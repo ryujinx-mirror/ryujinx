@@ -5,8 +5,9 @@ namespace Ryujinx
 {
     class VirtualFs : IDisposable
     {
-        private const string BasePath  = "Fs";
-        private const string SavesPath = "Saves";
+        private const string BasePath   = "Fs";
+        private const string SavesPath  = "Saves";
+        private const string SdCardPath = "SdCard";
 
         public Stream RomFs { get; private set; }
 
@@ -15,7 +16,7 @@ namespace Ryujinx
             RomFs = new FileStream(FileName, FileMode.Open, FileAccess.Read);
         }
 
-        internal string GetFullPath(string BasePath, string FileName)
+        public string GetFullPath(string BasePath, string FileName)
         {
             if (FileName.StartsWith('/'))
             {
@@ -32,19 +33,23 @@ namespace Ryujinx
             return FullPath;
         }
 
-        internal string GetGameSavesPath()
-        {
-            string SavesDir = Path.Combine(GetBasePath(), SavesPath);
+        public string GetSdCardPath() => MakeDirAndGetFullPath(SdCardPath);
 
-            if (!Directory.Exists(SavesDir))
+        public string GetGameSavesPath() => MakeDirAndGetFullPath(SavesPath);
+
+        private string MakeDirAndGetFullPath(string Dir)
+        {
+            string FullPath = Path.Combine(GetBasePath(), Dir);
+
+            if (!Directory.Exists(FullPath))
             {
-                Directory.CreateDirectory(SavesDir);
+                Directory.CreateDirectory(FullPath);
             }
 
-            return SavesDir;
+            return FullPath;
         }
 
-        internal string GetBasePath()
+        public string GetBasePath()
         {
             return Path.Combine(Directory.GetCurrentDirectory(), BasePath);
         }

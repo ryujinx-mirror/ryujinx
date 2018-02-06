@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Ryujinx.Loaders.Executables
 {
-    class Nro : IElf
+    class Nro : IExecutable
     {
         private byte[] m_Text;
         private byte[] m_RO;

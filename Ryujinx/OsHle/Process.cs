@@ -54,7 +54,7 @@ namespace Ryujinx.OsHle
                 AMemoryPerm.RW);
         }
 
-        public void LoadProgram(IElf Program)
+        public void LoadProgram(IExecutable Program)
         {
             Executable Executable = new Executable(Program, Memory, ImageBase);
 
@@ -138,7 +138,7 @@ namespace Ryujinx.OsHle
             Thread.Registers.SvcCall  += SvcHandler.SvcCall;
             Thread.Registers.ProcessId = ProcessId;
             Thread.Registers.ThreadId  = Ns.Os.IdGen.GenerateId();
-            Thread.Registers.Tpidr   = TlsPageAddr + TlsSlot * TlsSize;
+            Thread.Registers.Tpidr     = TlsPageAddr + TlsSlot * TlsSize;
             Thread.Registers.X0        = (ulong)ArgsPtr;
             Thread.Registers.X1        = (ulong)Handle;
             Thread.Registers.X31       = (ulong)StackTop;

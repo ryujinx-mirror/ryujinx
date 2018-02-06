@@ -7,7 +7,7 @@ namespace Ryujinx.Loaders
 {
     class Executable
     {
-        private IElf    NsoData;
+        private IExecutable    NsoData;
         private AMemory Memory;
 
         private ElfDyn[] Dynamic;
@@ -15,23 +15,25 @@ namespace Ryujinx.Loaders
         public long ImageBase { get; private set; }
         public long ImageEnd  { get; private set; }
 
-        public Executable(IElf NsoData, AMemory Memory, long ImageBase)
+        public Executable(IExecutable Exe, AMemory Memory, long ImageBase)
         {
-            this.NsoData   = NsoData;
+            this.NsoData   = Exe;
             this.Memory    = Memory;
             this.ImageBase = ImageBase;
             this.ImageEnd  = ImageBase;
 
-            WriteData(ImageBase + NsoData.TextOffset, NsoData.Text, MemoryType.CodeStatic, AMemoryPerm.RX);
-            WriteData(ImageBase + NsoData.ROOffset,   NsoData.RO,   MemoryType.Normal,     AMemoryPerm.Read);
-            WriteData(ImageBase + NsoData.DataOffset, NsoData.Data, MemoryType.Normal,     AMemoryPerm.RW);
+            WriteData(ImageBase + Exe.TextOffset, Exe.Text, MemoryType.CodeStatic, AMemoryPerm.RX);
+            WriteData(ImageBase + Exe.ROOffset,   Exe.RO,   MemoryType.Normal,     AMemoryPerm.Read);
+            WriteData(ImageBase + Exe.DataOffset, Exe.Data, MemoryType.Normal,     AMemoryPerm.RW);
 
-            if (NsoData.Text.Count == 0)
+            if (Exe.Mod0Offset == 0)
             {
+                MapBss(ImageBase + Exe.DataOffset + Exe.Data.Count, Exe.BssSize);
+
                 return;
             }
 
-            long Mod0Offset = ImageBase + NsoData.Mod0Offset;
+            long Mod0Offset = ImageBase + Exe.Mod0Offset;
 
             int  Mod0Magic        = Memory.ReadInt32(Mod0Offset + 0x0);
             long DynamicOffset    = Memory.ReadInt32(Mod0Offset + 0x4)  + Mod0Offset;
@@ -41,9 +43,7 @@ namespace Ryujinx.Loaders
             long EhHdrEndOffset   = Memory.ReadInt32(Mod0Offset + 0x14) + Mod0Offset;
             long ModObjOffset     = Memory.ReadInt32(Mod0Offset + 0x18) + Mod0Offset;
 
-             long BssSize = BssEndOffset - BssStartOffset;
-
-            Memory.Manager.MapPhys(BssStartOffset, BssSize, (int)MemoryType.Normal, AMemoryPerm.RW);
+            MapBss(BssStartOffset, BssEndOffset - BssStartOffset);
 
             ImageEnd = BssEndOffset;
 
@@ -81,6 +81,11 @@ namespace Ryujinx.Loaders
             {
                 Memory.WriteByte(Position + Index, Data[Index]);
             }
+        }
+
+        private void MapBss(long Position, long Size)
+        {
+            Memory.Manager.MapPhys(Position, Size, (int)MemoryType.Normal, AMemoryPerm.RW);
         }
 
         private ElfRel GetRelocation(long Position)

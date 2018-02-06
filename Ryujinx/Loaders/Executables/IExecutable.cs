@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 
 namespace Ryujinx.Loaders.Executables
 {
-    interface IElf
+    interface IExecutable
     {
         ReadOnlyCollection<byte> Text { get; }
         ReadOnlyCollection<byte> RO   { get; }

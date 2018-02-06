@@ -133,11 +133,28 @@ namespace Ryujinx.OsHle.Svc
             long Handle   = (long)Registers.X2;
             int  InfoId   =  (int)Registers.X3;
 
+            //Fail for info not available on older Kernel versions.
+            if (InfoType == 18 ||
+                InfoType == 19)
+            {
+                Registers.X0 = (int)SvcResult.ErrBadInfo;
+
+                return;
+            }
+
             switch (InfoType)
             {
-                case 6:  Registers.X1 = GetTotalMem(Memory); break;
-                case 7:  Registers.X1 = GetUsedMem(Memory);  break;
-                case 11: Registers.X1 = GetRnd64();          break;
+                case 2:  Registers.X1 = GetMapRegionBaseAddr();  break;
+                case 3:  Registers.X1 = GetMapRegionSize();      break;
+                case 4:  Registers.X1 = GetHeapRegionBaseAddr(); break;
+                case 5:  Registers.X1 = GetHeapRegionSize();     break;
+                case 6:  Registers.X1 = GetTotalMem(Memory);     break;
+                case 7:  Registers.X1 = GetUsedMem(Memory);      break;
+                case 11: Registers.X1 = GetRnd64();              break;
+                case 12: Registers.X1 = GetAddrSpaceBaseAddr();  break;
+                case 13: Registers.X1 = GetAddrSpaceSize();      break;
+                case 14: Registers.X1 = GetMapRegionBaseAddr();  break;
+                case 15: Registers.X1 = GetMapRegionSize();      break;
 
                 default: throw new NotImplementedException($"SvcGetInfo: {InfoType} {Handle} {InfoId}");
             }
@@ -158,6 +175,36 @@ namespace Ryujinx.OsHle.Svc
         private static ulong GetRnd64()
         {
             return (ulong)Rng.Next() + ((ulong)Rng.Next() << 32);
+        }
+
+        private static ulong GetAddrSpaceBaseAddr()
+        {
+            return 0x08000000;
+        }
+
+        private static ulong GetAddrSpaceSize()
+        {
+            return AMemoryMgr.AddrSize - GetAddrSpaceBaseAddr();
+        }
+
+        private static ulong GetMapRegionBaseAddr()
+        {
+            return 0x80000000;
+        }
+
+        private static ulong GetMapRegionSize()
+        {
+            return 0x40000000;
+        }
+
+        private static ulong GetHeapRegionBaseAddr()
+        {
+            return GetMapRegionBaseAddr() + GetMapRegionSize();
+        }
+
+        private static ulong GetHeapRegionSize()
+        {
+            return 0x40000000;
         }
     }
 }

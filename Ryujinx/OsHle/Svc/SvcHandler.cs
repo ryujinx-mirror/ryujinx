@@ -43,7 +43,8 @@ namespace Ryujinx.OsHle.Svc
             Success      = 0,
             ErrBadHandle = 0xe401,
             ErrTimeout   = 0xea01,
-            ErrBadIpcReq = 0xf601,
+            ErrBadInfo   = 0xf001,
+            ErrBadIpcReq = 0xf601
         }
 
         private Switch  Ns;

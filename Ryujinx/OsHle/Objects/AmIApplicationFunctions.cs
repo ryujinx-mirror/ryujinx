@@ -35,6 +35,13 @@ namespace Ryujinx.OsHle.Objects
             return 0;
         }
 
+        public static long NotifyRunning(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(1);
+
+            return 0;
+        }
+
         private static byte[] MakeLaunchParams()
         {
             //Size needs to be at least 0x88 bytes otherwise application errors.

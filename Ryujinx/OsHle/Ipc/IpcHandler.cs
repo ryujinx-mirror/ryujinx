@@ -20,6 +20,7 @@ namespace Ryujinx.OsHle.Ipc
             { ( "acc:u0",    100), Service.AccU0InitializeApplicationInfo           },
             { ( "acc:u0",    101), Service.AccU0GetBaasAccountManagerForApplication },
             { ( "apm",         0), Service.ApmOpenSession                           },
+            { ( "apm:p",       0), Service.ApmOpenSession                           },
             { ( "appletOE",    0), Service.AppletOpenApplicationProxy               },
             { ( "audout:u",    0), Service.AudOutListAudioOuts                      },
             { ( "audout:u",    1), Service.AudOutOpenAudioOut                       },
@@ -27,6 +28,7 @@ namespace Ryujinx.OsHle.Ipc
             { ( "audren:u",    1), Service.AudRenGetAudioRendererWorkBufferSize     },
             { ( "friend:a",    0), Service.FriendCreateFriendService                },
             { ( "fsp-srv",     1), Service.FspSrvInitialize                         },
+            { ( "fsp-srv",    18), Service.FspSrvMountSdCard                        },
             { ( "fsp-srv",    51), Service.FspSrvMountSaveData                      },
             { ( "fsp-srv",   200), Service.FspSrvOpenDataStorageByCurrentProcess    },
             { ( "fsp-srv",   203), Service.FspSrvOpenRomStorage                     },
@@ -43,11 +45,13 @@ namespace Ryujinx.OsHle.Ipc
             { ( "nvdrv",       2), Service.NvDrvClose                               },
             { ( "nvdrv",       3), Service.NvDrvInitialize                          },
             { ( "nvdrv",       4), Service.NvDrvQueryEvent                          },
+            { ( "nvdrv",       8), Service.NvDrvSetClientPid                        },
             { ( "nvdrv:a",     0), Service.NvDrvOpen                                },
             { ( "nvdrv:a",     1), Service.NvDrvIoctl                               },
             { ( "nvdrv:a",     2), Service.NvDrvClose                               },
             { ( "nvdrv:a",     3), Service.NvDrvInitialize                          },
             { ( "nvdrv:a",     4), Service.NvDrvQueryEvent                          },
+            { ( "nvdrv:a",     8), Service.NvDrvSetClientPid                        },
             { ( "pctl:a",      0), Service.PctlCreateService                        },
             { ( "pl:u",        1), Service.PlGetLoadState                           },
             { ( "pl:u",        2), Service.PlGetFontSize                            },
@@ -81,6 +85,7 @@ namespace Ryujinx.OsHle.Ipc
             { (typeof(AmIApplicationFunctions),  1), AmIApplicationFunctions.PopLaunchParameter },
             { (typeof(AmIApplicationFunctions), 20), AmIApplicationFunctions.EnsureSaveData     },
             { (typeof(AmIApplicationFunctions), 21), AmIApplicationFunctions.GetDesiredLanguage },
+            { (typeof(AmIApplicationFunctions), 40), AmIApplicationFunctions.NotifyRunning      },
 
             //IApplicationProxy
             { (typeof(AmIApplicationProxy),    0), AmIApplicationProxy.GetCommonStateGetter    },
@@ -103,6 +108,7 @@ namespace Ryujinx.OsHle.Ipc
             { (typeof(AmISelfController), 11), AmISelfController.SetOperationModeChangedNotification   },
             { (typeof(AmISelfController), 12), AmISelfController.SetPerformanceModeChangedNotification },
             { (typeof(AmISelfController), 13), AmISelfController.SetFocusHandlingMode                  },
+            { (typeof(AmISelfController), 16), AmISelfController.SetOutOfFocusSuspendingEnabled        },
 
             //IStorage
             { (typeof(AmIStorage), 0), AmIStorage.Open },
@@ -142,14 +148,15 @@ namespace Ryujinx.OsHle.Ipc
             { (typeof(TimeISystemClock), 0), TimeISystemClock.GetCurrentTime },
 
             //IApplicationDisplayService
-            { (typeof(ViIApplicationDisplayService),  100), ViIApplicationDisplayService.GetRelayService          },
-            { (typeof(ViIApplicationDisplayService),  101), ViIApplicationDisplayService.GetSystemDisplayService  },
-            { (typeof(ViIApplicationDisplayService),  102), ViIApplicationDisplayService.GetManagerDisplayService },
-            { (typeof(ViIApplicationDisplayService), 1010), ViIApplicationDisplayService.OpenDisplay              },
-            { (typeof(ViIApplicationDisplayService), 2020), ViIApplicationDisplayService.OpenLayer                },
-            { (typeof(ViIApplicationDisplayService), 2030), ViIApplicationDisplayService.CreateStrayLayer         },
-            { (typeof(ViIApplicationDisplayService), 2101), ViIApplicationDisplayService.SetLayerScalingMode      },
-            { (typeof(ViIApplicationDisplayService), 5202), ViIApplicationDisplayService.GetDisplayVSyncEvent     },
+            { (typeof(ViIApplicationDisplayService),  100), ViIApplicationDisplayService.GetRelayService                      },
+            { (typeof(ViIApplicationDisplayService),  101), ViIApplicationDisplayService.GetSystemDisplayService              },
+            { (typeof(ViIApplicationDisplayService),  102), ViIApplicationDisplayService.GetManagerDisplayService             },
+            { (typeof(ViIApplicationDisplayService),  103), ViIApplicationDisplayService.GetIndirectDisplayTransactionService },
+            { (typeof(ViIApplicationDisplayService), 1010), ViIApplicationDisplayService.OpenDisplay                          },
+            { (typeof(ViIApplicationDisplayService), 2020), ViIApplicationDisplayService.OpenLayer                            },
+            { (typeof(ViIApplicationDisplayService), 2030), ViIApplicationDisplayService.CreateStrayLayer                     },
+            { (typeof(ViIApplicationDisplayService), 2101), ViIApplicationDisplayService.SetLayerScalingMode                  },
+            { (typeof(ViIApplicationDisplayService), 5202), ViIApplicationDisplayService.GetDisplayVSyncEvent                 },
 
             //IHOSBinderDriver
             { (typeof(ViIHOSBinderDriver), 0), ViIHOSBinderDriver.TransactParcel  },
@@ -189,6 +196,8 @@ namespace Ryujinx.OsHle.Ipc
 
                     bool IgnoreNullPR = false;
 
+                    string DbgServiceName = string.Empty;
+
                     if (Session is HDomain Dom)
                     {
                         if (Request.DomCmd == IpcDomCmd.SendMsg)
@@ -200,10 +209,14 @@ namespace Ryujinx.OsHle.Ipc
 
                             if (Obj is HDomain)
                             {
+                                DbgServiceName = $"{ServiceName} {CmdId}";
+
                                 ServiceCmds.TryGetValue((ServiceName, CmdId), out ProcReq);
                             }
                             else if (Obj != null)
                             {
+                                DbgServiceName = $"{ServiceName} {Obj.GetType().Name} {CmdId}";
+
                                 ObjectCmds.TryGetValue((Obj.GetType(), CmdId), out ProcReq);
                             }
                         }
@@ -225,12 +238,16 @@ namespace Ryujinx.OsHle.Ipc
                         {
                             object Obj = ((HSessionObj)Session).Obj;
 
+                            DbgServiceName = $"{ServiceName} {Obj.GetType().Name} {CmdId}";
+
                             ObjectCmds.TryGetValue((Obj.GetType(), CmdId), out ProcReq);
                         }
                         else
                         {
+                            DbgServiceName = $"{ServiceName} {CmdId}";
+
                             ServiceCmds.TryGetValue((ServiceName, CmdId), out ProcReq);
-                        }                        
+                        }
                     }
 
                     if (ProcReq != null)
@@ -255,7 +272,7 @@ namespace Ryujinx.OsHle.Ipc
                     }
                     else if (!IgnoreNullPR)
                     {   
-                        throw new NotImplementedException(ServiceName);
+                        throw new NotImplementedException(DbgServiceName);
                     }
                 }
                 else if (Request.Type == IpcMessageType.Control)

@@ -110,6 +110,15 @@ namespace Ryujinx.OsHle.Services
             return 0;
         }
 
+        public static long NvDrvSetClientPid(ServiceCtx Context)
+        {
+            long Pid = Context.RequestData.ReadInt64();
+
+            Context.ResponseData.Write(0);
+
+            return 0;
+        }
+
         private static long NvGpuAsIoctlBindChannel(ServiceCtx Context)
         {
             long Position = Context.Request.PtrBuff[0].Position;

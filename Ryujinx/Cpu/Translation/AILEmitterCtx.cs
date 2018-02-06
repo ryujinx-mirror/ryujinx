@@ -147,7 +147,7 @@ namespace ChocolArm64.Translation
 
             int IntCond = (int)Cond;            
 
-            if (LastFlagOp == LastCmpOp && BranchOps.ContainsKey(Cond))
+            if (LastCmpOp != null && LastFlagOp == LastCmpOp && BranchOps.ContainsKey(Cond))
             {
                 Ldloc(Tmp3Index, AIoType.Int, GetIntType(LastCmpOp));
                 Ldloc(Tmp4Index, AIoType.Int, GetIntType(LastCmpOp));

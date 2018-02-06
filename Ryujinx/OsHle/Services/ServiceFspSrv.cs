@@ -11,6 +11,13 @@ namespace Ryujinx.OsHle.Services
             return 0;
         }
 
+        public static long FspSrvMountSdCard(ServiceCtx Context)
+        {
+            MakeObject(Context, new FspSrvIFileSystem(Context.Ns.VFs.GetSdCardPath()));
+
+            return 0;
+        }
+
         public static long FspSrvMountSaveData(ServiceCtx Context)
         {
             MakeObject(Context, new FspSrvIFileSystem(Context.Ns.VFs.GetGameSavesPath()));

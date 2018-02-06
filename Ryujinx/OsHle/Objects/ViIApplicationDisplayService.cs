@@ -31,6 +31,13 @@ namespace Ryujinx.OsHle.Objects
             return 0;
         }
 
+        public static long GetIndirectDisplayTransactionService(ServiceCtx Context)
+        {
+            MakeObject(Context, new ViIHOSBinderDriver());
+
+            return 0;
+        }
+
         public static long OpenDisplay(ServiceCtx Context)
         {
             string Name = GetDisplayName(Context);

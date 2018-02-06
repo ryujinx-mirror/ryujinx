@@ -24,5 +24,12 @@ namespace Ryujinx.OsHle.Objects
 
             return 0;
         }
+
+        public static long SetOutOfFocusSuspendingEnabled(ServiceCtx Context)
+        {
+            bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
+
+            return 0;
+        }
     }
 }
