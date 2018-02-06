@@ -138,7 +138,7 @@ namespace Ryujinx.OsHle
             Thread.Registers.SvcCall  += SvcHandler.SvcCall;
             Thread.Registers.ProcessId = ProcessId;
             Thread.Registers.ThreadId  = Ns.Os.IdGen.GenerateId();
-            Thread.Registers.TlsAddr   = TlsPageAddr + TlsSlot * TlsSize;
+            Thread.Registers.Tpidr   = TlsPageAddr + TlsSlot * TlsSize;
             Thread.Registers.X0        = (ulong)ArgsPtr;
             Thread.Registers.X1        = (ulong)Handle;
             Thread.Registers.X31       = (ulong)StackTop;
@@ -165,7 +165,7 @@ namespace Ryujinx.OsHle
         {
             if (sender is AThread Thread)
             {
-                TlsSlots.TryRemove(GetTlsSlot(Thread.Registers.TlsAddr), out _);
+                TlsSlots.TryRemove(GetTlsSlot(Thread.Registers.Tpidr), out _);
 
                 Ns.Os.IdGen.DeleteId(Thread.ThreadId);
             }

@@ -6,6 +6,8 @@ namespace ChocolArm64.Memory
 {
     public unsafe class AMemory
     {
+        private const long ErgMask = (4 << ARegisters.ErgSizeLog2) - 1;
+
         public AMemoryMgr Manager { get; private set; }
 
         private struct ExMonitor
@@ -52,6 +54,11 @@ namespace ChocolArm64.Memory
         {
             lock (Monitors)
             {
+                if (Monitors.TryGetValue(ThreadId, out ExMonitor Monitor))
+                {
+                    ExAddrs.Remove(Monitor.Position);
+                }
+
                 Monitors.Remove(ThreadId);
             }
         }
@@ -60,14 +67,16 @@ namespace ChocolArm64.Memory
         {
             lock (Monitors)
             {
-                bool ExState = !ExAddrs.Contains(Position);
+                Position &= ~ErgMask;
 
-                if (ExState)
+                if (Monitors.TryGetValue(Registers.ThreadId, out ExMonitor Monitor))
                 {
-                    ExAddrs.Add(Position);
+                    ExAddrs.Remove(Monitor.Position);
                 }
 
-                ExMonitor Monitor = new ExMonitor(Position, ExState);
+                bool ExState = ExAddrs.Add(Position);
+
+                Monitor = new ExMonitor(Position, ExState);
 
                 if (!Monitors.TryAdd(Registers.ThreadId, Monitor))
                 {
@@ -80,6 +89,8 @@ namespace ChocolArm64.Memory
         {
             lock (Monitors)
             {
+                Position &= ~ErgMask;
+
                 if (!Monitors.TryGetValue(Registers.ThreadId, out ExMonitor Monitor))
                 {
                     return false;

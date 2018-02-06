@@ -175,17 +175,6 @@ namespace ChocolArm64.Instruction
             Context.EmitStintzr(Op.Rd);
         }
 
-        private static void EmitRev(AILEmitterCtx Context, string Name)
-        {
-            AOpCodeAlu Op = (AOpCodeAlu)Context.CurrOp;
-
-            Context.EmitLdintzr(Op.Rn);
-
-            ASoftFallback.EmitCall(Context, Name);
-
-            Context.EmitStintzr(Op.Rd);
-        }
-
         public static void Rorv(AILEmitterCtx Context)
         {
             EmitDataLoadRn(Context);

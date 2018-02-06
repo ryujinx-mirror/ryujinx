@@ -467,11 +467,41 @@ namespace ChocolArm64.Translation
             throw new ArgumentOutOfRangeException(nameof(Size));
         }
 
-        public void EmitCall(Type MthdType, string MthdName)
+        public void EmitCallPropGet(Type ObjType, string PropName)
         {
-            if (MthdType == null)
+            if (ObjType == null)
             {
-                throw new ArgumentNullException(nameof(MthdType));
+                throw new ArgumentNullException(nameof(ObjType));
+            }
+
+            if (PropName == null)
+            {
+                throw new ArgumentNullException(nameof(PropName));
+            }
+
+            EmitCall(ObjType.GetMethod($"get_{PropName}"));
+        }
+
+        public void EmitCallPropSet(Type ObjType, string PropName)
+        {
+            if (ObjType == null)
+            {
+                throw new ArgumentNullException(nameof(ObjType));
+            }
+
+            if (PropName == null)
+            {
+                throw new ArgumentNullException(nameof(PropName));
+            }
+
+            EmitCall(ObjType.GetMethod($"set_{PropName}"));
+        }
+
+        public void EmitCall(Type ObjType, string MthdName)
+        {
+            if (ObjType == null)
+            {
+                throw new ArgumentNullException(nameof(ObjType));
             }
 
             if (MthdName == null)
@@ -479,7 +509,7 @@ namespace ChocolArm64.Translation
                 throw new ArgumentNullException(nameof(MthdName));
             }
 
-            EmitCall(MthdType.GetMethod(MthdName));
+            EmitCall(ObjType.GetMethod(MthdName));
         }
 
         public void EmitCall(MethodInfo MthdInfo)

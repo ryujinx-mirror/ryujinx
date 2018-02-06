@@ -39,7 +39,7 @@ namespace Ryujinx.OsHle.Svc
 
         private static void SvcGetSystemTick(Switch Ns, ARegisters Registers, AMemory Memory)
         {
-            Registers.X0 = (ulong)Registers.GetSystemReg(3, 3, 14, 0, 1);
+            Registers.X0 = (ulong)Registers.CntpctEl0;
         }
 
         private static void SvcConnectToNamedPort(Switch Ns, ARegisters Registers, AMemory Memory)
@@ -70,7 +70,7 @@ namespace Ryujinx.OsHle.Svc
 
         private static void SendSyncRequest(Switch Ns, ARegisters Registers, AMemory Memory, bool IsUser)
         {
-            long CmdPtr = Registers.TlsAddr;
+            long CmdPtr = Registers.Tpidr;
             long Size   = 0x100;
             int  Handle = 0;
 

@@ -1,6 +1,8 @@
 using ChocolArm64.Decoder;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
+using System;
+using System.Reflection;
 using System.Reflection.Emit;
 
 namespace ChocolArm64.Instruction
@@ -13,13 +15,30 @@ namespace ChocolArm64.Instruction
 
             Context.EmitLdarg(ATranslatedSub.RegistersArgIdx);
 
-            Context.EmitLdc_I4(Op.Op0);
-            Context.EmitLdc_I4(Op.Op1);
-            Context.EmitLdc_I4(Op.CRn);
-            Context.EmitLdc_I4(Op.CRm);
-            Context.EmitLdc_I4(Op.Op2);
+            string PropName;
 
-            Context.EmitCall(typeof(ARegisters), nameof(ARegisters.GetSystemReg));
+            switch (GetPackedId(Op))
+            {
+                case 0b11_011_0000_0000_001: PropName = nameof(ARegisters.CtrEl0);    break;
+                case 0b11_011_0000_0000_111: PropName = nameof(ARegisters.DczidEl0);  break;
+                case 0b11_011_0100_0100_000: PropName = nameof(ARegisters.Fpcr);      break;
+                case 0b11_011_0100_0100_001: PropName = nameof(ARegisters.Fpsr);      break;
+                case 0b11_011_1101_0000_010: PropName = nameof(ARegisters.TpidrEl0);  break;
+                case 0b11_011_1101_0000_011: PropName = nameof(ARegisters.Tpidr);     break;
+                case 0b11_011_1110_0000_001: PropName = nameof(ARegisters.CntpctEl0); break;
+
+                default: throw new NotImplementedException($"Unknown MRS at {Op.Position:x16}");
+            }
+
+            Context.EmitCallPropGet(typeof(ARegisters), PropName);
+
+            PropertyInfo PropInfo = typeof(ARegisters).GetProperty(PropName);
+
+            if (PropInfo.PropertyType != typeof(long) &&
+                PropInfo.PropertyType != typeof(ulong))
+            {
+                Context.Emit(OpCodes.Conv_U8);
+            }
 
             Context.EmitStintzr(Op.Rt);
         }
@@ -29,15 +48,28 @@ namespace ChocolArm64.Instruction
             AOpCodeSystem Op = (AOpCodeSystem)Context.CurrOp;
 
             Context.EmitLdarg(ATranslatedSub.RegistersArgIdx);
-
-            Context.EmitLdc_I4(Op.Op0);
-            Context.EmitLdc_I4(Op.Op1);
-            Context.EmitLdc_I4(Op.CRn);
-            Context.EmitLdc_I4(Op.CRm);
-            Context.EmitLdc_I4(Op.Op2);
             Context.EmitLdintzr(Op.Rt);
 
-            Context.EmitCall(typeof(ARegisters), nameof(ARegisters.SetSystemReg));
+            string PropName;
+
+            switch (GetPackedId(Op))
+            {
+                case 0b11_011_0100_0100_000: PropName = nameof(ARegisters.Fpcr);     break;
+                case 0b11_011_0100_0100_001: PropName = nameof(ARegisters.Fpsr);     break;
+                case 0b11_011_1101_0000_010: PropName = nameof(ARegisters.TpidrEl0); break;
+
+                default: throw new NotImplementedException($"Unknown MSR at {Op.Position:x16}");
+            }
+
+            PropertyInfo PropInfo = typeof(ARegisters).GetProperty(PropName);
+
+            if (PropInfo.PropertyType != typeof(long) &&
+                PropInfo.PropertyType != typeof(ulong))
+            {
+                Context.Emit(OpCodes.Conv_U4);
+            }
+
+            Context.EmitCallPropSet(typeof(ARegisters), PropName);
         }
 
         public static void Nop(AILEmitterCtx Context)
@@ -52,19 +84,12 @@ namespace ChocolArm64.Instruction
             //We treat it as no-op here since we don't have any cache being emulated anyway.
             AOpCodeSystem Op = (AOpCodeSystem)Context.CurrOp;
 
-            int Id;
-
-            Id  = Op.Op2 << 0;
-            Id |= Op.CRm << 3;
-            Id |= Op.CRn << 7;
-            Id |= Op.Op1 << 11;
-
-            switch (Id)
+            switch (GetPackedId(Op))
             {
-                case 0b011_0111_0100_001:
+                case 0b11_011_0111_0100_001:
                 {
                     //DC ZVA
-                    for (int Offs = 0; Offs < 64; Offs += 8)
+                    for (int Offs = 0; Offs < (4 << ARegisters.DczSizeLog2); Offs += 8)
                     {
                         Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
                         Context.EmitLdint(Op.Rt);
@@ -79,6 +104,19 @@ namespace ChocolArm64.Instruction
                     break;
                 }
             }
+        }
+
+        private static int GetPackedId(AOpCodeSystem Op)
+        {
+            int Id;
+
+            Id  = Op.Op2 << 0;
+            Id |= Op.CRm << 3;
+            Id |= Op.CRn << 7;
+            Id |= Op.Op1 << 11;
+            Id |= Op.Op0 << 14;
+
+            return Id;
         }
     }
 }

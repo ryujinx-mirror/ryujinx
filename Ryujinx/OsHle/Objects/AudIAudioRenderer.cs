@@ -19,7 +19,7 @@ namespace Ryujinx.OsHle.Objects
             {
                 Context.Memory.WriteInt32(Position + Offset, 5);
             }
-            
+
             return 0;
         }
 
