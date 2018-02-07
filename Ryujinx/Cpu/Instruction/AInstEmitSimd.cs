@@ -375,6 +375,8 @@ namespace ChocolArm64.Instruction
         public static void Smax_V(AILEmitterCtx Context) => EmitVectorSmax(Context);
         public static void Smin_V(AILEmitterCtx Context) => EmitVectorSmin(Context);
 
+        public static void Sshl_V(AILEmitterCtx Context) => EmitVectorSshl(Context);
+
         public static void Sshll_V(AILEmitterCtx Context)
         {
             AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
@@ -737,7 +739,10 @@ namespace ChocolArm64.Instruction
             EmitVectorBinarySx(Context, () => Context.EmitCall(MthdInfo));
         }
 
-        private static void EmitVectorUshl(AILEmitterCtx Context)
+        private static void EmitVectorSshl(AILEmitterCtx Context) => EmitVectorShl(Context, true);
+        private static void EmitVectorUshl(AILEmitterCtx Context) => EmitVectorShl(Context, false);
+
+        private static void EmitVectorShl(AILEmitterCtx Context, bool Signed)
         {
             //This instruction shifts the value on vector A by the number of bits
             //specified on the signed, lower 8 bits of vector B. If the shift value
@@ -772,7 +777,9 @@ namespace ChocolArm64.Instruction
                 Context.Emit(OpCodes.Bge_S, LblShl);
                 Context.Emit(OpCodes.Neg);
 
-                EmitShift(OpCodes.Shr_Un);
+                EmitShift(Signed
+                    ? OpCodes.Shr
+                    : OpCodes.Shr_Un);
 
                 Context.MarkLabel(LblShl);
 

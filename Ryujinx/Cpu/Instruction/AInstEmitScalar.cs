@@ -498,7 +498,22 @@ namespace ChocolArm64.Instruction
             Context.EmitLdvecsf(Op.Rn);
             Context.EmitLdvecsf(Op.Rm);
 
-            EmitMathOpCall(Context, Name);
+            MethodInfo MthdInfo;
+
+            if (Op.Size == 0)
+            {
+                MthdInfo = typeof(MathF).GetMethod(Name, new Type[] { typeof(float), typeof(float) });
+            }
+            else if (Op.Size == 1)
+            {
+                MthdInfo = typeof(Math).GetMethod(Name, new Type[] { typeof(double), typeof(double) });
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+
+            Context.EmitCall(MthdInfo);
 
             Context.EmitStvecsf(Op.Rd);
         }

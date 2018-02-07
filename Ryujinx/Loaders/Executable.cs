@@ -7,7 +7,6 @@ namespace Ryujinx.Loaders
 {
     class Executable
     {
-        private IExecutable    NsoData;
         private AMemory Memory;
 
         private ElfDyn[] Dynamic;
@@ -17,7 +16,6 @@ namespace Ryujinx.Loaders
 
         public Executable(IExecutable Exe, AMemory Memory, long ImageBase)
         {
-            this.NsoData   = Exe;
             this.Memory    = Memory;
             this.ImageBase = ImageBase;
             this.ImageEnd  = ImageBase;

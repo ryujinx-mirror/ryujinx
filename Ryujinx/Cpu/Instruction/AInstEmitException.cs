@@ -27,7 +27,7 @@ namespace ChocolArm64.Instruction
 
         public static void Und(AILEmitterCtx Context)
         {
-            throw new Exception("und inst! " + Context.CurrOp.Position.ToString("x8"));
+            throw new NotImplementedException($"Undefined instruction at {Context.CurrOp.Position:x16}");
         }
     }
 }
