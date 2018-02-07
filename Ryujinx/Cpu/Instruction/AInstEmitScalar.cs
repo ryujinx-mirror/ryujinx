@@ -169,6 +169,12 @@ namespace ChocolArm64.Instruction
             Context.MarkLabel(LblNotNaN);
         }
 
+        public static void Fcmpe_S(AILEmitterCtx Context)
+        {
+            //TODO: Raise exception if value is NaN, how to handle exceptions?
+            Fcmp_S(Context);
+        }
+
         public static void Fcsel_S(AILEmitterCtx Context)
         {
             AOpCodeSimdFcond Op = (AOpCodeSimdFcond)Context.CurrOp;
@@ -259,6 +265,14 @@ namespace ChocolArm64.Instruction
         public static void Fminnm_S(AILEmitterCtx Context) => EmitMathOp3(Context, nameof(Math.Min));
 
         public static void Fmov_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            Context.EmitLdvecsf(Op.Rn);
+            Context.EmitStvecsf(Op.Rd);
+        }
+
+        public static void Fmov_Si(AILEmitterCtx Context)
         {
             AOpCodeSimdFmov Op = (AOpCodeSimdFmov)Context.CurrOp;
 
