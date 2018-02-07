@@ -1,6 +1,8 @@
 using ChocolArm64.Decoder;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
+using System;
+using System.Reflection;
 using System.Reflection.Emit;
 
 using static ChocolArm64.Instruction.AInstEmitAluHelper;
@@ -9,6 +11,30 @@ namespace ChocolArm64.Instruction
 {
     static partial class AInstEmit
     {
+        public static void Adc(AILEmitterCtx Context)
+        {
+            EmitDataLoadOpers(Context);
+
+            Context.Emit(OpCodes.Add);
+
+            Context.EmitLdflg((int)APState.CBit);
+
+            Type[] MthdTypes  = new Type[] { typeof(bool) };
+
+            MethodInfo MthdInfo = typeof(Convert).GetMethod(nameof(Convert.ToInt32), MthdTypes);
+
+            Context.EmitCall(MthdInfo);
+
+            if (Context.CurrOp.RegisterSize != ARegisterSize.Int32)
+            {
+                Context.Emit(OpCodes.Conv_I8);
+            }
+
+            Context.Emit(OpCodes.Add);
+
+            EmitDataStore(Context);
+        }
+
         public static void Add(AILEmitterCtx Context) => EmitDataOp(Context, OpCodes.Add);
 
         public static void Adds(AILEmitterCtx Context)
@@ -104,6 +130,34 @@ namespace ChocolArm64.Instruction
 
         public static void Lslv(AILEmitterCtx Context) => EmitDataOpShift(Context, OpCodes.Shl);
         public static void Lsrv(AILEmitterCtx Context) => EmitDataOpShift(Context, OpCodes.Shr_Un);
+
+        public static void Sbc(AILEmitterCtx Context)
+        {
+            EmitDataLoadOpers(Context);
+
+            Context.Emit(OpCodes.Sub);
+
+            Context.EmitLdflg((int)APState.CBit);
+
+            Type[] MthdTypes  = new Type[] { typeof(bool) };
+
+            MethodInfo MthdInfo = typeof(Convert).GetMethod(nameof(Convert.ToInt32), MthdTypes);
+
+            Context.EmitCall(MthdInfo);
+
+            Context.EmitLdc_I4(1);
+
+            Context.Emit(OpCodes.Xor);
+
+            if (Context.CurrOp.RegisterSize != ARegisterSize.Int32)
+            {
+                Context.Emit(OpCodes.Conv_I8);
+            }
+
+            Context.Emit(OpCodes.Sub);
+
+            EmitDataStore(Context);
+        }
 
         public static void Sub(AILEmitterCtx Context) => EmitDataOp(Context, OpCodes.Sub);
 

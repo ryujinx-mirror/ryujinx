@@ -10,6 +10,7 @@ namespace ChocolArm64
         {
  #region "OpCode Table"
             //Integer
+            Set("x0011010000xxxxx000000xxxxxxxxxx", AInstEmit.Adc,           typeof(AOpCodeAluRs));
             Set("x0010001xxxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Add,           typeof(AOpCodeAluImm));
             Set("x0001011xx0xxxxxxxxxxxxxxxxxxxxx", AInstEmit.Add,           typeof(AOpCodeAluRs));
             Set("x0001011001xxxxxxxxxxxxxxxxxxxxx", AInstEmit.Add,           typeof(AOpCodeAluRx));
@@ -85,6 +86,7 @@ namespace ChocolArm64
             Set("x101101011000000000010xxxxxxxxxx", AInstEmit.Rev32,         typeof(AOpCodeAlu));
             Set("1101101011000000000011xxxxxxxxxx", AInstEmit.Rev64,         typeof(AOpCodeAlu));
             Set("x0011010110xxxxx001011xxxxxxxxxx", AInstEmit.Rorv,          typeof(AOpCodeAluRs));
+            Set("x1011010000xxxxx000000xxxxxxxxxx", AInstEmit.Sbc,           typeof(AOpCodeAluRs));
             Set("x00100110xxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Sbfm,          typeof(AOpCodeBfm));
             Set("x0011010110xxxxx000011xxxxxxxxxx", AInstEmit.Sdiv,          typeof(AOpCodeAluRs));
             Set("10011011001xxxxx0xxxxxxxxxxxxxxx", AInstEmit.Smaddl,        typeof(AOpCodeMul));
