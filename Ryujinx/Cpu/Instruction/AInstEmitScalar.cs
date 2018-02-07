@@ -258,6 +258,20 @@ namespace ChocolArm64.Instruction
 
         public static void Fdiv_S(AILEmitterCtx Context) => EmitScalarOp(Context, OpCodes.Div);
 
+        public static void Fmadd_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            Context.EmitLdvecsf(Op.Ra);
+            Context.EmitLdvecsf(Op.Rn);
+            Context.EmitLdvecsf(Op.Rm);
+
+            Context.Emit(OpCodes.Mul);
+            Context.Emit(OpCodes.Add);
+
+            Context.EmitStvecsf(Op.Rd);
+        }
+
         public static void Fmax_S(AILEmitterCtx Context) => EmitMathOp3(Context, nameof(Math.Max));
         public static void Fmin_S(AILEmitterCtx Context) => EmitMathOp3(Context, nameof(Math.Min));
 
@@ -325,6 +339,23 @@ namespace ChocolArm64.Instruction
             ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Fmov_S));
 
             Context.EmitStvec(Op.Rd);
+        }
+
+        public static void Fmsub_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            Context.EmitLdvecsf(Op.Ra);
+            Context.EmitLdvecsf(Op.Rn);
+
+            Context.Emit(OpCodes.Neg);
+
+            Context.EmitLdvecsf(Op.Rm);
+
+            Context.Emit(OpCodes.Mul);
+            Context.Emit(OpCodes.Sub);
+
+            Context.EmitStvecsf(Op.Rd);
         }
 
         public static void Fmul_S(AILEmitterCtx Context) => EmitScalarOp(Context, OpCodes.Mul);
