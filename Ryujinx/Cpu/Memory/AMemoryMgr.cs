@@ -6,8 +6,8 @@ namespace ChocolArm64.Memory
 {
     public class AMemoryMgr
     {
-        public const long AddrSize = 1L << 36;
-        public const long RamSize  = 2L * 1024 * 1024 * 1024;
+        public const long AddrSize = RamSize;
+        public const long RamSize  = 4L * 1024 * 1024 * 1024;
 
         private const int  PTLvl0Bits = 11;
         private const int  PTLvl1Bits = 13;
@@ -117,7 +117,7 @@ namespace ChocolArm64.Memory
 
                 while ((ulong)Size < (ulong)HeapSize)
                 {
-                    Allocator.Free(GetPhys(Position, AMemoryPerm.None));
+                    Allocator.Free(Position);
 
                     Position += PageSize;
                 }
@@ -252,38 +252,6 @@ namespace ChocolArm64.Memory
             long Size = End - Start;
 
             return new AMemoryMapInfo(Start, Size, BaseEntry.Type, BaseEntry.Perm);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long GetPhys(long Position, AMemoryPerm Perm)
-        {
-            if (!HasPTEntry(Position))
-            {
-                if (Position < 0x08000000)
-                {
-                    Console.WriteLine($"HACK: Ignoring bad access at {Position:x16}");
-
-                    return 0;
-                }
-
-                throw new VmmPageFaultException(Position);
-            }
-
-            PTEntry Entry = GetPTEntry(Position);
-
-            long AbsPos = Entry.Position + (Position & PageMask);
-
-            if (Entry.Map == PTMap.Mirror)
-            {
-                return GetPhys(AbsPos, Perm);
-            }
-
-            if (Entry.Map == PTMap.Unmapped)
-            {
-                throw new VmmPageFaultException(Position);
-            }
-
-            return AbsPos;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

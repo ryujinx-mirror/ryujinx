@@ -790,32 +790,6 @@ namespace ChocolArm64.Instruction
             return Res;
         }
 
-        public static AVec Shl64(AVec Vector, int Shift, int Size)
-        {
-            return Shl(Vector, Shift, Size, 8);
-        }
-
-        public static AVec Shl128(AVec Vector, int Shift, int Size)
-        {
-            return Shl(Vector, Shift, Size, 16);
-        }
-
-        private static AVec Shl(AVec Vector, int Shift, int Size, int Bytes)
-        {
-            AVec Res = new AVec();
-
-            int Elems = Bytes >> Size;
-
-            for (int Index = 0; Index < Elems; Index++)
-            {
-                ulong Value = ExtractVec(Vector, Index, Size);
-
-                Res = InsertVec(Res, Index, Size, Value << Shift);
-            }
-
-            return Res;
-        }
-
         public static AVec Sshll(AVec Vector, int Shift, int Size)
         {
             return Sshll_(Vector, Shift, Size, false);
@@ -838,32 +812,6 @@ namespace ChocolArm64.Instruction
                 long Value = ExtractSVec(Vector, Index + Part, Size);
 
                 Res = InsertSVec(Res, Index, Size + 1, Value << Shift);
-            }
-
-            return Res;
-        }
-
-        public static AVec Sshr64(AVec Vector, int Shift, int Size)
-        {
-            return Sshr(Vector, Shift, Size, 8);
-        }
-
-        public static AVec Sshr128(AVec Vector, int Shift, int Size)
-        {
-            return Sshr(Vector, Shift, Size, 16);
-        }
-
-        private static AVec Sshr(AVec Vector, int Shift, int Size, int Bytes)
-        {
-            AVec Res = new AVec();
-
-            int Elems = Bytes >> Size;
-
-            for (int Index = 0; Index < Elems; Index++)
-            {
-                long Value = ExtractSVec(Vector, Index, Size);
-
-                Res = InsertSVec(Res, Index, Size, Value >> Shift);
             }
 
             return Res;

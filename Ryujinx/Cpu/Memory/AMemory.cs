@@ -119,55 +119,22 @@ namespace ChocolArm64.Memory
 
         public byte ReadByte(long Position)
         {
-            return *((byte*)(RamPtr + Manager.GetPhys(Position, AMemoryPerm.Read)));
+            return *((byte*)(RamPtr + (uint)Position));
         }
 
         public ushort ReadUInt16(long Position)
         {
-            long PhysPos = Manager.GetPhys(Position, AMemoryPerm.Read);
-
-            if (BitConverter.IsLittleEndian && !IsPageCrossed(Position, 2))
-            {
-                return *((ushort*)(RamPtr + PhysPos));
-            }
-            else
-            {
-                return (ushort)(
-                    ReadByte(Position + 0) << 0 |
-                    ReadByte(Position + 1) << 8);
-            }
+            return *((ushort*)(RamPtr + (uint)Position));
         }
 
         public uint ReadUInt32(long Position)
         {
-            long PhysPos = Manager.GetPhys(Position, AMemoryPerm.Read);
-
-            if (BitConverter.IsLittleEndian && !IsPageCrossed(Position, 4))
-            {
-                return *((uint*)(RamPtr + PhysPos));
-            }
-            else
-            {
-                return (uint)(
-                    ReadUInt16(Position + 0) << 0 |
-                    ReadUInt16(Position + 2) << 16);
-            }
+            return *((uint*)(RamPtr + (uint)Position));
         }
 
         public ulong ReadUInt64(long Position)
         {
-            long PhysPos = Manager.GetPhys(Position, AMemoryPerm.Read);
-
-            if (BitConverter.IsLittleEndian && !IsPageCrossed(Position, 8))
-            {
-                return *((ulong*)(RamPtr + PhysPos));
-            }
-            else
-            {
-                return
-                    (ulong)ReadUInt32(Position + 0) << 0 |
-                    (ulong)ReadUInt32(Position + 4) << 32;
-            }
+            return *((ulong*)(RamPtr + (uint)Position));
         }
 
         public AVec ReadVector128(long Position)
@@ -186,52 +153,22 @@ namespace ChocolArm64.Memory
 
         public void WriteByte(long Position, byte Value)
         {
-            *((byte*)(RamPtr + Manager.GetPhys(Position, AMemoryPerm.Write))) = Value;
+            *((byte*)(RamPtr + (uint)Position)) = Value;
         }
 
         public void WriteUInt16(long Position, ushort Value)
         {
-            long PhysPos = Manager.GetPhys(Position, AMemoryPerm.Write);
-
-            if (BitConverter.IsLittleEndian && !IsPageCrossed(Position, 2))
-            {
-                *((ushort*)(RamPtr + PhysPos)) = Value;
-            }
-            else
-            {
-                WriteByte(Position + 0, (byte)(Value >> 0));
-                WriteByte(Position + 1, (byte)(Value >> 8));
-            }
+            *((ushort*)(RamPtr + (uint)Position)) = Value;
         }
 
         public void WriteUInt32(long Position, uint Value)
         {
-            long PhysPos = Manager.GetPhys(Position, AMemoryPerm.Write);
-
-            if (BitConverter.IsLittleEndian && !IsPageCrossed(Position, 4))
-            {
-                *((uint*)(RamPtr + PhysPos)) = Value;
-            }
-            else
-            {
-                WriteUInt16(Position + 0, (ushort)(Value >> 0));
-                WriteUInt16(Position + 2, (ushort)(Value >> 16));
-            }
+            *((uint*)(RamPtr + (uint)Position)) = Value;
         }
 
         public void WriteUInt64(long Position, ulong Value)
         {
-            long PhysPos = Manager.GetPhys(Position, AMemoryPerm.Write);
-
-            if (BitConverter.IsLittleEndian && !IsPageCrossed(Position, 8))
-            {
-                *((ulong*)(RamPtr + PhysPos)) = Value;
-            }
-            else
-            {
-                WriteUInt32(Position + 0, (uint)(Value >> 0));
-                WriteUInt32(Position + 4, (uint)(Value >> 32));
-            }
+            *((ulong*)(RamPtr + (uint)Position)) = Value;
         }
 
         public void WriteVector128(long Position, AVec Value)

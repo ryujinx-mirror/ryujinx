@@ -159,5 +159,12 @@ namespace Ryujinx.OsHle
 
             Handles.Delete(Handle);
         }
+
+        public long GetVirtHidOffset()
+        {
+            HSharedMem HidSharedMem = Handles.GetData<HSharedMem>(HidHandle);
+
+            return HidSharedMem.VirtPos;
+        }
     }
 }
