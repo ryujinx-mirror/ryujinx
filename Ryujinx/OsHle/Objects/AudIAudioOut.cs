@@ -1,12 +1,14 @@
 ﻿using ChocolArm64.Memory;
 using Ryujinx.OsHle.Handles;
 using Ryujinx.OsHle.Ipc;
+using static Ryujinx.OsHle.Objects.ObjHelper;
+
+using System;
 using System.Collections.Generic;
 using System.IO;
-using static Ryujinx.OsHle.Objects.ObjHelper;
+
 using OpenTK.Audio;
-using OpenTK.Audio.OpenAL; // https://openal.org/downloads/OpenAL11CoreSDK.zip Needed!
-using System;
+using OpenTK.Audio.OpenAL;
 
 namespace Ryujinx.OsHle.Objects
 {
@@ -52,7 +54,7 @@ namespace Ryujinx.OsHle.Objects
                     OpenALInstalled = false;
                 }
 
-                if(OpenALInstalled) AL.Listener(ALListenerf.Gain, (float)8.0); //Add more gain to it
+                if (OpenALInstalled) AL.Listener(ALListenerf.Gain, (float)8.0); //Add more gain to it
             }
 
             return 0;
@@ -123,7 +125,7 @@ namespace Ryujinx.OsHle.Objects
         {
             long TempKey = 0;
 
-            if(KeysQueue.Count > 0)
+            if (KeysQueue.Count > 0)
             {
                 TempKey = KeysQueue[KeysQueue.Count - 1];
                 KeysQueue.Remove(KeysQueue[KeysQueue.Count - 1]);
