@@ -21,10 +21,21 @@ namespace Ryujinx.OsHle.Services
 
         public static long AudOutOpenAudioOut(ServiceCtx Context)
         {
-            Context.ResponseData.Write(48000);
-            Context.ResponseData.Write(2);
-            Context.ResponseData.Write(2);
-            Context.ResponseData.Write(0);
+            MakeObject(Context, new AudIAudioOut());
+
+            Context.ResponseData.Write(48000); //Sample Rate
+            Context.ResponseData.Write(2); //Channel Count
+            Context.ResponseData.Write(2); //PCM Format
+            /*  
+                0 - Invalid
+                1 - INT8
+                2 - INT16
+                3 - INT24
+                4 - INT32
+                5 - PCM Float
+                6 - ADPCM
+            */
+            Context.ResponseData.Write(0); //Unknown
 
             return 0;
         }

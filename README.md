@@ -8,3 +8,6 @@ Contributions are always welcome.
 
 To run this emulator, you need the .NET Core 2.0 (or higher) SDK.
 Run `dotnet run -c Release -- game.nro` inside the Ryujinx solution folder.
+
+Audio is partially supported (glitched) on Windows, you need to install the OpenAL Core SDK :
+https://openal.org/downloads/OpenAL11CoreSDK.zip
