@@ -77,6 +77,8 @@ namespace Ryujinx.OsHle.Svc
                 long Src = Position;
                 long Dst = HndData.PhysPos;
 
+                HndData.VirtPos = Src;
+
                 if (Memory.Manager.MapPhys(Src, Dst, Size,
                     (int)MemoryType.SharedMemory, (AMemoryPerm)Perm))
                 {
@@ -113,9 +115,7 @@ namespace Ryujinx.OsHle.Svc
 
             Memory.Manager.Reprotect(Position, Size, (AMemoryPerm)Perm);
 
-            long PhysPos = Memory.Manager.GetPhys(Position, AMemoryPerm.None);
-
-            HTransferMem HndData = new HTransferMem(Memory, MapInfo.Perm, Position, Size, PhysPos);
+            HTransferMem HndData = new HTransferMem(Memory, MapInfo.Perm, Position, Size);
 
             int Handle = Ns.Os.Handles.GenerateId(HndData);
 

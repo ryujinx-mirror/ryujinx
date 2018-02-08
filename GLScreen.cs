@@ -6,6 +6,7 @@ using Gal;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
+using Ryujinx.OsHle;
 using System;
 
 namespace Ryujinx
@@ -60,12 +61,14 @@ namespace Ryujinx
 
             unsafe void UploadBitmap()
             {
-                if (Renderer.FrameBufferPtr == 0)
+                int FbSize = Width * Height * 4;
+
+                if (Renderer.FrameBufferPtr == 0 || Renderer.FrameBufferPtr + FbSize > uint.MaxValue)
                 {
                     return;
                 }
 
-                byte* SrcPtr = (byte*)IntPtr.Add(Ns.Ram, (int)Renderer.FrameBufferPtr);
+                byte* SrcPtr = (byte*)Ns.Ram + (uint)Renderer.FrameBufferPtr;
 
                 for (int Y = 0; Y < Height; Y++)
                 {
@@ -275,7 +278,14 @@ void main(void) {
         {
             unsafe
             {
-                byte* Ptr = (byte*)IntPtr.Add(Ns.Ram, (int)Ns.Os.HidOffset);
+                long HidOffset = Ns.Os.GetVirtHidOffset();
+
+                if (HidOffset == 0 || HidOffset + Horizon.HidSize > uint.MaxValue)
+                {
+                    return;
+                }
+
+                byte* Ptr = (byte*)Ns.Ram + (uint)HidOffset;
 
                 int State = 0;
                 

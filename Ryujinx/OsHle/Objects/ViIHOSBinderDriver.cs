@@ -155,8 +155,7 @@ namespace Ryujinx.OsHle.Objects
 
                 HNvMap NvMap = Context.Ns.Os.Handles.GetData<HNvMap>(Handle);
 
-                Context.Ns.Gpu.Renderer.FrameBufferPtr =
-                    Context.Memory.Manager.GetPhys(NvMap.Address, AMemoryPerm.Read);
+                Context.Ns.Gpu.Renderer.FrameBufferPtr = NvMap.Address;
             }
 
             return MakeReplyParcel(Context, 0);

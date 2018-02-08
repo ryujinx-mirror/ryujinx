@@ -9,15 +9,13 @@ namespace Ryujinx.OsHle.Handles
 
         public long Position { get; private set; }
         public long Size     { get; private set; }
-        public long PhysPos  { get; private set; }
 
-        public HTransferMem(AMemory Memory, AMemoryPerm Perm, long Position, long Size, long PhysPos)
+        public HTransferMem(AMemory Memory, AMemoryPerm Perm, long Position, long Size)
         {
             this.Memory   = Memory;
             this.Perm     = Perm;
             this.Position = Position;
             this.Size     = Size;
-            this.PhysPos  = PhysPos;
         }
     }
 }
