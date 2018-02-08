@@ -273,7 +273,7 @@ namespace ChocolArm64.Instruction
             AOpCodeSimdIns Op = (AOpCodeSimdIns)Context.CurrOp;
 
             Context.EmitLdvec(Op.Rd);
-            Context.EmitLdintzr(Op.Rn);
+            Context.EmitLdvec(Op.Rn);
             Context.EmitLdc_I4(Op.SrcIndex);
             Context.EmitLdc_I4(Op.DstIndex);
             Context.EmitLdc_I4(Op.Size);
