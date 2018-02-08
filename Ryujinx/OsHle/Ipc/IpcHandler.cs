@@ -127,7 +127,19 @@ namespace Ryujinx.OsHle.Ipc
             //IAudioRenderer
             { (typeof(AudIAudioRenderer), 4), AudIAudioRenderer.RequestUpdateAudioRenderer },
             { (typeof(AudIAudioRenderer), 5), AudIAudioRenderer.StartAudioRenderer         },
+            { (typeof(AudIAudioRenderer), 6), AudIAudioRenderer.StopAudioRenderer          },
             { (typeof(AudIAudioRenderer), 7), AudIAudioRenderer.QuerySystemEvent           },
+
+            //IAudioOut
+            { (typeof(AudIAudioOut), 0), AudIAudioOut.GetAudioOutState             },
+            { (typeof(AudIAudioOut), 1), AudIAudioOut.StartAudioOut                },
+            { (typeof(AudIAudioOut), 2), AudIAudioOut.StopAudioOut                 },
+            { (typeof(AudIAudioOut), 3), AudIAudioOut.AppendAudioOutBuffer         },
+            { (typeof(AudIAudioOut), 4), AudIAudioOut.RegisterBufferEvent          },
+            { (typeof(AudIAudioOut), 5), AudIAudioOut.GetReleasedAudioOutBuffer    },
+            { (typeof(AudIAudioOut), 6), AudIAudioOut.ContainsAudioOutBuffer       },
+            { (typeof(AudIAudioOut), 7), AudIAudioOut.AppendAudioOutBuffer_ex      },
+            { (typeof(AudIAudioOut), 8), AudIAudioOut.GetReleasedAudioOutBuffer_ex },
 
             //IFile
             { (typeof(FspSrvIFile), 0), FspSrvIFile.Read  },
