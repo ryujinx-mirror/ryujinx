@@ -9,6 +9,8 @@ namespace Ryujinx
     {
         static void Main(string[] args)
         {
+            Config.Read();
+
             Console.Title = "Ryujinx Console";
 
             IGalRenderer Renderer = new OpenGLRenderer();

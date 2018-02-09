@@ -10,13 +10,13 @@ namespace Ryujinx
         private static Stopwatch ExecutionTime = new Stopwatch();
         private static string LogFileName = "Ryujinx.log";
 
-        public static bool EnableInfo = true;
-        public static bool EnableTrace = true;
-        public static bool EnableDebug = true;
-        public static bool EnableWarn = true;
-        public static bool EnableError = true;
-        public static bool EnableFatal = true;
-        public static bool EnableLogFile = false;
+        public static bool EnableInfo = Config.LoggingEnableInfo;
+        public static bool EnableTrace = Config.LoggingEnableTrace;
+        public static bool EnableDebug = Config.LoggingEnableDebug;
+        public static bool EnableWarn = Config.LoggingEnableWarn;
+        public static bool EnableError = Config.LoggingEnableError;
+        public static bool EnableFatal = Config.LoggingEnableFatal;
+        public static bool EnableLogFile = Config.LoggingEnableLogFile;
 
         static Logging()
         {
