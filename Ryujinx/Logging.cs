@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
 
 namespace Ryujinx
@@ -28,6 +29,11 @@ namespace Ryujinx
         public static string GetExecutionTime()
         {
             return ExecutionTime.ElapsedMilliseconds.ToString().PadLeft(8, '0') + "ms";
+        }
+
+        private static string WhoCalledMe()
+        {
+            return new StackTrace().GetFrame(2).GetMethod().Name;
         }
 
         private static void LogFile(string Message)
@@ -59,7 +65,7 @@ namespace Ryujinx
         {
             if (EnableTrace)
             {
-                string Text = $"{GetExecutionTime()} | TRACE > {Message}";
+                string Text = $"{GetExecutionTime()} | TRACE > {WhoCalledMe()} - {Message}";
 
                 Console.ForegroundColor = ConsoleColor.DarkGray;
                 Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
@@ -73,7 +79,7 @@ namespace Ryujinx
         {
             if (EnableDebug)
             {
-                string Text = $"{GetExecutionTime()} | DEBUG > {Message}";
+                string Text = $"{GetExecutionTime()} | DEBUG > {WhoCalledMe()} - {Message}";
 
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
@@ -87,7 +93,7 @@ namespace Ryujinx
         {
             if (EnableWarn)
             {
-                string Text = $"{GetExecutionTime()} | WARN  > {Message}";
+                string Text = $"{GetExecutionTime()} | WARN  > {WhoCalledMe()} - {Message}";
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
@@ -101,7 +107,7 @@ namespace Ryujinx
         {
             if (EnableError)
             {
-                string Text = $"{GetExecutionTime()} | ERROR > {Message}";
+                string Text = $"{GetExecutionTime()} | ERROR > {WhoCalledMe()} - {Message}";
 
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
@@ -115,7 +121,7 @@ namespace Ryujinx
         {
             if (EnableFatal)
             {
-                string Text = $"{GetExecutionTime()} | FATAL > {Message}";
+                string Text = $"{GetExecutionTime()} | FATAL > {WhoCalledMe()} - {Message}";
 
                 Console.ForegroundColor = ConsoleColor.Magenta;
                 Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));

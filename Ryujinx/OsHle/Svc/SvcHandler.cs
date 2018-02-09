@@ -69,7 +69,9 @@ namespace Ryujinx.OsHle.Svc
 
             if (SvcFuncs.TryGetValue(e.Id, out SvcFunc Func))
             {
+                Logging.Trace($"{Func.Method.Name} called.");
                 Func(Ns, Registers, Memory);
+                Logging.Trace($"{Func.Method.Name} ended.");
             }
             else
             {
