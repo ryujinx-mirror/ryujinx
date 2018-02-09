@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace Ryujinx
 {
@@ -17,7 +18,7 @@ namespace Ryujinx
 
         public static void Read()
         {
-            IniParser Parser = new IniParser("Ryujinx.conf");
+            IniParser Parser = new IniParser(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Ryujinx.conf"));
 
             LoggingEnableInfo    = Convert.ToBoolean(Parser.Value("Logging_Enable_Info"));
             LoggingEnableTrace   = Convert.ToBoolean(Parser.Value("Logging_Enable_Trace"));
