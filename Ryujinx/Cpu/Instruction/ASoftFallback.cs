@@ -405,17 +405,17 @@ namespace ChocolArm64.Instruction
             return Res;
         }
 
-        public static AVec Fcvtzs_V64(AVec Vector, int Size)
+        public static AVec Fcvtzs_V64(AVec Vector, int FBits, int Size)
         {
-            return Fcvtzs_V(Vector, Size, 2);
+            return Fcvtzs_V(Vector, FBits, Size, 2);
         }
 
-        public static AVec Fcvtzs_V128(AVec Vector, int Size)
+        public static AVec Fcvtzs_V128(AVec Vector, int FBits, int Size)
         {
-            return Fcvtzs_V(Vector, Size, 4);
+            return Fcvtzs_V(Vector, FBits, Size, 4);
         }
 
-        private static AVec Fcvtzs_V(AVec Vector, int Size, int Bytes)
+        private static AVec Fcvtzs_V(AVec Vector, int FBits, int Size, int Bytes)
         {
             AVec Res = new AVec();
 
@@ -427,7 +427,7 @@ namespace ChocolArm64.Instruction
                 {
                     float Value = Vector.ExtractSingle(Index);
 
-                    Res = InsertSVec(Res, Index, Size + 2, SatSingleToInt32(Value));
+                    Res = InsertSVec(Res, Index, Size + 2, SatSingleToInt32(Value, FBits));
                 }
             }
             else
@@ -436,7 +436,7 @@ namespace ChocolArm64.Instruction
                 {
                     double Value = Vector.ExtractDouble(Index);
 
-                    Res = InsertSVec(Res, Index, Size + 2, SatDoubleToInt64(Value));
+                    Res = InsertSVec(Res, Index, Size + 2, SatDoubleToInt64(Value, FBits));
                 }
             }
 

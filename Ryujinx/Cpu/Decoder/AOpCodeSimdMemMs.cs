@@ -3,7 +3,7 @@ using ChocolArm64.State;
 
 namespace ChocolArm64.Decoder
 {
-    class AOpCodeSimdMemMult : AOpCode, IAOpCodeSimd
+    class AOpCodeSimdMemMs : AOpCode, IAOpCodeSimd
     {
         public int  Rt     { get; private set; }
         public int  Rn     { get; private set; }
@@ -14,7 +14,7 @@ namespace ChocolArm64.Decoder
         public int  Elems  { get; private set; }
         public bool WBack  { get; private set; }
 
-        public AOpCodeSimdMemMult(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeSimdMemMs(AInst Inst, long Position, int OpCode) : base(Inst, Position)
         {
             switch ((OpCode >> 12) & 0xf)
             {

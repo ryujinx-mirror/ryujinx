@@ -1,3 +1,4 @@
+using ChocolArm64.Exceptions;
 using ChocolArm64.State;
 using System;
 using System.Collections.Generic;
@@ -119,26 +120,46 @@ namespace ChocolArm64.Memory
 
         public byte ReadByte(long Position)
         {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Read);
+#endif
+
             return *((byte*)(RamPtr + (uint)Position));
         }
 
         public ushort ReadUInt16(long Position)
         {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Read);
+#endif
+
             return *((ushort*)(RamPtr + (uint)Position));
         }
 
         public uint ReadUInt32(long Position)
         {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Read);
+#endif
+
             return *((uint*)(RamPtr + (uint)Position));
         }
 
         public ulong ReadUInt64(long Position)
         {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Read);
+#endif
+
             return *((ulong*)(RamPtr + (uint)Position));
         }
 
         public AVec ReadVector128(long Position)
         {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Read);
+#endif
+
             return new AVec()
             {
                 X0 = ReadUInt64(Position + 0),
@@ -153,33 +174,61 @@ namespace ChocolArm64.Memory
 
         public void WriteByte(long Position, byte Value)
         {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Write);
+#endif
+
             *((byte*)(RamPtr + (uint)Position)) = Value;
         }
 
         public void WriteUInt16(long Position, ushort Value)
         {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Write);
+#endif
+
             *((ushort*)(RamPtr + (uint)Position)) = Value;
         }
 
         public void WriteUInt32(long Position, uint Value)
         {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Write);
+#endif
+
             *((uint*)(RamPtr + (uint)Position)) = Value;
         }
 
         public void WriteUInt64(long Position, ulong Value)
         {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Write);
+#endif
+
             *((ulong*)(RamPtr + (uint)Position)) = Value;
         }
 
         public void WriteVector128(long Position, AVec Value)
         {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Write);
+#endif
+
             WriteUInt64(Position + 0, Value.X0);
             WriteUInt64(Position + 8, Value.X1);
         }
 
-        private bool IsPageCrossed(long Position, int Size)
+        private void EnsureAccessIsValid(long Position, AMemoryPerm Perm)
         {
-            return (Position & AMemoryMgr.PageMask) + Size > AMemoryMgr.PageSize;
+            if (!Manager.IsMapped(Position))
+            {
+                throw new VmmPageFaultException(Position);
+            }
+
+            if (!Manager.HasPermission(Position, Perm))
+            {
+                throw new VmmAccessViolationException(Position, Perm);
+            }
         }
     }
 }

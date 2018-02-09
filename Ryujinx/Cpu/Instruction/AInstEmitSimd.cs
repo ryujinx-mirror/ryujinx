@@ -122,7 +122,23 @@ namespace ChocolArm64.Instruction
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
             Context.EmitLdvec(Op.Rn);
+            Context.EmitLdc_I4(0);
             Context.EmitLdc_I4(Op.SizeF);
+
+            ASoftFallback.EmitCall(Context,
+                nameof(ASoftFallback.Fcvtzs_V64),
+                nameof(ASoftFallback.Fcvtzs_V128));
+
+            Context.EmitStvec(Op.Rd);
+        }
+
+        public static void Fcvtzs_V_Fix(AILEmitterCtx Context)
+        {
+            AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
+
+            Context.EmitLdvec(Op.Rn);
+            Context.EmitLdc_I4((8 << (Op.Size + 1)) - Op.Imm);
+            Context.EmitLdc_I4(Op.Size - 2);
 
             ASoftFallback.EmitCall(Context,
                 nameof(ASoftFallback.Fcvtzs_V64),
@@ -283,7 +299,8 @@ namespace ChocolArm64.Instruction
             Context.EmitStvec(Op.Rd);
         }
 
-        public static void Ld__V(AILEmitterCtx Context) => EmitSimdMultLdSt(Context, IsLoad: true);
+        public static void Ld__Vms(AILEmitterCtx Context) => EmitSimdMemMs(Context, IsLoad: true);
+        public static void Ld__Vss(AILEmitterCtx Context) => EmitSimdMemSs(Context, IsLoad: true);
 
         public static void Mla_V(AILEmitterCtx Context) => EmitVectorMla(Context);
 
@@ -391,7 +408,7 @@ namespace ChocolArm64.Instruction
             EmitVectorImmBinarySx(Context, OpCodes.Shr, (8 << (Op.Size + 1)) - Op.Imm);
         }
 
-        public static void St__V(AILEmitterCtx Context) => EmitSimdMultLdSt(Context, IsLoad: false);
+        public static void St__V(AILEmitterCtx Context) => EmitSimdMemMs(Context, IsLoad: false);
 
         public static void Sub_V(AILEmitterCtx Context) => EmitVectorBinaryZx(Context, OpCodes.Sub);
 
@@ -571,9 +588,9 @@ namespace ChocolArm64.Instruction
             Context.EmitStvec(Op.Rd);
         }
 
-        private static void EmitSimdMultLdSt(AILEmitterCtx Context, bool IsLoad)
+        private static void EmitSimdMemMs(AILEmitterCtx Context, bool IsLoad)
         {
-            AOpCodeSimdMemMult Op = (AOpCodeSimdMemMult)Context.CurrOp;
+            AOpCodeSimdMemMs Op = (AOpCodeSimdMemMs)Context.CurrOp;
 
             int Offset = 0;
 
@@ -615,6 +632,79 @@ namespace ChocolArm64.Instruction
 
                     Context.EmitLdvec(Rtt);
                     Context.EmitLdc_I4(Elem);
+                    Context.EmitLdc_I4(Op.Size);
+
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.ExtractVec));
+
+                    EmitWriteCall(Context, Op.Size);
+                }
+
+                Offset += 1 << Op.Size;
+            }
+
+            if (Op.WBack)
+            {
+                Context.EmitLdint(Op.Rn);
+
+                if (Op.Rm != ARegisters.ZRIndex)
+                {
+                    Context.EmitLdint(Op.Rm);
+                }
+                else
+                {
+                    Context.EmitLdc_I8(Offset);
+                }
+
+                Context.Emit(OpCodes.Add);
+
+                Context.EmitStint(Op.Rn);
+            }
+        }
+
+        private static void EmitSimdMemSs(AILEmitterCtx Context, bool IsLoad)
+        {
+            AOpCodeSimdMemSs Op = (AOpCodeSimdMemSs)Context.CurrOp;
+
+            //TODO: Replicate mode.
+
+            int Offset = 0;
+
+            for (int SElem = 0; SElem < Op.SElems; SElem++)
+            {
+                int Rt = (Op.Rt + SElem) & 0x1f;
+
+                if (IsLoad)
+                {
+                    Context.EmitLdvec(Rt);
+                    Context.EmitLdc_I4(Op.Index);
+                    Context.EmitLdc_I4(Op.Size);
+                    Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
+                    Context.EmitLdint(Op.Rn);
+                    Context.EmitLdc_I8(Offset);
+
+                    Context.Emit(OpCodes.Add);
+
+                    EmitReadZxCall(Context, Op.Size);
+
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.InsertVec));
+
+                    Context.EmitStvec(Rt);
+
+                    if (Op.RegisterSize == ARegisterSize.SIMD64)
+                    {
+                        EmitVectorZeroUpper(Context, Rt);
+                    }
+                }
+                else
+                {
+                    Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
+                    Context.EmitLdint(Op.Rn);
+                    Context.EmitLdc_I8(Offset);
+
+                    Context.Emit(OpCodes.Add);
+
+                    Context.EmitLdvec(Rt);
+                    Context.EmitLdc_I4(Op.Index);
                     Context.EmitLdc_I4(Op.Size);
 
                     ASoftFallback.EmitCall(Context, nameof(ASoftFallback.ExtractVec));

@@ -73,12 +73,14 @@ namespace Ryujinx.Loaders
             MemoryType  Type,
             AMemoryPerm Perm)
         {
-            Memory.Manager.MapPhys(Position, Data.Count, (int)Type, Perm);
+            Memory.Manager.MapPhys(Position, Data.Count, (int)Type, AMemoryPerm.Write);
 
             for (int Index = 0; Index < Data.Count; Index++)
             {
                 Memory.WriteByte(Position + Index, Data[Index]);
             }
+
+            Memory.Manager.Reprotect(Position, Data.Count, Perm);
         }
 
         private void MapBss(long Position, long Size)

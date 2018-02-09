@@ -163,7 +163,7 @@ namespace ChocolArm64.Memory
         {
             while (Size > 0)
             {
-                if (!HasPTEntry(Position))
+                if (!IsMapped(Position))
                 {
                     long PhysPos = Allocator.Alloc(PageSize);                   
 
@@ -254,8 +254,13 @@ namespace ChocolArm64.Memory
             return new AMemoryMapInfo(Start, Size, BaseEntry.Type, BaseEntry.Perm);
         }
 
+        public bool HasPermission(long Position, AMemoryPerm Perm)
+        {
+            return GetPTEntry(Position).Perm.HasFlag(Perm);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool HasPTEntry(long Position)
+        public bool IsMapped(long Position)
         {
             if (Position >> PTLvl0Bits + PTLvl1Bits + PTPageBits != 0)
             {
