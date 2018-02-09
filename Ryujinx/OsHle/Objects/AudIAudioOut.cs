@@ -1,14 +1,11 @@
 ﻿using ChocolArm64.Memory;
+using OpenTK.Audio;
+using OpenTK.Audio.OpenAL;
 using Ryujinx.OsHle.Handles;
 using Ryujinx.OsHle.Ipc;
-using static Ryujinx.OsHle.Objects.ObjHelper;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
-
-using OpenTK.Audio;
-using OpenTK.Audio.OpenAL;
 
 namespace Ryujinx.OsHle.Objects
 {

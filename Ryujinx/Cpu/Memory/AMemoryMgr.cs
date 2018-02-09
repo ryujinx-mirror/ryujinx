@@ -1,5 +1,3 @@
-using ChocolArm64.Exceptions;
-using System;
 using System.Runtime.CompilerServices;
 
 namespace ChocolArm64.Memory

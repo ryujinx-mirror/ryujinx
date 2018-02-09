@@ -365,122 +365,6 @@ namespace ChocolArm64.Instruction
             return Res;
         }
 
-        public static AVec Fadd64(AVec LHS, AVec RHS, int Size)
-        {
-            return Fadd(LHS, RHS, Size, 2);
-        }
-
-        public static AVec Fadd128(AVec LHS, AVec RHS, int Size)
-        {
-            return Fadd(LHS, RHS, Size, 4);
-        }
-
-        private static AVec Fadd(AVec LHS, AVec RHS, int Size, int Bytes)
-        {
-            AVec Res = new AVec();
-
-            int Elems = Bytes >> Size;
-
-            if (Size == 0)
-            {
-                for (int Index = 0; Index < Elems; Index++)
-                {
-                    float L = LHS.ExtractSingle(Index);
-                    float R = RHS.ExtractSingle(Index);
-
-                    Res = AVec.InsertSingle(Res, Index, L + R);
-                }
-            }
-            else
-            {
-                for (int Index = 0; Index < Elems; Index++)
-                {
-                    double L = LHS.ExtractDouble(Index);
-                    double R = RHS.ExtractDouble(Index);
-
-                    Res = AVec.InsertDouble(Res, Index, L + R);
-                }
-            }
-
-            return Res;
-        }
-
-        public static AVec Fcvtzs_V64(AVec Vector, int FBits, int Size)
-        {
-            return Fcvtzs_V(Vector, FBits, Size, 2);
-        }
-
-        public static AVec Fcvtzs_V128(AVec Vector, int FBits, int Size)
-        {
-            return Fcvtzs_V(Vector, FBits, Size, 4);
-        }
-
-        private static AVec Fcvtzs_V(AVec Vector, int FBits, int Size, int Bytes)
-        {
-            AVec Res = new AVec();
-
-            int Elems = Bytes >> Size;
-
-            if (Size == 0)
-            {
-                for (int Index = 0; Index < Elems; Index++)
-                {
-                    float Value = Vector.ExtractSingle(Index);
-
-                    Res = InsertSVec(Res, Index, Size + 2, SatSingleToInt32(Value, FBits));
-                }
-            }
-            else
-            {
-                for (int Index = 0; Index < Elems; Index++)
-                {
-                    double Value = Vector.ExtractDouble(Index);
-
-                    Res = InsertSVec(Res, Index, Size + 2, SatDoubleToInt64(Value, FBits));
-                }
-            }
-
-            return Res;
-        }
-
-        public static AVec Fcvtzu_V_64(AVec Vector, int FBits, int Size)
-        {
-            return Fcvtzu_V(Vector, FBits, Size, 2);
-        }
-
-        public static AVec Fcvtzu_V_128(AVec Vector, int FBits, int Size)
-        {
-            return Fcvtzu_V(Vector, FBits, Size, 4);
-        }
-
-        private static AVec Fcvtzu_V(AVec Vector, int FBits, int Size, int Bytes)
-        {
-            AVec Res = new AVec();
-
-            int Elems = Bytes >> Size;
-
-            if (Size == 0)
-            {
-                for (int Index = 0; Index < Elems; Index++)
-                {
-                    float Value = Vector.ExtractSingle(Index);
-
-                    Res = InsertVec(Res, Index, Size + 2, SatSingleToUInt32(Value, FBits));
-                }
-            }
-            else
-            {
-                for (int Index = 0; Index < Elems; Index++)
-                {
-                    double Value = Vector.ExtractDouble(Index);
-
-                    Res = InsertVec(Res, Index, Size + 2, SatDoubleToUInt64(Value, FBits));
-                }
-            }
-
-            return Res;
-        }
-
         public static AVec Fmla64(AVec Res, AVec LHS, AVec RHS, int Size)
         {
             return Fmla(Res, LHS, RHS, Size, 2);
@@ -568,46 +452,6 @@ namespace ChocolArm64.Instruction
             return InsertVec(new AVec(), Elem, Size, Value);
         }
 
-        public static AVec Fmul64(AVec LHS, AVec RHS, int Size)
-        {
-            return Fmul(LHS, RHS, Size, 2);
-        }
-
-        public static AVec Fmul128(AVec LHS, AVec RHS, int Size)
-        {
-            return Fmul(LHS, RHS, Size, 4);
-        }
-
-        private static AVec Fmul(AVec LHS, AVec RHS, int Size, int Bytes)
-        {
-            AVec Res = new AVec();
-
-            int Elems = Bytes >> Size;
-
-            if (Size == 0)
-            {
-                for (int Index = 0; Index < Elems; Index++)
-                {
-                    float L = LHS.ExtractSingle(Index);
-                    float R = RHS.ExtractSingle(Index);
-
-                    Res = AVec.InsertSingle(Res, Index, L * R);
-                }
-            }
-            else
-            {
-                for (int Index = 0; Index < Elems; Index++)
-                {
-                    double L = LHS.ExtractDouble(Index);
-                    double R = RHS.ExtractDouble(Index);
-
-                    Res = AVec.InsertDouble(Res, Index, L * R);
-                }
-            }
-
-            return Res;
-        }
-
         public static AVec Fmul_Ve64(AVec LHS, AVec RHS, int SIdx, int Size)
         {
             return Fmul_Ve(LHS, RHS, SIdx, Size, 2);
@@ -644,46 +488,6 @@ namespace ChocolArm64.Instruction
                     double L = LHS.ExtractDouble(Index);
 
                     Res = AVec.InsertDouble(Res, Index, L * R);
-                }
-            }
-
-            return Res;
-        }
-
-        public static AVec Fsub64(AVec LHS, AVec RHS, int Size)
-        {
-            return Fsub(LHS, RHS, Size, 2);
-        }
-
-        public static AVec Fsub128(AVec LHS, AVec RHS, int Size)
-        {
-            return Fsub(LHS, RHS, Size, 4);
-        }
-
-        private static AVec Fsub(AVec LHS, AVec RHS, int Size, int Bytes)
-        {
-            AVec Res = new AVec();
-
-            int Elems = Bytes >> Size;
-
-            if (Size == 0)
-            {
-                for (int Index = 0; Index < Elems; Index++)
-                {
-                    float L = LHS.ExtractSingle(Index);
-                    float R = RHS.ExtractSingle(Index);
-
-                    Res = AVec.InsertSingle(Res, Index, L - R);
-                }
-            }
-            else
-            {
-                for (int Index = 0; Index < Elems; Index++)
-                {
-                    double L = LHS.ExtractDouble(Index);
-                    double R = RHS.ExtractDouble(Index);
-
-                    Res = AVec.InsertDouble(Res, Index, L - R);
                 }
             }
 
@@ -1121,6 +925,39 @@ namespace ChocolArm64.Instruction
                 case 1: return (short)Vector.ExtractUInt16(Index);
                 case 2: return (int)Vector.ExtractUInt32(Index);
                 case 3: return (long)Vector.ExtractUInt64(Index);
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(Size));
+        }
+
+        public static float VectorExtractSingle(AVec Vector, int Index)
+        {
+            return Vector.ExtractSingle(Index);
+        }
+
+        public static double VectorExtractDouble(AVec Vector, int Index)
+        {
+            return Vector.ExtractDouble(Index);
+        }
+
+        public static AVec VectorInsertSingle(float Value, AVec Vector, int Index)
+        {
+            return AVec.InsertSingle(Vector, Index, Value);
+        }
+
+        public static AVec VectorInsertDouble(double Value, AVec Vector, int Index)
+        {
+            return AVec.InsertDouble(Vector, Index, Value);
+        }
+
+        public static AVec VectorInsertInt(ulong Value, AVec Vector, int Index, int Size)
+        {
+            switch (Size)
+            {
+                case 0: return AVec.InsertByte  (Vector, Index,   (byte)Value);
+                case 1: return AVec.InsertUInt16(Vector, Index, (ushort)Value);
+                case 2: return AVec.InsertUInt32(Vector, Index,   (uint)Value);
+                case 3: return AVec.InsertUInt64(Vector, Index,  (ulong)Value);
             }
 
             throw new ArgumentOutOfRangeException(nameof(Size));
