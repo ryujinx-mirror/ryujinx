@@ -10,8 +10,6 @@ namespace Ryujinx.OsHle.Ipc
 {
     static class IpcHandler
     {
-        private delegate long ServiceProcessRequest(ServiceCtx Context);
-
         private static Dictionary<(string, int), ServiceProcessRequest> ServiceCmds =
                    new Dictionary<(string, int), ServiceProcessRequest>()
         {
@@ -71,122 +69,10 @@ namespace Ryujinx.OsHle.Ipc
             { ( "vi:m",        2), Service.ViGetDisplayService                      },
         };
 
-        private static Dictionary<(Type, int), ServiceProcessRequest> ObjectCmds =
-                   new Dictionary<(Type, int), ServiceProcessRequest>()
-        {
-            //IManagerForApplication
-            { (typeof(AccIManagerForApplication), 0), AccIManagerForApplication.CheckAvailability },
-            { (typeof(AccIManagerForApplication), 1), AccIManagerForApplication.GetAccountId      },
-
-            //IProfile
-            { (typeof(AccIProfile), 1), AccIProfile.GetBase },
-
-            //IApplicationFunctions
-            { (typeof(AmIApplicationFunctions),  1), AmIApplicationFunctions.PopLaunchParameter },
-            { (typeof(AmIApplicationFunctions), 20), AmIApplicationFunctions.EnsureSaveData     },
-            { (typeof(AmIApplicationFunctions), 21), AmIApplicationFunctions.GetDesiredLanguage },
-            { (typeof(AmIApplicationFunctions), 40), AmIApplicationFunctions.NotifyRunning      },
-
-            //IApplicationProxy
-            { (typeof(AmIApplicationProxy),    0), AmIApplicationProxy.GetCommonStateGetter    },
-            { (typeof(AmIApplicationProxy),    1), AmIApplicationProxy.GetSelfController       },
-            { (typeof(AmIApplicationProxy),    2), AmIApplicationProxy.GetWindowController     },
-            { (typeof(AmIApplicationProxy),    3), AmIApplicationProxy.GetAudioController      },
-            { (typeof(AmIApplicationProxy),    4), AmIApplicationProxy.GetDisplayController    },
-            { (typeof(AmIApplicationProxy),   11), AmIApplicationProxy.GetLibraryAppletCreator },
-            { (typeof(AmIApplicationProxy),   20), AmIApplicationProxy.GetApplicationFunctions },
-            { (typeof(AmIApplicationProxy), 1000), AmIApplicationProxy.GetDebugFunctions       },
-
-            //ICommonStateGetter
-            { (typeof(AmICommonStateGetter), 0), AmICommonStateGetter.GetEventHandle       },
-            { (typeof(AmICommonStateGetter), 1), AmICommonStateGetter.ReceiveMessage       },
-            { (typeof(AmICommonStateGetter), 5), AmICommonStateGetter.GetOperationMode     },
-            { (typeof(AmICommonStateGetter), 6), AmICommonStateGetter.GetPerformanceMode   },
-            { (typeof(AmICommonStateGetter), 9), AmICommonStateGetter.GetCurrentFocusState },
-
-            //ISelfController
-            { (typeof(AmISelfController), 11), AmISelfController.SetOperationModeChangedNotification   },
-            { (typeof(AmISelfController), 12), AmISelfController.SetPerformanceModeChangedNotification },
-            { (typeof(AmISelfController), 13), AmISelfController.SetFocusHandlingMode                  },
-            { (typeof(AmISelfController), 16), AmISelfController.SetOutOfFocusSuspendingEnabled        },
-
-            //IStorage
-            { (typeof(AmIStorage), 0), AmIStorage.Open },
-
-            //IStorageAccessor
-            { (typeof(AmIStorageAccessor),  0), AmIStorageAccessor.GetSize },
-            { (typeof(AmIStorageAccessor), 11), AmIStorageAccessor.Read    },
-
-            //IWindowController
-            { (typeof(AmIWindowController),  1), AmIWindowController.GetAppletResourceUserId },
-            { (typeof(AmIWindowController), 10), AmIWindowController.AcquireForegroundRights },
-
-            //ISession
-            { (typeof(ApmISession), 0), ApmISession.SetPerformanceConfiguration },
-
-            //IAudioRenderer
-            { (typeof(AudIAudioRenderer), 4), AudIAudioRenderer.RequestUpdateAudioRenderer },
-            { (typeof(AudIAudioRenderer), 5), AudIAudioRenderer.StartAudioRenderer         },
-            { (typeof(AudIAudioRenderer), 6), AudIAudioRenderer.StopAudioRenderer          },
-            { (typeof(AudIAudioRenderer), 7), AudIAudioRenderer.QuerySystemEvent           },
-
-            //IAudioOut
-            { (typeof(AudIAudioOut), 0), AudIAudioOut.GetAudioOutState             },
-            { (typeof(AudIAudioOut), 1), AudIAudioOut.StartAudioOut                },
-            { (typeof(AudIAudioOut), 2), AudIAudioOut.StopAudioOut                 },
-            { (typeof(AudIAudioOut), 3), AudIAudioOut.AppendAudioOutBuffer         },
-            { (typeof(AudIAudioOut), 4), AudIAudioOut.RegisterBufferEvent          },
-            { (typeof(AudIAudioOut), 5), AudIAudioOut.GetReleasedAudioOutBuffer    },
-            { (typeof(AudIAudioOut), 6), AudIAudioOut.ContainsAudioOutBuffer       },
-            { (typeof(AudIAudioOut), 7), AudIAudioOut.AppendAudioOutBuffer_ex      },
-            { (typeof(AudIAudioOut), 8), AudIAudioOut.GetReleasedAudioOutBuffer_ex },
-
-            //IFile
-            { (typeof(FspSrvIFile), 0), FspSrvIFile.Read  },
-            { (typeof(FspSrvIFile), 1), FspSrvIFile.Write },
-
-            //IFileSystem
-            { (typeof(FspSrvIFileSystem),  7), FspSrvIFileSystem.GetEntryType },
-            { (typeof(FspSrvIFileSystem),  8), FspSrvIFileSystem.OpenFile     },
-            { (typeof(FspSrvIFileSystem), 10), FspSrvIFileSystem.Commit       },
-
-            //IStorage
-            { (typeof(FspSrvIStorage), 0), FspSrvIStorage.Read },
-
-            //IAppletResource
-            { (typeof(HidIAppletResource), 0), HidIAppletResource.GetSharedMemoryHandle },
-
-            //ISystemClock
-            { (typeof(TimeISystemClock), 0), TimeISystemClock.GetCurrentTime },
-
-            //IApplicationDisplayService
-            { (typeof(ViIApplicationDisplayService),  100), ViIApplicationDisplayService.GetRelayService                      },
-            { (typeof(ViIApplicationDisplayService),  101), ViIApplicationDisplayService.GetSystemDisplayService              },
-            { (typeof(ViIApplicationDisplayService),  102), ViIApplicationDisplayService.GetManagerDisplayService             },
-            { (typeof(ViIApplicationDisplayService),  103), ViIApplicationDisplayService.GetIndirectDisplayTransactionService },
-            { (typeof(ViIApplicationDisplayService), 1010), ViIApplicationDisplayService.OpenDisplay                          },
-            { (typeof(ViIApplicationDisplayService), 2020), ViIApplicationDisplayService.OpenLayer                            },
-            { (typeof(ViIApplicationDisplayService), 2030), ViIApplicationDisplayService.CreateStrayLayer                     },
-            { (typeof(ViIApplicationDisplayService), 2101), ViIApplicationDisplayService.SetLayerScalingMode                  },
-            { (typeof(ViIApplicationDisplayService), 5202), ViIApplicationDisplayService.GetDisplayVSyncEvent                 },
-
-            //IHOSBinderDriver
-            { (typeof(ViIHOSBinderDriver), 0), ViIHOSBinderDriver.TransactParcel  },
-            { (typeof(ViIHOSBinderDriver), 1), ViIHOSBinderDriver.AdjustRefcount  },
-            { (typeof(ViIHOSBinderDriver), 2), ViIHOSBinderDriver.GetNativeHandle },
-
-            //IManagerDisplayService
-            { (typeof(ViIManagerDisplayService), 2010), ViIManagerDisplayService.CreateManagedLayer },
-            { (typeof(ViIManagerDisplayService), 6000), ViIManagerDisplayService.AddToLayerStack    },
-
-            //ISystemDisplayService
-            { (typeof(ViISystemDisplayService), 2205), ViISystemDisplayService.SetLayerZ },
-        };
-
         private const long SfciMagic = 'S' << 0 | 'F' << 8 | 'C' << 16 | 'I' << 24;
         private const long SfcoMagic = 'S' << 0 | 'F' << 8 | 'C' << 16 | 'O' << 24;
 
-        public static void ProcessRequest(
+        public static void IpcCall(
             Switch     Ns,
             AMemory    Memory,
             HSession   Session,
@@ -221,15 +107,15 @@ namespace Ryujinx.OsHle.Ipc
 
                             if (Obj is HDomain)
                             {
-                                DbgServiceName = $"{ServiceName} {CmdId}";
-
                                 ServiceCmds.TryGetValue((ServiceName, CmdId), out ProcReq);
+
+                                DbgServiceName = $"{ServiceName} {ProcReq?.Method.Name ?? CmdId.ToString()}";
                             }
                             else if (Obj != null)
                             {
-                                DbgServiceName = $"{ServiceName} {Obj.GetType().Name} {CmdId}";
+                                ((IIpcInterface)Obj).Commands.TryGetValue(CmdId, out ProcReq);
 
-                                ObjectCmds.TryGetValue((Obj.GetType(), CmdId), out ProcReq);
+                                DbgServiceName = $"{ServiceName} {Obj.GetType().Name} {ProcReq?.Method.Name ?? CmdId.ToString()}";
                             }
                         }
                         else if (Request.DomCmd == IpcDomCmd.DeleteObj)
@@ -250,15 +136,15 @@ namespace Ryujinx.OsHle.Ipc
                         {
                             object Obj = ((HSessionObj)Session).Obj;
 
-                            DbgServiceName = $"{ServiceName} {Obj.GetType().Name} {CmdId}";
+                            ((IIpcInterface)Obj).Commands.TryGetValue(CmdId, out ProcReq);
 
-                            ObjectCmds.TryGetValue((Obj.GetType(), CmdId), out ProcReq);
+                            DbgServiceName = $"{ServiceName} {Obj.GetType().Name} {ProcReq?.Method.Name ?? CmdId.ToString()}";
                         }
                         else
                         {
-                            DbgServiceName = $"{ServiceName} {CmdId}";
-
                             ServiceCmds.TryGetValue((ServiceName, CmdId), out ProcReq);
+
+                            DbgServiceName = $"{ServiceName} {ProcReq?.Method.Name ?? CmdId.ToString()}";
                         }
                     }
 

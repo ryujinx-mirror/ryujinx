@@ -1,4 +1,4 @@
-using Ryujinx.OsHle.Objects;
+using Ryujinx.OsHle.Objects.Time;
 
 using static Ryujinx.OsHle.Objects.ObjHelper;
 
@@ -8,28 +8,28 @@ namespace Ryujinx.OsHle.Services
     {
         public static long TimeGetStandardUserSystemClock(ServiceCtx Context)
         {
-            MakeObject(Context, new TimeISystemClock());
+            MakeObject(Context, new ISystemClock());
 
             return 0;
         }
 
         public static long TimeGetStandardNetworkSystemClock(ServiceCtx Context)
         {
-            MakeObject(Context, new TimeISystemClock());
+            MakeObject(Context, new ISystemClock());
 
             return 0;
         }
 
         public static long TimeGetStandardSteadyClock(ServiceCtx Context)
         {
-            MakeObject(Context, new TimeISteadyClock());
+            MakeObject(Context, new ISteadyClock());
 
             return 0;
         }
 
         public static long TimeGetTimeZoneService(ServiceCtx Context)
         {
-            MakeObject(Context, new TimeITimeZoneService());
+            MakeObject(Context, new ITimeZoneService());
 
             return 0;
         }

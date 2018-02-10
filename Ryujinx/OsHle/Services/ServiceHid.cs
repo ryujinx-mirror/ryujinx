@@ -1,5 +1,5 @@
 using Ryujinx.OsHle.Handles;
-using Ryujinx.OsHle.Objects;
+using Ryujinx.OsHle.Objects.Hid;
 
 using static Ryujinx.OsHle.Objects.ObjHelper;
 
@@ -11,7 +11,7 @@ namespace Ryujinx.OsHle.Services
         {
             HSharedMem HidHndData = Context.Ns.Os.Handles.GetData<HSharedMem>(Context.Ns.Os.HidHandle);
 
-            MakeObject(Context, new HidIAppletResource(HidHndData));
+            MakeObject(Context, new IAppletResource(HidHndData));
 
             return 0;
         }

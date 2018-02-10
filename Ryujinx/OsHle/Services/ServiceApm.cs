@@ -1,4 +1,4 @@
-using Ryujinx.OsHle.Objects;
+using Ryujinx.OsHle.Objects.Apm;
 
 using static Ryujinx.OsHle.Objects.ObjHelper;
 
@@ -8,7 +8,7 @@ namespace Ryujinx.OsHle.Services
     {
         public static long ApmOpenSession(ServiceCtx Context)
         {
-            MakeObject(Context, new ApmISession());
+            MakeObject(Context, new ISession());
 
             return 0;
         }

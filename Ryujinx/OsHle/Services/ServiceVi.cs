@@ -1,4 +1,4 @@
-using Ryujinx.OsHle.Objects;
+using Ryujinx.OsHle.Objects.Vi;
 
 using static Ryujinx.OsHle.Objects.ObjHelper;
 
@@ -10,7 +10,7 @@ namespace Ryujinx.OsHle.Services
         {
             int Unknown = Context.RequestData.ReadInt32();
 
-            MakeObject(Context, new ViIApplicationDisplayService());
+            MakeObject(Context, new IApplicationDisplayService());
 
             return 0;
         }

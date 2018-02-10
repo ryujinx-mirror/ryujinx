@@ -1,4 +1,4 @@
-using Ryujinx.OsHle.Objects;
+using Ryujinx.OsHle.Objects.Acc;
 
 using static Ryujinx.OsHle.Objects.ObjHelper;
 
@@ -13,7 +13,7 @@ namespace Ryujinx.OsHle.Services
 
         public static long AccU0GetProfile(ServiceCtx Context)
         {
-            MakeObject(Context, new AccIProfile());
+            MakeObject(Context, new IProfile());
 
             return 0;
         }
@@ -25,7 +25,7 @@ namespace Ryujinx.OsHle.Services
 
         public static long AccU0GetBaasAccountManagerForApplication(ServiceCtx Context)
         {
-            MakeObject(Context, new AccIManagerForApplication());
+            MakeObject(Context, new IManagerForApplication());
 
             return 0;
         }

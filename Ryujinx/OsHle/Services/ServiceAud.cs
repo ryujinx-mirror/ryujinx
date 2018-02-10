@@ -1,5 +1,5 @@
 using ChocolArm64.Memory;
-using Ryujinx.OsHle.Objects;
+using Ryujinx.OsHle.Objects.Aud;
 using System.Text;
 
 using static Ryujinx.OsHle.Objects.ObjHelper;
@@ -21,7 +21,7 @@ namespace Ryujinx.OsHle.Services
 
         public static long AudOutOpenAudioOut(ServiceCtx Context)
         {
-            MakeObject(Context, new AudIAudioOut());
+            MakeObject(Context, new IAudioOut());
 
             Context.ResponseData.Write(48000); //Sample Rate
             Context.ResponseData.Write(2); //Channel Count
@@ -42,7 +42,7 @@ namespace Ryujinx.OsHle.Services
 
         public static long AudRenOpenAudioRenderer(ServiceCtx Context)
         {
-            MakeObject(Context, new AudIAudioRenderer());
+            MakeObject(Context, new IAudioRenderer());
 
             return 0;
         }
