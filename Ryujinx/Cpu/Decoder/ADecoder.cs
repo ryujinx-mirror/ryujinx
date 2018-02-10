@@ -150,7 +150,8 @@ namespace ChocolArm64.Decoder
 
         private static bool IsException(AOpCode OpCode)
         {
-            return OpCode.Emitter == AInstEmit.Svc ||
+            return OpCode.Emitter == AInstEmit.Brk ||
+                   OpCode.Emitter == AInstEmit.Svc ||
                    OpCode.Emitter == AInstEmit.Und;
         }
 

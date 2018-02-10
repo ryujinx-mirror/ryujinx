@@ -8,7 +8,7 @@ namespace ChocolArm64.Decoder
 
         public AOpCodeException(AInst Inst, long Position, int OpCode) : base(Inst, Position)
         {
-            Id = (OpCode >> 5) & 0xfff;
+            Id = (OpCode >> 5) & 0xffff;
         }
     }
 }

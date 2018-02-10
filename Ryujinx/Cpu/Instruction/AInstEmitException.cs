@@ -7,7 +7,17 @@ namespace ChocolArm64.Instruction
 {
     static partial class AInstEmit
     {
+        public static void Brk(AILEmitterCtx Context)
+        {
+            EmitExceptionCall(Context, nameof(ARegisters.OnBreak));
+        }
+
         public static void Svc(AILEmitterCtx Context)
+        {
+            EmitExceptionCall(Context, nameof(ARegisters.OnSvcCall));
+        }
+
+        private static void EmitExceptionCall(AILEmitterCtx Context, string MthdName)
         {
             AOpCodeException Op = (AOpCodeException)Context.CurrOp;
 
@@ -17,7 +27,7 @@ namespace ChocolArm64.Instruction
 
             Context.EmitLdc_I4(Op.Id);
 
-            Context.EmitCall(typeof(ARegisters), nameof(ARegisters.OnSvcCall));
+            Context.EmitCall(typeof(ARegisters), MthdName);
 
             if (Context.CurrBlock.Next != null)
             {

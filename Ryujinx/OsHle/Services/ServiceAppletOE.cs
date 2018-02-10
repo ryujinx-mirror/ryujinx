@@ -1,4 +1,4 @@
-using Ryujinx.OsHle.Objects;
+using Ryujinx.OsHle.Objects.Am;
 
 using static Ryujinx.OsHle.Objects.ObjHelper;
 

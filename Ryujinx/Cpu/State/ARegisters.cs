@@ -42,12 +42,18 @@ namespace ChocolArm64.State
 
         public long CntpctEl0 => Environment.TickCount * TicksPerMS;
 
-        public event EventHandler<SvcEventArgs> SvcCall;
-        public event EventHandler<EventArgs>    Undefined;
+        public event EventHandler<AExceptionEventArgs> Break;
+        public event EventHandler<AExceptionEventArgs> SvcCall;
+        public event EventHandler<EventArgs>           Undefined;
+
+        public void OnBreak(int Imm)
+        {
+            Break?.Invoke(this, new AExceptionEventArgs(Imm));
+        }
 
         public void OnSvcCall(int Imm)
         {
-            SvcCall?.Invoke(this, new SvcEventArgs(Imm));
+            SvcCall?.Invoke(this, new AExceptionEventArgs(Imm));
         }
 
         public void OnUndefined()

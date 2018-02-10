@@ -1,7 +1,9 @@
 using ChocolArm64;
 using ChocolArm64.Memory;
+using ChocolArm64.State;
 using Ryujinx.Loaders;
 using Ryujinx.Loaders.Executables;
+using Ryujinx.OsHle.Exceptions;
 using Ryujinx.OsHle.Handles;
 using Ryujinx.OsHle.Svc;
 using System;
@@ -135,6 +137,7 @@ namespace Ryujinx.OsHle
                 return -1;
             }
 
+            Thread.Registers.Break    += BreakHandler;
             Thread.Registers.SvcCall  += SvcHandler.SvcCall;
             Thread.Registers.ProcessId = ProcessId;
             Thread.Registers.ThreadId  = Ns.Os.IdGen.GenerateId();
@@ -146,6 +149,11 @@ namespace Ryujinx.OsHle
             Thread.WorkFinished += ThreadFinished;
 
             return Handle;
+        }
+
+        private void BreakHandler(object sender, AExceptionEventArgs e)
+        {
+            throw new GuestBrokeExecutionException();
         }
 
         private int GetFreeTlsSlot(AThread Thread)

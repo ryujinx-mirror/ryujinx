@@ -7,7 +7,7 @@ namespace Ryujinx.OsHle
 {
     class ServiceCtx
     {
-        public Switch       Ns         { get; private set; }
+        public Switch       Ns           { get; private set; }
         public AMemory      Memory       { get; private set; }
         public HSession     Session      { get; private set; }
         public IpcMessage   Request      { get; private set; }

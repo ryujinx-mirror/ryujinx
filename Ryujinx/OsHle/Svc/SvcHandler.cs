@@ -63,7 +63,7 @@ namespace Ryujinx.OsHle.Svc
             Rng = new Random();
         }
 
-        public void SvcCall(object sender, SvcEventArgs e)
+        public void SvcCall(object sender, AExceptionEventArgs e)
         {
             ARegisters Registers = (ARegisters)sender;
 
@@ -75,7 +75,7 @@ namespace Ryujinx.OsHle.Svc
             }
             else
             {
-                throw new NotImplementedException(e.Id.ToString("x3"));
+                throw new NotImplementedException(e.Id.ToString("x4"));
             }
         }
     }

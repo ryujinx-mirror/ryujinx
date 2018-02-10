@@ -1,10 +1,9 @@
 using Ryujinx.OsHle.Ipc;
-using Ryujinx.OsHle.Objects.Am;
 using System.Collections.Generic;
 
 using static Ryujinx.OsHle.Objects.ObjHelper;
 
-namespace Ryujinx.OsHle.Objects
+namespace Ryujinx.OsHle.Objects.Am
 {
     class IApplicationProxy : IIpcInterface
     {
