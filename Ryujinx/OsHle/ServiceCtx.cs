@@ -32,21 +32,5 @@ namespace Ryujinx.OsHle
             this.RequestData  = RequestData;
             this.ResponseData = ResponseData;
         }
-
-        public T GetObject<T>()
-        {
-            object Obj = null;
-    
-            if (Session is HSessionObj SessionObj)
-            {
-                Obj = SessionObj.Obj; 
-            }
-            if (Session is HDomain Dom)
-            {
-                Obj = Dom.GetObject(Request.DomObjId);
-            }
-
-            return Obj is T ? (T)Obj : default(T);
-        }
     }
 }

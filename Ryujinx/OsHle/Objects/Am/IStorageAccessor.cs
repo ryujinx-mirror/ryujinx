@@ -11,7 +11,7 @@ namespace Ryujinx.OsHle.Objects.Am
 
         public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public IStorage Storage { get; private set; }
+        private IStorage Storage;
 
         public IStorageAccessor(IStorage Storage)
         {
@@ -26,19 +26,13 @@ namespace Ryujinx.OsHle.Objects.Am
 
         public long GetSize(ServiceCtx Context)
         {
-            IStorageAccessor Accessor = Context.GetObject<IStorageAccessor>();
-
-            Context.ResponseData.Write((long)Accessor.Storage.Data.Length);
+            Context.ResponseData.Write((long)Storage.Data.Length);
 
             return 0;
         }
 
         public long Read(ServiceCtx Context)
         {
-            IStorageAccessor Accessor = Context.GetObject<IStorageAccessor>();
-
-            IStorage Storage = Accessor.Storage;
-
             long ReadPosition = Context.RequestData.ReadInt64();
 
             if (Context.Request.RecvListBuff.Count > 0)

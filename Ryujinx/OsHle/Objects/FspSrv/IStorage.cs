@@ -11,7 +11,7 @@ namespace Ryujinx.OsHle.Objects.FspSrv
 
         public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public Stream BaseStream { get; private set; }
+        private Stream BaseStream;
 
         public IStorage(Stream BaseStream)
         {
@@ -23,10 +23,8 @@ namespace Ryujinx.OsHle.Objects.FspSrv
             this.BaseStream = BaseStream;
         }
 
-        public static long Read(ServiceCtx Context)
+        public long Read(ServiceCtx Context)
         {
-            IStorage Storage = Context.GetObject<IStorage>();
-
             long Offset = Context.RequestData.ReadInt64();
             long Size   = Context.RequestData.ReadInt64();
 
@@ -42,8 +40,8 @@ namespace Ryujinx.OsHle.Objects.FspSrv
 
                 byte[] Data = new byte[Size];
 
-                Storage.BaseStream.Seek(Offset, SeekOrigin.Begin);
-                Storage.BaseStream.Read(Data, 0, Data.Length);
+                BaseStream.Seek(Offset, SeekOrigin.Begin);
+                BaseStream.Read(Data, 0, Data.Length);
 
                 AMemoryHelper.WriteBytes(Context.Memory, BuffDesc.Position, Data);
             }

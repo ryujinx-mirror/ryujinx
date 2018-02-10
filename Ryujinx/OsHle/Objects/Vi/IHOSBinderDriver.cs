@@ -13,32 +13,22 @@ namespace Ryujinx.OsHle.Objects.Vi
 {
     class IHOSBinderDriver : IIpcInterface
     {
+        private delegate long ServiceProcessParcel(ServiceCtx Context, byte[] ParcelData);
+
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        private Dictionary<(string, int), ServiceProcessParcel> m_Methods;
 
-        private delegate long ServiceProcessRequest2(ServiceCtx Context, byte[] ParcelData);
-
-        private Dictionary<(string, int), ServiceProcessRequest2> InterfaceMthd =
-            new Dictionary<(string, int), ServiceProcessRequest2>()
-        {
-            { ("android.gui.IGraphicBufferProducer", 0x1), GraphicBufferProducerRequestBuffer },
-            { ("android.gui.IGraphicBufferProducer", 0x3), GraphicBufferProducerDequeueBuffer },
-            { ("android.gui.IGraphicBufferProducer", 0x7), GraphicBufferProducerQueueBuffer   },
-            //{ ("android.gui.IGraphicBufferProducer", 0x8), GraphicBufferProducerCancelBuffer  },
-            { ("android.gui.IGraphicBufferProducer", 0x9), GraphicBufferProducerQuery         },
-            { ("android.gui.IGraphicBufferProducer", 0xa), GraphicBufferProducerConnect       },
-            { ("android.gui.IGraphicBufferProducer", 0xe), GraphicBufferPreallocateBuffer     },
-        };
+        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;       
 
         private class BufferObj
         {
 
         }
 
-        public IdPoolWithObj BufferSlots { get; private set; }
+        private IdPoolWithObj BufferSlots;
 
-        public byte[] Gbfr;
+        private byte[] Gbfr;
 
         public IHOSBinderDriver()
         {
@@ -47,6 +37,17 @@ namespace Ryujinx.OsHle.Objects.Vi
                 { 0, TransactParcel  },
                 { 1, AdjustRefcount  },
                 { 2, GetNativeHandle }
+            };
+
+            m_Methods = new Dictionary<(string, int), ServiceProcessParcel>()
+            {
+                { ("android.gui.IGraphicBufferProducer", 0x1), GraphicBufferProducerRequestBuffer },
+                { ("android.gui.IGraphicBufferProducer", 0x3), GraphicBufferProducerDequeueBuffer },
+                { ("android.gui.IGraphicBufferProducer", 0x7), GraphicBufferProducerQueueBuffer   },
+                { ("android.gui.IGraphicBufferProducer", 0x8), GraphicBufferProducerCancelBuffer  },
+                { ("android.gui.IGraphicBufferProducer", 0x9), GraphicBufferProducerQuery         },
+                { ("android.gui.IGraphicBufferProducer", 0xa), GraphicBufferProducerConnect       },
+                { ("android.gui.IGraphicBufferProducer", 0xe), GraphicBufferPreallocateBuffer     }
             };
 
             BufferSlots = new IdPoolWithObj();
@@ -74,7 +75,7 @@ namespace Ryujinx.OsHle.Objects.Vi
 
                 string InterfaceName = Encoding.Unicode.GetString(Data, 8, StrSize * 2);
 
-                if (InterfaceMthd.TryGetValue((InterfaceName, Code), out ServiceProcessRequest2 ProcReq))
+                if (m_Methods.TryGetValue((InterfaceName, Code), out ServiceProcessParcel ProcReq))
                 {
                     return ProcReq(Context, Data);
                 }
@@ -85,43 +86,37 @@ namespace Ryujinx.OsHle.Objects.Vi
             }
         }
 
-        private static long GraphicBufferProducerRequestBuffer(ServiceCtx Context, byte[] ParcelData)
+        private long GraphicBufferProducerRequestBuffer(ServiceCtx Context, byte[] ParcelData)
         {
-            IHOSBinderDriver BinderDriver = Context.GetObject<IHOSBinderDriver>();
-
-            int GbfrSize = BinderDriver.Gbfr?.Length ?? 0;
+            int GbfrSize = Gbfr?.Length ?? 0;
 
             byte[] Data = new byte[GbfrSize + 4];
 
-            if (BinderDriver.Gbfr != null)
+            if (Gbfr != null)
             {
-                Buffer.BlockCopy(BinderDriver.Gbfr, 0, Data, 0, GbfrSize);
+                Buffer.BlockCopy(Gbfr, 0, Data, 0, GbfrSize);
             }
 
             return MakeReplyParcel(Context, Data);
         }
 
-        private static long GraphicBufferProducerDequeueBuffer(ServiceCtx Context, byte[] ParcelData)
+        private long GraphicBufferProducerDequeueBuffer(ServiceCtx Context, byte[] ParcelData)
         {
-            IHOSBinderDriver BinderDriver = Context.GetObject<IHOSBinderDriver>();
-
             //Note: It seems that the maximum number of slots is 64, because if we return
             //a Slot number > 63, it seems to cause a buffer overrun and it reads garbage.
             //Note 2: The size of each object associated with the slot is 0x30.
-            int Slot = BinderDriver.BufferSlots.GenerateId(new BufferObj());
+            int Slot = BufferSlots.GenerateId(new BufferObj());
 
             return MakeReplyParcel(Context, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         }
 
-        private static long GraphicBufferProducerQueueBuffer(ServiceCtx Context, byte[] ParcelData)
+        private long GraphicBufferProducerQueueBuffer(ServiceCtx Context, byte[] ParcelData)
         {
             return MakeReplyParcel(Context, 1280, 720, 0, 0, 0);
         }
 
-        private static long GraphicBufferProducerCancelBuffer(ServiceCtx Context, byte[] ParcelData)
+        private long GraphicBufferProducerCancelBuffer(ServiceCtx Context, byte[] ParcelData)
         {
-            IHOSBinderDriver BinderDriver = Context.GetObject<IHOSBinderDriver>();
-
             using (MemoryStream MS = new MemoryStream(ParcelData))
             {
                 BinaryReader Reader = new BinaryReader(MS);
@@ -130,31 +125,29 @@ namespace Ryujinx.OsHle.Objects.Vi
 
                 int Slot = Reader.ReadInt32();
 
-                BinderDriver.BufferSlots.Delete(Slot);
+                BufferSlots.Delete(Slot);
 
                 return MakeReplyParcel(Context, 0);
             }
         }
 
-        private static long GraphicBufferProducerQuery(ServiceCtx Context, byte[] ParcelData)
+        private long GraphicBufferProducerQuery(ServiceCtx Context, byte[] ParcelData)
         {
             return MakeReplyParcel(Context, 0, 0);
         }
 
-        private static long GraphicBufferProducerConnect(ServiceCtx Context, byte[] ParcelData)
+        private long GraphicBufferProducerConnect(ServiceCtx Context, byte[] ParcelData)
         {
             return MakeReplyParcel(Context, 1280, 720, 0, 0, 0);
         }
 
-        private static long GraphicBufferPreallocateBuffer(ServiceCtx Context, byte[] ParcelData)
+        private long GraphicBufferPreallocateBuffer(ServiceCtx Context, byte[] ParcelData)
         {
-            IHOSBinderDriver BinderDriver = Context.GetObject<IHOSBinderDriver>();
-
             int GbfrSize = ParcelData.Length - 0x54;
 
-            BinderDriver.Gbfr = new byte[GbfrSize];
+            Gbfr = new byte[GbfrSize];
 
-            Buffer.BlockCopy(ParcelData, 0x54, BinderDriver.Gbfr, 0, GbfrSize);
+            Buffer.BlockCopy(ParcelData, 0x54, Gbfr, 0, GbfrSize);
 
             using (MemoryStream MS = new MemoryStream(ParcelData))
             {
@@ -172,7 +165,7 @@ namespace Ryujinx.OsHle.Objects.Vi
             return MakeReplyParcel(Context, 0);
         }
 
-        private static long MakeReplyParcel(ServiceCtx Context, params int[] Ints)
+        private long MakeReplyParcel(ServiceCtx Context, params int[] Ints)
         {
             using (MemoryStream MS = new MemoryStream())
             {
@@ -187,7 +180,7 @@ namespace Ryujinx.OsHle.Objects.Vi
             }
         }
 
-        private static long MakeReplyParcel(ServiceCtx Context, byte[] Data)
+        private long MakeReplyParcel(ServiceCtx Context, byte[] Data)
         {
             long ReplyPos  = Context.Request.ReceiveBuff[0].Position;
             long ReplySize = Context.Request.ReceiveBuff[0].Position;

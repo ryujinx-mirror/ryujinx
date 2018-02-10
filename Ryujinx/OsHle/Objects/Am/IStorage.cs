@@ -25,9 +25,7 @@ namespace Ryujinx.OsHle.Objects.Am
 
         public long Open(ServiceCtx Context)
         {
-            IStorage Storage = Context.GetObject<IStorage>();
-
-            MakeObject(Context, new IStorageAccessor(Storage));
+            MakeObject(Context, new IStorageAccessor(this));
 
             return 0;
         }
