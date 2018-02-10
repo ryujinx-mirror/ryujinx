@@ -17,7 +17,7 @@ namespace Ryujinx.OsHle.Handles
             ObjIds = new IdPool();
         }
 
-        public int GenertateObjectId(object Obj)
+        public int GenerateObjectId(object Obj)
         {
             int Id = ObjIds.GenerateId();
 

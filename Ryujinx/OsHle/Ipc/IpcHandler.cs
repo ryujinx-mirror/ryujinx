@@ -212,7 +212,7 @@ namespace Ryujinx.OsHle.Ipc
 
             Ns.Os.Handles.ReplaceData(HndId, Dom);
 
-            return FillResponse(Response, 0, Dom.GenertateObjectId(Dom));
+            return FillResponse(Response, 0, Dom.GenerateObjectId(Dom));
         }
 
         private static IpcMessage IpcDuplicateSessionEx(

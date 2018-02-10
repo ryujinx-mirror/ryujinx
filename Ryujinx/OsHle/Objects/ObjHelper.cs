@@ -9,7 +9,7 @@ namespace Ryujinx.OsHle.Objects
         {
             if (Context.Session is HDomain Dom)
             {
-                Context.Response.ResponseObjIds.Add(Dom.GenertateObjectId(Obj));
+                Context.Response.ResponseObjIds.Add(Dom.GenerateObjectId(Obj));
             }
             else
             {
