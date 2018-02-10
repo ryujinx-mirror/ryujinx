@@ -93,7 +93,7 @@ namespace Ryujinx.OsHle.Svc
 
             if (Session != null)
             {
-                IpcHandler.ProcessRequest(Ns, Memory, Session, Cmd, CmdPtr, Handle);
+                IpcHandler.IpcCall(Ns, Memory, Session, Cmd, CmdPtr, Handle);
 
                 byte[] Response = AMemoryHelper.ReadBytes(Memory, CmdPtr, (int)Size);
 
