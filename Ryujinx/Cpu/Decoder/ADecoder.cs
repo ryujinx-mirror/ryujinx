@@ -161,7 +161,7 @@ namespace ChocolArm64.Decoder
 
             AInst Inst = AOpCodeTable.GetInst(OpCode);
 
-            AOpCode DecodedOpCode = new AOpCode(AInst.Undefined, Position);
+            AOpCode DecodedOpCode = new AOpCode(AInst.Undefined, Position, OpCode);
 
             if (Inst.Type != null)
             {

@@ -2,11 +2,11 @@ using System;
 
 namespace ChocolArm64.State
 {
-    public class AExceptionEventArgs : EventArgs
+    public class AInstExceptEventArgs : EventArgs
     {
         public int Id { get; private set; }
 
-        public AExceptionEventArgs(int Id)
+        public AInstExceptEventArgs(int Id)
         {
             this.Id = Id;
         }

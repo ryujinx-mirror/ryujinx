@@ -9,7 +9,7 @@ namespace ChocolArm64.Decoder
         public long Imm  { get; private set; }
         public int  Size { get; private set; }
 
-        public AOpCodeSimdImm(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeSimdImm(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             Rd = OpCode & 0x1f;
 

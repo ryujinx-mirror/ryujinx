@@ -14,7 +14,7 @@ namespace ChocolArm64.Decoder
         public bool Replicate { get; private set; }
         public bool WBack     { get; private set; }
 
-        public AOpCodeSimdMemSs(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeSimdMemSs(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             int Size   = (OpCode >> 10) & 3;
             int S      = (OpCode >> 12) & 1;

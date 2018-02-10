@@ -10,7 +10,7 @@ namespace ChocolArm64.Decoder
 
         public ADataOp DataOp { get; private set; }
 
-        public AOpCodeAlu(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeAlu(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             Rd     =           (OpCode >>  0) & 0x1f;
             Rn     =           (OpCode >>  5) & 0x1f;

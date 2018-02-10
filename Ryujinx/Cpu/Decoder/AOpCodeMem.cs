@@ -9,7 +9,7 @@ namespace ChocolArm64.Decoder
         public    int  Size     { get; protected set; }
         public    bool Extend64 { get; protected set; }
 
-        public AOpCodeMem(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeMem(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             Rt   = (OpCode >>  0) & 0x1f;
             Rn   = (OpCode >>  5) & 0x1f;

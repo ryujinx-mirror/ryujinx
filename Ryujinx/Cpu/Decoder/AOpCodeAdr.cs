@@ -7,7 +7,7 @@ namespace ChocolArm64.Decoder
         public int  Rd  { get; private set; }
         public long Imm { get; private set; }
 
-         public AOpCodeAdr(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+         public AOpCodeAdr(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             Rd = OpCode & 0x1f;
 

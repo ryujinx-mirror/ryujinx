@@ -6,6 +6,6 @@ namespace ChocolArm64.Decoder
     {
         public long Imm { get; protected set; }
 
-        public AOpCodeBImm(AInst Inst, long Position) : base(Inst, Position) { }
+        public AOpCodeBImm(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode) { }
     }
 }

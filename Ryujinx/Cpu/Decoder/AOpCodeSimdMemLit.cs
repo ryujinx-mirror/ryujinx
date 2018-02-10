@@ -10,7 +10,7 @@ namespace ChocolArm64.Decoder
         public bool Signed   => false;
         public bool Prefetch => false;
 
-        public AOpCodeSimdMemLit(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeSimdMemLit(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             int Opc = (OpCode >> 30) & 3;
 

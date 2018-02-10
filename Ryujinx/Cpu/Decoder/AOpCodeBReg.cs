@@ -6,7 +6,7 @@ namespace ChocolArm64.Decoder
     {
         public int Rn { get; private set; }
 
-        public AOpCodeBReg(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeBReg(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             int Op4 = (OpCode >>  0) & 0x1f;
             int Op2 = (OpCode >> 16) & 0x1f;

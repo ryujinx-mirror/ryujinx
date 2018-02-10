@@ -11,7 +11,7 @@ namespace ChocolArm64.Decoder
         public int Op1 { get; private set; }
         public int Op0 { get; private set; }
 
-        public AOpCodeSystem(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeSystem(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             Rt  =  (OpCode >>  0) & 0x1f;
             Op2 =  (OpCode >>  5) & 0x7;

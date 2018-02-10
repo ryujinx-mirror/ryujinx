@@ -10,7 +10,7 @@ namespace ChocolArm64.Decoder
         public bool Signed   { get; private set; }
         public bool Prefetch { get; private set; }
 
-        public AOpCodeMemLit(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeMemLit(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             Rt = OpCode & 0x1f;
 

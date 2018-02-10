@@ -6,14 +6,16 @@ namespace ChocolArm64.Decoder
 {
     class AOpCode : IAOpCode
     {
-        public long Position { get; private set; }
+        public long Position  { get; private set; }
+        public int  RawOpCode { get; private set; }
 
         public AInstEmitter  Emitter      { get; protected set; }
         public ARegisterSize RegisterSize { get; protected set; }
 
-        public AOpCode(AInst Inst, long Position)
+        public AOpCode(AInst Inst, long Position, int OpCode)
         {
-            this.Position = Position;
+            this.Position  = Position;
+            this.RawOpCode = OpCode;
 
             RegisterSize = ARegisterSize.Int64;
 

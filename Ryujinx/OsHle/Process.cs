@@ -137,23 +137,29 @@ namespace Ryujinx.OsHle
                 return -1;
             }
 
-            Thread.Registers.Break    += BreakHandler;
-            Thread.Registers.SvcCall  += SvcHandler.SvcCall;
-            Thread.Registers.ProcessId = ProcessId;
-            Thread.Registers.ThreadId  = Ns.Os.IdGen.GenerateId();
-            Thread.Registers.Tpidr     = TlsPageAddr + TlsSlot * TlsSize;
-            Thread.Registers.X0        = (ulong)ArgsPtr;
-            Thread.Registers.X1        = (ulong)Handle;
-            Thread.Registers.X31       = (ulong)StackTop;
+            Thread.Registers.Break     += BreakHandler;
+            Thread.Registers.SvcCall   += SvcHandler.SvcCall;
+            Thread.Registers.Undefined += UndefinedHandler;
+            Thread.Registers.ProcessId  = ProcessId;
+            Thread.Registers.ThreadId   = Ns.Os.IdGen.GenerateId();
+            Thread.Registers.Tpidr      = TlsPageAddr + TlsSlot * TlsSize;
+            Thread.Registers.X0         = (ulong)ArgsPtr;
+            Thread.Registers.X1         = (ulong)Handle;
+            Thread.Registers.X31        = (ulong)StackTop;
 
             Thread.WorkFinished += ThreadFinished;
 
             return Handle;
         }
 
-        private void BreakHandler(object sender, AExceptionEventArgs e)
+        private void BreakHandler(object sender, AInstExceptEventArgs e)
         {
             throw new GuestBrokeExecutionException();
+        }
+
+        private void UndefinedHandler(object sender, AInstUndEventArgs e)
+        {
+            throw new UndefinedInstructionException(e.Position, e.RawOpCode);
         }
 
         private int GetFreeTlsSlot(AThread Thread)

@@ -14,7 +14,7 @@ namespace ChocolArm64.Decoder
         public int  Elems  { get; private set; }
         public bool WBack  { get; private set; }
 
-        public AOpCodeSimdMemMs(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeSimdMemMs(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             switch ((OpCode >> 12) & 0xf)
             {

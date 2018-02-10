@@ -6,7 +6,7 @@ namespace ChocolArm64.Decoder
     {
         public ACond Cond { get; private set; }
 
-        public AOpCodeBImmCond(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeBImmCond(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             int O0 = (OpCode >> 4) & 1;
 

@@ -9,7 +9,7 @@ namespace ChocolArm64.Decoder
         public long Imm { get; private set; }
         public int  Pos { get; private set; }
 
-        public AOpCodeMov(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeMov(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             int P1 = (OpCode >> 22) & 1;
             int SF = (OpCode >> 31) & 1;

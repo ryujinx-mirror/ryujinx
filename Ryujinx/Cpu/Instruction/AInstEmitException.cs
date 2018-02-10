@@ -37,7 +37,21 @@ namespace ChocolArm64.Instruction
 
         public static void Und(AILEmitterCtx Context)
         {
-            throw new NotImplementedException($"Undefined instruction at {Context.CurrOp.Position:x16}");
+            AOpCode Op = Context.CurrOp;
+
+            Context.EmitStoreState();
+
+            Context.EmitLdarg(ATranslatedSub.RegistersArgIdx);
+
+            Context.EmitLdc_I8(Op.Position);
+            Context.EmitLdc_I4(Op.RawOpCode);
+
+            Context.EmitCall(typeof(ARegisters), nameof(ARegisters.OnUndefined));
+
+            if (Context.CurrBlock.Next != null)
+            {
+                Context.EmitLoadState(Context.CurrBlock.Next);
+            }
         }
     }
 }

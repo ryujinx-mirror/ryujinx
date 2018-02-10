@@ -6,7 +6,7 @@ namespace ChocolArm64.Decoder
     {
         public int Rt { get; private set; }
 
-        public AOpCodeBImmCmp(AInst Inst, long Position, int OpCode) : base(Inst, Position)
+        public AOpCodeBImmCmp(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             Rt = OpCode & 0x1f;
 
