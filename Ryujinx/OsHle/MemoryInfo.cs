@@ -18,7 +18,7 @@ namespace Ryujinx.OsHle
             BaseAddress    = MapInfo.Position;
             Size           = MapInfo.Size;
             MemType        = MapInfo.Type;
-            MemAttr        = 0;
+            MemAttr        = MapInfo.Attr;
             MemPerm        = (int)MapInfo.Perm;
             IpcRefCount    = 0;
             DeviceRefCount = 0;

@@ -5,7 +5,7 @@ namespace ChocolArm64.Exceptions
 {
     public class VmmAccessViolationException : Exception
     {
-        private const string ExMsg = "Value at address 0x{0:x16} could not be \"{1}\"!";
+        private const string ExMsg = "Address 0x{0:x16} does not have \"{1}\" permission!";
 
         public VmmAccessViolationException() { }
 

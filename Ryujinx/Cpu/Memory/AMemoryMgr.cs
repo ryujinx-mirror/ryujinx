@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace ChocolArm64.Memory
 {
     public class AMemoryMgr
@@ -27,24 +25,23 @@ namespace ChocolArm64.Memory
         private enum PTMap
         {
             Unmapped,
-            Physical,
-            Mirror
+            Mapped
         }
 
         private struct PTEntry
         {
-            public long Position;
-            public int  Type;
-
             public PTMap       Map;
             public AMemoryPerm Perm;
 
-            public PTEntry(long Position, int Type, PTMap Map, AMemoryPerm Perm)
+            public int Type;
+            public int Attr;
+
+            public PTEntry(PTMap Map, AMemoryPerm Perm, int Type, int Attr)
             {
-                this.Position = Position;
-                this.Type     = Type;
-                this.Map      = Map;
-                this.Perm     = Perm;
+                this.Map  = Map;
+                this.Perm = Perm;
+                this.Type = Type;
+                this.Attr = Attr;
             }
         }
 
@@ -53,7 +50,7 @@ namespace ChocolArm64.Memory
         private bool IsHeapInitialized;
 
         public long HeapAddr { get; private set; }
-        public int  HeapSize { get; private set; }
+        public long HeapSize { get; private set; }
 
         public AMemoryMgr(AMemoryAlloc Allocator)
         {
@@ -101,10 +98,10 @@ namespace ChocolArm64.Memory
             return false;
         }
 
-        public void SetHeapSize(int Size, int Type)
+        public void SetHeapSize(long Size, int Type)
         {
             //TODO: Return error when theres no enough space to allocate heap.
-            Size = (int)AMemoryHelper.PageRoundUp(Size);
+            Size = AMemoryHelper.PageRoundUp(Size);
 
             long Position = HeapAddr;
 
@@ -132,40 +129,13 @@ namespace ChocolArm64.Memory
             HeapSize = Size;
         }
 
-        public bool MapPhys(long Src, long Dst, long Size, int Type, AMemoryPerm Perm)
-        {
-            Src = AMemoryHelper.PageRoundDown(Src);
-            Dst = AMemoryHelper.PageRoundDown(Dst);
-
-            Size = AMemoryHelper.PageRoundUp(Size);
-
-            if (Dst < 0 || Dst + Size >= RamSize)
-            {
-                return false;
-            }
-
-            long PagesCount = Size / PageSize;
-
-            while (PagesCount-- > 0)
-            {
-                SetPTEntry(Src, new PTEntry(Dst, Type, PTMap.Physical, Perm));
-
-                Src += PageSize;
-                Dst += PageSize;
-            }
-
-            return true;
-        }
-
         public void MapPhys(long Position, long Size, int Type, AMemoryPerm Perm)
         {
             while (Size > 0)
             {
                 if (!IsMapped(Position))
                 {
-                    long PhysPos = Allocator.Alloc(PageSize);                   
-
-                    SetPTEntry(Position, new PTEntry(PhysPos, Type, PTMap.Physical, Perm));
+                    SetPTEntry(Position, new PTEntry(PTMap.Mapped, Perm, Type, 0));
                 }
 
                 long CPgSize = PageSize - (Position & PageMask);
@@ -186,13 +156,19 @@ namespace ChocolArm64.Memory
 
             while (PagesCount-- > 0)
             {
-                PTEntry Entry = GetPTEntry(Src);
+                PTEntry SrcEntry = GetPTEntry(Src);
+                PTEntry DstEntry = GetPTEntry(Dst);
 
-                Entry.Type     = Type;
-                Entry.Map      = PTMap.Mirror;
-                Entry.Position = Dst;
+                DstEntry.Map  = PTMap.Mapped;
+                DstEntry.Type = Type;
+                DstEntry.Perm = SrcEntry.Perm;
 
-                SetPTEntry(Src, Entry);
+                SrcEntry.Perm = AMemoryPerm.None;
+
+                SrcEntry.Attr |= 1;
+
+                SetPTEntry(Src, SrcEntry);
+                SetPTEntry(Dst, DstEntry);
 
                 Src += PageSize;
                 Dst += PageSize;
@@ -229,9 +205,10 @@ namespace ChocolArm64.Memory
             {
                 PTEntry Entry = GetPTEntry(Pos);
 
-                return Entry.Type == BaseEntry.Type &&
-                       Entry.Map  == BaseEntry.Map  &&
-                       Entry.Perm == BaseEntry.Perm;
+                return Entry.Map  == BaseEntry.Map  &&
+                       Entry.Perm == BaseEntry.Perm &&
+                       Entry.Type == BaseEntry.Type &&
+                       Entry.Attr == BaseEntry.Attr;
             }
 
             long Start = Position;
@@ -249,7 +226,12 @@ namespace ChocolArm64.Memory
 
             long Size = End - Start;
 
-            return new AMemoryMapInfo(Start, Size, BaseEntry.Type, BaseEntry.Perm);
+            return new AMemoryMapInfo(
+                Start,
+                Size,
+                BaseEntry.Type,
+                BaseEntry.Attr,
+                BaseEntry.Perm);
         }
 
         public bool HasPermission(long Position, AMemoryPerm Perm)
@@ -257,7 +239,6 @@ namespace ChocolArm64.Memory
             return GetPTEntry(Position).Perm.HasFlag(Perm);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsMapped(long Position)
         {
             if (Position >> PTLvl0Bits + PTLvl1Bits + PTPageBits != 0)
@@ -276,7 +257,6 @@ namespace ChocolArm64.Memory
             return PageTable[L0][L1].Map != PTMap.Unmapped;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private PTEntry GetPTEntry(long Position)
         {
             long L0 = (Position >> PTLvl0Bit) & PTLvl0Mask;
@@ -290,7 +270,6 @@ namespace ChocolArm64.Memory
             return PageTable[L0][L1];
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetPTEntry(long Position, PTEntry Entry)
         {
             long L0 = (Position >> PTLvl0Bit) & PTLvl0Mask;

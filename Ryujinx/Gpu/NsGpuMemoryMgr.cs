@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace Ryujinx.Gpu
 {
     class NsGpuMemoryMgr
@@ -16,7 +14,7 @@ namespace Ryujinx.Gpu
 
         private const int  PTLvl0Mask = PTLvl0Size - 1;
         private const int  PTLvl1Mask = PTLvl1Size - 1;
-        private const int  PageMask   = PageSize - 1;
+        private const int  PageMask   = PageSize   - 1;
 
         private const int  PTLvl0Bit  = PTPageBits + PTLvl0Bits;
         private const int  PTLvl1Bit  = PTPageBits;
@@ -107,6 +105,11 @@ namespace Ryujinx.Gpu
             long Position = 0;
             long FreeSize = 0;
 
+            if (Align < 1)
+            {
+                Align = 1;
+            }
+
             Align = (Align + PageMask) & ~PageMask;
 
             while (Position + FreeSize < AddrSize)
@@ -149,7 +152,6 @@ namespace Ryujinx.Gpu
             return BasePos + (Position & PageMask);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool HasPTAddr(long Position)
         {
             if (Position >> PTLvl0Bits + PTLvl1Bits + PTPageBits != 0)
@@ -168,7 +170,6 @@ namespace Ryujinx.Gpu
             return PageTable[L0][L1] != PteUnmapped;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private long GetPTAddr(long Position)
         {
             long L0 = (Position >> PTLvl0Bit) & PTLvl0Mask;
@@ -182,7 +183,6 @@ namespace Ryujinx.Gpu
             return PageTable[L0][L1];
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetPTAddr(long Position, long TgtAddr)
         {
             long L0 = (Position >> PTLvl0Bit) & PTLvl0Mask;

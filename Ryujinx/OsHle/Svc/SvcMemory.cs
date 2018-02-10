@@ -8,7 +8,7 @@ namespace Ryujinx.OsHle.Svc
     {
         private static void SvcSetHeapSize(Switch Ns, ARegisters Registers, AMemory Memory)
         {
-            int Size = (int)Registers.X1;
+            uint Size = (uint)Registers.X1;
 
             Memory.Manager.SetHeapSize(Size, (int)MemoryType.Heap);
 
@@ -30,8 +30,8 @@ namespace Ryujinx.OsHle.Svc
 
         private static void SvcMapMemory(Switch Ns, ARegisters Registers, AMemory Memory)
         {
-            long Src  = (long)Registers.X0;
-            long Dst  = (long)Registers.X1;
+            long Dst  = (long)Registers.X0;
+            long Src  = (long)Registers.X1;
             long Size = (long)Registers.X2;
 
             Memory.Manager.MapMirror(Src, Dst, Size, (int)MemoryType.MappedMemory);
@@ -79,11 +79,9 @@ namespace Ryujinx.OsHle.Svc
 
                 HndData.VirtPos = Src;
 
-                if (Memory.Manager.MapPhys(Src, Dst, Size,
-                    (int)MemoryType.SharedMemory, (AMemoryPerm)Perm))
-                {
-                    Registers.X0 = (int)SvcResult.Success;
-                }
+                Memory.Manager.MapPhys(Position, Size, (int)MemoryType.SharedMemory, (AMemoryPerm)Perm);
+
+                Registers.X0 = (int)SvcResult.Success;
             }
 
             //TODO: Error codes.
