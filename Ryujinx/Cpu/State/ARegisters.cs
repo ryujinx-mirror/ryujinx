@@ -10,9 +10,6 @@ namespace ChocolArm64.State
         internal const int ErgSizeLog2 = 4;
         internal const int DczSizeLog2 = 4;
 
-        private const long TicksPerS  = 19_200_000;
-        private const long TicksPerMS = TicksPerS / 1_000;
-
         public ulong X0,  X1,  X2,  X3,  X4,  X5,  X6,  X7,
                      X8,  X9,  X10, X11, X12, X13, X14, X15,
                      X16, X17, X18, X19, X20, X21, X22, X23,
@@ -40,23 +37,26 @@ namespace ChocolArm64.State
         public uint CtrEl0   => 0x8444c004;
         public uint DczidEl0 => 0x00000004;
 
+        private const long TicksPerS  = 19_200_000;
+        private const long TicksPerMS = TicksPerS / 1_000;
+
         public long CntpctEl0 => Environment.TickCount * TicksPerMS;
 
         public event EventHandler<AInstExceptEventArgs> Break;
         public event EventHandler<AInstExceptEventArgs> SvcCall;
-        public event EventHandler<AInstUndEventArgs> Undefined;
+        public event EventHandler<AInstUndEventArgs>    Undefined;
 
-        public void OnBreak(int Imm)
+        internal void OnBreak(int Imm)
         {
             Break?.Invoke(this, new AInstExceptEventArgs(Imm));
         }
 
-        public void OnSvcCall(int Imm)
+        internal void OnSvcCall(int Imm)
         {
             SvcCall?.Invoke(this, new AInstExceptEventArgs(Imm));
         }
 
-        public void OnUndefined(long Position, int RawOpCode)
+        internal void OnUndefined(long Position, int RawOpCode)
         {
             Undefined?.Invoke(this, new AInstUndEventArgs(Position, RawOpCode));
         }

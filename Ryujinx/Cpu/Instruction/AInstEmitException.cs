@@ -1,12 +1,14 @@
 using ChocolArm64.Decoder;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
-using System;
+using System.Reflection;
 
 namespace ChocolArm64.Instruction
 {
     static partial class AInstEmit
     {
+        private const BindingFlags Binding = BindingFlags.NonPublic | BindingFlags.Instance;
+
         public static void Brk(AILEmitterCtx Context)
         {
             EmitExceptionCall(Context, nameof(ARegisters.OnBreak));
@@ -27,7 +29,9 @@ namespace ChocolArm64.Instruction
 
             Context.EmitLdc_I4(Op.Id);
 
-            Context.EmitCall(typeof(ARegisters), MthdName);
+            MethodInfo MthdInfo = typeof(ARegisters).GetMethod(MthdName, Binding);
+
+            Context.EmitCall(MthdInfo);
 
             if (Context.CurrBlock.Next != null)
             {
@@ -46,7 +50,11 @@ namespace ChocolArm64.Instruction
             Context.EmitLdc_I8(Op.Position);
             Context.EmitLdc_I4(Op.RawOpCode);
 
-            Context.EmitCall(typeof(ARegisters), nameof(ARegisters.OnUndefined));
+            string MthdName = nameof(ARegisters.OnUndefined);
+
+            MethodInfo MthdInfo = typeof(ARegisters).GetMethod(MthdName, Binding);
+
+            Context.EmitCall(MthdInfo);
 
             if (Context.CurrBlock.Next != null)
             {

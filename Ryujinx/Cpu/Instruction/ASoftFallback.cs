@@ -97,39 +97,7 @@ namespace ChocolArm64.Instruction
             throw new ArgumentException(nameof(Size));
         }
 
-        public static int SatDoubleToInt32(double Value, int FBits = 0)
-        {
-            if (FBits != 0) Value *= Math.Pow(2, FBits);
-
-            return Value > int.MaxValue ? int.MaxValue :
-                   Value < int.MinValue ? int.MinValue : (int)Value;
-        }
-
-        public static long SatDoubleToInt64(double Value, int FBits = 0)
-        {
-            if (FBits != 0) Value *= Math.Pow(2, FBits);
-
-            return Value > long.MaxValue ? long.MaxValue :
-                   Value < long.MinValue ? long.MinValue : (long)Value;
-        }
-
-        public static uint SatDoubleToUInt32(double Value, int FBits = 0)
-        {
-            if (FBits != 0) Value *= Math.Pow(2, FBits);
-
-            return Value > uint.MaxValue ? uint.MaxValue :
-                   Value < uint.MinValue ? uint.MinValue : (uint)Value;
-        }
-
-        public static ulong SatDoubleToUInt64(double Value, int FBits = 0)
-        {
-            if (FBits != 0) Value *= Math.Pow(2, FBits);
-
-            return Value > ulong.MaxValue ? ulong.MaxValue :
-                   Value < ulong.MinValue ? ulong.MinValue : (ulong)Value;
-        }
-
-        public static int SatSingleToInt32(float Value, int FBits = 0)
+        public static int SatSingleToInt32(float Value, int FBits)
         {
             if (FBits != 0) Value *= MathF.Pow(2, FBits);
 
@@ -137,7 +105,7 @@ namespace ChocolArm64.Instruction
                    Value < int.MinValue ? int.MinValue : (int)Value;
         }
 
-        public static long SatSingleToInt64(float Value, int FBits = 0)
+        public static long SatSingleToInt64(float Value, int FBits)
         {
             if (FBits != 0) Value *= MathF.Pow(2, FBits);
 
@@ -145,7 +113,7 @@ namespace ChocolArm64.Instruction
                    Value < long.MinValue ? long.MinValue : (long)Value;
         }
 
-        public static uint SatSingleToUInt32(float Value, int FBits = 0)
+        public static uint SatSingleToUInt32(float Value, int FBits)
         {
             if (FBits != 0) Value *= MathF.Pow(2, FBits);
 
@@ -153,12 +121,116 @@ namespace ChocolArm64.Instruction
                    Value < uint.MinValue ? uint.MinValue : (uint)Value;
         }
 
-        public static ulong SatSingleToUInt64(float Value, int FBits = 0)
+        public static ulong SatSingleToUInt64(float Value, int FBits)
         {
             if (FBits != 0) Value *= MathF.Pow(2, FBits);
 
             return Value > ulong.MaxValue ? ulong.MaxValue :
                    Value < ulong.MinValue ? ulong.MinValue : (ulong)Value;
+        }
+
+        public static int SatDoubleToInt32(double Value, int FBits)
+        {
+            if (FBits != 0) Value *= Math.Pow(2, FBits);
+
+            return Value > int.MaxValue ? int.MaxValue :
+                   Value < int.MinValue ? int.MinValue : (int)Value;
+        }
+
+        public static long SatDoubleToInt64(double Value, int FBits)
+        {
+            if (FBits != 0) Value *= Math.Pow(2, FBits);
+
+            return Value > long.MaxValue ? long.MaxValue :
+                   Value < long.MinValue ? long.MinValue : (long)Value;
+        }
+
+        public static uint SatDoubleToUInt32(double Value, int FBits)
+        {
+            if (FBits != 0) Value *= Math.Pow(2, FBits);
+
+            return Value > uint.MaxValue ? uint.MaxValue :
+                   Value < uint.MinValue ? uint.MinValue : (uint)Value;
+        }
+
+        public static ulong SatDoubleToUInt64(double Value, int FBits)
+        {
+            if (FBits != 0) Value *= Math.Pow(2, FBits);
+
+            return Value > ulong.MaxValue ? ulong.MaxValue :
+                   Value < ulong.MinValue ? ulong.MinValue : (ulong)Value;
+        }
+
+        public static float Int32ToSingle(int Value, int FBits)
+        {
+            float ValueF = Value;
+
+            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
+
+            return ValueF;
+        }
+
+        public static float Int64ToSingle(long Value, int FBits)
+        {
+            float ValueF = Value;
+
+            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
+
+            return ValueF;
+        }
+
+        public static float UInt32ToSingle(uint Value, int FBits)
+        {
+            float ValueF = Value;
+
+            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
+
+            return ValueF;
+        }
+
+        public static float UInt64ToSingle(ulong Value, int FBits)
+        {
+            float ValueF = Value;
+
+            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
+
+            return ValueF;
+        }
+
+        public static float Int32ToDouble(int Value, int FBits)
+        {
+            float ValueF = Value;
+
+            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
+
+            return ValueF;
+        }
+
+        public static float Int64ToDouble(long Value, int FBits)
+        {
+            float ValueF = Value;
+
+            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
+
+            return ValueF;
+        }
+
+        public static float UInt32ToDouble(uint Value, int FBits)
+        {
+            float ValueF = Value;
+
+            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
+
+            return ValueF;
+        }
+
+        public static float UInt64ToDouble(ulong Value, int FBits)
+        {
+            float ValueF = Value;
+
+            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
+
+            return ValueF;
         }
 
         public static ulong SMulHi128(ulong LHS, ulong RHS)
@@ -556,44 +628,6 @@ namespace ChocolArm64.Instruction
             return Res;
         }
 
-        public static AVec Scvtf_V64(AVec Vector, int Size)
-        {
-            return Scvtf_V(Vector, Size, 2);
-        }
-
-        public static AVec Scvtf_V128(AVec Vector, int Size)
-        {
-            return Scvtf_V(Vector, Size, 4);
-        }
-
-        private static AVec Scvtf_V(AVec Vector, int Size, int Bytes)
-        {
-            AVec Res = new AVec();
-
-            int Elems = Bytes >> Size;
-
-            if (Size == 0)
-            {
-                for (int Index = 0; Index < Elems; Index++)
-                {
-                    int Value = (int)ExtractSVec(Vector, Index, Size + 2);
-
-                    Res = AVec.InsertSingle(Res, Index, Value);
-                }
-            }
-            else
-            {
-                for (int Index = 0; Index < Elems; Index++)
-                {
-                    long Value = ExtractSVec(Vector, Index, Size + 2);
-
-                    Res = AVec.InsertDouble(Res, Index, Value);
-                }
-            }
-
-            return Res;
-        }
-
         public static AVec Sshll(AVec Vector, int Shift, int Size)
         {
             return Sshll_(Vector, Shift, Size, false);
@@ -780,57 +814,6 @@ namespace ChocolArm64.Instruction
                 ulong Value = ExtractVec(Vector, Index + Part, Size);
 
                 Res = InsertVec(Res, Index, Size + 1, Value << Shift);
-            }
-
-            return Res;
-        }
-
-        public static AVec Ushr64(AVec Vector, int Shift, int Size)
-        {
-            return Ushr(Vector, Shift, Size, 8);
-        }
-
-        public static AVec Ushr128(AVec Vector, int Shift, int Size)
-        {
-            return Ushr(Vector, Shift, Size, 16);
-        }
-
-        private static AVec Ushr(AVec Vector, int Shift, int Size, int Bytes)
-        {
-            AVec Res = new AVec();
-
-            int Elems = Bytes >> Size;
-
-            for (int Index = 0; Index < Elems; Index++)
-            {
-                ulong Value = ExtractVec(Vector, Index, Size);
-
-                Res = InsertVec(Res, Index, Size, Value >> Shift);
-            }
-
-            return Res;
-        }
-
-        public static AVec Usra64(AVec Res, AVec Vector, int Shift, int Size)
-        {
-            return Usra(Res, Vector, Shift, Size, 8);
-        }
-
-        public static AVec Usra128(AVec Res, AVec Vector, int Shift, int Size)
-        {
-            return Usra(Res, Vector, Shift, Size, 16);
-        }
-
-        private static AVec Usra(AVec Res, AVec Vector, int Shift, int Size, int Bytes)
-        {
-            int Elems = Bytes >> Size;
-
-            for (int Index = 0; Index < Elems; Index++)
-            {
-                ulong Value  = ExtractVec(Vector, Index, Size);
-                ulong Addend = ExtractVec(Res,    Index, Size);
-
-                Res = InsertVec(Res, Index, Size, Addend + (Value >> Shift));
             }
 
             return Res;

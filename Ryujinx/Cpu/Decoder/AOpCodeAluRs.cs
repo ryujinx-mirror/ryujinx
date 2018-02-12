@@ -11,11 +11,19 @@ namespace ChocolArm64.Decoder
 
         public AOpCodeAluRs(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
-            Shift     =              (OpCode >> 10) & 0x3f;
+            int Shift = (OpCode >> 10) & 0x3f;
+
+            if (Shift >= GetBitsCount())
+            {
+                Emitter = AInstEmit.Und;
+
+                return;
+            }
+
+            this.Shift = Shift;
+
             Rm        =              (OpCode >> 16) & 0x1f;
             ShiftType = (AShiftType)((OpCode >> 22) & 0x3);
-
-            //Assert ShiftType != 3
         }
     }
 }

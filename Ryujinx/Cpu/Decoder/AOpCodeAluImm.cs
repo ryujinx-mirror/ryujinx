@@ -15,8 +15,6 @@ namespace ChocolArm64.Decoder
 
                 int Shift = (OpCode >> 22) & 3;
 
-                //Assert Shift < 2
-
                 Imm <<= Shift * 12;
             }
             else if (DataOp == ADataOp.Logical)
