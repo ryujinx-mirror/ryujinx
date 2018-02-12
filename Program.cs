@@ -27,14 +27,12 @@ namespace Ryujinx
                     {
                         Logging.Info("Loading as cart with RomFS.");
 
-                        Console.Title += " - Cart (with RomFS) - " + args[0];
                         Ns.Os.LoadCart(args[0], RomFsFiles[0]);
                     }
                     else
                     {
                         Logging.Info("Loading as cart WITHOUT RomFS.");
 
-                        Console.Title += " - Cart (without RomFS) - " + args[0];
                         Ns.Os.LoadCart(args[0]);
                     }
                 }
@@ -42,7 +40,6 @@ namespace Ryujinx
                 {
                     Logging.Info("Loading as homebrew.");
 
-                    Console.Title += " - Homebrew - " + args[0];
                     Ns.Os.LoadProgram(args[0]);
                 }
             }
