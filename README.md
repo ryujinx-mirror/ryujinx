@@ -59,7 +59,7 @@ If you have some homebrews that currently doesn't work on it, you can contact us
 
 **Contact**
 
-For help, support, suggestion, or if you just want to get in touch with the team, join our Discord served!
+For help, support, suggestion, or if you just want to get in touch with the team, join our Discord server!
 https://discord.gg/VkQYXAZ
 
 **Running**
