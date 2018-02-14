@@ -52,15 +52,11 @@ namespace ChocolArm64.Instruction
 
         public static void EmitSubsCCheck(AILEmitterCtx Context)
         {
-            //C = Rn == Rm || Rn > Rm
+            //C = Rn == Rm || Rn > Rm = !(Rn < Rm)
             EmitDataLoadOpers(Context);
 
-            Context.Emit(OpCodes.Ceq);
-
-            EmitDataLoadOpers(Context);
-
-            Context.Emit(OpCodes.Cgt_Un);
-            Context.Emit(OpCodes.Or);
+            Context.Emit(OpCodes.Clt_Un);
+            Context.Emit(OpCodes.Not);
 
             Context.EmitStflg((int)APState.CBit);
         }
