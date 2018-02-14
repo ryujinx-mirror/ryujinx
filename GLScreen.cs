@@ -191,7 +191,7 @@ void main(void) {
             ScreenTex = new ScreenTexture(Ns, Renderer, 1280, 720);
         }
 
-        protected override void OnLoad (EventArgs e)
+        protected override void OnLoad(EventArgs e)
         {
             VSync = VSyncMode.On;
 

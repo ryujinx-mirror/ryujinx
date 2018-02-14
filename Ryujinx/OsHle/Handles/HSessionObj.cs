@@ -18,9 +18,9 @@ namespace Ryujinx.OsHle.Handles
 
         protected virtual void Dispose(bool Disposing)
         {
-            if(Disposing && Obj != null)
+            if (Disposing && Obj != null)
             {
-                if(Obj is IDisposable DisposableObj)
+                if (Obj is IDisposable DisposableObj)
                 {
                     DisposableObj.Dispose();
                 }

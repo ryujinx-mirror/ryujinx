@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using ChocolArm64.State;
 using Ryujinx.OsHle.Handles;
 using System.Threading;
@@ -7,7 +6,7 @@ namespace Ryujinx.OsHle.Svc
 {
     partial class SvcHandler
     {
-        private static void SvcCreateThread(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcCreateThread(ARegisters Registers)
         {
             long EntryPoint  = (long)Registers.X1;
             long ArgsPtr     = (long)Registers.X2;
@@ -17,12 +16,17 @@ namespace Ryujinx.OsHle.Svc
 
             if (Ns.Os.TryGetProcess(Registers.ProcessId, out Process Process))
             {
+                if (ProcessorId == -2)
+                {
+                    ProcessorId = 0;
+                }
+
                 int Handle = Process.MakeThread(
                     EntryPoint,
                     StackTop,
                     ArgsPtr,
                     Priority,
-                    ProcessorId);                
+                    ProcessorId);
 
                 Registers.X0 = (int)SvcResult.Success;
                 Registers.X1 = (ulong)Handle;
@@ -31,15 +35,15 @@ namespace Ryujinx.OsHle.Svc
             //TODO: Error codes.
         }
 
-        private static void SvcStartThread(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcStartThread(ARegisters Registers)
         {
             int Handle = (int)Registers.X0;
 
-            HThread HndData = Ns.Os.Handles.GetData<HThread>(Handle);
+            HThread Thread = Ns.Os.Handles.GetData<HThread>(Handle);
 
-            if (HndData != null)
+            if (Thread != null)
             {
-                HndData.Thread.Execute();
+                Process.Scheduler.StartThread(Thread);
 
                 Registers.X0 = (int)SvcResult.Success;
             }
@@ -47,29 +51,31 @@ namespace Ryujinx.OsHle.Svc
             //TODO: Error codes.
         }
 
-        private static void SvcSleepThread(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcSleepThread(ARegisters Registers)
         {           
             ulong NanoSecs = Registers.X0;
 
-            if (NanoSecs == 0)
+            if (Process.TryGetThread(Registers.Tpidr, out HThread CurrThread))
             {
-                Thread.Yield();
+                Process.Scheduler.Yield(CurrThread);
             }
             else
             {
-                Thread.Sleep((int)(NanoSecs / 1000000));
+                Logging.Error($"Thread with TPIDR_EL0 0x{Registers.Tpidr:x16} not found!");
             }
+
+            Thread.Sleep((int)(NanoSecs / 1000000));
         }
 
-        private static void SvcGetThreadPriority(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcGetThreadPriority(ARegisters Registers)
         {
             int Handle = (int)Registers.X1;
 
-            HThread HndData = Ns.Os.Handles.GetData<HThread>(Handle);
+            HThread Thread = Ns.Os.Handles.GetData<HThread>(Handle);
 
-            if (HndData != null)
+            if (Thread != null)
             {
-                Registers.X1 = (ulong)HndData.Thread.Priority;
+                Registers.X1 = (ulong)Thread.Priority;
                 Registers.X0 = (int)SvcResult.Success;
             }
 

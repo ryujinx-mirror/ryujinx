@@ -127,11 +127,12 @@ namespace Ryujinx.OsHle
             Processes.TryAdd(ProcessId, MainProcess);
         }
 
-        public void StopAllProcesses()
+        public void FinalizeAllProcesses()
         {
             foreach (Process Process in Processes.Values)
             {
                 Process.StopAllThreads();
+                Process.Dispose();
             }
         }
 

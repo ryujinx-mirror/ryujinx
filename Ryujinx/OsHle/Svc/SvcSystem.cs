@@ -1,5 +1,6 @@
 using ChocolArm64.Memory;
 using ChocolArm64.State;
+using Ryujinx.OsHle.Exceptions;
 using Ryujinx.OsHle.Handles;
 using Ryujinx.OsHle.Ipc;
 using System;
@@ -8,7 +9,7 @@ namespace Ryujinx.OsHle.Svc
 {
     partial class SvcHandler
     {
-        private static void SvcCloseHandle(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcCloseHandle(ARegisters Registers)
         {
             int Handle = (int)Registers.X0;
 
@@ -17,7 +18,7 @@ namespace Ryujinx.OsHle.Svc
             Registers.X0 = (int)SvcResult.Success;
         }
 
-        private static void SvcResetSignal(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcResetSignal(ARegisters Registers)
         {
             int Handle = (int)Registers.X0;
 
@@ -26,7 +27,7 @@ namespace Ryujinx.OsHle.Svc
             Registers.X0 = (int)SvcResult.Success;
         }
 
-        private static void SvcWaitSynchronization(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcWaitSynchronization(ARegisters Registers)
         {
             long HandlesPtr   = (long)Registers.X0;
             int  HandlesCount =  (int)Registers.X2;
@@ -34,15 +35,26 @@ namespace Ryujinx.OsHle.Svc
 
             //TODO: Implement events.
 
+            //Logging.Info($"SvcWaitSynchronization Thread {Registers.ThreadId}");
+
+            if (Process.TryGetThread(Registers.Tpidr, out HThread Thread))
+            {
+                Process.Scheduler.Yield(Thread);
+            }
+            else
+            {
+                Logging.Error($"Thread with TPIDR_EL0 0x{Registers.Tpidr:x16} not found!");
+            }
+
             Registers.X0 = (int)SvcResult.Success;
         }
 
-        private static void SvcGetSystemTick(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcGetSystemTick(ARegisters Registers)
         {
             Registers.X0 = (ulong)Registers.CntpctEl0;
         }
 
-        private static void SvcConnectToNamedPort(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcConnectToNamedPort(ARegisters Registers)
         {
             long StackPtr = (long)Registers.X0;
             long NamePtr  = (long)Registers.X1;
@@ -58,23 +70,23 @@ namespace Ryujinx.OsHle.Svc
             Registers.X0 = (int)SvcResult.Success;
         }
 
-        private static void SvcSendSyncRequest(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcSendSyncRequest(ARegisters Registers)
         {
-            SendSyncRequest(Ns, Registers, Memory, false);
+            SendSyncRequest(Registers, false);
         }
 
-        private static void SvcSendSyncRequestWithUserBuffer(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcSendSyncRequestWithUserBuffer(ARegisters Registers)
         {
-            SendSyncRequest(Ns, Registers, Memory, true);
+            SendSyncRequest(Registers, true);
         }
 
-        private static void SendSyncRequest(Switch Ns, ARegisters Registers, AMemory Memory, bool IsUser)
+        private void SendSyncRequest(ARegisters Registers, bool UserBuffer)
         {
             long CmdPtr = Registers.Tpidr;
             long Size   = 0x100;
             int  Handle = 0;
 
-            if (IsUser)
+            if (UserBuffer)
             {
                 CmdPtr = (long)Registers.X0;
                 Size   = (long)Registers.X1;
@@ -105,16 +117,16 @@ namespace Ryujinx.OsHle.Svc
             }
         }
 
-        private static void SvcBreak(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcBreak(ARegisters Registers)
         {
             long Reason  = (long)Registers.X0;
             long Unknown = (long)Registers.X1;
             long Info    = (long)Registers.X2;
 
-            throw new Exception($"SvcBreak: {Reason} {Unknown} {Info}");
+            throw new GuestBrokeExecutionException();
         }
 
-        private static void SvcOutputDebugString(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcOutputDebugString(ARegisters Registers)
         {
             long Position = (long)Registers.X0;
             long Size     = (long)Registers.X1;
@@ -126,7 +138,7 @@ namespace Ryujinx.OsHle.Svc
             Registers.X0 = (int)SvcResult.Success;
         }
 
-        private static void SvcGetInfo(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcGetInfo(ARegisters Registers)
         {
             long StackPtr = (long)Registers.X0;
             int  InfoType =  (int)Registers.X1;
@@ -148,8 +160,8 @@ namespace Ryujinx.OsHle.Svc
                 case 3:  Registers.X1 = GetMapRegionSize();      break;
                 case 4:  Registers.X1 = GetHeapRegionBaseAddr(); break;
                 case 5:  Registers.X1 = GetHeapRegionSize();     break;
-                case 6:  Registers.X1 = GetTotalMem(Memory);     break;
-                case 7:  Registers.X1 = GetUsedMem(Memory);      break;
+                case 6:  Registers.X1 = GetTotalMem();           break;
+                case 7:  Registers.X1 = GetUsedMem();            break;
                 case 11: Registers.X1 = GetRnd64();              break;
                 case 12: Registers.X1 = GetAddrSpaceBaseAddr();  break;
                 case 13: Registers.X1 = GetAddrSpaceSize();      break;
@@ -162,47 +174,47 @@ namespace Ryujinx.OsHle.Svc
             Registers.X0 = (int)SvcResult.Success;
         }
 
-        private static ulong GetTotalMem(AMemory Memory)
+        private ulong GetTotalMem()
         {
             return (ulong)Memory.Manager.GetTotalMemorySize();
         }
 
-        private static ulong GetUsedMem(AMemory Memory)
+        private ulong GetUsedMem()
         {
             return (ulong)Memory.Manager.GetUsedMemorySize();
         }
 
-        private static ulong GetRnd64()
+        private ulong GetRnd64()
         {
             return (ulong)Rng.Next() + ((ulong)Rng.Next() << 32);
         }
 
-        private static ulong GetAddrSpaceBaseAddr()
+        private ulong GetAddrSpaceBaseAddr()
         {
             return 0x08000000;
         }
 
-        private static ulong GetAddrSpaceSize()
+        private ulong GetAddrSpaceSize()
         {
             return AMemoryMgr.AddrSize - GetAddrSpaceBaseAddr();
         }
 
-        private static ulong GetMapRegionBaseAddr()
+        private ulong GetMapRegionBaseAddr()
         {
             return 0x80000000;
         }
 
-        private static ulong GetMapRegionSize()
+        private ulong GetMapRegionSize()
         {
             return 0x40000000;
         }
 
-        private static ulong GetHeapRegionBaseAddr()
+        private ulong GetHeapRegionBaseAddr()
         {
             return GetMapRegionBaseAddr() + GetMapRegionSize();
         }
 
-        private static ulong GetHeapRegionSize()
+        private ulong GetHeapRegionSize()
         {
             return 0x40000000;
         }

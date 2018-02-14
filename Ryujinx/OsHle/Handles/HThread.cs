@@ -6,9 +6,16 @@ namespace Ryujinx.OsHle.Handles
     {
         public AThread Thread { get; private set; }
 
-        public HThread(AThread Thread)
+        public int ProcessorId { get; private set; }
+        public int Priority    { get; private set; }
+
+        public int ThreadId => Thread.ThreadId;
+
+        public HThread(AThread Thread, int ProcessorId, int Priority)
         {
-            this.Thread = Thread;
+            this.Thread      = Thread;
+            this.ProcessorId = ProcessorId;
+            this.Priority    = Priority;
         }
     }
 }

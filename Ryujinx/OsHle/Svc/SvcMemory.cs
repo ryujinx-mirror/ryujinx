@@ -6,7 +6,7 @@ namespace Ryujinx.OsHle.Svc
 {
     partial class SvcHandler
     {
-        private static void SvcSetHeapSize(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcSetHeapSize(ARegisters Registers)
         {
             uint Size = (uint)Registers.X1;
 
@@ -16,7 +16,7 @@ namespace Ryujinx.OsHle.Svc
             Registers.X1 = (ulong)Memory.Manager.HeapAddr;
         }
 
-        private static void SvcSetMemoryAttribute(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcSetMemoryAttribute(ARegisters Registers)
         {
             long Position = (long)Registers.X0;
             long Size     = (long)Registers.X1;
@@ -28,7 +28,7 @@ namespace Ryujinx.OsHle.Svc
             Registers.X0 = (int)SvcResult.Success;
         }
 
-        private static void SvcMapMemory(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcMapMemory(ARegisters Registers)
         {
             long Dst  = (long)Registers.X0;
             long Src  = (long)Registers.X1;
@@ -39,7 +39,7 @@ namespace Ryujinx.OsHle.Svc
             Registers.X0 = (int)SvcResult.Success;
         }
 
-        private static void SvcQueryMemory(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcQueryMemory(ARegisters Registers)
         {
             long InfoPtr  = (long)Registers.X0;
             long Position = (long)Registers.X2;
@@ -63,7 +63,7 @@ namespace Ryujinx.OsHle.Svc
             Registers.X1 = 0;
         }
 
-        private static void SvcMapSharedMemory(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcMapSharedMemory(ARegisters Registers)
         {
             int  Handle   =  (int)Registers.X0;
             long Position = (long)Registers.X1;
@@ -87,7 +87,7 @@ namespace Ryujinx.OsHle.Svc
             //TODO: Error codes.
         }
 
-        private static void SvcUnmapSharedMemory(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcUnmapSharedMemory(ARegisters Registers)
         {
             int  Handle   =  (int)Registers.X0;
             long Position = (long)Registers.X1;
@@ -103,7 +103,7 @@ namespace Ryujinx.OsHle.Svc
             //TODO: Error codes.
         }
 
-        private static void SvcCreateTransferMemory(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcCreateTransferMemory(ARegisters Registers)
         {
             long Position = (long)Registers.X1;
             long Size     = (long)Registers.X2;

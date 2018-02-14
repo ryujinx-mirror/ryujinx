@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace ChocolArm64.Memory
 {
@@ -18,6 +19,32 @@ namespace ChocolArm64.Memory
             {
                 Memory.WriteByte(Position + Offs, 0);
             }
+        }
+
+        public static int ReadInt32Exclusive(AMemory Memory, long Position)
+        {
+            while (!Memory.AcquireAddress(Position))
+            {
+                Thread.Yield();
+            }
+
+            int Value = Memory.ReadInt32(Position);
+
+            Memory.ReleaseAddress(Position);
+
+            return Value;
+        }
+
+        public static void WriteInt32Exclusive(AMemory Memory, long Position, int Value)
+        {
+            while (!Memory.AcquireAddress(Position))
+            {
+                Thread.Yield();
+            }
+
+            Memory.WriteInt32(Position, Value);
+
+            Memory.ReleaseAddress(Position);
         }
 
         public static byte[] ReadBytes(AMemory Memory, long Position, int Size)

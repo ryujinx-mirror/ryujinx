@@ -1,5 +1,6 @@
-using ChocolArm64;
 using ChocolArm64.Memory;
+using Ryujinx.OsHle.Handles;
+using System.Collections.Concurrent;
 using System.Threading;
 
 namespace Ryujinx.OsHle
@@ -8,33 +9,31 @@ namespace Ryujinx.OsHle
     {
         private const int MutexHasListenersMask = 0x40000000;
 
-        private AMemory Memory;
+        private Process Process;
 
         private long MutexAddress;
 
-        private int CurrRequestingThreadHandle;
-
-        private int HighestPriority;
-
-        private ManualResetEvent ThreadEvent;
-
         private object EnterWaitLock;
 
-        public Mutex(AMemory Memory, long MutexAddress)
+        private ConcurrentQueue<HThread> WaitingThreads;
+
+        public Mutex(Process Process, long MutexAddress, int OwnerThreadHandle)
         {
-            this.Memory       = Memory;
+            this.Process      = Process;
             this.MutexAddress = MutexAddress;
 
-            ThreadEvent = new ManualResetEvent(false);
+            //Process.Memory.WriteInt32(MutexAddress, OwnerThreadHandle);
 
             EnterWaitLock = new object();
+
+            WaitingThreads = new ConcurrentQueue<HThread>();
         }
 
-        public void WaitForLock(AThread RequestingThread, int RequestingThreadHandle)
+        public void WaitForLock(HThread RequestingThread, int RequestingThreadHandle)
         {
             lock (EnterWaitLock)
-            {               
-                int CurrentThreadHandle = Memory.ReadInt32(MutexAddress) & ~MutexHasListenersMask;
+            {
+                int CurrentThreadHandle = ReadMutexValue() & ~MutexHasListenersMask;
 
                 if (CurrentThreadHandle == RequestingThreadHandle ||
                     CurrentThreadHandle == 0)
@@ -42,23 +41,19 @@ namespace Ryujinx.OsHle
                     return;
                 }
 
-                if (CurrRequestingThreadHandle == 0 || RequestingThread.Priority < HighestPriority)
-                {
-                    CurrRequestingThreadHandle = RequestingThreadHandle;
+                WriteMutexValue(CurrentThreadHandle | MutexHasListenersMask);
 
-                    HighestPriority = RequestingThread.Priority;
-                }
+                WaitingThreads.Enqueue(RequestingThread);
             }
 
-            ThreadEvent.Reset();
-            ThreadEvent.WaitOne();
+            Process.Scheduler.WaitForSignal(RequestingThread);
         }
 
         public void GiveUpLock(int ThreadHandle)
         {
             lock (EnterWaitLock)
             {
-                int CurrentThread = Memory.ReadInt32(MutexAddress) & ~MutexHasListenersMask;
+                int CurrentThread = ReadMutexValue() & ~MutexHasListenersMask;
 
                 if (CurrentThread == ThreadHandle)
                 {
@@ -71,19 +66,31 @@ namespace Ryujinx.OsHle
         {
             lock (EnterWaitLock)
             {
-                if (CurrRequestingThreadHandle != 0)
+                int HasListeners = WaitingThreads.Count > 1 ? MutexHasListenersMask : 0;
+
+                WriteMutexValue(HasListeners);
+
+                HThread[] UnlockedThreads = new HThread[WaitingThreads.Count];
+
+                int Index = 0;
+
+                while (WaitingThreads.TryDequeue(out HThread Thread))
                 {
-                    Memory.WriteInt32(MutexAddress, CurrRequestingThreadHandle);
-                }
-                else
-                {
-                    Memory.WriteInt32(MutexAddress, 0);
+                    UnlockedThreads[Index++] = Thread;
                 }
 
-                CurrRequestingThreadHandle = 0;
-
-                ThreadEvent.Set();
+                Process.Scheduler.Signal(UnlockedThreads);
             }
+        }
+
+        private int ReadMutexValue()
+        {
+            return AMemoryHelper.ReadInt32Exclusive(Process.Memory, MutexAddress);
+        }
+
+        private void WriteMutexValue(int Value)
+        {
+            AMemoryHelper.WriteInt32Exclusive(Process.Memory, MutexAddress, Value);
         }
     }
 }

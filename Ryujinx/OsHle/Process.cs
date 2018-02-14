@@ -9,10 +9,11 @@ using Ryujinx.OsHle.Svc;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Ryujinx.OsHle
 {
-    class Process
+    class Process : IDisposable
     {
         private const int  MaxStackSize  = 8 * 1024 * 1024;
 
@@ -27,13 +28,17 @@ namespace Ryujinx.OsHle
 
         public AMemory Memory { get; private set; }
 
-        private SvcHandler SvcHandler;
+        public KProcessScheduler Scheduler { get; private set; }
 
-        private AThread MainThread;
+        private SvcHandler SvcHandler;       
 
         private ConcurrentDictionary<int, AThread> TlsSlots;
 
+        private ConcurrentDictionary<long, HThread> ThreadsByTpidr;
+
         private List<Executable> Executables;
+
+        private HThread MainThread;
 
         private long ImageBase;
 
@@ -42,9 +47,16 @@ namespace Ryujinx.OsHle
             this.Ns        = Ns;
             this.ProcessId = ProcessId;
 
-            Memory      = new AMemory(Ns.Ram, Allocator);
-            SvcHandler  = new SvcHandler(Ns, Memory);
-            TlsSlots    = new ConcurrentDictionary<int, AThread>();
+            Memory = new AMemory(Ns.Ram, Allocator);
+
+            Scheduler = new KProcessScheduler();
+
+            SvcHandler = new SvcHandler(Ns, this);
+
+            TlsSlots = new ConcurrentDictionary<int, AThread>();
+
+            ThreadsByTpidr = new ConcurrentDictionary<long, HThread>();
+
             Executables = new List<Executable>();
 
             ImageBase = 0x8000000;
@@ -86,16 +98,16 @@ namespace Ryujinx.OsHle
 
             Memory.Manager.MapPhys(StackBot, MaxStackSize, (int)MemoryType.Normal, AMemoryPerm.RW);
 
-            int Handle = MakeThread(Executables[0].ImageBase, TlsPageAddr, 0, 48, 0);
+            int Handle = MakeThread(Executables[0].ImageBase, TlsPageAddr, 0, 0, 0);
 
             if (Handle == -1)
             {
                 return false;
             }
 
-            MainThread = Ns.Os.Handles.GetData<HThread>(Handle).Thread;
+            MainThread = Ns.Os.Handles.GetData<HThread>(Handle);
 
-            MainThread.Execute();
+            Scheduler.StartThread(MainThread);
 
             return true;
         }
@@ -104,9 +116,9 @@ namespace Ryujinx.OsHle
         {
             if (MainThread != null)
             {
-                while (MainThread.IsAlive)
+                while (MainThread.Thread.IsAlive)
                 {
-                    MainThread.StopExecution();
+                    MainThread.Thread.StopExecution();
                 }
             }
 
@@ -126,11 +138,36 @@ namespace Ryujinx.OsHle
             int  Priority,
             int  ProcessorId)
         {
-            AThread Thread = new AThread(Memory, EntryPoint, Priority);
+            ThreadPriority ThreadPrio;
+
+            if (Priority < 12)
+            {
+                ThreadPrio = ThreadPriority.Highest;
+            }
+            else if (Priority < 24)
+            {
+                ThreadPrio = ThreadPriority.AboveNormal;
+            }
+            else if (Priority < 36)
+            {
+                ThreadPrio = ThreadPriority.Normal;
+            }
+            else if (Priority < 48)
+            {
+                ThreadPrio = ThreadPriority.BelowNormal;
+            }
+            else
+            {
+                ThreadPrio = ThreadPriority.Lowest;
+            }
+
+            AThread Thread = new AThread(Memory, ThreadPrio, EntryPoint);
+
+            HThread ThreadHnd = new HThread(Thread, ProcessorId, Priority);
+
+            int Handle = Ns.Os.Handles.GenerateId(ThreadHnd);
 
             int TlsSlot = GetFreeTlsSlot(Thread);
-
-            int Handle = Ns.Os.Handles.GenerateId(new HThread(Thread));
 
             if (TlsSlot == -1 || Handle  == -1)
             {
@@ -148,6 +185,8 @@ namespace Ryujinx.OsHle
             Thread.Registers.X31        = (ulong)StackTop;
 
             Thread.WorkFinished += ThreadFinished;
+
+            ThreadsByTpidr.TryAdd(Thread.Registers.Tpidr, ThreadHnd);
 
             return Handle;
         }
@@ -188,6 +227,24 @@ namespace Ryujinx.OsHle
         private int GetTlsSlot(long Position)
         {
             return (int)((Position - TlsPageAddr) / TlsSize);
+        }
+
+        public bool TryGetThread(long Tpidr, out HThread Thread)
+        {
+            return ThreadsByTpidr.TryGetValue(Tpidr, out Thread);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool Disposing)
+        {
+            if (Disposing)
+            {
+                Scheduler.Dispose();
+            }
         }
     }
 }

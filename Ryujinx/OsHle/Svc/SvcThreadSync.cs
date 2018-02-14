@@ -1,5 +1,4 @@
 using ChocolArm64;
-using ChocolArm64.Memory;
 using ChocolArm64.State;
 using Ryujinx.OsHle.Handles;
 
@@ -7,27 +6,24 @@ namespace Ryujinx.OsHle.Svc
 {
     partial class SvcHandler
     {
-        private static void SvcArbitrateLock(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcArbitrateLock(ARegisters Registers)
         {
             int  OwnerThreadHandle      =  (int)Registers.X0;
             long MutexAddress           = (long)Registers.X1;
             int  RequestingThreadHandle =  (int)Registers.X2;
 
-            AThread RequestingThread = Ns.Os.Handles.GetData<HThread>(RequestingThreadHandle).Thread;
+            HThread RequestingThread = Ns.Os.Handles.GetData<HThread>(RequestingThreadHandle);
 
-            Mutex M = new Mutex(Memory, MutexAddress);
+            Mutex M = new Mutex(Process, MutexAddress, OwnerThreadHandle);
 
             M = Ns.Os.Mutexes.GetOrAdd(MutexAddress, M);
 
-            //FIXME
-            //M.WaitForLock(RequestingThread, RequestingThreadHandle);
-
-            Memory.WriteInt32(MutexAddress, 0);
+            M.WaitForLock(RequestingThread, RequestingThreadHandle);
 
             Registers.X0 = (int)SvcResult.Success;
         }
 
-        private static void SvcArbitrateUnlock(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcArbitrateUnlock(ARegisters Registers)
         {
             long MutexAddress = (long)Registers.X0;
 
@@ -39,39 +35,36 @@ namespace Ryujinx.OsHle.Svc
             Registers.X0 = (int)SvcResult.Success;
         }
 
-        private static void SvcWaitProcessWideKeyAtomic(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcWaitProcessWideKeyAtomic(ARegisters Registers)
         {
             long MutexAddress   = (long)Registers.X0;
             long CondVarAddress = (long)Registers.X1;
             int  ThreadHandle   =  (int)Registers.X2;
             long Timeout        = (long)Registers.X3;
 
-            AThread Thread = Ns.Os.Handles.GetData<HThread>(ThreadHandle).Thread;
+            HThread Thread = Ns.Os.Handles.GetData<HThread>(ThreadHandle);
 
             if (Ns.Os.Mutexes.TryGetValue(MutexAddress, out Mutex M))
             {
                 M.GiveUpLock(ThreadHandle);
             }
 
-            CondVar Signal = new CondVar(Memory, CondVarAddress, Timeout);
+            CondVar Cv = new CondVar(Process, CondVarAddress, Timeout);
 
-            Signal = Ns.Os.CondVars.GetOrAdd(CondVarAddress, Signal);
+            Cv = Ns.Os.CondVars.GetOrAdd(CondVarAddress, Cv);
 
-            Signal.WaitForSignal(ThreadHandle);
+            Cv.WaitForSignal(Thread);
 
-            M = new Mutex(Memory, MutexAddress);
+            M = new Mutex(Process, MutexAddress, ThreadHandle);
 
             M = Ns.Os.Mutexes.GetOrAdd(MutexAddress, M);
 
-            //FIXME
-            //M.WaitForLock(Thread, ThreadHandle);
-
-            Memory.WriteInt32(MutexAddress, 0);
+            M.WaitForLock(Thread, ThreadHandle);
 
             Registers.X0 = (int)SvcResult.Success;
         }
 
-        private static void SvcSignalProcessWideKey(Switch Ns, ARegisters Registers, AMemory Memory)
+        private void SvcSignalProcessWideKey(ARegisters Registers)
         {
             long CondVarAddress = (long)Registers.X0;
             int  Count          =  (int)Registers.X1;

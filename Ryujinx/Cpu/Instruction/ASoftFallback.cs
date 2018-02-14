@@ -197,38 +197,38 @@ namespace ChocolArm64.Instruction
             return ValueF;
         }
 
-        public static float Int32ToDouble(int Value, int FBits)
+        public static double Int32ToDouble(int Value, int FBits)
         {
-            float ValueF = Value;
+            double ValueF = Value;
 
-            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
+            if (FBits != 0) ValueF *= 1 / Math.Pow(2, FBits);
 
             return ValueF;
         }
 
-        public static float Int64ToDouble(long Value, int FBits)
+        public static double Int64ToDouble(long Value, int FBits)
         {
-            float ValueF = Value;
+            double ValueF = Value;
 
-            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
+            if (FBits != 0) ValueF *= 1 / Math.Pow(2, FBits);
 
             return ValueF;
         }
 
-        public static float UInt32ToDouble(uint Value, int FBits)
+        public static double UInt32ToDouble(uint Value, int FBits)
         {
-            float ValueF = Value;
+            double ValueF = Value;
 
-            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
+            if (FBits != 0) ValueF *= 1 / Math.Pow(2, FBits);
 
             return ValueF;
         }
 
-        public static float UInt64ToDouble(ulong Value, int FBits)
+        public static double UInt64ToDouble(ulong Value, int FBits)
         {
-            float ValueF = Value;
+            double ValueF = Value;
 
-            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
+            if (FBits != 0) ValueF *= 1 / Math.Pow(2, FBits);
 
             return ValueF;
         }

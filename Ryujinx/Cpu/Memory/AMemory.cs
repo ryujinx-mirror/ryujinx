@@ -66,10 +66,10 @@ namespace ChocolArm64.Memory
 
         public void SetExclusive(ARegisters Registers, long Position)
         {
+            Position &= ~ErgMask;
+
             lock (Monitors)
             {
-                Position &= ~ErgMask;
-
                 if (Monitors.TryGetValue(Registers.ThreadId, out ExMonitor Monitor))
                 {
                     ExAddrs.Remove(Monitor.Position);
@@ -88,10 +88,10 @@ namespace ChocolArm64.Memory
 
         public bool TestExclusive(ARegisters Registers, long Position)
         {
+            Position &= ~ErgMask;
+
             lock (Monitors)
             {
-                Position &= ~ErgMask;
-
                 if (!Monitors.TryGetValue(Registers.ThreadId, out ExMonitor Monitor))
                 {
                     return false;
@@ -110,6 +110,26 @@ namespace ChocolArm64.Memory
                     Monitor.Reset();
                     ExAddrs.Remove(Monitor.Position);
                 }
+            }
+        }
+
+        public bool AcquireAddress(long Position)
+        {
+            Position &= ~ErgMask;
+
+            lock (Monitors)
+            {
+                return ExAddrs.Add(Position);
+            }
+        }
+
+        public void ReleaseAddress(long Position)
+        {
+            Position &= ~ErgMask;
+
+            lock (Monitors)
+            {
+                ExAddrs.Remove(Position);
             }
         }
 

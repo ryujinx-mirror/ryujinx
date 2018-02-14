@@ -1,86 +1,103 @@
 using ChocolArm64.Memory;
-using System.Collections.Concurrent;
-using System.Threading;
+using Ryujinx.OsHle.Handles;
+using System.Collections.Generic;
 
 namespace Ryujinx.OsHle
 {
     class CondVar
     {
-        private AMemory Memory;
+        private Process Process;
 
         private long CondVarAddress;
         private long Timeout;
 
-        private class WaitingThread
+        private List<HThread> WaitingThreads;
+
+        public CondVar(Process Process, long CondVarAddress, long Timeout)
         {
-            public int Handle;
-
-            public ManualResetEvent Event;
-
-            public WaitingThread(int Handle, ManualResetEvent Event)
-            {
-                this.Handle = Handle;
-                this.Event  = Event;
-            }
-        }
-
-        private ConcurrentQueue<WaitingThread> WaitingThreads;
-
-        public CondVar(AMemory Memory, long CondVarAddress, long Timeout)
-        {
-            this.Memory         = Memory;
+            this.Process        = Process;
             this.CondVarAddress = CondVarAddress;
             this.Timeout        = Timeout;
 
-            WaitingThreads = new ConcurrentQueue<WaitingThread>();
+            WaitingThreads = new List<HThread>();
         }
 
-        public void WaitForSignal(int ThreadHandle)
+        public void WaitForSignal(HThread Thread)
         {
-            int Count = Memory.ReadInt32(CondVarAddress);
+            int Count = ReadCondVarValue();
 
             if (Count <= 0)
             {
+                //FIXME: We shouldn't need to do that?
+                Process.Scheduler.Yield(Thread);
+
                 return;
             }
 
-            Memory.WriteInt32(CondVarAddress, Count - 1);
+            WriteCondVarValue(Count - 1);
 
-            ManualResetEvent Event = new ManualResetEvent(false);
-
-            WaitingThreads.Enqueue(new WaitingThread(ThreadHandle, Event));
+            lock (WaitingThreads)
+            {
+                WaitingThreads.Add(Thread);
+            }
 
             if (Timeout != -1)
             {
-                Event.WaitOne((int)(Timeout / 1000000));
+                Process.Scheduler.WaitForSignal(Thread, (int)(Timeout / 1000000));
             }
             else
             {
-                Event.WaitOne();
+                Process.Scheduler.WaitForSignal(Thread);
             }
         }
 
         public void SetSignal(int Count)
         {
-            if (Count == -1)
+            lock (WaitingThreads)
             {
-                while (WaitingThreads.TryDequeue(out WaitingThread Thread))
+                if (Count == -1)
                 {
-                    Thread.Event.Set();
-                }
+                    Process.Scheduler.Signal(WaitingThreads.ToArray());
 
-                Memory.WriteInt32(CondVarAddress, WaitingThreads.Count);
-            }
-            else
-            {
-                //TODO: Threads with the highest priority needs to be signaled first.
-                if (WaitingThreads.TryDequeue(out WaitingThread Thread))
+                    WriteCondVarValue(WaitingThreads.Count);
+
+                    WaitingThreads.Clear();
+                }
+                else
                 {
-                    Thread.Event.Set();
-                }
+                    if (WaitingThreads.Count > 0)
+                    {
+                        int HighestPriority  = WaitingThreads[0].Priority;
+                        int HighestPrioIndex = 0;
 
-                Memory.WriteInt32(CondVarAddress, Count);
+                        for (int Index = 1; Index < WaitingThreads.Count; Index++)
+                        {
+                            if (HighestPriority > WaitingThreads[Index].Priority)
+                            {
+                                HighestPriority = WaitingThreads[Index].Priority;
+
+                                HighestPrioIndex = Index;
+                            }
+                        }
+
+                        Process.Scheduler.Signal(WaitingThreads[HighestPrioIndex]);
+
+                        WaitingThreads.RemoveAt(HighestPrioIndex);
+                    }
+
+                    WriteCondVarValue(Count);
+                }
             }
+        }
+
+        private int ReadCondVarValue()
+        {
+            return AMemoryHelper.ReadInt32Exclusive(Process.Memory, CondVarAddress);
+        }
+
+        private void WriteCondVarValue(int Value)
+        {
+            AMemoryHelper.WriteInt32Exclusive(Process.Memory, CondVarAddress, Value);
         }
     }
 }
