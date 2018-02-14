@@ -8,14 +8,14 @@ namespace Ryujinx.OsHle.Services
     {
         public static long TimeGetStandardUserSystemClock(ServiceCtx Context)
         {
-            MakeObject(Context, new ISystemClock());
+            MakeObject(Context, new ISystemClock(SystemClockType.Standard));
 
             return 0;
         }
 
         public static long TimeGetStandardNetworkSystemClock(ServiceCtx Context)
         {
-            MakeObject(Context, new ISystemClock());
+            MakeObject(Context, new ISystemClock(SystemClockType.Network));
 
             return 0;
         }
@@ -33,5 +33,13 @@ namespace Ryujinx.OsHle.Services
 
             return 0;
         }
+
+        public static long TimeGetStandardLocalSystemClock(ServiceCtx Context)
+        {
+            MakeObject(Context, new ISystemClock(SystemClockType.Local));
+
+            return 0;
+        }
+
     }
 }

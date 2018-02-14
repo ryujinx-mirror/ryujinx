@@ -273,6 +273,13 @@ namespace ChocolArm64.Instruction
             EmitVectorImmBinaryZx(Context, OpCodes.Shl, Op.Imm - (8 << Op.Size));
         }
 
+        public static void Shrn_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
+
+            EmitVectorImmNarrowBinaryZx(Context, OpCodes.Shr_Un, (8 << (Op.Size + 1)) - Op.Imm);
+        }
+
         public static void Smax_V(AILEmitterCtx Context) => EmitVectorSmax(Context);
         public static void Smin_V(AILEmitterCtx Context) => EmitVectorSmin(Context);
 
@@ -300,7 +307,8 @@ namespace ChocolArm64.Instruction
             EmitVectorImmBinarySx(Context, OpCodes.Shr, (8 << (Op.Size + 1)) - Op.Imm);
         }
 
-        public static void St__V(AILEmitterCtx Context) => EmitSimdMemMs(Context, IsLoad: false);
+        public static void St__Vms(AILEmitterCtx Context) => EmitSimdMemMs(Context, IsLoad: false);
+        public static void St__Vss(AILEmitterCtx Context) => EmitSimdMemSs(Context, IsLoad: false);
 
         public static void Sub_V(AILEmitterCtx Context) => EmitVectorBinaryZx(Context, OpCodes.Sub);
 
@@ -622,7 +630,7 @@ namespace ChocolArm64.Instruction
 
             for (int Index = 1; Index < (Bytes >> Op.Size); Index++)
             {
-                EmitVectorExtractZx(Context, Op.Rn, Op.Size, Index);
+                EmitVectorExtractZx(Context, Op.Rn, Index, Op.Size);
 
                 Context.Emit(OpCodes.Add);
             }
@@ -986,10 +994,6 @@ namespace ChocolArm64.Instruction
 
             for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
             {
-                Context.EmitLdvec(Op.Rd);
-                Context.EmitLdc_I4(Index);
-                Context.EmitLdc_I4(Op.Size);
-
                 if (Opers.HasFlag(OperFlags.Rd))
                 {
                     EmitVectorExtract(Context, Op.Rd, Index, Op.Size, Signed);
@@ -1007,9 +1011,7 @@ namespace ChocolArm64.Instruction
 
                 Emit();
 
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.InsertVec));
-
-                Context.EmitStvec(Op.Rd);
+                EmitVectorInsert(Context, Op.Rd, Index, Op.Size);
             }
 
             if (Op.RegisterSize == ARegisterSize.SIMD64)
@@ -1018,27 +1020,27 @@ namespace ChocolArm64.Instruction
             }
         }
 
-        private static void EmitVectorImmBinarySx(AILEmitterCtx Context, OpCode ILOp, long Imm)
+        private static void EmitVectorImmBinarySx(AILEmitterCtx Context, OpCode ILOp, int Imm)
         {
             EmitVectorImmBinarySx(Context, () => Context.Emit(ILOp), Imm);
         }
 
-        private static void EmitVectorImmBinaryZx(AILEmitterCtx Context, OpCode ILOp, long Imm)
+        private static void EmitVectorImmBinaryZx(AILEmitterCtx Context, OpCode ILOp, int Imm)
         {
             EmitVectorImmBinaryZx(Context, () => Context.Emit(ILOp), Imm);
         }
 
-        private static void EmitVectorImmBinarySx(AILEmitterCtx Context, Action Emit, long Imm)
+        private static void EmitVectorImmBinarySx(AILEmitterCtx Context, Action Emit, int Imm)
         {
             EmitVectorImmBinaryOp(Context, Emit, Imm, true);
         }
 
-        private static void EmitVectorImmBinaryZx(AILEmitterCtx Context, Action Emit, long Imm)
+        private static void EmitVectorImmBinaryZx(AILEmitterCtx Context, Action Emit, int Imm)
         {
             EmitVectorImmBinaryOp(Context, Emit, Imm, false);
         }
 
-        private static void EmitVectorImmBinaryOp(AILEmitterCtx Context, Action Emit, long Imm, bool Signed)
+        private static void EmitVectorImmBinaryOp(AILEmitterCtx Context, Action Emit, int Imm, bool Signed)
         {
             AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
 
@@ -1046,22 +1048,66 @@ namespace ChocolArm64.Instruction
 
             for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
             {
-                Context.EmitLdvec(Op.Rd);
-                Context.EmitLdc_I4(Index);
-                Context.EmitLdc_I4(Op.Size);
+                EmitVectorExtract(Context, Op.Rn, Index, Op.Size, Signed);
 
-                EmitVectorExtract(Context, Op.Rn, Index, Op.Size,  Signed);
-
-                Context.EmitLdc_I8(Imm);
+                Context.EmitLdc_I4(Imm);
 
                 Emit();
 
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.InsertVec));
-
-                Context.EmitStvec(Op.Rd);
+                EmitVectorInsert(Context, Op.Rd, Index, Op.Size);
             }
 
             if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
+        private static void EmitVectorImmNarrowBinarySx(AILEmitterCtx Context, OpCode ILOp, int Imm)
+        {
+            EmitVectorImmNarrowBinarySx(Context, () => Context.Emit(ILOp), Imm);
+        }
+
+        private static void EmitVectorImmNarrowBinaryZx(AILEmitterCtx Context, OpCode ILOp, int Imm)
+        {
+            EmitVectorImmNarrowBinaryZx(Context, () => Context.Emit(ILOp), Imm);
+        }
+
+        private static void EmitVectorImmNarrowBinarySx(AILEmitterCtx Context, Action Emit, int Imm)
+        {
+            EmitVectorImmNarrowBinaryOp(Context, Emit, Imm, true);
+        }
+
+        private static void EmitVectorImmNarrowBinaryZx(AILEmitterCtx Context, Action Emit, int Imm)
+        {
+            EmitVectorImmNarrowBinaryOp(Context, Emit, Imm, false);
+        }
+
+        private static void EmitVectorImmNarrowBinaryOp(AILEmitterCtx Context, Action Emit, int Imm, bool Signed)
+        {
+            AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
+
+            if (Op.Size < 0 || Op.Size > 2)
+            {
+                throw new InvalidOperationException(Op.Size.ToString());
+            }
+
+            int Elems = 8 >> Op.Size;
+
+            int Part = Op.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                EmitVectorExtract(Context, Op.Rn, Index, Op.Size + 1, Signed);
+
+                Context.EmitLdc_I4(Imm);
+
+                Emit();
+
+                EmitVectorInsert(Context, Op.Rd, Part + Index, Op.Size);
+            }
+
+            if (Part == 0)
             {
                 EmitVectorZeroUpper(Context, Op.Rd);
             }
@@ -1141,6 +1187,11 @@ namespace ChocolArm64.Instruction
 
         private static void EmitVectorExtract(AILEmitterCtx Context, int Reg, int Index, int Size, bool Signed)
         {
+            if (Size < 0 || Size > 3)
+            {
+                throw new ArgumentOutOfRangeException(nameof(Size));
+            }
+
             IAOpCodeSimd Op = (IAOpCodeSimd)Context.CurrOp;
 
             Context.EmitLdvec(Reg);
@@ -1185,6 +1236,11 @@ namespace ChocolArm64.Instruction
 
         private static void EmitVectorInsert(AILEmitterCtx Context, int Reg, int Index, int Size)
         {
+            if (Size < 0 || Size > 3)
+            {
+                throw new ArgumentOutOfRangeException(nameof(Size));
+            }
+
             Context.EmitLdvec(Reg);
             Context.EmitLdc_I4(Index);
             Context.EmitLdc_I4(Size);
@@ -1196,6 +1252,11 @@ namespace ChocolArm64.Instruction
 
         private static void EmitVectorInsert(AILEmitterCtx Context, int Reg, int Index, int Size, long Value)
         {
+            if (Size < 0 || Size > 3)
+            {
+                throw new ArgumentOutOfRangeException(nameof(Size));
+            }
+
             Context.EmitLdvec(Reg);
             Context.EmitLdc_I4(Index);
             Context.EmitLdc_I4(Size);

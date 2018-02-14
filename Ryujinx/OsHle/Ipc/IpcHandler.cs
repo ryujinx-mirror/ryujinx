@@ -62,10 +62,12 @@ namespace Ryujinx.OsHle.Ipc
             { ( "time:u",      1), Service.TimeGetStandardNetworkSystemClock        },
             { ( "time:u",      2), Service.TimeGetStandardSteadyClock               },
             { ( "time:u",      3), Service.TimeGetTimeZoneService                   },
+            { ( "time:u",      4), Service.TimeGetStandardLocalSystemClock          },
             { ( "time:s",      0), Service.TimeGetStandardUserSystemClock           },
             { ( "time:s",      1), Service.TimeGetStandardNetworkSystemClock        },
             { ( "time:s",      2), Service.TimeGetStandardSteadyClock               },
             { ( "time:s",      3), Service.TimeGetTimeZoneService                   },
+            { ( "time:s",      4), Service.TimeGetStandardLocalSystemClock          },
             { ( "vi:m",        2), Service.ViGetDisplayService                      },
         };
 

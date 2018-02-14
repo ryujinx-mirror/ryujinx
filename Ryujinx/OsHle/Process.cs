@@ -30,7 +30,7 @@ namespace Ryujinx.OsHle
 
         public KProcessScheduler Scheduler { get; private set; }
 
-        private SvcHandler SvcHandler;       
+        private SvcHandler SvcHandler;
 
         private ConcurrentDictionary<int, AThread> TlsSlots;
 

@@ -219,14 +219,17 @@ namespace ChocolArm64
             Set("0x0011100x100001110110xxxxxxxxxx", AInstEmit.Scvtf_V,       typeof(AOpCodeSimd));
             Set("010111110>>>>xxx010101xxxxxxxxxx", AInstEmit.Shl_S,         typeof(AOpCodeSimdShImm));
             Set("0x0011110>>>>xxx010101xxxxxxxxxx", AInstEmit.Shl_V,         typeof(AOpCodeSimdShImm));
+            Set("0x00111100>>>xxx100001xxxxxxxxxx", AInstEmit.Shrn_V,        typeof(AOpCodeSimdShImm));
             Set("0x001110<<1xxxxx011001xxxxxxxxxx", AInstEmit.Smax_V,        typeof(AOpCodeSimdReg));
             Set("0x001110<<1xxxxx011011xxxxxxxxxx", AInstEmit.Smin_V,        typeof(AOpCodeSimdReg));
             Set("0>001110<<1xxxxx010001xxxxxxxxxx", AInstEmit.Sshl_V,        typeof(AOpCodeSimdReg));
             Set("0x00111100>>>xxx101001xxxxxxxxxx", AInstEmit.Sshll_V,       typeof(AOpCodeSimdShImm));
             Set("010111110>>>>xxx000001xxxxxxxxxx", AInstEmit.Sshr_S,        typeof(AOpCodeSimdShImm));
             Set("0x0011110>>>>xxx000001xxxxxxxxxx", AInstEmit.Sshr_V,        typeof(AOpCodeSimdShImm));
-            Set("0x00110000000000xxxxxxxxxxxxxxxx", AInstEmit.St__V,         typeof(AOpCodeSimdMemMs));
-            Set("0x001100100xxxxxxxxxxxxxxxxxxxxx", AInstEmit.St__V,         typeof(AOpCodeSimdMemMs));
+            Set("0x00110000000000xxxxxxxxxxxxxxxx", AInstEmit.St__Vms,       typeof(AOpCodeSimdMemMs));
+            Set("0x001100100xxxxxxxxxxxxxxxxxxxxx", AInstEmit.St__Vms,       typeof(AOpCodeSimdMemMs));
+            Set("0x00110100000000xx0xxxxxxxxxxxxx", AInstEmit.St__Vss,       typeof(AOpCodeSimdMemSs));
+            Set("0x001101100xxxxxxx0xxxxxxxxxxxxx", AInstEmit.St__Vss,       typeof(AOpCodeSimdMemSs));
             Set("xx10110xx0xxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Stp,           typeof(AOpCodeSimdMemPair));
             Set("xx111100x00xxxxxxxxx00xxxxxxxxxx", AInstEmit.Str,           typeof(AOpCodeSimdMemImm));
             Set("xx111100x00xxxxxxxxx01xxxxxxxxxx", AInstEmit.Str,           typeof(AOpCodeSimdMemImm));
@@ -293,7 +296,7 @@ namespace ChocolArm64
                 //The < means that we should never have ALL bits with the '<' set.
                 //So, when the encoding has <<, it means that 00, 01, and 10 are valid,
                 //but not 11. <<< is 000, 001, ..., 110 but NOT 111, and so on...
-                //For >, the invalid value is zero. So, for << 01, 10 and 11 are valid,
+                //For >, the invalid value is zero. So, for >> 01, 10 and 11 are valid,
                 //but 00 isn't.
                 switch (Encoding[Index])
                 {
