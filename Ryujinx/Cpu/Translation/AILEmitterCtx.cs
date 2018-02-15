@@ -37,6 +37,7 @@ namespace ChocolArm64.Translation
         private const int Tmp2Index = -2;
         private const int Tmp3Index = -3;
         private const int Tmp4Index = -4;
+        private const int Tmp5Index = -5;
 
         public AILEmitterCtx(ATranslator Translator, ABlock[] Graph, ABlock Root)
         {
@@ -91,7 +92,7 @@ namespace ChocolArm64.Translation
         }
 
         public bool TryOptEmitSubroutineCall()
-        {           
+        {
             if (!Translator.TryGetCachedSub(CurrOp, out ATranslatedSub Sub))
             {
                 return false;
@@ -343,6 +344,9 @@ namespace ChocolArm64.Translation
         public void EmitLdtmp() => EmitLdint(Tmp1Index);
         public void EmitSttmp() => EmitStint(Tmp1Index);
 
+        public void EmitLdvectmp() => EmitLdvec(Tmp5Index);
+        public void EmitStvectmp() => EmitStvec(Tmp5Index);
+
         public void EmitLdint(int Index) => Ldloc(Index, AIoType.Int);
         public void EmitStint(int Index) => Stloc(Index, AIoType.Int);
 
@@ -427,7 +431,8 @@ namespace ChocolArm64.Translation
                 Size |= 2;
             }
 
-            if (Op is AOpCodeMem || Op is IAOpCodeLit)
+            if ((Op is AOpCodeMem || Op is IAOpCodeLit) &&
+                !(Op is AOpCodeSimdMemMs || Op is AOpCodeSimdMemSs))
             {
                 return Size < 4 ? typeof(ulong) : typeof(AVec);
             }

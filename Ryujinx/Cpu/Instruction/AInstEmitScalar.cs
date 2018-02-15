@@ -507,6 +507,32 @@ namespace ChocolArm64.Instruction
             Context.EmitStvecsf(Op.Rd);
         }
 
+        public static void Ucvtf_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            Context.EmitLdvecsi(Op.Rn);
+
+            Context.Emit(OpCodes.Conv_R_Un);
+
+            EmitFloatCast(Context, Op.Size);
+
+            Context.EmitStvecsf(Op.Rd);
+        }
+
+        public static void Umov_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimdIns Op = (AOpCodeSimdIns)Context.CurrOp;
+
+            Context.EmitLdvec(Op.Rn);
+            Context.EmitLdc_I4(Op.DstIndex);
+            Context.EmitLdc_I4(Op.Size);
+
+            ASoftFallback.EmitCall(Context, nameof(ASoftFallback.ExtractVec));
+
+            Context.EmitStintzr(Op.Rd);
+        }
+
         private static void EmitScalarOp(AILEmitterCtx Context, OpCode ILOp)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;

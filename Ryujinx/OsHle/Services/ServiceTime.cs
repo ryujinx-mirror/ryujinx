@@ -8,7 +8,7 @@ namespace Ryujinx.OsHle.Services
     {
         public static long TimeGetStandardUserSystemClock(ServiceCtx Context)
         {
-            MakeObject(Context, new ISystemClock(SystemClockType.Standard));
+            MakeObject(Context, new ISystemClock(SystemClockType.User));
 
             return 0;
         }

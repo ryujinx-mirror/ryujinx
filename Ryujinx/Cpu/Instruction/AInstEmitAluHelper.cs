@@ -21,12 +21,21 @@ namespace ChocolArm64.Instruction
 
         public static void EmitAddsVCheck(AILEmitterCtx Context)
         {
-            //V = (Rd ^ Rn) & ~(Rn ^ Rm) < 0
-            Context.Emit(OpCodes.Dup);
+            //V = (Rd ^ Rn) & (Rd ^ Rm) & ~(Rn ^ Rm) < 0
+            Context.EmitSttmp();
+            Context.EmitLdtmp();
+            Context.EmitLdtmp();
 
             EmitDataLoadRn(Context);
 
             Context.Emit(OpCodes.Xor);
+
+            Context.EmitLdtmp();
+
+            EmitDataLoadOper2(Context);
+
+            Context.Emit(OpCodes.Xor);
+            Context.Emit(OpCodes.And);
 
             EmitDataLoadOpers(Context);
 
@@ -47,7 +56,10 @@ namespace ChocolArm64.Instruction
             EmitDataLoadOpers(Context);
 
             Context.Emit(OpCodes.Clt_Un);
-            Context.Emit(OpCodes.Not);
+
+            Context.EmitLdc_I4(1);
+
+            Context.Emit(OpCodes.Xor);
 
             Context.EmitStflg((int)APState.CBit);
         }

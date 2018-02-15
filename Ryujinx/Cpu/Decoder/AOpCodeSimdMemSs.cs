@@ -3,12 +3,8 @@ using ChocolArm64.State;
 
 namespace ChocolArm64.Decoder
 {
-    class AOpCodeSimdMemSs : AOpCode, IAOpCodeSimd
+    class AOpCodeSimdMemSs : AOpCodeMemReg, IAOpCodeSimd
     {
-        public int  Rt        { get; private set; }
-        public int  Rn        { get; private set; }
-        public int  Size      { get; private set; }
-        public int  Rm        { get; private set; }
         public int  SElems    { get; private set; }
         public int  Index     { get; private set; }
         public bool Replicate { get; private set; }
@@ -91,9 +87,6 @@ namespace ChocolArm64.Decoder
             this.SElems = SElems;
             this.Size   = Scale;
 
-            Rt    =  (OpCode >>  0) & 0x1f;
-            Rn    =  (OpCode >>  5) & 0x1f;
-            Rm    =  (OpCode >> 16) & 0x1f;
             WBack = ((OpCode >> 23) & 0x1) != 0;
 
             RegisterSize = Q != 0

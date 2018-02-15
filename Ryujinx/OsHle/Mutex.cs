@@ -1,7 +1,6 @@
 using ChocolArm64.Memory;
 using Ryujinx.OsHle.Handles;
 using System.Collections.Concurrent;
-using System.Threading;
 
 namespace Ryujinx.OsHle
 {

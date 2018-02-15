@@ -2,7 +2,7 @@ namespace Ryujinx.OsHle.Objects.Time
 {
     enum SystemClockType
     {
-        Standard,
+        User,
         Network,
         Local
     }

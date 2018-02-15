@@ -1,4 +1,3 @@
-using ChocolArm64;
 using ChocolArm64.State;
 using Ryujinx.OsHle.Handles;
 

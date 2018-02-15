@@ -28,7 +28,7 @@ namespace Ryujinx.OsHle.Objects.Time
         {
             DateTime CurrentTime = DateTime.Now;
 
-            if (ClockType == SystemClockType.Standard ||
+            if (ClockType == SystemClockType.User ||
                 ClockType == SystemClockType.Network)
             {
                 CurrentTime = CurrentTime.ToUniversalTime();
