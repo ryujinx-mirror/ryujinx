@@ -116,7 +116,7 @@ namespace Ryujinx.OsHle
         {
             if (MainThread != null)
             {
-                while (MainThread.Thread.IsAlive)
+                if (MainThread.Thread.IsAlive)
                 {
                     MainThread.Thread.StopExecution();
                 }
@@ -124,7 +124,7 @@ namespace Ryujinx.OsHle
 
             foreach (AThread Thread in TlsSlots.Values)
             {
-                while (Thread.IsAlive)
+                if (Thread.IsAlive)
                 {
                     Thread.StopExecution();
                 }

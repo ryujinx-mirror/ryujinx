@@ -4,6 +4,7 @@ using Ryujinx.OsHle.Handles;
 using Ryujinx.OsHle.Utilities;
 using System.Collections.Concurrent;
 using System.IO;
+using System;
 
 namespace Ryujinx.OsHle
 {
@@ -136,6 +137,18 @@ namespace Ryujinx.OsHle
             }
         }
 
+        internal bool ExitProcess(int ProcessId) {
+            Process process;
+            var Success = Processes.TryRemove(ProcessId, out process);
+            if (Success) {
+                process.StopAllThreads();
+            }
+
+            if (Processes.Count == 0) {
+                Ns.OnFinish(EventArgs.Empty);
+            }
+            return Success;
+        }
         internal bool TryGetProcess(int ProcessId, out Process Process)
         {
             if (!Processes.TryGetValue(ProcessId, out Process))

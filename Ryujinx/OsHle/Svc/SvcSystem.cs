@@ -9,6 +9,8 @@ namespace Ryujinx.OsHle.Svc
 {
     partial class SvcHandler
     {
+        private void SvcExitProcess(ARegisters Registers) => Ns.Os.ExitProcess(Registers.ProcessId);
+
         private void SvcCloseHandle(ARegisters Registers)
         {
             int Handle = (int)Registers.X0;

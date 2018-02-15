@@ -24,6 +24,15 @@ namespace Ryujinx
             VFs = new VirtualFs();
         }
 
+        public event EventHandler Finish;
+        internal virtual void OnFinish(EventArgs e)
+        {
+            EventHandler Handler = Finish;
+            if (Handler != null)
+            {
+                Handler(this, e);
+            }
+        }
         public void Dispose()
         {
             Dispose(true);
