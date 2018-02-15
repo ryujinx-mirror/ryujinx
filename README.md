@@ -68,7 +68,7 @@ To run this emulator, you need the .NET Core 2.0 (or higher) SDK.
 Run `dotnet run -c Release -- path\to\homebrew.nro` inside the Ryujinx solution folder to run homebrew apps.
 Run `dotnet run -c Release -- path\to\game_exefs_and_romfs_folder` to run official games (they need to be decrypted and extracted first!).
 
-Audio is partially supported (glitched) on Windows, you need to install the OpenAL Core SDK:
+Audio is partially supported (glitched) on Linux and macOS, for Windows you need to install the OpenAL Core SDK:
 https://openal.org/downloads/OpenAL11CoreSDK.zip
 
 **Lastest build**
