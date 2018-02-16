@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace ChocolArm64
 {
-    class AThread
+    public class AThread
     {
         public ARegisters  Registers { get; private set; }
         public AMemory     Memory    { get; private set; }
