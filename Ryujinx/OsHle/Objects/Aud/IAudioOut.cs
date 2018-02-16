@@ -101,17 +101,17 @@ namespace Ryujinx.OsHle.Objects.Aud
 
             KeysQueue.Enqueue(BufferId);
 
-            byte[] AudioOutBuffer = AMemoryHelper.ReadBytes(Context.Memory, Context.Request.SendBuff[0].Position, 0x28);
+            byte[] AudioOutBuffer = AMemoryHelper.ReadBytes(Context.Memory, Context.Request.SendBuff[0].Position, sizeof(long) * 5);
             using (MemoryStream MS = new MemoryStream(AudioOutBuffer))
             {
                 BinaryReader Reader = new BinaryReader(MS);
-                long PointerToSampleDataPointer = Reader.ReadInt64();
-                long PointerToSampleData = Reader.ReadInt64();
-                long CapacitySampleBuffer = Reader.ReadInt64();
-                long SizeDataSampleBuffer = Reader.ReadInt64();
-                long Unknown = Reader.ReadInt64();
+                long PointerNextBuffer        = Reader.ReadInt64();
+                long PointerSampleBuffer      = Reader.ReadInt64();
+                long CapacitySampleBuffer     = Reader.ReadInt64();
+                long SizeDataInSampleBuffer   = Reader.ReadInt64();
+                long OffsetDataInSampleBuffer = Reader.ReadInt64();
 
-                byte[] AudioSampleBuffer = AMemoryHelper.ReadBytes(Context.Memory, PointerToSampleData, (int)SizeDataSampleBuffer);
+                byte[] AudioSampleBuffer = AMemoryHelper.ReadBytes(Context.Memory, PointerSampleBuffer + OffsetDataInSampleBuffer, (int)SizeDataInSampleBuffer);
 
                 if (OpenALInstalled)
                 {
@@ -145,8 +145,9 @@ namespace Ryujinx.OsHle.Objects.Aud
             if (KeysQueue.Count > 0) TempKey = KeysQueue.Dequeue();
 
             AMemoryHelper.WriteBytes(Context.Memory, Context.Request.ReceiveBuff[0].Position, BitConverter.GetBytes(TempKey));
-
-            Context.ResponseData.Write((int)TempKey);
+            
+            int ReleasedBuffersCount = 1;
+            Context.ResponseData.Write(ReleasedBuffersCount);
 
             if (OpenALInstalled)
             {
