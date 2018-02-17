@@ -174,6 +174,42 @@ namespace ChocolArm64.Memory
             return *((ulong*)(RamPtr + (uint)Position));
         }
 
+        public AVec ReadVector8(long Position)
+        {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Read);
+#endif
+
+            return new AVec() { B0 = ReadByte(Position) };
+        }
+
+        public AVec ReadVector16(long Position)
+        {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Read);
+#endif
+
+            return new AVec() { H0 = ReadUInt16(Position) };
+        }
+
+        public AVec ReadVector32(long Position)
+        {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Read);
+#endif
+
+            return new AVec() { W0 = ReadUInt32(Position) };
+        }
+
+        public AVec ReadVector64(long Position)
+        {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Read);
+#endif
+
+            return new AVec() { X0 = ReadUInt64(Position) };
+        }
+
         public AVec ReadVector128(long Position)
         {
 #if DEBUG
@@ -226,6 +262,42 @@ namespace ChocolArm64.Memory
 #endif
 
             *((ulong*)(RamPtr + (uint)Position)) = Value;
+        }
+
+        public void WriteVector8(long Position, AVec Value)
+        {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Write);
+#endif
+
+            WriteByte(Position, Value.B0);
+        }
+
+        public void WriteVector16(long Position, AVec Value)
+        {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Write);
+#endif
+
+            WriteUInt16(Position, Value.H0);
+        }
+
+        public void WriteVector32(long Position, AVec Value)
+        {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Write);
+#endif
+
+            WriteUInt32(Position, Value.W0);
+        }
+
+        public void WriteVector64(long Position, AVec Value)
+        {
+#if DEBUG
+            EnsureAccessIsValid(Position, AMemoryPerm.Write);
+#endif
+
+            WriteUInt64(Position, Value.X0);
         }
 
         public void WriteVector128(long Position, AVec Value)

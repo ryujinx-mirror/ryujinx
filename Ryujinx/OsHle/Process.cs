@@ -70,6 +70,8 @@ namespace Ryujinx.OsHle
 
         public void LoadProgram(IExecutable Program)
         {
+            Logging.Info($"Image base at 0x{ImageBase:x16}.");
+
             Executable Executable = new Executable(Program, Memory, ImageBase);
 
             Executables.Add(Executable);

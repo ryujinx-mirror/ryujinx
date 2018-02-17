@@ -80,6 +80,8 @@ namespace Ryujinx.OsHle
                         continue;
                     }
 
+                    Logging.Info($"Loding {Path.GetFileNameWithoutExtension(File)}...");
+
                     using (FileStream Input = new FileStream(File, FileMode.Open))
                     {
                         Nso Program = new Nso(Input);

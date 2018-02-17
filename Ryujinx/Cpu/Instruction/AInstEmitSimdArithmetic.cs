@@ -1,0 +1,354 @@
+using ChocolArm64.Decoder;
+using ChocolArm64.State;
+using ChocolArm64.Translation;
+using System;
+using System.Reflection;
+using System.Reflection.Emit;
+
+using static ChocolArm64.Instruction.AInstEmitSimdHelper;
+
+namespace ChocolArm64.Instruction
+{
+    static partial class AInstEmit
+    {
+        public static void Add_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Add));
+        }
+
+        public static void Addp_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            EmitVectorExtractZx(Context, Op.Rn, 0, Op.Size);
+            EmitVectorExtractZx(Context, Op.Rn, 1, Op.Size);
+
+            Context.Emit(OpCodes.Add);
+
+            EmitScalarSet(Context, Op.Rd, Op.Size);
+        }
+
+        public static void Addp_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            int Elems = Bytes >> Op.Size;
+            int Half  = Elems >> 1;
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                int Elem = (Index & (Half - 1)) << 1;
+
+                EmitVectorExtractZx(Context, Index < Half ? Op.Rn : Op.Rm, Elem + 0, Op.Size);
+                EmitVectorExtractZx(Context, Index < Half ? Op.Rn : Op.Rm, Elem + 1, Op.Size);
+
+                Context.Emit(OpCodes.Add);
+
+                EmitVectorInsertTmp(Context, Index, Op.Size);
+            }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
+        public static void Addv_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            EmitVectorExtractZx(Context, Op.Rn, 0, Op.Size);
+
+            for (int Index = 1; Index < (Bytes >> Op.Size); Index++)
+            {
+                EmitVectorExtractZx(Context, Op.Rn, Index, Op.Size);
+
+                Context.Emit(OpCodes.Add);
+            }
+
+            EmitScalarSet(Context, Op.Rd, Op.Size);
+        }
+
+        public static void Cnt_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int Elems = Op.RegisterSize == ARegisterSize.SIMD128 ? 16 : 8;
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                EmitVectorExtractZx(Context, Op.Rn, Index, 0);
+
+                Context.Emit(OpCodes.Conv_U1);
+
+                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountSetBits8));
+
+                Context.Emit(OpCodes.Conv_U8);
+
+                EmitVectorInsert(Context, Op.Rd, Index, 0);
+            }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
+        public static void Fabs_S(AILEmitterCtx Context)
+        {
+            EmitScalarUnaryOpF(Context, () =>
+            {
+                EmitUnaryMathCall(Context, nameof(Math.Abs));
+            });
+        }
+
+        public static void Fadd_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Add));
+        }
+
+        public static void Fadd_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Add));
+        }
+
+        public static void Fdiv_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Div));
+        }
+
+        public static void Fmadd_S(AILEmitterCtx Context)
+        {
+            EmitScalarTernaryRaOpF(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Add);
+            });
+        }
+
+        public static void Fmax_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpF(Context, () =>
+            {
+                EmitBinaryMathCall(Context, nameof(Math.Max));
+            });
+        }
+
+        public static void Fmin_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpF(Context, () =>
+            {
+                EmitBinaryMathCall(Context, nameof(Math.Min));
+            });
+        }
+
+        public static void Fmaxnm_S(AILEmitterCtx Context)
+        {
+            Fmax_S(Context);
+        }
+
+        public static void Fminnm_S(AILEmitterCtx Context)
+        {
+            Fmin_S(Context);
+        }
+
+        public static void Fmla_V(AILEmitterCtx Context)
+        {
+            EmitVectorTernaryOpF(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Add);
+            });
+        }
+
+        public static void Fmla_Ve(AILEmitterCtx Context)
+        {
+            EmitVectorTernaryOpByElemF(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Add);
+            });
+        }
+
+        public static void Fmsub_S(AILEmitterCtx Context)
+        {
+            EmitScalarTernaryRaOpF(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Neg);
+                Context.Emit(OpCodes.Add);
+            });
+        }
+
+        public static void Fmul_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Mul));
+        }
+
+        public static void Fmul_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Mul));
+        }
+
+        public static void Fmul_Ve(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpByElemF(Context, () => Context.Emit(OpCodes.Mul));
+        }
+
+        public static void Fneg_S(AILEmitterCtx Context)
+        {
+            EmitScalarUnaryOpF(Context, () => Context.Emit(OpCodes.Neg));
+        }
+
+        public static void Fnmul_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpF(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Neg);
+            });
+        }
+
+        public static void Frinta_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            EmitVectorExtractF(Context, Op.Rn, 0, Op.Size);
+
+            Context.EmitLdc_I4((int)MidpointRounding.AwayFromZero);
+
+            MethodInfo MthdInfo;
+
+            Type[] Types = new Type[] { null, typeof(MidpointRounding) };
+
+            Types[0] = Op.Size == 0
+                ? typeof(float)
+                : typeof(double);
+
+            if (Op.Size == 0)
+            {
+                MthdInfo = typeof(MathF).GetMethod(nameof(MathF.Round), Types);
+            }
+            else if (Op.Size == 1)
+            {
+                MthdInfo = typeof(Math).GetMethod(nameof(Math.Round), Types);
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+
+            Context.EmitCall(MthdInfo);
+
+            EmitScalarSetF(Context, Op.Rd, Op.Size);
+        }
+
+        public static void Frintm_S(AILEmitterCtx Context)
+        {
+            EmitScalarUnaryOpF(Context, () =>
+            {
+                EmitUnaryMathCall(Context, nameof(Math.Floor));
+            });
+        }
+
+        public static void Fsqrt_S(AILEmitterCtx Context)
+        {
+            EmitScalarUnaryOpF(Context, () =>
+            {
+                EmitUnaryMathCall(Context, nameof(Math.Sqrt));
+            });
+        }
+
+        public static void Fsub_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Sub));
+        }
+
+        public static void Fsub_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Sub));
+        }
+
+        public static void Mla_V(AILEmitterCtx Context)
+        {
+            EmitVectorTernaryOpZx(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Add);
+            });
+        }
+
+        public static void Mul_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Mul));
+        }
+
+        public static void Neg_V(AILEmitterCtx Context)
+        {
+            EmitVectorUnaryOpSx(Context, () => Context.Emit(OpCodes.Neg));
+        }
+
+        public static void Saddw_V(AILEmitterCtx Context)
+        {
+            EmitVectorWidenBinaryOpSx(Context, () => Context.Emit(OpCodes.Add));
+        }
+
+        public static void Smax_V(AILEmitterCtx Context)
+        {
+            Type[] Types = new Type[] { typeof(long), typeof(long) };
+
+            MethodInfo MthdInfo = typeof(Math).GetMethod(nameof(Math.Max), Types);
+
+            EmitVectorBinaryOpSx(Context, () => Context.EmitCall(MthdInfo));
+        }
+
+        public static void Smin_V(AILEmitterCtx Context)
+        {
+            Type[] Types = new Type[] { typeof(long), typeof(long) };
+
+            MethodInfo MthdInfo = typeof(Math).GetMethod(nameof(Math.Min), Types);
+
+            EmitVectorBinaryOpSx(Context, () => Context.EmitCall(MthdInfo));
+        }
+
+        public static void Sub_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpZx(Context, () => Context.Emit(OpCodes.Sub));
+        }
+
+        public static void Sub_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Sub));
+        }
+
+        public static void Uaddlv_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            EmitVectorExtractZx(Context, Op.Rn, 0, Op.Size);
+
+            for (int Index = 1; Index < (Bytes >> Op.Size); Index++)
+            {
+                EmitVectorExtractZx(Context, Op.Rn, Index, Op.Size);
+
+                Context.Emit(OpCodes.Add);
+            }
+
+            EmitScalarSet(Context, Op.Rd, Op.Size + 1);
+        }
+
+        public static void Uaddw_V(AILEmitterCtx Context)
+        {
+            EmitVectorWidenBinaryOpZx(Context, () => Context.Emit(OpCodes.Add));
+        }
+    }
+}

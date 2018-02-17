@@ -87,6 +87,8 @@ namespace ChocolArm64.Decoder
             this.SElems = SElems;
             this.Size   = Scale;
 
+            Extend64 = false;
+
             WBack = ((OpCode >> 23) & 0x1) != 0;
 
             RegisterSize = Q != 0

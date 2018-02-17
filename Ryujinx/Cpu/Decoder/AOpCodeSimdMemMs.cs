@@ -37,6 +37,8 @@ namespace ChocolArm64.Decoder
                 return;
             }
 
+            Extend64 = false;
+
             RegisterSize = Q
                 ? ARegisterSize.SIMD128
                 : ARegisterSize.SIMD64;

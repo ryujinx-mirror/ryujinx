@@ -1,6 +1,7 @@
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace ChocolArm64.Instruction
 {
@@ -97,140 +98,60 @@ namespace ChocolArm64.Instruction
             throw new ArgumentException(nameof(Size));
         }
 
-        public static int SatSingleToInt32(float Value, int FBits)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int SatF32ToS32(float Value)
         {
-            if (FBits != 0) Value *= MathF.Pow(2, FBits);
-
             return Value > int.MaxValue ? int.MaxValue :
                    Value < int.MinValue ? int.MinValue : (int)Value;
         }
 
-        public static long SatSingleToInt64(float Value, int FBits)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long SatF32ToS64(float Value)
         {
-            if (FBits != 0) Value *= MathF.Pow(2, FBits);
-
             return Value > long.MaxValue ? long.MaxValue :
                    Value < long.MinValue ? long.MinValue : (long)Value;
         }
 
-        public static uint SatSingleToUInt32(float Value, int FBits)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint SatF32ToU32(float Value)
         {
-            if (FBits != 0) Value *= MathF.Pow(2, FBits);
-
             return Value > uint.MaxValue ? uint.MaxValue :
                    Value < uint.MinValue ? uint.MinValue : (uint)Value;
         }
 
-        public static ulong SatSingleToUInt64(float Value, int FBits)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong SatF32ToU64(float Value)
         {
-            if (FBits != 0) Value *= MathF.Pow(2, FBits);
-
             return Value > ulong.MaxValue ? ulong.MaxValue :
                    Value < ulong.MinValue ? ulong.MinValue : (ulong)Value;
         }
 
-        public static int SatDoubleToInt32(double Value, int FBits)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int SatF64ToS32(double Value)
         {
-            if (FBits != 0) Value *= Math.Pow(2, FBits);
-
             return Value > int.MaxValue ? int.MaxValue :
                    Value < int.MinValue ? int.MinValue : (int)Value;
         }
 
-        public static long SatDoubleToInt64(double Value, int FBits)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long SatF64ToS64(double Value)
         {
-            if (FBits != 0) Value *= Math.Pow(2, FBits);
-
             return Value > long.MaxValue ? long.MaxValue :
                    Value < long.MinValue ? long.MinValue : (long)Value;
         }
 
-        public static uint SatDoubleToUInt32(double Value, int FBits)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint SatF64ToU32(double Value)
         {
-            if (FBits != 0) Value *= Math.Pow(2, FBits);
-
             return Value > uint.MaxValue ? uint.MaxValue :
                    Value < uint.MinValue ? uint.MinValue : (uint)Value;
         }
 
-        public static ulong SatDoubleToUInt64(double Value, int FBits)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong SatF64ToU64(double Value)
         {
-            if (FBits != 0) Value *= Math.Pow(2, FBits);
-
             return Value > ulong.MaxValue ? ulong.MaxValue :
                    Value < ulong.MinValue ? ulong.MinValue : (ulong)Value;
-        }
-
-        public static float Int32ToSingle(int Value, int FBits)
-        {
-            float ValueF = Value;
-
-            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
-
-            return ValueF;
-        }
-
-        public static float Int64ToSingle(long Value, int FBits)
-        {
-            float ValueF = Value;
-
-            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
-
-            return ValueF;
-        }
-
-        public static float UInt32ToSingle(uint Value, int FBits)
-        {
-            float ValueF = Value;
-
-            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
-
-            return ValueF;
-        }
-
-        public static float UInt64ToSingle(ulong Value, int FBits)
-        {
-            float ValueF = Value;
-
-            if (FBits != 0) ValueF *= 1 / MathF.Pow(2, FBits);
-
-            return ValueF;
-        }
-
-        public static double Int32ToDouble(int Value, int FBits)
-        {
-            double ValueF = Value;
-
-            if (FBits != 0) ValueF *= 1 / Math.Pow(2, FBits);
-
-            return ValueF;
-        }
-
-        public static double Int64ToDouble(long Value, int FBits)
-        {
-            double ValueF = Value;
-
-            if (FBits != 0) ValueF *= 1 / Math.Pow(2, FBits);
-
-            return ValueF;
-        }
-
-        public static double UInt32ToDouble(uint Value, int FBits)
-        {
-            double ValueF = Value;
-
-            if (FBits != 0) ValueF *= 1 / Math.Pow(2, FBits);
-
-            return ValueF;
-        }
-
-        public static double UInt64ToDouble(ulong Value, int FBits)
-        {
-            double ValueF = Value;
-
-            if (FBits != 0) ValueF *= 1 / Math.Pow(2, FBits);
-
-            return ValueF;
         }
 
         public static ulong SMulHi128(ulong LHS, ulong RHS)
@@ -269,14 +190,6 @@ namespace ChocolArm64.Instruction
             ulong ResHi = LHiRHi + (LHiRLo >> 32) + (LLoRHi >> 32) + Carry;
 
             return ResHi;
-        }    
-
-        public static AVec Addp_S(AVec Vector, int Size)
-        {
-            ulong Low  = ExtractVec(Vector, 0, Size);
-            ulong High = ExtractVec(Vector, 1, Size);
-
-            return InsertVec(new AVec(), 0, Size, Low + High);
         }
 
         public static int CountSetBits8(byte Value)
@@ -285,38 +198,6 @@ namespace ChocolArm64.Instruction
                    (Value >> 2) & 1 + (Value >> 3) & 1 +
                    (Value >> 4) & 1 + (Value >> 5) & 1 +
                    (Value >> 6) & 1 + (Value >> 7);
-        }
-
-        public static AVec Dup_Gp64(ulong Value, int Size)
-        {
-            return Dup_Gp(Value, Size, 8);
-        }
-
-        public static AVec Dup_Gp128(ulong Value, int Size)
-        {
-            return Dup_Gp(Value, Size, 16);
-        }
-
-        private static AVec Dup_Gp(ulong Value, int Size, int Bytes)
-        {
-            AVec Res = new AVec();
-
-            for (int Index = 0; Index < (Bytes >> Size); Index++)
-            {
-                Res = InsertVec(Res, Index, Size, Value);
-            }
-
-            return Res;
-        }
-
-        public static AVec Dup_S(AVec Vector, int Elem, int Size)
-        {
-            return InsertVec(new AVec(), 0, Size, ExtractVec(Vector, Elem, Size));
-        }
-
-        public static AVec Fmov_S(ulong Value, int Elem, int Size)
-        {
-            return InsertVec(new AVec(), Elem, Size, Value);
         }
 
         public static AVec Tbl1_V64(AVec Vector, AVec Tb0)
@@ -368,27 +249,27 @@ namespace ChocolArm64.Instruction
             for (int Index  = 0; Index  < Tb.Length; Index++)
             for (int Index2 = 0; Index2 < 16;        Index2++)
             {
-                Table[Index * 16 + Index2] = (byte)ExtractVec(Tb[Index], Index2, 0);
+                Table[Index * 16 + Index2] = (byte)VectorExtractIntZx(Tb[Index], Index2, 0);
             }
 
             for (int Index = 0; Index < Bytes; Index++)
             {
-                byte TblIdx = (byte)ExtractVec(Vector, Index, 0);
+                byte TblIdx = (byte)VectorExtractIntZx(Vector, Index, 0);
 
                 if (TblIdx < Table.Length)
                 {
-                    Res = InsertVec(Res, Index, 0, Table[TblIdx]);
+                    Res = VectorInsertInt(Table[TblIdx], Res, Index, 0);
                 }
             }
 
             return Res;
         }
 
-        public static ulong ExtractVec(AVec Vector, int Index, int Size)
+        public static ulong VectorExtractIntZx(AVec Vector, int Index, int Size)
         {
             switch (Size)
             {
-                case 0: return Vector.ExtractByte(Index);
+                case 0: return Vector.ExtractByte  (Index);
                 case 1: return Vector.ExtractUInt16(Index);
                 case 2: return Vector.ExtractUInt32(Index);
                 case 3: return Vector.ExtractUInt64(Index);
@@ -397,14 +278,14 @@ namespace ChocolArm64.Instruction
             throw new ArgumentOutOfRangeException(nameof(Size));
         }
 
-        public static long ExtractSVec(AVec Vector, int Index, int Size)
+        public static long VectorExtractIntSx(AVec Vector, int Index, int Size)
         {
             switch (Size)
             {
-                case 0: return (sbyte)Vector.ExtractByte(Index);
+                case 0: return (sbyte)Vector.ExtractByte  (Index);
                 case 1: return (short)Vector.ExtractUInt16(Index);
-                case 2: return (int)Vector.ExtractUInt32(Index);
-                case 3: return (long)Vector.ExtractUInt64(Index);
+                case 2: return   (int)Vector.ExtractUInt32(Index);
+                case 3: return  (long)Vector.ExtractUInt64(Index);
             }
 
             throw new ArgumentOutOfRangeException(nameof(Size));
@@ -438,32 +319,6 @@ namespace ChocolArm64.Instruction
                 case 1: return AVec.InsertUInt16(Vector, Index, (ushort)Value);
                 case 2: return AVec.InsertUInt32(Vector, Index,   (uint)Value);
                 case 3: return AVec.InsertUInt64(Vector, Index,  (ulong)Value);
-            }
-
-            throw new ArgumentOutOfRangeException(nameof(Size));
-        }
-
-        public static AVec InsertVec(AVec Vector, int Index, int Size, ulong Value)
-        {
-            switch (Size)
-            {
-                case 0: return AVec.InsertByte(Vector, Index, (byte)Value);
-                case 1: return AVec.InsertUInt16(Vector, Index, (ushort)Value);
-                case 2: return AVec.InsertUInt32(Vector, Index, (uint)Value);
-                case 3: return AVec.InsertUInt64(Vector, Index, (ulong)Value);
-            }
-
-            throw new ArgumentOutOfRangeException(nameof(Size));
-        }
-
-        public static AVec InsertSVec(AVec Vector, int Index, int Size, long Value)
-        {
-            switch (Size)
-            {
-                case 0: return AVec.InsertByte(Vector, Index, (byte)Value);
-                case 1: return AVec.InsertUInt16(Vector, Index, (ushort)Value);
-                case 2: return AVec.InsertUInt32(Vector, Index, (uint)Value);
-                case 3: return AVec.InsertUInt64(Vector, Index, (ulong)Value);
             }
 
             throw new ArgumentOutOfRangeException(nameof(Size));

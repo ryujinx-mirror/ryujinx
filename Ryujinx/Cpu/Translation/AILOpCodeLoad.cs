@@ -1,5 +1,4 @@
 using ChocolArm64.State;
-using System;
 using System.Reflection.Emit;
 
 namespace ChocolArm64.Translation
@@ -10,41 +9,38 @@ namespace ChocolArm64.Translation
 
         public AIoType IoType { get; private set; }
 
-        public Type OperType { get; private set; }
+        public ARegisterSize RegisterSize { get; private set; }
 
-        public AILOpCodeLoad(int Index, AIoType IoType) : this(Index, IoType, null) { }
+        public AILOpCodeLoad(int Index, AIoType IoType) : this(Index, IoType, ARegisterSize.Int64) { }
 
-        public AILOpCodeLoad(int Index, AIoType IoType, Type OperType)
+        public AILOpCodeLoad(int Index, AIoType IoType, ARegisterSize RegisterSize)
         {
-            this.IoType   = IoType;
-            this.Index    = Index;
-            this.OperType = OperType;
+            this.IoType       = IoType;
+            this.Index        = Index;
+            this.RegisterSize = RegisterSize;
         }
 
         public void Emit(AILEmitter Context)
         {
             switch (IoType & AIoType.Mask)
             {
-                case AIoType.Arg:    EmitLdarg(Context, Index);                       break;
-                case AIoType.Fields: EmitLdfld(Context, Index);                       break;
+                case AIoType.Arg: Context.Generator.EmitLdarg(Index); break;
+
+                case AIoType.Fields:
+                {
+                    long IntInputs = Context.LocalAlloc.GetIntInputs(Context.GetILBlock(Index));
+                    long VecInputs = Context.LocalAlloc.GetVecInputs(Context.GetILBlock(Index));
+
+                    LoadLocals(Context, IntInputs, ARegisterType.Int);
+                    LoadLocals(Context, VecInputs, ARegisterType.Vector);
+
+                    break;
+                }
+
                 case AIoType.Flag:   EmitLdloc(Context, Index, ARegisterType.Flag);   break;
                 case AIoType.Int:    EmitLdloc(Context, Index, ARegisterType.Int);    break;
                 case AIoType.Vector: EmitLdloc(Context, Index, ARegisterType.Vector); break;
             }
-        }
-
-        private void EmitLdarg(AILEmitter Context, int Index)
-        {
-            Context.Generator.EmitLdarg(Index);
-        }
-
-        private void EmitLdfld(AILEmitter Context, int Index)
-        {
-            long IntInputs = Context.LocalAlloc.GetIntInputs(Context.GetILBlock(Index));
-            long VecInputs = Context.LocalAlloc.GetVecInputs(Context.GetILBlock(Index));
-
-            LoadLocals(Context, IntInputs, ARegisterType.Int);
-            LoadLocals(Context, VecInputs, ARegisterType.Vector);
         }
 
         private void LoadLocals(AILEmitter Context, long Inputs, ARegisterType BaseType)
@@ -60,23 +56,22 @@ namespace ChocolArm64.Translation
                     Context.Generator.EmitLdarg(ATranslatedSub.RegistersArgIdx);
                     Context.Generator.Emit(OpCodes.Ldfld, Reg.GetField());
 
-                    AILConv.EmitConv(
-                        Context,
-                        Context.GetFieldType(Reg.Type),
-                        Context.GetLocalType(Reg));
-
                     Context.Generator.EmitStloc(Context.GetLocalIndex(Reg));
                 }
             }
         }
 
-        private void EmitLdloc(AILEmitter Context, int Index, ARegisterType Type)
+        private void EmitLdloc(AILEmitter Context, int Index, ARegisterType RegisterType)
         {
-            ARegister Reg = new ARegister(Index, Type);
+            ARegister Reg = new ARegister(Index, RegisterType);
 
             Context.Generator.EmitLdloc(Context.GetLocalIndex(Reg));
 
-            AILConv.EmitConv(Context, Context.GetLocalType(Reg), OperType);
+            if (RegisterType == ARegisterType.Int &&
+                RegisterSize == ARegisterSize.Int32)
+            {
+                Context.Generator.Emit(OpCodes.Conv_U4);
+            }
         }
     }
 }

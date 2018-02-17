@@ -20,7 +20,7 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeAdr Op = (AOpCodeAdr)Context.CurrOp;
 
-            Context.EmitLdc_I((Op.Position & ~0xfff) + (Op.Imm << 12));
+            Context.EmitLdc_I((Op.Position & ~0xfffL) + (Op.Imm << 12));
             Context.EmitStintzr(Op.Rd);
         }
 

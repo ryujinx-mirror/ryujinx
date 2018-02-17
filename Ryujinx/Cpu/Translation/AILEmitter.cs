@@ -86,9 +86,6 @@ namespace ChocolArm64.Translation
                 ARegister Reg = Subroutine.Params[Index];
 
                 Generator.EmitLdarg(Index + ParamsStart);
-
-                AILConv.EmitConv(this, GetFieldType(Reg.Type), GetLocalType(Reg));
-
                 Generator.EmitStloc(GetLocalIndex(Reg));
             }
         }
