@@ -1,13 +1,76 @@
+using System;
+using System.Collections.Generic;
+
 namespace Ryujinx.OsHle.Handles
 {
     class HSharedMem
     {
-        public long PhysPos { get; private set; }
-        public long VirtPos { get; set; }
+        private List<long> Positions;
+
+        public int PositionsCount => Positions.Count;
+
+        public EventHandler<EventArgs> MemoryMapped;
+        public EventHandler<EventArgs> MemoryUnmapped;
 
         public HSharedMem(long PhysPos)
         {
-            this.PhysPos = PhysPos;
+            Positions = new List<long>();
+        }
+
+        public void AddVirtualPosition(long Position)
+        {
+            lock (Positions)
+            {
+                Positions.Add(Position);
+
+                if (MemoryMapped != null)
+                {
+                    MemoryMapped(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        public void RemoveVirtualPosition(long Position)
+        {
+            lock (Positions)
+            {
+                Positions.Remove(Position);
+
+                if (MemoryUnmapped != null)
+                {
+                    MemoryUnmapped(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        public long GetVirtualPosition(int Index)
+        {
+            lock (Positions)
+            {
+                if (Index < 0 || Index >= Positions.Count)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(Index));
+                }
+
+                return Positions[Index];
+            }
+        }
+
+        public bool TryGetLastVirtualPosition(out long Position)
+        {
+            lock (Positions)
+            {
+                if (Positions.Count > 0)
+                {
+                    Position = Positions[Positions.Count - 1];
+
+                    return true;
+                }
+
+                Position = 0;
+
+                return false;
+            }
         }
     }
 }

@@ -50,7 +50,8 @@ namespace Ryujinx
 
             using (GLScreen Screen = new GLScreen(Ns, Renderer))
             {
-                Ns.Finish += (Sender, Args) => {
+                Ns.Finish += (Sender, Args) =>
+                {
                     Screen.Exit();
                 };
 

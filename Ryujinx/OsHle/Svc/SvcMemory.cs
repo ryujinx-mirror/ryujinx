@@ -65,21 +65,18 @@ namespace Ryujinx.OsHle.Svc
 
         private void SvcMapSharedMemory(ARegisters Registers)
         {
-            int  Handle   =  (int)Registers.X0;
-            long Position = (long)Registers.X1;
-            long Size     = (long)Registers.X2;
-            int  Perm     =  (int)Registers.X3;
+            int  Handle =  (int)Registers.X0;
+            long Src    = (long)Registers.X1;
+            long Size   = (long)Registers.X2;
+            int  Perm   =  (int)Registers.X3;
 
-            HSharedMem HndData = Ns.Os.Handles.GetData<HSharedMem>(Handle);
+            HSharedMem SharedMem = Ns.Os.Handles.GetData<HSharedMem>(Handle);
 
-            if (HndData != null)
+            if (SharedMem != null)
             {
-                long Src = Position;
-                long Dst = HndData.PhysPos;
+                SharedMem.AddVirtualPosition(Src);
 
-                HndData.VirtPos = Src;
-
-                Memory.Manager.MapPhys(Position, Size, (int)MemoryType.SharedMemory, (AMemoryPerm)Perm);
+                Memory.Manager.MapPhys(Src, Size, (int)MemoryType.SharedMemory, (AMemoryPerm)Perm);
 
                 Registers.X0 = (int)SvcResult.Success;
             }

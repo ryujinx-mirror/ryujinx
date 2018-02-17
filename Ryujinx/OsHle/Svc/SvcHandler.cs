@@ -8,6 +8,7 @@ namespace Ryujinx.OsHle.Svc
     partial class SvcHandler
     {
         private delegate void SvcFunc(ARegisters Registers);
+
         private Dictionary<int, SvcFunc> SvcFuncs;
 
         private Switch  Ns;

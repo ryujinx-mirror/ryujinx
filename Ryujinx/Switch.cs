@@ -15,6 +15,8 @@ namespace Ryujinx
         internal Horizon   Os  { get; private set; }
         internal VirtualFs VFs { get; private set; }
 
+        public event EventHandler Finish;
+
         public Switch(IGalRenderer Renderer)
         {
             Ram = Marshal.AllocHGlobal((IntPtr)AMemoryMgr.RamSize);
@@ -24,15 +26,14 @@ namespace Ryujinx
             VFs = new VirtualFs();
         }
 
-        public event EventHandler Finish;
         internal virtual void OnFinish(EventArgs e)
         {
-            EventHandler Handler = Finish;
-            if (Handler != null)
+            if (Finish != null)
             {
-                Handler(this, e);
+                Finish(this, e);
             }
         }
+
         public void Dispose()
         {
             Dispose(true);
