@@ -276,76 +276,62 @@ void main(void) {
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
-            unsafe
+            HidControllerKeys CurrentButton = 0;
+            JoystickPosition LeftJoystick;
+            JoystickPosition RightJoystick;
+
+            if (Keyboard[OpenTK.Input.Key.Escape]) this.Exit();
+
+            //RightJoystick
+            int LeftJoystickDX = 0;
+            int LeftJoystickDY = 0;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Left.StickUp])     LeftJoystickDY = short.MaxValue;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Left.StickDown])   LeftJoystickDY = -short.MaxValue;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Left.StickLeft])   LeftJoystickDX = -short.MaxValue;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Left.StickRight])  LeftJoystickDX = short.MaxValue;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Left.StickButton]) CurrentButton |= HidControllerKeys.KEY_LSTICK;
+
+            //LeftButtons
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Left.DPadUp])      CurrentButton |= HidControllerKeys.KEY_DUP;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Left.DPadDown])    CurrentButton |= HidControllerKeys.KEY_DDOWN;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Left.DPadLeft])    CurrentButton |= HidControllerKeys.KEY_DLEFT;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Left.DPadRight])   CurrentButton |= HidControllerKeys.KEY_DRIGHT;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Left.ButtonMinus]) CurrentButton |= HidControllerKeys.KEY_MINUS;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Left.ButtonL])     CurrentButton |= HidControllerKeys.KEY_L;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Left.ButtonZL])    CurrentButton |= HidControllerKeys.KEY_ZL;
+
+            //RightJoystick
+            int RightJoystickDX = 0;
+            int RightJoystickDY = 0;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Right.StickUp])    RightJoystickDY = short.MaxValue;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Right.StickDown])  RightJoystickDY = -short.MaxValue;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Right.StickLeft])  RightJoystickDX = -short.MaxValue;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Right.StickRight]) RightJoystickDX = short.MaxValue;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Right.StickButton]) CurrentButton |= HidControllerKeys.KEY_RSTICK;
+
+            //RightButtons
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Right.ButtonA])    CurrentButton |= HidControllerKeys.KEY_A;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Right.ButtonB])    CurrentButton |= HidControllerKeys.KEY_B;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Right.ButtonX])    CurrentButton |= HidControllerKeys.KEY_X;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Right.ButtonY])    CurrentButton |= HidControllerKeys.KEY_Y;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Right.ButtonPlus]) CurrentButton |= HidControllerKeys.KEY_PLUS;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Right.ButtonR])    CurrentButton |= HidControllerKeys.KEY_R;
+            if (Keyboard[(OpenTK.Input.Key)Config.FakeJoyCon.Right.ButtonZR])   CurrentButton |= HidControllerKeys.KEY_ZR;
+
+            LeftJoystick = new JoystickPosition
             {
-                long HidOffset = Ns.Os.GetVirtHidOffset();
+                DX = LeftJoystickDX,
+                DY = LeftJoystickDY
+            };
 
-                if (HidOffset == 0 || HidOffset + Horizon.HidSize > uint.MaxValue)
-                {
-                    return;
-                }
-
-                byte* Ptr = (byte*)Ns.Ram + (uint)HidOffset;
-
-                int State = 0;
-                
-                if (Keyboard[OpenTK.Input.Key.Up])
-                {
-                    State |= 0x2000;
-                }
-
-                if (Keyboard[OpenTK.Input.Key.Down])
-                {
-                    State |= 0x8000;
-                }
-
-                if (Keyboard[OpenTK.Input.Key.Left])
-                {
-                    State |= 0x1000;
-                }
-
-                if (Keyboard[OpenTK.Input.Key.Right])
-                {
-                    State |= 0x4000;
-                }
-
-                if (Keyboard[OpenTK.Input.Key.A])
-                {
-                    State |= 0x1;
-                }
-
-                if (Keyboard[OpenTK.Input.Key.S])
-                {
-                    State |= 0x2;
-                }
-
-                if (Keyboard[OpenTK.Input.Key.Z])
-                {
-                    State |= 0x4;
-                }
-
-                if (Keyboard[OpenTK.Input.Key.X])
-                {
-                    State |= 0x8;
-                }
-
-                if (Keyboard[OpenTK.Input.Key.Enter])
-                {
-                    State |= 0x400;
-                }
-
-                if (Keyboard[OpenTK.Input.Key.Tab])
-                {
-                    State |= 0x800;
-                }
-
-                *((int*)(Ptr + 0xae38)) = (int)State;
-            }
-
-            if (Keyboard[OpenTK.Input.Key.Escape])
+            RightJoystick = new JoystickPosition
             {
-                this.Exit();
-            }
+                DX = RightJoystickDX,
+                DY = RightJoystickDY
+            };
+
+            //We just need one pair of JoyCon because it's emulate by the keyboard.
+            Ns.Hid.SendControllerButtons(HidControllerID.CONTROLLER_HANDHELD, HidControllerLayouts.Main, CurrentButton, LeftJoystick, RightJoystick);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)

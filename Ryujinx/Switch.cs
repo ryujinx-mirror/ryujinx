@@ -14,6 +14,7 @@ namespace Ryujinx
         internal NsGpu     Gpu { get; private set; }
         internal Horizon   Os  { get; private set; }
         internal VirtualFs VFs { get; private set; }
+        internal Hid       Hid { get; private set; }
 
         public event EventHandler Finish;
 
@@ -24,6 +25,7 @@ namespace Ryujinx
             Gpu = new NsGpu(Renderer);
             Os  = new Horizon(this);
             VFs = new VirtualFs();
+            Hid = new Hid(this);
         }
 
         internal virtual void OnFinish(EventArgs e)

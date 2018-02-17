@@ -87,7 +87,7 @@ namespace Ryujinx.OsHle
                         continue;
                     }
 
-                    Logging.Info($"Loding {Path.GetFileNameWithoutExtension(File)}...");
+                    Logging.Info($"Loading {Path.GetFileNameWithoutExtension(File)}...");
 
                     using (FileStream Input = new FileStream(File, FileMode.Open))
                     {
@@ -195,14 +195,8 @@ namespace Ryujinx.OsHle
             if (SharedMem.TryGetLastVirtualPosition(out long Position))
             {
                 Logging.Info($"HID shared memory successfully mapped to {Position:x16}!");
+                Ns.Hid.Init(Position);
             }
-        }
-
-        public long GetVirtHidOffset()
-        {
-            HidSharedMem.TryGetLastVirtualPosition(out long Position);
-
-            return Position;
         }
     }
 }
