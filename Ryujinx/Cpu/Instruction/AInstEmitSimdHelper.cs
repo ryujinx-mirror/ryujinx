@@ -76,6 +76,36 @@ namespace ChocolArm64.Instruction
             Context.EmitCall(MthdInfo);
         }
 
+        public static void EmitRoundMathCall(AILEmitterCtx Context, MidpointRounding RoundMode)
+        {
+            IAOpCodeSimd Op = (IAOpCodeSimd)Context.CurrOp;
+
+            Context.EmitLdc_I4((int)RoundMode);
+
+            MethodInfo MthdInfo;
+
+            Type[] Types = new Type[] { null, typeof(MidpointRounding) };
+
+            Types[0] = Op.Size == 0
+                ? typeof(float)
+                : typeof(double);
+
+            if (Op.Size == 0)
+            {
+                MthdInfo = typeof(MathF).GetMethod(nameof(MathF.Round), Types);
+            }
+            else if (Op.Size == 1)
+            {
+                MthdInfo = typeof(Math).GetMethod(nameof(Math.Round), Types);
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+
+            Context.EmitCall(MthdInfo);
+        }
+
         public static void EmitScalarUnaryOpSx(AILEmitterCtx Context, Action Emit)
         {
             EmitScalarOp(Context, Emit, OperFlags.Rn, true);

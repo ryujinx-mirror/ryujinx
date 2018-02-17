@@ -21,6 +21,16 @@ namespace ChocolArm64.Instruction
             EmitScalarSetF(Context, Op.Rd, Op.Opc);
         }
 
+        public static void Fcvtas_Gp(AILEmitterCtx Context)
+        {
+            Fcvta__Gp(Context, Signed: true);
+        }
+
+        public static void Fcvtau_Gp(AILEmitterCtx Context)
+        {
+            Fcvta__Gp(Context, Signed: false);
+        }
+
         public static void Fcvtms_Gp(AILEmitterCtx Context)
         {
             EmitFcvt_s_Gp(Context, nameof(Math.Floor));
@@ -153,6 +163,31 @@ namespace ChocolArm64.Instruction
             {
                 throw new ArgumentOutOfRangeException(nameof(Size));
             }
+        }
+
+        private static void Fcvta__Gp(AILEmitterCtx Context, bool Signed)
+        {
+            AOpCodeSimdCvt Op = (AOpCodeSimdCvt)Context.CurrOp;
+
+            EmitVectorExtractF(Context, Op.Rn, 0, Op.Size);
+
+            EmitRoundMathCall(Context, MidpointRounding.AwayFromZero);
+
+            if (Signed)
+            {
+                EmitScalarFcvts(Context, Op.Size, 0);
+            }
+            else
+            {
+                EmitScalarFcvtu(Context, Op.Size, 0);
+            }
+
+            if (Context.CurrOp.RegisterSize == ARegisterSize.Int32)
+            {
+                Context.Emit(OpCodes.Conv_U8);
+            }
+
+            Context.EmitStintzr(Op.Rd);
         }
 
         private static void EmitFcvt_s_Gp(AILEmitterCtx Context, string Name)
