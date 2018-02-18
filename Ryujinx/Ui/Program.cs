@@ -2,6 +2,7 @@
 using Gal.OpenGL;
 using System;
 using System.IO;
+using ChocolArm64;
 
 namespace Ryujinx
 {

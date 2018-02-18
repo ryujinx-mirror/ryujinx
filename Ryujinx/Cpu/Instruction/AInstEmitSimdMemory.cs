@@ -1,6 +1,7 @@
 using ChocolArm64.Decoder;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
+using System;
 using System.Reflection.Emit;
 
 using static ChocolArm64.Instruction.AInstEmitMemoryHelper;
@@ -85,45 +86,73 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdMemSs Op = (AOpCodeSimdMemSs)Context.CurrOp;
 
-            //TODO: Replicate mode.
-
             int Offset = 0;
 
-            for (int SElem = 0; SElem < Op.SElems; SElem++)
+            void EmitMemAddress()
             {
-                int Rt = (Op.Rt + SElem) & 0x1f;
+                Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
+                Context.EmitLdint(Op.Rn);
+                Context.EmitLdc_I8(Offset);
 
-                if (IsLoad)
+                Context.Emit(OpCodes.Add);
+            }
+
+            if (Op.Replicate)
+            {
+                //Only loads uses the replicate mode.
+                if (!IsLoad)
                 {
-                    Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
-                    Context.EmitLdint(Op.Rn);
-                    Context.EmitLdc_I8(Offset);
+                    throw new InvalidOperationException();
+                }
 
-                    Context.Emit(OpCodes.Add);
+                int Bytes = Context.CurrOp.GetBitsCount() >> 3;
 
-                    EmitReadZxCall(Context, Op.Size);
+                for (int SElem = 0; SElem < Op.SElems; SElem++)
+                {
+                    int Rt = (Op.Rt + SElem) & 0x1f;
 
-                    EmitVectorInsert(Context, Rt, Op.Index, Op.Size);
+                    for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
+                    {
+                        EmitMemAddress();
+
+                        EmitReadZxCall(Context, Op.Size);
+
+                        EmitVectorInsert(Context, Rt, Index, Op.Size);
+                    }
 
                     if (Op.RegisterSize == ARegisterSize.SIMD64)
                     {
                         EmitVectorZeroUpper(Context, Rt);
                     }
+
+                    Offset += 1 << Op.Size;
                 }
-                else
+            }
+            else
+            {
+                for (int SElem = 0; SElem < Op.SElems; SElem++)
                 {
-                    Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
-                    Context.EmitLdint(Op.Rn);
-                    Context.EmitLdc_I8(Offset);
+                    int Rt = (Op.Rt + SElem) & 0x1f;
 
-                    Context.Emit(OpCodes.Add);
+                    if (IsLoad)
+                    {
+                        EmitMemAddress();
 
-                    EmitVectorExtractZx(Context, Rt, Op.Index, Op.Size);
+                        EmitReadZxCall(Context, Op.Size);
 
-                    EmitWriteCall(Context, Op.Size);
+                        EmitVectorInsert(Context, Rt, Op.Index, Op.Size);
+                    }
+                    else
+                    {
+                        EmitMemAddress();
+
+                        EmitVectorExtractZx(Context, Rt, Op.Index, Op.Size);
+
+                        EmitWriteCall(Context, Op.Size);
+                    }
+
+                    Offset += 1 << Op.Size;
                 }
-
-                Offset += 1 << Op.Size;
             }
 
             if (Op.WBack)

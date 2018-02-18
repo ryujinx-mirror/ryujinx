@@ -60,6 +60,8 @@ namespace ChocolArm64.Instruction
 
             Context.Emit(OpCodes.And);
 
+            EmitZeroCVFlags(Context);
+
             Context.EmitZNFlagCheck();
 
             EmitDataStoreS(Context);
@@ -79,6 +81,8 @@ namespace ChocolArm64.Instruction
 
             if (SetFlags)
             {
+                EmitZeroCVFlags(Context);
+
                 Context.EmitZNFlagCheck();
             }
 
@@ -334,6 +338,14 @@ namespace ChocolArm64.Instruction
             {
                 Context.Emit(OpCodes.Conv_I4);
             }
-        }        
+        }
+
+        private static void EmitZeroCVFlags(AILEmitterCtx Context)
+        {
+            Context.EmitLdc_I4(0);
+            Context.EmitLdc_I4(0);
+            Context.EmitStflg((int)APState.VBit);
+            Context.EmitStflg((int)APState.CBit);
+        }
     }
 }

@@ -38,7 +38,7 @@ namespace ChocolArm64
                     Position = TranslateSubroutine(Position).Execute(Thread.Registers, Thread.Memory);
                 }
             }
-            while (Position != 0 && KeepRunning);
+            while (Position != 0 && KeepRunning); 
         }
 
         public bool TryGetCachedSub(AOpCode OpCode, out ATranslatedSub Sub)
