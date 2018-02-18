@@ -21,37 +21,23 @@ https://openal.org/downloads/OpenAL11CoreSDK.zip
    - Arrows.
    - Enter > "Start" & Tab > "Select"
    - Qwerty: 
-     - A > "A"
+     - A > "A" (QWERTY) / Q > "A" (AZERTY)
      - S > "B"
-     - Z > "X"
+     - Z > "X" (QWERTY) / W > "X" (AZERTY)
      - X > "Y"
-   - Azerty:
-     - Q > "A"
-     - S > "B"
-     - W > "X"
-     - X > "Y" 
+     - Key_Up > "Right Stick Up"
+     - Key_Down > "Right Stick Down"
+     - Key_Left > "Right Stick Left"
+     - Key_Right > "Right Stick Right"
+     - I > "Left Stick Up"
+     - K > "Left Stick Down"
+     - J > "Left Stick Left"
+     - L > "Left Stick Right"
+     - Tab > "Minus"
+     - Enter > "Plus"
 
- - Config File: `Ryujinx.conf` should be present on executable folder.
-   - Logging_Enable_Info (bool)
-   Enable the Informations Logging.
-
-   - Logging_Enable_Trace (bool)
-   Enable the Trace Logging (Enabled in Debug recommanded).
-
-   - Logging_Enable_Debug (bool)
-   Enable the Debug Logging (Enabled in Debug recommanded).
-
-   - Logging_Enable_Warn (bool)
-   Enable the Warning Logging (Enabled in Debug recommanded).
-
-   - Logging_Enable_Error (bool)
-   Enable the Error Logging (Enabled in Debug recommanded).
-
-   - Logging_Enable_Fatal (bool)
-   Enable the Fatal Logging (Enabled in Debug recommanded).
-
-   - Logging_Enable_LogFile (bool)
-   Enable writing the logging inside a Ryujinx.log file.
+ - Config File: `Ryujinx.conf` should be present in executable folder.
+   For more informations [you can go here](CONFIG.md).
 
 **Help**
 
