@@ -6,7 +6,6 @@ using Gal;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
-using Ryujinx.OsHle;
 using System;
 
 namespace Ryujinx

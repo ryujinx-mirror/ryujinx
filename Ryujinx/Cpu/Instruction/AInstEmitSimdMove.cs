@@ -85,6 +85,8 @@ namespace ChocolArm64.Instruction
 
             EmitVectorExtractZx(Context, Op.Rn, 0, 3);
 
+            EmitIntZeroHigherIfNeeded(Context);
+
             Context.EmitStintzr(Op.Rd);
         }
 
@@ -93,6 +95,8 @@ namespace ChocolArm64.Instruction
             AOpCodeSimdCvt Op = (AOpCodeSimdCvt)Context.CurrOp;
 
             EmitVectorExtractZx(Context, Op.Rn, 1, 3);
+
+            EmitIntZeroHigherIfNeeded(Context);
 
             Context.EmitStintzr(Op.Rd);
         }
@@ -103,6 +107,8 @@ namespace ChocolArm64.Instruction
 
             Context.EmitLdintzr(Op.Rn);
 
+            EmitIntZeroHigherIfNeeded(Context);
+
             EmitScalarSet(Context, Op.Rd, 3);
         }
 
@@ -111,6 +117,8 @@ namespace ChocolArm64.Instruction
             AOpCodeSimdCvt Op = (AOpCodeSimdCvt)Context.CurrOp;
 
             Context.EmitLdintzr(Op.Rn);
+
+            EmitIntZeroHigherIfNeeded(Context);
 
             EmitVectorInsert(Context, Op.Rd, 1, 3);
         }
@@ -137,11 +145,18 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdImm Op = (AOpCodeSimdImm)Context.CurrOp;
 
-            for (int Index = 0; Index < (4 >> Op.Size); Index++)
+            int Elems = Op.RegisterSize == ARegisterSize.SIMD128 ? 4 : 2;
+
+            for (int Index = 0; Index < (Elems >> Op.Size); Index++)
             {
                 Context.EmitLdc_I8(Op.Imm);
 
                 EmitVectorInsert(Context, Op.Rd, Index, Op.Size + 2);
+            }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
             }
         }
 
@@ -245,6 +260,15 @@ namespace ChocolArm64.Instruction
             if (Part == 0)
             {
                 EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
+        private static void EmitIntZeroHigherIfNeeded(AILEmitterCtx Context)
+        {
+            if (Context.CurrOp.RegisterSize == ARegisterSize.Int32)
+            {
+                Context.Emit(OpCodes.Conv_U4);
+                Context.Emit(OpCodes.Conv_U8);
             }
         }
 

@@ -26,7 +26,7 @@ namespace ChocolArm64.Translation
         {
             if (ILEmitter is AILOpCodeLoad Ld && AILEmitter.IsRegIndex(Ld.Index))
             {
-                switch (Ld.IoType & AIoType.Mask)
+                switch (Ld.IoType)
                 {
                     case AIoType.Flag:   IntInputs |= ((1L << Ld.Index) << 32) & ~IntOutputs; break;
                     case AIoType.Int:    IntInputs |=  (1L << Ld.Index)        & ~IntOutputs; break;
@@ -37,7 +37,7 @@ namespace ChocolArm64.Translation
             {
                 if (AILEmitter.IsRegIndex(St.Index))
                 {
-                    switch (St.IoType & AIoType.Mask)
+                    switch (St.IoType)
                     {
                         case AIoType.Flag:   IntOutputs |= (1L << St.Index) << 32; break;
                         case AIoType.Int:    IntOutputs |=  1L << St.Index;        break;

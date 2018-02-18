@@ -27,11 +27,9 @@ namespace ChocolArm64.Decoder
 
             switch (Scale)
             {
-                case 0: Index >>= 0; break;
-
                 case 1:
                 {
-                    if ((Index & 1) != 0)
+                    if ((Size & 1) != 0)
                     {
                         Inst = AInst.Undefined;
 
@@ -45,23 +43,23 @@ namespace ChocolArm64.Decoder
 
                 case 2:
                 {
-                    if ((Index & 2) != 0 ||
-                       ((Index & 1) != 0 && S != 0))
+                    if ((Size & 2) != 0 ||
+                       ((Size & 1) != 0 && S != 0))
                     {
                         Inst = AInst.Undefined;
 
                         return;
                     }
 
-                    if ((Index & 1) != 0)
+                    if ((Size & 1) != 0)
                     {
                         Index >>= 3;
+
+                        Scale = 3;
                     }
                     else
                     {
                         Index >>= 2;
-
-                        Scale = 3;
                     }
 
                     break;

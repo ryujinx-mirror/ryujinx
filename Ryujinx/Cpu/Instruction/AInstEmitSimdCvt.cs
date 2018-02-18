@@ -246,6 +246,11 @@ namespace ChocolArm64.Instruction
                 EmitScalarFcvtu(Context, Op.Size, Op.FBits);
             }
 
+            if (Context.CurrOp.RegisterSize == ARegisterSize.Int32)
+            {
+                Context.Emit(OpCodes.Conv_U8);
+            }
+
             Context.EmitStintzr(Op.Rd);
         }
 
@@ -312,6 +317,11 @@ namespace ChocolArm64.Instruction
                     ASoftFallback.EmitCall(Context, Signed
                         ? nameof(ASoftFallback.SatF64ToS64)
                         : nameof(ASoftFallback.SatF64ToU64));
+                }
+
+                if (SizeF == 0)
+                {
+                    Context.Emit(OpCodes.Conv_U8);
                 }
 
                 EmitVectorInsert(Context, Op.Rd, Index, SizeI);

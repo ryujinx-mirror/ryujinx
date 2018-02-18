@@ -10,9 +10,6 @@ namespace ChocolArm64.Translation
         Flag,
         Int,
         Float,
-        Vector,
-        Mask    = 0xff,
-        VectorI = Vector | 1 << 8,
-        VectorF = Vector | 1 << 9
+        Vector
     }
 }

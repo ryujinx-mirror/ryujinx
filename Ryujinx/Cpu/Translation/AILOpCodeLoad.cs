@@ -22,7 +22,7 @@ namespace ChocolArm64.Translation
 
         public void Emit(AILEmitter Context)
         {
-            switch (IoType & AIoType.Mask)
+            switch (IoType)
             {
                 case AIoType.Arg: Context.Generator.EmitLdarg(Index); break;
 

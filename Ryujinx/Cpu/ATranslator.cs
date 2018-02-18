@@ -8,9 +8,9 @@ namespace ChocolArm64
 {
     class ATranslator
     {
-        private Dictionary<long, ATranslatedSub> CachedSubs;
-
         public AThread Thread { get; private set; }
+
+        private Dictionary<long, ATranslatedSub> CachedSubs;
 
         private bool KeepRunning;
 
