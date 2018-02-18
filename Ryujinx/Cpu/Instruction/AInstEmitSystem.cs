@@ -13,26 +13,26 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSystem Op = (AOpCodeSystem)Context.CurrOp;
 
-            Context.EmitLdarg(ATranslatedSub.RegistersArgIdx);
+            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
 
             string PropName;
 
             switch (GetPackedId(Op))
             {
-                case 0b11_011_0000_0000_001: PropName = nameof(ARegisters.CtrEl0);    break;
-                case 0b11_011_0000_0000_111: PropName = nameof(ARegisters.DczidEl0);  break;
-                case 0b11_011_0100_0100_000: PropName = nameof(ARegisters.Fpcr);      break;
-                case 0b11_011_0100_0100_001: PropName = nameof(ARegisters.Fpsr);      break;
-                case 0b11_011_1101_0000_010: PropName = nameof(ARegisters.TpidrEl0);  break;
-                case 0b11_011_1101_0000_011: PropName = nameof(ARegisters.Tpidr);     break;
-                case 0b11_011_1110_0000_001: PropName = nameof(ARegisters.CntpctEl0); break;
+                case 0b11_011_0000_0000_001: PropName = nameof(AThreadState.CtrEl0);    break;
+                case 0b11_011_0000_0000_111: PropName = nameof(AThreadState.DczidEl0);  break;
+                case 0b11_011_0100_0100_000: PropName = nameof(AThreadState.Fpcr);      break;
+                case 0b11_011_0100_0100_001: PropName = nameof(AThreadState.Fpsr);      break;
+                case 0b11_011_1101_0000_010: PropName = nameof(AThreadState.TpidrEl0);  break;
+                case 0b11_011_1101_0000_011: PropName = nameof(AThreadState.Tpidr);     break;
+                case 0b11_011_1110_0000_001: PropName = nameof(AThreadState.CntpctEl0); break;
 
                 default: throw new NotImplementedException($"Unknown MRS at {Op.Position:x16}");
             }
 
-            Context.EmitCallPropGet(typeof(ARegisters), PropName);
+            Context.EmitCallPropGet(typeof(AThreadState), PropName);
 
-            PropertyInfo PropInfo = typeof(ARegisters).GetProperty(PropName);
+            PropertyInfo PropInfo = typeof(AThreadState).GetProperty(PropName);
 
             if (PropInfo.PropertyType != typeof(long) &&
                 PropInfo.PropertyType != typeof(ulong))
@@ -47,21 +47,21 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSystem Op = (AOpCodeSystem)Context.CurrOp;
 
-            Context.EmitLdarg(ATranslatedSub.RegistersArgIdx);
+            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
             Context.EmitLdintzr(Op.Rt);
 
             string PropName;
 
             switch (GetPackedId(Op))
             {
-                case 0b11_011_0100_0100_000: PropName = nameof(ARegisters.Fpcr);     break;
-                case 0b11_011_0100_0100_001: PropName = nameof(ARegisters.Fpsr);     break;
-                case 0b11_011_1101_0000_010: PropName = nameof(ARegisters.TpidrEl0); break;
+                case 0b11_011_0100_0100_000: PropName = nameof(AThreadState.Fpcr);     break;
+                case 0b11_011_0100_0100_001: PropName = nameof(AThreadState.Fpsr);     break;
+                case 0b11_011_1101_0000_010: PropName = nameof(AThreadState.TpidrEl0); break;
 
                 default: throw new NotImplementedException($"Unknown MSR at {Op.Position:x16}");
             }
 
-            PropertyInfo PropInfo = typeof(ARegisters).GetProperty(PropName);
+            PropertyInfo PropInfo = typeof(AThreadState).GetProperty(PropName);
 
             if (PropInfo.PropertyType != typeof(long) &&
                 PropInfo.PropertyType != typeof(ulong))
@@ -69,7 +69,7 @@ namespace ChocolArm64.Instruction
                 Context.Emit(OpCodes.Conv_U4);
             }
 
-            Context.EmitCallPropSet(typeof(ARegisters), PropName);
+            Context.EmitCallPropSet(typeof(AThreadState), PropName);
         }
 
         public static void Nop(AILEmitterCtx Context)
@@ -89,7 +89,7 @@ namespace ChocolArm64.Instruction
                 case 0b11_011_0111_0100_001:
                 {
                     //DC ZVA
-                    for (int Offs = 0; Offs < (4 << ARegisters.DczSizeLog2); Offs += 8)
+                    for (int Offs = 0; Offs < (4 << AThreadState.DczSizeLog2); Offs += 8)
                     {
                         Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
                         Context.EmitLdint(Op.Rt);

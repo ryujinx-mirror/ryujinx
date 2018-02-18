@@ -7,7 +7,7 @@ namespace ChocolArm64
 {
     public class AThread
     {
-        public ARegisters  Registers { get; private set; }
+        public AThreadState  ThreadState { get; private set; }
         public AMemory     Memory    { get; private set; }
 
         public long EntryPoint { get; private set; }
@@ -20,7 +20,7 @@ namespace ChocolArm64
 
         public event EventHandler WorkFinished;
 
-        public int ThreadId => Registers.ThreadId;
+        public int ThreadId => ThreadState.ThreadId;
 
         public bool IsAlive => Work.IsAlive;
 
@@ -34,7 +34,7 @@ namespace ChocolArm64
             this.Priority   = Priority;
             this.EntryPoint = EntryPoint;
 
-            Registers   = new ARegisters();
+            ThreadState = new AThreadState();
             Translator  = new ATranslator(this);
             ExecuteLock = new object();
         }

@@ -167,7 +167,7 @@ namespace ChocolArm64.Instruction
 
             Context.EmitLdint(Op.Rn);
 
-            if (Op.Rm != ARegisters.ZRIndex)
+            if (Op.Rm != AThreadState.ZRIndex)
             {
                 Context.EmitLdint(Op.Rm);
             }

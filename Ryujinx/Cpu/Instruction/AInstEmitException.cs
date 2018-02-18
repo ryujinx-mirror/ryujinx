@@ -11,12 +11,12 @@ namespace ChocolArm64.Instruction
 
         public static void Brk(AILEmitterCtx Context)
         {
-            EmitExceptionCall(Context, nameof(ARegisters.OnBreak));
+            EmitExceptionCall(Context, nameof(AThreadState.OnBreak));
         }
 
         public static void Svc(AILEmitterCtx Context)
         {
-            EmitExceptionCall(Context, nameof(ARegisters.OnSvcCall));
+            EmitExceptionCall(Context, nameof(AThreadState.OnSvcCall));
         }
 
         private static void EmitExceptionCall(AILEmitterCtx Context, string MthdName)
@@ -25,11 +25,11 @@ namespace ChocolArm64.Instruction
 
             Context.EmitStoreState();
 
-            Context.EmitLdarg(ATranslatedSub.RegistersArgIdx);
+            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
 
             Context.EmitLdc_I4(Op.Id);
 
-            MethodInfo MthdInfo = typeof(ARegisters).GetMethod(MthdName, Binding);
+            MethodInfo MthdInfo = typeof(AThreadState).GetMethod(MthdName, Binding);
 
             Context.EmitCall(MthdInfo);
 
@@ -45,14 +45,14 @@ namespace ChocolArm64.Instruction
 
             Context.EmitStoreState();
 
-            Context.EmitLdarg(ATranslatedSub.RegistersArgIdx);
+            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
 
             Context.EmitLdc_I8(Op.Position);
             Context.EmitLdc_I4(Op.RawOpCode);
 
-            string MthdName = nameof(ARegisters.OnUndefined);
+            string MthdName = nameof(AThreadState.OnUndefined);
 
-            MethodInfo MthdInfo = typeof(ARegisters).GetMethod(MthdName, Binding);
+            MethodInfo MthdInfo = typeof(AThreadState).GetMethod(MthdName, Binding);
 
             Context.EmitCall(MthdInfo);
 

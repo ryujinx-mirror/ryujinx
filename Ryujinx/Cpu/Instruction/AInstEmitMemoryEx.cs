@@ -159,7 +159,7 @@ namespace ChocolArm64.Instruction
         private static void EmitMemoryCall(AILEmitterCtx Context, string Name, int Rn = -1)
         {
             Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
-            Context.EmitLdarg(ATranslatedSub.RegistersArgIdx);
+            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
 
             if (Rn != -1)
             {

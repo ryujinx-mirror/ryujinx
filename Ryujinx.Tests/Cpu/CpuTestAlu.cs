@@ -10,8 +10,8 @@ namespace Ryujinx.Tests.Cpu
         public void Add()
         {
             // ADD X0, X1, X2
-            ARegisters Registers = SingleOpcode(0x8B020020, X1: 1, X2: 2);
-            Assert.AreEqual(3, Registers.X0);
+            AThreadState ThreadState = SingleOpcode(0x8B020020, X1: 1, X2: 2);
+            Assert.AreEqual(3, ThreadState.X0);
         }
 
         [Test]
@@ -28,10 +28,10 @@ namespace Ryujinx.Tests.Cpu
 
             foreach (var test in tests)
             {
-                ARegisters Registers = SingleOpcode(Opcode, X1: test.W1, X2: test.W2);
-                Assert.AreEqual(test.Result,   Registers.X0);
-                Assert.AreEqual(test.Negative, Registers.Negative);
-                Assert.AreEqual(test.Zero,     Registers.Zero);
+                AThreadState ThreadState = SingleOpcode(Opcode, X1: test.W1, X2: test.W2);
+                Assert.AreEqual(test.Result,   ThreadState.X0);
+                Assert.AreEqual(test.Negative, ThreadState.Negative);
+                Assert.AreEqual(test.Zero,     ThreadState.Zero);
             }
         }
 
@@ -50,16 +50,16 @@ namespace Ryujinx.Tests.Cpu
         public void RevX0X0()
         {
             // REV X0, X0
-            ARegisters Registers = SingleOpcode(0xDAC00C00, X0: 0xAABBCCDDEEFF1100);
-            Assert.AreEqual(0x0011FFEEDDCCBBAA, Registers.X0);
+            AThreadState ThreadState = SingleOpcode(0xDAC00C00, X0: 0xAABBCCDDEEFF1100);
+            Assert.AreEqual(0x0011FFEEDDCCBBAA, ThreadState.X0);
         }
 
         [Test]
         public void RevW1W1()
         {
             // REV W1, W1
-            ARegisters Registers = SingleOpcode(0x5AC00821, X1: 0x12345678);
-            Assert.AreEqual(0x78563412, Registers.X1);
+            AThreadState ThreadState = SingleOpcode(0x5AC00821, X1: 0x12345678);
+            Assert.AreEqual(0x78563412, ThreadState.X1);
         }
     }
 }

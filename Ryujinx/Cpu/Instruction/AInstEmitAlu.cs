@@ -343,8 +343,11 @@ namespace ChocolArm64.Instruction
         private static void EmitZeroCVFlags(AILEmitterCtx Context)
         {
             Context.EmitLdc_I4(0);
-            Context.EmitLdc_I4(0);
+
             Context.EmitStflg((int)APState.VBit);
+
+            Context.EmitLdc_I4(0);
+
             Context.EmitStflg((int)APState.CBit);
         }
     }

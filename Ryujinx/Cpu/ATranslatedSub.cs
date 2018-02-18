@@ -9,7 +9,7 @@ namespace ChocolArm64
 {
     class ATranslatedSub
     {
-        private delegate long AA64Subroutine(ARegisters Register, AMemory Memory);
+        private delegate long AA64Subroutine(AThreadState Register, AMemory Memory);
 
         private AA64Subroutine ExecDelegate;
 
@@ -17,8 +17,8 @@ namespace ChocolArm64
 
         public static Type[] FixedArgTypes { get; private set; }
 
-        public static int RegistersArgIdx { get; private set; }
-        public static int MemoryArgIdx    { get; private set; }
+        public static int StateArgIdx  { get; private set; }
+        public static int MemoryArgIdx { get; private set; }
 
         public DynamicMethod Method { get; private set; }
 
@@ -58,9 +58,9 @@ namespace ChocolArm64
 
                 FixedArgTypes[Index] = ParamType;
 
-                if (ParamType == typeof(ARegisters))
+                if (ParamType == typeof(AThreadState))
                 {
-                    RegistersArgIdx = Index;
+                    StateArgIdx = Index;
                 }
                 else if (ParamType == typeof(AMemory))
                 {
@@ -69,7 +69,7 @@ namespace ChocolArm64
             }
         }
 
-        public long Execute(ARegisters Registers, AMemory Memory)
+        public long Execute(AThreadState ThreadState, AMemory Memory)
         {
             if (!HasDelegate)
             {
@@ -83,7 +83,7 @@ namespace ChocolArm64
 
                 foreach (ARegister Reg in Params)
                 {
-                    Generator.EmitLdarg(RegistersArgIdx);
+                    Generator.EmitLdarg(StateArgIdx);
 
                     Generator.Emit(OpCodes.Ldfld, Reg.GetField());
                 }
@@ -96,7 +96,7 @@ namespace ChocolArm64
                 HasDelegate = true;
             }
 
-            return ExecDelegate(Registers, Memory);
+            return ExecDelegate(ThreadState, Memory);
         }
 
         public void MarkForReJit() => NeedsReJit = true;

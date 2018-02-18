@@ -6,43 +6,43 @@ namespace Ryujinx.OsHle.Svc
 {
     partial class SvcHandler
     {
-        private void SvcSetHeapSize(ARegisters Registers)
+        private void SvcSetHeapSize(AThreadState ThreadState)
         {
-            uint Size = (uint)Registers.X1;
+            uint Size = (uint)ThreadState.X1;
 
             Memory.Manager.SetHeapSize(Size, (int)MemoryType.Heap);
 
-            Registers.X0 = (int)SvcResult.Success;
-            Registers.X1 = (ulong)Memory.Manager.HeapAddr;
+            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X1 = (ulong)Memory.Manager.HeapAddr;
         }
 
-        private void SvcSetMemoryAttribute(ARegisters Registers)
+        private void SvcSetMemoryAttribute(AThreadState ThreadState)
         {
-            long Position = (long)Registers.X0;
-            long Size     = (long)Registers.X1;
-            int  State0   =  (int)Registers.X2;
-            int  State1   =  (int)Registers.X3;
+            long Position = (long)ThreadState.X0;
+            long Size     = (long)ThreadState.X1;
+            int  State0   =  (int)ThreadState.X2;
+            int  State1   =  (int)ThreadState.X3;
 
             //TODO
 
-            Registers.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = (int)SvcResult.Success;
         }
 
-        private void SvcMapMemory(ARegisters Registers)
+        private void SvcMapMemory(AThreadState ThreadState)
         {
-            long Dst  = (long)Registers.X0;
-            long Src  = (long)Registers.X1;
-            long Size = (long)Registers.X2;
+            long Dst  = (long)ThreadState.X0;
+            long Src  = (long)ThreadState.X1;
+            long Size = (long)ThreadState.X2;
 
             Memory.Manager.MapMirror(Src, Dst, Size, (int)MemoryType.MappedMemory);
 
-            Registers.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = (int)SvcResult.Success;
         }
 
-        private void SvcQueryMemory(ARegisters Registers)
+        private void SvcQueryMemory(AThreadState ThreadState)
         {
-            long InfoPtr  = (long)Registers.X0;
-            long Position = (long)Registers.X2;
+            long InfoPtr  = (long)ThreadState.X0;
+            long Position = (long)ThreadState.X2;
 
             AMemoryMapInfo MapInfo = Memory.Manager.GetMapInfo(Position);
 
@@ -59,16 +59,16 @@ namespace Ryujinx.OsHle.Svc
 
             //TODO: X1.
 
-            Registers.X0 = (int)SvcResult.Success;
-            Registers.X1 = 0;
+            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X1 = 0;
         }
 
-        private void SvcMapSharedMemory(ARegisters Registers)
+        private void SvcMapSharedMemory(AThreadState ThreadState)
         {
-            int  Handle =  (int)Registers.X0;
-            long Src    = (long)Registers.X1;
-            long Size   = (long)Registers.X2;
-            int  Perm   =  (int)Registers.X3;
+            int  Handle =  (int)ThreadState.X0;
+            long Src    = (long)ThreadState.X1;
+            long Size   = (long)ThreadState.X2;
+            int  Perm   =  (int)ThreadState.X3;
 
             HSharedMem SharedMem = Ns.Os.Handles.GetData<HSharedMem>(Handle);
 
@@ -78,33 +78,33 @@ namespace Ryujinx.OsHle.Svc
 
                 Memory.Manager.MapPhys(Src, Size, (int)MemoryType.SharedMemory, (AMemoryPerm)Perm);
 
-                Registers.X0 = (int)SvcResult.Success;
+                ThreadState.X0 = (int)SvcResult.Success;
             }
 
             //TODO: Error codes.
         }
 
-        private void SvcUnmapSharedMemory(ARegisters Registers)
+        private void SvcUnmapSharedMemory(AThreadState ThreadState)
         {
-            int  Handle   =  (int)Registers.X0;
-            long Position = (long)Registers.X1;
-            long Size     = (long)Registers.X2;
+            int  Handle   =  (int)ThreadState.X0;
+            long Position = (long)ThreadState.X1;
+            long Size     = (long)ThreadState.X2;
 
             HSharedMem HndData = Ns.Os.Handles.GetData<HSharedMem>(Handle);
 
             if (HndData != null)
             {
-                Registers.X0 = (int)SvcResult.Success;
+                ThreadState.X0 = (int)SvcResult.Success;
             }
 
             //TODO: Error codes.
         }
 
-        private void SvcCreateTransferMemory(ARegisters Registers)
+        private void SvcCreateTransferMemory(AThreadState ThreadState)
         {
-            long Position = (long)Registers.X1;
-            long Size     = (long)Registers.X2;
-            int  Perm     =  (int)Registers.X3;
+            long Position = (long)ThreadState.X1;
+            long Size     = (long)ThreadState.X2;
+            int  Perm     =  (int)ThreadState.X3;
 
             AMemoryMapInfo MapInfo = Memory.Manager.GetMapInfo(Position);
 
@@ -114,8 +114,8 @@ namespace Ryujinx.OsHle.Svc
 
             int Handle = Ns.Os.Handles.GenerateId(HndData);
 
-            Registers.X1 = (ulong)Handle;
-            Registers.X0 = (int)SvcResult.Success;
+            ThreadState.X1 = (ulong)Handle;
+            ThreadState.X0 = (int)SvcResult.Success;
         }
     }
 }

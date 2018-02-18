@@ -33,7 +33,7 @@ namespace Ryujinx.Tests.Cpu
         private void Execute(AThread Thread)
         {
             AutoResetEvent Wait = new AutoResetEvent(false);
-            Thread.Registers.Break += (sender, e) => Thread.StopExecution();
+            Thread.ThreadState.Break += (sender, e) => Thread.StopExecution();
             Thread.WorkFinished += (sender, e) => Wait.Set();
 
             Wait.Reset();
@@ -41,23 +41,23 @@ namespace Ryujinx.Tests.Cpu
             Wait.WaitOne();
         }
 
-        private ARegisters SingleOpcode(uint Opcode, 
-                                        ulong X0 = 0, ulong X1 = 0, ulong X2 = 0, 
-                                        AVec V0 = new AVec(), AVec V1 = new AVec(), AVec V2 = new AVec())
+        private AThreadState SingleOpcode(uint Opcode, 
+                                          ulong X0 = 0, ulong X1 = 0, ulong X2 = 0, 
+                                          AVec V0 = new AVec(), AVec V1 = new AVec(), AVec V2 = new AVec())
         {
             Memory.WriteUInt32(0x1000, Opcode);
             Memory.WriteUInt32(0x1004, 0xD4200000); // BRK #0
             Memory.WriteUInt32(0x1008, 0xD65F03C0); // RET
 
             AThread Thread = new AThread(Memory, ThreadPriority.Normal, 0x1000);
-            Thread.Registers.X0 = X0;
-            Thread.Registers.X1 = X1;
-            Thread.Registers.X2 = X2;
-            Thread.Registers.V0 = V0;
-            Thread.Registers.V1 = V1;
-            Thread.Registers.V2 = V2;
+            Thread.ThreadState.X0 = X0;
+            Thread.ThreadState.X1 = X1;
+            Thread.ThreadState.X2 = X2;
+            Thread.ThreadState.V0 = V0;
+            Thread.ThreadState.V1 = V1;
+            Thread.ThreadState.V2 = V2;
             Execute(Thread);
-            return Thread.Registers;
+            return Thread.ThreadState;
         }
 
         [Test]

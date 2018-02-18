@@ -8,7 +8,7 @@ namespace ChocolArm64.Memory
 {
     public unsafe class AMemory
     {
-        private const long ErgMask = (4 << ARegisters.ErgSizeLog2) - 1;
+        private const long ErgMask = (4 << AThreadState.ErgSizeLog2) - 1;
 
         public AMemoryMgr Manager { get; private set; }
 
@@ -65,13 +65,13 @@ namespace ChocolArm64.Memory
             }
         }
 
-        public void SetExclusive(ARegisters Registers, long Position)
+        public void SetExclusive(AThreadState ThreadState, long Position)
         {
             Position &= ~ErgMask;
 
             lock (Monitors)
             {
-                if (Monitors.TryGetValue(Registers.ThreadId, out ExMonitor Monitor))
+                if (Monitors.TryGetValue(ThreadState.ThreadId, out ExMonitor Monitor))
                 {
                     ExAddrs.Remove(Monitor.Position);
                 }
@@ -80,20 +80,20 @@ namespace ChocolArm64.Memory
 
                 Monitor = new ExMonitor(Position, ExState);
 
-                if (!Monitors.TryAdd(Registers.ThreadId, Monitor))
+                if (!Monitors.TryAdd(ThreadState.ThreadId, Monitor))
                 {
-                    Monitors[Registers.ThreadId] = Monitor;
+                    Monitors[ThreadState.ThreadId] = Monitor;
                 }
             }
         }
 
-        public bool TestExclusive(ARegisters Registers, long Position)
+        public bool TestExclusive(AThreadState ThreadState, long Position)
         {
             Position &= ~ErgMask;
 
             lock (Monitors)
             {
-                if (!Monitors.TryGetValue(Registers.ThreadId, out ExMonitor Monitor))
+                if (!Monitors.TryGetValue(ThreadState.ThreadId, out ExMonitor Monitor))
                 {
                     return false;
                 }
@@ -102,11 +102,11 @@ namespace ChocolArm64.Memory
             }
         }
 
-        public void ClearExclusive(ARegisters Registers)
+        public void ClearExclusive(AThreadState ThreadState)
         {
             lock (Monitors)
             {
-                if (Monitors.TryGetValue(Registers.ThreadId, out ExMonitor Monitor))
+                if (Monitors.TryGetValue(ThreadState.ThreadId, out ExMonitor Monitor))
                 {
                     Monitor.Reset();
                     ExAddrs.Remove(Monitor.Position);

@@ -2,7 +2,7 @@ using System;
 
 namespace ChocolArm64.State
 {
-    public class ARegisters
+    public class AThreadState
     {
         internal const int LRIndex = 30;
         internal const int ZRIndex = 31;

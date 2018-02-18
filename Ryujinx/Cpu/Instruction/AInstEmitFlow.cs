@@ -26,7 +26,7 @@ namespace ChocolArm64.Instruction
             AOpCodeBImmAl Op = (AOpCodeBImmAl)Context.CurrOp;
 
             Context.EmitLdc_I(Op.Position + 4);
-            Context.EmitStint(ARegisters.LRIndex);
+            Context.EmitStint(AThreadState.LRIndex);
             Context.EmitStoreState();
 
             if (Context.TryOptEmitSubroutineCall())
@@ -66,7 +66,7 @@ namespace ChocolArm64.Instruction
             AOpCodeBReg Op = (AOpCodeBReg)Context.CurrOp;
 
             Context.EmitLdc_I(Op.Position + 4);
-            Context.EmitStint(ARegisters.LRIndex);
+            Context.EmitStint(AThreadState.LRIndex);
             Context.EmitStoreState();
             Context.EmitLdintzr(Op.Rn);
 
@@ -99,7 +99,7 @@ namespace ChocolArm64.Instruction
         public static void Ret(AILEmitterCtx Context)
         {
             Context.EmitStoreState();
-            Context.EmitLdint(ARegisters.LRIndex);
+            Context.EmitLdint(AThreadState.LRIndex);
 
             Context.Emit(OpCodes.Ret);
         }

@@ -9,57 +9,57 @@ namespace Ryujinx.OsHle.Svc
 {
     partial class SvcHandler
     {
-        private void SvcExitProcess(ARegisters Registers) => Ns.Os.ExitProcess(Registers.ProcessId);
+        private void SvcExitProcess(AThreadState ThreadState) => Ns.Os.ExitProcess(ThreadState.ProcessId);
 
-        private void SvcCloseHandle(ARegisters Registers)
+        private void SvcCloseHandle(AThreadState ThreadState)
         {
-            int Handle = (int)Registers.X0;
+            int Handle = (int)ThreadState.X0;
 
             Ns.Os.CloseHandle(Handle);
 
-            Registers.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = (int)SvcResult.Success;
         }
 
-        private void SvcResetSignal(ARegisters Registers)
+        private void SvcResetSignal(AThreadState ThreadState)
         {
-            int Handle = (int)Registers.X0;
+            int Handle = (int)ThreadState.X0;
 
             //TODO: Implement events.
 
-            Registers.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = (int)SvcResult.Success;
         }
 
-        private void SvcWaitSynchronization(ARegisters Registers)
+        private void SvcWaitSynchronization(AThreadState ThreadState)
         {
-            long HandlesPtr   = (long)Registers.X0;
-            int  HandlesCount =  (int)Registers.X2;
-            long Timeout      = (long)Registers.X3;
+            long HandlesPtr   = (long)ThreadState.X0;
+            int  HandlesCount =  (int)ThreadState.X2;
+            long Timeout      = (long)ThreadState.X3;
 
             //TODO: Implement events.
 
-            //Logging.Info($"SvcWaitSynchronization Thread {Registers.ThreadId}");
+            //Logging.Info($"SvcWaitSynchronization Thread {ThreadState.ThreadId}");
 
-            if (Process.TryGetThread(Registers.Tpidr, out HThread Thread))
+            if (Process.TryGetThread(ThreadState.Tpidr, out HThread Thread))
             {
                 Process.Scheduler.Yield(Thread);
             }
             else
             {
-                Logging.Error($"Thread with TPIDR_EL0 0x{Registers.Tpidr:x16} not found!");
+                Logging.Error($"Thread with TPIDR_EL0 0x{ThreadState.Tpidr:x16} not found!");
             }
 
-            Registers.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = (int)SvcResult.Success;
         }
 
-        private void SvcGetSystemTick(ARegisters Registers)
+        private void SvcGetSystemTick(AThreadState ThreadState)
         {
-            Registers.X0 = (ulong)Registers.CntpctEl0;
+            ThreadState.X0 = (ulong)ThreadState.CntpctEl0;
         }
 
-        private void SvcConnectToNamedPort(ARegisters Registers)
+        private void SvcConnectToNamedPort(AThreadState ThreadState)
         {
-            long StackPtr = (long)Registers.X0;
-            long NamePtr  = (long)Registers.X1;
+            long StackPtr = (long)ThreadState.X0;
+            long NamePtr  = (long)ThreadState.X1;
 
             string Name = AMemoryHelper.ReadAsciiString(Memory, NamePtr, 8);
 
@@ -68,35 +68,35 @@ namespace Ryujinx.OsHle.Svc
 
             HSession Session = new HSession(Name);
 
-            Registers.X1 = (ulong)Ns.Os.Handles.GenerateId(Session);
-            Registers.X0 = (int)SvcResult.Success;
+            ThreadState.X1 = (ulong)Ns.Os.Handles.GenerateId(Session);
+            ThreadState.X0 = (int)SvcResult.Success;
         }
 
-        private void SvcSendSyncRequest(ARegisters Registers)
+        private void SvcSendSyncRequest(AThreadState ThreadState)
         {
-            SendSyncRequest(Registers, false);
+            SendSyncRequest(ThreadState, false);
         }
 
-        private void SvcSendSyncRequestWithUserBuffer(ARegisters Registers)
+        private void SvcSendSyncRequestWithUserBuffer(AThreadState ThreadState)
         {
-            SendSyncRequest(Registers, true);
+            SendSyncRequest(ThreadState, true);
         }
 
-        private void SendSyncRequest(ARegisters Registers, bool UserBuffer)
+        private void SendSyncRequest(AThreadState ThreadState, bool UserBuffer)
         {
-            long CmdPtr = Registers.Tpidr;
+            long CmdPtr = ThreadState.Tpidr;
             long Size   = 0x100;
             int  Handle = 0;
 
             if (UserBuffer)
             {
-                CmdPtr = (long)Registers.X0;
-                Size   = (long)Registers.X1;
-                Handle =  (int)Registers.X2;
+                CmdPtr = (long)ThreadState.X0;
+                Size   = (long)ThreadState.X1;
+                Handle =  (int)ThreadState.X2;
             }
             else
             {
-                Handle = (int)Registers.X0;
+                Handle = (int)ThreadState.X0;
             }
 
             byte[] CmdData = AMemoryHelper.ReadBytes(Memory, CmdPtr, (int)Size);
@@ -111,69 +111,69 @@ namespace Ryujinx.OsHle.Svc
 
                 byte[] Response = AMemoryHelper.ReadBytes(Memory, CmdPtr, (int)Size);
 
-                Registers.X0 = (int)SvcResult.Success;
+                ThreadState.X0 = (int)SvcResult.Success;
             }
             else
             {
-                Registers.X0 = (int)SvcResult.ErrBadIpcReq;
+                ThreadState.X0 = (int)SvcResult.ErrBadIpcReq;
             }
         }
 
-        private void SvcBreak(ARegisters Registers)
+        private void SvcBreak(AThreadState ThreadState)
         {
-            long Reason  = (long)Registers.X0;
-            long Unknown = (long)Registers.X1;
-            long Info    = (long)Registers.X2;
+            long Reason  = (long)ThreadState.X0;
+            long Unknown = (long)ThreadState.X1;
+            long Info    = (long)ThreadState.X2;
 
             throw new GuestBrokeExecutionException();
         }
 
-        private void SvcOutputDebugString(ARegisters Registers)
+        private void SvcOutputDebugString(AThreadState ThreadState)
         {
-            long Position = (long)Registers.X0;
-            long Size     = (long)Registers.X1;
+            long Position = (long)ThreadState.X0;
+            long Size     = (long)ThreadState.X1;
 
             string Str = AMemoryHelper.ReadAsciiString(Memory, Position, (int)Size);
 
             Logging.Info($"SvcOutputDebugString: {Str}");
 
-            Registers.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = (int)SvcResult.Success;
         }
 
-        private void SvcGetInfo(ARegisters Registers)
+        private void SvcGetInfo(AThreadState ThreadState)
         {
-            long StackPtr = (long)Registers.X0;
-            int  InfoType =  (int)Registers.X1;
-            long Handle   = (long)Registers.X2;
-            int  InfoId   =  (int)Registers.X3;
+            long StackPtr = (long)ThreadState.X0;
+            int  InfoType =  (int)ThreadState.X1;
+            long Handle   = (long)ThreadState.X2;
+            int  InfoId   =  (int)ThreadState.X3;
 
             //Fail for info not available on older Kernel versions.
             if (InfoType == 18 ||
                 InfoType == 19)
             {
-                Registers.X0 = (int)SvcResult.ErrBadInfo;
+                ThreadState.X0 = (int)SvcResult.ErrBadInfo;
 
                 return;
             }
 
             switch (InfoType)
             {
-                case 2:  Registers.X1 = GetMapRegionBaseAddr();  break;
-                case 3:  Registers.X1 = GetMapRegionSize();      break;
-                case 4:  Registers.X1 = GetHeapRegionBaseAddr(); break;
-                case 5:  Registers.X1 = GetHeapRegionSize();     break;
-                case 6:  Registers.X1 = GetTotalMem();           break;
-                case 7:  Registers.X1 = GetUsedMem();            break;
-                case 11: Registers.X1 = GetRnd64();              break;
-                case 12: Registers.X1 = GetAddrSpaceBaseAddr();  break;
-                case 13: Registers.X1 = GetAddrSpaceSize();      break;
-                case 14: Registers.X1 = GetMapRegionBaseAddr();  break;
-                case 15: Registers.X1 = GetMapRegionSize();      break;
+                case 2:  ThreadState.X1 = GetMapRegionBaseAddr();  break;
+                case 3:  ThreadState.X1 = GetMapRegionSize();      break;
+                case 4:  ThreadState.X1 = GetHeapRegionBaseAddr(); break;
+                case 5:  ThreadState.X1 = GetHeapRegionSize();     break;
+                case 6:  ThreadState.X1 = GetTotalMem();           break;
+                case 7:  ThreadState.X1 = GetUsedMem();            break;
+                case 11: ThreadState.X1 = GetRnd64();              break;
+                case 12: ThreadState.X1 = GetAddrSpaceBaseAddr();  break;
+                case 13: ThreadState.X1 = GetAddrSpaceSize();      break;
+                case 14: ThreadState.X1 = GetMapRegionBaseAddr();  break;
+                case 15: ThreadState.X1 = GetMapRegionSize();      break;
 
                 default: throw new NotImplementedException($"SvcGetInfo: {InfoType} {Handle} {InfoId}");
             }
 
-            Registers.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = (int)SvcResult.Success;
         }
 
         private ulong GetTotalMem()

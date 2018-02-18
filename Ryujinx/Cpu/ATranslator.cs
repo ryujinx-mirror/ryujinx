@@ -31,14 +31,14 @@ namespace ChocolArm64
             {
                 if (CachedSubs.TryGetValue(Position, out ATranslatedSub Sub) && !Sub.NeedsReJit)
                 {
-                    Position = Sub.Execute(Thread.Registers, Thread.Memory);
+                    Position = Sub.Execute(Thread.ThreadState, Thread.Memory);
                 }
                 else
                 {
-                    Position = TranslateSubroutine(Position).Execute(Thread.Registers, Thread.Memory);
+                    Position = TranslateSubroutine(Position).Execute(Thread.ThreadState, Thread.Memory);
                 }
             }
-            while (Position != 0 && KeepRunning); 
+            while (Position != 0 && KeepRunning);
         }
 
         public bool TryGetCachedSub(AOpCode OpCode, out ATranslatedSub Sub)

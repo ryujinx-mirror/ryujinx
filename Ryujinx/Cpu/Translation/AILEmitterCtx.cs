@@ -309,7 +309,7 @@ namespace ChocolArm64.Translation
 
         public void EmitLdintzr(int Index)
         {
-            if (Index != ARegisters.ZRIndex)
+            if (Index != AThreadState.ZRIndex)
             {
                 EmitLdint(Index);
             }
@@ -321,7 +321,7 @@ namespace ChocolArm64.Translation
 
         public void EmitStintzr(int Index)
         {
-            if (Index != ARegisters.ZRIndex)
+            if (Index != AThreadState.ZRIndex)
             {
                 EmitStint(Index);
             }

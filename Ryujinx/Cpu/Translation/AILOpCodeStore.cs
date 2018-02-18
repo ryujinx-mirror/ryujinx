@@ -53,7 +53,7 @@ namespace ChocolArm64.Translation
                 {
                     ARegister Reg = AILEmitter.GetRegFromBit(Bit, BaseType);
 
-                    Context.Generator.EmitLdarg(ATranslatedSub.RegistersArgIdx);
+                    Context.Generator.EmitLdarg(ATranslatedSub.StateArgIdx);
                     Context.Generator.EmitLdloc(Context.GetLocalIndex(Reg));
 
                     Context.Generator.Emit(OpCodes.Stfld, Reg.GetField());
