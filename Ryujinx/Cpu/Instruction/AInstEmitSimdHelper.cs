@@ -210,14 +210,14 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdRegElem Op = (AOpCodeSimdRegElem)Context.CurrOp;
 
-            EmitVectorOpByElemF(Context, Emit, Op.Index);
+            EmitVectorOpByElemF(Context, Emit, Op.Index, Ternary: false);
         }
 
         public static void EmitVectorTernaryOpByElemF(AILEmitterCtx Context, Action Emit)
         {
             AOpCodeSimdRegElem Op = (AOpCodeSimdRegElem)Context.CurrOp;
 
-            EmitVectorOpByElemF(Context, Emit, Op.Index);
+            EmitVectorOpByElemF(Context, Emit, Op.Index, Ternary: true);
         }
 
         public static void EmitVectorOpF(AILEmitterCtx Context, Action Emit, OperFlags Opers)
@@ -256,7 +256,7 @@ namespace ChocolArm64.Instruction
             }
         }
 
-        public static void EmitVectorOpByElemF(AILEmitterCtx Context, Action Emit, int Elem)
+        public static void EmitVectorOpByElemF(AILEmitterCtx Context, Action Emit, int Elem, bool Ternary)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
@@ -266,6 +266,11 @@ namespace ChocolArm64.Instruction
 
             for (int Index = 0; Index < (Bytes >> SizeF + 2); Index++)
             {
+                if (Ternary)
+                {
+                    EmitVectorExtractF(Context, Op.Rd, Index, SizeF);
+                }
+
                 EmitVectorExtractF(Context, Op.Rn, Index, SizeF);
                 EmitVectorExtractF(Context, Op.Rm, Elem,  SizeF);
 

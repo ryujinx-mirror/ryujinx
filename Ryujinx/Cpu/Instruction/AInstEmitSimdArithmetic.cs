@@ -182,8 +182,7 @@ namespace ChocolArm64.Instruction
             EmitScalarTernaryRaOpF(Context, () =>
             {
                 Context.Emit(OpCodes.Mul);
-                Context.Emit(OpCodes.Neg);
-                Context.Emit(OpCodes.Add);
+                Context.Emit(OpCodes.Sub);
             });
         }
 
@@ -259,6 +258,15 @@ namespace ChocolArm64.Instruction
             {
                 Context.Emit(OpCodes.Mul);
                 Context.Emit(OpCodes.Add);
+            });
+        }
+
+        public static void Mls_V(AILEmitterCtx Context)
+        {
+            EmitVectorTernaryOpZx(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Sub);
             });
         }
 
