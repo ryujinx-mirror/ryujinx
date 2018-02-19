@@ -231,9 +231,14 @@ namespace Ryujinx.OsHle
             return (int)((Position - TlsPageAddr) / TlsSize);
         }
 
-        public bool TryGetThread(long Tpidr, out HThread Thread)
+        public HThread GetThread(long Tpidr)
         {
-            return ThreadsByTpidr.TryGetValue(Tpidr, out Thread);
+            if (!ThreadsByTpidr.TryGetValue(Tpidr, out HThread Thread))
+            {
+                Logging.Error($"Thread with TPIDR 0x{Tpidr:x16} not found!");
+            }
+
+            return Thread;
         }
 
         public void Dispose()

@@ -7,8 +7,8 @@ namespace ChocolArm64
 {
     public class AThread
     {
-        public AThreadState  ThreadState { get; private set; }
-        public AMemory     Memory    { get; private set; }
+        public AThreadState ThreadState { get; private set; }
+        public AMemory      Memory      { get; private set; }
 
         public long EntryPoint { get; private set; }
 

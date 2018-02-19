@@ -1,6 +1,5 @@
 using ChocolArm64.State;
 using Ryujinx.OsHle.Handles;
-using System.Threading;
 
 namespace Ryujinx.OsHle.Svc
 {
@@ -18,6 +17,7 @@ namespace Ryujinx.OsHle.Svc
             {
                 if (ProcessorId == -2)
                 {
+                    //TODO: Get this value from the NPDM file.
                     ProcessorId = 0;
                 }
 
@@ -55,16 +55,16 @@ namespace Ryujinx.OsHle.Svc
         {           
             ulong NanoSecs = ThreadState.X0;
 
-            if (Process.TryGetThread(ThreadState.Tpidr, out HThread CurrThread))
+            HThread CurrThread = Process.GetThread(ThreadState.Tpidr);
+            
+            if (NanoSecs == 0)
             {
                 Process.Scheduler.Yield(CurrThread);
             }
             else
             {
-                Logging.Error($"Thread with TPIDR_EL0 0x{ThreadState.Tpidr:x16} not found!");
+                Process.Scheduler.WaitForSignal(CurrThread, (int)(NanoSecs / 1000000));
             }
-
-            Thread.Sleep((int)(NanoSecs / 1000000));
         }
 
         private void SvcGetThreadPriority(AThreadState ThreadState)

@@ -43,7 +43,7 @@ namespace Ryujinx
         }
 
         public void Init(long HidOffset)
-        {
+        {            
             unsafe
             {
                 if (HidOffset == 0 || HidOffset + Horizon.HidSize > uint.MaxValue)

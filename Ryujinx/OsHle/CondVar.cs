@@ -1,6 +1,6 @@
-using ChocolArm64.Memory;
 using Ryujinx.OsHle.Handles;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Ryujinx.OsHle
 {
@@ -10,6 +10,8 @@ namespace Ryujinx.OsHle
 
         private long CondVarAddress;
         private long Timeout;
+
+        private bool OwnsCondVarValue;
 
         private List<HThread> WaitingThreads;
 
@@ -24,34 +26,43 @@ namespace Ryujinx.OsHle
 
         public void WaitForSignal(HThread Thread)
         {
-            int Count = ReadCondVarValue();
+            int Count = Process.Memory.ReadInt32(CondVarAddress);
 
             if (Count <= 0)
             {
-                //FIXME: We shouldn't need to do that?
-                Process.Scheduler.Yield(Thread);
+                lock (WaitingThreads)
+                {
+                    WaitingThreads.Add(Thread);
+                }
 
-                return;
+                if (Timeout == -1)
+                {
+                    Process.Scheduler.WaitForSignal(Thread);
+                }
+                else
+                {
+                    Process.Scheduler.WaitForSignal(Thread, (int)(Timeout / 1000000));
+
+                    lock (WaitingThreads)
+                    {
+                        WaitingThreads.Remove(Thread);
+                    }
+                }
             }
 
-            WriteCondVarValue(Count - 1);
+            AcquireCondVarValue();
 
-            lock (WaitingThreads)
+            Count = Process.Memory.ReadInt32(CondVarAddress);
+
+            if (Count > 0)
             {
-                WaitingThreads.Add(Thread);
+                Process.Memory.WriteInt32(CondVarAddress, Count - 1);
             }
 
-            if (Timeout != -1)
-            {
-                Process.Scheduler.WaitForSignal(Thread, (int)(Timeout / 1000000));
-            }
-            else
-            {
-                Process.Scheduler.WaitForSignal(Thread);
-            }
+            ReleaseCondVarValue();
         }
 
-        public void SetSignal(int Count)
+        public void SetSignal(HThread Thread, int Count)
         {
             lock (WaitingThreads)
             {
@@ -59,7 +70,11 @@ namespace Ryujinx.OsHle
                 {
                     Process.Scheduler.Signal(WaitingThreads.ToArray());
 
-                    WriteCondVarValue(WaitingThreads.Count);
+                    AcquireCondVarValue();
+
+                    Process.Memory.WriteInt32(CondVarAddress, WaitingThreads.Count);
+
+                    ReleaseCondVarValue();
 
                     WaitingThreads.Clear();
                 }
@@ -85,19 +100,39 @@ namespace Ryujinx.OsHle
                         WaitingThreads.RemoveAt(HighestPrioIndex);
                     }
 
-                    WriteCondVarValue(Count);
+                    AcquireCondVarValue();
+
+                    Process.Memory.WriteInt32(CondVarAddress, Count);
+
+                    ReleaseCondVarValue();
                 }
+            }
+
+            Process.Scheduler.Suspend(Thread.ProcessorId);
+            Process.Scheduler.Resume(Thread);
+        }
+
+        private void AcquireCondVarValue()
+        {
+            if (!OwnsCondVarValue)
+            {
+                while (!Process.Memory.AcquireAddress(CondVarAddress))
+                {
+                    Thread.Yield();
+                }
+
+                OwnsCondVarValue = true;
             }
         }
 
-        private int ReadCondVarValue()
+        private void ReleaseCondVarValue()
         {
-            return AMemoryHelper.ReadInt32Exclusive(Process.Memory, CondVarAddress);
-        }
+            if (OwnsCondVarValue)
+            {
+                OwnsCondVarValue = false;
 
-        private void WriteCondVarValue(int Value)
-        {
-            AMemoryHelper.WriteInt32Exclusive(Process.Memory, CondVarAddress, Value);
+                Process.Memory.ReleaseAddress(CondVarAddress);
+            }
         }
     }
 }

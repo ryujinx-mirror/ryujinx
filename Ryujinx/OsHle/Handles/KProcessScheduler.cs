@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -6,19 +7,8 @@ namespace Ryujinx.OsHle.Handles
 {
     class KProcessScheduler : IDisposable
     {
-        private enum ThreadState
-        {
-            WaitingToRun,
-            WaitingSignal,
-            Running
-        }
-
         private class SchedulerThread : IDisposable
         {
-            public bool Signaled { get; set; }
-
-            public ThreadState State { get; set; }
-
             public HThread Thread { get; private set; }
 
             public AutoResetEvent WaitEvent { get; private set; }
@@ -44,9 +34,70 @@ namespace Ryujinx.OsHle.Handles
             }
         }
 
-        private Dictionary<HThread, SchedulerThread> AllThreads;
+        private class ThreadQueue
+        {
+            private List<SchedulerThread> Threads;
 
-        private Queue<SchedulerThread>[] WaitingThreads;
+            public ThreadQueue()
+            {
+                Threads = new List<SchedulerThread>();
+            }
+
+            public void Push(SchedulerThread Thread)
+            {
+                lock (Threads)
+                {
+                    Threads.Add(Thread);
+                }
+            }
+
+            public SchedulerThread Pop(int MinPriority = 0x40)
+            {
+                lock (Threads)
+                {
+                    SchedulerThread SchedThread;
+
+                    int HighestPriority = MinPriority;
+
+                    int HighestPrioIndex = -1;
+
+                    for (int Index = 0; Index < Threads.Count; Index++)
+                    {
+                        SchedThread = Threads[Index];
+
+                        if (HighestPriority > SchedThread.Thread.Priority)
+                        {
+                            HighestPriority = SchedThread.Thread.Priority;
+
+                            HighestPrioIndex = Index;
+                        }
+                    }
+
+                    if (HighestPrioIndex == -1)
+                    {
+                        return null;
+                    }
+
+                    SchedThread = Threads[HighestPrioIndex];
+
+                    Threads.RemoveAt(HighestPrioIndex);
+
+                    return SchedThread;
+                }
+            }
+
+            public bool HasThread(SchedulerThread SchedThread)
+            {
+                lock (Threads)
+                {
+                    return Threads.Contains(SchedThread);
+                }
+            }
+        }
+
+        private ConcurrentDictionary<HThread, SchedulerThread> AllThreads;
+
+        private ThreadQueue[] WaitingToRun;
 
         private HashSet<int> ActiveProcessors;
 
@@ -54,13 +105,13 @@ namespace Ryujinx.OsHle.Handles
 
         public KProcessScheduler()
         {
-            AllThreads = new Dictionary<HThread, SchedulerThread>();
+            AllThreads = new ConcurrentDictionary<HThread, SchedulerThread>();
 
-            WaitingThreads = new Queue<SchedulerThread>[4];
+            WaitingToRun = new ThreadQueue[4];
 
-            for (int Index = 0; Index < WaitingThreads.Length; Index++)
+            for (int Index = 0; Index < 4; Index++)
             {
-                WaitingThreads[Index] = new Queue<SchedulerThread>();
+                WaitingToRun[Index] = new ThreadQueue();
             }
 
             ActiveProcessors = new HashSet<int>();
@@ -72,14 +123,12 @@ namespace Ryujinx.OsHle.Handles
         {
             lock (SchedLock)
             {
-                if (AllThreads.ContainsKey(Thread))
+                SchedulerThread SchedThread = new SchedulerThread(Thread);
+
+                if (!AllThreads.TryAdd(Thread, SchedThread))
                 {
                     return;
                 }
-
-                SchedulerThread SchedThread = new SchedulerThread(Thread);
-
-                AllThreads.Add(Thread, SchedThread);
 
                 if (!ActiveProcessors.Contains(Thread.ProcessorId))
                 {
@@ -87,117 +136,158 @@ namespace Ryujinx.OsHle.Handles
 
                     Thread.Thread.Execute();
 
-                    SetThreadAsRunning(SchedThread);
-
-                    SchedThread.State = ThreadState.Running;
+                    Logging.Debug($"{GetDbgThreadInfo(Thread)} running.");
                 }
                 else
                 {
-                    InsertSorted(SchedThread);
-
-                    SchedThread.State = ThreadState.WaitingToRun;
+                    WaitingToRun[Thread.ProcessorId].Push(SchedThread);
 
                     Logging.Debug($"{GetDbgThreadInfo(SchedThread.Thread)} waiting to run.");
                 }
             }
         }
 
-        public void WaitForSignal(HThread Thread, int TimeoutMs)
+        public void Suspend(int ProcessorId)
         {
-            Logging.Debug($"{GetDbgThreadInfo(Thread)} entering signal wait state with timeout.");
+            lock (SchedLock)
+            {
+                SchedulerThread SchedThread = WaitingToRun[ProcessorId].Pop();
 
-            PutThreadToWait(Thread, ThreadState.WaitingSignal, TimeoutMs);
+                if (SchedThread != null)
+                {
+                    RunThread(SchedThread);
+                }
+                else
+                {
+                    ActiveProcessors.Remove(ProcessorId);
+                }
+            }
         }
 
-        public void WaitForSignal(HThread Thread)
+        public void Resume(HThread CurrThread)
         {
+            SchedulerThread SchedThread;
+
+            Logging.Debug($"{GetDbgThreadInfo(CurrThread)} entering ipc delay wait state.");
+
+            lock (SchedLock)
+            {
+                if (!AllThreads.TryGetValue(CurrThread, out SchedThread))
+                {
+                    Logging.Error($"{GetDbgThreadInfo(CurrThread)} was not found on the scheduler queue!");
+
+                    return;
+                }
+            }
+
+            TryResumingExecution(SchedThread);
+        }
+
+        public void WaitForSignal(HThread Thread, int Timeout = -1)
+        {
+            SchedulerThread SchedThread;
+
             Logging.Debug($"{GetDbgThreadInfo(Thread)} entering signal wait state.");
 
-            PutThreadToWait(Thread, ThreadState.WaitingSignal);
+            lock (SchedLock)
+            {
+                SchedThread = WaitingToRun[Thread.ProcessorId].Pop();
+
+                if (SchedThread != null)
+                {
+                    RunThread(SchedThread);
+                }
+                else
+                {
+                    ActiveProcessors.Remove(Thread.ProcessorId);
+                }
+
+                if (!AllThreads.TryGetValue(Thread, out SchedThread))
+                {
+                    Logging.Error($"{GetDbgThreadInfo(Thread)} was not found on the scheduler queue!");
+
+                    return;
+                }
+            }
+
+            if (Timeout >= 0)
+            {
+                Logging.Debug($"{GetDbgThreadInfo(Thread)} has wait timeout of {Timeout}ms.");
+
+                SchedThread.WaitEvent.WaitOne(Timeout);
+            }
+            else
+            {
+                SchedThread.WaitEvent.WaitOne();
+            }
+
+            TryResumingExecution(SchedThread);
+        }
+
+        private void TryResumingExecution(SchedulerThread SchedThread)
+        {
+            HThread Thread = SchedThread.Thread;
+
+            lock (SchedLock)
+            {
+                if (ActiveProcessors.Add(Thread.ProcessorId))
+                {
+                    Logging.Debug($"{GetDbgThreadInfo(Thread)} resuming execution...");
+
+                    return;
+                }
+
+                WaitingToRun[Thread.ProcessorId].Push(SchedThread);
+            }
+
+            SchedThread.WaitEvent.WaitOne();
+
+            Logging.Debug($"{GetDbgThreadInfo(Thread)} resuming execution...");
         }
 
         public void Yield(HThread Thread)
         {
-            Logging.Debug($"{GetDbgThreadInfo(Thread)} yielded execution.");
-
-            if (WaitingThreads[Thread.ProcessorId].Count == 0)
-            {
-                Logging.Debug($"{GetDbgThreadInfo(Thread)} resumed because theres nothing to run.");
-
-                return;
-            }            
-
-            PutThreadToWait(Thread, ThreadState.WaitingToRun);
-        }
-
-        private void PutThreadToWait(HThread Thread, ThreadState State, int TimeoutMs = -1)
-        {
             SchedulerThread SchedThread;
+
+            Logging.Debug($"{GetDbgThreadInfo(Thread)} yielded execution.");
 
             lock (SchedLock)
             {
+                SchedThread = WaitingToRun[Thread.ProcessorId].Pop(Thread.Priority);
+
+                if (SchedThread == null)
+                {
+                    Logging.Debug($"{GetDbgThreadInfo(Thread)} resumed because theres nothing better to run.");
+
+                    return;
+                }
+                
+                RunThread(SchedThread);
+
                 if (!AllThreads.TryGetValue(Thread, out SchedThread))
                 {
-                    return;
-                }
-
-                if (SchedThread.Signaled && SchedThread.State == ThreadState.WaitingSignal)
-                {
-                    SchedThread.Signaled = false;
+                    Logging.Error($"{GetDbgThreadInfo(Thread)} was not found on the scheduler queue!");
 
                     return;
                 }
 
-                ActiveProcessors.Remove(Thread.ProcessorId);
-
-                SchedThread.State = State;
-
-                TryRunningWaitingThead(SchedThread.Thread.ProcessorId);
-
-                if (State == ThreadState.WaitingSignal)
-                {
-                    InsertSorted(SchedThread);
-                }
-                else
-                {
-                    InsertAtEnd(SchedThread);
-                }
+                WaitingToRun[Thread.ProcessorId].Push(SchedThread);
             }
 
-            if (TimeoutMs >= 0)
-            {
-                Logging.Debug($"{GetDbgThreadInfo(SchedThread.Thread)} waiting with timeout of {TimeoutMs}ms.");
+            SchedThread.WaitEvent.WaitOne();
 
-                SchedThread.WaitEvent.WaitOne(TimeoutMs);
+            Logging.Debug($"{GetDbgThreadInfo(Thread)} resuming execution...");
+        }
+
+        private void RunThread(SchedulerThread SchedThread)
+        {
+            if (!SchedThread.Thread.Thread.Execute())
+            {
+                SchedThread.WaitEvent.Set();
             }
             else
             {
-                Logging.Debug($"{GetDbgThreadInfo(SchedThread.Thread)} waiting indefinitely.");
-
-                SchedThread.WaitEvent.WaitOne();
-            }
-
-            while (true)
-            {
-                lock (SchedLock)
-                {
-                    Logging.Debug($"Trying to run {GetDbgThreadInfo(SchedThread.Thread)}.");
-
-                    if (!ActiveProcessors.Contains(SchedThread.Thread.ProcessorId))
-                    {
-                        SetThreadAsRunning(SchedThread);
-
-                        break;
-                    }
-                    else
-                    {
-                        SchedThread.State = ThreadState.WaitingToRun;
-
-                        Logging.Debug($"{GetDbgThreadInfo(SchedThread.Thread)} waiting to run.");
-                    }
-                }
-
-                SchedThread.WaitEvent.WaitOne();
+                Logging.Debug($"{GetDbgThreadInfo(SchedThread.Thread)} running.");
             }
         }
 
@@ -205,105 +295,19 @@ namespace Ryujinx.OsHle.Handles
         {
             lock (SchedLock)
             {
-                HashSet<int> SignaledProcessorIds = new HashSet<int>();
-
                 foreach (HThread Thread in Threads)
                 {
-                    Logging.Debug($"{GetDbgThreadInfo(Thread)} signaled.");
-
                     if (AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
                     {
-                        if (SchedThread.State == ThreadState.WaitingSignal)
+                        if (!WaitingToRun[Thread.ProcessorId].HasThread(SchedThread))
                         {
-                            SchedThread.State = ThreadState.WaitingToRun;
+                            Logging.Debug($"{GetDbgThreadInfo(Thread)} signaled.");
 
-                            SignaledProcessorIds.Add(Thread.ProcessorId);
+                            SchedThread.WaitEvent.Set();
                         }
-
-                        SchedThread.Signaled = true;
                     }
                 }
-
-                foreach (int ProcessorId in SignaledProcessorIds)
-                {
-                    TryRunningWaitingThead(ProcessorId);
-                }
             }
-        }
-
-        private void TryRunningWaitingThead(int ProcessorId)
-        {
-            Logging.Debug($"TryRunningWaitingThead core {ProcessorId}.");
-
-            lock (SchedLock)
-            {
-                if (!ActiveProcessors.Contains(ProcessorId) && WaitingThreads[ProcessorId].Count > 0)
-                {
-                    SchedulerThread SchedThread = WaitingThreads[ProcessorId].Dequeue();
-
-                    Logging.Debug($"Now trying to run {GetDbgThreadInfo(SchedThread.Thread)}.");
-
-                    if (!SchedThread.Thread.Thread.Execute())
-                    {
-                        SchedThread.WaitEvent.Set();
-                    }
-                    else
-                    {
-                        SetThreadAsRunning(SchedThread);
-                    }
-                }
-                else
-                {
-                    Logging.Debug($"Processor id {ProcessorId} already being used or no waiting threads.");
-                }
-            }
-        }
-
-        private void SetThreadAsRunning(SchedulerThread SchedThread)
-        {
-            ActiveProcessors.Add(SchedThread.Thread.ProcessorId);
-
-            SchedThread.State = ThreadState.Running;
-
-            SchedThread.Signaled = false;
-
-            Logging.Debug($"{GetDbgThreadInfo(SchedThread.Thread)} running.");
-        }
-
-        private void InsertSorted(SchedulerThread SchedThread)
-        {
-            HThread Thread = SchedThread.Thread;
-
-            Queue<SchedulerThread> CoreQueue = WaitingThreads[Thread.ProcessorId];
-
-            Queue<SchedulerThread> TempQueue = new Queue<SchedulerThread>(CoreQueue.Count);
-
-            while (CoreQueue.Count > 0)
-            {
-                if (CoreQueue.Peek().Thread.Priority >= Thread.Priority)
-                {
-                    break;
-                }
-
-                TempQueue.Enqueue(CoreQueue.Dequeue());
-            }
-
-            CoreQueue.Enqueue(SchedThread);
-
-            while (CoreQueue.Count > 0)
-            {
-                TempQueue.Enqueue(CoreQueue.Dequeue());
-            }
-
-            while (TempQueue.Count > 0)
-            {
-                CoreQueue.Enqueue(TempQueue.Dequeue());
-            }
-        }
-
-        private void InsertAtEnd(SchedulerThread SchedThread)
-        {
-            WaitingThreads[SchedThread.Thread.ProcessorId].Enqueue(SchedThread);
         }
 
         private string GetDbgThreadInfo(HThread Thread)
@@ -320,14 +324,9 @@ namespace Ryujinx.OsHle.Handles
         {
             if (Disposing)
             {
-                foreach (Queue<SchedulerThread> SchedThreads in WaitingThreads)
+                foreach (SchedulerThread SchedThread in AllThreads.Values)
                 {
-                    foreach (SchedulerThread SchedThread in SchedThreads)
-                    {
-                        SchedThread.Dispose();
-                    }
-
-                    SchedThreads.Clear();
+                    SchedThread.Dispose();
                 }
             }
         }

@@ -4,6 +4,7 @@ using Ryujinx.OsHle.Exceptions;
 using Ryujinx.OsHle.Handles;
 using Ryujinx.OsHle.Ipc;
 using System;
+using System.Threading;
 
 namespace Ryujinx.OsHle.Svc
 {
@@ -37,16 +38,10 @@ namespace Ryujinx.OsHle.Svc
 
             //TODO: Implement events.
 
-            //Logging.Info($"SvcWaitSynchronization Thread {ThreadState.ThreadId}");
+            HThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
-            if (Process.TryGetThread(ThreadState.Tpidr, out HThread Thread))
-            {
-                Process.Scheduler.Yield(Thread);
-            }
-            else
-            {
-                Logging.Error($"Thread with TPIDR_EL0 0x{ThreadState.Tpidr:x16} not found!");
-            }
+            Process.Scheduler.Suspend(CurrThread.ProcessorId);
+            Process.Scheduler.Resume(CurrThread);
 
             ThreadState.X0 = (int)SvcResult.Success;
         }
@@ -99,6 +94,10 @@ namespace Ryujinx.OsHle.Svc
                 Handle = (int)ThreadState.X0;
             }
 
+            HThread CurrThread = Process.GetThread(ThreadState.Tpidr);
+
+            Process.Scheduler.Suspend(CurrThread.ProcessorId);
+
             byte[] CmdData = AMemoryHelper.ReadBytes(Memory, CmdPtr, (int)Size);
 
             HSession Session = Ns.Os.Handles.GetData<HSession>(Handle);
@@ -117,6 +116,10 @@ namespace Ryujinx.OsHle.Svc
             {
                 ThreadState.X0 = (int)SvcResult.ErrBadIpcReq;
             }
+
+            Thread.Yield();
+
+            Process.Scheduler.Resume(CurrThread);
         }
 
         private void SvcBreak(AThreadState ThreadState)

@@ -1,6 +1,6 @@
-using ChocolArm64.Memory;
 using Ryujinx.OsHle.Handles;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Ryujinx.OsHle
 {
@@ -11,6 +11,8 @@ namespace Ryujinx.OsHle
         private Process Process;
 
         private long MutexAddress;
+
+        private bool OwnsMutexValue;
 
         private object EnterWaitLock;
 
@@ -30,9 +32,11 @@ namespace Ryujinx.OsHle
 
         public void WaitForLock(HThread RequestingThread, int RequestingThreadHandle)
         {
+            AcquireMutexValue();
+
             lock (EnterWaitLock)
             {
-                int CurrentThreadHandle = ReadMutexValue() & ~MutexHasListenersMask;
+                int CurrentThreadHandle = Process.Memory.ReadInt32(MutexAddress) & ~MutexHasListenersMask;
 
                 if (CurrentThreadHandle == RequestingThreadHandle ||
                     CurrentThreadHandle == 0)
@@ -40,7 +44,9 @@ namespace Ryujinx.OsHle
                     return;
                 }
 
-                WriteMutexValue(CurrentThreadHandle | MutexHasListenersMask);
+                Process.Memory.WriteInt32(MutexAddress, CurrentThreadHandle | MutexHasListenersMask);
+
+                ReleaseMutexValue();
 
                 WaitingThreads.Enqueue(RequestingThread);
             }
@@ -50,24 +56,32 @@ namespace Ryujinx.OsHle
 
         public void GiveUpLock(int ThreadHandle)
         {
+            AcquireMutexValue();
+
             lock (EnterWaitLock)
             {
-                int CurrentThread = ReadMutexValue() & ~MutexHasListenersMask;
+                int CurrentThread = Process.Memory.ReadInt32(MutexAddress) & ~MutexHasListenersMask;
 
                 if (CurrentThread == ThreadHandle)
                 {
                     Unlock();
                 }
             }
+
+            ReleaseMutexValue();
         }
 
         public void Unlock()
         {
+            AcquireMutexValue();
+
             lock (EnterWaitLock)
             {
                 int HasListeners = WaitingThreads.Count > 1 ? MutexHasListenersMask : 0;
 
-                WriteMutexValue(HasListeners);
+                Process.Memory.WriteInt32(MutexAddress, HasListeners);
+
+                ReleaseMutexValue();
 
                 HThread[] UnlockedThreads = new HThread[WaitingThreads.Count];
 
@@ -82,14 +96,27 @@ namespace Ryujinx.OsHle
             }
         }
 
-        private int ReadMutexValue()
+        private void AcquireMutexValue()
         {
-            return AMemoryHelper.ReadInt32Exclusive(Process.Memory, MutexAddress);
+            if (!OwnsMutexValue)
+            {
+                while (!Process.Memory.AcquireAddress(MutexAddress))
+                {
+                    Thread.Yield();
+                }
+
+                OwnsMutexValue = true;
+            }
         }
 
-        private void WriteMutexValue(int Value)
+        private void ReleaseMutexValue()
         {
-            AMemoryHelper.WriteInt32Exclusive(Process.Memory, MutexAddress, Value);
+            if (OwnsMutexValue)
+            {
+                OwnsMutexValue = false;
+
+                Process.Memory.ReleaseAddress(MutexAddress);
+            }
         }
     }
 }
