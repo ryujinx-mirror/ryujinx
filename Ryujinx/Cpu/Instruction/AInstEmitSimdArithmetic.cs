@@ -124,6 +124,11 @@ namespace ChocolArm64.Instruction
             EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Div));
         }
 
+        public static void Fdiv_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Div));
+        }
+
         public static void Fmadd_S(AILEmitterCtx Context)
         {
             EmitScalarTernaryRaOpF(Context, () =>
