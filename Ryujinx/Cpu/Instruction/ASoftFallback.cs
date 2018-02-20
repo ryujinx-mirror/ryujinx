@@ -1,6 +1,7 @@
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace ChocolArm64.Instruction
@@ -101,6 +102,8 @@ namespace ChocolArm64.Instruction
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int SatF32ToS32(float Value)
         {
+            if (float.IsNaN(Value)) return 0;
+
             return Value > int.MaxValue ? int.MaxValue :
                    Value < int.MinValue ? int.MinValue : (int)Value;
         }
@@ -108,6 +111,8 @@ namespace ChocolArm64.Instruction
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long SatF32ToS64(float Value)
         {
+            if (float.IsNaN(Value)) return 0;
+
             return Value > long.MaxValue ? long.MaxValue :
                    Value < long.MinValue ? long.MinValue : (long)Value;
         }
@@ -115,6 +120,8 @@ namespace ChocolArm64.Instruction
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint SatF32ToU32(float Value)
         {
+            if (float.IsNaN(Value)) return 0;
+
             return Value > uint.MaxValue ? uint.MaxValue :
                    Value < uint.MinValue ? uint.MinValue : (uint)Value;
         }
@@ -122,6 +129,8 @@ namespace ChocolArm64.Instruction
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong SatF32ToU64(float Value)
         {
+            if (float.IsNaN(Value)) return 0;
+
             return Value > ulong.MaxValue ? ulong.MaxValue :
                    Value < ulong.MinValue ? ulong.MinValue : (ulong)Value;
         }
@@ -129,6 +138,8 @@ namespace ChocolArm64.Instruction
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int SatF64ToS32(double Value)
         {
+            if (double.IsNaN(Value)) return 0;
+
             return Value > int.MaxValue ? int.MaxValue :
                    Value < int.MinValue ? int.MinValue : (int)Value;
         }
@@ -136,6 +147,8 @@ namespace ChocolArm64.Instruction
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long SatF64ToS64(double Value)
         {
+            if (double.IsNaN(Value)) return 0;
+
             return Value > long.MaxValue ? long.MaxValue :
                    Value < long.MinValue ? long.MinValue : (long)Value;
         }
@@ -143,6 +156,8 @@ namespace ChocolArm64.Instruction
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint SatF64ToU32(double Value)
         {
+            if (double.IsNaN(Value)) return 0;
+
             return Value > uint.MaxValue ? uint.MaxValue :
                    Value < uint.MinValue ? uint.MinValue : (uint)Value;
         }
@@ -150,46 +165,20 @@ namespace ChocolArm64.Instruction
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong SatF64ToU64(double Value)
         {
+            if (double.IsNaN(Value)) return 0;
+
             return Value > ulong.MaxValue ? ulong.MaxValue :
                    Value < ulong.MinValue ? ulong.MinValue : (ulong)Value;
         }
 
-        public static ulong SMulHi128(ulong LHS, ulong RHS)
+        public static long SMulHi128(long LHS, long RHS)
         {
-            long LLo = (uint)(LHS >>  0);
-            long LHi =  (int)(LHS >> 32);
-            long RLo = (uint)(RHS >>  0);
-            long RHi =  (int)(RHS >> 32);
-
-            long LHiRHi = LHi * RHi;
-            long LHiRLo = LHi * RLo;
-            long LLoRHi = LLo * RHi;
-            long LLoRLo = LLo * RLo;
-
-            long Carry = ((uint)LHiRLo + ((uint)LLoRHi + (LLoRLo >> 32))) >> 32;
-
-            long ResHi = LHiRHi + (LHiRLo >> 32) + (LLoRHi >> 32) + Carry;
-
-            return (ulong)ResHi;
+            return (long)(BigInteger.Multiply(LHS, RHS) >> 64);
         }
 
         public static ulong UMulHi128(ulong LHS, ulong RHS)
         {
-            ulong LLo = (uint)(LHS >>  0);
-            ulong LHi = (uint)(LHS >> 32);
-            ulong RLo = (uint)(RHS >>  0);
-            ulong RHi = (uint)(RHS >> 32);
-
-            ulong LHiRHi = LHi * RHi;
-            ulong LHiRLo = LHi * RLo;
-            ulong LLoRHi = LLo * RHi;
-            ulong LLoRLo = LLo * RLo;
-
-            ulong Carry = ((uint)LHiRLo + ((uint)LLoRHi + (LLoRLo >> 32))) >> 32;
-
-            ulong ResHi = LHiRHi + (LHiRLo >> 32) + (LLoRHi >> 32) + Carry;
-
-            return ResHi;
+            return (ulong)(BigInteger.Multiply(LHS, RHS) >> 64);
         }
 
         public static int CountSetBits8(byte Value)

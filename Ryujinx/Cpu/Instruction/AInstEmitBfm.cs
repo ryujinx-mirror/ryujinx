@@ -36,7 +36,7 @@ namespace ChocolArm64.Instruction
 
             if (Op.Pos + 1 == BitsCount)
             {
-                EmitBfmShift(Context, OpCodes.Shr);
+                EmitSbfmShift(Context);
             }
             else if (Op.Pos < Op.Shift)
             {
@@ -87,7 +87,7 @@ namespace ChocolArm64.Instruction
 
             if (Op.Pos + 1 == Op.GetBitsCount())
             {
-                EmitBfmShift(Context, OpCodes.Shr_Un);
+                EmitUbfmShift(Context);
             }
             else if (Op.Pos < Op.Shift)
             {
@@ -166,19 +166,28 @@ namespace ChocolArm64.Instruction
             Context.EmitStintzr(Op.Rd);
         }
 
-        private static void EmitBfmShift(AILEmitterCtx Context, OpCode ILOp)
+        private static void EmitSbfmShift(AILEmitterCtx Context)
+        {
+            EmitBfmShift(Context, true);
+        }
+
+        private static void EmitUbfmShift(AILEmitterCtx Context)
+        {
+            EmitBfmShift(Context, false);
+        }
+
+        private static void EmitBfmShift(AILEmitterCtx Context, bool Signed)
         {
             AOpCodeBfm Op = (AOpCodeBfm)Context.CurrOp;
 
-            if (Op.Shift > 0)
-            {
-                Context.EmitLdintzr(Op.Rn);
-                Context.EmitLdc_I4(Op.Shift);
+            Context.EmitLdintzr(Op.Rn);
+            Context.EmitLdc_I4(Op.Shift);
 
-                Context.Emit(ILOp);
+            Context.Emit(Signed
+                ? OpCodes.Shr
+                : OpCodes.Shr_Un);
 
-                Context.EmitStintzr(Op.Rd);
-            }
+            Context.EmitStintzr(Op.Rd);
         }
 
         private static void EmitBfmLsl(AILEmitterCtx Context)

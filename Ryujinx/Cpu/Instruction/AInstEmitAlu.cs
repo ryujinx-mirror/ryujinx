@@ -107,6 +107,16 @@ namespace ChocolArm64.Instruction
             Context.EmitStintzr(Op.Rd);
         }
 
+        public static void Eon(AILEmitterCtx Context)
+        {
+            EmitDataLoadOpers(Context);
+
+            Context.Emit(OpCodes.Not);
+            Context.Emit(OpCodes.Xor);
+
+            EmitDataStore(Context);
+        }
+
         public static void Eor(AILEmitterCtx Context) => EmitDataOp(Context, OpCodes.Xor);
 
         public static void Extr(AILEmitterCtx Context)

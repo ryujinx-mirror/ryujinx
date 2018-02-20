@@ -4,6 +4,7 @@ using ChocolArm64.Translation;
 using System;
 using System.Reflection.Emit;
 
+using static ChocolArm64.Instruction.AInstEmitAluHelper;
 using static ChocolArm64.Instruction.AInstEmitSimdHelper;
 
 namespace ChocolArm64.Instruction
@@ -54,24 +55,9 @@ namespace ChocolArm64.Instruction
 
             Context.EmitCondBranch(LblTrue, Op.Cond);
 
-            //TODO: Share this logic with Ccmp.
-            Context.EmitLdc_I4((Op.NZCV >> 0) & 1);
+            EmitSetNZCV(Context, Op.NZCV);
 
-            Context.EmitStflg((int)APState.VBit);
-
-            Context.EmitLdc_I4((Op.NZCV >> 1) & 1);
-
-            Context.EmitStflg((int)APState.CBit);
-
-            Context.EmitLdc_I4((Op.NZCV >> 2) & 1);
-
-            Context.EmitStflg((int)APState.ZBit);
-
-            Context.EmitLdc_I4((Op.NZCV >> 3) & 1);
-
-            Context.EmitStflg((int)APState.NBit);
-
-            Context.Emit(OpCodes.Br_S, LblEnd);
+            Context.Emit(OpCodes.Br, LblEnd);
 
             Context.MarkLabel(LblTrue);
 
@@ -80,11 +66,34 @@ namespace ChocolArm64.Instruction
             Context.MarkLabel(LblEnd);
         }
 
+        public static void Fccmpe_S(AILEmitterCtx Context)
+        {
+            Fccmp_S(Context);
+        }
+
         public static void Fcmp_S(AILEmitterCtx Context)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
             bool CmpWithZero = !(Op is AOpCodeSimdFcond) ? Op.Bit3 : false;
+
+            //Handle NaN case. If any number is NaN, then NZCV = 0011.
+            if (CmpWithZero)
+            {
+                EmitNaNCheck(Context, Op.Rn);
+            }
+            else
+            {
+                EmitNaNCheck(Context, Op.Rn);
+                EmitNaNCheck(Context, Op.Rm);
+
+                Context.Emit(OpCodes.Or);
+            }
+
+            AILLabel LblNaN = new AILLabel();
+            AILLabel LblEnd = new AILLabel();
+
+            Context.Emit(OpCodes.Brtrue_S, LblNaN);
 
             void EmitLoadOpers()
             {
@@ -102,7 +111,7 @@ namespace ChocolArm64.Instruction
 
             //Z = Rn == Rm
             EmitLoadOpers();
-            
+
             Context.Emit(OpCodes.Ceq);
             Context.Emit(OpCodes.Dup);
 
@@ -123,30 +132,18 @@ namespace ChocolArm64.Instruction
 
             Context.EmitStflg((int)APState.NBit);
 
-            //Handle NaN case. If any number is NaN, then NZCV = 0011.
-            AILLabel LblNotNaN = new AILLabel();
+            //V = 0
+            Context.EmitLdc_I4(0);
 
-            if (CmpWithZero)
-            {
-                EmitNaNCheck(Context, Op.Rn);
-            }
-            else
-            {
-                EmitNaNCheck(Context, Op.Rn);
-                EmitNaNCheck(Context, Op.Rm);
-
-                Context.Emit(OpCodes.Or);
-            }
-
-            Context.Emit(OpCodes.Brfalse_S, LblNotNaN);
-
-            Context.EmitLdc_I4(1);
-            Context.EmitLdc_I4(1);
-
-            Context.EmitStflg((int)APState.CBit);
             Context.EmitStflg((int)APState.VBit);
 
-            Context.MarkLabel(LblNotNaN);
+            Context.Emit(OpCodes.Br_S, LblEnd);
+
+            Context.MarkLabel(LblNaN);
+
+            EmitSetNZCV(Context, 0b0011);
+
+            Context.MarkLabel(LblEnd);
         }
 
         public static void Fcmpe_S(AILEmitterCtx Context)

@@ -145,5 +145,24 @@ namespace ChocolArm64.Instruction
                 Context.EmitStint(Op.Rd);
             }
         }
+
+        public static void EmitSetNZCV(AILEmitterCtx Context, int NZCV)
+        {
+            Context.EmitLdc_I4((NZCV >> 0) & 1);
+
+            Context.EmitStflg((int)APState.VBit);
+
+            Context.EmitLdc_I4((NZCV >> 1) & 1);
+
+            Context.EmitStflg((int)APState.CBit);
+
+            Context.EmitLdc_I4((NZCV >> 2) & 1);
+
+            Context.EmitStflg((int)APState.ZBit);
+
+            Context.EmitLdc_I4((NZCV >> 3) & 1);
+
+            Context.EmitStflg((int)APState.NBit);
+        }
     }
 }

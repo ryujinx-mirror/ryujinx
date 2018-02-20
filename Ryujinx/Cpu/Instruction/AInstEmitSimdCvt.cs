@@ -91,7 +91,7 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
-            EmitVectorExtractSx(Context, Op.Rd, 0, Op.Size + 2);
+            EmitVectorExtractSx(Context, Op.Rn, 0, Op.Size + 2);
 
             EmitFloatCast(Context, Op.Size);
 

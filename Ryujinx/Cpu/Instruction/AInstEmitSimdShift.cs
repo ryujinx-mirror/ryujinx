@@ -10,15 +10,6 @@ namespace ChocolArm64.Instruction
 {
     static partial class AInstEmit
     {
-        [Flags]
-        private enum ShrFlags
-        {
-            None       = 0,
-            Signed     = 1 << 0,
-            Rounding   = 1 << 1,
-            Accumulate = 1 << 2
-        }
-
         public static void Shl_S(AILEmitterCtx Context)
         {
             AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
@@ -100,14 +91,43 @@ namespace ChocolArm64.Instruction
             EmitVectorShImmWidenBinaryZx(Context, () => Context.Emit(OpCodes.Shl), Shift);
         }
 
+        public static void Ushr_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
+
+            EmitScalarUnaryOpZx(Context, () =>
+            {
+                Context.EmitLdc_I4(GetImmShr(Op));
+
+                Context.Emit(OpCodes.Shr_Un);
+            });
+        }
+
         public static void Ushr_V(AILEmitterCtx Context)
         {
-            EmitVectorShr(Context, ShrFlags.None);
+            AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
+
+            EmitVectorUnaryOpZx(Context, () =>
+            {
+                Context.EmitLdc_I4(GetImmShr(Op));
+
+                Context.Emit(OpCodes.Shr_Un);
+            });
         }
 
         public static void Usra_V(AILEmitterCtx Context)
         {
-            EmitVectorShr(Context, ShrFlags.Accumulate);
+            AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
+
+            Action Emit = () =>
+            {
+                Context.EmitLdc_I4(GetImmShr(Op));
+
+                Context.Emit(OpCodes.Shr_Un);
+                Context.Emit(OpCodes.Add);
+            };
+
+            EmitVectorOp(Context, Emit, OperFlags.RdRn, Signed: false);
         }
 
         private static void EmitVectorShl(AILEmitterCtx Context, bool Signed)
@@ -170,35 +190,6 @@ namespace ChocolArm64.Instruction
             else
             {
                 EmitVectorBinaryOpZx(Context, Emit);
-            }
-        }
-
-        private static void EmitVectorShr(AILEmitterCtx Context, ShrFlags Flags)
-        {
-            AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
-
-            int Shift = (8 << (Op.Size + 1)) - Op.Imm;
-
-            if (Flags.HasFlag(ShrFlags.Accumulate))
-            {
-                Action Emit = () =>
-                {
-                    Context.EmitLdc_I4(Shift);
-
-                    Context.Emit(OpCodes.Shr_Un);
-                    Context.Emit(OpCodes.Add);
-                };
-
-                EmitVectorOp(Context, Emit, OperFlags.RdRn, Signed: false);
-            }
-            else
-            {
-                EmitVectorUnaryOpZx(Context, () =>
-                {
-                    Context.EmitLdc_I4(Shift);
-
-                    Context.Emit(OpCodes.Shr_Un);
-                });
             }
         }
 
