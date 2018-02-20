@@ -12,6 +12,6 @@
     <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Ryujinx\Ryujinx.csproj" />
+    <ProjectReference Include="..\ChocolArm64\ChocolArm64.csproj" />
   </ItemGroup>
 </Project>
