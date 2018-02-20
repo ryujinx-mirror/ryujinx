@@ -137,6 +137,8 @@ namespace Ryujinx
 
 precision highp float;
 
+uniform vec2 window_size;
+
 layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec4 in_color;
 layout(location = 2) in vec2 in_tex_coord;
@@ -144,10 +146,20 @@ layout(location = 2) in vec2 in_tex_coord;
 out vec4 color;
 out vec2 tex_coord;
 
+// Have a fixed aspect ratio, fit the image within the available space.
+vec3 get_scale_ratio() {
+    vec2 native_size = vec2(1280, 720);
+    vec2 ratio = vec2(
+        (window_size.y * native_size.x) / (native_size.y * window_size.x),
+        (window_size.x * native_size.y) / (native_size.x * window_size.y)
+    );
+    return vec3(min(ratio, vec2(1, 1)), 1);
+}
+
 void main(void) { 
     color = in_color;
     tex_coord = in_tex_coord;
-    gl_Position = vec4((in_position + vec3(-960, 270, 0)) / vec3(1920, 270, 1), 1);
+    gl_Position = vec4(in_position * get_scale_ratio(), 1);
 }";
 
         private string FragShaderSource = @"
@@ -168,6 +180,8 @@ void main(void) {
         private int VtxShaderHandle,
                     FragShaderHandle,
                     PrgShaderHandle;
+
+        private int WindowSizeUniformLocation;
         
         private int VaoHandle;
         private int VboHandle;
@@ -216,10 +230,10 @@ void main(void) {
 
             uint[] Buffer = new uint[]
             {
-                0xc4700000, 0x80000000, 0x00000000, 0xffffffff, 0x00000000, 0x00000000, 0x00000000,
-                0x45340000, 0x80000000, 0x00000000, 0xffffffff, 0x00000000, 0x3f800000, 0x00000000,
-                0xc4700000, 0xc4070000, 0x00000000, 0xffffffff, 0x00000000, 0x00000000, 0x3f800000,
-                0x45340000, 0xc4070000, 0x00000000, 0xffffffff, 0x00000000, 0x3f800000, 0x3f800000
+                0xbf800000, 0x3f800000, 0x00000000, 0xffffffff, 0x00000000, 0x00000000, 0x00000000,
+                0x3f800000, 0x3f800000, 0x00000000, 0xffffffff, 0x00000000, 0x3f800000, 0x00000000,
+                0xbf800000, 0xbf800000, 0x00000000, 0xffffffff, 0x00000000, 0x00000000, 0x3f800000,
+                0x3f800000, 0xbf800000, 0x00000000, 0xffffffff, 0x00000000, 0x3f800000, 0x3f800000
             };
 
             IntPtr Length = new IntPtr(Buffer.Length * 4);
@@ -269,8 +283,10 @@ void main(void) {
             GL.UseProgram(PrgShaderHandle);
 
             int TexLocation = GL.GetUniformLocation(PrgShaderHandle, "tex");
-
             GL.Uniform1(TexLocation, 0);
+
+            WindowSizeUniformLocation = GL.GetUniformLocation(PrgShaderHandle, "window_size");
+            GL.Uniform2(WindowSizeUniformLocation, new Vector2(1280.0f, 720.0f));
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
@@ -335,7 +351,7 @@ void main(void) {
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            GL.Viewport(0, 0, 1280, 720);
+            GL.Viewport(0, 0, Width, Height);
 
             Title = $"Ryujinx Screen - (Vsync: {VSync} - FPS: {1f / e.Time:0})";
 
@@ -350,6 +366,12 @@ void main(void) {
             Renderer.Render();           
 
             SwapBuffers();
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            GL.UseProgram(PrgShaderHandle);
+            GL.Uniform2(WindowSizeUniformLocation, new Vector2(Width, Height));
         }
 
         void RenderFb()
