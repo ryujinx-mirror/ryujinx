@@ -19,7 +19,10 @@ namespace Ryujinx.OsHle.Objects.FspSrv
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, Read  },
-                { 1, Write }
+                { 1, Write },
+                // { 2, Flush },
+                { 3, SetSize },
+                { 4, GetSize }
             };
 
             this.BaseStream = BaseStream;
@@ -35,14 +38,12 @@ namespace Ryujinx.OsHle.Objects.FspSrv
 
             byte[] Data = new byte[Size];
 
+            BaseStream.Seek(Offset, SeekOrigin.Begin);
             int ReadSize = BaseStream.Read(Data, 0, (int)Size);
 
             AMemoryHelper.WriteBytes(Context.Memory, Position, Data);
 
-            //TODO: Use ReadSize, we need to return the size that was REALLY read from the file.
-            //This is a workaround because we are doing something wrong and the game expects to read
-            //data from a file that doesn't yet exists -- and breaks if it can't read anything.
-            Context.ResponseData.Write((long)Size);
+            Context.ResponseData.Write((long)ReadSize);
 
             return 0;
         }
@@ -60,6 +61,19 @@ namespace Ryujinx.OsHle.Objects.FspSrv
             BaseStream.Seek(Offset, SeekOrigin.Begin);
             BaseStream.Write(Data, 0, (int)Size);
 
+            return 0;
+        }
+
+        public long GetSize(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(BaseStream.Length);
+            return 0;
+        }
+
+        public long SetSize(ServiceCtx Context)
+        {
+            long Size = Context.RequestData.ReadInt64();
+            BaseStream.SetLength(Size);
             return 0;
         }
 
