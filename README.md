@@ -2,7 +2,7 @@
 
 Experimental Switch emulator written in C#
 
-Don't expect much from this. Some homebrew apps works, and Tetris shows the intro logos (sometimes) but that's about it for now.
+Don't expect much from this. Some homebrew apps work, and Puyo Puyo Tetris shows the intro logo (sometimes) but that's about it for now.
 Contributions are always welcome.
 
 **Building**
@@ -10,7 +10,7 @@ Contributions are always welcome.
 To build this emulator, you need the .NET Core 2.0 (or higher) SDK. https://www.microsoft.com/net/download/
 In release builds, memory checks are disabled to improve performances.
 
-Or just drag'n'drop the *.NRO or the game folder on  the executable if you have a pre-build version.
+Or just drag'n'drop the *.NRO / *.NSO or the game folder on the executable if you have a pre-build version.
 
 **Features**
 
@@ -41,11 +41,11 @@ https://openal.org/downloads/OpenAL11CoreSDK.zip
 
 **Help**
 
-If you have some homebrews that currently doesn't work on it, you can contact us through discord with the compiled NRO/NSO (and source code if possible) and will work to make them work.
+If you have some homebrew that currently don't work on the emulator, you can contact us through Discord with the compiled NRO/NSO (and source code if possible) and then we'll make changes to make the requested app / game work.
 
 **Contact**
 
-For help, support, suggestion, or if you just want to get in touch with the team, join our Discord server!
+For help, support, suggestions, or if you just want to get in touch with the team, join our Discord server!
 https://discord.gg/VkQYXAZ
 
 **Running**
@@ -54,10 +54,7 @@ To run this emulator, you need the .NET Core 2.0 (or higher) SDK.
 Run `dotnet run -c Release -- path\to\homebrew.nro` inside the Ryujinx solution folder to run homebrew apps.
 Run `dotnet run -c Release -- path\to\game_exefs_and_romfs_folder` to run official games (they need to be decrypted and extracted first!).
 
-Audio is partially supported (glitched) on Linux and macOS, for Windows you need to install the OpenAL Core SDK:
-https://openal.org/downloads/OpenAL11CoreSDK.zip
+**Latest build**
 
-**Lastest build**
-
-Those builds are compiled automatically for each commit on the master branch. They may be unstable or not work at all.
-To download the lastest automatic build for Windows (64-bits), [Click Here](https://ci.appveyor.com/api/projects/gdkchan/ryujinx/artifacts/ryujinx_lastest_unstable.zip).
+These builds are compiled automatically for each commit on the master branch. They may be unstable or not work at all.
+To download the latest automatic build for Windows (64-bits), [Click Here](https://ci.appveyor.com/api/projects/gdkchan/ryujinx/artifacts/ryujinx_lastest_unstable.zip).
