@@ -263,6 +263,16 @@ namespace ChocolArm64.Instruction
             }
         }
 
+        public static void Zip1_V(AILEmitterCtx Context)
+        {
+            EmitVectorZip(Context, Part: 0);
+        }
+
+        public static void Zip2_V(AILEmitterCtx Context)
+        {
+            EmitVectorZip(Context, Part: 1);
+        }
+
         private static void EmitIntZeroHigherIfNeeded(AILEmitterCtx Context)
         {
             if (Context.CurrOp.RegisterSize == ARegisterSize.Int32)
@@ -286,6 +296,30 @@ namespace ChocolArm64.Instruction
                 int Elem = Part + ((Index & (Half - 1)) << 1);
                 
                 EmitVectorExtractZx(Context, Index < Half ? Op.Rn : Op.Rm, Elem, Op.Size);
+
+                EmitVectorInsert(Context, Op.Rd, Index, Op.Size);
+            }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
+        private static void EmitVectorZip(AILEmitterCtx Context, int Part)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            int Elems = Bytes >> Op.Size;
+            int Half  = Elems >> 1;
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                int Elem = Part * Half + (Index >> 1);
+
+                EmitVectorExtractZx(Context, (Index & 1) == 0 ? Op.Rn : Op.Rm, Elem, Op.Size);
 
                 EmitVectorInsert(Context, Op.Rd, Index, Op.Size);
             }
