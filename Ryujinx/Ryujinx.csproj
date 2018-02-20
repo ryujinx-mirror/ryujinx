@@ -10,6 +10,11 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ChocolArm64\ChocolArm64.csproj" />
+    <ProjectReference Include="..\Ryujinx.Core\Ryujinx.Core.csproj" />
+    <ProjectReference Include="..\Ryujinx.Graphics\Ryujinx.Graphics.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="Ryujinx.conf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

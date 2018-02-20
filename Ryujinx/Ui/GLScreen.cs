@@ -2,10 +2,11 @@
 // to the Public Domain.
 // It is provided "as is" without express or implied warranty of any kind.
 
-using Gal;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
+using Ryujinx.Core;
+using Ryujinx.Graphics.Gal;
 using System;
 
 namespace Ryujinx
@@ -346,7 +347,7 @@ void main(void) {
             };
 
             //We just need one pair of JoyCon because it's emulate by the keyboard.
-            Ns.Hid.SendControllerButtons(HidControllerID.CONTROLLER_HANDHELD, HidControllerLayouts.Main, CurrentButton, LeftJoystick, RightJoystick);
+            Ns.SendControllerButtons(HidControllerID.CONTROLLER_HANDHELD, HidControllerLayouts.Main, CurrentButton, LeftJoystick, RightJoystick);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)

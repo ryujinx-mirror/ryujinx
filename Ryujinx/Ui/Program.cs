@@ -1,5 +1,6 @@
-﻿using Gal;
-using Gal.OpenGL;
+﻿using Ryujinx.Core;
+using Ryujinx.Graphics.Gal;
+using Ryujinx.Graphics.Gal.OpenGL;
 using System;
 using System.IO;
 
@@ -27,20 +28,20 @@ namespace Ryujinx
                     {
                         Logging.Info("Loading as cart with RomFS.");
 
-                        Ns.Os.LoadCart(args[0], RomFsFiles[0]);
+                        Ns.LoadCart(args[0], RomFsFiles[0]);
                     }
                     else
                     {
                         Logging.Info("Loading as cart WITHOUT RomFS.");
 
-                        Ns.Os.LoadCart(args[0]);
+                        Ns.LoadCart(args[0]);
                     }
                 }
                 else if (File.Exists(args[0]))
                 {
                     Logging.Info("Loading as homebrew.");
 
-                    Ns.Os.LoadProgram(args[0]);
+                    Ns.LoadProgram(args[0]);
                 }
             }
             else
@@ -58,7 +59,7 @@ namespace Ryujinx
                 Screen.Run(60.0);
             }
 
-            Ns.Os.FinalizeAllProcesses();
+            Ns.FinalizeAllProcesses();
 
             Ns.Dispose();
         }
