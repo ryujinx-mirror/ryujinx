@@ -1,5 +1,8 @@
 ﻿namespace Ryujinx
 {
+    /// <summary>
+    /// Common RGB color hex codes for JoyCon coloring.
+    /// </summary>
     public enum JoyConColor //Thanks to CTCaer
     {
         Body_Grey = 0x828282,

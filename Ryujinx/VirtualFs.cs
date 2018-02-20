@@ -37,7 +37,7 @@ namespace Ryujinx
 
         public string GetGameSavesPath() => MakeDirAndGetFullPath(SavesPath);
 
-        private string MakeDirAndGetFullPath(string Dir)
+        private static string MakeDirAndGetFullPath(string Dir)
         {
             string FullPath = Path.Combine(GetBasePath(), Dir);
 
@@ -49,7 +49,7 @@ namespace Ryujinx
             return FullPath;
         }
 
-        public string GetBasePath()
+        public static string GetBasePath()
         {
             return Path.Combine(Directory.GetCurrentDirectory(), BasePath);
         }
@@ -61,9 +61,9 @@ namespace Ryujinx
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing && RomFs != null)
+            if (disposing)
             {
-                RomFs.Dispose();
+                RomFs?.Dispose();
             }
         }
     }

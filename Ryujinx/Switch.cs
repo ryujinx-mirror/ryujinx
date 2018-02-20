@@ -30,10 +30,7 @@ namespace Ryujinx
 
         internal virtual void OnFinish(EventArgs e)
         {
-            if (Finish != null)
-            {
-                Finish(this, e);
-            }
+            Finish?.Invoke(this, e);
         }
 
         public void Dispose()

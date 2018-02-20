@@ -1,7 +1,9 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
  
 namespace Ryujinx
 {
+    [Flags]
     public enum HidControllerKeys
     {
         KEY_A            = (1 << 0),
@@ -79,12 +81,14 @@ namespace Ryujinx
         Main
     }
 
+    [Flags]
     public enum HidControllerConnectionState
     {
         Controller_State_Connected = (1 << 0),
         Controller_State_Wired     = (1 << 1)
     }
 
+    [Flags]
     public enum HidControllerType
     {
         ControllerType_ProController = (1 << 0),

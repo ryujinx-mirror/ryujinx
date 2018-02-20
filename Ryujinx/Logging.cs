@@ -7,7 +7,7 @@ namespace Ryujinx
     public static class Logging
     {
         private static Stopwatch ExecutionTime = new Stopwatch();
-        private static string LogFileName = "Ryujinx.log";
+        private const string LogFileName = "Ryujinx.log";
 
         public static bool EnableInfo = Config.LoggingEnableInfo;
         public static bool EnableTrace = Config.LoggingEnableTrace;

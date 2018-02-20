@@ -165,12 +165,7 @@ namespace Ryujinx.OsHle
 
         internal bool TryGetProcess(int ProcessId, out Process Process)
         {
-            if (!Processes.TryGetValue(ProcessId, out Process))
-            {
-                return false;
-            }
-
-            return true;
+            return Processes.TryGetValue(ProcessId, out Process);
         }
 
         internal void CloseHandle(int Handle)

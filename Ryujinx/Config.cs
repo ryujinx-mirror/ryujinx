@@ -20,7 +20,9 @@ namespace Ryujinx
 
         public static void Read()
         {
-            IniParser Parser = new IniParser(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Ryujinx.conf"));
+            var iniFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            var iniPath = Path.Combine(iniFolder, "Ryujinx.conf");
+            IniParser Parser = new IniParser(iniPath);
 
             LoggingEnableInfo    = Convert.ToBoolean(Parser.Value("Logging_Enable_Info"));
             LoggingEnableTrace   = Convert.ToBoolean(Parser.Value("Logging_Enable_Trace"));
@@ -70,23 +72,24 @@ namespace Ryujinx
     // https://stackoverflow.com/a/37772571
     public class IniParser
     {
-        private Dictionary<string, string> Values;
+        private readonly Dictionary<string, string> Values;
 
         public IniParser(string Path)
         {
             Values = File.ReadLines(Path)
-            .Where(Line => (!String.IsNullOrWhiteSpace(Line) && !Line.StartsWith("#")))
-            .Select(Line => Line.Split(new char[] { '=' }, 2, 0))
+            .Where(Line => !string.IsNullOrWhiteSpace(Line) && !Line.StartsWith('#'))
+            .Select(Line => Line.Split('=', 2))
             .ToDictionary(Parts => Parts[0].Trim(), Parts => Parts.Length > 1 ? Parts[1].Trim() : null);
         }
 
-        public string Value(string Name, string Value = null)
+        /// <summary>
+        /// Gets the setting value for the requested setting <see cref="Name"/>.
+        /// </summary>
+        /// <param name="Name">Setting Name</param>
+        /// <param name="defaultValue">Default value of the setting</param>
+        public string Value(string Name, string defaultValue = null)
         {
-            if (Values != null && Values.ContainsKey(Name))
-            {
-                return Values[Name];
-            }
-            return Value;
+            return Values.TryGetValue(Name, out var value) ? value : defaultValue;
         }
     }
 }

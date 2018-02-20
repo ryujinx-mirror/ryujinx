@@ -23,10 +23,7 @@ namespace Ryujinx.OsHle.Handles
             {
                 Positions.Add(Position);
 
-                if (MemoryMapped != null)
-                {
-                    MemoryMapped(this, EventArgs.Empty);
-                }
+                MemoryMapped?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -36,10 +33,7 @@ namespace Ryujinx.OsHle.Handles
             {
                 Positions.Remove(Position);
 
-                if (MemoryUnmapped != null)
-                {
-                    MemoryUnmapped(this, EventArgs.Empty);
-                }
+                MemoryUnmapped?.Invoke(this, EventArgs.Empty);
             }
         }
 
