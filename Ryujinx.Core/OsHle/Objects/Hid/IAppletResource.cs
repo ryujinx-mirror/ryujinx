@@ -10,7 +10,7 @@ namespace Ryujinx.Core.OsHle.Objects.Hid
 
         public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public HSharedMem Handle;
+        private HSharedMem Handle;
 
         public IAppletResource(HSharedMem Handle)
         {

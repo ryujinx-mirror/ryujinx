@@ -34,9 +34,12 @@ namespace Ryujinx.Core.OsHle.Ipc
             { ( "hid",         0), Service.HidCreateAppletResource                  },
             { ( "hid",        11), Service.HidActivateTouchScreen                   },
             { ( "hid",       100), Service.HidSetSupportedNpadStyleSet              },
+            { ( "hid",       101), Service.HidGetSupportedNpadStyleSet              },
             { ( "hid",       102), Service.HidSetSupportedNpadIdType                },
             { ( "hid",       103), Service.HidActivateNpad                          },
             { ( "hid",       120), Service.HidSetNpadJoyHoldType                    },
+            { ( "hid",       121), Service.HidGetNpadJoyHoldType                    },
+            { ( "hid",       203), Service.HidCreateActiveVibrationDeviceList       },
             { ( "lm",          0), Service.LmInitialize                             },
             { ( "nvdrv",       0), Service.NvDrvOpen                                },
             { ( "nvdrv",       1), Service.NvDrvIoctl                               },
@@ -79,6 +82,7 @@ namespace Ryujinx.Core.OsHle.Ipc
             AMemory    Memory,
             HSession   Session,
             IpcMessage Request,
+            int        ThreadId,
             long       CmdPtr,
             int        HndId)
         {
@@ -111,13 +115,13 @@ namespace Ryujinx.Core.OsHle.Ipc
                             {
                                 ServiceCmds.TryGetValue((ServiceName, CmdId), out ProcReq);
 
-                                DbgServiceName = $"{ServiceName} {ProcReq?.Method.Name ?? CmdId.ToString()}";
+                                DbgServiceName = $"{ProcReq?.Method.Name ?? CmdId.ToString()}";
                             }
                             else if (Obj != null)
                             {
                                 ((IIpcInterface)Obj).Commands.TryGetValue(CmdId, out ProcReq);
 
-                                DbgServiceName = $"{ServiceName} {Obj.GetType().Name} {ProcReq?.Method.Name ?? CmdId.ToString()}";
+                                DbgServiceName = $"{Obj.GetType().Name} {ProcReq?.Method.Name ?? CmdId.ToString()}";
                             }
                         }
                         else if (Request.DomCmd == IpcDomCmd.DeleteObj)
@@ -140,15 +144,17 @@ namespace Ryujinx.Core.OsHle.Ipc
 
                             ((IIpcInterface)Obj).Commands.TryGetValue(CmdId, out ProcReq);
 
-                            DbgServiceName = $"{ServiceName} {Obj.GetType().Name} {ProcReq?.Method.Name ?? CmdId.ToString()}";
+                            DbgServiceName = $"{Obj.GetType().Name} {ProcReq?.Method.Name ?? CmdId.ToString()}";
                         }
                         else
                         {
                             ServiceCmds.TryGetValue((ServiceName, CmdId), out ProcReq);
 
-                            DbgServiceName = $"{ServiceName} {ProcReq?.Method.Name ?? CmdId.ToString()}";
+                            DbgServiceName = $"{ProcReq?.Method.Name ?? CmdId.ToString()}";
                         }
                     }
+
+                    DbgServiceName = $"Tid {ThreadId} {ServiceName} {DbgServiceName}";
 
                     Logging.Debug($"IpcMessage: {DbgServiceName}");
 

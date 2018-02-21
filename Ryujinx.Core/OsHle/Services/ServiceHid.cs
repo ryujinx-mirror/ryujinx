@@ -23,6 +23,13 @@ namespace Ryujinx.Core.OsHle.Services
             return 0;
         }
 
+        public static long HidGetSupportedNpadStyleSet(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(0);
+
+            return 0;
+        }
+
         public static long HidSetSupportedNpadStyleSet(ServiceCtx Context)
         {
             long Unknown0 = Context.RequestData.ReadInt64();
@@ -49,6 +56,20 @@ namespace Ryujinx.Core.OsHle.Services
         {
             long Unknown0 = Context.RequestData.ReadInt64();
             long Unknown8 = Context.RequestData.ReadInt64();
+
+            return 0;
+        }
+
+        public static long HidGetNpadJoyHoldType(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(0L);
+
+            return 0;
+        }
+
+        public static long HidCreateActiveVibrationDeviceList(ServiceCtx Context)
+        {
+            MakeObject(Context, new IActiveApplicationDeviceList());
 
             return 0;
         }

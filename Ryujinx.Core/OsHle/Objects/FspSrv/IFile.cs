@@ -14,18 +14,23 @@ namespace Ryujinx.Core.OsHle.Objects.FspSrv
 
         private Stream BaseStream;
 
-        public IFile(Stream BaseStream)
+        public event EventHandler<EventArgs> Disposed;
+
+        public string HostPath { get; private set; }
+
+        public IFile(Stream BaseStream, string HostPath)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, Read  },
-                { 1, Write },
-                // { 2, Flush },
+                { 0, Read    },
+                { 1, Write   },
+                { 2, Flush   },
                 { 3, SetSize },
                 { 4, GetSize }
             };
 
             this.BaseStream = BaseStream;
+            this.HostPath   = HostPath;
         }
 
         public long Read(ServiceCtx Context)
@@ -39,6 +44,7 @@ namespace Ryujinx.Core.OsHle.Objects.FspSrv
             byte[] Data = new byte[Size];
 
             BaseStream.Seek(Offset, SeekOrigin.Begin);
+
             int ReadSize = BaseStream.Read(Data, 0, (int)Size);
 
             AMemoryHelper.WriteBytes(Context.Memory, Position, Data);
@@ -64,16 +70,26 @@ namespace Ryujinx.Core.OsHle.Objects.FspSrv
             return 0;
         }
 
-        public long GetSize(ServiceCtx Context)
+        public long Flush(ServiceCtx Context)
         {
-            Context.ResponseData.Write(BaseStream.Length);
+            BaseStream.Flush();
+
             return 0;
         }
 
         public long SetSize(ServiceCtx Context)
         {
             long Size = Context.RequestData.ReadInt64();
+
             BaseStream.SetLength(Size);
+
+            return 0;
+        }
+
+        public long GetSize(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(BaseStream.Length);
+
             return 0;
         }
 
@@ -87,6 +103,8 @@ namespace Ryujinx.Core.OsHle.Objects.FspSrv
             if (disposing && BaseStream != null)
             {
                 BaseStream.Dispose();
+
+                Disposed?.Invoke(this, EventArgs.Empty);
             }
         }
     }

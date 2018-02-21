@@ -37,7 +37,7 @@ namespace Ryujinx.Core
 
         public string GetGameSavesPath() => MakeDirAndGetFullPath(SavesPath);
 
-        private static string MakeDirAndGetFullPath(string Dir)
+        private string MakeDirAndGetFullPath(string Dir)
         {
             string FullPath = Path.Combine(GetBasePath(), Dir);
 
@@ -49,7 +49,12 @@ namespace Ryujinx.Core
             return FullPath;
         }
 
-        public static string GetBasePath()
+        public DriveInfo GetDrive()
+        {
+            return new DriveInfo(Path.GetPathRoot(GetBasePath()));
+        }
+
+        public string GetBasePath()
         {
             return Path.Combine(Directory.GetCurrentDirectory(), BasePath);
         }

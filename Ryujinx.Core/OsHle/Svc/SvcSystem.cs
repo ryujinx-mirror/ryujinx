@@ -106,7 +106,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (Session != null)
             {
-                IpcHandler.IpcCall(Ns, Memory, Session, Cmd, CmdPtr, Handle);
+                IpcHandler.IpcCall(Ns, Memory, Session, Cmd, ThreadState.ThreadId, CmdPtr, Handle);
 
                 byte[] Response = AMemoryHelper.ReadBytes(Memory, CmdPtr, (int)Size);
 

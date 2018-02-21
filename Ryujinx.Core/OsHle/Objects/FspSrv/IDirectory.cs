@@ -3,131 +3,115 @@ using Ryujinx.Core.OsHle.Ipc;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Ryujinx.Core.OsHle.Objects.FspSrv
 {
-    [StructLayout(LayoutKind.Sequential, Size = 0x310)]
-    struct DirectoryEntry
+    class IDirectory : IIpcInterface, IDisposable
     {
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x300)]
-        public byte[] Name;
-        public int Unknown;
-        public byte Type;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x3)]
-        public byte[] Padding;
-        public long Size;
-    }
+        private const int DirectoryEntrySize = 0x310;
 
-    enum DirectoryEntryType
-    {
-        Directory,
-        File
-    }
-
-    class IDirectory : IIpcInterface
-    {
-        private List<DirectoryEntry> DirectoryEntries = new List<DirectoryEntry>();
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private string HostPath;
+        private List<string> DirectoryEntries;
 
-        public IDirectory(string HostPath, int flags)
+        private int CurrentItemIndex;
+
+        public event EventHandler<EventArgs> Disposed;
+
+        public string HostPath { get; private set; }
+
+        public IDirectory(string HostPath, int Flags)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                {  0, Read          },
-                {  1, GetEntryCount }
+                { 0, Read          },
+                { 1, GetEntryCount }
             };
 
             this.HostPath = HostPath;
 
-            if ((flags & 1) == 1)
+            DirectoryEntries = new List<string>();
+
+            if ((Flags & 1) != 0)
             {
-                string[] Directories = Directory.GetDirectories(HostPath, "*", SearchOption.TopDirectoryOnly).
-                             Where(x => (new FileInfo(x).Attributes & FileAttributes.Hidden) == 0).ToArray();
-
-                foreach (string Directory in Directories)
-                {
-                    DirectoryEntry Info = new DirectoryEntry
-                    {
-                        Name = Encoding.UTF8.GetBytes(Directory),
-                        Type = (byte)DirectoryEntryType.Directory,
-                        Size = 0
-                    };
-
-                    Array.Resize(ref Info.Name, 0x300);
-                    DirectoryEntries.Add(Info);
-                }
+                DirectoryEntries.AddRange(Directory.GetDirectories(HostPath));
             }
 
-            if ((flags & 2) == 2)
+            if ((Flags & 2) != 0)
             {
-                string[] Files = Directory.GetFiles(HostPath, "*", SearchOption.TopDirectoryOnly).
-                       Where(x => (new FileInfo(x).Attributes & FileAttributes.Hidden) == 0).ToArray();
-
-                foreach (string FileName in Files)
-                {
-                    DirectoryEntry Info = new DirectoryEntry
-                    {
-                        Name = Encoding.UTF8.GetBytes(Path.GetFileName(FileName)),
-                        Type = (byte)DirectoryEntryType.File,
-                        Size = new FileInfo(Path.Combine(HostPath, FileName)).Length
-                    };
-
-                    Array.Resize(ref Info.Name, 0x300);
-                    DirectoryEntries.Add(Info);
-                }
+                DirectoryEntries.AddRange(Directory.GetFiles(HostPath));
             }
+
+            CurrentItemIndex = 0;
         }
 
-        private int LastItem = 0;
         public long Read(ServiceCtx Context)
         {
             long BufferPosition = Context.Request.ReceiveBuff[0].Position;
-            long BufferLen = Context.Request.ReceiveBuff[0].Size;
-            long MaxDirectories = BufferLen / Marshal.SizeOf(typeof(DirectoryEntry));
+            long BufferLen      = Context.Request.ReceiveBuff[0].Size;
 
-            if (MaxDirectories > DirectoryEntries.Count - LastItem)
+            int MaxReadCount = (int)(BufferLen / DirectoryEntrySize);
+
+            int Count = Math.Min(DirectoryEntries.Count - CurrentItemIndex, MaxReadCount);
+
+            for (int Index = 0; Index < Count; Index++)
             {
-                MaxDirectories = DirectoryEntries.Count - LastItem;
+                long Position = BufferPosition + Index * DirectoryEntrySize;
+
+                WriteDirectoryEntry(Context, Position, DirectoryEntries[CurrentItemIndex++]);
             }
 
-            int CurrentIndex;
-            for (CurrentIndex = 0; CurrentIndex < MaxDirectories; CurrentIndex++)
-            {
-                int CurrentItem = LastItem + CurrentIndex;
-
-                byte[] DirectoryEntry = new byte[Marshal.SizeOf(typeof(DirectoryEntry))];
-                IntPtr Ptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(DirectoryEntry)));
-                Marshal.StructureToPtr(DirectoryEntries[CurrentItem], Ptr, true);
-                Marshal.Copy(Ptr, DirectoryEntry, 0, Marshal.SizeOf(typeof(DirectoryEntry)));
-                Marshal.FreeHGlobal(Ptr);
-
-                AMemoryHelper.WriteBytes(Context.Memory, BufferPosition + Marshal.SizeOf(typeof(DirectoryEntry)) * CurrentIndex, DirectoryEntry);
-            }
-
-            if (LastItem < DirectoryEntries.Count)
-            {
-                LastItem += CurrentIndex;
-                Context.ResponseData.Write((long)CurrentIndex); // index = number of entries written this call.
-            }
-            else
-            {
-                Context.ResponseData.Write((long)0);
-            }
+            Context.ResponseData.Write((long)Count);
 
             return 0;
+        }
+
+        private void WriteDirectoryEntry(ServiceCtx Context, long Position, string FullPath)
+        {
+            for (int Offset = 0; Offset < 0x300; Offset += 8)
+            {
+                Context.Memory.WriteInt64(Position + Offset, 0);
+            }
+
+            byte[] NameBuffer = Encoding.UTF8.GetBytes(Path.GetFileName(FullPath));
+
+            AMemoryHelper.WriteBytes(Context.Memory, Position, NameBuffer);
+
+            int  Type = 0;
+            long Size = 0;
+
+            if (File.Exists(FullPath))
+            {
+                Type = 1;
+                Size = new FileInfo(FullPath).Length;
+            }
+
+            Context.Memory.WriteInt32(Position + 0x300, 0); //Padding?
+            Context.Memory.WriteInt32(Position + 0x304, Type);
+            Context.Memory.WriteInt64(Position + 0x308, Size);
         }
 
         public long GetEntryCount(ServiceCtx Context)
         {
             Context.ResponseData.Write((long)DirectoryEntries.Count);
+
             return 0;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Disposed?.Invoke(this, EventArgs.Empty);
+            }
         }
     }
 }

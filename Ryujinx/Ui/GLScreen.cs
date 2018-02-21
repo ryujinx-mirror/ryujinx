@@ -154,7 +154,7 @@ vec3 get_scale_ratio() {
         (window_size.y * native_size.x) / (native_size.y * window_size.x),
         (window_size.x * native_size.y) / (native_size.x * window_size.y)
     );
-    return vec3(min(ratio, vec2(1, 1)), 1);
+    return vec3(min(ratio, vec2(1, 1)) * vec2(1, -1), 1);
 }
 
 void main(void) { 

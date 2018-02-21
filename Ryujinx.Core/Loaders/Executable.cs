@@ -26,7 +26,12 @@ namespace Ryujinx.Core.Loaders
 
             if (Exe.Mod0Offset == 0)
             {
-                MapBss(ImageBase + Exe.DataOffset + Exe.Data.Count, Exe.BssSize);
+                int BssOffset = Exe.DataOffset + Exe.Data.Count;
+                int BssSize   = Exe.BssSize;
+
+                MapBss(ImageBase + BssOffset, BssSize);
+
+                ImageEnd = ImageBase + BssOffset + BssSize;
 
                 return;
             }
