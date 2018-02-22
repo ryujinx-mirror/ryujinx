@@ -161,47 +161,23 @@ namespace Ryujinx.Core.OsHle.Svc
 
             switch (InfoType)
             {
-                case 2:  ThreadState.X1 = GetMapRegionBaseAddr();  break;
-                case 3:  ThreadState.X1 = GetMapRegionSize();      break;
-                case 4:  ThreadState.X1 = GetHeapRegionBaseAddr(); break;
-                case 5:  ThreadState.X1 = GetHeapRegionSize();     break;
-                case 6:  ThreadState.X1 = GetTotalMem();           break;
-                case 7:  ThreadState.X1 = GetUsedMem();            break;
-                case 11: ThreadState.X1 = GetRnd64();              break;
-                case 12: ThreadState.X1 = GetAddrSpaceBaseAddr();  break;
-                case 13: ThreadState.X1 = GetAddrSpaceSize();      break;
-                case 14: ThreadState.X1 = GetMapRegionBaseAddr();  break;
-                case 15: ThreadState.X1 = GetMapRegionSize();      break;
+                case 2:  ThreadState.X1 = GetMapRegionBaseAddr();          break;
+                case 3:  ThreadState.X1 = GetMapRegionSize();              break;
+                case 4:  ThreadState.X1 = GetHeapRegionBaseAddr();         break;
+                case 5:  ThreadState.X1 = GetHeapRegionSize();             break;
+                case 6:  ThreadState.X1 = GetTotalMem();                   break;
+                case 7:  ThreadState.X1 = GetUsedMem();                    break;
+                case 8:  ThreadState.X1 = IsCurrentProcessBeingDebugged(); break;
+                case 11: ThreadState.X1 = GetRnd64();                      break;
+                case 12: ThreadState.X1 = GetAddrSpaceBaseAddr();          break;
+                case 13: ThreadState.X1 = GetAddrSpaceSize();              break;
+                case 14: ThreadState.X1 = GetMapRegionBaseAddr();          break;
+                case 15: ThreadState.X1 = GetMapRegionSize();              break;
 
                 default: throw new NotImplementedException($"SvcGetInfo: {InfoType} {Handle} {InfoId}");
             }
 
             ThreadState.X0 = (int)SvcResult.Success;
-        }
-
-        private ulong GetTotalMem()
-        {
-            return (ulong)Memory.Manager.GetTotalMemorySize();
-        }
-
-        private ulong GetUsedMem()
-        {
-            return (ulong)Memory.Manager.GetUsedMemorySize();
-        }
-
-        private ulong GetRnd64()
-        {
-            return (ulong)Rng.Next() + ((ulong)Rng.Next() << 32);
-        }
-
-        private ulong GetAddrSpaceBaseAddr()
-        {
-            return 0x08000000;
-        }
-
-        private ulong GetAddrSpaceSize()
-        {
-            return AMemoryMgr.AddrSize - GetAddrSpaceBaseAddr();
         }
 
         private ulong GetMapRegionBaseAddr()
@@ -222,6 +198,36 @@ namespace Ryujinx.Core.OsHle.Svc
         private ulong GetHeapRegionSize()
         {
             return 0x40000000;
+        }
+
+        private ulong GetTotalMem()
+        {
+            return (ulong)Memory.Manager.GetTotalMemorySize();
+        }
+
+        private ulong GetUsedMem()
+        {
+            return (ulong)Memory.Manager.GetUsedMemorySize();
+        }
+
+        private ulong IsCurrentProcessBeingDebugged()
+        {
+            return (ulong)0;
+        }
+
+        private ulong GetRnd64()
+        {
+            return (ulong)Rng.Next() + ((ulong)Rng.Next() << 32);
+        }
+
+        private ulong GetAddrSpaceBaseAddr()
+        {
+            return 0x08000000;
+        }
+
+        private ulong GetAddrSpaceSize()
+        {
+            return AMemoryMgr.AddrSize - GetAddrSpaceBaseAddr();
         }
     }
 }

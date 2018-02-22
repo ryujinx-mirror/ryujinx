@@ -20,6 +20,8 @@ namespace Ryujinx.Core.Loaders.Executables
         public int DataOffset { get; private set; }
         public int BssSize    { get; private set; }
 
+        public Extensions Extension { get; private set; }
+
         public Nro(Stream Input)
         {
             BinaryReader Reader = new BinaryReader(Input);
@@ -46,6 +48,8 @@ namespace Ryujinx.Core.Loaders.Executables
             this.ROOffset   = ROOffset;
             this.DataOffset = DataOffset;
             this.BssSize    = BssSize;
+
+            this.Extension  = Extensions.NRO;
 
             byte[] Read(long Position, int Size)
             {

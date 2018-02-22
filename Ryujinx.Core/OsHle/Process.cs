@@ -186,6 +186,13 @@ namespace Ryujinx.Core.OsHle
             Thread.ThreadState.X1         = (ulong)Handle;
             Thread.ThreadState.X31        = (ulong)StackTop;
 
+            if (Executables[0].Extension == Extensions.NRO)
+            {
+                Homebrew Homebrew_ABI = new Homebrew(Memory, Executables[0].ImageEnd, (long)Handle);
+                Thread.ThreadState.X0 = (ulong)Executables[0].ImageEnd;
+                Thread.ThreadState.X1 = 0xFFFFFFFFFFFFFFFF;
+            }
+
             Thread.WorkFinished += ThreadFinished;
 
             ThreadsByTpidr.TryAdd(Thread.ThreadState.Tpidr, ThreadHnd);

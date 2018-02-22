@@ -13,6 +13,7 @@ namespace Ryujinx.Core.Loaders
 
         public long ImageBase { get; private set; }
         public long ImageEnd  { get; private set; }
+        public Extensions Extension { get; private set; }
 
         public Executable(IExecutable Exe, AMemory Memory, long ImageBase)
         {
@@ -45,6 +46,8 @@ namespace Ryujinx.Core.Loaders
             long EhHdrStartOffset = Memory.ReadInt32(Mod0Offset + 0x10) + Mod0Offset;
             long EhHdrEndOffset   = Memory.ReadInt32(Mod0Offset + 0x14) + Mod0Offset;
             long ModObjOffset     = Memory.ReadInt32(Mod0Offset + 0x18) + Mod0Offset;
+
+            Extension = Exe.Extension;
 
             MapBss(BssStartOffset, BssEndOffset - BssStartOffset);
 

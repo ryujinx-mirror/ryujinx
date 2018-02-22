@@ -13,11 +13,19 @@ namespace Ryujinx.Core.OsHle.Objects.Am
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
+                { 10, SetScreenShotPermission               },
                 { 11, SetOperationModeChangedNotification   },
                 { 12, SetPerformanceModeChangedNotification },
                 { 13, SetFocusHandlingMode                  },
                 { 16, SetOutOfFocusSuspendingEnabled        }
             };
+        }
+
+        public long SetScreenShotPermission(ServiceCtx Context)
+        {
+            bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
+
+            return 0;
         }
 
         public long SetOperationModeChangedNotification(ServiceCtx Context)
