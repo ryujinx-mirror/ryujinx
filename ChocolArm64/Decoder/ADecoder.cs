@@ -1,6 +1,7 @@
 using ChocolArm64.Instruction;
 using ChocolArm64.Memory;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 
@@ -8,6 +9,15 @@ namespace ChocolArm64.Decoder
 {
     static class ADecoder
     {
+        private delegate object OpActivator(AInst Inst, long Position, int OpCode);
+
+        private static ConcurrentDictionary<Type, OpActivator> OpActivators;
+
+        static ADecoder()
+        {
+            OpActivators = new ConcurrentDictionary<Type, OpActivator>();
+        }
+
         public static (ABlock[] Graph, ABlock Root) DecodeSubroutine(ATranslator Translator, long Start)
         {
             Dictionary<long, ABlock> Visited    = new Dictionary<long, ABlock>();
@@ -165,43 +175,39 @@ namespace ChocolArm64.Decoder
 
             if (Inst.Type != null)
             {
-                DecodedOpCode = CreateOpCode(Inst.Type, Inst, Position, OpCode);
+                DecodedOpCode = MakeOpCode(Inst.Type, Inst, Position, OpCode);
             }
 
             return DecodedOpCode;
         }
 
-        private delegate object OpActivator(AInst Inst, long Position, int OpCode);
-
-        private static Dictionary<Type, OpActivator> Activators = new Dictionary<Type, OpActivator>();
-
-        private static AOpCode CreateOpCode(Type Type, AInst Inst, long Position, int OpCode)
+        private static AOpCode MakeOpCode(Type Type, AInst Inst, long Position, int OpCode)
         {
             if (Type == null)
             {
                 throw new ArgumentNullException(nameof(Type));
             }
 
-            if (!Activators.TryGetValue(Type, out OpActivator CreateInstance))
-            {
-                Type[] ArgTypes = new Type[] { typeof(AInst), typeof(long), typeof(int) };
-
-                DynamicMethod Mthd = new DynamicMethod($"{Type.Name}_Create", Type, ArgTypes);
-
-                ILGenerator Generator = Mthd.GetILGenerator();
-
-                Generator.Emit(OpCodes.Ldarg_0);
-                Generator.Emit(OpCodes.Ldarg_1);
-                Generator.Emit(OpCodes.Ldarg_2);
-                Generator.Emit(OpCodes.Newobj, Type.GetConstructor(ArgTypes));
-                Generator.Emit(OpCodes.Ret);
-
-                CreateInstance = (OpActivator)Mthd.CreateDelegate(typeof(OpActivator));
-
-                Activators.Add(Type, CreateInstance);
-            }
+            OpActivator CreateInstance = OpActivators.GetOrAdd(Type, CacheOpActivator);
 
             return (AOpCode)CreateInstance(Inst, Position, OpCode);
+        }
+
+        private static OpActivator CacheOpActivator(Type Type)
+        {
+            Type[] ArgTypes = new Type[] { typeof(AInst), typeof(long), typeof(int) };
+
+            DynamicMethod Mthd = new DynamicMethod($"Make{Type.Name}", Type, ArgTypes);
+
+            ILGenerator Generator = Mthd.GetILGenerator();
+
+            Generator.Emit(OpCodes.Ldarg_0);
+            Generator.Emit(OpCodes.Ldarg_1);
+            Generator.Emit(OpCodes.Ldarg_2);
+            Generator.Emit(OpCodes.Newobj, Type.GetConstructor(ArgTypes));
+            Generator.Emit(OpCodes.Ret);
+
+            return (OpActivator)Mthd.CreateDelegate(typeof(OpActivator));
         }
     }
 }
