@@ -33,7 +33,7 @@ namespace Ryujinx.Core
         }
         */
 
-        private const int Hid_Num_Entries = 16;
+        private const int Hid_Num_Entries = 17;
         private Switch Ns;
         private long SharedMemOffset;
 
@@ -63,9 +63,8 @@ namespace Ryujinx.Core
                 TouchScreen.Header.LatestEntry = 0;
                 TouchScreen.Header.MaxEntryIndex = (ulong)Hid_Num_Entries - 1;
                 TouchScreen.Header.Timestamp = (ulong)Environment.TickCount;
-
-                //TODO: Write this structure when the input is implemented
-                //Marshal.StructureToPtr(TouchScreen, HidPtr, false);
+                
+                Marshal.StructureToPtr(TouchScreen, HidPtr, false);
 
                 InnerOffset += (uint)Marshal.SizeOf(typeof(HidTouchScreen));
                 HidPtr = new IntPtr(Ns.Ram.ToInt64() + (uint)SharedMemOffset + InnerOffset);
@@ -170,16 +169,57 @@ namespace Ryujinx.Core
             InnerOffset += (uint)Marshal.SizeOf(typeof(HidControllerLayoutHeader)) + (uint)((uint)(ControllerLayoutHeader.LatestEntry) * Marshal.SizeOf(typeof(HidControllerInputEntry)));
             HidPtr = new IntPtr(Ns.Ram.ToInt64() + (uint)SharedMemOffset + InnerOffset);
 
-            HidControllerInputEntry ControllerInputEntry = new HidControllerInputEntry();
-            ControllerInputEntry.Timestamp = (ulong)Environment.TickCount;
-            ControllerInputEntry.Timestamp_2 = (ulong)Environment.TickCount;
-            ControllerInputEntry.Buttons = (ulong)Buttons;
-            ControllerInputEntry.Joysticks = new JoystickPosition[(int)HidControllerJoystick.Joystick_Num_Sticks];
+            HidControllerInputEntry ControllerInputEntry = new HidControllerInputEntry
+            {
+                Timestamp = (ulong)Environment.TickCount,
+                Timestamp_2 = (ulong)Environment.TickCount,
+                Buttons = (ulong)Buttons,
+                Joysticks = new JoystickPosition[(int)HidControllerJoystick.Joystick_Num_Sticks]
+            };
             ControllerInputEntry.Joysticks[(int)HidControllerJoystick.Joystick_Left] = LeftJoystick;
             ControllerInputEntry.Joysticks[(int)HidControllerJoystick.Joystick_Right] = RightJoystick;
             ControllerInputEntry.ConnectionState = (ulong)(HidControllerConnectionState.Controller_State_Connected | HidControllerConnectionState.Controller_State_Wired);
 
             Marshal.StructureToPtr(ControllerInputEntry, HidPtr, false);
+        }
+
+        public void SendTouchPoint(HidTouchScreenEntryTouch TouchPoint)
+        {
+            uint InnerOffset = (uint)Marshal.SizeOf(typeof(HidSharedMemHeader));
+
+            IntPtr HidPtr = new IntPtr(Ns.Ram.ToInt64() + (uint)SharedMemOffset + InnerOffset);
+
+            HidTouchScreenHeader OldTouchScreenHeader = (HidTouchScreenHeader)Marshal.PtrToStructure(HidPtr,typeof(HidTouchScreenHeader));
+
+            HidTouchScreenHeader TouchScreenHeader = new HidTouchScreenHeader()
+            {
+                TimestampTicks = (ulong)Environment.TickCount,
+                NumEntries = (ulong)Hid_Num_Entries,
+                MaxEntryIndex = (ulong)Hid_Num_Entries - 1,
+                Timestamp = (ulong)Environment.TickCount,
+                LatestEntry = OldTouchScreenHeader.LatestEntry < Hid_Num_Entries-1 ? OldTouchScreenHeader.LatestEntry + 1 : 0
+            };
+
+            Marshal.StructureToPtr(TouchScreenHeader, HidPtr, false);
+
+            InnerOffset += (uint)Marshal.SizeOf(typeof(HidTouchScreenHeader))
+                + (uint)((uint)(OldTouchScreenHeader.LatestEntry) * Marshal.SizeOf(typeof(HidTouchScreenEntry)));
+            HidPtr = new IntPtr(Ns.Ram.ToInt64() + (uint)SharedMemOffset + InnerOffset);            
+
+            HidTouchScreenEntry hidTouchScreenEntry = new HidTouchScreenEntry()
+            {
+                Header = new HidTouchScreenEntryHeader()
+                {
+                    Timestamp = (ulong)Environment.TickCount,
+                    NumTouches = 1
+                },
+                Touches = new HidTouchScreenEntryTouch[16]
+            };
+
+            //Only supports single touch
+            hidTouchScreenEntry.Touches[0] = TouchPoint;
+
+            Marshal.StructureToPtr(hidTouchScreenEntry, HidPtr, false);
         }
     }
 }

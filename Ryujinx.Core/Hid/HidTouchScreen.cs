@@ -38,7 +38,7 @@ namespace Ryujinx.Core
     {
         public HidTouchScreenEntryHeader Header;
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-        public HidTouchScreenEntryTouch[] Touches; 
+        public HidTouchScreenEntryTouch[] Touches;
         public ulong Unknown;
     }
 
@@ -51,4 +51,5 @@ namespace Ryujinx.Core
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x3C0)]
         public byte[] Padding;
     }
+
 }
