@@ -4,12 +4,29 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="OpenTK.NETCore" Version="1.1.2749.6433" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ChocolArm64\ChocolArm64.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Gal\OpenGL\FbVtxShader.glsl">
+        <LogicalName>GlFbVtxShader</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Gal\OpenGL\FbFragShader.glsl">
+        <LogicalName>GlFbFragShader</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,3 @@
-using System;
-
 namespace Ryujinx.Core.OsHle.Objects
 {
     static class ErrorCode
