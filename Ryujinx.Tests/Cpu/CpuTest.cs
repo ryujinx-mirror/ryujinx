@@ -58,7 +58,8 @@ namespace Ryujinx.Tests.Cpu
         }
 
         protected void SetThreadState(ulong X0 = 0, ulong X1 = 0, ulong X2 = 0,
-                                      AVec V0 = default(AVec), AVec V1 = default(AVec), AVec V2 = default(AVec))
+                                      AVec V0 = default(AVec), AVec V1 = default(AVec), AVec V2 = default(AVec),
+                                      bool Overflow = false, bool Carry = false, bool Zero = false, bool Negative = false)
         {
             Thread.ThreadState.X0 = X0;
             Thread.ThreadState.X1 = X1;
@@ -66,6 +67,10 @@ namespace Ryujinx.Tests.Cpu
             Thread.ThreadState.V0 = V0;
             Thread.ThreadState.V1 = V1;
             Thread.ThreadState.V2 = V2;
+            Thread.ThreadState.Overflow = Overflow;
+            Thread.ThreadState.Carry = Carry;
+            Thread.ThreadState.Zero = Zero;
+            Thread.ThreadState.Negative = Negative;
         }
 
         protected void ExecuteOpcodes()
@@ -87,12 +92,13 @@ namespace Ryujinx.Tests.Cpu
 
         protected AThreadState SingleOpcode(uint Opcode,
                                             ulong X0 = 0, ulong X1 = 0, ulong X2 = 0,
-                                            AVec V0 = default(AVec), AVec V1 = default(AVec), AVec V2 = default(AVec))
+                                            AVec V0 = default(AVec), AVec V1 = default(AVec), AVec V2 = default(AVec),
+                                            bool Overflow = false, bool Carry = false, bool Zero = false, bool Negative = false)
         {
             this.Opcode(Opcode);
             this.Opcode(0xD4200000); // BRK #0
             this.Opcode(0xD65F03C0); // RET
-            SetThreadState(X0, X1, X2, V0, V1, V2);
+            SetThreadState(X0, X1, X2, V0, V1, V2, Overflow, Carry, Zero, Negative);
             ExecuteOpcodes();
 
             return GetThreadState();
