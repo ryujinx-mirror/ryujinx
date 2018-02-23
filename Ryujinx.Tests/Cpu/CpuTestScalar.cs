@@ -3,8 +3,7 @@ using NUnit.Framework;
 
 namespace Ryujinx.Tests.Cpu
 {
-    [TestFixture]
-    public partial class CpuTest
+    public class CpuTestScalar : CpuTest
     {
         [TestCase(0x00000000u, 0x80000000u, 0x00000000u)]
         [TestCase(0x80000000u, 0x00000000u, 0x00000000u)]
@@ -15,10 +14,9 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0x7F7FFFFFu, 0x807FFFFFu, 0x7F7FFFFFu)]
         [TestCase(0x7FC00000u, 0x3F800000u, 0x7FC00000u)]
         [TestCase(0x3F800000u, 0x7FC00000u, 0x7FC00000u)]
-        // NaN tests
-        //[TestCase(0x7F800001u, 0x7FC00042u, 0x7FC00001u)]
-        //[TestCase(0x7FC00042u, 0x7F800001u, 0x7FC00001u)]
-        //[TestCase(0x7FC0000Au, 0x7FC0000Bu, 0x7FC0000Au)]
+        [TestCase(0x7F800001u, 0x7FC00042u, 0x7FC00001u, Ignore = "NaN test.")]
+        [TestCase(0x7FC00042u, 0x7F800001u, 0x7FC00001u, Ignore = "NaN test.")]
+        [TestCase(0x7FC0000Au, 0x7FC0000Bu, 0x7FC0000Au, Ignore = "NaN test.")]
         public void Fmax_S(uint A, uint B, uint Result)
         {
             // FMAX S0, S1, S2

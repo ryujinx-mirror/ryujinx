@@ -3,8 +3,7 @@ using NUnit.Framework;
 
 namespace Ryujinx.Tests.Cpu
 {
-    [TestFixture]
-    public partial class CpuTest
+    public class CpuTestSimdMove : CpuTest
     {
         [TestCase(0u, 0u, 0x2313221221112010ul, 0x0000000000000000ul)]
         [TestCase(1u, 0u, 0x2313221221112010ul, 0x2717261625152414ul)]

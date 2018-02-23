@@ -1,10 +1,9 @@
-﻿using ChocolArm64.State;
+using ChocolArm64.State;
 using NUnit.Framework;
 
 namespace Ryujinx.Tests.Cpu
 {
-    [TestFixture]
-    public partial class CpuTest
+    public class CpuTestAlu : CpuTest
     {
         [Test]
         public void Add()
@@ -14,25 +13,17 @@ namespace Ryujinx.Tests.Cpu
             Assert.AreEqual(3, ThreadState.X0);
         }
 
-        [Test]
-        public void Ands()
+        [TestCase(0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFul, true, false)]
+        [TestCase(0xFFFFFFFFu, 0x00000000u, 0x00000000ul, false, true)]
+        [TestCase(0x12345678u, 0x7324A993u, 0x12240010ul, false, false)]
+        public void Ands(uint A, uint B, ulong Result, bool Negative, bool Zero)
         {
             // ANDS W0, W1, W2
             uint Opcode = 0x6A020020;
-            var tests = new[]
-            {
-                new { W1 = 0xFFFFFFFFul, W2 = 0xFFFFFFFFul, Result = 0xFFFFFFFFul, Negative = true,  Zero = false },
-                new { W1 = 0xFFFFFFFFul, W2 = 0x00000000ul, Result = 0x00000000ul, Negative = false, Zero = true  },
-                new { W1 = 0x12345678ul, W2 = 0x7324A993ul, Result = 0x12240010ul, Negative = false, Zero = false },
-            };
-
-            foreach (var test in tests)
-            {
-                AThreadState ThreadState = SingleOpcode(Opcode, X1: test.W1, X2: test.W2);
-                Assert.AreEqual(test.Result,   ThreadState.X0);
-                Assert.AreEqual(test.Negative, ThreadState.Negative);
-                Assert.AreEqual(test.Zero,     ThreadState.Zero);
-            }
+            AThreadState ThreadState = SingleOpcode(Opcode, X1: A, X2: B);
+            Assert.AreEqual(Result,   ThreadState.X0);
+            Assert.AreEqual(Negative, ThreadState.Negative);
+            Assert.AreEqual(Zero,     ThreadState.Zero);
         }
 
         [Test]
@@ -40,8 +31,14 @@ namespace Ryujinx.Tests.Cpu
         {
             // ORR W0, WZR, #0x01010101
             Assert.AreEqual(0x01010101, SingleOpcode(0x3200C3E0).X0);
+
+            Reset();
+
             // ORR W1, WZR, #0x00F000F0
             Assert.AreEqual(0x00F000F0, SingleOpcode(0x320C8FE1).X1);
+
+            Reset();
+
             // ORR W2, WZR, #1
             Assert.AreEqual(0x00000001, SingleOpcode(0x320003E2).X2);
         }
