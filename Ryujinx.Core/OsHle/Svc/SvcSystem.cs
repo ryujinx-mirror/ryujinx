@@ -161,6 +161,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             switch (InfoType)
             {
+                case 0:  ThreadState.X1 = AllowedCpuIdBitmask();           break;
                 case 2:  ThreadState.X1 = GetMapRegionBaseAddr();          break;
                 case 3:  ThreadState.X1 = GetMapRegionSize();              break;
                 case 4:  ThreadState.X1 = GetHeapRegionBaseAddr();         break;
@@ -178,6 +179,11 @@ namespace Ryujinx.Core.OsHle.Svc
             }
 
             ThreadState.X0 = (int)SvcResult.Success;
+        }
+        
+        private ulong AllowedCpuIdBitmask()
+        {
+            return 0xF; //Mephisto value.
         }
 
         private ulong GetMapRegionBaseAddr()
