@@ -18,8 +18,8 @@ namespace ChocolArm64.Translation
 
         private AILBlock ILBlock;
 
-        private AOpCode LastCmpOp;
-        private AOpCode LastFlagOp;
+        private AOpCode OptOpLastCompare;
+        private AOpCode OptOpLastFlagSet;
 
         private int BlkIndex;
         private int OpcIndex;
@@ -75,6 +75,9 @@ namespace ChocolArm64.Translation
                 BlkIndex++;
                 OpcIndex = -1;
 
+                OptOpLastFlagSet = null;
+                OptOpLastCompare = null;
+
                 ILBlock = Emitter.GetILBlock(BlkIndex);
             }
 
@@ -120,7 +123,7 @@ namespace ChocolArm64.Translation
 
         public void TryOptMarkCondWithoutCmp()
         {
-            LastCmpOp = CurrOp;
+            OptOpLastCompare = CurrOp;
 
             AInstEmitAluHelper.EmitDataLoadOpers(this);
 
@@ -146,14 +149,15 @@ namespace ChocolArm64.Translation
         {
             OpCode ILOp;
 
-            int IntCond = (int)Cond;            
+            int IntCond = (int)Cond;
 
-            if (LastCmpOp != null && LastFlagOp == LastCmpOp && BranchOps.ContainsKey(Cond))
+            if (OptOpLastCompare != null &&
+                OptOpLastCompare == OptOpLastFlagSet && BranchOps.ContainsKey(Cond))
             {
-                Ldloc(Tmp3Index, AIoType.Int, LastCmpOp.RegisterSize);
-                Ldloc(Tmp4Index, AIoType.Int, LastCmpOp.RegisterSize);
+                Ldloc(Tmp3Index, AIoType.Int, OptOpLastCompare.RegisterSize);
+                Ldloc(Tmp4Index, AIoType.Int, OptOpLastCompare.RegisterSize);
 
-                if (LastCmpOp.Emitter == AInstEmit.Adds)
+                if (OptOpLastCompare.Emitter == AInstEmit.Adds)
                 {
                     Emit(OpCodes.Neg);
                 }
@@ -356,7 +360,7 @@ namespace ChocolArm64.Translation
         public void EmitLdflg(int Index) => Ldloc(Index, AIoType.Flag);
         public void EmitStflg(int Index)
         {
-            LastFlagOp = CurrOp;
+            OptOpLastFlagSet = CurrOp;
 
             Stloc(Index, AIoType.Flag);
         }

@@ -1,5 +1,3 @@
-using ChocolArm64.Memory;
-
 namespace Ryujinx.Core.OsHle
 {
     static class MemoryRegions

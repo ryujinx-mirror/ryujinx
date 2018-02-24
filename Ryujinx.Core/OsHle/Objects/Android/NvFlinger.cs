@@ -291,7 +291,10 @@ namespace Ryujinx.Core.OsHle.Objects.Android
 
                 BufferQueue[Slot].State = BufferState.Free;
 
-                WaitBufferFree.Set();
+                lock (WaitBufferFree)
+                {
+                    WaitBufferFree.Set();
+                }
             });
         }
 
@@ -317,15 +320,15 @@ namespace Ryujinx.Core.OsHle.Objects.Android
 
             do
             {
-                if ((Slot = GetFreeSlot(Width, Height)) != -1)
-                {
-                    break;
-                }
-
-                Logging.Debug("Waiting for a free BufferQueue slot...");
-
                 lock (WaitBufferFree)
                 {
+                    if ((Slot = GetFreeSlot(Width, Height)) != -1)
+                    {
+                        break;
+                    }
+
+                    Logging.Debug("Waiting for a free BufferQueue slot...");
+
                     if (!KeepRunning)
                     {
                         break;

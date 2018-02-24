@@ -9,6 +9,11 @@ namespace ChocolArm64.Instruction
 {
     static partial class AInstEmit
     {
+        public static void Hint(AILEmitterCtx Context)
+        {
+            //Execute as no-op.
+        }
+
         public static void Mrs(AILEmitterCtx Context)
         {
             AOpCodeSystem Op = (AOpCodeSystem)Context.CurrOp;

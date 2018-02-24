@@ -6,7 +6,7 @@ using System.Reflection.Emit;
 
 namespace ChocolArm64
 {
-    class ATranslator
+    public class ATranslator
     {
         public AThread Thread { get; private set; }
 
@@ -41,7 +41,7 @@ namespace ChocolArm64
             while (Position != 0 && KeepRunning);
         }
 
-        public bool TryGetCachedSub(AOpCode OpCode, out ATranslatedSub Sub)
+        internal bool TryGetCachedSub(AOpCode OpCode, out ATranslatedSub Sub)
         {
             if (OpCode.Emitter != AInstEmit.Bl)
             {
@@ -53,7 +53,7 @@ namespace ChocolArm64
             return TryGetCachedSub(((AOpCodeBImmAl)OpCode).Imm, out Sub);
         }
 
-        public bool TryGetCachedSub(long Position, out ATranslatedSub Sub)
+        internal bool TryGetCachedSub(long Position, out ATranslatedSub Sub)
         {
             return CachedSubs.TryGetValue(Position, out Sub);
         }

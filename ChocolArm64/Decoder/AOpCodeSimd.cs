@@ -10,8 +10,6 @@ namespace ChocolArm64.Decoder
         public int Opc  { get; private   set; }
         public int Size { get; protected set; }
 
-        public int SizeF => Size & 1;
-
         public AOpCodeSimd(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
             Rd   = (OpCode >>  0) & 0x1f;

@@ -265,6 +265,32 @@ namespace ChocolArm64.Instruction
             });
         }
 
+        public static void Frintx_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            EmitVectorExtractF(Context, Op.Rn, 0, Op.Size);
+
+            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
+
+            Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
+
+            if (Op.Size == 0)
+            {
+                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
+            }
+            else if (Op.Size == 1)
+            {
+                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+
+            EmitScalarSetF(Context, Op.Rd, Op.Size);
+        }
+
         public static void Fsqrt_S(AILEmitterCtx Context)
         {
             EmitScalarUnaryOpF(Context, () =>

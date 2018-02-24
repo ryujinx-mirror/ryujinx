@@ -189,6 +189,32 @@ namespace ChocolArm64.Instruction
                    (Value >> 6) & 1 + (Value >> 7);
         }
 
+        public static float RoundF(float Value, int Fpcr)
+        {
+            switch ((ARoundMode)((Fpcr >> 22) & 3))
+            {
+                case ARoundMode.ToNearest:            return MathF.Round   (Value);
+                case ARoundMode.TowardsPlusInfinity:  return MathF.Ceiling (Value);
+                case ARoundMode.TowardsMinusInfinity: return MathF.Floor   (Value);
+                case ARoundMode.TowardsZero:          return MathF.Truncate(Value);
+            }
+
+            throw new InvalidOperationException();
+        }
+
+        public static double Round(double Value, int Fpcr)
+        {
+            switch ((ARoundMode)((Fpcr >> 22) & 3))
+            {
+                case ARoundMode.ToNearest:            return Math.Round   (Value);
+                case ARoundMode.TowardsPlusInfinity:  return Math.Ceiling (Value);
+                case ARoundMode.TowardsMinusInfinity: return Math.Floor   (Value);
+                case ARoundMode.TowardsZero:          return Math.Truncate(Value);
+            }
+
+            throw new InvalidOperationException();
+        }
+
         public static AVec Tbl1_V64(AVec Vector, AVec Tb0)
         {
             return Tbl(Vector, 8, Tb0);
