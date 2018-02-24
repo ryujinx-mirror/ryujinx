@@ -86,10 +86,10 @@ namespace Ryujinx.Core.OsHle
 
         public void InitializeHeap()
         {
-            Memory.Manager.SetHeapAddr((ImageBase + 0x3fffffff) & ~0x3fffffff);
+            Memory.Manager.SetHeapAddr(MemoryRegions.HeapRegionAddress);
         }
 
-        public bool Run()
+        public bool Run(bool UseHbAbi = false)
         {
             if (Executables.Count == 0)
             {
@@ -108,6 +108,14 @@ namespace Ryujinx.Core.OsHle
             }
 
             MainThread = Ns.Os.Handles.GetData<HThread>(Handle);
+
+            if (UseHbAbi)
+            {
+                Homebrew Homebrew_ABI = new Homebrew(Memory, Executables[0].ImageEnd, (long)Handle);
+
+                MainThread.Thread.ThreadState.X0 = (ulong)Executables[0].ImageEnd;
+                MainThread.Thread.ThreadState.X1 = ulong.MaxValue;
+            }
 
             Scheduler.StartThread(MainThread);
 
@@ -185,13 +193,6 @@ namespace Ryujinx.Core.OsHle
             Thread.ThreadState.X0         = (ulong)ArgsPtr;
             Thread.ThreadState.X1         = (ulong)Handle;
             Thread.ThreadState.X31        = (ulong)StackTop;
-
-            if (Executables[0].Extension == Extensions.NRO)
-            {
-                Homebrew Homebrew_ABI = new Homebrew(Memory, Executables[0].ImageEnd, (long)Handle);
-                Thread.ThreadState.X0 = (ulong)Executables[0].ImageEnd;
-                Thread.ThreadState.X1 = 0xFFFFFFFFFFFFFFFF;
-            }
 
             Thread.WorkFinished += ThreadFinished;
 

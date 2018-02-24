@@ -182,22 +182,22 @@ namespace Ryujinx.Core.OsHle.Svc
 
         private ulong GetMapRegionBaseAddr()
         {
-            return 0x80000000;
+            return MemoryRegions.MapRegionAddress;
         }
 
         private ulong GetMapRegionSize()
         {
-            return 0x40000000;
+            return MemoryRegions.MapRegionSize;
         }
 
         private ulong GetHeapRegionBaseAddr()
         {
-            return GetMapRegionBaseAddr() + GetMapRegionSize();
+            return MemoryRegions.HeapRegionAddress;
         }
 
         private ulong GetHeapRegionSize()
         {
-            return 0x40000000;
+            return MemoryRegions.HeapRegionSize;
         }
 
         private ulong GetTotalMem()

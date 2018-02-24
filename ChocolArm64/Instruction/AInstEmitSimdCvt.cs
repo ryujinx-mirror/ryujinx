@@ -23,52 +23,62 @@ namespace ChocolArm64.Instruction
 
         public static void Fcvtas_Gp(AILEmitterCtx Context)
         {
-            Fcvta__Gp(Context, Signed: true);
+            EmitFcvt_s_Gp(Context, () => EmitRoundMathCall(Context, MidpointRounding.AwayFromZero));
         }
 
         public static void Fcvtau_Gp(AILEmitterCtx Context)
         {
-            Fcvta__Gp(Context, Signed: false);
+            EmitFcvt_u_Gp(Context, () => EmitRoundMathCall(Context, MidpointRounding.AwayFromZero));
         }
 
         public static void Fcvtms_Gp(AILEmitterCtx Context)
         {
-            EmitFcvt_s_Gp(Context, nameof(Math.Floor));
+            EmitFcvt_s_Gp(Context, () => EmitUnaryMathCall(Context, nameof(Math.Floor)));
+        }
+
+        public static void Fcvtmu_Gp(AILEmitterCtx Context)
+        {
+            EmitFcvt_u_Gp(Context, () => EmitUnaryMathCall(Context, nameof(Math.Floor)));
         }
 
         public static void Fcvtps_Gp(AILEmitterCtx Context)
         {
-            EmitFcvt_s_Gp(Context, nameof(Math.Ceiling));
+            EmitFcvt_s_Gp(Context, () => EmitUnaryMathCall(Context, nameof(Math.Ceiling)));
+        }
+
+        public static void Fcvtpu_Gp(AILEmitterCtx Context)
+        {
+            EmitFcvt_u_Gp(Context, () => EmitUnaryMathCall(Context, nameof(Math.Ceiling)));
         }
 
         public static void Fcvtzs_Gp(AILEmitterCtx Context)
         {
-            EmitFcvtz__Gp(Context, Signed: true);
+            EmitFcvt_s_Gp(Context, () => { });
         }
 
         public static void Fcvtzs_Gp_Fix(AILEmitterCtx Context)
         {
-            EmitFcvtz__Gp_Fix(Context, Signed: true);
+            EmitFcvtzs_Gp_Fix(Context);
         }
 
         public static void Fcvtzs_V(AILEmitterCtx Context)
         {
-            EmitVectorFcvt(Context, Signed: true);
+            EmitVectorFcvtzs(Context);
         }
 
         public static void Fcvtzu_Gp(AILEmitterCtx Context)
         {
-            EmitFcvtz__Gp(Context, Signed: false);
+            EmitFcvt_u_Gp(Context, () => { });
         }
 
         public static void Fcvtzu_Gp_Fix(AILEmitterCtx Context)
         {
-            EmitFcvtz__Gp_Fix(Context, Signed: false);
+            EmitFcvtzu_Gp_Fix(Context);
         }
 
         public static void Fcvtzu_V(AILEmitterCtx Context)
         {
-            EmitVectorFcvt(Context, Signed: false);
+            EmitVectorFcvtzu(Context);
         }
 
         public static void Scvtf_Gp(AILEmitterCtx Context)
@@ -165,13 +175,23 @@ namespace ChocolArm64.Instruction
             }
         }
 
-        private static void Fcvta__Gp(AILEmitterCtx Context, bool Signed)
+        private static void EmitFcvt_s_Gp(AILEmitterCtx Context, Action Emit)
+        {
+            EmitFcvt___Gp(Context, Emit, true);
+        }
+
+        private static void EmitFcvt_u_Gp(AILEmitterCtx Context, Action Emit)
+        {
+            EmitFcvt___Gp(Context, Emit, false);
+        }
+
+        private static void EmitFcvt___Gp(AILEmitterCtx Context, Action Emit, bool Signed)
         {
             AOpCodeSimdCvt Op = (AOpCodeSimdCvt)Context.CurrOp;
 
             EmitVectorExtractF(Context, Op.Rn, 0, Op.Size);
 
-            EmitRoundMathCall(Context, MidpointRounding.AwayFromZero);
+            Emit();
 
             if (Signed)
             {
@@ -190,45 +210,14 @@ namespace ChocolArm64.Instruction
             Context.EmitStintzr(Op.Rd);
         }
 
-        private static void EmitFcvt_s_Gp(AILEmitterCtx Context, string Name)
+        private static void EmitFcvtzs_Gp_Fix(AILEmitterCtx Context)
         {
-            AOpCodeSimdCvt Op = (AOpCodeSimdCvt)Context.CurrOp;
-
-            EmitVectorExtractF(Context, Op.Rn, 0, Op.Size);
-
-            EmitUnaryMathCall(Context, Name);
-
-            EmitScalarFcvts(Context, Op.Size, 0);
-
-            if (Context.CurrOp.RegisterSize == ARegisterSize.Int32)
-            {
-                Context.Emit(OpCodes.Conv_U8);
-            }
-
-            Context.EmitStintzr(Op.Rd);
+            EmitFcvtz__Gp_Fix(Context, true);
         }
 
-        private static void EmitFcvtz__Gp(AILEmitterCtx Context, bool Signed)
+        private static void EmitFcvtzu_Gp_Fix(AILEmitterCtx Context)
         {
-            AOpCodeSimdCvt Op = (AOpCodeSimdCvt)Context.CurrOp;
-
-            EmitVectorExtractF(Context, Op.Rn, 0, Op.Size);
-
-            if (Signed)
-            {
-                EmitScalarFcvts(Context, Op.Size, 0);
-            }
-            else
-            {
-                EmitScalarFcvtu(Context, Op.Size, 0);
-            }
-
-            if (Context.CurrOp.RegisterSize == ARegisterSize.Int32)
-            {
-                Context.Emit(OpCodes.Conv_U8);
-            }
-
-            Context.EmitStintzr(Op.Rd);
+            EmitFcvtz__Gp_Fix(Context, false);
         }
 
         private static void EmitFcvtz__Gp_Fix(AILEmitterCtx Context, bool Signed)
@@ -252,6 +241,16 @@ namespace ChocolArm64.Instruction
             }
 
             Context.EmitStintzr(Op.Rd);
+        }
+
+        private static void EmitVectorScvtf(AILEmitterCtx Context)
+        {
+            EmitVectorCvtf(Context, true);
+        }
+
+        private static void EmitVectorUcvtf(AILEmitterCtx Context)
+        {
+            EmitVectorCvtf(Context, false);
         }
 
         private static void EmitVectorCvtf(AILEmitterCtx Context, bool Signed)
@@ -289,7 +288,17 @@ namespace ChocolArm64.Instruction
             }
         }
 
-        private static void EmitVectorFcvt(AILEmitterCtx Context, bool Signed)
+        private static void EmitVectorFcvtzs(AILEmitterCtx Context)
+        {
+            EmitVectorFcvtz(Context, true);
+        }
+
+        private static void EmitVectorFcvtzu(AILEmitterCtx Context)
+        {
+            EmitVectorFcvtz(Context, false);
+        }
+
+        private static void EmitVectorFcvtz(AILEmitterCtx Context, bool Signed)
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 

@@ -21,8 +21,6 @@ namespace Ryujinx.Core.Loaders.Executables
         public int DataOffset { get; private set; }
         public int BssSize    { get; private set; }
 
-        public Extensions Extension { get; private set; }
-
         [Flags]
         private enum NsoFlags
         {
@@ -80,8 +78,6 @@ namespace Ryujinx.Core.Loaders.Executables
             this.ROOffset   = ROMemOffset;
             this.DataOffset = DataMemOffset;
             this.BssSize    = BssSize;
-
-            this.Extension = Extensions.NSO;
 
             //Text segment
             Input.Seek(TextOffset, SeekOrigin.Begin);

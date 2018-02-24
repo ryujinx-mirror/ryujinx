@@ -114,25 +114,22 @@ namespace Ryujinx.Core.OsHle
 
         public void LoadProgram(string FileName)
         {
+            bool IsNro = Path.GetExtension(FileName).ToLower() == ".nro";
+
             int ProcessId = IdGen.GenerateId();
 
             Process MainProcess = new Process(Ns, Allocator, ProcessId);
 
             using (FileStream Input = new FileStream(FileName, FileMode.Open))
             {
-                if (Path.GetExtension(FileName).ToLower() == ".nro")
-                {
-                    MainProcess.LoadProgram(new Nro(Input));
-                }
-                else
-                {
-                    MainProcess.LoadProgram(new Nso(Input));
-                }
+                MainProcess.LoadProgram(IsNro
+                    ? (IExecutable)new Nro(Input)
+                    : (IExecutable)new Nso(Input));
             }
 
             MainProcess.SetEmptyArgs();
             MainProcess.InitializeHeap();
-            MainProcess.Run();
+            MainProcess.Run(IsNro);
 
             Processes.TryAdd(ProcessId, MainProcess);
         }
@@ -190,6 +187,7 @@ namespace Ryujinx.Core.OsHle
             if (SharedMem.TryGetLastVirtualPosition(out long Position))
             {
                 Logging.Info($"HID shared memory successfully mapped to {Position:x16}!");
+
                 Ns.Hid.Init(Position);
             }
         }

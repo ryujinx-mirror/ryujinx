@@ -273,7 +273,16 @@ namespace Ryujinx.Core.OsHle.Objects.FspSrv
 
             FileStream Stream = new FileStream(FileName, FileMode.Open);
 
-            MakeObject(Context, new IFile(Stream, FileName));
+            IFile FileInterface = new IFile(Stream, FileName);
+
+            FileInterface.Disposed += RemoveFileInUse;
+
+            lock (OpenPaths)
+            {
+                OpenPaths.Add(FileName);
+            }
+
+            MakeObject(Context, FileInterface);
 
             return 0;
         }
@@ -353,7 +362,7 @@ namespace Ryujinx.Core.OsHle.Objects.FspSrv
 
             lock (OpenPaths)
             {
-                FileInterface.Disposed -= RemoveDirectoryInUse;
+                FileInterface.Disposed -= RemoveFileInUse;
 
                 OpenPaths.Remove(FileInterface.HostPath);
             }

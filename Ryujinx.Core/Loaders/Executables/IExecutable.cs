@@ -2,12 +2,6 @@ using System.Collections.ObjectModel;
 
 namespace Ryujinx.Core.Loaders.Executables
 {
-    public enum Extensions
-    {
-        NRO,
-        NSO
-    }
-
     public interface IExecutable
     {
         ReadOnlyCollection<byte> Text { get; }
@@ -19,7 +13,5 @@ namespace Ryujinx.Core.Loaders.Executables
         int ROOffset   { get; }
         int DataOffset { get; }
         int BssSize    { get; }
-
-        Extensions Extension  { get; }
     }
 }

@@ -3,7 +3,6 @@ using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 
-
 namespace Ryujinx.Graphics.Gal.OpenGL
 {
     public class OpenGLRenderer : IGalRenderer
@@ -28,8 +27,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         private Queue<Action> ActionsQueue;
 
         private FrameBuffer FbRenderer;
-
-        public long FrameBufferPtr { get; set; }
 
         public OpenGLRenderer()
         {
@@ -58,7 +55,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 ActionsQueue.Dequeue()();
             }
-        }        
+        }
 
         public void Render()
         {

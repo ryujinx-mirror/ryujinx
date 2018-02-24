@@ -245,7 +245,7 @@ namespace Ryujinx.Core.OsHle.Objects.Android
 
             HNvMap NvMap = GetNvMap(Context, Slot);
 
-            if (NvMap.Address < 0 || NvMap.Address + FbSize > AMemoryMgr.AddrSize)
+            if (FbSize < 0 || NvMap.Address < 0 || NvMap.Address + FbSize > AMemoryMgr.AddrSize)
             {
                 Logging.Error($"Frame buffer address {NvMap.Address:x16} is invalid!");
 
