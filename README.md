@@ -57,4 +57,4 @@ Run `dotnet run -c Release -- path\to\game_exefs_and_romfs_folder` to run offici
 **Latest build**
 
 These builds are compiled automatically for each commit on the master branch. They may be unstable or not work at all.
-To download the latest automatic build for Windows (64-bits), [Click Here](https://ci.appveyor.com/api/projects/gdkchan/ryujinx/artifacts/ryujinx_lastest_unstable.zip).
+To download the latest automatic build for Windows (64-bits), [Click Here](https://ci.appveyor.com/api/projects/gdkchan/ryujinx/artifacts/ryujinx_latest_unstable.zip).
