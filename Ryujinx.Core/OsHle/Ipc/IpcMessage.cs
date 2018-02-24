@@ -108,7 +108,7 @@ namespace Ryujinx.Core.OsHle.Ipc
                 RecvListCount = 0;
             }
 
-            if (Domain)
+            if (Domain && Type == IpcMessageType.Request)
             {
                 int DomWord0 = Reader.ReadInt32();
 
