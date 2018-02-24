@@ -86,7 +86,7 @@ namespace Ryujinx.Core.OsHle.Ipc
             long       CmdPtr,
             int        HndId)
         {
-            IpcMessage Response = new IpcMessage(Request.IsDomain);
+            IpcMessage Response = new IpcMessage(Request.IsDomain && Request.Type == IpcMessageType.Request);
 
             using (MemoryStream Raw = new MemoryStream(Request.RawData))
             {
@@ -192,6 +192,7 @@ namespace Ryujinx.Core.OsHle.Ipc
                     {
                         case 0: Request = IpcConvertSessionToDomain(Ns, Session, Response, HndId); break;
                         case 3: Request = IpcQueryBufferPointerSize(Response);                     break;
+                        case 2: //IpcDuplicateSession, differences is unknown. 
                         case 4: Request = IpcDuplicateSessionEx(Ns, Session, Response, ReqReader); break;
 
                         default: throw new NotImplementedException(CmdId.ToString());
