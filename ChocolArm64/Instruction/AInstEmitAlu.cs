@@ -11,7 +11,10 @@ namespace ChocolArm64.Instruction
 {
     static partial class AInstEmit
     {
-        public static void Adc(AILEmitterCtx Context)
+        public static void Adc(AILEmitterCtx Context)  => EmitAdc(Context, false);
+        public static void Adcs(AILEmitterCtx Context) => EmitAdc(Context, true);
+
+        private static void EmitAdc(AILEmitterCtx Context, bool SetFlags)
         {
             EmitDataLoadOpers(Context);
 
@@ -27,10 +30,18 @@ namespace ChocolArm64.Instruction
 
             if (Context.CurrOp.RegisterSize != ARegisterSize.Int32)
             {
-                Context.Emit(OpCodes.Conv_I8);
+                Context.Emit(OpCodes.Conv_U8);
             }
 
             Context.Emit(OpCodes.Add);
+
+            if (SetFlags)
+            {
+                Context.EmitZNFlagCheck();
+
+                EmitAddsCCheck(Context);
+                EmitAddsVCheck(Context);
+            }
 
             EmitDataStore(Context);
         }
@@ -145,7 +156,10 @@ namespace ChocolArm64.Instruction
         public static void Lslv(AILEmitterCtx Context) => EmitDataOpShift(Context, OpCodes.Shl);
         public static void Lsrv(AILEmitterCtx Context) => EmitDataOpShift(Context, OpCodes.Shr_Un);
 
-        public static void Sbc(AILEmitterCtx Context)
+        public static void Sbc(AILEmitterCtx Context)  => EmitSbc(Context, false);
+        public static void Sbcs(AILEmitterCtx Context) => EmitSbc(Context, true);
+
+        private static void EmitSbc(AILEmitterCtx Context, bool SetFlags)
         {
             EmitDataLoadOpers(Context);
 
@@ -165,10 +179,18 @@ namespace ChocolArm64.Instruction
 
             if (Context.CurrOp.RegisterSize != ARegisterSize.Int32)
             {
-                Context.Emit(OpCodes.Conv_I8);
+                Context.Emit(OpCodes.Conv_U8);
             }
 
             Context.Emit(OpCodes.Sub);
+
+            if (SetFlags)
+            {
+                Context.EmitZNFlagCheck();
+
+                EmitSbcsCCheck(Context);
+                EmitSubsVCheck(Context);
+            }
 
             EmitDataStore(Context);
         }

@@ -18,23 +18,33 @@ Or just drag'n'drop the *.NRO / *.NSO or the game folder on the executable if yo
 https://openal.org/downloads/OpenAL11CoreSDK.zip
 
  - Keyboard Input is partially supported:
-   - Arrows.
-   - Enter > "Start" & Tab > "Select"
-   - Qwerty: 
-     - A > "A" (QWERTY) / Q > "A" (AZERTY)
-     - S > "B"
-     - Z > "X" (QWERTY) / W > "X" (AZERTY)
-     - X > "Y"
-     - Key_Up > "Right Stick Up"
-     - Key_Down > "Right Stick Down"
-     - Key_Left > "Right Stick Left"
-     - Key_Right > "Right Stick Right"
-     - I > "Left Stick Up"
-     - K > "Left Stick Down"
-     - J > "Left Stick Left"
-     - L > "Left Stick Right"
-     - Tab > "Minus"
-     - Enter > "Plus"
+   - Left Joycon:
+	 - Stick Up = W
+	 - Stick Down = S
+	 - Stick Left = A
+	 - Stick Right = D
+	 - Stick Button = F
+	 - DPad Up = Up
+	 - DPad Down = Down
+	 - DPad Left = Left
+	 - DPad Right = Right
+	 - Minus = -
+	 - L = E
+	 - ZL = Q
+
+   - Right Joycon:
+	 - Stick Up = I
+	 - Stick Down = K
+	 - Stick Left = J
+	 - Stick Right = L
+	 - Stick Button = H
+	 - A = Z
+	 - B = X
+	 - X = C
+	 - Y = V
+	 - Plus = +
+	 - R = U
+	 - ZR = O
 
  - Config File: `Ryujinx.conf` should be present in executable folder.
    For more informations [you can go here](CONFIG.md).

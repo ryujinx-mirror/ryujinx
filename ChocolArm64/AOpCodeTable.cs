@@ -11,6 +11,7 @@ namespace ChocolArm64
  #region "OpCode Table"
             //Integer
             Set("x0011010000xxxxx000000xxxxxxxxxx", AInstEmit.Adc,           typeof(AOpCodeAluRs));
+            Set("x0111010000xxxxx000000xxxxxxxxxx", AInstEmit.Adcs,          typeof(AOpCodeAluRs));
             Set("x00100010xxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Add,           typeof(AOpCodeAluImm));
             Set("x0001011<<0xxxxxxxxxxxxxxxxxxxxx", AInstEmit.Add,           typeof(AOpCodeAluRs));
             Set("x0001011001xxxxxxxxxxxxxxxxxxxxx", AInstEmit.Add,           typeof(AOpCodeAluRx));
@@ -90,6 +91,7 @@ namespace ChocolArm64
             Set("1101101011000000000011xxxxxxxxxx", AInstEmit.Rev64,         typeof(AOpCodeAlu));
             Set("x0011010110xxxxx001011xxxxxxxxxx", AInstEmit.Rorv,          typeof(AOpCodeAluRs));
             Set("x1011010000xxxxx000000xxxxxxxxxx", AInstEmit.Sbc,           typeof(AOpCodeAluRs));
+            Set("x1111010000xxxxx000000xxxxxxxxxx", AInstEmit.Sbcs,          typeof(AOpCodeAluRs));
             Set("x00100110xxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Sbfm,          typeof(AOpCodeBfm));
             Set("x0011010110xxxxx000011xxxxxxxxxx", AInstEmit.Sdiv,          typeof(AOpCodeAluRs));
             Set("10011011001xxxxx0xxxxxxxxxxxxxxx", AInstEmit.Smaddl,        typeof(AOpCodeMul));
@@ -145,6 +147,7 @@ namespace ChocolArm64
             Set("01011110000xxxxx000001xxxxxxxxxx", AInstEmit.Dup_S,         typeof(AOpCodeSimdIns));
             Set("0x001110000xxxxx000001xxxxxxxxxx", AInstEmit.Dup_V,         typeof(AOpCodeSimdIns));
             Set("0x101110001xxxxx000111xxxxxxxxxx", AInstEmit.Eor_V,         typeof(AOpCodeSimdReg));
+            Set("011111101x1xxxxx110101xxxxxxxxxx", AInstEmit.Fabd_S,        typeof(AOpCodeSimdReg));
             Set("000111100x100000110000xxxxxxxxxx", AInstEmit.Fabs_S,        typeof(AOpCodeSimd));
             Set("000111100x1xxxxx001010xxxxxxxxxx", AInstEmit.Fadd_S,        typeof(AOpCodeSimdReg));
             Set("0>0011100<1xxxxx110101xxxxxxxxxx", AInstEmit.Fadd_V,        typeof(AOpCodeSimdReg));

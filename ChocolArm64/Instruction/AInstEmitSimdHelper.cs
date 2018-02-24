@@ -36,19 +36,17 @@ namespace ChocolArm64.Instruction
         {
             IAOpCodeSimd Op = (IAOpCodeSimd)Context.CurrOp;
 
+            int SizeF = Op.Size & 1;
+
             MethodInfo MthdInfo;
 
-            if (Op.Size == 0)
+            if (SizeF == 0)
             {
                 MthdInfo = typeof(MathF).GetMethod(Name, new Type[] { typeof(float) });
             }
-            else if (Op.Size == 1)
+            else /* if (SizeF == 1) */
             {
                 MthdInfo = typeof(Math).GetMethod(Name, new Type[] { typeof(double) });
-            }
-            else
-            {
-                throw new InvalidOperationException();
             }
 
             Context.EmitCall(MthdInfo);
@@ -58,19 +56,17 @@ namespace ChocolArm64.Instruction
         {
             IAOpCodeSimd Op = (IAOpCodeSimd)Context.CurrOp;
 
+            int SizeF = Op.Size & 1;
+
             MethodInfo MthdInfo;
 
-            if (Op.Size == 0)
+            if (SizeF == 0)
             {
                 MthdInfo = typeof(MathF).GetMethod(Name, new Type[] { typeof(float), typeof(float) });
             }
-            else if (Op.Size == 1)
+            else /* if (SizeF == 1) */
             {
                 MthdInfo = typeof(Math).GetMethod(Name, new Type[] { typeof(double), typeof(double) });
-            }
-            else
-            {
-                throw new InvalidOperationException();
             }
 
             Context.EmitCall(MthdInfo);
@@ -80,27 +76,25 @@ namespace ChocolArm64.Instruction
         {
             IAOpCodeSimd Op = (IAOpCodeSimd)Context.CurrOp;
 
+            int SizeF = Op.Size & 1;
+
             Context.EmitLdc_I4((int)RoundMode);
 
             MethodInfo MthdInfo;
 
             Type[] Types = new Type[] { null, typeof(MidpointRounding) };
 
-            Types[0] = Op.Size == 0
+            Types[0] = SizeF == 0
                 ? typeof(float)
                 : typeof(double);
 
-            if (Op.Size == 0)
+            if (SizeF == 0)
             {
                 MthdInfo = typeof(MathF).GetMethod(nameof(MathF.Round), Types);
             }
-            else if (Op.Size == 1)
+            else /* if (SizeF == 1) */
             {
                 MthdInfo = typeof(Math).GetMethod(nameof(Math.Round), Types);
-            }
-            else
-            {
-                throw new InvalidOperationException();
             }
 
             Context.EmitCall(MthdInfo);

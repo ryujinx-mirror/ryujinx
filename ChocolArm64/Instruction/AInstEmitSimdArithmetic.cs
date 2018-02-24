@@ -101,6 +101,16 @@ namespace ChocolArm64.Instruction
             }
         }
 
+        public static void Fabd_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpF(Context, () =>
+            {
+                Context.Emit(OpCodes.Sub);
+
+                EmitUnaryMathCall(Context, nameof(Math.Abs));
+            });
+        }
+
         public static void Fabs_S(AILEmitterCtx Context)
         {
             EmitScalarUnaryOpF(Context, () =>
@@ -269,26 +279,25 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
-            EmitVectorExtractF(Context, Op.Rn, 0, Op.Size);
-
-            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
-
-            Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
-
-            if (Op.Size == 0)
+            EmitScalarUnaryOpF(Context, () =>
             {
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
-            }
-            else if (Op.Size == 1)
-            {
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
-            }
-            else
-            {
-                throw new InvalidOperationException();
-            }
+                Context.EmitLdarg(ATranslatedSub.StateArgIdx);
 
-            EmitScalarSetF(Context, Op.Rd, Op.Size);
+                Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
+
+                if (Op.Size == 0)
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
+                }
+                else if (Op.Size == 1)
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            });
         }
 
         public static void Fsqrt_S(AILEmitterCtx Context)

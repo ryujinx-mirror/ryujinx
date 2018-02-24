@@ -41,6 +41,25 @@ namespace ChocolArm64.Instruction
             Context.EmitStflg((int)APState.VBit);
         }
 
+        public static void EmitSbcsCCheck(AILEmitterCtx Context)
+        {
+            //C = (Rn == Rm && CIn) || Rn > Rm
+            EmitDataLoadOpers(Context);
+
+            Context.Emit(OpCodes.Ceq);
+
+            Context.EmitLdflg((int)APState.CBit);
+
+            Context.Emit(OpCodes.And);
+
+            EmitDataLoadOpers(Context);
+
+            Context.Emit(OpCodes.Cgt_Un);
+            Context.Emit(OpCodes.Or);
+
+            Context.EmitStflg((int)APState.CBit);
+        }
+
         public static void EmitSubsCCheck(AILEmitterCtx Context)
         {
             //C = Rn == Rm || Rn > Rm = !(Rn < Rm)
