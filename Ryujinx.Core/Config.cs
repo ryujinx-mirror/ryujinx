@@ -8,12 +8,13 @@ namespace Ryujinx.Core
 {
     public static class Config
     {
-        public static bool LoggingEnableInfo { get; private set; }
-        public static bool LoggingEnableTrace { get; private set; }
-        public static bool LoggingEnableDebug { get; private set; }
-        public static bool LoggingEnableWarn { get; private set; }
-        public static bool LoggingEnableError { get; private set; }
-        public static bool LoggingEnableFatal { get; private set; }
+        public static bool LoggingEnableInfo    { get; private set; }
+        public static bool LoggingEnableTrace   { get; private set; }
+        public static bool LoggingEnableDebug   { get; private set; }
+        public static bool LoggingEnableWarn    { get; private set; }
+        public static bool LoggingEnableError   { get; private set; }
+        public static bool LoggingEnableFatal   { get; private set; }
+        public static bool LoggingEnableIpc     { get; private set; }
         public static bool LoggingEnableLogFile { get; private set; }
 
         public static JoyCon FakeJoyCon { get; private set; }
@@ -30,6 +31,7 @@ namespace Ryujinx.Core
             LoggingEnableWarn    = Convert.ToBoolean(Parser.Value("Logging_Enable_Warn"));
             LoggingEnableError   = Convert.ToBoolean(Parser.Value("Logging_Enable_Error"));
             LoggingEnableFatal   = Convert.ToBoolean(Parser.Value("Logging_Enable_Fatal"));
+            LoggingEnableIpc     = Convert.ToBoolean(Parser.Value("Logging_Enable_Ipc"));
             LoggingEnableLogFile = Convert.ToBoolean(Parser.Value("Logging_Enable_LogFile"));
 
             FakeJoyCon = new JoyCon

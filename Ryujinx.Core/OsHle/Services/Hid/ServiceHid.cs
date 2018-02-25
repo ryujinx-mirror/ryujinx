@@ -24,6 +24,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Hid
                 { 103, ActivateNpad                    },
                 { 120, SetNpadJoyHoldType              },
                 { 121, GetNpadJoyHoldType              },
+                { 200, GetVibrationDeviceInfo          },
                 { 203, CreateActiveVibrationDeviceList },
             };
         }
@@ -84,6 +85,15 @@ namespace Ryujinx.Core.OsHle.IpcServices.Hid
         public long GetNpadJoyHoldType(ServiceCtx Context)
         {
             Context.ResponseData.Write(0L);
+
+            return 0;
+        }
+
+        public long GetVibrationDeviceInfo(ServiceCtx Context)
+        {
+            int VibrationDeviceHandle = Context.RequestData.ReadInt32();
+
+            Context.ResponseData.Write(0L); //VibrationDeviceInfoForIpc
 
             return 0;
         }

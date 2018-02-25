@@ -13,12 +13,19 @@ namespace Ryujinx.Core.OsHle.IpcServices.Am
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
+                { 1,  Exit                                  },
                 { 10, SetScreenShotPermission               },
                 { 11, SetOperationModeChangedNotification   },
                 { 12, SetPerformanceModeChangedNotification },
                 { 13, SetFocusHandlingMode                  },
+                { 14, SetRestartMessageEnabled              },
                 { 16, SetOutOfFocusSuspendingEnabled        }
             };
+        }
+
+        public long Exit(ServiceCtx Context)
+        {
+            return 0;
         }
 
         public long SetScreenShotPermission(ServiceCtx Context)
@@ -47,6 +54,13 @@ namespace Ryujinx.Core.OsHle.IpcServices.Am
             bool Flag1 = Context.RequestData.ReadByte() != 0 ? true : false;
             bool Flag2 = Context.RequestData.ReadByte() != 0 ? true : false;
             bool Flag3 = Context.RequestData.ReadByte() != 0 ? true : false;
+
+            return 0;
+        }
+
+        public long SetRestartMessageEnabled(ServiceCtx Context)
+        {
+            bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
             return 0;
         }

@@ -26,6 +26,10 @@
 
   Enable the Fatal Logging (Enabled in Debug recommanded).
 
+- `Logging_Enable_Ipc` *(bool)*
+
+  Enable the Ipc Message Logging.
+
 - `Logging_Enable_LogFile` *(bool)*
 
   Enable writing the logging inside a Ryujinx.log file.

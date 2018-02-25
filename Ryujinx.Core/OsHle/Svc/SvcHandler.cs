@@ -30,6 +30,8 @@ namespace Ryujinx.Core.OsHle.Svc
                 { 0x09, SvcStartThread                   },
                 { 0x0b, SvcSleepThread                   },
                 { 0x0c, SvcGetThreadPriority             },
+                { 0x0d, SvcSetThreadPriority             },
+                { 0x0f, SvcSetThreadCoreMask             },
                 { 0x13, SvcMapSharedMemory               },
                 { 0x14, SvcUnmapSharedMemory             },
                 { 0x15, SvcCreateTransferMemory          },
@@ -44,6 +46,7 @@ namespace Ryujinx.Core.OsHle.Svc
                 { 0x1f, SvcConnectToNamedPort            },
                 { 0x21, SvcSendSyncRequest               },
                 { 0x22, SvcSendSyncRequestWithUserBuffer },
+                { 0x25, SvcGetThreadId                   },
                 { 0x26, SvcBreak                         },
                 { 0x27, SvcOutputDebugString             },
                 { 0x29, SvcGetInfo                       }

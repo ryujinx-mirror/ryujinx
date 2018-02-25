@@ -6,6 +6,7 @@ using Ryujinx.Core.OsHle.IpcServices.Friend;
 using Ryujinx.Core.OsHle.IpcServices.FspSrv;
 using Ryujinx.Core.OsHle.IpcServices.Hid;
 using Ryujinx.Core.OsHle.IpcServices.Lm;
+using Ryujinx.Core.OsHle.IpcServices.Ns;
 using Ryujinx.Core.OsHle.IpcServices.NvServices;
 using Ryujinx.Core.OsHle.IpcServices.Pctl;
 using Ryujinx.Core.OsHle.IpcServices.Pl;
@@ -24,6 +25,7 @@ namespace Ryujinx.Core.OsHle.IpcServices
             switch (Name)
             {
                 case "acc:u0":   return new ServiceAcc();
+                case "aoc:u":    return new ServiceNs();
                 case "apm":      return new ServiceApm();
                 case "apm:p":    return new ServiceApm();
                 case "appletOE": return new ServiceAppletOE();
@@ -42,6 +44,8 @@ namespace Ryujinx.Core.OsHle.IpcServices
                 case "time:s":   return new ServiceTime();
                 case "time:u":   return new ServiceTime();
                 case "vi:m":     return new ServiceVi();
+                case "vi:s":     return new ServiceVi();
+                case "vi:u":     return new ServiceVi();
             }
 
             throw new NotImplementedException(Name);

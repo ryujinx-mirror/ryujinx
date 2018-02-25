@@ -1,6 +1,8 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
+using static Ryujinx.Core.OsHle.IpcServices.ObjHelper;
+
 namespace Ryujinx.Core.OsHle.IpcServices.Lm
 {
     class ServiceLm : IIpcService
@@ -20,6 +22,8 @@ namespace Ryujinx.Core.OsHle.IpcServices.Lm
         public long Initialize(ServiceCtx Context)
         {
             Context.Session.Initialize();
+
+            MakeObject(Context, new ILogger());
 
             return 0;
         }

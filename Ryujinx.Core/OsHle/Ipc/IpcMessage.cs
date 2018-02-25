@@ -41,6 +41,8 @@ namespace Ryujinx.Core.OsHle.Ipc
 
         public IpcMessage(byte[] Data, long CmdPtr, bool Domain) : this()
         {
+            Logging.Ipc(Data, CmdPtr, Domain);
+
             using (MemoryStream MS = new MemoryStream(Data))
             {
                 BinaryReader Reader = new BinaryReader(MS);

@@ -81,5 +81,44 @@ namespace Ryujinx.Core.OsHle.Svc
 
             //TODO: Error codes.
         }
+
+        private void SvcSetThreadPriority(AThreadState ThreadState)
+        {
+            int Handle = (int)ThreadState.X1;
+            int Prio = (int)ThreadState.X0;
+
+            HThread Thread = Ns.Os.Handles.GetData<HThread>(Handle);
+
+            if (Thread != null)
+            {
+                Thread.Priority = Prio;
+
+                ThreadState.X0 = (int)SvcResult.Success;
+            }
+
+            //TODO: Error codes.
+        }
+
+        private void SvcSetThreadCoreMask(AThreadState ThreadState)
+        {
+            ThreadState.X0 = (int)SvcResult.Success;
+
+            //TODO: Error codes.
+        }
+
+        private void SvcGetThreadId(AThreadState ThreadState)
+        {
+            int Handle = (int)ThreadState.X0;
+
+            HThread Thread = Ns.Os.Handles.GetData<HThread>(Handle);
+
+            if (Thread != null)
+            {
+                ThreadState.X1 = (ulong)Thread.ThreadId;
+                ThreadState.X0 = (int)SvcResult.Success;
+            }
+
+            //TODO: Error codes.
+        }
     }
 }
