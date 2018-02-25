@@ -1,79 +1,13 @@
 using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Handles;
-using Ryujinx.Core.OsHle.Objects;
-using Ryujinx.Core.OsHle.Services;
+using Ryujinx.Core.OsHle.IpcServices;
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace Ryujinx.Core.OsHle.Ipc
 {
     static class IpcHandler
     {
-        private static Dictionary<(string, int), ServiceProcessRequest> ServiceCmds =
-                   new Dictionary<(string, int), ServiceProcessRequest>()
-        {
-            { ( "acc:u0",      3), Service.AccU0ListOpenUsers                       },
-            { ( "acc:u0",      5), Service.AccU0GetProfile                          },
-            { ( "acc:u0",    100), Service.AccU0InitializeApplicationInfo           },
-            { ( "acc:u0",    101), Service.AccU0GetBaasAccountManagerForApplication },
-            { ( "apm",         0), Service.ApmOpenSession                           },
-            { ( "apm:p",       0), Service.ApmOpenSession                           },
-            { ( "appletOE",    0), Service.AppletOpenApplicationProxy               },
-            { ( "audout:u",    0), Service.AudOutListAudioOuts                      },
-            { ( "audout:u",    1), Service.AudOutOpenAudioOut                       },
-            { ( "audren:u",    0), Service.AudRenOpenAudioRenderer                  },
-            { ( "audren:u",    1), Service.AudRenGetAudioRendererWorkBufferSize     },
-            { ( "friend:a",    0), Service.FriendCreateFriendService                },
-            { ( "fsp-srv",     1), Service.FspSrvInitialize                         },
-            { ( "fsp-srv",    18), Service.FspSrvMountSdCard                        },
-            { ( "fsp-srv",    51), Service.FspSrvMountSaveData                      },
-            { ( "fsp-srv",   200), Service.FspSrvOpenDataStorageByCurrentProcess    },
-            { ( "fsp-srv",   203), Service.FspSrvOpenRomStorage                     },
-            { ( "fsp-srv",  1005), Service.FspSrvGetGlobalAccessLogMode             },
-            { ( "hid",         0), Service.HidCreateAppletResource                  },
-            { ( "hid",        11), Service.HidActivateTouchScreen                   },
-            { ( "hid",       100), Service.HidSetSupportedNpadStyleSet              },
-            { ( "hid",       101), Service.HidGetSupportedNpadStyleSet              },
-            { ( "hid",       102), Service.HidSetSupportedNpadIdType                },
-            { ( "hid",       103), Service.HidActivateNpad                          },
-            { ( "hid",       120), Service.HidSetNpadJoyHoldType                    },
-            { ( "hid",       121), Service.HidGetNpadJoyHoldType                    },
-            { ( "hid",       203), Service.HidCreateActiveVibrationDeviceList       },
-            { ( "lm",          0), Service.LmInitialize                             },
-            { ( "nvdrv",       0), Service.NvDrvOpen                                },
-            { ( "nvdrv",       1), Service.NvDrvIoctl                               },
-            { ( "nvdrv",       2), Service.NvDrvClose                               },
-            { ( "nvdrv",       3), Service.NvDrvInitialize                          },
-            { ( "nvdrv",       4), Service.NvDrvQueryEvent                          },
-            { ( "nvdrv",       8), Service.NvDrvSetClientPid                        },
-            { ( "nvdrv:a",     0), Service.NvDrvOpen                                },
-            { ( "nvdrv:a",     1), Service.NvDrvIoctl                               },
-            { ( "nvdrv:a",     2), Service.NvDrvClose                               },
-            { ( "nvdrv:a",     3), Service.NvDrvInitialize                          },
-            { ( "nvdrv:a",     4), Service.NvDrvQueryEvent                          },
-            { ( "nvdrv:a",     8), Service.NvDrvSetClientPid                        },
-            { ( "pctl:a",      0), Service.PctlCreateService                        },
-            { ( "pl:u",        1), Service.PlGetLoadState                           },
-            { ( "pl:u",        2), Service.PlGetFontSize                            },
-            { ( "pl:u",        3), Service.PlGetSharedMemoryAddressOffset           },
-            { ( "pl:u",        4), Service.PlGetSharedMemoryNativeHandle            },
-            { ( "set",         1), Service.SetGetAvailableLanguageCodes             },
-            { ( "sm:",         0), Service.SmInitialize                             },
-            { ( "sm:",         1), Service.SmGetService                             },
-            { ( "time:u",      0), Service.TimeGetStandardUserSystemClock           },
-            { ( "time:u",      1), Service.TimeGetStandardNetworkSystemClock        },
-            { ( "time:u",      2), Service.TimeGetStandardSteadyClock               },
-            { ( "time:u",      3), Service.TimeGetTimeZoneService                   },
-            { ( "time:u",      4), Service.TimeGetStandardLocalSystemClock          },
-            { ( "time:s",      0), Service.TimeGetStandardUserSystemClock           },
-            { ( "time:s",      1), Service.TimeGetStandardNetworkSystemClock        },
-            { ( "time:s",      2), Service.TimeGetStandardSteadyClock               },
-            { ( "time:s",      3), Service.TimeGetTimeZoneService                   },
-            { ( "time:s",      4), Service.TimeGetStandardLocalSystemClock          },
-            { ( "vi:m",        2), Service.ViGetDisplayService                      },
-        };
-
         private const long SfciMagic = 'S' << 0 | 'F' << 8 | 'C' << 16 | 'I' << 24;
         private const long SfcoMagic = 'S' << 0 | 'F' << 8 | 'C' << 16 | 'O' << 24;
 
@@ -94,7 +28,7 @@ namespace Ryujinx.Core.OsHle.Ipc
 
                 if (Request.Type == IpcMessageType.Request)
                 {
-                    string ServiceName = Session.ServiceName;
+                    string ServiceName = Session.Service.GetType().Name;
 
                     ServiceProcessRequest ProcReq = null;
 
@@ -113,13 +47,13 @@ namespace Ryujinx.Core.OsHle.Ipc
 
                             if (Obj is HDomain)
                             {
-                                ServiceCmds.TryGetValue((ServiceName, CmdId), out ProcReq);
+                                Session.Service.Commands.TryGetValue(CmdId, out ProcReq);
 
                                 DbgServiceName = $"{ProcReq?.Method.Name ?? CmdId.ToString()}";
                             }
                             else if (Obj != null)
                             {
-                                ((IIpcInterface)Obj).Commands.TryGetValue(CmdId, out ProcReq);
+                                ((IIpcService)Obj).Commands.TryGetValue(CmdId, out ProcReq);
 
                                 DbgServiceName = $"{Obj.GetType().Name} {ProcReq?.Method.Name ?? CmdId.ToString()}";
                             }
@@ -142,13 +76,13 @@ namespace Ryujinx.Core.OsHle.Ipc
                         {
                             object Obj = ((HSessionObj)Session).Obj;
 
-                            ((IIpcInterface)Obj).Commands.TryGetValue(CmdId, out ProcReq);
+                            ((IIpcService)Obj).Commands.TryGetValue(CmdId, out ProcReq);
 
                             DbgServiceName = $"{Obj.GetType().Name} {ProcReq?.Method.Name ?? CmdId.ToString()}";
                         }
                         else
                         {
-                            ServiceCmds.TryGetValue((ServiceName, CmdId), out ProcReq);
+                            Session.Service.Commands.TryGetValue(CmdId, out ProcReq);
 
                             DbgServiceName = $"{ProcReq?.Method.Name ?? CmdId.ToString()}";
                         }

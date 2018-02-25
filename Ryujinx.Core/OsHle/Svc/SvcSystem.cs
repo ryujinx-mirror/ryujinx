@@ -3,6 +3,7 @@ using ChocolArm64.State;
 using Ryujinx.Core.OsHle.Exceptions;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
+using Ryujinx.Core.OsHle.IpcServices;
 using System;
 using System.Threading;
 
@@ -61,7 +62,7 @@ namespace Ryujinx.Core.OsHle.Svc
             //TODO: Validate that app has perms to access the service, and that the service
             //actually exists, return error codes otherwise.
 
-            HSession Session = new HSession(Name);
+            HSession Session = new HSession(ServiceFactory.MakeService(Name));
 
             ThreadState.X1 = (ulong)Ns.Os.Handles.GenerateId(Session);
             ThreadState.X0 = (int)SvcResult.Success;

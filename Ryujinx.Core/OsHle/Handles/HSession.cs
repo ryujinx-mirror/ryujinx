@@ -1,21 +1,23 @@
+using Ryujinx.Core.OsHle.IpcServices;
+
 namespace Ryujinx.Core.OsHle.Handles
 {
     class HSession
     {
-        public string ServiceName { get; private set; }
+        public IIpcService Service { get; private set; }
 
         public bool IsInitialized { get; private set; }
 
         public int State { get; set; }
 
-        public HSession(string ServiceName)
+        public HSession(IIpcService Service)
         {
-            this.ServiceName = ServiceName;
+            this.Service = Service;
         }
 
         public HSession(HSession Session)
         {
-            ServiceName   = Session.ServiceName;
+            Service       = Session.Service;
             IsInitialized = Session.IsInitialized;
         }
 
