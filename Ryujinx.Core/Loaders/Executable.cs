@@ -9,13 +9,21 @@ namespace Ryujinx.Core.Loaders
     {
         private AMemory Memory;
 
-        private ElfDyn[] Dynamic;
+        private List<ElfDyn> Dynamic;
+
+        private Dictionary<long, string> m_SymbolTable;
+
+        public IReadOnlyDictionary<long, string> SymbolTable => m_SymbolTable;
 
         public long ImageBase { get; private set; }
         public long ImageEnd  { get; private set; }
 
         public Executable(IExecutable Exe, AMemory Memory, long ImageBase)
         {
+            Dynamic = new List<ElfDyn>();
+
+            m_SymbolTable = new Dictionary<long, string>();
+
             this.Memory    = Memory;
             this.ImageBase = ImageBase;
             this.ImageEnd  = ImageBase;
@@ -48,9 +56,7 @@ namespace Ryujinx.Core.Loaders
 
             MapBss(BssStartOffset, BssEndOffset - BssStartOffset);
 
-            ImageEnd = BssEndOffset;
-
-            List<ElfDyn> Dynamic = new List<ElfDyn>();
+            ImageEnd = ImageBase + BssEndOffset;
 
             while (true)
             {
@@ -69,7 +75,19 @@ namespace Ryujinx.Core.Loaders
                 Dynamic.Add(new ElfDyn(Tag, Value));
             }
 
-            this.Dynamic = Dynamic.ToArray();
+            long StrTblAddr = ImageBase + GetFirstValue(ElfDynTag.DT_STRTAB);
+            long SymTblAddr = ImageBase + GetFirstValue(ElfDynTag.DT_SYMTAB);
+
+            long SymEntSize = GetFirstValue(ElfDynTag.DT_SYMENT);
+
+            while ((ulong)SymTblAddr < (ulong)StrTblAddr)
+            {
+                ElfSym Sym = GetSymbol(SymTblAddr, StrTblAddr);
+
+                m_SymbolTable.TryAdd(Sym.Value, Sym.Name);
+
+                SymTblAddr += SymEntSize;
+            }
         }
 
         private void WriteData(
@@ -135,7 +153,7 @@ namespace Ryujinx.Core.Loaders
                 Name += (char)Chr;
             }
 
-            return new ElfSym(Name, Info, Other, SHIdx, ImageBase, Value, Size);
+            return new ElfSym(Name, Info, Other, SHIdx, Value, Size);
         }
 
         private long GetFirstValue(ElfDynTag Tag)

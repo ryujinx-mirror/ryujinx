@@ -18,7 +18,10 @@ namespace ChocolArm64.Decoder
             OpActivators = new ConcurrentDictionary<Type, OpActivator>();
         }
 
-        public static (ABlock[] Graph, ABlock Root) DecodeSubroutine(ATranslator Translator, long Start)
+        public static (ABlock[] Graph, ABlock Root) DecodeSubroutine(
+            ATranslator Translator,
+            AMemory     Memory,
+            long        Start)
         {
             Dictionary<long, ABlock> Visited    = new Dictionary<long, ABlock>();
             Dictionary<long, ABlock> VisitedEnd = new Dictionary<long, ABlock>();
@@ -45,7 +48,7 @@ namespace ChocolArm64.Decoder
             {
                 ABlock Current = Blocks.Dequeue();
 
-                FillBlock(Translator.Thread.Memory, Current);
+                FillBlock(Memory, Current);
 
                 //Set child blocks. "Branch" is the block the branch instruction
                 //points to (when taken), "Next" is the block at the next address,

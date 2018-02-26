@@ -28,14 +28,14 @@ namespace ChocolArm64
 
         private object ExecuteLock;
 
-        public AThread(AMemory Memory, ThreadPriority Priority, long EntryPoint)
+        public AThread(ATranslator Translator, AMemory Memory, ThreadPriority Priority, long EntryPoint)
         {
+            this.Translator = Translator;
             this.Memory     = Memory;
             this.Priority   = Priority;
             this.EntryPoint = EntryPoint;
 
             ThreadState = new AThreadState();
-            Translator  = new ATranslator(this);
             ExecuteLock = new object();
         }
 
@@ -55,7 +55,7 @@ namespace ChocolArm64
 
             Work = new Thread(delegate()
             {
-                Translator.ExecuteSubroutine(EntryPoint);
+                Translator.ExecuteSubroutine(this, EntryPoint);
 
                 Memory.RemoveMonitor(ThreadId);
 

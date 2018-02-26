@@ -1,3 +1,4 @@
+using ChocolArm64.Events;
 using ChocolArm64.Memory;
 using ChocolArm64.State;
 using System;
@@ -62,7 +63,7 @@ namespace Ryujinx.Core.OsHle.Svc
             Rng = new Random();
         }
 
-        public void SvcCall(object sender, AInstExceptEventArgs e)
+        public void SvcCall(object sender, AInstExceptionEventArgs e)
         {
             AThreadState ThreadState = (AThreadState)sender;
 

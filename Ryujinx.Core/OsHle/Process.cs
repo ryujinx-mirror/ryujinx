@@ -1,6 +1,6 @@
 using ChocolArm64;
+using ChocolArm64.Events;
 using ChocolArm64.Memory;
-using ChocolArm64.State;
 using Ryujinx.Core.Loaders;
 using Ryujinx.Core.Loaders.Executables;
 using Ryujinx.Core.OsHle.Exceptions;
@@ -23,6 +23,8 @@ namespace Ryujinx.Core.OsHle
         private const long TlsPageAddr   = (AMemoryMgr.AddrSize - TlsTotalSize) & ~AMemoryMgr.PageMask;
 
         private Switch Ns;
+
+        private ATranslator Translator;
 
         public int ProcessId { get; private set; }
 
@@ -171,7 +173,7 @@ namespace Ryujinx.Core.OsHle
                 ThreadPrio = ThreadPriority.Lowest;
             }
 
-            AThread Thread = new AThread(Memory, ThreadPrio, EntryPoint);
+            AThread Thread = new AThread(GetTranslator(), Memory, ThreadPrio, EntryPoint);
 
             HThread ThreadHnd = new HThread(Thread, ProcessorId, Priority);
 
@@ -201,14 +203,43 @@ namespace Ryujinx.Core.OsHle
             return Handle;
         }
 
-        private void BreakHandler(object sender, AInstExceptEventArgs e)
+        private void BreakHandler(object sender, AInstExceptionEventArgs e)
         {
             throw new GuestBrokeExecutionException();
         }
 
-        private void UndefinedHandler(object sender, AInstUndEventArgs e)
+        private void UndefinedHandler(object sender, AInstUndefinedEventArgs e)
         {
             throw new UndefinedInstructionException(e.Position, e.RawOpCode);
+        }
+
+        private ATranslator GetTranslator()
+        {
+            if (Translator == null)
+            {
+                Dictionary<long, string> SymbolTable = new Dictionary<long, string>();
+
+                foreach (Executable Exe in Executables)
+                {
+                    foreach (KeyValuePair<long, string> KV in Exe.SymbolTable)
+                    {                        
+                        SymbolTable.Add(Exe.ImageBase + KV.Key, KV.Value);
+                    }
+                }
+
+                Translator = new ATranslator(SymbolTable);
+
+                
+
+                Translator.CpuTrace += CpuTraceHandler;
+            }
+
+            return Translator;
+        }
+
+        private void CpuTraceHandler(object sender, ACpuTraceEventArgs e)
+        {
+            Logging.Info($"Executing at 0x{e.Position:x16} {e.SubName}");
         }
 
         private int GetFreeTlsSlot(AThread Thread)

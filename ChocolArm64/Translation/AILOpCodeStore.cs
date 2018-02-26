@@ -11,10 +11,10 @@ namespace ChocolArm64.Translation
 
         public ARegisterSize RegisterSize { get; private set; }
 
-        public AILOpCodeStore(int Index, AIoType IoType, ARegisterSize RegisterSize = ARegisterSize.Int64)
+        public AILOpCodeStore(int Index, AIoType IoType, ARegisterSize RegisterSize = 0)
         {
-            this.IoType       = IoType;
             this.Index        = Index;
+            this.IoType       = IoType;
             this.RegisterSize = RegisterSize;
         }
 

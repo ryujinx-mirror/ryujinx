@@ -1,13 +1,13 @@
 using System;
 
-namespace ChocolArm64.State
+namespace ChocolArm64.Events
 {
-    public class AInstUndEventArgs : EventArgs
+    public class AInstUndefinedEventArgs : EventArgs
     {
         public long Position  { get; private set; }
         public int  RawOpCode { get; private set; }
 
-        public AInstUndEventArgs(long Position, int RawOpCode)
+        public AInstUndefinedEventArgs(long Position, int RawOpCode)
         {
             this.Position  = Position;
             this.RawOpCode = RawOpCode;

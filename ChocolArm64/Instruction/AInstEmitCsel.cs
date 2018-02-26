@@ -44,16 +44,15 @@ namespace ChocolArm64.Instruction
                 Context.Emit(OpCodes.Neg);
             }
 
-            Context.EmitStintzr(Op.Rd);
-
             Context.Emit(OpCodes.Br_S, LblEnd);
 
             Context.MarkLabel(LblTrue);
 
             Context.EmitLdintzr(Op.Rn);
-            Context.EmitStintzr(Op.Rd);
 
             Context.MarkLabel(LblEnd);
+
+            Context.EmitStintzr(Op.Rd);
         }
     }
 }

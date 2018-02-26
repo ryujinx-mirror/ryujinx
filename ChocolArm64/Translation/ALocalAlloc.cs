@@ -67,7 +67,7 @@ namespace ChocolArm64.Translation
             public long VecOutputs;
         }
 
-        private const int MaxOptGraphLength = 120;
+        private const int MaxOptGraphLength = 55;
 
         public ALocalAlloc(AILBlock[] Graph, AILBlock Root)
         {
@@ -149,11 +149,7 @@ namespace ChocolArm64.Translation
 
                     if (RetTarget)
                     {
-                        BlkIO.Entry      = Block;
-                        BlkIO.IntInputs  = 0;
-                        BlkIO.VecInputs  = 0;
-                        BlkIO.IntOutputs = 0;
-                        BlkIO.VecOutputs = 0;
+                        BlkIO.Entry = Block;
                     }
                     else
                     {

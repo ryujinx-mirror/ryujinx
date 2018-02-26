@@ -4,11 +4,13 @@ namespace ChocolArm64.Translation
 {
     class AILBlock : IAILEmit
     {
-        public long IntInputs  { get; private set; }
-        public long IntOutputs { get; private set; }
+        public long IntInputs    { get; private set; }
+        public long IntOutputs   { get; private set; }
+        public long IntAwOutputs { get; private set; }
 
-        public long VecInputs  { get; private set; }
-        public long VecOutputs { get; private set; }
+        public long VecInputs    { get; private set; }
+        public long VecOutputs   { get; private set; }
+        public long VecAwOutputs { get; private set; }
 
         public bool HasStateStore { get; private set; }
 
@@ -24,13 +26,22 @@ namespace ChocolArm64.Translation
 
         public void Add(IAILEmit ILEmitter)
         {
-            if (ILEmitter is AILOpCodeLoad Ld && AILEmitter.IsRegIndex(Ld.Index))
+            if (ILEmitter is AILBarrier)
+            {
+                //Those barriers are used to separate the groups of CIL
+                //opcodes emitted by each ARM instruction.
+                //We can only consider the new outputs for doing input elimination
+                //after all the CIL opcodes used by the instruction being emitted.
+                IntAwOutputs = IntOutputs;
+                VecAwOutputs = VecOutputs;
+            }
+            else if (ILEmitter is AILOpCodeLoad Ld && AILEmitter.IsRegIndex(Ld.Index))
             {
                 switch (Ld.IoType)
                 {
-                    case AIoType.Flag:   IntInputs |= ((1L << Ld.Index) << 32) & ~IntOutputs; break;
-                    case AIoType.Int:    IntInputs |=  (1L << Ld.Index)        & ~IntOutputs; break;
-                    case AIoType.Vector: VecInputs |=  (1L << Ld.Index)        & ~VecOutputs; break;
+                    case AIoType.Flag:   IntInputs |= ((1L << Ld.Index) << 32) & ~IntAwOutputs; break;
+                    case AIoType.Int:    IntInputs |=  (1L << Ld.Index)        & ~IntAwOutputs; break;
+                    case AIoType.Vector: VecInputs |=  (1L << Ld.Index)        & ~VecAwOutputs; break;
                 }
             }
             else if (ILEmitter is AILOpCodeStore St)

@@ -1,3 +1,4 @@
+using ChocolArm64.Events;
 using System;
 
 namespace ChocolArm64.State
@@ -42,23 +43,23 @@ namespace ChocolArm64.State
 
         public long CntpctEl0 => Environment.TickCount * TicksPerMS;
 
-        public event EventHandler<AInstExceptEventArgs> Break;
-        public event EventHandler<AInstExceptEventArgs> SvcCall;
-        public event EventHandler<AInstUndEventArgs>    Undefined;
+        public event EventHandler<AInstExceptionEventArgs> Break;
+        public event EventHandler<AInstExceptionEventArgs> SvcCall;
+        public event EventHandler<AInstUndefinedEventArgs> Undefined;
 
         internal void OnBreak(int Imm)
         {
-            Break?.Invoke(this, new AInstExceptEventArgs(Imm));
+            Break?.Invoke(this, new AInstExceptionEventArgs(Imm));
         }
 
         internal void OnSvcCall(int Imm)
         {
-            SvcCall?.Invoke(this, new AInstExceptEventArgs(Imm));
+            SvcCall?.Invoke(this, new AInstExceptionEventArgs(Imm));
         }
 
         internal void OnUndefined(long Position, int RawOpCode)
         {
-            Undefined?.Invoke(this, new AInstUndEventArgs(Position, RawOpCode));
+            Undefined?.Invoke(this, new AInstUndefinedEventArgs(Position, RawOpCode));
         }
     }
 }

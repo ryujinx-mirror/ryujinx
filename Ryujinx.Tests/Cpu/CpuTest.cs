@@ -30,10 +30,11 @@ namespace Ryujinx.Tests.Cpu
             EntryPoint = Position;
 
             Ram = Marshal.AllocHGlobal((IntPtr)AMemoryMgr.RamSize);
+            ATranslator Translator = new ATranslator();
             Allocator = new AMemoryAlloc();
             Memory = new AMemory(Ram, Allocator);
             Memory.Manager.MapPhys(Position, Size, 2, AMemoryPerm.Read | AMemoryPerm.Write | AMemoryPerm.Execute);
-            Thread = new AThread(Memory, ThreadPriority.Normal, EntryPoint);
+            Thread = new AThread(Translator, Memory, ThreadPriority.Normal, EntryPoint);
         }
 
         [TearDown]

@@ -39,13 +39,15 @@ namespace ChocolArm64.Translation
         private const int Tmp4Index = -4;
         private const int Tmp5Index = -5;
 
-        public AILEmitterCtx(ATranslator Translator, ABlock[] Graph, ABlock Root)
+        public AILEmitterCtx(
+            ATranslator Translator,
+            ABlock[]    Graph,
+            ABlock      Root,
+            string      SubName)
         {
             this.Translator = Translator;
             this.Graph      = Graph;
             this.Root       = Root;
-
-            string SubName = $"Sub{Root.Position:X16}";
 
             Labels = new Dictionary<long, AILLabel>();
 
@@ -92,6 +94,8 @@ namespace ChocolArm64.Translation
             }
 
             CurrOp.Emitter(this);
+
+            ILBlock.Add(new AILBarrier());
         }
 
         public bool TryOptEmitSubroutineCall()

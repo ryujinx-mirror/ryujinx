@@ -16,17 +16,15 @@ namespace Ryujinx.Core.Loaders
             Binding == ElfSymBinding.STB_GLOBAL ||
             Binding == ElfSymBinding.STB_WEAK;
 
-        public int  SHIdx    { get; private set; }
-        public long ValueAbs { get; private set; }
-        public long Value    { get; private set; }
-        public long Size     { get; private set; }
+        public int  SHIdx { get; private set; }
+        public long Value { get; private set; }
+        public long Size  { get; private set; }
 
         public ElfSym(
             string Name,
             int    Info, 
             int    Other,
             int    SHIdx,
-            long   ImageBase,
             long   Value,
             long   Size)
         {
@@ -35,7 +33,6 @@ namespace Ryujinx.Core.Loaders
             this.Binding    = (ElfSymBinding)(Info >> 4);
             this.Visibility = (ElfSymVisibility)Other;
             this.SHIdx      = SHIdx;
-            this.ValueAbs   = Value + ImageBase;
             this.Value      = Value;
             this.Size       = Size;
         }
