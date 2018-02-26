@@ -54,15 +54,6 @@ namespace ChocolArm64.Instruction
             {
                 EmitSbfmCast(Context, OpCodes.Conv_I4);
             }
-            else if (Op.Shift == 0)
-            {
-                Context.EmitLdintzr(Op.Rn);
-
-                Context.EmitLsl(BitsCount - 1 - Op.Pos);
-                Context.EmitAsr(BitsCount - 1);
-
-                Context.EmitStintzr(Op.Rd);
-            }
             else
             {
                 EmitBfmLoadRn(Context);

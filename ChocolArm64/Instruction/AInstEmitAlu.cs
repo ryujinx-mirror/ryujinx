@@ -39,7 +39,7 @@ namespace ChocolArm64.Instruction
             {
                 Context.EmitZNFlagCheck();
 
-                EmitAddsCCheck(Context);
+                EmitAdcsCCheck(Context);
                 EmitAddsVCheck(Context);
             }
 

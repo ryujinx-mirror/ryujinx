@@ -7,6 +7,31 @@ namespace ChocolArm64.Instruction
 {
     static class AInstEmitAluHelper
     {
+        public static void EmitAdcsCCheck(AILEmitterCtx Context)
+        {
+            //C = (Rd == Rn && CIn) || Rd < Rn
+            Context.EmitSttmp();
+            Context.EmitLdtmp();
+            Context.EmitLdtmp();
+
+            EmitDataLoadRn(Context);
+
+            Context.Emit(OpCodes.Ceq);
+
+            Context.EmitLdflg((int)APState.CBit);
+
+            Context.Emit(OpCodes.And);
+
+            Context.EmitLdtmp();
+
+            EmitDataLoadRn(Context);
+
+            Context.Emit(OpCodes.Clt_Un);
+            Context.Emit(OpCodes.Or);
+
+            Context.EmitStflg((int)APState.CBit);
+        }
+
         public static void EmitAddsCCheck(AILEmitterCtx Context)
         {
             //C = Rd < Rn
