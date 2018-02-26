@@ -56,7 +56,7 @@ namespace Ryujinx.Core.Loaders
 
             MapBss(BssStartOffset, BssEndOffset - BssStartOffset);
 
-            ImageEnd = ImageBase + BssEndOffset;
+            ImageEnd = BssEndOffset;
 
             while (true)
             {

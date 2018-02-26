@@ -113,9 +113,11 @@ namespace Ryujinx.Core.OsHle
 
             if (UseHbAbi)
             {
-                Homebrew Homebrew_ABI = new Homebrew(Memory, Executables[0].ImageEnd, (long)Handle);
+                long HbAbiDataPosition = (Executables[0].ImageEnd + 0xfff) & ~0xfff;
 
-                MainThread.Thread.ThreadState.X0 = (ulong)Executables[0].ImageEnd;
+                Homebrew.WriteHbAbiData(Memory, HbAbiDataPosition, Handle);
+
+                MainThread.Thread.ThreadState.X0 = (ulong)HbAbiDataPosition;
                 MainThread.Thread.ThreadState.X1 = ulong.MaxValue;
             }
 
@@ -223,13 +225,11 @@ namespace Ryujinx.Core.OsHle
                 {
                     foreach (KeyValuePair<long, string> KV in Exe.SymbolTable)
                     {                        
-                        SymbolTable.Add(Exe.ImageBase + KV.Key, KV.Value);
+                        SymbolTable.TryAdd(Exe.ImageBase + KV.Key, KV.Value);
                     }
                 }
 
                 Translator = new ATranslator(SymbolTable);
-
-                
 
                 Translator.CpuTrace += CpuTraceHandler;
             }
@@ -239,7 +239,7 @@ namespace Ryujinx.Core.OsHle
 
         private void CpuTraceHandler(object sender, ACpuTraceEventArgs e)
         {
-            Logging.Info($"Executing at 0x{e.Position:x16} {e.SubName}");
+            Logging.Trace($"Executing at 0x{e.Position:x16} {e.SubName}");
         }
 
         private int GetFreeTlsSlot(AThread Thread)
