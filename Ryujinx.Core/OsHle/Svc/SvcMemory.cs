@@ -23,7 +23,15 @@ namespace Ryujinx.Core.OsHle.Svc
             int  State0   =  (int)ThreadState.X2;
             int  State1   =  (int)ThreadState.X3;
 
-            //TODO
+            if ((State0 == 0 && State1 == 0) ||
+                (State0 == 8 && State1 == 0))
+            {
+                Memory.Manager.ClearAttrBit(Position, Size, 3);
+            }
+            else if (State0 == 8 && State1 == 8)
+            {
+                Memory.Manager.SetAttrBit(Position, Size, 3);
+            }
 
             ThreadState.X0 = (int)SvcResult.Success;
         }

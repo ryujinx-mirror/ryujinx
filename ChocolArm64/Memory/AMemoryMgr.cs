@@ -234,6 +234,36 @@ namespace ChocolArm64.Memory
                 BaseEntry.Perm);
         }
 
+        public void ClearAttrBit(long Position, long Size, int Bit)
+        {
+            while (Size > 0)
+            {
+                PTEntry Entry = GetPTEntry(Position);
+
+                Entry.Attr &= ~(1 << Bit);
+
+                SetPTEntry(Position, Entry);
+
+                Position += PageSize;
+                Size     -= PageSize;
+            }
+        }
+
+        public void SetAttrBit(long Position, long Size, int Bit)
+        {
+            while (Size > 0)
+            {
+                PTEntry Entry = GetPTEntry(Position);
+
+                Entry.Attr |= (1 << Bit);
+
+                SetPTEntry(Position, Entry);
+
+                Position += PageSize;
+                Size     -= PageSize;
+            }
+        }
+
         public bool HasPermission(long Position, AMemoryPerm Perm)
         {
             return GetPTEntry(Position).Perm.HasFlag(Perm);

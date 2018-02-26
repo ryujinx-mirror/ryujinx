@@ -1,5 +1,4 @@
 using Ryujinx.Core.OsHle.Ipc;
-using System;
 using System.Collections.Generic;
 using System.IO;
 
