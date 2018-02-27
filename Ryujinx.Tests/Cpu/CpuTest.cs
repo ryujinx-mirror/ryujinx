@@ -17,7 +17,6 @@ namespace Ryujinx.Tests.Cpu
         private long EntryPoint;
 
         private IntPtr Ram;
-        private AMemoryAlloc Allocator;
         private AMemory Memory;
         private AThread Thread;
 
@@ -31,9 +30,8 @@ namespace Ryujinx.Tests.Cpu
 
             Ram = Marshal.AllocHGlobal((IntPtr)AMemoryMgr.RamSize);
             ATranslator Translator = new ATranslator();
-            Allocator = new AMemoryAlloc();
-            Memory = new AMemory(Ram, Allocator);
-            Memory.Manager.MapPhys(Position, Size, 2, AMemoryPerm.Read | AMemoryPerm.Write | AMemoryPerm.Execute);
+            Memory = new AMemory(Ram);
+            Memory.Manager.Map(Position, Size, 2, AMemoryPerm.Read | AMemoryPerm.Write | AMemoryPerm.Execute);
             Thread = new AThread(Translator, Memory, ThreadPriority.Normal, EntryPoint);
         }
 
@@ -42,7 +40,6 @@ namespace Ryujinx.Tests.Cpu
         {
             Thread = null;
             Memory = null;
-            Allocator = null;
             Marshal.FreeHGlobal(Ram);
         }
 

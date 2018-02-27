@@ -7,7 +7,7 @@ namespace Ryujinx.Core.OsHle
         //http://switchbrew.org/index.php?title=Homebrew_ABI
         public static void WriteHbAbiData(AMemory Memory, long Position, int MainThreadHandle)
         {
-            Memory.Manager.MapPhys(Position, AMemoryMgr.PageSize, (int)MemoryType.Normal, AMemoryPerm.RW);
+            Memory.Manager.Map(Position, AMemoryMgr.PageSize, (int)MemoryType.Normal, AMemoryPerm.RW);
 
             //MainThreadHandle
             WriteConfigEntry(Memory, ref Position, 1, 0, MainThreadHandle);

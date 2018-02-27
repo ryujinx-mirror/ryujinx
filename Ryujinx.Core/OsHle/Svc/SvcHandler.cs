@@ -17,6 +17,8 @@ namespace Ryujinx.Core.OsHle.Svc
         private AMemory Memory;
 
         private static Random Rng;
+        
+        private ulong CurrentHeapSize;
 
         public SvcHandler(Switch Ns, Process Process)
         {
@@ -25,6 +27,7 @@ namespace Ryujinx.Core.OsHle.Svc
                 { 0x01, SvcSetHeapSize                   },
                 { 0x03, SvcSetMemoryAttribute            },
                 { 0x04, SvcMapMemory                     },
+                { 0x05, SvcUnmapMemory                   },
                 { 0x06, SvcQueryMemory                   },
                 { 0x07, SvcExitProcess                   },
                 { 0x08, SvcCreateThread                  },

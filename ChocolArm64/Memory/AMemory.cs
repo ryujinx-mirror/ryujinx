@@ -41,9 +41,9 @@ namespace ChocolArm64.Memory
 
         private byte* RamPtr;
 
-        public AMemory(IntPtr Ram, AMemoryAlloc Allocator)
+        public AMemory(IntPtr Ram)
         {
-            Manager = new AMemoryMgr(Allocator);
+            Manager = new AMemoryMgr();
 
             Monitors = new Dictionary<int, ExMonitor>();
 

@@ -10,10 +10,21 @@ namespace Ryujinx.Core.OsHle.Svc
         {
             uint Size = (uint)ThreadState.X1;
 
-            Memory.Manager.SetHeapSize(Size, (int)MemoryType.Heap);
+            long Position = MemoryRegions.HeapRegionAddress;
+
+            if (Size > CurrentHeapSize)
+            {
+                Memory.Manager.Map(Position, Size, (int)MemoryType.Heap, AMemoryPerm.RW);
+            }
+            else
+            {
+                Memory.Manager.Unmap(Position + Size, (long)CurrentHeapSize - Size);
+            }
+
+            CurrentHeapSize = Size;
 
             ThreadState.X0 = (int)SvcResult.Success;
-            ThreadState.X1 = (ulong)Memory.Manager.HeapAddr;
+            ThreadState.X1 = (ulong)Position;
         }
 
         private void SvcSetMemoryAttribute(AThreadState ThreadState)
@@ -42,7 +53,30 @@ namespace Ryujinx.Core.OsHle.Svc
             long Src  = (long)ThreadState.X1;
             long Size = (long)ThreadState.X2;
 
-            Memory.Manager.MapMirror(Src, Dst, Size, (int)MemoryType.MappedMemory);
+            AMemoryMapInfo SrcInfo = Memory.Manager.GetMapInfo(Src);
+
+            Memory.Manager.Map(Dst, Size, (int)MemoryType.MappedMemory, SrcInfo.Perm);
+
+            Memory.Manager.Reprotect(Src, Size, AMemoryPerm.None);
+
+            Memory.Manager.SetAttrBit(Src, Size, 0);
+
+            ThreadState.X0 = (int)SvcResult.Success;
+        }
+
+        private void SvcUnmapMemory(AThreadState ThreadState)
+        {
+            long Dst  = (long)ThreadState.X0;
+            long Src  = (long)ThreadState.X1;
+            long Size = (long)ThreadState.X2;
+
+            AMemoryMapInfo DstInfo = Memory.Manager.GetMapInfo(Dst);
+
+            Memory.Manager.Unmap(Dst, Size, (int)MemoryType.MappedMemory);
+
+            Memory.Manager.Reprotect(Src, Size, DstInfo.Perm);
+
+            Memory.Manager.ClearAttrBit(Src, Size, 0);
 
             ThreadState.X0 = (int)SvcResult.Success;
         }
@@ -54,17 +88,22 @@ namespace Ryujinx.Core.OsHle.Svc
 
             AMemoryMapInfo MapInfo = Memory.Manager.GetMapInfo(Position);
 
-            MemoryInfo Info = new MemoryInfo(MapInfo);
+            if (MapInfo == null)
+            {
+                //TODO: Correct error code.
+                ThreadState.X0 = ulong.MaxValue;
 
-            Memory.WriteInt64(InfoPtr + 0x00, Info.BaseAddress);
-            Memory.WriteInt64(InfoPtr + 0x08, Info.Size);
-            Memory.WriteInt32(InfoPtr + 0x10, Info.MemType);
-            Memory.WriteInt32(InfoPtr + 0x14, Info.MemAttr);
-            Memory.WriteInt32(InfoPtr + 0x18, Info.MemPerm);
-            Memory.WriteInt32(InfoPtr + 0x1c, Info.IpcRefCount);
-            Memory.WriteInt32(InfoPtr + 0x20, Info.DeviceRefCount);
-            Memory.WriteInt32(InfoPtr + 0x24, Info.Padding);
+                return;
+            }
 
+            Memory.WriteInt64(InfoPtr + 0x00, MapInfo.Position);
+            Memory.WriteInt64(InfoPtr + 0x08, MapInfo.Size);
+            Memory.WriteInt32(InfoPtr + 0x10, MapInfo.Type);
+            Memory.WriteInt32(InfoPtr + 0x14, MapInfo.Attr);
+            Memory.WriteInt32(InfoPtr + 0x18, (int)MapInfo.Perm);
+            Memory.WriteInt32(InfoPtr + 0x1c, 0);
+            Memory.WriteInt32(InfoPtr + 0x20, 0);
+            Memory.WriteInt32(InfoPtr + 0x24, 0);
             //TODO: X1.
 
             ThreadState.X0 = (int)SvcResult.Success;
@@ -84,7 +123,7 @@ namespace Ryujinx.Core.OsHle.Svc
             {
                 SharedMem.AddVirtualPosition(Src);
 
-                Memory.Manager.MapPhys(Src, Size, (int)MemoryType.SharedMemory, (AMemoryPerm)Perm);
+                Memory.Manager.Map(Src, Size, (int)MemoryType.SharedMemory, (AMemoryPerm)Perm);
 
                 ThreadState.X0 = (int)SvcResult.Success;
             }

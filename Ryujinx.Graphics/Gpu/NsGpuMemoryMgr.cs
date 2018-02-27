@@ -16,7 +16,7 @@ namespace Ryujinx.Graphics.Gpu
         private const int  PTLvl1Mask = PTLvl1Size - 1;
         private const int  PageMask   = PageSize   - 1;
 
-        private const int  PTLvl0Bit  = PTPageBits + PTLvl0Bits;
+        private const int  PTLvl0Bit  = PTPageBits + PTLvl1Bits;
         private const int  PTLvl1Bit  = PTPageBits;
 
         private const long PteUnmapped = -1;

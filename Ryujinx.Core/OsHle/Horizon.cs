@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using Ryujinx.Core.Loaders.Executables;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Utilities;
@@ -16,9 +15,6 @@ namespace Ryujinx.Core.OsHle
         internal int HidHandle  { get; private set; }
         internal int FontHandle { get; private set; }
 
-        public long HidOffset  { get; private set; }
-        public long FontOffset { get; private set; }
-
         internal IdPool IdGen    { get; private set; }
         internal IdPool NvMapIds { get; private set; }
 
@@ -32,8 +28,6 @@ namespace Ryujinx.Core.OsHle
         private ConcurrentDictionary<int, Process> Processes;
 
         private HSharedMem HidSharedMem;
-
-        private AMemoryAlloc Allocator;
 
         private Switch Ns;
 
@@ -53,18 +47,13 @@ namespace Ryujinx.Core.OsHle
 
             Processes = new ConcurrentDictionary<int, Process>();
 
-            Allocator = new AMemoryAlloc();
-
-            HidOffset  = Allocator.Alloc(HidSize);
-            FontOffset = Allocator.Alloc(FontSize);
-
-            HidSharedMem = new HSharedMem(HidOffset);
+            HidSharedMem = new HSharedMem();
 
             HidSharedMem.MemoryMapped += HidInit;
 
             HidHandle = Handles.GenerateId(HidSharedMem);
 
-            FontHandle = Handles.GenerateId(new HSharedMem(FontOffset));
+            FontHandle = Handles.GenerateId(new HSharedMem());
         }
 
         public void LoadCart(string ExeFsDir, string RomFsFile = null)
@@ -76,7 +65,7 @@ namespace Ryujinx.Core.OsHle
 
             int ProcessId = IdGen.GenerateId();
 
-            Process MainProcess = new Process(Ns, Allocator, ProcessId);
+            Process MainProcess = new Process(Ns, ProcessId);
 
             void LoadNso(string FileName)
             {
@@ -106,7 +95,6 @@ namespace Ryujinx.Core.OsHle
             LoadNso("subsdk*");
             LoadNso("sdk");
 
-            MainProcess.InitializeHeap();
             MainProcess.Run();
 
             Processes.TryAdd(ProcessId, MainProcess);
@@ -118,7 +106,7 @@ namespace Ryujinx.Core.OsHle
 
             int ProcessId = IdGen.GenerateId();
 
-            Process MainProcess = new Process(Ns, Allocator, ProcessId);
+            Process MainProcess = new Process(Ns, ProcessId);
 
             using (FileStream Input = new FileStream(FileName, FileMode.Open))
             {
@@ -128,7 +116,6 @@ namespace Ryujinx.Core.OsHle
             }
 
             MainProcess.SetEmptyArgs();
-            MainProcess.InitializeHeap();
             MainProcess.Run(IsNro);
 
             Processes.TryAdd(ProcessId, MainProcess);
@@ -186,7 +173,7 @@ namespace Ryujinx.Core.OsHle
 
             if (SharedMem.TryGetLastVirtualPosition(out long Position))
             {
-                Logging.Info($"HID shared memory successfully mapped to {Position:x16}!");
+                Logging.Info($"HID shared memory successfully mapped to 0x{Position:x16}!");
 
                 Ns.Hid.Init(Position);
             }

@@ -11,7 +11,14 @@ namespace Ryujinx.Core.OsHle.Svc
 {
     partial class SvcHandler
     {
-        private void SvcExitProcess(AThreadState ThreadState) => Ns.Os.ExitProcess(ThreadState.ProcessId);
+        private const int AllowedCpuIdBitmask = 0b1111;
+
+        private const bool EnableProcessDebugging = false;
+
+        private void SvcExitProcess(AThreadState ThreadState)
+        {
+            Ns.Os.ExitProcess(ThreadState.ProcessId);
+        }
 
         private void SvcCloseHandle(AThreadState ThreadState)
         {
@@ -162,79 +169,62 @@ namespace Ryujinx.Core.OsHle.Svc
 
             switch (InfoType)
             {
-                case 0:  ThreadState.X1 = AllowedCpuIdBitmask();           break;
-                case 2:  ThreadState.X1 = GetMapRegionBaseAddr();          break;
-                case 3:  ThreadState.X1 = GetMapRegionSize();              break;
-                case 4:  ThreadState.X1 = GetHeapRegionBaseAddr();         break;
-                case 5:  ThreadState.X1 = GetHeapRegionSize();             break;
-                case 6:  ThreadState.X1 = GetTotalMem();                   break;
-                case 7:  ThreadState.X1 = GetUsedMem();                    break;
-                case 8:  ThreadState.X1 = IsCurrentProcessBeingDebugged(); break;
-                case 11: ThreadState.X1 = GetRnd64();                      break;
-                case 12: ThreadState.X1 = GetAddrSpaceBaseAddr();          break;
-                case 13: ThreadState.X1 = GetAddrSpaceSize();              break;
-                case 14: ThreadState.X1 = GetMapRegionBaseAddr();          break;
-                case 15: ThreadState.X1 = GetMapRegionSize();              break;
+                case 0:
+                    ThreadState.X1 = AllowedCpuIdBitmask;
+                    break;
+
+                case 2:
+                    ThreadState.X1 = MemoryRegions.MapRegionAddress;
+                    break;
+
+                case 3:
+                    ThreadState.X1 = MemoryRegions.MapRegionSize;
+                    break;
+
+                case 4:
+                    ThreadState.X1 = MemoryRegions.HeapRegionAddress;
+                    break;
+
+                case 5:
+                    ThreadState.X1 = CurrentHeapSize;
+                    break;
+
+                case 6:
+                    ThreadState.X1 = MemoryRegions.TotalMemoryAvailable;
+                    break;
+    
+                case 7:
+                    ThreadState.X1 = MemoryRegions.TotalMemoryUsed + CurrentHeapSize;
+                    break;
+
+                case 8:
+                    ThreadState.X1 = EnableProcessDebugging ? 1 : 0;
+                    break;
+
+                case 11:
+                    ThreadState.X1 = (ulong)Rng.Next() + ((ulong)Rng.Next() << 32);
+                    break;
+
+                case 12:
+                    ThreadState.X1 = MemoryRegions.AddrSpaceStart;
+                    break;
+
+                case 13:
+                    ThreadState.X1 = MemoryRegions.AddrSpaceSize;
+                    break;
+
+                case 14:
+                    ThreadState.X1 = MemoryRegions.MapRegionAddress;
+                    break;
+
+                case 15:
+                    ThreadState.X1 = MemoryRegions.MapRegionSize;
+                    break;
 
                 default: throw new NotImplementedException($"SvcGetInfo: {InfoType} {Handle} {InfoId}");
             }
 
             ThreadState.X0 = (int)SvcResult.Success;
-        }
-        
-        private ulong AllowedCpuIdBitmask()
-        {
-            return 0xF; //Mephisto value.
-        }
-
-        private ulong GetMapRegionBaseAddr()
-        {
-            return MemoryRegions.MapRegionAddress;
-        }
-
-        private ulong GetMapRegionSize()
-        {
-            return MemoryRegions.MapRegionSize;
-        }
-
-        private ulong GetHeapRegionBaseAddr()
-        {
-            return MemoryRegions.HeapRegionAddress;
-        }
-
-        private ulong GetHeapRegionSize()
-        {
-            return MemoryRegions.HeapRegionSize;
-        }
-
-        private ulong GetTotalMem()
-        {
-            return (ulong)Memory.Manager.GetTotalMemorySize();
-        }
-
-        private ulong GetUsedMem()
-        {
-            return (ulong)Memory.Manager.GetUsedMemorySize();
-        }
-
-        private ulong IsCurrentProcessBeingDebugged()
-        {
-            return (ulong)0;
-        }
-
-        private ulong GetRnd64()
-        {
-            return (ulong)Rng.Next() + ((ulong)Rng.Next() << 32);
-        }
-
-        private ulong GetAddrSpaceBaseAddr()
-        {
-            return 0x08000000;
-        }
-
-        private ulong GetAddrSpaceSize()
-        {
-            return AMemoryMgr.AddrSize - GetAddrSpaceBaseAddr();
         }
     }
 }

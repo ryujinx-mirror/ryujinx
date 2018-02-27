@@ -96,7 +96,7 @@ namespace Ryujinx.Core.Loaders
             MemoryType  Type,
             AMemoryPerm Perm)
         {
-            Memory.Manager.MapPhys(Position, Data.Count, (int)Type, AMemoryPerm.Write);
+            Memory.Manager.Map(Position, Data.Count, (int)Type, AMemoryPerm.Write);
 
             for (int Index = 0; Index < Data.Count; Index++)
             {
@@ -108,7 +108,7 @@ namespace Ryujinx.Core.Loaders
 
         private void MapBss(long Position, long Size)
         {
-            Memory.Manager.MapPhys(Position, Size, (int)MemoryType.Normal, AMemoryPerm.RW);
+            Memory.Manager.Map(Position, Size, (int)MemoryType.Normal, AMemoryPerm.RW);
         }
 
         private ElfRel GetRelocation(long Position)

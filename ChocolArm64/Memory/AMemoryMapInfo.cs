@@ -1,6 +1,6 @@
 namespace ChocolArm64.Memory
 {
-    public struct AMemoryMapInfo
+    public class AMemoryMapInfo
     {
         public long Position { get; private set; }
         public long Size     { get; private set; }

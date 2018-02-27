@@ -15,18 +15,14 @@ namespace Ryujinx.Core.OsHle
 {
     public class Process : IDisposable
     {
-        private const int  MaxStackSize  = 8 * 1024 * 1024;
-
         private const int  TlsSize       = 0x200;
         private const int  TotalTlsSlots = 32;
-        private const int  TlsTotalSize  = TotalTlsSlots * TlsSize;
-        private const long TlsPageAddr   = (AMemoryMgr.AddrSize - TlsTotalSize) & ~AMemoryMgr.PageMask;
 
         private Switch Ns;
 
-        private ATranslator Translator;
-
         public int ProcessId { get; private set; }
+
+        private ATranslator Translator;
 
         public AMemory Memory { get; private set; }
 
@@ -44,12 +40,12 @@ namespace Ryujinx.Core.OsHle
 
         private long ImageBase;
 
-        public Process(Switch Ns, AMemoryAlloc Allocator, int ProcessId)
+        public Process(Switch Ns, int ProcessId)
         {
             this.Ns        = Ns;
             this.ProcessId = ProcessId;
 
-            Memory = new AMemory(Ns.Ram, Allocator);
+            Memory = new AMemory(Ns.Ram);
 
             Scheduler = new KProcessScheduler();
 
@@ -61,13 +57,12 @@ namespace Ryujinx.Core.OsHle
 
             Executables = new List<Executable>();
 
-            ImageBase = 0x8000000;
+            ImageBase = MemoryRegions.AddrSpaceStart;
 
-            Memory.Manager.MapPhys(
-                TlsPageAddr,
-                TlsTotalSize,
-                (int)MemoryType.ThreadLocal,
-                AMemoryPerm.RW);
+            MapRWMemRegion(
+                MemoryRegions.TlsPagesAddress,
+                MemoryRegions.TlsPagesSize,
+                MemoryType.ThreadLocal);
         }
 
         public void LoadProgram(IExecutable Program)
@@ -86,11 +81,6 @@ namespace Ryujinx.Core.OsHle
             ImageBase += AMemoryMgr.PageSize;
         }
 
-        public void InitializeHeap()
-        {
-            Memory.Manager.SetHeapAddr(MemoryRegions.HeapRegionAddress);
-        }
-
         public bool Run(bool UseHbAbi = false)
         {
             if (Executables.Count == 0)
@@ -98,11 +88,14 @@ namespace Ryujinx.Core.OsHle
                 return false;
             }
 
-            long StackBot = TlsPageAddr - MaxStackSize;
+            MapRWMemRegion(
+                MemoryRegions.MainStackAddress,
+                MemoryRegions.MainStackSize,
+                MemoryType.Normal);
+            
+            long StackTop = MemoryRegions.MainStackAddress + MemoryRegions.MainStackSize;
 
-            Memory.Manager.MapPhys(StackBot, MaxStackSize, (int)MemoryType.Normal, AMemoryPerm.RW);
-
-            int Handle = MakeThread(Executables[0].ImageBase, TlsPageAddr, 0, 0, 0);
+            int Handle = MakeThread(Executables[0].ImageBase, StackTop, 0, 0, 0);
 
             if (Handle == -1)
             {
@@ -113,7 +106,7 @@ namespace Ryujinx.Core.OsHle
 
             if (UseHbAbi)
             {
-                long HbAbiDataPosition = (Executables[0].ImageEnd + 0xfff) & ~0xfff;
+                long HbAbiDataPosition = AMemoryHelper.PageRoundUp(Executables[0].ImageEnd);
 
                 Homebrew.WriteHbAbiData(Memory, HbAbiDataPosition, Handle);
 
@@ -124,6 +117,11 @@ namespace Ryujinx.Core.OsHle
             Scheduler.StartThread(MainThread);
 
             return true;
+        }
+
+        private void MapRWMemRegion(long Position, long Size, MemoryType Type)
+        {
+            Memory.Manager.Map(Position, Size, (int)Type, AMemoryPerm.RW);
         }
 
         public void StopAllThreads()
@@ -188,12 +186,14 @@ namespace Ryujinx.Core.OsHle
                 return -1;
             }
 
+            long Tpidr = MemoryRegions.TlsPagesAddress + TlsSlot * TlsSize;
+
             Thread.ThreadState.Break     += BreakHandler;
             Thread.ThreadState.SvcCall   += SvcHandler.SvcCall;
             Thread.ThreadState.Undefined += UndefinedHandler;
             Thread.ThreadState.ProcessId  = ProcessId;
             Thread.ThreadState.ThreadId   = Ns.Os.IdGen.GenerateId();
-            Thread.ThreadState.Tpidr      = TlsPageAddr + TlsSlot * TlsSize;
+            Thread.ThreadState.Tpidr      = Tpidr;
             Thread.ThreadState.X0         = (ulong)ArgsPtr;
             Thread.ThreadState.X1         = (ulong)Handle;
             Thread.ThreadState.X31        = (ulong)StackTop;
@@ -267,7 +267,7 @@ namespace Ryujinx.Core.OsHle
 
         private int GetTlsSlot(long Position)
         {
-            return (int)((Position - TlsPageAddr) / TlsSize);
+            return (int)((Position - MemoryRegions.TlsPagesAddress) / TlsSize);
         }
 
         public HThread GetThread(long Tpidr)

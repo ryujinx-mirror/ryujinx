@@ -12,7 +12,7 @@ namespace Ryujinx.Core.OsHle.Handles
         public EventHandler<EventArgs> MemoryMapped;
         public EventHandler<EventArgs> MemoryUnmapped;
 
-        public HSharedMem(long PhysPos)
+        public HSharedMem()
         {
             Positions = new List<long>();
         }

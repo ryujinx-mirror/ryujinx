@@ -5,9 +5,9 @@ namespace Ryujinx.Core
 {
     class VirtualFs : IDisposable
     {
-        private const string BasePath   = "Fs";
-        private const string SavesPath  = "Saves";
-        private const string SdCardPath = "SdCard";
+        private const string BasePath   = "RyuFs";
+        private const string NandPath   = "nand";
+        private const string SdCardPath = "sdmc";
 
         public Stream RomFs { get; private set; }
 
@@ -35,7 +35,7 @@ namespace Ryujinx.Core
 
         public string GetSdCardPath() => MakeDirAndGetFullPath(SdCardPath);
 
-        public string GetGameSavesPath() => MakeDirAndGetFullPath(SavesPath);
+        public string GetGameSavesPath() => MakeDirAndGetFullPath(NandPath);
 
         private string MakeDirAndGetFullPath(string Dir)
         {
@@ -56,7 +56,9 @@ namespace Ryujinx.Core
 
         public string GetBasePath()
         {
-            return Path.Combine(Directory.GetCurrentDirectory(), BasePath);
+            string AppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+            return Path.Combine(AppDataPath, BasePath);
         }
 
         public void Dispose()
