@@ -1,5 +1,6 @@
 using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Ipc;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.IpcServices.Set
@@ -30,12 +31,10 @@ namespace Ryujinx.Core.OsHle.IpcServices.Set
                 short Size     = Context.Request.RecvListBuff[0].Size;
 
                 //This should return an array of ints with values matching the LanguageCode enum.
-                byte[] Data = new byte[Size];
-
-                Data[0] = 0;
-                Data[1] = 1;
-
-                AMemoryHelper.WriteBytes(Context.Memory, Position, Data);
+                foreach (long value in new long[] { 0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L })
+                {
+                    AMemoryHelper.WriteBytes(Context.Memory, Position += 8, BitConverter.GetBytes(value));
+                }
             }
 
             Context.ResponseData.Write(LangCodesCount);
