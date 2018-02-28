@@ -274,7 +274,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Android
 
             if (BufferQueue[Slot].Transform.HasFlag(HalTransform.Rotate90))
             {
-                Rotate = MathF.PI * 0.5f;
+                Rotate = -MathF.PI * 0.5f;
             }
 
             byte* Fb = (byte*)Context.Ns.Ram + NvMap.Address;
