@@ -7,7 +7,7 @@ namespace Ryujinx.Core.OsHle
         public const long AddrSpaceStart = 0x08000000;
 
         public const long MapRegionAddress = 0x10000000;
-        public const long MapRegionSize    = 0x40000000;
+        public const long MapRegionSize    = 0x10000000;
 
         public const long MainStackSize = 0x100000;
 

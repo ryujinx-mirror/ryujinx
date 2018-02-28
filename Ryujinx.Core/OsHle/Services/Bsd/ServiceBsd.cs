@@ -13,8 +13,11 @@ namespace Ryujinx.Core.OsHle.IpcServices.Bsd
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, Initialize      },
-                { 1, StartMonitoring }
+                {  0, Initialize      },
+                {  1, StartMonitoring },
+                {  2, Socket          },
+                { 10, Send            },
+                { 14, Connect         }
             };
         }
 
@@ -52,6 +55,39 @@ namespace Ryujinx.Core.OsHle.IpcServices.Bsd
         //StartMonitoring(u64, pid)
         public long StartMonitoring(ServiceCtx Context)
         {
+            //Todo: Stub
+
+            return 0;
+        }
+
+        //Socket(u32 domain, u32 type, u32 protocol) -> (i32 ret, u32 bsd_errno)
+        public long Socket(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(0);
+            Context.ResponseData.Write(0);
+
+            //Todo: Stub
+
+            return 0;
+        }
+
+        //Connect(u32 socket, buffer<sockaddr, 0x21, 0>) -> (i32 ret, u32 bsd_errno)
+        public long Connect(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(0);
+            Context.ResponseData.Write(0);
+
+            //Todo: Stub
+
+            return 0;
+        }
+
+        //Send(u32 socket, u32 flags, buffer<i8, 0x21, 0>) -> (i32 ret, u32 bsd_errno)
+        public long Send(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(0);
+            Context.ResponseData.Write(0);
+
             //Todo: Stub
 
             return 0;

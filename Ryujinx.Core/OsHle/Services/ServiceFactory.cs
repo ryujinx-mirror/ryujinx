@@ -13,6 +13,7 @@ using Ryujinx.Core.OsHle.IpcServices.NvServices;
 using Ryujinx.Core.OsHle.IpcServices.Pctl;
 using Ryujinx.Core.OsHle.IpcServices.Pl;
 using Ryujinx.Core.OsHle.IpcServices.Set;
+using Ryujinx.Core.OsHle.IpcServices.Sfdnsres;
 using Ryujinx.Core.OsHle.IpcServices.Sm;
 using Ryujinx.Core.OsHle.IpcServices.Ssl;
 using Ryujinx.Core.OsHle.IpcServices.Time;
@@ -45,6 +46,7 @@ namespace Ryujinx.Core.OsHle.IpcServices
                 case "pctl:a":   return new ServicePctl();
                 case "pl:u":     return new ServicePl();
                 case "set":      return new ServiceSet();
+                case "sfdnsres": return new ServiceSfdnsres();
                 case "sm:":      return new ServiceSm();
                 case "ssl":      return new ServiceSsl();
                 case "time:s":   return new ServiceTime();
