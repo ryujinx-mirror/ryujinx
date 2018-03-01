@@ -35,11 +35,21 @@ namespace Ryujinx.Core.OsHle.IpcServices.Android
             Acquired
         }
 
+        private struct Rect
+        {
+            public int Top;
+            public int Left;
+            public int Right;
+            public int Bottom;
+        }
+
         private struct BufferEntry
         {
             public BufferState State;
 
             public HalTransform Transform;
+
+            public Rect Crop;
 
             public GbpBuffer Data;
         }
@@ -168,6 +178,11 @@ namespace Ryujinx.Core.OsHle.IpcServices.Android
 
             BufferQueue[Slot].Transform = (HalTransform)Transform;
 
+            BufferQueue[Slot].Crop.Top    = CropTop;
+            BufferQueue[Slot].Crop.Left   = CropLeft;
+            BufferQueue[Slot].Crop.Right  = CropRight;
+            BufferQueue[Slot].Crop.Bottom = CropBottom;
+
             BufferQueue[Slot].State = BufferState.Queued;
 
             SendFrameBuffer(Context, Slot);
@@ -256,20 +271,44 @@ namespace Ryujinx.Core.OsHle.IpcServices.Android
                 return;
             }
 
-            BufferQueue[Slot].State = BufferState.Acquired; 
+            BufferQueue[Slot].State = BufferState.Acquired;
+
+            Rect Crop = BufferQueue[Slot].Crop;
+
+            int RealWidth  = FbWidth;
+            int RealHeight = FbHeight;
 
             float ScaleX = 1;
             float ScaleY = 1;
+            float OffsX = 0;
+            float OffsY = 0;
+
+            if (Crop.Right  != 0 &&
+                Crop.Bottom != 0)
+            {
+                RealWidth  = Crop.Right  - Crop.Left;
+                RealHeight = Crop.Bottom - Crop.Top;
+
+                ScaleX = (float)FbWidth  / RealWidth;
+                ScaleY = (float)FbHeight / RealHeight;
+
+                OffsX = -(float)Crop.Left / Crop.Right;
+                OffsY = -(float)Crop.Top  / Crop.Bottom;
+
+                OffsX += ScaleX - 1;
+                OffsY += ScaleY - 1;
+            }
+
             float Rotate = 0;
 
             if (BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipX))
             {
-                ScaleX = -1;
+                ScaleX = -ScaleX;
             }
 
             if (BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipY))
             {
-                ScaleY = -1;
+                ScaleY = -ScaleY;
             }
 
             if (BufferQueue[Slot].Transform.HasFlag(HalTransform.Rotate90))
@@ -287,6 +326,8 @@ namespace Ryujinx.Core.OsHle.IpcServices.Android
                     FbHeight,
                     ScaleX,
                     ScaleY,
+                    OffsX,
+                    OffsY,
                     Rotate);
 
                 BufferQueue[Slot].State = BufferState.Free;

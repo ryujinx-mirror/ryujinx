@@ -1,6 +1,7 @@
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gal.OpenGL
@@ -24,7 +25,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private Texture[] Textures;
 
-        private Queue<Action> ActionsQueue;
+        private ConcurrentQueue<Action> ActionsQueue;
 
         private FrameBuffer FbRenderer;
 
@@ -34,7 +35,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             Textures = new Texture[8];
 
-            ActionsQueue = new Queue<Action>();
+            ActionsQueue = new ConcurrentQueue<Action>();
         }
 
         public void InitializeFrameBuffer()
@@ -51,9 +52,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             int Count = ActionsQueue.Count;
 
-            while (Count-- > 0)
+            while (Count-- > 0 && ActionsQueue.TryDequeue(out Action RenderAction))
             {
-                ActionsQueue.Dequeue()();
+                RenderAction();
             }
         }
 
@@ -86,6 +87,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             int   Height,
             float ScaleX,
             float ScaleY,
+            float OffsX,
+            float OffsY,
             float Rotate)
         {
             Matrix2 Transform;
@@ -93,7 +96,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             Transform  = Matrix2.CreateScale(ScaleX, ScaleY);
             Transform *= Matrix2.CreateRotation(Rotate);
 
-            FbRenderer.Set(Fb, Width, Height, Transform);
+            Vector2 Offs = new Vector2(OffsX, OffsY);
+
+            FbRenderer.Set(Fb, Width, Height, Transform, Offs);
         }
 
         public void SendVertexBuffer(int Index, byte[] Buffer, int Stride, GalVertexAttrib[] Attribs)

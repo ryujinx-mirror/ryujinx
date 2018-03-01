@@ -135,7 +135,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.BindVertexArray(0);
         }
 
-        public unsafe void Set(byte* Fb, int Width, int Height, Matrix2 Transform)
+        public unsafe void Set(byte* Fb, int Width, int Height, Matrix2 Transform, Vector2 Offs)
         {
             if (Fb == null)
             {
@@ -172,6 +172,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             int WindowSizeUniformLocation = GL.GetUniformLocation(PrgShaderHandle, "window_size");
 
             GL.Uniform2(WindowSizeUniformLocation, new Vector2(WindowWidth, WindowHeight));
+
+            int OffsetUniformLocation = GL.GetUniformLocation(PrgShaderHandle, "offset");
+
+            GL.Uniform2(OffsetUniformLocation, Offs);
         }
 
         public void Render()

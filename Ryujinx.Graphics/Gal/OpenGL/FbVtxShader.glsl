@@ -2,8 +2,9 @@
 
 precision highp float;
 
-uniform vec2 window_size;
 uniform mat2 transform;
+uniform vec2 window_size;
+uniform vec2 offset;
 
 layout(location = 0) in vec2 in_position;
 layout(location = 1) in vec2 in_tex_coord;
@@ -22,5 +23,6 @@ vec2 get_scale_ratio(void) {
 
 void main(void) {
     tex_coord = in_tex_coord;
-    gl_Position = vec4((transform * in_position) * get_scale_ratio(), 0, 1);
+    vec2 t_pos = (transform * in_position) + offset;
+    gl_Position = vec4(t_pos * get_scale_ratio(), 0, 1);
 }
