@@ -46,6 +46,7 @@ namespace Ryujinx.Core.OsHle.IpcServices
                 case "pctl:a":   return new ServicePctl();
                 case "pl:u":     return new ServicePl();
                 case "set":      return new ServiceSet();
+                case "set:sys":  return new ServiceSetSys();
                 case "sfdnsres": return new ServiceSfdnsres();
                 case "sm:":      return new ServiceSm();
                 case "ssl":      return new ServiceSsl();
