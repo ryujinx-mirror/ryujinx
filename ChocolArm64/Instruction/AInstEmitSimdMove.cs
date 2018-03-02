@@ -57,6 +57,31 @@ namespace ChocolArm64.Instruction
             }
         }
 
+        public static void Ext_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimdExt Op = (AOpCodeSimdExt)Context.CurrOp;
+
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            for (int Index = 0; Index < Bytes; Index++)
+            {
+                int Position = Op.Imm4 + Index;
+
+                int Reg = Position < Bytes ? Op.Rn : Op.Rm;
+
+                Position &= Bytes - 1;
+
+                EmitVectorExtractZx(Context, Reg, Position, 0);
+
+                EmitVectorInsert(Context, Op.Rd, Index, 0);
+            }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
         public static void Fcsel_S(AILEmitterCtx Context)
         {
             AOpCodeSimdFcond Op = (AOpCodeSimdFcond)Context.CurrOp;

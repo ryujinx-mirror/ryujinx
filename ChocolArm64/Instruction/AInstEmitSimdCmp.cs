@@ -46,6 +46,45 @@ namespace ChocolArm64.Instruction
             EmitVectorCmp(Context, OpCodes.Blt_S);
         }
 
+        public static void Cmtst_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            ulong SzMask = ulong.MaxValue >> (64 - (8 << Op.Size));
+
+            for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
+            {
+                EmitVectorExtractZx(Context, Op.Rn, Index, Op.Size);
+                EmitVectorExtractZx(Context, Op.Rm, Index, Op.Size);
+
+                AILLabel LblTrue = new AILLabel();
+                AILLabel LblEnd  = new AILLabel();
+
+                Context.Emit(OpCodes.And);
+
+                Context.EmitLdc_I4(0);
+
+                Context.Emit(OpCodes.Bne_Un_S, LblTrue);
+
+                EmitVectorInsert(Context, Op.Rd, Index, Op.Size, 0);
+
+                Context.Emit(OpCodes.Br_S, LblEnd);
+
+                Context.MarkLabel(LblTrue);
+
+                EmitVectorInsert(Context, Op.Rd, Index, Op.Size, (long)SzMask);
+
+                Context.MarkLabel(LblEnd);
+            }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
         public static void Fccmp_S(AILEmitterCtx Context)
         {
             AOpCodeSimdFcond Op = (AOpCodeSimdFcond)Context.CurrOp;
