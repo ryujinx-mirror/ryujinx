@@ -75,7 +75,7 @@ namespace ChocolArm64.Instruction
 
         private static ulong ReverseBytes(ulong Value, RevSize Size)
         {
-            Value = ((Value & 0xff00ff00ff00ff00) >>  8) | ((Value & 0x00ff00ff00ff00ff) <<  8);
+            Value = ((Value & 0xff00ff00ff00ff00) >> 8) | ((Value & 0x00ff00ff00ff00ff) << 8);
 
             if (Size == RevSize.Rev16)
             {
