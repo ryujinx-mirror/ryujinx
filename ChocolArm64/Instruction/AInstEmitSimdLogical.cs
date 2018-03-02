@@ -1,4 +1,5 @@
 using ChocolArm64.Translation;
+using System;
 using System.Reflection.Emit;
 
 using static ChocolArm64.Instruction.AInstEmitSimdHelper;
@@ -64,6 +65,16 @@ namespace ChocolArm64.Instruction
         public static void Orr_Vi(AILEmitterCtx Context)
         {
             EmitVectorImmBinaryOp(Context, () => Context.Emit(OpCodes.Or));
+        }
+
+        public static void Rev64_V(AILEmitterCtx Context)
+        {
+            Action Emit = () =>
+            {
+                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.ReverseBits64));
+            };
+            
+            EmitVectorUnaryOpZx(Context, Emit);
         }
     }
 }
