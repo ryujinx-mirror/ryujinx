@@ -121,6 +121,8 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (SharedMem != null)
             {
+                AMemoryHelper.FillWithZeros(Memory, Src, (int)Size);
+
                 SharedMem.AddVirtualPosition(Src);
 
                 Memory.Manager.Map(Src, Size, (int)MemoryType.SharedMemory, (AMemoryPerm)Perm);

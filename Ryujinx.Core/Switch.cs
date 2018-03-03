@@ -1,4 +1,5 @@
 using ChocolArm64.Memory;
+using Ryujinx.Core.Input;
 using Ryujinx.Core.OsHle;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Gpu;
@@ -14,7 +15,7 @@ namespace Ryujinx.Core
         internal NsGpu     Gpu { get; private set; }
         internal Horizon   Os  { get; private set; }
         internal VirtualFs VFs { get; private set; }
-        internal Hid       Hid { get; private set; }
+        public   Hid       Hid { get; private set; }
 
         public event EventHandler Finish;
 
@@ -41,20 +42,6 @@ namespace Ryujinx.Core
         public void LoadProgram(string FileName)
         {
             Os.LoadProgram(FileName);
-        }
-
-        public void SendControllerButtons(HidControllerID ControllerId,
-                                          HidControllerLayouts Layout,
-                                          HidControllerKeys Buttons,
-                                          JoystickPosition LeftJoystick,
-                                          JoystickPosition RightJoystick)
-        {
-            Hid.SendControllerButtons(ControllerId, Layout, Buttons, LeftJoystick, RightJoystick);
-        }
-        
-        public void SendTouchScreenEntry(HidTouchScreenEntryTouch TouchPoint)
-        {
-            Hid.SendTouchPoint(TouchPoint);
         }
 
         internal virtual void OnFinish(EventArgs e)

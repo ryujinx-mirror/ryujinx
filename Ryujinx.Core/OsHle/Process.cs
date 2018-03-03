@@ -242,6 +242,16 @@ namespace Ryujinx.Core.OsHle
             Logging.Trace($"Executing at 0x{e.Position:x16} {e.SubName}");
         }
 
+        public void EnableCpuTracing()
+        {
+            Translator.EnableCpuTrace = true;
+        }
+
+        public void DisableCpuTracing()
+        {
+            Translator.EnableCpuTrace = false;
+        }
+
         private int GetFreeTlsSlot(AThread Thread)
         {
             for (int Index = 1; Index < TotalTlsSlots; Index++)
