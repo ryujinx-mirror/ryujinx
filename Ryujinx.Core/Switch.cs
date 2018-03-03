@@ -1,6 +1,7 @@
 using ChocolArm64.Memory;
 using Ryujinx.Core.Input;
 using Ryujinx.Core.OsHle;
+using Ryujinx.Core.Settings;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Gpu;
 using System;
@@ -15,7 +16,9 @@ namespace Ryujinx.Core
         internal NsGpu     Gpu { get; private set; }
         internal Horizon   Os  { get; private set; }
         internal VirtualFs VFs { get; private set; }
-        public   Hid       Hid { get; private set; }
+
+        public Hid    Hid      { get; private set; }
+        public SetSys Settings { get; private set; }
 
         public event EventHandler Finish;
 
@@ -24,9 +27,11 @@ namespace Ryujinx.Core
             Ram = Marshal.AllocHGlobal((IntPtr)AMemoryMgr.RamSize);
 
             Gpu = new NsGpu(Renderer);
-            Os  = new Horizon(this);
             VFs = new VirtualFs();
-            Hid = new Hid(this);
+
+            Hid      = new Hid(this);
+            Os       = new Horizon(this);
+            Settings = new SetSys();
         }
 
         public void FinalizeAllProcesses()

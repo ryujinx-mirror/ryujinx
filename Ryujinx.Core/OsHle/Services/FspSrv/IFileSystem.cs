@@ -50,7 +50,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
         {
             long Position = Context.Request.PtrBuff[0].Position;
 
-            string Name = ReadUtf8String(Context.Memory, Position);
+            string Name = ReadUtf8String(Context);
 
             long Mode = Context.RequestData.ReadInt64();
             int  Size = Context.RequestData.ReadInt32();
@@ -84,7 +84,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
         {
             long Position = Context.Request.PtrBuff[0].Position;
 
-            string Name = ReadUtf8String(Context.Memory, Position);
+            string Name = ReadUtf8String(Context);
 
             string FileName = Context.Ns.VFs.GetFullPath(Path, Name);
 
@@ -107,7 +107,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
         {
             long Position = Context.Request.PtrBuff[0].Position;
 
-            string Name = ReadUtf8String(Context.Memory, Position);
+            string Name = ReadUtf8String(Context);
 
             string DirName = Context.Ns.VFs.GetFullPath(Path, Name);
 
@@ -145,7 +145,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
         {
             long Position = Context.Request.PtrBuff[0].Position;
 
-            string Name = ReadUtf8String(Context.Memory, Position);
+            string Name = ReadUtf8String(Context);
 
             string DirName = Context.Ns.VFs.GetFullPath(Path, Name);
 
@@ -166,11 +166,8 @@ namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
 
         public long RenameFile(ServiceCtx Context)
         {
-            long OldPosition = Context.Request.PtrBuff[0].Position;
-            long NewPosition = Context.Request.PtrBuff[0].Position;
-
-            string OldName = ReadUtf8String(Context.Memory, OldPosition);
-            string NewName = ReadUtf8String(Context.Memory, NewPosition);
+            string OldName = ReadUtf8String(Context, 0);
+            string NewName = ReadUtf8String(Context, 1);
 
             string OldFileName = Context.Ns.VFs.GetFullPath(Path, OldName);
             string NewFileName = Context.Ns.VFs.GetFullPath(Path, NewName);
@@ -197,11 +194,8 @@ namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
 
         public long RenameDirectory(ServiceCtx Context)
         {
-            long OldPosition = Context.Request.PtrBuff[0].Position;
-            long NewPosition = Context.Request.PtrBuff[0].Position;
-
-            string OldName = ReadUtf8String(Context.Memory, OldPosition);
-            string NewName = ReadUtf8String(Context.Memory, NewPosition);
+            string OldName = ReadUtf8String(Context, 0);
+            string NewName = ReadUtf8String(Context, 1);
 
             string OldDirName = Context.Ns.VFs.GetFullPath(Path, OldName);
             string NewDirName = Context.Ns.VFs.GetFullPath(Path, NewName);
@@ -230,7 +224,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
         {
             long Position = Context.Request.PtrBuff[0].Position;
 
-            string Name = ReadUtf8String(Context.Memory, Position);
+            string Name = ReadUtf8String(Context);
 
             string FileName = Context.Ns.VFs.GetFullPath(Path, Name);
 
@@ -258,7 +252,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
 
             int FilterFlags = Context.RequestData.ReadInt32();
 
-            string Name = ReadUtf8String(Context.Memory, Position);
+            string Name = ReadUtf8String(Context);
 
             string FileName = Context.Ns.VFs.GetFullPath(Path, Name);
 
@@ -294,7 +288,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
 
             int FilterFlags = Context.RequestData.ReadInt32();
 
-            string Name = ReadUtf8String(Context.Memory, Position);
+            string Name = ReadUtf8String(Context);
 
             string DirName = Context.Ns.VFs.GetFullPath(Path, Name);
 
@@ -331,7 +325,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
         {
             long Position = Context.Request.PtrBuff[0].Position;
 
-            string Name = ReadUtf8String(Context.Memory, Position);
+            string Name = ReadUtf8String(Context);
 
             Context.ResponseData.Write(Context.Ns.VFs.GetDrive().AvailableFreeSpace);
 
@@ -342,7 +336,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
         {
             long Position = Context.Request.PtrBuff[0].Position;
 
-            string Name = ReadUtf8String(Context.Memory, Position);
+            string Name = ReadUtf8String(Context);
 
             Context.ResponseData.Write(Context.Ns.VFs.GetDrive().TotalSize);
 
@@ -381,13 +375,16 @@ namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
             }
         }
 
-        private string ReadUtf8String(AMemory Memory, long Position)
+        private string ReadUtf8String(ServiceCtx Context, int Index = 0)
         {
+            long Position = Context.Request.PtrBuff[Index].Position;
+            long Size     = Context.Request.PtrBuff[Index].Size;
+
             using (MemoryStream MS = new MemoryStream())
             {
-                while (true)
+                while (Size-- > 0)
                 {
-                    byte Value = Memory.ReadByte(Position++);
+                    byte Value = Context.Memory.ReadByte(Position++);
 
                     if (Value == 0)
                     {

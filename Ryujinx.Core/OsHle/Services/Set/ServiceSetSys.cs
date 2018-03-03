@@ -22,8 +22,8 @@ namespace Ryujinx.Core.OsHle.IpcServices.Set
 
         public static long GetColorSetId(ServiceCtx Context)
         {
-            //Use white system theme
-            Context.ResponseData.Write(1);
+            Context.ResponseData.Write((int)Context.Ns.Settings.ThemeColor);
+
             return 0;
         }
 
