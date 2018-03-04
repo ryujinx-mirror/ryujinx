@@ -582,8 +582,6 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
                 NvMap.Kind    = Kind;
             }
 
-            Logging.Debug($"{NvMap.Address:x16}");
-
             return 0;
         }
 

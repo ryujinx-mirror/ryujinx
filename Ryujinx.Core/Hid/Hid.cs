@@ -164,8 +164,6 @@ namespace Ryujinx.Core.Input
 
         public void SetTouchPoints(params HidTouchPoint[] Points)
         {
-            Logging.Debug("hid touch");
-
             long LastEntry = ReadInt64(HidTouchScreenOffset + 0x10);
 
             long CurrEntry = (LastEntry + 1) % HidEntryCount;
@@ -226,8 +224,6 @@ namespace Ryujinx.Core.Input
 
             if ((ulong)Position + 4 > AMemoryMgr.AddrSize) return;
 
-            Logging.Debug($"hid wr32 {Position:x8} {Value:x8}");
-
             *((int*)((byte*)Ns.Ram + Position)) = Value;
         }
 
@@ -236,8 +232,6 @@ namespace Ryujinx.Core.Input
             Position += SharedMemOffset;
 
             if ((ulong)Position + 8 > AMemoryMgr.AddrSize) return;
-
-            Logging.Debug($"hid wr64 {Position:x8} {Value:x16}");
 
             *((long*)((byte*)Ns.Ram + Position)) = Value;
         }
