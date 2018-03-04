@@ -278,38 +278,44 @@ namespace Ryujinx.Core.OsHle.IpcServices.Android
             int RealWidth  = FbWidth;
             int RealHeight = FbHeight;
 
+            float XSign = BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipX) ? -1 : 1;
+            float YSign = BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipY) ? -1 : 1;
+
             float ScaleX = 1;
             float ScaleY = 1;
+
             float OffsX = 0;
             float OffsY = 0;
 
             if (Crop.Right  != 0 &&
                 Crop.Bottom != 0)
             {
+                //Who knows if this is right, I was never good with math...
                 RealWidth  = Crop.Right  - Crop.Left;
                 RealHeight = Crop.Bottom - Crop.Top;
 
-                ScaleX = (float)FbWidth  / RealWidth;
-                ScaleY = (float)FbHeight / RealHeight;
+                if (BufferQueue[Slot].Transform.HasFlag(HalTransform.Rotate90))
+                {
+                    ScaleY = (float)FbHeight / RealHeight;
+                    ScaleX = (float)FbWidth  / RealWidth;
 
-                OffsX = -(float)Crop.Left / Crop.Right;
-                OffsY = -(float)Crop.Top  / Crop.Bottom;
+                    OffsY = ((-(float)Crop.Left / Crop.Right)  + ScaleX - 1) * -XSign;
+                    OffsX = ((-(float)Crop.Top  / Crop.Bottom) + ScaleY - 1) * -YSign;
+                }
+                else
+                {
+                    ScaleX = (float)FbWidth  / RealWidth;
+                    ScaleY = (float)FbHeight / RealHeight;
 
-                OffsX += ScaleX - 1;
-                OffsY += ScaleY - 1;
+                    OffsX = ((-(float)Crop.Left / Crop.Right)  + ScaleX - 1) *  XSign;
+                    OffsY = ((-(float)Crop.Top  / Crop.Bottom) + ScaleY - 1) * -YSign;
+                }
             }
+
+            ScaleX *= XSign;
+            ScaleY *= YSign;
 
             float Rotate = 0;
-
-            if (BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipX))
-            {
-                ScaleX = -ScaleX;
-            }
-
-            if (BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipY))
-            {
-                ScaleY = -ScaleY;
-            }
 
             if (BufferQueue[Slot].Transform.HasFlag(HalTransform.Rotate90))
             {

@@ -53,7 +53,12 @@ namespace Ryujinx.Core.OsHle.Svc
 
             Cv = Ns.Os.CondVars.GetOrAdd(CondVarAddress, Cv);
 
-            Cv.WaitForSignal(Thread);
+            if (!Cv.WaitForSignal(Thread))
+            {
+                ThreadState.X0 = (int)SvcResult.ErrTimeout;
+
+                return;
+            }
 
             M.WaitForLock(Thread, ThreadHandle);
 

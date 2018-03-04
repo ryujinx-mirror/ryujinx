@@ -29,6 +29,10 @@ namespace Ryujinx
         {
             this.Ns       = Ns;
             this.Renderer = Renderer;
+
+            Location = new Point(
+                (DisplayDevice.Default.Width  / 2) - (Width  / 2),
+                (DisplayDevice.Default.Height / 2) - (Height / 2));
         }
 
         protected override void OnLoad(EventArgs e)

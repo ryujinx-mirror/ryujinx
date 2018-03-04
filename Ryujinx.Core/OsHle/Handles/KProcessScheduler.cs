@@ -183,7 +183,7 @@ namespace Ryujinx.Core.OsHle.Handles
             TryResumingExecution(SchedThread);
         }
 
-        public void WaitForSignal(HThread Thread, int Timeout = -1)
+        public bool WaitForSignal(HThread Thread, int Timeout = -1)
         {
             SchedulerThread SchedThread;
 
@@ -206,22 +206,26 @@ namespace Ryujinx.Core.OsHle.Handles
                 {
                     Logging.Error($"{GetDbgThreadInfo(Thread)} was not found on the scheduler queue!");
 
-                    return;
+                    return false;
                 }
             }
+
+            bool Result;
 
             if (Timeout >= 0)
             {
                 Logging.Debug($"{GetDbgThreadInfo(Thread)} has wait timeout of {Timeout}ms.");
 
-                SchedThread.WaitEvent.WaitOne(Timeout);
+                Result = SchedThread.WaitEvent.WaitOne(Timeout);
             }
             else
             {
-                SchedThread.WaitEvent.WaitOne();
+                Result = SchedThread.WaitEvent.WaitOne();
             }
 
             TryResumingExecution(SchedThread);
+
+            return Result;
         }
 
         private void TryResumingExecution(SchedulerThread SchedThread)
