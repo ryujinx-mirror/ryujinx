@@ -9,7 +9,7 @@ using System.IO;
 
 namespace Ryujinx.Core.OsHle.IpcServices.Aud
 {
-    class IAudioOut : IIpcService
+    class IAudioOut : IIpcService, IDisposable
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
@@ -121,6 +121,8 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
                     {
                         if (AudioCtx == null) //Needed to call the instance of AudioContext()
                             return 0;
+                        
+                        EnsureAudioFinalized();
 
                         Source = AL.GenSource();
                         Buffer = AL.GenBuffer();
@@ -128,16 +130,6 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
                         AL.BufferData(Buffer, ALFormat.Stereo16, AudioSampleBuffer, AudioSampleBuffer.Length, 48000);
                         AL.SourceQueueBuffer(Source, Buffer);
                         AL.SourcePlay(Source);
-
-                        int State;
-
-                        do AL.GetSource(Source, ALGetSourcei.SourceState, out State);
-                        while ((ALSourceState)State == ALSourceState.Playing);
-
-                        AL.SourceStop(Source);
-                        AL.SourceUnqueueBuffer(Buffer);
-                        AL.DeleteSource(Source);
-                        AL.DeleteBuffers(1, ref Buffer);
                     }
                 }
             }
@@ -185,6 +177,34 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
         public long GetReleasedAudioOutBuffer_ex(ServiceCtx Context)
         {
             return 0;
+        }
+
+        private void EnsureAudioFinalized()
+        {
+            if (Source != 0 ||
+                Buffer != 0)
+            {
+                AL.SourceStop(Source);
+                AL.SourceUnqueueBuffer(Buffer);
+                AL.DeleteSource(Source);
+                AL.DeleteBuffers(1, ref Buffer);
+
+                Source = 0;
+                Buffer = 0;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                EnsureAudioFinalized();
+            }
         }
     }
 }
