@@ -239,7 +239,19 @@ namespace Ryujinx.Core.OsHle
 
         private void CpuTraceHandler(object sender, ACpuTraceEventArgs e)
         {
-            Logging.Trace($"Executing at 0x{e.Position:x16} {e.SubName}");
+            string NsoName = string.Empty;
+
+            for (int Index = Executables.Count - 1; Index >= 0; Index--)
+            {
+                if (e.Position >= Executables[Index].ImageBase)
+                {
+                    NsoName = $"{(e.Position - Executables[Index].ImageBase):x16}";
+                    
+                    break;
+                }
+            }
+
+            Logging.Trace($"Executing at 0x{e.Position:x16} {e.SubName} {NsoName}");
         }
 
         public void EnableCpuTracing()

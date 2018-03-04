@@ -44,7 +44,7 @@ namespace Ryujinx
             HidJoystickPosition LeftJoystick;
             HidJoystickPosition RightJoystick;
 
-            if (Keyboard[OpenTK.Input.Key.Escape]) this.Exit();
+            if (Keyboard[Key.Escape]) this.Exit();
 
             int LeftJoystickDX = 0;
             int LeftJoystickDY = 0;
@@ -99,7 +99,7 @@ namespace Ryujinx
 
             //Get screen touch position from left mouse click
             //OpenTK always captures mouse events, even if out of focus, so check if window is focused.
-            if (Focused && Mouse?.GetState().LeftButton == OpenTK.Input.ButtonState.Pressed)
+            if (Focused && Mouse?.GetState().LeftButton == ButtonState.Pressed)
             {
                 int ScrnWidth  = Width;
                 int ScrnHeight = Height;
