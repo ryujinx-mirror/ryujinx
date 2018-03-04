@@ -7,11 +7,14 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection.Emit;
+using System.Threading;
 
 namespace ChocolArm64
 {
     public class ATranslator
     {
+        private HashSet<long> SubBlocks;
+
         private ConcurrentDictionary<long, ATranslatedSub> CachedSubs;
 
         private ConcurrentDictionary<long, string> SymbolTable;
@@ -24,6 +27,8 @@ namespace ChocolArm64
 
         public ATranslator(IReadOnlyDictionary<long, string> SymbolTable = null)
         {
+            SubBlocks = new HashSet<long>();
+
             CachedSubs = new ConcurrentDictionary<long, ATranslatedSub>();
 
             if (SymbolTable != null)
@@ -38,9 +43,9 @@ namespace ChocolArm64
             KeepRunning = true;
         }
 
-        public void StopExecution() => KeepRunning = false;
+        internal void StopExecution() => KeepRunning = false;
 
-        public void ExecuteSubroutine(AThread Thread, long Position)
+        internal void ExecuteSubroutine(AThread Thread, long Position)
         {
             do
             {
@@ -54,9 +59,14 @@ namespace ChocolArm64
                     CpuTrace?.Invoke(this, new ACpuTraceEventArgs(Position, SubName));
                 }
 
-                if (!CachedSubs.TryGetValue(Position, out ATranslatedSub Sub) || Sub.NeedsReJit)
+                if (!CachedSubs.TryGetValue(Position, out ATranslatedSub Sub))
                 {
-                    Sub = TranslateSubroutine(Thread.Memory, Position);
+                    Sub = TranslateTier0(Thread.Memory, Position);
+                }
+
+                if (Sub.ShouldReJit())
+                {
+                    TranslateTier1(Thread.Memory, Position);
                 }
 
                 Position = Sub.Execute(Thread.ThreadState, Thread.Memory);
@@ -86,19 +96,57 @@ namespace ChocolArm64
             return CachedSubs.ContainsKey(Position);
         }
 
-        private ATranslatedSub TranslateSubroutine(AMemory Memory, long Position)
+        private ATranslatedSub TranslateTier0(AMemory Memory, long Position)
+        {
+            ABlock Block = ADecoder.DecodeBasicBlock(this, Memory, Position);
+
+            ABlock[] Graph = new ABlock[] { Block };
+
+            string SubName = GetSubName(Position);
+
+            AILEmitterCtx Context = new AILEmitterCtx(this, Graph, Block, SubName);
+
+            do
+            {
+                Context.EmitOpCode();
+            }
+            while (Context.AdvanceOpCode());
+
+            ATranslatedSub Subroutine = Context.GetSubroutine();
+
+            if (SubBlocks.Contains(Position))
+            {
+                SubBlocks.Remove(Position);
+
+                Subroutine.SetType(ATranslatedSubType.SubBlock);
+            }
+            else
+            {
+                Subroutine.SetType(ATranslatedSubType.SubTier0);
+            }
+
+            CachedSubs.AddOrUpdate(Position, Subroutine, (Key, OldVal) => Subroutine);
+
+            AOpCode LastOp = Block.GetLastOp();
+
+            if (LastOp.Emitter != AInstEmit.Ret &&
+                LastOp.Emitter != AInstEmit.Br)
+            {
+                SubBlocks.Add(LastOp.Position + 4);
+            }
+
+            return Subroutine;
+        }
+
+        private void TranslateTier1(AMemory Memory, long Position)
         {
             (ABlock[] Graph, ABlock Root) Cfg = ADecoder.DecodeSubroutine(this, Memory, Position);
 
-            string SubName = SymbolTable.GetOrAdd(Position, $"Sub{Position:x16}");
+            string SubName = GetSubName(Position);
 
             PropagateName(Cfg.Graph, SubName);
 
-            AILEmitterCtx Context = new AILEmitterCtx(
-                this,
-                Cfg.Graph,
-                Cfg.Root,
-                SubName);
+            AILEmitterCtx Context = new AILEmitterCtx(this, Cfg.Graph, Cfg.Root, SubName);
 
             if (Context.CurrBlock.Position != Position)
             {
@@ -115,7 +163,7 @@ namespace ChocolArm64
             //since we can now call it directly which is faster.
             foreach (ATranslatedSub TS in CachedSubs.Values)
             {
-                if (TS.SubCalls.Contains(Position))
+                if (TS.HasCallee(Position))
                 {
                     TS.MarkForReJit();
                 }
@@ -123,9 +171,14 @@ namespace ChocolArm64
 
             ATranslatedSub Subroutine = Context.GetSubroutine();
 
-            CachedSubs.AddOrUpdate(Position, Subroutine, (Key, OldVal) => Subroutine);
+            Subroutine.SetType(ATranslatedSubType.SubTier1);
 
-            return Subroutine;
+            CachedSubs.AddOrUpdate(Position, Subroutine, (Key, OldVal) => Subroutine);
+        }
+
+        private string GetSubName(long Position)
+        {
+            return SymbolTable.GetOrAdd(Position, $"Sub{Position:x16}");
         }
 
         private void PropagateName(ABlock[] Graph, string Name)

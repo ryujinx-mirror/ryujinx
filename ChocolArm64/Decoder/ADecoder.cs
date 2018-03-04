@@ -18,6 +18,18 @@ namespace ChocolArm64.Decoder
             OpActivators = new ConcurrentDictionary<Type, OpActivator>();
         }
 
+        public static ABlock DecodeBasicBlock(
+            ATranslator Translator,
+            AMemory     Memory,
+            long        Start)
+        {
+            ABlock Block = new ABlock(Start);
+
+            FillBlock(Memory, Block);
+
+            return Block;
+        }
+
         public static (ABlock[] Graph, ABlock Root) DecodeSubroutine(
             ATranslator Translator,
             AMemory     Memory,
@@ -72,8 +84,8 @@ namespace ChocolArm64.Decoder
                         }
                     }
 
-                    if ((!(LastOp is AOpCodeBImmAl) &&
-                         !(LastOp is AOpCodeBReg)) || HasCachedSub)
+                    if (!((LastOp is AOpCodeBImmAl) ||
+                          (LastOp is AOpCodeBReg)) || HasCachedSub)
                     {
                         Current.Next = Enqueue(Current.EndPosition);
                     }

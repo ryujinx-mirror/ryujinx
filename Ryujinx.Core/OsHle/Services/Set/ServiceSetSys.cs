@@ -1,6 +1,4 @@
-﻿using ChocolArm64.Memory;
-using Ryujinx.Core.OsHle.Ipc;
-using System;
+﻿using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.IpcServices.Set

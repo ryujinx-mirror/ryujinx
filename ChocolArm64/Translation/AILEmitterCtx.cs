@@ -12,14 +12,9 @@ namespace ChocolArm64.Translation
     {
         private ATranslator Translator;
 
-        private Dictionary<long, AILLabel> Labels;        
+        private HashSet<long> Callees;
 
-        private AILEmitter Emitter;
-
-        private AILBlock ILBlock;
-
-        private AOpCode OptOpLastCompare;
-        private AOpCode OptOpLastFlagSet;
+        private Dictionary<long, AILLabel> Labels;
 
         private int BlkIndex;
         private int OpcIndex;
@@ -28,6 +23,13 @@ namespace ChocolArm64.Translation
         private ABlock   Root;
         public  ABlock   CurrBlock => Graph[BlkIndex];
         public  AOpCode  CurrOp    => Graph[BlkIndex].OpCodes[OpcIndex];
+
+        private AILEmitter Emitter;
+
+        private AILBlock ILBlock;
+
+        private AOpCode OptOpLastCompare;
+        private AOpCode OptOpLastFlagSet;
 
         //This is the index of the temporary register, used to store temporary
         //values needed by some functions, since IL doesn't have a swap instruction.
@@ -45,9 +47,26 @@ namespace ChocolArm64.Translation
             ABlock      Root,
             string      SubName)
         {
+            if (Translator == null)
+            {
+                throw new ArgumentNullException(nameof(Translator));
+            }
+
+            if (Graph == null)
+            {
+                throw new ArgumentNullException(nameof(Graph));
+            }
+
+            if (Root == null)
+            {
+                throw new ArgumentNullException(nameof(Root));
+            }
+
             this.Translator = Translator;
             this.Graph      = Graph;
             this.Root       = Root;
+
+            Callees = new HashSet<long>();
 
             Labels = new Dictionary<long, AILLabel>();
 
@@ -57,23 +76,27 @@ namespace ChocolArm64.Translation
 
             OpcIndex = -1;
 
-            if (!AdvanceOpCode())
+            if (Graph.Length == 0 || !AdvanceOpCode())
             {
                 throw new ArgumentException(nameof(Graph));
             }
         }
 
-        public ATranslatedSub GetSubroutine() => Emitter.GetSubroutine();
+        public ATranslatedSub GetSubroutine()
+        {
+            return Emitter.GetSubroutine(Callees);
+        }
 
         public bool AdvanceOpCode()
         {
+            if (OpcIndex + 1 == CurrBlock.OpCodes.Count &&
+                BlkIndex + 1 == Graph.Length)
+            {
+                return false;
+            }
+
             while (++OpcIndex >= (CurrBlock?.OpCodes.Count ?? 0))
             {
-                if (BlkIndex + 1 >= Graph.Length)
-                {
-                    return false;
-                }
-
                 BlkIndex++;
                 OpcIndex = -1;
 
@@ -100,6 +123,13 @@ namespace ChocolArm64.Translation
 
         public bool TryOptEmitSubroutineCall()
         {
+            Callees.Add(((AOpCodeBImm)CurrOp).Imm);
+
+            if (CurrBlock.Next == null)
+            {
+                return false;
+            }
+
             if (!Translator.TryGetCachedSub(CurrOp, out ATranslatedSub Sub))
             {
                 return false;

@@ -58,11 +58,13 @@ namespace ChocolArm64.Translation
             this.Root = ILBlocks[Array.IndexOf(Graph, Root)];
         }
 
-        public ATranslatedSub GetSubroutine()
+        public AILBlock GetILBlock(int Index) => ILBlocks[Index];
+
+        public ATranslatedSub GetSubroutine(HashSet<long> Callees)
         {
             LocalAlloc = new ALocalAlloc(ILBlocks, Root);
 
-            InitSubroutine();
+            InitSubroutine(Callees);
             InitLocals();
 
             foreach (AILBlock ILBlock in ILBlocks)
@@ -73,24 +75,7 @@ namespace ChocolArm64.Translation
             return Subroutine;
         }
 
-        public AILBlock GetILBlock(int Index) => ILBlocks[Index];
-
-        private void InitLocals()
-        {
-            int ParamsStart = ATranslatedSub.FixedArgTypes.Length;
-
-            Locals = new Dictionary<ARegister, int>();
-
-            for (int Index = 0; Index < Subroutine.Params.Count; Index++)
-            {
-                ARegister Reg = Subroutine.Params[Index];
-
-                Generator.EmitLdarg(Index + ParamsStart);
-                Generator.EmitStloc(GetLocalIndex(Reg));
-            }
-        }
-
-        private void InitSubroutine()
+        private void InitSubroutine(HashSet<long> Callees)
         {
             List<ARegister> Params = new List<ARegister>();
 
@@ -114,8 +99,23 @@ namespace ChocolArm64.Translation
 
             Generator = Mthd.GetILGenerator();
 
-            Subroutine = new ATranslatedSub(Mthd, Params);
+            Subroutine = new ATranslatedSub(Mthd, Params, Callees);
         }
+
+        private void InitLocals()
+        {
+            int ParamsStart = ATranslatedSub.FixedArgTypes.Length;
+
+            Locals = new Dictionary<ARegister, int>();
+
+            for (int Index = 0; Index < Subroutine.Params.Count; Index++)
+            {
+                ARegister Reg = Subroutine.Params[Index];
+
+                Generator.EmitLdarg(Index + ParamsStart);
+                Generator.EmitStloc(GetLocalIndex(Reg));
+            }
+        }        
 
         private Type[] GetParamTypes(IList<ARegister> Params)
         {

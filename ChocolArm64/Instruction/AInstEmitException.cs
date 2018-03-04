@@ -2,6 +2,7 @@ using ChocolArm64.Decoder;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace ChocolArm64.Instruction
 {
@@ -37,6 +38,12 @@ namespace ChocolArm64.Instruction
             {
                 Context.EmitLoadState(Context.CurrBlock.Next);
             }
+            else
+            {
+                Context.EmitLdc_I8(Op.Position + 4);
+
+                Context.Emit(OpCodes.Ret);
+            }
         }
 
         public static void Und(AILEmitterCtx Context)
@@ -59,6 +66,12 @@ namespace ChocolArm64.Instruction
             if (Context.CurrBlock.Next != null)
             {
                 Context.EmitLoadState(Context.CurrBlock.Next);
+            }
+            else
+            {
+                Context.EmitLdc_I8(Op.Position + 4);
+
+                Context.Emit(OpCodes.Ret);
             }
         }
     }

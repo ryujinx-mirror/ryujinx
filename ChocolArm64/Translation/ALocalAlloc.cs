@@ -67,14 +67,15 @@ namespace ChocolArm64.Translation
             public long VecOutputs;
         }
 
-        private const int MaxOptGraphLength = 55;
+        private const int MaxOptGraphLength = 40;
 
         public ALocalAlloc(AILBlock[] Graph, AILBlock Root)
         {
             IntPaths = new Dictionary<AILBlock, PathIo>();
             VecPaths = new Dictionary<AILBlock, PathIo>();
 
-            if (Graph.Length < MaxOptGraphLength)
+            if (Graph.Length > 1 &&
+                Graph.Length < MaxOptGraphLength)
             {
                 InitializeOptimal(Graph, Root);
             }
@@ -179,10 +180,8 @@ namespace ChocolArm64.Translation
         {
             //This is WAY faster than InitializeOptimal, but results in
             //uneeded loads and stores, so the resulting code will be slower.
-            long IntInputs  = 0;
-            long IntOutputs = 0;
-            long VecInputs  = 0;
-            long VecOutputs = 0;
+            long IntInputs = 0, IntOutputs = 0;
+            long VecInputs = 0, VecOutputs = 0;
 
             foreach (AILBlock Block in Graph)
             {
@@ -196,8 +195,11 @@ namespace ChocolArm64.Translation
             //in those cases if we attempt to write an output registers that was
             //not written, we will be just writing zero and messing up the old register value.
             //So we just need to ensure that all outputs are loaded.
-            IntInputs |= IntOutputs;
-            VecInputs |= VecOutputs;
+            if (Graph.Length > 1)
+            {
+                IntInputs |= IntOutputs;
+                VecInputs |= VecOutputs;
+            }
 
             foreach (AILBlock Block in Graph)
             {

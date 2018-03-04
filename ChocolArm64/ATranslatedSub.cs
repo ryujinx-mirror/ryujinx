@@ -2,6 +2,7 @@ using ChocolArm64.Memory;
 using ChocolArm64.State;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -13,35 +14,47 @@ namespace ChocolArm64
 
         private AA64Subroutine ExecDelegate;
 
-        private bool HasDelegate;
-
-        public static Type[] FixedArgTypes { get; private set; }
-
         public static int StateArgIdx  { get; private set; }
         public static int MemoryArgIdx { get; private set; }
 
+        public static Type[] FixedArgTypes { get; private set; }
+
         public DynamicMethod Method { get; private set; }
 
-        public HashSet<long> SubCalls { get; private set; }
+        public ReadOnlyCollection<ARegister> Params { get; private set; }
 
-        public List<ARegister> Params { get; private set; }
+        private HashSet<long> Callees;
 
-        public bool NeedsReJit { get; private set; }
+        private ATranslatedSubType Type;
 
-        public ATranslatedSub()
+        private int CallCount;
+
+        private bool NeedsReJit;
+
+        private int MinCallCountForReJit = 250;
+
+        public ATranslatedSub(DynamicMethod Method, List<ARegister> Params, HashSet<long> Callees)
         {
-            SubCalls = new HashSet<long>();
-        }
+            if (Method == null)
+            {
+                throw new ArgumentNullException(nameof(Method));
+            }
 
-        public ATranslatedSub(DynamicMethod Method, List<ARegister> Params) : this()
-        {
             if (Params == null)
             {
                 throw new ArgumentNullException(nameof(Params));
             }
 
-            this.Method = Method;
-            this.Params = Params;
+            if (Callees == null)
+            {
+                throw new ArgumentNullException(nameof(Callees));
+            }
+
+            this.Method  = Method;
+            this.Params  = Params.AsReadOnly();
+            this.Callees = Callees;
+
+            PrepareDelegate();
         }
 
         static ATranslatedSub()
@@ -69,36 +82,53 @@ namespace ChocolArm64
             }
         }
 
-        public long Execute(AThreadState ThreadState, AMemory Memory)
+        private void PrepareDelegate()
         {
-            if (!HasDelegate)
+            string Name = $"{Method.Name}_Dispatch";
+
+            DynamicMethod Mthd = new DynamicMethod(Name, typeof(long), FixedArgTypes);
+
+            ILGenerator Generator = Mthd.GetILGenerator();
+
+            Generator.EmitLdargSeq(FixedArgTypes.Length);
+
+            foreach (ARegister Reg in Params)
             {
-                string Name = $"{Method.Name}_Dispatch";
+                Generator.EmitLdarg(StateArgIdx);
 
-                DynamicMethod Mthd = new DynamicMethod(Name, typeof(long), FixedArgTypes);
-
-                ILGenerator Generator = Mthd.GetILGenerator();
-
-                Generator.EmitLdargSeq(FixedArgTypes.Length);
-
-                foreach (ARegister Reg in Params)
-                {
-                    Generator.EmitLdarg(StateArgIdx);
-
-                    Generator.Emit(OpCodes.Ldfld, Reg.GetField());
-                }
-
-                Generator.Emit(OpCodes.Call, Method);
-                Generator.Emit(OpCodes.Ret);
-
-                ExecDelegate = (AA64Subroutine)Mthd.CreateDelegate(typeof(AA64Subroutine));
-
-                HasDelegate = true;
+                Generator.Emit(OpCodes.Ldfld, Reg.GetField());
             }
 
+            Generator.Emit(OpCodes.Call, Method);
+            Generator.Emit(OpCodes.Ret);
+
+            ExecDelegate = (AA64Subroutine)Mthd.CreateDelegate(typeof(AA64Subroutine));
+        }
+
+        public bool ShouldReJit()
+        {
+            if (Type == ATranslatedSubType.SubTier0)
+            {
+                if (CallCount < MinCallCountForReJit)
+                {
+                    CallCount++;
+                }
+
+                return CallCount == MinCallCountForReJit;
+            }
+
+            return Type == ATranslatedSubType.SubTier1 && NeedsReJit;
+        }
+
+        public long Execute(AThreadState ThreadState, AMemory Memory)
+        {
             return ExecDelegate(ThreadState, Memory);
         }
 
-        public void MarkForReJit() => NeedsReJit = true;
+        public void SetType(ATranslatedSubType Type) => this.Type = Type;
+
+        public bool HasCallee(long Position) => Callees.Contains(Position);
+
+        public void MarkForReJit() => NeedsReJit = true;        
     }
 }
