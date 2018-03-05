@@ -4,9 +4,9 @@ namespace ChocolArm64.Decoder
 {
     class AOpCodeSimdReg : AOpCodeSimd
     {
-        public bool Bit3 { get; private set; }
-        public int  Ra   { get; private set; }
-        public int  Rm   { get; private set; }
+        public bool Bit3 { get; private   set; }
+        public int  Ra   { get; private   set; }
+        public int  Rm   { get; protected set; }
 
         public AOpCodeSimdReg(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {

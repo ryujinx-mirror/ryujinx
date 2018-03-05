@@ -99,6 +99,11 @@ namespace ChocolArm64.Instruction
                     EmitVectorInsertF(Context, Op.Rd, Part + Index, 0);
                 }
             }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
         }
 
         public static void Fcvtps_Gp(AILEmitterCtx Context)

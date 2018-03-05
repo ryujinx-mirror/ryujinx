@@ -1,4 +1,4 @@
-namespace Ryujinx.Core.OsHle.IpcServices
+namespace Ryujinx.Core.OsHle
 {
     enum ErrorModule
     {

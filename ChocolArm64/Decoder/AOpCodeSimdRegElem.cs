@@ -8,15 +8,27 @@ namespace ChocolArm64.Decoder
 
         public AOpCodeSimdRegElem(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
-            if ((Size & 1) != 0)
+            switch (Size)
             {
-                Index = (OpCode >> 11) & 1;
+                case 1:
+                    Index = (OpCode >> 21) & 1 |
+                            (OpCode >> 10) & 2 |
+                            (OpCode >> 18) & 4;
+
+                    Rm &= 0xf;
+
+                    break;
+
+                case 2:
+                    Index = (OpCode >> 21) & 1 |
+                            (OpCode >> 10) & 2;
+
+                    break;
+
+                default: Emitter = AInstEmit.Und; return;
             }
-            else
-            {
-                Index = (OpCode >> 21) & 1 |
-                        (OpCode >> 10) & 2;
-            }
+
+            
         }
     }
 }

@@ -2,6 +2,8 @@ using ChocolArm64.Memory;
 using ChocolArm64.State;
 using Ryujinx.Core.OsHle.Handles;
 
+using static Ryujinx.Core.OsHle.ErrorCode;
+
 namespace Ryujinx.Core.OsHle.Svc
 {
     partial class SvcHandler
@@ -23,7 +25,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             CurrentHeapSize = Size;
 
-            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = 0;
             ThreadState.X1 = (ulong)Position;
         }
 
@@ -44,7 +46,7 @@ namespace Ryujinx.Core.OsHle.Svc
                 Memory.Manager.SetAttrBit(Position, Size, 3);
             }
 
-            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = 0;
         }
 
         private void SvcMapMemory(AThreadState ThreadState)
@@ -61,7 +63,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             Memory.Manager.SetAttrBit(Src, Size, 0);
 
-            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = 0;
         }
 
         private void SvcUnmapMemory(AThreadState ThreadState)
@@ -78,7 +80,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             Memory.Manager.ClearAttrBit(Src, Size, 0);
 
-            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = 0;
         }
 
         private void SvcQueryMemory(AThreadState ThreadState)
@@ -86,12 +88,13 @@ namespace Ryujinx.Core.OsHle.Svc
             long InfoPtr  = (long)ThreadState.X0;
             long Position = (long)ThreadState.X2;
 
+            Position &= uint.MaxValue;
+
             AMemoryMapInfo MapInfo = Memory.Manager.GetMapInfo(Position);
 
             if (MapInfo == null)
             {
-                //TODO: Correct error code.
-                ThreadState.X0 = ulong.MaxValue;
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidMemRange);
 
                 return;
             }
@@ -106,7 +109,7 @@ namespace Ryujinx.Core.OsHle.Svc
             Memory.WriteInt32(InfoPtr + 0x24, 0);
             //TODO: X1.
 
-            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = 0;
             ThreadState.X1 = 0;
         }
 
@@ -127,7 +130,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
                 Memory.Manager.Map(Src, Size, (int)MemoryType.SharedMemory, (AMemoryPerm)Perm);
 
-                ThreadState.X0 = (int)SvcResult.Success;
+                ThreadState.X0 = 0;
             }
 
             //TODO: Error codes.
@@ -143,7 +146,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (HndData != null)
             {
-                ThreadState.X0 = (int)SvcResult.Success;
+                ThreadState.X0 = 0;
             }
 
             //TODO: Error codes.
@@ -164,7 +167,7 @@ namespace Ryujinx.Core.OsHle.Svc
             int Handle = Ns.Os.Handles.GenerateId(HndData);
 
             ThreadState.X1 = (ulong)Handle;
-            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = 0;
         }
     }
 }

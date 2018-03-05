@@ -28,7 +28,7 @@ namespace Ryujinx.Core.OsHle.Svc
                     Priority,
                     ProcessorId);
 
-                ThreadState.X0 = (int)SvcResult.Success;
+                ThreadState.X0 = 0;
                 ThreadState.X1 = (ulong)Handle;
             }
 
@@ -45,7 +45,7 @@ namespace Ryujinx.Core.OsHle.Svc
             {
                 Process.Scheduler.StartThread(Thread);
 
-                ThreadState.X0 = (int)SvcResult.Success;
+                ThreadState.X0 = 0;
             }
 
             //TODO: Error codes.
@@ -75,8 +75,8 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (Thread != null)
             {
+                ThreadState.X0 = 0;
                 ThreadState.X1 = (ulong)Thread.Priority;
-                ThreadState.X0 = (int)SvcResult.Success;
             }
 
             //TODO: Error codes.
@@ -93,7 +93,7 @@ namespace Ryujinx.Core.OsHle.Svc
             {
                 Thread.Priority = Prio;
 
-                ThreadState.X0 = (int)SvcResult.Success;
+                ThreadState.X0 = 0;
             }
 
             //TODO: Error codes.
@@ -101,7 +101,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
         private void SvcSetThreadCoreMask(AThreadState ThreadState)
         {
-            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = 0;
 
             //TODO: Error codes.
         }
@@ -114,8 +114,8 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (Thread != null)
             {
+                ThreadState.X0 = 0;
                 ThreadState.X1 = (ulong)Thread.ThreadId;
-                ThreadState.X0 = (int)SvcResult.Success;
             }
 
             //TODO: Error codes.

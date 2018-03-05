@@ -341,6 +341,11 @@ namespace ChocolArm64.Instruction
             EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Mul));
         }
 
+        public static void Mul_Ve(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpByElemZx(Context, () => Context.Emit(OpCodes.Mul));
+        }
+
         public static void Neg_V(AILEmitterCtx Context)
         {
             EmitVectorUnaryOpSx(Context, () => Context.Emit(OpCodes.Neg));

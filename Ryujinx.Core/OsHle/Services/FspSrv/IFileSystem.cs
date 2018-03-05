@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-using static Ryujinx.Core.OsHle.IpcServices.ErrorCode;
+using static Ryujinx.Core.OsHle.ErrorCode;
 using static Ryujinx.Core.OsHle.IpcServices.ObjHelper;
 
 namespace Ryujinx.Core.OsHle.IpcServices.FspSrv

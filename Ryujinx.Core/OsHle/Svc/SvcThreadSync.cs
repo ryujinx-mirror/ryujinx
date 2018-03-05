@@ -1,6 +1,8 @@
 using ChocolArm64.State;
 using Ryujinx.Core.OsHle.Handles;
 
+using static Ryujinx.Core.OsHle.ErrorCode;
+
 namespace Ryujinx.Core.OsHle.Svc
 {
     partial class SvcHandler
@@ -19,7 +21,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             M.WaitForLock(RequestingThread, RequestingThreadHandle);
 
-            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = 0;
         }
 
         private void SvcArbitrateUnlock(AThreadState ThreadState)
@@ -31,7 +33,7 @@ namespace Ryujinx.Core.OsHle.Svc
                 M.Unlock();
             }
 
-            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = 0;
         }
 
         private void SvcWaitProcessWideKeyAtomic(AThreadState ThreadState)
@@ -55,14 +57,14 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (!Cv.WaitForSignal(Thread))
             {
-                ThreadState.X0 = (int)SvcResult.ErrTimeout;
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.Timeout);
 
                 return;
             }
 
             M.WaitForLock(Thread, ThreadHandle);
 
-            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = 0;
         }
 
         private void SvcSignalProcessWideKey(AThreadState ThreadState)
@@ -77,7 +79,7 @@ namespace Ryujinx.Core.OsHle.Svc
                 Cv.SetSignal(CurrThread, Count);
             }
 
-            ThreadState.X0 = (int)SvcResult.Success;
+            ThreadState.X0 = 0;
         }
     }
 }
