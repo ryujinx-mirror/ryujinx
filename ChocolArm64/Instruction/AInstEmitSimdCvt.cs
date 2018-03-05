@@ -31,6 +31,36 @@ namespace ChocolArm64.Instruction
             EmitFcvt_u_Gp(Context, () => EmitRoundMathCall(Context, MidpointRounding.AwayFromZero));
         }
 
+        public static void Fcvtl_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            int Elems = 4 >> SizeF;
+
+            int Part = Context.CurrOp.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                if (SizeF == 0)
+                {
+                    //TODO: This need the half precision floating point type,
+                    //that is not yet supported on .NET. We should probably
+                    //do our own implementation on the meantime.
+                    throw new NotImplementedException();
+                }
+                else /* if (SizeF == 1) */
+                {
+                    EmitVectorExtractF(Context, Op.Rn, Part + Index, 0);
+
+                    Context.Emit(OpCodes.Conv_R8);
+                }
+
+                EmitVectorInsertF(Context, Op.Rd, Index, SizeF);
+            }
+        }
+
         public static void Fcvtms_Gp(AILEmitterCtx Context)
         {
             EmitFcvt_s_Gp(Context, () => EmitUnaryMathCall(Context, nameof(Math.Floor)));
@@ -39,6 +69,36 @@ namespace ChocolArm64.Instruction
         public static void Fcvtmu_Gp(AILEmitterCtx Context)
         {
             EmitFcvt_u_Gp(Context, () => EmitUnaryMathCall(Context, nameof(Math.Floor)));
+        }
+
+        public static void Fcvtn_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            int Elems = 4 >> SizeF;
+
+            int Part = Context.CurrOp.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                EmitVectorExtractF(Context, Op.Rd, Index, SizeF);
+
+                if (SizeF == 0)
+                {
+                    //TODO: This need the half precision floating point type,
+                    //that is not yet supported on .NET. We should probably
+                    //do our own implementation on the meantime.
+                    throw new NotImplementedException();
+                }
+                else /* if (SizeF == 1) */
+                {
+                    Context.Emit(OpCodes.Conv_R4);
+
+                    EmitVectorInsertF(Context, Op.Rd, Part + Index, 0);
+                }
+            }
         }
 
         public static void Fcvtps_Gp(AILEmitterCtx Context)

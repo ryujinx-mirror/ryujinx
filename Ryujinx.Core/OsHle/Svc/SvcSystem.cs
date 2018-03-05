@@ -20,6 +20,15 @@ namespace Ryujinx.Core.OsHle.Svc
             Ns.Os.ExitProcess(ThreadState.ProcessId);
         }
 
+        private void SvcClearEvent(AThreadState ThreadState)
+        {
+            int Handle = (int)ThreadState.X0;
+
+            //TODO: Implement events.
+
+            ThreadState.X0 = (int)SvcResult.Success;
+        }
+
         private void SvcCloseHandle(AThreadState ThreadState)
         {
             int Handle = (int)ThreadState.X0;
