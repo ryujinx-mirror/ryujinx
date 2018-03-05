@@ -197,8 +197,11 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD4200000);
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
-            Assert.AreEqual(0, GetThreadState().X0);
-            Assert.IsTrue(GetThreadState().Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, GetThreadState().X0);
+                Assert.IsTrue(GetThreadState().Zero);
+            });
         }
 
         [Test]

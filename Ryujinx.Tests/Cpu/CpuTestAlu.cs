@@ -17,20 +17,24 @@ namespace Ryujinx.Tests.Cpu
             Assert.AreEqual(Result, ThreadState.X0);
         }
 
-        [TestCase(0x3A020020u, 2u,          3u,   false, false, false, 5u)]
-        [TestCase(0x3A020020u, 2u,          3u,   true,  false, false, 6u)]
-        [TestCase(0xBA020020u, 2u,          3u,   false, false, false, 5u)]
-        [TestCase(0xBA020020u, 2u,          3u,   true,  false, false, 6u)]
-        [TestCase(0x3A020020u, 0xFFFFFFFEu, 0x1u, true,  true,  true,  0x0u)]
-        public void Adcs(uint Opcode, uint A, uint B, bool CarryState, bool Zero, bool Carry, uint Result)
+        [TestCase(0x3A020020u, 2u,          3u,          false, false, false, false, 5u)]
+        [TestCase(0x3A020020u, 2u,          3u,          true,  false, false, false, 6u)]
+        [TestCase(0xBA020020u, 2u,          3u,          false, false, false, false, 5u)]
+        [TestCase(0xBA020020u, 2u,          3u,          true,  false, false, false, 6u)]
+        [TestCase(0x3A020020u, 0xFFFFFFFEu, 0x1u,        true,  false, true,  true,  0x0u)]
+        [TestCase(0x3A020020u, 0xFFFFFFFFu, 0xFFFFFFFFu, true,  true,  false, true,  0xFFFFFFFFu)]
+        public void Adcs(uint Opcode, uint A, uint B, bool CarryState, bool Negative, bool Zero, bool Carry, uint Result)
         {
             //ADCS (X0/W0), (X1, W1), (X2/W2)
             AThreadState ThreadState = SingleOpcode(Opcode, X1: A, X2: B, Carry: CarryState);
-            Assert.IsFalse(ThreadState.Negative);
-            Assert.IsFalse(ThreadState.Overflow);
-            Assert.AreEqual(Zero, ThreadState.Zero);
-            Assert.AreEqual(Carry, ThreadState.Carry);
-            Assert.AreEqual(Result, ThreadState.X0);
+            Assert.Multiple(() =>
+            {
+                Assert.IsFalse(ThreadState.Overflow);
+                Assert.AreEqual(Negative, ThreadState.Negative);
+                Assert.AreEqual(Zero,     ThreadState.Zero);
+                Assert.AreEqual(Carry,    ThreadState.Carry);
+                Assert.AreEqual(Result,   ThreadState.X0);
+            });
         }
     
         [Test]
@@ -50,11 +54,14 @@ namespace Ryujinx.Tests.Cpu
         {
             //ADDS WZR, WSP, #5
             AThreadState ThreadState = SingleOpcode(0x310017FF, X31: A);
-            Assert.IsFalse(ThreadState.Negative);
-            Assert.AreEqual(Zero, ThreadState.Zero);
-            Assert.AreEqual(Carry, ThreadState.Carry);
-            Assert.IsFalse(ThreadState.Overflow);
-            Assert.AreEqual(A, ThreadState.X31);
+            Assert.Multiple(() =>
+            {
+                Assert.IsFalse(ThreadState.Negative);
+                Assert.IsFalse(ThreadState.Overflow);
+                Assert.AreEqual(Zero,  ThreadState.Zero);
+                Assert.AreEqual(Carry, ThreadState.Carry);
+                Assert.AreEqual(A,     ThreadState.X31);
+            });
         }
 
         [TestCase(0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFul, true,  false)]
@@ -65,26 +72,55 @@ namespace Ryujinx.Tests.Cpu
             // ANDS W0, W1, W2
             uint Opcode = 0x6A020020;
             AThreadState ThreadState = SingleOpcode(Opcode, X1: A, X2: B);
-            Assert.AreEqual(Result,   ThreadState.X0);
-            Assert.AreEqual(Negative, ThreadState.Negative);
-            Assert.AreEqual(Zero,     ThreadState.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(Result,   ThreadState.X0);
+                Assert.AreEqual(Negative, ThreadState.Negative);
+                Assert.AreEqual(Zero,     ThreadState.Zero);
+            });
         }
 
-        [Test]
-        public void OrrBitmasks()
+        [TestCase(0x0000FF44u, 0x00000004u, 0x00000FF4u)]
+        [TestCase(0x00000000u, 0x00000004u, 0x00000000u)]
+        [TestCase(0x0000FF44u, 0x00000008u, 0x000000FFu)]
+        [TestCase(0xFFFFFFFFu, 0x00000004u, 0xFFFFFFFFu)]
+        [TestCase(0xFFFFFFFFu, 0x00000008u, 0xFFFFFFFFu)]
+        [TestCase(0xFFFFFFFFu, 0x00000020u, 0xFFFFFFFFu)]
+        [TestCase(0x0FFFFFFFu, 0x0000001Cu, 0x00000000u)]
+        [TestCase(0x80000000u, 0x0000001Fu, 0xFFFFFFFFu)]
+        [TestCase(0xCAFE0000u, 0x00000020u, 0xCAFE0000u)]
+        public void Asrv32(uint A, uint ShiftValue, uint Result)
         {
-            // ORR W0, WZR, #0x01010101
-            Assert.AreEqual(0x01010101, SingleOpcode(0x3200C3E0).X0);
+            // ASRV W0, W1, W2
+            AThreadState ThreadState = SingleOpcode(0x1AC22820, X1: A, X2: ShiftValue);
+            Assert.AreEqual(Result, ThreadState.X0);
+        }
 
-            Reset();
+        [TestCase(0x000000000000FF44ul, 0x00000004u, 0x0000000000000FF4ul)]
+        [TestCase(0x0000000000000000ul, 0x00000004u, 0x0000000000000000ul)]
+        [TestCase(0x000000000000FF44ul, 0x00000008u, 0x00000000000000FFul)]
+        [TestCase(0x00000000FFFFFFFFul, 0x00000004u, 0x000000000FFFFFFFul)]
+        [TestCase(0x00000000FFFFFFFFul, 0x00000008u, 0x0000000000FFFFFFul)]
+        [TestCase(0x00000000FFFFFFFFul, 0x00000020u, 0x0000000000000000ul)]
+        [TestCase(0x000000000FFFFFFFul, 0x0000001Cu, 0x0000000000000000ul)]
+        [TestCase(0x000CC4488FFFFFFFul, 0x0000001Cu, 0x0000000000CC4488ul)]
+        [TestCase(0xFFFFFFFFFFFFFFFFul, 0x0000001Cu, 0xFFFFFFFFFFFFFFFFul)]
+        [TestCase(0x8000000000000000ul, 0x0000003Fu, 0xFFFFFFFFFFFFFFFFul)]
+        [TestCase(0xCAFE000000000000ul, 0x00000040u, 0xCAFE000000000000ul)]
+        public void Asrv64(ulong A, uint ShiftValue, ulong Result)
+        {
+            // ASRV X0, X1, X2
+            AThreadState ThreadState = SingleOpcode(0x9AC22820, X1: A, X2: ShiftValue);
+            Assert.AreEqual(Result, ThreadState.X0);
+        }
 
-            // ORR W1, WZR, #0x00F000F0
-            Assert.AreEqual(0x00F000F0, SingleOpcode(0x320C8FE1).X1);
-
-            Reset();
-
-            // ORR W2, WZR, #1
-            Assert.AreEqual(0x00000001, SingleOpcode(0x320003E2).X2);
+        [TestCase(0x01010101u, 0x3200C3E2u)]
+        [TestCase(0x00F000F0u, 0x320C8FE2u)]
+        [TestCase(0x00000001u, 0x320003E2u)]
+        public void OrrBitmasks(uint Bitmask, uint Opcode)
+        {
+            // ORR W2, WZR, #Bitmask
+            Assert.AreEqual(Bitmask, SingleOpcode(Opcode).X2);
         }
 
         [Test]
@@ -113,11 +149,14 @@ namespace Ryujinx.Tests.Cpu
         {
             //SBCS (X0/W0), (X1, W1), (X2/W2)
             AThreadState ThreadState = SingleOpcode(Opcode, X1: A, X2: B, Carry: CarryState);
-            Assert.AreEqual(Negative, ThreadState.Negative);
-            Assert.IsFalse(ThreadState.Overflow);
-            Assert.AreEqual(Zero, ThreadState.Zero);
-            Assert.AreEqual(Carry, ThreadState.Carry);
-            Assert.AreEqual(Result, ThreadState.X0);
+            Assert.Multiple(() =>
+            {
+                Assert.IsFalse(ThreadState.Overflow);
+                Assert.AreEqual(Negative, ThreadState.Negative);
+                Assert.AreEqual(Zero,     ThreadState.Zero);
+                Assert.AreEqual(Carry,    ThreadState.Carry);
+                Assert.AreEqual(Result,   ThreadState.X0);
+            });
         }
     }
 }
