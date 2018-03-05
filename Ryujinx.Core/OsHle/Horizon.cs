@@ -27,7 +27,7 @@ namespace Ryujinx.Core.OsHle
 
         private ConcurrentDictionary<int, Process> Processes;
 
-        private HSharedMem HidSharedMem;
+        internal HSharedMem HidSharedMem;
 
         private Switch Ns;
 
@@ -48,8 +48,6 @@ namespace Ryujinx.Core.OsHle
             Processes = new ConcurrentDictionary<int, Process>();
 
             HidSharedMem = new HSharedMem();
-
-            HidSharedMem.MemoryMapped += HidInit;
 
             HidHandle = Handles.GenerateId(HidSharedMem);
 
@@ -165,18 +163,6 @@ namespace Ryujinx.Core.OsHle
             }
 
             Handles.Delete(Handle);
-        }
-
-        private void HidInit(object sender, EventArgs e)
-        {
-            HSharedMem SharedMem = (HSharedMem)sender;
-
-            if (SharedMem.TryGetLastVirtualPosition(out long Position))
-            {
-                Logging.Info($"HID shared memory successfully mapped to 0x{Position:x16}!");
-
-                Ns.Hid.Init(Position);
-            }
         }
     }
 }

@@ -27,10 +27,16 @@ namespace Ryujinx.Core
             Ram = Marshal.AllocHGlobal((IntPtr)AMemoryMgr.RamSize);
 
             Gpu = new NsGpu(Renderer);
+
             VFs = new VirtualFs();
 
-            Hid      = new Hid(this);
-            Os       = new Horizon(this);
+            Hid = new Hid(Ram);
+
+            Os = new Horizon(this);
+
+            Os.HidSharedMem.MemoryMapped   += Hid.ShMemMap;
+            Os.HidSharedMem.MemoryUnmapped += Hid.ShMemUnmap;
+
             Settings = new SetSys();
         }
 

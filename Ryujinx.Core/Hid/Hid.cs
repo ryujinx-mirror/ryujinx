@@ -1,4 +1,6 @@
 ﻿using ChocolArm64.Memory;
+using Ryujinx.Core.OsHle.Handles;
+using System;
 using System.Diagnostics;
 
 namespace Ryujinx.Core.Input
@@ -60,33 +62,65 @@ namespace Ryujinx.Core.Input
 
         private const int HidEntryCount = 17;
 
-        private long SharedMemOffset;
+        private object ShMemLock;
 
-        private Switch Ns;
+        private long[] ShMemPositions;
 
-        public Hid(Switch Ns)
+        private IntPtr Ram;
+
+        public Hid(IntPtr Ram)
         {
-            this.Ns = Ns;
+            this.Ram = Ram;
+
+            ShMemLock = new object();
+
+            ShMemPositions = new long[0];
         }
 
-        public void Init(long HidOffset)
+        internal void ShMemMap(object sender, EventArgs e)
         {
-            SharedMemOffset = HidOffset;
+            HSharedMem SharedMem = (HSharedMem)sender;
 
+            lock (ShMemLock)
+            {
+                ShMemPositions = SharedMem.GetVirtualPositions();
+
+                long BasePosition = ShMemPositions[ShMemPositions.Length - 1];
+
+                Logging.Info($"HID shared memory successfully mapped to 0x{BasePosition:x16}!");
+
+                Init(BasePosition);
+            }
+        }
+
+        internal void ShMemUnmap(object sender, EventArgs e)
+        {
+            HSharedMem SharedMem = (HSharedMem)sender;
+
+            lock (ShMemLock)
+            {
+                ShMemPositions = SharedMem.GetVirtualPositions();
+            }
+        }
+
+        private void Init(long BasePosition)
+        {
             InitializeJoyconPair(
+                BasePosition,
                 JoyConColor.Body_Neon_Red,
                 JoyConColor.Buttons_Neon_Red,
                 JoyConColor.Body_Neon_Blue,
                 JoyConColor.Buttons_Neon_Blue);
         }
 
-        public void InitializeJoyconPair(
+        private void InitializeJoyconPair(
+            long        BasePosition,
             JoyConColor LeftColorBody,
             JoyConColor LeftColorButtons,
             JoyConColor RightColorBody,
             JoyConColor RightColorButtons)
         {
-            long BaseControllerOffset = HidControllersOffset + 8 * HidControllerSize;
+            long BaseControllerOffset = BasePosition + HidControllersOffset + 8 * HidControllerSize;
 
             HidControllerType Type =
                 HidControllerType.ControllerType_Handheld |
@@ -125,115 +159,123 @@ namespace Ryujinx.Core.Input
             HidJoystickPosition  LeftStick,
             HidJoystickPosition  RightStick)
         {
-            long ControllerOffset = HidControllersOffset + (int)ControllerId * HidControllerSize;
+            lock (ShMemLock)
+            {
+                foreach (long Position in ShMemPositions)
+                {
+                    long ControllerOffset = Position + HidControllersOffset;
 
-            ControllerOffset += HidControllerHeaderSize;
+                    ControllerOffset += (int)ControllerId * HidControllerSize;
 
-            ControllerOffset += (int)ControllerLayout * HidControllerLayoutsSize;
+                    ControllerOffset += HidControllerHeaderSize;
 
-            long LastEntry = ReadInt64(ControllerOffset + 0x10);
+                    ControllerOffset += (int)ControllerLayout * HidControllerLayoutsSize;
 
-            long CurrEntry = (LastEntry + 1) % HidEntryCount;
+                    long LastEntry = ReadInt64(ControllerOffset + 0x10);
 
-            long Timestamp = Stopwatch.GetTimestamp();
+                    long CurrEntry = (LastEntry + 1) % HidEntryCount;
 
-            WriteInt64(ControllerOffset + 0x0,  Timestamp);
-            WriteInt64(ControllerOffset + 0x8,  HidEntryCount);
-            WriteInt64(ControllerOffset + 0x10, CurrEntry);
-            WriteInt64(ControllerOffset + 0x18, HidEntryCount - 1);
+                    long Timestamp = Stopwatch.GetTimestamp();
 
-            ControllerOffset += HidControllersLayoutHeaderSize;
+                    WriteInt64(ControllerOffset + 0x0,  Timestamp);
+                    WriteInt64(ControllerOffset + 0x8,  HidEntryCount);
+                    WriteInt64(ControllerOffset + 0x10, CurrEntry);
+                    WriteInt64(ControllerOffset + 0x18, HidEntryCount - 1);
 
-            ControllerOffset += CurrEntry * HidControllersInputEntrySize;
+                    ControllerOffset += HidControllersLayoutHeaderSize;
 
-            WriteInt64(ControllerOffset + 0x0,  Timestamp);
-            WriteInt64(ControllerOffset + 0x8,  Timestamp);
+                    ControllerOffset += CurrEntry * HidControllersInputEntrySize;
 
-            WriteInt64(ControllerOffset + 0x10, (uint)Buttons);
+                    WriteInt64(ControllerOffset + 0x0,  Timestamp);
+                    WriteInt64(ControllerOffset + 0x8,  Timestamp);
 
-            WriteInt32(ControllerOffset + 0x18, LeftStick.DX);
-            WriteInt32(ControllerOffset + 0x1c, LeftStick.DY);
+                    WriteInt64(ControllerOffset + 0x10, (uint)Buttons);
 
-            WriteInt64(ControllerOffset + 0x20, RightStick.DX);
-            WriteInt64(ControllerOffset + 0x24, RightStick.DY);
+                    WriteInt32(ControllerOffset + 0x18, LeftStick.DX);
+                    WriteInt32(ControllerOffset + 0x1c, LeftStick.DY);
 
-            WriteInt64(ControllerOffset + 0x28,
-                (uint)HidControllerConnState.Controller_State_Connected |
-                (uint)HidControllerConnState.Controller_State_Wired);
+                    WriteInt64(ControllerOffset + 0x20, RightStick.DX);
+                    WriteInt64(ControllerOffset + 0x24, RightStick.DY);
+
+                    WriteInt64(ControllerOffset + 0x28,
+                        (uint)HidControllerConnState.Controller_State_Connected |
+                        (uint)HidControllerConnState.Controller_State_Wired);
+                }
+            }
         }
 
         public void SetTouchPoints(params HidTouchPoint[] Points)
         {
-            long LastEntry = ReadInt64(HidTouchScreenOffset + 0x10);
-
-            long CurrEntry = (LastEntry + 1) % HidEntryCount;
-
-            long Timestamp = Stopwatch.GetTimestamp();
-
-            WriteInt64(HidTouchScreenOffset + 0x0,  Timestamp);
-            WriteInt64(HidTouchScreenOffset + 0x8,  HidEntryCount);
-            WriteInt64(HidTouchScreenOffset + 0x10, CurrEntry);
-            WriteInt64(HidTouchScreenOffset + 0x18, HidEntryCount - 1);
-            WriteInt64(HidTouchScreenOffset + 0x20, Timestamp);            
-
-            long TouchEntryOffset = HidTouchScreenOffset + HidTouchHeaderSize;
-
-            long LastEntryOffset = TouchEntryOffset + LastEntry * HidTouchEntrySize;
-
-            long LastTimestamp = ReadInt64(LastEntryOffset);
-
-            TouchEntryOffset += CurrEntry * HidTouchEntrySize;            
-
-            WriteInt64(TouchEntryOffset + 0x0, LastTimestamp + 1);
-            WriteInt64(TouchEntryOffset + 0x8, Points.Length);
-
-            TouchEntryOffset += HidTouchEntryHeaderSize;
-
-            const int Padding = 0;
-
-            int Index = 0;
-
-            foreach (HidTouchPoint Point in Points)
+            lock (ShMemLock)
             {
-                WriteInt64(TouchEntryOffset + 0x0,  Timestamp);
-                WriteInt32(TouchEntryOffset + 0x8,  Padding);
-                WriteInt32(TouchEntryOffset + 0xc,  Index++);
-                WriteInt32(TouchEntryOffset + 0x10, Point.X);
-                WriteInt32(TouchEntryOffset + 0x14, Point.Y);
-                WriteInt32(TouchEntryOffset + 0x18, Point.DiameterX);
-                WriteInt32(TouchEntryOffset + 0x1c, Point.DiameterY);
-                WriteInt32(TouchEntryOffset + 0x20, Point.Angle);
-                WriteInt32(TouchEntryOffset + 0x24, Padding);
+                foreach (long Position in ShMemPositions)
+                {
+                    long TouchScreenOffset = Position + HidTouchScreenOffset;
 
-                TouchEntryOffset += HidTouchEntryTouchSize;
+                    long LastEntry = ReadInt64(TouchScreenOffset + 0x10);
+
+                    long CurrEntry = (LastEntry + 1) % HidEntryCount;
+
+                    long Timestamp = ReadInt64(TouchScreenOffset) + 1;
+
+                    WriteInt64(TouchScreenOffset + 0x0,  Timestamp);
+                    WriteInt64(TouchScreenOffset + 0x8,  HidEntryCount);
+                    WriteInt64(TouchScreenOffset + 0x10, CurrEntry);
+                    WriteInt64(TouchScreenOffset + 0x18, HidEntryCount - 1);
+                    WriteInt64(TouchScreenOffset + 0x20, Timestamp);            
+
+                    long TouchEntryOffset = TouchScreenOffset + HidTouchHeaderSize;
+
+                    long LastEntryOffset = TouchEntryOffset + LastEntry * HidTouchEntrySize;
+
+                    TouchEntryOffset += CurrEntry * HidTouchEntrySize;            
+
+                    WriteInt64(TouchEntryOffset + 0x0, Timestamp);
+                    WriteInt64(TouchEntryOffset + 0x8, Points.Length);
+
+                    TouchEntryOffset += HidTouchEntryHeaderSize;
+
+                    const int Padding = 0;
+
+                    int Index = 0;
+
+                    foreach (HidTouchPoint Point in Points)
+                    {
+                        WriteInt64(TouchEntryOffset + 0x0,  Timestamp);
+                        WriteInt32(TouchEntryOffset + 0x8,  Padding);
+                        WriteInt32(TouchEntryOffset + 0xc,  Index++);
+                        WriteInt32(TouchEntryOffset + 0x10, Point.X);
+                        WriteInt32(TouchEntryOffset + 0x14, Point.Y);
+                        WriteInt32(TouchEntryOffset + 0x18, Point.DiameterX);
+                        WriteInt32(TouchEntryOffset + 0x1c, Point.DiameterY);
+                        WriteInt32(TouchEntryOffset + 0x20, Point.Angle);
+                        WriteInt32(TouchEntryOffset + 0x24, Padding);
+
+                        TouchEntryOffset += HidTouchEntryTouchSize;
+                    }
+                }
             }
         }
 
         private unsafe long ReadInt64(long Position)
         {
-            Position += SharedMemOffset;
-
             if ((ulong)Position + 8 > AMemoryMgr.AddrSize) return 0;
 
-            return *((long*)((byte*)Ns.Ram + Position));
+            return *((long*)((byte*)Ram + Position));
         }
 
         private unsafe void WriteInt32(long Position, int Value)
         {
-            Position += SharedMemOffset;
-
             if ((ulong)Position + 4 > AMemoryMgr.AddrSize) return;
 
-            *((int*)((byte*)Ns.Ram + Position)) = Value;
+            *((int*)((byte*)Ram + Position)) = Value;
         }
 
         private unsafe void WriteInt64(long Position, long Value)
         {
-            Position += SharedMemOffset;
-
             if ((ulong)Position + 8 > AMemoryMgr.AddrSize) return;
 
-            *((long*)((byte*)Ns.Ram + Position)) = Value;
+            *((long*)((byte*)Ram + Position)) = Value;
         }
     }
 }
