@@ -27,8 +27,6 @@ namespace ChocolArm64.Decoder
 
                 default: Emitter = AInstEmit.Und; return;
             }
-
-            
         }
     }
 }

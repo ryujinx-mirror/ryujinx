@@ -88,8 +88,6 @@ namespace Ryujinx.Core.OsHle.Svc
             long InfoPtr  = (long)ThreadState.X0;
             long Position = (long)ThreadState.X2;
 
-            Position &= uint.MaxValue;
-
             AMemoryMapInfo MapInfo = Memory.Manager.GetMapInfo(Position);
 
             if (MapInfo == null)
