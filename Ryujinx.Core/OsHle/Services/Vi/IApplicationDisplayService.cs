@@ -24,6 +24,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
                 {  102, GetManagerDisplayService             },
                 {  103, GetIndirectDisplayTransactionService },
                 { 1010, OpenDisplay                          },
+                { 1020, CloseDisplay                         },
                 { 2020, OpenLayer                            },
                 { 2030, CreateStrayLayer                     },
                 { 2101, SetLayerScalingMode                  },
@@ -66,6 +67,15 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
             long DisplayId = Context.Ns.Os.Displays.GenerateId(new Display(Name));
 
             Context.ResponseData.Write(DisplayId);
+
+            return 0;
+        }
+
+        public long CloseDisplay(ServiceCtx Context)
+        {
+            int DisplayId = Context.RequestData.ReadInt32();
+
+            Context.Ns.Os.Displays.Delete(DisplayId);
 
             return 0;
         }
