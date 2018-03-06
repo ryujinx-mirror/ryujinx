@@ -18,9 +18,17 @@ namespace Ryujinx.Core
 
         public string GetFullPath(string BasePath, string FileName)
         {
-            if (FileName.StartsWith('/'))
+            if (FileName.StartsWith("//"))
+            {
+                FileName = FileName.Substring(2);
+            }
+            else if (FileName.StartsWith('/'))
             {
                 FileName = FileName.Substring(1);
+            }
+            else
+            {
+                return null;
             }
 
             string FullPath = Path.GetFullPath(Path.Combine(BasePath, FileName));

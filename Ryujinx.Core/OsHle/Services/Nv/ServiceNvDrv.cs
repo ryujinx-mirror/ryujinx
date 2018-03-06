@@ -38,6 +38,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             { ("/dev/nvmap",           0x0101), NvMapIocCreate                    },
             { ("/dev/nvmap",           0x0103), NvMapIocFromId                    },
             { ("/dev/nvmap",           0x0104), NvMapIocAlloc                     },
+            { ("/dev/nvmap",           0x0105), NvMapIocFree                      },
             { ("/dev/nvmap",           0x0109), NvMapIocParam                     },
             { ("/dev/nvmap",           0x010e), NvMapIocGetId                     },
         };
@@ -581,6 +582,25 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
                 NvMap.Align   = Align;
                 NvMap.Kind    = Kind;
             }
+
+            return 0;
+        }
+
+        private static long NvMapIocFree(ServiceCtx Context)
+        {
+            long Position = Context.Request.GetSendBuffPtr();
+
+            MemReader Reader = new MemReader(Context.Memory, Position);
+            MemWriter Writer = new MemWriter(Context.Memory, Position + 8);
+
+            int  Handle  =       Reader.ReadInt32();
+            int  Padding =       Reader.ReadInt32();
+
+            HNvMap NvMap = Context.Ns.Os.Handles.GetData<HNvMap>(Handle);
+
+            Writer.WriteInt64(0);
+            Writer.WriteInt32(NvMap.Size);
+            Writer.WriteInt32(0);
 
             return 0;
         }

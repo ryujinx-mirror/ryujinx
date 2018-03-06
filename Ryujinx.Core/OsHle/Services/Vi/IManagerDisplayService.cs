@@ -13,8 +13,9 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 2010, CreateManagedLayer },
-                { 6000, AddToLayerStack    }
+                { 2010, CreateManagedLayer  },
+                { 2011, DestroyManagedLayer },
+                { 6000, AddToLayerStack     }
             };
         }
 
@@ -22,6 +23,11 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
         {
             Context.ResponseData.Write(0L); //LayerId
 
+            return 0;
+        }
+
+        public long DestroyManagedLayer(ServiceCtx Context)
+        {
             return 0;
         }
 

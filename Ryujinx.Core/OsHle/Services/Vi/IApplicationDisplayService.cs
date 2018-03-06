@@ -26,6 +26,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
                 { 1010, OpenDisplay                          },
                 { 1020, CloseDisplay                         },
                 { 2020, OpenLayer                            },
+                { 2021, CloseLayer                           },
                 { 2030, CreateStrayLayer                     },
                 { 2101, SetLayerScalingMode                  },
                 { 5202, GetDisplayVSyncEvent                 }
@@ -93,6 +94,11 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
 
             Context.ResponseData.Write((long)Parcel.Length);
 
+            return 0;
+        }
+
+        public long CloseLayer(ServiceCtx Context)
+        {
             return 0;
         }
 

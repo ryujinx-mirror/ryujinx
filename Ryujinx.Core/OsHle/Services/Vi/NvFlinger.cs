@@ -70,6 +70,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Android
                 { ("android.gui.IGraphicBufferProducer", 0x8), GbpCancelBuffer   },
                 { ("android.gui.IGraphicBufferProducer", 0x9), GbpQuery          },
                 { ("android.gui.IGraphicBufferProducer", 0xa), GbpConnect        },
+                { ("android.gui.IGraphicBufferProducer", 0xb), GbpDisconnect     },
                 { ("android.gui.IGraphicBufferProducer", 0xe), GbpPreallocBuffer }
             };
 
@@ -210,6 +211,11 @@ namespace Ryujinx.Core.OsHle.IpcServices.Android
         private long GbpConnect(ServiceCtx Context, BinaryReader ParcelReader)
         {
             return MakeReplyParcel(Context, 1280, 720, 0, 0, 0);
+        }
+
+        private long GbpDisconnect(ServiceCtx Context, BinaryReader ParcelReader)
+        {
+            return MakeReplyParcel(Context, 0);
         }
 
         private long GbpPreallocBuffer(ServiceCtx Context, BinaryReader ParcelReader)
