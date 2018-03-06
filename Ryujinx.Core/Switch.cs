@@ -17,8 +17,9 @@ namespace Ryujinx.Core
         internal Horizon   Os  { get; private set; }
         internal VirtualFs VFs { get; private set; }
 
-        public Hid    Hid      { get; private set; }
-        public SetSys Settings { get; private set; }
+        public Hid    Hid                       { get; private set; }        
+        public SetSys Settings                  { get; private set; }
+        public PerformanceStatistics Statistics { get; private set; }
 
         public event EventHandler Finish;
 
@@ -31,6 +32,8 @@ namespace Ryujinx.Core
             VFs = new VirtualFs();
 
             Hid = new Hid(Ram);
+
+            Statistics = new PerformanceStatistics();
 
             Os = new Horizon(this);
 

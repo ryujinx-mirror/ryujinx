@@ -22,8 +22,6 @@ namespace Ryujinx.Core
 
         static Logging()
         {
-            ExecutionTime.Start();
-
             if (File.Exists(LogFileName)) File.Delete(LogFileName);
         }
 
