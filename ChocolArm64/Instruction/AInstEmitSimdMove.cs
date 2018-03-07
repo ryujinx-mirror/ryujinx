@@ -63,15 +63,18 @@ namespace ChocolArm64.Instruction
 
             int Bytes = Context.CurrOp.GetBitsCount() >> 3;
 
+            int Position = Op.Imm4;
+
             for (int Index = 0; Index < Bytes; Index++)
             {
-                int Position = Op.Imm4 + Index;
+                int Reg = Op.Imm4 + Index < Bytes ? Op.Rn : Op.Rm;
 
-                int Reg = Position < Bytes ? Op.Rn : Op.Rm;
+                if (Position == Bytes)
+                {
+                    Position = 0;
+                }
 
-                Position &= Bytes - 1;
-
-                EmitVectorExtractZx(Context, Reg, Position, 0);
+                EmitVectorExtractZx(Context, Reg, Position++, 0);
 
                 EmitVectorInsert(Context, Op.Rd, Index, 0);
             }

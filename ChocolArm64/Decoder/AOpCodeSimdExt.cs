@@ -8,7 +8,7 @@ namespace ChocolArm64.Decoder
 
         public AOpCodeSimdExt(AInst Inst, long Position, int OpCode) : base(Inst, Position, OpCode)
         {
-            int Imm4 = (OpCode >> 11) & 0xf;
+            Imm4 = (OpCode >> 11) & 0xf;
         }
     }
 }

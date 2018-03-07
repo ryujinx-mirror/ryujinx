@@ -459,15 +459,25 @@ namespace ChocolArm64.Instruction
 
         public static void EmitVectorWidenRnRmBinaryOpSx(AILEmitterCtx Context, Action Emit)
         {
-            EmitVectorWidenRnRmBinaryOp(Context, Emit, true);
+            EmitVectorWidenRnRmOp(Context, Emit, false, true);
         }
 
         public static void EmitVectorWidenRnRmBinaryOpZx(AILEmitterCtx Context, Action Emit)
         {
-            EmitVectorWidenRnRmBinaryOp(Context, Emit, false);
+            EmitVectorWidenRnRmOp(Context, Emit, false, false);
         }
 
-        public static void EmitVectorWidenRnRmBinaryOp(AILEmitterCtx Context, Action Emit, bool Signed)
+        public static void EmitVectorWidenRnRmTernaryOpSx(AILEmitterCtx Context, Action Emit)
+        {
+            EmitVectorWidenRnRmOp(Context, Emit, true, true);
+        }
+
+        public static void EmitVectorWidenRnRmTernaryOpZx(AILEmitterCtx Context, Action Emit)
+        {
+            EmitVectorWidenRnRmOp(Context, Emit, true, false);
+        }
+
+        public static void EmitVectorWidenRnRmOp(AILEmitterCtx Context, Action Emit, bool Ternary, bool Signed)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
@@ -477,6 +487,11 @@ namespace ChocolArm64.Instruction
 
             for (int Index = 0; Index < Elems; Index++)
             {
+                if (Ternary)
+                {
+                    EmitVectorExtract(Context, Op.Rd, Index, Op.Size + 1, Signed);
+                }
+
                 EmitVectorExtract(Context, Op.Rn, Part + Index, Op.Size, Signed);
                 EmitVectorExtract(Context, Op.Rm, Part + Index, Op.Size, Signed);
 

@@ -374,6 +374,15 @@ namespace ChocolArm64.Instruction
             EmitVectorBinaryOpSx(Context, () => Context.EmitCall(MthdInfo));
         }
 
+        public static void Smlal_V(AILEmitterCtx Context)
+        {
+            EmitVectorWidenRnRmTernaryOpSx(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Add);
+            });
+        }
+
         public static void Smull_V(AILEmitterCtx Context)
         {
             EmitVectorWidenRnRmBinaryOpSx(Context, () => Context.Emit(OpCodes.Mul));
