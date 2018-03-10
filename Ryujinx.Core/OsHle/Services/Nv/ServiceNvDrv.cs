@@ -81,7 +81,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             
             FileDesc FdData = Context.Ns.Os.Fds.GetData<FileDesc>(Fd);
 
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             Context.ResponseData.Write(0);
 
@@ -139,7 +139,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvGpuAsIoctlBindChannel(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             int Fd = Context.Memory.ReadInt32(Position);
 
@@ -148,7 +148,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvGpuAsIoctlAllocSpace(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
 
@@ -174,7 +174,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvGpuAsIoctlMapBufferEx(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
 
@@ -207,7 +207,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvGpuAsIoctlGetVaRegions(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
             MemWriter Writer = new MemWriter(Context.Memory, Position);
@@ -237,7 +237,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvGpuAsIoctlInitializeEx(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
 
@@ -254,7 +254,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvHostIoctlCtrlGetConfig(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
             MemWriter Writer = new MemWriter(Context.Memory, Position + 0x82);
@@ -269,7 +269,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvHostIoctlCtrlEventWait(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
 
@@ -285,7 +285,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvGpuIoctlZcullGetCtxSize(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             Context.Memory.WriteInt32(Position, 1);
 
@@ -294,7 +294,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvGpuIoctlZcullGetInfo(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemWriter Writer = new MemWriter(Context.Memory, Position);
 
@@ -314,7 +314,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvGpuIoctlGetCharacteristics(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
             MemWriter Writer = new MemWriter(Context.Memory, Position);
@@ -376,7 +376,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvGpuIoctlGetTpcMasks(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
 
@@ -390,7 +390,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvGpuIoctlZbcGetActiveSlotMask(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             Context.Memory.WriteInt32(Position + 0, 7);
             Context.Memory.WriteInt32(Position + 4, 1);
@@ -400,14 +400,14 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvMapIoctlChannelSetUserData(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             return 0;
         }
 
         private static long NvMapIoctlChannelSetNvMap(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             int Fd = Context.Memory.ReadInt32(Position);
 
@@ -416,7 +416,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvMapIoctlChannelSubmitGpFifo(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
             MemWriter Writer = new MemWriter(Context.Memory, Position + 0x10);
@@ -455,7 +455,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvMapIoctlChannelAllocObjCtx(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             int ClassNum = Context.Memory.ReadInt32(Position + 0);
             int Flags    = Context.Memory.ReadInt32(Position + 4);
@@ -467,7 +467,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvMapIoctlChannelZcullBind(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
 
@@ -480,7 +480,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvMapIoctlChannelSetErrorNotifier(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
 
@@ -494,7 +494,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvMapIoctlChannelSetPriority(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             int Priority = Context.Memory.ReadInt32(Position);
 
@@ -503,7 +503,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         private static long NvMapIoctlChannelAllocGpFifoEx2(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
+            long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
             MemWriter Writer = new MemWriter(Context.Memory, Position + 0xc);

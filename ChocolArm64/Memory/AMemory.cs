@@ -2,7 +2,6 @@ using ChocolArm64.Exceptions;
 using ChocolArm64.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace ChocolArm64.Memory
@@ -139,71 +138,77 @@ namespace ChocolArm64.Memory
             }
         }
 
-        public sbyte ReadSByte(long Position) => (sbyte)ReadByte  (Position);
-        public short ReadInt16(long Position) => (short)ReadUInt16(Position);
-        public int   ReadInt32(long Position) =>   (int)ReadUInt32(Position);
-        public long  ReadInt64(long Position) =>  (long)ReadUInt64(Position);
+        public sbyte ReadSByte(long Position)
+        {
+            return (sbyte)ReadByte(Position);
+        }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public short ReadInt16(long Position)
+        {
+            return (short)ReadUInt16(Position);
+        }
+
+        public int ReadInt32(long Position)
+        {
+            return (int)ReadUInt32(Position);
+        }
+
+        public long ReadInt64(long Position)
+        {
+            return (long)ReadUInt64(Position);
+        }
+
         public byte ReadByte(long Position)
         {
             EnsureAccessIsValid(Position, AMemoryPerm.Read);
 
-            return *((byte*)(RamPtr + (uint)Position));
+            return ReadByteUnchecked(Position);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ushort ReadUInt16(long Position)
         {
             EnsureAccessIsValid(Position + 0, AMemoryPerm.Read);
             EnsureAccessIsValid(Position + 1, AMemoryPerm.Read);
 
-            return *((ushort*)(RamPtr + (uint)Position));
+            return ReadUInt16Unchecked(Position);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public uint ReadUInt32(long Position)
         {
             EnsureAccessIsValid(Position + 0, AMemoryPerm.Read);
             EnsureAccessIsValid(Position + 3, AMemoryPerm.Read);
 
-            return *((uint*)(RamPtr + (uint)Position));
+            return ReadUInt32Unchecked(Position);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ulong ReadUInt64(long Position)
         {
             EnsureAccessIsValid(Position + 0, AMemoryPerm.Read);
             EnsureAccessIsValid(Position + 7, AMemoryPerm.Read);
 
-            return *((ulong*)(RamPtr + (uint)Position));
+            return ReadUInt64Unchecked(Position);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AVec ReadVector8(long Position)
         {
             return new AVec() { B0 = ReadByte(Position) };
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AVec ReadVector16(long Position)
         {
             return new AVec() { H0 = ReadUInt16(Position) };
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AVec ReadVector32(long Position)
         {
             return new AVec() { W0 = ReadUInt32(Position) };
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AVec ReadVector64(long Position)
         {
             return new AVec() { X0 = ReadUInt64(Position) };
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AVec ReadVector128(long Position)
         {
             return new AVec()
@@ -213,93 +218,229 @@ namespace ChocolArm64.Memory
             };
         }
 
-        public void WriteSByte(long Position, sbyte Value) => WriteByte  (Position,   (byte)Value);
-        public void WriteInt16(long Position, short Value) => WriteUInt16(Position, (ushort)Value);
-        public void WriteInt32(long Position, int   Value) => WriteUInt32(Position,   (uint)Value);
-        public void WriteInt64(long Position, long  Value) => WriteUInt64(Position,  (ulong)Value);
+        public sbyte ReadSByteUnchecked(long Position)
+        {
+            return (sbyte)ReadByteUnchecked(Position);
+        }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public short ReadInt16Unchecked(long Position)
+        {
+            return (short)ReadUInt16Unchecked(Position);
+        }
+
+        public int ReadInt32Unchecked(long Position)
+        {
+            return (int)ReadUInt32Unchecked(Position);
+        }
+
+        public long ReadInt64Unchecked(long Position)
+        {
+            return (long)ReadUInt64Unchecked(Position);
+        }
+
+        public byte ReadByteUnchecked(long Position)
+        {
+            return *((byte*)(RamPtr + (uint)Position));
+        }
+
+        public ushort ReadUInt16Unchecked(long Position)
+        {
+            return *((ushort*)(RamPtr + (uint)Position));
+        }
+
+        public uint ReadUInt32Unchecked(long Position)
+        {
+            return *((uint*)(RamPtr + (uint)Position));
+        }
+
+        public ulong ReadUInt64Unchecked(long Position)
+        {
+            return *((ulong*)(RamPtr + (uint)Position));
+        }
+
+        public AVec ReadVector8Unchecked(long Position)
+        {
+            return new AVec() { B0 = ReadByteUnchecked(Position) };
+        }
+
+        public AVec ReadVector16Unchecked(long Position)
+        {
+            return new AVec() { H0 = ReadUInt16Unchecked(Position) };
+        }
+
+        public AVec ReadVector32Unchecked(long Position)
+        {
+            return new AVec() { W0 = ReadUInt32Unchecked(Position) };
+        }
+
+        public AVec ReadVector64Unchecked(long Position)
+        {
+            return new AVec() { X0 = ReadUInt64Unchecked(Position) };
+        }
+
+        public AVec ReadVector128Unchecked(long Position)
+        {
+            return new AVec()
+            {
+                X0 = ReadUInt64Unchecked(Position + 0),
+                X1 = ReadUInt64Unchecked(Position + 8)
+            };
+        }
+
+        public void WriteSByte(long Position, sbyte Value)
+        {
+            WriteByte(Position, (byte)Value);
+        }
+
+        public void WriteInt16(long Position, short Value)
+        {
+            WriteUInt16(Position, (ushort)Value);
+        }
+
+        public void WriteInt32(long Position, int Value)
+        {
+            WriteUInt32(Position, (uint)Value);
+        }
+
+        public void WriteInt64(long Position, long Value)
+        {
+            WriteUInt64(Position, (ulong)Value);
+        }
+
         public void WriteByte(long Position, byte Value)
         {
             EnsureAccessIsValid(Position, AMemoryPerm.Write);
 
-            *((byte*)(RamPtr + (uint)Position)) = Value;
+            WriteByteUnchecked(Position, Value);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteUInt16(long Position, ushort Value)
         {
             EnsureAccessIsValid(Position + 0, AMemoryPerm.Write);
             EnsureAccessIsValid(Position + 1, AMemoryPerm.Write);
 
-            *((ushort*)(RamPtr + (uint)Position)) = Value;
+            WriteUInt16Unchecked(Position, Value);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteUInt32(long Position, uint Value)
         {
             EnsureAccessIsValid(Position + 0, AMemoryPerm.Write);
             EnsureAccessIsValid(Position + 3, AMemoryPerm.Write);
 
-            *((uint*)(RamPtr + (uint)Position)) = Value;
+            WriteUInt32Unchecked(Position, Value);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteUInt64(long Position, ulong Value)
         {
             EnsureAccessIsValid(Position + 0, AMemoryPerm.Write);
             EnsureAccessIsValid(Position + 7, AMemoryPerm.Write);
 
-            *((ulong*)(RamPtr + (uint)Position)) = Value;
+            WriteUInt64Unchecked(Position, Value);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteVector8(long Position, AVec Value)
         {
             WriteByte(Position, Value.B0);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteVector16(long Position, AVec Value)
         {
             WriteUInt16(Position, Value.H0);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteVector32(long Position, AVec Value)
         {
             WriteUInt32(Position, Value.W0);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteVector64(long Position, AVec Value)
         {
             WriteUInt64(Position, Value.X0);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteVector128(long Position, AVec Value)
         {
             WriteUInt64(Position + 0, Value.X0);
             WriteUInt64(Position + 8, Value.X1);
         }
 
+        public void WriteSByteUnchecked(long Position, sbyte Value)
+        {
+            WriteByteUnchecked(Position, (byte)Value);
+        }
+
+        public void WriteInt16Unchecked(long Position, short Value)
+        {
+            WriteUInt16Unchecked(Position, (ushort)Value);
+        }
+
+        public void WriteInt32Unchecked(long Position, int Value)
+        {
+            WriteUInt32Unchecked(Position, (uint)Value);
+        }
+
+        public void WriteInt64Unchecked(long Position, long Value)
+        {
+            WriteUInt64Unchecked(Position, (ulong)Value);
+        }
+
+        public void WriteByteUnchecked(long Position, byte Value)
+        {
+            *((byte*)(RamPtr + (uint)Position)) = Value;
+        }
+
+        public void WriteUInt16Unchecked(long Position, ushort Value)
+        {
+            *((ushort*)(RamPtr + (uint)Position)) = Value;
+        }
+
+        public void WriteUInt32Unchecked(long Position, uint Value)
+        {
+            *((uint*)(RamPtr + (uint)Position)) = Value;
+        }
+
+        public void WriteUInt64Unchecked(long Position, ulong Value)
+        {
+            *((ulong*)(RamPtr + (uint)Position)) = Value;
+        }
+
+        public void WriteVector8Unchecked(long Position, AVec Value)
+        {
+            WriteByteUnchecked(Position, Value.B0);
+        }
+
+        public void WriteVector16Unchecked(long Position, AVec Value)
+        {
+            WriteUInt16Unchecked(Position, Value.H0);
+        }
+
+        public void WriteVector32Unchecked(long Position, AVec Value)
+        {
+            WriteUInt32Unchecked(Position, Value.W0);
+        }
+
+        public void WriteVector64Unchecked(long Position, AVec Value)
+        {
+            WriteUInt64Unchecked(Position, Value.X0);
+        }
+
+        public void WriteVector128Unchecked(long Position, AVec Value)
+        {
+            WriteUInt64Unchecked(Position + 0, Value.X0);
+            WriteUInt64Unchecked(Position + 8, Value.X1);
+        }
+
         private void EnsureAccessIsValid(long Position, AMemoryPerm Perm)
         {
-#if DEBUG
-            if (AOptimizations.EnableMemoryChecks)
+            if (!Manager.IsMapped(Position))
             {
-                if (!Manager.IsMapped(Position))
-                {
-                    throw new VmmPageFaultException(Position);
-                }
-
-                if (!Manager.HasPermission(Position, Perm))
-                {
-                    throw new VmmAccessViolationException(Position, Perm);
-                }
+                throw new VmmPageFaultException(Position);
             }
-#endif
+
+            if (!Manager.HasPermission(Position, Perm))
+            {
+                throw new VmmAccessViolationException(Position, Perm);
+            }
         }
 
         public void Dispose()

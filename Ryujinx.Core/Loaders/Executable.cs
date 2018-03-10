@@ -34,7 +34,7 @@ namespace Ryujinx.Core.Loaders
 
             if (Exe.Mod0Offset == 0)
             {
-                int BssOffset = Exe.DataOffset + Exe.Data.Count;
+                int BssOffset = Exe.DataOffset + Exe.Data.Length;
                 int BssSize   = Exe.BssSize;
 
                 MapBss(ImageBase + BssOffset, BssSize);
@@ -92,18 +92,15 @@ namespace Ryujinx.Core.Loaders
 
         private void WriteData(
             long        Position,
-            IList<byte> Data,
+            byte[]      Data,
             MemoryType  Type,
             AMemoryPerm Perm)
         {
-            Memory.Manager.Map(Position, Data.Count, (int)Type, AMemoryPerm.Write);
+            Memory.Manager.Map(Position, Data.Length, (int)Type, AMemoryPerm.Write);
 
-            for (int Index = 0; Index < Data.Count; Index++)
-            {
-                Memory.WriteByte(Position + Index, Data[Index]);
-            }
+            AMemoryHelper.WriteBytes(Memory, Position, Data);
 
-            Memory.Manager.Reprotect(Position, Data.Count, Perm);
+            Memory.Manager.Reprotect(Position, Data.Length, Perm);
         }
 
         private void MapBss(long Position, long Size)

@@ -1,19 +1,14 @@
 using Ryujinx.Core.Loaders.Compression;
 using System;
-using System.Collections.ObjectModel;
 using System.IO;
 
 namespace Ryujinx.Core.Loaders.Executables
 {
     class Nso : IExecutable
     {
-        private byte[] m_Text;
-        private byte[] m_RO;
-        private byte[] m_Data;
-
-        public ReadOnlyCollection<byte> Text => Array.AsReadOnly(m_Text);
-        public ReadOnlyCollection<byte> RO   => Array.AsReadOnly(m_RO);
-        public ReadOnlyCollection<byte> Data => Array.AsReadOnly(m_Data);
+        public byte[] Text { get; private set; }
+        public byte[] RO   { get; private set; }
+        public byte[] Data { get; private set; }
 
         public int Mod0Offset { get; private set; }
         public int TextOffset { get; private set; }
@@ -57,9 +52,9 @@ namespace Ryujinx.Core.Loaders.Executables
 
             byte[] BuildId = Reader.ReadBytes(0x20);
 
-            int TextSize   = Reader.ReadInt32();
-            int ROSize     = Reader.ReadInt32();
-            int DataSize   = Reader.ReadInt32();
+            int TextSize = Reader.ReadInt32();
+            int ROSize   = Reader.ReadInt32();
+            int DataSize = Reader.ReadInt32();
 
             Input.Seek(0x24, SeekOrigin.Current);
 
@@ -82,38 +77,38 @@ namespace Ryujinx.Core.Loaders.Executables
             //Text segment
             Input.Seek(TextOffset, SeekOrigin.Begin);
 
-            m_Text = Reader.ReadBytes(TextSize);
+            Text = Reader.ReadBytes(TextSize);
 
             if (Flags.HasFlag(NsoFlags.IsTextCompressed) || true)
             {
-                m_Text = Lz4.Decompress(m_Text, TextDecSize);
+                Text = Lz4.Decompress(Text, TextDecSize);
             }
 
             //Read-only data segment
             Input.Seek(ROOffset, SeekOrigin.Begin);
 
-            m_RO = Reader.ReadBytes(ROSize);
+            RO = Reader.ReadBytes(ROSize);
 
             if (Flags.HasFlag(NsoFlags.IsROCompressed) || true)
             {
-                m_RO = Lz4.Decompress(m_RO, RODecSize);
+                RO = Lz4.Decompress(RO, RODecSize);
             }
 
             //Data segment
             Input.Seek(DataOffset, SeekOrigin.Begin);
 
-            m_Data = Reader.ReadBytes(DataSize);
+            Data = Reader.ReadBytes(DataSize);
 
             if (Flags.HasFlag(NsoFlags.IsDataCompressed) || true)
             {
-                m_Data = Lz4.Decompress(m_Data, DataDecSize);
+                Data = Lz4.Decompress(Data, DataDecSize);
             }
 
-            using (MemoryStream Text = new MemoryStream(m_Text))
+            using (MemoryStream TextMS = new MemoryStream(Text))
             {
-                BinaryReader TextReader = new BinaryReader(Text);
+                BinaryReader TextReader = new BinaryReader(TextMS);
 
-                Text.Seek(4, SeekOrigin.Begin);
+                TextMS.Seek(4, SeekOrigin.Begin);
 
                 Mod0Offset = TextReader.ReadInt32();
             }

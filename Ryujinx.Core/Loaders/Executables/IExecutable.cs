@@ -1,12 +1,10 @@
-using System.Collections.ObjectModel;
-
 namespace Ryujinx.Core.Loaders.Executables
 {
     public interface IExecutable
     {
-        ReadOnlyCollection<byte> Text { get; }
-        ReadOnlyCollection<byte> RO   { get; }
-        ReadOnlyCollection<byte> Data { get; }
+        byte[] Text { get; }
+        byte[] RO   { get; }
+        byte[] Data { get; }
 
         int Mod0Offset { get; }
         int TextOffset { get; }

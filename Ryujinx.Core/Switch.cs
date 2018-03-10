@@ -30,7 +30,7 @@ namespace Ryujinx.Core
 
             VFs = new VirtualFs();
 
-            Hid = new Hid(this);
+            Hid = new Hid(Memory);
 
             Statistics = new PerformanceStatistics();
 

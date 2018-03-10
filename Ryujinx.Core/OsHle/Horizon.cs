@@ -52,6 +52,8 @@ namespace Ryujinx.Core.OsHle
             HidHandle = Handles.GenerateId(HidSharedMem);
 
             FontHandle = Handles.GenerateId(new HSharedMem());
+
+            HidSharedMem.AddVirtualPosition(0);
         }
 
         public void LoadCart(string ExeFsDir, string RomFsFile = null)

@@ -47,7 +47,7 @@ namespace Ryujinx.Tests.Cpu
 
         protected void Opcode(uint Opcode)
         {
-            Thread.Memory.WriteUInt32(Position, Opcode);
+            Thread.Memory.WriteUInt32Unchecked(Position, Opcode);
             Position += 4;
         }
 
