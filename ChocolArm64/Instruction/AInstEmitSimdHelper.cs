@@ -190,6 +190,11 @@ namespace ChocolArm64.Instruction
             EmitScalarSetF(Context, Op.Rd, SizeF);
         }
 
+        public static void EmitVectorUnaryOpF(AILEmitterCtx Context, Action Emit)
+        {
+            EmitVectorOpF(Context, Emit, OperFlags.Rn);
+        }
+
         public static void EmitVectorBinaryOpF(AILEmitterCtx Context, Action Emit)
         {
             EmitVectorOpF(Context, Emit, OperFlags.RnRm);

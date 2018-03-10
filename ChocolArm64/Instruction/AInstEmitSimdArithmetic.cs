@@ -267,6 +267,14 @@ namespace ChocolArm64.Instruction
             });
         }
 
+        public static void Frintm_V(AILEmitterCtx Context)
+        {
+            EmitVectorUnaryOpF(Context, () =>
+            {
+                EmitUnaryMathCall(Context, nameof(Math.Floor));
+            });
+        }
+
         public static void Frintp_S(AILEmitterCtx Context)
         {
             EmitScalarUnaryOpF(Context, () =>
