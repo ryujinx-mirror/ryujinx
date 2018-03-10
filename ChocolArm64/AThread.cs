@@ -10,7 +10,7 @@ namespace ChocolArm64
         public AThreadState ThreadState { get; private set; }
         public AMemory      Memory      { get; private set; }
 
-        public long EntryPoint { get; private set; }
+        private long EntryPoint;
 
         private ATranslator Translator;
 

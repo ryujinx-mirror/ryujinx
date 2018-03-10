@@ -5,13 +5,12 @@ using Ryujinx.Core.Settings;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Gpu;
 using System;
-using System.Runtime.InteropServices;
 
 namespace Ryujinx.Core
 {
     public class Switch : IDisposable
     {
-        public IntPtr Ram {get; private set; }
+        internal AMemory Memory { get; private set; }
 
         internal NsGpu     Gpu { get; private set; }
         internal Horizon   Os  { get; private set; }
@@ -25,13 +24,13 @@ namespace Ryujinx.Core
 
         public Switch(IGalRenderer Renderer)
         {
-            Ram = Marshal.AllocHGlobal((IntPtr)AMemoryMgr.RamSize);
+            Memory = new AMemory();
 
             Gpu = new NsGpu(Renderer);
 
             VFs = new VirtualFs();
 
-            Hid = new Hid(Ram);
+            Hid = new Hid(this);
 
             Statistics = new PerformanceStatistics();
 
@@ -72,10 +71,10 @@ namespace Ryujinx.Core
         {
             if (disposing)
             {
+                Memory.Dispose();
+
                 VFs.Dispose();
             }
-
-            Marshal.FreeHGlobal(Ram);
         }
     }
 }

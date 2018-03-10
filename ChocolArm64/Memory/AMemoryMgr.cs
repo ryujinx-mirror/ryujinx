@@ -4,8 +4,8 @@ namespace ChocolArm64.Memory
 {
     public class AMemoryMgr
     {
-        public const long AddrSize = RamSize;
         public const long RamSize  = 4L * 1024 * 1024 * 1024;
+        public const long AddrSize = RamSize;
 
         private const int PTLvl0Bits = 10;
         private const int PTLvl1Bits = 10;
@@ -19,8 +19,8 @@ namespace ChocolArm64.Memory
         private const int PTLvl1Mask = PTLvl1Size - 1;
         public  const int PageMask   = PageSize   - 1;
 
-        private const int PTLvl0Bit  = PTPageBits + PTLvl1Bits;
-        private const int PTLvl1Bit  = PTPageBits;
+        private const int PTLvl0Bit = PTPageBits + PTLvl1Bits;
+        private const int PTLvl1Bit = PTPageBits;
 
         private enum PTMap
         {

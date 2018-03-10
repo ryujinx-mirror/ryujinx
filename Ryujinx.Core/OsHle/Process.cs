@@ -45,7 +45,7 @@ namespace Ryujinx.Core.OsHle
             this.Ns        = Ns;
             this.ProcessId = ProcessId;
 
-            Memory = new AMemory(Ns.Ram);
+            Memory = Ns.Memory;
 
             Scheduler = new KProcessScheduler();
 

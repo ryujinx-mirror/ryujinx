@@ -197,7 +197,7 @@ namespace Ryujinx.Core.OsHle.Svc
                     break;
 
                 case 5:
-                    ThreadState.X1 = CurrentHeapSize;
+                    ThreadState.X1 = MemoryRegions.HeapRegionSize;
                     break;
 
                 case 6:

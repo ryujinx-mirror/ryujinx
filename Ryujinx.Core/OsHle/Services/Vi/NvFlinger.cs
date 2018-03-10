@@ -264,11 +264,11 @@ namespace Ryujinx.Core.OsHle.IpcServices.Android
             int FbWidth  = BufferQueue[Slot].Data.Width;
             int FbHeight = BufferQueue[Slot].Data.Height;
 
-            int FbSize = FbWidth * FbHeight * 4;
+            long FbSize = (uint)FbWidth * FbHeight * 4;
 
             HNvMap NvMap = GetNvMap(Context, Slot);
 
-            if (FbSize < 0 || NvMap.Address < 0 || NvMap.Address + FbSize > AMemoryMgr.AddrSize)
+            if ((ulong)(NvMap.Address + FbSize) > AMemoryMgr.AddrSize)
             {
                 Logging.Error($"Frame buffer address {NvMap.Address:x16} is invalid!");
 
@@ -330,7 +330,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Android
                 Rotate = -MathF.PI * 0.5f;
             }
 
-            byte* Fb = (byte*)Context.Ns.Ram + NvMap.Address;
+            byte* Fb = (byte*)Context.Ns.Memory.Ram + NvMap.Address;
 
             Context.Ns.Gpu.Renderer.QueueAction(delegate()
             {
