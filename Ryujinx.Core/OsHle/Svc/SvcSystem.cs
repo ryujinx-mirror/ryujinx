@@ -67,7 +67,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
         private void SvcGetSystemTick(AThreadState ThreadState)
         {
-            ThreadState.X0 = (ulong)ThreadState.CntpctEl0;
+            ThreadState.X0 = ThreadState.CntpctEl0;
         }
 
         private void SvcConnectToNamedPort(AThreadState ThreadState)

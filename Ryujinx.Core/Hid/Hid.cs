@@ -258,9 +258,9 @@ namespace Ryujinx.Core.Input
             }
         }
 
-        private long GetTimestamp()
+        private static long GetTimestamp()
         {
-            return Environment.TickCount * 19_200;
+            return (long)((ulong)Environment.TickCount * 19_200);
         }
     }
 }

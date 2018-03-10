@@ -38,10 +38,10 @@ namespace ChocolArm64.State
         public uint CtrEl0   => 0x8444c004;
         public uint DczidEl0 => 0x00000004;
 
-        private const long TicksPerS  = 19_200_000;
-        private const long TicksPerMS = TicksPerS / 1_000;
+        private const ulong TicksPerS  = 19_200_000;
+        private const ulong TicksPerMS = TicksPerS / 1_000;
 
-        public long CntpctEl0 => Environment.TickCount * TicksPerMS;
+        public ulong CntpctEl0 => (ulong)Environment.TickCount * TicksPerMS;
 
         public event EventHandler<AInstExceptionEventArgs> Break;
         public event EventHandler<AInstExceptionEventArgs> SvcCall;
