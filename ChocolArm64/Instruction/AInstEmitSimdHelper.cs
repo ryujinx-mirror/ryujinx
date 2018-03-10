@@ -207,7 +207,7 @@ namespace ChocolArm64.Instruction
 
         public static void EmitVectorOpF(AILEmitterCtx Context, Action Emit, OperFlags Opers)
         {
-            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
             int SizeF = Op.Size & 1;
 
@@ -227,7 +227,7 @@ namespace ChocolArm64.Instruction
 
                 if (Opers.HasFlag(OperFlags.Rm))
                 {
-                    EmitVectorExtractF(Context, Op.Rm, Index, SizeF);
+                    EmitVectorExtractF(Context, ((AOpCodeSimdReg)Op).Rm, Index, SizeF);
                 }
 
                 Emit();
