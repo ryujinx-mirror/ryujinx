@@ -35,6 +35,7 @@ namespace Ryujinx.Core.OsHle.IpcServices
                 case "appletOE": return new ServiceAppletOE();
                 case "audout:u": return new ServiceAudOut();
                 case "audren:u": return new ServiceAudRen();
+                case "bsd:s":    return new ServiceBsd();
                 case "bsd:u":    return new ServiceBsd();
                 case "friend:a": return new ServiceFriend();
                 case "fsp-srv":  return new ServiceFspSrv();
