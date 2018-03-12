@@ -48,6 +48,7 @@ namespace Ryujinx.Core.OsHle
                         case "appletOE": Service = new ServiceAppletOE(); break;
                         case "audout:u": Service = new ServiceAudOut();   break;
                         case "audren:u": Service = new ServiceAudRen();   break;
+                        case "bsd:s":    Service = new ServiceBsd();      break;
                         case "bsd:u":    Service = new ServiceBsd();      break;
                         case "friend:a": Service = new ServiceFriend();   break;
                         case "fsp-srv":  Service = new ServiceFspSrv();   break;
