@@ -43,6 +43,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             FbRenderer = new FrameBuffer(1280, 720);
         }
 
+        public void ResetFrameBuffer()
+        {
+            FbRenderer.Reset();
+        }
+
         public void QueueAction(Action ActionMthd)
         {
             ActionsQueue.Enqueue(ActionMthd);

@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace Ryujinx.Core.OsHle
 {
-    public class CondVar
+    class CondVar
     {
         private Process Process;
 

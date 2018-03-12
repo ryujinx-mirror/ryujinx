@@ -39,7 +39,7 @@ namespace Ryujinx.Core.OsHle.Svc
         {
             int Handle = (int)ThreadState.X0;
 
-            HThread Thread = Ns.Os.Handles.GetData<HThread>(Handle);
+            HThread Thread = Process.HandleTable.GetData<HThread>(Handle);
 
             if (Thread != null)
             {
@@ -49,6 +49,13 @@ namespace Ryujinx.Core.OsHle.Svc
             }
 
             //TODO: Error codes.
+        }
+
+        private void SvcExitThread(AThreadState ThreadState)
+        {
+            HThread CurrThread = Process.GetThread(ThreadState.Tpidr);
+            
+            CurrThread.Thread.StopExecution();
         }
 
         private void SvcSleepThread(AThreadState ThreadState)
@@ -71,7 +78,7 @@ namespace Ryujinx.Core.OsHle.Svc
         {
             int Handle = (int)ThreadState.X1;
 
-            HThread Thread = Ns.Os.Handles.GetData<HThread>(Handle);
+            HThread Thread = Process.HandleTable.GetData<HThread>(Handle);
 
             if (Thread != null)
             {
@@ -87,7 +94,7 @@ namespace Ryujinx.Core.OsHle.Svc
             int Handle = (int)ThreadState.X1;
             int Prio = (int)ThreadState.X0;
 
-            HThread Thread = Ns.Os.Handles.GetData<HThread>(Handle);
+            HThread Thread = Process.HandleTable.GetData<HThread>(Handle);
 
             if (Thread != null)
             {
@@ -110,7 +117,7 @@ namespace Ryujinx.Core.OsHle.Svc
         {
             int Handle = (int)ThreadState.X0;
 
-            HThread Thread = Ns.Os.Handles.GetData<HThread>(Handle);
+            HThread Thread = Process.HandleTable.GetData<HThread>(Handle);
 
             if (Thread != null)
             {

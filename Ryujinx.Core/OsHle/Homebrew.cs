@@ -37,5 +37,33 @@ namespace Ryujinx.Core.OsHle
 
             Position += 0x18;
         }
+
+        public static string ReadHbAbiNextLoadPath(AMemory Memory, long Position)
+        {
+            string FileName = null;
+
+            while (true)
+            {
+                long Key = Memory.ReadInt64(Position);
+
+                if (Key == 2)
+                {
+                    long Value0 = Memory.ReadInt64(Position + 0x08);
+                    long Value1 = Memory.ReadInt64(Position + 0x10);
+
+                    FileName = AMemoryHelper.ReadAsciiString(Memory, Value0, (int)(Value1 - Value0));
+
+                    break;
+                }
+                else if (Key == 0)
+                {
+                    break;
+                }
+
+                Position += 0x18;
+            }
+
+            return FileName;
+        }
     }
 }

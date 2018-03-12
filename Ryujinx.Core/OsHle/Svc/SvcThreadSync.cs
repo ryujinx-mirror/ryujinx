@@ -13,7 +13,7 @@ namespace Ryujinx.Core.OsHle.Svc
             long MutexAddress           = (long)ThreadState.X1;
             int  RequestingThreadHandle =  (int)ThreadState.X2;
 
-            HThread RequestingThread = Ns.Os.Handles.GetData<HThread>(RequestingThreadHandle);
+            HThread RequestingThread = Process.HandleTable.GetData<HThread>(RequestingThreadHandle);
 
             Mutex M = new Mutex(Process, MutexAddress, OwnerThreadHandle);
 
@@ -43,7 +43,7 @@ namespace Ryujinx.Core.OsHle.Svc
             int  ThreadHandle   =  (int)ThreadState.X2;
             long Timeout        = (long)ThreadState.X3;
 
-            HThread Thread = Ns.Os.Handles.GetData<HThread>(ThreadHandle);
+            HThread Thread = Process.HandleTable.GetData<HThread>(ThreadHandle);
 
             Mutex M = new Mutex(Process, MutexAddress, ThreadHandle);
 

@@ -55,9 +55,9 @@ namespace Ryujinx.Core.OsHle.IpcServices.Sm
                 return 0;
             }
 
-            HSession Session = new HSession(ServiceFactory.MakeService(Name));
+            HSession Session = new HSession(Context.Process.Services.GetService(Name));
 
-            int Handle = Context.Ns.Os.Handles.GenerateId(Session);
+            int Handle = Context.Process.HandleTable.OpenHandle(Session);
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
 

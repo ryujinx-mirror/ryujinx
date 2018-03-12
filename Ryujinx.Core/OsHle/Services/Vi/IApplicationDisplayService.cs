@@ -15,6 +15,8 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
 
         public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
+        private IdDictionary Displays;
+
         public IApplicationDisplayService()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
@@ -28,14 +30,17 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
                 { 2020, OpenLayer                            },
                 { 2021, CloseLayer                           },
                 { 2030, CreateStrayLayer                     },
+                { 2031, DestroyStrayLayer                    },
                 { 2101, SetLayerScalingMode                  },
                 { 5202, GetDisplayVSyncEvent                 }
             };
+
+            Displays = new IdDictionary();
         }
 
         public long GetRelayService(ServiceCtx Context)
         {
-            MakeObject(Context, new IHOSBinderDriver());
+            MakeObject(Context, new IHOSBinderDriver(Context.Ns.Gpu.Renderer));
 
             return 0;
         }
@@ -56,7 +61,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
 
         public long GetIndirectDisplayTransactionService(ServiceCtx Context)
         {
-            MakeObject(Context, new IHOSBinderDriver());
+            MakeObject(Context, new IHOSBinderDriver(Context.Ns.Gpu.Renderer));
 
             return 0;
         }
@@ -65,7 +70,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
         {
             string Name = GetDisplayName(Context);
 
-            long DisplayId = Context.Ns.Os.Displays.GenerateId(new Display(Name));
+            long DisplayId = Displays.Add(new Display(Name));
 
             Context.ResponseData.Write(DisplayId);
 
@@ -76,7 +81,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
         {
             int DisplayId = Context.RequestData.ReadInt32();
 
-            Context.Ns.Os.Displays.Delete(DisplayId);
+            Displays.Delete(DisplayId);
 
             return 0;
         }
@@ -99,6 +104,8 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
 
         public long CloseLayer(ServiceCtx Context)
         {
+            long LayerId = Context.RequestData.ReadInt64();
+
             return 0;
         }
 
@@ -109,7 +116,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
 
             long ParcelPtr = Context.Request.ReceiveBuff[0].Position;
 
-            Display Disp = Context.Ns.Os.Displays.GetData<Display>((int)DisplayId);
+            Display Disp = Displays.GetData<Display>((int)DisplayId);
 
             byte[] Parcel = MakeIGraphicsBufferProducer(ParcelPtr);
 
@@ -118,6 +125,11 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
             Context.ResponseData.Write(0L);
             Context.ResponseData.Write((long)Parcel.Length);
 
+            return 0;
+        }
+
+        public long DestroyStrayLayer(ServiceCtx Context)
+        {
             return 0;
         }
 
@@ -133,7 +145,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
         {
             string Name = GetDisplayName(Context);
 
-            int Handle = Context.Ns.Os.Handles.GenerateId(new HEvent());
+            int Handle = Context.Process.HandleTable.OpenHandle(new HEvent());
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 

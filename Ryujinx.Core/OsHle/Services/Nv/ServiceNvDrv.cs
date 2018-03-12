@@ -1,5 +1,4 @@
 using ChocolArm64.Memory;
-using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using Ryujinx.Core.OsHle.Utilities;
 using Ryujinx.Graphics.Gpu;
@@ -12,40 +11,16 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
     {
         private delegate long ServiceProcessIoctl(ServiceCtx Context);
 
-        private static Dictionary<(string, int), ServiceProcessIoctl> IoctlCmds =
-                   new Dictionary<(string, int), ServiceProcessIoctl>()
-        {
-            { ("/dev/nvhost-as-gpu",   0x4101), NvGpuAsIoctlBindChannel           },
-            { ("/dev/nvhost-as-gpu",   0x4102), NvGpuAsIoctlAllocSpace            },
-            { ("/dev/nvhost-as-gpu",   0x4106), NvGpuAsIoctlMapBufferEx           },
-            { ("/dev/nvhost-as-gpu",   0x4108), NvGpuAsIoctlGetVaRegions          },
-            { ("/dev/nvhost-as-gpu",   0x4109), NvGpuAsIoctlInitializeEx          },
-            { ("/dev/nvhost-ctrl",     0x001b), NvHostIoctlCtrlGetConfig          },
-            { ("/dev/nvhost-ctrl",     0x001d), NvHostIoctlCtrlEventWait          },
-            { ("/dev/nvhost-ctrl-gpu", 0x4701), NvGpuIoctlZcullGetCtxSize         },
-            { ("/dev/nvhost-ctrl-gpu", 0x4702), NvGpuIoctlZcullGetInfo            },
-            { ("/dev/nvhost-ctrl-gpu", 0x4705), NvGpuIoctlGetCharacteristics      },
-            { ("/dev/nvhost-ctrl-gpu", 0x4706), NvGpuIoctlGetTpcMasks             },
-            { ("/dev/nvhost-ctrl-gpu", 0x4714), NvGpuIoctlZbcGetActiveSlotMask    },
-            { ("/dev/nvhost-gpu",      0x4714), NvMapIoctlChannelSetUserData      },
-            { ("/dev/nvhost-gpu",      0x4801), NvMapIoctlChannelSetNvMap         },
-            { ("/dev/nvhost-gpu",      0x4808), NvMapIoctlChannelSubmitGpFifo     },
-            { ("/dev/nvhost-gpu",      0x4809), NvMapIoctlChannelAllocObjCtx      },
-            { ("/dev/nvhost-gpu",      0x480b), NvMapIoctlChannelZcullBind        },
-            { ("/dev/nvhost-gpu",      0x480c), NvMapIoctlChannelSetErrorNotifier },
-            { ("/dev/nvhost-gpu",      0x480d), NvMapIoctlChannelSetPriority      },
-            { ("/dev/nvhost-gpu",      0x481a), NvMapIoctlChannelAllocGpFifoEx2   },
-            { ("/dev/nvmap",           0x0101), NvMapIocCreate                    },
-            { ("/dev/nvmap",           0x0103), NvMapIocFromId                    },
-            { ("/dev/nvmap",           0x0104), NvMapIocAlloc                     },
-            { ("/dev/nvmap",           0x0105), NvMapIocFree                      },
-            { ("/dev/nvmap",           0x0109), NvMapIocParam                     },
-            { ("/dev/nvmap",           0x010e), NvMapIocGetId                     },
-        };
-
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+
+        private Dictionary<(string, int), ServiceProcessIoctl> IoctlCmds;
+
+        private IdDictionary Fds;
+
+        private IdDictionary NvMaps;
+        private IdDictionary NvMapsById;
 
         public ServiceNvDrv()
         {
@@ -58,15 +33,50 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
                 { 4, QueryEvent   },
                 { 8, SetClientPid },
             };
+
+            IoctlCmds = new Dictionary<(string, int), ServiceProcessIoctl>()
+            {
+                { ("/dev/nvhost-as-gpu",   0x4101), NvGpuAsIoctlBindChannel           },
+                { ("/dev/nvhost-as-gpu",   0x4102), NvGpuAsIoctlAllocSpace            },
+                { ("/dev/nvhost-as-gpu",   0x4106), NvGpuAsIoctlMapBufferEx           },
+                { ("/dev/nvhost-as-gpu",   0x4108), NvGpuAsIoctlGetVaRegions          },
+                { ("/dev/nvhost-as-gpu",   0x4109), NvGpuAsIoctlInitializeEx          },
+                { ("/dev/nvhost-ctrl",     0x001b), NvHostIoctlCtrlGetConfig          },
+                { ("/dev/nvhost-ctrl",     0x001d), NvHostIoctlCtrlEventWait          },
+                { ("/dev/nvhost-ctrl-gpu", 0x4701), NvGpuIoctlZcullGetCtxSize         },
+                { ("/dev/nvhost-ctrl-gpu", 0x4702), NvGpuIoctlZcullGetInfo            },
+                { ("/dev/nvhost-ctrl-gpu", 0x4705), NvGpuIoctlGetCharacteristics      },
+                { ("/dev/nvhost-ctrl-gpu", 0x4706), NvGpuIoctlGetTpcMasks             },
+                { ("/dev/nvhost-ctrl-gpu", 0x4714), NvGpuIoctlZbcGetActiveSlotMask    },
+                { ("/dev/nvhost-gpu",      0x4714), NvMapIoctlChannelSetUserData      },
+                { ("/dev/nvhost-gpu",      0x4801), NvMapIoctlChannelSetNvMap         },
+                { ("/dev/nvhost-gpu",      0x4808), NvMapIoctlChannelSubmitGpFifo     },
+                { ("/dev/nvhost-gpu",      0x4809), NvMapIoctlChannelAllocObjCtx      },
+                { ("/dev/nvhost-gpu",      0x480b), NvMapIoctlChannelZcullBind        },
+                { ("/dev/nvhost-gpu",      0x480c), NvMapIoctlChannelSetErrorNotifier },
+                { ("/dev/nvhost-gpu",      0x480d), NvMapIoctlChannelSetPriority      },
+                { ("/dev/nvhost-gpu",      0x481a), NvMapIoctlChannelAllocGpFifoEx2   },
+                { ("/dev/nvmap",           0x0101), NvMapIocCreate                    },
+                { ("/dev/nvmap",           0x0103), NvMapIocFromId                    },
+                { ("/dev/nvmap",           0x0104), NvMapIocAlloc                     },
+                { ("/dev/nvmap",           0x0105), NvMapIocFree                      },
+                { ("/dev/nvmap",           0x0109), NvMapIocParam                     },
+                { ("/dev/nvmap",           0x010e), NvMapIocGetId                     },
+            };
+
+            Fds = new IdDictionary();
+
+            NvMaps     = new IdDictionary();
+            NvMapsById = new IdDictionary();
         }
 
-        public static long Open(ServiceCtx Context)
+        public long Open(ServiceCtx Context)
         {
             long NamePtr = Context.Request.SendBuff[0].Position;
 
             string Name = AMemoryHelper.ReadAsciiString(Context.Memory, NamePtr);
 
-            int Fd = Context.Ns.Os.Fds.GenerateId(new FileDesc(Name));
+            int Fd = Fds.Add(new NvFd(Name));
 
             Context.ResponseData.Write(Fd);
             Context.ResponseData.Write(0);
@@ -74,12 +84,12 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        public static long Ioctl(ServiceCtx Context)
+        public long Ioctl(ServiceCtx Context)
         {
             int Fd  = Context.RequestData.ReadInt32();
             int Cmd = Context.RequestData.ReadInt32() & 0xffff;
             
-            FileDesc FdData = Context.Ns.Os.Fds.GetData<FileDesc>(Fd);
+            NvFd FdData = Fds.GetData<NvFd>(Fd);
 
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -95,18 +105,18 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             }
         }
 
-        public static long Close(ServiceCtx Context)
+        public long Close(ServiceCtx Context)
         {
             int Fd = Context.RequestData.ReadInt32();
 
-            Context.Ns.Os.Fds.Delete(Fd);
+            Fds.Delete(Fd);
 
             Context.ResponseData.Write(0);
 
             return 0;
         }
 
-        public static long Initialize(ServiceCtx Context)
+        public long Initialize(ServiceCtx Context)
         {
             long TransferMemSize   = Context.RequestData.ReadInt64();
             int  TransferMemHandle = Context.Request.HandleDesc.ToCopy[0];
@@ -116,7 +126,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        public static long QueryEvent(ServiceCtx Context)
+        public long QueryEvent(ServiceCtx Context)
         {
             int Fd      = Context.RequestData.ReadInt32();
             int EventId = Context.RequestData.ReadInt32();
@@ -128,7 +138,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        public static long SetClientPid(ServiceCtx Context)
+        public long SetClientPid(ServiceCtx Context)
         {
             long Pid = Context.RequestData.ReadInt64();
 
@@ -137,7 +147,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvGpuAsIoctlBindChannel(ServiceCtx Context)
+        private long NvGpuAsIoctlBindChannel(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -146,7 +156,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvGpuAsIoctlAllocSpace(ServiceCtx Context)
+        private long NvGpuAsIoctlAllocSpace(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -172,7 +182,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvGpuAsIoctlMapBufferEx(ServiceCtx Context)
+        private long NvGpuAsIoctlMapBufferEx(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -186,18 +196,29 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             long MapSize  = Reader.ReadInt64();
             long Offset   = Reader.ReadInt64();
 
-            HNvMap NvMap = Context.Ns.Os.Handles.GetData<HNvMap>(Handle);
-
-            if (NvMap != null)
+            if (Handle == 0)
             {
-                if ((Flags & 1) != 0)
-                {
-                    Offset = Context.Ns.Gpu.MapMemory(NvMap.Address, Offset, NvMap.Size);
-                }
-                else
-                {
-                    Offset = Context.Ns.Gpu.MapMemory(NvMap.Address, NvMap.Size);
-                }
+                //Handle 0 is valid here, but it refers to something else.
+                //TODO: Figure out what, for now just return success.
+                return 0;
+            }
+
+            NvMap Map = NvMaps.GetData<NvMap>(Handle);
+
+            if (Map == null)
+            {
+                Logging.Warn($"Trying to use invalid NvMap Handle {Handle}!");
+                
+                return -1; //TODO: Corrent error code.
+            }
+
+            if ((Flags & 1) != 0)
+            {
+                Offset = Context.Ns.Gpu.MapMemory(Map.Address, Offset, Map.Size);
+            }
+            else
+            {
+                Offset = Context.Ns.Gpu.MapMemory(Map.Address, Map.Size);
             }
 
             Context.Memory.WriteInt64(Position + 0x20, Offset);
@@ -205,7 +226,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvGpuAsIoctlGetVaRegions(ServiceCtx Context)
+        private long NvGpuAsIoctlGetVaRegions(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -235,7 +256,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvGpuAsIoctlInitializeEx(ServiceCtx Context)
+        private long NvGpuAsIoctlInitializeEx(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -252,7 +273,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvHostIoctlCtrlGetConfig(ServiceCtx Context)
+        private long NvHostIoctlCtrlGetConfig(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -267,7 +288,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvHostIoctlCtrlEventWait(ServiceCtx Context)
+        private long NvHostIoctlCtrlEventWait(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -283,7 +304,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvGpuIoctlZcullGetCtxSize(ServiceCtx Context)
+        private long NvGpuIoctlZcullGetCtxSize(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -292,7 +313,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvGpuIoctlZcullGetInfo(ServiceCtx Context)
+        private long NvGpuIoctlZcullGetInfo(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -312,7 +333,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvGpuIoctlGetCharacteristics(ServiceCtx Context)
+        private long NvGpuIoctlGetCharacteristics(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -374,7 +395,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvGpuIoctlGetTpcMasks(ServiceCtx Context)
+        private long NvGpuIoctlGetTpcMasks(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -388,7 +409,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvGpuIoctlZbcGetActiveSlotMask(ServiceCtx Context)
+        private long NvGpuIoctlZbcGetActiveSlotMask(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -398,14 +419,14 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvMapIoctlChannelSetUserData(ServiceCtx Context)
+        private long NvMapIoctlChannelSetUserData(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
             return 0;
         }
 
-        private static long NvMapIoctlChannelSetNvMap(ServiceCtx Context)
+        private long NvMapIoctlChannelSetNvMap(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -414,7 +435,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvMapIoctlChannelSubmitGpFifo(ServiceCtx Context)
+        private long NvMapIoctlChannelSubmitGpFifo(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -453,7 +474,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvMapIoctlChannelAllocObjCtx(ServiceCtx Context)
+        private long NvMapIoctlChannelAllocObjCtx(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -465,7 +486,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvMapIoctlChannelZcullBind(ServiceCtx Context)
+        private long NvMapIoctlChannelZcullBind(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -478,7 +499,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvMapIoctlChannelSetErrorNotifier(ServiceCtx Context)
+        private long NvMapIoctlChannelSetErrorNotifier(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -492,7 +513,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvMapIoctlChannelSetPriority(ServiceCtx Context)
+        private long NvMapIoctlChannelSetPriority(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -501,7 +522,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvMapIoctlChannelAllocGpFifoEx2(ServiceCtx Context)
+        private long NvMapIoctlChannelAllocGpFifoEx2(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -521,47 +542,46 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvMapIocCreate(ServiceCtx Context)
+        private long NvMapIocCreate(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
             int Size = Context.Memory.ReadInt32(Position);
 
-            int Id = Context.Ns.Os.NvMapIds.GenerateId();
+            NvMap Map = new NvMap() { Size = Size };
 
-            int Handle = Context.Ns.Os.Handles.GenerateId(new HNvMap(Id, Size));
+            Map.Handle = NvMaps.Add(Map);
 
-            Context.Memory.WriteInt32(Position + 4, Handle);
+            Map.Id = NvMapsById.Add(Map);
 
-            Logging.Info($"NvMap {Id} created with size {Size:x8}!");
+            Context.Memory.WriteInt32(Position + 4, Map.Handle);
+
+            Logging.Info($"NvMap {Map.Id} created with size {Size:x8}!");
 
             return 0;
         }
 
-        private static long NvMapIocFromId(ServiceCtx Context)
+        private long NvMapIocFromId(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
             int Id = Context.Memory.ReadInt32(Position);
 
-            int Handle = -1;
+            NvMap Map = NvMapsById.GetData<NvMap>(Id);
 
-            foreach (KeyValuePair<int, object> KV in Context.Ns.Os.Handles)
+            if (Map == null)
             {
-                if (KV.Value is HNvMap NvMap && NvMap.Id == Id)
-                {
-                    Handle = KV.Key;
-
-                    break;
-                }
+                Logging.Warn($"Trying to use invalid NvMap Id {Id}!");
+                
+                return -1; //TODO: Corrent error code.
             }
 
-            Context.Memory.WriteInt32(Position + 4, Handle);
+            Context.Memory.WriteInt32(Position + 4, Map.Handle);
 
             return 0;
         }
 
-        private static long NvMapIocAlloc(ServiceCtx Context)
+        private long NvMapIocAlloc(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -574,38 +594,49 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             byte Kind     = (byte)Reader.ReadInt64();
             long Addr     =       Reader.ReadInt64();
 
-            HNvMap NvMap = Context.Ns.Os.Handles.GetData<HNvMap>(Handle);
+            NvMap Map = NvMaps.GetData<NvMap>(Handle);
 
-            if (NvMap != null)
+            if (Map == null)
             {
-                NvMap.Address = Addr;
-                NvMap.Align   = Align;
-                NvMap.Kind    = Kind;
+                Logging.Warn($"Trying to use invalid NvMap Handle {Handle}!");
+                
+                return -1; //TODO: Corrent error code.
             }
+
+            Map.Address = Addr;
+            Map.Align   = Align;
+            Map.Kind    = Kind;
 
             return 0;
         }
 
-        private static long NvMapIocFree(ServiceCtx Context)
+        private long NvMapIocFree(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
             MemReader Reader = new MemReader(Context.Memory, Position);
             MemWriter Writer = new MemWriter(Context.Memory, Position + 8);
 
-            int  Handle  =       Reader.ReadInt32();
-            int  Padding =       Reader.ReadInt32();
+            int  Handle  = Reader.ReadInt32();
+            int  Padding = Reader.ReadInt32();
 
-            HNvMap NvMap = Context.Ns.Os.Handles.GetData<HNvMap>(Handle);
+            NvMap Map = NvMaps.GetData<NvMap>(Handle);
+
+            if (Map == null)
+            {
+                Logging.Warn($"Trying to use invalid NvMap Handle {Handle}!");
+                
+                return -1; //TODO: Corrent error code.
+            }
 
             Writer.WriteInt64(0);
-            Writer.WriteInt32(NvMap.Size);
+            Writer.WriteInt32(Map.Size);
             Writer.WriteInt32(0);
 
             return 0;
         }
 
-        private static long NvMapIocParam(ServiceCtx Context)
+        private long NvMapIocParam(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -614,16 +645,23 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             int Handle = Reader.ReadInt32();
             int Param  = Reader.ReadInt32();
 
-            HNvMap NvMap = Context.Ns.Os.Handles.GetData<HNvMap>(Handle);
+            NvMap Map = NvMaps.GetData<NvMap>(Handle);
+
+            if (Map == null)
+            {
+                Logging.Warn($"Trying to use invalid NvMap Handle {Handle}!");
+                
+                return -1; //TODO: Corrent error code.
+            }
 
             int Response = 0;
-            
+
             switch (Param)
             {
-                case 1: Response = NvMap.Size;  break;
-                case 2: Response = NvMap.Align; break;
-                case 4: Response = 0x40000000;  break;
-                case 5: Response = NvMap.Kind;  break;
+                case 1: Response = Map.Size;   break;
+                case 2: Response = Map.Align;  break;
+                case 4: Response = 0x40000000; break;
+                case 5: Response = Map.Kind;   break;
             }
 
             Context.Memory.WriteInt32(Position + 8, Response);
@@ -631,17 +669,29 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        private static long NvMapIocGetId(ServiceCtx Context)
+        private long NvMapIocGetId(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
 
             int Handle = Context.Memory.ReadInt32(Position + 4);
 
-            HNvMap NvMap = Context.Ns.Os.Handles.GetData<HNvMap>(Handle);
+            NvMap Map = NvMaps.GetData<NvMap>(Handle);
 
-            Context.Memory.WriteInt32(Position, NvMap.Id);
+            if (Map == null)
+            {
+                Logging.Warn($"Trying to use invalid NvMap Handle {Handle}!");
+                
+                return -1; //TODO: Corrent error code.
+            }
+
+            Context.Memory.WriteInt32(Position, Map.Id);
 
             return 0;
+        }
+
+        public NvMap GetNvMap(int Handle)
+        {
+            return NvMaps.GetData<NvMap>(Handle);
         }
     }
 }

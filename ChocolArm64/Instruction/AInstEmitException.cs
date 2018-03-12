@@ -34,6 +34,22 @@ namespace ChocolArm64.Instruction
 
             Context.EmitCall(MthdInfo);
 
+            //Check if the thread should still be running, if it isn't then we return 0
+            //to force a return to the dispatcher and then exit the thread.
+            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
+
+            Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Running));
+
+            AILLabel LblEnd = new AILLabel();
+
+            Context.Emit(OpCodes.Brtrue_S, LblEnd);
+
+            Context.EmitLdc_I8(0);
+
+            Context.Emit(OpCodes.Ret);
+
+            Context.MarkLabel(LblEnd);
+
             if (Context.CurrBlock.Next != null)
             {
                 Context.EmitLoadState(Context.CurrBlock.Next);

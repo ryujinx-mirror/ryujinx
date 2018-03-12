@@ -13,6 +13,7 @@ namespace Ryujinx.Core.OsHle.Ipc
 
         public static void IpcCall(
             Switch     Ns,
+            Process    Process,
             AMemory    Memory,
             HSession   Session,
             IpcMessage Request,
@@ -60,7 +61,7 @@ namespace Ryujinx.Core.OsHle.Ipc
                         }
                         else if (Request.DomCmd == IpcDomCmd.DeleteObj)
                         {
-                            Dom.DeleteObject(Request.DomObjId);
+                            Dom.Delete(Request.DomObjId);
 
                             Response = FillResponse(Response, 0);
 
@@ -100,6 +101,7 @@ namespace Ryujinx.Core.OsHle.Ipc
 
                             ServiceCtx Context = new ServiceCtx(
                                 Ns,
+                                Process,
                                 Memory,
                                 Session,
                                 Request,
@@ -124,15 +126,43 @@ namespace Ryujinx.Core.OsHle.Ipc
 
                     switch (CmdId)
                     {
-                        case 0: Request = IpcConvertSessionToDomain(Ns, Session, Response, HndId); break;
-                        case 3: Request = IpcQueryBufferPointerSize(Response);                     break;
-                        case 2: //IpcDuplicateSession, differences is unknown. 
-                        case 4: Request = IpcDuplicateSessionEx(Ns, Session, Response, ReqReader); break;
+                        case 0:
+                        {
+                            HDomain Dom = new HDomain(Session);
+
+                            Process.HandleTable.ReplaceData(HndId, Dom);
+
+                            Request = FillResponse(Response, 0, Dom.Add(Dom));
+
+                            break;
+                        }
+
+                        case 3:
+                        {
+                            Request = FillResponse(Response, 0, 0x500);
+                            
+                            break;
+                        }
+
+                        //TODO: Whats the difference between IpcDuplicateSession/Ex? 
+                        case 2: 
+                        case 4:
+                        {
+                            int Unknown = ReqReader.ReadInt32();
+
+                            int Handle = Process.HandleTable.OpenHandle(Session);
+
+                            Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
+
+                            Request = FillResponse(Response, 0);
+
+                            break;
+                        }
 
                         default: throw new NotImplementedException(CmdId.ToString());
                     }
                 }
-                else if (Request.Type == IpcMessageType.Unknown2)
+                else if (Request.Type == IpcMessageType.CloseSession)
                 {
                     //TODO
                 }
@@ -143,39 +173,6 @@ namespace Ryujinx.Core.OsHle.Ipc
 
                 AMemoryHelper.WriteBytes(Memory, CmdPtr, Response.GetBytes(CmdPtr));
             }
-        }
-
-        private static IpcMessage IpcConvertSessionToDomain(
-            Switch     Ns,
-            HSession   Session,
-            IpcMessage Response,
-            int        HndId)
-        {
-            HDomain Dom = new HDomain(Session);
-
-            Ns.Os.Handles.ReplaceData(HndId, Dom);
-
-            return FillResponse(Response, 0, Dom.GenerateObjectId(Dom));
-        }
-
-        private static IpcMessage IpcDuplicateSessionEx(
-            Switch       Ns,
-            HSession     Session,
-            IpcMessage   Response,
-            BinaryReader ReqReader)
-        {
-            int Unknown = ReqReader.ReadInt32();
-
-            int Handle = Ns.Os.Handles.GenerateId(Session);
-
-            Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
-
-            return FillResponse(Response, 0);
-        }
-
-        private static IpcMessage IpcQueryBufferPointerSize(IpcMessage Response)
-        {
-            return FillResponse(Response, 0, 0x500);
         }
 
         private static IpcMessage FillResponse(IpcMessage Response, long Result, params int[] Values)

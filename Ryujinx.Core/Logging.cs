@@ -8,7 +8,8 @@ namespace Ryujinx.Core
 {
     public static class Logging
     {
-        private static Stopwatch ExecutionTime = new Stopwatch();
+        private static Stopwatch ExecutionTime;
+
         private const string LogFileName = "Ryujinx.log";
 
         private static bool EnableInfo    = Config.LoggingEnableInfo;
@@ -23,6 +24,10 @@ namespace Ryujinx.Core
         static Logging()
         {
             if (File.Exists(LogFileName)) File.Delete(LogFileName);
+
+            ExecutionTime = new Stopwatch();
+
+            ExecutionTime.Start();
         }
 
         public static string GetExecutionTime()

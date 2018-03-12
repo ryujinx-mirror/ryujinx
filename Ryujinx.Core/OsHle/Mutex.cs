@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace Ryujinx.Core.OsHle
 {
-    public class Mutex
+    class Mutex
     {
         private const int MutexHasListenersMask = 0x40000000;
 

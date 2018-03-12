@@ -1,4 +1,3 @@
-using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
@@ -32,9 +31,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Hid
 
         public long CreateAppletResource(ServiceCtx Context)
         {
-            HSharedMem HidHndData = Context.Ns.Os.Handles.GetData<HSharedMem>(Context.Ns.Os.HidHandle);
-
-            MakeObject(Context, new IAppletResource(HidHndData));
+            MakeObject(Context, new IAppletResource(Context.Ns.Os.HidSharedMem));
 
             return 0;
         }

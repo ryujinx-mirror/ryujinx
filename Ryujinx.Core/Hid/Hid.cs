@@ -63,17 +63,13 @@ namespace Ryujinx.Core.Input
 
         private object ShMemLock;
 
-        private long[] ShMemPositions;
+        private (AMemory, long)[] ShMemPositions;
 
-        private AMemory Memory;
-
-        public Hid(AMemory Memory)
+        public Hid()
         {
-            this.Memory = Memory;
-
             ShMemLock = new object();
 
-            ShMemPositions = new long[0];
+            ShMemPositions = new (AMemory, long)[0];
         }
 
         internal void ShMemMap(object sender, EventArgs e)
@@ -84,11 +80,11 @@ namespace Ryujinx.Core.Input
             {
                 ShMemPositions = SharedMem.GetVirtualPositions();
 
-                long BasePosition = ShMemPositions[ShMemPositions.Length - 1];
+                (AMemory Memory, long Position) ShMem = ShMemPositions[ShMemPositions.Length - 1];
 
-                Logging.Info($"HID shared memory successfully mapped to 0x{BasePosition:x16}!");
+                Logging.Info($"HID shared memory successfully mapped to 0x{ShMem.Position:x16}!");
 
-                Init(BasePosition);
+                Init(ShMem.Memory, ShMem.Position);
             }
         }
 
@@ -102,10 +98,11 @@ namespace Ryujinx.Core.Input
             }
         }
 
-        private void Init(long BasePosition)
+        private void Init(AMemory Memory, long Position)
         {
             InitializeJoyconPair(
-                BasePosition,
+                Memory,
+                Position,
                 JoyConColor.Body_Neon_Red,
                 JoyConColor.Buttons_Neon_Red,
                 JoyConColor.Body_Neon_Blue,
@@ -113,13 +110,14 @@ namespace Ryujinx.Core.Input
         }
 
         private void InitializeJoyconPair(
-            long        BasePosition,
+            AMemory     Memory,
+            long        Position,
             JoyConColor LeftColorBody,
             JoyConColor LeftColorButtons,
             JoyConColor RightColorBody,
             JoyConColor RightColorButtons)
         {
-            long BaseControllerOffset = BasePosition + HidControllersOffset + 8 * HidControllerSize;
+            long BaseControllerOffset = Position + HidControllersOffset + 8 * HidControllerSize;
 
             HidControllerType Type =
                 HidControllerType.ControllerType_Handheld |
@@ -160,7 +158,7 @@ namespace Ryujinx.Core.Input
         {
             lock (ShMemLock)
             {
-                foreach (long Position in ShMemPositions)
+                foreach ((AMemory Memory, long Position) in ShMemPositions)
                 {
                     long ControllerOffset = Position + HidControllersOffset;
 
@@ -207,7 +205,7 @@ namespace Ryujinx.Core.Input
         {
             lock (ShMemLock)
             {
-                foreach (long Position in ShMemPositions)
+                foreach ((AMemory Memory, long Position) in ShMemPositions)
                 {
                     long TouchScreenOffset = Position + HidTouchScreenOffset;
 

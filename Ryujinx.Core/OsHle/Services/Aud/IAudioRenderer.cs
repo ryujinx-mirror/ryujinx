@@ -56,7 +56,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
 
         public long QuerySystemEvent(ServiceCtx Context)
         {
-            int Handle = Context.Ns.Os.Handles.GenerateId(new HEvent());
+            int Handle = Context.Process.HandleTable.OpenHandle(new HEvent());
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 

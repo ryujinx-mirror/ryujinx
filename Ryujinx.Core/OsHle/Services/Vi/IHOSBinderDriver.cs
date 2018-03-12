@@ -1,6 +1,7 @@
 using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Ipc;
 using Ryujinx.Core.OsHle.IpcServices.Android;
+using Ryujinx.Graphics.Gal;
 using System;
 using System.Collections.Generic;
 
@@ -14,7 +15,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
 
         private NvFlinger Flinger;
 
-        public IHOSBinderDriver()
+        public IHOSBinderDriver(IGalRenderer Renderer)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -23,7 +24,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
                 { 2, GetNativeHandle }
             };
 
-            Flinger = new NvFlinger();
+            Flinger = new NvFlinger(Renderer);
         }
 
         public long TransactParcel(ServiceCtx Context)

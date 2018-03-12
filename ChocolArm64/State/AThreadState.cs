@@ -29,6 +29,8 @@ namespace ChocolArm64.State
         public int ProcessId;
         public int ThreadId;
 
+        public bool Running { get; set; }
+
         public long TpidrEl0 { get; set; }
         public long Tpidr    { get; set; }
 

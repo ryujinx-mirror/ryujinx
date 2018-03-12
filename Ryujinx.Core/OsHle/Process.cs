@@ -9,16 +9,19 @@ using Ryujinx.Core.OsHle.Svc;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Ryujinx.Core.OsHle
 {
-    public class Process : IDisposable
+    class Process : IDisposable
     {
-        private const int  TlsSize       = 0x200;
-        private const int  TotalTlsSlots = 32;
+        private const int TlsSize       = 0x200;
+        private const int TotalTlsSlots = 32;
 
         private Switch Ns;
+
+        public bool NeedsHbAbi { get; private set; }
+
+        public long HbAbiDataPosition { get; private set; }
 
         public int ProcessId { get; private set; }
 
@@ -26,7 +29,11 @@ namespace Ryujinx.Core.OsHle
 
         public AMemory Memory { get; private set; }
 
+        public ServiceMgr Services { get; private set; }
+
         public KProcessScheduler Scheduler { get; private set; }
+
+        public KProcessHandleTable HandleTable { get; private set; }
 
         private SvcHandler SvcHandler;
 
@@ -40,14 +47,22 @@ namespace Ryujinx.Core.OsHle
 
         private long ImageBase;
 
+        private bool ShouldDispose;
+
+        private bool Disposed;
+
         public Process(Switch Ns, int ProcessId)
         {
             this.Ns        = Ns;
             this.ProcessId = ProcessId;
 
-            Memory = Ns.Memory;
+            Memory = new AMemory();
 
-            Scheduler = new KProcessScheduler();
+            Services = new ServiceMgr();
+
+            HandleTable = new KProcessHandleTable();
+
+            Scheduler = new KProcessScheduler();            
 
             SvcHandler = new SvcHandler(Ns, this);
 
@@ -67,6 +82,11 @@ namespace Ryujinx.Core.OsHle
 
         public void LoadProgram(IExecutable Program)
         {
+            if (Disposed)
+            {
+                throw new ObjectDisposedException(nameof(Process));
+            }
+
             Logging.Info($"Image base at 0x{ImageBase:x16}.");
 
             Executable Executable = new Executable(Program, Memory, ImageBase);
@@ -78,11 +98,19 @@ namespace Ryujinx.Core.OsHle
 
         public void SetEmptyArgs()
         {
+            //TODO: This should be part of Run.
             ImageBase += AMemoryMgr.PageSize;
         }
 
-        public bool Run(bool UseHbAbi = false)
+        public bool Run(bool NeedsHbAbi = false)
         {
+            if (Disposed)
+            {
+                throw new ObjectDisposedException(nameof(Process));
+            }
+
+            this.NeedsHbAbi = NeedsHbAbi;
+
             if (Executables.Count == 0)
             {
                 return false;
@@ -102,11 +130,11 @@ namespace Ryujinx.Core.OsHle
                 return false;
             }
 
-            MainThread = Ns.Os.Handles.GetData<HThread>(Handle);
+            MainThread = HandleTable.GetData<HThread>(Handle);
 
-            if (UseHbAbi)
+            if (NeedsHbAbi)
             {
-                long HbAbiDataPosition = AMemoryHelper.PageRoundUp(Executables[0].ImageEnd);
+                HbAbiDataPosition = AMemoryHelper.PageRoundUp(Executables[0].ImageEnd);
 
                 Homebrew.WriteHbAbiData(Memory, HbAbiDataPosition, Handle);
 
@@ -124,22 +152,21 @@ namespace Ryujinx.Core.OsHle
             Memory.Manager.Map(Position, Size, (int)Type, AMemoryPerm.RW);
         }
 
-        public void StopAllThreads()
+        public void StopAllThreadsAsync()
         {
+            if (Disposed)
+            {
+                throw new ObjectDisposedException(nameof(Process));
+            }
+
             if (MainThread != null)
             {
-                while (MainThread.Thread.IsAlive)
-                {
-                    MainThread.Thread.StopExecution();
-                }
+                MainThread.Thread.StopExecution();
             }
 
             foreach (AThread Thread in TlsSlots.Values)
             {
-                while (Thread.IsAlive)
-                {
-                    Thread.StopExecution();
-                }
+                Thread.StopExecution();
             }
         }
 
@@ -150,49 +177,26 @@ namespace Ryujinx.Core.OsHle
             int  Priority,
             int  ProcessorId)
         {
-            ThreadPriority ThreadPrio;
-
-            if (Priority < 12)
+            if (Disposed)
             {
-                ThreadPrio = ThreadPriority.Highest;
-            }
-            else if (Priority < 24)
-            {
-                ThreadPrio = ThreadPriority.AboveNormal;
-            }
-            else if (Priority < 36)
-            {
-                ThreadPrio = ThreadPriority.Normal;
-            }
-            else if (Priority < 48)
-            {
-                ThreadPrio = ThreadPriority.BelowNormal;
-            }
-            else
-            {
-                ThreadPrio = ThreadPriority.Lowest;
+                throw new ObjectDisposedException(nameof(Process));
             }
 
-            AThread Thread = new AThread(GetTranslator(), Memory, ThreadPrio, EntryPoint);
+            AThread Thread = new AThread(GetTranslator(), Memory, EntryPoint);
 
             HThread ThreadHnd = new HThread(Thread, ProcessorId, Priority);
 
-            int Handle = Ns.Os.Handles.GenerateId(ThreadHnd);
+            int Handle = HandleTable.OpenHandle(ThreadHnd);
 
-            int TlsSlot = GetFreeTlsSlot(Thread);
+            int ThreadId = GetFreeTlsSlot(Thread);
 
-            if (TlsSlot == -1 || Handle  == -1)
-            {
-                return -1;
-            }
-
-            long Tpidr = MemoryRegions.TlsPagesAddress + TlsSlot * TlsSize;
+            long Tpidr = MemoryRegions.TlsPagesAddress + ThreadId * TlsSize;
 
             Thread.ThreadState.Break     += BreakHandler;
             Thread.ThreadState.SvcCall   += SvcHandler.SvcCall;
             Thread.ThreadState.Undefined += UndefinedHandler;
             Thread.ThreadState.ProcessId  = ProcessId;
-            Thread.ThreadState.ThreadId   = Ns.Os.IdGen.GenerateId();
+            Thread.ThreadState.ThreadId   = ThreadId;
             Thread.ThreadState.Tpidr      = Tpidr;
             Thread.ThreadState.X0         = (ulong)ArgsPtr;
             Thread.ThreadState.X1         = (ulong)Handle;
@@ -224,7 +228,7 @@ namespace Ryujinx.Core.OsHle
                 foreach (Executable Exe in Executables)
                 {
                     foreach (KeyValuePair<long, string> KV in Exe.SymbolTable)
-                    {                        
+                    {
                         SymbolTable.TryAdd(Exe.ImageBase + KV.Key, KV.Value);
                     }
                 }
@@ -274,16 +278,28 @@ namespace Ryujinx.Core.OsHle
                 }
             }
 
-            return -1;
+            throw new InvalidOperationException();
         }
 
         private void ThreadFinished(object sender, EventArgs e)
         {
             if (sender is AThread Thread)
             {
-                TlsSlots.TryRemove(GetTlsSlot(Thread.ThreadState.Tpidr), out _);
+                Logging.Info($"Thread {Thread.ThreadId} exiting...");
 
-                Ns.Os.IdGen.DeleteId(Thread.ThreadId);
+                TlsSlots.TryRemove(GetTlsSlot(Thread.ThreadState.Tpidr), out _);
+            }
+
+            if (TlsSlots.Count == 0)
+            {
+                if (ShouldDispose)
+                {
+                    Dispose();
+                }
+
+                Logging.Info($"No threads running, now exiting Process {ProcessId}...");
+
+                Ns.Os.ExitProcess(ProcessId);
             }
         }
 
@@ -309,9 +325,30 @@ namespace Ryujinx.Core.OsHle
 
         protected virtual void Dispose(bool Disposing)
         {
-            if (Disposing)
+            if (Disposing && !Disposed)
             {
+                //If there is still some thread running, disposing the objects is not
+                //safe as the thread may try to access those resources. Instead, we set
+                //the flag to have the Process disposed when all threads finishes.
+                //Note: This may not happen if the guest code gets stuck on a infinite loop.
+                if (TlsSlots.Count > 0)
+                {
+                    ShouldDispose = true;
+
+                    Logging.Info($"Process {ProcessId} waiting all threads terminate...");
+
+                    return;
+                }
+
+                Disposed = true;
+                
+                Services.Dispose();
+                HandleTable.Dispose();
                 Scheduler.Dispose();
+                SvcHandler.Dispose();
+                Memory.Dispose();
+
+                Logging.Info($"Process {ProcessId} exiting...");
             }
         }
     }

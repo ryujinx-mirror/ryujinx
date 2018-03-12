@@ -165,7 +165,7 @@ namespace Ryujinx.Core.OsHle.Svc
                 return;
             }
 
-            HSharedMem SharedMem = Ns.Os.Handles.GetData<HSharedMem>(Handle);
+            HSharedMem SharedMem = Process.HandleTable.GetData<HSharedMem>(Handle);
 
             if (SharedMem != null)
             {
@@ -175,7 +175,12 @@ namespace Ryujinx.Core.OsHle.Svc
 
                 Memory.Manager.Reprotect(Src, Size, (AMemoryPerm)Perm);
 
-                SharedMem.AddVirtualPosition(Src);
+                lock (MappedSharedMems)
+                {
+                    MappedSharedMems.Add((SharedMem, Src));
+                }
+
+                SharedMem.AddVirtualPosition(Memory, Src);
 
                 ThreadState.X0 = 0;
             }
@@ -198,11 +203,18 @@ namespace Ryujinx.Core.OsHle.Svc
                 return;
             }
 
-            HSharedMem HndData = Ns.Os.Handles.GetData<HSharedMem>(Handle);
+            HSharedMem SharedMem = Process.HandleTable.GetData<HSharedMem>(Handle);
 
-            if (HndData != null)
+            if (SharedMem != null)
             {
                 Memory.Manager.Unmap(Src, Size, (int)MemoryType.SharedMemory);
+
+                SharedMem.RemoveVirtualPosition(Memory, Src);
+
+                lock (MappedSharedMems)
+                {
+                    MappedSharedMems.Remove((SharedMem, Src));
+                }
 
                 ThreadState.X0 = 0;
             }
@@ -229,12 +241,12 @@ namespace Ryujinx.Core.OsHle.Svc
 
             Memory.Manager.Reprotect(Src, Size, (AMemoryPerm)Perm);
 
-            HTransferMem HndData = new HTransferMem(Memory, MapInfo.Perm, Src, Size);
+            HTransferMem TMem = new HTransferMem(Memory, MapInfo.Perm, Src, Size);
 
-            int Handle = Ns.Os.Handles.GenerateId(HndData);
-
-            ThreadState.X1 = (ulong)Handle;
+            ulong Handle = (ulong)Process.HandleTable.OpenHandle(TMem);
+            
             ThreadState.X0 = 0;
+            ThreadState.X1 = Handle;
         }
 
         private static bool IsValidPosition(long Position)

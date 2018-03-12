@@ -8,6 +8,7 @@ namespace Ryujinx.Graphics.Gal
         void RunActions();
 
         void InitializeFrameBuffer();
+        void ResetFrameBuffer();
         void Render();
         void SetWindowSize(int Width, int Height);
         void SetFrameBuffer(

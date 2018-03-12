@@ -1,12 +1,13 @@
 using ChocolArm64.Events;
 using ChocolArm64.Memory;
 using ChocolArm64.State;
+using Ryujinx.Core.OsHle.Handles;
 using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Svc
 {
-    partial class SvcHandler
+    partial class SvcHandler : IDisposable
     {
         private delegate void SvcFunc(AThreadState ThreadState);
 
@@ -16,9 +17,11 @@ namespace Ryujinx.Core.OsHle.Svc
         private Process Process;
         private AMemory Memory;
 
-        private static Random Rng;
-        
+        private HashSet<(HSharedMem, long)> MappedSharedMems;
+
         private ulong CurrentHeapSize;
+
+        private static Random Rng;
 
         public SvcHandler(Switch Ns, Process Process)
         {
@@ -32,6 +35,7 @@ namespace Ryujinx.Core.OsHle.Svc
                 { 0x07, SvcExitProcess                   },
                 { 0x08, SvcCreateThread                  },
                 { 0x09, SvcStartThread                   },
+                { 0x0a, SvcExitThread                    },
                 { 0x0b, SvcSleepThread                   },
                 { 0x0c, SvcGetThreadPriority             },
                 { 0x0d, SvcSetThreadPriority             },
@@ -60,6 +64,8 @@ namespace Ryujinx.Core.OsHle.Svc
             this.Ns      = Ns;
             this.Process = Process;
             this.Memory  = Process.Memory;
+
+            MappedSharedMems = new HashSet<(HSharedMem, long)>();
         }
 
         static SvcHandler()
@@ -82,6 +88,27 @@ namespace Ryujinx.Core.OsHle.Svc
             else
             {
                 throw new NotImplementedException(e.Id.ToString("x4"));
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool Disposing)
+        {
+            if (Disposing)
+            {
+                lock (MappedSharedMems)
+                {
+                    foreach ((HSharedMem SharedMem, long Position) in MappedSharedMems)
+                    {
+                        SharedMem.RemoveVirtualPosition(Memory, Position);
+                    }
+
+                    MappedSharedMems.Clear();
+                }
             }
         }
     }

@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using Ryujinx.Core.Input;
 using Ryujinx.Core.OsHle;
 using Ryujinx.Core.Settings;
@@ -10,8 +9,6 @@ namespace Ryujinx.Core
 {
     public class Switch : IDisposable
     {
-        internal AMemory Memory { get; private set; }
-
         internal NsGpu     Gpu { get; private set; }
         internal Horizon   Os  { get; private set; }
         internal VirtualFs VFs { get; private set; }
@@ -24,13 +21,11 @@ namespace Ryujinx.Core
 
         public Switch(IGalRenderer Renderer)
         {
-            Memory = new AMemory();
-
             Gpu = new NsGpu(Renderer);
 
             VFs = new VirtualFs();
 
-            Hid = new Hid(Memory);
+            Hid = new Hid();
 
             Statistics = new PerformanceStatistics();
 
@@ -40,11 +35,6 @@ namespace Ryujinx.Core
             Os.HidSharedMem.MemoryUnmapped += Hid.ShMemUnmap;
 
             Settings = new SetSys();
-        }
-
-        public void FinalizeAllProcesses()
-        {
-            Os.FinalizeAllProcesses();
         }
 
         public void LoadCart(string ExeFsDir, string RomFsFile = null)
@@ -67,12 +57,11 @@ namespace Ryujinx.Core
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected virtual void Dispose(bool Disposing)
         {
-            if (disposing)
+            if (Disposing)
             {
-                Memory.Dispose();
-
+                Os.Dispose();
                 VFs.Dispose();
             }
         }

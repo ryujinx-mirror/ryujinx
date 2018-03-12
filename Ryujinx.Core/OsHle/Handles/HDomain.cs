@@ -1,58 +1,48 @@
-using Ryujinx.Core.OsHle.Utilities;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Handles
 {
-    class HDomain : HSession
+    class HDomain : HSession, IDisposable
     {
-        private Dictionary<int, object> Objects;
-
-        private IdPool ObjIds;
+        private IdDictionary Objects;
 
         public HDomain(HSession Session) : base(Session)
         {
-            Objects = new Dictionary<int, object>();
-
-            ObjIds = new IdPool();
+            Objects = new IdDictionary();
         }
 
-        public int GenerateObjectId(object Obj)
+        public int Add(object Obj)
         {
-            int Id = ObjIds.GenerateId();
-
-            if (Id == -1)
-            {
-                throw new InvalidOperationException();
-            }
-
-            Objects.Add(Id, Obj);
-
-            return Id;
+            return Objects.Add(Obj);
         }
 
-        public void DeleteObject(int Id)
+        public bool Delete(int Id)
         {
-            if (Objects.TryGetValue(Id, out object Obj))
-            {
-                if (Obj is IDisposable DisposableObj)
-                {
-                    DisposableObj.Dispose();
-                }
-
-                ObjIds.DeleteId(Id);
-                Objects.Remove(Id);
-            }
+            return Objects.Delete(Id);
         }
 
         public object GetObject(int Id)
         {
-            if (Objects.TryGetValue(Id, out object Obj))
-            {
-                return Obj;
-            }
+            return Objects.GetData(Id);
+        }
 
-            return null;
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool Disposing)
+        {
+            if (Disposing)
+            {
+                foreach (object Obj in Objects)
+                {
+                    if (Obj is IDisposable DisposableObj)
+                    {
+                        DisposableObj.Dispose();
+                    }
+                }
+            }
         }
     }
 }

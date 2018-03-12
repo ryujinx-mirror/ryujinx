@@ -28,7 +28,7 @@ namespace Ryujinx.Tests.Cpu
             ATranslator Translator = new ATranslator();
             Memory = new AMemory();
             Memory.Manager.Map(Position, Size, 2, AMemoryPerm.Read | AMemoryPerm.Write | AMemoryPerm.Execute);
-            Thread = new AThread(Translator, Memory, ThreadPriority.Normal, EntryPoint);
+            Thread = new AThread(Translator, Memory, EntryPoint);
         }
 
         [TearDown]

@@ -24,6 +24,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private byte* FbPtr;
 
+        private object FbPtrLock;
+
         public FrameBuffer(int Width, int Height)
         {
             if (Width < 0)
@@ -35,6 +37,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 throw new ArgumentOutOfRangeException(nameof(Height));
             }
+
+            FbPtrLock = new object();
 
             TexWidth  = Width;
             TexHeight = Height;
@@ -152,7 +156,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 throw new ArgumentOutOfRangeException(nameof(Height));
             }
 
-            FbPtr = Fb;
+            lock (FbPtrLock)
+            {
+                FbPtr = Fb;
+            }
 
             if (Width  != TexWidth ||
                 Height != TexHeight)
@@ -178,17 +185,28 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.Uniform2(OffsetUniformLocation, Offs);
         }
 
+        public void Reset()
+        {
+            lock (FbPtrLock)
+            {
+                FbPtr = null;
+            }
+        }
+
         public void Render()
         {
-            if (FbPtr == null)
+            lock (FbPtrLock)
             {
-                return;
-            }
+                if (FbPtr == null)
+                {
+                    return;
+                }
 
-            for (int Y = 0; Y < TexHeight; Y++)
-            for (int X = 0; X < TexWidth;  X++)
-            {
-                Pixels[X + Y * TexWidth] = *((int*)(FbPtr + GetSwizzleOffset(X, Y)));
+                for (int Y = 0; Y < TexHeight; Y++)
+                for (int X = 0; X < TexWidth;  X++)
+                {
+                    Pixels[X + Y * TexWidth] = *((int*)(FbPtr + GetSwizzleOffset(X, Y)));
+                }
             }
 
             GL.BindTexture(TextureTarget.Texture2D, TexHandle);

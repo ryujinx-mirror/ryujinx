@@ -3,7 +3,6 @@ using ChocolArm64.State;
 using Ryujinx.Core.OsHle.Exceptions;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
-using Ryujinx.Core.OsHle.IpcServices;
 using System;
 using System.Threading;
 
@@ -35,7 +34,7 @@ namespace Ryujinx.Core.OsHle.Svc
         {
             int Handle = (int)ThreadState.X0;
 
-            Ns.Os.CloseHandle(Handle);
+            Process.HandleTable.CloseHandle(Handle);
 
             ThreadState.X0 = 0;
         }
@@ -80,10 +79,12 @@ namespace Ryujinx.Core.OsHle.Svc
             //TODO: Validate that app has perms to access the service, and that the service
             //actually exists, return error codes otherwise.
 
-            HSession Session = new HSession(ServiceFactory.MakeService(Name));
+            HSession Session = new HSession(Process.Services.GetService(Name));
 
-            ThreadState.X1 = (ulong)Ns.Os.Handles.GenerateId(Session);
+            ulong Handle = (ulong)Process.HandleTable.OpenHandle(Session);
+            
             ThreadState.X0 = 0;
+            ThreadState.X1 = Handle;
         }
 
         private void SvcSendSyncRequest(AThreadState ThreadState)
@@ -119,13 +120,21 @@ namespace Ryujinx.Core.OsHle.Svc
 
             byte[] CmdData = AMemoryHelper.ReadBytes(Memory, CmdPtr, (int)Size);
 
-            HSession Session = Ns.Os.Handles.GetData<HSession>(Handle);
+            HSession Session = Process.HandleTable.GetData<HSession>(Handle);
 
             IpcMessage Cmd = new IpcMessage(CmdData, CmdPtr, Session is HDomain);
 
             if (Session != null)
             {
-                IpcHandler.IpcCall(Ns, Memory, Session, Cmd, ThreadState.ThreadId, CmdPtr, Handle);
+                IpcHandler.IpcCall(
+                    Ns,
+                    Process,
+                    Memory,
+                    Session,
+                    Cmd,
+                    ThreadState.ThreadId,
+                    CmdPtr,
+                    Handle);
 
                 byte[] Response = AMemoryHelper.ReadBytes(Memory, CmdPtr, (int)Size);
 

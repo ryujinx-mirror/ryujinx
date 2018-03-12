@@ -1,3 +1,4 @@
+using ChocolArm64.Memory;
 using System;
 using System.Collections.Generic;
 
@@ -5,37 +6,37 @@ namespace Ryujinx.Core.OsHle.Handles
 {
     class HSharedMem
     {
-        private List<long> Positions;
+        private List<(AMemory, long)> Positions;
 
         public EventHandler<EventArgs> MemoryMapped;
         public EventHandler<EventArgs> MemoryUnmapped;
 
         public HSharedMem()
         {
-            Positions = new List<long>();
+            Positions = new List<(AMemory, long)>();
         }
 
-        public void AddVirtualPosition(long Position)
+        public void AddVirtualPosition(AMemory Memory, long Position)
         {
             lock (Positions)
             {
-                Positions.Add(Position);
+                Positions.Add((Memory, Position));
 
                 MemoryMapped?.Invoke(this, EventArgs.Empty);
             }
         }
 
-        public void RemoveVirtualPosition(long Position)
+        public void RemoveVirtualPosition(AMemory Memory, long Position)
         {
             lock (Positions)
             {
-                Positions.Remove(Position);
+                Positions.Remove((Memory, Position));
 
                 MemoryUnmapped?.Invoke(this, EventArgs.Empty);
             }
         }
 
-        public long[] GetVirtualPositions()
+        public (AMemory, long)[] GetVirtualPositions()
         {
             return Positions.ToArray();
         }
