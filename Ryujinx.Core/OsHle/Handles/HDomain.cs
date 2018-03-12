@@ -37,7 +37,7 @@ namespace Ryujinx.Core.OsHle.Handles
             {
                 foreach (object Obj in Objects)
                 {
-                    if (Obj is IDisposable DisposableObj)
+                    if (Obj != this && Obj is IDisposable DisposableObj)
                     {
                         DisposableObj.Dispose();
                     }

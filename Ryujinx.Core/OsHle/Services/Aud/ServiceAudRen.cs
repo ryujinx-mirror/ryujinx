@@ -15,8 +15,9 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, OpenAudioRenderer              },
-                { 1, GetAudioRendererWorkBufferSize },
+                { 0, OpenAudioRenderer                    },
+                { 1, GetAudioRendererWorkBufferSize       },
+                { 2, GetAudioRenderersProcessMasterVolume }
             };
         }
 
@@ -44,6 +45,13 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
             int Rev1Magic  = Context.RequestData.ReadInt32();
 
             Context.ResponseData.Write(0x400L);
+
+            return 0;
+        }
+
+        public long GetAudioRenderersProcessMasterVolume(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(0);
 
             return 0;
         }
