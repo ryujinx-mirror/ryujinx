@@ -89,6 +89,9 @@ namespace ChocolArm64.Instruction
             //We treat it as no-op here since we don't have any cache being emulated anyway.
             AOpCodeSystem Op = (AOpCodeSystem)Context.CurrOp;
 
+            //TODO: We should throw on unimplemented sys instructions here,
+            //since it causing some problems when the programs expects some values
+            //that never return.
             switch (GetPackedId(Op))
             {
                 case 0b11_011_0111_0100_001:
@@ -97,7 +100,7 @@ namespace ChocolArm64.Instruction
                     for (int Offs = 0; Offs < (4 << AThreadState.DczSizeLog2); Offs += 8)
                     {
                         Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
-                        Context.EmitLdint(Op.Rt);
+                        Context.EmitLdintzr(Op.Rt);
                         Context.EmitLdc_I(Offs);
 
                         Context.Emit(OpCodes.Add);
@@ -106,8 +109,13 @@ namespace ChocolArm64.Instruction
 
                         AInstEmitMemoryHelper.EmitWriteCall(Context, 3);
                     }
+
                     break;
                 }
+
+                //No-op
+                case 0b11_011_0111_1110_001: //DC CIVAC
+                    break;
             }
         }
 
