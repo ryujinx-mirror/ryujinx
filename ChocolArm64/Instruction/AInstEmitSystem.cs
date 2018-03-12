@@ -89,9 +89,6 @@ namespace ChocolArm64.Instruction
             //We treat it as no-op here since we don't have any cache being emulated anyway.
             AOpCodeSystem Op = (AOpCodeSystem)Context.CurrOp;
 
-            //TODO: We should throw on unimplemented sys instructions here,
-            //since it causing some problems when the programs expects some values
-            //that never return.
             switch (GetPackedId(Op))
             {
                 case 0b11_011_0111_0100_001:
