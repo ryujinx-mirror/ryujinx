@@ -1,5 +1,6 @@
 using ChocolArm64.Events;
 using System;
+using System.Diagnostics;
 
 namespace ChocolArm64.State
 {
@@ -40,14 +41,33 @@ namespace ChocolArm64.State
         public uint CtrEl0   => 0x8444c004;
         public uint DczidEl0 => 0x00000004;
 
-        private const ulong TicksPerS  = 19_200_000;
-        private const ulong TicksPerMS = TicksPerS / 1_000;
+        public ulong CntfrqEl0 { get; set; }
+        public ulong CntpctEl0
+        {
+            get
+            {
+                double Ticks = TickCounter.ElapsedTicks * HostTickFreq;
 
-        public ulong CntpctEl0 => (ulong)Environment.TickCount * TicksPerMS;
+                return (ulong)(Ticks * CntfrqEl0);
+            }
+        }
 
         public event EventHandler<AInstExceptionEventArgs> Break;
         public event EventHandler<AInstExceptionEventArgs> SvcCall;
         public event EventHandler<AInstUndefinedEventArgs> Undefined;
+
+        private static Stopwatch TickCounter;
+
+        private static double HostTickFreq;
+
+        static AThreadState()
+        {
+            HostTickFreq = 1.0 / Stopwatch.Frequency;
+
+            TickCounter = new Stopwatch();
+
+            TickCounter.Start();
+        }
 
         internal void OnBreak(int Imm)
         {

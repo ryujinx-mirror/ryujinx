@@ -30,6 +30,7 @@ namespace ChocolArm64.Instruction
                 case 0b11_011_0100_0100_001: PropName = nameof(AThreadState.Fpsr);      break;
                 case 0b11_011_1101_0000_010: PropName = nameof(AThreadState.TpidrEl0);  break;
                 case 0b11_011_1101_0000_011: PropName = nameof(AThreadState.Tpidr);     break;
+                case 0b11_011_1110_0000_000: PropName = nameof(AThreadState.CntfrqEl0); break;
                 case 0b11_011_1110_0000_001: PropName = nameof(AThreadState.CntpctEl0); break;
 
                 default: throw new NotImplementedException($"Unknown MRS at {Op.Position:x16}");

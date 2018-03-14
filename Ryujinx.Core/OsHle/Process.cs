@@ -17,6 +17,8 @@ namespace Ryujinx.Core.OsHle
         private const int TlsSize       = 0x200;
         private const int TotalTlsSlots = 32;
 
+        private const int TickFreq = 19_200_000;
+
         private Switch Ns;
 
         public bool NeedsHbAbi { get; private set; }
@@ -197,6 +199,7 @@ namespace Ryujinx.Core.OsHle
             Thread.ThreadState.Undefined += UndefinedHandler;
             Thread.ThreadState.ProcessId  = ProcessId;
             Thread.ThreadState.ThreadId   = ThreadId;
+            Thread.ThreadState.CntfrqEl0  = TickFreq;
             Thread.ThreadState.Tpidr      = Tpidr;
             Thread.ThreadState.X0         = (ulong)ArgsPtr;
             Thread.ThreadState.X1         = (ulong)Handle;
