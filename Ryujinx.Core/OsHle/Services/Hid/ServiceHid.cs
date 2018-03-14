@@ -18,6 +18,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Hid
             {
                 {   0, CreateAppletResource                    },
                 {  11, ActivateTouchScreen                     },
+                {  66, StartSixAxisSensor                      },
                 { 100, SetSupportedNpadStyleSet                },
                 { 101, GetSupportedNpadStyleSet                },
                 { 102, SetSupportedNpadIdType                  },
@@ -43,6 +44,15 @@ namespace Ryujinx.Core.OsHle.IpcServices.Hid
         public long ActivateTouchScreen(ServiceCtx Context)
         {
             long Unknown = Context.RequestData.ReadInt64();
+
+            return 0;
+        }
+
+        public long StartSixAxisSensor(ServiceCtx Context)
+        {
+            int Handle = Context.RequestData.ReadInt32();
+
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
             return 0;
         }
