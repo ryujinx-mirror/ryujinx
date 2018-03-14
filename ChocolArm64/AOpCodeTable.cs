@@ -42,6 +42,14 @@ namespace ChocolArm64
             Set("x1111010010xxxxxxxxx00xxxxxxxxxx", AInstEmit.Ccmp,          typeof(AOpCodeCcmpReg));
             Set("11010101000000110011xxxx01011111", AInstEmit.Clrex,         typeof(AOpCodeSystem));
             Set("x101101011000000000100xxxxxxxxxx", AInstEmit.Clz,           typeof(AOpCodeAlu));
+            Set("x0011010110xxxxx010000xxxxxxxxxx", AInstEmit.Crc32b,        typeof(AOpCodeAluRs));
+            Set("x0011010110xxxxx010001xxxxxxxxxx", AInstEmit.Crc32h,        typeof(AOpCodeAluRs));
+            Set("x0011010110xxxxx010010xxxxxxxxxx", AInstEmit.Crc32w,        typeof(AOpCodeAluRs));
+            Set("x0011010110xxxxx010011xxxxxxxxxx", AInstEmit.Crc32x,        typeof(AOpCodeAluRs));
+            Set("x0011010110xxxxx010100xxxxxxxxxx", AInstEmit.Crc32cb,       typeof(AOpCodeAluRs));
+            Set("x0011010110xxxxx010101xxxxxxxxxx", AInstEmit.Crc32ch,       typeof(AOpCodeAluRs));
+            Set("x0011010110xxxxx010110xxxxxxxxxx", AInstEmit.Crc32cw,       typeof(AOpCodeAluRs));
+            Set("x0011010110xxxxx010111xxxxxxxxxx", AInstEmit.Crc32cx,       typeof(AOpCodeAluRs));
             Set("x0011010100xxxxxxxxx00xxxxxxxxxx", AInstEmit.Csel,          typeof(AOpCodeCsel));
             Set("x0011010100xxxxxxxxx01xxxxxxxxxx", AInstEmit.Csinc,         typeof(AOpCodeCsel));
             Set("x1011010100xxxxxxxxx00xxxxxxxxxx", AInstEmit.Csinv,         typeof(AOpCodeCsel));
@@ -243,6 +251,7 @@ namespace ChocolArm64
             Set("0x0011110>>>>xxx010101xxxxxxxxxx", AInstEmit.Shl_V,         typeof(AOpCodeSimdShImm));
             Set("0x101110<<100001001110xxxxxxxxxx", AInstEmit.Shll_V,        typeof(AOpCodeSimd));
             Set("0x00111100>>>xxx100001xxxxxxxxxx", AInstEmit.Shrn_V,        typeof(AOpCodeSimdShImm));
+            Set("0x1011110>>>>xxx010101xxxxxxxxxx", AInstEmit.Sli_V,         typeof(AOpCodeSimdShImm));
             Set("0x001110<<1xxxxx011001xxxxxxxxxx", AInstEmit.Smax_V,        typeof(AOpCodeSimdReg));
             Set("0x001110<<1xxxxx011011xxxxxxxxxx", AInstEmit.Smin_V,        typeof(AOpCodeSimdReg));
             Set("0x001110<<1xxxxx100000xxxxxxxxxx", AInstEmit.Smlal_V,       typeof(AOpCodeSimdReg));

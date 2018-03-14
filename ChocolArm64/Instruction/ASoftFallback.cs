@@ -38,6 +38,84 @@ namespace ChocolArm64.Instruction
             return (ulong)Size;
         }
 
+        private const uint Crc32RevPoly  = 0xedb88320;
+        private const uint Crc32cRevPoly = 0x82f63b78;
+
+        public static uint Crc32b(uint Crc, byte Val) => Crc32 (Crc, Crc32RevPoly, Val);
+        public static uint Crc32h(uint Crc, byte Val) => Crc32h(Crc, Crc32RevPoly, Val);
+        public static uint Crc32w(uint Crc, byte Val) => Crc32w(Crc, Crc32RevPoly, Val);
+        public static uint Crc32x(uint Crc, byte Val) => Crc32x(Crc, Crc32RevPoly, Val);
+
+        public static uint Crc32cb(uint Crc, byte Val) => Crc32 (Crc, Crc32cRevPoly, Val);
+        public static uint Crc32ch(uint Crc, byte Val) => Crc32h(Crc, Crc32cRevPoly, Val);
+        public static uint Crc32cw(uint Crc, byte Val) => Crc32w(Crc, Crc32cRevPoly, Val);
+        public static uint Crc32cx(uint Crc, byte Val) => Crc32x(Crc, Crc32cRevPoly, Val);
+
+        private static uint Crc32h(uint Crc, uint Poly, ushort Val)
+        {
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 0));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 8));
+
+            return Crc;
+        }
+
+        private static uint Crc32w(uint Crc, uint Poly, uint Val)
+        {
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 0));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 8));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 16));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 24));
+
+            return Crc;
+        }
+
+        private static uint Crc32x(uint Crc, uint Poly, ulong Val)
+        {
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 0));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 8));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 16));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 24));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 32));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 40));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 48));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 56));
+
+            return Crc;
+        }
+
+        private static uint Crc32(uint Crc, uint Poly, byte Val)
+        {
+            Crc ^= Val;
+
+            for (int Bit = 7; Bit >= 0; Bit--)
+            {
+                uint Mask = (uint)(-(int)(Crc & 1));
+
+                Crc = (Crc >> 1) ^ (Poly & Mask);
+            }
+
+            return Crc;
+        }
+
+        public static uint ReverseBits8(uint Value)
+        {
+            Value = ((Value & 0xaa) >> 1) | ((Value & 0x55) << 1);
+            Value = ((Value & 0xcc) >> 2) | ((Value & 0x33) << 2);
+            Value = ((Value & 0xf0) >> 4) | ((Value & 0x0f) << 4);
+
+            return Value;
+        }
+
+        public static uint ReverseBits16(uint Value)
+        {
+            Value = ((Value & 0xaaaa) >> 1) | ((Value & 0x5555) << 1);
+            Value = ((Value & 0xcccc) >> 2) | ((Value & 0x3333) << 2);
+            Value = ((Value & 0xf0f0) >> 4) | ((Value & 0x0f0f) << 4);
+            Value = ((Value & 0xff00) >> 8) | ((Value & 0x00ff) << 8);
+
+            return Value;
+        }
+
         public static uint ReverseBits32(uint Value)
         {
             Value = ((Value & 0xaaaaaaaa) >> 1) | ((Value & 0x55555555) << 1);
