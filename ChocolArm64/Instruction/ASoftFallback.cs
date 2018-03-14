@@ -97,25 +97,6 @@ namespace ChocolArm64.Instruction
             return Crc;
         }
 
-        public static uint ReverseBits8(uint Value)
-        {
-            Value = ((Value & 0xaa) >> 1) | ((Value & 0x55) << 1);
-            Value = ((Value & 0xcc) >> 2) | ((Value & 0x33) << 2);
-            Value = ((Value & 0xf0) >> 4) | ((Value & 0x0f) << 4);
-
-            return Value;
-        }
-
-        public static uint ReverseBits16(uint Value)
-        {
-            Value = ((Value & 0xaaaa) >> 1) | ((Value & 0x5555) << 1);
-            Value = ((Value & 0xcccc) >> 2) | ((Value & 0x3333) << 2);
-            Value = ((Value & 0xf0f0) >> 4) | ((Value & 0x0f0f) << 4);
-            Value = ((Value & 0xff00) >> 8) | ((Value & 0x00ff) << 8);
-
-            return Value;
-        }
-
         public static uint ReverseBits32(uint Value)
         {
             Value = ((Value & 0xaaaaaaaa) >> 1) | ((Value & 0x55555555) << 1);

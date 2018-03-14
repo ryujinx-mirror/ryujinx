@@ -7,7 +7,6 @@ namespace ChocolArm64.Instruction
 {
     static partial class AInstEmit
     {
-        
         public static void Crc32b(AILEmitterCtx Context)
         {
             EmitCrc32(Context, nameof(ASoftFallback.Crc32b));
