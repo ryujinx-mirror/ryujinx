@@ -88,7 +88,14 @@ namespace ChocolArm64.Decoder
 
         private static long ShlOnes(long Value, int Shift)
         {
-            return Value << Shift | (long)(ulong.MaxValue >> (64 - Shift));
+            if (Shift != 0)
+            {
+                return Value << Shift | (long)(ulong.MaxValue >> (64 - Shift));
+            }
+            else
+            {
+                return Value;
+            }
         }
     }
 }

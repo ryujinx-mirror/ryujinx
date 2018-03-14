@@ -58,7 +58,7 @@ namespace ChocolArm64.Instruction
 
             int Shift = Op.Imm - (8 << Op.Size);
 
-            ulong Mask = ulong.MaxValue >> (64 - Shift);            
+            ulong Mask = Shift != 0 ? ulong.MaxValue >> (64 - Shift) : 0;            
 
             for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
             {
