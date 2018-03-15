@@ -41,15 +41,15 @@ namespace ChocolArm64.Instruction
         private const uint Crc32RevPoly  = 0xedb88320;
         private const uint Crc32cRevPoly = 0x82f63b78;
 
-        public static uint Crc32b(uint Crc, byte Val) => Crc32 (Crc, Crc32RevPoly, Val);
-        public static uint Crc32h(uint Crc, byte Val) => Crc32h(Crc, Crc32RevPoly, Val);
-        public static uint Crc32w(uint Crc, byte Val) => Crc32w(Crc, Crc32RevPoly, Val);
-        public static uint Crc32x(uint Crc, byte Val) => Crc32x(Crc, Crc32RevPoly, Val);
+        public static uint Crc32b(uint Crc, byte   Val) => Crc32 (Crc, Crc32RevPoly, Val);
+        public static uint Crc32h(uint Crc, ushort Val) => Crc32h(Crc, Crc32RevPoly, Val);
+        public static uint Crc32w(uint Crc, uint   Val) => Crc32w(Crc, Crc32RevPoly, Val);
+        public static uint Crc32x(uint Crc, ulong  Val) => Crc32x(Crc, Crc32RevPoly, Val);
 
-        public static uint Crc32cb(uint Crc, byte Val) => Crc32 (Crc, Crc32cRevPoly, Val);
-        public static uint Crc32ch(uint Crc, byte Val) => Crc32h(Crc, Crc32cRevPoly, Val);
-        public static uint Crc32cw(uint Crc, byte Val) => Crc32w(Crc, Crc32cRevPoly, Val);
-        public static uint Crc32cx(uint Crc, byte Val) => Crc32x(Crc, Crc32cRevPoly, Val);
+        public static uint Crc32cb(uint Crc, byte   Val) => Crc32 (Crc, Crc32cRevPoly, Val);
+        public static uint Crc32ch(uint Crc, ushort Val) => Crc32h(Crc, Crc32cRevPoly, Val);
+        public static uint Crc32cw(uint Crc, uint   Val) => Crc32w(Crc, Crc32cRevPoly, Val);
+        public static uint Crc32cx(uint Crc, ulong  Val) => Crc32x(Crc, Crc32cRevPoly, Val);
 
         private static uint Crc32h(uint Crc, uint Poly, ushort Val)
         {
