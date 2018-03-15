@@ -82,6 +82,7 @@ namespace ChocolArm64.Decoder
                 }
             }
 
+            this.Index  = Index;
             this.SElems = SElems;
             this.Size   = Scale;
 
