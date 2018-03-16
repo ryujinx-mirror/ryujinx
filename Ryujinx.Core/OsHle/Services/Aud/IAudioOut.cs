@@ -1,11 +1,9 @@
 using ChocolArm64.Memory;
+using Ryujinx.Audio;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
-using OpenTK.Audio;
-using OpenTK.Audio.OpenAL;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Ryujinx.Core.OsHle.IpcServices.Aud
 {
@@ -15,124 +13,64 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
 
         public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public IAudioOut()
+        private IAalOutput AudioOut;
+
+        private int Track;
+
+        public IAudioOut(IAalOutput AudioOut, int Track)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, GetAudioOutState             },
-                { 1, StartAudioOut                },
-                { 2, StopAudioOut                 },
-                { 3, AppendAudioOutBuffer         },
-                { 4, RegisterBufferEvent          },
-                { 5, GetReleasedAudioOutBuffer    },
-                { 6, ContainsAudioOutBuffer       },
-                { 7, AppendAudioOutBuffer_ex      },
-                { 8, GetReleasedAudioOutBuffer_ex }
+                { 0, GetAudioOutState            },
+                { 1, StartAudioOut               },
+                { 2, StopAudioOut                },
+                { 3, AppendAudioOutBuffer        },
+                { 4, RegisterBufferEvent         },
+                { 5, GetReleasedAudioOutBuffer   },
+                { 6, ContainsAudioOutBuffer      },
+                { 7, AppendAudioOutBufferEx      },
+                { 8, GetReleasedAudioOutBufferEx }
             };
+
+            this.AudioOut = AudioOut;
+            this.Track    = Track;
         }
 
-        enum AudioOutState
-        {
-            Started,
-            Stopped
-        };
-
-        //IAudioOut
-        private AudioOutState State = AudioOutState.Stopped;
-        private Queue<long> BufferIdQueue = new Queue<long>();
-
-        //OpenAL
-        private bool OpenALInstalled = true;
-        private AudioContext AudioCtx;
-        private int Source;
-        private int Buffer;
-
-        //Return State of IAudioOut
         public long GetAudioOutState(ServiceCtx Context)
         {
-            Context.ResponseData.Write((int)State);
+            Context.ResponseData.Write((int)AudioOut.GetState(Track));
 
             return 0;
         }
 
         public long StartAudioOut(ServiceCtx Context)
         {
-            if (State == AudioOutState.Stopped)
-            {
-                State = AudioOutState.Started;
-
-                try
-                { 
-                    AudioCtx = new AudioContext(); //Create the audio context
-                }
-                catch (Exception)
-                {
-                    Logging.Warn("OpenAL Error! PS: Install OpenAL Core SDK!");
-                    OpenALInstalled = false;
-                }
-
-                if (OpenALInstalled) AL.Listener(ALListenerf.Gain, 8.0f); //Add more gain to it
-            }
+            AudioOut.Start(Track);
 
             return 0;
         }
 
         public long StopAudioOut(ServiceCtx Context)
         {
-            if (State == AudioOutState.Started)
-            {
-                if (OpenALInstalled)
-                { 
-                    if (AudioCtx == null) //Needed to call the instance of AudioContext()
-                        return 0;
-
-                    AL.SourceStop(Source);
-                    AL.DeleteSource(Source);
-                    AL.DeleteBuffers(1, ref Buffer);
-                }
-                State = AudioOutState.Stopped;
-            }
+            AudioOut.Stop(Track);
 
             return 0;
         }
 
         public long AppendAudioOutBuffer(ServiceCtx Context)
         {
-            long BufferId = Context.RequestData.ReadInt64();
+            long Tag = Context.RequestData.ReadInt64();
 
-            byte[] AudioOutBuffer = AMemoryHelper.ReadBytes(Context.Memory, Context.Request.SendBuff[0].Position, sizeof(long) * 5);
+            AudioOutData Data = AMemoryHelper.Read<AudioOutData>(
+                Context.Memory,
+                Context.Request.SendBuff[0].Position);
+            
+            byte[] Buffer = AMemoryHelper.ReadBytes(
+                Context.Memory,
+                Data.SampleBufferPtr,
+                Data.SampleBufferSize);
 
-            using (MemoryStream MS = new MemoryStream(AudioOutBuffer))
-            {
-                BinaryReader Reader = new BinaryReader(MS);
-                long PointerNextBuffer        = Reader.ReadInt64();
-                long PointerSampleBuffer      = Reader.ReadInt64();
-                long CapacitySampleBuffer     = Reader.ReadInt64();
-                long SizeDataInSampleBuffer   = Reader.ReadInt64();
-                long OffsetDataInSampleBuffer = Reader.ReadInt64();
-
-                if (SizeDataInSampleBuffer > 0)
-                {
-                    BufferIdQueue.Enqueue(BufferId);
-
-                    byte[] AudioSampleBuffer = AMemoryHelper.ReadBytes(Context.Memory, PointerSampleBuffer + OffsetDataInSampleBuffer, (int)SizeDataInSampleBuffer);
-
-                    if (OpenALInstalled)
-                    {
-                        if (AudioCtx == null) //Needed to call the instance of AudioContext()
-                            return 0;
-                        
-                        EnsureAudioFinalized();
-
-                        Source = AL.GenSource();
-                        Buffer = AL.GenBuffer();
-
-                        AL.BufferData(Buffer, ALFormat.Stereo16, AudioSampleBuffer, AudioSampleBuffer.Length, 48000);
-                        AL.SourceQueueBuffer(Source, Buffer);
-                        AL.SourcePlay(Source);
-                    }
-                }
-            }
+            AudioOut.AppendBuffer(Track, Tag, Buffer);
 
             return 0;
         }
@@ -148,50 +86,51 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
 
         public long GetReleasedAudioOutBuffer(ServiceCtx Context)
         {
-            int ReleasedBuffersCount = 0;
+            long Position = Context.Request.ReceiveBuff[0].Position;
+            long Size     = Context.Request.ReceiveBuff[0].Size;
 
-            for(int i = 0; i < BufferIdQueue.Count; i++)
+            uint Count = (uint)((ulong)Size >> 3);
+
+            long[] ReleasedBuffers = AudioOut.GetReleasedBuffers(Track);
+
+            for (uint Index = 0; Index < Count; Index++)
             {
-                long BufferId = BufferIdQueue.Dequeue();
+                long Tag = 0;
 
-                AMemoryHelper.WriteBytes(Context.Memory, Context.Request.ReceiveBuff[0].Position + (8 * i), BitConverter.GetBytes(BufferId));
+                if (Index < ReleasedBuffers.Length)
+                {
+                    Tag = ReleasedBuffers[Index];
+                }
 
-                ReleasedBuffersCount++;
+                Context.Memory.WriteInt64(Position + Index * 8, Tag);
             }
 
-            Context.ResponseData.Write(ReleasedBuffersCount);
+            Context.ResponseData.Write(ReleasedBuffers.Length);
 
             return 0;
         }
 
         public long ContainsAudioOutBuffer(ServiceCtx Context)
         {
+            long Tag = Context.RequestData.ReadInt64();
+
+            Context.ResponseData.Write(AudioOut.ContainsBuffer(Track, Tag) ? 1 : 0);
+
             return 0;
         }
 
-        public long AppendAudioOutBuffer_ex(ServiceCtx Context)
+        public long AppendAudioOutBufferEx(ServiceCtx Context)
         {
+            Logging.Warn("Not implemented!");
+
             return 0;
         }
 
-        public long GetReleasedAudioOutBuffer_ex(ServiceCtx Context)
+        public long GetReleasedAudioOutBufferEx(ServiceCtx Context)
         {
+            Logging.Warn("Not implemented!");
+
             return 0;
-        }
-
-        private void EnsureAudioFinalized()
-        {
-            if (Source != 0 ||
-                Buffer != 0)
-            {
-                AL.SourceStop(Source);
-                AL.SourceUnqueueBuffer(Buffer);
-                AL.DeleteSource(Source);
-                AL.DeleteBuffers(1, ref Buffer);
-
-                Source = 0;
-                Buffer = 0;
-            }
         }
 
         public void Dispose()
@@ -199,11 +138,11 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected virtual void Dispose(bool Disposing)
         {
-            if (disposing)
+            if (Disposing)
             {
-                EnsureAudioFinalized();
+                AudioOut.CloseTrack(Track);
             }
         }
     }

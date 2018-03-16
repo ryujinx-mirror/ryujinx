@@ -37,7 +37,25 @@ namespace Ryujinx.Core.OsHle
         {
             lock (Services)
             {
-                if (!Services.TryGetValue(Name, out IIpcService Service))
+                string LookUpName;
+
+                //Same service with different privileges.
+                if (Name.EndsWith(":a")  ||
+                    Name.EndsWith(":m")  ||
+                    Name.EndsWith(":s")  ||
+                    Name.EndsWith(":su") ||
+                    Name.EndsWith(":u")  ||
+                    Name.EndsWith(":u0") ||
+                    Name.EndsWith(":u1"))
+                {
+                    LookUpName = Name.Substring(0, Name.IndexOf(':'));
+                }
+                else
+                {
+                    LookUpName = Name;
+                }
+
+                if (!Services.TryGetValue(LookUpName, out IIpcService Service))
                 {
                     switch (Name)
                     {
@@ -76,7 +94,7 @@ namespace Ryujinx.Core.OsHle
                         throw new NotImplementedException(Name);
                     }
 
-                    Services.Add(Name, Service);
+                    Services.Add(LookUpName, Service);
                 }
 
                 return Service;

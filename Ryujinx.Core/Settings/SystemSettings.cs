@@ -1,6 +1,6 @@
 namespace Ryujinx.Core.Settings
 {
-    public class SetSys
+    public class SystemSettings
     {
         public ColorSet ThemeColor;
     }

@@ -6,7 +6,7 @@ namespace Ryujinx.Core.OsHle.Ipc
     {
         public long  Position { get; private set; }
         public int   Index    { get; private set; }
-        public short Size     { get; private set; }
+        public long  Size     { get; private set; }
 
         public IpcPtrBuffDesc(BinaryReader Reader)
         {
@@ -20,7 +20,7 @@ namespace Ryujinx.Core.OsHle.Ipc
             Index  = ((int)Word0 >> 0) & 0x03f;
             Index |= ((int)Word0 >> 3) & 0x1c0;
 
-            Size = (short)(Word0 >> 16);
+            Size = (ushort)(Word0 >> 16);
         }
     }
 }

@@ -118,7 +118,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             Process.Scheduler.Suspend(CurrThread.ProcessorId);
 
-            byte[] CmdData = AMemoryHelper.ReadBytes(Memory, CmdPtr, (int)Size);
+            byte[] CmdData = AMemoryHelper.ReadBytes(Memory, CmdPtr, Size);
 
             HSession Session = Process.HandleTable.GetData<HSession>(Handle);
 
@@ -136,7 +136,7 @@ namespace Ryujinx.Core.OsHle.Svc
                     CmdPtr,
                     Handle);
 
-                byte[] Response = AMemoryHelper.ReadBytes(Memory, CmdPtr, (int)Size);
+                byte[] Response = AMemoryHelper.ReadBytes(Memory, CmdPtr, Size);
 
                 ThreadState.X0 = 0;
             }
@@ -164,7 +164,7 @@ namespace Ryujinx.Core.OsHle.Svc
             long Position = (long)ThreadState.X0;
             long Size     = (long)ThreadState.X1;
 
-            string Str = AMemoryHelper.ReadAsciiString(Memory, Position, (int)Size);
+            string Str = AMemoryHelper.ReadAsciiString(Memory, Position, Size);
 
             Logging.Info($"SvcOutputDebugString: {Str}");
 

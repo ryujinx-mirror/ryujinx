@@ -51,7 +51,7 @@ namespace Ryujinx.Core.OsHle
                     long Value0 = Memory.ReadInt64(Position + 0x08);
                     long Value1 = Memory.ReadInt64(Position + 0x10);
 
-                    FileName = AMemoryHelper.ReadAsciiString(Memory, Value0, (int)(Value1 - Value0));
+                    FileName = AMemoryHelper.ReadAsciiString(Memory, Value0, Value1 - Value0);
 
                     break;
                 }

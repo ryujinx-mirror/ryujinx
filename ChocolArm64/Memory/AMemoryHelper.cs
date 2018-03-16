@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ChocolArm64.Memory
@@ -20,11 +22,11 @@ namespace ChocolArm64.Memory
             }
         }
 
-        public static byte[] ReadBytes(AMemory Memory, long Position, int Size)
+        public static byte[] ReadBytes(AMemory Memory, long Position, long Size)
         {
             byte[] Data = new byte[Size];
 
-            for (int Offs = 0; Offs < Size; Offs++)
+            for (long Offs = 0; Offs < Size; Offs++)
             {
                 Data[Offs] = (byte)Memory.ReadByte(Position + Offs);
             }
@@ -40,11 +42,39 @@ namespace ChocolArm64.Memory
             }
         }
 
-        public static string ReadAsciiString(AMemory Memory, long Position, int MaxSize = -1)
+        public unsafe static T Read<T>(AMemory Memory, long Position) where T : struct
+        {
+            long Size = Marshal.SizeOf<T>();
+
+            if ((ulong)(Position + Size) > AMemoryMgr.AddrSize)
+            {
+                throw new ArgumentOutOfRangeException(nameof(Position));
+            }
+
+            IntPtr Ptr = new IntPtr((byte*)Memory.Ram + Position);
+
+            return Marshal.PtrToStructure<T>(Ptr);
+        }
+
+        public unsafe static void Write<T>(AMemory Memory, long Position, T Value) where T : struct
+        {
+            long Size = Marshal.SizeOf<T>();
+
+            if ((ulong)(Position + Size) > AMemoryMgr.AddrSize)
+            {
+                throw new ArgumentOutOfRangeException(nameof(Position));
+            }
+
+            IntPtr Ptr = new IntPtr((byte*)Memory.Ram + Position);
+
+            Marshal.StructureToPtr<T>(Value, Ptr, false);
+        }
+
+        public static string ReadAsciiString(AMemory Memory, long Position, long MaxSize = -1)
         {
             using (MemoryStream MS = new MemoryStream())
             {
-                for (int Offs = 0; Offs < MaxSize || MaxSize == -1; Offs++)
+                for (long Offs = 0; Offs < MaxSize || MaxSize == -1; Offs++)
                 {
                     byte Value = (byte)Memory.ReadByte(Position + Offs);
 

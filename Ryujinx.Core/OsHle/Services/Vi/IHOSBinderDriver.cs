@@ -35,7 +35,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
             long DataPos  = Context.Request.SendBuff[0].Position;
             long DataSize = Context.Request.SendBuff[0].Size;
 
-            byte[] Data = AMemoryHelper.ReadBytes(Context.Memory, DataPos, (int)DataSize);
+            byte[] Data = AMemoryHelper.ReadBytes(Context.Memory, DataPos, DataSize);
 
             Data = Parcel.GetParcelData(Data);
 
@@ -66,9 +66,9 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected virtual void Dispose(bool Disposing)
         {
-            if (disposing)
+            if (Disposing)
             {
                 Flinger.Dispose();
             }

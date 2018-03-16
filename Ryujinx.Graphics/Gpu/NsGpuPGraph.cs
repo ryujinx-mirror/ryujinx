@@ -117,7 +117,7 @@ namespace Ryujinx.Graphics.Gpu
 
                 if (Position != -1)
                 {
-                    byte[] Buffer = AMemoryHelper.ReadBytes(Memory, Position, (int)Size);
+                    byte[] Buffer = AMemoryHelper.ReadBytes(Memory, Position, Size);
 
                     int Stride = GetRegister(NsGpuRegister._3dVertexArray0Fetch) & 0xfff;
 

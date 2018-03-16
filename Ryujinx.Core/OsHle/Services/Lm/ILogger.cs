@@ -54,7 +54,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Lm
             long BufferPosition = Context.Request.PtrBuff[0].Position;
             long BufferLen      = Context.Request.PtrBuff[0].Size;
 
-            byte[] LogBuffer = AMemoryHelper.ReadBytes(Context.Memory, BufferPosition, (int)BufferLen);
+            byte[] LogBuffer = AMemoryHelper.ReadBytes(Context.Memory, BufferPosition, BufferLen);
 
             MemoryStream LogMessage = new MemoryStream(LogBuffer);
             BinaryReader bReader = new BinaryReader(LogMessage);

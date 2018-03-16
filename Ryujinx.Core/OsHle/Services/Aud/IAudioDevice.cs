@@ -55,7 +55,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
             long Position = Context.Request.SendBuff[0].Position;
             long Size     = Context.Request.SendBuff[0].Size;
 
-            string Name = AMemoryHelper.ReadAsciiString(Context.Memory, Position, (int)Size);
+            string Name = AMemoryHelper.ReadAsciiString(Context.Memory, Position, Size);
 
             return 0;
         }
