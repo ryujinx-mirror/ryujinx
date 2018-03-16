@@ -381,12 +381,15 @@ namespace ChocolArm64.Instruction
                 }
 
                 EmitVectorExtract(Context, Op.Rn, Index, Op.Size, Signed);
-                EmitVectorExtract(Context, Op.Rm, Index, Op.Size, Signed);
+                EmitVectorExtract(Context, Op.Rm, Elem,  Op.Size, Signed);
 
                 Emit();
 
-                EmitVectorInsert(Context, Op.Rd, Index, Op.Size);
+                EmitVectorInsertTmp(Context, Index, Op.Size);
             }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
 
             if (Op.RegisterSize == ARegisterSize.SIMD64)
             {

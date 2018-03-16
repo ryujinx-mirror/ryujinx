@@ -11,9 +11,8 @@ namespace ChocolArm64.Decoder
             switch (Size)
             {
                 case 1:
-                    Index = (OpCode >> 21) & 1 |
-                            (OpCode >> 10) & 2 |
-                            (OpCode >> 18) & 4;
+                    Index = (OpCode >> 20) & 3 |
+                            (OpCode >>  9) & 4;
 
                     Rm &= 0xf;
 
