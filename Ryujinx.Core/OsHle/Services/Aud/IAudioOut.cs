@@ -91,7 +91,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
 
             uint Count = (uint)((ulong)Size >> 3);
 
-            long[] ReleasedBuffers = AudioOut.GetReleasedBuffers(Track);
+            long[] ReleasedBuffers = AudioOut.GetReleasedBuffers(Track, (int)Count);
 
             for (uint Index = 0; Index < Count; Index++)
             {

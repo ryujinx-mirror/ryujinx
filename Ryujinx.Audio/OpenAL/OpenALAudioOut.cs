@@ -10,6 +10,8 @@ namespace Ryujinx.Audio.OpenAL
     {
         private const int MaxTracks = 256;
 
+        private const int MaxReleased = 32;
+
         private AudioContext Context;
 
         private class Track : IDisposable
@@ -26,6 +28,8 @@ namespace Ryujinx.Audio.OpenAL
 
             private Queue<long> QueuedTagsQueue;
 
+            private Queue<long> ReleasedTagsQueue;
+
             private bool Disposed;
 
             public Track(int SampleRate, ALFormat Format)
@@ -40,9 +44,45 @@ namespace Ryujinx.Audio.OpenAL
                 Buffers = new ConcurrentDictionary<long, int>();
 
                 QueuedTagsQueue = new Queue<long>();
+
+                ReleasedTagsQueue = new Queue<long>();
             }
 
-            public int GetBufferId(long Tag)
+            public bool ContainsBuffer(long Tag)
+            {
+                SyncQueuedTags();
+
+                foreach (long QueuedTag in QueuedTagsQueue)
+                {
+                    if (QueuedTag == Tag)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            public long[] GetReleasedBuffers(int MaxCount)
+            {
+                ClearReleased();
+
+                List<long> Tags = new List<long>();
+
+                HashSet<long> Unique = new HashSet<long>();
+
+                while (MaxCount-- > 0 && ReleasedTagsQueue.TryDequeue(out long Tag))
+                {
+                    if (Unique.Add(Tag))
+                    {
+                        Tags.Add(Tag);
+                    }
+                }
+
+                return Tags.ToArray();
+            }
+
+            public int AppendBuffer(long Tag)
             {
                 if (Disposed)
                 {
@@ -63,23 +103,6 @@ namespace Ryujinx.Audio.OpenAL
                 return Id;
             }
 
-            public long[] GetReleasedBuffers()
-            {
-                ClearReleased();
-
-                List<long> Tags = new List<long>();
-
-                foreach (long Tag in Buffers.Keys)
-                {
-                    if (!ContainsBuffer(Tag))
-                    {
-                        Tags.Add(Tag);
-                    }
-                }
-
-                return Tags.ToArray();
-            }
-
             public void ClearReleased()
             {
                 SyncQueuedTags();
@@ -91,21 +114,6 @@ namespace Ryujinx.Audio.OpenAL
                     AL.SourceUnqueueBuffers(SourceId, ReleasedCount);
                 }
             }
-
-            public bool ContainsBuffer(long Tag)
-            {
-                SyncQueuedTags();
-
-                foreach (long QueuedTag in QueuedTagsQueue)
-                {
-                    if (QueuedTag == Tag)
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
             
             private void SyncQueuedTags()
             {
@@ -116,7 +124,12 @@ namespace Ryujinx.Audio.OpenAL
 
                 while (QueuedTagsQueue.Count > QueuedCount)
                 {
-                    QueuedTagsQueue.Dequeue();
+                    ReleasedTagsQueue.Enqueue(QueuedTagsQueue.Dequeue());
+                }
+
+                while (ReleasedTagsQueue.Count > MaxReleased)
+                {
+                    ReleasedTagsQueue.Dequeue();
                 }
             }
 
@@ -202,20 +215,6 @@ namespace Ryujinx.Audio.OpenAL
             }
         }
 
-        public void AppendBuffer(int Track, long Tag, byte[] Buffer)
-        {
-            if (Tracks.TryGetValue(Track, out Track Td))
-            {
-                int BufferId = Td.GetBufferId(Tag);
-
-                AL.BufferData(BufferId, Td.Format, Buffer, Buffer.Length, Td.SampleRate);
-
-                AL.SourceQueueBuffer(Td.SourceId, BufferId);
-
-                StartPlaybackIfNeeded(Td);
-            }
-        }
-
         public bool ContainsBuffer(int Track, long Tag)
         {
             if (Tracks.TryGetValue(Track, out Track Td))
@@ -226,14 +225,28 @@ namespace Ryujinx.Audio.OpenAL
             return false;
         }
 
-        public long[] GetReleasedBuffers(int Track)
+        public long[] GetReleasedBuffers(int Track, int MaxCount)
         {
             if (Tracks.TryGetValue(Track, out Track Td))
             {
-                return Td.GetReleasedBuffers();
+                return Td.GetReleasedBuffers(MaxCount);
             }
             
             return null;
+        }
+
+        public void AppendBuffer(int Track, long Tag, byte[] Buffer)
+        {
+            if (Tracks.TryGetValue(Track, out Track Td))
+            {
+                int BufferId = Td.AppendBuffer(Tag);
+
+                AL.BufferData(BufferId, Td.Format, Buffer, Buffer.Length, Td.SampleRate);
+
+                AL.SourceQueueBuffer(Td.SourceId, BufferId);
+
+                StartPlaybackIfNeeded(Td);
+            }
         }
 
         public void Start(int Track)
