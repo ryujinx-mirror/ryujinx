@@ -1,18 +1,17 @@
 using ChocolArm64.Memory;
 using Ryujinx.Audio;
+using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 using System.Text;
 
-using static Ryujinx.Core.OsHle.IpcServices.ObjHelper;
-
 namespace Ryujinx.Core.OsHle.IpcServices.Aud
 {
-    class ServiceAudOut : IIpcService
+    class ServiceAudOut : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ServiceAudOut()
         {
@@ -73,9 +72,16 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
                 Channels = 2;
             }
 
-            int Track = AudioOut.OpenTrack(SampleRate, Channels, out AudioFormat Format);
+            KEvent ReleaseEvent = new KEvent();
 
-            MakeObject(Context, new IAudioOut(AudioOut, Track));
+            ReleaseCallback Callback = () =>
+            {
+                ReleaseEvent.Handle.Set();
+            };
+
+            int Track = AudioOut.OpenTrack(SampleRate, Channels, Callback, out AudioFormat Format);
+
+            MakeObject(Context, new IAudioOut(AudioOut, ReleaseEvent, Track));
 
             Context.ResponseData.Write(SampleRate);
             Context.ResponseData.Write(Channels);

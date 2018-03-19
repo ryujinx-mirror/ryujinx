@@ -16,8 +16,10 @@ namespace Ryujinx.Core.OsHle
 
         private ConcurrentDictionary<int, Process> Processes;
 
-        internal HSharedMem HidSharedMem;
-        internal HSharedMem FontSharedMem;
+        internal HSharedMem HidSharedMem  { get; private set; }
+        internal HSharedMem FontSharedMem { get; private set; }
+
+        internal KEvent VsyncEvent { get; private set; }
 
         private Switch Ns;
 
@@ -32,6 +34,8 @@ namespace Ryujinx.Core.OsHle
 
             HidSharedMem  = new HSharedMem();
             FontSharedMem = new HSharedMem();
+
+            VsyncEvent = new KEvent();
         }
 
         public void LoadCart(string ExeFsDir, string RomFsFile = null)
@@ -91,6 +95,8 @@ namespace Ryujinx.Core.OsHle
             MainProcess.Run(IsNro);
         }
 
+        public void SignalVsync() => VsyncEvent.Handle.Set();
+
         private Process MakeProcess()
         {
             Process Process;
@@ -109,7 +115,14 @@ namespace Ryujinx.Core.OsHle
                 Processes.TryAdd(ProcessId, Process);
             }
 
+            InitializeProcess(Process);
+
             return Process;
+        }
+
+        private void InitializeProcess(Process Process)
+        {
+            Process.AppletState.SetFocus(true);
         }
 
         internal void ExitProcess(int ProcessId)
@@ -171,6 +184,8 @@ namespace Ryujinx.Core.OsHle
                     Process.StopAllThreadsAsync();
                     Process.Dispose();
                 }
+
+                VsyncEvent.Dispose();
             }
         }
     }

@@ -13,7 +13,7 @@ namespace Ryujinx.Core.OsHle.Svc
             long MutexAddress           = (long)ThreadState.X1;
             int  RequestingThreadHandle =  (int)ThreadState.X2;
 
-            HThread RequestingThread = Process.HandleTable.GetData<HThread>(RequestingThreadHandle);
+            KThread RequestingThread = Process.HandleTable.GetData<KThread>(RequestingThreadHandle);
 
             Mutex M = new Mutex(Process, MutexAddress, OwnerThreadHandle);
 
@@ -43,7 +43,7 @@ namespace Ryujinx.Core.OsHle.Svc
             int  ThreadHandle   =  (int)ThreadState.X2;
             long Timeout        = (long)ThreadState.X3;
 
-            HThread Thread = Process.HandleTable.GetData<HThread>(ThreadHandle);
+            KThread Thread = Process.HandleTable.GetData<KThread>(ThreadHandle);
 
             Mutex M = new Mutex(Process, MutexAddress, ThreadHandle);
 
@@ -72,7 +72,7 @@ namespace Ryujinx.Core.OsHle.Svc
             long CondVarAddress = (long)ThreadState.X0;
             int  Count          =  (int)ThreadState.X1;
 
-            HThread CurrThread = Process.GetThread(ThreadState.Tpidr);
+            KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
             if (Ns.Os.CondVars.TryGetValue(CondVarAddress, out CondVar Cv))
             {

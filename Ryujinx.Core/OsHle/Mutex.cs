@@ -16,7 +16,7 @@ namespace Ryujinx.Core.OsHle
 
         private object EnterWaitLock;
 
-        private ConcurrentQueue<HThread> WaitingThreads;
+        private ConcurrentQueue<KThread> WaitingThreads;
 
         public Mutex(Process Process, long MutexAddress, int OwnerThreadHandle)
         {
@@ -27,10 +27,10 @@ namespace Ryujinx.Core.OsHle
 
             EnterWaitLock = new object();
 
-            WaitingThreads = new ConcurrentQueue<HThread>();
+            WaitingThreads = new ConcurrentQueue<KThread>();
         }
 
-        public void WaitForLock(HThread RequestingThread, int RequestingThreadHandle)
+        public void WaitForLock(KThread RequestingThread, int RequestingThreadHandle)
         {
             AcquireMutexValue();
 
@@ -83,11 +83,11 @@ namespace Ryujinx.Core.OsHle
 
                 ReleaseMutexValue();
 
-                HThread[] UnlockedThreads = new HThread[WaitingThreads.Count];
+                KThread[] UnlockedThreads = new KThread[WaitingThreads.Count];
 
                 int Index = 0;
 
-                while (WaitingThreads.TryDequeue(out HThread Thread))
+                while (WaitingThreads.TryDequeue(out KThread Thread))
                 {
                     UnlockedThreads[Index++] = Thread;
                 }

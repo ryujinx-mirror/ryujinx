@@ -13,7 +13,7 @@ namespace Ryujinx.Core.OsHle
 
         private bool OwnsCondVarValue;
 
-        private List<HThread> WaitingThreads;
+        private List<KThread> WaitingThreads;
 
         public CondVar(Process Process, long CondVarAddress, long Timeout)
         {
@@ -21,10 +21,10 @@ namespace Ryujinx.Core.OsHle
             this.CondVarAddress = CondVarAddress;
             this.Timeout        = Timeout;
 
-            WaitingThreads = new List<HThread>();
+            WaitingThreads = new List<KThread>();
         }
 
-        public bool WaitForSignal(HThread Thread)
+        public bool WaitForSignal(KThread Thread)
         {
             int Count = Process.Memory.ReadInt32(CondVarAddress);
 
@@ -66,7 +66,7 @@ namespace Ryujinx.Core.OsHle
             return true;
         }
 
-        public void SetSignal(HThread Thread, int Count)
+        public void SetSignal(KThread Thread, int Count)
         {
             lock (WaitingThreads)
             {

@@ -1,15 +1,13 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-using static Ryujinx.Core.OsHle.IpcServices.ObjHelper;
-
 namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
 {
-    class ServiceFspSrv : IIpcService
+    class ServiceFspSrv : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ServiceFspSrv()
         {

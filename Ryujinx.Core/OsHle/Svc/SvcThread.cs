@@ -39,7 +39,7 @@ namespace Ryujinx.Core.OsHle.Svc
         {
             int Handle = (int)ThreadState.X0;
 
-            HThread Thread = Process.HandleTable.GetData<HThread>(Handle);
+            KThread Thread = Process.HandleTable.GetData<KThread>(Handle);
 
             if (Thread != null)
             {
@@ -53,16 +53,18 @@ namespace Ryujinx.Core.OsHle.Svc
 
         private void SvcExitThread(AThreadState ThreadState)
         {
-            HThread CurrThread = Process.GetThread(ThreadState.Tpidr);
-            
+            KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
+
             CurrThread.Thread.StopExecution();
+
+            CurrThread.Handle.Set();
         }
 
         private void SvcSleepThread(AThreadState ThreadState)
         {           
             ulong NanoSecs = ThreadState.X0;
 
-            HThread CurrThread = Process.GetThread(ThreadState.Tpidr);
+            KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
             
             if (NanoSecs == 0)
             {
@@ -78,7 +80,7 @@ namespace Ryujinx.Core.OsHle.Svc
         {
             int Handle = (int)ThreadState.X1;
 
-            HThread Thread = Process.HandleTable.GetData<HThread>(Handle);
+            KThread Thread = Process.HandleTable.GetData<KThread>(Handle);
 
             if (Thread != null)
             {
@@ -91,10 +93,10 @@ namespace Ryujinx.Core.OsHle.Svc
 
         private void SvcSetThreadPriority(AThreadState ThreadState)
         {
+            int Prio   = (int)ThreadState.X0;
             int Handle = (int)ThreadState.X1;
-            int Prio = (int)ThreadState.X0;
 
-            HThread Thread = Process.HandleTable.GetData<HThread>(Handle);
+            KThread Thread = Process.HandleTable.GetData<KThread>(Handle);
 
             if (Thread != null)
             {
@@ -117,7 +119,7 @@ namespace Ryujinx.Core.OsHle.Svc
         {
             int Handle = (int)ThreadState.X0;
 
-            HThread Thread = Process.HandleTable.GetData<HThread>(Handle);
+            KThread Thread = Process.HandleTable.GetData<KThread>(Handle);
 
             if (Thread != null)
             {

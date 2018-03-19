@@ -17,10 +17,6 @@ namespace Ryujinx.Core.OsHle.Ipc
 
         public List<int> ResponseObjIds { get; private set; }    
 
-        public bool      IsDomain { get; private set; }
-        public IpcDomCmd DomCmd   { get; private set; }
-        public int       DomObjId { get; private set; }
-
         public byte[] RawData { get; set; }
 
         public IpcMessage()
@@ -34,27 +30,18 @@ namespace Ryujinx.Core.OsHle.Ipc
             ResponseObjIds = new List<int>();
         }
 
-        public IpcMessage(bool Domain) : this()
+        public IpcMessage(byte[] Data, long CmdPtr) : this()
         {
-            IsDomain = Domain;
-        }
-
-        public IpcMessage(byte[] Data, long CmdPtr, bool Domain) : this()
-        {
-            Logging.Ipc(Data, CmdPtr, Domain);
-
             using (MemoryStream MS = new MemoryStream(Data))
             {
                 BinaryReader Reader = new BinaryReader(MS);
 
-                Initialize(Reader, CmdPtr, Domain);
+                Initialize(Reader, CmdPtr);
             }
         }
 
-        private void Initialize(BinaryReader Reader, long CmdPtr, bool Domain)
+        private void Initialize(BinaryReader Reader, long CmdPtr)
         {
-            IsDomain = Domain;
-
             int Word0 = Reader.ReadInt32();
             int Word1 = Reader.ReadInt32();
 
@@ -110,19 +97,6 @@ namespace Ryujinx.Core.OsHle.Ipc
                 RecvListCount = 0;
             }
 
-            if (Domain && Type == IpcMessageType.Request)
-            {
-                int DomWord0 = Reader.ReadInt32();
-
-                DomCmd = (IpcDomCmd)(DomWord0 & 0xff);
-
-                RawDataSize = (DomWord0 >> 16) & 0xffff;
-
-                DomObjId = Reader.ReadInt32();
-
-                Reader.ReadInt64(); //Padding
-            }
-
             RawData = Reader.ReadBytes(RawDataSize);
 
             Reader.BaseStream.Seek(RecvListPos, SeekOrigin.Begin);
@@ -165,9 +139,7 @@ namespace Ryujinx.Core.OsHle.Ipc
                 //This is the weirdest padding I've seen so far...
                 int Pad1 = 0x10 - Pad0;
 
-                DataLength = (DataLength + Pad0 + Pad1 + (IsDomain ? 0x10 : 0)) / 4;
-
-                DataLength += ResponseObjIds.Count;
+                DataLength = (DataLength + Pad0 + Pad1) / 4;
 
                 Word1 = DataLength & 0x3ff;
 
@@ -182,21 +154,9 @@ namespace Ryujinx.Core.OsHle.Ipc
 
                 MS.Seek(Pad0, SeekOrigin.Current);
 
-                if (IsDomain)
-                {
-                    Writer.Write(ResponseObjIds.Count);
-                    Writer.Write(0);
-                    Writer.Write(0L);
-                }
-
                 if (RawData != null)
                 {
                     Writer.Write(RawData);
-                }
-
-                foreach (int Id in ResponseObjIds)
-                {
-                    Writer.Write(Id);
                 }
 
                 Writer.Write(new byte[Pad1]);

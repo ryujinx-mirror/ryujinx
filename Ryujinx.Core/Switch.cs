@@ -14,9 +14,9 @@ namespace Ryujinx.Core
 
         internal NsGpu Gpu { get; private set; }
 
-        internal Horizon Os { get; private set; }
-
         internal VirtualFileSystem VFs { get; private set; }
+
+        public Horizon Os { get; private set; }
 
         public SystemSettings Settings { get; private set; }
 
@@ -40,11 +40,11 @@ namespace Ryujinx.Core
 
             this.AudioOut = AudioOut;
 
-            Gpu = new NsGpu(Renderer);
-
-            Os = new Horizon(this);
+            Gpu = new NsGpu(Renderer);            
 
             VFs = new VirtualFileSystem();
+
+            Os = new Horizon(this);
 
             Settings = new SystemSettings();
 

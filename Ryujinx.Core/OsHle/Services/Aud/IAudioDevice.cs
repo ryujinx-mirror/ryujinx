@@ -5,11 +5,11 @@ using System.Text;
 
 namespace Ryujinx.Core.OsHle.IpcServices.Aud
 {
-    class IAudioDevice : IIpcService
+    class IAudioDevice : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IAudioDevice()
         {

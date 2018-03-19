@@ -5,6 +5,7 @@ using Ryujinx.Core.Loaders;
 using Ryujinx.Core.Loaders.Executables;
 using Ryujinx.Core.OsHle.Exceptions;
 using Ryujinx.Core.OsHle.Handles;
+using Ryujinx.Core.OsHle.IpcServices.NvServices;
 using Ryujinx.Core.OsHle.Svc;
 using System;
 using System.Collections.Concurrent;
@@ -31,21 +32,21 @@ namespace Ryujinx.Core.OsHle
 
         public AMemory Memory { get; private set; }
 
-        public ServiceMgr Services { get; private set; }
-
         public KProcessScheduler Scheduler { get; private set; }
 
         public KProcessHandleTable HandleTable { get; private set; }
+
+        public AppletStateMgr AppletState { get; private set; }
 
         private SvcHandler SvcHandler;
 
         private ConcurrentDictionary<int, AThread> TlsSlots;
 
-        private ConcurrentDictionary<long, HThread> ThreadsByTpidr;
+        private ConcurrentDictionary<long, KThread> ThreadsByTpidr;
 
         private List<Executable> Executables;
 
-        private HThread MainThread;
+        private KThread MainThread;
 
         private long ImageBase;
 
@@ -60,17 +61,17 @@ namespace Ryujinx.Core.OsHle
 
             Memory = new AMemory();
 
-            Services = new ServiceMgr();
-
             HandleTable = new KProcessHandleTable();
 
-            Scheduler = new KProcessScheduler();            
+            Scheduler = new KProcessScheduler();
+
+            AppletState = new AppletStateMgr();
 
             SvcHandler = new SvcHandler(Ns, this);
 
             TlsSlots = new ConcurrentDictionary<int, AThread>();
 
-            ThreadsByTpidr = new ConcurrentDictionary<long, HThread>();
+            ThreadsByTpidr = new ConcurrentDictionary<long, KThread>();
 
             Executables = new List<Executable>();
 
@@ -132,7 +133,7 @@ namespace Ryujinx.Core.OsHle
                 return false;
             }
 
-            MainThread = HandleTable.GetData<HThread>(Handle);
+            MainThread = HandleTable.GetData<KThread>(Handle);
 
             if (NeedsHbAbi)
             {
@@ -186,7 +187,7 @@ namespace Ryujinx.Core.OsHle
 
             AThread Thread = new AThread(GetTranslator(), Memory, EntryPoint);
 
-            HThread ThreadHnd = new HThread(Thread, ProcessorId, Priority);
+            KThread ThreadHnd = new KThread(Thread, ProcessorId, Priority);
 
             int Handle = HandleTable.OpenHandle(ThreadHnd);
 
@@ -311,9 +312,9 @@ namespace Ryujinx.Core.OsHle
             return (int)((Position - MemoryRegions.TlsPagesAddress) / TlsSize);
         }
 
-        public HThread GetThread(long Tpidr)
+        public KThread GetThread(long Tpidr)
         {
-            if (!ThreadsByTpidr.TryGetValue(Tpidr, out HThread Thread))
+            if (!ThreadsByTpidr.TryGetValue(Tpidr, out KThread Thread))
             {
                 Logging.Error($"Thread with TPIDR 0x{Tpidr:x16} not found!");
             }
@@ -344,11 +345,27 @@ namespace Ryujinx.Core.OsHle
                 }
 
                 Disposed = true;
-                
-                Services.Dispose();
-                HandleTable.Dispose();
+
+                foreach (object Obj in HandleTable.Clear())
+                {
+                    if (Obj is KSession Session)
+                    {
+                        Session.Dispose();
+                    }
+                }
+
+                ServiceNvDrv.Fds.DeleteProcess(this);
+
+                ServiceNvDrv.NvMaps.DeleteProcess(this);
+
+                ServiceNvDrv.NvMapsById.DeleteProcess(this);
+
                 Scheduler.Dispose();
+
+                AppletState.Dispose();
+
                 SvcHandler.Dispose();
+
                 Memory.Dispose();
 
                 Logging.Info($"Process {ProcessId} exiting...");

@@ -1,14 +1,17 @@
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.IpcServices.Aud
 {
-    class IAudioRenderer : IIpcService
+    class IAudioRenderer : IpcService, IDisposable
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+
+        private KEvent UpdateEvent;
 
         public IAudioRenderer()
         {
@@ -19,6 +22,8 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
                 { 6, StopAudioRenderer          },
                 { 7, QuerySystemEvent           }
             };
+
+            UpdateEvent = new KEvent();
         }
 
         public long RequestUpdateAudioRenderer(ServiceCtx Context)
@@ -41,6 +46,9 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
                 Context.Memory.WriteInt32(Position + Offset, 5);
             }
 
+            //TODO: We shouldn't be signaling this here.
+            UpdateEvent.Handle.Set();
+
             return 0;
         }
 
@@ -56,11 +64,24 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
 
         public long QuerySystemEvent(ServiceCtx Context)
         {
-            int Handle = Context.Process.HandleTable.OpenHandle(new HEvent());
+            int Handle = Context.Process.HandleTable.OpenHandle(UpdateEvent);
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
             return 0;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool Disposing)
+        {
+            if (Disposing)
+            {
+                UpdateEvent.Dispose();
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ using OpenTK.Audio.OpenAL;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Ryujinx.Audio.OpenAL
 {
@@ -22,7 +23,11 @@ namespace Ryujinx.Audio.OpenAL
             
             public ALFormat Format { get; private set; }
 
+            private ReleaseCallback Callback;
+
             public PlaybackState State { get; set; }
+
+            private bool ShouldCallReleaseCallback;
 
             private ConcurrentDictionary<long, int> Buffers;
 
@@ -30,12 +35,15 @@ namespace Ryujinx.Audio.OpenAL
 
             private Queue<long> ReleasedTagsQueue;
 
+            private int LastReleasedCount;
+
             private bool Disposed;
 
-            public Track(int SampleRate, ALFormat Format)
+            public Track(int SampleRate, ALFormat Format, ReleaseCallback Callback)
             {
                 this.SampleRate = SampleRate;
                 this.Format     = Format;
+                this.Callback   = Callback;
 
                 State = PlaybackState.Stopped;
 
@@ -109,9 +117,40 @@ namespace Ryujinx.Audio.OpenAL
 
                 AL.GetSource(SourceId, ALGetSourcei.BuffersProcessed, out int ReleasedCount);
 
+                CheckReleaseChanges(ReleasedCount);
+
                 if (ReleasedCount > 0)
                 {
                     AL.SourceUnqueueBuffers(SourceId, ReleasedCount);
+                }
+            }
+
+            public void CallReleaseCallbackIfNeeded()
+            {
+                CheckReleaseChanges();
+
+                if (ShouldCallReleaseCallback)
+                {
+                    ShouldCallReleaseCallback = false;
+
+                    Callback();
+                }
+            }
+
+            private void CheckReleaseChanges()
+            {
+                AL.GetSource(SourceId, ALGetSourcei.BuffersProcessed, out int ReleasedCount);
+
+                CheckReleaseChanges(ReleasedCount);
+            }
+
+            private void CheckReleaseChanges(int NewReleasedCount)
+            {
+                if (LastReleasedCount != NewReleasedCount)
+                {
+                    LastReleasedCount = NewReleasedCount;
+
+                    ShouldCallReleaseCallback = true;
                 }
             }
             
@@ -156,18 +195,46 @@ namespace Ryujinx.Audio.OpenAL
 
         private ConcurrentDictionary<int, Track> Tracks;
 
+        private Thread AudioPollerThread;
+
+        private bool KeepPolling;
+
         public OpenALAudioOut()
         {
             Context = new AudioContext();
 
             Tracks = new ConcurrentDictionary<int, Track>();
+
+            KeepPolling = true;
+
+            AudioPollerThread = new Thread(AudioPollerWork);
+
+            AudioPollerThread.Start();
         }
 
-        public int OpenTrack(int SampleRate, int Channels, out AudioFormat Format)
+        private void AudioPollerWork()
+        {
+            do
+            {
+                foreach (Track Td in Tracks.Values)
+                {
+                    Td.CallReleaseCallbackIfNeeded();
+                }
+
+                Thread.Yield();
+            }
+            while (KeepPolling);
+        }
+
+        public int OpenTrack(
+            int             SampleRate,
+            int             Channels,
+            ReleaseCallback Callback,
+            out AudioFormat Format)
         {
             Format = AudioFormat.PcmInt16;
 
-            Track Td = new Track(SampleRate, GetALFormat(Channels, Format));
+            Track Td = new Track(SampleRate, GetALFormat(Channels, Format), Callback);
 
             for (int Id = 0; Id < MaxTracks; Id++)
             {
@@ -292,5 +359,7 @@ namespace Ryujinx.Audio.OpenAL
 
             return PlaybackState.Stopped;
         }
+
+
     }
 }

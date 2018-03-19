@@ -51,11 +51,11 @@ namespace Ryujinx.Core.OsHle.IpcServices.Bsd
         public Socket Handle;
     }
 
-    class ServiceBsd : IIpcService
+    class ServiceBsd : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         private List<SocketBsd> Sockets = new List<SocketBsd>();
 

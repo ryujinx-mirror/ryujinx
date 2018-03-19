@@ -1,4 +1,5 @@
 using ChocolArm64.Memory;
+using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using Ryujinx.Core.OsHle.Utilities;
 using Ryujinx.Graphics.Gpu;
@@ -7,20 +8,22 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 {
-    class ServiceNvDrv : IIpcService
+    class ServiceNvDrv : IpcService, IDisposable
     {
         private delegate long ServiceProcessIoctl(ServiceCtx Context);
 
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         private Dictionary<(string, int), ServiceProcessIoctl> IoctlCmds;
 
-        private IdDictionary Fds;
+        public static GlobalStateTable Fds { get; private set; }
 
-        private IdDictionary NvMaps;
-        private IdDictionary NvMapsById;
+        public static GlobalStateTable NvMaps     { get; private set; }
+        public static GlobalStateTable NvMapsById { get; private set; }
+
+        private KEvent Event;
 
         public ServiceNvDrv()
         {
@@ -64,10 +67,15 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
                 { ("/dev/nvmap",           0x010e), NvMapIocGetId                     },
             };
 
-            Fds = new IdDictionary();
+            Event = new KEvent();
+        }
 
-            NvMaps     = new IdDictionary();
-            NvMapsById = new IdDictionary();
+        static ServiceNvDrv()
+        {
+            Fds = new GlobalStateTable();
+
+            NvMaps     = new GlobalStateTable();
+            NvMapsById = new GlobalStateTable();
         }
 
         public long Open(ServiceCtx Context)
@@ -76,7 +84,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
             string Name = AMemoryHelper.ReadAsciiString(Context.Memory, NamePtr);
 
-            int Fd = Fds.Add(new NvFd(Name));
+            int Fd = Fds.Add(Context.Process, new NvFd(Name));
 
             Context.ResponseData.Write(Fd);
             Context.ResponseData.Write(0);
@@ -89,7 +97,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             int Fd  = Context.RequestData.ReadInt32();
             int Cmd = Context.RequestData.ReadInt32() & 0xffff;
             
-            NvFd FdData = Fds.GetData<NvFd>(Fd);
+            NvFd FdData = Fds.GetData<NvFd>(Context.Process, Fd);
 
             long Position = Context.Request.GetSendBuffPtr();
 
@@ -109,7 +117,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
         {
             int Fd = Context.RequestData.ReadInt32();
 
-            Fds.Delete(Fd);
+            Fds.Delete(Context.Process, Fd);
 
             Context.ResponseData.Write(0);
 
@@ -131,7 +139,10 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             int Fd      = Context.RequestData.ReadInt32();
             int EventId = Context.RequestData.ReadInt32();
 
-            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(0xcafe);
+            //TODO: Use Fd/EventId, different channels have different events.
+            int Handle = Context.Process.HandleTable.OpenHandle(Event);
+
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
             Context.ResponseData.Write(0);
 
@@ -203,7 +214,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
                 return 0;
             }
 
-            NvMap Map = NvMaps.GetData<NvMap>(Handle);
+            NvMap Map = NvMaps.GetData<NvMap>(Context.Process, Handle);
 
             if (Map == null)
             {
@@ -550,9 +561,9 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
             NvMap Map = new NvMap() { Size = Size };
 
-            Map.Handle = NvMaps.Add(Map);
+            Map.Handle = NvMaps.Add(Context.Process, Map);
 
-            Map.Id = NvMapsById.Add(Map);
+            Map.Id = NvMapsById.Add(Context.Process, Map);
 
             Context.Memory.WriteInt32(Position + 4, Map.Handle);
 
@@ -567,7 +578,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
             int Id = Context.Memory.ReadInt32(Position);
 
-            NvMap Map = NvMapsById.GetData<NvMap>(Id);
+            NvMap Map = NvMapsById.GetData<NvMap>(Context.Process, Id);
 
             if (Map == null)
             {
@@ -594,7 +605,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             byte Kind     = (byte)Reader.ReadInt64();
             long Addr     =       Reader.ReadInt64();
 
-            NvMap Map = NvMaps.GetData<NvMap>(Handle);
+            NvMap Map = NvMaps.GetData<NvMap>(Context.Process, Handle);
 
             if (Map == null)
             {
@@ -620,7 +631,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             int  Handle  = Reader.ReadInt32();
             int  Padding = Reader.ReadInt32();
 
-            NvMap Map = NvMaps.GetData<NvMap>(Handle);
+            NvMap Map = NvMaps.GetData<NvMap>(Context.Process, Handle);
 
             if (Map == null)
             {
@@ -645,7 +656,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             int Handle = Reader.ReadInt32();
             int Param  = Reader.ReadInt32();
 
-            NvMap Map = NvMaps.GetData<NvMap>(Handle);
+            NvMap Map = NvMaps.GetData<NvMap>(Context.Process, Handle);
 
             if (Map == null)
             {
@@ -675,7 +686,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
             int Handle = Context.Memory.ReadInt32(Position + 4);
 
-            NvMap Map = NvMaps.GetData<NvMap>(Handle);
+            NvMap Map = NvMaps.GetData<NvMap>(Context.Process, Handle);
 
             if (Map == null)
             {
@@ -689,9 +700,17 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             return 0;
         }
 
-        public NvMap GetNvMap(int Handle)
+        public void Dispose()
         {
-            return NvMaps.GetData<NvMap>(Handle);
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool Disposing)
+        {
+            if (Disposing)
+            {
+                Event.Dispose();
+            }
         }
     }
 }

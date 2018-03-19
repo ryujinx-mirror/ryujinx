@@ -181,6 +181,8 @@ namespace Ryujinx
             SwapBuffers();
 
             Ns.Statistics.EndSystemFrame();
+
+            Ns.Os.SignalVsync();
         }
 
         protected override void OnResize(EventArgs e)

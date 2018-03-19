@@ -5,15 +5,14 @@ using System.IO;
 using System.Text;
 
 using static Ryujinx.Core.OsHle.ErrorCode;
-using static Ryujinx.Core.OsHle.IpcServices.ObjHelper;
 
 namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
 {
-    class IFileSystem : IIpcService
+    class IFileSystem : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         private HashSet<string> OpenPaths;
 

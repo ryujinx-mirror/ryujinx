@@ -1,11 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle
 {
-    class IdDictionary : IEnumerable<object>
+    class IdDictionary
     {
         private ConcurrentDictionary<int, object> Objs;
 
@@ -39,18 +38,6 @@ namespace Ryujinx.Core.OsHle
             throw new InvalidOperationException();
         }
 
-        public bool ReplaceData(int Id, object Data)
-        {
-            if (Objs.ContainsKey(Id))
-            {
-                Objs[Id] = Data;
-
-                return true;
-            }
-
-            return false;
-        }
-
         public object GetData(int Id)
         {
             if (Objs.TryGetValue(Id, out object Data))
@@ -71,31 +58,25 @@ namespace Ryujinx.Core.OsHle
             return default(T);
         }
 
-        public bool Delete(int Id)
+        public object Delete(int Id)
         {
             if (Objs.TryRemove(Id, out object Obj))
             {
-                if (Obj is IDisposable DisposableObj)
-                {
-                    DisposableObj.Dispose();
-                }
-
                 FreeIdHint = Id;
 
-                return true;
+                return Obj;
             }
 
-            return false;
+            return null;
         }
 
-        IEnumerator<object> IEnumerable<object>.GetEnumerator()
+        public ICollection<object> Clear()
         {
-            return Objs.Values.GetEnumerator();
-        }
+            ICollection<object> Values = Objs.Values;
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return Objs.Values.GetEnumerator();
+            Objs.Clear();
+
+            return Values;
         }
     }
 }

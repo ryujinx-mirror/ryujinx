@@ -5,15 +5,15 @@ using System.Threading;
 
 namespace Ryujinx.Core.OsHle.Handles
 {
-    public class KProcessScheduler : IDisposable
+    class KProcessScheduler : IDisposable
     {
         private class SchedulerThread : IDisposable
         {
-            public HThread Thread { get; private set; }
+            public KThread Thread { get; private set; }
 
             public AutoResetEvent WaitEvent { get; private set; }
 
-            public SchedulerThread(HThread Thread)
+            public SchedulerThread(KThread Thread)
             {
                 this.Thread = Thread;
 
@@ -95,7 +95,7 @@ namespace Ryujinx.Core.OsHle.Handles
             }
         }
 
-        private ConcurrentDictionary<HThread, SchedulerThread> AllThreads;
+        private ConcurrentDictionary<KThread, SchedulerThread> AllThreads;
 
         private ThreadQueue[] WaitingToRun;
 
@@ -105,7 +105,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
         public KProcessScheduler()
         {
-            AllThreads = new ConcurrentDictionary<HThread, SchedulerThread>();
+            AllThreads = new ConcurrentDictionary<KThread, SchedulerThread>();
 
             WaitingToRun = new ThreadQueue[4];
 
@@ -119,7 +119,7 @@ namespace Ryujinx.Core.OsHle.Handles
             SchedLock = new object();
         }
 
-        public void StartThread(HThread Thread)
+        public void StartThread(KThread Thread)
         {
             lock (SchedLock)
             {
@@ -164,7 +164,7 @@ namespace Ryujinx.Core.OsHle.Handles
             }
         }
 
-        public void Resume(HThread CurrThread)
+        public void Resume(KThread CurrThread)
         {
             SchedulerThread SchedThread;
 
@@ -183,7 +183,7 @@ namespace Ryujinx.Core.OsHle.Handles
             TryResumingExecution(SchedThread);
         }
 
-        public bool WaitForSignal(HThread Thread, int Timeout = -1)
+        public bool WaitForSignal(KThread Thread, int Timeout = -1)
         {
             SchedulerThread SchedThread;
 
@@ -230,7 +230,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
         private void TryResumingExecution(SchedulerThread SchedThread)
         {
-            HThread Thread = SchedThread.Thread;
+            KThread Thread = SchedThread.Thread;
 
             lock (SchedLock)
             {
@@ -249,7 +249,7 @@ namespace Ryujinx.Core.OsHle.Handles
             Logging.Debug($"{GetDbgThreadInfo(Thread)} resuming execution...");
         }
 
-        public void Yield(HThread Thread)
+        public void Yield(KThread Thread)
         {
             SchedulerThread SchedThread;
 
@@ -295,11 +295,11 @@ namespace Ryujinx.Core.OsHle.Handles
             }
         }
 
-        public void Signal(params HThread[] Threads)
+        public void Signal(params KThread[] Threads)
         {
             lock (SchedLock)
             {
-                foreach (HThread Thread in Threads)
+                foreach (KThread Thread in Threads)
                 {
                     if (AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
                     {
@@ -314,7 +314,7 @@ namespace Ryujinx.Core.OsHle.Handles
             }
         }
 
-        private string GetDbgThreadInfo(HThread Thread)
+        private string GetDbgThreadInfo(KThread Thread)
         {
             return $"Thread {Thread.ThreadId} (core {Thread.ProcessorId}) prio {Thread.Priority}";
         }

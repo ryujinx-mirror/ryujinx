@@ -4,11 +4,13 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.IpcServices.Sm
 {
-    class ServiceSm : IIpcService
+    class ServiceSm : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+
+        private bool IsInitialized;
 
         public ServiceSm()
         {
@@ -23,7 +25,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Sm
 
         public long Initialize(ServiceCtx Context)
         {
-            Context.Session.Initialize();
+            IsInitialized = true;
 
             return 0;
         }
@@ -31,7 +33,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Sm
         public long GetService(ServiceCtx Context)
         {
             //Only for kernel version > 3.0.0.
-            if (!Context.Session.IsInitialized)
+            if (!IsInitialized)
             {
                 //return SmNotInitialized;
             }
@@ -55,7 +57,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Sm
                 return 0;
             }
 
-            HSession Session = new HSession(Context.Process.Services.GetService(Name));
+            KSession Session = new KSession(ServiceFactory.MakeService(Name));
 
             int Handle = Context.Process.HandleTable.OpenHandle(Session);
 

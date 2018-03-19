@@ -2,7 +2,7 @@ using ChocolArm64;
 
 namespace Ryujinx.Core.OsHle.Handles
 {
-    public class HThread
+    class KThread : KSynchronizationObject
     {
         public AThread Thread { get; private set; }
 
@@ -11,7 +11,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
         public int ThreadId => Thread.ThreadId;
 
-        public HThread(AThread Thread, int ProcessorId, int Priority)
+        public KThread(AThread Thread, int ProcessorId, int Priority)
         {
             this.Thread      = Thread;
             this.ProcessorId = ProcessorId;

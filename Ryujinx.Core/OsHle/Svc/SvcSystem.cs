@@ -3,6 +3,7 @@ using ChocolArm64.State;
 using Ryujinx.Core.OsHle.Exceptions;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
+using Ryujinx.Core.OsHle.IpcServices;
 using System;
 using System.Threading;
 
@@ -34,7 +35,28 @@ namespace Ryujinx.Core.OsHle.Svc
         {
             int Handle = (int)ThreadState.X0;
 
-            Process.HandleTable.CloseHandle(Handle);
+            object Obj = Process.HandleTable.CloseHandle(Handle);
+
+            if (Obj == null)
+            {
+                Logging.Warn($"Tried to CloseHandle on invalid handle 0x{Handle:x8}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+
+                return;
+            }
+
+            if (Obj is KSession Session)
+            {
+                Session.Dispose();
+            }
+            else if (Obj is HTransferMem TMem)
+            {
+                TMem.Memory.Manager.Reprotect(
+                    TMem.Position,
+                    TMem.Size,
+                    TMem.Perm);
+            }
 
             ThreadState.X0 = 0;
         }
@@ -43,25 +65,78 @@ namespace Ryujinx.Core.OsHle.Svc
         {
             int Handle = (int)ThreadState.X0;
 
-            //TODO: Implement events.
+            KEvent Event = Process.HandleTable.GetData<KEvent>(Handle);
 
-            ThreadState.X0 = 0;
+            if (Event != null)
+            {
+                Event.Handle.Reset();
+
+                ThreadState.X0 = 0;
+            }
+            else
+            {
+                Logging.Warn($"Tried to ResetSignal on invalid event handle 0x{Handle:x8}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+            }
         }
 
         private void SvcWaitSynchronization(AThreadState ThreadState)
         {
-            long HandlesPtr   = (long)ThreadState.X0;
+            long HandlesPtr   = (long)ThreadState.X1;
             int  HandlesCount =  (int)ThreadState.X2;
             long Timeout      = (long)ThreadState.X3;
 
-            //TODO: Implement events.
+            KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
-            HThread CurrThread = Process.GetThread(ThreadState.Tpidr);
+            WaitHandle[] Handles = new WaitHandle[HandlesCount];
+
+            for (int Index = 0; Index < HandlesCount; Index++)
+            {
+                int Handle = Memory.ReadInt32(HandlesPtr + Index * 4);
+
+                KSynchronizationObject SyncObj = Process.HandleTable.GetData<KSynchronizationObject>(Handle);
+
+                if (SyncObj == null)
+                {
+                    Logging.Warn($"Tried to WaitSynchronization on invalid handle 0x{Handle:x8}!");
+
+                    ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+
+                    return;
+                }
+
+                Handles[Index] = SyncObj.Handle;
+            }
 
             Process.Scheduler.Suspend(CurrThread.ProcessorId);
+
+            int HandleIndex;
+
+            ulong Result = 0;
+
+            if (Timeout != -1)
+            {
+                HandleIndex = WaitHandle.WaitAny(Handles, (int)(Timeout / 1000000));
+
+                if (HandleIndex == WaitHandle.WaitTimeout)
+                {
+                    Result = MakeError(ErrorModule.Kernel, KernelErr.Timeout);
+                }
+            }
+            else
+            {
+                HandleIndex = WaitHandle.WaitAny(Handles);
+            }
+
             Process.Scheduler.Resume(CurrThread);
 
-            ThreadState.X0 = 0;
+            ThreadState.X0 = Result;
+
+            if (Result == 0)
+            {
+                ThreadState.X1 = (ulong)HandleIndex;
+            }
         }
 
         private void SvcGetSystemTick(AThreadState ThreadState)
@@ -78,8 +153,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             //TODO: Validate that app has perms to access the service, and that the service
             //actually exists, return error codes otherwise.
-
-            HSession Session = new HSession(Process.Services.GetService(Name));
+            KSession Session = new KSession(ServiceFactory.MakeService(Name));
 
             ulong Handle = (ulong)Process.HandleTable.OpenHandle(Session);
             
@@ -89,65 +163,46 @@ namespace Ryujinx.Core.OsHle.Svc
 
         private void SvcSendSyncRequest(AThreadState ThreadState)
         {
-            SendSyncRequest(ThreadState, false);
+            SendSyncRequest(ThreadState, ThreadState.Tpidr, 0x100, (int)ThreadState.X0);
         }
 
         private void SvcSendSyncRequestWithUserBuffer(AThreadState ThreadState)
         {
-            SendSyncRequest(ThreadState, true);
+            SendSyncRequest(
+                      ThreadState,
+                (long)ThreadState.X0,
+                (long)ThreadState.X1,
+                 (int)ThreadState.X2);
         }
 
-        private void SendSyncRequest(AThreadState ThreadState, bool UserBuffer)
+        private void SendSyncRequest(AThreadState ThreadState, long CmdPtr, long Size, int Handle)
         {
-            long CmdPtr = ThreadState.Tpidr;
-            long Size   = 0x100;
-            int  Handle = 0;
-
-            if (UserBuffer)
-            {
-                CmdPtr = (long)ThreadState.X0;
-                Size   = (long)ThreadState.X1;
-                Handle =  (int)ThreadState.X2;
-            }
-            else
-            {
-                Handle = (int)ThreadState.X0;
-            }
-
-            HThread CurrThread = Process.GetThread(ThreadState.Tpidr);
-
-            Process.Scheduler.Suspend(CurrThread.ProcessorId);
+            KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
             byte[] CmdData = AMemoryHelper.ReadBytes(Memory, CmdPtr, Size);
 
-            HSession Session = Process.HandleTable.GetData<HSession>(Handle);
-
-            IpcMessage Cmd = new IpcMessage(CmdData, CmdPtr, Session is HDomain);
+            KSession Session = Process.HandleTable.GetData<KSession>(Handle);
 
             if (Session != null)
             {
-                IpcHandler.IpcCall(
-                    Ns,
-                    Process,
-                    Memory,
-                    Session,
-                    Cmd,
-                    ThreadState.ThreadId,
-                    CmdPtr,
-                    Handle);
+                Process.Scheduler.Suspend(CurrThread.ProcessorId);
 
-                byte[] Response = AMemoryHelper.ReadBytes(Memory, CmdPtr, Size);
+                IpcMessage Cmd = new IpcMessage(CmdData, CmdPtr);
+
+                IpcHandler.IpcCall(Ns, Process, Memory, Session, Cmd, CmdPtr);
+
+                Thread.Yield();
+
+                Process.Scheduler.Resume(CurrThread);
 
                 ThreadState.X0 = 0;
             }
             else
             {
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidIpcReq);
+                Logging.Warn($"Tried to SendSyncRequest on invalid session handle 0x{Handle:x8}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
-
-            Thread.Yield();
-
-            Process.Scheduler.Resume(CurrThread);
         }
 
         private void SvcBreak(AThreadState ThreadState)

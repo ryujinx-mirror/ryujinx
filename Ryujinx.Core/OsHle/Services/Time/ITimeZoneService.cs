@@ -4,11 +4,11 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.IpcServices.Time
 {
-    class ITimeZoneService : IIpcService
+    class ITimeZoneService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         private static DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local);
 

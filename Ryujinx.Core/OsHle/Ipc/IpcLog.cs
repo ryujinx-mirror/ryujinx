@@ -125,8 +125,7 @@ namespace Ryujinx.Core.OsHle.Ipc
 
                     Reader.ReadInt64(); //Padding
 
-                    IpcMessage += Environment.NewLine + $"    Domain:" + Environment.NewLine +
-                                  $"      DomCmd: {Enum.GetName(typeof(IpcDomCmd), DomCmd)}" + Environment.NewLine +
+                    IpcMessage += Environment.NewLine + $"    Domain:" + Environment.NewLine + Environment.NewLine +
                                   $"      DomObjId: {DomObjId.ToString()}" + Environment.NewLine;
                 }
 

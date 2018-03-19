@@ -1,8 +1,8 @@
-using System;
+using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Handles
 {
-    class KProcessHandleTable : IDisposable
+    class KProcessHandleTable
     {
         private IdDictionary Handles;
 
@@ -21,43 +21,14 @@ namespace Ryujinx.Core.OsHle.Handles
             return Handles.GetData<T>(Handle);
         }
 
-        public bool ReplaceData(int Id, object Data)
+        public object CloseHandle(int Handle)
         {
-            return Handles.ReplaceData(Id, Data);
-        }
-
-        public bool CloseHandle(int Handle)
-        {
-            object Data = Handles.GetData(Handle);
-
-            if (Data is HTransferMem TMem)
-            {
-                TMem.Memory.Manager.Reprotect(
-                    TMem.Position,
-                    TMem.Size,
-                    TMem.Perm);
-            }
-
             return Handles.Delete(Handle);
         }
 
-        public void Dispose()
+        public ICollection<object> Clear()
         {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool Disposing)
-        {
-            if (Disposing)
-            {
-                foreach (object Obj in Handles)
-                {
-                    if (Obj is IDisposable DisposableObj)
-                    {
-                        DisposableObj.Dispose();
-                    }
-                }
-            }
+            return Handles.Clear();
         }
     }
 }

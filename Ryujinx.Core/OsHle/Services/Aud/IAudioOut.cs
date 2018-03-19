@@ -7,17 +7,19 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.IpcServices.Aud
 {
-    class IAudioOut : IIpcService, IDisposable
+    class IAudioOut : IpcService, IDisposable
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         private IAalOutput AudioOut;
 
+        private KEvent ReleaseEvent;
+
         private int Track;
 
-        public IAudioOut(IAalOutput AudioOut, int Track)
+        public IAudioOut(IAalOutput AudioOut, KEvent ReleaseEvent, int Track)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -32,8 +34,9 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
                 { 8, GetReleasedAudioOutBufferEx }
             };
 
-            this.AudioOut = AudioOut;
-            this.Track    = Track;
+            this.AudioOut     = AudioOut;
+            this.ReleaseEvent = ReleaseEvent;
+            this.Track        = Track;
         }
 
         public long GetAudioOutState(ServiceCtx Context)
@@ -77,7 +80,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
 
         public long RegisterBufferEvent(ServiceCtx Context)
         {
-            int Handle = Context.Process.HandleTable.OpenHandle(new HEvent());
+            int Handle = Context.Process.HandleTable.OpenHandle(ReleaseEvent);
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
@@ -143,6 +146,8 @@ namespace Ryujinx.Core.OsHle.IpcServices.Aud
             if (Disposing)
             {
                 AudioOut.CloseTrack(Track);
+
+                ReleaseEvent.Dispose();
             }
         }
     }

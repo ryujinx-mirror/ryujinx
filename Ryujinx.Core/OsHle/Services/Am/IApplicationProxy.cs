@@ -1,15 +1,13 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-using static Ryujinx.Core.OsHle.IpcServices.ObjHelper;
-
 namespace Ryujinx.Core.OsHle.IpcServices.Am
 {
-    class IApplicationProxy : IIpcService
+    class IApplicationProxy : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IApplicationProxy()
         {

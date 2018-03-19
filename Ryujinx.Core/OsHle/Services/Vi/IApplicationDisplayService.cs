@@ -1,19 +1,17 @@
 using ChocolArm64.Memory;
-using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 using System.IO;
 
 using static Ryujinx.Core.OsHle.IpcServices.Android.Parcel;
-using static Ryujinx.Core.OsHle.IpcServices.ObjHelper;
 
 namespace Ryujinx.Core.OsHle.IpcServices.Vi
 {
-    class IApplicationDisplayService : IIpcService
+    class IApplicationDisplayService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         private IdDictionary Displays;
 
@@ -145,7 +143,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Vi
         {
             string Name = GetDisplayName(Context);
 
-            int Handle = Context.Process.HandleTable.OpenHandle(new HEvent());
+            int Handle = Context.Process.HandleTable.OpenHandle(Context.Ns.Os.VsyncEvent);
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 

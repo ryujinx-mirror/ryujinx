@@ -1,6 +1,5 @@
 using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Handles;
-using Ryujinx.Core.OsHle.IpcServices;
 using System;
 using System.IO;
 
@@ -8,20 +7,15 @@ namespace Ryujinx.Core.OsHle.Ipc
 {
     static class IpcHandler
     {
-        private const long SfciMagic = 'S' << 0 | 'F' << 8 | 'C' << 16 | 'I' << 24;
-        private const long SfcoMagic = 'S' << 0 | 'F' << 8 | 'C' << 16 | 'O' << 24;
-
         public static void IpcCall(
             Switch     Ns,
             Process    Process,
             AMemory    Memory,
-            HSession   Session,
+            KSession   Session,
             IpcMessage Request,
-            int        ThreadId,
-            long       CmdPtr,
-            int        HndId)
+            long       CmdPtr)
         {
-            IpcMessage Response = new IpcMessage(Request.IsDomain && Request.Type == IpcMessageType.Request);
+            IpcMessage Response = new IpcMessage();
 
             using (MemoryStream Raw = new MemoryStream(Request.RawData))
             {
@@ -29,94 +23,25 @@ namespace Ryujinx.Core.OsHle.Ipc
 
                 if (Request.Type == IpcMessageType.Request)
                 {
-                    string ServiceName = Session.Service.GetType().Name;
+                    Response.Type = IpcMessageType.Response;
 
-                    ServiceProcessRequest ProcReq = null;
-
-                    bool IgnoreNullPR = false;
-
-                    string DbgServiceName = string.Empty;
-
-                    if (Session is HDomain Dom)
+                    using (MemoryStream ResMS = new MemoryStream())
                     {
-                        if (Request.DomCmd == IpcDomCmd.SendMsg)
-                        {
-                            long Magic =      ReqReader.ReadInt64();
-                            int  CmdId = (int)ReqReader.ReadInt64();
+                        BinaryWriter ResWriter = new BinaryWriter(ResMS);
 
-                            object Obj = Dom.GetObject(Request.DomObjId);
+                        ServiceCtx Context = new ServiceCtx(
+                            Ns,
+                            Process,
+                            Memory,
+                            Session,
+                            Request,
+                            Response,
+                            ReqReader,
+                            ResWriter);
 
-                            if (Obj is HDomain)
-                            {
-                                Session.Service.Commands.TryGetValue(CmdId, out ProcReq);
+                        Session.Service.CallMethod(Context);
 
-                                DbgServiceName = $"{ProcReq?.Method.Name ?? CmdId.ToString()}";
-                            }
-                            else if (Obj != null)
-                            {
-                                ((IIpcService)Obj).Commands.TryGetValue(CmdId, out ProcReq);
-
-                                DbgServiceName = $"{Obj.GetType().Name} {ProcReq?.Method.Name ?? CmdId.ToString()}";
-                            }
-                        }
-                        else if (Request.DomCmd == IpcDomCmd.DeleteObj)
-                        {
-                            Dom.Delete(Request.DomObjId);
-
-                            Response = FillResponse(Response, 0);
-
-                            IgnoreNullPR = true;
-                        }
-                    }
-                    else
-                    {
-                        long Magic =      ReqReader.ReadInt64();
-                        int  CmdId = (int)ReqReader.ReadInt64();
-
-                        if (Session is HSessionObj)
-                        {
-                            object Obj = ((HSessionObj)Session).Obj;
-
-                            ((IIpcService)Obj).Commands.TryGetValue(CmdId, out ProcReq);
-
-                            DbgServiceName = $"{Obj.GetType().Name} {ProcReq?.Method.Name ?? CmdId.ToString()}";
-                        }
-                        else
-                        {
-                            Session.Service.Commands.TryGetValue(CmdId, out ProcReq);
-
-                            DbgServiceName = $"{ProcReq?.Method.Name ?? CmdId.ToString()}";
-                        }
-                    }
-
-                    DbgServiceName = $"Tid {ThreadId} {ServiceName} {DbgServiceName}";
-
-                    Logging.Debug($"IpcMessage: {DbgServiceName}");
-
-                    if (ProcReq != null)
-                    {
-                        using (MemoryStream ResMS = new MemoryStream())
-                        {
-                            BinaryWriter ResWriter = new BinaryWriter(ResMS);
-
-                            ServiceCtx Context = new ServiceCtx(
-                                Ns,
-                                Process,
-                                Memory,
-                                Session,
-                                Request,
-                                Response,
-                                ReqReader,
-                                ResWriter);
-
-                            long Result = ProcReq(Context);
-
-                            Response = FillResponse(Response, Result, ResMS.ToArray());
-                        }
-                    }
-                    else if (!IgnoreNullPR)
-                    {   
-                        throw new NotImplementedException(DbgServiceName);
+                        Response.RawData = ResMS.ToArray();
                     }
                 }
                 else if (Request.Type == IpcMessageType.Control)
@@ -128,11 +53,7 @@ namespace Ryujinx.Core.OsHle.Ipc
                     {
                         case 0:
                         {
-                            HDomain Dom = new HDomain(Session);
-
-                            Process.HandleTable.ReplaceData(HndId, Dom);
-
-                            Request = FillResponse(Response, 0, Dom.Add(Dom));
+                            Request = FillResponse(Response, 0, Session.Service.ConvertToDomain());
 
                             break;
                         }
@@ -198,7 +119,7 @@ namespace Ryujinx.Core.OsHle.Ipc
             {
                 BinaryWriter Writer = new BinaryWriter(MS);
 
-                Writer.Write(SfcoMagic);
+                Writer.Write(IpcMagic.Sfco);
                 Writer.Write(Result);
 
                 if (Data != null)

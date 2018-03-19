@@ -6,6 +6,5 @@ namespace Ryujinx.Core.OsHle
         public const int InvalidHandle   = 114;
         public const int Timeout         = 117;
         public const int InvalidInfo     = 120;
-        public const int InvalidIpcReq   = 123;
     }
 }

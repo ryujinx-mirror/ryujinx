@@ -2,7 +2,11 @@ namespace Ryujinx.Audio
 {
     public interface IAalOutput
     {
-        int OpenTrack(int SampleRate, int Channels, out AudioFormat Format);
+        int OpenTrack(
+            int             SampleRate,
+            int             Channels,
+            ReleaseCallback Callback,
+            out AudioFormat Format);
 
         void CloseTrack(int Track);
 

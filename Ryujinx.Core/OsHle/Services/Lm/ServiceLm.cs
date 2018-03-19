@@ -1,15 +1,13 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-using static Ryujinx.Core.OsHle.IpcServices.ObjHelper;
-
 namespace Ryujinx.Core.OsHle.IpcServices.Lm
 {
-    class ServiceLm : IIpcService
+    class ServiceLm : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ServiceLm()
         {
@@ -21,8 +19,6 @@ namespace Ryujinx.Core.OsHle.IpcServices.Lm
 
         public long Initialize(ServiceCtx Context)
         {
-            Context.Session.Initialize();
-
             MakeObject(Context, new ILogger());
 
             return 0;

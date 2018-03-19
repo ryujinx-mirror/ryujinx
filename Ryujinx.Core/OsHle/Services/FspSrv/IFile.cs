@@ -6,11 +6,11 @@ using System.IO;
 
 namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
 {
-    class IFile : IIpcService, IDisposable
+    class IFile : IpcService, IDisposable
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         private Stream BaseStream;
 

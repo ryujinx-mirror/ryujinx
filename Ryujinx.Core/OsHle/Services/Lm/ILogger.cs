@@ -7,11 +7,11 @@ using System.Text;
 
 namespace Ryujinx.Core.OsHle.IpcServices.Lm
 {
-    class ILogger : IIpcService
+    class ILogger : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ILogger()
         {

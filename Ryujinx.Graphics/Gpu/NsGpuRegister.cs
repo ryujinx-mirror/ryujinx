@@ -89,5 +89,6 @@ namespace Ryujinx.Graphics.Gpu
         _3dCbData13               = 0x23c4,
         _3dCbData14               = 0x23c8,
         _3dCbData15               = 0x23cc,
+        _3dSetShader              = 0x3890
     }
 }

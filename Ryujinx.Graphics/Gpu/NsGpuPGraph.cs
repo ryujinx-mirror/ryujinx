@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Gpu
     {
         private NsGpu Gpu;
 
-        private int[] Registers;
+        private uint[] Registers;
 
         public NsGpuEngine[] SubChannels;
 
@@ -18,7 +18,7 @@ namespace Ryujinx.Graphics.Gpu
         {
             this.Gpu = Gpu;
 
-            Registers = new int[0x1000];
+            Registers = new uint[0x1000];
 
             SubChannels = new NsGpuEngine[8];
 
@@ -33,7 +33,7 @@ namespace Ryujinx.Graphics.Gpu
             {
                 if (Entry.Arguments.Count == 1)
                 {
-                    SetRegister(Entry.Register, Entry.Arguments[0]);
+                    SetRegister(Entry.Register, (uint)Entry.Arguments[0]);
                 }
 
                 switch (Entry.Register)
@@ -48,7 +48,7 @@ namespace Ryujinx.Graphics.Gpu
                     case NsGpuRegister._3dVertexArray0Fetch:
                         SendVertexBuffers(Memory);
                         break;
-                    
+
                     case NsGpuRegister._3dCbData0:
                         if (GetRegister(NsGpuRegister._3dCbPos) == 0x20)
                         {
@@ -62,6 +62,22 @@ namespace Ryujinx.Graphics.Gpu
                     case NsGpuRegister._3dQueryGet:
                         HasQuery = true;
                         break;
+
+                    case NsGpuRegister._3dSetShader:
+                        uint ShaderPrg  = (uint)Entry.Arguments[0];
+                        uint ShaderId   = (uint)Entry.Arguments[1];
+                        uint CodeAddr   = (uint)Entry.Arguments[2];
+                        uint ShaderType = (uint)Entry.Arguments[3];
+                        uint CodeEnd    = (uint)Entry.Arguments[4];
+
+                        SendShader(
+                            Memory,
+                            ShaderPrg,
+                            ShaderId,
+                            CodeAddr,
+                            ShaderType,
+                            CodeEnd);
+                        break;
                 }
             }
 
@@ -71,10 +87,10 @@ namespace Ryujinx.Graphics.Gpu
                     (long)GetRegister(NsGpuRegister._3dQueryAddressHigh) << 32 |
                     (long)GetRegister(NsGpuRegister._3dQueryAddressLow)  << 0;
 
-                int Seq = GetRegister(NsGpuRegister._3dQuerySequence);
-                int Get = GetRegister(NsGpuRegister._3dQueryGet);
+                uint Seq = GetRegister(NsGpuRegister._3dQuerySequence);
+                uint Get = GetRegister(NsGpuRegister._3dQueryGet);
 
-                int Mode = Get & 3;
+                uint Mode = Get & 3;
 
                 if (Mode == 0)
                 {
@@ -85,7 +101,7 @@ namespace Ryujinx.Graphics.Gpu
                     {
                         Gpu.Renderer.QueueAction(delegate()
                         {
-                            Memory.WriteInt32(Position, Seq);
+                            Memory.WriteUInt32(Position, Seq);
                         });
                     }
                 }
@@ -119,13 +135,13 @@ namespace Ryujinx.Graphics.Gpu
                 {
                     byte[] Buffer = AMemoryHelper.ReadBytes(Memory, Position, Size);
 
-                    int Stride = GetRegister(NsGpuRegister._3dVertexArray0Fetch) & 0xfff;
+                    int Stride = (int)GetRegister(NsGpuRegister._3dVertexArray0Fetch) & 0xfff;
 
                     List<GalVertexAttrib> Attribs = new List<GalVertexAttrib>();
 
                     for (int Attr = 0; Attr < 16; Attr++)
                     {
-                        int Packed = GetRegister(NsGpuRegister._3dVertexAttrib0Format + Attr * 4);
+                        int Packed = (int)GetRegister(NsGpuRegister._3dVertexAttrib0Format + Attr * 4);
 
                         GalVertexAttrib Attrib = new GalVertexAttrib(Attr,
                                                   (Packed >>  0) & 0x1f,
@@ -154,10 +170,10 @@ namespace Ryujinx.Graphics.Gpu
             long TicPos = (long)GetRegister(NsGpuRegister._3dTicAddressHigh) << 32 |
                           (long)GetRegister(NsGpuRegister._3dTicAddressLow)  << 0;
 
-            int CbData = GetRegister(NsGpuRegister._3dCbData0);
+            uint CbData = GetRegister(NsGpuRegister._3dCbData0);
 
-            int TicIndex = (CbData >>  0) & 0xfffff;
-            int TscIndex = (CbData >> 20) & 0xfff; //I guess?
+            uint TicIndex = (CbData >>  0) & 0xfffff;
+            uint TscIndex = (CbData >> 20) & 0xfff; //I guess?
 
             TicPos = Gpu.MemoryMgr.GetCpuAddr(TicPos + TicIndex * 0x20);
 
@@ -196,6 +212,19 @@ namespace Ryujinx.Graphics.Gpu
                     }
                 }
             }
+        }
+
+        private void SendShader(
+            AMemory Memory,
+            uint    ShaderPrg,
+            uint    ShaderId,
+            uint    CodeAddr,
+            uint    ShaderType,
+            uint    CodeEnd)
+        {
+            long CodePos = Gpu.MemoryMgr.GetCpuAddr(CodeAddr);
+
+            byte[] Data = AMemoryHelper.ReadBytes(Memory, CodePos, 0x300);
         }
 
         private static byte[] GetDecodedTexture(
@@ -263,12 +292,12 @@ namespace Ryujinx.Graphics.Gpu
             return Data;
         }
 
-        public int GetRegister(NsGpuRegister Register)
+        public uint GetRegister(NsGpuRegister Register)
         {
             return Registers[((int)Register >> 2) & 0xfff];
         }
 
-        public void SetRegister(NsGpuRegister Register, int Value)
+        public void SetRegister(NsGpuRegister Register, uint Value)
         {
             Registers[((int)Register >> 2) & 0xfff] = Value;
         }

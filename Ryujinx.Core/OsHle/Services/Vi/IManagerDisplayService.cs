@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.IpcServices.Vi
 {
-    class IManagerDisplayService : IIpcService
+    class IManagerDisplayService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IManagerDisplayService()
         {
