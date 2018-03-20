@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Aud
+namespace Ryujinx.Core.OsHle.Services.Aud
 {
     [StructLayout(LayoutKind.Sequential)]
     struct AudioOutData

@@ -1,4 +1,4 @@
-namespace Ryujinx.Core.OsHle.IpcServices.Vi
+namespace Ryujinx.Core.OsHle.Services.Vi
 {
     class Display
     {

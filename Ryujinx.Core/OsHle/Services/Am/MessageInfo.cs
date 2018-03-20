@@ -1,4 +1,4 @@
-namespace Ryujinx.Core.OsHle.IpcServices.Am
+namespace Ryujinx.Core.OsHle.Services.Am
 {
     enum MessageInfo
     {

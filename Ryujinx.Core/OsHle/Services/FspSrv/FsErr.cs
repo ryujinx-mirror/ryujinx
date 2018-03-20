@@ -1,4 +1,4 @@
-namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
+namespace Ryujinx.Core.OsHle.Services.FspSrv
 {
     static class FsErr
     {

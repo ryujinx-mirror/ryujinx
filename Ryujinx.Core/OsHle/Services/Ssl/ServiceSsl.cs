@@ -1,7 +1,7 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Ssl
+namespace Ryujinx.Core.OsHle.Services.Ssl
 {
     class ServiceSsl : IpcService
     {

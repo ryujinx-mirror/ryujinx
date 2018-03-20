@@ -3,9 +3,9 @@ using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 using System.IO;
 
-using static Ryujinx.Core.OsHle.IpcServices.Android.Parcel;
+using static Ryujinx.Core.OsHle.Services.Android.Parcel;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Vi
+namespace Ryujinx.Core.OsHle.Services.Vi
 {
     class IApplicationDisplayService : IpcService
     {

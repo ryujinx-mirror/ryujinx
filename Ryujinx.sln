@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx", "Ryujinx\Ryujinx.csproj", "{074045D4-3ED2-4711-9169-E385F2BFB5A0}"
 EndProject
@@ -9,9 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Tests", "Ryujinx.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Core", "Ryujinx.Core\Ryujinx.Core.csproj", "{CB92CFF9-1D62-4D4F-9E88-8130EF61E351}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChocolArm64", "ChocolArm64\ChocolArm64.csproj", "{2345A1A7-8DEF-419B-9AFB-4DFD41D20D05}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChocolArm64", "ChocolArm64\ChocolArm64.csproj", "{2345A1A7-8DEF-419B-9AFB-4DFD41D20D05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ryujinx.Graphics", "Ryujinx.Graphics\Ryujinx.Graphics.csproj", "{EAAE36AF-7781-4578-A7E0-F0EFD2025569}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics", "Ryujinx.Graphics\Ryujinx.Graphics.csproj", "{EAAE36AF-7781-4578-A7E0-F0EFD2025569}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Audio", "Ryujinx.Audio\Ryujinx.Audio.csproj", "{5C1D818E-682A-46A5-9D54-30006E26C270}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{EAAE36AF-7781-4578-A7E0-F0EFD2025569}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EAAE36AF-7781-4578-A7E0-F0EFD2025569}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAAE36AF-7781-4578-A7E0-F0EFD2025569}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C1D818E-682A-46A5-9D54-30006E26C270}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C1D818E-682A-46A5-9D54-30006E26C270}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C1D818E-682A-46A5-9D54-30006E26C270}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C1D818E-682A-46A5-9D54-30006E26C270}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

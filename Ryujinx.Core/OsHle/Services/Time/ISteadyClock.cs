@@ -1,7 +1,7 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Time
+namespace Ryujinx.Core.OsHle.Services.Time
 {
     class ISteadyClock : IpcService
     {

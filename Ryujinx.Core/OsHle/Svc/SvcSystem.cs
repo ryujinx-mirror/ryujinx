@@ -3,7 +3,7 @@ using ChocolArm64.State;
 using Ryujinx.Core.OsHle.Exceptions;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
-using Ryujinx.Core.OsHle.IpcServices;
+using Ryujinx.Core.OsHle.Services;
 using System;
 using System.Threading;
 

@@ -1,12 +1,12 @@
 using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
-using Ryujinx.Core.OsHle.IpcServices.Android;
+using Ryujinx.Core.OsHle.Services.Android;
 using Ryujinx.Graphics.Gal;
 using System;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Vi
+namespace Ryujinx.Core.OsHle.Services.Vi
 {
     class IHOSBinderDriver : IpcService, IDisposable
     {

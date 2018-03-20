@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Lm
+namespace Ryujinx.Core.OsHle.Services.Lm
 {
     class ILogger : IpcService
     {

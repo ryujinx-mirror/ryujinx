@@ -1,7 +1,7 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Acc
+namespace Ryujinx.Core.OsHle.Services.Acc
 {
     class ServiceAcc : IpcService
     {

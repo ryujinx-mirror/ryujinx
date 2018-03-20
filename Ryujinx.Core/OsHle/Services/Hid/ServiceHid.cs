@@ -1,8 +1,8 @@
+using Ryujinx.Core.Input;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
-using Ryujinx.Core.Input;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Hid
+namespace Ryujinx.Core.OsHle.Services.Hid
 {
     class ServiceHid : IpcService
     {

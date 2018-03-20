@@ -5,7 +5,7 @@ using Ryujinx.Core.Loaders;
 using Ryujinx.Core.Loaders.Executables;
 using Ryujinx.Core.OsHle.Exceptions;
 using Ryujinx.Core.OsHle.Handles;
-using Ryujinx.Core.OsHle.IpcServices.NvServices;
+using Ryujinx.Core.OsHle.Services.Nv;
 using Ryujinx.Core.OsHle.Svc;
 using System;
 using System.Collections.Concurrent;

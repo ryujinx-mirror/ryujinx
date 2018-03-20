@@ -1,10 +1,10 @@
-using Ryujinx.Core.OsHle.Ipc;
 using Ryujinx.Core.OsHle.Handles;
+using Ryujinx.Core.OsHle.Ipc;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Ryujinx.Core.OsHle.IpcServices
+namespace Ryujinx.Core.OsHle.Services
 {
     abstract class IpcService : IIpcService
     {

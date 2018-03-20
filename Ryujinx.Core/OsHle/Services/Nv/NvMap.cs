@@ -1,4 +1,4 @@
-namespace Ryujinx.Core.OsHle.IpcServices.NvServices
+namespace Ryujinx.Core.OsHle.Services.Nv
 {
     class NvMap
     {

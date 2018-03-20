@@ -3,7 +3,7 @@ using Ryujinx.Core.OsHle.Ipc;
 using System;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Aud
+namespace Ryujinx.Core.OsHle.Services.Aud
 {
     class IAudioRenderer : IpcService, IDisposable
     {

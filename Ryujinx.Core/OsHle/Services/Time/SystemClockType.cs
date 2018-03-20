@@ -1,4 +1,4 @@
-namespace Ryujinx.Core.OsHle.IpcServices.Time
+namespace Ryujinx.Core.OsHle.Services.Time
 {
     enum SystemClockType
     {

@@ -8,7 +8,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Bsd
+namespace Ryujinx.Core.OsHle.Services.Bsd
 {
 
     //bsd_errno == (SocketException.ErrorCode - 10000)

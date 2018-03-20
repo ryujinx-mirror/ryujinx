@@ -1,7 +1,7 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Pctl
+namespace Ryujinx.Core.OsHle.Services.Pctl
 {
     class ServicePctl : IpcService
     {

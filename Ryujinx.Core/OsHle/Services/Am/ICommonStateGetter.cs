@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 using static Ryujinx.Core.OsHle.ErrorCode;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Am
+namespace Ryujinx.Core.OsHle.Services.Am
 {
     class ICommonStateGetter : IpcService
     {

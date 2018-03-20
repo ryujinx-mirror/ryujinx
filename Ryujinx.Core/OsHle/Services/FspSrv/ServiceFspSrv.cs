@@ -1,7 +1,7 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
+namespace Ryujinx.Core.OsHle.Services.FspSrv
 {
     class ServiceFspSrv : IpcService
     {

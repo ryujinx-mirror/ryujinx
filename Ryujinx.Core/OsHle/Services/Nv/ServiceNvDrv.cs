@@ -6,7 +6,7 @@ using Ryujinx.Graphics.Gpu;
 using System;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.IpcServices.NvServices
+namespace Ryujinx.Core.OsHle.Services.Nv
 {
     class ServiceNvDrv : IpcService, IDisposable
     {

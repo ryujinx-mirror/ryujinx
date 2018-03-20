@@ -1,26 +1,26 @@
-using Ryujinx.Core.OsHle.IpcServices.Acc;
-using Ryujinx.Core.OsHle.IpcServices.Am;
-using Ryujinx.Core.OsHle.IpcServices.Apm;
-using Ryujinx.Core.OsHle.IpcServices.Aud;
-using Ryujinx.Core.OsHle.IpcServices.Bsd;
-using Ryujinx.Core.OsHle.IpcServices.Friend;
-using Ryujinx.Core.OsHle.IpcServices.FspSrv;
-using Ryujinx.Core.OsHle.IpcServices.Hid;
-using Ryujinx.Core.OsHle.IpcServices.Lm;
-using Ryujinx.Core.OsHle.IpcServices.Nifm;
-using Ryujinx.Core.OsHle.IpcServices.Ns;
-using Ryujinx.Core.OsHle.IpcServices.NvServices;
-using Ryujinx.Core.OsHle.IpcServices.Pctl;
-using Ryujinx.Core.OsHle.IpcServices.Pl;
-using Ryujinx.Core.OsHle.IpcServices.Set;
-using Ryujinx.Core.OsHle.IpcServices.Sfdnsres;
-using Ryujinx.Core.OsHle.IpcServices.Sm;
-using Ryujinx.Core.OsHle.IpcServices.Ssl;
-using Ryujinx.Core.OsHle.IpcServices.Time;
-using Ryujinx.Core.OsHle.IpcServices.Vi;
+using Ryujinx.Core.OsHle.Services.Acc;
+using Ryujinx.Core.OsHle.Services.Am;
+using Ryujinx.Core.OsHle.Services.Apm;
+using Ryujinx.Core.OsHle.Services.Aud;
+using Ryujinx.Core.OsHle.Services.Bsd;
+using Ryujinx.Core.OsHle.Services.Friend;
+using Ryujinx.Core.OsHle.Services.FspSrv;
+using Ryujinx.Core.OsHle.Services.Hid;
+using Ryujinx.Core.OsHle.Services.Lm;
+using Ryujinx.Core.OsHle.Services.Nifm;
+using Ryujinx.Core.OsHle.Services.Ns;
+using Ryujinx.Core.OsHle.Services.Nv;
+using Ryujinx.Core.OsHle.Services.Pctl;
+using Ryujinx.Core.OsHle.Services.Pl;
+using Ryujinx.Core.OsHle.Services.Set;
+using Ryujinx.Core.OsHle.Services.Sfdnsres;
+using Ryujinx.Core.OsHle.Services.Sm;
+using Ryujinx.Core.OsHle.Services.Ssl;
+using Ryujinx.Core.OsHle.Services.Time;
+using Ryujinx.Core.OsHle.Services.Vi;
 using System;
 
-namespace Ryujinx.Core.OsHle.IpcServices
+namespace Ryujinx.Core.OsHle.Services
 {
     static class ServiceFactory
     {

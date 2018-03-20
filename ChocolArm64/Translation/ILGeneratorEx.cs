@@ -3,7 +3,7 @@ using System;
 namespace ChocolArm64
 {
     using System.Reflection.Emit;
-    
+
     static class ILGeneratorEx
     {
         public static void EmitLdc_I4(this ILGenerator Generator,int Value)

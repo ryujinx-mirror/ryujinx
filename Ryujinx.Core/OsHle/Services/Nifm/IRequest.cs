@@ -3,7 +3,7 @@ using Ryujinx.Core.OsHle.Ipc;
 using System;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Nifm
+namespace Ryujinx.Core.OsHle.Services.Nifm
 {
     class IRequest : IpcService, IDisposable
     {

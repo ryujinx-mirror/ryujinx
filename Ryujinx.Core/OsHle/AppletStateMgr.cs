@@ -1,5 +1,5 @@
-using Ryujinx.Core.OsHle.IpcServices.Am;
 using Ryujinx.Core.OsHle.Handles;
+using Ryujinx.Core.OsHle.Services.Am;
 using System;
 using System.Collections.Concurrent;
 

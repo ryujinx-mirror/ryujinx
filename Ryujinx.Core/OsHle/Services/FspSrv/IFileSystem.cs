@@ -6,7 +6,7 @@ using System.Text;
 
 using static Ryujinx.Core.OsHle.ErrorCode;
 
-namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
+namespace Ryujinx.Core.OsHle.Services.FspSrv
 {
     class IFileSystem : IpcService
     {

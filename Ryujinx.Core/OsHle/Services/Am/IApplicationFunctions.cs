@@ -2,7 +2,7 @@ using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Ryujinx.Core.OsHle.IpcServices.Am
+namespace Ryujinx.Core.OsHle.Services.Am
 {
     class IApplicationFunctions : IpcService
     {

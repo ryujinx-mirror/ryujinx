@@ -1,4 +1,4 @@
-using Ryujinx.Core.OsHle.IpcServices;
+using Ryujinx.Core.OsHle.Services;
 using System;
 
 namespace Ryujinx.Core.OsHle.Handles

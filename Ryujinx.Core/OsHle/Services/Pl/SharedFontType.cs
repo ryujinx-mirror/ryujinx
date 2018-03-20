@@ -1,4 +1,4 @@
-namespace Ryujinx.Core.OsHle.IpcServices.Pl
+namespace Ryujinx.Core.OsHle.Services.Pl
 {
     enum SharedFontType
     {

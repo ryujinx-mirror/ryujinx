@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Ryujinx.Core.OsHle.IpcServices.FspSrv
+namespace Ryujinx.Core.OsHle.Services.FspSrv
 {
     class IFile : IpcService, IDisposable
     {
