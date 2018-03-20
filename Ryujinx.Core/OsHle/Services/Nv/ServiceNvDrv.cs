@@ -22,6 +22,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
         public static GlobalStateTable NvMaps     { get; private set; }
         public static GlobalStateTable NvMapsById { get; private set; }
+        public static GlobalStateTable NvMapsFb   { get; private set; }
 
         private KEvent Event;
 
@@ -76,6 +77,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
             NvMaps     = new GlobalStateTable();
             NvMapsById = new GlobalStateTable();
+            NvMapsFb   = new GlobalStateTable();
         }
 
         public long Open(ServiceCtx Context)
@@ -130,6 +132,8 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
             int  TransferMemHandle = Context.Request.HandleDesc.ToCopy[0];
 
             Context.ResponseData.Write(0);
+
+            NvMapsFb.Add(Context.Process, 0, new NvMapFb());
 
             return 0;
         }
@@ -209,8 +213,11 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
             if (Handle == 0)
             {
-                //Handle 0 is valid here, but it refers to something else.
-                //TODO: Figure out what, for now just return success.
+                //This is used to store offsets for the Framebuffer(s);
+                NvMapFb MapFb = (NvMapFb)NvMapsFb.GetData(Context.Process, 0);
+
+                MapFb.AddBufferOffset(BuffAddr);
+
                 return 0;
             }
 
@@ -225,11 +232,11 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
 
             if ((Flags & 1) != 0)
             {
-                Offset = Context.Ns.Gpu.MapMemory(Map.Address, Offset, Map.Size);
+                Offset = Context.Ns.Gpu.MapMemory(Map.CpuAddress, Offset, Map.Size);
             }
             else
             {
-                Offset = Context.Ns.Gpu.MapMemory(Map.Address, Map.Size);
+                Offset = Context.Ns.Gpu.MapMemory(Map.CpuAddress, Map.Size);
             }
 
             Context.Memory.WriteInt64(Position + 0x20, Offset);
@@ -614,7 +621,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
                 return -1; //TODO: Corrent error code.
             }
 
-            Map.Address = Addr;
+            Map.CpuAddress = Addr;
             Map.Align   = Align;
             Map.Kind    = Kind;
 

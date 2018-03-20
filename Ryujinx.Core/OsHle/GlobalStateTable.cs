@@ -12,11 +12,18 @@ namespace Ryujinx.Core.OsHle
             DictByProcess = new ConcurrentDictionary<Process, IdDictionary>();
         }
 
-        public int Add(Process Process, object Obj)
+        public bool Add(Process Process, int Id, object Data)
         {
             IdDictionary Dict = DictByProcess.GetOrAdd(Process, (Key) => new IdDictionary());
 
-            return Dict.Add(Obj);
+            return Dict.Add(Id, Data);
+        }
+
+        public int Add(Process Process, object Data)
+        {
+            IdDictionary Dict = DictByProcess.GetOrAdd(Process, (Key) => new IdDictionary());
+
+            return Dict.Add(Data);
         }
 
         public object GetData(Process Process, int Id)

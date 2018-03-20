@@ -289,11 +289,20 @@ namespace Ryujinx.Core.OsHle.IpcServices.Android
 
             long FbSize = (uint)FbWidth * FbHeight * 4;
 
-            NvMap NvMap = GetNvMap(Context, Slot);
+            NvMap Map = GetNvMap(Context, Slot);
 
-            if ((ulong)(NvMap.Address + FbSize) > AMemoryMgr.AddrSize)
+            NvMapFb MapFb = (NvMapFb)ServiceNvDrv.NvMapsFb.GetData(Context.Process, 0);
+
+            long Address = Map.CpuAddress;
+            
+            if (MapFb.HasBufferOffset(Slot))
             {
-                Logging.Error($"Frame buffer address {NvMap.Address:x16} is invalid!");
+                Address += MapFb.GetBufferOffset(Slot);
+            }
+
+            if ((ulong)(Address + FbSize) > AMemoryMgr.AddrSize)
+            {
+                Logging.Error($"Frame buffer address {Address:x16} is invalid!");
 
                 BufferQueue[Slot].State = BufferState.Free;
 
@@ -365,7 +374,7 @@ namespace Ryujinx.Core.OsHle.IpcServices.Android
                 Interlocked.Increment(ref RenderQueueCount);
             }
 
-            byte* Fb = (byte*)Context.Memory.Ram + NvMap.Address;
+            byte* Fb = (byte*)Context.Memory.Ram + Address;
 
             Context.Ns.Gpu.Renderer.QueueAction(delegate()
             {

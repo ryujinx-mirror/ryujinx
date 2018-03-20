@@ -15,6 +15,11 @@ namespace Ryujinx.Core.OsHle
             Objs = new ConcurrentDictionary<int, object>();
         }
 
+        public bool Add(int Id, object Data)
+        {
+            return Objs.TryAdd(Id, Data);
+        }
+
         public int Add(object Data)
         {
             if (Objs.TryAdd(FreeIdHint, Data))

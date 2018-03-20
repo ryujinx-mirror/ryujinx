@@ -7,6 +7,6 @@ namespace Ryujinx.Core.OsHle.IpcServices.NvServices
         public int  Size;
         public int  Align;
         public int  Kind;
-        public long Address;
+        public long CpuAddress;
     }
 }
