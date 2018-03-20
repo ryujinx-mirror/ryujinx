@@ -9,6 +9,7 @@ namespace Ryujinx.Core
 {
     public static class Config
     {
+        public static bool EnableMemoryChecks   { get; private set; }
         public static bool LoggingEnableInfo    { get; private set; }
         public static bool LoggingEnableTrace   { get; private set; }
         public static bool LoggingEnableDebug   { get; private set; }
@@ -26,6 +27,7 @@ namespace Ryujinx.Core
             var iniPath = Path.Combine(iniFolder, "Ryujinx.conf");
             IniParser Parser = new IniParser(iniPath);
 
+            EnableMemoryChecks   = Convert.ToBoolean(Parser.Value("Enable_Memory_Checks"));
             LoggingEnableInfo    = Convert.ToBoolean(Parser.Value("Logging_Enable_Info"));
             LoggingEnableTrace   = Convert.ToBoolean(Parser.Value("Logging_Enable_Trace"));
             LoggingEnableDebug   = Convert.ToBoolean(Parser.Value("Logging_Enable_Debug"));

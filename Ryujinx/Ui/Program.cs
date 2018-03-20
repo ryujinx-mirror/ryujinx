@@ -12,9 +12,9 @@ namespace Ryujinx
     {
         static void Main(string[] args)
         {
-            AOptimizations.DisableMemoryChecks = true;
-
             Config.Read();
+
+            AOptimizations.DisableMemoryChecks = !Config.EnableMemoryChecks;
 
             Console.Title = "Ryujinx Console";
 
