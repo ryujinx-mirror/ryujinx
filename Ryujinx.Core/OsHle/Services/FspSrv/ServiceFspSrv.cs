@@ -13,28 +13,28 @@ namespace Ryujinx.Core.OsHle.Services.FspSrv
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                {    1, Initialize                      },
-                {   18, MountSdCard                     },
-                {   51, MountSaveData                   },
-                {  200, OpenDataStorageByCurrentProcess },
-                {  203, OpenRomStorage                  },
-                { 1005, GetGlobalAccessLogMode          }
+                {    1, SetCurrentProcess                    },
+                {   18, OpenSdCardFileSystem                 },
+                {   51, OpenSaveDataFileSystem               },
+                {  200, OpenDataStorageByCurrentProcess      },
+                {  203, OpenPatchDataStorageByCurrentProcess },
+                { 1005, GetGlobalAccessLogMode               }
             };
         }
 
-        public long Initialize(ServiceCtx Context)
+        public long SetCurrentProcess(ServiceCtx Context)
         {
             return 0;
         }
 
-        public long MountSdCard(ServiceCtx Context)
+        public long OpenSdCardFileSystem(ServiceCtx Context)
         {
             MakeObject(Context, new IFileSystem(Context.Ns.VFs.GetSdCardPath()));
 
             return 0;
         }
 
-        public long MountSaveData(ServiceCtx Context)
+        public long OpenSaveDataFileSystem(ServiceCtx Context)
         {
             MakeObject(Context, new IFileSystem(Context.Ns.VFs.GetGameSavesPath()));
 
@@ -48,7 +48,7 @@ namespace Ryujinx.Core.OsHle.Services.FspSrv
             return 0;
         }
 
-        public long OpenRomStorage(ServiceCtx Context)
+        public long OpenPatchDataStorageByCurrentProcess(ServiceCtx Context)
         {
             MakeObject(Context, new IStorage(Context.Ns.VFs.RomFs));
 
