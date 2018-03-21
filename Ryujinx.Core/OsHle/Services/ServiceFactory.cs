@@ -44,10 +44,10 @@ namespace Ryujinx.Core.OsHle.Services
                     return new ServiceAppletOE();
 
                 case "audout:u":
-                    return new ServiceAudOut();
+                    return new IAudioOutManager();
 
                 case "audren:u":
-                    return new ServiceAudRen();
+                    return new IAudioRendererManager();
 
                 case "bsd:s":
                     return new ServiceBsd();

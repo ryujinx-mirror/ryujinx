@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Services.Aud
 {
-    class ServiceAudRen : IpcService
+    class IAudioRendererManager : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public ServiceAudRen()
+        public IAudioRendererManager()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {

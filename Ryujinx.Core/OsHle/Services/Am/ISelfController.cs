@@ -13,7 +13,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 1,  Exit                                  },
+                { 1,  LockExit                              },
                 { 10, SetScreenShotPermission               },
                 { 11, SetOperationModeChangedNotification   },
                 { 12, SetPerformanceModeChangedNotification },
@@ -23,7 +23,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
             };
         }
 
-        public long Exit(ServiceCtx Context)
+        public long LockExit(ServiceCtx Context)
         {
             return 0;
         }
