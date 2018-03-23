@@ -13,13 +13,15 @@ namespace Ryujinx.Core.OsHle.Services.Vi
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
+                { 0, GetDisplayService },
+                { 1, GetDisplayService },
                 { 2, GetDisplayService }
             };
         }
 
         public long GetDisplayService(ServiceCtx Context)
         {
-            int Unknown = Context.RequestData.ReadInt32();
+            int ServiceType = Context.RequestData.ReadInt32();
 
             MakeObject(Context, new IApplicationDisplayService());
 
