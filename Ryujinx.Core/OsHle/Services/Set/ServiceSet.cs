@@ -15,7 +15,8 @@ namespace Ryujinx.Core.OsHle.Services.Set
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 1, GetAvailableLanguageCodes }
+                { 1, GetAvailableLanguageCodes     },
+                { 3, GetAvailableLanguageCodeCount }
             };
         }
 
@@ -37,6 +38,13 @@ namespace Ryujinx.Core.OsHle.Services.Set
                 }
             }
 
+            Context.ResponseData.Write(LangCodesCount);
+
+            return 0;
+        }
+
+        public static long GetAvailableLanguageCodeCount(ServiceCtx Context)
+        {
             Context.ResponseData.Write(LangCodesCount);
 
             return 0;
