@@ -248,6 +248,56 @@ namespace ChocolArm64.Instruction
             EmitScalarSetF(Context, Op.Rd, SizeF);
         }
 
+        public static void Frinti_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            EmitScalarUnaryOpF(Context, () =>
+            {
+                Context.EmitLdarg(ATranslatedSub.StateArgIdx);
+
+                Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
+
+                if (Op.Size == 0)
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
+                }
+                else if (Op.Size == 1)
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            });
+        }
+
+        public static void Frinti_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+            
+            EmitVectorUnaryOpF(Context, () =>
+            {
+                Context.EmitLdarg(ATranslatedSub.StateArgIdx);
+
+                Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
+
+                if (Op.Size == 2)
+                {   
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
+                }
+                else if (Op.Size == 3)
+                {   
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            });
+        }
+
         public static void Frinta_S(AILEmitterCtx Context)
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
@@ -257,6 +307,14 @@ namespace ChocolArm64.Instruction
             EmitRoundMathCall(Context, MidpointRounding.AwayFromZero);
 
             EmitScalarSetF(Context, Op.Rd, Op.Size);
+        }
+
+        public static void Frinta_V(AILEmitterCtx Context)
+        {
+            EmitVectorUnaryOpF(Context, () =>
+            {
+                EmitRoundMathCall(Context, MidpointRounding.AwayFromZero);
+            });
         }
 
         public static void Frintm_S(AILEmitterCtx Context)
@@ -275,9 +333,36 @@ namespace ChocolArm64.Instruction
             });
         }
 
+        public static void Frintn_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            EmitVectorExtractF(Context, Op.Rn, 0, Op.Size);
+
+            EmitRoundMathCall(Context, MidpointRounding.ToEven);
+
+            EmitScalarSetF(Context, Op.Rd, Op.Size);
+        }
+
+        public static void Frintn_V(AILEmitterCtx Context)
+        {
+            EmitVectorUnaryOpF(Context, () =>
+            {
+                EmitRoundMathCall(Context, MidpointRounding.ToEven);
+            });
+        }
+
         public static void Frintp_S(AILEmitterCtx Context)
         {
             EmitScalarUnaryOpF(Context, () =>
+            {
+                EmitUnaryMathCall(Context, nameof(Math.Ceiling));
+            });
+        }
+
+        public static void Frintp_V(AILEmitterCtx Context)
+        {
+            EmitVectorUnaryOpF(Context, () =>
             {
                 EmitUnaryMathCall(Context, nameof(Math.Ceiling));
             });
@@ -299,6 +384,31 @@ namespace ChocolArm64.Instruction
                 }
                 else if (Op.Size == 1)
                 {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            });
+        }
+
+        public static void Frintx_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            EmitVectorUnaryOpF(Context, () =>
+            {
+                Context.EmitLdarg(ATranslatedSub.StateArgIdx);
+
+                Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
+
+                if (Op.Size == 0)
+                {   
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
+                }
+                else if (Op.Size == 1)
+                {   
                     ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
                 }
                 else
