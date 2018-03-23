@@ -13,14 +13,24 @@ namespace Ryujinx.Core.OsHle.Services.Apm
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, SetPerformanceConfiguration }
+                { 0, SetPerformanceConfiguration },
+                { 1, GetPerformanceConfiguration }
             };
         }
 
         public long SetPerformanceConfiguration(ServiceCtx Context)
         {
-            int PerfMode   = Context.RequestData.ReadInt32();
-            int PerfConfig = Context.RequestData.ReadInt32();
+            PerformanceMode          PerfMode   = (PerformanceMode)Context.RequestData.ReadInt32();
+            PerformanceConfiguration PerfConfig = (PerformanceConfiguration)Context.RequestData.ReadInt32();
+
+            return 0;
+        }
+
+        public long GetPerformanceConfiguration(ServiceCtx Context)
+        {
+            PerformanceMode PerfMode = (PerformanceMode)Context.RequestData.ReadInt32();
+
+            Context.ResponseData.Write((uint)PerformanceConfiguration.PerformanceConfiguration1);
 
             return 0;
         }
