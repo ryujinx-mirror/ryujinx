@@ -221,13 +221,25 @@ namespace ChocolArm64.Instruction
             EmitScalarUnaryOpF(Context, () => Context.Emit(OpCodes.Neg));
         }
 
-        public static void Fnmul_S(AILEmitterCtx Context)
+        public static void Fnmadd_S(AILEmitterCtx Context)
         {
-            EmitScalarBinaryOpF(Context, () =>
-            {
-                Context.Emit(OpCodes.Mul);
-                Context.Emit(OpCodes.Neg);
-            });
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            EmitVectorExtractF(Context, Op.Rn, 0, SizeF);
+
+            Context.Emit(OpCodes.Neg);
+
+            EmitVectorExtractF(Context, Op.Rm, 0, SizeF);
+
+            Context.Emit(OpCodes.Mul);
+
+            EmitVectorExtractF(Context, Op.Ra, 0, SizeF);
+
+            Context.Emit(OpCodes.Sub);
+
+            EmitScalarSetF(Context, Op.Rd, SizeF);
         }
 
         public static void Fnmsub_S(AILEmitterCtx Context)
@@ -246,6 +258,34 @@ namespace ChocolArm64.Instruction
             Context.Emit(OpCodes.Sub);
 
             EmitScalarSetF(Context, Op.Rd, SizeF);
+        }
+
+        public static void Fnmul_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpF(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Neg);
+            });
+        }
+
+        public static void Frinta_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            EmitVectorExtractF(Context, Op.Rn, 0, Op.Size);
+
+            EmitRoundMathCall(Context, MidpointRounding.AwayFromZero);
+
+            EmitScalarSetF(Context, Op.Rd, Op.Size);
+        }
+
+        public static void Frinta_V(AILEmitterCtx Context)
+        {
+            EmitVectorUnaryOpF(Context, () =>
+            {
+                EmitRoundMathCall(Context, MidpointRounding.AwayFromZero);
+            });
         }
 
         public static void Frinti_S(AILEmitterCtx Context)
@@ -295,25 +335,6 @@ namespace ChocolArm64.Instruction
                 {
                     throw new InvalidOperationException();
                 }
-            });
-        }
-
-        public static void Frinta_S(AILEmitterCtx Context)
-        {
-            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
-
-            EmitVectorExtractF(Context, Op.Rn, 0, Op.Size);
-
-            EmitRoundMathCall(Context, MidpointRounding.AwayFromZero);
-
-            EmitScalarSetF(Context, Op.Rd, Op.Size);
-        }
-
-        public static void Frinta_V(AILEmitterCtx Context)
-        {
-            EmitVectorUnaryOpF(Context, () =>
-            {
-                EmitRoundMathCall(Context, MidpointRounding.AwayFromZero);
             });
         }
 
