@@ -8,7 +8,7 @@ namespace ChocolArm64
     {
         static AOpCodeTable()
         {
- #region "OpCode Table"
+#region "OpCode Table"
             //Integer
             Set("x0011010000xxxxx000000xxxxxxxxxx", AInstEmit.Adc,           typeof(AOpCodeAluRs));
             Set("x0111010000xxxxx000000xxxxxxxxxx", AInstEmit.Adcs,          typeof(AOpCodeAluRs));
@@ -41,6 +41,7 @@ namespace ChocolArm64
             Set("x1111010010xxxxxxxxx10xxxxxxxxxx", AInstEmit.Ccmp,          typeof(AOpCodeCcmpImm));
             Set("x1111010010xxxxxxxxx00xxxxxxxxxx", AInstEmit.Ccmp,          typeof(AOpCodeCcmpReg));
             Set("11010101000000110011xxxx01011111", AInstEmit.Clrex,         typeof(AOpCodeSystem));
+            Set("x101101011000000000101xxxxxxxxxx", AInstEmit.Cls,           typeof(AOpCodeAlu));
             Set("x101101011000000000100xxxxxxxxxx", AInstEmit.Clz,           typeof(AOpCodeAlu));
             Set("x0011010110xxxxx010000xxxxxxxxxx", AInstEmit.Crc32b,        typeof(AOpCodeAluRs));
             Set("x0011010110xxxxx010001xxxxxxxxxx", AInstEmit.Crc32h,        typeof(AOpCodeAluRs));
@@ -68,7 +69,7 @@ namespace ChocolArm64
             Set("xx111000010xxxxxxxxxxxxxxxxxxxxx", AInstEmit.Ldr,           typeof(AOpCodeMemImm));
             Set("xx11100101xxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Ldr,           typeof(AOpCodeMemImm));
             Set("xx111000011xxxxxxxxx10xxxxxxxxxx", AInstEmit.Ldr,           typeof(AOpCodeMemReg));
-            Set("xx011000xxxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.LdrLit,        typeof(AOpCodeMemLit));            
+            Set("xx011000xxxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.LdrLit,        typeof(AOpCodeMemLit));
             Set("0x1110001x0xxxxxxxxxxxxxxxxxxxxx", AInstEmit.Ldrs,          typeof(AOpCodeMemImm));
             Set("0x1110011xxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Ldrs,          typeof(AOpCodeMemImm));
             Set("10111000100xxxxxxxxxxxxxxxxxxxxx", AInstEmit.Ldrs,          typeof(AOpCodeMemImm));

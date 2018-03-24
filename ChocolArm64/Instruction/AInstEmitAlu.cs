@@ -100,6 +100,24 @@ namespace ChocolArm64.Instruction
             EmitDataStore(Context, SetFlags);
         }
 
+        public static void Cls(AILEmitterCtx Context)
+        {
+            AOpCodeAlu Op = (AOpCodeAlu)Context.CurrOp;
+
+            Context.EmitLdintzr(Op.Rn);
+
+            if (Op.RegisterSize == ARegisterSize.Int32)
+            {
+                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountLeadingSigns32));
+            }
+            else
+            {
+                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountLeadingSigns64));
+            }
+
+            Context.EmitStintzr(Op.Rd);
+        }
+
         public static void Clz(AILEmitterCtx Context)
         {
             AOpCodeAlu Op = (AOpCodeAlu)Context.CurrOp;
