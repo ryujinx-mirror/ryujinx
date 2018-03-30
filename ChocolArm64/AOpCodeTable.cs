@@ -229,8 +229,8 @@ namespace ChocolArm64
             Set("01101110000xxxxx0xxxx1xxxxxxxxxx", AInstEmit.Ins_V,         typeof(AOpCodeSimdIns));
             Set("0x00110001000000xxxxxxxxxxxxxxxx", AInstEmit.Ld__Vms,       typeof(AOpCodeSimdMemMs));
             Set("0x001100110xxxxxxxxxxxxxxxxxxxxx", AInstEmit.Ld__Vms,       typeof(AOpCodeSimdMemMs));
-            Set("0x00110101000000xx0xxxxxxxxxxxxx", AInstEmit.Ld__Vss,       typeof(AOpCodeSimdMemSs));
-            Set("0x001101110xxxxxxx0xxxxxxxxxxxxx", AInstEmit.Ld__Vss,       typeof(AOpCodeSimdMemSs));
+            Set("0x00110101x00000xxxxxxxxxxxxxxxx", AInstEmit.Ld__Vss,       typeof(AOpCodeSimdMemSs));
+            Set("0x00110111xxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Ld__Vss,       typeof(AOpCodeSimdMemSs));
             Set("xx10110xx1xxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Ldp,           typeof(AOpCodeSimdMemPair));
             Set("xx111100x10xxxxxxxxx00xxxxxxxxxx", AInstEmit.Ldr,           typeof(AOpCodeSimdMemImm));
             Set("xx111100x10xxxxxxxxx01xxxxxxxxxx", AInstEmit.Ldr,           typeof(AOpCodeSimdMemImm));
@@ -275,8 +275,8 @@ namespace ChocolArm64
             Set("0x0011110>>>>xxx000101xxxxxxxxxx", AInstEmit.Ssra_V,        typeof(AOpCodeSimdShImm));
             Set("0x00110000000000xxxxxxxxxxxxxxxx", AInstEmit.St__Vms,       typeof(AOpCodeSimdMemMs));
             Set("0x001100100xxxxxxxxxxxxxxxxxxxxx", AInstEmit.St__Vms,       typeof(AOpCodeSimdMemMs));
-            Set("0x00110100000000xx0xxxxxxxxxxxxx", AInstEmit.St__Vss,       typeof(AOpCodeSimdMemSs));
-            Set("0x001101100xxxxxxx0xxxxxxxxxxxxx", AInstEmit.St__Vss,       typeof(AOpCodeSimdMemSs));
+            Set("0x00110100x00000xxxxxxxxxxxxxxxx", AInstEmit.St__Vss,       typeof(AOpCodeSimdMemSs));
+            Set("0x00110110xxxxxxxxxxxxxxxxxxxxxx", AInstEmit.St__Vss,       typeof(AOpCodeSimdMemSs));
             Set("xx10110xx0xxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Stp,           typeof(AOpCodeSimdMemPair));
             Set("xx111100x00xxxxxxxxx00xxxxxxxxxx", AInstEmit.Str,           typeof(AOpCodeSimdMemImm));
             Set("xx111100x00xxxxxxxxx01xxxxxxxxxx", AInstEmit.Str,           typeof(AOpCodeSimdMemImm));

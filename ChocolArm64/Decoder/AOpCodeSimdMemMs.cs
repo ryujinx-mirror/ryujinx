@@ -25,8 +25,8 @@ namespace ChocolArm64.Decoder
                 default: Inst = AInst.Undefined; return;
             }
 
-            Size  =  (OpCode >> 10) & 0x3;
-            WBack = ((OpCode >> 23) & 0x1) != 0;
+            Size  =  (OpCode >> 10) & 3;
+            WBack = ((OpCode >> 23) & 1) != 0;
 
             bool Q = ((OpCode >> 30) & 1) != 0;
 

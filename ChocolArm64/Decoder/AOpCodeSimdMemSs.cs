@@ -18,7 +18,7 @@ namespace ChocolArm64.Decoder
             int Scale  = (OpCode >> 14) & 3;
             int L      = (OpCode >> 22) & 1;
             int Q      = (OpCode >> 30) & 1;
-            
+
             SElems |= (OpCode >> 21) & 1;
 
             SElems++;
@@ -88,7 +88,7 @@ namespace ChocolArm64.Decoder
 
             Extend64 = false;
 
-            WBack = ((OpCode >> 23) & 0x1) != 0;
+            WBack = ((OpCode >> 23) & 1) != 0;
 
             RegisterSize = Q != 0
                 ? ARegisterSize.SIMD128
