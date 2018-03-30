@@ -247,7 +247,7 @@ namespace ChocolArm64.Instruction
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
             int SizeF = Op.Size & 1;
-            
+
             EmitVectorExtractF(Context, Op.Rn, 0, SizeF);
             EmitVectorExtractF(Context, Op.Rm, 0, SizeF);
 
@@ -316,7 +316,7 @@ namespace ChocolArm64.Instruction
         public static void Frinti_V(AILEmitterCtx Context)
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
-            
+
             EmitVectorUnaryOpF(Context, () =>
             {
                 Context.EmitLdarg(ATranslatedSub.StateArgIdx);
@@ -324,11 +324,11 @@ namespace ChocolArm64.Instruction
                 Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
 
                 if (Op.Size == 2)
-                {   
+                {
                     ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
                 }
                 else if (Op.Size == 3)
-                {   
+                {
                     ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
                 }
                 else
@@ -425,11 +425,11 @@ namespace ChocolArm64.Instruction
                 Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
 
                 if (Op.Size == 0)
-                {   
+                {
                     ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
                 }
                 else if (Op.Size == 1)
-                {   
+                {
                     ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
                 }
                 else
@@ -567,6 +567,18 @@ namespace ChocolArm64.Instruction
         public static void Uaddw_V(AILEmitterCtx Context)
         {
             EmitVectorWidenRmBinaryOpZx(Context, () => Context.Emit(OpCodes.Add));
+        }
+
+        public static void Uhadd_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpZx(Context, () =>
+            {
+                Context.Emit(OpCodes.Add);
+
+                Context.EmitLdc_I4(1);
+
+                Context.Emit(OpCodes.Shr_Un);
+            });
         }
 
         public static void Umull_V(AILEmitterCtx Context)
