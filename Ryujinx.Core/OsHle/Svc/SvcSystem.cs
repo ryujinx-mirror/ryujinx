@@ -235,7 +235,8 @@ namespace Ryujinx.Core.OsHle.Svc
 
             //Fail for info not available on older Kernel versions.
             if (InfoType == 18 ||
-                InfoType == 19)
+                InfoType == 19 ||
+                InfoType == 20)
             {
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidInfo);
 
