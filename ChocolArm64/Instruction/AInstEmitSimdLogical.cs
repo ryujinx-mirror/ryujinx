@@ -34,6 +34,16 @@ namespace ChocolArm64.Instruction
 
         public static void Bif_V(AILEmitterCtx Context)
         {
+            EmitBitBif(Context, true);
+        }
+
+        public static void Bit_V(AILEmitterCtx Context)
+        {
+            EmitBitBif(Context, false);
+        }
+
+        public static void EmitBitBif(AILEmitterCtx Context, bool NotRm)
+        {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
             int Bytes = Context.CurrOp.GetBitsCount() >> 3;
@@ -46,6 +56,11 @@ namespace ChocolArm64.Instruction
                 Context.Emit(OpCodes.Xor);
 
                 EmitVectorExtractZx(Context, Op.Rm, Index, Op.Size);
+
+                if (NotRm)
+                {
+                    Context.Emit(OpCodes.Not);
+                }
 
                 Context.Emit(OpCodes.And);
 
