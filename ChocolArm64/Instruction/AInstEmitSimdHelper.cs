@@ -447,6 +447,9 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
+            Context.EmitLdvec(Op.Rd);
+            Context.EmitStvectmp();
+
             int Elems = 8 >> Op.Size;
 
             int Part = Op.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
@@ -488,6 +491,9 @@ namespace ChocolArm64.Instruction
         public static void EmitVectorWidenRnRmOp(AILEmitterCtx Context, Action Emit, bool Ternary, bool Signed)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            Context.EmitLdvec(Op.Rd);
+            Context.EmitStvectmp();
 
             int Elems = 8 >> Op.Size;
 

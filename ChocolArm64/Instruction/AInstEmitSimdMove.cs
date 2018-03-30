@@ -61,6 +61,9 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdExt Op = (AOpCodeSimdExt)Context.CurrOp;
 
+            Context.EmitLdvec(Op.Rd);
+            Context.EmitStvectmp();
+
             int Bytes = Context.CurrOp.GetBitsCount() >> 3;
 
             int Position = Op.Imm4;
@@ -75,9 +78,11 @@ namespace ChocolArm64.Instruction
                 }
 
                 EmitVectorExtractZx(Context, Reg, Position++, 0);
-
-                EmitVectorInsert(Context, Op.Rd, Index, 0);
+                EmitVectorInsertTmp(Context, Index, 0);
             }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
 
             if (Op.RegisterSize == ARegisterSize.SIMD64)
             {
@@ -113,7 +118,7 @@ namespace ChocolArm64.Instruction
 
             EmitVectorExtractZx(Context, Op.Rn, 0, 3);
 
-            EmitIntZeroHigherIfNeeded(Context);
+            EmitIntZeroUpperIfNeeded(Context);
 
             Context.EmitStintzr(Op.Rd);
         }
@@ -124,7 +129,7 @@ namespace ChocolArm64.Instruction
 
             EmitVectorExtractZx(Context, Op.Rn, 1, 3);
 
-            EmitIntZeroHigherIfNeeded(Context);
+            EmitIntZeroUpperIfNeeded(Context);
 
             Context.EmitStintzr(Op.Rd);
         }
@@ -135,7 +140,7 @@ namespace ChocolArm64.Instruction
 
             Context.EmitLdintzr(Op.Rn);
 
-            EmitIntZeroHigherIfNeeded(Context);
+            EmitIntZeroUpperIfNeeded(Context);
 
             EmitScalarSet(Context, Op.Rd, 3);
         }
@@ -146,7 +151,7 @@ namespace ChocolArm64.Instruction
 
             Context.EmitLdintzr(Op.Rn);
 
-            EmitIntZeroHigherIfNeeded(Context);
+            EmitIntZeroUpperIfNeeded(Context);
 
             EmitVectorInsert(Context, Op.Rd, 1, 3);
         }
@@ -301,7 +306,7 @@ namespace ChocolArm64.Instruction
             EmitVectorZip(Context, Part: 1);
         }
 
-        private static void EmitIntZeroHigherIfNeeded(AILEmitterCtx Context)
+        private static void EmitIntZeroUpperIfNeeded(AILEmitterCtx Context)
         {
             if (Context.CurrOp.RegisterSize == ARegisterSize.Int32)
             {
@@ -322,7 +327,7 @@ namespace ChocolArm64.Instruction
             for (int Index = 0; Index < Elems; Index++)
             {
                 int Elem = Part + ((Index & (Half - 1)) << 1);
-                
+
                 EmitVectorExtractZx(Context, Index < Half ? Op.Rn : Op.Rm, Elem, Op.Size);
 
                 EmitVectorInsert(Context, Op.Rd, Index, Op.Size);

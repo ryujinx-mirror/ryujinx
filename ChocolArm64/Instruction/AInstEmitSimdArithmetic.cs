@@ -548,12 +548,12 @@ namespace ChocolArm64.Instruction
 
         public static void Uabd_V(AILEmitterCtx Context)
         {
-            EmitVectorTernaryOpZx(Context, () => EmitAbd(Context));
+            EmitVectorBinaryOpZx(Context, () => EmitAbd(Context));
         }
 
         public static void Uabdl_V(AILEmitterCtx Context)
         {
-            EmitVectorWidenRnRmTernaryOpZx(Context, () => EmitAbd(Context));
+            EmitVectorWidenRnRmBinaryOpZx(Context, () => EmitAbd(Context));
         }
 
         private static void EmitAbd(AILEmitterCtx Context)
@@ -563,8 +563,6 @@ namespace ChocolArm64.Instruction
             Type[] Types = new Type[] { typeof(long) };
 
             Context.EmitCall(typeof(Math).GetMethod(nameof(Math.Abs), Types));
-
-            Context.Emit(OpCodes.Add);
         }
 
         public static void Uaddl_V(AILEmitterCtx Context)
