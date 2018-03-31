@@ -72,7 +72,7 @@ namespace ChocolArm64.Translation
 
             Emitter = new AILEmitter(Graph, Root, SubName);
 
-            ILBlock = Emitter.GetILBlock(0);          
+            ILBlock = Emitter.GetILBlock(0);
 
             OpcIndex = -1;
 
@@ -260,17 +260,23 @@ namespace ChocolArm64.Translation
                 case AIntType.Int64:  Emit(OpCodes.Conv_I8); break;
             }
 
-            if (IntType == AIntType.UInt64 ||
-                IntType == AIntType.Int64)
+            bool Sz64 = CurrOp.RegisterSize != ARegisterSize.Int32;
+
+            if (Sz64 == (IntType == AIntType.UInt64 ||
+                         IntType == AIntType.Int64))
             {
                 return;
             }
 
-            if (CurrOp.RegisterSize != ARegisterSize.Int32)
+            if (Sz64)
             {
                 Emit(IntType >= AIntType.Int8
                     ? OpCodes.Conv_I8
                     : OpCodes.Conv_U8);
+            }
+            else
+            {
+                Emit(OpCodes.Conv_U4);
             }
         }
 
@@ -298,7 +304,7 @@ namespace ChocolArm64.Translation
                 EmitLdc_I4(Amount);
 
                 Emit(OpCodes.Shr_Un);
-                
+
                 Ldloc(Tmp2Index, AIoType.Int);
 
                 EmitLdc_I4(CurrOp.GetBitsCount() - Amount);
