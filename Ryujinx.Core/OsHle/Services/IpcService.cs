@@ -14,7 +14,7 @@ namespace Ryujinx.Core.OsHle.Services
 
         private int SelfId;
 
-        private bool IsDomain;       
+        private bool IsDomain;
 
         public IpcService()
         {

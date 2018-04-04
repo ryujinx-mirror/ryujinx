@@ -123,7 +123,7 @@ namespace Ryujinx.Core.OsHle
                 MemoryRegions.MainStackAddress,
                 MemoryRegions.MainStackSize,
                 MemoryType.Normal);
-            
+
             long StackTop = MemoryRegions.MainStackAddress + MemoryRegions.MainStackSize;
 
             int Handle = MakeThread(Executables[0].ImageBase, StackTop, 0, 0, 0);
@@ -254,7 +254,7 @@ namespace Ryujinx.Core.OsHle
                 if (e.Position >= Executables[Index].ImageBase)
                 {
                     NsoName = $"{(e.Position - Executables[Index].ImageBase):x16}";
-                    
+
                     break;
                 }
             }
