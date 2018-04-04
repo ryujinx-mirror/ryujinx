@@ -92,6 +92,7 @@ namespace ChocolArm64
             Set("x01100100xxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Orr,           typeof(AOpCodeAluImm));
             Set("x0101010xx0xxxxxxxxxxxxxxxxxxxxx", AInstEmit.Orr,           typeof(AOpCodeAluRs));
             Set("1111100110xxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Pfrm,          typeof(AOpCodeMemImm));
+            Set("11111000100xxxxxxxxx00xxxxxxxxxx", AInstEmit.Pfrm,          typeof(AOpCodeMemImm));
             Set("11011000xxxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Pfrm,          typeof(AOpCodeMemLit));
             Set("x101101011000000000000xxxxxxxxxx", AInstEmit.Rbit,          typeof(AOpCodeAlu));
             Set("11010110010xxxxx000000xxxxxxxxxx", AInstEmit.Ret,           typeof(AOpCodeBReg));
