@@ -18,6 +18,7 @@ namespace Ryujinx.Core.OsHle.Services.Hid
                 {   1, ActivateDebugPad                        },
                 {  11, ActivateTouchScreen                     },
                 {  21, ActivateMouse                           },
+                {  31, ActivateKeyboard                        },
                 {  66, StartSixAxisSensor                      },
                 { 100, SetSupportedNpadStyleSet                },
                 { 101, GetSupportedNpadStyleSet                },
@@ -55,6 +56,13 @@ namespace Ryujinx.Core.OsHle.Services.Hid
         }
 
         public long ActivateMouse(ServiceCtx Context)
+        {
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
+
+            return 0;
+        }
+
+        public long ActivateKeyboard(ServiceCtx Context)
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
