@@ -107,25 +107,31 @@ namespace ChocolArm64
 
             ATranslatedSub Subroutine = Context.GetSubroutine();
 
-            if (SubBlocks.Contains(Position))
+            lock (SubBlocks)
             {
-                SubBlocks.Remove(Position);
+                if (SubBlocks.Contains(Position))
+                {
+                    SubBlocks.Remove(Position);
 
-                Subroutine.SetType(ATranslatedSubType.SubBlock);
-            }
-            else
-            {
-                Subroutine.SetType(ATranslatedSubType.SubTier0);
+                    Subroutine.SetType(ATranslatedSubType.SubBlock);
+                }
+                else
+                {
+                    Subroutine.SetType(ATranslatedSubType.SubTier0);
+                }
             }
 
             CachedSubs.AddOrUpdate(Position, Subroutine, (Key, OldVal) => Subroutine);
 
             AOpCode LastOp = Block.GetLastOp();
 
-            if (LastOp.Emitter != AInstEmit.Ret &&
-                LastOp.Emitter != AInstEmit.Br)
+            lock (SubBlocks)
             {
-                SubBlocks.Add(LastOp.Position + 4);
+                if (LastOp.Emitter != AInstEmit.Ret &&
+                    LastOp.Emitter != AInstEmit.Br)
+                {
+                    SubBlocks.Add(LastOp.Position + 4);
+                }
             }
 
             return Subroutine;
