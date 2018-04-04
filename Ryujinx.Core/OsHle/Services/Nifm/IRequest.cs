@@ -19,7 +19,9 @@ namespace Ryujinx.Core.OsHle.Services.Nifm
             {
                 { 0, GetRequestState               },
                 { 1, GetResult                     },
-                { 2, GetSystemEventReadableHandles }
+                { 2, GetSystemEventReadableHandles },
+                { 3, Cancel                        },
+                { 4, Submit                        },
             };
 
             Event = new KEvent();
@@ -48,6 +50,20 @@ namespace Ryujinx.Core.OsHle.Services.Nifm
             int Handle = Context.Process.HandleTable.OpenHandle(Event);
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
+
+            return 0;
+        }
+
+        public long Cancel(ServiceCtx Context)
+        {
+            //Todo: Stub
+
+            return 0;
+        }
+
+        public long Submit(ServiceCtx Context)
+        {
+            //Todo: Stub
 
             return 0;
         }

@@ -25,6 +25,7 @@ namespace Ryujinx.Core.OsHle.Services.Vi
                 {  103, GetIndirectDisplayTransactionService },
                 { 1010, OpenDisplay                          },
                 { 1020, CloseDisplay                         },
+                { 1102, GetDisplayResolution                 },
                 { 2020, OpenLayer                            },
                 { 2021, CloseLayer                           },
                 { 2030, CreateStrayLayer                     },
@@ -80,6 +81,16 @@ namespace Ryujinx.Core.OsHle.Services.Vi
             int DisplayId = Context.RequestData.ReadInt32();
 
             Displays.Delete(DisplayId);
+
+            return 0;
+        }
+
+        public long GetDisplayResolution(ServiceCtx Context)
+        {
+            long DisplayId = Context.RequestData.ReadInt32();
+
+            Context.ResponseData.Write(1280);
+            Context.ResponseData.Write(720);
 
             return 0;
         }

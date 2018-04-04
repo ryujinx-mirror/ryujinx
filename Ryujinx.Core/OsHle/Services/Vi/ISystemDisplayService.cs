@@ -13,11 +13,17 @@ namespace Ryujinx.Core.OsHle.Services.Vi
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 2205, SetLayerZ }
+                { 2205, SetLayerZ },
+                { 2207, SetLayerVisibility }
             };
         }
 
         public static long SetLayerZ(ServiceCtx Context)
+        {
+            return 0;
+        }
+
+        public static long SetLayerVisibility(ServiceCtx Context)
         {
             return 0;
         }

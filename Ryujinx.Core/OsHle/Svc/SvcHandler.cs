@@ -40,6 +40,7 @@ namespace Ryujinx.Core.OsHle.Svc
                 { 0x0c, SvcGetThreadPriority             },
                 { 0x0d, SvcSetThreadPriority             },
                 { 0x0f, SvcSetThreadCoreMask             },
+                { 0x10, SvcGetCurrentProcessorNumber     },
                 { 0x12, SvcClearEvent                    },
                 { 0x13, SvcMapSharedMemory               },
                 { 0x14, SvcUnmapSharedMemory             },

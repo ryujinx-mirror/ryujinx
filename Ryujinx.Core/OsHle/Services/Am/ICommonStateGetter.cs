@@ -56,7 +56,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
         public long GetPerformanceMode(ServiceCtx Context)
         {
-            Context.ResponseData.Write((byte)0);
+            Context.ResponseData.Write((byte)Apm.PerformanceMode.Handheld);
 
             return 0;
         }

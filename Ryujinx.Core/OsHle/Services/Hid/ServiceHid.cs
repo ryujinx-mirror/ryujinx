@@ -15,6 +15,7 @@ namespace Ryujinx.Core.OsHle.Services.Hid
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 {   0, CreateAppletResource                    },
+                {   1, ActivateDebugPad                        },
                 {  11, ActivateTouchScreen                     },
                 {  66, StartSixAxisSensor                      },
                 { 100, SetSupportedNpadStyleSet                },
@@ -22,6 +23,7 @@ namespace Ryujinx.Core.OsHle.Services.Hid
                 { 102, SetSupportedNpadIdType                  },
                 { 103, ActivateNpad                            },
                 { 120, SetNpadJoyHoldType                      },
+                { 121, GetNpadJoyHoldType                      },
                 { 122, SetNpadJoyAssignmentModeSingleByDefault },
                 { 123, SetNpadJoyAssignmentModeSingle          },
                 { 124, SetNpadJoyAssignmentModeDual            },
@@ -36,6 +38,11 @@ namespace Ryujinx.Core.OsHle.Services.Hid
         {
             MakeObject(Context, new IAppletResource(Context.Ns.Os.HidSharedMem));
 
+            return 0;
+        }
+
+        public long ActivateDebugPad(ServiceCtx Context)
+        {
             return 0;
         }
 

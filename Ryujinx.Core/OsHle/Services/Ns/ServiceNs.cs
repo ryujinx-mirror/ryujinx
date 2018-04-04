@@ -13,8 +13,15 @@ namespace Ryujinx.Core.OsHle.Services.Ns
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                //{ 1, Function }
+                { 2, CountAddOnContent }
             };
+        }
+
+        public static long CountAddOnContent(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(0);
+
+            return 0;
         }
     }
 }

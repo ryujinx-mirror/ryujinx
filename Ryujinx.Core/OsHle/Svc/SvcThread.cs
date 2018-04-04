@@ -117,6 +117,13 @@ namespace Ryujinx.Core.OsHle.Svc
             //TODO: Error codes.
         }
 
+        private void SvcGetCurrentProcessorNumber(AThreadState ThreadState)
+        {
+            KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
+
+            ThreadState.X0 = (ulong)CurrThread.ProcessorId;
+        }
+
         private void SvcGetThreadId(AThreadState ThreadState)
         {
             int Handle = (int)ThreadState.X1;
