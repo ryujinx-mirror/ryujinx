@@ -221,6 +221,11 @@ namespace ChocolArm64.Instruction
             EmitScalarUnaryOpF(Context, () => Context.Emit(OpCodes.Neg));
         }
 
+        public static void Fneg_V(AILEmitterCtx Context)
+        {
+            EmitVectorUnaryOpF(Context, () => Context.Emit(OpCodes.Neg));
+        }
+
         public static void Fnmadd_S(AILEmitterCtx Context)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
