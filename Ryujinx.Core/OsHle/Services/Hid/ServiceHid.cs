@@ -17,6 +17,7 @@ namespace Ryujinx.Core.OsHle.Services.Hid
                 {   0, CreateAppletResource                    },
                 {   1, ActivateDebugPad                        },
                 {  11, ActivateTouchScreen                     },
+                {  21, ActivateMouse                           },
                 {  66, StartSixAxisSensor                      },
                 { 100, SetSupportedNpadStyleSet                },
                 { 101, GetSupportedNpadStyleSet                },
@@ -48,7 +49,14 @@ namespace Ryujinx.Core.OsHle.Services.Hid
 
         public long ActivateTouchScreen(ServiceCtx Context)
         {
-            long Unknown = Context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
+
+            return 0;
+        }
+
+        public long ActivateMouse(ServiceCtx Context)
+        {
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
             return 0;
         }
@@ -119,7 +127,7 @@ namespace Ryujinx.Core.OsHle.Services.Hid
             HidControllerId HidControllerId = (HidControllerId)Context.RequestData.ReadInt32();
             long AppletUserResourseId = Context.RequestData.ReadInt64();
             long NpadJoyDeviceType = Context.RequestData.ReadInt64();
-            
+
             return 0;
         }
 
