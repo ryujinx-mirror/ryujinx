@@ -1,12 +1,31 @@
-using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Ipc;
-using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Services.Set
 {
     class ServiceSet : IpcService
     {
+        private static string[] LanguageCodes = new string[]
+        {
+            "ja",
+            "en-US",
+            "fr",
+            "de",
+            "it",
+            "es",
+            "zh-CN",
+            "ko",
+            "nl",
+            "pt",
+            "ru",
+            "zh-TW",
+            "en-GB",
+            "fr-CA",
+            "es-419",
+            "zh-Hans",
+            "zh-Hant"
+        };
+
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
@@ -20,32 +39,41 @@ namespace Ryujinx.Core.OsHle.Services.Set
             };
         }
 
-        private const int LangCodesCount = 13;
-
         public static long GetAvailableLanguageCodes(ServiceCtx Context)
         {
-            int PtrBuffSize = Context.RequestData.ReadInt32();
+            long  Position = Context.Request.RecvListBuff[0].Position;
+            short Size     = Context.Request.RecvListBuff[0].Size;
 
-            if (Context.Request.RecvListBuff.Count > 0)
+            int Count = (int)((uint)Size / 8);
+
+            if (Count > LanguageCodes.Length)
             {
-                long  Position = Context.Request.RecvListBuff[0].Position;
-                short Size     = Context.Request.RecvListBuff[0].Size;
+                Count = LanguageCodes.Length;
+            }
 
-                //This should return an array of ints with values matching the LanguageCode enum.
-                foreach (long value in new long[] { 0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L })
+            for (int Index = 0; Index < Count; Index++)
+            {
+                string LanguageCode = LanguageCodes[Index];
+
+                foreach (char Chr in LanguageCode)
                 {
-                    AMemoryHelper.WriteBytes(Context.Memory, Position += 8, BitConverter.GetBytes(value));
+                    Context.Memory.WriteByte(Position++, (byte)Chr);
+                }
+
+                for (int Offs = 0; Offs < (8 - LanguageCode.Length); Offs++)
+                {
+                    Context.Memory.WriteByte(Position++, 0);
                 }
             }
 
-            Context.ResponseData.Write(LangCodesCount);
+            Context.ResponseData.Write(Count);
 
             return 0;
         }
 
         public static long GetAvailableLanguageCodeCount(ServiceCtx Context)
         {
-            Context.ResponseData.Write(LangCodesCount);
+            Context.ResponseData.Write(LanguageCodes.Length);
 
             return 0;
         }

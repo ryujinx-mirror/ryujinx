@@ -156,7 +156,7 @@ namespace Ryujinx.Core.OsHle.Svc
             KSession Session = new KSession(ServiceFactory.MakeService(Name));
 
             ulong Handle = (ulong)Process.HandleTable.OpenHandle(Session);
-            
+
             ThreadState.X0 = 0;
             ThreadState.X1 = Handle;
         }
@@ -268,7 +268,7 @@ namespace Ryujinx.Core.OsHle.Svc
                 case 6:
                     ThreadState.X1 = MemoryRegions.TotalMemoryAvailable;
                     break;
-    
+
                 case 7:
                     ThreadState.X1 = MemoryRegions.TotalMemoryUsed + CurrentHeapSize;
                     break;

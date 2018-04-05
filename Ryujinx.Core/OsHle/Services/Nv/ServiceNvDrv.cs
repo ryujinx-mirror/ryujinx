@@ -5,6 +5,7 @@ using Ryujinx.Core.OsHle.Utilities;
 using Ryujinx.Graphics.Gpu;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Ryujinx.Core.OsHle.Services.Nv
 {
@@ -45,6 +46,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
                 { ("/dev/nvhost-as-gpu",   0x4106), NvGpuAsIoctlMapBufferEx           },
                 { ("/dev/nvhost-as-gpu",   0x4108), NvGpuAsIoctlGetVaRegions          },
                 { ("/dev/nvhost-as-gpu",   0x4109), NvGpuAsIoctlInitializeEx          },
+                { ("/dev/nvhost-as-gpu",   0x4114), NvGpuAsIoctlRemap                 },
                 { ("/dev/nvhost-ctrl",     0x001b), NvHostIoctlCtrlGetConfig          },
                 { ("/dev/nvhost-ctrl",     0x001d), NvHostIoctlCtrlEventWait          },
                 { ("/dev/nvhost-ctrl-gpu", 0x4701), NvGpuIoctlZcullGetCtxSize         },
@@ -98,7 +100,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
         {
             int Fd  = Context.RequestData.ReadInt32();
             int Cmd = Context.RequestData.ReadInt32() & 0xffff;
-            
+
             NvFd FdData = Fds.GetData<NvFd>(Context.Process, Fd);
 
             long Position = Context.Request.GetSendBuffPtr();
@@ -206,7 +208,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             int  Flags    = Reader.ReadInt32();
             int  Kind     = Reader.ReadInt32();
             int  Handle   = Reader.ReadInt32();
-            int  PageSize = Reader.ReadInt32();            
+            int  PageSize = Reader.ReadInt32();
             long BuffAddr = Reader.ReadInt64();
             long MapSize  = Reader.ReadInt64();
             long Offset   = Reader.ReadInt64();
@@ -226,7 +228,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             if (Map == null)
             {
                 Logging.Warn($"Trying to use invalid NvMap Handle {Handle}!");
-                
+
                 return -1; //TODO: Corrent error code.
             }
 
@@ -287,6 +289,35 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             long Unknown10   = Reader.ReadInt64();
             long Unknown18   = Reader.ReadInt64();
             long Unknown20   = Reader.ReadInt64();
+
+            return 0;
+        }
+
+        private long NvGpuAsIoctlRemap(ServiceCtx Context)
+        {
+            Context.RequestData.BaseStream.Seek(-4, SeekOrigin.Current);
+
+            int Cmd = Context.RequestData.ReadInt32();
+
+            int Size = (Cmd >> 16) & 0xff;
+
+            int Count = Size / 0x18;
+
+            long Position = Context.Request.GetSendBuffPtr();
+
+            MemReader Reader = new MemReader(Context.Memory, Position);
+
+            for (int Index = 0; Index < Count; Index++)
+            {
+                int Flags   = Reader.ReadInt32();
+                int Kind    = Reader.ReadInt32();
+                int Handle  = Reader.ReadInt32();
+                int Padding = Reader.ReadInt32();
+                int Offset  = Reader.ReadInt32();
+                int Pages   = Reader.ReadInt32();
+            }
+
+            //TODO
 
             return 0;
         }
@@ -590,7 +621,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             if (Map == null)
             {
                 Logging.Warn($"Trying to use invalid NvMap Id {Id}!");
-                
+
                 return -1; //TODO: Corrent error code.
             }
 
@@ -617,7 +648,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             if (Map == null)
             {
                 Logging.Warn($"Trying to use invalid NvMap Handle {Handle}!");
-                
+
                 return -1; //TODO: Corrent error code.
             }
 
@@ -643,7 +674,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             if (Map == null)
             {
                 Logging.Warn($"Trying to use invalid NvMap Handle {Handle}!");
-                
+
                 return -1; //TODO: Corrent error code.
             }
 
@@ -668,7 +699,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             if (Map == null)
             {
                 Logging.Warn($"Trying to use invalid NvMap Handle {Handle}!");
-                
+
                 return -1; //TODO: Corrent error code.
             }
 
@@ -698,7 +729,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             if (Map == null)
             {
                 Logging.Warn($"Trying to use invalid NvMap Handle {Handle}!");
-                
+
                 return -1; //TODO: Corrent error code.
             }
 

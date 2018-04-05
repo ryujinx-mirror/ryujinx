@@ -61,12 +61,12 @@ namespace Ryujinx.Core.OsHle.Ipc
                         case 3:
                         {
                             Request = FillResponse(Response, 0, 0x500);
-                            
+
                             break;
                         }
 
-                        //TODO: Whats the difference between IpcDuplicateSession/Ex? 
-                        case 2: 
+                        //TODO: Whats the difference between IpcDuplicateSession/Ex?
+                        case 2:
                         case 4:
                         {
                             int Unknown = ReqReader.ReadInt32();
