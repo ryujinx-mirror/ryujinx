@@ -389,11 +389,22 @@ namespace Ryujinx.Core.OsHle.Services.Nv
 
             MemReader Reader = new MemReader(Context.Memory, Position);
 
-            int ColorDs = Reader.ReadInt32();
-            int ColorL2 = Reader.ReadInt32();
-            int Depth   = Reader.ReadInt32();
-            int Format  = Reader.ReadInt32();
-            int Type    = Reader.ReadInt32();
+            int[] ColorDs = new int[4];
+            int[] ColorL2 = new int[4];
+
+            ColorDs[0] = Reader.ReadInt32();
+            ColorDs[1] = Reader.ReadInt32();
+            ColorDs[2] = Reader.ReadInt32();
+            ColorDs[3] = Reader.ReadInt32();
+
+            ColorL2[0] = Reader.ReadInt32();
+            ColorL2[1] = Reader.ReadInt32();
+            ColorL2[2] = Reader.ReadInt32();
+            ColorL2[3] = Reader.ReadInt32();
+
+            int Depth  = Reader.ReadInt32();
+            int Format = Reader.ReadInt32();
+            int Type   = Reader.ReadInt32();
 
             return 0;
         }
