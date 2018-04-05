@@ -129,6 +129,38 @@ namespace ChocolArm64.Instruction
             EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Add));
         }
 
+        public static void Faddp_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            int Elems = Bytes >> SizeF + 2;
+            int Half  = Elems >> 1;
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                int Elem = (Index & (Half - 1)) << 1;
+
+                EmitVectorExtractF(Context, Index < Half ? Op.Rn : Op.Rm, Elem + 0, SizeF);
+                EmitVectorExtractF(Context, Index < Half ? Op.Rn : Op.Rm, Elem + 1, SizeF);
+
+                Context.Emit(OpCodes.Add);
+
+                EmitVectorInsertTmpF(Context, Index, SizeF);
+            }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
         public static void Fdiv_S(AILEmitterCtx Context)
         {
             EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Div));
