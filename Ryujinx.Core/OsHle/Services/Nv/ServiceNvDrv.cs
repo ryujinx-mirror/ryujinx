@@ -51,6 +51,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
                 { ("/dev/nvhost-ctrl",     0x001d), NvHostIoctlCtrlEventWait          },
                 { ("/dev/nvhost-ctrl-gpu", 0x4701), NvGpuIoctlZcullGetCtxSize         },
                 { ("/dev/nvhost-ctrl-gpu", 0x4702), NvGpuIoctlZcullGetInfo            },
+                { ("/dev/nvhost-ctrl-gpu", 0x4703), NvGpuIoctlZbcSetTable             },
                 { ("/dev/nvhost-ctrl-gpu", 0x4705), NvGpuIoctlGetCharacteristics      },
                 { ("/dev/nvhost-ctrl-gpu", 0x4706), NvGpuIoctlGetTpcMasks             },
                 { ("/dev/nvhost-ctrl-gpu", 0x4714), NvGpuIoctlZbcGetActiveSlotMask    },
@@ -378,6 +379,21 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             Writer.WriteInt32(0);
             Writer.WriteInt32(0);
             Writer.WriteInt32(0);
+
+            return 0;
+        }
+
+        private long NvGpuIoctlZbcSetTable(ServiceCtx Context)
+        {
+            long Position = Context.Request.GetSendBuffPtr();
+
+            MemReader Reader = new MemReader(Context.Memory, Position);
+
+            int ColorDs = Reader.ReadInt32();
+            int ColorL2 = Reader.ReadInt32();
+            int Depth   = Reader.ReadInt32();
+            int Format  = Reader.ReadInt32();
+            int Type    = Reader.ReadInt32();
 
             return 0;
         }
