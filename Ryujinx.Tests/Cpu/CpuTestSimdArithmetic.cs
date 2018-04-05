@@ -618,5 +618,13 @@ namespace Ryujinx.Tests.Cpu
                 Assert.AreEqual(Result1, ThreadState.V0.X1);
             });
         }
+
+        [TestCase(0x41200000u, 0x3EA18000u)]
+        public void Frsqrte_S(uint A, uint Result)
+        {
+            AVec V1 = new AVec { X0 = A };
+            AThreadState ThreadState = SingleOpcode(0x7EA1D820, V1: V1);
+            Assert.AreEqual(Result, ThreadState.V0.X0);
+        }
     }
 }

@@ -476,6 +476,22 @@ namespace ChocolArm64.Instruction
             });
         }
 
+        public static void Frsqrte_S(AILEmitterCtx Context)
+        {
+            EmitScalarUnaryOpF(Context, () =>
+            {
+                EmitUnarySoftFloatCall(Context, nameof(ASoftFloat.InvSqrtEstimate));
+            });
+        }
+
+        public static void Frsqrte_V(AILEmitterCtx Context)
+        {
+            EmitVectorUnaryOpF(Context, () =>
+            {
+                EmitUnarySoftFloatCall(Context, nameof(ASoftFloat.InvSqrtEstimate));
+            });
+        }
+
         public static void Fsqrt_S(AILEmitterCtx Context)
         {
             EmitScalarUnaryOpF(Context, () =>

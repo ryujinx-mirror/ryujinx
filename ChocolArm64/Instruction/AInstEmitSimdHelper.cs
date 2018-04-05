@@ -100,6 +100,26 @@ namespace ChocolArm64.Instruction
             Context.EmitCall(MthdInfo);
         }
 
+        public static void EmitUnarySoftFloatCall(AILEmitterCtx Context, string Name)
+        {
+            IAOpCodeSimd Op = (IAOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            MethodInfo MthdInfo;
+
+            if (SizeF == 0)
+            {
+                MthdInfo = typeof(ASoftFloat).GetMethod(Name, new Type[] { typeof(float) });
+            }
+            else /* if (SizeF == 1) */
+            {
+                MthdInfo = typeof(ASoftFloat).GetMethod(Name, new Type[] { typeof(double) });
+            }
+
+            Context.EmitCall(MthdInfo);
+        }
+
         public static void EmitScalarUnaryOpSx(AILEmitterCtx Context, Action Emit)
         {
             EmitScalarOp(Context, Emit, OperFlags.Rn, true);
