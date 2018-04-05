@@ -48,6 +48,9 @@ https://openal.org/downloads/OpenAL11CoreSDK.zip
 
  - Config File: `Ryujinx.conf` should be present in executable folder.
    For more informations [you can go here](CONFIG.md).
+ 
+ - If you are a Windows user, you can configure your keys, the logs, install OpenAL, etc... with Ryujinx-Setting.
+ [Download it, right here](https://github.com/AcK77/Ryujinx-Settings)
 
 **Help**
 
