@@ -7,9 +7,12 @@ namespace Ryujinx.Core.OsHle.Handles
     {
         public IpcService Service { get; private set; }
 
-        public KSession(IpcService Service)
+        public string ServiceName { get; private set; }
+
+        public KSession(IpcService Service, string ServiceName)
         {
-            this.Service = Service;
+            this.Service     = Service;
+            this.ServiceName = ServiceName;
         }
 
         public void Dispose()

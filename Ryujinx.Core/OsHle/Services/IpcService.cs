@@ -104,7 +104,9 @@ namespace Ryujinx.Core.OsHle.Services
             }
             else
             {
-                throw new NotImplementedException($"{Service.GetType().Name}: {CommandId}");
+                string DbgMessage = $"{Context.Session.ServiceName} {Service.GetType().Name}: {CommandId}";
+
+                throw new NotImplementedException(DbgMessage);
             }
         }
 
@@ -118,7 +120,7 @@ namespace Ryujinx.Core.OsHle.Services
             }
             else
             {
-                KSession Session = new KSession(Obj);
+                KSession Session = new KSession(Obj, Context.Session.ServiceName);
 
                 int Handle = Context.Process.HandleTable.OpenHandle(Session);
 

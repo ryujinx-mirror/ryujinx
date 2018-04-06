@@ -153,7 +153,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             //TODO: Validate that app has perms to access the service, and that the service
             //actually exists, return error codes otherwise.
-            KSession Session = new KSession(ServiceFactory.MakeService(Name));
+            KSession Session = new KSession(ServiceFactory.MakeService(Name), Name);
 
             ulong Handle = (ulong)Process.HandleTable.OpenHandle(Session);
 

@@ -57,7 +57,7 @@ namespace Ryujinx.Core.OsHle.Services.Sm
                 return 0;
             }
 
-            KSession Session = new KSession(ServiceFactory.MakeService(Name));
+            KSession Session = new KSession(ServiceFactory.MakeService(Name), Name);
 
             int Handle = Context.Process.HandleTable.OpenHandle(Session);
 
