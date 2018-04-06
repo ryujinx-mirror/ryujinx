@@ -140,26 +140,6 @@ namespace ChocolArm64.Instruction
             EmitVectorFcmp(Context, OpCodes.Bgt_S);
         }
 
-        public static void Fcmhi_S(AILEmitterCtx Context)
-        {
-            EmitScalarFcmp(Context, OpCodes.Bgt_Un_S);
-        }
-
-        public static void Fcmhi_V(AILEmitterCtx Context)
-        {
-            EmitVectorFcmp(Context, OpCodes.Bgt_Un_S);
-        }
-
-        public static void Fcmhs_S(AILEmitterCtx Context)
-        {
-            EmitScalarFcmp(Context, OpCodes.Bge_Un_S);
-        }
-
-        public static void Fcmhs_V(AILEmitterCtx Context)
-        {
-            EmitVectorFcmp(Context, OpCodes.Bge_Un_S);
-        }
-
         public static void Fcmle_S(AILEmitterCtx Context)
         {
             EmitScalarFcmp(Context, OpCodes.Ble_S);
