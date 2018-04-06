@@ -512,21 +512,33 @@ namespace ChocolArm64.Instruction
 
         public static void Frsqrts_S(AILEmitterCtx Context)
         {
-            EmitScalarBinaryOpF(Context, () => EmitFrsqrts(Context));
+            EmitFrsqrts(Context, 0, Scalar: true);
         }
 
         public static void Frsqrts_V(AILEmitterCtx Context)
         {
-            EmitVectorBinaryOpF(Context, () => EmitFrsqrts(Context));
-        }
-
-        private static void EmitFrsqrts(AILEmitterCtx Context)
-        {
-            IAOpCodeSimd Op = (IAOpCodeSimd)Context.CurrOp;
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
             int SizeF = Op.Size & 1;
 
-            Context.Emit(OpCodes.Mul);
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            for (int Index = 0; Index < Bytes >> SizeF + 2; Index++)
+            {
+                EmitFrsqrts(Context, Index, Scalar: false);
+            }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
+        private static void EmitFrsqrts(AILEmitterCtx Context, int Index, bool Scalar)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
 
             if (SizeF == 0)
             {
@@ -537,7 +549,11 @@ namespace ChocolArm64.Instruction
                 Context.EmitLdc_R8(3);
             }
 
-            Context.Emit(OpCodes.Add);
+            EmitVectorExtractF(Context, Op.Rn, Index, SizeF);
+            EmitVectorExtractF(Context, Op.Rm, Index, SizeF);
+
+            Context.Emit(OpCodes.Mul);
+            Context.Emit(OpCodes.Sub);
 
             if (SizeF == 0)
             {
@@ -549,6 +565,13 @@ namespace ChocolArm64.Instruction
             }
 
             Context.Emit(OpCodes.Mul);
+
+            if (Scalar)
+            {
+                EmitVectorZeroAll(Context, Op.Rd);
+            }
+
+            EmitVectorInsertF(Context, Op.Rd, Index, SizeF);
         }
 
         public static void Fsqrt_S(AILEmitterCtx Context)

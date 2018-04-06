@@ -313,13 +313,7 @@ namespace ChocolArm64.Instruction
 
         private static void EmitScalarFcmp(AILEmitterCtx Context, OpCode ILOp)
         {
-            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
-
-            int SizeF = Op.Size & 1;
-
-            EmitFcmp(Context, ILOp, 0);
-
-            EmitScalarSetF(Context, Op.Rd, SizeF);
+            EmitFcmp(Context, ILOp, 0, Scalar: true);
         }
 
         private static void EmitVectorFcmp(AILEmitterCtx Context, OpCode ILOp)
@@ -332,7 +326,7 @@ namespace ChocolArm64.Instruction
 
             for (int Index = 0; Index < Bytes >> SizeF + 2; Index++)
             {
-                EmitFcmp(Context, ILOp, Index);
+                EmitFcmp(Context, ILOp, Index, Scalar: false);
             }
 
             if (Op.RegisterSize == ARegisterSize.SIMD64)
@@ -341,7 +335,7 @@ namespace ChocolArm64.Instruction
             }
         }
 
-        private static void EmitFcmp(AILEmitterCtx Context, OpCode ILOp, int Index)
+        private static void EmitFcmp(AILEmitterCtx Context, OpCode ILOp, int Index, bool Scalar)
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
@@ -369,13 +363,29 @@ namespace ChocolArm64.Instruction
 
             Context.Emit(ILOp, LblTrue);
 
-            EmitVectorInsert(Context, Op.Rd, Index, SizeF + 2, 0);
+            if (Scalar)
+            {
+                EmitVectorZeroAll(Context, Op.Rd);
+            }
+            else
+            {
+                EmitVectorInsert(Context, Op.Rd, Index, SizeF + 2, 0);
+            }
 
             Context.Emit(OpCodes.Br_S, LblEnd);
 
             Context.MarkLabel(LblTrue);
 
-            EmitVectorInsert(Context, Op.Rd, Index, SizeF + 2, (long)SzMask);
+            if (Scalar)
+            {
+                EmitVectorInsert(Context, Op.Rd, Index, 3, (long)SzMask);
+
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+            else
+            {
+                EmitVectorInsert(Context, Op.Rd, Index, SizeF + 2, (long)SzMask);
+            }
 
             Context.MarkLabel(LblEnd);
         }
