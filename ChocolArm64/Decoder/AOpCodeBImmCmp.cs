@@ -1,4 +1,5 @@
 using ChocolArm64.Instruction;
+using ChocolArm64.State;
 
 namespace ChocolArm64.Decoder
 {
@@ -11,6 +12,10 @@ namespace ChocolArm64.Decoder
             Rt = OpCode & 0x1f;
 
             Imm = Position + ADecoderHelper.DecodeImmS19_2(OpCode);
+
+            RegisterSize = (OpCode >> 31) != 0
+                ? ARegisterSize.Int64
+                : ARegisterSize.Int32;
         }
     }
 }
