@@ -268,11 +268,13 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
 
                     byte[] IpAdress = NewBsdSocket.IpAddress.GetAddressBytes();
 
-                    AMemoryHelper.WriteBytes(Context.Memory, AddrBufferPtr, IpAdress);
+                    Writer.Write(IpAdress);
+
+                    AMemoryHelper.WriteBytes(Context.Memory, AddrBufferPtr, MS.ToArray());
 
                     Context.ResponseData.Write(Sockets.Count - 1);
                     Context.ResponseData.Write(0);
-                    Context.ResponseData.Write(IpAdress.Length);
+                    Context.ResponseData.Write(MS.Length);
                 }
             }
             else
