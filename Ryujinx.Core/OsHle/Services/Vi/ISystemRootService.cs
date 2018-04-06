@@ -1,25 +1,27 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.Services.Nifm
+namespace Ryujinx.Core.OsHle.Services.Vi
 {
-    class ServiceNifm : IpcService
+    class ISystemRootService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public ServiceNifm()
+        public ISystemRootService()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 4, CreateGeneralServiceOld }
+                { 1, GetDisplayService }
             };
         }
 
-        public long CreateGeneralServiceOld(ServiceCtx Context)
+        public long GetDisplayService(ServiceCtx Context)
         {
-            MakeObject(Context, new IGeneralService());
+            int ServiceType = Context.RequestData.ReadInt32();
+
+            MakeObject(Context, new IApplicationDisplayService());
 
             return 0;
         }

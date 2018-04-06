@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Services.Pl
 {
-    class ServicePl : IpcService
+    class ISharedFontManager : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public ServicePl()
+        public ISharedFontManager()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {

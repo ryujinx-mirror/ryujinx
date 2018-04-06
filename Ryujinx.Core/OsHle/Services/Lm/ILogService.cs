@@ -1,25 +1,25 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.Services.Am
+namespace Ryujinx.Core.OsHle.Services.Lm
 {
-    class ServiceAppletOE : IpcService
+    class ILogService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public ServiceAppletOE()
+        public ILogService()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, OpenApplicationProxy }
+                { 0, Initialize }
             };
         }
 
-        public long OpenApplicationProxy(ServiceCtx Context)
+        public long Initialize(ServiceCtx Context)
         {
-            MakeObject(Context, new IApplicationProxy());
+            MakeObject(Context, new ILogger());
 
             return 0;
         }

@@ -1,25 +1,25 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.Services.Friend
+namespace Ryujinx.Core.OsHle.Services.Nifm
 {
-    class ServiceFriend : IpcService
+    class IStaticService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public ServiceFriend()
+        public IStaticService()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, CreateFriendService }
+                { 4, CreateGeneralServiceOld }
             };
         }
 
-        public static long CreateFriendService(ServiceCtx Context)
+        public long CreateGeneralServiceOld(ServiceCtx Context)
         {
-            MakeObject(Context, new IFriendService());
+            MakeObject(Context, new IGeneralService());
 
             return 0;
         }

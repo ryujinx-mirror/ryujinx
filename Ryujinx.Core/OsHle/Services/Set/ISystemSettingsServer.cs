@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Services.Set
 {
-    class ServiceSetSys : IpcService
+    class ISystemSettingsServer : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public ServiceSetSys()
+        public ISystemSettingsServer()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -26,7 +26,7 @@ namespace Ryujinx.Core.OsHle.Services.Set
         }
 
         public static long SetColorSetId(ServiceCtx Context)
-        {            
+        {
             return 0;
         }
     }

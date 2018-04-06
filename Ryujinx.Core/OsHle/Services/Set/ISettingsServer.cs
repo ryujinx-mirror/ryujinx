@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Services.Set
 {
-    class ServiceSet : IpcService
+    class ISettingsServer : IpcService
     {
         private static string[] LanguageCodes = new string[]
         {
@@ -30,7 +30,7 @@ namespace Ryujinx.Core.OsHle.Services.Set
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public ServiceSet()
+        public ISettingsServer()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {

@@ -7,7 +7,6 @@ using Ryujinx.Core.OsHle.Services.Friend;
 using Ryujinx.Core.OsHle.Services.FspSrv;
 using Ryujinx.Core.OsHle.Services.Hid;
 using Ryujinx.Core.OsHle.Services.Lm;
-using Ryujinx.Core.OsHle.Services.Nifm;
 using Ryujinx.Core.OsHle.Services.Ns;
 using Ryujinx.Core.OsHle.Services.Nv;
 using Ryujinx.Core.OsHle.Services.Pctl;
@@ -16,7 +15,6 @@ using Ryujinx.Core.OsHle.Services.Set;
 using Ryujinx.Core.OsHle.Services.Sfdnsres;
 using Ryujinx.Core.OsHle.Services.Sm;
 using Ryujinx.Core.OsHle.Services.Ssl;
-using Ryujinx.Core.OsHle.Services.Time;
 using Ryujinx.Core.OsHle.Services.Vi;
 using System;
 
@@ -29,19 +27,19 @@ namespace Ryujinx.Core.OsHle.Services
             switch (Name)
             {
                 case "acc:u0":
-                    return new ServiceAcc();
+                    return new IAccountServiceForApplication();
 
                 case "aoc:u":
-                    return new ServiceNs();
+                    return new IAddOnContentManager();
 
                 case "apm":
-                    return new ServiceApm();
+                    return new IManager();
 
                 case "apm:p":
-                    return new ServiceApm();
+                    return new IManager();
 
                 case "appletOE":
-                    return new ServiceAppletOE();
+                    return new IApplicationProxyService();
 
                 case "audout:u":
                     return new IAudioOutManager();
@@ -50,67 +48,67 @@ namespace Ryujinx.Core.OsHle.Services
                     return new IAudioRendererManager();
 
                 case "bsd:s":
-                    return new ServiceBsd();
+                    return new IClient();
 
                 case "bsd:u":
-                    return new ServiceBsd();
+                    return new IClient();
 
                 case "friend:a":
-                    return new ServiceFriend();
+                    return new IServiceCreator();
 
                 case "fsp-srv":
-                    return new ServiceFspSrv();
+                    return new IFileSystemProxy();
 
                 case "hid":
-                    return new ServiceHid();
+                    return new IHidServer();
 
                 case "lm":
-                    return new ServiceLm();
+                    return new ILogService();
 
                 case "nifm:u":
-                    return new ServiceNifm();
+                    return new Nifm.IStaticService();
 
                 case "nvdrv":
-                    return new ServiceNvDrv();
+                    return new INvDrvServices();
 
                 case "nvdrv:a":
-                    return new ServiceNvDrv();
+                    return new INvDrvServices();
 
                 case "pctl:a":
-                    return new ServicePctl();
+                    return new IParentalControlServiceFactory();
 
                 case "pl:u":
-                    return new ServicePl();
+                    return new ISharedFontManager();
 
                 case "set":
-                    return new ServiceSet();
+                    return new ISettingsServer();
 
                 case "set:sys":
-                    return new ServiceSetSys();
+                    return new ISystemSettingsServer();
 
                 case "sfdnsres":
-                    return new ServiceSfdnsres();
+                    return new IResolver();
 
                 case "sm:":
-                    return new ServiceSm();
+                    return new IUserInterface();
 
                 case "ssl":
-                    return new ServiceSsl();
+                    return new ISslService();
 
                 case "time:s":
-                    return new ServiceTime();
+                    return new Time.IStaticService();
 
                 case "time:u":
-                    return new ServiceTime();
+                    return new Time.IStaticService();
 
                 case "vi:m":
-                    return new ServiceVi();
+                    return new IManagerRootService();
 
                 case "vi:s":
-                    return new ServiceVi();
+                    return new ISystemRootService();
 
                 case "vi:u":
-                    return new ServiceVi();
+                    return new IApplicationRootService();
             }
 
             throw new NotImplementedException(Name);

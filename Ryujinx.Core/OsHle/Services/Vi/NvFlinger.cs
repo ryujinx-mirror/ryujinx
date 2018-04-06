@@ -62,7 +62,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
         private BufferEntry[] BufferQueue;
 
         private ManualResetEvent WaitBufferFree;
-        
+
         private object RenderQueueLock;
 
         private int RenderQueueCount;
@@ -85,7 +85,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
                 { ("android.gui.IGraphicBufferProducer", 0xb), GbpDisconnect     },
                 { ("android.gui.IGraphicBufferProducer", 0xe), GbpPreallocBuffer }
             };
-            
+
             this.Renderer     = Renderer;
             this.ReleaseEvent = ReleaseEvent;
 
@@ -139,7 +139,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
             using (MemoryStream MS = new MemoryStream())
             {
                 BinaryWriter Writer = new BinaryWriter(MS);
-                
+
                 BufferEntry Entry = BufferQueue[Slot];
 
                 int  BufferCount = 1; //?
@@ -243,7 +243,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
         private long GbpPreallocBuffer(ServiceCtx Context, BinaryReader ParcelReader)
         {
             int Slot = ParcelReader.ReadInt32();
-            
+
             int  BufferCount = ParcelReader.ReadInt32();
             long BufferSize  = ParcelReader.ReadInt64();
 
@@ -290,10 +290,10 @@ namespace Ryujinx.Core.OsHle.Services.Android
 
             NvMap Map = GetNvMap(Context, Slot);
 
-            NvMapFb MapFb = (NvMapFb)ServiceNvDrv.NvMapsFb.GetData(Context.Process, 0);
+            NvMapFb MapFb = (NvMapFb)INvDrvServices.NvMapsFb.GetData(Context.Process, 0);
 
             long Address = Map.CpuAddress;
-            
+
             if (MapFb.HasBufferOffset(Slot))
             {
                 Address += MapFb.GetBufferOffset(Slot);
@@ -413,7 +413,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
                 NvMapHandle = BitConverter.ToInt32(RawValue, 0);
             }
 
-            return ServiceNvDrv.NvMaps.GetData<NvMap>(Context.Process, NvMapHandle);
+            return INvDrvServices.NvMaps.GetData<NvMap>(Context.Process, NvMapHandle);
         }
 
         private int GetFreeSlotBlocking(int Width, int Height)

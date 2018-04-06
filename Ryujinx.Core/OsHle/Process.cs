@@ -354,11 +354,11 @@ namespace Ryujinx.Core.OsHle
                     }
                 }
 
-                ServiceNvDrv.Fds.DeleteProcess(this);
+                INvDrvServices.Fds.DeleteProcess(this);
 
-                ServiceNvDrv.NvMaps    .DeleteProcess(this);
-                ServiceNvDrv.NvMapsById.DeleteProcess(this);
-                ServiceNvDrv.NvMapsFb  .DeleteProcess(this);
+                INvDrvServices.NvMaps    .DeleteProcess(this);
+                INvDrvServices.NvMapsById.DeleteProcess(this);
+                INvDrvServices.NvMapsFb  .DeleteProcess(this);
 
                 Scheduler.Dispose();
 

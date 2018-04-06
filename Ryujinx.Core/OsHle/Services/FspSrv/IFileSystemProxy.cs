@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Services.FspSrv
 {
-    class ServiceFspSrv : IpcService
+    class IFileSystemProxy : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public ServiceFspSrv()
+        public IFileSystemProxy()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -60,6 +60,6 @@ namespace Ryujinx.Core.OsHle.Services.FspSrv
             Context.ResponseData.Write(0);
 
             return 0;
-        }        
+        }
     }
 }

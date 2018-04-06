@@ -1,25 +1,27 @@
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.Services.Pctl
+namespace Ryujinx.Core.OsHle.Services.Vi
 {
-    class ServicePctl : IpcService
+    class IManagerRootService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public ServicePctl()
+        public IManagerRootService()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, CreateService }
+                { 2, GetDisplayService }
             };
         }
 
-        public static long CreateService(ServiceCtx Context)
+        public long GetDisplayService(ServiceCtx Context)
         {
-            MakeObject(Context, new IParentalControlService());
+            int ServiceType = Context.RequestData.ReadInt32();
+
+            MakeObject(Context, new IApplicationDisplayService());
 
             return 0;
         }

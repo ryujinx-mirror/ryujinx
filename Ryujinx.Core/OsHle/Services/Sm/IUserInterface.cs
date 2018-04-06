@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Services.Sm
 {
-    class ServiceSm : IpcService
+    class IUserInterface : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
@@ -12,7 +12,7 @@ namespace Ryujinx.Core.OsHle.Services.Sm
 
         private bool IsInitialized;
 
-        public ServiceSm()
+        public IUserInterface()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {

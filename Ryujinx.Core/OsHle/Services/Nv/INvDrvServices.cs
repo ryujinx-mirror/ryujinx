@@ -9,7 +9,7 @@ using System.IO;
 
 namespace Ryujinx.Core.OsHle.Services.Nv
 {
-    class ServiceNvDrv : IpcService, IDisposable
+    class INvDrvServices : IpcService, IDisposable
     {
         private delegate long ServiceProcessIoctl(ServiceCtx Context);
 
@@ -27,7 +27,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
 
         private KEvent Event;
 
-        public ServiceNvDrv()
+        public INvDrvServices()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -74,7 +74,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             Event = new KEvent();
         }
 
-        static ServiceNvDrv()
+        static INvDrvServices()
         {
             Fds = new GlobalStateTable();
 

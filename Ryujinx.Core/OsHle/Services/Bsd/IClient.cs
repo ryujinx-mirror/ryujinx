@@ -1,7 +1,6 @@
 using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Ipc;
 using Ryujinx.Core.OsHle.Utilities;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -10,56 +9,15 @@ using System.Threading.Tasks;
 
 namespace Ryujinx.Core.OsHle.Services.Bsd
 {
-
-    //bsd_errno == (SocketException.ErrorCode - 10000)
-    //https://github.com/freebsd/freebsd/blob/master/sys/sys/errno.h
-    public enum BsdError
-    {
-        ENOTSOCK        = 38, /* Socket operation on non-socket */
-        EDESTADDRREQ    = 39, /* Destination address required */
-        EMSGSIZE        = 40, /* Message too long */
-        EPROTOTYPE      = 41, /* Protocol wrong type for socket */
-        ENOPROTOOPT     = 42, /* Protocol not available */
-        EPROTONOSUPPORT = 43, /* Protocol not supported */
-        ESOCKTNOSUPPORT = 44, /* Socket type not supported */
-        EOPNOTSUPP      = 45, /* Operation not supported */
-        EPFNOSUPPORT    = 46, /* Protocol family not supported */
-        EAFNOSUPPORT    = 47, /* Address family not supported by protocol family */
-        EADDRINUSE      = 48, /* Address already in use */
-        EADDRNOTAVAIL   = 49, /* Can't assign requested address */
-        ENETDOWN        = 50, /* Network is down */
-        ENETUNREACH     = 51, /* Network is unreachable */
-        ENETRESET       = 52, /* Network dropped connection on reset */
-        ECONNABORTED    = 53, /* Software caused connection abort */
-        ECONNRESET      = 54, /* Connection reset by peer */
-        ENOBUFS         = 55, /* No buffer space available */
-        EISCONN         = 56, /* Socket is already connected */
-        ENOTCONN        = 57, /* Socket is not connected */
-        ESHUTDOWN       = 58, /* Can't send after socket shutdown */
-        ETOOMANYREFS    = 59, /* Too many references: can't splice */
-        ETIMEDOUT       = 60, /* Operation timed out */
-        ECONNREFUSED    = 61  /* Connection refused */
-    }
-
-    class SocketBsd
-    {
-        public int Family;
-        public int Type;
-        public int Protocol;
-        public IPAddress IpAddress;
-        public IPEndPoint RemoteEP;
-        public Socket Handle;
-    }
-
-    class ServiceBsd : IpcService
+    class IClient : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private List<SocketBsd> Sockets = new List<SocketBsd>();
+        private List<BsdSocket> Sockets = new List<BsdSocket>();
 
-        public ServiceBsd()
+        public IClient()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -95,11 +53,6 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
             } BsdBufferConfig;
             */
 
-            long Pid = Context.RequestData.ReadInt64();
-            long TransferMemorySize = Context.RequestData.ReadInt64();
-
-            // Two other args are unknown!
-
             Context.ResponseData.Write(0);
 
             //Todo: Stub
@@ -118,18 +71,18 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
         //(u32 domain, u32 type, u32 protocol) -> (i32 ret, u32 bsd_errno)
         public long Socket(ServiceCtx Context)
         {
-            SocketBsd NewBSDSocket = new SocketBsd
+            BsdSocket NewBsdSocket = new BsdSocket
             {
                 Family   = Context.RequestData.ReadInt32(),
                 Type     = Context.RequestData.ReadInt32(),
                 Protocol = Context.RequestData.ReadInt32()
             };
 
-            Sockets.Add(NewBSDSocket);
+            Sockets.Add(NewBsdSocket);
 
-            Sockets[Sockets.Count - 1].Handle = new Socket((AddressFamily)Sockets[Sockets.Count - 1].Family,
-                                                           (SocketType)Sockets[Sockets.Count - 1].Type,
-                                                           (ProtocolType)Sockets[Sockets.Count - 1].Protocol);
+            NewBsdSocket.Handle = new Socket((AddressFamily)NewBsdSocket.Family,
+                                                (SocketType)NewBsdSocket.Type,
+                                              (ProtocolType)NewBsdSocket.Protocol);
 
             Context.ResponseData.Write(Sockets.Count - 1);
             Context.ResponseData.Write(0);
@@ -149,12 +102,13 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
             //https://github.com/TuxSH/ftpd/blob/switch_pr/source/ftp.c#L1634
             //https://linux.die.net/man/2/poll
 
-            byte[] SentBuffer     = AMemoryHelper.ReadBytes(Context.Memory, 
-                                                            Context.Request.SendBuff[0].Position, 
-                                                            Context.Request.SendBuff[0].Size);
-            int SocketId          = Get32(SentBuffer, 0);
-            short RequestedEvents = (short)Get16(SentBuffer, 4);
-            short ReturnedEvents  = (short)Get16(SentBuffer, 6);
+            byte[] SentBuffer = AMemoryHelper.ReadBytes(Context.Memory,
+                                                        Context.Request.SendBuff[0].Position,
+                                                        Context.Request.SendBuff[0].Size);
+
+            int SocketId        = Get32(SentBuffer, 0);
+            int RequestedEvents = Get16(SentBuffer, 4);
+            int ReturnedEvents  = Get16(SentBuffer, 6);
 
             //Todo: Stub - Need to implemented the Type-22 buffer.
 
@@ -167,18 +121,20 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
         //(u32 socket, u32 flags) -> (i32 ret, u32 bsd_errno, buffer<i8, 0x22, 0> message)
         public long Recv(ServiceCtx Context)
         {
+            int SocketId    = Context.RequestData.ReadInt32();
+            int SocketFlags = Context.RequestData.ReadInt32();
+
+            byte[] ReceivedBuffer = new byte[Context.Request.ReceiveBuff[0].Size];
+
             try
             {
-                int SocketId          = Context.RequestData.ReadInt32();
-                int SocketFlags       = Context.RequestData.ReadInt32();
-                byte[] ReceivedBuffer = new byte[Context.Request.ReceiveBuff[0].Size];
-                int ReadedBytes       = Sockets[SocketId].Handle.Receive(ReceivedBuffer);
+                int BytesRead = Sockets[SocketId].Handle.Receive(ReceivedBuffer);
 
                 //Logging.Debug("Received Buffer:" + Environment.NewLine + Logging.HexDump(ReceivedBuffer));
 
                 AMemoryHelper.WriteBytes(Context.Memory, Context.Request.ReceiveBuff[0].Position, ReceivedBuffer);
 
-                Context.ResponseData.Write(ReadedBytes);
+                Context.ResponseData.Write(BytesRead);
                 Context.ResponseData.Write(0);
             }
             catch (SocketException Ex)
@@ -193,15 +149,16 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
         //(u32 socket, u32 flags, buffer<i8, 0x21, 0>) -> (i32 ret, u32 bsd_errno)
         public long Send(ServiceCtx Context)
         {
-            int SocketId      = Context.RequestData.ReadInt32();
-            int SocketFlags   = Context.RequestData.ReadInt32();
-            byte[] SentBuffer = AMemoryHelper.ReadBytes(Context.Memory, 
-                                                        Context.Request.SendBuff[0].Position, 
+            int SocketId    = Context.RequestData.ReadInt32();
+            int SocketFlags = Context.RequestData.ReadInt32();
+
+            byte[] SentBuffer = AMemoryHelper.ReadBytes(Context.Memory,
+                                                        Context.Request.SendBuff[0].Position,
                                                         Context.Request.SendBuff[0].Size);
 
             try
             {
-                //Logging.Debug("Sended Buffer:" + Environment.NewLine + Logging.HexDump(SendedBuffer));
+                //Logging.Debug("Sent Buffer:" + Environment.NewLine + Logging.HexDump(SentBuffer));
 
                 int BytesSent = Sockets[SocketId].Handle.Send(SentBuffer);
 
@@ -220,13 +177,15 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
         //(u32 socket, u32 flags, buffer<i8, 0x21, 0>, buffer<sockaddr, 0x21, 0>) -> (i32 ret, u32 bsd_errno)
         public long SendTo(ServiceCtx Context)
         {
-            int SocketId         = Context.RequestData.ReadInt32();
-            int SocketFlags      = Context.RequestData.ReadInt32();
-            byte[] SentBuffer    = AMemoryHelper.ReadBytes(Context.Memory, 
-                                                           Context.Request.SendBuff[0].Position, 
-                                                           Context.Request.SendBuff[0].Size);
-            byte[] AddressBuffer = AMemoryHelper.ReadBytes(Context.Memory, 
-                                                           Context.Request.SendBuff[1].Position, 
+            int SocketId    = Context.RequestData.ReadInt32();
+            int SocketFlags = Context.RequestData.ReadInt32();
+
+            byte[] SentBuffer = AMemoryHelper.ReadBytes(Context.Memory,
+                                                        Context.Request.SendBuff[0].Position,
+                                                        Context.Request.SendBuff[0].Size);
+
+            byte[] AddressBuffer = AMemoryHelper.ReadBytes(Context.Memory,
+                                                           Context.Request.SendBuff[1].Position,
                                                            Context.Request.SendBuff[1].Size);
 
             if (!Sockets[SocketId].Handle.Connected)
@@ -246,7 +205,7 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
 
             try
             {
-                //Logging.Debug("Sended Buffer:" + Environment.NewLine + Logging.HexDump(SendedBuffer));
+                //Logging.Debug("Sent Buffer:" + Environment.NewLine + Logging.HexDump(SentBuffer));
 
                 int BytesSent = Sockets[SocketId].Handle.Send(SentBuffer);
 
@@ -265,12 +224,13 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
         //(u32 socket) -> (i32 ret, u32 bsd_errno, u32 addrlen, buffer<sockaddr, 0x22, 0> addr)
         public long Accept(ServiceCtx Context)
         {
-            int SocketId       = Context.RequestData.ReadInt32();
+            int SocketId = Context.RequestData.ReadInt32();
+
             long AddrBufferPtr = Context.Request.ReceiveBuff[0].Position;
 
             Socket HandleAccept = null;
 
-            var TimeOut = Task.Factory.StartNew(() =>
+            Task TimeOut = Task.Factory.StartNew(() =>
             {
                 try
                 {
@@ -287,40 +247,38 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
 
             if (HandleAccept != null)
             {
-                SocketBsd NewBSDSocket = new SocketBsd
+                BsdSocket NewBsdSocket = new BsdSocket
                 {
                     IpAddress = ((IPEndPoint)Sockets[SocketId].Handle.LocalEndPoint).Address,
                     RemoteEP  = ((IPEndPoint)Sockets[SocketId].Handle.LocalEndPoint),
                     Handle    = HandleAccept
                 };
 
-                Sockets.Add(NewBSDSocket);
+                Sockets.Add(NewBsdSocket);
 
                 using (MemoryStream MS = new MemoryStream())
                 {
                     BinaryWriter Writer = new BinaryWriter(MS);
 
                     Writer.Write((byte)0);
-                    Writer.Write((byte)Sockets[Sockets.Count - 1].Handle.AddressFamily);
-                    Writer.Write((Int16)((IPEndPoint)Sockets[Sockets.Count - 1].Handle.LocalEndPoint).Port);
 
-                    string[] IpAdress = Sockets[Sockets.Count - 1].IpAddress.ToString().Split('.');
-                    Writer.Write(byte.Parse(IpAdress[0]));
-                    Writer.Write(byte.Parse(IpAdress[1]));
-                    Writer.Write(byte.Parse(IpAdress[2]));
-                    Writer.Write(byte.Parse(IpAdress[3]));
+                    Writer.Write((byte)NewBsdSocket.Handle.AddressFamily);
 
-                    AMemoryHelper.WriteBytes(Context.Memory, AddrBufferPtr, MS.ToArray());
+                    Writer.Write((short)((IPEndPoint)NewBsdSocket.Handle.LocalEndPoint).Port);
+
+                    byte[] IpAdress = NewBsdSocket.IpAddress.GetAddressBytes();
+
+                    AMemoryHelper.WriteBytes(Context.Memory, AddrBufferPtr, IpAdress);
 
                     Context.ResponseData.Write(Sockets.Count - 1);
                     Context.ResponseData.Write(0);
-                    Context.ResponseData.Write(MS.Length);
+                    Context.ResponseData.Write(IpAdress.Length);
                 }
             }
             else
             {
                 Context.ResponseData.Write(-1);
-                Context.ResponseData.Write((int)BsdError.ETIMEDOUT);
+                Context.ResponseData.Write((int)BsdError.Timeout);
             }
 
             return 0;
@@ -331,8 +289,8 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
         {
             int SocketId = Context.RequestData.ReadInt32();
 
-            byte[] AddressBuffer = AMemoryHelper.ReadBytes(Context.Memory, 
-                                                           Context.Request.SendBuff[0].Position, 
+            byte[] AddressBuffer = AMemoryHelper.ReadBytes(Context.Memory,
+                                                           Context.Request.SendBuff[0].Position,
                                                            Context.Request.SendBuff[0].Size);
 
             try
@@ -356,8 +314,8 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
         {
             int SocketId = Context.RequestData.ReadInt32();
 
-            byte[] AddressBuffer = AMemoryHelper.ReadBytes(Context.Memory, 
-                                                           Context.Request.SendBuff[0].Position, 
+            byte[] AddressBuffer = AMemoryHelper.ReadBytes(Context.Memory,
+                                                           Context.Request.SendBuff[0].Position,
                                                            Context.Request.SendBuff[0].Size);
 
             try
@@ -404,19 +362,20 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
         //(u32 socket, u32 level, u32 option_name, buffer<unknown, 0x21, 0>) -> (i32 ret, u32 bsd_errno)
         public long SetSockOpt(ServiceCtx Context)
         {
-            int SocketId         = Context.RequestData.ReadInt32();
-            int SocketLevel      = Context.RequestData.ReadInt32();
-            int SocketOptionName = Context.RequestData.ReadInt32();
+            int SocketId = Context.RequestData.ReadInt32();
 
-            byte[] SocketOptionValue = AMemoryHelper.ReadBytes(Context.Memory, 
-                                                               Context.Request.PtrBuff[0].Position, 
+            SocketOptionLevel SocketLevel      = (SocketOptionLevel)Context.RequestData.ReadInt32();
+            SocketOptionName  SocketOptionName =  (SocketOptionName)Context.RequestData.ReadInt32();
+
+            byte[] SocketOptionValue = AMemoryHelper.ReadBytes(Context.Memory,
+                                                               Context.Request.PtrBuff[0].Position,
                                                                Context.Request.PtrBuff[0].Size);
+
+            int OptionValue = Get32(SocketOptionValue, 0);
 
             try
             {
-                Sockets[SocketId].Handle.SetSocketOption((SocketOptionLevel)SocketLevel, 
-                                                         (SocketOptionName)SocketOptionName,
-                                                         Get32(SocketOptionValue, 0));
+                Sockets[SocketId].Handle.SetSocketOption(SocketLevel, SocketOptionName, OptionValue);
 
                 Context.ResponseData.Write(0);
                 Context.ResponseData.Write(0);
@@ -461,10 +420,11 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
                 int Size   = Reader.ReadByte();
                 int Family = Reader.ReadByte();
                 int Port   = EndianSwap.Swap16(Reader.ReadInt16());
-                string IpAddress = Reader.ReadByte().ToString() +
-                                   "." + Reader.ReadByte().ToString() +
-                                   "." + Reader.ReadByte().ToString() +
-                                   "." + Reader.ReadByte().ToString();
+
+                string IpAddress = Reader.ReadByte().ToString() + "." +
+                                   Reader.ReadByte().ToString() + "." +
+                                   Reader.ReadByte().ToString() + "." +
+                                   Reader.ReadByte().ToString();
 
                 Logging.Debug($"Try to connect to {IpAddress}:{Port}");
 

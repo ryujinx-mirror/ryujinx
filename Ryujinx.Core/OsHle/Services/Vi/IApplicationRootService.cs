@@ -3,19 +3,17 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Services.Vi
 {
-    class ServiceVi : IpcService
+    class IApplicationRootService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public ServiceVi()
+        public IApplicationRootService()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, GetDisplayService },
-                { 1, GetDisplayService },
-                { 2, GetDisplayService }
+                { 0, GetDisplayService }
             };
         }
 

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Services.Acc
 {
-    class ServiceAcc : IpcService
+    class IAccountServiceForApplication : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public ServiceAcc()
+        public IAccountServiceForApplication()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
