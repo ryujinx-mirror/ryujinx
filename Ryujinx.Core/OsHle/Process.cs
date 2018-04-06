@@ -15,8 +15,9 @@ namespace Ryujinx.Core.OsHle
 {
     class Process : IDisposable
     {
-        private const int TlsSize       = 0x200;
-        private const int TotalTlsSlots = 32;
+        private const int TlsSize = 0x200;
+
+        private const int TotalTlsSlots = (int)MemoryRegions.TlsPagesSize / TlsSize;
 
         private const int TickFreq = 19_200_000;
 

@@ -16,7 +16,7 @@ namespace Ryujinx.Core.OsHle
 
         public const long MainStackAddress = AMemoryMgr.AddrSize - MainStackSize;
 
-        public const long TlsPagesSize = 0x4000;
+        public const long TlsPagesSize = 0x20000;
 
         public const long TlsPagesAddress = MainStackAddress - TlsPagesSize;
 
