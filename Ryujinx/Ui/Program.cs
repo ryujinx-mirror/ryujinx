@@ -30,6 +30,11 @@ namespace Ryujinx
                 {
                     string[] RomFsFiles = Directory.GetFiles(args[0], "*.istorage");
 
+                    if (RomFsFiles.Length == 0)
+                    {
+                        RomFsFiles = Directory.GetFiles(args[0], "*.romfs");
+                    }
+
                     if (RomFsFiles.Length > 0)
                     {
                         Logging.Info("Loading as cart with RomFS.");
