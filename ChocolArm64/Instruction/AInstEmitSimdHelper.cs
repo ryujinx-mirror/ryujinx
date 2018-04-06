@@ -562,10 +562,7 @@ namespace ChocolArm64.Instruction
 
         public static void EmitVectorExtract(AILEmitterCtx Context, int Reg, int Index, int Size, bool Signed)
         {
-            if (Size < 0 || Size > 3)
-            {
-                throw new ArgumentOutOfRangeException(nameof(Size));
-            }
+            ThrowIfInvalid(Index, Size);
 
             IAOpCodeSimd Op = (IAOpCodeSimd)Context.CurrOp;
 
@@ -580,6 +577,8 @@ namespace ChocolArm64.Instruction
 
         public static void EmitVectorExtractF(AILEmitterCtx Context, int Reg, int Index, int Size)
         {
+            ThrowIfInvalidF(Index, Size);
+
             Context.EmitLdvec(Reg);
             Context.EmitLdc_I4(Index);
 
@@ -615,10 +614,7 @@ namespace ChocolArm64.Instruction
 
         public static void EmitVectorInsert(AILEmitterCtx Context, int Reg, int Index, int Size)
         {
-            if (Size < 0 || Size > 3)
-            {
-                throw new ArgumentOutOfRangeException(nameof(Size));
-            }
+            ThrowIfInvalid(Index, Size);
 
             Context.EmitLdvec(Reg);
             Context.EmitLdc_I4(Index);
@@ -631,10 +627,7 @@ namespace ChocolArm64.Instruction
 
         public static void EmitVectorInsertTmp(AILEmitterCtx Context, int Index, int Size)
         {
-            if (Size < 0 || Size > 3)
-            {
-                throw new ArgumentOutOfRangeException(nameof(Size));
-            }
+            ThrowIfInvalid(Index, Size);
 
             Context.EmitLdvectmp();
             Context.EmitLdc_I4(Index);
@@ -647,10 +640,7 @@ namespace ChocolArm64.Instruction
 
         public static void EmitVectorInsert(AILEmitterCtx Context, int Reg, int Index, int Size, long Value)
         {
-            if (Size < 0 || Size > 3)
-            {
-                throw new ArgumentOutOfRangeException(nameof(Size));
-            }
+            ThrowIfInvalid(Index, Size);
 
             Context.EmitLdc_I8(Value);
             Context.EmitLdvec(Reg);
@@ -664,6 +654,8 @@ namespace ChocolArm64.Instruction
 
         public static void EmitVectorInsertF(AILEmitterCtx Context, int Reg, int Index, int Size)
         {
+            ThrowIfInvalidF(Index, Size);
+
             Context.EmitLdvec(Reg);
             Context.EmitLdc_I4(Index);
 
@@ -685,6 +677,8 @@ namespace ChocolArm64.Instruction
 
         public static void EmitVectorInsertTmpF(AILEmitterCtx Context, int Index, int Size)
         {
+            ThrowIfInvalidF(Index, Size);
+
             Context.EmitLdvectmp();
             Context.EmitLdc_I4(Index);
 
@@ -702,6 +696,32 @@ namespace ChocolArm64.Instruction
             }
 
             Context.EmitStvectmp();
+        }
+
+        private static void ThrowIfInvalid(int Index, int Size)
+        {
+            if ((uint)Size > 3)
+            {
+                throw new ArgumentOutOfRangeException(nameof(Size));
+            }
+
+            if ((uint)Index >= 16 >> Size)
+            {
+                throw new ArgumentOutOfRangeException(nameof(Index));
+            }
+        }
+
+        private static void ThrowIfInvalidF(int Index, int Size)
+        {
+            if ((uint)Size > 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(Size));
+            }
+
+            if ((uint)Index >= 4 >> Size)
+            {
+                throw new ArgumentOutOfRangeException(nameof(Index));
+            }
         }
     }
 }
