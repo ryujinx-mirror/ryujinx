@@ -492,6 +492,47 @@ namespace ChocolArm64.Instruction
             });
         }
 
+        public static void Frsqrts_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpF(Context, () => EmitFrsqrts(Context));
+        }
+
+        public static void Frsqrts_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpF(Context, () => EmitFrsqrts(Context));
+        }
+
+        private static void EmitFrsqrts(AILEmitterCtx Context)
+        {
+            IAOpCodeSimd Op = (IAOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            Context.Emit(OpCodes.Mul);
+
+            if (SizeF == 0)
+            {
+                Context.EmitLdc_R4(3);
+            }
+            else /* if (SizeF == 1) */
+            {
+                Context.EmitLdc_R8(3);
+            }
+
+            Context.Emit(OpCodes.Add);
+
+            if (SizeF == 0)
+            {
+                Context.EmitLdc_R4(0.5f);
+            }
+            else /* if (SizeF == 1) */
+            {
+                Context.EmitLdc_R8(0.5);
+            }
+
+            Context.Emit(OpCodes.Mul);
+        }
+
         public static void Fsqrt_S(AILEmitterCtx Context)
         {
             EmitScalarUnaryOpF(Context, () =>
