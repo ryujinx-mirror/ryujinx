@@ -266,9 +266,9 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
 
                     Writer.Write((short)((IPEndPoint)NewBsdSocket.Handle.LocalEndPoint).Port);
 
-                    byte[] IpAdress = NewBsdSocket.IpAddress.GetAddressBytes();
+                    byte[] IpAddress = NewBsdSocket.IpAddress.GetAddressBytes();
 
-                    Writer.Write(IpAdress);
+                    Writer.Write(IpAddress);
 
                     AMemoryHelper.WriteBytes(Context.Memory, AddrBufferPtr, MS.ToArray());
 
