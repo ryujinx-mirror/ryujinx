@@ -11,6 +11,7 @@ namespace Ryujinx.Graphics.Gpu
             switch (Texture.Format)
             {
                 case GalTextureFormat.A8B8G8R8: return Read4Bpp    (Memory, Texture);
+                case GalTextureFormat.A1B5G5R5: return Read2Bpp    (Memory, Texture);
                 case GalTextureFormat.BC1:      return Read8Bpt4x4 (Memory, Texture);
                 case GalTextureFormat.BC2:      return Read16Bpt4x4(Memory, Texture);
                 case GalTextureFormat.BC3:      return Read16Bpt4x4(Memory, Texture);
@@ -42,6 +43,35 @@ namespace Ryujinx.Graphics.Gpu
                     *(int*)(BuffPtr + OutOffs) = Pixel;
 
                     OutOffs += 4;
+                }
+            }
+
+            return Output;
+        }
+
+        private unsafe static byte[] Read2Bpp(AMemory Memory, Texture Texture)
+        {
+            int Width  = Texture.Width;
+            int Height = Texture.Height;
+
+            byte[] Output = new byte[Width * Height * 2];
+
+            ISwizzle Swizzle = GetSwizzle(Texture, 2);
+
+            fixed (byte* BuffPtr = Output)
+            {
+                long OutOffs = 0;
+
+                for (int Y = 0; Y < Height; Y++)
+                for (int X = 0; X < Width;  X++)
+                {
+                    long Offset = (uint)Swizzle.GetSwizzleOffset(X, Y);
+
+                    short Pixel = Memory.ReadInt16Unchecked(Texture.Position + Offset);
+
+                    *(short*)(BuffPtr + OutOffs) = Pixel;
+
+                    OutOffs += 2;
                 }
             }
 
