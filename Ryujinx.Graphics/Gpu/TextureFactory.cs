@@ -20,6 +20,8 @@ namespace Ryujinx.Graphics.Gpu
 
             TextureSwizzle Swizzle = (TextureSwizzle)((Tic[2] >> 21) & 7);
 
+            int Pitch = (Tic[3] & 0xffff) << 5;
+
             int BlockHeightLog2 = (Tic[3] >> 3) & 7;
 
             int BlockHeight = 1 << BlockHeightLog2;
@@ -31,6 +33,7 @@ namespace Ryujinx.Graphics.Gpu
                 TextureAddress,
                 Width,
                 Height,
+                Pitch,
                 BlockHeight,
                 Swizzle,
                 Format);

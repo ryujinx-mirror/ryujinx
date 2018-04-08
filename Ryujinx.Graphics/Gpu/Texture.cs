@@ -8,6 +8,7 @@ namespace Ryujinx.Graphics.Gpu
 
         public int Width  { get; private set; }
         public int Height { get; private set; }
+        public int Pitch  { get; private set; }
 
         public int BlockHeight { get; private set; }
 
@@ -19,6 +20,7 @@ namespace Ryujinx.Graphics.Gpu
             long             Position,
             int              Width,
             int              Height,
+            int              Pitch,
             int              BlockHeight,
             TextureSwizzle   Swizzle,
             GalTextureFormat Format)
@@ -26,6 +28,7 @@ namespace Ryujinx.Graphics.Gpu
             this.Position    = Position;
             this.Width       = Width;
             this.Height      = Height;
+            this.Pitch       = Pitch;
             this.BlockHeight = BlockHeight;
             this.Swizzle     = Swizzle;
             this.Format      = Format;

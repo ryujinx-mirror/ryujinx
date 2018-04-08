@@ -26,7 +26,7 @@ namespace Ryujinx.Graphics.Gpu
 
             byte[] Output = new byte[Width * Height * 4];
 
-            ISwizzle Swizzle = GetSwizzle(Texture.Swizzle, Width, 4, Texture.BlockHeight);
+            ISwizzle Swizzle = GetSwizzle(Texture, 4);
 
             fixed (byte* BuffPtr = Output)
             {
@@ -55,7 +55,7 @@ namespace Ryujinx.Graphics.Gpu
 
             byte[] Output = new byte[Width * Height * 8];
 
-            ISwizzle Swizzle = GetSwizzle(Texture.Swizzle, Width, 8, Texture.BlockHeight);
+            ISwizzle Swizzle = GetSwizzle(Texture, 8);
 
             fixed (byte* BuffPtr = Output)
             {
@@ -84,7 +84,7 @@ namespace Ryujinx.Graphics.Gpu
 
             byte[] Output = new byte[Width * Height * 16];
 
-            ISwizzle Swizzle = GetSwizzle(Texture.Swizzle, Width, 16, Texture.BlockHeight);
+            ISwizzle Swizzle = GetSwizzle(Texture, 16);
 
             fixed (byte* BuffPtr = Output)
             {
@@ -108,20 +108,20 @@ namespace Ryujinx.Graphics.Gpu
             return Output;
         }
 
-        private static ISwizzle GetSwizzle(TextureSwizzle Swizzle, int Width, int Bpp, int BlockHeight)
+        private static ISwizzle GetSwizzle(Texture Texture, int Bpp)
         {
-            switch (Swizzle)
+            switch (Texture.Swizzle)
             {
                 case TextureSwizzle.Pitch:
                 case TextureSwizzle.PitchColorKey:
-                     return new LinearSwizzle(Width, Bpp);
+                     return new LinearSwizzle(Texture.Pitch, Bpp);
 
                 case TextureSwizzle.BlockLinear:
                 case TextureSwizzle.BlockLinearColorKey:
-                    return new BlockLinearSwizzle(Width, Bpp, BlockHeight);
+                    return new BlockLinearSwizzle(Texture.Width, Bpp, Texture.BlockHeight);
             }
 
-            throw new NotImplementedException(Swizzle.ToString());
+            throw new NotImplementedException(Texture.Swizzle.ToString());
         }
     }
 }
