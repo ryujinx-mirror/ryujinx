@@ -256,6 +256,11 @@ namespace ChocolArm64.Instruction
             EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Mul));
         }
 
+        public static void Fmul_Se(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpByElemF(Context, () => Context.Emit(OpCodes.Mul));
+        }
+
         public static void Fmul_V(AILEmitterCtx Context)
         {
             EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Mul));
@@ -322,6 +327,110 @@ namespace ChocolArm64.Instruction
                 Context.Emit(OpCodes.Mul);
                 Context.Emit(OpCodes.Neg);
             });
+        }
+
+        public static void Frecpe_S(AILEmitterCtx Context)
+        {
+            EmitFrecpe(Context, 0, Scalar: true);
+        }
+
+        public static void Frecpe_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            for (int Index = 0; Index < Bytes >> SizeF + 2; Index++)
+            {
+                EmitFrecpe(Context, Index, Scalar: false);
+            }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
+        private static void EmitFrecpe(AILEmitterCtx Context, int Index, bool Scalar)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            if (SizeF == 0)
+            {
+                Context.EmitLdc_R4(1);
+            }
+            else /* if (SizeF == 1) */
+            {
+                Context.EmitLdc_R8(1);
+            }
+
+            EmitVectorExtractF(Context, Op.Rn, Index, SizeF);
+
+            Context.Emit(OpCodes.Div);
+
+            if (Scalar)
+            {
+                EmitVectorZeroAll(Context, Op.Rd);
+            }
+
+            EmitVectorInsertF(Context, Op.Rd, Index, SizeF);
+        }
+
+        public static void Frecps_S(AILEmitterCtx Context)
+        {
+            EmitFrecps(Context, 0, Scalar: true);
+        }
+
+        public static void Frecps_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            for (int Index = 0; Index < Bytes >> SizeF + 2; Index++)
+            {
+                EmitFrecps(Context, Index, Scalar: false);
+            }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
+        private static void EmitFrecps(AILEmitterCtx Context, int Index, bool Scalar)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            if (SizeF == 0)
+            {
+                Context.EmitLdc_R4(2);
+            }
+            else /* if (SizeF == 1) */
+            {
+                Context.EmitLdc_R8(2);
+            }
+
+            EmitVectorExtractF(Context, Op.Rn, Index, SizeF);
+            EmitVectorExtractF(Context, Op.Rm, Index, SizeF);
+
+            Context.Emit(OpCodes.Mul);
+            Context.Emit(OpCodes.Sub);
+
+            if (Scalar)
+            {
+                EmitVectorZeroAll(Context, Op.Rd);
+            }
+
+            EmitVectorInsertF(Context, Op.Rd, Index, SizeF);
         }
 
         public static void Frinta_S(AILEmitterCtx Context)

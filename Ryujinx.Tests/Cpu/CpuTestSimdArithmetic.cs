@@ -44,6 +44,53 @@ namespace Ryujinx.Tests.Cpu
                 Assert.AreEqual(Result1, ThreadState.V0.X1);
             });
         }
+
+        [Test, Description("fmul s6, s1, v0.s[2]")]
+        public void Fmul_Se([Random(10)] float A, [Random(10)] float B)
+        {
+            AThreadState ThreadState = SingleOpcode(0x5F809826, V1: new AVec { S0 = A }, V0: new AVec { S2 = B });
+
+            Assert.That(ThreadState.V6.S0, Is.EqualTo(A * B));
+        }
+
+        [Test, Description("frecpe v2.4s, v0.4s")]
+        public void Frecpe_V([Random(100)] float A)
+        {
+            AThreadState ThreadState = SingleOpcode(0x4EA1D802, V0: new AVec { S0 = A, S1 = A, S2 = A, S3 = A });
+
+            Assert.That(ThreadState.V2.S0, Is.EqualTo(1 / A));
+            Assert.That(ThreadState.V2.S1, Is.EqualTo(1 / A));
+            Assert.That(ThreadState.V2.S2, Is.EqualTo(1 / A));
+            Assert.That(ThreadState.V2.S3, Is.EqualTo(1 / A));
+        }
+
+        [Test, Description("frecpe d0, d1")]
+        public void Frecpe_S([Random(100)] double A)
+        {
+            AThreadState ThreadState = SingleOpcode(0x5EE1D820, V1: new AVec { D0 = A });
+
+            Assert.That(ThreadState.V0.D0, Is.EqualTo(1 / A));
+        }
+
+        [Test, Description("frecps v4.4s, v2.4s, v0.4s")]
+        public void Frecps_V([Random(10)] float A, [Random(10)] float B)
+        {
+            AThreadState ThreadState = SingleOpcode(0x4E20FC44, V2: new AVec { S0 = A, S1 = A, S2 = A, S3 = A },
+                                                                V0: new AVec { S0 = B, S1 = B, S2 = B, S3 = B });
+
+            Assert.That(ThreadState.V4.S0, Is.EqualTo(2 - (A * B)));
+            Assert.That(ThreadState.V4.S1, Is.EqualTo(2 - (A * B)));
+            Assert.That(ThreadState.V4.S2, Is.EqualTo(2 - (A * B)));
+            Assert.That(ThreadState.V4.S3, Is.EqualTo(2 - (A * B)));
+        }
+
+        [Test, Description("frecps d0, d1, d2")]
+        public void Frecps_S([Random(10)] double A, [Random(10)] double B)
+        {
+            AThreadState ThreadState = SingleOpcode(0x5E62FC20, V1: new AVec { D0 = A }, V2: new AVec { D0 = B });
+
+            Assert.That(ThreadState.V0.D0, Is.EqualTo(2 - (A * B)));
+        }
     
         [TestCase(0x3FE66666u, false, 0x40000000u)]
         [TestCase(0x3F99999Au, false, 0x3F800000u)]

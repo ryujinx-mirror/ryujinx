@@ -120,6 +120,32 @@ namespace ChocolArm64.Instruction
             Context.EmitCall(MthdInfo);
         }
 
+        public static void EmitScalarBinaryOpByElemF(AILEmitterCtx Context, Action Emit)
+        {
+            AOpCodeSimdRegElemF Op = (AOpCodeSimdRegElemF)Context.CurrOp;
+
+            EmitScalarOpByElemF(Context, Emit, Op.Index, Ternary: false);
+        }
+
+        public static void EmitScalarOpByElemF(AILEmitterCtx Context, Action Emit, int Elem, bool Ternary)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            if (Ternary)
+            {
+                EmitVectorExtractF(Context, Op.Rd, 0, SizeF);
+            }
+
+            EmitVectorExtractF(Context, Op.Rn, 0,    SizeF);
+            EmitVectorExtractF(Context, Op.Rm, Elem, SizeF);
+
+            Emit();
+
+            EmitScalarSetF(Context, Op.Rd, SizeF);
+        }
+
         public static void EmitScalarUnaryOpSx(AILEmitterCtx Context, Action Emit)
         {
             EmitScalarOp(Context, Emit, OperFlags.Rn, true);
