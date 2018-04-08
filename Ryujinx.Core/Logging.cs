@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Ryujinx.Core
@@ -12,14 +13,24 @@ namespace Ryujinx.Core
 
         private const string LogFileName = "Ryujinx.log";
 
-        private static bool EnableInfo    = Config.LoggingEnableInfo;
-        private static bool EnableTrace   = Config.LoggingEnableTrace;
-        private static bool EnableDebug   = Config.LoggingEnableDebug;
-        private static bool EnableWarn    = Config.LoggingEnableWarn;
-        private static bool EnableError   = Config.LoggingEnableError;
-        private static bool EnableFatal   = Config.LoggingEnableFatal;
-        private static bool EnableIpc     = Config.LoggingEnableIpc;
+        private static bool EnableInfo = Config.LoggingEnableInfo;
+        private static bool EnableTrace = Config.LoggingEnableTrace;
+        private static bool EnableDebug = Config.LoggingEnableDebug;
+        private static bool EnableWarn = Config.LoggingEnableWarn;
+        private static bool EnableError = Config.LoggingEnableError;
+        private static bool EnableFatal = Config.LoggingEnableFatal;
+        private static bool EnableIpc = Config.LoggingEnableIpc;
         private static bool EnableLogFile = Config.LoggingEnableLogFile;
+
+        private enum LogLevel
+        {
+            Debug = 1,
+            Error = 2,
+            Fatal = 3,
+            Info = 4,
+            Trace = 5,
+            Warn = 6
+        }
 
         static Logging()
         {
@@ -30,14 +41,42 @@ namespace Ryujinx.Core
             ExecutionTime.Start();
         }
 
-        public static string GetExecutionTime()
-        {
-            return ExecutionTime.ElapsedMilliseconds.ToString().PadLeft(8, '0') + "ms";
-        }
+        public static string GetExecutionTime() => ExecutionTime.ElapsedMilliseconds.ToString().PadLeft(8, '0') + "ms";
 
-        private static string WhoCalledMe()
+        private static void LogMessage(LogEntry LogEntry)
         {
-            return new StackTrace().GetFrame(2).GetMethod().Name;
+            ConsoleColor consoleColor = ConsoleColor.White;
+
+            switch (LogEntry.LogLevel)
+            {
+                case LogLevel.Debug:
+                    consoleColor = ConsoleColor.Gray;
+                    break;
+                case LogLevel.Error:
+                    consoleColor = ConsoleColor.Red;
+                    break;
+                case LogLevel.Fatal:
+                    consoleColor = ConsoleColor.Magenta;
+                    break;
+                case LogLevel.Info:
+                    consoleColor = ConsoleColor.White;
+                    break;
+                case LogLevel.Trace:
+                    consoleColor = ConsoleColor.DarkGray;
+                    break;
+                case LogLevel.Warn:
+                    consoleColor = ConsoleColor.Yellow;
+                    break;
+            }
+
+            string Text = $"{LogEntry.ExecutionTime} | {LogEntry.LogLevel.ToString()}  > " +
+                $"{LogEntry.CallingMember}:{LogEntry.CallingLineNumber} > {LogEntry.Message}";
+
+            Console.ForegroundColor = consoleColor;
+            Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
+            Console.ResetColor();
+
+            LogFile(Text);
         }
 
         private static void LogFile(string Message)
@@ -51,87 +90,105 @@ namespace Ryujinx.Core
             }
         }
 
-        public static void Info(string Message)
+        public static void Info(string Message,
+                                [CallerMemberName] string CallingMember     = "",
+                                [CallerLineNumber] int    CallingLineNumber = 0)
         {
             if (EnableInfo)
             {
-                string Text = $"{GetExecutionTime()} | INFO  > {Message}";
-
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
-                Console.ResetColor();
-
-                LogFile(Text);
+                LogMessage(new LogEntry
+                {
+                    CallingLineNumber   = CallingLineNumber,
+                    CallingMember       = CallingMember,
+                    LogLevel            = LogLevel.Info,
+                    Message             = Message,
+                    ExecutionTime       = GetExecutionTime()
+                });
             }
         }
-
-        public static void Trace(string Message)
+    
+        public static void Trace(string Message,
+                                [CallerMemberName] string CallingMember = "",
+                                [CallerLineNumber] int CallingLineNumber = 0)
         {
             if (EnableTrace)
             {
-                string Text = $"{GetExecutionTime()} | TRACE > {WhoCalledMe()} - {Message}";
-
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
-                Console.ResetColor();
-
-                LogFile(Text);
+                LogMessage(new LogEntry
+                {
+                    CallingLineNumber   = CallingLineNumber,
+                    CallingMember       = CallingMember,
+                    LogLevel            = LogLevel.Trace,
+                    Message             = Message,
+                    ExecutionTime       = GetExecutionTime()
+                });
             }
         }
 
-        public static void Debug(string Message)
+        public static void Debug(string Message,
+                                [CallerMemberName] string CallingMember = "",
+                                [CallerLineNumber] int CallingLineNumber = 0)
         {
             if (EnableDebug)
             {
-                string Text = $"{GetExecutionTime()} | DEBUG > {WhoCalledMe()} - {Message}";
-
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
-                Console.ResetColor();
-
-                LogFile(Text);
+                LogMessage(new LogEntry
+                {
+                    CallingLineNumber   = CallingLineNumber,
+                    CallingMember       = CallingMember,
+                    LogLevel            = LogLevel.Debug,
+                    Message             = Message,
+                    ExecutionTime       = GetExecutionTime()
+                });
             }
         }
 
-        public static void Warn(string Message)
+        public static void Warn(string Message,
+                                [CallerMemberName] string CallingMember = "",
+                                [CallerLineNumber] int CallingLineNumber = 0)
         {
             if (EnableWarn)
             {
-                string Text = $"{GetExecutionTime()} | WARN  > {WhoCalledMe()} - {Message}";
-
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
-                Console.ResetColor();
-
-                LogFile(Text);
+                LogMessage(new LogEntry
+                {
+                    CallingLineNumber   = CallingLineNumber,
+                    CallingMember       = CallingMember,
+                    LogLevel            = LogLevel.Warn,
+                    Message             = Message,
+                    ExecutionTime       = GetExecutionTime()
+                });
             }
         }
 
-        public static void Error(string Message)
+        public static void Error(string Message,
+                                [CallerMemberName] string CallingMember = "",
+                                [CallerLineNumber] int CallingLineNumber = 0)
         {
             if (EnableError)
             {
-                string Text = $"{GetExecutionTime()} | ERROR > {WhoCalledMe()} - {Message}";
-
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
-                Console.ResetColor();
-
-                LogFile(Text);
+                LogMessage(new LogEntry
+                {
+                    CallingLineNumber   = CallingLineNumber,
+                    CallingMember       = CallingMember,
+                    LogLevel            = LogLevel.Error,
+                    Message             = Message,
+                    ExecutionTime       = GetExecutionTime()
+                });
             }
         }
 
-        public static void Fatal(string Message)
+        public static void Fatal(string Message,
+                                [CallerMemberName] string CallingMember = "",
+                                [CallerLineNumber] int CallingLineNumber = 0)
         {
             if (EnableFatal)
             {
-                string Text = $"{GetExecutionTime()} | FATAL > {WhoCalledMe()} - {Message}";
-
-                Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
-                Console.ResetColor();
-
-                LogFile(Text);
+                LogMessage(new LogEntry
+                {
+                    CallingLineNumber   = CallingLineNumber,
+                    CallingMember       = CallingMember,
+                    LogLevel            = LogLevel.Fatal,
+                    Message             = Message,
+                    ExecutionTime       = GetExecutionTime()
+                });
             }
         }
 
@@ -208,5 +265,14 @@ namespace Ryujinx.Core
             }
             return result.ToString();
         }
-    }
+
+        private struct LogEntry
+        {           
+            public string   CallingMember;
+            public string   ExecutionTime;
+            public string   Message;
+            public int      CallingLineNumber;
+            public LogLevel LogLevel;
+        }
+    }    
 }
