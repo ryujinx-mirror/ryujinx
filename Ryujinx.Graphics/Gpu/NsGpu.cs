@@ -1,5 +1,5 @@
-using ChocolArm64.Memory;
 using Ryujinx.Graphics.Gal;
+using System.Threading;
 
 namespace Ryujinx.Graphics.Gpu
 {
@@ -9,7 +9,13 @@ namespace Ryujinx.Graphics.Gpu
 
         internal NsGpuMemoryMgr MemoryMgr { get; private set; }
 
-        internal NsGpuPGraph PGraph { get; private set; }
+        public NvGpuFifo Fifo;
+
+        internal NvGpuEngine3d Engine3d;
+
+        private Thread FifoProcessing;
+
+        private bool KeepRunning;
 
         public NsGpu(IGalRenderer Renderer)
         {
@@ -17,7 +23,15 @@ namespace Ryujinx.Graphics.Gpu
 
             MemoryMgr = new NsGpuMemoryMgr();
 
-            PGraph = new NsGpuPGraph(this);
+            Fifo = new NvGpuFifo(this);
+
+            Engine3d = new NvGpuEngine3d(this);
+
+            KeepRunning = true;
+
+            FifoProcessing = new Thread(ProcessFifo);            
+
+            FifoProcessing.Start();
         }
 
         public long GetCpuAddr(long Position)
@@ -35,11 +49,6 @@ namespace Ryujinx.Graphics.Gpu
             return MemoryMgr.Map(CpuAddr, GpuAddr, Size);
         }
 
-        public void ProcessPushBuffer(NsGpuPBEntry[] PushBuffer, AMemory Memory)
-        {
-            PGraph.ProcessPushBuffer(PushBuffer, Memory);
-        }
-
         public long ReserveMemory(long Size, long Align)
         {
             return MemoryMgr.Reserve(Size, Align);
@@ -48,6 +57,16 @@ namespace Ryujinx.Graphics.Gpu
         public long ReserveMemory(long GpuAddr, long Size, long Align)
         {
             return MemoryMgr.Reserve(GpuAddr, Size, Align);
+        }
+
+        private void ProcessFifo()
+        {
+            while (KeepRunning)
+            {
+                Fifo.DispatchCalls();
+
+                Thread.Yield();
+            }
         }
     }
 }

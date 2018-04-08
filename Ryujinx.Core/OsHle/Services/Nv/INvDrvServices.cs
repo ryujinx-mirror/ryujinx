@@ -538,9 +538,9 @@ namespace Ryujinx.Core.OsHle.Services.Nv
                 {
                     byte[] Data = AMemoryHelper.ReadBytes(Context.Memory, CpuAddr, Size);
 
-                    NsGpuPBEntry[] PushBuffer = NsGpuPBEntry.DecodePushBuffer(Data);
+                    NsGpuPBEntry[] PushBuffer = NvGpuPushBuffer.Decode(Data);
 
-                    Context.Ns.Gpu.ProcessPushBuffer(PushBuffer, Context.Memory);
+                    Context.Ns.Gpu.Fifo.PushBuffer(Context.Memory, PushBuffer);
                 }
             }
 
@@ -680,8 +680,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             }
 
             Map.CpuAddress = Addr;
-            Map.Align   = Align;
-            Map.Kind    = Kind;
+            Map.Align      = Align;
+            Map.Kind       = Kind;
 
             return 0;
         }

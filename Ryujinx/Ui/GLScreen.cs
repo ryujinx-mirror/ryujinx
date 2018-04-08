@@ -173,8 +173,6 @@ namespace Ryujinx
             Title = $"Ryujinx Screen - (Vsync: {VSync} - FPS: {Ns.Statistics.SystemFrameRate:0} - Guest FPS: " +
                 $"{Ns.Statistics.GameFrameRate:0})";
 
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
             Renderer.RunActions();
             Renderer.Render();
 

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Ryujinx.Graphics.Gpu
+namespace Ryujinx.Graphics.Gal.Texture
 {
     class SwizzleAddr
     {
@@ -109,7 +109,7 @@ namespace Ryujinx.Graphics.Gpu
              *     y x x x x x x y y y y x y y x y 0 0 0 0 1024 x 1024 dxt5
              *   y y x x x x x x y y y y x y y x y x 0 0 0 2048 x 2048 dxt1
              * y y y x x x x x x y y y y x y y x y x x 0 0 1024 x 1024 rgba8888
-             * 
+             *
              * Read from right to left, LSB first.
              */
             int XCnt    = XBase;

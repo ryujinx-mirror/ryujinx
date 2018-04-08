@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Drawing;
 
-namespace Ryujinx.Graphics.Gpu
+namespace Ryujinx.Graphics.Gal.Texture
 {
     static class BCn
     {
-        public static byte[] DecodeBC1(NsGpuTexture Tex, int Offset)
+        public static byte[] DecodeBC1(GalTexture Texture, int Offset)
         {
-            int W = (Tex.Width  + 3) / 4;
-            int H = (Tex.Height + 3) / 4;
+            int W = (Texture.Width  + 3) / 4;
+            int H = (Texture.Height + 3) / 4;
 
             byte[] Output = new byte[W * H * 64];
 
@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Gpu
                 {
                     int IOffs = Offset + Swizzle.GetSwizzledAddress64(X, Y) * 8;
 
-                    byte[] Tile = BCnDecodeTile(Tex.Data, IOffs, true);
+                    byte[] Tile = BCnDecodeTile(Texture.Data, IOffs, true);
 
                     int TOffset = 0;
 
@@ -44,10 +44,10 @@ namespace Ryujinx.Graphics.Gpu
             return Output;
         }
 
-        public static byte[] DecodeBC2(NsGpuTexture Tex, int Offset)
+        public static byte[] DecodeBC2(GalTexture Texture, int Offset)
         {
-            int W = (Tex.Width  + 3) / 4;
-            int H = (Tex.Height + 3) / 4;
+            int W = (Texture.Width  + 3) / 4;
+            int H = (Texture.Height + 3) / 4;
 
             byte[] Output = new byte[W * H * 64];
 
@@ -59,10 +59,10 @@ namespace Ryujinx.Graphics.Gpu
                 {
                     int IOffs = Offset + Swizzle.GetSwizzledAddress128(X, Y) * 16;
 
-                    byte[] Tile = BCnDecodeTile(Tex.Data, IOffs + 8, false);
+                    byte[] Tile = BCnDecodeTile(Texture.Data, IOffs + 8, false);
 
-                    int AlphaLow  = Get32(Tex.Data, IOffs + 0);
-                    int AlphaHigh = Get32(Tex.Data, IOffs + 4);
+                    int AlphaLow  = Get32(Texture.Data, IOffs + 0);
+                    int AlphaHigh = Get32(Texture.Data, IOffs + 4);
 
                     ulong AlphaCh = (uint)AlphaLow | (ulong)AlphaHigh << 32;
 
@@ -90,10 +90,10 @@ namespace Ryujinx.Graphics.Gpu
             return Output;
         }
 
-        public static byte[] DecodeBC3(NsGpuTexture Tex, int Offset)
+        public static byte[] DecodeBC3(GalTexture Texture, int Offset)
         {
-            int W = (Tex.Width  + 3) / 4;
-            int H = (Tex.Height + 3) / 4;
+            int W = (Texture.Width  + 3) / 4;
+            int H = (Texture.Height + 3) / 4;
 
             byte[] Output = new byte[W * H * 64];
 
@@ -105,17 +105,17 @@ namespace Ryujinx.Graphics.Gpu
                 {
                     int IOffs = Offset + Swizzle.GetSwizzledAddress128(X, Y) * 16;
 
-                    byte[] Tile = BCnDecodeTile(Tex.Data, IOffs + 8, false);
+                    byte[] Tile = BCnDecodeTile(Texture.Data, IOffs + 8, false);
 
                     byte[] Alpha = new byte[8];
 
-                    Alpha[0] = Tex.Data[IOffs + 0];
-                    Alpha[1] = Tex.Data[IOffs + 1];
+                    Alpha[0] = Texture.Data[IOffs + 0];
+                    Alpha[1] = Texture.Data[IOffs + 1];
 
                     CalculateBC3Alpha(Alpha);
 
-                    int AlphaLow  = Get32(Tex.Data, IOffs + 2);
-                    int AlphaHigh = Get16(Tex.Data, IOffs + 6);
+                    int AlphaLow  = Get32(Texture.Data, IOffs + 2);
+                    int AlphaHigh = Get16(Texture.Data, IOffs + 6);
 
                     ulong AlphaCh = (uint)AlphaLow | (ulong)AlphaHigh << 32;
 
@@ -143,10 +143,10 @@ namespace Ryujinx.Graphics.Gpu
             return Output;
         }
 
-        public static byte[] DecodeBC4(NsGpuTexture Tex, int Offset)
+        public static byte[] DecodeBC4(GalTexture Texture, int Offset)
         {
-            int W = (Tex.Width  + 3) / 4;
-            int H = (Tex.Height + 3) / 4;
+            int W = (Texture.Width  + 3) / 4;
+            int H = (Texture.Height + 3) / 4;
 
             byte[] Output = new byte[W * H * 64];
 
@@ -160,13 +160,13 @@ namespace Ryujinx.Graphics.Gpu
 
                     byte[] Red = new byte[8];
 
-                    Red[0] = Tex.Data[IOffs + 0];
-                    Red[1] = Tex.Data[IOffs + 1];
+                    Red[0] = Texture.Data[IOffs + 0];
+                    Red[1] = Texture.Data[IOffs + 1];
 
                     CalculateBC3Alpha(Red);
 
-                    int RedLow  = Get32(Tex.Data, IOffs + 2);
-                    int RedHigh = Get16(Tex.Data, IOffs + 6);
+                    int RedLow  = Get32(Texture.Data, IOffs + 2);
+                    int RedHigh = Get16(Texture.Data, IOffs + 6);
 
                     ulong RedCh = (uint)RedLow | (ulong)RedHigh << 32;
 
@@ -194,10 +194,10 @@ namespace Ryujinx.Graphics.Gpu
             return Output;
         }
 
-        public static byte[] DecodeBC5(NsGpuTexture Tex, int Offset, bool SNorm)
+        public static byte[] DecodeBC5(GalTexture Texture, int Offset, bool SNorm)
         {
-            int W = (Tex.Width  + 3) / 4;
-            int H = (Tex.Height + 3) / 4;
+            int W = (Texture.Width  + 3) / 4;
+            int H = (Texture.Height + 3) / 4;
 
             byte[] Output = new byte[W * H * 64];
 
@@ -212,11 +212,11 @@ namespace Ryujinx.Graphics.Gpu
                     byte[] Red   = new byte[8];
                     byte[] Green = new byte[8];
 
-                    Red[0]   = Tex.Data[IOffs + 0];
-                    Red[1]   = Tex.Data[IOffs + 1];
+                    Red[0]   = Texture.Data[IOffs + 0];
+                    Red[1]   = Texture.Data[IOffs + 1];
 
-                    Green[0] = Tex.Data[IOffs + 8];
-                    Green[1] = Tex.Data[IOffs + 9];
+                    Green[0] = Texture.Data[IOffs + 8];
+                    Green[1] = Texture.Data[IOffs + 9];
 
                     if (SNorm)
                     {
@@ -229,11 +229,11 @@ namespace Ryujinx.Graphics.Gpu
                         CalculateBC3Alpha(Green);
                     }
 
-                    int RedLow    = Get32(Tex.Data, IOffs + 2);
-                    int RedHigh   = Get16(Tex.Data, IOffs + 6);
+                    int RedLow    = Get32(Texture.Data, IOffs + 2);
+                    int RedHigh   = Get16(Texture.Data, IOffs + 6);
 
-                    int GreenLow  = Get32(Tex.Data, IOffs + 10);
-                    int GreenHigh = Get16(Tex.Data, IOffs + 14);
+                    int GreenLow  = Get32(Texture.Data, IOffs + 10);
+                    int GreenHigh = Get16(Texture.Data, IOffs + 14);
 
                     ulong RedCh   = (uint)RedLow   | (ulong)RedHigh   << 32;
                     ulong GreenCh = (uint)GreenLow | (ulong)GreenHigh << 32;

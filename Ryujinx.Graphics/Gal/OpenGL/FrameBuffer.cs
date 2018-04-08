@@ -219,7 +219,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 PixelFormat.Rgba,
                 PixelType.UnsignedByte,
                 Pixels);
-            
+
             GL.ActiveTexture(TextureUnit.Texture0);
 
             GL.BindVertexArray(VaoHandle);

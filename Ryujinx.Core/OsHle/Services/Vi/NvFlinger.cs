@@ -244,12 +244,16 @@ namespace Ryujinx.Core.OsHle.Services.Android
         {
             int Slot = ParcelReader.ReadInt32();
 
-            int  BufferCount = ParcelReader.ReadInt32();
-            long BufferSize  = ParcelReader.ReadInt64();
+            int BufferCount = ParcelReader.ReadInt32();
 
-            BufferQueue[Slot].State = BufferState.Free;
+            if (BufferCount > 0)
+            {
+                long BufferSize = ParcelReader.ReadInt64();
 
-            BufferQueue[Slot].Data = new GbpBuffer(ParcelReader);
+                BufferQueue[Slot].State = BufferState.Free;
+
+                BufferQueue[Slot].Data = new GbpBuffer(ParcelReader);
+            }
 
             return MakeReplyParcel(Context, 0);
         }
