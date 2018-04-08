@@ -70,7 +70,7 @@ namespace Ryujinx.Core
             }
 
             string Text = $"{LogEntry.ExecutionTime} | {LogEntry.LogLevel.ToString()}  > " +
-                $"{LogEntry.CallingMember}:{LogEntry.CallingLineNumber} > {LogEntry.Message}";
+                $"{LogEntry.CallingMember} > {LogEntry.Message}";
 
             Console.ForegroundColor = consoleColor;
             Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
@@ -90,104 +90,86 @@ namespace Ryujinx.Core
             }
         }
 
-        public static void Info(string Message,
-                                [CallerMemberName] string CallingMember     = "",
-                                [CallerLineNumber] int    CallingLineNumber = 0)
+        public static void Info(string Message, [CallerMemberName] string CallingMember = "")
         {
             if (EnableInfo)
             {
                 LogMessage(new LogEntry
                 {
-                    CallingLineNumber   = CallingLineNumber,
-                    CallingMember       = CallingMember,
-                    LogLevel            = LogLevel.Info,
-                    Message             = Message,
-                    ExecutionTime       = GetExecutionTime()
+                    CallingMember = CallingMember,
+                    LogLevel      = LogLevel.Info,
+                    Message       = Message,
+                    ExecutionTime = GetExecutionTime()
                 });
             }
         }
-    
-        public static void Trace(string Message,
-                                [CallerMemberName] string CallingMember = "",
-                                [CallerLineNumber] int CallingLineNumber = 0)
+
+        public static void Trace(string Message, [CallerMemberName] string CallingMember = "")
         {
             if (EnableTrace)
             {
                 LogMessage(new LogEntry
                 {
-                    CallingLineNumber   = CallingLineNumber,
-                    CallingMember       = CallingMember,
-                    LogLevel            = LogLevel.Trace,
-                    Message             = Message,
-                    ExecutionTime       = GetExecutionTime()
+                    CallingMember = CallingMember,
+                    LogLevel      = LogLevel.Trace,
+                    Message       = Message,
+                    ExecutionTime = GetExecutionTime()
                 });
             }
         }
 
-        public static void Debug(string Message,
-                                [CallerMemberName] string CallingMember = "",
-                                [CallerLineNumber] int CallingLineNumber = 0)
+        public static void Debug(string Message, [CallerMemberName] string CallingMember = "")
         {
             if (EnableDebug)
             {
                 LogMessage(new LogEntry
                 {
-                    CallingLineNumber   = CallingLineNumber,
-                    CallingMember       = CallingMember,
-                    LogLevel            = LogLevel.Debug,
-                    Message             = Message,
-                    ExecutionTime       = GetExecutionTime()
+                    CallingMember = CallingMember,
+                    LogLevel      = LogLevel.Debug,
+                    Message       = Message,
+                    ExecutionTime = GetExecutionTime()
                 });
             }
         }
 
-        public static void Warn(string Message,
-                                [CallerMemberName] string CallingMember = "",
-                                [CallerLineNumber] int CallingLineNumber = 0)
+        public static void Warn(string Message, [CallerMemberName] string CallingMember = "")
         {
             if (EnableWarn)
             {
                 LogMessage(new LogEntry
                 {
-                    CallingLineNumber   = CallingLineNumber,
-                    CallingMember       = CallingMember,
-                    LogLevel            = LogLevel.Warn,
-                    Message             = Message,
-                    ExecutionTime       = GetExecutionTime()
+                    CallingMember = CallingMember,
+                    LogLevel      = LogLevel.Warn,
+                    Message       = Message,
+                    ExecutionTime = GetExecutionTime()
                 });
             }
         }
 
-        public static void Error(string Message,
-                                [CallerMemberName] string CallingMember = "",
-                                [CallerLineNumber] int CallingLineNumber = 0)
+        public static void Error(string Message, [CallerMemberName] string CallingMember = "")
         {
             if (EnableError)
             {
                 LogMessage(new LogEntry
                 {
-                    CallingLineNumber   = CallingLineNumber,
-                    CallingMember       = CallingMember,
-                    LogLevel            = LogLevel.Error,
-                    Message             = Message,
-                    ExecutionTime       = GetExecutionTime()
+                    CallingMember = CallingMember,
+                    LogLevel      = LogLevel.Error,
+                    Message       = Message,
+                    ExecutionTime = GetExecutionTime()
                 });
             }
         }
 
-        public static void Fatal(string Message,
-                                [CallerMemberName] string CallingMember = "",
-                                [CallerLineNumber] int CallingLineNumber = 0)
+        public static void Fatal(string Message, [CallerMemberName] string CallingMember = "")
         {
             if (EnableFatal)
             {
                 LogMessage(new LogEntry
                 {
-                    CallingLineNumber   = CallingLineNumber,
-                    CallingMember       = CallingMember,
-                    LogLevel            = LogLevel.Fatal,
-                    Message             = Message,
-                    ExecutionTime       = GetExecutionTime()
+                    CallingMember = CallingMember,
+                    LogLevel      = LogLevel.Fatal,
+                    Message       = Message,
+                    ExecutionTime = GetExecutionTime()
                 });
             }
         }
@@ -217,7 +199,7 @@ namespace Ryujinx.Core
             int firstCharColumn = firstHexColumn
                 + bytesPerLine * 3       // - 2 digit for the hexadecimal value and 1 space
                 + (bytesPerLine - 1) / 8 // - 1 extra space every 8 characters from the 9th
-                + 2;                  // 2 spaces 
+                + 2;                  // 2 spaces
 
             int lineLength = firstCharColumn
                 + bytesPerLine           // - characters to show the ascii value
@@ -267,12 +249,11 @@ namespace Ryujinx.Core
         }
 
         private struct LogEntry
-        {           
+        {
             public string   CallingMember;
             public string   ExecutionTime;
             public string   Message;
-            public int      CallingLineNumber;
             public LogLevel LogLevel;
         }
-    }    
+    }
 }
