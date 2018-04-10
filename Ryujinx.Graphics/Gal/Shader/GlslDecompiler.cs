@@ -31,40 +31,51 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             InstsExpr = new Dictionary<ShaderIrInst, GetInstExpr>()
             {
-                { ShaderIrInst.And,  GetAndExpr  },
-                { ShaderIrInst.Asr,  GetAsrExpr  },
-                { ShaderIrInst.Band, GetBandExpr },
-                { ShaderIrInst.Bnot, GetBnotExpr },
-                { ShaderIrInst.Clt,  GetCltExpr  },
-                { ShaderIrInst.Ceq,  GetCeqExpr  },
-                { ShaderIrInst.Cle,  GetCleExpr  },
-                { ShaderIrInst.Cgt,  GetCgtExpr  },
-                { ShaderIrInst.Cne,  GetCneExpr  },
-                { ShaderIrInst.Cge,  GetCgeExpr  },
-                { ShaderIrInst.Exit, GetExitExpr },
-                { ShaderIrInst.Fabs, GetFabsExpr },
-                { ShaderIrInst.Fadd, GetFaddExpr },
-                { ShaderIrInst.Fcos, GetFcosExpr },
-                { ShaderIrInst.Fex2, GetFex2Expr },
-                { ShaderIrInst.Ffma, GetFfmaExpr },
-                { ShaderIrInst.Flg2, GetFlg2Expr },
-                { ShaderIrInst.Fmul, GetFmulExpr },
-                { ShaderIrInst.Fneg, GetFnegExpr },
-                { ShaderIrInst.Frcp, GetFrcpExpr },
-                { ShaderIrInst.Frsq, GetFrsqExpr },
-                { ShaderIrInst.Fsin, GetFsinExpr },
-                { ShaderIrInst.Ipa,  GetIpaExpr  },
-                { ShaderIrInst.Kil,  GetKilExpr  },
-                { ShaderIrInst.Lsr,  GetLsrExpr  },
-                { ShaderIrInst.Not,  GetNotExpr  },
-                { ShaderIrInst.Or,   GetOrExpr   },
-                { ShaderIrInst.Stof, GetStofExpr },
-                { ShaderIrInst.Utof, GetUtofExpr },
-                { ShaderIrInst.Texr, GetTexrExpr },
-                { ShaderIrInst.Texg, GetTexgExpr },
-                { ShaderIrInst.Texb, GetTexbExpr },
-                { ShaderIrInst.Texa, GetTexaExpr },
-                { ShaderIrInst.Xor,  GetXorExpr  },
+                { ShaderIrInst.And,   GetAndExpr   },
+                { ShaderIrInst.Asr,   GetAsrExpr   },
+                { ShaderIrInst.Band,  GetBandExpr  },
+                { ShaderIrInst.Bnot,  GetBnotExpr  },
+                { ShaderIrInst.Ceil,  GetCeilExpr  },
+                { ShaderIrInst.Ceq,   GetCeqExpr   },
+                { ShaderIrInst.Cge,   GetCgeExpr   },
+                { ShaderIrInst.Cgt,   GetCgtExpr   },
+                { ShaderIrInst.Clamp, GetClampExpr },
+                { ShaderIrInst.Cle,   GetCleExpr   },
+                { ShaderIrInst.Clt,   GetCltExpr   },
+                { ShaderIrInst.Cne,   GetCneExpr   },
+                { ShaderIrInst.Exit,  GetExitExpr  },
+                { ShaderIrInst.Fabs,  GetFabsExpr  },
+                { ShaderIrInst.Fadd,  GetFaddExpr  },
+                { ShaderIrInst.Fceq,  GetCeqExpr   },
+                { ShaderIrInst.Fcge,  GetCgeExpr   },
+                { ShaderIrInst.Fcgt,  GetCgtExpr   },
+                { ShaderIrInst.Fcle,  GetCleExpr   },
+                { ShaderIrInst.Fclt,  GetCltExpr   },
+                { ShaderIrInst.Fcne,  GetCneExpr   },
+                { ShaderIrInst.Fcos,  GetFcosExpr  },
+                { ShaderIrInst.Fex2,  GetFex2Expr  },
+                { ShaderIrInst.Ffma,  GetFfmaExpr  },
+                { ShaderIrInst.Flg2,  GetFlg2Expr  },
+                { ShaderIrInst.Floor, GetFloorExpr },
+                { ShaderIrInst.Fmul,  GetFmulExpr  },
+                { ShaderIrInst.Fneg,  GetFnegExpr  },
+                { ShaderIrInst.Frcp,  GetFrcpExpr  },
+                { ShaderIrInst.Frsq,  GetFrsqExpr  },
+                { ShaderIrInst.Fsin,  GetFsinExpr  },
+                { ShaderIrInst.Ftos,  GetFtosExpr  },
+                { ShaderIrInst.Ftou,  GetFtouExpr  },
+                { ShaderIrInst.Ipa,   GetIpaExpr   },
+                { ShaderIrInst.Kil,   GetKilExpr   },
+                { ShaderIrInst.Lsr,   GetLsrExpr   },
+                { ShaderIrInst.Not,   GetNotExpr   },
+                { ShaderIrInst.Or,    GetOrExpr    },
+                { ShaderIrInst.Stof,  GetStofExpr  },
+                { ShaderIrInst.Texq,  GetTexqExpr  },
+                { ShaderIrInst.Texs,  GetTexsExpr  },
+                { ShaderIrInst.Trunc, GetTruncExpr },
+                { ShaderIrInst.Txlf,  GetTxlfExpr  },
+                { ShaderIrInst.Utof,  GetUtofExpr  },
+                { ShaderIrInst.Xor,   GetXorExpr   }
             };
         }
 
@@ -117,11 +128,21 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private void PrintDeclInAttributes()
         {
+            if (Decl.ShaderType == GalShaderType.Fragment)
+            {
+                SB.AppendLine("in vec4 " + GlslDecl.PositionOutAttrName + ";");
+            }
+
             PrintDeclAttributes(Decl.InAttributes.Values, "in");
         }
 
         private void PrintDeclOutAttributes()
         {
+            if (Decl.ShaderType == GalShaderType.Vertex)
+            {
+                SB.AppendLine("out vec4 " + GlslDecl.PositionOutAttrName + ";");
+            }
+
             PrintDeclAttributes(Decl.OutAttributes.Values, "out");
         }
 
@@ -133,7 +154,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             {
                 if (DeclInfo.Index >= 0)
                 {
-                    SB.AppendLine($"layout (location = {DeclInfo.Index}) {InOut} {GetDecl(DeclInfo)};");
+                    SB.AppendLine("layout (location = " + DeclInfo.Index + ") " + InOut + " " + GetDecl(DeclInfo) + ";");
 
                     Count++;
                 }
@@ -222,7 +243,14 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 if (Node is ShaderIrCond Cond)
                 {
-                    string SubScopeName = "if (" + GetSrcExpr(Cond.Pred, true) + ")";
+                    string IfExpr = GetSrcExpr(Cond.Pred, true);
+
+                    if (Cond.Not)
+                    {
+                        IfExpr = "!(" + IfExpr + ")";
+                    }
+
+                    string SubScopeName = "if (" + IfExpr + ")";
 
                     PrintBlockScope(SubScopeName, IdentationLevel + 1, Cond.Child);
                 }
@@ -236,6 +264,16 @@ namespace Ryujinx.Graphics.Gal.Shader
                 }
                 else if (Node is ShaderIrOp Op)
                 {
+                    if (Op.Inst == ShaderIrInst.Exit)
+                    {
+                        //Do everything that needs to be done before
+                        //the shader ends here.
+                        if (Decl.ShaderType == GalShaderType.Vertex)
+                        {
+                            SB.AppendLine(Identation + GlslDecl.PositionOutAttrName + " = gl_Position;");
+                        }
+                    }
+
                     SB.AppendLine(Identation + GetSrcExpr(Op, true) + ";");
                 }
                 else
@@ -321,10 +359,9 @@ namespace Ryujinx.Graphics.Gal.Shader
                     return true;
 
                 case ShaderIrInst.Ipa:
-                case ShaderIrInst.Texr:
-                case ShaderIrInst.Texg:
-                case ShaderIrInst.Texb:
-                case ShaderIrInst.Texa:
+                case ShaderIrInst.Texq:
+                case ShaderIrInst.Texs:
+                case ShaderIrInst.Txlf:
                     return false;
             }
 
@@ -349,11 +386,6 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private string GetName(ShaderIrOperAbuf Abuf)
         {
-            if (Abuf.Offs == GlslDecl.GlPositionWAttr && Decl.ShaderType == GalShaderType.Fragment)
-            {
-                return "(1f / gl_FragCoord.w)";
-            }
-
             if (Abuf.Offs == GlslDecl.VertexIdAttr)
             {
                 return "gl_VertexID";
@@ -437,6 +469,10 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private string GetBnotExpr(ShaderIrOp Op) => GetUnaryExpr(Op, "!");
 
+        private string GetCeilExpr(ShaderIrOp Op) => GetUnaryCall(Op, "ceil");
+
+        private string GetClampExpr(ShaderIrOp Op) => GetTernaryCall(Op, "clamp");
+
         private string GetCltExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "<");
         private string GetCeqExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "==");
         private string GetCleExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "<=");
@@ -458,6 +494,8 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private string GetFlg2Expr(ShaderIrOp Op) => GetUnaryCall(Op, "log2");
 
+        private string GetFloorExpr(ShaderIrOp Op) => GetUnaryCall(Op, "floor");
+
         private string GetFmulExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "*");
 
         private string GetFnegExpr(ShaderIrOp Op) => GetUnaryExpr(Op, "-");
@@ -467,6 +505,16 @@ namespace Ryujinx.Graphics.Gal.Shader
         private string GetFrsqExpr(ShaderIrOp Op) => GetUnaryCall(Op, "inversesqrt");
 
         private string GetFsinExpr(ShaderIrOp Op) => GetUnaryCall(Op, "sin");
+
+        private string GetFtosExpr(ShaderIrOp Op)
+        {
+            return "int(" + GetOperExpr(Op, Op.OperandA) + ")";
+        }
+
+        private string GetFtouExpr(ShaderIrOp Op)
+        {
+            return "int(uint(" + GetOperExpr(Op, Op.OperandA) + "))";
+        }
 
         private string GetIpaExpr(ShaderIrOp Op) => GetSrcExpr(Op.OperandA);
 
@@ -487,6 +535,54 @@ namespace Ryujinx.Graphics.Gal.Shader
             return "float(" + GetOperExpr(Op, Op.OperandA) + ")";
         }
 
+        private string GetTexqExpr(ShaderIrOp Op)
+        {
+            ShaderIrMetaTexq Meta = (ShaderIrMetaTexq)Op.MetaData;
+
+            string Ch = "xyzw".Substring(Meta.Elem, 1);
+
+            if (Meta.Info == ShaderTexqInfo.Dimension)
+            {
+                string Sampler = GetTexSamplerName(Op);
+
+                string Lod = GetOperExpr(Op, Op.OperandA); //???
+
+                return "textureSize(" + Sampler + ", " + Lod + ")." + Ch;
+            }
+            else
+            {
+                throw new NotImplementedException(Meta.Info.ToString());
+            }
+        }
+
+        private string GetTexsExpr(ShaderIrOp Op)
+        {
+            ShaderIrMetaTex Meta = (ShaderIrMetaTex)Op.MetaData;
+
+            string Sampler = GetTexSamplerName(Op);
+
+            string Coords = GetTexSamplerCoords(Op);
+
+            string Ch = "rgba".Substring(Meta.Elem, 1);
+
+            return "texture(" + Sampler + ", " + Coords + ")." + Ch;
+        }
+
+        private string GetTxlfExpr(ShaderIrOp Op)
+        {
+            ShaderIrMetaTex Meta = (ShaderIrMetaTex)Op.MetaData;
+
+            string Sampler = GetTexSamplerName(Op);
+
+            string Coords = GetITexSamplerCoords(Op);
+
+            string Ch = "rgba".Substring(Meta.Elem, 1);
+
+            return "texelFetch(" + Sampler + ", " + Coords + ", 0)." + Ch;
+        }
+
+        private string GetTruncExpr(ShaderIrOp Op) => GetUnaryCall(Op, "trunc");
+
         private string GetUtofExpr(ShaderIrOp Op)
         {
             return "float(uint(" + GetOperExpr(Op, Op.OperandA) + "))";
@@ -497,6 +593,13 @@ namespace Ryujinx.Graphics.Gal.Shader
         private string GetUnaryCall(ShaderIrOp Op, string FuncName)
         {
             return FuncName + "(" + GetOperExpr(Op, Op.OperandA) + ")";
+        }
+
+        private string GetTernaryCall(ShaderIrOp Op, string FuncName)
+        {
+            return FuncName + "(" + GetOperExpr(Op, Op.OperandA) + ", " +
+                                    GetOperExpr(Op, Op.OperandB) + ", " +
+                                    GetOperExpr(Op, Op.OperandC) + ")";
         }
 
         private string GetUnaryExpr(ShaderIrOp Op, string Opr)
@@ -517,16 +620,6 @@ namespace Ryujinx.Graphics.Gal.Shader
                    GetOperExpr(Op, Op.OperandC);
         }
 
-        private string GetTexrExpr(ShaderIrOp Op) => GetTexExpr(Op, 'r');
-        private string GetTexgExpr(ShaderIrOp Op) => GetTexExpr(Op, 'g');
-        private string GetTexbExpr(ShaderIrOp Op) => GetTexExpr(Op, 'b');
-        private string GetTexaExpr(ShaderIrOp Op) => GetTexExpr(Op, 'a');
-
-        private string GetTexExpr(ShaderIrOp Op, char Ch)
-        {
-            return $"texture({GetTexSamplerName(Op)}, {GetTexSamplerCoords(Op)}).{Ch}";
-        }
-
         private string GetTexSamplerName(ShaderIrOp Op)
         {
             ShaderIrOperImm Node = (ShaderIrOperImm)Op.OperandC;
@@ -545,6 +638,12 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             return "vec2(" + GetOperExpr(Op, Op.OperandA) + ", " +
                              GetOperExpr(Op, Op.OperandB) + ")";
+        }
+
+        private string GetITexSamplerCoords(ShaderIrOp Op)
+        {
+            return "ivec2(" + GetOperExpr(Op, Op.OperandA) + ", " +
+                              GetOperExpr(Op, Op.OperandB) + ")";
         }
 
         private string GetOperExpr(ShaderIrOp Op, ShaderIrNode Oper)
@@ -571,13 +670,31 @@ namespace Ryujinx.Graphics.Gal.Shader
                     throw new InvalidOperationException();
                 }
 
-                //For integer immediates being used as float,
-                //it's better (for readability) to just return the float value.
-                if (Src is ShaderIrOperImm Imm && DstType == OperType.F32)
+                switch (Src)
                 {
-                    float Value = BitConverter.Int32BitsToSingle(Imm.Value);
+                    case ShaderIrOperGpr Gpr:
+                    {
+                        //When the Gpr is ZR, just return the 0 value directly,
+                        //since the float encoding for 0 is 0.
+                        if (Gpr.IsConst)
+                        {
+                            return "0";
+                        }
+                        break;
+                    }
 
-                    return Value.ToString(CultureInfo.InvariantCulture) + "f";
+                    case ShaderIrOperImm Imm:
+                    {
+                        //For integer immediates being used as float,
+                        //it's better (for readability) to just return the float value.
+                        if (DstType == OperType.F32)
+                        {
+                            float Value = BitConverter.Int32BitsToSingle(Imm.Value);
+
+                            return Value.ToString(CultureInfo.InvariantCulture) + "f";
+                        }
+                        break;
+                    }
                 }
 
                 switch (DstType)
@@ -592,12 +709,20 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private static OperType GetDstNodeType(ShaderIrNode Node)
         {
+            //Special case instructions with the result type different
+            //from the input types (like integer <-> float conversion) here.
             if (Node is ShaderIrOp Op)
             {
                 switch (Op.Inst)
                 {
-                    case ShaderIrInst.Stof: return OperType.F32;
-                    case ShaderIrInst.Utof: return OperType.F32;
+                    case ShaderIrInst.Stof:
+                    case ShaderIrInst.Txlf:
+                    case ShaderIrInst.Utof:
+                        return OperType.F32;
+
+                    case ShaderIrInst.Ftos:
+                    case ShaderIrInst.Ftou:
+                        return OperType.I32;
                 }
             }
 

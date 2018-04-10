@@ -25,6 +25,36 @@ namespace Ryujinx.Graphics.Gal.Shader
             F64 = 3
         }
 
+        public static void F2f_C(ShaderIrBlock Block, long OpCode)
+        {
+            EmitF2f(Block, OpCode, ShaderOper.CR);
+        }
+
+        public static void F2f_I(ShaderIrBlock Block, long OpCode)
+        {
+            EmitF2f(Block, OpCode, ShaderOper.Immf);
+        }
+
+        public static void F2f_R(ShaderIrBlock Block, long OpCode)
+        {
+            EmitF2f(Block, OpCode, ShaderOper.RR);
+        }
+
+        public static void F2i_C(ShaderIrBlock Block, long OpCode)
+        {
+            EmitF2i(Block, OpCode, ShaderOper.CR);
+        }
+
+        public static void F2i_I(ShaderIrBlock Block, long OpCode)
+        {
+            EmitF2i(Block, OpCode, ShaderOper.Immf);
+        }
+
+        public static void F2i_R(ShaderIrBlock Block, long OpCode)
+        {
+            EmitF2i(Block, OpCode, ShaderOper.RR);
+        }
+
         public static void I2f_C(ShaderIrBlock Block, long OpCode)
         {
             EmitI2f(Block, OpCode, ShaderOper.CR);
@@ -38,6 +68,131 @@ namespace Ryujinx.Graphics.Gal.Shader
         public static void I2f_R(ShaderIrBlock Block, long OpCode)
         {
             EmitI2f(Block, OpCode, ShaderOper.RR);
+        }
+
+        public static void Mov_C(ShaderIrBlock Block, long OpCode)
+        {
+            ShaderIrOperCbuf Cbuf = GetOperCbuf34(OpCode);
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Cbuf), OpCode));
+        }
+
+        public static void Mov_I(ShaderIrBlock Block, long OpCode)
+        {
+            ShaderIrOperImm Imm = GetOperImm19_20(OpCode);
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Imm), OpCode));
+        }
+
+        public static void Mov_R(ShaderIrBlock Block, long OpCode)
+        {
+            ShaderIrOperGpr Gpr = GetOperGpr20(OpCode);
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Gpr), OpCode));
+        }
+
+        public static void Mov32i(ShaderIrBlock Block, long OpCode)
+        {
+            ShaderIrOperImm Imm = GetOperImm32_20(OpCode);
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Imm), OpCode));
+        }
+
+        private static void EmitF2f(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        {
+            bool Na = ((OpCode >> 45) & 1) != 0;
+            bool Aa = ((OpCode >> 49) & 1) != 0;
+
+            ShaderIrNode OperA;
+
+            switch (Oper)
+            {
+                case ShaderOper.CR:   OperA = GetOperCbuf34   (OpCode); break;
+                case ShaderOper.Immf: OperA = GetOperImmf19_20(OpCode); break;
+                case ShaderOper.RR:   OperA = GetOperGpr20    (OpCode); break;
+
+                default: throw new ArgumentException(nameof(Oper));
+            }
+
+            OperA = GetAluAbsNeg(OperA, Aa, Na);
+
+            ShaderIrInst RoundInst = GetRoundInst(OpCode);
+
+            if (RoundInst != ShaderIrInst.Invalid)
+            {
+                OperA = new ShaderIrOp(RoundInst, OperA);
+            }
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), OperA), OpCode));
+        }
+
+        private static void EmitF2i(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        {
+            IntType Type = GetIntType(OpCode);
+
+            if (Type == IntType.U64 ||
+                Type == IntType.S64)
+            {
+                //TODO: 64-bits support.
+                //Note: GLSL doesn't support 64-bits integers.
+                throw new NotImplementedException();
+            }
+
+            bool Na = ((OpCode >> 45) & 1) != 0;
+            bool Aa = ((OpCode >> 49) & 1) != 0;
+
+            ShaderIrNode OperA;
+
+            switch (Oper)
+            {
+                case ShaderOper.CR:   OperA = GetOperCbuf34   (OpCode); break;
+                case ShaderOper.Immf: OperA = GetOperImmf19_20(OpCode); break;
+                case ShaderOper.RR:   OperA = GetOperGpr20    (OpCode); break;
+
+                default: throw new ArgumentException(nameof(Oper));
+            }
+
+            OperA = GetAluAbsNeg(OperA, Aa, Na);
+
+            ShaderIrInst RoundInst = GetRoundInst(OpCode);
+
+            if (RoundInst != ShaderIrInst.Invalid)
+            {
+                OperA = new ShaderIrOp(RoundInst, OperA);
+            }
+
+            bool Signed = Type >= IntType.S8;
+
+            int Size = 8 << ((int)Type & 3);
+
+            if (Size < 32)
+            {
+                uint Mask = uint.MaxValue >> (32 - Size);
+
+                float CMin = 0;
+                float CMax = Mask;
+
+                if (Signed)
+                {
+                    uint HalfMask = Mask >> 1;
+
+                    CMin -= HalfMask + 1;
+                    CMax  = HalfMask;
+                }
+
+                ShaderIrOperImmf IMin = new ShaderIrOperImmf(CMin);
+                ShaderIrOperImmf IMax = new ShaderIrOperImmf(CMax);
+
+                OperA = new ShaderIrOp(ShaderIrInst.Clamp, OperA, IMin, IMax);
+            }
+
+            ShaderIrInst Inst = Signed
+                ? ShaderIrInst.Ftos
+                : ShaderIrInst.Ftou;
+
+            ShaderIrNode Op = new ShaderIrOp(Inst, OperA);
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
         }
 
         private static void EmitI2f(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
@@ -76,18 +231,16 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             int Size = 8 << ((int)Type & 3);
 
-            ulong Mask = ulong.MaxValue >> (64 - Size);
-
-            int Mask32 = (int)Mask;
-
             if (Shift != 0)
             {
                 OperA = new ShaderIrOp(ShaderIrInst.Asr, OperA, new ShaderIrOperImm(Shift));
             }
 
-            if (Mask != uint.MaxValue)
+            if (Size < 32)
             {
-                OperA = new ShaderIrOp(ShaderIrInst.And, OperA, new ShaderIrOperImm(Mask32));
+                uint Mask = uint.MaxValue >> (32 - Size);
+
+                OperA = new ShaderIrOp(ShaderIrInst.And, OperA, new ShaderIrOperImm((int)Mask));
             }
 
             ShaderIrInst Inst = Signed
@@ -97,13 +250,6 @@ namespace Ryujinx.Graphics.Gal.Shader
             ShaderIrNode Op = new ShaderIrOp(Inst, OperA);
 
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
-        }
-
-        public static void Mov32i(ShaderIrBlock Block, long OpCode)
-        {
-            ShaderIrOperImm Imm = GetOperImm32_20(OpCode);
-
-            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Imm), OpCode));
         }
 
         private static IntType GetIntType(long OpCode)
@@ -123,6 +269,18 @@ namespace Ryujinx.Graphics.Gal.Shader
         private static FloatType GetFloatType(long OpCode)
         {
             return (FloatType)((OpCode >> 8) & 3);
+        }
+
+        private static ShaderIrInst GetRoundInst(long OpCode)
+        {
+            switch ((OpCode >> 39) & 3)
+            {
+                case 1: return ShaderIrInst.Floor;
+                case 2: return ShaderIrInst.Ceil;
+                case 3: return ShaderIrInst.Trunc;
+            }
+
+            return ShaderIrInst.Invalid;
         }
     }
 }

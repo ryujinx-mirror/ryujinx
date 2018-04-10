@@ -5,10 +5,13 @@ namespace Ryujinx.Graphics.Gal.Shader
         public ShaderIrNode Pred  { get; set; }
         public ShaderIrNode Child { get; set; }
 
-        public ShaderIrCond(ShaderIrNode Pred, ShaderIrNode Child)
+        public bool Not { get; private set; }
+
+        public ShaderIrCond(ShaderIrNode Pred, ShaderIrNode Child, bool Not)
         {
             this.Pred  = Pred;
             this.Child = Child;
+            this.Not   = Not;
         }
     }
 }

@@ -81,6 +81,21 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
         }
 
+        public static void Isetp_C(ShaderIrBlock Block, long OpCode)
+        {
+            EmitIsetp(Block, OpCode, ShaderOper.CR);
+        }
+
+        public static void Isetp_I(ShaderIrBlock Block, long OpCode)
+        {
+            EmitIsetp(Block, OpCode, ShaderOper.Imm);
+        }
+
+        public static void Isetp_R(ShaderIrBlock Block, long OpCode)
+        {
+            EmitIsetp(Block, OpCode, ShaderOper.RR);
+        }
+
         public static void Lop32i(ShaderIrBlock Block, long OpCode)
         {
             int SubOp = (int)(OpCode >> 53) & 3;
@@ -259,6 +274,16 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private static void EmitFsetp(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
         {
+            EmitSetp(Block, OpCode, true, Oper);
+        }
+
+        private static void EmitIsetp(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        {
+            EmitSetp(Block, OpCode, false, Oper);
+        }
+
+        private static void EmitSetp(ShaderIrBlock Block, long OpCode, bool IsFloat, ShaderOper Oper)
+        {
             bool Aa = ((OpCode >>  7) & 1) != 0;
             bool Np = ((OpCode >> 42) & 1) != 0;
             bool Na = ((OpCode >> 43) & 1) != 0;
@@ -269,17 +294,28 @@ namespace Ryujinx.Graphics.Gal.Shader
             switch (Oper)
             {
                 case ShaderOper.CR:   OperB = GetOperCbuf34   (OpCode); break;
+                case ShaderOper.Imm:  OperB = GetOperImm19_20 (OpCode); break;
                 case ShaderOper.Immf: OperB = GetOperImmf19_20(OpCode); break;
                 case ShaderOper.RR:   OperB = GetOperGpr20    (OpCode); break;
 
                 default: throw new ArgumentException(nameof(Oper));
             }
 
-            ShaderIrInst CmpInst = GetCmp(OpCode);
+            ShaderIrInst CmpInst;
 
-            ShaderIrOp Op = new ShaderIrOp(CmpInst,
-                GetAluAbsNeg(OperA, Aa, Na),
-                GetAluAbs   (OperB, Ab));
+            if (IsFloat)
+            {
+                OperA = GetAluAbsNeg(OperA, Aa, Na);
+                OperB = GetAluAbs   (OperB, Ab);
+
+                CmpInst = GetCmpF(OpCode);
+            }
+            else
+            {
+                CmpInst = GetCmp(OpCode);
+            }
+
+            ShaderIrOp Op = new ShaderIrOp(CmpInst, OperA, OperB);
 
             ShaderIrOperPred P0Node = GetOperPred3 (OpCode);
             ShaderIrOperPred P1Node = GetOperPred0 (OpCode);

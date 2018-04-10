@@ -7,13 +7,22 @@ namespace Ryujinx.Graphics.Gal.Shader
     {
         private struct UseSite
         {
-            public object Parent;
+            public ShaderIrNode Parent { get; private set; }
+            public ShaderIrCond Cond   { get; private set; }
 
-            public int OperIndex;
+            public int UseIndex { get; private set; }
 
-            public UseSite(object Parent, int OperIndex)
+            public int OperIndex { get; private set; }
+
+            public UseSite(
+                ShaderIrNode Parent,
+                ShaderIrCond Cond,
+                int          UseIndex,
+                int          OperIndex)
             {
                 this.Parent    = Parent;
+                this.Cond      = Cond;
+                this.UseIndex  = UseIndex;
                 this.OperIndex = OperIndex;
             }
         }
@@ -24,7 +33,9 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             public int AsgIndex { get; private set; }
 
-            private bool Propagate;
+            public int LastSiteIndex { get; private set; }
+
+            public ShaderIrCond Cond { get; private set; }
 
             private List<UseSite> Sites;
 
@@ -35,6 +46,11 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             public void AddUseSite(UseSite Site)
             {
+                if (LastSiteIndex < Site.UseIndex)
+                {
+                    LastSiteIndex = Site.UseIndex;
+                }
+
                 Sites.Add(Site);
             }
 
@@ -42,12 +58,25 @@ namespace Ryujinx.Graphics.Gal.Shader
             {
                 //This happens when a untiliazied register is used,
                 //this usually indicates a decoding error, but may also
-                //be cased by bogus programs (?). In any case, we just
+                //be caused by bogus programs (?). In any case, we just
                 //keep the unitialized access and avoid trying to propagate
                 //the expression (since we can't propagate what doesn't yet exist).
-                if (Asg == null || !Propagate)
+                if (Asg == null)
                 {
                     return false;
+                }
+
+                if (Cond != null)
+                {
+                    //If the assignment is conditional, we can only propagate
+                    //to the use sites that shares the same condition of the assignment.
+                    foreach (UseSite Site in Sites)
+                    {
+                        if (!IsSameCondition(Cond, Site.Cond))
+                        {
+                            return false;
+                        }
+                    }
                 }
 
                 if (Sites.Count > 0)
@@ -89,11 +118,13 @@ namespace Ryujinx.Graphics.Gal.Shader
                 return true;
             }
 
-            public void SetNewAsg(ShaderIrAsg Asg, int AsgIndex, bool Propagate)
+            public void SetNewAsg(ShaderIrAsg Asg, int AsgIndex, ShaderIrCond Cond)
             {
-                this.Asg       = Asg;
-                this.AsgIndex  = AsgIndex;
-                this.Propagate = Propagate;
+                this.Asg      = Asg;
+                this.AsgIndex = AsgIndex;
+                this.Cond     = Cond;
+
+                LastSiteIndex = 0;
 
                 Sites.Clear();
             }
@@ -137,38 +168,52 @@ namespace Ryujinx.Graphics.Gal.Shader
                 return GetUse(GetPredKey(PredIndex));
             }
 
-            void FindRegUses(List<(int, UseSite)> UseList, object Parent, ShaderIrNode Node, int OperIndex = 0)
+            void RemoveUse(RegUse Use)
             {
-                if (Node is ShaderIrAsg Asg)
+                if (!Nodes.Remove((ShaderIrNode)Use.Cond ?? Use.Asg))
                 {
-                    FindRegUses(UseList, Asg, Asg.Src);
-                }
-                else if (Node is ShaderIrCond Cond)
-                {
-                    FindRegUses(UseList, Cond, Cond.Pred,  0);
-                    FindRegUses(UseList, Cond, Cond.Child, 1);
-                }
-                else if (Node is ShaderIrOp Op)
-                {
-                    FindRegUses(UseList, Op, Op.OperandA, 0);
-                    FindRegUses(UseList, Op, Op.OperandB, 1);
-                    FindRegUses(UseList, Op, Op.OperandC, 2);
-                }
-                else if (Node is ShaderIrOperGpr Gpr && Gpr.Index != ShaderIrOperGpr.ZRIndex)
-                {
-                    UseList.Add((GetGprKey(Gpr.Index), new UseSite(Parent, OperIndex)));
-                }
-                else if (Node is ShaderIrOperPred Pred)
-                {
-                    UseList.Add((GetPredKey(Pred.Index), new UseSite(Parent, OperIndex)));
+                    throw new InvalidOperationException();
                 }
             }
 
-            void TryAddRegUseSite(ShaderIrNode Node)
+            void FindRegUses(
+                List<(int, UseSite)> UseList,
+                ShaderIrNode         Parent,
+                ShaderIrNode         Node,
+                ShaderIrCond         CondNode,
+                int                  UseIndex,
+                int                  OperIndex = 0)
+            {
+                if (Node is ShaderIrAsg Asg)
+                {
+                    FindRegUses(UseList, Asg, Asg.Src, CondNode, UseIndex);
+                }
+                else if (Node is ShaderIrCond Cond)
+                {
+                    FindRegUses(UseList, Cond, Cond.Pred,  CondNode, UseIndex, 0);
+                    FindRegUses(UseList, Cond, Cond.Child, CondNode, UseIndex, 1);
+                }
+                else if (Node is ShaderIrOp Op)
+                {
+                    FindRegUses(UseList, Op, Op.OperandA, CondNode, UseIndex, 0);
+                    FindRegUses(UseList, Op, Op.OperandB, CondNode, UseIndex, 1);
+                    FindRegUses(UseList, Op, Op.OperandC, CondNode, UseIndex, 2);
+                }
+                else if (Node is ShaderIrOperGpr Gpr && !Gpr.IsConst)
+                {
+                    UseList.Add((GetGprKey(Gpr.Index), new UseSite(Parent, CondNode, UseIndex, OperIndex)));
+                }
+                else if (Node is ShaderIrOperPred Pred)
+                {
+                    UseList.Add((GetPredKey(Pred.Index), new UseSite(Parent, CondNode, UseIndex, OperIndex)));
+                }
+            }
+
+            void TryAddRegUseSite(ShaderIrNode Node, ShaderIrCond CondNode, int UseIndex)
             {
                 List<(int, UseSite)> UseList = new List<(int, UseSite)>();
 
-                FindRegUses(UseList, null, Node);
+                FindRegUses(UseList, null, Node, CondNode, UseIndex);
 
                 foreach ((int Key, UseSite Site) in UseList)
                 {
@@ -190,10 +235,22 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 List<(int, UseSite)> UseList = new List<(int, UseSite)>();
 
-                FindRegUses(UseList, Use.Asg, Use.Asg.Src);
+                if (Use.Cond != null)
+                {
+                    FindRegUses(UseList, null, Use.Cond, null, 0);
+                }
+                else
+                {
+                    FindRegUses(UseList, Use.Asg, Use.Asg.Src, null, 0);
+                }
 
                 foreach ((int Key, UseSite Site) in UseList)
                 {
+                    //TODO: Build an assignment list inside RegUse,
+                    //and check if there is an assignment inside the
+                    //range of Use.AsgIndex and Use.LastSiteIndex,
+                    //and if that's the case, then we should return false.
+                    //The current method is too conservative.
                     if (GetUse(Key).AsgIndex >= Use.AsgIndex)
                     {
                         return false;
@@ -203,13 +260,18 @@ namespace Ryujinx.Graphics.Gal.Shader
                 return Use.TryPropagate();
             }
 
-            for (int Index = 0, AsgIndex = 0; Index < Nodes.Count; Index++, AsgIndex++)
+            for (int Index = 0, IterCount = 0; Index < Nodes.Count; Index++, IterCount++)
             {
                 ShaderIrNode Node = Nodes[Index];
 
-                bool IsConditional = Node is ShaderIrCond;
+                ShaderIrCond CondNode = null;
 
-                TryAddRegUseSite(Node);
+                if (Node is ShaderIrCond)
+                {
+                    CondNode = (ShaderIrCond)Node;
+                }
+
+                TryAddRegUseSite(Node, CondNode, IterCount);;
 
                 while (Node is ShaderIrCond Cond)
                 {
@@ -223,7 +285,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 RegUse Use = null;
 
-                if (Asg.Dst is ShaderIrOperGpr Gpr && Gpr.Index != ShaderIrOperGpr.ZRIndex)
+                if (Asg.Dst is ShaderIrOperGpr Gpr && !Gpr.IsConst)
                 {
                     Use = GetGprUse(Gpr.Index);
                 }
@@ -232,16 +294,22 @@ namespace Ryujinx.Graphics.Gal.Shader
                     Use = GetPredUse(Pred.Index);
                 }
 
-                if (!IsConditional && TryPropagate(Use))
-                {
-                    Nodes.Remove(Use.Asg);
+                bool CanRemoveAsg = CondNode == null;
 
+                CanRemoveAsg |= IsSameCondition(CondNode, Use?.Cond);
+
+                if (CanRemoveAsg && TryPropagate(Use))
+                {
+                    RemoveUse(Use);
+
+                    //Note: Only decrement if the removal was successful.
+                    //RemoveUse throws when this is not the case so we should be good.
                     Index--;
                 }
 
                 //All nodes inside conditional nodes can't be propagated,
                 //as we don't even know if they will be executed to begin with.
-                Use?.SetNewAsg(Asg, AsgIndex, !IsConditional);
+                Use?.SetNewAsg(Asg, IterCount, CondNode);
             }
 
             foreach (RegUse Use in Uses.Values)
@@ -258,9 +326,41 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 if (TryPropagate(Use))
                 {
-                    Nodes.Remove(Use.Asg);
+                    RemoveUse(Use);
                 }
             }
+        }
+
+        private static bool IsSameCondition(ShaderIrCond CondA, ShaderIrCond CondB)
+        {
+            if (CondA == null || CondB == null)
+            {
+                return CondA == CondB;
+            }
+
+            if (CondA.Not != CondB.Not)
+            {
+                return false;
+            }
+
+            if (CondA.Pred is ShaderIrOperPred PredA)
+            {
+                if (!(CondB.Pred is ShaderIrOperPred PredB))
+                {
+                    return false;
+                }
+
+                if (PredA.Index != PredB.Index)
+                {
+                    return false;
+                }
+            }
+            else if (CondA.Pred != CondB.Pred)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

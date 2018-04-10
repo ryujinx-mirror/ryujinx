@@ -12,41 +12,13 @@ namespace Ryujinx.Graphics.Gpu
             {
                 case GalTextureFormat.A8B8G8R8: return Read4Bpp    (Memory, Texture);
                 case GalTextureFormat.A1B5G5R5: return Read2Bpp    (Memory, Texture);
+                case GalTextureFormat.B5G6R5:   return Read2Bpp    (Memory, Texture);
                 case GalTextureFormat.BC1:      return Read8Bpt4x4 (Memory, Texture);
                 case GalTextureFormat.BC2:      return Read16Bpt4x4(Memory, Texture);
                 case GalTextureFormat.BC3:      return Read16Bpt4x4(Memory, Texture);
             }
 
             throw new NotImplementedException(Texture.Format.ToString());
-        }
-
-        private unsafe static byte[] Read4Bpp(AMemory Memory, Texture Texture)
-        {
-            int Width  = Texture.Width;
-            int Height = Texture.Height;
-
-            byte[] Output = new byte[Width * Height * 4];
-
-            ISwizzle Swizzle = GetSwizzle(Texture, 4);
-
-            fixed (byte* BuffPtr = Output)
-            {
-                long OutOffs = 0;
-
-                for (int Y = 0; Y < Height; Y++)
-                for (int X = 0; X < Width;  X++)
-                {
-                    long Offset = (uint)Swizzle.GetSwizzleOffset(X, Y);
-
-                    int Pixel = Memory.ReadInt32Unchecked(Texture.Position + Offset);
-
-                    *(int*)(BuffPtr + OutOffs) = Pixel;
-
-                    OutOffs += 4;
-                }
-            }
-
-            return Output;
         }
 
         private unsafe static byte[] Read2Bpp(AMemory Memory, Texture Texture)
@@ -56,7 +28,7 @@ namespace Ryujinx.Graphics.Gpu
 
             byte[] Output = new byte[Width * Height * 2];
 
-            ISwizzle Swizzle = GetSwizzle(Texture, 2);
+            ISwizzle Swizzle = GetSwizzle(Texture, Width, 2);
 
             fixed (byte* BuffPtr = Output)
             {
@@ -78,6 +50,35 @@ namespace Ryujinx.Graphics.Gpu
             return Output;
         }
 
+        private unsafe static byte[] Read4Bpp(AMemory Memory, Texture Texture)
+        {
+            int Width  = Texture.Width;
+            int Height = Texture.Height;
+
+            byte[] Output = new byte[Width * Height * 4];
+
+            ISwizzle Swizzle = GetSwizzle(Texture, Width, 4);
+
+            fixed (byte* BuffPtr = Output)
+            {
+                long OutOffs = 0;
+
+                for (int Y = 0; Y < Height; Y++)
+                for (int X = 0; X < Width;  X++)
+                {
+                    long Offset = (uint)Swizzle.GetSwizzleOffset(X, Y);
+
+                    int Pixel = Memory.ReadInt32Unchecked(Texture.Position + Offset);
+
+                    *(int*)(BuffPtr + OutOffs) = Pixel;
+
+                    OutOffs += 4;
+                }
+            }
+
+            return Output;
+        }
+
         private unsafe static byte[] Read8Bpt4x4(AMemory Memory, Texture Texture)
         {
             int Width  = (Texture.Width  + 3) / 4;
@@ -85,7 +86,7 @@ namespace Ryujinx.Graphics.Gpu
 
             byte[] Output = new byte[Width * Height * 8];
 
-            ISwizzle Swizzle = GetSwizzle(Texture, 8);
+            ISwizzle Swizzle = GetSwizzle(Texture, Width, 8);
 
             fixed (byte* BuffPtr = Output)
             {
@@ -114,7 +115,7 @@ namespace Ryujinx.Graphics.Gpu
 
             byte[] Output = new byte[Width * Height * 16];
 
-            ISwizzle Swizzle = GetSwizzle(Texture, 16);
+            ISwizzle Swizzle = GetSwizzle(Texture, Width, 16);
 
             fixed (byte* BuffPtr = Output)
             {
@@ -138,7 +139,7 @@ namespace Ryujinx.Graphics.Gpu
             return Output;
         }
 
-        private static ISwizzle GetSwizzle(Texture Texture, int Bpp)
+        private static ISwizzle GetSwizzle(Texture Texture, int Width, int Bpp)
         {
             switch (Texture.Swizzle)
             {
@@ -148,7 +149,7 @@ namespace Ryujinx.Graphics.Gpu
 
                 case TextureSwizzle.BlockLinear:
                 case TextureSwizzle.BlockLinearColorKey:
-                    return new BlockLinearSwizzle(Texture.Width, Bpp, Texture.BlockHeight);
+                    return new BlockLinearSwizzle(Width, Bpp, Texture.BlockHeight);
             }
 
             throw new NotImplementedException(Texture.Swizzle.ToString());

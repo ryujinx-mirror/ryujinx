@@ -55,6 +55,18 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             throw new ArgumentException(nameof(Type));
         }
 
+        public static (PixelFormat, PixelType) GetTextureFormat(GalTextureFormat Format)
+        {
+            switch (Format)
+            {
+                case GalTextureFormat.A8B8G8R8: return (PixelFormat.Rgba, PixelType.UnsignedByte);
+                case GalTextureFormat.A1B5G5R5: return (PixelFormat.Rgba, PixelType.UnsignedShort5551);
+                case GalTextureFormat.B5G6R5:   return (PixelFormat.Rgb,  PixelType.UnsignedShort565);
+            }
+
+            throw new NotImplementedException(Format.ToString());
+        }
+
         public static PixelInternalFormat GetCompressedTextureFormat(GalTextureFormat Format)
         {
             switch (Format)

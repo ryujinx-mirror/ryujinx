@@ -8,6 +8,15 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             while (Offset + 2 <= Code.Length)
             {
+                //Ignore scheduling instructions, which are
+                //written every 32 bytes.
+                if ((Offset & 7) == 0)
+                {
+                    Offset += 2;
+
+                    continue;
+                }
+
                 uint Word0 = (uint)Code[Offset++];
                 uint Word1 = (uint)Code[Offset++];
 

@@ -10,6 +10,8 @@ namespace Ryujinx.Graphics.Gal.Shader
         private const int AttrStartIndex = 8;
         private const int TexStartIndex = 8;
 
+        public const string PositionOutAttrName = "position";
+
         private const string InAttrName  = "in_attr";
         private const string OutAttrName = "out_attr";
         private const string UniformName = "c";
@@ -62,10 +64,11 @@ namespace Ryujinx.Graphics.Gal.Shader
             m_Gprs  = new Dictionary<int, ShaderDeclInfo>();
             m_Preds = new Dictionary<int, ShaderDeclInfo>();
 
-            //FIXME: Only valid for vertex shaders.
             if (ShaderType == GalShaderType.Fragment)
             {
                 m_Gprs.Add(0, new ShaderDeclInfo(FragmentOutputName, 0, 0, 4));
+
+                m_InAttributes.Add(7, new ShaderDeclInfo(PositionOutAttrName, -1, 0, 4));
             }
             else
             {
@@ -104,10 +107,9 @@ namespace Ryujinx.Graphics.Gal.Shader
                     Traverse(Op, Op.OperandB);
                     Traverse(Op, Op.OperandC);
 
-                    if (Op.Inst == ShaderIrInst.Texr ||
-                        Op.Inst == ShaderIrInst.Texg ||
-                        Op.Inst == ShaderIrInst.Texb ||
-                        Op.Inst == ShaderIrInst.Texa)
+                    if (Op.Inst == ShaderIrInst.Texq ||
+                        Op.Inst == ShaderIrInst.Texs ||
+                        Op.Inst == ShaderIrInst.Txlf)
                     {
                         int Handle = ((ShaderIrOperImm)Op.OperandC).Value;
 

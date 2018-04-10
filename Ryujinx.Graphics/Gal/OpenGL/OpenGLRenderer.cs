@@ -63,7 +63,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public void Render()
         {
-            FbRenderer.Render();
+            //FbRenderer.Render();
         }
 
         public void SetWindowSize(int Width, int Height)

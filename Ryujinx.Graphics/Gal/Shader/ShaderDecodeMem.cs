@@ -36,24 +36,56 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
         }
 
+        public static void Texq(ShaderIrBlock Block, long OpCode)
+        {
+            ShaderIrNode OperD = GetOperGpr0(OpCode);
+            ShaderIrNode OperA = GetOperGpr8(OpCode);
+
+            ShaderTexqInfo Info = (ShaderTexqInfo)((OpCode >> 22) & 0x1f);
+
+            ShaderIrMetaTexq Meta0 = new ShaderIrMetaTexq(Info, 0);
+            ShaderIrMetaTexq Meta1 = new ShaderIrMetaTexq(Info, 1);
+
+            ShaderIrNode OperC = GetOperImm13_36(OpCode);
+
+            ShaderIrOp Op0 = new ShaderIrOp(ShaderIrInst.Texq, OperA, null, OperC, Meta0);
+            ShaderIrOp Op1 = new ShaderIrOp(ShaderIrInst.Texq, OperA, null, OperC, Meta1);
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(OperD, Op0), OpCode));
+            Block.AddNode(GetPredNode(new ShaderIrAsg(OperA, Op1), OpCode)); //Is this right?
+        }
+
         public static void Texs(ShaderIrBlock Block, long OpCode)
         {
+            EmitTex(Block, OpCode, ShaderIrInst.Texs);
+        }
+
+        public static void Tlds(ShaderIrBlock Block, long OpCode)
+        {
+            EmitTex(Block, OpCode, ShaderIrInst.Txlf);
+        }
+
+        private static void EmitTex(ShaderIrBlock Block, long OpCode, ShaderIrInst Inst)
+        {
             //TODO: Support other formats.
-            ShaderIrNode OperA = GetOperGpr8    (OpCode);
-            ShaderIrNode OperB = GetOperGpr20   (OpCode);
-            ShaderIrNode OperC = GetOperGpr28   (OpCode);
-            ShaderIrNode OperD = GetOperImm13_36(OpCode);
+            ShaderIrNode OperA  = GetOperGpr8    (OpCode);
+            ShaderIrNode OperB  = GetOperGpr20   (OpCode);
+            ShaderIrNode OperC  = GetOperImm13_36(OpCode);
 
             for (int Ch = 0; Ch < 4; Ch++)
             {
-                ShaderIrOp Op = new ShaderIrOp(ShaderIrInst.Texr + Ch, OperA, OperB, OperD);
+                ShaderIrOperGpr Dst = (Ch >> 1) != 0
+                    ? GetOperGpr28(OpCode)
+                    : GetOperGpr0 (OpCode);
 
-                ShaderIrOperGpr Dst = GetOperGpr0(OpCode);
+                Dst.Index += Ch & 1;
 
-                Dst.Index += Ch;
+                ShaderIrMetaTex Meta = new ShaderIrMetaTex(Ch);
 
-                Block.AddNode(new ShaderIrAsg(Dst, Op));
-            }            
+                ShaderIrOp Op = new ShaderIrOp(Inst, OperA, OperB, OperC, Meta);
+
+                Block.AddNode(GetPredNode(new ShaderIrAsg(Dst, Op), OpCode));
+            }
         }
     }
 }

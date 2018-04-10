@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             Textures = new int[80];
         }
 
-        public void Set(int Index, GalTexture Tex)
+        public void Set(int Index, GalTexture Texture)
         {
             GL.ActiveTexture(TextureUnit.Texture0 + Index);
 
@@ -19,29 +19,38 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             GL.BindTexture(TextureTarget.Texture2D, Handle);
 
-            int W = Tex.Width;
-            int H = Tex.Height;
+            const int Border = 0;
 
-            byte[] Data = Tex.Data;
-
-            int Length = Data.Length;
-
-            if (IsCompressedTextureFormat(Tex.Format))
+            if (IsCompressedTextureFormat(Texture.Format))
             {
-                PixelInternalFormat Pif = OGLEnumConverter.GetCompressedTextureFormat(Tex.Format);
+                PixelInternalFormat InternalFmt = OGLEnumConverter.GetCompressedTextureFormat(Texture.Format);
 
-                GL.CompressedTexImage2D(TextureTarget.Texture2D, 0, Pif, W, H, 0, Length, Data);
+                GL.CompressedTexImage2D(
+                    TextureTarget.Texture2D,
+                    0,
+                    InternalFmt,
+                    Texture.Width,
+                    Texture.Height,
+                    Border,
+                    Texture.Data.Length,
+                    Texture.Data);
             }
             else
             {
-                //TODO: Get those from Texture format.
-                const PixelInternalFormat Pif = PixelInternalFormat.Rgba;
+                const PixelInternalFormat InternalFmt = PixelInternalFormat.Rgba;
 
-                const PixelFormat Pf = PixelFormat.Rgba;
+                (PixelFormat, PixelType) Format = OGLEnumConverter.GetTextureFormat(Texture.Format);
 
-                const PixelType Pt = PixelType.UnsignedByte;
-
-                GL.TexImage2D(TextureTarget.Texture2D, 0, Pif, W, H, 0, Pf, Pt, Data);
+                GL.TexImage2D(
+                    TextureTarget.Texture2D,
+                    0,
+                    InternalFmt,
+                    Texture.Width,
+                    Texture.Height,
+                    Border,
+                    Format.Item1,
+                    Format.Item2,
+                    Texture.Data);
             }
         }
 

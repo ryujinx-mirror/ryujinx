@@ -60,7 +60,17 @@ namespace Ryujinx.Graphics.Gal.Shader
             return new ShaderIrOperGpr((int)(OpCode >> 28) & 0xff);
         }
 
-        public static ShaderIrNode GetOperImm19_20(long OpCode)
+        public static ShaderIrOperImm GetOperImm13_36(long OpCode)
+        {
+            return new ShaderIrOperImm((int)(OpCode >> 36) & 0x1fff);
+        }
+
+        public static ShaderIrOperImm GetOperImm32_20(long OpCode)
+        {
+            return new ShaderIrOperImm((int)(OpCode >> 20));
+        }
+
+        public static ShaderIrOperImm GetOperImm19_20(long OpCode)
         {
             int Value = (int)(OpCode >> 20) & 0x7ffff;
 
@@ -74,7 +84,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             return new ShaderIrOperImm((int)Value);
         }
 
-        public static ShaderIrNode GetOperImmf19_20(long OpCode)
+        public static ShaderIrOperImmf GetOperImmf19_20(long OpCode)
         {
             uint Imm = (uint)(OpCode >> 20) & 0x7ffff;
 
@@ -90,16 +100,6 @@ namespace Ryujinx.Graphics.Gal.Shader
             float Value = BitConverter.Int32BitsToSingle((int)Imm);
 
             return new ShaderIrOperImmf(Value);
-        }
-
-        public static ShaderIrOperImm GetOperImm13_36(long OpCode)
-        {
-            return new ShaderIrOperImm((int)(OpCode >> 36) & 0x1fff);
-        }
-
-        public static ShaderIrOperImm GetOperImm32_20(long OpCode)
-        {
-            return new ShaderIrOperImm((int)(OpCode >> 20));
         }
 
         public static ShaderIrOperPred GetOperPred3(long OpCode)
@@ -131,22 +131,37 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public static ShaderIrInst GetCmp(long OpCode)
         {
+            switch ((int)(OpCode >> 49) & 7)
+            {
+                case 1: return ShaderIrInst.Clt;
+                case 2: return ShaderIrInst.Ceq;
+                case 3: return ShaderIrInst.Cle;
+                case 4: return ShaderIrInst.Cgt;
+                case 5: return ShaderIrInst.Cne;
+                case 6: return ShaderIrInst.Cge;
+            }
+
+            throw new ArgumentException(nameof(OpCode));
+        }
+
+        public static ShaderIrInst GetCmpF(long OpCode)
+        {
             switch ((int)(OpCode >> 48) & 0xf)
             {
-                case 0x1: return ShaderIrInst.Clt;
-                case 0x2: return ShaderIrInst.Ceq;
-                case 0x3: return ShaderIrInst.Cle;
-                case 0x4: return ShaderIrInst.Cgt;
-                case 0x5: return ShaderIrInst.Cne;
-                case 0x6: return ShaderIrInst.Cge;
-                case 0x7: return ShaderIrInst.Cnum;
-                case 0x8: return ShaderIrInst.Cnan;
-                case 0x9: return ShaderIrInst.Cltu;
-                case 0xa: return ShaderIrInst.Cequ;
-                case 0xb: return ShaderIrInst.Cleu;
-                case 0xc: return ShaderIrInst.Cgtu;
-                case 0xd: return ShaderIrInst.Cneu;
-                case 0xe: return ShaderIrInst.Cgeu;
+                case 0x1: return ShaderIrInst.Fclt;
+                case 0x2: return ShaderIrInst.Fceq;
+                case 0x3: return ShaderIrInst.Fcle;
+                case 0x4: return ShaderIrInst.Fcgt;
+                case 0x5: return ShaderIrInst.Fcne;
+                case 0x6: return ShaderIrInst.Fcge;
+                case 0x7: return ShaderIrInst.Fcnum;
+                case 0x8: return ShaderIrInst.Fcnan;
+                case 0x9: return ShaderIrInst.Fcltu;
+                case 0xa: return ShaderIrInst.Fcequ;
+                case 0xb: return ShaderIrInst.Fcleu;
+                case 0xc: return ShaderIrInst.Fcgtu;
+                case 0xd: return ShaderIrInst.Fcneu;
+                case 0xe: return ShaderIrInst.Fcgeu;
             }
 
             throw new ArgumentException(nameof(OpCode));
@@ -170,7 +185,9 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             if (Pred.Index != ShaderIrOperPred.UnusedIndex)
             {
-                Node = new ShaderIrCond(Pred, Node);
+                bool Inv = ((OpCode >> 19) & 1) != 0;
+
+                Node = new ShaderIrCond(Pred, Node, Inv);
             }
 
             return Node;
