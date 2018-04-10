@@ -7,6 +7,8 @@ namespace Ryujinx.Graphics.Gal
         B5G6R5   = 0x15,
         BC1      = 0x24,
         BC2      = 0x25,
-        BC3      = 0x26
+        BC3      = 0x26,
+        BC4      = 0x27,
+        BC5      = 0x28
     }
 }

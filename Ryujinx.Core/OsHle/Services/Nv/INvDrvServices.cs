@@ -316,6 +316,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv
                 int Padding = Reader.ReadInt32();
                 int Offset  = Reader.ReadInt32();
                 int Pages   = Reader.ReadInt32();
+
+                System.Console.WriteLine("remap " + Offset.ToString("x8") + " " + Pages.ToString("x8"));
             }
 
             //TODO

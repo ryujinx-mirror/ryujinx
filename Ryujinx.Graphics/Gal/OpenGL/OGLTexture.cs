@@ -85,9 +85,17 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private static bool IsCompressedTextureFormat(GalTextureFormat Format)
         {
-            return Format == GalTextureFormat.BC1 ||
-                   Format == GalTextureFormat.BC2 ||
-                   Format == GalTextureFormat.BC3;
+            switch (Format)
+            {
+                case GalTextureFormat.BC1:
+                case GalTextureFormat.BC2:
+                case GalTextureFormat.BC3:
+                case GalTextureFormat.BC4:
+                case GalTextureFormat.BC5:
+                    return true;
+            }
+
+            return false;
         }
 
         private int EnsureTextureInitialized(int TexIndex)

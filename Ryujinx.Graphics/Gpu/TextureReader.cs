@@ -16,6 +16,8 @@ namespace Ryujinx.Graphics.Gpu
                 case GalTextureFormat.BC1:      return Read8Bpt4x4 (Memory, Texture);
                 case GalTextureFormat.BC2:      return Read16Bpt4x4(Memory, Texture);
                 case GalTextureFormat.BC3:      return Read16Bpt4x4(Memory, Texture);
+                case GalTextureFormat.BC4:      return Read8Bpt4x4 (Memory, Texture);
+                case GalTextureFormat.BC5:      return Read16Bpt4x4(Memory, Texture);
             }
 
             throw new NotImplementedException(Texture.Format.ToString());
