@@ -121,7 +121,7 @@ namespace ChocolArm64.Instruction
             Value = ((Value & 0xcccccccccccccccc) >>  2) | ((Value & 0x3333333333333333) <<  2);
             Value = ((Value & 0xf0f0f0f0f0f0f0f0) >>  4) | ((Value & 0x0f0f0f0f0f0f0f0f) <<  4);
             Value = ((Value & 0xff00ff00ff00ff00) >>  8) | ((Value & 0x00ff00ff00ff00ff) <<  8);
-            Value = ((Value & 0xffff0000ffff0000) >> 16) | ((Value & 0x0000ffff0000ffff) << 16);           
+            Value = ((Value & 0xffff0000ffff0000) >> 16) | ((Value & 0x0000ffff0000ffff) << 16);
 
             return (Value >> 32) | (Value << 32);
         }
@@ -250,10 +250,10 @@ namespace ChocolArm64.Instruction
 
         public static int CountSetBits8(byte Value)
         {
-            return (Value >> 0) & 1 + (Value >> 1) & 1 +
-                   (Value >> 2) & 1 + (Value >> 3) & 1 +
-                   (Value >> 4) & 1 + (Value >> 5) & 1 +
-                   (Value >> 6) & 1 + (Value >> 7);
+            return ((Value >> 0) & 1) + ((Value >> 1) & 1) +
+                   ((Value >> 2) & 1) + ((Value >> 3) & 1) +
+                   ((Value >> 4) & 1) + ((Value >> 5) & 1) +
+                   ((Value >> 6) & 1) +  (Value >> 7);
         }
 
         public static float RoundF(float Value, int Fpcr)
