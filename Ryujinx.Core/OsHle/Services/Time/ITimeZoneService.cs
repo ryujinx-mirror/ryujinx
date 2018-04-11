@@ -26,12 +26,12 @@ namespace Ryujinx.Core.OsHle.Services.Time
 
             DateTime CurrentTime = Epoch.AddSeconds(PosixTime).ToLocalTime();
 
-            Context.ResponseData.Write((ushort)Epoch.Year);
-            Context.ResponseData.Write((byte)Epoch.Month);
-            Context.ResponseData.Write((byte)Epoch.Day);
-            Context.ResponseData.Write((byte)Epoch.Hour);
-            Context.ResponseData.Write((byte)Epoch.Minute);
-            Context.ResponseData.Write((byte)Epoch.Second);
+            Context.ResponseData.Write((ushort)CurrentTime.Year);
+            Context.ResponseData.Write((byte)CurrentTime.Month);
+            Context.ResponseData.Write((byte)CurrentTime.Day);
+            Context.ResponseData.Write((byte)CurrentTime.Hour);
+            Context.ResponseData.Write((byte)CurrentTime.Minute);
+            Context.ResponseData.Write((byte)CurrentTime.Second);
             Context.ResponseData.Write((byte)0);
 
             /* Thanks to TuxSH
@@ -45,16 +45,16 @@ namespace Ryujinx.Core.OsHle.Services.Time
 	                };
                 };
             */
-            Context.ResponseData.Write((int)Epoch.DayOfWeek);
+            Context.ResponseData.Write((int)CurrentTime.DayOfWeek);
 
-            Context.ResponseData.Write(Epoch.DayOfYear);
+            Context.ResponseData.Write(CurrentTime.DayOfYear);
 
             //TODO: Find out the names used.
             Context.ResponseData.Write(new byte[8]);
 
-            Context.ResponseData.Write((byte)(Epoch.IsDaylightSavingTime() ? 1 : 0));
+            Context.ResponseData.Write((byte)(CurrentTime.IsDaylightSavingTime() ? 1 : 0));
 
-            Context.ResponseData.Write((int)TimeZoneInfo.Local.GetUtcOffset(Epoch).TotalSeconds);
+            Context.ResponseData.Write((int)TimeZoneInfo.Local.GetUtcOffset(CurrentTime).TotalSeconds);
 
             return 0;
         }
