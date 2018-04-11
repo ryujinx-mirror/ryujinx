@@ -160,11 +160,14 @@ namespace ChocolArm64
 
             //Mark all methods that calls this method for ReJiting,
             //since we can now call it directly which is faster.
-            foreach (ATranslatedSub TS in CachedSubs.Values)
+            if (CachedSubs.TryGetValue(Position, out ATranslatedSub OldSub))
             {
-                if (TS.HasCallee(Position))
+                foreach (long CallerPos in OldSub.GetCallerPositions())
                 {
-                    TS.MarkForReJit();
+                    if (CachedSubs.TryGetValue(Position, out ATranslatedSub CallerSub))
+                    {
+                        CallerSub.MarkForReJit();
+                    }
                 }
             }
 

@@ -3,6 +3,7 @@ using ChocolArm64.State;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -23,7 +24,7 @@ namespace ChocolArm64
 
         public ReadOnlyCollection<ARegister> Params { get; private set; }
 
-        private HashSet<long> Callees;
+        private HashSet<long> Callers;
 
         private ATranslatedSubType Type;
 
@@ -33,7 +34,7 @@ namespace ChocolArm64
 
         private int MinCallCountForReJit = 250;
 
-        public ATranslatedSub(DynamicMethod Method, List<ARegister> Params, HashSet<long> Callees)
+        public ATranslatedSub(DynamicMethod Method, List<ARegister> Params)
         {
             if (Method == null)
             {
@@ -45,14 +46,10 @@ namespace ChocolArm64
                 throw new ArgumentNullException(nameof(Params));
             }
 
-            if (Callees == null)
-            {
-                throw new ArgumentNullException(nameof(Callees));
-            }
-
             this.Method  = Method;
             this.Params  = Params.AsReadOnly();
-            this.Callees = Callees;
+
+            Callers = new HashSet<long>();
 
             PrepareDelegate();
         }
@@ -107,17 +104,14 @@ namespace ChocolArm64
 
         public bool ShouldReJit()
         {
-            if (Type == ATranslatedSubType.SubTier0)
+            if (NeedsReJit && CallCount < MinCallCountForReJit)
             {
-                if (CallCount < MinCallCountForReJit)
-                {
-                    CallCount++;
-                }
+                CallCount++;
 
-                return CallCount == MinCallCountForReJit;
+                return false;
             }
 
-            return Type == ATranslatedSubType.SubTier1 && NeedsReJit;
+            return NeedsReJit;
         }
 
         public long Execute(AThreadState ThreadState, AMemory Memory)
@@ -125,10 +119,32 @@ namespace ChocolArm64
             return ExecDelegate(ThreadState, Memory);
         }
 
-        public void SetType(ATranslatedSubType Type) => this.Type = Type;
+        public void AddCaller(long Position)
+        {
+            lock (Callers)
+            {
+                Callers.Add(Position);
+            }
+        }
 
-        public bool HasCallee(long Position) => Callees.Contains(Position);
+        public long[] GetCallerPositions()
+        {
+            lock (Callers)
+            {
+                return Callers.ToArray();
+            }
+        }
 
-        public void MarkForReJit() => NeedsReJit = true;        
+        public void SetType(ATranslatedSubType Type)
+        {
+            this.Type = Type;
+
+            if (Type == ATranslatedSubType.SubTier0)
+            {
+                NeedsReJit = true;
+            }
+        }
+
+        public void MarkForReJit() => NeedsReJit = true;
     }
 }

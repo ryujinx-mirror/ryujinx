@@ -12,8 +12,6 @@ namespace ChocolArm64.Translation
     {
         private ATranslator Translator;
 
-        private HashSet<long> Callees;
-
         private Dictionary<long, AILLabel> Labels;
 
         private int BlkIndex;
@@ -66,8 +64,6 @@ namespace ChocolArm64.Translation
             this.Graph      = Graph;
             this.Root       = Root;
 
-            Callees = new HashSet<long>();
-
             Labels = new Dictionary<long, AILLabel>();
 
             Emitter = new AILEmitter(Graph, Root, SubName);
@@ -84,7 +80,7 @@ namespace ChocolArm64.Translation
 
         public ATranslatedSub GetSubroutine()
         {
-            return Emitter.GetSubroutine(Callees);
+            return Emitter.GetSubroutine();
         }
 
         public bool AdvanceOpCode()
@@ -123,8 +119,6 @@ namespace ChocolArm64.Translation
 
         public bool TryOptEmitSubroutineCall()
         {
-            Callees.Add(((AOpCodeBImm)CurrOp).Imm);
-
             if (CurrBlock.Next == null)
             {
                 return false;
@@ -151,6 +145,8 @@ namespace ChocolArm64.Translation
             }
 
             EmitCall(Sub.Method);
+
+            Sub.AddCaller(Root.Position);
 
             return true;
         }

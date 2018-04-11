@@ -60,11 +60,11 @@ namespace ChocolArm64.Translation
 
         public AILBlock GetILBlock(int Index) => ILBlocks[Index];
 
-        public ATranslatedSub GetSubroutine(HashSet<long> Callees)
+        public ATranslatedSub GetSubroutine()
         {
             LocalAlloc = new ALocalAlloc(ILBlocks, Root);
 
-            InitSubroutine(Callees);
+            InitSubroutine();
             InitLocals();
 
             foreach (AILBlock ILBlock in ILBlocks)
@@ -75,7 +75,7 @@ namespace ChocolArm64.Translation
             return Subroutine;
         }
 
-        private void InitSubroutine(HashSet<long> Callees)
+        private void InitSubroutine()
         {
             List<ARegister> Params = new List<ARegister>();
 
@@ -99,7 +99,7 @@ namespace ChocolArm64.Translation
 
             Generator = Mthd.GetILGenerator();
 
-            Subroutine = new ATranslatedSub(Mthd, Params, Callees);
+            Subroutine = new ATranslatedSub(Mthd, Params);
         }
 
         private void InitLocals()
@@ -115,7 +115,7 @@ namespace ChocolArm64.Translation
                 Generator.EmitLdarg(Index + ParamsStart);
                 Generator.EmitStloc(GetLocalIndex(Reg));
             }
-        }        
+        }
 
         private Type[] GetParamTypes(IList<ARegister> Params)
         {
