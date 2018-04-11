@@ -10,7 +10,7 @@ namespace Ryujinx.Core.OsHle.Services.Time
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private static DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local);
+        private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public ITimeZoneService()
         {
@@ -20,25 +20,13 @@ namespace Ryujinx.Core.OsHle.Services.Time
             };
         }
 
-        //(nn::time::PosixTime)-> (nn::time::CalendarTime, nn::time::sf::CalendarAdditionalInfo)
         public long ToCalendarTimeWithMyRule(ServiceCtx Context)
         {
             long PosixTime = Context.RequestData.ReadInt64();
 
-            Epoch = Epoch.AddSeconds(PosixTime).ToLocalTime();
+            DateTime CurrentTime = Epoch.AddSeconds(PosixTime).ToLocalTime();
 
-            /*
-                struct CalendarTime {
-                    u16_le year;
-                    u8 month; // Starts at 1
-                    u8 day;   // Starts at 1
-                    u8 hour;
-                    u8 minute;
-                    u8 second;
-                    INSERT_PADDING_BYTES(1);
-                };
-            */
-            Context.ResponseData.Write((short)Epoch.Year);
+            Context.ResponseData.Write((ushort)Epoch.Year);
             Context.ResponseData.Write((byte)Epoch.Month);
             Context.ResponseData.Write((byte)Epoch.Day);
             Context.ResponseData.Write((byte)Epoch.Hour);
@@ -58,10 +46,15 @@ namespace Ryujinx.Core.OsHle.Services.Time
                 };
             */
             Context.ResponseData.Write((int)Epoch.DayOfWeek);
+
             Context.ResponseData.Write(Epoch.DayOfYear);
+
+            //TODO: Find out the names used.
             Context.ResponseData.Write(new byte[8]);
-            Context.ResponseData.Write(Convert.ToByte(Epoch.IsDaylightSavingTime()));
-            Context.ResponseData.Write(0);
+
+            Context.ResponseData.Write((byte)(Epoch.IsDaylightSavingTime() ? 1 : 0));
+
+            Context.ResponseData.Write((int)TimeZoneInfo.Local.GetUtcOffset(Epoch).TotalSeconds);
 
             return 0;
         }
