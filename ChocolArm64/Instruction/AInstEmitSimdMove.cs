@@ -256,6 +256,16 @@ namespace ChocolArm64.Instruction
             Context.EmitStvec(Op.Rd);
         }
 
+        public static void Trn1_V(AILEmitterCtx Context)
+        {
+            EmitVectorTranspose(Context, Part: 0);
+        }
+
+        public static void Trn2_V(AILEmitterCtx Context)
+        {
+            EmitVectorTranspose(Context, Part: 1);
+        }
+
         public static void Umov_S(AILEmitterCtx Context)
         {
             AOpCodeSimdIns Op = (AOpCodeSimdIns)Context.CurrOp;
@@ -312,6 +322,29 @@ namespace ChocolArm64.Instruction
             {
                 Context.Emit(OpCodes.Conv_U4);
                 Context.Emit(OpCodes.Conv_U8);
+            }
+        }
+
+        private static void EmitVectorTranspose(AILEmitterCtx Context, int Part)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            int Elems = Bytes >> Op.Size;
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                int Elem = (Index & ~1) + Part;
+
+                EmitVectorExtractZx(Context, (Index & 1) == 0 ? Op.Rn : Op.Rm, Elem, Op.Size);
+
+                EmitVectorInsert(Context, Op.Rd, Index, Op.Size);
+            }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
             }
         }
 

@@ -316,6 +316,8 @@ namespace ChocolArm64
             Set("01111110xx1xxxxx100001xxxxxxxxxx", AInstEmit.Sub_S,         typeof(AOpCodeSimdReg));
             Set("0>101110<<1xxxxx100001xxxxxxxxxx", AInstEmit.Sub_V,         typeof(AOpCodeSimdReg));
             Set("0x001110000xxxxx0xx000xxxxxxxxxx", AInstEmit.Tbl_V,         typeof(AOpCodeSimdTbl));
+            Set("0>001110<<0xxxxx001010xxxxxxxxxx", AInstEmit.Trn1_V,        typeof(AOpCodeSimdReg));
+            Set("0>001110<<0xxxxx011010xxxxxxxxxx", AInstEmit.Trn2_V,        typeof(AOpCodeSimdReg));
             Set("0x101110<<1xxxxx011101xxxxxxxxxx", AInstEmit.Uabd_V,        typeof(AOpCodeSimdReg));
             Set("0x101110<<1xxxxx011100xxxxxxxxxx", AInstEmit.Uabdl_V,       typeof(AOpCodeSimdReg));
             Set("0x101110<<1xxxxx000000xxxxxxxxxx", AInstEmit.Uaddl_V,       typeof(AOpCodeSimdReg));
@@ -333,11 +335,11 @@ namespace ChocolArm64
             Set("011111110>>>>xxx000001xxxxxxxxxx", AInstEmit.Ushr_S,        typeof(AOpCodeSimdShImm));
             Set("0x1011110>>>>xxx000001xxxxxxxxxx", AInstEmit.Ushr_V,        typeof(AOpCodeSimdShImm));
             Set("0x1011110>>>>xxx000101xxxxxxxxxx", AInstEmit.Usra_V,        typeof(AOpCodeSimdShImm));
-            Set("0x001110xx0xxxxx000110xxxxxxxxxx", AInstEmit.Uzp1_V,        typeof(AOpCodeSimdReg));
-            Set("0x001110xx0xxxxx010110xxxxxxxxxx", AInstEmit.Uzp2_V,        typeof(AOpCodeSimdReg));
+            Set("0>001110<<0xxxxx000110xxxxxxxxxx", AInstEmit.Uzp1_V,        typeof(AOpCodeSimdReg));
+            Set("0>001110<<0xxxxx010110xxxxxxxxxx", AInstEmit.Uzp2_V,        typeof(AOpCodeSimdReg));
             Set("0x001110<<100001001010xxxxxxxxxx", AInstEmit.Xtn_V,         typeof(AOpCodeSimd));
-            Set("0x001110xx0xxxxx001110xxxxxxxxxx", AInstEmit.Zip1_V,        typeof(AOpCodeSimdReg));
-            Set("0x001110xx0xxxxx011110xxxxxxxxxx", AInstEmit.Zip2_V,        typeof(AOpCodeSimdReg));
+            Set("0>001110<<0xxxxx001110xxxxxxxxxx", AInstEmit.Zip1_V,        typeof(AOpCodeSimdReg));
+            Set("0>001110<<0xxxxx011110xxxxxxxxxx", AInstEmit.Zip2_V,        typeof(AOpCodeSimdReg));
 #endregion
         }
 
