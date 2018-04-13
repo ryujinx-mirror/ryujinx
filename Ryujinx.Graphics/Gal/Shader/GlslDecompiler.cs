@@ -500,7 +500,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private string GetFnegExpr(ShaderIrOp Op) => GetUnaryExpr(Op, "-");
 
-        private string GetFrcpExpr(ShaderIrOp Op) => GetUnaryExpr(Op, "1f / ");
+        private string GetFrcpExpr(ShaderIrOp Op) => GetUnaryExpr(Op, "1 / ");
 
         private string GetFrsqExpr(ShaderIrOp Op) => GetUnaryCall(Op, "inversesqrt");
 
