@@ -428,7 +428,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private string GetValue(ShaderIrOperImmf Immf)
         {
-            return Immf.Value.ToString(CultureInfo.InvariantCulture) + "f";
+            return Immf.Value.ToString(CultureInfo.InvariantCulture);
         }
 
         private string GetName(ShaderIrOperPred Pred)
@@ -691,7 +691,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                         {
                             float Value = BitConverter.Int32BitsToSingle(Imm.Value);
 
-                            return Value.ToString(CultureInfo.InvariantCulture) + "f";
+                            return Value.ToString(CultureInfo.InvariantCulture);
                         }
                         break;
                     }
