@@ -219,7 +219,7 @@ namespace Ryujinx.Core.Input
                     Memory.WriteInt64Unchecked(TouchScreenOffset + 0x8,  HidEntryCount);
                     Memory.WriteInt64Unchecked(TouchScreenOffset + 0x10, CurrEntry);
                     Memory.WriteInt64Unchecked(TouchScreenOffset + 0x18, HidEntryCount - 1);
-                    Memory.WriteInt64Unchecked(TouchScreenOffset + 0x20, Timestamp);            
+                    Memory.WriteInt64Unchecked(TouchScreenOffset + 0x20, Timestamp);
 
                     long TouchEntryOffset = TouchScreenOffset + HidTouchHeaderSize;
 

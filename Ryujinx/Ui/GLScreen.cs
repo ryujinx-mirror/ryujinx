@@ -156,6 +156,13 @@ namespace Ryujinx
 
             Ns.Hid.SetJoyconButton(
                 HidControllerId.CONTROLLER_HANDHELD,
+                HidControllerLayouts.Handheld_Joined,
+                CurrentButton,
+                LeftJoystick,
+                RightJoystick);
+
+            Ns.Hid.SetJoyconButton(
+                HidControllerId.CONTROLLER_HANDHELD,
                 HidControllerLayouts.Main,
                 CurrentButton,
                 LeftJoystick,
