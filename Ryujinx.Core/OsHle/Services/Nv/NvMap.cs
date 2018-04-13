@@ -8,5 +8,6 @@ namespace Ryujinx.Core.OsHle.Services.Nv
         public int  Align;
         public int  Kind;
         public long CpuAddress;
+        public long GpuAddress;
     }
 }

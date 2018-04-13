@@ -38,8 +38,6 @@ namespace Ryujinx
         protected override void OnLoad(EventArgs e)
         {
             VSync = VSyncMode.On;
-
-            Renderer.InitializeFrameBuffer();
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)

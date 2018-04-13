@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.Gpu
 {
-    enum TextureSwizzle
+    public enum TextureSwizzle
     {
         _1dBuffer           = 0,
         PitchColorKey       = 1,

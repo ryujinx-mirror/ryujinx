@@ -127,17 +127,72 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public static BlendEquationMode GetBlendEquation(GalBlendEquation BlendEquation)
         {
-            return (BlendEquationMode)BlendEquation;
+            switch (BlendEquation)
+            {
+                case GalBlendEquation.FuncAdd:             return BlendEquationMode.FuncAdd;
+                case GalBlendEquation.FuncSubtract:        return BlendEquationMode.FuncSubtract;
+                case GalBlendEquation.FuncReverseSubtract: return BlendEquationMode.FuncReverseSubtract;
+                case GalBlendEquation.Min:                 return BlendEquationMode.Min;
+                case GalBlendEquation.Max:                 return BlendEquationMode.Max;
+            }
+
+            throw new ArgumentException(nameof(BlendEquation));
         }
 
         public static BlendingFactorSrc GetBlendFactorSrc(GalBlendFactor BlendFactor)
         {
-            return (BlendingFactorSrc)(BlendFactor - 0x4000);
+            switch (BlendFactor)
+            {
+                case GalBlendFactor.Zero:                  return BlendingFactorSrc.Zero;
+                case GalBlendFactor.One:                   return BlendingFactorSrc.One;
+                case GalBlendFactor.SrcColor:              return BlendingFactorSrc.SrcColor;
+                case GalBlendFactor.OneMinusSrcColor:      return BlendingFactorSrc.OneMinusSrcColor;
+                case GalBlendFactor.DstColor:              return BlendingFactorSrc.DstColor;
+                case GalBlendFactor.OneMinusDstColor:      return BlendingFactorSrc.OneMinusDstColor;
+                case GalBlendFactor.SrcAlpha:              return BlendingFactorSrc.SrcAlpha;
+                case GalBlendFactor.OneMinusSrcAlpha:      return BlendingFactorSrc.OneMinusSrcAlpha;
+                case GalBlendFactor.DstAlpha:              return BlendingFactorSrc.DstAlpha;
+                case GalBlendFactor.OneMinusDstAlpha:      return BlendingFactorSrc.OneMinusDstAlpha;
+                case GalBlendFactor.ConstantColor:         return BlendingFactorSrc.ConstantColor;
+                case GalBlendFactor.OneMinusConstantColor: return BlendingFactorSrc.OneMinusConstantColor;
+                case GalBlendFactor.ConstantAlpha:         return BlendingFactorSrc.ConstantAlpha;
+                case GalBlendFactor.OneMinusConstantAlpha: return BlendingFactorSrc.OneMinusConstantAlpha;
+                case GalBlendFactor.SrcAlphaSaturate:      return BlendingFactorSrc.SrcAlphaSaturate;
+                case GalBlendFactor.Src1Color:             return BlendingFactorSrc.Src1Color;
+                case GalBlendFactor.OneMinusSrc1Color:     return BlendingFactorSrc.OneMinusSrc1Color;
+                case GalBlendFactor.Src1Alpha:             return BlendingFactorSrc.Src1Alpha;
+                case GalBlendFactor.OneMinusSrc1Alpha:     return BlendingFactorSrc.OneMinusSrc1Alpha;
+            }
+
+            throw new ArgumentException(nameof(BlendFactor));
         }
 
         public static BlendingFactorDest GetBlendFactorDst(GalBlendFactor BlendFactor)
         {
-            return (BlendingFactorDest)(BlendFactor - 0x4000);
+            switch (BlendFactor)
+            {
+                case GalBlendFactor.Zero:                  return BlendingFactorDest.Zero;
+                case GalBlendFactor.One:                   return BlendingFactorDest.One;
+                case GalBlendFactor.SrcColor:              return BlendingFactorDest.SrcColor;
+                case GalBlendFactor.OneMinusSrcColor:      return BlendingFactorDest.OneMinusSrcColor;
+                case GalBlendFactor.DstColor:              return BlendingFactorDest.DstColor;
+                case GalBlendFactor.OneMinusDstColor:      return BlendingFactorDest.OneMinusDstColor;
+                case GalBlendFactor.SrcAlpha:              return BlendingFactorDest.SrcAlpha;
+                case GalBlendFactor.OneMinusSrcAlpha:      return BlendingFactorDest.OneMinusSrcAlpha;
+                case GalBlendFactor.DstAlpha:              return BlendingFactorDest.DstAlpha;
+                case GalBlendFactor.OneMinusDstAlpha:      return BlendingFactorDest.OneMinusDstAlpha;
+                case GalBlendFactor.ConstantColor:         return BlendingFactorDest.ConstantColor;
+                case GalBlendFactor.OneMinusConstantColor: return BlendingFactorDest.OneMinusConstantColor;
+                case GalBlendFactor.ConstantAlpha:         return BlendingFactorDest.ConstantAlpha;
+                case GalBlendFactor.OneMinusConstantAlpha: return BlendingFactorDest.OneMinusConstantAlpha;
+                case GalBlendFactor.SrcAlphaSaturate:      return BlendingFactorDest.SrcAlphaSaturate;
+                case GalBlendFactor.Src1Color:             return BlendingFactorDest.Src1Color;
+                case GalBlendFactor.OneMinusSrc1Color:     return BlendingFactorDest.OneMinusSrc1Color;
+                case GalBlendFactor.Src1Alpha:             return BlendingFactorDest.Src1Alpha;
+                case GalBlendFactor.OneMinusSrc1Alpha:     return BlendingFactorDest.OneMinusSrc1Alpha;
+            }
+
+            throw new ArgumentException(nameof(BlendFactor));
         }
     }
 }

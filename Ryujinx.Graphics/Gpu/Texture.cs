@@ -2,7 +2,7 @@ using Ryujinx.Graphics.Gal;
 
 namespace Ryujinx.Graphics.Gpu
 {
-    struct Texture
+    public struct Texture
     {
         public long Position { get; private set; }
 
@@ -15,6 +15,24 @@ namespace Ryujinx.Graphics.Gpu
         public TextureSwizzle Swizzle { get; private set; }
 
         public GalTextureFormat Format { get; private set; }
+
+        public Texture(
+            long Position,
+            int  Width,
+            int  Height)
+        {
+            this.Position = Position;
+            this.Width    = Width;
+            this.Height   = Height;
+
+            Pitch = 0;
+
+            BlockHeight = 16;
+
+            Swizzle = TextureSwizzle.BlockLinear;
+
+            Format = GalTextureFormat.A8B8G8R8;
+        }
 
         public Texture(
             long             Position,

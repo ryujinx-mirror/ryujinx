@@ -2,6 +2,7 @@ using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Services.Nv;
 using Ryujinx.Graphics.Gal;
+using Ryujinx.Graphics.Gpu;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -63,13 +64,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
 
         private ManualResetEvent WaitBufferFree;
 
-        private object RenderQueueLock;
-
-        private int RenderQueueCount;
-
-        private bool NvFlingerDisposed;
-
-        private bool KeepRunning;
+        private bool Disposed;
 
         public NvFlinger(IGalRenderer Renderer, KEvent ReleaseEvent)
         {
@@ -92,10 +87,6 @@ namespace Ryujinx.Core.OsHle.Services.Android
             BufferQueue = new BufferEntry[0x40];
 
             WaitBufferFree = new ManualResetEvent(false);
-
-            RenderQueueLock = new object();
-
-            KeepRunning = true;
         }
 
         public long ProcessParcelRequest(ServiceCtx Context, byte[] ParcelData, int Code)
@@ -285,35 +276,24 @@ namespace Ryujinx.Core.OsHle.Services.Android
             return 0;
         }
 
-        private unsafe void SendFrameBuffer(ServiceCtx Context, int Slot)
+        private void SendFrameBuffer(ServiceCtx Context, int Slot)
         {
-            int FbWidth  = BufferQueue[Slot].Data.Width;
-            int FbHeight = BufferQueue[Slot].Data.Height;
-
-            long FbSize = (uint)FbWidth * FbHeight * 4;
+            int FbWidth  = 1280;
+            int FbHeight = 720;
 
             NvMap Map = GetNvMap(Context, Slot);
 
             NvMapFb MapFb = (NvMapFb)INvDrvServices.NvMapsFb.GetData(Context.Process, 0);
 
-            long Address = Map.CpuAddress;
+            long CpuAddr = Map.CpuAddress;
+            long GpuAddr = Map.GpuAddress;
 
             if (MapFb.HasBufferOffset(Slot))
             {
-                Address += MapFb.GetBufferOffset(Slot);
-            }
+                CpuAddr += MapFb.GetBufferOffset(Slot);
 
-            if ((ulong)(Address + FbSize) > AMemoryMgr.AddrSize)
-            {
-                Logging.Error($"Frame buffer address {Address:x16} is invalid!");
-
-                BufferQueue[Slot].State = BufferState.Free;
-
-                ReleaseEvent.Handle.Set();
-
-                WaitBufferFree.Set();
-
-                return;
+                //TODO: Enable once the frame buffers problems are fixed.
+                //GpuAddr += MapFb.GetBufferOffset(Slot);
             }
 
             BufferQueue[Slot].State = BufferState.Acquired;
@@ -367,41 +347,28 @@ namespace Ryujinx.Core.OsHle.Services.Android
                 Rotate = -MathF.PI * 0.5f;
             }
 
-            lock (RenderQueueLock)
-            {
-                if (NvFlingerDisposed)
-                {
-                    return;
-                }
+            Renderer.SetFrameBufferTransform(ScaleX, ScaleY, Rotate, OffsX, OffsY);
 
-                Interlocked.Increment(ref RenderQueueCount);
+            //TODO: Support double buffering here aswell, it is broken for GPU
+            //frame buffers because it seems to be completely out of sync.
+            if (Context.Ns.Gpu.Engine3d.IsFrameBufferPosition(GpuAddr))
+            {
+                //Frame buffer is rendered to by the GPU, we can just
+                //bind the frame buffer texture, it's not necessary to read anything.
+                Renderer.SetFrameBuffer(GpuAddr);
+            }
+            else
+            {
+                //Frame buffer is not set on the GPU registers, in this case
+                //assume that the app is manually writing to it.
+                Texture Texture = new Texture(CpuAddr, FbWidth, FbHeight);
+
+                byte[] Data = TextureReader.Read(Context.Memory, Texture);
+
+                Renderer.SetFrameBuffer(Data, FbWidth, FbHeight);
             }
 
-            byte* Fb = (byte*)Context.Memory.Ram + Address;
-
-            Context.Ns.Gpu.Renderer.QueueAction(delegate()
-            {
-                Context.Ns.Gpu.Renderer.SetFrameBuffer(
-                    Fb,
-                    FbWidth,
-                    FbHeight,
-                    ScaleX,
-                    ScaleY,
-                    OffsX,
-                    OffsY,
-                    Rotate);
-
-                BufferQueue[Slot].State = BufferState.Free;
-
-                Interlocked.Decrement(ref RenderQueueCount);
-
-                ReleaseEvent.Handle.Set();
-
-                lock (WaitBufferFree)
-                {
-                    WaitBufferFree.Set();
-                }
-            });
+            Context.Ns.Gpu.Renderer.QueueAction(() => ReleaseBuffer(Slot));
         }
 
         private NvMap GetNvMap(ServiceCtx Context, int Slot)
@@ -420,6 +387,18 @@ namespace Ryujinx.Core.OsHle.Services.Android
             return INvDrvServices.NvMaps.GetData<NvMap>(Context.Process, NvMapHandle);
         }
 
+        private void ReleaseBuffer(int Slot)
+        {
+            BufferQueue[Slot].State = BufferState.Free;
+
+            ReleaseEvent.Handle.Set();
+
+            lock (WaitBufferFree)
+            {
+                WaitBufferFree.Set();
+            }
+        }
+
         private int GetFreeSlotBlocking(int Width, int Height)
         {
             int Slot;
@@ -435,7 +414,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
 
                     Logging.Debug("Waiting for a free BufferQueue slot...");
 
-                    if (!KeepRunning)
+                    if (Disposed)
                     {
                         break;
                     }
@@ -445,7 +424,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
 
                 WaitBufferFree.WaitOne();
             }
-            while (KeepRunning);
+            while (!Disposed);
 
             Logging.Debug($"Found free BufferQueue slot {Slot}!");
 
@@ -485,26 +464,12 @@ namespace Ryujinx.Core.OsHle.Services.Android
 
         protected virtual void Dispose(bool Disposing)
         {
-            if (Disposing && !NvFlingerDisposed)
+            if (Disposing && !Disposed)
             {
-                lock (RenderQueueLock)
-                {
-                    NvFlingerDisposed = true;
-                }
-
-                //Ensure that all pending actions was sent before
-                //we can safely assume that the class was disposed.
-                while (RenderQueueCount > 0)
-                {
-                    Thread.Yield();
-                }
-
-                Renderer.ResetFrameBuffer();
+                Disposed = true;
 
                 lock (WaitBufferFree)
                 {
-                    KeepRunning = false;
-
                     WaitBufferFree.Set();
                 }
 

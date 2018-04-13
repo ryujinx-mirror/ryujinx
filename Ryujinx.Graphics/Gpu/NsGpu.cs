@@ -9,9 +9,9 @@ namespace Ryujinx.Graphics.Gpu
 
         internal NsGpuMemoryMgr MemoryMgr { get; private set; }
 
-        public NvGpuFifo Fifo;
+        public NvGpuFifo Fifo { get; private set; }
 
-        internal NvGpuEngine3d Engine3d;
+        public NvGpuEngine3d Engine3d { get; private set; }
 
         private Thread FifoProcessing;
 
@@ -29,7 +29,7 @@ namespace Ryujinx.Graphics.Gpu
 
             KeepRunning = true;
 
-            FifoProcessing = new Thread(ProcessFifo);            
+            FifoProcessing = new Thread(ProcessFifo);
 
             FifoProcessing.Start();
         }

@@ -2,7 +2,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     static class ShaderDecoder
     {
-        public static ShaderIrBlock DecodeBasicBlock(int[] Code, int Offset, GalShaderType ShaderType)
+        public static ShaderIrBlock DecodeBasicBlock(int[] Code, int Offset)
         {
             ShaderIrBlock Block = new ShaderIrBlock();
 
@@ -36,8 +36,6 @@ namespace Ryujinx.Graphics.Gal.Shader
                     break;
                 }
             }
-
-            Block.RunOptimizationPasses(ShaderType);
 
             return Block;
         }

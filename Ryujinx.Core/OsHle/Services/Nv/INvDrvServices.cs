@@ -244,6 +244,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv
 
             Context.Memory.WriteInt64(Position + 0x20, Offset);
 
+            Map.GpuAddress = Offset;
+
             return 0;
         }
 

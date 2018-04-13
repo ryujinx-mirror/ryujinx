@@ -74,17 +74,28 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             for (int Ch = 0; Ch < 4; Ch++)
             {
-                ShaderIrOperGpr Dst = (Ch >> 1) != 0
-                    ? GetOperGpr28(OpCode)
-                    : GetOperGpr0 (OpCode);
-
-                Dst.Index += Ch & 1;
+                //Assign it to a temp because the destination registers
+                //may be used as texture coord input aswell.
+                ShaderIrOperGpr Dst = new ShaderIrOperGpr(0x100 + Ch);
 
                 ShaderIrMetaTex Meta = new ShaderIrMetaTex(Ch);
 
                 ShaderIrOp Op = new ShaderIrOp(Inst, OperA, OperB, OperC, Meta);
 
                 Block.AddNode(GetPredNode(new ShaderIrAsg(Dst, Op), OpCode));
+            }
+
+            for (int Ch = 0; Ch < 4; Ch++)
+            {
+                ShaderIrOperGpr Src = new ShaderIrOperGpr(0x100 + Ch);
+
+                ShaderIrOperGpr Dst = (Ch >> 1) != 0
+                    ? GetOperGpr28(OpCode)
+                    : GetOperGpr0 (OpCode);
+
+                Dst.Index += Ch & 1;
+
+                Block.AddNode(GetPredNode(new ShaderIrAsg(Dst, Src), OpCode));
             }
         }
     }

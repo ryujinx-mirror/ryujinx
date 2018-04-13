@@ -81,7 +81,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public GlslProgram Decompile(int[] Code, GalShaderType ShaderType)
         {
-            ShaderIrBlock Block = ShaderDecoder.DecodeBasicBlock(Code, 0, ShaderType);
+            ShaderIrBlock Block = ShaderDecoder.DecodeBasicBlock(Code, 0);
 
             ShaderIrNode[] Nodes = Block.GetNodes();
 
