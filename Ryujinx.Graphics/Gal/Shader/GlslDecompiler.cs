@@ -89,7 +89,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             SB = new StringBuilder();
 
-            SB.AppendLine("#version 330 core");
+            SB.AppendLine("#version 410 core");
 
             PrintDeclTextures();
             PrintDeclUniforms();
