@@ -428,7 +428,7 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
                                    Reader.ReadByte().ToString() + "." +
                                    Reader.ReadByte().ToString();
 
-                Logging.Debug($"Try to connect to {IpAddress}:{Port}");
+                Logging.Debug(LogClass.ServiceBsd, $"Try to connect to {IpAddress}:{Port}");
 
                 Sockets[SocketId].IpAddress = IPAddress.Parse(IpAddress);
                 Sockets[SocketId].RemoteEP = new IPEndPoint(Sockets[SocketId].IpAddress, Port);

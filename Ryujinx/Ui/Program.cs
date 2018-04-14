@@ -37,27 +37,27 @@ namespace Ryujinx
 
                     if (RomFsFiles.Length > 0)
                     {
-                        Logging.Info("Loading as cart with RomFS.");
+                        Logging.Info(LogClass.Loader, "Loading as cart with RomFS.");
 
                         Ns.LoadCart(args[0], RomFsFiles[0]);
                     }
                     else
                     {
-                        Logging.Info("Loading as cart WITHOUT RomFS.");
+                        Logging.Info(LogClass.Loader, "Loading as cart WITHOUT RomFS.");
 
                         Ns.LoadCart(args[0]);
                     }
                 }
                 else if (File.Exists(args[0]))
                 {
-                    Logging.Info("Loading as homebrew.");
+                    Logging.Info(LogClass.Loader, "Loading as homebrew.");
 
                     Ns.LoadProgram(args[0]);
                 }
             }
             else
             {
-                Logging.Error("Please specify the folder with the NSOs/IStorage or a NSO/NRO.");
+                Logging.Error(LogClass.Loader, "Please specify the folder with the NSOs/IStorage or a NSO/NRO.");
             }
 
             using (GLScreen Screen = new GLScreen(Ns, Renderer))

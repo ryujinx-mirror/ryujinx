@@ -39,7 +39,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (Obj == null)
             {
-                Logging.Warn($"Tried to CloseHandle on invalid handle 0x{Handle:x8}!");
+                Logging.Warn(LogClass.KernelSvc, $"Tried to CloseHandle on invalid handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
@@ -75,7 +75,7 @@ namespace Ryujinx.Core.OsHle.Svc
             }
             else
             {
-                Logging.Warn($"Tried to ResetSignal on invalid event handle 0x{Handle:x8}!");
+                Logging.Warn(LogClass.KernelSvc, $"Tried to ResetSignal on invalid event handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
@@ -99,7 +99,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
                 if (SyncObj == null)
                 {
-                    Logging.Warn($"Tried to WaitSynchronization on invalid handle 0x{Handle:x8}!");
+                    Logging.Warn(LogClass.KernelSvc, $"Tried to WaitSynchronization on invalid handle 0x{Handle:x8}!");
 
                     ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
@@ -199,7 +199,7 @@ namespace Ryujinx.Core.OsHle.Svc
             }
             else
             {
-                Logging.Warn($"Tried to SendSyncRequest on invalid session handle 0x{Handle:x8}!");
+                Logging.Warn(LogClass.KernelSvc, $"Tried to SendSyncRequest on invalid session handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
@@ -221,7 +221,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             string Str = AMemoryHelper.ReadAsciiString(Memory, Position, Size);
 
-            Logging.Info(Str);
+            Logging.Info(LogClass.KernelSvc, Str);
 
             ThreadState.X0 = 0;
         }

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 
 namespace Ryujinx.Core
 {
@@ -13,14 +14,16 @@ namespace Ryujinx.Core
 
         private const string LogFileName = "Ryujinx.log";
 
-        private static bool EnableInfo = Config.LoggingEnableInfo;
-        private static bool EnableTrace = Config.LoggingEnableTrace;
-        private static bool EnableDebug = Config.LoggingEnableDebug;
-        private static bool EnableWarn = Config.LoggingEnableWarn;
-        private static bool EnableError = Config.LoggingEnableError;
-        private static bool EnableFatal = Config.LoggingEnableFatal;
-        private static bool EnableIpc = Config.LoggingEnableIpc;
-        private static bool EnableLogFile = Config.LoggingEnableLogFile;
+        private static bool   EnableInfo         = Config.LoggingEnableInfo;
+        private static bool   EnableTrace        = Config.LoggingEnableTrace;
+        private static bool   EnableDebug        = Config.LoggingEnableDebug;
+        private static bool   EnableWarn         = Config.LoggingEnableWarn;
+        private static bool   EnableError        = Config.LoggingEnableError;
+        private static bool   EnableFatal        = Config.LoggingEnableFatal;
+        private static bool   EnableIpc          = Config.LoggingEnableIpc;
+        private static bool   EnableFilter       = Config.LoggingEnableFilter;
+        private static bool   EnableLogFile      = Config.LoggingEnableLogFile;
+        private static bool[] FilteredLogClasses = Config.LoggingFilteredClasses;
 
         private enum LogLevel
         {
@@ -45,6 +48,10 @@ namespace Ryujinx.Core
 
         private static void LogMessage(LogEntry LogEntry)
         {
+            if (EnableFilter)
+                if (!FilteredLogClasses[(int)LogEntry.LogClass])
+                    return;
+
             ConsoleColor consoleColor = ConsoleColor.White;
 
             switch (LogEntry.LogLevel)
@@ -69,8 +76,10 @@ namespace Ryujinx.Core
                     break;
             }
 
-            string Text = $"{LogEntry.ExecutionTime} | {LogEntry.LogLevel.ToString()}  > " +
-                $"{LogEntry.CallingMember} > {LogEntry.Message}";
+            LogEntry.ManagedThreadId = Thread.CurrentThread.ManagedThreadId;
+
+            string Text = $"{LogEntry.ExecutionTime} | {LogEntry.ManagedThreadId} > {LogEntry.LogClass} > " +
+                $"{LogEntry.LogLevel.ToString()}  > {LogEntry.CallingMember} > {LogEntry.Message}";
 
             Console.ForegroundColor = consoleColor;
             Console.WriteLine(Text.PadLeft(Text.Length + 1, ' '));
@@ -90,7 +99,7 @@ namespace Ryujinx.Core
             }
         }
 
-        public static void Info(string Message, [CallerMemberName] string CallingMember = "")
+        public static void Info(LogClass LogClass, string Message, [CallerMemberName] string CallingMember = "")
         {
             if (EnableInfo)
             {
@@ -98,13 +107,14 @@ namespace Ryujinx.Core
                 {
                     CallingMember = CallingMember,
                     LogLevel      = LogLevel.Info,
+                    LogClass      = LogClass,
                     Message       = Message,
                     ExecutionTime = GetExecutionTime()
                 });
             }
         }
 
-        public static void Trace(string Message, [CallerMemberName] string CallingMember = "")
+        public static void Trace(LogClass LogClass, string Message, [CallerMemberName] string CallingMember = "")
         {
             if (EnableTrace)
             {
@@ -112,13 +122,14 @@ namespace Ryujinx.Core
                 {
                     CallingMember = CallingMember,
                     LogLevel      = LogLevel.Trace,
+                    LogClass      = LogClass,
                     Message       = Message,
                     ExecutionTime = GetExecutionTime()
                 });
             }
         }
 
-        public static void Debug(string Message, [CallerMemberName] string CallingMember = "")
+        public static void Debug(LogClass LogClass,string Message, [CallerMemberName] string CallingMember = "")
         {
             if (EnableDebug)
             {
@@ -126,13 +137,14 @@ namespace Ryujinx.Core
                 {
                     CallingMember = CallingMember,
                     LogLevel      = LogLevel.Debug,
+                    LogClass      = LogClass,
                     Message       = Message,
                     ExecutionTime = GetExecutionTime()
                 });
             }
         }
 
-        public static void Warn(string Message, [CallerMemberName] string CallingMember = "")
+        public static void Warn(LogClass LogClass, string Message, [CallerMemberName] string CallingMember = "")
         {
             if (EnableWarn)
             {
@@ -140,13 +152,14 @@ namespace Ryujinx.Core
                 {
                     CallingMember = CallingMember,
                     LogLevel      = LogLevel.Warn,
+                    LogClass      = LogClass,
                     Message       = Message,
                     ExecutionTime = GetExecutionTime()
                 });
             }
         }
 
-        public static void Error(string Message, [CallerMemberName] string CallingMember = "")
+        public static void Error(LogClass LogClass, string Message, [CallerMemberName] string CallingMember = "")
         {
             if (EnableError)
             {
@@ -154,13 +167,14 @@ namespace Ryujinx.Core
                 {
                     CallingMember = CallingMember,
                     LogLevel      = LogLevel.Error,
+                    LogClass      = LogClass,
                     Message       = Message,
                     ExecutionTime = GetExecutionTime()
                 });
             }
         }
 
-        public static void Fatal(string Message, [CallerMemberName] string CallingMember = "")
+        public static void Fatal(LogClass LogClass, string Message, [CallerMemberName] string CallingMember = "")
         {
             if (EnableFatal)
             {
@@ -168,6 +182,7 @@ namespace Ryujinx.Core
                 {
                     CallingMember = CallingMember,
                     LogLevel      = LogLevel.Fatal,
+                    LogClass      = LogClass,
                     Message       = Message,
                     ExecutionTime = GetExecutionTime()
                 });
@@ -253,6 +268,8 @@ namespace Ryujinx.Core
             public string   CallingMember;
             public string   ExecutionTime;
             public string   Message;
+            public int      ManagedThreadId;
+            public LogClass LogClass;
             public LogLevel LogLevel;
         }
     }

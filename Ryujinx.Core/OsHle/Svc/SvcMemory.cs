@@ -57,7 +57,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (!IsValidPosition(Src))
             {
-                Logging.Warn($"Tried to map Memory at invalid src address {Src:x16}!");
+                Logging.Warn(LogClass.KernelSvc, $"Tried to map Memory at invalid src address {Src:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidMemRange);
 
@@ -66,7 +66,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (!IsValidMapPosition(Dst))
             {
-                Logging.Warn($"Tried to map Memory at invalid dst address {Dst:x16}!");
+                Logging.Warn(LogClass.KernelSvc, $"Tried to map Memory at invalid dst address {Dst:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidMemRange);
 
@@ -92,7 +92,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (!IsValidPosition(Src))
             {
-                Logging.Warn($"Tried to unmap Memory at invalid src address {Src:x16}!");
+                Logging.Warn(LogClass.KernelSvc, $"Tried to unmap Memory at invalid src address {Src:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidMemRange);
 
@@ -101,7 +101,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (!IsValidMapPosition(Dst))
             {
-                Logging.Warn($"Tried to unmap Memory at invalid dst address {Dst:x16}!");
+                Logging.Warn(LogClass.KernelSvc, $"Tried to unmap Memory at invalid dst address {Dst:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidMemRange);
 
@@ -158,7 +158,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (!IsValidPosition(Src))
             {
-                Logging.Warn($"Tried to map SharedMemory at invalid address {Src:x16}!");
+                Logging.Warn(LogClass.KernelSvc, $"Tried to map SharedMemory at invalid address {Src:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidMemRange);
 
@@ -196,7 +196,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (!IsValidPosition(Src))
             {
-                Logging.Warn($"Tried to unmap SharedMemory at invalid address {Src:x16}!");
+                Logging.Warn(LogClass.KernelSvc, $"Tried to unmap SharedMemory at invalid address {Src:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidMemRange);
 
@@ -230,7 +230,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (!IsValidPosition(Src))
             {
-                Logging.Warn($"Tried to create TransferMemory at invalid address {Src:x16}!");
+                Logging.Warn(LogClass.KernelSvc, $"Tried to create TransferMemory at invalid address {Src:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidMemRange);
 

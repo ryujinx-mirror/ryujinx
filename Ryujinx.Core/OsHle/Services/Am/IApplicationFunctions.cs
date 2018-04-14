@@ -58,7 +58,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
             int Module = ErrorCode & 0xFF;
             int Description = (ErrorCode >> 9) & 0xFFF;
 
-            Logging.Info($"({(ErrorModule)Module}){2000 + Module}-{Description}");
+            Logging.Info(LogClass.ServiceAm, $"({(ErrorModule)Module}){2000 + Module}-{Description}");
 
             return 0;
         }

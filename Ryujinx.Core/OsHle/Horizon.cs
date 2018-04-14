@@ -56,7 +56,7 @@ namespace Ryujinx.Core.OsHle
                         continue;
                     }
 
-                    Logging.Info($"Loading {Path.GetFileNameWithoutExtension(File)}...");
+                    Logging.Info(LogClass.Loader, $"Loading {Path.GetFileNameWithoutExtension(File)}...");
 
                     using (FileStream Input = new FileStream(File, FileMode.Open))
                     {
@@ -131,7 +131,7 @@ namespace Ryujinx.Core.OsHle
             {
                 string NextNro = Homebrew.ReadHbAbiNextLoadPath(Process.Memory, Process.HbAbiDataPosition);
 
-                Logging.Info($"HbAbi NextLoadPath {NextNro}");
+                Logging.Info(LogClass.Loader, $"HbAbi NextLoadPath {NextNro}");
 
                 if (NextNro == string.Empty)
                 {

@@ -137,7 +137,7 @@ namespace Ryujinx.Core.OsHle.Svc
             }
             else
             {
-                Logging.Warn($"Tried to GetThreadId on invalid thread handle 0x{Handle:x8}!");
+                Logging.Warn(LogClass.KernelSvc, $"Tried to GetThreadId on invalid thread handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }

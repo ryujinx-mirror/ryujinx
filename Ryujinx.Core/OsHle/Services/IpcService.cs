@@ -81,7 +81,7 @@ namespace Ryujinx.Core.OsHle.Services
             {
                 Context.ResponseData.BaseStream.Seek(IsDomain ? 0x20 : 0x10, SeekOrigin.Begin);
 
-                Logging.Trace($"{Service.GetType().Name}: {ProcessRequest.Method.Name}");
+                Logging.Trace(LogClass.KernelIpc, $"{Service.GetType().Name}: {ProcessRequest.Method.Name}");
 
                 long Result = ProcessRequest(Context);
 

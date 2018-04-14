@@ -82,7 +82,7 @@ namespace Ryujinx.Core.Input
 
                 (AMemory Memory, long Position) ShMem = ShMemPositions[ShMemPositions.Length - 1];
 
-                Logging.Info($"HID shared memory successfully mapped to 0x{ShMem.Position:x16}!");
+                Logging.Info(LogClass.ServiceHid, $"HID shared memory successfully mapped to 0x{ShMem.Position:x16}!");
 
                 Init(ShMem.Memory, ShMem.Position);
             }

@@ -80,11 +80,11 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (SvcFuncs.TryGetValue(e.Id, out SvcFunc Func))
             {
-                Logging.Trace($"(Thread {ThreadState.ThreadId}) {Func.Method.Name} called.");
+                Logging.Trace(LogClass.KernelSvc, $"(Thread {ThreadState.ThreadId}) {Func.Method.Name} called.");
 
                 Func(ThreadState);
 
-                Logging.Trace($"(Thread {ThreadState.ThreadId}) {Func.Method.Name} ended.");
+                Logging.Trace(LogClass.KernelSvc, $"(Thread {ThreadState.ThreadId}) {Func.Method.Name} ended.");
             }
             else
             {

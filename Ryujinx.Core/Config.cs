@@ -9,15 +9,17 @@ namespace Ryujinx.Core
 {
     public static class Config
     {
-        public static bool EnableMemoryChecks   { get; private set; }
-        public static bool LoggingEnableInfo    { get; private set; }
-        public static bool LoggingEnableTrace   { get; private set; }
-        public static bool LoggingEnableDebug   { get; private set; }
-        public static bool LoggingEnableWarn    { get; private set; }
-        public static bool LoggingEnableError   { get; private set; }
-        public static bool LoggingEnableFatal   { get; private set; }
-        public static bool LoggingEnableIpc     { get; private set; }
-        public static bool LoggingEnableLogFile { get; private set; }
+        public static bool   EnableMemoryChecks     { get; private set; }
+        public static bool   LoggingEnableInfo      { get; private set; }
+        public static bool   LoggingEnableTrace     { get; private set; }
+        public static bool   LoggingEnableDebug     { get; private set; }
+        public static bool   LoggingEnableWarn      { get; private set; }
+        public static bool   LoggingEnableError     { get; private set; }
+        public static bool   LoggingEnableFatal     { get; private set; }
+        public static bool   LoggingEnableIpc       { get; private set; }
+        public static bool   LoggingEnableLogFile   { get; private set; }
+        public static bool   LoggingEnableFilter    { get; private set; }
+        public static bool[] LoggingFilteredClasses { get; private set; }
 
         public static JoyCon FakeJoyCon { get; private set; }
 
@@ -27,15 +29,32 @@ namespace Ryujinx.Core
             var iniPath = Path.Combine(iniFolder, "Ryujinx.conf");
             IniParser Parser = new IniParser(iniPath);
 
-            EnableMemoryChecks   = Convert.ToBoolean(Parser.Value("Enable_Memory_Checks"));
-            LoggingEnableInfo    = Convert.ToBoolean(Parser.Value("Logging_Enable_Info"));
-            LoggingEnableTrace   = Convert.ToBoolean(Parser.Value("Logging_Enable_Trace"));
-            LoggingEnableDebug   = Convert.ToBoolean(Parser.Value("Logging_Enable_Debug"));
-            LoggingEnableWarn    = Convert.ToBoolean(Parser.Value("Logging_Enable_Warn"));
-            LoggingEnableError   = Convert.ToBoolean(Parser.Value("Logging_Enable_Error"));
-            LoggingEnableFatal   = Convert.ToBoolean(Parser.Value("Logging_Enable_Fatal"));
-            LoggingEnableIpc     = Convert.ToBoolean(Parser.Value("Logging_Enable_Ipc"));
-            LoggingEnableLogFile = Convert.ToBoolean(Parser.Value("Logging_Enable_LogFile"));
+            EnableMemoryChecks     = Convert.ToBoolean(Parser.Value("Enable_Memory_Checks"));
+            LoggingEnableInfo      = Convert.ToBoolean(Parser.Value("Logging_Enable_Info"));
+            LoggingEnableTrace     = Convert.ToBoolean(Parser.Value("Logging_Enable_Trace"));
+            LoggingEnableDebug     = Convert.ToBoolean(Parser.Value("Logging_Enable_Debug"));
+            LoggingEnableWarn      = Convert.ToBoolean(Parser.Value("Logging_Enable_Warn"));
+            LoggingEnableError     = Convert.ToBoolean(Parser.Value("Logging_Enable_Error"));
+            LoggingEnableFatal     = Convert.ToBoolean(Parser.Value("Logging_Enable_Fatal"));
+            LoggingEnableIpc       = Convert.ToBoolean(Parser.Value("Logging_Enable_Ipc"));
+            LoggingEnableLogFile   = Convert.ToBoolean(Parser.Value("Logging_Enable_LogFile"));
+            LoggingEnableFilter    = Convert.ToBoolean(Parser.Value("Logging_Enable_Filter"));
+            LoggingFilteredClasses = new bool[(int)LogClass.Count];
+
+            string[] FilteredLogClasses = Parser.Value("Logging_Filtered_Classes", string.Empty).Split(',');
+            foreach (string LogClass in FilteredLogClasses)
+            {
+                if (!string.IsNullOrEmpty(LogClass.Trim()))
+                {
+                    foreach (LogClass EnumItemName in Enum.GetValues(typeof(LogClass)))
+                    {
+                        if (EnumItemName.ToString().ToLower().Contains(LogClass.Trim().ToLower()))
+                        {
+                            LoggingFilteredClasses[(int)EnumItemName] = true;
+                        }
+                    }
+                }
+            }
 
             FakeJoyCon = new JoyCon
             {

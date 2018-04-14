@@ -112,7 +112,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
 
                 if (Commands.TryGetValue((InterfaceName, Code), out ServiceProcessParcel ProcReq))
                 {
-                    Logging.Debug($"{InterfaceName} {ProcReq.Method.Name}");
+                    Logging.Debug(LogClass.ServiceNv, $"{InterfaceName} {ProcReq.Method.Name}");
 
                     return ProcReq(Context, Reader);
                 }
@@ -412,7 +412,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
                         break;
                     }
 
-                    Logging.Debug("Waiting for a free BufferQueue slot...");
+                    Logging.Debug(LogClass.ServiceNv, "Waiting for a free BufferQueue slot...");
 
                     if (Disposed)
                     {
@@ -426,7 +426,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
             }
             while (!Disposed);
 
-            Logging.Debug($"Found free BufferQueue slot {Slot}!");
+            Logging.Debug(LogClass.ServiceNv, $"Found free BufferQueue slot {Slot}!");
 
             return Slot;
         }

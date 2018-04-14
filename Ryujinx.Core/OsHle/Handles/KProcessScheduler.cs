@@ -136,13 +136,13 @@ namespace Ryujinx.Core.OsHle.Handles
 
                     Thread.Thread.Execute();
 
-                    Logging.Debug($"{GetDbgThreadInfo(Thread)} running.");
+                    Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} running.");
                 }
                 else
                 {
                     WaitingToRun[Thread.ProcessorId].Push(SchedThread);
 
-                    Logging.Debug($"{GetDbgThreadInfo(SchedThread.Thread)} waiting to run.");
+                    Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(SchedThread.Thread)} waiting to run.");
                 }
             }
         }
@@ -168,13 +168,13 @@ namespace Ryujinx.Core.OsHle.Handles
         {
             SchedulerThread SchedThread;
 
-            Logging.Debug($"{GetDbgThreadInfo(CurrThread)} entering ipc delay wait state.");
+            Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(CurrThread)} entering ipc delay wait state.");
 
             lock (SchedLock)
             {
                 if (!AllThreads.TryGetValue(CurrThread, out SchedThread))
                 {
-                    Logging.Error($"{GetDbgThreadInfo(CurrThread)} was not found on the scheduler queue!");
+                    Logging.Error(LogClass.KernelScheduler, $"{GetDbgThreadInfo(CurrThread)} was not found on the scheduler queue!");
 
                     return;
                 }
@@ -187,7 +187,7 @@ namespace Ryujinx.Core.OsHle.Handles
         {
             SchedulerThread SchedThread;
 
-            Logging.Debug($"{GetDbgThreadInfo(Thread)} entering signal wait state.");
+            Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} entering signal wait state.");
 
             lock (SchedLock)
             {
@@ -204,7 +204,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
                 if (!AllThreads.TryGetValue(Thread, out SchedThread))
                 {
-                    Logging.Error($"{GetDbgThreadInfo(Thread)} was not found on the scheduler queue!");
+                    Logging.Error(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} was not found on the scheduler queue!");
 
                     return false;
                 }
@@ -214,7 +214,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
             if (Timeout >= 0)
             {
-                Logging.Debug($"{GetDbgThreadInfo(Thread)} has wait timeout of {Timeout}ms.");
+                Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} has wait timeout of {Timeout}ms.");
 
                 Result = SchedThread.WaitEvent.WaitOne(Timeout);
             }
@@ -236,7 +236,7 @@ namespace Ryujinx.Core.OsHle.Handles
             {
                 if (ActiveProcessors.Add(Thread.ProcessorId))
                 {
-                    Logging.Debug($"{GetDbgThreadInfo(Thread)} resuming execution...");
+                    Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} resuming execution...");
 
                     return;
                 }
@@ -246,14 +246,14 @@ namespace Ryujinx.Core.OsHle.Handles
 
             SchedThread.WaitEvent.WaitOne();
 
-            Logging.Debug($"{GetDbgThreadInfo(Thread)} resuming execution...");
+            Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} resuming execution...");
         }
 
         public void Yield(KThread Thread)
         {
             SchedulerThread SchedThread;
 
-            Logging.Debug($"{GetDbgThreadInfo(Thread)} yielded execution.");
+            Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} yielded execution.");
 
             lock (SchedLock)
             {
@@ -261,7 +261,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
                 if (SchedThread == null)
                 {
-                    Logging.Debug($"{GetDbgThreadInfo(Thread)} resumed because theres nothing better to run.");
+                    Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} resumed because theres nothing better to run.");
 
                     return;
                 }
@@ -270,7 +270,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
                 if (!AllThreads.TryGetValue(Thread, out SchedThread))
                 {
-                    Logging.Error($"{GetDbgThreadInfo(Thread)} was not found on the scheduler queue!");
+                    Logging.Error(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} was not found on the scheduler queue!");
 
                     return;
                 }
@@ -280,7 +280,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
             SchedThread.WaitEvent.WaitOne();
 
-            Logging.Debug($"{GetDbgThreadInfo(Thread)} resuming execution...");
+            Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} resuming execution...");
         }
 
         private void RunThread(SchedulerThread SchedThread)
@@ -291,7 +291,7 @@ namespace Ryujinx.Core.OsHle.Handles
             }
             else
             {
-                Logging.Debug($"{GetDbgThreadInfo(SchedThread.Thread)} running.");
+                Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(SchedThread.Thread)} running.");
             }
         }
 
@@ -305,7 +305,7 @@ namespace Ryujinx.Core.OsHle.Handles
                     {
                         if (!WaitingToRun[Thread.ProcessorId].HasThread(SchedThread))
                         {
-                            Logging.Debug($"{GetDbgThreadInfo(Thread)} signaled.");
+                            Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} signaled.");
 
                             SchedThread.WaitEvent.Set();
                         }

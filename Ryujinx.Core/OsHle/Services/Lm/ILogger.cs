@@ -129,11 +129,11 @@ namespace Ryujinx.Core.OsHle.Services.Lm
 
             switch((Severity)iSeverity)
             {
-                case Severity.Trace:    Logging.Trace(LogString); break;
-                case Severity.Info:     Logging.Info(LogString);  break;
-                case Severity.Warning:  Logging.Warn(LogString);  break;
-                case Severity.Error:    Logging.Error(LogString); break;
-                case Severity.Critical: Logging.Fatal(LogString); break;
+                case Severity.Trace:    Logging.Trace(LogClass.ServiceLm, LogString); break;
+                case Severity.Info:     Logging.Info(LogClass.ServiceLm, LogString);  break;
+                case Severity.Warning:  Logging.Warn(LogClass.ServiceLm, LogString);  break;
+                case Severity.Error:    Logging.Error(LogClass.ServiceLm, LogString); break;
+                case Severity.Critical: Logging.Fatal(LogClass.ServiceLm, LogString); break;
             }
 
             return 0;
