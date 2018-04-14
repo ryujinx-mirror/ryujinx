@@ -55,6 +55,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         private ShaderProgram Shader;
 
         private Rect Viewport;
+        private Rect Window;
 
         private bool IsInitialized;
 
@@ -77,6 +78,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public void Create(long Tag, int Width, int Height)
         {
+            //TODO: We should either use the original frame buffer size,
+            //or just remove the Width/Height arguments.
+            Width  = Window.Width;
+            Height = Window.Height;
+
             if (Fbs.TryGetValue(Tag, out FrameBuffer Fb))
             {
                 if (Fb.Width  != Width ||
@@ -118,6 +124,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 0);
 
             GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+
+            GL.Viewport(0, 0, Width, Height);
 
             Fbs.Add(Tag, Fb);
         }
@@ -207,6 +215,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.Uniform2(WindowSizeUniformLocation, new Vector2(Width, Height));
 
             GL.UseProgram(CurrentProgram);
+
+            Window = new Rect(0, 0, Width, Height);
         }
 
         public void SetViewport(int X, int Y, int Width, int Height)
@@ -234,7 +244,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
-                GL.Viewport(0, 0, 1280, 720);
+                SetViewport(Window);
 
                 GL.Clear(
                     ClearBufferMask.ColorBufferBit |
@@ -255,10 +265,12 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 {
                     GL.Enable(EnableCap.Blend);
                 }
+
+                //GL.Viewport(0, 0, 1280, 720);
             }
         }
 
-        private void SetViewport()
+        private void SetViewport(Rect Viewport)
         {
             GL.Viewport(
                 Viewport.X,

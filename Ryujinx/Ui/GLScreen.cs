@@ -38,6 +38,8 @@ namespace Ryujinx
         protected override void OnLoad(EventArgs e)
         {
             VSync = VSyncMode.On;
+
+            Renderer.SetWindowSize(Width, Height);
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
@@ -172,8 +174,6 @@ namespace Ryujinx
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             Ns.Statistics.StartSystemFrame();
-
-            GL.Viewport(0, 0, Width, Height);
 
             Title = $"Ryujinx Screen - (Vsync: {VSync} - FPS: {Ns.Statistics.SystemFrameRate:0} - Guest FPS: " +
                 $"{Ns.Statistics.GameFrameRate:0})";
