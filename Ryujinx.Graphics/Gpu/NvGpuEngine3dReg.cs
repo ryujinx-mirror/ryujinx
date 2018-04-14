@@ -16,6 +16,7 @@ namespace Ryujinx.Graphics.Gpu
         BlendFuncSrcAlpha    = 0x4d4,
         BlendFuncDstAlpha    = 0x4d6,
         BlendEnableMaster    = 0x4d7,
+        IBlendNEnable        = 0x4d8,
         VertexArrayElemBase  = 0x50d,
         TexHeaderPoolOffset  = 0x55d,
         TexSamplerPoolOffset = 0x557,

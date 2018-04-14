@@ -184,6 +184,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 EnsureInitialized();
 
+                bool AlphaBlendEnable = GL.GetInteger(GetPName.Blend) != 0;
+
+                GL.Disable(EnableCap.Blend);
+
                 GL.ActiveTexture(TextureUnit.Texture0);
 
                 GL.BindTexture(TextureTarget.Texture2D, CurrTexHandle);
@@ -191,6 +195,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 int CurrentProgram = GL.GetInteger(GetPName.CurrentProgram);
 
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+
+                GL.Clear(
+                    ClearBufferMask.ColorBufferBit |
+                    ClearBufferMask.DepthBufferBit);
 
                 GL.BindVertexArray(VaoHandle);
 
@@ -202,6 +210,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, CurrFbHandle);
 
                 GL.UseProgram(CurrentProgram);
+
+                if (AlphaBlendEnable)
+                {
+                    GL.Enable(EnableCap.Blend);
+                }
             }
         }
 
@@ -289,9 +302,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             GL.BindTexture(TextureTarget.Texture2D, Handle);
 
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            const int MinFilter = (int)TextureMinFilter.Linear;
+            const int MagFilter = (int)TextureMagFilter.Linear;
 
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, MinFilter);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, MagFilter);
 
             (PixelFormat Format, PixelType Type) = OGLEnumConverter.GetTextureFormat(GalTextureFormat.A8B8G8R8);
 

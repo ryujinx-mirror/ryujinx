@@ -168,7 +168,7 @@ namespace Ryujinx.Graphics.Gpu
         private void SetAlphaBlending()
         {
             //TODO: Support independent blend properly.
-            bool Enable = (ReadRegister(NvGpuEngine3dReg.IBlendEnable) & 1) != 0;
+            bool Enable = (ReadRegister(NvGpuEngine3dReg.IBlendNEnable) & 1) != 0;
 
             Gpu.Renderer.SetBlendEnable(Enable);
 
