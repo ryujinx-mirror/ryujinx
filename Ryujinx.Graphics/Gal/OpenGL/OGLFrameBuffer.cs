@@ -196,6 +196,19 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.UseProgram(CurrentProgram);
         }
 
+        public void SetWindowSize(int Width, int Height)
+        {
+            int CurrentProgram = GL.GetInteger(GetPName.CurrentProgram);
+
+            GL.UseProgram(Shader.Handle);
+
+            int WindowSizeUniformLocation = GL.GetUniformLocation(Shader.Handle, "window_size");
+
+            GL.Uniform2(WindowSizeUniformLocation, new Vector2(Width, Height));
+
+            GL.UseProgram(CurrentProgram);
+        }
+
         public void SetViewport(int X, int Y, int Width, int Height)
         {
             Viewport = new Rect(X, Y, Width, Height);

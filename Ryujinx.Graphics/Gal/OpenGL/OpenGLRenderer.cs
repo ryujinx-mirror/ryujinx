@@ -56,7 +56,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public void SetWindowSize(int Width, int Height)
         {
-            //TODO
+            FrameBuffer.SetWindowSize(Width, Height);
         }
 
         public void SetBlendEnable(bool Enable)
