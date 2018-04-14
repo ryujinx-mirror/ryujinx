@@ -141,6 +141,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             ActionsQueue.Enqueue(() => FrameBuffer.SetTransform(Transform, Offs));
         }
 
+        public void SetViewport(int X, int Y, int Width, int Height)
+        {
+            ActionsQueue.Enqueue(() => FrameBuffer.SetViewport(X, Y, Width, Height));
+        }
+
         public void ClearBuffers(int RtIndex, GalClearBufferFlags Flags)
         {
             ActionsQueue.Enqueue(() => Rasterizer.ClearBuffers(RtIndex, Flags));
@@ -216,6 +221,16 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
 
             ActionsQueue.Enqueue(() => Shader.SetUniform1(UniformName, Value));
+        }
+
+        public void SetUniform2F(string UniformName, float X, float Y)
+        {
+            if (UniformName == null)
+            {
+                throw new ArgumentNullException(nameof(UniformName));
+            }
+
+            ActionsQueue.Enqueue(() => Shader.SetUniform2F(UniformName, X, Y));
         }
 
         public IEnumerable<ShaderDeclInfo> GetTextureUsage(long Tag)

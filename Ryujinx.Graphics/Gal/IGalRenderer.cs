@@ -42,6 +42,8 @@ namespace Ryujinx.Graphics.Gal
 
         void SetFrameBufferTransform(float SX, float SY, float Rotate, float TX, float TY);
 
+        void SetViewport(int X, int Y, int Width, int Height);
+
         //Rasterizer
         void ClearBuffers(int RtIndex, GalClearBufferFlags Flags);
 
@@ -61,6 +63,8 @@ namespace Ryujinx.Graphics.Gal
         void SetConstBuffer(long Tag, int Cbuf, byte[] Data);
 
         void SetUniform1(string UniformName, int Value);
+
+        void SetUniform2F(string UniformName, float X, float Y);
 
         void BindShader(long Tag);
 

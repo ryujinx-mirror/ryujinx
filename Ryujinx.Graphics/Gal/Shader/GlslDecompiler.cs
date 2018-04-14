@@ -115,6 +115,11 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private void PrintDeclUniforms()
         {
+            if (Decl.ShaderType == GalShaderType.Vertex)
+            {
+                SB.AppendLine("uniform vec2 " + GalConsts.FlipUniformName + ";");
+            }
+
             foreach (ShaderDeclInfo DeclInfo in Decl.Uniforms.Values.OrderBy(DeclKeySelector))
             {
                 SB.AppendLine($"uniform {GetDecl(DeclInfo)};");
@@ -270,6 +275,8 @@ namespace Ryujinx.Graphics.Gal.Shader
                         //the shader ends here.
                         if (Decl.ShaderType == GalShaderType.Vertex)
                         {
+                            SB.AppendLine(Identation + "gl_Position.xy *= flip;");
+
                             SB.AppendLine(Identation + GlslDecl.PositionOutAttrName + " = gl_Position;");
                         }
                     }

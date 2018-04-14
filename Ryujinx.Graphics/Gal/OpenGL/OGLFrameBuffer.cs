@@ -7,6 +7,22 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 {
     class OGLFrameBuffer
     {
+        private struct Rect
+        {
+            public int X      { get; private set; }
+            public int Y      { get; private set; }
+            public int Width  { get; private set; }
+            public int Height { get; private set; }
+
+            public Rect(int X, int Y, int Width, int Height)
+            {
+                this.X     = X;
+                this.Y     = Y;
+                this.Width = Width;
+                this.Height = Height;
+            }
+        }
+
         private class FrameBuffer
         {
             public int Width  { get; set; }
@@ -37,6 +53,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         private Dictionary<long, FrameBuffer> Fbs;
 
         private ShaderProgram Shader;
+
+        private Rect Viewport;
 
         private bool IsInitialized;
 
@@ -178,6 +196,13 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.UseProgram(CurrentProgram);
         }
 
+        public void SetViewport(int X, int Y, int Width, int Height)
+        {
+            Viewport = new Rect(X, Y, Width, Height);
+
+            //TODO
+        }
+
         public void Render()
         {
             if (CurrTexHandle != 0)
@@ -195,6 +220,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 int CurrentProgram = GL.GetInteger(GetPName.CurrentProgram);
 
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+
+                GL.Viewport(0, 0, 1280, 720);
 
                 GL.Clear(
                     ClearBufferMask.ColorBufferBit |
@@ -216,6 +243,15 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     GL.Enable(EnableCap.Blend);
                 }
             }
+        }
+
+        private void SetViewport()
+        {
+            GL.Viewport(
+                Viewport.X,
+                Viewport.Y,
+                Viewport.Width,
+                Viewport.Height);
         }
 
         private void EnsureInitialized()

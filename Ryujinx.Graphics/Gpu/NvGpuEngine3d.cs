@@ -147,6 +147,17 @@ namespace Ryujinx.Graphics.Gpu
                 Gpu.Renderer.BindShader(Tag);
             }
 
+            int RawSX = ReadRegister(NvGpuEngine3dReg.ViewportScaleX);
+            int RawSY = ReadRegister(NvGpuEngine3dReg.ViewportScaleY);
+
+            float SX = BitConverter.Int32BitsToSingle(RawSX);
+            float SY = BitConverter.Int32BitsToSingle(RawSY);
+
+            float SignX = MathF.Sign(SX);
+            float SignY = MathF.Sign(SY);
+
+            Gpu.Renderer.SetUniform2F(GalConsts.FlipUniformName, SignX, SignY);
+
             return Tags;
         }
 

@@ -158,6 +158,15 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.Uniform1(Location, Value);
         }
 
+        public void SetUniform2F(string UniformName, float X, float Y)
+        {
+            BindProgram();
+
+            int Location = GL.GetUniformLocation(CurrentProgramHandle, UniformName);
+
+            GL.Uniform2(Location, X, Y);
+        }
+
         public void Bind(long Tag)
         {
             if (Stages.TryGetValue(Tag, out ShaderStage Stage))
