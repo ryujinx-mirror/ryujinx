@@ -13,11 +13,21 @@ namespace Ryujinx.Core.OsHle.Services.Acc
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
+                {   0, GetUserCount                        },
                 {   3, ListOpenUsers                       },
                 {   5, GetProfile                          },
                 { 100, InitializeApplicationInfo           },
                 { 101, GetBaasAccountManagerForApplication }
             };
+        }
+
+        public long GetUserCount(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(0);
+
+            Logging.Stub(LogClass.ServiceAcc, "Stubbed");
+
+            return 0;
         }
 
         public long ListOpenUsers(ServiceCtx Context)
