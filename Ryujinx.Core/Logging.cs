@@ -20,6 +20,7 @@ namespace Ryujinx.Core
         private static bool   EnableWarn         = Config.LoggingEnableWarn;
         private static bool   EnableError        = Config.LoggingEnableError;
         private static bool   EnableFatal        = Config.LoggingEnableFatal;
+        private static bool   EnableStub         = Config.LoggingEnableIpc;
         private static bool   EnableIpc          = Config.LoggingEnableIpc;
         private static bool   EnableFilter       = Config.LoggingEnableFilter;
         private static bool   EnableLogFile      = Config.LoggingEnableLogFile;
@@ -27,12 +28,13 @@ namespace Ryujinx.Core
 
         private enum LogLevel
         {
-            Debug = 1,
-            Error = 2,
-            Fatal = 3,
-            Info = 4,
-            Trace = 5,
-            Warn = 6
+            Debug,
+            Error,
+            Fatal,
+            Info,
+            Stub,
+            Trace,
+            Warn
         }
 
         static Logging()
@@ -67,6 +69,9 @@ namespace Ryujinx.Core
                     break;
                 case LogLevel.Info:
                     consoleColor = ConsoleColor.White;
+                    break;
+                case LogLevel.Stub:
+                    consoleColor = ConsoleColor.DarkYellow;
                     break;
                 case LogLevel.Trace:
                     consoleColor = ConsoleColor.DarkGray;
@@ -122,6 +127,21 @@ namespace Ryujinx.Core
                 {
                     CallingMember = CallingMember,
                     LogLevel      = LogLevel.Trace,
+                    LogClass      = LogClass,
+                    Message       = Message,
+                    ExecutionTime = GetExecutionTime()
+                });
+            }
+        }
+
+        public static void Stub(LogClass LogClass, string Message, [CallerMemberName] string CallingMember = "")
+        {
+            if (EnableStub)
+            {
+                LogMessage(new LogEntry
+                {
+                    CallingMember = CallingMember,
+                    LogLevel      = LogLevel.Stub,
                     LogClass      = LogClass,
                     Message       = Message,
                     ExecutionTime = GetExecutionTime()

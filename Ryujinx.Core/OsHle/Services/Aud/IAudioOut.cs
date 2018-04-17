@@ -124,14 +124,14 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
         public long AppendAudioOutBufferEx(ServiceCtx Context)
         {
-            Logging.Warn(LogClass.ServiceAudio, "Not implemented!");
+            Logging.Stub(LogClass.ServiceAudio, "Stubbed");
 
             return 0;
         }
 
         public long GetReleasedAudioOutBufferEx(ServiceCtx Context)
         {
-            Logging.Warn(LogClass.ServiceAudio, "Not implemented!");
+            Logging.Stub(LogClass.ServiceAudio, "Stubbed");
 
             return 0;
         }

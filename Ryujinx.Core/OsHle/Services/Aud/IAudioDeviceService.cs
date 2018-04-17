@@ -57,6 +57,8 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
             string Name = AMemoryHelper.ReadAsciiString(Context.Memory, Position, Size);
 
+            Logging.Stub(LogClass.ServiceAudio, $"Volume = {Volume}, Position = {Position}, Size = {Size}");
+
             return 0;
         }
     }

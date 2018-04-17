@@ -32,6 +32,9 @@ namespace Ryujinx.Core.OsHle.Services.Apm
 
             Context.ResponseData.Write((uint)PerformanceConfiguration.PerformanceConfiguration1);
 
+            Logging.Stub(LogClass.ServiceApm, $"PerformanceMode = {PerfMode}, PerformanceConfiguration =" +
+                $" {PerformanceConfiguration.PerformanceConfiguration1}");
+
             return 0;
         }
     }

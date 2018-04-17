@@ -31,14 +31,14 @@ namespace Ryujinx.Core.OsHle.Services.Nifm
         {
             Context.ResponseData.Write(0);
 
-            //Todo: Stub
+            Logging.Stub(LogClass.ServiceNifm, "Stubbed");
 
             return 0;
         }
 
         public long GetResult(ServiceCtx Context)
         {
-            //Todo: Stub
+            Logging.Stub(LogClass.ServiceNifm, "Stubbed");
 
             return 0;
         }
@@ -56,14 +56,14 @@ namespace Ryujinx.Core.OsHle.Services.Nifm
 
         public long Cancel(ServiceCtx Context)
         {
-            //Todo: Stub
+            Logging.Stub(LogClass.ServiceNifm, "Stubbed");
 
             return 0;
         }
 
         public long Submit(ServiceCtx Context)
         {
-            //Todo: Stub
+            Logging.Stub(LogClass.ServiceNifm, "Stubbed");
 
             return 0;
         }

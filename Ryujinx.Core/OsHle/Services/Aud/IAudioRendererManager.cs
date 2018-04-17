@@ -42,6 +42,8 @@ namespace Ryujinx.Core.OsHle.Services.Aud
             int Unknown2c  = Context.RequestData.ReadInt32();
             int Rev1Magic  = Context.RequestData.ReadInt32();
 
+            Logging.Stub(LogClass.ServiceAudio, "BufferSize = 0x400L");
+
             Context.ResponseData.Write(0x400L);
 
             return 0;

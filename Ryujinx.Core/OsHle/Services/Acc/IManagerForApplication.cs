@@ -19,12 +19,16 @@ namespace Ryujinx.Core.OsHle.Services.Acc
         }
 
         public long CheckAvailability(ServiceCtx Context)
-        {           
+        {
+            Logging.Stub(LogClass.ServiceAcc, "Stubbed");
+
             return 0;
         }
 
         public long GetAccountId(ServiceCtx Context)
         {
+            Logging.Stub(LogClass.ServiceAcc, "AccountId = 0xcafeL");
+
             Context.ResponseData.Write(0xcafeL);
 
             return 0;

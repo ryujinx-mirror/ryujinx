@@ -22,11 +22,15 @@ namespace Ryujinx.Core.OsHle.Services.Ns
         {
             Context.ResponseData.Write(0);
 
+            Logging.Stub(LogClass.ServiceNs, "Stubbed");
+
             return 0;
         }
 
         public static long ListAddOnContent(ServiceCtx Context)
         {
+            Logging.Stub(LogClass.ServiceNs, "Stubbed");
+
             //TODO: This is supposed to write a u32 array aswell.
             //It's unknown what it contains.
             Context.ResponseData.Write(0);

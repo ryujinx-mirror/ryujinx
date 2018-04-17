@@ -19,6 +19,8 @@ namespace Ryujinx.Core.OsHle.Services.Acc
 
         public long GetBase(ServiceCtx Context)
         {
+            Logging.Stub(LogClass.ServiceAcc, "Stubbed");
+
             Context.ResponseData.Write(0L);
             Context.ResponseData.Write(0L);
             Context.ResponseData.Write(0L);

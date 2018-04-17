@@ -1,4 +1,5 @@
 ﻿using Ryujinx.Core.OsHle.Ipc;
+using Ryujinx.Core.Settings;
 using System.Collections.Generic;
 
 namespace Ryujinx.Core.OsHle.Services.Set
@@ -27,6 +28,9 @@ namespace Ryujinx.Core.OsHle.Services.Set
 
         public static long SetColorSetId(ServiceCtx Context)
         {
+            int ColorSetId = Context.RequestData.ReadInt32();
+
+            Context.Ns.Settings.ThemeColor = (ColorSet)ColorSetId;
             return 0;
         }
     }

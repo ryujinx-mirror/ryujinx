@@ -24,7 +24,7 @@ namespace Ryujinx.Core.OsHle.Services.Nifm
 
             MakeObject(Context, new IRequest());
 
-            //Todo: Stub
+            Logging.Stub(LogClass.ServiceNifm, "Stubbed");
 
             return 0;
         }

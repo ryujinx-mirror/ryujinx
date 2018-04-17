@@ -37,6 +37,8 @@ namespace Ryujinx.Core.OsHle.Services.Am
             long UIdLow  = Context.RequestData.ReadInt64();
             long UIdHigh = Context.RequestData.ReadInt64();
 
+            Logging.Stub(LogClass.ServiceAm, $"UidLow = {UIdLow}, UidHigh = {UIdHigh}");
+
             Context.ResponseData.Write(0L);
 
             return 0;
@@ -44,6 +46,8 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
         public long GetDesiredLanguage(ServiceCtx Context)
         {
+            Logging.Stub(LogClass.ServiceAm, "LanguageId = 1");
+
             //This is an enumerator where each number is a differnet language.
             //0 is Japanese and 1 is English, need to figure out the other codes.
             Context.ResponseData.Write(1L);

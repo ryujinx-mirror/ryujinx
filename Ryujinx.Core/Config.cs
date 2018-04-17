@@ -17,6 +17,7 @@ namespace Ryujinx.Core
         public static bool   LoggingEnableError     { get; private set; }
         public static bool   LoggingEnableFatal     { get; private set; }
         public static bool   LoggingEnableIpc       { get; private set; }
+        public static bool   LoggingEnableStub      { get; private set; }
         public static bool   LoggingEnableLogFile   { get; private set; }
         public static bool   LoggingEnableFilter    { get; private set; }
         public static bool[] LoggingFilteredClasses { get; private set; }
@@ -37,6 +38,7 @@ namespace Ryujinx.Core
             LoggingEnableError     = Convert.ToBoolean(Parser.Value("Logging_Enable_Error"));
             LoggingEnableFatal     = Convert.ToBoolean(Parser.Value("Logging_Enable_Fatal"));
             LoggingEnableIpc       = Convert.ToBoolean(Parser.Value("Logging_Enable_Ipc"));
+            LoggingEnableStub      = Convert.ToBoolean(Parser.Value("Logging_Enable_Stub"));
             LoggingEnableLogFile   = Convert.ToBoolean(Parser.Value("Logging_Enable_LogFile"));
             LoggingEnableFilter    = Convert.ToBoolean(Parser.Value("Logging_Enable_Filter"));
             LoggingFilteredClasses = new bool[(int)LogClass.Count];

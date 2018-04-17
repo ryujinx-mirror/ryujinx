@@ -20,6 +20,8 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
         public long GetAppletResourceUserId(ServiceCtx Context)
         {
+            Logging.Stub(LogClass.ServiceAm, $"Applet Resource Id = 0");
+
             Context.ResponseData.Write(0L);
 
             return 0;
@@ -27,6 +29,8 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
         public long AcquireForegroundRights(ServiceCtx Context)
         {
+            Logging.Stub(LogClass.ServiceAm, "Stubbed");
+
             return 0;
         }
     }

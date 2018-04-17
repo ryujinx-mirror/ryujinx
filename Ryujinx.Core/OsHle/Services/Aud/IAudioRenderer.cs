@@ -54,11 +54,15 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
         public long StartAudioRenderer(ServiceCtx Context)
         {
+            Logging.Stub(LogClass.ServiceAudio, "Stubbed");
+
             return 0;
         }
 
         public long StopAudioRenderer(ServiceCtx Context)
         {
+            Logging.Stub(LogClass.ServiceAudio, "Stubbed");
+
             return 0;
         }
 

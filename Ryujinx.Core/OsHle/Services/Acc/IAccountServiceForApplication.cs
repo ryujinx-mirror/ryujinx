@@ -22,6 +22,8 @@ namespace Ryujinx.Core.OsHle.Services.Acc
 
         public long ListOpenUsers(ServiceCtx Context)
         {
+            Logging.Stub(LogClass.ServiceAcc, "Stubbed");
+
             return 0;
         }
 
@@ -34,6 +36,8 @@ namespace Ryujinx.Core.OsHle.Services.Acc
 
         public long InitializeApplicationInfo(ServiceCtx Context)
         {
+            Logging.Stub(LogClass.ServiceAcc, "Stubbed");
+
             return 0;
         }
 

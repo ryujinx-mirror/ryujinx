@@ -32,6 +32,8 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
+            Logging.Stub(LogClass.ServiceAm, $"ScreenShot Allowed = {Enable}");
+
             return 0;
         }
 
@@ -39,12 +41,16 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
+            Logging.Stub(LogClass.ServiceAm, $"OperationMode Changed = {Enable}");
+
             return 0;
         }
 
         public long SetPerformanceModeChangedNotification(ServiceCtx Context)
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
+
+            Logging.Stub(LogClass.ServiceAm, $"PerformanceMode Changed = {Enable}");
 
             return 0;
         }
@@ -55,6 +61,8 @@ namespace Ryujinx.Core.OsHle.Services.Am
             bool Flag2 = Context.RequestData.ReadByte() != 0 ? true : false;
             bool Flag3 = Context.RequestData.ReadByte() != 0 ? true : false;
 
+            Logging.Stub(LogClass.ServiceAm, $"Focus Handling Mode Flags = {{{Flag1}|{Flag2}|{Flag3}}}");
+
             return 0;
         }
 
@@ -62,12 +70,16 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
+            Logging.Stub(LogClass.ServiceAm, $"Restart Message Enabled = {Enable}");
+
             return 0;
         }
 
         public long SetOutOfFocusSuspendingEnabled(ServiceCtx Context)
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
+
+            Logging.Stub(LogClass.ServiceAm, $"Out Of Focus Suspending Enabled = {Enable}");
 
             return 0;
         }

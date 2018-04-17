@@ -45,12 +45,16 @@ namespace Ryujinx.Core.OsHle.Services.Hid
 
         public long ActivateDebugPad(ServiceCtx Context)
         {
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
+
             return 0;
         }
 
         public long ActivateTouchScreen(ServiceCtx Context)
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
+
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
 
             return 0;
         }
@@ -59,12 +63,16 @@ namespace Ryujinx.Core.OsHle.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
+
             return 0;
         }
 
         public long ActivateKeyboard(ServiceCtx Context)
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
+
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
 
             return 0;
         }
@@ -75,12 +83,16 @@ namespace Ryujinx.Core.OsHle.Services.Hid
 
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
+
             return 0;
         }
 
         public long GetSupportedNpadStyleSet(ServiceCtx Context)
         {
             Context.ResponseData.Write(0);
+
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
 
             return 0;
         }
@@ -90,6 +102,8 @@ namespace Ryujinx.Core.OsHle.Services.Hid
             long Unknown0 = Context.RequestData.ReadInt64();
             long Unknown8 = Context.RequestData.ReadInt64();
 
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
+
             return 0;
         }
 
@@ -97,12 +111,16 @@ namespace Ryujinx.Core.OsHle.Services.Hid
         {
             long Unknown = Context.RequestData.ReadInt64();
 
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
+
             return 0;
         }
 
         public long ActivateNpad(ServiceCtx Context)
         {
             long Unknown = Context.RequestData.ReadInt64();
+
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
 
             return 0;
         }
@@ -112,12 +130,16 @@ namespace Ryujinx.Core.OsHle.Services.Hid
             long Unknown0 = Context.RequestData.ReadInt64();
             long Unknown8 = Context.RequestData.ReadInt64();
 
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
+
             return 0;
         }
 
         public long GetNpadJoyHoldType(ServiceCtx Context)
         {
             Context.ResponseData.Write(0L);
+
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
 
             return 0;
         }
@@ -126,6 +148,8 @@ namespace Ryujinx.Core.OsHle.Services.Hid
         {
             HidControllerId HidControllerId = (HidControllerId)Context.RequestData.ReadInt32();
             long AppletUserResourseId = Context.RequestData.ReadInt64();
+
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
 
             return 0;
         }
@@ -136,6 +160,8 @@ namespace Ryujinx.Core.OsHle.Services.Hid
             long AppletUserResourseId = Context.RequestData.ReadInt64();
             long NpadJoyDeviceType = Context.RequestData.ReadInt64();
 
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
+
             return 0;
         }
 
@@ -143,6 +169,8 @@ namespace Ryujinx.Core.OsHle.Services.Hid
         {
             HidControllerId HidControllerId = (HidControllerId)Context.RequestData.ReadInt32();
             long AppletUserResourseId = Context.RequestData.ReadInt64();
+
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
 
             return 0;
         }
@@ -153,12 +181,16 @@ namespace Ryujinx.Core.OsHle.Services.Hid
             long Unknown8 = Context.RequestData.ReadInt32();
             long AppletUserResourseId = Context.RequestData.ReadInt64();
 
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
+
             return 0;
         }
 
         public long GetVibrationDeviceInfo(ServiceCtx Context)
         {
             int VibrationDeviceHandle = Context.RequestData.ReadInt32();
+
+            Logging.Stub(LogClass.ServiceHid, $"VibrationDeviceHandle = {VibrationDeviceHandle}, VibrationDeviceInfo = 0");
 
             Context.ResponseData.Write(0L); //VibrationDeviceInfoForIpc
 
@@ -174,6 +206,8 @@ namespace Ryujinx.Core.OsHle.Services.Hid
 
         public long SendVibrationValues(ServiceCtx Context)
         {
+            Logging.Stub(LogClass.ServiceHid, "Stubbed");
+
             return 0;
         }
     }
