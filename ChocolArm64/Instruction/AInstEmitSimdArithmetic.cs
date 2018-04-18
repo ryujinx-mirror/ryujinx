@@ -11,6 +11,35 @@ namespace ChocolArm64.Instruction
 {
     static partial class AInstEmit
     {
+        public static void Abs_S(AILEmitterCtx Context)
+        {
+            EmitScalarUnaryOpSx(Context, () => EmitAbs(Context));
+        }
+
+        public static void Abs_V(AILEmitterCtx Context)
+        {
+            EmitVectorUnaryOpSx(Context, () => EmitAbs(Context));
+        }
+
+        private static void EmitAbs(AILEmitterCtx Context)
+        {
+            AILLabel LblTrue = new AILLabel();
+
+            Context.Emit(OpCodes.Dup);
+
+            Context.Emit(OpCodes.Ldc_I4_0);
+            Context.Emit(OpCodes.Bge_S, LblTrue);
+
+            Context.Emit(OpCodes.Neg);
+
+            Context.MarkLabel(LblTrue);
+        }
+
+        public static void Add_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpZx(Context, () => Context.Emit(OpCodes.Add));
+        }
+
         public static void Add_V(AILEmitterCtx Context)
         {
             EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Add));
@@ -736,6 +765,11 @@ namespace ChocolArm64.Instruction
         public static void Mul_Ve(AILEmitterCtx Context)
         {
             EmitVectorBinaryOpByElemZx(Context, () => Context.Emit(OpCodes.Mul));
+        }
+
+        public static void Neg_S(AILEmitterCtx Context)
+        {
+            EmitScalarUnaryOpSx(Context, () => Context.Emit(OpCodes.Neg));
         }
 
         public static void Neg_V(AILEmitterCtx Context)
