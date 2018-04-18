@@ -1,22 +1,12 @@
 using ChocolArm64.State;
+
 using NUnit.Framework;
 
 namespace Ryujinx.Tests.Cpu
 {
-    public class CpuTestMisc : CpuTest
+    [Category("Misc"), Explicit]
+    public sealed class CpuTestMisc : CpuTest
     {
-        [TestCase(0ul)]
-        [TestCase(1ul)]
-        [TestCase(2ul)]
-        [TestCase(42ul)]
-        public void SanityCheck(ulong A)
-        {
-            // NOP
-            uint Opcode = 0xD503201F;
-            AThreadState ThreadState = SingleOpcode(Opcode, X0: A);
-            Assert.AreEqual(A, ThreadState.X0);
-        }
-
         [TestCase(0xFFFFFFFDu)] // Roots.
         [TestCase(0x00000005u)]
         public void Misc1(uint A)
@@ -46,27 +36,28 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD4200000);
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
-            Assert.AreEqual(0, GetThreadState().X0);
+
+            Assert.That(GetThreadState().X0, Is.Zero);
         }
 
-        [TestCase(-20f, -5f)] // 18 integer solutions.
-        [TestCase(-12f, -6f)]
-        [TestCase(-12f, 3f)]
-        [TestCase(-8f, -8f)]
-        [TestCase(-6f, -12f)]
-        [TestCase(-5f, -20f)]
-        [TestCase(-4f, 2f)]
-        [TestCase(-3f, 12f)]
-        [TestCase(-2f, 4f)]
-        [TestCase(2f, -4f)]
-        [TestCase(3f, -12f)]
-        [TestCase(4f, -2f)]
-        [TestCase(5f, 20f)]
-        [TestCase(6f, 12f)]
-        [TestCase(8f, 8f)]
-        [TestCase(12f, -3f)]
-        [TestCase(12f, 6f)]
-        [TestCase(20f, 5f)]
+        [TestCase(-20f,  -5f)] // 18 integer solutions.
+        [TestCase(-12f,  -6f)]
+        [TestCase(-12f,   3f)]
+        [TestCase( -8f,  -8f)]
+        [TestCase( -6f, -12f)]
+        [TestCase( -5f, -20f)]
+        [TestCase( -4f,   2f)]
+        [TestCase( -3f,  12f)]
+        [TestCase( -2f,   4f)]
+        [TestCase(  2f,  -4f)]
+        [TestCase(  3f, -12f)]
+        [TestCase(  4f,  -2f)]
+        [TestCase(  5f,  20f)]
+        [TestCase(  6f,  12f)]
+        [TestCase(  8f,   8f)]
+        [TestCase( 12f,  -3f)]
+        [TestCase( 12f,   6f)]
+        [TestCase( 20f,   5f)]
         public void Misc2(float A, float B)
         {
             // 1 / ((1 / A + 1 / B) ^ 2) = 16
@@ -92,27 +83,28 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD4200000);
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
-            Assert.AreEqual(16f, GetThreadState().V0.S0);
+
+            Assert.That(GetThreadState().V0.S0, Is.EqualTo(16f));
         }
 
-        [TestCase(-20d, -5d)] // 18 integer solutions.
-        [TestCase(-12d, -6d)]
-        [TestCase(-12d, 3d)]
-        [TestCase(-8d, -8d)]
-        [TestCase(-6d, -12d)]
-        [TestCase(-5d, -20d)]
-        [TestCase(-4d, 2d)]
-        [TestCase(-3d, 12d)]
-        [TestCase(-2d, 4d)]
-        [TestCase(2d, -4d)]
-        [TestCase(3d, -12d)]
-        [TestCase(4d, -2d)]
-        [TestCase(5d, 20d)]
-        [TestCase(6d, 12d)]
-        [TestCase(8d, 8d)]
-        [TestCase(12d, -3d)]
-        [TestCase(12d, 6d)]
-        [TestCase(20d, 5d)]
+        [TestCase(-20d,  -5d)] // 18 integer solutions.
+        [TestCase(-12d,  -6d)]
+        [TestCase(-12d,   3d)]
+        [TestCase( -8d,  -8d)]
+        [TestCase( -6d, -12d)]
+        [TestCase( -5d, -20d)]
+        [TestCase( -4d,   2d)]
+        [TestCase( -3d,  12d)]
+        [TestCase( -2d,   4d)]
+        [TestCase(  2d,  -4d)]
+        [TestCase(  3d, -12d)]
+        [TestCase(  4d,  -2d)]
+        [TestCase(  5d,  20d)]
+        [TestCase(  6d,  12d)]
+        [TestCase(  8d,   8d)]
+        [TestCase( 12d,  -3d)]
+        [TestCase( 12d,   6d)]
+        [TestCase( 20d,   5d)]
         public void Misc3(double A, double B)
         {
             // 1 / ((1 / A + 1 / B) ^ 2) = 16
@@ -138,74 +130,12 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD4200000);
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
-            Assert.AreEqual(16d, GetThreadState().V0.D0);
+
+            Assert.That(GetThreadState().V0.D0, Is.EqualTo(16d));
         }
 
         [Test]
-        public void MiscR()
-        {
-            ulong Result = 5;
-
-            /*
-            0x0000000000000000: MOV X0, #2
-            0x0000000000000004: MOV X1, #3
-            0x0000000000000008: ADD X0, X0, X1
-            0x000000000000000C: BRK #0
-            0x0000000000000010: RET
-            */
-
-            Opcode(0xD2800040);
-            Opcode(0xD2800061);
-            Opcode(0x8B010000);
-            Opcode(0xD4200000);
-            Opcode(0xD65F03C0);
-            ExecuteOpcodes();
-            Assert.AreEqual(Result, GetThreadState().X0);
-
-            Reset();
-
-            /*
-            0x0000000000000000: MOV X0, #3
-            0x0000000000000004: MOV X1, #2
-            0x0000000000000008: ADD X0, X0, X1
-            0x000000000000000C: BRK #0
-            0x0000000000000010: RET
-            */
-
-            Opcode(0xD2800060);
-            Opcode(0xD2800041);
-            Opcode(0x8B010000);
-            Opcode(0xD4200000);
-            Opcode(0xD65F03C0);
-            ExecuteOpcodes();
-            Assert.AreEqual(Result, GetThreadState().X0);
-        }
-
-        [Test, Explicit]
-        public void Misc5()
-        {
-            /*
-            0x0000000000000000: SUBS X0, X0, #1
-            0x0000000000000004: B.NE #0
-            0x0000000000000008: BRK #0
-            0x000000000000000C: RET
-            */
-
-            SetThreadState(X0: 0x100000000);
-            Opcode(0xF1000400);
-            Opcode(0x54FFFFE1);
-            Opcode(0xD4200000);
-            Opcode(0xD65F03C0);
-            ExecuteOpcodes();
-            Assert.Multiple(() =>
-            {
-                Assert.AreEqual(0, GetThreadState().X0);
-                Assert.IsTrue(GetThreadState().Zero);
-            });
-        }
-
-        [Test]
-        public void MiscF([Range(0, 92, 1)] int A)
+        public void MiscF([Range(0u, 92u, 1u)] uint A)
         {
             ulong F_n(uint n)
             {
@@ -250,7 +180,7 @@ namespace Ryujinx.Tests.Cpu
             0x0000000000000050: RET
             */
 
-            SetThreadState(X0: (uint)A);
+            SetThreadState(X0: A);
             Opcode(0x2A0003E4);
             Opcode(0x340001C0);
             Opcode(0x7100041F);
@@ -273,7 +203,62 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD4200000);
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
-            Assert.AreEqual(F_n((uint)A), GetThreadState().X0);
+
+            Assert.That(GetThreadState().X0, Is.EqualTo(F_n(A)));
+        }
+
+        [Test]
+        public void MiscR()
+        {
+            const ulong Result = 5;
+
+            /*
+            0x0000000000000000: MOV X0, #2
+            0x0000000000000004: MOV X1, #3
+            0x0000000000000008: ADD X0, X0, X1
+            0x000000000000000C: BRK #0
+            0x0000000000000010: RET
+            */
+
+            Opcode(0xD2800040);
+            Opcode(0xD2800061);
+            Opcode(0x8B010000);
+            Opcode(0xD4200000);
+            Opcode(0xD65F03C0);
+            ExecuteOpcodes();
+
+            Assert.That(GetThreadState().X0, Is.EqualTo(Result));
+
+            Reset();
+
+            /*
+            0x0000000000000000: MOV X0, #3
+            0x0000000000000004: MOV X1, #2
+            0x0000000000000008: ADD X0, X0, X1
+            0x000000000000000C: BRK #0
+            0x0000000000000010: RET
+            */
+
+            Opcode(0xD2800060);
+            Opcode(0xD2800041);
+            Opcode(0x8B010000);
+            Opcode(0xD4200000);
+            Opcode(0xD65F03C0);
+            ExecuteOpcodes();
+
+            Assert.That(GetThreadState().X0, Is.EqualTo(Result));
+        }
+
+        [TestCase( 0ul)]
+        [TestCase( 1ul)]
+        [TestCase( 2ul)]
+        [TestCase(42ul)]
+        public void SanityCheck(ulong A)
+        {
+            uint Opcode = 0xD503201F; // NOP
+            AThreadState ThreadState = SingleOpcode(Opcode, X0: A);
+
+            Assert.That(ThreadState.X0, Is.EqualTo(A));
         }
     }
 }
