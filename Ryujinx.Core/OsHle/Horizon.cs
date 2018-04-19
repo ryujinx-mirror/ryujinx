@@ -179,6 +179,8 @@ namespace Ryujinx.Core.OsHle
                 }
 
                 VsyncEvent.Dispose();
+
+                Scheduler.Dispose();
             }
         }
     }

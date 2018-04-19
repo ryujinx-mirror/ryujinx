@@ -95,6 +95,11 @@ namespace Ryujinx.Core.OsHle.Handles
                     return Threads.Contains(SchedThread);
                 }
             }
+
+            public bool Remove(SchedulerThread SchedThread)
+            {
+                return Threads.Remove(SchedThread);
+            }
         }
 
         private ConcurrentDictionary<KThread, SchedulerThread> AllThreads;
@@ -153,6 +158,11 @@ namespace Ryujinx.Core.OsHle.Handles
 
             lock (SchedLock)
             {
+                if (AllThreads.TryRemove(Thread, out SchedulerThread SchedThread))
+                {
+                    WaitingToRun[Thread.ProcessorId].Remove(SchedThread);
+                }
+
                 SchedulerThread NewThread = WaitingToRun[Thread.ProcessorId].Pop();
 
                 if (NewThread == null)
