@@ -41,6 +41,16 @@ namespace Ryujinx.Graphics.Gal.Shader
             EmitAluFfma(Block, OpCode, ShaderOper.RR);
         }
 
+        public static void Fmul32i(ShaderIrBlock Block, long OpCode)
+        {
+            ShaderIrNode OperA = GetOperGpr8     (OpCode);
+            ShaderIrNode OperB = GetOperImmf32_20(OpCode);
+
+            ShaderIrOp Op = new ShaderIrOp(ShaderIrInst.Fmul, OperA, OperB);
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
+        }
+
         public static void Fmul_C(ShaderIrBlock Block, long OpCode)
         {
             EmitAluBinaryF(Block, OpCode, ShaderOper.CR, ShaderIrInst.Fmul);
@@ -212,7 +222,6 @@ namespace Ryujinx.Graphics.Gal.Shader
             bool Aa = ((OpCode >> 46) & 1) != 0;
             bool Na = ((OpCode >> 48) & 1) != 0;
             bool Ab = ((OpCode >> 49) & 1) != 0;
-            bool Ad = ((OpCode >> 50) & 1) != 0;
 
             ShaderIrNode OperA = GetOperGpr8(OpCode), OperB;
 
@@ -233,8 +242,6 @@ namespace Ryujinx.Graphics.Gal.Shader
             OperB = GetAluAbsNeg(OperB, Ab, Nb);
 
             ShaderIrNode Op = new ShaderIrOp(Inst, OperA, OperB);
-
-            Op = GetAluAbs(Op, Ad);
 
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
         }

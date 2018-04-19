@@ -57,7 +57,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             Count = Process.Memory.ReadInt32(CondVarAddress);
 
-            if (Count > 0)
+            if (Result && Count > 0)
             {
                 Process.Memory.WriteInt32(CondVarAddress, Count - 1);
             }
@@ -73,10 +73,10 @@ namespace Ryujinx.Core.OsHle.Kernel
             {
                 if (Count < 0)
                 {
-                    Process.Memory.WriteInt32(CondVarAddress, WaitingThreads.Count);
-
                     foreach ((_, AutoResetEvent WaitEvent) in WaitingThreads)
                     {
+                        IncrementCondVarValue();
+
                         WaitEvent.Set();
                     }
 
@@ -84,8 +84,6 @@ namespace Ryujinx.Core.OsHle.Kernel
                 }
                 else
                 {
-                    Process.Memory.WriteInt32(CondVarAddress, Count);
-
                     while (WaitingThreads.Count > 0 && Count-- > 0)
                     {
                         int HighestPriority  = WaitingThreads[0].Thread.Priority;
@@ -101,6 +99,8 @@ namespace Ryujinx.Core.OsHle.Kernel
                             }
                         }
 
+                        IncrementCondVarValue();
+
                         WaitingThreads[HighestPrioIndex].WaitEvent.Set();
 
                         WaitingThreads.RemoveAt(HighestPrioIndex);
@@ -109,6 +109,17 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
 
             Process.Scheduler.Yield(Thread);
+        }
+
+        private void IncrementCondVarValue()
+        {
+            AcquireCondVarValue();
+
+            int Count = Process.Memory.ReadInt32(CondVarAddress);
+
+            Process.Memory.WriteInt32(CondVarAddress, Count + 1);
+
+            ReleaseCondVarValue();
         }
 
         private void AcquireCondVarValue()

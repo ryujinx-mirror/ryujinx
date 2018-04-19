@@ -70,6 +70,11 @@ namespace Ryujinx.Graphics.Gal.Shader
             return new ShaderIrOperImm((int)(OpCode >> 20));
         }
 
+        public static ShaderIrOperImmf GetOperImmf32_20(long OpCode)
+        {
+            return new ShaderIrOperImmf(BitConverter.Int32BitsToSingle((int)(OpCode >> 20)));
+        }
+
         public static ShaderIrOperImm GetOperImm19_20(long OpCode)
         {
             int Value = (int)(OpCode >> 20) & 0x7ffff;

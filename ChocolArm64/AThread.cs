@@ -54,6 +54,14 @@ namespace ChocolArm64
             return true;
         }
 
-        public void StopExecution() => ThreadState.Running = false;
+        public void StopExecution()
+        {
+            ThreadState.Running = false;
+        }
+
+        public bool IsCurrentThread()
+        {
+            return Thread.CurrentThread == Work;
+        }
     }
 }

@@ -15,11 +15,15 @@ namespace Ryujinx.Core.OsHle.Handles
 
             public AutoResetEvent WaitEvent { get; private set; }
 
+            public bool Active { get; set; }
+
             public SchedulerThread(KThread Thread)
             {
                 this.Thread = Thread;
 
                 WaitEvent = new AutoResetEvent(false);
+
+                Active = true;
             }
 
             public void Dispose()
@@ -98,7 +102,10 @@ namespace Ryujinx.Core.OsHle.Handles
 
             public bool Remove(SchedulerThread SchedThread)
             {
-                return Threads.Remove(SchedThread);
+                lock (Threads)
+                {
+                    return Threads.Remove(SchedThread);
+                }
             }
         }
 
@@ -180,6 +187,55 @@ namespace Ryujinx.Core.OsHle.Handles
             }
         }
 
+        public void SetThreadActivity(KThread Thread, bool Active)
+        {
+            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
+            {
+                throw new InvalidOperationException();
+            }
+
+            lock (SchedLock)
+            {
+                bool OldState = SchedThread.Active;
+
+                SchedThread.Active = Active;
+
+                if (!OldState && Active)
+                {
+                    if (ActiveProcessors.Add(Thread.ProcessorId))
+                    {
+                        RunThread(SchedThread);
+                    }
+                    else
+                    {
+                        WaitingToRun[Thread.ProcessorId].Push(SchedThread);
+
+                        PrintDbgThreadInfo(Thread, "entering wait state...");
+                    }
+                }
+                else if (OldState && !Active)
+                {
+                    if (Thread.Thread.IsCurrentThread())
+                    {
+                        Suspend(Thread.ProcessorId);
+
+                        PrintDbgThreadInfo(Thread, "entering inactive wait state...");
+                    }
+                    else
+                    {
+                        WaitingToRun[Thread.ProcessorId].Remove(SchedThread);
+                    }
+                }
+            }
+
+            if (!Active && Thread.Thread.IsCurrentThread())
+            {
+                SchedThread.WaitEvent.WaitOne();
+
+                PrintDbgThreadInfo(Thread, "resuming execution...");
+            }
+        }
+
         public void Suspend(int ProcessorId)
         {
             lock (SchedLock)
@@ -222,9 +278,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
         public void Resume(KThread Thread)
         {
-            SchedulerThread SchedThread;
-
-            if (!AllThreads.TryGetValue(Thread, out SchedThread))
+            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
             {
                 throw new InvalidOperationException();
             }
@@ -236,18 +290,25 @@ namespace Ryujinx.Core.OsHle.Handles
         {
             KThread Thread = SchedThread.Thread;
 
-            lock (SchedLock)
+            if (SchedThread.Active)
             {
-                if (ActiveProcessors.Add(Thread.ProcessorId))
+                lock (SchedLock)
                 {
-                    PrintDbgThreadInfo(Thread, "resuming execution...");
+                    if (ActiveProcessors.Add(Thread.ProcessorId))
+                    {
+                        PrintDbgThreadInfo(Thread, "resuming execution...");
 
-                    return;
+                        return;
+                    }
+
+                    WaitingToRun[Thread.ProcessorId].Push(SchedThread);
+
+                    PrintDbgThreadInfo(Thread, "entering wait state...");
                 }
-
-                PrintDbgThreadInfo(Thread, "entering wait state...");
-
-                WaitingToRun[Thread.ProcessorId].Push(SchedThread);
+            }
+            else
+            {
+                PrintDbgThreadInfo(Thread, "entering inactive wait state...");
             }
 
             SchedThread.WaitEvent.WaitOne();

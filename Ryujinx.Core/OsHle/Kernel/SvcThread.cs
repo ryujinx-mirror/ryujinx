@@ -147,7 +147,28 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
             else
             {
-                Logging.Warn(LogClass.KernelSvc, $"Tried to GetThreadId on invalid thread handle 0x{Handle:x8}!");
+                Logging.Warn(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+            }
+        }
+
+        private void SvcSetThreadActivity(AThreadState ThreadState)
+        {
+            int  Handle = (int)ThreadState.X0;
+            bool Active = (int)ThreadState.X1 != 0;
+
+            KThread CurrThread = Process.HandleTable.GetData<KThread>(Handle);
+
+            if (CurrThread != null)
+            {
+                Process.Scheduler.SetThreadActivity(CurrThread, Active);
+
+                ThreadState.X0 = 0;
+            }
+            else
+            {
+                Logging.Warn(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
