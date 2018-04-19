@@ -12,6 +12,8 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private long MutexAddress;
 
+        private int OwnerThreadHandle;
+
         private List<(KThread Thread, AutoResetEvent WaitEvent)> WaitingThreads;
 
         public MutualExclusion(Process Process, long MutexAddress)
@@ -24,8 +26,6 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         public void WaitForLock(KThread RequestingThread)
         {
-            int OwnerThreadHandle = Process.Memory.ReadInt32(MutexAddress) & ~MutexHasListenersMask;
-
             WaitForLock(RequestingThread, OwnerThreadHandle);
         }
 
@@ -80,10 +80,14 @@ namespace Ryujinx.Core.OsHle.Kernel
                     WaitingThreads.RemoveAt(HighestPrioIndex);
 
                     Process.Memory.WriteInt32(MutexAddress, HasListeners | Handle);
+
+                    OwnerThreadHandle = Handle;
                 }
                 else
                 {
                     Process.Memory.WriteInt32(MutexAddress, 0);
+
+                    OwnerThreadHandle = 0;
                 }
             }
         }

@@ -64,11 +64,11 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private void SvcSleepThread(AThreadState ThreadState)
         {
-            ulong NanoSecs = ThreadState.X0;
+            ulong Ns = ThreadState.X0;
 
             KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
-            if (NanoSecs == 0)
+            if (Ns == 0)
             {
                 Process.Scheduler.Yield(CurrThread);
             }
@@ -76,7 +76,7 @@ namespace Ryujinx.Core.OsHle.Kernel
             {
                 Process.Scheduler.Suspend(CurrThread.ProcessorId);
 
-                Thread.Sleep((int)(NanoSecs / 1000000));
+                Thread.Sleep(NsTimeConverter.GetTimeMs(Ns));
 
                 Process.Scheduler.Resume(CurrThread);
             }
@@ -103,14 +103,14 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private void SvcSetThreadPriority(AThreadState ThreadState)
         {
-            int Prio   = (int)ThreadState.X0;
-            int Handle = (int)ThreadState.X1;
+            int Handle   = (int)ThreadState.X0;
+            int Priority = (int)ThreadState.X1;
 
             KThread CurrThread = Process.HandleTable.GetData<KThread>(Handle);
 
             if (CurrThread != null)
             {
-                CurrThread.Priority = Prio;
+                CurrThread.Priority = Priority;
 
                 ThreadState.X0 = 0;
             }

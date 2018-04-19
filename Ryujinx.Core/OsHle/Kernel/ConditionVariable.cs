@@ -22,7 +22,7 @@ namespace Ryujinx.Core.OsHle.Kernel
             WaitingThreads = new List<(KThread, AutoResetEvent)>();
         }
 
-        public bool WaitForSignal(KThread Thread, long Timeout)
+        public bool WaitForSignal(KThread Thread, ulong Timeout)
         {
             bool Result = true;
 
@@ -37,23 +37,19 @@ namespace Ryujinx.Core.OsHle.Kernel
                         WaitingThreads.Add((Thread, WaitEvent));
                     }
 
-                    Process.Scheduler.Suspend(Thread.ProcessorId);
-
-                    if (Timeout < 0)
+                    if (Timeout == ulong.MaxValue)
                     {
                         Result = WaitEvent.WaitOne();
                     }
                     else
                     {
-                        Result = WaitEvent.WaitOne((int)(Timeout / 1000000));
+                        Result = WaitEvent.WaitOne(NsTimeConverter.GetTimeMs(Timeout));
 
                         lock (WaitingThreads)
                         {
                             WaitingThreads.Remove((Thread, WaitEvent));
                         }
                     }
-
-                    Process.Scheduler.Resume(Thread);
                 }
             }
 

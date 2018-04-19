@@ -83,9 +83,9 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private void SvcWaitSynchronization(AThreadState ThreadState)
         {
-            long HandlesPtr   = (long)ThreadState.X1;
-            int  HandlesCount =  (int)ThreadState.X2;
-            long Timeout      = (long)ThreadState.X3;
+            long  HandlesPtr   = (long)ThreadState.X1;
+            int   HandlesCount =  (int)ThreadState.X2;
+            ulong Timeout      =       ThreadState.X3;
 
             KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
@@ -115,9 +115,9 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             ulong Result = 0;
 
-            if (Timeout != -1)
+            if (Timeout != ulong.MaxValue)
             {
-                HandleIndex = WaitHandle.WaitAny(Handles, (int)(Timeout / 1000000));
+                HandleIndex = WaitHandle.WaitAny(Handles, NsTimeConverter.GetTimeMs(Timeout));
 
                 if (HandleIndex == WaitHandle.WaitTimeout)
                 {

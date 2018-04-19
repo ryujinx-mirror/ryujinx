@@ -55,10 +55,10 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private void SvcWaitProcessWideKeyAtomic(AThreadState ThreadState)
         {
-            long MutexAddress   = (long)ThreadState.X0;
-            long CondVarAddress = (long)ThreadState.X1;
-            int  ThreadHandle   =  (int)ThreadState.X2;
-            long Timeout        = (long)ThreadState.X3;
+            long  MutexAddress   = (long)ThreadState.X0;
+            long  CondVarAddress = (long)ThreadState.X1;
+            int   ThreadHandle   =  (int)ThreadState.X2;
+            ulong Timeout        =       ThreadState.X3;
 
             KThread Thread = Process.HandleTable.GetData<KThread>(ThreadHandle);
 
@@ -68,6 +68,8 @@ namespace Ryujinx.Core.OsHle.Kernel
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
+
+            Process.Scheduler.Suspend(Thread.ProcessorId);
 
             MutualExclusion Mutex = GetMutex(MutexAddress);
 
@@ -81,6 +83,8 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
 
             Mutex.WaitForLock(Thread);
+
+            Process.Scheduler.Resume(Thread);
 
             ThreadState.X0 = 0;
         }
