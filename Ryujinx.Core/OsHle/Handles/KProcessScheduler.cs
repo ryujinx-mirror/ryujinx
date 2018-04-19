@@ -161,6 +161,8 @@ namespace Ryujinx.Core.OsHle.Handles
                 if (AllThreads.TryRemove(Thread, out SchedulerThread SchedThread))
                 {
                     WaitingToRun[Thread.ProcessorId].Remove(SchedThread);
+
+                    SchedThread.Dispose();
                 }
 
                 SchedulerThread NewThread = WaitingToRun[Thread.ProcessorId].Pop();
