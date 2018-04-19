@@ -391,7 +391,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
         {
             BufferQueue[Slot].State = BufferState.Free;
 
-            ReleaseEvent.Handle.Set();
+            ReleaseEvent.WaitEvent.Set();
 
             lock (WaitBufferFree)
             {

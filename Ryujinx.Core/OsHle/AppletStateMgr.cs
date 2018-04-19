@@ -22,7 +22,7 @@ namespace Ryujinx.Core.OsHle
 
         public void SetFocus(bool IsFocused)
         {
-            FocusState = IsFocused 
+            FocusState = IsFocused
                 ? FocusState.InFocus
                 : FocusState.OutOfFocus;
 
@@ -33,14 +33,14 @@ namespace Ryujinx.Core.OsHle
         {
             Messages.Enqueue(Message);
 
-            MessageEvent.Handle.Set();
+            MessageEvent.WaitEvent.Set();
         }
 
         public bool TryDequeueMessage(out MessageInfo Message)
         {
             if (Messages.Count < 2)
             {
-                MessageEvent.Handle.Reset();
+                MessageEvent.WaitEvent.Reset();
             }
 
             return Messages.TryDequeue(out Message);

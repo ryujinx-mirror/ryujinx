@@ -9,7 +9,7 @@ using System.Threading;
 
 using static Ryujinx.Core.OsHle.ErrorCode;
 
-namespace Ryujinx.Core.OsHle.Svc
+namespace Ryujinx.Core.OsHle.Kernel
 {
     partial class SvcHandler
     {
@@ -69,7 +69,7 @@ namespace Ryujinx.Core.OsHle.Svc
 
             if (Event != null)
             {
-                Event.Handle.Reset();
+                Event.WaitEvent.Reset();
 
                 ThreadState.X0 = 0;
             }
@@ -106,7 +106,7 @@ namespace Ryujinx.Core.OsHle.Svc
                     return;
                 }
 
-                Handles[Index] = SyncObj.Handle;
+                Handles[Index] = SyncObj.WaitEvent;
             }
 
             Process.Scheduler.Suspend(CurrThread.ProcessorId);

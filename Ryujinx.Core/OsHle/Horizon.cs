@@ -11,8 +11,7 @@ namespace Ryujinx.Core.OsHle
         internal const int HidSize  = 0x40000;
         internal const int FontSize = 0x50;
 
-        internal ConcurrentDictionary<long, Mutex>   Mutexes  { get; private set; }
-        internal ConcurrentDictionary<long, CondVar> CondVars { get; private set; }
+        private KProcessScheduler Scheduler;
 
         private ConcurrentDictionary<int, Process> Processes;
 
@@ -27,8 +26,7 @@ namespace Ryujinx.Core.OsHle
         {
             this.Ns = Ns;
 
-            Mutexes  = new ConcurrentDictionary<long, Mutex>();
-            CondVars = new ConcurrentDictionary<long, CondVar>();
+            Scheduler = new KProcessScheduler();
 
             Processes = new ConcurrentDictionary<int, Process>();
 
@@ -95,7 +93,7 @@ namespace Ryujinx.Core.OsHle
             MainProcess.Run(IsNro);
         }
 
-        public void SignalVsync() => VsyncEvent.Handle.Set();
+        public void SignalVsync() => VsyncEvent.WaitEvent.Set();
 
         private Process MakeProcess()
         {
@@ -110,7 +108,7 @@ namespace Ryujinx.Core.OsHle
                     ProcessId++;
                 }
 
-                Process = new Process(Ns, ProcessId);
+                Process = new Process(Ns, Scheduler, ProcessId);
 
                 Processes.TryAdd(ProcessId, Process);
             }
@@ -144,11 +142,6 @@ namespace Ryujinx.Core.OsHle
 
                 if (File.Exists(NextNro))
                 {
-                    //TODO: Those dictionaries shouldn't even exist,
-                    //the Mutex and CondVar helper classes should be static.
-                    Mutexes.Clear();
-                    CondVars.Clear();
-
                     LoadProgram(NextNro);
                 }
             }

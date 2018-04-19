@@ -1,4 +1,4 @@
-namespace Ryujinx.Core.OsHle
+namespace Ryujinx.Core.OsHle.Kernel
 {
     static class KernelErr
     {

@@ -7,6 +7,8 @@ namespace Ryujinx.Core.OsHle.Handles
 {
     class KProcessScheduler : IDisposable
     {
+        private const int LowestPriority = 0x40;
+
         private class SchedulerThread : IDisposable
         {
             public KThread Thread { get; private set; }
@@ -51,7 +53,7 @@ namespace Ryujinx.Core.OsHle.Handles
                 }
             }
 
-            public SchedulerThread Pop(int MinPriority = 0x40)
+            public SchedulerThread Pop(int MinPriority = LowestPriority)
             {
                 lock (Threads)
                 {
@@ -130,20 +132,39 @@ namespace Ryujinx.Core.OsHle.Handles
                     return;
                 }
 
-                if (!ActiveProcessors.Contains(Thread.ProcessorId))
+                if (ActiveProcessors.Add(Thread.ProcessorId))
                 {
-                    ActiveProcessors.Add(Thread.ProcessorId);
-
                     Thread.Thread.Execute();
 
-                    Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} running.");
+                    PrintDbgThreadInfo(Thread, "running.");
                 }
                 else
                 {
                     WaitingToRun[Thread.ProcessorId].Push(SchedThread);
 
-                    Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(SchedThread.Thread)} waiting to run.");
+                    PrintDbgThreadInfo(Thread, "waiting to run.");
                 }
+            }
+        }
+
+        public void RemoveThread(KThread Thread)
+        {
+            PrintDbgThreadInfo(Thread, "exited.");
+
+            lock (SchedLock)
+            {
+                SchedulerThread NewThread = WaitingToRun[Thread.ProcessorId].Pop();
+
+                if (NewThread == null)
+                {
+                    Logging.Debug(LogClass.KernelScheduler, $"Nothing to run on core {Thread.ProcessorId}!");
+
+                    ActiveProcessors.Remove(Thread.ProcessorId);
+
+                    return;
+                }
+
+                RunThread(NewThread);
             }
         }
 
@@ -159,73 +180,44 @@ namespace Ryujinx.Core.OsHle.Handles
                 }
                 else
                 {
+                    Logging.Debug(LogClass.KernelScheduler, $"Nothing to run on core {ProcessorId}!");
+
                     ActiveProcessors.Remove(ProcessorId);
                 }
             }
         }
 
-        public void Resume(KThread CurrThread)
+        public void Yield(KThread Thread)
         {
-            SchedulerThread SchedThread;
-
-            Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(CurrThread)} entering ipc delay wait state.");
+            PrintDbgThreadInfo(Thread, "yielded execution.");
 
             lock (SchedLock)
             {
-                if (!AllThreads.TryGetValue(CurrThread, out SchedThread))
+                SchedulerThread SchedThread = WaitingToRun[Thread.ProcessorId].Pop(Thread.Priority);
+
+                if (SchedThread == null)
                 {
-                    Logging.Error(LogClass.KernelScheduler, $"{GetDbgThreadInfo(CurrThread)} was not found on the scheduler queue!");
+                    PrintDbgThreadInfo(Thread, "resumed because theres nothing better to run.");
 
                     return;
                 }
+
+                RunThread(SchedThread);
             }
 
-            TryResumingExecution(SchedThread);
+            Resume(Thread);
         }
 
-        public bool WaitForSignal(KThread Thread, int Timeout = -1)
+        public void Resume(KThread Thread)
         {
             SchedulerThread SchedThread;
 
-            Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} entering signal wait state.");
-
-            lock (SchedLock)
+            if (!AllThreads.TryGetValue(Thread, out SchedThread))
             {
-                SchedThread = WaitingToRun[Thread.ProcessorId].Pop();
-
-                if (SchedThread != null)
-                {
-                    RunThread(SchedThread);
-                }
-                else
-                {
-                    ActiveProcessors.Remove(Thread.ProcessorId);
-                }
-
-                if (!AllThreads.TryGetValue(Thread, out SchedThread))
-                {
-                    Logging.Error(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} was not found on the scheduler queue!");
-
-                    return false;
-                }
-            }
-
-            bool Result;
-
-            if (Timeout >= 0)
-            {
-                Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} has wait timeout of {Timeout}ms.");
-
-                Result = SchedThread.WaitEvent.WaitOne(Timeout);
-            }
-            else
-            {
-                Result = SchedThread.WaitEvent.WaitOne();
+                throw new InvalidOperationException();
             }
 
             TryResumingExecution(SchedThread);
-
-            return Result;
         }
 
         private void TryResumingExecution(SchedulerThread SchedThread)
@@ -236,51 +228,19 @@ namespace Ryujinx.Core.OsHle.Handles
             {
                 if (ActiveProcessors.Add(Thread.ProcessorId))
                 {
-                    Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} resuming execution...");
+                    PrintDbgThreadInfo(Thread, "resuming execution...");
 
                     return;
                 }
+
+                PrintDbgThreadInfo(Thread, "entering wait state...");
 
                 WaitingToRun[Thread.ProcessorId].Push(SchedThread);
             }
 
             SchedThread.WaitEvent.WaitOne();
 
-            Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} resuming execution...");
-        }
-
-        public void Yield(KThread Thread)
-        {
-            SchedulerThread SchedThread;
-
-            Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} yielded execution.");
-
-            lock (SchedLock)
-            {
-                SchedThread = WaitingToRun[Thread.ProcessorId].Pop(Thread.Priority);
-
-                if (SchedThread == null)
-                {
-                    Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} resumed because theres nothing better to run.");
-
-                    return;
-                }
-                
-                RunThread(SchedThread);
-
-                if (!AllThreads.TryGetValue(Thread, out SchedThread))
-                {
-                    Logging.Error(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} was not found on the scheduler queue!");
-
-                    return;
-                }
-
-                WaitingToRun[Thread.ProcessorId].Push(SchedThread);
-            }
-
-            SchedThread.WaitEvent.WaitOne();
-
-            Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} resuming execution...");
+            PrintDbgThreadInfo(Thread, "resuming execution...");
         }
 
         private void RunThread(SchedulerThread SchedThread)
@@ -291,32 +251,16 @@ namespace Ryujinx.Core.OsHle.Handles
             }
             else
             {
-                Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(SchedThread.Thread)} running.");
+                PrintDbgThreadInfo(SchedThread.Thread, "running.");
             }
         }
 
-        public void Signal(params KThread[] Threads)
+        private void PrintDbgThreadInfo(KThread Thread, string Message)
         {
-            lock (SchedLock)
-            {
-                foreach (KThread Thread in Threads)
-                {
-                    if (AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
-                    {
-                        if (!WaitingToRun[Thread.ProcessorId].HasThread(SchedThread))
-                        {
-                            Logging.Debug(LogClass.KernelScheduler, $"{GetDbgThreadInfo(Thread)} signaled.");
-
-                            SchedThread.WaitEvent.Set();
-                        }
-                    }
-                }
-            }
-        }
-
-        private string GetDbgThreadInfo(KThread Thread)
-        {
-            return $"Thread {Thread.ThreadId} (core {Thread.ProcessorId}) prio {Thread.Priority}";
+            Logging.Debug(LogClass.KernelScheduler, "(" +
+                "ThreadId: "    + Thread.ThreadId    + ", " +
+                "ProcessorId: " + Thread.ProcessorId + ", " +
+                "Priority: "    + Thread.Priority    + ") " + Message);
         }
 
         public void Dispose()

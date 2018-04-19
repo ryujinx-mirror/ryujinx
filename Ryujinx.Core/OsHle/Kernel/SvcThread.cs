@@ -1,9 +1,10 @@
 using ChocolArm64.State;
 using Ryujinx.Core.OsHle.Handles;
+using System.Threading;
 
 using static Ryujinx.Core.OsHle.ErrorCode;
 
-namespace Ryujinx.Core.OsHle.Svc
+namespace Ryujinx.Core.OsHle.Kernel
 {
     partial class SvcHandler
     {
@@ -15,42 +16,43 @@ namespace Ryujinx.Core.OsHle.Svc
             int  Priority    =  (int)ThreadState.X4;
             int  ProcessorId =  (int)ThreadState.X5;
 
-            if (Ns.Os.TryGetProcess(ThreadState.ProcessId, out Process Process))
+            if (ProcessorId == -2)
             {
-                if (ProcessorId == -2)
-                {
-                    //TODO: Get this value from the NPDM file.
-                    ProcessorId = 0;
-                }
-
-                int Handle = Process.MakeThread(
-                    EntryPoint,
-                    StackTop,
-                    ArgsPtr,
-                    Priority,
-                    ProcessorId);
-
-                ThreadState.X0 = 0;
-                ThreadState.X1 = (ulong)Handle;
+                //TODO: Get this value from the NPDM file.
+                ProcessorId = 0;
             }
 
-            //TODO: Error codes.
+            int Handle = Process.MakeThread(
+                EntryPoint,
+                StackTop,
+                ArgsPtr,
+                Priority,
+                ProcessorId);
+
+            ThreadState.X0 = 0;
+            ThreadState.X1 = (ulong)Handle;
         }
 
         private void SvcStartThread(AThreadState ThreadState)
         {
             int Handle = (int)ThreadState.X0;
 
-            KThread Thread = Process.HandleTable.GetData<KThread>(Handle);
+            KThread CurrThread = Process.HandleTable.GetData<KThread>(Handle);
 
-            if (Thread != null)
+            if (CurrThread != null)
             {
-                Process.Scheduler.StartThread(Thread);
+                Process.Scheduler.StartThread(CurrThread);
+
+                Process.Scheduler.Yield(Process.GetThread(ThreadState.Tpidr));
 
                 ThreadState.X0 = 0;
             }
+            else
+            {
+                Logging.Warn(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
-            //TODO: Error codes.
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+            }
         }
 
         private void SvcExitThread(AThreadState ThreadState)
@@ -58,8 +60,6 @@ namespace Ryujinx.Core.OsHle.Svc
             KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
             CurrThread.Thread.StopExecution();
-
-            CurrThread.Handle.Set();
         }
 
         private void SvcSleepThread(AThreadState ThreadState)
@@ -74,7 +74,11 @@ namespace Ryujinx.Core.OsHle.Svc
             }
             else
             {
-                Process.Scheduler.WaitForSignal(CurrThread, (int)(NanoSecs / 1000000));
+                Process.Scheduler.Suspend(CurrThread.ProcessorId);
+
+                Thread.Sleep((int)(NanoSecs / 1000000));
+
+                Process.Scheduler.Resume(CurrThread);
             }
         }
 
@@ -82,15 +86,19 @@ namespace Ryujinx.Core.OsHle.Svc
         {
             int Handle = (int)ThreadState.X1;
 
-            KThread Thread = Process.HandleTable.GetData<KThread>(Handle);
+            KThread CurrThread = Process.HandleTable.GetData<KThread>(Handle);
 
-            if (Thread != null)
+            if (CurrThread != null)
             {
                 ThreadState.X0 = 0;
-                ThreadState.X1 = (ulong)Thread.Priority;
+                ThreadState.X1 = (ulong)CurrThread.Priority;
             }
+            else
+            {
+                Logging.Warn(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
-            //TODO: Error codes.
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+            }
         }
 
         private void SvcSetThreadPriority(AThreadState ThreadState)
@@ -98,16 +106,20 @@ namespace Ryujinx.Core.OsHle.Svc
             int Prio   = (int)ThreadState.X0;
             int Handle = (int)ThreadState.X1;
 
-            KThread Thread = Process.HandleTable.GetData<KThread>(Handle);
+            KThread CurrThread = Process.HandleTable.GetData<KThread>(Handle);
 
-            if (Thread != null)
+            if (CurrThread != null)
             {
-                Thread.Priority = Prio;
+                CurrThread.Priority = Prio;
 
                 ThreadState.X0 = 0;
             }
+            else
+            {
+                Logging.Warn(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
-            //TODO: Error codes.
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+            }
         }
 
         private void SvcSetThreadCoreMask(AThreadState ThreadState)
@@ -119,21 +131,19 @@ namespace Ryujinx.Core.OsHle.Svc
 
         private void SvcGetCurrentProcessorNumber(AThreadState ThreadState)
         {
-            KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
-
-            ThreadState.X0 = (ulong)CurrThread.ProcessorId;
+            ThreadState.X0 = (ulong)Process.GetThread(ThreadState.Tpidr).ProcessorId;
         }
 
         private void SvcGetThreadId(AThreadState ThreadState)
         {
             int Handle = (int)ThreadState.X1;
 
-            KThread Thread = Process.HandleTable.GetData<KThread>(Handle);
+            KThread CurrThread = Process.HandleTable.GetData<KThread>(Handle);
 
-            if (Thread != null)
+            if (CurrThread != null)
             {
                 ThreadState.X0 = 0;
-                ThreadState.X1 = (ulong)Thread.ThreadId;
+                ThreadState.X1 = (ulong)CurrThread.ThreadId;
             }
             else
             {

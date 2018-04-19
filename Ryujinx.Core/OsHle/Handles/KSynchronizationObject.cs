@@ -5,11 +5,11 @@ namespace Ryujinx.Core.OsHle.Handles
 {
     class KSynchronizationObject : IDisposable
     {
-        public ManualResetEvent Handle { get; private set; }
+        public ManualResetEvent WaitEvent { get; private set; }
 
         public KSynchronizationObject()
         {
-            Handle = new ManualResetEvent(false);
+            WaitEvent = new ManualResetEvent(false);
         }
 
         public void Dispose()
@@ -21,7 +21,7 @@ namespace Ryujinx.Core.OsHle.Handles
         {
             if (Disposing)
             {
-                Handle.Dispose();
+                WaitEvent.Dispose();
             }
         }
     }

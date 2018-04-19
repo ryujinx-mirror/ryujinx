@@ -47,7 +47,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
             }
 
             //TODO: We shouldn't be signaling this here.
-            UpdateEvent.Handle.Set();
+            UpdateEvent.WaitEvent.Set();
 
             return 0;
         }

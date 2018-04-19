@@ -2,53 +2,58 @@ using Ryujinx.Core.OsHle.Handles;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Ryujinx.Core.OsHle
+namespace Ryujinx.Core.OsHle.Kernel
 {
-    class CondVar
+    class ConditionVariable
     {
         private Process Process;
 
         private long CondVarAddress;
-        private long Timeout;
 
         private bool OwnsCondVarValue;
 
-        private List<KThread> WaitingThreads;
+        private List<(KThread Thread, AutoResetEvent WaitEvent)> WaitingThreads;
 
-        public CondVar(Process Process, long CondVarAddress, long Timeout)
+        public ConditionVariable(Process Process, long CondVarAddress)
         {
             this.Process        = Process;
             this.CondVarAddress = CondVarAddress;
-            this.Timeout        = Timeout;
 
-            WaitingThreads = new List<KThread>();
+            WaitingThreads = new List<(KThread, AutoResetEvent)>();
         }
 
-        public bool WaitForSignal(KThread Thread)
+        public bool WaitForSignal(KThread Thread, long Timeout)
         {
+            bool Result = true;
+
             int Count = Process.Memory.ReadInt32(CondVarAddress);
 
             if (Count <= 0)
             {
-                lock (WaitingThreads)
+                using (AutoResetEvent WaitEvent = new AutoResetEvent(false))
                 {
-                    WaitingThreads.Add(Thread);
-                }
-
-                if (Timeout == -1)
-                {
-                    Process.Scheduler.WaitForSignal(Thread);
-                }
-                else
-                {
-                    bool Result = Process.Scheduler.WaitForSignal(Thread, (int)(Timeout / 1000000));
-
                     lock (WaitingThreads)
                     {
-                        WaitingThreads.Remove(Thread);
+                        WaitingThreads.Add((Thread, WaitEvent));
                     }
 
-                    return Result;
+                    Process.Scheduler.Suspend(Thread.ProcessorId);
+
+                    if (Timeout < 0)
+                    {
+                        Result = WaitEvent.WaitOne();
+                    }
+                    else
+                    {
+                        Result = WaitEvent.WaitOne((int)(Timeout / 1000000));
+
+                        lock (WaitingThreads)
+                        {
+                            WaitingThreads.Remove((Thread, WaitEvent));
+                        }
+                    }
+
+                    Process.Scheduler.Resume(Thread);
                 }
             }
 
@@ -63,57 +68,49 @@ namespace Ryujinx.Core.OsHle
 
             ReleaseCondVarValue();
 
-            return true;
+            return Result;
         }
 
         public void SetSignal(KThread Thread, int Count)
         {
             lock (WaitingThreads)
             {
-                if (Count == -1)
+                if (Count < 0)
                 {
-                    Process.Scheduler.Signal(WaitingThreads.ToArray());
-
-                    AcquireCondVarValue();
-
                     Process.Memory.WriteInt32(CondVarAddress, WaitingThreads.Count);
 
-                    ReleaseCondVarValue();
+                    foreach ((_, AutoResetEvent WaitEvent) in WaitingThreads)
+                    {
+                        WaitEvent.Set();
+                    }
 
                     WaitingThreads.Clear();
                 }
                 else
                 {
-                    if (WaitingThreads.Count > 0)
+                    Process.Memory.WriteInt32(CondVarAddress, Count);
+
+                    while (WaitingThreads.Count > 0 && Count-- > 0)
                     {
-                        int HighestPriority  = WaitingThreads[0].Priority;
+                        int HighestPriority  = WaitingThreads[0].Thread.Priority;
                         int HighestPrioIndex = 0;
 
                         for (int Index = 1; Index < WaitingThreads.Count; Index++)
                         {
-                            if (HighestPriority > WaitingThreads[Index].Priority)
+                            if (HighestPriority > WaitingThreads[Index].Thread.Priority)
                             {
-                                HighestPriority = WaitingThreads[Index].Priority;
+                                HighestPriority = WaitingThreads[Index].Thread.Priority;
 
                                 HighestPrioIndex = Index;
                             }
                         }
 
-                        Process.Scheduler.Signal(WaitingThreads[HighestPrioIndex]);
+                        WaitingThreads[HighestPrioIndex].WaitEvent.Set();
 
                         WaitingThreads.RemoveAt(HighestPrioIndex);
                     }
-
-                    AcquireCondVarValue();
-
-                    Process.Memory.WriteInt32(CondVarAddress, Count);
-
-                    ReleaseCondVarValue();
                 }
             }
-
-            Process.Scheduler.Suspend(Thread.ProcessorId);
-            Process.Scheduler.Resume(Thread);
         }
 
         private void AcquireCondVarValue()

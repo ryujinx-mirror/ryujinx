@@ -1,6 +1,5 @@
 using OpenTK;
 using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using Ryujinx.Core;
 using Ryujinx.Core.Input;

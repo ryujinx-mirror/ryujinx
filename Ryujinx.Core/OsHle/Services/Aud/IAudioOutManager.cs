@@ -76,7 +76,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
             ReleaseCallback Callback = () =>
             {
-                ReleaseEvent.Handle.Set();
+                ReleaseEvent.WaitEvent.Set();
             };
 
             int Track = AudioOut.OpenTrack(SampleRate, Channels, Callback, out AudioFormat Format);

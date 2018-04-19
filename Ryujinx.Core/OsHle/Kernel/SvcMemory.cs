@@ -4,7 +4,7 @@ using Ryujinx.Core.OsHle.Handles;
 
 using static Ryujinx.Core.OsHle.ErrorCode;
 
-namespace Ryujinx.Core.OsHle.Svc
+namespace Ryujinx.Core.OsHle.Kernel
 {
     partial class SvcHandler
     {
@@ -244,7 +244,7 @@ namespace Ryujinx.Core.OsHle.Svc
             HTransferMem TMem = new HTransferMem(Memory, MapInfo.Perm, Src, Size);
 
             ulong Handle = (ulong)Process.HandleTable.OpenHandle(TMem);
-            
+
             ThreadState.X0 = 0;
             ThreadState.X1 = Handle;
         }
@@ -252,13 +252,13 @@ namespace Ryujinx.Core.OsHle.Svc
         private static bool IsValidPosition(long Position)
         {
             return Position >= MemoryRegions.AddrSpaceStart &&
-                   Position <  MemoryRegions.AddrSpaceStart + MemoryRegions.AddrSpaceSize; 
+                   Position <  MemoryRegions.AddrSpaceStart + MemoryRegions.AddrSpaceSize;
         }
 
         private static bool IsValidMapPosition(long Position)
         {
             return Position >= MemoryRegions.MapRegionAddress &&
-                   Position <  MemoryRegions.MapRegionAddress + MemoryRegions.MapRegionSize; 
+                   Position <  MemoryRegions.MapRegionAddress + MemoryRegions.MapRegionSize;
         }
     }
 }
