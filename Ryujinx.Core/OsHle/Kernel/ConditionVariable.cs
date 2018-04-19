@@ -111,6 +111,8 @@ namespace Ryujinx.Core.OsHle.Kernel
                     }
                 }
             }
+
+            Process.Scheduler.Yield(Thread);
         }
 
         private void AcquireCondVarValue()

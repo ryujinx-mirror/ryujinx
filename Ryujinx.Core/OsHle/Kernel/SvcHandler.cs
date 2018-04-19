@@ -18,7 +18,7 @@ namespace Ryujinx.Core.OsHle.Kernel
         private Process Process;
         private AMemory Memory;
 
-        private ConcurrentDictionary<long, MutualExclusion>     Mutexes;
+        private ConcurrentDictionary<long, MutualExclusion>   Mutexes;
         private ConcurrentDictionary<long, ConditionVariable> CondVars;
 
         private HashSet<(HSharedMem, long)> MappedSharedMems;
