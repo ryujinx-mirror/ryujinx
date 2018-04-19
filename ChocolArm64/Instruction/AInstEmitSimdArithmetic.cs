@@ -211,17 +211,87 @@ namespace ChocolArm64.Instruction
 
         public static void Fmax_S(AILEmitterCtx Context)
         {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
             EmitScalarBinaryOpF(Context, () =>
             {
-                EmitBinaryMathCall(Context, nameof(Math.Max));
+                if (Op.Size == 0)
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.MaxF));
+                }
+                else if (Op.Size == 1)
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Max));
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            });
+        }
+
+        public static void Fmax_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            EmitVectorBinaryOpF(Context, () =>
+            {
+                if (Op.Size == 0)
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.MaxF));
+                }
+                else if (Op.Size == 1)
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Max));
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
             });
         }
 
         public static void Fmin_S(AILEmitterCtx Context)
         {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
             EmitScalarBinaryOpF(Context, () =>
             {
-                EmitBinaryMathCall(Context, nameof(Math.Min));
+                if (Op.Size == 0)
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.MinF));
+                }
+                else if (Op.Size == 1)
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Min));
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            });
+        }
+
+        public static void Fmin_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            EmitVectorBinaryOpF(Context, () =>
+            {
+                if (SizeF == 0)
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.MinF));
+                }
+                else if (SizeF == 1)
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Min));
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
             });
         }
 
@@ -510,17 +580,19 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
+            int SizeF = Op.Size & 1;
+
             EmitVectorUnaryOpF(Context, () =>
             {
                 Context.EmitLdarg(ATranslatedSub.StateArgIdx);
 
                 Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
 
-                if (Op.Size == 2)
+                if (SizeF == 0)
                 {
                     ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
                 }
-                else if (Op.Size == 3)
+                else if (SizeF == 1)
                 {
                     ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
                 }

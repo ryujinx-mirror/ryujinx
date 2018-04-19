@@ -256,6 +256,82 @@ namespace ChocolArm64.Instruction
                    ((Value >> 6) & 1) +  (Value >> 7);
         }
 
+        public static float MaxF(float val1, float val2)
+        {
+            if (val1 == 0.0 && val2 == 0.0)
+            {
+                if (BitConverter.SingleToInt32Bits(val1) < 0 && BitConverter.SingleToInt32Bits(val2) < 0)
+                    return -0.0f;
+                
+                return 0.0f;
+            }
+
+            if (val1 > val2) 
+                return val1; 
+     
+            if (float.IsNaN(val1)) 
+                return val1;
+     
+            return val2;
+        }
+
+        public static double Max(double val1, double val2)
+        {
+            if (val1 == 0.0 && val2 == 0.0)
+            {
+                if (BitConverter.DoubleToInt64Bits(val1) < 0 && BitConverter.DoubleToInt64Bits(val2) < 0)
+                    return -0.0;
+
+                return 0.0;
+            }
+
+            if (val1 > val2) 
+                return val1; 
+     
+            if (double.IsNaN(val1)) 
+                return val1;
+     
+            return val2;
+        }
+
+        public static float MinF(float val1, float val2)
+        {
+            if (val1 == 0.0 && val2 == 0.0)
+            {
+                if (BitConverter.SingleToInt32Bits(val1) < 0 || BitConverter.SingleToInt32Bits(val2) < 0)
+                    return -0.0f;
+                
+                return 0.0f;
+            }
+
+            if (val1 < val2) 
+                return val1; 
+     
+            if (float.IsNaN(val1)) 
+                return val1;
+     
+            return val2;
+        }
+
+        public static double Min(double val1, double val2)
+        {
+            if (val1 == 0.0 && val2 == 0.0)
+            {
+                if (BitConverter.DoubleToInt64Bits(val1) < 0 || BitConverter.DoubleToInt64Bits(val2) < 0)
+                    return -0.0;
+                
+                return 0.0;
+            }
+
+            if (val1 < val2) 
+                return val1; 
+     
+            if (double.IsNaN(val1)) 
+                return val1;
+     
+            return val2;
+        }
+
         public static float RoundF(float Value, int Fpcr)
         {
             switch ((ARoundMode)((Fpcr >> 22) & 3))

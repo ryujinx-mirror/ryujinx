@@ -45,6 +45,58 @@ namespace Ryujinx.Tests.Cpu
             });
         }
 
+        [TestCase(0x80000000u, 0x80000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u)]
+        [TestCase(0x00000000u, 0x00000000u, 0x80000000u, 0x80000000u, 0x00000000u, 0x00000000u)]
+        [TestCase(0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u)]
+        [TestCase(0x80000000u, 0x80000000u, 0x3DCCCCCDu, 0x3DCCCCCDu, 0x3DCCCCCDu, 0x3DCCCCCDu)]
+        [TestCase(0x3DCCCCCDu, 0x3DCCCCCDu, 0x3C9623B1u, 0x3C9623B1u, 0x3DCCCCCDu, 0x3DCCCCCDu)]
+        [TestCase(0x8BA98D27u, 0x8BA98D27u, 0x00000076u, 0x00000076u, 0x00000076u, 0x00000076u)]
+        [TestCase(0x807FFFFFu, 0x807FFFFFu, 0x7F7FFFFFu, 0x7F7FFFFFu, 0x7F7FFFFFu, 0x7F7FFFFFu)]
+        [TestCase(0x7F7FFFFFu, 0x7F7FFFFFu, 0x807FFFFFu, 0x807FFFFFu, 0x7F7FFFFFu, 0x7F7FFFFFu)]
+        [TestCase(0x7FC00000u, 0x7FC00000u, 0x3F800000u, 0x3F800000u, 0x7FC00000u, 0x7FC00000u)]
+        [TestCase(0x3F800000u, 0x3F800000u, 0x7FC00000u, 0x7FC00000u, 0x7FC00000u, 0x7FC00000u)]
+        [TestCase(0x7F800001u, 0x7F800001u, 0x7FC00042u, 0x7FC00042u, 0x7FC00001u, 0x7FC00001u, Ignore = "NaN test.")]
+        [TestCase(0x7FC00042u, 0x7FC00042u, 0x7F800001u, 0x7F800001u, 0x7FC00001u, 0x7FC00001u, Ignore = "NaN test.")]
+        [TestCase(0x7FC0000Au, 0x7FC0000Au, 0x7FC0000Bu, 0x7FC0000Bu, 0x7FC0000Au, 0x7FC0000Au, Ignore = "NaN test.")]
+        public void Fmax_V(uint A, uint B, uint C, uint D, uint Result0, uint Result1)
+        {
+            uint Opcode = 0x4E22F420;
+            AVec V1 = new AVec { X0 = A, X1 = B };
+            AVec V2 = new AVec { X0 = C, X1 = D };
+            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(Result0, ThreadState.V0.X0);
+                Assert.AreEqual(Result1, ThreadState.V0.X1);
+            });
+        }
+
+        [TestCase(0x80000000u, 0x80000000u, 0x00000000u, 0x00000000u, 0x80000000u, 0x80000000u)]
+        [TestCase(0x00000000u, 0x00000000u, 0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u)]
+        [TestCase(0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u)]
+        [TestCase(0x80000000u, 0x80000000u, 0x3DCCCCCDu, 0x3DCCCCCDu, 0x80000000u, 0x80000000u)]
+        [TestCase(0x3DCCCCCDu, 0x3DCCCCCDu, 0x3C9623B1u, 0x3C9623B1u, 0x3C9623B1u, 0x3C9623B1u)]
+        [TestCase(0x8BA98D27u, 0x8BA98D27u, 0x00000076u, 0x00000076u, 0x8BA98D27u, 0x8BA98D27u)]
+        [TestCase(0x807FFFFFu, 0x807FFFFFu, 0x7F7FFFFFu, 0x7F7FFFFFu, 0x807FFFFFu, 0x807FFFFFu)]
+        [TestCase(0x7F7FFFFFu, 0x7F7FFFFFu, 0x807FFFFFu, 0x807FFFFFu, 0x807FFFFFu, 0x807FFFFFu)]
+        [TestCase(0x7FC00000u, 0x7FC00000u, 0x3F800000u, 0x3F800000u, 0x7FC00000u, 0x7FC00000u)]
+        [TestCase(0x3F800000u, 0x3F800000u, 0x7FC00000u, 0x7FC00000u, 0x7FC00000u, 0x7FC00000u)]
+        [TestCase(0x7F800001u, 0x7F800001u, 0x7FC00042u, 0x7FC00042u, 0x7FC00001u, 0x7FC00001u, Ignore = "NaN test.")]
+        [TestCase(0x7FC00042u, 0x7FC00042u, 0x7F800001u, 0x7F800001u, 0x7FC00001u, 0x7FC00001u, Ignore = "NaN test.")]
+        [TestCase(0x7FC0000Au, 0x7FC0000Au, 0x7FC0000Bu, 0x7FC0000Bu, 0x7FC0000Au, 0x7FC0000Au, Ignore = "NaN test.")]
+        public void Fmin_V(uint A, uint B, uint C, uint D, uint Result0, uint Result1)
+        {
+            uint Opcode = 0x4EA2F420;
+            AVec V1 = new AVec { X0 = A, X1 = B };
+            AVec V2 = new AVec { X0 = C, X1 = D };
+            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(Result0, ThreadState.V0.X0);
+                Assert.AreEqual(Result1, ThreadState.V0.X1);
+            });
+        }
+
         [Test, Description("fmul s6, s1, v0.s[2]")]
         public void Fmul_Se([Random(10)] float A, [Random(10)] float B)
         {
