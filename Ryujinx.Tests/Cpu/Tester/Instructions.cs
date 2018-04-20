@@ -1,7 +1,7 @@
 // https://github.com/LDj3SNuD/ARM_v8-A_AArch64_Instructions_Tester/blob/master/Tester/Instructions.cs
 
 // https://meriac.github.io/archex/A64_v83A_ISA/index.xml
-/* https://meriac.github.io/archex/A64_v83A_ISA/fpsimdindex.xml */
+// https://meriac.github.io/archex/A64_v83A_ISA/fpsimdindex.xml
 
 using System.Numerics;
 
@@ -1674,9 +1674,578 @@ namespace Ryujinx.Tests.Cpu.Tester
 #endregion
     }
 
-    /*
-    internal static class Advanced
+    internal static class SimdFp
     {
+#region "Simd"
+        // https://meriac.github.io/archex/A64_v83A_ISA/abs_advsimd.xml#ABS_asisdmisc_R
+        public static void Abs_S(Bits size, Bits Rn, Bits Rd)
+        {
+            bool U = false;
+
+            /* Decode Scalar */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size != '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = esize;
+            int elements = 1;
+
+            bool neg = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(datasize, n);
+            BigInteger element;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element = SInt(Elem(operand, e, esize));
+
+                if (neg)
+                {
+                    element = -element;
+                }
+                else
+                {
+                    element = Abs(element);
+                }
+
+                Elem(result, e, esize, element.SubBigInteger(esize - 1, 0));
+            }
+
+            V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/abs_advsimd.xml#ABS_asimdmisc_R
+        public static void Abs_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            bool U = false;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size:Q == '110' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool neg = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(datasize, n);
+            BigInteger element;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element = SInt(Elem(operand, e, esize));
+
+                if (neg)
+                {
+                    element = -element;
+                }
+                else
+                {
+                    element = Abs(element);
+                }
+
+                Elem(result, e, esize, element.SubBigInteger(esize - 1, 0));
+            }
+
+            V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/neg_advsimd.xml#NEG_asisdmisc_R
+        public static void Neg_S(Bits size, Bits Rn, Bits Rd)
+        {
+            bool U = true;
+
+            /* Decode Scalar */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size != '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = esize;
+            int elements = 1;
+
+            bool neg = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(datasize, n);
+            BigInteger element;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element = SInt(Elem(operand, e, esize));
+
+                if (neg)
+                {
+                    element = -element;
+                }
+                else
+                {
+                    element = Abs(element);
+                }
+
+                Elem(result, e, esize, element.SubBigInteger(esize - 1, 0));
+            }
+
+            V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/neg_advsimd.xml#NEG_asimdmisc_R
+        public static void Neg_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            bool U = true;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size:Q == '110' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool neg = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(datasize, n);
+            BigInteger element;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element = SInt(Elem(operand, e, esize));
+
+                if (neg)
+                {
+                    element = -element;
+                }
+                else
+                {
+                    element = Abs(element);
+                }
+
+                Elem(result, e, esize, element.SubBigInteger(esize - 1, 0));
+            }
+
+            V(d, result);
+        }
+#endregion
+
+#region "SimdReg"
+        // https://meriac.github.io/archex/A64_v83A_ISA/add_advsimd.xml#ADD_asisdsame_only
+        public static void Add_S(Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            bool U = false;
+
+            /* Decode Scalar */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size != '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = esize;
+            int elements = 1;
+
+            bool sub_op = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            Bits element1;
+            Bits element2;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Elem(operand1, e, esize);
+                element2 = Elem(operand2, e, esize);
+
+                if (sub_op)
+                {
+                    Elem(result, e, esize, element1 - element2);
+                }
+                else
+                {
+                    Elem(result, e, esize, element1 + element2);
+                }
+            }
+
+            V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/add_advsimd.xml#ADD_asimdsame_only
+        public static void Add_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            bool U = false;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size:Q == '110' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool sub_op = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            Bits element1;
+            Bits element2;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Elem(operand1, e, esize);
+                element2 = Elem(operand2, e, esize);
+
+                if (sub_op)
+                {
+                    Elem(result, e, esize, element1 - element2);
+                }
+                else
+                {
+                    Elem(result, e, esize, element1 + element2);
+                }
+            }
+
+            V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/addhn_advsimd.xml
+        public static void Addhn_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            bool U = false;
+            bool o1 = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = 64;
+            int part = (int)UInt(Q);
+            int elements = datasize / esize;
+
+            bool sub_op = (o1 == true);
+            bool round = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(2 * datasize, n);
+            Bits operand2 = V(2 * datasize, m);
+            BigInteger round_const = (round ? (BigInteger)1 << (esize - 1) : 0);
+            Bits sum;
+            Bits element1;
+            Bits element2;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Elem(operand1, e, 2 * esize);
+                element2 = Elem(operand2, e, 2 * esize);
+
+                if (sub_op)
+                {
+                    sum = element1 - element2;
+                }
+                else
+                {
+                    sum = element1 + element2;
+                }
+
+                sum = sum + round_const;
+
+                Elem(result, e, esize, sum[2 * esize - 1, esize]);
+            }
+
+            Vpart(d, part, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/raddhn_advsimd.xml
+        public static void Raddhn_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            bool U = true;
+            bool o1 = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = 64;
+            int part = (int)UInt(Q);
+            int elements = datasize / esize;
+
+            bool sub_op = (o1 == true);
+            bool round = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(2 * datasize, n);
+            Bits operand2 = V(2 * datasize, m);
+            BigInteger round_const = (round ? (BigInteger)1 << (esize - 1) : 0);
+            Bits sum;
+            Bits element1;
+            Bits element2;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Elem(operand1, e, 2 * esize);
+                element2 = Elem(operand2, e, 2 * esize);
+
+                if (sub_op)
+                {
+                    sum = element1 - element2;
+                }
+                else
+                {
+                    sum = element1 + element2;
+                }
+
+                sum = sum + round_const;
+
+                Elem(result, e, esize, sum[2 * esize - 1, esize]);
+            }
+
+            Vpart(d, part, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/rsubhn_advsimd.xml
+        public static void Rsubhn_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            bool U = true;
+            bool o1 = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = 64;
+            int part = (int)UInt(Q);
+            int elements = datasize / esize;
+
+            bool sub_op = (o1 == true);
+            bool round = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(2 * datasize, n);
+            Bits operand2 = V(2 * datasize, m);
+            BigInteger round_const = (round ? (BigInteger)1 << (esize - 1) : 0);
+            Bits sum;
+            Bits element1;
+            Bits element2;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Elem(operand1, e, 2 * esize);
+                element2 = Elem(operand2, e, 2 * esize);
+
+                if (sub_op)
+                {
+                    sum = element1 - element2;
+                }
+                else
+                {
+                    sum = element1 + element2;
+                }
+
+                sum = sum + round_const;
+
+                Elem(result, e, esize, sum[2 * esize - 1, esize]);
+            }
+
+            Vpart(d, part, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/sub_advsimd.xml#SUB_asisdsame_only
+        public static void Sub_S(Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            bool U = true;
+
+            /* Decode Scalar */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size != '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = esize;
+            int elements = 1;
+
+            bool sub_op = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            Bits element1;
+            Bits element2;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Elem(operand1, e, esize);
+                element2 = Elem(operand2, e, esize);
+
+                if (sub_op)
+                {
+                    Elem(result, e, esize, element1 - element2);
+                }
+                else
+                {
+                    Elem(result, e, esize, element1 + element2);
+                }
+            }
+
+            V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/sub_advsimd.xml#SUB_asimdsame_only
+        public static void Sub_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            bool U = true;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size:Q == '110' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool sub_op = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            Bits element1;
+            Bits element2;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Elem(operand1, e, esize);
+                element2 = Elem(operand2, e, esize);
+
+                if (sub_op)
+                {
+                    Elem(result, e, esize, element1 - element2);
+                }
+                else
+                {
+                    Elem(result, e, esize, element1 + element2);
+                }
+            }
+
+            V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/subhn_advsimd.xml
+        public static void Subhn_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            bool U = false;
+            bool o1 = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = 64;
+            int part = (int)UInt(Q);
+            int elements = datasize / esize;
+
+            bool sub_op = (o1 == true);
+            bool round = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(2 * datasize, n);
+            Bits operand2 = V(2 * datasize, m);
+            BigInteger round_const = (round ? (BigInteger)1 << (esize - 1) : 0);
+            Bits sum;
+            Bits element1;
+            Bits element2;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Elem(operand1, e, 2 * esize);
+                element2 = Elem(operand2, e, 2 * esize);
+
+                if (sub_op)
+                {
+                    sum = element1 - element2;
+                }
+                else
+                {
+                    sum = element1 + element2;
+                }
+
+                sum = sum + round_const;
+
+                Elem(result, e, esize, sum[2 * esize - 1, esize]);
+            }
+
+            Vpart(d, part, result);
+        }
+#endregion
     }
-    */
 }

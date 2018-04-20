@@ -26,7 +26,6 @@ namespace ChocolArm64.Instruction
             AILLabel LblTrue = new AILLabel();
 
             Context.Emit(OpCodes.Dup);
-
             Context.Emit(OpCodes.Ldc_I4_0);
             Context.Emit(OpCodes.Bge_S, LblTrue);
 
@@ -43,6 +42,11 @@ namespace ChocolArm64.Instruction
         public static void Add_V(AILEmitterCtx Context)
         {
             EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Add));
+        }
+
+        public static void Addhn_V(AILEmitterCtx Context)
+        {
+            EmitHighNarrow(Context, () => Context.Emit(OpCodes.Add), Round: false);
         }
 
         public static void Addp_S(AILEmitterCtx Context)
@@ -125,6 +129,40 @@ namespace ChocolArm64.Instruction
             }
 
             if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
+        private static void EmitHighNarrow(AILEmitterCtx Context, Action Emit, bool Round)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int Elems = 8 >> Op.Size;
+            int ESize = 8 << Op.Size;
+
+            int Part = Op.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                EmitVectorExtractZx(Context, Op.Rn, Index, Op.Size + 1);
+                EmitVectorExtractZx(Context, Op.Rm, Index, Op.Size + 1);
+
+                Emit();
+
+                if (Round)
+                {
+                    Context.EmitLdc_I8(1L << (ESize - 1));
+
+                    Context.Emit(OpCodes.Add);
+                }
+
+                Context.EmitLsr(ESize);
+
+                EmitVectorInsert(Context, Op.Rd, Part + Index, Op.Size);
+            }
+
+            if (Part == 0)
             {
                 EmitVectorZeroUpper(Context, Op.Rd);
             }
@@ -849,6 +887,16 @@ namespace ChocolArm64.Instruction
             EmitVectorUnaryOpSx(Context, () => Context.Emit(OpCodes.Neg));
         }
 
+        public static void Raddhn_V(AILEmitterCtx Context)
+        {
+            EmitHighNarrow(Context, () => Context.Emit(OpCodes.Add), Round: true);
+        }
+
+        public static void Rsubhn_V(AILEmitterCtx Context)
+        {
+            EmitHighNarrow(Context, () => Context.Emit(OpCodes.Sub), Round: true);
+        }
+
         public static void Saddw_V(AILEmitterCtx Context)
         {
             EmitVectorWidenRmBinaryOpSx(Context, () => Context.Emit(OpCodes.Add));
@@ -894,6 +942,11 @@ namespace ChocolArm64.Instruction
         public static void Sub_V(AILEmitterCtx Context)
         {
             EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Sub));
+        }
+
+        public static void Subhn_V(AILEmitterCtx Context)
+        {
+            EmitHighNarrow(Context, () => Context.Emit(OpCodes.Sub), Round: false);
         }
 
         public static void Uabd_V(AILEmitterCtx Context)

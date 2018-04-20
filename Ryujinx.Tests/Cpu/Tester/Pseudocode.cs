@@ -70,6 +70,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             // ELR_ELx and SPSR_ELx have UNKNOWN values, so that it
             // is impossible to return from a reset in an architecturally defined way.
             AArch64.ResetGeneralRegisters();
+            AArch64.ResetSIMDFPRegisters();
             AArch64.ResetSpecialRegisters();
         }
 #endregion
@@ -82,6 +83,16 @@ namespace Ryujinx.Tests.Cpu.Tester
             {
                 /* X[i] = bits(64) UNKNOWN; */
                 _R[i].SetAll(false);
+            }
+        }
+
+        /* #AArch64.ResetSIMDFPRegisters.0 */
+        public static void ResetSIMDFPRegisters()
+        {
+            for (int i = 0; i <= 31; i++)
+            {
+                /* V[i] = bits(128) UNKNOWN; */
+                _V[i].SetAll(false);
             }
         }
 
@@ -116,8 +127,8 @@ namespace Ryujinx.Tests.Cpu.Tester
                     default:
                     case Bits bits when bits == EL1:
                         SP_EL1 = ZeroExtend(64, value);
-                        break;
-                    /*case Bits bits when bits == EL2:
+                        break;/*
+                    case Bits bits when bits == EL2:
                         SP_EL2 = ZeroExtend(64, value);
                         break;
                     case Bits bits when bits == EL3:
@@ -144,12 +155,70 @@ namespace Ryujinx.Tests.Cpu.Tester
                         return SP_EL0[width - 1, 0];
                     default:
                     case Bits bits when bits == EL1:
-                        return SP_EL1[width - 1, 0];
-                    /*case Bits bits when bits == EL2:
+                        return SP_EL1[width - 1, 0];/*
+                    case Bits bits when bits == EL2:
                         return SP_EL2[width - 1, 0];
                     case Bits bits when bits == EL3:
                         return SP_EL3[width - 1, 0];*/
                 }
+            }
+        }
+
+        // #impl-aarch64.V.write.1
+        public static void V(int n, Bits value)
+        {
+            /* int width = value.Count; */
+
+            /* assert n >= 0 && n <= 31; */
+            /* assert width IN {8,16,32,64,128}; */
+
+            _V[n] = ZeroExtend(128, value);
+        }
+
+        /* #impl-aarch64.V.read.1 */
+        public static Bits V(int width, int n)
+        {
+            /* assert n >= 0 && n <= 31; */
+            /* assert width IN {8,16,32,64,128}; */
+
+            return _V[n][width - 1, 0];
+        }
+
+        /* #impl-aarch64.Vpart.read.2 */
+        public static Bits Vpart(int width, int n, int part)
+        {
+            /* assert n >= 0 && n <= 31; */
+            /* assert part IN {0, 1}; */
+
+            if (part == 0)
+            {
+                /* assert width IN {8,16,32,64}; */
+                return _V[n][width - 1, 0];
+            }
+            else
+            {
+                /* assert width == 64; */
+                return _V[n][(width * 2) - 1, width];
+            }
+        }
+
+        // #impl-aarch64.Vpart.write.2
+        public static void Vpart(int n, int part, Bits value)
+        {
+            int width = value.Count;
+
+            /* assert n >= 0 && n <= 31; */
+            /* assert part IN {0, 1}; */
+
+            if (part == 0)
+            {
+                /* assert width IN {8,16,32,64}; */
+                _V[n] = ZeroExtend(128, value);
+            }
+            else
+            {
+                /* assert width == 64; */
+                _V[n][(width * 2) - 1, width] = value[width - 1, 0];
             }
         }
 
@@ -214,6 +283,7 @@ namespace Ryujinx.Tests.Cpu.Tester
         public static Bits ExtendReg(int N, int reg, ExtendType type, int shift)
         {
             /* assert shift >= 0 && shift <= 4; */
+
             Bits val = X(N, reg);
             bool unsigned;
             int len;
@@ -384,6 +454,12 @@ namespace Ryujinx.Tests.Cpu.Tester
                 _R[i] = new Bits(64, false);
             }
 
+            _V = new Bits[32];
+            for (int i = 0; i <= 31; i++)
+            {
+                _V[i] = new Bits(128, false);
+            }
+
             SP_EL0 = new Bits(64, false);
             SP_EL1 = new Bits(64, false);
 
@@ -437,6 +513,12 @@ namespace Ryujinx.Tests.Cpu.Tester
             return (result, carry_out);
         }
 
+        // #impl-shared.Abs.1
+        public static BigInteger Abs(BigInteger x)
+        {
+            return (x >= 0 ? x : -x);
+        }
+
         // #impl-shared.CountLeadingSignBits.1
         public static int CountLeadingSignBits(Bits x)
         {
@@ -451,6 +533,26 @@ namespace Ryujinx.Tests.Cpu.Tester
             int N = x.Count;
 
             return (N - 1 - HighestSetBit(x));
+        }
+
+        // #impl-shared.Elem.read.3
+        public static Bits Elem(/*in */Bits vector, int e, int size)
+        {
+            /* int N = vector.Count; */
+
+            /* assert e >= 0 && (e+1)*size <= N; */
+
+            return vector[e * size + size - 1, e * size];
+        }
+
+        // #impl-shared.Elem.write.3
+        public static void Elem(/*out */Bits vector, int e, int size, Bits value)
+        {
+            /* int N = vector.Count; */
+
+            /* assert e >= 0 && (e+1)*size <= N; */
+
+            vector[(e + 1) * size - 1, e * size] = value;
         }
 
         /* */
@@ -854,6 +956,8 @@ namespace Ryujinx.Tests.Cpu.Tester
 
 #region "functions/registers/"
         public static readonly Bits[] _R;
+
+        public static readonly Bits[] _V;
 
         public static Bits SP_EL0;
         public static Bits SP_EL1;
