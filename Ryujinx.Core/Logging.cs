@@ -20,7 +20,7 @@ namespace Ryujinx.Core
         private static bool   EnableWarn         = Config.LoggingEnableWarn;
         private static bool   EnableError        = Config.LoggingEnableError;
         private static bool   EnableFatal        = Config.LoggingEnableFatal;
-        private static bool   EnableStub         = Config.LoggingEnableIpc;
+        private static bool   EnableStub         = Config.LoggingEnableStub;
         private static bool   EnableIpc          = Config.LoggingEnableIpc;
         private static bool   EnableFilter       = Config.LoggingEnableFilter;
         private static bool   EnableLogFile      = Config.LoggingEnableLogFile;
