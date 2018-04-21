@@ -1,5 +1,7 @@
 using Ryujinx.Core.OsHle.Ipc;
+using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Ryujinx.Core.OsHle.Services.Set
 {
@@ -34,9 +36,35 @@ namespace Ryujinx.Core.OsHle.Services.Set
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
+                { 0, GetLanguageCode               },
                 { 1, GetAvailableLanguageCodes     },
                 { 3, GetAvailableLanguageCodeCount }
             };
+        }
+
+        public static long GetLanguageCode(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(LanguageCodetoLongBE(LanguageCodes[1]));
+
+            return 0;
+        }
+
+        private static long LanguageCodetoLongBE(string LanguageCode)
+        {
+            using (MemoryStream MS = new MemoryStream())
+            {
+                foreach (char Chr in LanguageCode)
+                {
+                    MS.WriteByte((byte)Chr);
+                }
+
+                for (int Offs = 0; Offs < (8 - LanguageCode.Length); Offs++)
+                {
+                    MS.WriteByte(0);
+                }
+
+                return BitConverter.ToInt64(MS.ToArray(), 0);
+            }
         }
 
         public static long GetAvailableLanguageCodes(ServiceCtx Context)

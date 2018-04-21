@@ -11,6 +11,7 @@ using Ryujinx.Core.OsHle.Services.Ns;
 using Ryujinx.Core.OsHle.Services.Nv;
 using Ryujinx.Core.OsHle.Services.Pctl;
 using Ryujinx.Core.OsHle.Services.Pl;
+using Ryujinx.Core.OsHle.Services.Prepo;
 using Ryujinx.Core.OsHle.Services.Set;
 using Ryujinx.Core.OsHle.Services.Sfdnsres;
 using Ryujinx.Core.OsHle.Services.Sm;
@@ -40,7 +41,7 @@ namespace Ryujinx.Core.OsHle.Services
 
                 case "appletAE":
                     return new IAllSystemAppletProxiesService();
-                    
+
                 case "appletOE":
                     return new IApplicationProxyService();
 
@@ -71,6 +72,15 @@ namespace Ryujinx.Core.OsHle.Services
                 case "nifm:u":
                     return new Nifm.IStaticService();
 
+                case "ns:ec":
+                    return new IServiceGetterInterface();
+
+                case "ns:su":
+                    return new ISystemUpdateInterface();
+
+                case "ns:vm":
+                    return new IVulnerabilityManagerInterface();
+
                 case "nvdrv":
                     return new INvDrvServices();
 
@@ -82,6 +92,9 @@ namespace Ryujinx.Core.OsHle.Services
 
                 case "pl:u":
                     return new ISharedFontManager();
+
+                case "prepo:u":
+                    return new IPrepoService();
 
                 case "set":
                     return new ISettingsServer();
@@ -97,6 +110,9 @@ namespace Ryujinx.Core.OsHle.Services
 
                 case "ssl":
                     return new ISslService();
+
+                case "time:a":
+                    return new Time.IStaticService();
 
                 case "time:s":
                     return new Time.IStaticService();

@@ -20,6 +20,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
                 { 1, ReceiveMessage       },
                 { 5, GetOperationMode     },
                 { 6, GetPerformanceMode   },
+                { 8, GetBootMode          },
                 { 9, GetCurrentFocusState }
             };
         }
@@ -57,6 +58,15 @@ namespace Ryujinx.Core.OsHle.Services.Am
         public long GetPerformanceMode(ServiceCtx Context)
         {
             Context.ResponseData.Write((byte)Apm.PerformanceMode.Handheld);
+
+            return 0;
+        }
+
+        public long GetBootMode(ServiceCtx Context)
+        {
+            Context.ResponseData.Write((byte)0); //Unknown value.
+
+            Logging.Stub(LogClass.ServiceAm, "Stubbed");
 
             return 0;
         }

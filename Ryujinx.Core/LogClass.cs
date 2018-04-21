@@ -25,6 +25,7 @@
         ServiceNv,
         ServicePctl,
         ServicePl,
+        ServicePrepo,
         ServiceSet,
         ServiceSfdnsres,
         ServiceSm,

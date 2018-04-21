@@ -19,7 +19,8 @@ namespace Ryujinx.Core.OsHle.Services.Am
                 { 12, SetPerformanceModeChangedNotification },
                 { 13, SetFocusHandlingMode                  },
                 { 14, SetRestartMessageEnabled              },
-                { 16, SetOutOfFocusSuspendingEnabled        }
+                { 16, SetOutOfFocusSuspendingEnabled        },
+                { 50, SetHandlesRequestToDisplay            }
             };
         }
 
@@ -80,6 +81,15 @@ namespace Ryujinx.Core.OsHle.Services.Am
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
             Logging.Stub(LogClass.ServiceAm, $"Out Of Focus Suspending Enabled = {Enable}");
+
+            return 0;
+        }
+
+        public long SetHandlesRequestToDisplay(ServiceCtx Context)
+        {
+            bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
+
+            Logging.Stub(LogClass.ServiceAm, $"HandlesRequestToDisplay Allowed = {Enable}");
 
             return 0;
         }

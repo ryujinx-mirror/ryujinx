@@ -22,9 +22,10 @@ namespace Ryujinx.Core.OsHle.Services.Vi
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, TransactParcel  },
-                { 1, AdjustRefcount  },
-                { 2, GetNativeHandle }
+                { 0, TransactParcel     },
+                { 1, AdjustRefcount     },
+                { 2, GetNativeHandle    },
+                { 3, TransactParcelAuto }
             };
 
             ReleaseEvent = new KEvent();
@@ -33,6 +34,24 @@ namespace Ryujinx.Core.OsHle.Services.Vi
         }
 
         public long TransactParcel(ServiceCtx Context)
+        {
+            int Id   = Context.RequestData.ReadInt32();
+            int Code = Context.RequestData.ReadInt32();
+
+            long DataPos  = Context.Request.SendBuff[0].Position;
+            long DataSize = Context.Request.SendBuff[0].Size;
+
+            byte[] Data = AMemoryHelper.ReadBytes(Context.Memory, DataPos, DataSize);
+
+            Data = Parcel.GetParcelData(Data);
+
+            return Flinger.ProcessParcelRequest(Context, Data, Code);
+        }
+
+        //TransactParcelAuto(i32, u32, u32, buffer<unknown, 0x21, 0>) -> buffer<unknown, 0x22, 0>
+        //Buffer C (PtrBuff) and X (ReceiveListBuff) can be used here...
+        //But they are all null during all my tests.
+        public long TransactParcelAuto(ServiceCtx Context)
         {
             int Id   = Context.RequestData.ReadInt32();
             int Code = Context.RequestData.ReadInt32();
