@@ -38,6 +38,9 @@ namespace Ryujinx.Core.OsHle.Services
                 case "apm:p":
                     return new IManager();
 
+                case "appletAE":
+                    return new IAllSystemAppletProxiesService();
+                    
                 case "appletOE":
                     return new IApplicationProxyService();
 
