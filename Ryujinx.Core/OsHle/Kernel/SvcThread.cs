@@ -91,7 +91,7 @@ namespace Ryujinx.Core.OsHle.Kernel
             if (CurrThread != null)
             {
                 ThreadState.X0 = 0;
-                ThreadState.X1 = (ulong)CurrThread.Priority;
+                ThreadState.X1 = (ulong)CurrThread.ActualPriority;
             }
             else
             {
@@ -110,7 +110,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (CurrThread != null)
             {
-                CurrThread.Priority = Priority;
+                CurrThread.SetPriority(Priority);
 
                 ThreadState.X0 = 0;
             }

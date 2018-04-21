@@ -13,17 +13,23 @@ namespace Ryujinx.Core.OsHle.Handles
         {
             public KThread Thread { get; private set; }
 
-            public AutoResetEvent WaitEvent { get; private set; }
+            public ManualResetEvent SyncWaitEvent  { get; private set; }
+            public AutoResetEvent   SchedWaitEvent { get; private set; }
 
             public bool Active { get; set; }
+
+            public int SyncTimeout { get; set; }
 
             public SchedulerThread(KThread Thread)
             {
                 this.Thread = Thread;
 
-                WaitEvent = new AutoResetEvent(false);
+                SyncWaitEvent  = new ManualResetEvent(true);
+                SchedWaitEvent = new AutoResetEvent(false);
 
                 Active = true;
+
+                SyncTimeout = 0;
             }
 
             public void Dispose()
@@ -35,7 +41,8 @@ namespace Ryujinx.Core.OsHle.Handles
             {
                 if (Disposing)
                 {
-                    WaitEvent.Dispose();
+                    SyncWaitEvent.Dispose();
+                    SchedWaitEvent.Dispose();
                 }
             }
         }
@@ -71,9 +78,9 @@ namespace Ryujinx.Core.OsHle.Handles
                     {
                         SchedThread = Threads[Index];
 
-                        if (HighestPriority > SchedThread.Thread.Priority)
+                        if (HighestPriority > SchedThread.Thread.ActualPriority)
                         {
-                            HighestPriority = SchedThread.Thread.Priority;
+                            HighestPriority = SchedThread.Thread.ActualPriority;
 
                             HighestPrioIndex = Index;
                         }
@@ -194,45 +201,66 @@ namespace Ryujinx.Core.OsHle.Handles
                 throw new InvalidOperationException();
             }
 
-            lock (SchedLock)
+            SchedThread.Active = Active;
+
+            UpdateSyncWaitEvent(SchedThread);
+
+            WaitIfNeeded(SchedThread);
+        }
+
+        public bool EnterWait(KThread Thread, int Timeout = -1)
+        {
+            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
             {
-                bool OldState = SchedThread.Active;
-
-                SchedThread.Active = Active;
-
-                if (!OldState && Active)
-                {
-                    if (ActiveProcessors.Add(Thread.ProcessorId))
-                    {
-                        RunThread(SchedThread);
-                    }
-                    else
-                    {
-                        WaitingToRun[Thread.ProcessorId].Push(SchedThread);
-
-                        PrintDbgThreadInfo(Thread, "entering wait state...");
-                    }
-                }
-                else if (OldState && !Active)
-                {
-                    if (Thread.Thread.IsCurrentThread())
-                    {
-                        Suspend(Thread.ProcessorId);
-
-                        PrintDbgThreadInfo(Thread, "entering inactive wait state...");
-                    }
-                    else
-                    {
-                        WaitingToRun[Thread.ProcessorId].Remove(SchedThread);
-                    }
-                }
+                throw new InvalidOperationException();
             }
 
-            if (!Active && Thread.Thread.IsCurrentThread())
-            {
-                SchedThread.WaitEvent.WaitOne();
+            SchedThread.SyncTimeout = Timeout;
 
-                PrintDbgThreadInfo(Thread, "resuming execution...");
+            UpdateSyncWaitEvent(SchedThread);
+
+            return WaitIfNeeded(SchedThread);
+        }
+
+        public void WakeUp(KThread Thread)
+        {
+            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
+            {
+                throw new InvalidOperationException();
+            }
+
+            SchedThread.SyncTimeout = 0;
+
+            UpdateSyncWaitEvent(SchedThread);
+
+            WaitIfNeeded(SchedThread);
+        }
+
+        private void UpdateSyncWaitEvent(SchedulerThread SchedThread)
+        {
+            if (SchedThread.Active && SchedThread.SyncTimeout == 0)
+            {
+                SchedThread.SyncWaitEvent.Set();
+            }
+            else
+            {
+                SchedThread.SyncWaitEvent.Reset();
+            }
+        }
+
+        private bool WaitIfNeeded(SchedulerThread SchedThread)
+        {
+            KThread Thread = SchedThread.Thread;
+
+            if (!IsActive(SchedThread) && Thread.Thread.IsCurrentThread())
+            {
+                Suspend(Thread.ProcessorId);
+
+                return Resume(Thread);
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -261,66 +289,78 @@ namespace Ryujinx.Core.OsHle.Handles
 
             lock (SchedLock)
             {
-                SchedulerThread SchedThread = WaitingToRun[Thread.ProcessorId].Pop(Thread.Priority);
+                SchedulerThread SchedThread = WaitingToRun[Thread.ProcessorId].Pop(Thread.ActualPriority);
 
-                if (SchedThread == null)
+                if (IsActive(Thread) && SchedThread == null)
                 {
                     PrintDbgThreadInfo(Thread, "resumed because theres nothing better to run.");
 
                     return;
                 }
 
-                RunThread(SchedThread);
+                if (SchedThread != null)
+                {
+                    RunThread(SchedThread);
+                }
             }
 
             Resume(Thread);
         }
 
-        public void Resume(KThread Thread)
+        public bool Resume(KThread Thread)
         {
             if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
             {
                 throw new InvalidOperationException();
             }
 
-            TryResumingExecution(SchedThread);
+            return TryResumingExecution(SchedThread);
         }
 
-        private void TryResumingExecution(SchedulerThread SchedThread)
+        private bool TryResumingExecution(SchedulerThread SchedThread)
         {
             KThread Thread = SchedThread.Thread;
 
-            if (SchedThread.Active)
-            {
-                lock (SchedLock)
-                {
-                    if (ActiveProcessors.Add(Thread.ProcessorId))
-                    {
-                        PrintDbgThreadInfo(Thread, "resuming execution...");
-
-                        return;
-                    }
-
-                    WaitingToRun[Thread.ProcessorId].Push(SchedThread);
-
-                    PrintDbgThreadInfo(Thread, "entering wait state...");
-                }
-            }
-            else
+            if (!SchedThread.Active || SchedThread.SyncTimeout != 0)
             {
                 PrintDbgThreadInfo(Thread, "entering inactive wait state...");
             }
 
-            SchedThread.WaitEvent.WaitOne();
+            bool Result = false;
+
+            if (SchedThread.SyncTimeout != 0)
+            {
+                Result = SchedThread.SyncWaitEvent.WaitOne(SchedThread.SyncTimeout);
+
+                SchedThread.SyncTimeout = 0;
+            }
+
+            lock (SchedLock)
+            {
+                if (ActiveProcessors.Add(Thread.ProcessorId))
+                {
+                    PrintDbgThreadInfo(Thread, "resuming execution...");
+
+                    return Result;
+                }
+
+                WaitingToRun[Thread.ProcessorId].Push(SchedThread);
+
+                PrintDbgThreadInfo(Thread, "entering wait state...");
+            }
+
+            SchedThread.SchedWaitEvent.WaitOne();
 
             PrintDbgThreadInfo(Thread, "resuming execution...");
+
+            return Result;
         }
 
         private void RunThread(SchedulerThread SchedThread)
         {
             if (!SchedThread.Thread.Thread.Execute())
             {
-                SchedThread.WaitEvent.Set();
+                SchedThread.SchedWaitEvent.Set();
             }
             else
             {
@@ -328,12 +368,28 @@ namespace Ryujinx.Core.OsHle.Handles
             }
         }
 
+        private bool IsActive(KThread Thread)
+        {
+            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
+            {
+                throw new InvalidOperationException();
+            }
+
+            return IsActive(SchedThread);
+        }
+
+        private bool IsActive(SchedulerThread SchedThread)
+        {
+            return SchedThread.Active && SchedThread.SyncTimeout == 0;
+        }
+
         private void PrintDbgThreadInfo(KThread Thread, string Message)
         {
             Logging.Debug(LogClass.KernelScheduler, "(" +
-                "ThreadId: "    + Thread.ThreadId    + ", " +
-                "ProcessorId: " + Thread.ProcessorId + ", " +
-                "Priority: "    + Thread.Priority    + ") " + Message);
+                "ThreadId: "       + Thread.ThreadId       + ", " +
+                "ProcessorId: "    + Thread.ProcessorId    + ", " +
+                "ActualPriority: " + Thread.ActualPriority + ", " +
+                "WantedPriority: " + Thread.WantedPriority + ") " + Message);
         }
 
         public void Dispose()

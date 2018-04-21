@@ -35,6 +35,8 @@ namespace Ryujinx.Core.OsHle
 
         public KProcessScheduler Scheduler { get; private set; }
 
+        public KThread ThreadArbiterList { get; set; }
+
         public KProcessHandleTable HandleTable { get; private set; }
 
         public AppletStateMgr AppletState { get; private set; }
@@ -43,7 +45,7 @@ namespace Ryujinx.Core.OsHle
 
         private ConcurrentDictionary<int, AThread> TlsSlots;
 
-        private ConcurrentDictionary<long, KThread> ThreadsByTpidr;
+        private ConcurrentDictionary<long, KThread> Threads;
 
         private List<Executable> Executables;
 
@@ -71,7 +73,7 @@ namespace Ryujinx.Core.OsHle
 
             TlsSlots = new ConcurrentDictionary<int, AThread>();
 
-            ThreadsByTpidr = new ConcurrentDictionary<long, KThread>();
+            Threads = new ConcurrentDictionary<long, KThread>();
 
             Executables = new List<Executable>();
 
@@ -185,34 +187,32 @@ namespace Ryujinx.Core.OsHle
                 throw new ObjectDisposedException(nameof(Process));
             }
 
-            AThread Thread = new AThread(GetTranslator(), Memory, EntryPoint);
+            AThread CpuThread = new AThread(GetTranslator(), Memory, EntryPoint);
 
-            KThread KernelThread = new KThread(Thread, ProcessorId, Priority);
+            KThread Thread = new KThread(CpuThread, ProcessorId, Priority);
 
-            int Handle = HandleTable.OpenHandle(KernelThread);
+            int Handle = HandleTable.OpenHandle(Thread);
 
-            KernelThread.Handle = Handle;
-
-            int ThreadId = GetFreeTlsSlot(Thread);
+            int ThreadId = GetFreeTlsSlot(CpuThread);
 
             long Tpidr = MemoryRegions.TlsPagesAddress + ThreadId * TlsSize;
 
-            Thread.ThreadState.ProcessId = ProcessId;
-            Thread.ThreadState.ThreadId  = ThreadId;
-            Thread.ThreadState.CntfrqEl0 = TickFreq;
-            Thread.ThreadState.Tpidr     = Tpidr;
+            CpuThread.ThreadState.ProcessId = ProcessId;
+            CpuThread.ThreadState.ThreadId  = ThreadId;
+            CpuThread.ThreadState.CntfrqEl0 = TickFreq;
+            CpuThread.ThreadState.Tpidr     = Tpidr;
 
-            Thread.ThreadState.X0  = (ulong)ArgsPtr;
-            Thread.ThreadState.X1  = (ulong)Handle;
-            Thread.ThreadState.X31 = (ulong)StackTop;
+            CpuThread.ThreadState.X0  = (ulong)ArgsPtr;
+            CpuThread.ThreadState.X1  = (ulong)Handle;
+            CpuThread.ThreadState.X31 = (ulong)StackTop;
 
-            Thread.ThreadState.Break     += BreakHandler;
-            Thread.ThreadState.SvcCall   += SvcHandler.SvcCall;
-            Thread.ThreadState.Undefined += UndefinedHandler;
+            CpuThread.ThreadState.Break     += BreakHandler;
+            CpuThread.ThreadState.SvcCall   += SvcHandler.SvcCall;
+            CpuThread.ThreadState.Undefined += UndefinedHandler;
 
-            Thread.WorkFinished += ThreadFinished;
+            CpuThread.WorkFinished += ThreadFinished;
 
-            ThreadsByTpidr.TryAdd(Thread.ThreadState.Tpidr, KernelThread);
+            Threads.TryAdd(CpuThread.ThreadState.Tpidr, Thread);
 
             return Handle;
         }
@@ -324,7 +324,7 @@ namespace Ryujinx.Core.OsHle
 
         public KThread GetThread(long Tpidr)
         {
-            if (!ThreadsByTpidr.TryGetValue(Tpidr, out KThread Thread))
+            if (!Threads.TryGetValue(Tpidr, out KThread Thread))
             {
                 Logging.Error(LogClass.KernelScheduler, $"Thread with TPIDR 0x{Tpidr:x16} not found!");
             }
