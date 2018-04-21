@@ -1763,6 +1763,53 @@ namespace Ryujinx.Tests.Cpu.Tester
             V(d, result);
         }
 
+        // https://meriac.github.io/archex/A64_v83A_ISA/addp_advsimd_pair.xml
+        public static void Addp_S(Bits size, Bits Rn, Bits Rd)
+        {
+            /* Decode Scalar */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size != '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = esize * 2;
+            // int elements = 2;
+
+            ReduceOp op = ReduceOp.ReduceOp_ADD;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand = V(datasize, n);
+
+            V(d, Reduce(op, operand, esize));
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/addv_advsimd.xml
+        public static void Addv_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size:Q == '100' then ReservedValue(); */
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            // int elements = datasize / esize;
+
+            ReduceOp op = ReduceOp.ReduceOp_ADD;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand = V(datasize, n);
+
+            V(d, Reduce(op, operand, esize));
+        }
+
         // https://meriac.github.io/archex/A64_v83A_ISA/neg_advsimd.xml#NEG_asisdmisc_R
         public static void Neg_S(Bits size, Bits Rn, Bits Rd)
         {
@@ -1993,6 +2040,41 @@ namespace Ryujinx.Tests.Cpu.Tester
             }
 
             Vpart(d, part, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/addp_advsimd_vec.xml
+        public static void Addp_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size:Q == '110' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            Bits concat =  Bits.Concat(operand2, operand1);
+            Bits element1;
+            Bits element2;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Elem(concat, 2 * e, esize);
+                element2 = Elem(concat, (2 * e) + 1, esize);
+
+                Elem(result, e, esize, element1 + element2);
+            }
+
+            V(d, result);
         }
 
         // https://meriac.github.io/archex/A64_v83A_ISA/raddhn_advsimd.xml

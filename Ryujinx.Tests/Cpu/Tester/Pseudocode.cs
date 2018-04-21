@@ -442,6 +442,56 @@ namespace Ryujinx.Tests.Cpu.Tester
         // #ShiftType
         public enum ShiftType {ShiftType_LSL, ShiftType_LSR, ShiftType_ASR, ShiftType_ROR};
 #endregion
+
+#region "instrs/vector/reduce/reduceop/"
+        public static Bits Reduce(ReduceOp op, Bits input, int esize)
+        {
+            int N = input.Count;
+
+            int half;
+            Bits hi;
+            Bits lo;
+            Bits result = new Bits(esize);
+
+            if (N == esize)
+            {
+                return new Bits(input);
+            }
+
+            half = N / 2;
+            hi = Reduce(op, input[N - 1, half], esize);
+            lo = Reduce(op, input[half - 1, 0], esize);
+
+            switch (op)
+            {
+                case ReduceOp.ReduceOp_FMINNUM:
+                    /* result = FPMinNum(lo, hi, FPCR); */
+                    break;
+                case ReduceOp.ReduceOp_FMAXNUM:
+                    /* result = FPMaxNum(lo, hi, FPCR); */
+                    break;
+                case ReduceOp.ReduceOp_FMIN:
+                    /* result = FPMin(lo, hi, FPCR); */
+                    break;
+                case ReduceOp.ReduceOp_FMAX:
+                    /* result = FPMax(lo, hi, FPCR); */
+                    break;
+                case ReduceOp.ReduceOp_FADD:
+                    /* result = FPAdd(lo, hi, FPCR); */
+                    break;
+                default:
+                case ReduceOp.ReduceOp_ADD:
+                    result = lo + hi;
+                    break;
+            }
+
+            return result;
+        }
+
+        public enum ReduceOp {ReduceOp_FMINNUM, ReduceOp_FMAXNUM,
+                              ReduceOp_FMIN, ReduceOp_FMAX,
+                              ReduceOp_FADD, ReduceOp_ADD};
+#endregion
     }
 
     internal static class Shared
