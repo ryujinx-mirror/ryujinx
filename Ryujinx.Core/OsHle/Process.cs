@@ -1,6 +1,7 @@
 using ChocolArm64;
 using ChocolArm64.Events;
 using ChocolArm64.Memory;
+using ChocolArm64.State;
 using Ryujinx.Core.Loaders;
 using Ryujinx.Core.Loaders.Executables;
 using Ryujinx.Core.OsHle.Exceptions;
@@ -10,6 +11,7 @@ using Ryujinx.Core.OsHle.Services.Nv;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Ryujinx.Core.OsHle
 {
@@ -47,9 +49,11 @@ namespace Ryujinx.Core.OsHle
 
         private ConcurrentDictionary<long, KThread> Threads;
 
+        private KThread MainThread;
+
         private List<Executable> Executables;
 
-        private KThread MainThread;
+        private Dictionary<long, string> SymbolTable;
 
         private long ImageBase;
 
@@ -120,6 +124,8 @@ namespace Ryujinx.Core.OsHle
             {
                 return false;
             }
+
+            MakeSymbolTable();
 
             MapRWMemRegion(
                 MemoryRegions.MainStackAddress,
@@ -227,26 +233,39 @@ namespace Ryujinx.Core.OsHle
             throw new UndefinedInstructionException(e.Position, e.RawOpCode);
         }
 
+        private void MakeSymbolTable()
+        {
+            SymbolTable = new Dictionary<long, string>();
+
+            foreach (Executable Exe in Executables)
+            {
+                foreach (KeyValuePair<long, string> KV in Exe.SymbolTable)
+                {
+                    SymbolTable.TryAdd(Exe.ImageBase + KV.Key, KV.Value);
+                }
+            }
+        }
+
         private ATranslator GetTranslator()
         {
             if (Translator == null)
             {
-                Dictionary<long, string> SymbolTable = new Dictionary<long, string>();
-
-                foreach (Executable Exe in Executables)
-                {
-                    foreach (KeyValuePair<long, string> KV in Exe.SymbolTable)
-                    {
-                        SymbolTable.TryAdd(Exe.ImageBase + KV.Key, KV.Value);
-                    }
-                }
-
                 Translator = new ATranslator(SymbolTable);
 
                 Translator.CpuTrace += CpuTraceHandler;
             }
 
             return Translator;
+        }
+
+        public void EnableCpuTracing()
+        {
+            Translator.EnableCpuTrace = true;
+        }
+
+        public void DisableCpuTracing()
+        {
+            Translator.EnableCpuTrace = false;
         }
 
         private void CpuTraceHandler(object sender, ACpuTraceEventArgs e)
@@ -263,17 +282,47 @@ namespace Ryujinx.Core.OsHle
                 }
             }
 
-            Logging.Trace(LogClass.Loader, $"Executing at 0x{e.Position:x16} {e.SubName} {NsoName}");
+            Logging.Trace(LogClass.CPU, $"Executing at 0x{e.Position:x16} {e.SubName} {NsoName}");
         }
 
-        public void EnableCpuTracing()
+        public void PrintStackTrace(AThreadState ThreadState)
         {
-            Translator.EnableCpuTrace = true;
+            long[] Positions = ThreadState.GetCallStack();
+
+            StringBuilder Trace = new StringBuilder();
+
+            Trace.AppendLine("Guest stack trace:");
+
+            foreach (long Position in Positions)
+            {
+                if (!SymbolTable.TryGetValue(Position, out string SubName))
+                {
+                    SubName = $"Sub{Position:x16}";
+                }
+
+                Trace.AppendLine(" " + SubName + " (" + GetNsoNameAndAddress(Position) + ")");
+            }
+
+            Logging.Trace(LogClass.CPU, Trace.ToString());
         }
 
-        public void DisableCpuTracing()
+        private string GetNsoNameAndAddress(long Position)
         {
-            Translator.EnableCpuTrace = false;
+            string Name = string.Empty;
+
+            for (int Index = Executables.Count - 1; Index >= 0; Index--)
+            {
+                if (Position >= Executables[Index].ImageBase)
+                {
+                    long Offset = Position - Executables[Index].ImageBase;
+
+                    Name = $"{Executables[Index].Name}:{Offset:x8}";
+
+                    break;
+                }
+            }
+
+            return Name;
         }
 
         private int GetFreeTlsSlot(AThread Thread)

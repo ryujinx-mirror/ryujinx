@@ -156,13 +156,13 @@ namespace Ryujinx.Core.OsHle.Kernel
         private void SvcSetThreadActivity(AThreadState ThreadState)
         {
             int  Handle = (int)ThreadState.X0;
-            bool Active = (int)ThreadState.X1 != 0;
+            bool Active = (int)ThreadState.X1 == 0;
 
-            KThread CurrThread = Process.HandleTable.GetData<KThread>(Handle);
+            KThread Thread = Process.HandleTable.GetData<KThread>(Handle);
 
-            if (CurrThread != null)
+            if (Thread != null)
             {
-                Process.Scheduler.SetThreadActivity(CurrThread, Active);
+                Process.Scheduler.SetThreadActivity(Thread, Active);
 
                 ThreadState.X0 = 0;
             }

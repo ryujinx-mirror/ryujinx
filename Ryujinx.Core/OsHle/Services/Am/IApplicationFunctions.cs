@@ -18,6 +18,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
                 { 20, EnsureSaveData     },
                 { 21, GetDesiredLanguage },
                 { 22, SetTerminateResult },
+                { 23, GetDisplayVersion  },
                 { 40, NotifyRunning      }
             };
         }
@@ -63,6 +64,15 @@ namespace Ryujinx.Core.OsHle.Services.Am
             int Description = (ErrorCode >> 9) & 0xFFF;
 
             Logging.Info(LogClass.ServiceAm, $"({(ErrorModule)Module}){2000 + Module}-{Description}");
+
+            return 0;
+        }
+
+        public long GetDisplayVersion(ServiceCtx Context)
+        {
+            //FIXME: Need to check correct version on a switch.
+            Context.ResponseData.Write(1L);
+            Context.ResponseData.Write(0L);
 
             return 0;
         }

@@ -16,6 +16,7 @@
         ServiceApm,
         ServiceAudio,
         ServiceBsd,
+        ServiceCaps,
         ServiceFriend,
         ServiceFs,
         ServiceHid,

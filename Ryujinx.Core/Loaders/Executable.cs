@@ -7,13 +7,15 @@ namespace Ryujinx.Core.Loaders
 {
     class Executable
     {
-        private AMemory Memory;
-
         private List<ElfDyn> Dynamic;
 
         private Dictionary<long, string> m_SymbolTable;
 
         public IReadOnlyDictionary<long, string> SymbolTable => m_SymbolTable;
+
+        public string Name { get; private set; }
+
+        private AMemory Memory;
 
         public long ImageBase { get; private set; }
         public long ImageEnd  { get; private set; }
@@ -23,6 +25,8 @@ namespace Ryujinx.Core.Loaders
             Dynamic = new List<ElfDyn>();
 
             m_SymbolTable = new Dictionary<long, string>();
+
+            Name = Exe.Name;
 
             this.Memory    = Memory;
             this.ImageBase = ImageBase;

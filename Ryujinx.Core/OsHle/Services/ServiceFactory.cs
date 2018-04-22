@@ -3,6 +3,7 @@ using Ryujinx.Core.OsHle.Services.Am;
 using Ryujinx.Core.OsHle.Services.Apm;
 using Ryujinx.Core.OsHle.Services.Aud;
 using Ryujinx.Core.OsHle.Services.Bsd;
+using Ryujinx.Core.OsHle.Services.Caps;
 using Ryujinx.Core.OsHle.Services.Friend;
 using Ryujinx.Core.OsHle.Services.FspSrv;
 using Ryujinx.Core.OsHle.Services.Hid;
@@ -57,7 +58,16 @@ namespace Ryujinx.Core.OsHle.Services
                 case "bsd:u":
                     return new IClient();
 
+                case "caps:a":
+                    return new IAlbumAccessorService();
+
+                case "caps:ss":
+                    return new IScreenshotService();
+
                 case "friend:a":
+                    return new IServiceCreator();
+
+                case "friend:u":
                     return new IServiceCreator();
 
                 case "fsp-srv":

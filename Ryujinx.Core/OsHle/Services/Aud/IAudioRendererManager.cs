@@ -53,7 +53,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
         {
             long UserId = Context.RequestData.ReadInt64();
 
-            MakeObject(Context, new IAudioDeviceService());
+            MakeObject(Context, new IAudioDevice());
 
             return 0;
         }

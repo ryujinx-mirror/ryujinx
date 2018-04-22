@@ -16,8 +16,21 @@ namespace Ryujinx.Core.OsHle.Services.Time
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 101,  ToCalendarTimeWithMyRule }
+                {   0, GetDeviceLocationName    },
+                { 101, ToCalendarTimeWithMyRule }
             };
+        }
+
+        public long GetDeviceLocationName(ServiceCtx Context)
+        {
+            Logging.Stub(LogClass.ServiceTime, "Stubbed");
+
+            for (int Index = 0; Index < 0x24; Index++)
+            {
+                Context.ResponseData.Write((byte)0);
+            }
+
+            return 0;
         }
 
         public long ToCalendarTimeWithMyRule(ServiceCtx Context)

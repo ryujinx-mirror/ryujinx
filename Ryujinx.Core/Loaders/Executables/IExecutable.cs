@@ -2,6 +2,8 @@ namespace Ryujinx.Core.Loaders.Executables
 {
     public interface IExecutable
     {
+        string Name { get; }
+
         byte[] Text { get; }
         byte[] RO   { get; }
         byte[] Data { get; }

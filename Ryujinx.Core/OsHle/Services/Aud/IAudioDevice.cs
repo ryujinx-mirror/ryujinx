@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Ryujinx.Core.OsHle.Services.Aud
 {
-    class IAudioDeviceService : IpcService
+    class IAudioDevice : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
@@ -14,12 +14,13 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
         private KEvent SystemEvent;
 
-        public IAudioDeviceService()
+        public IAudioDevice()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, ListAudioDeviceName         },
                 { 1, SetAudioDeviceOutputVolume  },
+                { 3, GetActiveAudioDeviceName    },
                 { 4, QueryAudioDeviceSystemEvent },
                 { 5, GetActiveChannelCount       }
             };
@@ -68,6 +69,20 @@ namespace Ryujinx.Core.OsHle.Services.Aud
             string Name = AMemoryHelper.ReadAsciiString(Context.Memory, Position, Size);
 
             Logging.Stub(LogClass.ServiceAudio, $"Volume = {Volume}, Position = {Position}, Size = {Size}");
+
+            return 0;
+        }
+
+        public long GetActiveAudioDeviceName(ServiceCtx Context)
+        {
+            string Name = "FIXME";
+
+            long Position = Context.Request.ReceiveBuff[0].Position;
+            long Size     = Context.Request.ReceiveBuff[0].Size;
+
+            byte[] Buffer = Encoding.ASCII.GetBytes(Name + '\0');
+
+            AMemoryHelper.WriteBytes(Context.Memory, Position, Buffer);
 
             return 0;
         }

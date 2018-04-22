@@ -58,7 +58,9 @@ namespace Ryujinx.Core.OsHle
 
                     using (FileStream Input = new FileStream(File, FileMode.Open))
                     {
-                        Nso Program = new Nso(Input);
+                        string Name = Path.GetFileNameWithoutExtension(File);
+
+                        Nso Program = new Nso(Input, Name);
 
                         MainProcess.LoadProgram(Program);
                     }
@@ -80,13 +82,15 @@ namespace Ryujinx.Core.OsHle
         {
             bool IsNro = Path.GetExtension(FileName).ToLower() == ".nro";
 
+            string Name = Path.GetFileNameWithoutExtension(FileName);
+
             Process MainProcess = MakeProcess();
 
             using (FileStream Input = new FileStream(FileName, FileMode.Open))
             {
                 MainProcess.LoadProgram(IsNro
-                    ? (IExecutable)new Nro(Input)
-                    : (IExecutable)new Nso(Input));
+                    ? (IExecutable)new Nro(Input, Name)
+                    : (IExecutable)new Nso(Input, Name));
             }
 
             MainProcess.SetEmptyArgs();

@@ -4,6 +4,8 @@ namespace Ryujinx.Core.Loaders.Executables
 {
     class Nro : IExecutable
     {
+        public string Name { get; private set; }
+
         public byte[] Text { get; private set; }
         public byte[] RO   { get; private set; }
         public byte[] Data { get; private set; }
@@ -14,8 +16,10 @@ namespace Ryujinx.Core.Loaders.Executables
         public int DataOffset { get; private set; }
         public int BssSize    { get; private set; }
 
-        public Nro(Stream Input)
+        public Nro(Stream Input, string Name)
         {
+            this.Name = Name;
+
             BinaryReader Reader = new BinaryReader(Input);
 
             Input.Seek(4, SeekOrigin.Begin);

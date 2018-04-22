@@ -6,6 +6,8 @@ namespace Ryujinx.Core.Loaders.Executables
 {
     class Nso : IExecutable
     {
+        public string Name { get; private set; }
+
         public byte[] Text { get; private set; }
         public byte[] RO   { get; private set; }
         public byte[] Data { get; private set; }
@@ -27,8 +29,10 @@ namespace Ryujinx.Core.Loaders.Executables
             HasDataHash      = 1 << 5
         }
 
-        public Nso(Stream Input)
+        public Nso(Stream Input, string Name)
         {
+            this.Name = Name;
+
             BinaryReader Reader = new BinaryReader(Input);
 
             Input.Seek(0, SeekOrigin.Begin);

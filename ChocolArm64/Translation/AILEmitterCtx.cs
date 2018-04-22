@@ -461,6 +461,21 @@ namespace ChocolArm64.Translation
             EmitCall(ObjType.GetMethod(MthdName));
         }
 
+        public void EmitPrivateCall(Type ObjType, string MthdName)
+        {
+            if (ObjType == null)
+            {
+                throw new ArgumentNullException(nameof(ObjType));
+            }
+
+            if (MthdName == null)
+            {
+                throw new ArgumentNullException(nameof(MthdName));
+            }
+
+            EmitCall(ObjType.GetMethod(MthdName, BindingFlags.Instance | BindingFlags.NonPublic));
+        }
+
         public void EmitCall(MethodInfo MthdInfo)
         {
             if (MthdInfo == null)
