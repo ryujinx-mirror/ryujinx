@@ -1,7 +1,6 @@
 using ChocolArm64.Decoder;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
-using System.Reflection;
 using System.Reflection.Emit;
 
 namespace ChocolArm64.Instruction

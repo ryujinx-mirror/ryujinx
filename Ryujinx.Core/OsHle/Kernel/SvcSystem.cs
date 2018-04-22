@@ -211,6 +211,8 @@ namespace Ryujinx.Core.OsHle.Kernel
             long Unknown = (long)ThreadState.X1;
             long Info    = (long)ThreadState.X2;
 
+            Process.PrintStackTrace(ThreadState);
+
             throw new GuestBrokeExecutionException();
         }
 
@@ -297,7 +299,10 @@ namespace Ryujinx.Core.OsHle.Kernel
                     ThreadState.X1 = MemoryRegions.MapRegionSize;
                     break;
 
-                default: throw new NotImplementedException($"SvcGetInfo: {InfoType} {Handle} {InfoId}");
+                default:
+                    Process.PrintStackTrace(ThreadState);
+
+                    throw new NotImplementedException($"SvcGetInfo: {InfoType} {Handle:x8} {InfoId}");
             }
 
             ThreadState.X0 = 0;

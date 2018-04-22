@@ -93,6 +93,8 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
             else
             {
+                Process.PrintStackTrace(ThreadState);
+
                 throw new NotImplementedException(e.Id.ToString("x4"));
             }
         }

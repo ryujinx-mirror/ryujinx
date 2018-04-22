@@ -303,7 +303,7 @@ namespace Ryujinx.Core.OsHle
                 Trace.AppendLine(" " + SubName + " (" + GetNsoNameAndAddress(Position) + ")");
             }
 
-            Logging.Trace(LogClass.CPU, Trace.ToString());
+            Logging.Info(LogClass.CPU, Trace.ToString());
         }
 
         private string GetNsoNameAndAddress(long Position)
