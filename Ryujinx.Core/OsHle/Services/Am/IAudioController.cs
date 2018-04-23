@@ -23,8 +23,8 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
         public long SetExpectedMasterVolume(ServiceCtx Context)
         {
-            float Unknown0 = Context.RequestData.ReadSingle();
-            float Unknown1 = Context.RequestData.ReadSingle();
+            float AppletVolume        = Context.RequestData.ReadSingle();
+            float LibraryAppletVolume = Context.RequestData.ReadSingle();
 
             Logging.Stub(LogClass.ServiceAm, "Stubbed");
 
