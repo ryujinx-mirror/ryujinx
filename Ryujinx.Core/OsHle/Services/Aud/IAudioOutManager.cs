@@ -1,5 +1,6 @@
 using ChocolArm64.Memory;
 using Ryujinx.Audio;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
@@ -9,6 +10,8 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 {
     class IAudioOutManager : IpcService
     {
+        private const string DefaultAudioOutput = "DeviceOut";
+
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
@@ -25,10 +28,24 @@ namespace Ryujinx.Core.OsHle.Services.Aud
         public long ListAudioOuts(ServiceCtx Context)
         {
             long Position = Context.Request.ReceiveBuff[0].Position;
+            long Size     = Context.Request.ReceiveBuff[0].Size;
 
-            AMemoryHelper.WriteBytes(Context.Memory, Position, Encoding.ASCII.GetBytes("iface"));
+            int NameCount = 0;
 
-            Context.ResponseData.Write(1);
+            byte[] DeviceNameBuffer = Encoding.UTF8.GetBytes(DefaultAudioOutput);
+
+            if ((ulong)DeviceNameBuffer.Length <= (ulong)Size)
+            {
+                AMemoryHelper.WriteBytes(Context.Memory, Position, DeviceNameBuffer);
+
+                NameCount++;
+            }
+            else
+            {
+                Context.Ns.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
+            }
+
+            Context.ResponseData.Write(NameCount);
 
             return 0;
         }
@@ -44,17 +61,21 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
             if (DeviceName == string.Empty)
             {
-                DeviceName = "FIXME";
+                DeviceName = DefaultAudioOutput;
             }
 
-            long DeviceNamePosition = Context.Request.ReceiveBuff[0].Position;
-            long DeviceNameSize     = Context.Request.ReceiveBuff[0].Size;
+            long Position = Context.Request.ReceiveBuff[0].Position;
+            long Size     = Context.Request.ReceiveBuff[0].Size;
 
-            byte[] DeviceNameBuffer = Encoding.ASCII.GetBytes(DeviceName);
+            byte[] DeviceNameBuffer = Encoding.UTF8.GetBytes(DeviceName);
 
-            if (DeviceName.Length <= DeviceNameSize)
+            if ((ulong)DeviceNameBuffer.Length <= (ulong)Size)
             {
-                AMemoryHelper.WriteBytes(Context.Memory, DeviceNamePosition, DeviceNameBuffer);
+                AMemoryHelper.WriteBytes(Context.Memory, Position, DeviceNameBuffer);
+            }
+            else
+            {
+                Context.Ns.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
             }
 
             int SampleRate = Context.RequestData.ReadInt32();

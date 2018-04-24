@@ -12,16 +12,18 @@ namespace Ryujinx.Core.OsHle
         internal const int HidSize  = 0x40000;
         internal const int FontSize = 0x50;
 
+        private Switch Ns;
+
         private KProcessScheduler Scheduler;
 
         private ConcurrentDictionary<int, Process> Processes;
+
+        internal SystemStateMgr SystemState { get; private set; }
 
         internal HSharedMem HidSharedMem  { get; private set; }
         internal HSharedMem FontSharedMem { get; private set; }
 
         internal KEvent VsyncEvent { get; private set; }
-
-        private Switch Ns;
 
         public Horizon(Switch Ns)
         {
@@ -30,6 +32,8 @@ namespace Ryujinx.Core.OsHle
             Scheduler = new KProcessScheduler(Ns.Log);
 
             Processes = new ConcurrentDictionary<int, Process>();
+
+            SystemState = new SystemStateMgr();
 
             HidSharedMem  = new HSharedMem();
             FontSharedMem = new HSharedMem();
