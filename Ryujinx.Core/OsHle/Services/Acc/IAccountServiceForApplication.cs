@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
@@ -13,9 +14,9 @@ namespace Ryujinx.Core.OsHle.Services.Acc
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                {   0, GetUserCount                        },
-                {   3, ListOpenUsers                       },
-                {   5, GetProfile                          },
+                { 0,   GetUserCount                        },
+                { 3,   ListOpenUsers                       },
+                { 5,   GetProfile                          },
                 { 100, InitializeApplicationInfo           },
                 { 101, GetBaasAccountManagerForApplication }
             };
@@ -25,14 +26,14 @@ namespace Ryujinx.Core.OsHle.Services.Acc
         {
             Context.ResponseData.Write(0);
 
-            Logging.Stub(LogClass.ServiceAcc, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
 
             return 0;
         }
 
         public long ListOpenUsers(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAcc, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
 
             return 0;
         }
@@ -46,7 +47,7 @@ namespace Ryujinx.Core.OsHle.Services.Acc
 
         public long InitializeApplicationInfo(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAcc, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
 
             return 0;
         }

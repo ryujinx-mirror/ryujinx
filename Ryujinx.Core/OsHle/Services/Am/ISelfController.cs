@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
@@ -33,7 +34,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Logging.Stub(LogClass.ServiceAm, $"ScreenShot Allowed = {Enable}");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -42,7 +43,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Logging.Stub(LogClass.ServiceAm, $"OperationMode Changed = {Enable}");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -51,7 +52,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Logging.Stub(LogClass.ServiceAm, $"PerformanceMode Changed = {Enable}");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -62,7 +63,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
             bool Flag2 = Context.RequestData.ReadByte() != 0 ? true : false;
             bool Flag3 = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Logging.Stub(LogClass.ServiceAm, $"Focus Handling Mode Flags = {{{Flag1}|{Flag2}|{Flag3}}}");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -71,7 +72,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Logging.Stub(LogClass.ServiceAm, $"Restart Message Enabled = {Enable}");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -80,7 +81,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Logging.Stub(LogClass.ServiceAm, $"Out Of Focus Suspending Enabled = {Enable}");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -89,7 +90,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Logging.Stub(LogClass.ServiceAm, $"HandlesRequestToDisplay Allowed = {Enable}");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }

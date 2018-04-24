@@ -17,7 +17,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                {  0, GetSize },
+                { 0,  GetSize },
                 { 11, Read    }
             };
 
@@ -45,7 +45,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
                 if (Storage.Data.Length > Size)
                 {
                     Data = new byte[Size];
-                    
+
                     Buffer.BlockCopy(Storage.Data, 0, Data, 0, Size);
                 }
                 else

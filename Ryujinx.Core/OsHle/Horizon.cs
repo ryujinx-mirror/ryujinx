@@ -1,4 +1,5 @@
 using Ryujinx.Core.Loaders.Executables;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using System;
 using System.Collections.Concurrent;
@@ -26,7 +27,7 @@ namespace Ryujinx.Core.OsHle
         {
             this.Ns = Ns;
 
-            Scheduler = new KProcessScheduler();
+            Scheduler = new KProcessScheduler(Ns.Log);
 
             Processes = new ConcurrentDictionary<int, Process>();
 
@@ -54,7 +55,7 @@ namespace Ryujinx.Core.OsHle
                         continue;
                     }
 
-                    Logging.Info(LogClass.Loader, $"Loading {Path.GetFileNameWithoutExtension(File)}...");
+                    Ns.Log.PrintInfo(LogClass.Loader, $"Loading {Path.GetFileNameWithoutExtension(File)}...");
 
                     using (FileStream Input = new FileStream(File, FileMode.Open))
                     {
@@ -133,7 +134,7 @@ namespace Ryujinx.Core.OsHle
             {
                 string NextNro = Homebrew.ReadHbAbiNextLoadPath(Process.Memory, Process.HbAbiDataPosition);
 
-                Logging.Info(LogClass.Loader, $"HbAbi NextLoadPath {NextNro}");
+                Ns.Log.PrintInfo(LogClass.Loader, $"HbAbi NextLoadPath {NextNro}");
 
                 if (NextNro == string.Empty)
                 {

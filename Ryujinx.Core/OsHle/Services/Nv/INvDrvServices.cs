@@ -1,4 +1,5 @@
 using ChocolArm64.Memory;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using Ryujinx.Core.OsHle.Utilities;
@@ -228,7 +229,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
 
             if (Map == null)
             {
-                Logging.Warn(LogClass.ServiceNv, $"Trying to use invalid NvMap Handle {Handle}!");
+                Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"invalid NvMap Handle {Handle}!");
 
                 return -1; //TODO: Corrent error code.
             }
@@ -634,7 +635,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
 
             Context.Memory.WriteInt32(Position + 4, Map.Handle);
 
-            Logging.Info(LogClass.ServiceNv, $"NvMap {Map.Id} created with size {Size:x8}!");
+            Context.Ns.Log.PrintInfo(LogClass.ServiceNv, $"NvMap {Map.Id} created with size {Size:x8}!");
 
             return 0;
         }
@@ -649,7 +650,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
 
             if (Map == null)
             {
-                Logging.Warn(LogClass.ServiceNv, $"Trying to use invalid NvMap Id {Id}!");
+                Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Invalid NvMap Id {Id}!");
 
                 return -1; //TODO: Corrent error code.
             }
@@ -676,7 +677,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
 
             if (Map == null)
             {
-                Logging.Warn(LogClass.ServiceNv, $"Trying to use invalid NvMap Handle {Handle}!");
+                Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Invalid NvMap Handle {Handle}!");
 
                 return -1; //TODO: Corrent error code.
             }
@@ -695,14 +696,14 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             MemReader Reader = new MemReader(Context.Memory, Position);
             MemWriter Writer = new MemWriter(Context.Memory, Position + 8);
 
-            int  Handle  = Reader.ReadInt32();
-            int  Padding = Reader.ReadInt32();
+            int Handle  = Reader.ReadInt32();
+            int Padding = Reader.ReadInt32();
 
             NvMap Map = NvMaps.GetData<NvMap>(Context.Process, Handle);
 
             if (Map == null)
             {
-                Logging.Warn(LogClass.ServiceNv, $"Trying to use invalid NvMap Handle {Handle}!");
+                Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Invalid NvMap Handle {Handle}!");
 
                 return -1; //TODO: Corrent error code.
             }
@@ -727,7 +728,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
 
             if (Map == null)
             {
-                Logging.Warn(LogClass.ServiceNv, $"Trying to use invalid NvMap Handle {Handle}!");
+                Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Invalid NvMap Handle {Handle}!");
 
                 return -1; //TODO: Corrent error code.
             }
@@ -757,7 +758,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
 
             if (Map == null)
             {
-                Logging.Warn(LogClass.ServiceNv, $"Trying to use invalid NvMap Handle {Handle}!");
+                Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Invalid NvMap Handle {Handle}!");
 
                 return -1; //TODO: Corrent error code.
             }

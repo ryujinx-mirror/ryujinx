@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
         public long RequestToGetForeground(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -37,7 +38,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Logging.Stub(LogClass.ServiceAm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }

@@ -87,7 +87,7 @@ namespace ChocolArm64.Instruction
                         : nameof(AMemory.ReadUInt64); break;
                 }
             }
-            
+
             Context.EmitCall(typeof(AMemory), Name);
 
             if (!IsSimd)
@@ -119,7 +119,7 @@ namespace ChocolArm64.Instruction
             string Name = null;
 
             if (Size < 0 || Size > (IsSimd ? 4 : 3))
-            {              
+            {
                 throw new ArgumentOutOfRangeException(nameof(Size));
             }
 

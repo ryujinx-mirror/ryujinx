@@ -1,4 +1,5 @@
 using ChocolArm64.Memory;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Services.Nv;
 using Ryujinx.Graphics.Gal;
@@ -112,7 +113,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
 
                 if (Commands.TryGetValue((InterfaceName, Code), out ServiceProcessParcel ProcReq))
                 {
-                    Logging.Debug(LogClass.ServiceNv, $"{InterfaceName} {ProcReq.Method.Name}");
+                    Context.Ns.Log.PrintDebug(LogClass.ServiceVi, $"{InterfaceName} {ProcReq.Method.Name}");
 
                     return ProcReq(Context, Reader);
                 }
@@ -412,8 +413,6 @@ namespace Ryujinx.Core.OsHle.Services.Android
                         break;
                     }
 
-                    Logging.Debug(LogClass.ServiceNv, "Waiting for a free BufferQueue slot...");
-
                     if (Disposed)
                     {
                         break;
@@ -425,8 +424,6 @@ namespace Ryujinx.Core.OsHle.Services.Android
                 WaitBufferFree.WaitOne();
             }
             while (!Disposed);
-
-            Logging.Debug(LogClass.ServiceNv, $"Found free BufferQueue slot {Slot}!");
 
             return Slot;
         }

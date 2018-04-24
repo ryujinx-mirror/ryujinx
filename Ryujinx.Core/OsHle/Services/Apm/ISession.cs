@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
@@ -32,8 +33,7 @@ namespace Ryujinx.Core.OsHle.Services.Apm
 
             Context.ResponseData.Write((uint)PerformanceConfiguration.PerformanceConfiguration1);
 
-            Logging.Stub(LogClass.ServiceApm, $"PerformanceMode = {PerfMode}, PerformanceConfiguration =" +
-                $" {PerformanceConfiguration.PerformanceConfiguration1}");
+            Context.Ns.Log.PrintStub(LogClass.ServiceApm, "Stubbed.");
 
             return 0;
         }

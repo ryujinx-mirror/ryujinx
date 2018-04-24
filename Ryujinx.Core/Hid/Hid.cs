@@ -1,4 +1,5 @@
 ﻿using ChocolArm64.Memory;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using System;
 
@@ -61,12 +62,16 @@ namespace Ryujinx.Core.Input
 
         private const int HidEntryCount = 17;
 
+        private Logger Log;
+
         private object ShMemLock;
 
         private (AMemory, long)[] ShMemPositions;
 
-        public Hid()
+        public Hid(Logger Log)
         {
+            this.Log = Log;
+
             ShMemLock = new object();
 
             ShMemPositions = new (AMemory, long)[0];
@@ -82,7 +87,7 @@ namespace Ryujinx.Core.Input
 
                 (AMemory Memory, long Position) ShMem = ShMemPositions[ShMemPositions.Length - 1];
 
-                Logging.Info(LogClass.ServiceHid, $"HID shared memory successfully mapped to 0x{ShMem.Position:x16}!");
+                Log.PrintInfo(LogClass.Hid, $"HID shared memory successfully mapped to 0x{ShMem.Position:x16}!");
 
                 Init(ShMem.Memory, ShMem.Position);
             }

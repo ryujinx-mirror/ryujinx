@@ -1,6 +1,7 @@
 using ChocolArm64.Events;
 using ChocolArm64.Memory;
 using ChocolArm64.State;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using System;
 using System.Collections.Generic;
@@ -85,11 +86,9 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (SvcFuncs.TryGetValue(e.Id, out SvcFunc Func))
             {
-                Logging.Trace(LogClass.KernelSvc, $"(Thread {ThreadState.ThreadId}) {Func.Method.Name} called.");
-
                 Func(ThreadState);
 
-                Logging.Trace(LogClass.KernelSvc, $"(Thread {ThreadState.ThreadId}) {Func.Method.Name} ended.");
+                Ns.Log.PrintDebug(LogClass.KernelSvc, $"{Func.Method.Name} ended.");
             }
             else
             {

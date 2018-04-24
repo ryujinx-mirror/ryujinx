@@ -19,10 +19,10 @@ namespace Ryujinx.Core.OsHle.Services.Vi
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                {  100, GetRelayService                      },
-                {  101, GetSystemDisplayService              },
-                {  102, GetManagerDisplayService             },
-                {  103, GetIndirectDisplayTransactionService },
+                { 100,  GetRelayService                      },
+                { 101,  GetSystemDisplayService              },
+                { 102,  GetManagerDisplayService             },
+                { 103,  GetIndirectDisplayTransactionService },
                 { 1010, OpenDisplay                          },
                 { 1020, CloseDisplay                         },
                 { 1102, GetDisplayResolution                 },

@@ -12,10 +12,6 @@ namespace Ryujinx
     {
         static void Main(string[] args)
         {
-            Config.Read();
-
-            AOptimizations.DisableMemoryChecks = !Config.EnableMemoryChecks;
-
             Console.Title = "Ryujinx Console";
 
             IGalRenderer Renderer = new OpenGLRenderer();
@@ -23,6 +19,10 @@ namespace Ryujinx
             IAalOutput AudioOut = new OpenALAudioOut();
 
             Switch Ns = new Switch(Renderer, AudioOut);
+
+            Config.Read(Ns.Log);
+
+            Ns.Log.Updated += ConsoleLog.PrintLog;
 
             if (args.Length == 1)
             {
@@ -37,27 +37,27 @@ namespace Ryujinx
 
                     if (RomFsFiles.Length > 0)
                     {
-                        Logging.Info(LogClass.Loader, "Loading as cart with RomFS.");
+                        Console.WriteLine("Loading as cart with RomFS.");
 
                         Ns.LoadCart(args[0], RomFsFiles[0]);
                     }
                     else
                     {
-                        Logging.Info(LogClass.Loader, "Loading as cart WITHOUT RomFS.");
+                        Console.WriteLine("Loading as cart WITHOUT RomFS.");
 
                         Ns.LoadCart(args[0]);
                     }
                 }
                 else if (File.Exists(args[0]))
                 {
-                    Logging.Info(LogClass.Loader, "Loading as homebrew.");
+                    Console.WriteLine("Loading as homebrew.");
 
                     Ns.LoadProgram(args[0]);
                 }
             }
             else
             {
-                Logging.Error(LogClass.Loader, "Please specify the folder with the NSOs/IStorage or a NSO/NRO.");
+                Console.WriteLine("Please specify the folder with the NSOs/IStorage or a NSO/NRO.");
             }
 
             using (GLScreen Screen = new GLScreen(Ns, Renderer))

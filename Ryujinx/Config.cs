@@ -1,58 +1,59 @@
 ﻿using Ryujinx.Core.Input;
+using Ryujinx.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Ryujinx.Core
+namespace Ryujinx
 {
     public static class Config
     {
-        public static bool   EnableMemoryChecks     { get; private set; }
-        public static bool   LoggingEnableInfo      { get; private set; }
-        public static bool   LoggingEnableTrace     { get; private set; }
-        public static bool   LoggingEnableDebug     { get; private set; }
-        public static bool   LoggingEnableWarn      { get; private set; }
-        public static bool   LoggingEnableError     { get; private set; }
-        public static bool   LoggingEnableFatal     { get; private set; }
-        public static bool   LoggingEnableIpc       { get; private set; }
-        public static bool   LoggingEnableStub      { get; private set; }
-        public static bool   LoggingEnableLogFile   { get; private set; }
-        public static bool   LoggingEnableFilter    { get; private set; }
-        public static bool[] LoggingFilteredClasses { get; private set; }
-
         public static JoyCon FakeJoyCon { get; private set; }
 
-        public static void Read()
+        public static void Read(Logger Log)
         {
-            var iniFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            var iniPath = Path.Combine(iniFolder, "Ryujinx.conf");
-            IniParser Parser = new IniParser(iniPath);
+            string IniFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
-            EnableMemoryChecks     = Convert.ToBoolean(Parser.Value("Enable_Memory_Checks"));
-            LoggingEnableInfo      = Convert.ToBoolean(Parser.Value("Logging_Enable_Info"));
-            LoggingEnableTrace     = Convert.ToBoolean(Parser.Value("Logging_Enable_Trace"));
-            LoggingEnableDebug     = Convert.ToBoolean(Parser.Value("Logging_Enable_Debug"));
-            LoggingEnableWarn      = Convert.ToBoolean(Parser.Value("Logging_Enable_Warn"));
-            LoggingEnableError     = Convert.ToBoolean(Parser.Value("Logging_Enable_Error"));
-            LoggingEnableFatal     = Convert.ToBoolean(Parser.Value("Logging_Enable_Fatal"));
-            LoggingEnableIpc       = Convert.ToBoolean(Parser.Value("Logging_Enable_Ipc"));
-            LoggingEnableStub      = Convert.ToBoolean(Parser.Value("Logging_Enable_Stub"));
-            LoggingEnableLogFile   = Convert.ToBoolean(Parser.Value("Logging_Enable_LogFile"));
-            LoggingEnableFilter    = Convert.ToBoolean(Parser.Value("Logging_Enable_Filter"));
-            LoggingFilteredClasses = new bool[(int)LogClass.Count];
+            string IniPath = Path.Combine(IniFolder, "Ryujinx.conf");
 
-            string[] FilteredLogClasses = Parser.Value("Logging_Filtered_Classes", string.Empty).Split(',');
+            IniParser Parser = new IniParser(IniPath);
+
+            AOptimizations.DisableMemoryChecks = !Convert.ToBoolean(Parser.Value("Enable_Memory_Checks"));
+
+            Console.WriteLine(Parser.Value("Logging_Enable_Warn"));
+
+            bool LoggingEnableDebug = Convert.ToBoolean(Parser.Value("Logging_Enable_Debug"));
+            bool LoggingEnableStub  = Convert.ToBoolean(Parser.Value("Logging_Enable_Stub"));
+            bool LoggingEnableInfo  = Convert.ToBoolean(Parser.Value("Logging_Enable_Info"));
+            bool LoggingEnableTrace = Convert.ToBoolean(Parser.Value("Logging_Enable_Trace"));
+            bool LoggingEnableWarn  = Convert.ToBoolean(Parser.Value("Logging_Enable_Warn"));
+            bool LoggingEnableError = Convert.ToBoolean(Parser.Value("Logging_Enable_Error"));
+
+            string[] FilteredLogClasses = Parser.Value("Logging_Filtered_Classes").Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+            //When the classes are specified on the list, we only
+            //enable the classes that are on the list.
+            //So, first disable everything, then enable
+            //the classes that the user added to the list.
+            if (FilteredLogClasses.Length > 0)
+            {
+                foreach (LogClass Class in Enum.GetValues(typeof(LogClass)))
+                {
+                    Log.SetEnable(Class, false);
+                }
+            }
+
             foreach (string LogClass in FilteredLogClasses)
             {
                 if (!string.IsNullOrEmpty(LogClass.Trim()))
                 {
-                    foreach (LogClass EnumItemName in Enum.GetValues(typeof(LogClass)))
+                    foreach (LogClass Class in Enum.GetValues(typeof(LogClass)))
                     {
-                        if (EnumItemName.ToString().ToLower().Contains(LogClass.Trim().ToLower()))
+                        if (Class.ToString().ToLower().Contains(LogClass.Trim().ToLower()))
                         {
-                            LoggingFilteredClasses[(int)EnumItemName] = true;
+                            Log.SetEnable(Class, true);
                         }
                     }
                 }
@@ -103,19 +104,14 @@ namespace Ryujinx.Core
         public IniParser(string Path)
         {
             Values = File.ReadLines(Path)
-            .Where(Line => !string.IsNullOrWhiteSpace(Line) && !Line.StartsWith('#'))
-            .Select(Line => Line.Split('=', 2))
-            .ToDictionary(Parts => Parts[0].Trim(), Parts => Parts.Length > 1 ? Parts[1].Trim() : null);
+                .Where(Line => !string.IsNullOrWhiteSpace(Line) && !Line.StartsWith('#'))
+                .Select(Line => Line.Split('=', 2))
+                .ToDictionary(Parts => Parts[0].Trim(), Parts => Parts.Length > 1 ? Parts[1].Trim() : null);
         }
 
-        /// <summary>
-        /// Gets the setting value for the requested setting <see cref="Name"/>.
-        /// </summary>
-        /// <param name="Name">Setting Name</param>
-        /// <param name="defaultValue">Default value of the setting</param>
-        public string Value(string Name, string defaultValue = null)
+        public string Value(string Name)
         {
-            return Values.TryGetValue(Name, out var value) ? value : defaultValue;
+            return Values.TryGetValue(Name, out string Value) ? Value : null;
         }
     }
 }

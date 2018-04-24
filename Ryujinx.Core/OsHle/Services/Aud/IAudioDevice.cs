@@ -1,4 +1,5 @@
 using ChocolArm64.Memory;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
@@ -68,7 +69,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
             string Name = AMemoryHelper.ReadAsciiString(Context.Memory, Position, Size);
 
-            Logging.Stub(LogClass.ServiceAudio, $"Volume = {Volume}, Position = {Position}, Size = {Size}");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
@@ -93,7 +94,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Logging.Stub(LogClass.ServiceAudio, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
@@ -102,7 +103,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
         {
             Context.ResponseData.Write(2);
 
-            Logging.Stub(LogClass.ServiceAudio, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }

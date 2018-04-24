@@ -1,6 +1,6 @@
 using ChocolArm64.Memory;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -21,123 +21,68 @@ namespace Ryujinx.Core.OsHle.Services.Lm
             };
         }
 
-        enum Flags
-        {
-            Padding,
-            IsHead,
-            IsTail
-        }
-
-        enum Severity
-        {
-            Trace,
-            Info,
-            Warning,
-            Error,
-            Critical
-        }
-
-        enum Field
-        {
-            Padding,
-            Skip,
-            Message,
-            Line,
-            Filename,
-            Function,
-            Module,
-            Thread
-        }
-
         public long Log(ServiceCtx Context)
         {
-            long BufferPosition = Context.Request.PtrBuff[0].Position;
-            long BufferLen      = Context.Request.PtrBuff[0].Size;
+            byte[] LogBuffer = AMemoryHelper.ReadBytes(
+                Context.Memory,
+                Context.Request.PtrBuff[0].Position,
+                Context.Request.PtrBuff[0].Size);
 
-            byte[] LogBuffer = AMemoryHelper.ReadBytes(Context.Memory, BufferPosition, BufferLen);
-
-            MemoryStream LogMessage = new MemoryStream(LogBuffer);
-            BinaryReader bReader = new BinaryReader(LogMessage);
-
-            //Header reading.
-            long Pid       = bReader.ReadInt64();
-            long ThreadCxt = bReader.ReadInt64();
-            int Infos      = bReader.ReadInt32();
-            int PayloadLen = bReader.ReadInt32();
-
-            int iFlags     = Infos & 0xFFFF;
-            int iSeverity  = (Infos >> 17) & 0x7F;
-            int iVerbosity = (Infos >> 25) & 0x7F;
-
-            //ToDo: For now we don't care about Head or Tail Log.
-            bool IsHeadLog = Convert.ToBoolean(iFlags & (int)Flags.IsHead);
-            bool IsTailLog = Convert.ToBoolean(iFlags & (int)Flags.IsTail);
-
-            string LogString = "nn::diag::detail::LogImpl()" + Environment.NewLine + Environment.NewLine +
-                               "Header:" + Environment.NewLine +
-                               $"   Pid: {Pid}" + Environment.NewLine +
-                               $"   ThreadContext: {ThreadCxt}" + Environment.NewLine +
-                               $"   Flags: {IsHeadLog}/{IsTailLog}" + Environment.NewLine +
-                               $"   Severity: {Enum.GetName(typeof(Severity), iSeverity)}" + Environment.NewLine +
-                               $"   Verbosity: {iVerbosity}";
-
-            LogString += Environment.NewLine + Environment.NewLine + "Message:" + Environment.NewLine;
-
-            string StrMessage = "", StrLine = "", StrFilename = "", StrFunction = "",
-                   StrModule = "", StrThread = "";
-
-            do
+            using (MemoryStream MS = new MemoryStream(LogBuffer))
             {
-                byte FieldType = bReader.ReadByte();
-                byte FieldSize = bReader.ReadByte();
+                BinaryReader Reader = new BinaryReader(MS);
 
-                if ((Field)FieldType != Field.Skip || FieldSize != 0)
+                long  Pid           = Reader.ReadInt64();
+                long  ThreadContext = Reader.ReadInt64();
+                short Flags         = Reader.ReadInt16();
+                byte  Level         = Reader.ReadByte();
+                byte  Verbosity     = Reader.ReadByte();
+                int   PayloadLength = Reader.ReadInt32();
+
+                StringBuilder SB = new StringBuilder();
+
+                SB.AppendLine("Guest log:");
+
+                while (MS.Position < MS.Length)
                 {
-                    byte[] Message = bReader.ReadBytes(FieldSize);
-                    switch ((Field)FieldType)
+                    byte Type = Reader.ReadByte();
+                    byte Size = Reader.ReadByte();
+
+                    LmLogField Field = (LmLogField)Type;
+
+                    string FieldStr = string.Empty;
+
+                    if (Field == LmLogField.Skip)
                     {
-                        case Field.Message:
-                            StrMessage = Encoding.UTF8.GetString(Message);
-                            break;
+                        Reader.ReadByte();
 
-                        case Field.Line:
-                            StrLine = BitConverter.ToInt32(Message, 0).ToString();
-                            break;
-
-                        case Field.Filename:
-                            StrFilename = Encoding.UTF8.GetString(Message);
-                            break;
-
-                        case Field.Function:
-                            StrFunction = Encoding.UTF8.GetString(Message);
-                            break;
-
-                        case Field.Module:
-                            StrModule = Encoding.UTF8.GetString(Message);
-                            break;
-
-                        case Field.Thread:
-                            StrThread = Encoding.UTF8.GetString(Message);
-                            break;
+                        continue;
                     }
+                    else if (Field == LmLogField.Line)
+                    {
+                        FieldStr = Field + ": " + Reader.ReadInt32();
+                    }
+                    else
+                    {
+                        FieldStr = Field + ": \"" + Encoding.UTF8.GetString(Reader.ReadBytes(Size)) + "\"";
+                    }
+
+                    SB.AppendLine(" " + FieldStr);
                 }
-                
-            }
-            while (LogMessage.Position != PayloadLen + 0x18); // 0x18 - Size of Header LogMessage.
 
-            LogString += StrModule + " > " + StrThread + ": " + StrFilename + "@" + StrFunction + "(" + StrLine + ") '" + StrMessage + "'" + Environment.NewLine;
+                string Text = SB.ToString();
 
-            switch((Severity)iSeverity)
-            {
-                case Severity.Trace:    Logging.Trace(LogClass.ServiceLm, LogString); break;
-                case Severity.Info:     Logging.Info(LogClass.ServiceLm, LogString);  break;
-                case Severity.Warning:  Logging.Warn(LogClass.ServiceLm, LogString);  break;
-                case Severity.Error:    Logging.Error(LogClass.ServiceLm, LogString); break;
-                case Severity.Critical: Logging.Fatal(LogClass.ServiceLm, LogString); break;
+                switch((LmLogLevel)Level)
+                {
+                    case LmLogLevel.Trace:    Context.Ns.Log.PrintDebug  (LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Info:     Context.Ns.Log.PrintInfo   (LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Warning:  Context.Ns.Log.PrintWarning(LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Error:    Context.Ns.Log.PrintError  (LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Critical: Context.Ns.Log.PrintError  (LogClass.ServiceLm, Text); break;
+                }
             }
 
             return 0;
         }
     }
 }
- 

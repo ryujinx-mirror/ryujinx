@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using System;
@@ -54,14 +55,14 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
         public long StartAudioRenderer(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAudio, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
 
         public long StopAudioRenderer(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAudio, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }

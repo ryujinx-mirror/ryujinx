@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
@@ -66,7 +67,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             Context.ResponseData.Write((byte)0); //Unknown value.
 
-            Logging.Stub(LogClass.ServiceAm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }

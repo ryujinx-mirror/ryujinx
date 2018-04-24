@@ -17,7 +17,7 @@ namespace Ryujinx.Core.OsHle.Services.Set
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                {  4, GetFirmwareVersion2 },
+                { 4,  GetFirmwareVersion2 },
                 { 23, GetColorSetId       },
                 { 24, SetColorSetId       }
             };

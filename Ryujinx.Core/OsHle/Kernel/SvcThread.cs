@@ -1,4 +1,5 @@
 using ChocolArm64.State;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using System.Threading;
 
@@ -49,7 +50,7 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
             else
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
@@ -95,7 +96,7 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
             else
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
@@ -116,7 +117,7 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
             else
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
@@ -147,7 +148,7 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
             else
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
@@ -168,7 +169,7 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
             else
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }

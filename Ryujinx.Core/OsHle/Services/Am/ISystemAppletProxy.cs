@@ -13,15 +13,15 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                {    0, GetCommonStateGetter     },
-                {    1, GetSelfController        },
-                {    2, GetWindowController      },
-                {    3, GetAudioController       },
-                {    4, GetDisplayController     },
-                {   11, GetLibraryAppletCreator  },
-                {   20, GetHomeMenuFunctions     },
-                {   21, GetGlobalStateController },
-                {   22, GetApplicationCreator    },
+                { 0,    GetCommonStateGetter     },
+                { 1,    GetSelfController        },
+                { 2,    GetWindowController      },
+                { 3,    GetAudioController       },
+                { 4,    GetDisplayController     },
+                { 11,   GetLibraryAppletCreator  },
+                { 20,   GetHomeMenuFunctions     },
+                { 21,   GetGlobalStateController },
+                { 22,   GetApplicationCreator    },
                 { 1000, GetDebugFunctions        }
             };
         }

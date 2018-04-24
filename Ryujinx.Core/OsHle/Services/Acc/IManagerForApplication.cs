@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
@@ -20,14 +21,14 @@ namespace Ryujinx.Core.OsHle.Services.Acc
 
         public long CheckAvailability(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAcc, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
 
             return 0;
         }
 
         public long GetAccountId(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAcc, "AccountId = 0xcafeL");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
 
             Context.ResponseData.Write(0xcafeL);
 

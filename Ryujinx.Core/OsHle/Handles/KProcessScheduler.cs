@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -124,8 +125,12 @@ namespace Ryujinx.Core.OsHle.Handles
 
         private object SchedLock;
 
-        public KProcessScheduler()
+        private Logger Log;
+
+        public KProcessScheduler(Logger Log)
         {
+            this.Log = Log;
+
             AllThreads = new ConcurrentDictionary<KThread, SchedulerThread>();
 
             WaitingToRun = new ThreadQueue[4];
@@ -183,7 +188,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
                 if (NewThread == null)
                 {
-                    Logging.Debug(LogClass.KernelScheduler, $"Nothing to run on core {Thread.ProcessorId}!");
+                    Log.PrintDebug(LogClass.KernelScheduler, $"Nothing to run on core {Thread.ProcessorId}!");
 
                     ActiveProcessors.Remove(Thread.ProcessorId);
 
@@ -276,7 +281,7 @@ namespace Ryujinx.Core.OsHle.Handles
                 }
                 else
                 {
-                    Logging.Debug(LogClass.KernelScheduler, $"Nothing to run on core {ProcessorId}!");
+                    Log.PrintDebug(LogClass.KernelScheduler, $"Nothing to run on core {ProcessorId}!");
 
                     ActiveProcessors.Remove(ProcessorId);
                 }
@@ -385,7 +390,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
         private void PrintDbgThreadInfo(KThread Thread, string Message)
         {
-            Logging.Debug(LogClass.KernelScheduler, "(" +
+            Log.PrintDebug(LogClass.KernelScheduler, "(" +
                 "ThreadId: "       + Thread.ThreadId       + ", " +
                 "ProcessorId: "    + Thread.ProcessorId    + ", " +
                 "ActualPriority: " + Thread.ActualPriority + ", " +

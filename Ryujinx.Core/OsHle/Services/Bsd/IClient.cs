@@ -21,11 +21,11 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                {  0, Initialize      },
-                {  1, StartMonitoring },
-                {  2, Socket          },
-                {  6, Poll            },
-                {  8, Recv            },
+                { 0,  Initialize      },
+                { 1,  StartMonitoring },
+                { 2,  Socket          },
+                { 6,  Poll            },
+                { 8,  Recv            },
                 { 10, Send            },
                 { 11, SendTo          },
                 { 12, Accept          },
@@ -428,9 +428,8 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
                                    Reader.ReadByte().ToString() + "." +
                                    Reader.ReadByte().ToString();
 
-                Logging.Debug(LogClass.ServiceBsd, $"Try to connect to {IpAddress}:{Port}");
-
                 Sockets[SocketId].IpAddress = IPAddress.Parse(IpAddress);
+
                 Sockets[SocketId].RemoteEP = new IPEndPoint(Sockets[SocketId].IpAddress, Port);
             }
         }

@@ -103,6 +103,9 @@ namespace Ryujinx.Core.OsHle.Services
                 case "pl:u":
                     return new ISharedFontManager();
 
+                case "prepo:a":
+                    return new IPrepoService();
+
                 case "prepo:u":
                     return new IPrepoService();
 

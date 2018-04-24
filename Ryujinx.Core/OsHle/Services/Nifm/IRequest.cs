@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using System;
@@ -31,14 +32,14 @@ namespace Ryujinx.Core.OsHle.Services.Nifm
         {
             Context.ResponseData.Write(0);
 
-            Logging.Stub(LogClass.ServiceNifm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
 
         public long GetResult(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceNifm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
@@ -56,14 +57,14 @@ namespace Ryujinx.Core.OsHle.Services.Nifm
 
         public long Cancel(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceNifm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
 
         public long Submit(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceNifm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }

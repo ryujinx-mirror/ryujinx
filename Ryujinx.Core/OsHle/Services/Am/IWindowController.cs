@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
@@ -13,14 +14,14 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                {  1, GetAppletResourceUserId },
+                { 1,  GetAppletResourceUserId },
                 { 10, AcquireForegroundRights }
             };
         }
 
         public long GetAppletResourceUserId(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAm, $"Applet Resource Id = 0");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             Context.ResponseData.Write(0L);
 
@@ -29,7 +30,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
         public long AcquireForegroundRights(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }

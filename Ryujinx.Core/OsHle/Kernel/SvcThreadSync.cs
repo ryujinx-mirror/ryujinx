@@ -1,4 +1,5 @@
 using ChocolArm64.State;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using System;
 using System.Threading;
@@ -19,7 +20,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (IsPointingInsideKernel(MutexAddress))
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid mutex address 0x{MutexAddress:x16}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid mutex address 0x{MutexAddress:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
 
@@ -28,7 +29,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (IsWordAddressUnaligned(MutexAddress))
             {
-                Logging.Warn(LogClass.KernelSvc, $"Unaligned mutex address 0x{MutexAddress:x16}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Unaligned mutex address 0x{MutexAddress:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAlignment);
 
@@ -39,7 +40,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (OwnerThread == null)
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid owner thread handle 0x{OwnerThreadHandle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid owner thread handle 0x{OwnerThreadHandle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
@@ -50,7 +51,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (WaitThread == null)
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid requesting thread handle 0x{WaitThreadHandle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid requesting thread handle 0x{WaitThreadHandle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
@@ -70,7 +71,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (IsPointingInsideKernel(MutexAddress))
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid mutex address 0x{MutexAddress:x16}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid mutex address 0x{MutexAddress:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
 
@@ -79,7 +80,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (IsWordAddressUnaligned(MutexAddress))
             {
-                Logging.Warn(LogClass.KernelSvc, $"Unaligned mutex address 0x{MutexAddress:x16}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Unaligned mutex address 0x{MutexAddress:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAlignment);
 
@@ -103,7 +104,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (IsPointingInsideKernel(MutexAddress))
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid mutex address 0x{MutexAddress:x16}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid mutex address 0x{MutexAddress:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
 
@@ -112,7 +113,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (IsWordAddressUnaligned(MutexAddress))
             {
-                Logging.Warn(LogClass.KernelSvc, $"Unaligned mutex address 0x{MutexAddress:x16}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Unaligned mutex address 0x{MutexAddress:x16}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAlignment);
 
@@ -123,7 +124,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (Thread == null)
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid thread handle 0x{ThreadHandle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{ThreadHandle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
@@ -182,7 +183,7 @@ namespace Ryujinx.Core.OsHle.Kernel
         {
             if (CurrThread == null)
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid mutex 0x{MutexAddress:x16}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid mutex 0x{MutexAddress:x16}!");
 
                 return false;
             }
@@ -357,7 +358,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (OwnerThread == null)
             {
-                Logging.Warn(LogClass.KernelSvc, $"Invalid thread handle 0x{OwnerThreadHandle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{OwnerThreadHandle:x8}!");
 
                 return;
             }

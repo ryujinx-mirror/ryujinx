@@ -13,11 +13,11 @@ namespace Ryujinx.Core.OsHle.Services.FspSrv
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                {    1, SetCurrentProcess                    },
-                {   18, OpenSdCardFileSystem                 },
-                {   51, OpenSaveDataFileSystem               },
-                {  200, OpenDataStorageByCurrentProcess      },
-                {  203, OpenPatchDataStorageByCurrentProcess },
+                { 1,    SetCurrentProcess                    },
+                { 18,   OpenSdCardFileSystem                 },
+                { 51,   OpenSaveDataFileSystem               },
+                { 200,  OpenDataStorageByCurrentProcess      },
+                { 203,  OpenPatchDataStorageByCurrentProcess },
                 { 1005, GetGlobalAccessLogMode               }
             };
         }

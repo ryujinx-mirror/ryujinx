@@ -1,5 +1,6 @@
 using ChocolArm64.Memory;
 using ChocolArm64.State;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Exceptions;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
@@ -39,7 +40,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (Obj == null)
             {
-                Logging.Warn(LogClass.KernelSvc, $"Tried to CloseHandle on invalid handle 0x{Handle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Tried to CloseHandle on invalid handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
@@ -75,7 +76,7 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
             else
             {
-                Logging.Warn(LogClass.KernelSvc, $"Tried to ResetSignal on invalid event handle 0x{Handle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid event handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
@@ -99,7 +100,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
                 if (SyncObj == null)
                 {
-                    Logging.Warn(LogClass.KernelSvc, $"Tried to WaitSynchronization on invalid handle 0x{Handle:x8}!");
+                    Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid handle 0x{Handle:x8}!");
 
                     ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
@@ -199,7 +200,7 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
             else
             {
-                Logging.Warn(LogClass.KernelSvc, $"Tried to SendSyncRequest on invalid session handle 0x{Handle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid session handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
@@ -223,7 +224,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             string Str = AMemoryHelper.ReadAsciiString(Memory, Position, Size);
 
-            Logging.Info(LogClass.KernelSvc, Str);
+            Ns.Log.PrintWarning(LogClass.KernelSvc, Str);
 
             ThreadState.X0 = 0;
         }

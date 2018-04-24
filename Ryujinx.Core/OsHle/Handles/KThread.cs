@@ -7,13 +7,13 @@ namespace Ryujinx.Core.OsHle.Handles
     {
         public AThread Thread { get; private set; }
 
-        public KThread MutexOwner { get; set; }
+        public long MutexAddress   { get; set; }
+        public long CondVarAddress { get; set; }
 
         public KThread NextMutexThread   { get; set; }
         public KThread NextCondVarThread { get; set; }
 
-        public long MutexAddress   { get; set; }
-        public long CondVarAddress { get; set; }
+        public KThread MutexOwner { get; set; }
 
         public int ActualPriority { get; private set; }
         public int WantedPriority { get; private set; }

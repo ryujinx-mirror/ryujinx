@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
@@ -19,7 +20,7 @@ namespace Ryujinx.Core.OsHle.Services.Acc
 
         public long GetBase(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAcc, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
 
             Context.ResponseData.Write(0L);
             Context.ResponseData.Write(0L);
@@ -28,7 +29,7 @@ namespace Ryujinx.Core.OsHle.Services.Acc
             Context.ResponseData.Write(0L);
             Context.ResponseData.Write(0L);
             Context.ResponseData.Write(0L);
-            
+
             return 0;
         }
     }

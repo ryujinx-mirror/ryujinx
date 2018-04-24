@@ -4,6 +4,7 @@ using ChocolArm64.Memory;
 using ChocolArm64.State;
 using Ryujinx.Core.Loaders;
 using Ryujinx.Core.Loaders.Executables;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Exceptions;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Kernel;
@@ -96,7 +97,7 @@ namespace Ryujinx.Core.OsHle
                 throw new ObjectDisposedException(nameof(Process));
             }
 
-            Logging.Info(LogClass.Loader, $"Image base at 0x{ImageBase:x16}.");
+            Ns.Log.PrintInfo(LogClass.Loader, $"Image base at 0x{ImageBase:x16}.");
 
             Executable Executable = new Executable(Program, Memory, ImageBase);
 
@@ -282,7 +283,7 @@ namespace Ryujinx.Core.OsHle
                 }
             }
 
-            Logging.Trace(LogClass.CPU, $"Executing at 0x{e.Position:x16} {e.SubName} {NsoName}");
+            Ns.Log.PrintDebug(LogClass.Cpu, $"Executing at 0x{e.Position:x16} {e.SubName} {NsoName}");
         }
 
         public void PrintStackTrace(AThreadState ThreadState)
@@ -303,7 +304,7 @@ namespace Ryujinx.Core.OsHle
                 Trace.AppendLine(" " + SubName + " (" + GetNsoNameAndAddress(Position) + ")");
             }
 
-            Logging.Info(LogClass.CPU, Trace.ToString());
+            Ns.Log.PrintInfo(LogClass.Cpu, Trace.ToString());
         }
 
         private string GetNsoNameAndAddress(long Position)
@@ -342,8 +343,6 @@ namespace Ryujinx.Core.OsHle
         {
             if (sender is AThread Thread)
             {
-                Logging.Info(LogClass.KernelScheduler, $"Thread {Thread.ThreadId} exiting...");
-
                 TlsSlots.TryRemove(GetTlsSlot(Thread.ThreadState.Tpidr), out _);
 
                 KThread KernelThread = GetThread(Thread.ThreadState.Tpidr);
@@ -360,8 +359,6 @@ namespace Ryujinx.Core.OsHle
                     Dispose();
                 }
 
-                Logging.Info(LogClass.KernelScheduler, $"No threads running, now exiting Process {ProcessId}...");
-
                 Ns.Os.ExitProcess(ProcessId);
             }
         }
@@ -375,7 +372,7 @@ namespace Ryujinx.Core.OsHle
         {
             if (!Threads.TryGetValue(Tpidr, out KThread Thread))
             {
-                Logging.Error(LogClass.KernelScheduler, $"Thread with TPIDR 0x{Tpidr:x16} not found!");
+                throw new InvalidOperationException();
             }
 
             return Thread;
@@ -398,7 +395,7 @@ namespace Ryujinx.Core.OsHle
                 {
                     ShouldDispose = true;
 
-                    Logging.Info(LogClass.KernelScheduler, $"Process {ProcessId} waiting all threads terminate...");
+                    Ns.Log.PrintInfo(LogClass.Loader, $"Process {ProcessId} waiting all threads terminate...");
 
                     return;
                 }
@@ -425,7 +422,7 @@ namespace Ryujinx.Core.OsHle
 
                 Memory.Dispose();
 
-                Logging.Info(LogClass.KernelScheduler, $"Process {ProcessId} exiting...");
+                Ns.Log.PrintInfo(LogClass.Loader, $"Process {ProcessId} exiting...");
             }
         }
     }

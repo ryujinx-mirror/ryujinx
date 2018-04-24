@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System;
 using System.Collections.Generic;
@@ -16,14 +17,14 @@ namespace Ryujinx.Core.OsHle.Services.Time
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                {   0, GetDeviceLocationName    },
+                { 0,   GetDeviceLocationName    },
                 { 101, ToCalendarTimeWithMyRule }
             };
         }
 
         public long GetDeviceLocationName(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceTime, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceTime, "Stubbed.");
 
             for (int Index = 0; Index < 0x24; Index++)
             {
@@ -60,7 +61,7 @@ namespace Ryujinx.Core.OsHle.Services.Time
             */
             Context.ResponseData.Write((int)CurrentTime.DayOfWeek);
 
-            Context.ResponseData.Write(CurrentTime.DayOfYear);
+            Context.ResponseData.Write(CurrentTime.DayOfYear - 1);
 
             //TODO: Find out the names used.
             Context.ResponseData.Write(new byte[8]);

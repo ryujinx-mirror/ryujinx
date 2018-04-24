@@ -1,5 +1,6 @@
 using Ryujinx.Audio;
 using Ryujinx.Core.Input;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle;
 using Ryujinx.Core.Settings;
 using Ryujinx.Graphics.Gal;
@@ -11,6 +12,8 @@ namespace Ryujinx.Core
     public class Switch : IDisposable
     {
         internal IAalOutput AudioOut { get; private set; }
+
+        public Logger Log { get; private set; }
 
         internal NsGpu Gpu { get; private set; }
 
@@ -40,7 +43,9 @@ namespace Ryujinx.Core
 
             this.AudioOut = AudioOut;
 
-            Gpu = new NsGpu(Renderer);            
+            Log = new Logger();
+
+            Gpu = new NsGpu(Renderer);
 
             VFs = new VirtualFileSystem();
 
@@ -50,7 +55,7 @@ namespace Ryujinx.Core
 
             Statistics = new PerformanceStatistics();
 
-            Hid = new Hid();
+            Hid = new Hid(Log);
 
             Os.HidSharedMem.MemoryMapped   += Hid.ShMemMap;
             Os.HidSharedMem.MemoryUnmapped += Hid.ShMemUnmap;

@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
@@ -16,7 +17,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
                 { 0, SetExpectedMasterVolume              },
                 { 1, GetMainAppletExpectedMasterVolume    },
                 { 2, GetLibraryAppletExpectedMasterVolume },
-                { 3, ChangeMainAppletMasterVolume         }, 
+                { 3, ChangeMainAppletMasterVolume         },
                 { 4, SetTransparentVolumeRate             }
             };
         }
@@ -26,7 +27,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
             float AppletVolume        = Context.RequestData.ReadSingle();
             float LibraryAppletVolume = Context.RequestData.ReadSingle();
 
-            Logging.Stub(LogClass.ServiceAm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -35,7 +36,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             Context.ResponseData.Write(1f);
 
-            Logging.Stub(LogClass.ServiceAm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -44,7 +45,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             Context.ResponseData.Write(1f);
 
-            Logging.Stub(LogClass.ServiceAm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -54,7 +55,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
             float Unknown0 = Context.RequestData.ReadSingle();
             long  Unknown1 = Context.RequestData.ReadInt64();
 
-            Logging.Stub(LogClass.ServiceAm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -63,7 +64,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             float Unknown0 = Context.RequestData.ReadSingle();
 
-            Logging.Stub(LogClass.ServiceAm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }

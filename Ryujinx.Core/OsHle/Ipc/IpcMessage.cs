@@ -15,7 +15,7 @@ namespace Ryujinx.Core.OsHle.Ipc
         public List<IpcBuffDesc>         ExchangeBuff { get; private set; }
         public List<IpcRecvListBuffDesc> RecvListBuff { get; private set; }
 
-        public List<int> ResponseObjIds { get; private set; }    
+        public List<int> ResponseObjIds { get; private set; }
 
         public byte[] RawData { get; set; }
 
@@ -84,7 +84,7 @@ namespace Ryujinx.Core.OsHle.Ipc
 
             long Pad0 = GetPadSize16(Reader.BaseStream.Position + CmdPtr);
 
-            Reader.BaseStream.Seek(Pad0, SeekOrigin.Current);            
+            Reader.BaseStream.Seek(Pad0, SeekOrigin.Current);
 
             int RecvListCount = RecvListFlags - 2;
 
@@ -109,7 +109,6 @@ namespace Ryujinx.Core.OsHle.Ipc
 
         public byte[] GetBytes(long CmdPtr)
         {
-            //todo
             using (MemoryStream MS = new MemoryStream())
             {
                 BinaryWriter Writer = new BinaryWriter(MS);

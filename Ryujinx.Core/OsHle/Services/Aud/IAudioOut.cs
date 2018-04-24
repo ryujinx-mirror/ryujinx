@@ -1,5 +1,6 @@
 using ChocolArm64.Memory;
 using Ryujinx.Audio;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using System;
@@ -67,7 +68,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
             AudioOutData Data = AMemoryHelper.Read<AudioOutData>(
                 Context.Memory,
                 Context.Request.SendBuff[0].Position);
-            
+
             byte[] Buffer = AMemoryHelper.ReadBytes(
                 Context.Memory,
                 Data.SampleBufferPtr,
@@ -124,14 +125,14 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
         public long AppendAudioOutBufferEx(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAudio, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
 
         public long GetReleasedAudioOutBufferEx(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAudio, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }

@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +15,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                {  1, PopLaunchParameter },
+                { 1,  PopLaunchParameter },
                 { 20, EnsureSaveData     },
                 { 21, GetDesiredLanguage },
                 { 22, SetTerminateResult },
@@ -38,7 +39,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
             long UIdLow  = Context.RequestData.ReadInt64();
             long UIdHigh = Context.RequestData.ReadInt64();
 
-            Logging.Stub(LogClass.ServiceAm, $"UidLow = {UIdLow}, UidHigh = {UIdHigh}");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             Context.ResponseData.Write(0L);
 
@@ -47,7 +48,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
         public long GetDesiredLanguage(ServiceCtx Context)
         {
-            Logging.Stub(LogClass.ServiceAm, "LanguageId = 1");
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             //This is an enumerator where each number is a differnet language.
             //0 is Japanese and 1 is English, need to figure out the other codes.
@@ -60,12 +61,19 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             int ErrorCode = Context.RequestData.ReadInt32();
 
-            int Module = ErrorCode & 0xFF;
-            int Description = (ErrorCode >> 9) & 0xFFF;
+            string Result = GetFormattedErrorCode(ErrorCode);
 
-            Logging.Info(LogClass.ServiceAm, $"({(ErrorModule)Module}){2000 + Module}-{Description}");
+            Context.Ns.Log.PrintInfo(LogClass.ServiceAm, $"Result = 0x{ErrorCode:x8} ({Result}).");
 
             return 0;
+        }
+
+        private string GetFormattedErrorCode(int ErrorCode)
+        {
+            int Module      = (ErrorCode >> 0) & 0x1ff;
+            int Description = (ErrorCode >> 9) & 0x1fff;
+
+            return $"{(2000 + Module):d4}-{Description:d4}";
         }
 
         public long GetDisplayVersion(ServiceCtx Context)

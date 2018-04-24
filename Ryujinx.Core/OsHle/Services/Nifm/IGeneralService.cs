@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
@@ -24,7 +25,7 @@ namespace Ryujinx.Core.OsHle.Services.Nifm
 
             MakeObject(Context, new IRequest());
 
-            Logging.Stub(LogClass.ServiceNifm, "Stubbed");
+            Context.Ns.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }

@@ -1,10 +1,11 @@
-﻿namespace Ryujinx.Core
+namespace Ryujinx.Core.Logging
 {
     public enum LogClass
     {
         Audio,
-        CPU,
-        GPU,
+        Cpu,
+        Gpu,
+        Hid,
         Kernel,
         KernelIpc,
         KernelScheduler,
@@ -32,7 +33,6 @@
         ServiceSm,
         ServiceSss,
         ServiceTime,
-        ServiceVi,
-        Count,
+        ServiceVi
     }
 }
