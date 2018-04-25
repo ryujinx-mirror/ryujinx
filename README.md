@@ -1,13 +1,14 @@
+![](https://github.com/zoltx23/ryujinx-emu/blob/master/img/Ryujinx_logo_128.png?raw=true) 
 # Ryujinx [![Build status](https://ci.appveyor.com/api/projects/status/ssg4jwu6ve3k594s?svg=true)](https://ci.appveyor.com/project/gdkchan/ryujinx)
 
 Experimental Switch emulator written in C#
 
-Don't expect much from this. Some homebrew apps work, and Puyo Puyo Tetris shows the intro logo (sometimes) but that's about it for now.
+Don't expect much from this. Some homebrew apps work, Puyo Puyo Tetris shows the intro logo (sometimes), and a handful of games boot / work; but that's about it for now.
 Contributions are always welcome.
 
 **Building**
 
-To build this emulator, you need the .NET Core 2.0 (or higher) SDK. https://www.microsoft.com/net/download/
+To build this emulator, you will need the .NET Core 2.0 (or higher) SDK. https://www.microsoft.com/net/download/
 In release builds, memory checks are disabled to improve performances.
 
 Or just drag'n'drop the *.NRO / *.NSO or the game folder on the executable if you have a pre-build version.
@@ -54,18 +55,21 @@ https://openal.org/downloads/OpenAL11CoreSDK.zip
 
 **Help**
 
-If you have some homebrew that currently don't work on the emulator, you can contact us through Discord with the compiled NRO/NSO (and source code if possible) and then we'll make changes to make the requested app / game work.
+If you have some homebrew that currently doesn't work within the emulator, you can contact us through our Discord with the compiled NRO/NSO (and source code if possible) and then we'll make changes in order to make the requested app / game work.
 
 **Contact**
 
-For help, support, suggestions, or if you just want to get in touch with the team, join our Discord server!
+For help, support, suggestions, or if you just want to get in touch with the team; join our Discord server!
 https://discord.gg/VkQYXAZ
 
 **Running**
 
 To run this emulator, you need the .NET Core 2.0 (or higher) SDK.
 Run `dotnet run -c Release -- path\to\homebrew.nro` inside the Ryujinx solution folder to run homebrew apps.
-Run `dotnet run -c Release -- path\to\game_exefs_and_romfs_folder` to run official games (they need to be decrypted and extracted first!).
+Run `dotnet run -c Release -- path\to\game_exefs_and_romfs_folder` to run official games (they need to be decrypted and extracted first!)
+
+**Compatibility** 
+You can check out the compatibility list within the Wiki. Only a handful of games actually work. 
 
 **Latest build**
 
