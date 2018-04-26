@@ -32,7 +32,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
             int NameCount = 0;
 
-            byte[] DeviceNameBuffer = Encoding.UTF8.GetBytes(DefaultAudioOutput);
+            byte[] DeviceNameBuffer = Encoding.ASCII.GetBytes(DefaultAudioOutput + "\0");
 
             if ((ulong)DeviceNameBuffer.Length <= (ulong)Size)
             {
@@ -67,7 +67,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
             long Position = Context.Request.ReceiveBuff[0].Position;
             long Size     = Context.Request.ReceiveBuff[0].Size;
 
-            byte[] DeviceNameBuffer = Encoding.UTF8.GetBytes(DeviceName);
+            byte[] DeviceNameBuffer = Encoding.ASCII.GetBytes(DeviceName + "\0");
 
             if ((ulong)DeviceNameBuffer.Length <= (ulong)Size)
             {

@@ -45,7 +45,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
             foreach (string Name in DeviceNames)
             {
-                byte[] Buffer = Encoding.UTF8.GetBytes(Name + '\0');
+                byte[] Buffer = Encoding.ASCII.GetBytes(Name + "\0");
 
                 if ((Position - BasePosition) + Buffer.Length > Size)
                 {
@@ -71,7 +71,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
             byte[] DeviceNameBuffer = AMemoryHelper.ReadBytes(Context.Memory, Position, Size);
 
-            string DeviceName = Encoding.UTF8.GetString(DeviceNameBuffer);
+            string DeviceName = Encoding.ASCII.GetString(DeviceNameBuffer);
 
             Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
@@ -85,7 +85,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
             long Position = Context.Request.ReceiveBuff[0].Position;
             long Size     = Context.Request.ReceiveBuff[0].Size;
 
-            byte[] DeviceNameBuffer = Encoding.UTF8.GetBytes(Name + '\0');
+            byte[] DeviceNameBuffer = Encoding.ASCII.GetBytes(Name + "\0");
 
             if ((ulong)DeviceNameBuffer.Length <= (ulong)Size)
             {
