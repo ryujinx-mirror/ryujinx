@@ -43,8 +43,6 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             KThread OwnerThread = Process.HandleTable.GetData<KThread>(OwnerThreadHandle);
 
-            Ns.Log.PrintDebug(LogClass.KernelSvc, "lock tid: " + OwnerThread.ThreadId.ToString());
-
             if (OwnerThread == null)
             {
                 Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid owner thread handle 0x{OwnerThreadHandle:x8}!");

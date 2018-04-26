@@ -345,7 +345,7 @@ namespace Ryujinx.Core.OsHle
             {
                 TlsSlots.TryRemove(GetTlsSlot(Thread.ThreadState.Tpidr), out _);
 
-                KThread KernelThread = GetThread(Thread.ThreadState.Tpidr);
+                Threads.TryRemove(Thread.ThreadState.Tpidr, out KThread KernelThread);
 
                 Scheduler.RemoveThread(KernelThread);
 
