@@ -106,14 +106,9 @@ namespace ChocolArm64.Instruction
 
             Context.EmitLdintzr(Op.Rn);
 
-            if (Op.RegisterSize == ARegisterSize.Int32)
-            {
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountLeadingSigns32));
-            }
-            else
-            {
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountLeadingSigns64));
-            }
+            Context.EmitLdc_I4(Op.RegisterSize == ARegisterSize.Int32 ? 32 : 64);
+
+            ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountLeadingSigns));
 
             Context.EmitStintzr(Op.Rd);
         }
@@ -124,14 +119,9 @@ namespace ChocolArm64.Instruction
 
             Context.EmitLdintzr(Op.Rn);
 
-            if (Op.RegisterSize == ARegisterSize.Int32)
-            {
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountLeadingZeros32));
-            }
-            else
-            {
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountLeadingZeros64));
-            }
+            Context.EmitLdc_I4(Op.RegisterSize == ARegisterSize.Int32 ? 32 : 64);
+
+            ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountLeadingZeros));
 
             Context.EmitStintzr(Op.Rd);
         }

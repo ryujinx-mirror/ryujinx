@@ -179,6 +179,90 @@ namespace Ryujinx.Tests.Cpu
             });
         }
 
+        [Test, Description("CLS <Vd>.<T>, <Vn>.<T>")]
+        public void Cls_V_8B_4H_2S([ValueSource("_8B4H2S_")] [Random(1)] ulong A,
+                                   [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
+        {
+            uint Opcode = 0x0E204820; // CLS V0.8B, V1.8B
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
+            AVec V1 = new AVec { X0 = A };
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.V(1, new Bits(A));
+            SimdFp.Cls_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+            Assert.That(ThreadState.V0.X1, Is.Zero);
+        }
+
+        [Test, Pairwise, Description("CLS <Vd>.<T>, <Vn>.<T>")]
+        public void Cls_V_16B_8H_4S([ValueSource("_8B4H2S_")] [Random(1)] ulong A0,
+                                    [ValueSource("_8B4H2S_")] [Random(1)] ulong A1,
+                                    [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B, 8H, 4S>
+        {
+            uint Opcode = 0x4E204820; // CLS V0.16B, V1.16B
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            AVec V1 = new AVec { X0 = A0, X1 = A1 };
+            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1);
+
+            AArch64.Vpart(1, 0, new Bits(A0));
+            AArch64.Vpart(1, 1, new Bits(A1));
+            SimdFp.Cls_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
+        public void Clz_V_8B_4H_2S([ValueSource("_8B4H2S_")] [Random(1)] ulong A,
+                                   [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
+        {
+            uint Opcode = 0x2E204820; // CLZ V0.8B, V1.8B
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
+            AVec V1 = new AVec { X0 = A };
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.V(1, new Bits(A));
+            SimdFp.Clz_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+            Assert.That(ThreadState.V0.X1, Is.Zero);
+        }
+
+        [Test, Pairwise, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
+        public void Clz_V_16B_8H_4S([ValueSource("_8B4H2S_")] [Random(1)] ulong A0,
+                                    [ValueSource("_8B4H2S_")] [Random(1)] ulong A1,
+                                    [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B, 8H, 4S>
+        {
+            uint Opcode = 0x6E204820; // CLZ V0.16B, V1.16B
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            AVec V1 = new AVec { X0 = A0, X1 = A1 };
+            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1);
+
+            AArch64.Vpart(1, 0, new Bits(A0));
+            AArch64.Vpart(1, 1, new Bits(A1));
+            SimdFp.Clz_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
         [Test, Description("NEG <V><d>, <V><n>")]
         public void Neg_S_D([ValueSource("_1D_")] [Random(1)] ulong A)
         {

@@ -1699,6 +1699,7 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             Bits result = new Bits(datasize);
             Bits operand = V(datasize, n);
+
             BigInteger element;
 
             for (int e = 0; e <= elements - 1; e++)
@@ -1742,6 +1743,7 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             Bits result = new Bits(datasize);
             Bits operand = V(datasize, n);
+
             BigInteger element;
 
             for (int e = 0; e <= elements - 1; e++)
@@ -1810,6 +1812,90 @@ namespace Ryujinx.Tests.Cpu.Tester
             V(d, Reduce(op, operand, esize));
         }
 
+        // https://meriac.github.io/archex/A64_v83A_ISA/cls_advsimd.xml
+        public static void Cls_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            bool U = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            CountOp countop = (U ? CountOp.CountOp_CLZ : CountOp.CountOp_CLS);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(datasize, n);
+
+            BigInteger count;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                if (countop == CountOp.CountOp_CLS)
+                {
+                    count = (BigInteger)CountLeadingSignBits(Elem(operand, e, esize));
+                }
+                else
+                {
+                    count = (BigInteger)CountLeadingZeroBits(Elem(operand, e, esize));
+                }
+
+                Elem(result, e, esize, count.SubBigInteger(esize - 1, 0));
+            }
+
+            V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/clz_advsimd.xml
+        public static void Clz_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            bool U = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            CountOp countop = (U ? CountOp.CountOp_CLZ : CountOp.CountOp_CLS);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(datasize, n);
+
+            BigInteger count;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                if (countop == CountOp.CountOp_CLS)
+                {
+                    count = (BigInteger)CountLeadingSignBits(Elem(operand, e, esize));
+                }
+                else
+                {
+                    count = (BigInteger)CountLeadingZeroBits(Elem(operand, e, esize));
+                }
+
+                Elem(result, e, esize, count.SubBigInteger(esize - 1, 0));
+            }
+
+            V(d, result);
+        }
+
         // https://meriac.github.io/archex/A64_v83A_ISA/neg_advsimd.xml#NEG_asisdmisc_R
         public static void Neg_S(Bits size, Bits Rn, Bits Rd)
         {
@@ -1832,6 +1918,7 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             Bits result = new Bits(datasize);
             Bits operand = V(datasize, n);
+
             BigInteger element;
 
             for (int e = 0; e <= elements - 1; e++)
@@ -1875,6 +1962,7 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             Bits result = new Bits(datasize);
             Bits operand = V(datasize, n);
+
             BigInteger element;
 
             for (int e = 0; e <= elements - 1; e++)
@@ -2073,6 +2161,163 @@ namespace Ryujinx.Tests.Cpu.Tester
 
                 Elem(result, e, esize, element1 + element2);
             }
+
+            V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/and_advsimd.xml
+        public static void And_V(bool Q, Bits Rm, Bits Rn, Bits Rd)
+        {
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            int datasize = (Q ? 128 : 64);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+
+            Bits result = AND(operand1, operand2);
+
+            V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/bic_advsimd_reg.xml
+        public static void Bic_V(bool Q, Bits Rm, Bits Rn, Bits Rd)
+        {
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            int datasize = (Q ? 128 : 64);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+
+            operand2 = NOT(operand2);
+
+            Bits result = AND(operand1, operand2);
+
+            V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/bif_advsimd.xml
+        public static void Bif_V(bool Q, Bits Rm, Bits Rn, Bits Rd)
+        {
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            int datasize = (Q ? 128 : 64);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1;
+            Bits operand3;
+            Bits operand4 = V(datasize, n);
+
+            operand1 = V(datasize, d);
+            operand3 = NOT(V(datasize, m));
+
+            V(d, EOR(operand1, AND(EOR(operand1, operand4), operand3)));
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/bit_advsimd.xml
+        public static void Bit_V(bool Q, Bits Rm, Bits Rn, Bits Rd)
+        {
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            int datasize = (Q ? 128 : 64);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1;
+            Bits operand3;
+            Bits operand4 = V(datasize, n);
+
+            operand1 = V(datasize, d);
+            operand3 = V(datasize, m);
+
+            V(d, EOR(operand1, AND(EOR(operand1, operand4), operand3)));
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/bsl_advsimd.xml
+        public static void Bsl_V(bool Q, Bits Rm, Bits Rn, Bits Rd)
+        {
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            int datasize = (Q ? 128 : 64);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1;
+            Bits operand3;
+            Bits operand4 = V(datasize, n);
+
+            operand1 = V(datasize, m);
+            operand3 = V(datasize, d);
+
+            V(d, EOR(operand1, AND(EOR(operand1, operand4), operand3)));
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/orn_advsimd.xml
+        public static void Orn_V(bool Q, Bits Rm, Bits Rn, Bits Rd)
+        {
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            int datasize = (Q ? 128 : 64);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+
+            operand2 = NOT(operand2);
+
+            Bits result = OR(operand1, operand2);
+
+            V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/orr_advsimd_reg.xml
+        public static void Orr_V(bool Q, Bits Rm, Bits Rn, Bits Rd)
+        {
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            int datasize = (Q ? 128 : 64);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+
+            Bits result = OR(operand1, operand2);
 
             V(d, result);
         }

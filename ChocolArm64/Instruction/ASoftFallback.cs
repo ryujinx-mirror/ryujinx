@@ -20,18 +20,12 @@ namespace ChocolArm64.Instruction
             Context.EmitCall(typeof(ASoftFallback), MthdName);
         }
 
-        public static uint  CountLeadingSigns32(uint Value)  => (uint)CountLeadingSigns(Value, 32);
-        public static ulong CountLeadingSigns64(ulong Value) => (ulong)CountLeadingSigns(Value, 64);
-
-        private static ulong CountLeadingSigns(ulong Value, int Size)
+        public static ulong CountLeadingSigns(ulong Value, int Size)
         {
             return CountLeadingZeros((Value >> 1) ^ Value, Size - 1);
         }
 
-        public static uint  CountLeadingZeros32(uint Value)  => (uint)CountLeadingZeros(Value, 32);
-        public static ulong CountLeadingZeros64(ulong Value) => (ulong)CountLeadingZeros(Value, 64);
-
-        private static ulong CountLeadingZeros(ulong Value, int Size)
+        public static ulong CountLeadingZeros(ulong Value, int Size)
         {
             int HighBit = Size - 1;
 

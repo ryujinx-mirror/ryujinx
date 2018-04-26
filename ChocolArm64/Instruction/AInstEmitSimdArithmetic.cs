@@ -109,6 +109,43 @@ namespace ChocolArm64.Instruction
             EmitScalarSet(Context, Op.Rd, Op.Size);
         }
 
+        public static void Cls_V(AILEmitterCtx Context)
+        {
+            MethodInfo MthdInfo = typeof(ASoftFallback).GetMethod(nameof(ASoftFallback.CountLeadingSigns));
+
+            EmitCountLeadingBits(Context, () => Context.EmitCall(MthdInfo));
+        }
+
+        public static void Clz_V(AILEmitterCtx Context)
+        {
+            MethodInfo MthdInfo = typeof(ASoftFallback).GetMethod(nameof(ASoftFallback.CountLeadingZeros));
+
+            EmitCountLeadingBits(Context, () => Context.EmitCall(MthdInfo));
+        }
+
+        private static void EmitCountLeadingBits(AILEmitterCtx Context, Action Emit)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
+            {
+                EmitVectorExtractZx(Context, Op.Rn, Index, Op.Size);
+
+                Context.EmitLdc_I4(8 << Op.Size);
+
+                Emit();
+
+                EmitVectorInsert(Context, Op.Rd, Index, Op.Size);
+            }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
         public static void Cnt_V(AILEmitterCtx Context)
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;

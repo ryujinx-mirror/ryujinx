@@ -253,6 +253,11 @@ namespace Ryujinx.Tests.Cpu.Tester
         }
 #endregion
 
+#region "instrs/countop/"
+        // #CountOp
+        public enum CountOp {CountOp_CLZ, CountOp_CLS, CountOp_CNT};
+#endregion
+
 #region "instrs/extendreg/"
         /* #impl-aarch64.DecodeRegExtend.1 */
         public static ExtendType DecodeRegExtend(Bits op)

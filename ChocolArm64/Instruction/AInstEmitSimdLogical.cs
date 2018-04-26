@@ -103,6 +103,15 @@ namespace ChocolArm64.Instruction
             EmitVectorUnaryOpZx(Context, () => Context.Emit(OpCodes.Not));
         }
 
+        public static void Orn_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpZx(Context, () =>
+            {
+                Context.Emit(OpCodes.Not);
+                Context.Emit(OpCodes.Or);
+            });
+        }
+
         public static void Orr_V(AILEmitterCtx Context)
         {
             EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Or));
