@@ -1,6 +1,7 @@
-﻿using ChocolArm64.Memory;
+using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Ipc;
 using Ryujinx.Core.Settings;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -17,9 +18,10 @@ namespace Ryujinx.Core.OsHle.Services.Set
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 4,  GetFirmwareVersion2 },
-                { 23, GetColorSetId       },
-                { 24, SetColorSetId       }
+                { 4,  GetFirmwareVersion2  },
+                { 23, GetColorSetId        },
+                { 24, SetColorSetId        },
+                { 38, GetSettingsItemValue }
             };
         }
 
@@ -81,6 +83,64 @@ namespace Ryujinx.Core.OsHle.Services.Set
             int ColorSetId = Context.RequestData.ReadInt32();
 
             Context.Ns.Settings.ThemeColor = (ColorSet)ColorSetId;
+            return 0;
+        }
+        
+        public static long GetSettingsItemValue(ServiceCtx Context)
+        {
+            long ClassPos  = Context.Request.PtrBuff[0].Position;
+            long ClassSize = Context.Request.PtrBuff[0].Size;
+
+            long NamePos  = Context.Request.PtrBuff[1].Position;
+            long NameSize = Context.Request.PtrBuff[1].Size;
+
+            long ReplyPos  = Context.Request.ReceiveBuff[0].Position;
+            long ReplySize = Context.Request.ReceiveBuff[0].Size;
+
+            byte[] Class = AMemoryHelper.ReadBytes(Context.Memory, ClassPos, ClassSize);
+            byte[] Name  = AMemoryHelper.ReadBytes(Context.Memory, NamePos, NameSize);
+
+            string AskedSetting = Encoding.ASCII.GetString(Class).Trim('\0') + "!" + Encoding.ASCII.GetString(Name).Trim('\0');
+
+            NxSettings.Settings.TryGetValue(AskedSetting, out object NxSetting);
+
+            if (NxSetting != null)
+            {
+                byte[] SettingBuffer = new byte[ReplySize];
+
+                if (NxSetting is string StringValue)
+                {
+                    if (StringValue.Length + 1 > ReplySize)
+                    { 
+                        Context.Ns.Log.PrintError(Logging.LogClass.ServiceSet, $"{AskedSetting} String value size is too big!");
+                    }
+                    else
+                    { 
+                        SettingBuffer = Encoding.ASCII.GetBytes(StringValue + "\0");
+                    }
+                }
+                if (NxSetting is int IntValue)
+                {
+                    SettingBuffer = BitConverter.GetBytes(IntValue);
+                }
+                else if (NxSetting is bool BoolValue)
+                {
+                    SettingBuffer[0] = BoolValue ? (byte)1 : (byte)0;
+                }
+                else
+                {
+                    throw new NotImplementedException(NxSetting.GetType().Name);
+                }
+
+                AMemoryHelper.WriteBytes(Context.Memory, ReplyPos, SettingBuffer);
+
+                Context.Ns.Log.PrintDebug(Logging.LogClass.ServiceSet, $"{AskedSetting} set value: {NxSetting} as {NxSetting.GetType()}");
+            }
+            else
+            {
+                Context.Ns.Log.PrintError(Logging.LogClass.ServiceSet, $"{AskedSetting} not found!");
+            }
+
             return 0;
         }
     }
