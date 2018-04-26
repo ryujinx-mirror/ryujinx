@@ -7,10 +7,11 @@ namespace Ryujinx.Graphics.Gpu
     {
         public IGalRenderer Renderer { get; private set; }
 
-        internal NsGpuMemoryMgr MemoryMgr { get; private set; }
+        public NsGpuMemoryMgr MemoryMgr { get; private set; }
 
         public NvGpuFifo Fifo { get; private set; }
 
+        public NvGpuEngine2d Engine2d { get; private set; }
         public NvGpuEngine3d Engine3d { get; private set; }
 
         private Thread FifoProcessing;
@@ -25,6 +26,7 @@ namespace Ryujinx.Graphics.Gpu
 
             Fifo = new NvGpuFifo(this);
 
+            Engine2d = new NvGpuEngine2d(this);
             Engine3d = new NvGpuEngine3d(this);
 
             KeepRunning = true;

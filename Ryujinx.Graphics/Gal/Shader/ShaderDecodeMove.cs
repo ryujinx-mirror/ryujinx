@@ -70,6 +70,21 @@ namespace Ryujinx.Graphics.Gal.Shader
             EmitI2f(Block, OpCode, ShaderOper.RR);
         }
 
+        public static void I2i_C(ShaderIrBlock Block, long OpCode)
+        {
+            EmitI2i(Block, OpCode, ShaderOper.CR);
+        }
+
+        public static void I2i_I(ShaderIrBlock Block, long OpCode)
+        {
+            EmitI2i(Block, OpCode, ShaderOper.Imm);
+        }
+
+        public static void I2i_R(ShaderIrBlock Block, long OpCode)
+        {
+            EmitI2i(Block, OpCode, ShaderOper.RR);
+        }
+
         public static void Mov_C(ShaderIrBlock Block, long OpCode)
         {
             ShaderIrOperCbuf Cbuf = GetOperCbuf34(OpCode);
@@ -183,7 +198,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 ShaderIrOperImmf IMin = new ShaderIrOperImmf(CMin);
                 ShaderIrOperImmf IMax = new ShaderIrOperImmf(CMax);
 
-                OperA = new ShaderIrOp(ShaderIrInst.Clamp, OperA, IMin, IMax);
+                OperA = new ShaderIrOp(ShaderIrInst.Fclamp, OperA, IMin, IMax);
             }
 
             ShaderIrInst Inst = Signed
@@ -250,6 +265,81 @@ namespace Ryujinx.Graphics.Gal.Shader
             ShaderIrNode Op = new ShaderIrOp(Inst, OperA);
 
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
+        }
+
+        private static void EmitI2i(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        {
+            IntType Type = GetIntType(OpCode);
+
+            if (Type == IntType.U64 ||
+                Type == IntType.S64)
+            {
+                //TODO: 64-bits support.
+                //Note: GLSL doesn't support 64-bits integers.
+                throw new NotImplementedException();
+            }
+
+            int Sel = (int)(OpCode >> 41) & 3;
+
+            bool NegA = ((OpCode >> 45) & 1) != 0;
+            bool AbsA = ((OpCode >> 49) & 1) != 0;
+            bool SatA = ((OpCode >> 50) & 1) != 0;
+
+            ShaderIrNode OperA;
+
+            switch (Oper)
+            {
+                case ShaderOper.CR:   OperA = GetOperCbuf34   (OpCode); break;
+                case ShaderOper.Immf: OperA = GetOperImmf19_20(OpCode); break;
+                case ShaderOper.RR:   OperA = GetOperGpr20    (OpCode); break;
+
+                default: throw new ArgumentException(nameof(Oper));
+            }
+
+            OperA = GetAluAbsNeg(OperA, AbsA, NegA);
+
+            bool Signed = Type >= IntType.S8;
+
+            int Shift = Sel * 8;
+
+            int Size = 8 << ((int)Type & 3);
+
+            if (Shift != 0)
+            {
+                OperA = new ShaderIrOp(ShaderIrInst.Asr, OperA, new ShaderIrOperImm(Shift));
+            }
+
+            if (Size < 32)
+            {
+                uint Mask = uint.MaxValue >> (32 - Size);
+
+                if (SatA)
+                {
+                    uint CMin = 0;
+                    uint CMax = Mask;
+
+                    if (Signed)
+                    {
+                        uint HalfMask = Mask >> 1;
+
+                        CMin -= HalfMask + 1;
+                        CMax  = HalfMask;
+                    }
+
+                    ShaderIrOperImm IMin = new ShaderIrOperImm((int)CMin);
+                    ShaderIrOperImm IMax = new ShaderIrOperImm((int)CMax);
+
+                    OperA = new ShaderIrOp(Signed
+                        ? ShaderIrInst.Clamps
+                        : ShaderIrInst.Clampu, OperA, IMin, IMax);
+                }
+                else
+                {
+                    OperA = new ShaderIrOp(ShaderIrInst.And, OperA, new ShaderIrOperImm((int)Mask));
+                }
+            }
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), OperA), OpCode));
         }
 
         private static IntType GetIntType(long OpCode)

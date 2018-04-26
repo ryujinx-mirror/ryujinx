@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         F_Start,
         Ceil,
-        Clamp,
+
         Fabs,
         Fadd,
         Fceq,
@@ -22,6 +22,7 @@ namespace Ryujinx.Graphics.Gal.Shader
         Fcgeu,
         Fcgt,
         Fcgtu,
+        Fclamp,
         Fcle,
         Fcleu,
         Fclt,
@@ -53,6 +54,8 @@ namespace Ryujinx.Graphics.Gal.Shader
         Ceq,
         Cge,
         Cgt,
+        Clamps,
+        Clampu,
         Cle,
         Clt,
         Cne,

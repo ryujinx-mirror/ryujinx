@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.Gpu
 {
-    class NsGpuMemoryMgr
+    public class NsGpuMemoryMgr
     {
         private const long AddrSize   = 1L << 40;
 
@@ -50,12 +50,20 @@ namespace Ryujinx.Graphics.Gpu
             return GpuAddr;
         }
 
+        public void Unmap(long Position, long Size)
+        {
+            for (long Offset = 0; Offset < Size; Offset += PageSize)
+            {
+                SetPTAddr(Position + Offset, PteUnmapped);
+            }
+        }
+
         public long Map(long CpuAddr, long Size)
         {
             CpuAddr &= ~PageMask;
 
             long Position = GetFreePosition(Size);
-            
+
             if (Position != -1)
             {
                 for (long Offset = 0; Offset < Size; Offset += PageSize)

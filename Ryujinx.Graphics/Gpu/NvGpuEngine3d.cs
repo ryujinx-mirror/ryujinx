@@ -360,6 +360,9 @@ namespace Ryujinx.Graphics.Gpu
 
             for (int Index = 0; Index < 32; Index++)
             {
+                int VertexFirst = ReadRegister(NvGpuEngine3dReg.VertexArrayFirst);
+                int VertexCount = ReadRegister(NvGpuEngine3dReg.VertexArrayCount);
+
                 int Control = ReadRegister(NvGpuEngine3dReg.VertexArrayNControl + Index * 4);
 
                 bool Enable = (Control & 0x1000) != 0;
@@ -394,7 +397,7 @@ namespace Ryujinx.Graphics.Gpu
                 }
                 else
                 {
-                    Gpu.Renderer.DrawArrays(Index, PrimType);
+                    Gpu.Renderer.DrawArrays(Index, VertexFirst, VertexCount, PrimType);
                 }
             }
         }

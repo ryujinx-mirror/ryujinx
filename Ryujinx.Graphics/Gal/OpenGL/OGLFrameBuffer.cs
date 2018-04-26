@@ -270,6 +270,31 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
         }
 
+        public void GetBufferData(long Tag, Action<byte[]> Callback)
+        {
+            if (Fbs.TryGetValue(Tag, out FrameBuffer Fb))
+            {
+                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, Fb.Handle);
+
+                byte[] Data = new byte[Fb.Width * Fb.Height * 4];
+
+                (PixelFormat Format, PixelType Type) = OGLEnumConverter.GetTextureFormat(GalTextureFormat.A8B8G8R8);
+
+                GL.ReadPixels(
+                    0,
+                    0,
+                    Fb.Width,
+                    Fb.Height,
+                    Format,
+                    Type,
+                    Data);
+
+                Callback(Data);
+
+                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, CurrFbHandle);
+            }
+        }
+
         private void SetViewport(Rect Viewport)
         {
             GL.Viewport(

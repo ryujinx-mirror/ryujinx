@@ -44,6 +44,8 @@ namespace Ryujinx.Graphics.Gal
 
         void SetViewport(int X, int Y, int Width, int Height);
 
+        void GetFrameBufferData(long Tag, Action<byte[]> Callback);
+
         //Rasterizer
         void ClearBuffers(int RtIndex, GalClearBufferFlags Flags);
 
@@ -51,7 +53,7 @@ namespace Ryujinx.Graphics.Gal
 
         void SetIndexArray(byte[] Buffer, GalIndexFormat Format);
 
-        void DrawArrays(int VbIndex, GalPrimitiveType PrimType);
+        void DrawArrays(int VbIndex, int First, int PrimCount, GalPrimitiveType PrimType);
 
         void DrawElements(int VbIndex, int First, GalPrimitiveType PrimType);
 

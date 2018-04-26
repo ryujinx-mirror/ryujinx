@@ -9,5 +9,12 @@ namespace Ryujinx.Core.OsHle.Services.Nv
         public int  Kind;
         public long CpuAddress;
         public long GpuAddress;
+
+        public NvMap() { }
+
+        public NvMap(int Size)
+        {
+            this.Size = Size;
+        }
     }
 }

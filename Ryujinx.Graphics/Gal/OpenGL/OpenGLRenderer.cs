@@ -146,6 +146,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             ActionsQueue.Enqueue(() => FrameBuffer.SetViewport(X, Y, Width, Height));
         }
 
+        public void GetFrameBufferData(long Tag, Action<byte[]> Callback)
+        {
+            ActionsQueue.Enqueue(() => FrameBuffer.GetBufferData(Tag, Callback));
+        }
+
         public void ClearBuffers(int RtIndex, GalClearBufferFlags Flags)
         {
             ActionsQueue.Enqueue(() => Rasterizer.ClearBuffers(RtIndex, Flags));
@@ -173,14 +178,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             ActionsQueue.Enqueue(() => Rasterizer.SetIndexArray(Buffer, Format));
         }
 
-        public void DrawArrays(int VbIndex, GalPrimitiveType PrimType)
+        public void DrawArrays(int VbIndex, int First, int PrimCount, GalPrimitiveType PrimType)
         {
             if ((uint)VbIndex > 31)
             {
                 throw new ArgumentOutOfRangeException(nameof(VbIndex));
             }
 
-            ActionsQueue.Enqueue(() => Rasterizer.DrawArrays(VbIndex, PrimType));
+            ActionsQueue.Enqueue(() => Rasterizer.DrawArrays(VbIndex, First, PrimCount, PrimType));
         }
 
         public void DrawElements(int VbIndex, int First, GalPrimitiveType PrimType)

@@ -6,11 +6,24 @@ namespace Ryujinx.Graphics.Gal.Shader
     {
         private const int EncodingBits = 14;
 
-        private static ShaderDecodeFunc[] OpCodes;
+        private class ShaderDecodeEntry
+        {
+            public ShaderDecodeFunc Func;
+
+            public int XBits;
+
+            public ShaderDecodeEntry(ShaderDecodeFunc Func, int XBits)
+            {
+                this.Func  = Func;
+                this.XBits = XBits;
+            }
+        }
+
+        private static ShaderDecodeEntry[] OpCodes;
 
         static ShaderOpCodeTable()
         {
-            OpCodes = new ShaderDecodeFunc[1 << EncodingBits];
+            OpCodes = new ShaderDecodeEntry[1 << EncodingBits];
 
 #region Instructions
             Set("111000110000xx", ShaderDecode.Exit);
@@ -31,12 +44,18 @@ namespace Ryujinx.Graphics.Gal.Shader
             Set("0100110001101x", ShaderDecode.Fmul_C);
             Set("0011100x01101x", ShaderDecode.Fmul_I);
             Set("0101110001101x", ShaderDecode.Fmul_R);
+            Set("0100100xxxxxxx", ShaderDecode.Fset_C);
+            Set("0011000xxxxxxx", ShaderDecode.Fset_I);
+            Set("01011000xxxxxx", ShaderDecode.Fset_R);
             Set("010010111011xx", ShaderDecode.Fsetp_C);
             Set("0011011x1011xx", ShaderDecode.Fsetp_I);
             Set("010110111011xx", ShaderDecode.Fsetp_R);
             Set("0100110010111x", ShaderDecode.I2f_C);
             Set("0011100x10111x", ShaderDecode.I2f_I);
             Set("0101110010111x", ShaderDecode.I2f_R);
+            Set("0100110011100x", ShaderDecode.I2i_C);
+            Set("0011100x11100x", ShaderDecode.I2i_I);
+            Set("0101110011100x", ShaderDecode.I2i_R);
             Set("11100000xxxxxx", ShaderDecode.Ipa);
             Set("010010110110xx", ShaderDecode.Isetp_C);
             Set("0011011x0110xx", ShaderDecode.Isetp_I);
@@ -91,6 +110,8 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             XMask = ~XMask;
 
+            ShaderDecodeEntry Entry = new ShaderDecodeEntry(Func, XBits);
+
             for (int Index = 0; Index < (1 << XBits); Index++)
             {
                 Value &= XMask;
@@ -100,13 +121,16 @@ namespace Ryujinx.Graphics.Gal.Shader
                     Value |= ((Index >> X) & 1) << XPos[X];
                 }
 
-                OpCodes[Value] = Func;
+                if (OpCodes[Value] == null || OpCodes[Value].XBits > XBits)
+                {
+                    OpCodes[Value] = Entry;
+                }
             }
         }
 
         public static ShaderDecodeFunc GetDecoder(long OpCode)
         {
-            return OpCodes[(ulong)OpCode >> (64 - EncodingBits)];
+            return OpCodes[(ulong)OpCode >> (64 - EncodingBits)]?.Func;
         }
     }
 }

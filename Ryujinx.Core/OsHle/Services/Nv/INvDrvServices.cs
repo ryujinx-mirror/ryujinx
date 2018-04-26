@@ -44,6 +44,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             {
                 { ("/dev/nvhost-as-gpu",   0x4101), NvGpuAsIoctlBindChannel           },
                 { ("/dev/nvhost-as-gpu",   0x4102), NvGpuAsIoctlAllocSpace            },
+                { ("/dev/nvhost-as-gpu",   0x4105), NvGpuAsIoctlUnmap                 },
                 { ("/dev/nvhost-as-gpu",   0x4106), NvGpuAsIoctlMapBufferEx           },
                 { ("/dev/nvhost-as-gpu",   0x4108), NvGpuAsIoctlGetVaRegions          },
                 { ("/dev/nvhost-as-gpu",   0x4109), NvGpuAsIoctlInitializeEx          },
@@ -201,6 +202,19 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             return 0;
         }
 
+        private long NvGpuAsIoctlUnmap(ServiceCtx Context)
+        {
+            long Position = Context.Request.GetSendBuffPtr();
+
+            MemReader Reader = new MemReader(Context.Memory, Position);
+
+            long Offset = Reader.ReadInt64();
+
+            Context.Ns.Gpu.MemoryMgr.Unmap(Offset, 0x10000);
+
+            return 0;
+        }
+
         private long NvGpuAsIoctlMapBufferEx(ServiceCtx Context)
         {
             long Position = Context.Request.GetSendBuffPtr();
@@ -319,6 +333,19 @@ namespace Ryujinx.Core.OsHle.Services.Nv
                 int Padding = Reader.ReadInt32();
                 int Offset  = Reader.ReadInt32();
                 int Pages   = Reader.ReadInt32();
+
+                NvMap Map = NvMaps.GetData<NvMap>(Context.Process, Handle);
+
+                if (Map == null)
+                {
+                    Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"invalid NvMap Handle {Handle}!");
+
+                    return -1; //TODO: Corrent error code.
+                }
+
+                Context.Ns.Gpu.MapMemory(Map.CpuAddress,
+                    (long)(uint)Offset << 16,
+                    (long)(uint)Pages  << 16);
             }
 
             //TODO

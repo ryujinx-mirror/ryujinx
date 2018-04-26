@@ -22,14 +22,11 @@ namespace Ryujinx
 
             AOptimizations.DisableMemoryChecks = !Convert.ToBoolean(Parser.Value("Enable_Memory_Checks"));
 
-            Console.WriteLine(Parser.Value("Logging_Enable_Warn"));
-
-            bool LoggingEnableDebug = Convert.ToBoolean(Parser.Value("Logging_Enable_Debug"));
-            bool LoggingEnableStub  = Convert.ToBoolean(Parser.Value("Logging_Enable_Stub"));
-            bool LoggingEnableInfo  = Convert.ToBoolean(Parser.Value("Logging_Enable_Info"));
-            bool LoggingEnableTrace = Convert.ToBoolean(Parser.Value("Logging_Enable_Trace"));
-            bool LoggingEnableWarn  = Convert.ToBoolean(Parser.Value("Logging_Enable_Warn"));
-            bool LoggingEnableError = Convert.ToBoolean(Parser.Value("Logging_Enable_Error"));
+            Log.SetEnable(LogLevel.Debug,   Convert.ToBoolean(Parser.Value("Logging_Enable_Debug")));
+            Log.SetEnable(LogLevel.Stub,    Convert.ToBoolean(Parser.Value("Logging_Enable_Stub")));
+            Log.SetEnable(LogLevel.Info,    Convert.ToBoolean(Parser.Value("Logging_Enable_Info")));
+            Log.SetEnable(LogLevel.Warning, Convert.ToBoolean(Parser.Value("Logging_Enable_Warn")));
+            Log.SetEnable(LogLevel.Error,   Convert.ToBoolean(Parser.Value("Logging_Enable_Error")));
 
             string[] FilteredLogClasses = Parser.Value("Logging_Filtered_Classes").Split(',', StringSplitOptions.RemoveEmptyEntries);
 

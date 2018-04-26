@@ -48,8 +48,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             public int VaoHandle;
             public int VboHandle;
-
-            public int PrimCount;
         }
 
         private struct IbInfo
@@ -101,8 +99,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         public void SetVertexArray(int VbIndex, int Stride, byte[] Buffer, GalVertexAttrib[] Attribs)
         {
             EnsureVbInitialized(VbIndex);
-
-            VertexBuffers[VbIndex].PrimCount = Buffer.Length / Stride;
 
             VbInfo Vb = VertexBuffers[VbIndex];
 
@@ -171,28 +167,23 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
         }
 
-        public void DrawArrays(int VbIndex, GalPrimitiveType PrimType)
+        public void DrawArrays(int VbIndex, int First, int PrimCount, GalPrimitiveType PrimType)
         {
-            VbInfo Vb = VertexBuffers[VbIndex];
-
-            if (Vb.PrimCount == 0)
+            if (PrimCount == 0)
             {
                 return;
             }
 
+            VbInfo Vb = VertexBuffers[VbIndex];
+
             GL.BindVertexArray(Vb.VaoHandle);
 
-            GL.DrawArrays(OGLEnumConverter.GetPrimitiveType(PrimType), 0, Vb.PrimCount);
+            GL.DrawArrays(OGLEnumConverter.GetPrimitiveType(PrimType), First, PrimCount);
         }
 
         public void DrawElements(int VbIndex, int First, GalPrimitiveType PrimType)
         {
             VbInfo Vb = VertexBuffers[VbIndex];
-
-            if (Vb.PrimCount == 0)
-            {
-                return;
-            }
 
             PrimitiveType Mode = OGLEnumConverter.GetPrimitiveType(PrimType);
 

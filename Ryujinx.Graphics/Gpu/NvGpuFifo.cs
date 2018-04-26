@@ -139,9 +139,15 @@ namespace Ryujinx.Graphics.Gpu
             {
                 switch (SubChannels[PBEntry.SubChannel])
                 {
+                    case NvGpuEngine._2d: Call2dMethod(Memory, PBEntry); break;
                     case NvGpuEngine._3d: Call3dMethod(Memory, PBEntry); break;
                 }
             }
+        }
+
+        private void Call2dMethod(AMemory Memory, NsGpuPBEntry PBEntry)
+        {
+            Gpu.Engine2d.CallMethod(Memory, PBEntry);
         }
 
         private void Call3dMethod(AMemory Memory, NsGpuPBEntry PBEntry)

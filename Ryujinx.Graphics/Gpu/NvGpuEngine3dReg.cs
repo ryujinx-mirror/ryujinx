@@ -12,6 +12,8 @@ namespace Ryujinx.Graphics.Gpu
         ViewportTranslateX   = 0x283,
         ViewportTranslateY   = 0x284,
         ViewportTranslateZ   = 0x285,
+        VertexArrayFirst     = 0x35d,
+        VertexArrayCount     = 0x35e,
         VertexAttribNFormat  = 0x458,
         IBlendEnable         = 0x4b9,
         BlendSeparateAlpha   = 0x4cf,

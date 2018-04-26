@@ -31,51 +31,53 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             InstsExpr = new Dictionary<ShaderIrInst, GetInstExpr>()
             {
-                { ShaderIrInst.And,   GetAndExpr   },
-                { ShaderIrInst.Asr,   GetAsrExpr   },
-                { ShaderIrInst.Band,  GetBandExpr  },
-                { ShaderIrInst.Bnot,  GetBnotExpr  },
-                { ShaderIrInst.Ceil,  GetCeilExpr  },
-                { ShaderIrInst.Ceq,   GetCeqExpr   },
-                { ShaderIrInst.Cge,   GetCgeExpr   },
-                { ShaderIrInst.Cgt,   GetCgtExpr   },
-                { ShaderIrInst.Clamp, GetClampExpr },
-                { ShaderIrInst.Cle,   GetCleExpr   },
-                { ShaderIrInst.Clt,   GetCltExpr   },
-                { ShaderIrInst.Cne,   GetCneExpr   },
-                { ShaderIrInst.Exit,  GetExitExpr  },
-                { ShaderIrInst.Fabs,  GetFabsExpr  },
-                { ShaderIrInst.Fadd,  GetFaddExpr  },
-                { ShaderIrInst.Fceq,  GetCeqExpr   },
-                { ShaderIrInst.Fcge,  GetCgeExpr   },
-                { ShaderIrInst.Fcgt,  GetCgtExpr   },
-                { ShaderIrInst.Fcle,  GetCleExpr   },
-                { ShaderIrInst.Fclt,  GetCltExpr   },
-                { ShaderIrInst.Fcne,  GetCneExpr   },
-                { ShaderIrInst.Fcos,  GetFcosExpr  },
-                { ShaderIrInst.Fex2,  GetFex2Expr  },
-                { ShaderIrInst.Ffma,  GetFfmaExpr  },
-                { ShaderIrInst.Flg2,  GetFlg2Expr  },
-                { ShaderIrInst.Floor, GetFloorExpr },
-                { ShaderIrInst.Fmul,  GetFmulExpr  },
-                { ShaderIrInst.Fneg,  GetFnegExpr  },
-                { ShaderIrInst.Frcp,  GetFrcpExpr  },
-                { ShaderIrInst.Frsq,  GetFrsqExpr  },
-                { ShaderIrInst.Fsin,  GetFsinExpr  },
-                { ShaderIrInst.Ftos,  GetFtosExpr  },
-                { ShaderIrInst.Ftou,  GetFtouExpr  },
-                { ShaderIrInst.Ipa,   GetIpaExpr   },
-                { ShaderIrInst.Kil,   GetKilExpr   },
-                { ShaderIrInst.Lsr,   GetLsrExpr   },
-                { ShaderIrInst.Not,   GetNotExpr   },
-                { ShaderIrInst.Or,    GetOrExpr    },
-                { ShaderIrInst.Stof,  GetStofExpr  },
-                { ShaderIrInst.Texq,  GetTexqExpr  },
-                { ShaderIrInst.Texs,  GetTexsExpr  },
-                { ShaderIrInst.Trunc, GetTruncExpr },
-                { ShaderIrInst.Txlf,  GetTxlfExpr  },
-                { ShaderIrInst.Utof,  GetUtofExpr  },
-                { ShaderIrInst.Xor,   GetXorExpr   }
+                { ShaderIrInst.And,    GetAndExpr    },
+                { ShaderIrInst.Asr,    GetAsrExpr    },
+                { ShaderIrInst.Band,   GetBandExpr   },
+                { ShaderIrInst.Bnot,   GetBnotExpr   },
+                { ShaderIrInst.Ceil,   GetCeilExpr   },
+                { ShaderIrInst.Ceq,    GetCeqExpr    },
+                { ShaderIrInst.Cge,    GetCgeExpr    },
+                { ShaderIrInst.Cgt,    GetCgtExpr    },
+                { ShaderIrInst.Clamps, GetClampsExpr },
+                { ShaderIrInst.Clampu, GetClampuExpr },
+                { ShaderIrInst.Cle,    GetCleExpr    },
+                { ShaderIrInst.Clt,    GetCltExpr    },
+                { ShaderIrInst.Cne,    GetCneExpr    },
+                { ShaderIrInst.Exit,   GetExitExpr   },
+                { ShaderIrInst.Fabs,   GetFabsExpr   },
+                { ShaderIrInst.Fadd,   GetFaddExpr   },
+                { ShaderIrInst.Fceq,   GetCeqExpr    },
+                { ShaderIrInst.Fcge,   GetCgeExpr    },
+                { ShaderIrInst.Fcgt,   GetCgtExpr    },
+                { ShaderIrInst.Fclamp, GetFclampExpr },
+                { ShaderIrInst.Fcle,   GetCleExpr    },
+                { ShaderIrInst.Fclt,   GetCltExpr    },
+                { ShaderIrInst.Fcne,   GetCneExpr    },
+                { ShaderIrInst.Fcos,   GetFcosExpr   },
+                { ShaderIrInst.Fex2,   GetFex2Expr   },
+                { ShaderIrInst.Ffma,   GetFfmaExpr   },
+                { ShaderIrInst.Flg2,   GetFlg2Expr   },
+                { ShaderIrInst.Floor,  GetFloorExpr  },
+                { ShaderIrInst.Fmul,   GetFmulExpr   },
+                { ShaderIrInst.Fneg,   GetFnegExpr   },
+                { ShaderIrInst.Frcp,   GetFrcpExpr   },
+                { ShaderIrInst.Frsq,   GetFrsqExpr   },
+                { ShaderIrInst.Fsin,   GetFsinExpr   },
+                { ShaderIrInst.Ftos,   GetFtosExpr   },
+                { ShaderIrInst.Ftou,   GetFtouExpr   },
+                { ShaderIrInst.Ipa,    GetIpaExpr    },
+                { ShaderIrInst.Kil,    GetKilExpr    },
+                { ShaderIrInst.Lsr,    GetLsrExpr    },
+                { ShaderIrInst.Not,    GetNotExpr    },
+                { ShaderIrInst.Or,     GetOrExpr     },
+                { ShaderIrInst.Stof,   GetStofExpr   },
+                { ShaderIrInst.Texq,   GetTexqExpr   },
+                { ShaderIrInst.Texs,   GetTexsExpr   },
+                { ShaderIrInst.Trunc,  GetTruncExpr  },
+                { ShaderIrInst.Txlf,   GetTxlfExpr   },
+                { ShaderIrInst.Utof,   GetUtofExpr   },
+                { ShaderIrInst.Xor,    GetXorExpr    }
             };
         }
 
@@ -478,7 +480,19 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private string GetCeilExpr(ShaderIrOp Op) => GetUnaryCall(Op, "ceil");
 
-        private string GetClampExpr(ShaderIrOp Op) => GetTernaryCall(Op, "clamp");
+        private string GetClampsExpr(ShaderIrOp Op)
+        {
+            return "clamp(" + GetOperExpr(Op, Op.OperandA) + ", " +
+                              GetOperExpr(Op, Op.OperandB) + ", " +
+                              GetOperExpr(Op, Op.OperandC) + ")";
+        }
+
+        private string GetClampuExpr(ShaderIrOp Op)
+        {
+            return "int(clamp(uint(" + GetOperExpr(Op, Op.OperandA) + "), " +
+                             "uint(" + GetOperExpr(Op, Op.OperandB) + "), " +
+                             "uint(" + GetOperExpr(Op, Op.OperandC) + ")))";
+        }
 
         private string GetCltExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "<");
         private string GetCeqExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "==");
@@ -498,6 +512,8 @@ namespace Ryujinx.Graphics.Gal.Shader
         private string GetFex2Expr(ShaderIrOp Op) => GetUnaryCall(Op, "exp2");
 
         private string GetFfmaExpr(ShaderIrOp Op) => GetTernaryExpr(Op, "*", "+");
+
+        private string GetFclampExpr(ShaderIrOp Op) => GetTernaryCall(Op, "clamp");
 
         private string GetFlg2Expr(ShaderIrOp Op) => GetUnaryCall(Op, "log2");
 
