@@ -261,13 +261,16 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                     PrintBlockScope(SubScopeName, IdentationLevel + 1, Cond.Child);
                 }
-                else if (Node is ShaderIrAsg Asg && IsValidOutOper(Asg.Dst))
+                else if (Node is ShaderIrAsg Asg)
                 {
-                    string Expr = GetSrcExpr(Asg.Src, true);
+                    if (IsValidOutOper(Asg.Dst))
+                    {
+                        string Expr = GetSrcExpr(Asg.Src, true);
 
-                    Expr = GetExprWithCast(Asg.Dst, Asg.Src, Expr);
+                        Expr = GetExprWithCast(Asg.Dst, Asg.Src, Expr);
 
-                    SB.AppendLine(Identation + GetDstOperName(Asg.Dst) + " = " + Expr + ";");
+                        SB.AppendLine(Identation + GetDstOperName(Asg.Dst) + " = " + Expr + ";");
+                    }
                 }
                 else if (Node is ShaderIrOp Op)
                 {

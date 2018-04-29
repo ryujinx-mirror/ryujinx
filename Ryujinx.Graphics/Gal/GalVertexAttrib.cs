@@ -2,6 +2,7 @@ namespace Ryujinx.Graphics.Gal
 {
     public struct GalVertexAttrib
     {
+        public int  Index   { get; private set; }
         public bool IsConst { get; private set; }
         public int  Offset  { get; private set; }
 
@@ -11,12 +12,14 @@ namespace Ryujinx.Graphics.Gal
         public bool IsBgra { get; private set; }
 
         public GalVertexAttrib(
+            int                 Index,
             bool                IsConst,
             int                 Offset,
             GalVertexAttribSize Size,
             GalVertexAttribType Type,
             bool                IsBgra)
         {
+            this.Index   = Index;
             this.IsConst = IsConst;
             this.Offset  = Offset;
             this.Size    = Size;

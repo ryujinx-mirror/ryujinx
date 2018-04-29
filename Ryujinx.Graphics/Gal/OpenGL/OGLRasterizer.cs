@@ -44,12 +44,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             { GalVertexAttribSize._11_11_10,    VertexAttribPointerType.Int   }  //?
         };
 
-        private struct VbInfo
-        {
-            public int VaoHandle;
-            public int VboHandle;
-        }
-
         private struct IbInfo
         {
             public int IboHandle;
@@ -58,13 +52,15 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             public DrawElementsType Type;
         }
 
-        private VbInfo[] VertexBuffers;
+        private int VaoHandle;
+
+        private int[] VertexBuffers;
 
         private IbInfo IndexBuffer;
 
         public OGLRasterizer()
         {
-            VertexBuffers = new VbInfo[32];
+            VertexBuffers = new int[32];
 
             IndexBuffer = new IbInfo();
         }
@@ -100,28 +96,19 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             EnsureVbInitialized(VbIndex);
 
-            VbInfo Vb = VertexBuffers[VbIndex];
-
             IntPtr Length = new IntPtr(Buffer.Length);
 
-            GL.BindBuffer(BufferTarget.ArrayBuffer, Vb.VboHandle);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBuffers[VbIndex]);
             GL.BufferData(BufferTarget.ArrayBuffer, Length, Buffer, BufferUsageHint.StreamDraw);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
-            GL.BindVertexArray(Vb.VaoHandle);
+            GL.BindVertexArray(VaoHandle);
 
-            for (int Attr = 0; Attr < 16; Attr++)
+            foreach (GalVertexAttrib Attrib in Attribs)
             {
-                GL.DisableVertexAttribArray(Attr);
-            }
+                GL.EnableVertexAttribArray(Attrib.Index);
 
-            for (int Index = 0; Index < Attribs.Length; Index++)
-            {
-                GalVertexAttrib Attrib = Attribs[Index];
-
-                GL.EnableVertexAttribArray(Index);
-
-                GL.BindBuffer(BufferTarget.ArrayBuffer, Vb.VboHandle);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBuffers[VbIndex]);
 
                 bool Unsigned =
                     Attrib.Type == GalVertexAttribType.Unorm ||
@@ -146,7 +133,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 int Size   = AttribElements[Attrib.Size];
                 int Offset = Attrib.Offset;
 
-                GL.VertexAttribPointer(Index, Size, Type, Normalize, Stride, Offset);
+                GL.VertexAttribPointer(Attrib.Index, Size, Type, Normalize, Stride, Offset);
             }
 
             GL.BindVertexArray(0);
@@ -174,20 +161,16 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 return;
             }
 
-            VbInfo Vb = VertexBuffers[VbIndex];
-
-            GL.BindVertexArray(Vb.VaoHandle);
+            GL.BindVertexArray(VaoHandle);
 
             GL.DrawArrays(OGLEnumConverter.GetPrimitiveType(PrimType), First, PrimCount);
         }
 
         public void DrawElements(int VbIndex, int First, GalPrimitiveType PrimType)
         {
-            VbInfo Vb = VertexBuffers[VbIndex];
-
             PrimitiveType Mode = OGLEnumConverter.GetPrimitiveType(PrimType);
 
-            GL.BindVertexArray(Vb.VaoHandle);
+            GL.BindVertexArray(VaoHandle);
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, IndexBuffer.IboHandle);
 
@@ -196,19 +179,15 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private void EnsureVbInitialized(int VbIndex)
         {
-            VbInfo Vb = VertexBuffers[VbIndex];
-
-            if (Vb.VaoHandle == 0)
+            if (VaoHandle == 0)
             {
-                Vb.VaoHandle = GL.GenVertexArray();
+                VaoHandle = GL.GenVertexArray();
             }
 
-            if (Vb.VboHandle == 0)
+            if (VertexBuffers[VbIndex] == 0)
             {
-                Vb.VboHandle = GL.GenBuffer();
+                VertexBuffers[VbIndex] = GL.GenBuffer();
             }
-
-            VertexBuffers[VbIndex] = Vb;
         }
 
         private void EnsureIbInitialized()

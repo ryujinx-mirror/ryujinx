@@ -51,6 +51,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv
                 { ("/dev/nvhost-as-gpu",   0x4114), NvGpuAsIoctlRemap                 },
                 { ("/dev/nvhost-ctrl",     0x001b), NvHostIoctlCtrlGetConfig          },
                 { ("/dev/nvhost-ctrl",     0x001d), NvHostIoctlCtrlEventWait          },
+                { ("/dev/nvhost-ctrl",     0x001e), NvHostIoctlCtrlEventWaitAsync     },
+                { ("/dev/nvhost-ctrl",     0x001f), NvHostIoctlCtrlEventRegister      },
                 { ("/dev/nvhost-ctrl-gpu", 0x4701), NvGpuIoctlZcullGetCtxSize         },
                 { ("/dev/nvhost-ctrl-gpu", 0x4702), NvGpuIoctlZcullGetInfo            },
                 { ("/dev/nvhost-ctrl-gpu", 0x4703), NvGpuIoctlZbcSetTable             },
@@ -380,6 +382,33 @@ namespace Ryujinx.Core.OsHle.Services.Nv
             int Value     = Reader.ReadInt32();
 
             Context.Memory.WriteInt32(Position + 0xc, 0xcafe);
+
+            return 0;
+        }
+
+        private long NvHostIoctlCtrlEventWaitAsync(ServiceCtx Context)
+        {
+            long Position = Context.Request.GetSendBuffPtr();
+
+            MemReader Reader = new MemReader(Context.Memory, Position);
+
+            int SyncPtId  = Reader.ReadInt32();
+            int Threshold = Reader.ReadInt32();
+            int Timeout   = Reader.ReadInt32();
+            int Value     = Reader.ReadInt32();
+
+            Context.Memory.WriteInt32(Position + 0xc, 0xcafe);
+
+            return 0;
+        }
+
+        private long NvHostIoctlCtrlEventRegister(ServiceCtx Context)
+        {
+            long Position = Context.Request.GetSendBuffPtr();
+
+            MemReader Reader = new MemReader(Context.Memory, Position);
+
+            int UserEventId = Reader.ReadInt32();
 
             return 0;
         }

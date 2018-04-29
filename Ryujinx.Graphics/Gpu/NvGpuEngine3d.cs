@@ -351,6 +351,7 @@ namespace Ryujinx.Graphics.Gpu
                 }
 
                 Attribs[ArrayIndex].Add(new GalVertexAttrib(
+                                           Attr,
                                          ((Packed >>  6) & 0x1) != 0,
                                           (Packed >>  7) & 0x3fff,
                     (GalVertexAttribSize)((Packed >> 21) & 0x3f),
@@ -367,17 +368,33 @@ namespace Ryujinx.Graphics.Gpu
 
                 bool Enable = (Control & 0x1000) != 0;
 
+                long VertexPosition = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNAddress + Index * 4);
+
                 if (!Enable)
                 {
                     continue;
                 }
 
-                long VertexPosition = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNAddress + Index * 4);
-                long VertexEndPos   = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNEndAddr + Index * 4);
-
-                long Size = (VertexEndPos - VertexPosition) + 1;
-
                 int Stride = Control & 0xfff;
+
+                long Size = 0;
+
+                if (IndexCount != 0)
+                {
+                    Size = GetVertexCountFromIndexBuffer(
+                        Memory,
+                        IndexPosition,
+                        IndexCount,
+                        IndexSize);
+                }
+                else
+                {
+                    Size = VertexCount;
+                }
+
+                //TODO: Support cases where the Stride is 0.
+                //In this case, we need to use the size of the attribute.
+                Size *= Stride;
 
                 VertexPosition = Gpu.GetCpuAddr(VertexPosition);
 
@@ -400,6 +417,62 @@ namespace Ryujinx.Graphics.Gpu
                     Gpu.Renderer.DrawArrays(Index, VertexFirst, VertexCount, PrimType);
                 }
             }
+        }
+
+        private int GetVertexCountFromIndexBuffer(
+            AMemory Memory,
+            long    IndexPosition,
+            int     IndexCount,
+            int     IndexSize)
+        {
+            int MaxIndex = -1;
+
+            if (IndexSize == 2)
+            {
+                while (IndexCount -- > 0)
+                {
+                    ushort Value = Memory.ReadUInt16(IndexPosition);
+
+                    IndexPosition += 2;
+
+                    if (MaxIndex < Value)
+                    {
+                        MaxIndex = Value;
+                    }
+                }
+            }
+            else if (IndexSize == 1)
+            {
+                while (IndexCount -- > 0)
+                {
+                    byte Value = Memory.ReadByte(IndexPosition++);
+
+                    if (MaxIndex < Value)
+                    {
+                        MaxIndex = Value;
+                    }
+                }
+            }
+            else if (IndexSize == 4)
+            {
+                while (IndexCount -- > 0)
+                {
+                    uint Value = Memory.ReadUInt32(IndexPosition);
+
+                    IndexPosition += 2;
+
+                    if (MaxIndex < Value)
+                    {
+                        MaxIndex = (int)Value;
+                    }
+                }
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(nameof(IndexSize));
+            }
+
+            return MaxIndex + 1;
         }
 
         private void QueryControl(AMemory Memory, NsGpuPBEntry PBEntry)
