@@ -74,8 +74,11 @@ namespace Ryujinx.Tests.Cpu
             AArch64.V(2, new Bits(B));
             SimdFp.Add_S(Op[23, 22], Op[20, 16], Op[9, 5], Op[4, 0]);
 
-            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-            Assert.That(ThreadState.V0.X1, Is.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.Zero);
+            });
         }
 
         [Test, Description("ADD <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]
@@ -96,8 +99,11 @@ namespace Ryujinx.Tests.Cpu
             AArch64.V(2, new Bits(B));
             SimdFp.Add_V(Op[30], Op[23, 22], Op[20, 16], Op[9, 5], Op[4, 0]);
 
-            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-            Assert.That(ThreadState.V0.X1, Is.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.Zero);
+            });
         }
 
         [Test, Pairwise, Description("ADD <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]
@@ -205,8 +211,11 @@ namespace Ryujinx.Tests.Cpu
             AArch64.V(2, new Bits(B));
             SimdFp.Addp_V(Op[30], Op[23, 22], Op[20, 16], Op[9, 5], Op[4, 0]);
 
-            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-            Assert.That(ThreadState.V0.X1, Is.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.Zero);
+            });
         }
 
         [Test, Pairwise, Description("ADDP <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]
@@ -253,8 +262,11 @@ namespace Ryujinx.Tests.Cpu
             AArch64.V(2, new Bits(B));
             SimdFp.And_V(Op[30], Op[20, 16], Op[9, 5], Op[4, 0]);
 
-            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-            Assert.That(ThreadState.V0.X1, Is.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.Zero);
+            });
         }
 
         [Test, Pairwise, Description("AND <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]
@@ -299,8 +311,11 @@ namespace Ryujinx.Tests.Cpu
             AArch64.V(2, new Bits(B));
             SimdFp.Bic_V(Op[30], Op[20, 16], Op[9, 5], Op[4, 0]);
 
-            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-            Assert.That(ThreadState.V0.X1, Is.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.Zero);
+            });
         }
 
         [Test, Pairwise, Description("BIC <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]
@@ -347,8 +362,11 @@ namespace Ryujinx.Tests.Cpu
             AArch64.V(2, new Bits(B));
             SimdFp.Bif_V(Op[30], Op[20, 16], Op[9, 5], Op[4, 0]);
 
-            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-            Assert.That(ThreadState.V0.X1, Is.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.Zero);
+            });
         }
 
         [Test, Pairwise, Description("BIF <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]
@@ -400,8 +418,11 @@ namespace Ryujinx.Tests.Cpu
             AArch64.V(2, new Bits(B));
             SimdFp.Bit_V(Op[30], Op[20, 16], Op[9, 5], Op[4, 0]);
 
-            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-            Assert.That(ThreadState.V0.X1, Is.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.Zero);
+            });
         }
 
         [Test, Pairwise, Description("BIT <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]
@@ -453,8 +474,11 @@ namespace Ryujinx.Tests.Cpu
             AArch64.V(2, new Bits(B));
             SimdFp.Bsl_V(Op[30], Op[20, 16], Op[9, 5], Op[4, 0]);
 
-            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-            Assert.That(ThreadState.V0.X1, Is.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.Zero);
+            });
         }
 
         [Test, Pairwise, Description("BSL <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]
@@ -504,8 +528,11 @@ namespace Ryujinx.Tests.Cpu
             AArch64.V(2, new Bits(B));
             SimdFp.Orn_V(Op[30], Op[20, 16], Op[9, 5], Op[4, 0]);
 
-            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-            Assert.That(ThreadState.V0.X1, Is.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.Zero);
+            });
         }
 
         [Test, Pairwise, Description("ORN <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]
@@ -550,8 +577,11 @@ namespace Ryujinx.Tests.Cpu
             AArch64.V(2, new Bits(B));
             SimdFp.Orr_V(Op[30], Op[20, 16], Op[9, 5], Op[4, 0]);
 
-            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-            Assert.That(ThreadState.V0.X1, Is.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.Zero);
+            });
         }
 
         [Test, Pairwise, Description("ORR <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]
@@ -714,8 +744,11 @@ namespace Ryujinx.Tests.Cpu
             AArch64.V(2, new Bits(B));
             SimdFp.Sub_S(Op[23, 22], Op[20, 16], Op[9, 5], Op[4, 0]);
 
-            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-            Assert.That(ThreadState.V0.X1, Is.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.Zero);
+            });
         }
 
         [Test, Description("SUB <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]
@@ -736,8 +769,11 @@ namespace Ryujinx.Tests.Cpu
             AArch64.V(2, new Bits(B));
             SimdFp.Sub_V(Op[30], Op[23, 22], Op[20, 16], Op[9, 5], Op[4, 0]);
 
-            Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-            Assert.That(ThreadState.V0.X1, Is.Zero);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(ThreadState.V0.X1, Is.Zero);
+            });
         }
 
         [Test, Pairwise, Description("SUB <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]

@@ -104,6 +104,8 @@ namespace Ryujinx.Tests.Cpu.Tester
             SP_EL0.SetAll(false);
             /* SP_EL1 = bits(64) UNKNOWN; */
             SP_EL1.SetAll(false);
+
+            FPSR.SetAll(false); // FIXME: Temporary solution.
         }
 
         // #impl-aarch64.SP.write.0
@@ -517,6 +519,8 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             SP_EL0 = new Bits(64, false);
             SP_EL1 = new Bits(64, false);
+
+            FPSR = new Bits(32, false); // FIXME: Temporary solution.
 
             PSTATE.N = false;
             PSTATE.Z = false;
@@ -1016,6 +1020,8 @@ namespace Ryujinx.Tests.Cpu.Tester
 
         public static Bits SP_EL0;
         public static Bits SP_EL1;
+
+        public static Bits FPSR; // FIXME: Temporary solution.
 #endregion
 
 #region "functions/system/"
@@ -1081,6 +1087,7 @@ namespace Ryujinx.Tests.Cpu.Tester
                 return true; // EL1 and EL0 must exist
             }
 
+            /* return boolean IMPLEMENTATION_DEFINED; */
             return false;
         }
 
@@ -1111,6 +1118,66 @@ namespace Ryujinx.Tests.Cpu.Tester
             public bool V;  // oVerflow condition flag
             public Bits EL; // Exception Level
             public bool SP; // Stack pointer select: 0=SP0, 1=SPx [AArch64 only]
+        }
+#endregion
+
+#region "functions/vector/"
+        // #impl-shared.SatQ.3
+        public static (Bits, bool) SatQ(BigInteger i, int N, bool unsigned)
+        {
+            (Bits result, bool sat) = (unsigned ? UnsignedSatQ(i, N) : SignedSatQ(i, N));
+
+            return (result, sat);
+        }
+
+        // #impl-shared.SignedSatQ.2
+        public static (Bits, bool) SignedSatQ(BigInteger i, int N)
+        {
+            BigInteger result;
+            bool saturated;
+
+            if (i > BigInteger.Pow(2, N - 1) - 1)
+            {
+                result = BigInteger.Pow(2, N - 1) - 1;
+                saturated = true;
+            }
+            else if (i < -(BigInteger.Pow(2, N - 1)))
+            {
+                result = -(BigInteger.Pow(2, N - 1));
+                saturated = true;
+            }
+            else
+            {
+                result = i;
+                saturated = false;
+            }
+
+            return (result.SubBigInteger(N - 1, 0), saturated);
+        }
+
+        // #impl-shared.UnsignedSatQ.2
+        public static (Bits, bool) UnsignedSatQ(BigInteger i, int N)
+        {
+            BigInteger result;
+            bool saturated;
+
+            if (i > BigInteger.Pow(2, N) - 1)
+            {
+                result = BigInteger.Pow(2, N) - 1;
+                saturated = true;
+            }
+            else if (i < 0)
+            {
+                result = 0;
+                saturated = true;
+            }
+            else
+            {
+                result = i;
+                saturated = false;
+            }
+
+            return (result.SubBigInteger(N - 1, 0), saturated);
         }
 #endregion
     }

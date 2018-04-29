@@ -21,6 +21,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -37,6 +38,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -53,6 +55,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -75,6 +78,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             int container_size = 16;
@@ -113,6 +117,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             int container_size = 32;
@@ -187,6 +192,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             Bits imm;
@@ -225,6 +231,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             Bits imm;
@@ -259,6 +266,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             Bits imm;
@@ -288,6 +296,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             Bits imm;
@@ -312,6 +321,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             Bits imm;
@@ -341,6 +351,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             Bits imm;
@@ -370,6 +381,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             Bits imm;
@@ -409,6 +421,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             Bits imm;
@@ -447,6 +460,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -466,6 +480,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -488,6 +503,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if shift == '11' then ReservedValue(); */
@@ -513,6 +529,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if shift == '11' then ReservedValue(); */
@@ -541,6 +558,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if sf == '0' && imm6<5> == '1' then ReservedValue(); */
@@ -564,6 +582,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if sf == '0' && imm6<5> == '1' then ReservedValue(); */
@@ -591,6 +610,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             ShiftType shift_type = DecodeShift(op2);
@@ -610,6 +630,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if sf == '0' && imm6<5> == '1' then ReservedValue(); */
@@ -635,6 +656,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if sf == '0' && imm6<5> == '1' then ReservedValue(); */
@@ -716,6 +738,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if sf == '0' && imm6<5> == '1' then ReservedValue(); */
@@ -741,6 +764,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if sf == '0' && imm6<5> == '1' then ReservedValue(); */
@@ -764,6 +788,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if N != sf then UnallocatedEncoding(); */
@@ -790,6 +815,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             ShiftType shift_type = DecodeShift(op2);
@@ -811,6 +837,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             ShiftType shift_type = DecodeShift(op2);
@@ -830,6 +857,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if sf == '0' && imm6<5> == '1' then ReservedValue(); */
@@ -855,6 +883,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if sf == '0' && imm6<5> == '1' then ReservedValue(); */
@@ -880,6 +909,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             ShiftType shift_type = DecodeShift(op2);
@@ -899,6 +929,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -920,6 +951,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -944,6 +976,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -970,6 +1003,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if shift == '11' then ReservedValue(); */
@@ -997,6 +1031,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* if shift == '11' then ReservedValue(); */
@@ -1027,6 +1062,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -1055,6 +1091,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             ExtendType extend_type = DecodeRegExtend(option);
@@ -1086,6 +1123,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             ExtendType extend_type = DecodeRegExtend(option);
@@ -1113,6 +1151,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             ExtendType extend_type = DecodeRegExtend(option);
@@ -1146,6 +1185,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             ExtendType extend_type = DecodeRegExtend(option);
@@ -1176,6 +1216,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             int R;
@@ -1205,6 +1246,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             int R;
@@ -1238,6 +1280,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             int R;
@@ -1267,6 +1310,7 @@ namespace Ryujinx.Tests.Cpu.Tester
         {
             /* Decode */
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             Bits flags = nzcv;
@@ -1288,6 +1332,7 @@ namespace Ryujinx.Tests.Cpu.Tester
         {
             /* Decode */
             int n = (int)UInt(Rn);
+
             int datasize = (sf ? 64 : 32);
 
             Bits flags = nzcv;
@@ -1314,6 +1359,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             Bits flags = nzcv;
@@ -1336,6 +1382,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* Decode */
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             Bits flags = nzcv;
@@ -1362,6 +1409,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -1388,6 +1436,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -1414,6 +1463,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -1440,6 +1490,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -1467,6 +1518,7 @@ namespace Ryujinx.Tests.Cpu.Tester
         {
             /* Decode */
             int d = (int)UInt(Rd);
+
             int datasize = (sf ? 64 : 32);
 
             /* if sf == '0' && hw<1> == '1' then UnallocatedEncoding(); */
@@ -1486,6 +1538,7 @@ namespace Ryujinx.Tests.Cpu.Tester
         {
             /* Decode */
             int d = (int)UInt(Rd);
+
             int datasize = (sf ? 64 : 32);
 
             /* if sf == '0' && hw<1> == '1' then UnallocatedEncoding(); */
@@ -1506,6 +1559,7 @@ namespace Ryujinx.Tests.Cpu.Tester
         {
             /* Decode */
             int d = (int)UInt(Rd);
+
             int datasize = (sf ? 64 : 32);
 
             /* if sf == '0' && hw<1> == '1' then UnallocatedEncoding(); */
@@ -1530,6 +1584,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
             int a = (int)UInt(Ra);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -1550,6 +1605,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);
             int a = (int)UInt(Ra);
+
             int datasize = (sf ? 64 : 32);
 
             /* Operation */
@@ -1982,6 +2038,182 @@ namespace Ryujinx.Tests.Cpu.Tester
             }
 
             V(d, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/sqxtn_advsimd.xml#SQXTN_asisdmisc_N
+        public static void Sqxtn_S(Bits size, Bits Rn, Bits Rd)
+        {
+            bool U = false;
+
+            /* Decode Scalar */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = esize;
+            int part = 0;
+            int elements = 1;
+
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(2 * datasize, n);
+            Bits element;
+            bool sat;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element = Elem(operand, e, 2 * esize);
+
+                (Bits _result, bool _sat) = SatQ(Int(element, unsigned), esize, unsigned);
+                Elem(result, e, esize, _result);
+                sat = _sat;
+
+                if (sat)
+                {
+                    /* FPSR.QC = '1'; */
+                    FPSR[27] = true; // FIXME: Temporary solution.
+                }
+            }
+
+            Vpart(d, part, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/sqxtn_advsimd.xml#SQXTN_asimdmisc_N
+        public static void Sqxtn_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            bool U = false;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = 64;
+            int part = (int)UInt(Q);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(2 * datasize, n);
+            Bits element;
+            bool sat;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element = Elem(operand, e, 2 * esize);
+
+                (Bits _result, bool _sat) = SatQ(Int(element, unsigned), esize, unsigned);
+                Elem(result, e, esize, _result);
+                sat = _sat;
+
+                if (sat)
+                {
+                    /* FPSR.QC = '1'; */
+                    FPSR[27] = true; // FIXME: Temporary solution.
+                }
+            }
+
+            Vpart(d, part, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/uqxtn_advsimd.xml#UQXTN_asisdmisc_N
+        public static void Uqxtn_S(Bits size, Bits Rn, Bits Rd)
+        {
+            bool U = true;
+
+            /* Decode Scalar */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = esize;
+            int part = 0;
+            int elements = 1;
+
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(2 * datasize, n);
+            Bits element;
+            bool sat;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element = Elem(operand, e, 2 * esize);
+
+                (Bits _result, bool _sat) = SatQ(Int(element, unsigned), esize, unsigned);
+                Elem(result, e, esize, _result);
+                sat = _sat;
+
+                if (sat)
+                {
+                    /* FPSR.QC = '1'; */
+                    FPSR[27] = true; // FIXME: Temporary solution.
+                }
+            }
+
+            Vpart(d, part, result);
+        }
+
+        // https://meriac.github.io/archex/A64_v83A_ISA/uqxtn_advsimd.xml#UQXTN_asimdmisc_N
+        public static void Uqxtn_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            bool U = true;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = 64;
+            int part = (int)UInt(Q);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(2 * datasize, n);
+            Bits element;
+            bool sat;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element = Elem(operand, e, 2 * esize);
+
+                (Bits _result, bool _sat) = SatQ(Int(element, unsigned), esize, unsigned);
+                Elem(result, e, esize, _result);
+                sat = _sat;
+
+                if (sat)
+                {
+                    /* FPSR.QC = '1'; */
+                    FPSR[27] = true; // FIXME: Temporary solution.
+                }
+            }
+
+            Vpart(d, part, result);
         }
 #endregion
 

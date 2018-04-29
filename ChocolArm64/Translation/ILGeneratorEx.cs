@@ -6,7 +6,7 @@ namespace ChocolArm64
 
     static class ILGeneratorEx
     {
-        public static void EmitLdc_I4(this ILGenerator Generator,int Value)
+        public static void EmitLdc_I4(this ILGenerator Generator, int Value)
         {
             switch (Value)
             {
