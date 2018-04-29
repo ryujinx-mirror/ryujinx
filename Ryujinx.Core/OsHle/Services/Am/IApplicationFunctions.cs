@@ -48,11 +48,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
         public long GetDesiredLanguage(ServiceCtx Context)
         {
-            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
-
-            //This is an enumerator where each number is a differnet language.
-            //0 is Japanese and 1 is English, need to figure out the other codes.
-            Context.ResponseData.Write(1L);
+            Context.ResponseData.Write(Context.Ns.Os.SystemState.DesiredLanguageCode);
 
             return 0;
         }

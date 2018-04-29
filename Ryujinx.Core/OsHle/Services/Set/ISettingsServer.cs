@@ -1,33 +1,10 @@
 using Ryujinx.Core.OsHle.Ipc;
-using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Ryujinx.Core.OsHle.Services.Set
 {
     class ISettingsServer : IpcService
     {
-        private static string[] LanguageCodes = new string[]
-        {
-            "ja",
-            "en-US",
-            "fr",
-            "de",
-            "it",
-            "es",
-            "zh-CN",
-            "ko",
-            "nl",
-            "pt",
-            "ru",
-            "zh-TW",
-            "en-GB",
-            "fr-CA",
-            "es-419",
-            "zh-Hans",
-            "zh-Hant"
-        };
-
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
@@ -44,27 +21,9 @@ namespace Ryujinx.Core.OsHle.Services.Set
 
         public static long GetLanguageCode(ServiceCtx Context)
         {
-            Context.ResponseData.Write(LanguageCodetoLongBE(LanguageCodes[1]));
+            Context.ResponseData.Write(Context.Ns.Os.SystemState.DesiredLanguageCode);
 
             return 0;
-        }
-
-        private static long LanguageCodetoLongBE(string LanguageCode)
-        {
-            using (MemoryStream MS = new MemoryStream())
-            {
-                foreach (char Chr in LanguageCode)
-                {
-                    MS.WriteByte((byte)Chr);
-                }
-
-                for (int Offs = 0; Offs < (8 - LanguageCode.Length); Offs++)
-                {
-                    MS.WriteByte(0);
-                }
-
-                return BitConverter.ToInt64(MS.ToArray(), 0);
-            }
         }
 
         public static long GetAvailableLanguageCodes(ServiceCtx Context)
@@ -74,24 +33,16 @@ namespace Ryujinx.Core.OsHle.Services.Set
 
             int Count = (int)((uint)Size / 8);
 
-            if (Count > LanguageCodes.Length)
+            if (Count > SystemStateMgr.LanguageCodes.Length)
             {
-                Count = LanguageCodes.Length;
+                Count = SystemStateMgr.LanguageCodes.Length;
             }
 
             for (int Index = 0; Index < Count; Index++)
             {
-                string LanguageCode = LanguageCodes[Index];
+                Context.Memory.WriteInt64(Position, SystemStateMgr.GetLanguageCode(Index));
 
-                foreach (char Chr in LanguageCode)
-                {
-                    Context.Memory.WriteByte(Position++, (byte)Chr);
-                }
-
-                for (int Offs = 0; Offs < (8 - LanguageCode.Length); Offs++)
-                {
-                    Context.Memory.WriteByte(Position++, 0);
-                }
+                Position += 8;
             }
 
             Context.ResponseData.Write(Count);
@@ -101,7 +52,7 @@ namespace Ryujinx.Core.OsHle.Services.Set
 
         public static long GetAvailableLanguageCodeCount(ServiceCtx Context)
         {
-            Context.ResponseData.Write(LanguageCodes.Length);
+            Context.ResponseData.Write(SystemStateMgr.LanguageCodes.Length);
 
             return 0;
         }

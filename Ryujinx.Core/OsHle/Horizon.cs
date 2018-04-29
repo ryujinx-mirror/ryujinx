@@ -18,7 +18,7 @@ namespace Ryujinx.Core.OsHle
 
         private ConcurrentDictionary<int, Process> Processes;
 
-        internal SystemStateMgr SystemState { get; private set; }
+        public SystemStateMgr SystemState { get; private set; }
 
         internal HSharedMem HidSharedMem  { get; private set; }
         internal HSharedMem FontSharedMem { get; private set; }
