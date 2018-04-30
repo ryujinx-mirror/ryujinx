@@ -68,9 +68,9 @@ namespace Ryujinx.Graphics.Gal.Shader
         private static void EmitTex(ShaderIrBlock Block, long OpCode, ShaderIrInst Inst)
         {
             //TODO: Support other formats.
-            ShaderIrNode OperA  = GetOperGpr8    (OpCode);
-            ShaderIrNode OperB  = GetOperGpr20   (OpCode);
-            ShaderIrNode OperC  = GetOperImm13_36(OpCode);
+            ShaderIrNode OperA = GetOperGpr8    (OpCode);
+            ShaderIrNode OperB = GetOperGpr20   (OpCode);
+            ShaderIrNode OperC = GetOperImm13_36(OpCode);
 
             for (int Ch = 0; Ch < 4; Ch++)
             {
@@ -94,6 +94,11 @@ namespace Ryujinx.Graphics.Gal.Shader
                     : GetOperGpr0 (OpCode);
 
                 Dst.Index += Ch & 1;
+
+                if (Dst.Index >= ShaderIrOperGpr.ZRIndex)
+                {
+                    continue;
+                }
 
                 Block.AddNode(GetPredNode(new ShaderIrAsg(Dst, Src), OpCode));
             }
