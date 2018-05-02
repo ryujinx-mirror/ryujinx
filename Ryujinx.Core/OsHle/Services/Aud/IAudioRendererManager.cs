@@ -29,25 +29,64 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
         public long GetAudioRendererWorkBufferSize(ServiceCtx Context)
         {
-            int SampleRate = Context.RequestData.ReadInt32();
-            int Unknown4   = Context.RequestData.ReadInt32();
-            int Unknown8   = Context.RequestData.ReadInt32();
-            int UnknownC   = Context.RequestData.ReadInt32();
-            int Unknown10  = Context.RequestData.ReadInt32();
-            int Unknown14  = Context.RequestData.ReadInt32();
-            int Unknown18  = Context.RequestData.ReadInt32();
-            int Unknown1c  = Context.RequestData.ReadInt32();
-            int Unknown20  = Context.RequestData.ReadInt32();
-            int Unknown24  = Context.RequestData.ReadInt32();
-            int Unknown28  = Context.RequestData.ReadInt32();
-            int Unknown2c  = Context.RequestData.ReadInt32();
-            int Rev1Magic  = Context.RequestData.ReadInt32();
+            long SampleRate = Context.RequestData.ReadUInt32();
+            long Unknown4   = Context.RequestData.ReadUInt32();
+            long Unknown8   = Context.RequestData.ReadUInt32();
+            long UnknownC   = Context.RequestData.ReadUInt32();
+            long Unknown10  = Context.RequestData.ReadUInt32();
+            long Unknown14  = Context.RequestData.ReadUInt32();
+            long Unknown18  = Context.RequestData.ReadUInt32();
+            long Unknown1c  = Context.RequestData.ReadUInt32();
+            uint Reserved20 = Context.RequestData.ReadUInt32(); //Not used in FW1.0
+            uint Reserved24 = Context.RequestData.ReadUInt32(); //Not used in FW1.0
+            uint Reserved28 = Context.RequestData.ReadUInt32(); //Not used in FW1.0
+            uint Reserved2c = Context.RequestData.ReadUInt32(); //Not used in FW1.0
+            uint Rev1Magic  = Context.RequestData.ReadUInt32();
 
-            Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            if (Rev1Magic == 0x31564552) //REV1
+            {
+                long Size;
 
-            Context.ResponseData.Write(0x400L);
+                Size  = UnknownC * 0x400 + 0x50;
+                Size += RoundUp(Unknown8 * 4, 64);
+                Size += (UnknownC + 1) * 0x940;
+                Size += Unknown14 * 0x170;
+                Size += Unknown10 * 0x100;
+                Size += (Unknown14 + UnknownC) * 0x2C0;
+                Size += Unknown10 * 0x2F0;
+                Size += Unknown10 * 0x100 + 0x40;
+                Size += Unknown18 * 0x4B0;
+                Size += RoundUp((UnknownC + 1) * 8, 16);
+                Size += RoundUp(Unknown10 * 8, 16);
+                Size += (Unknown18 + Unknown10 * 4) * 0x20;
+                Size += RoundUp((Unknown4 * 4 + (UnknownC + Unknown14) * 0x3C0) * (Unknown8 + 6), 64);
 
-            return 0;
+                if (Unknown1c == 0)
+                {
+                    Size += (((((UnknownC + 1) + Unknown10 + Unknown14 + Unknown18) * 16 + 0x658) * (Unknown1c + 1) + 0xFF) & ~0x3FL);
+                }
+
+                long WorkBufferSize = (Size + 0x1907D) & ~0xFFFL;
+
+                Context.ResponseData.Write(WorkBufferSize);
+
+                Context.Ns.Log.PrintDebug(LogClass.ServiceAudio, $"WorkBufferSize is 0x{WorkBufferSize:x16}.");
+
+                return 0;
+            }
+            else
+            {
+                Context.ResponseData.Write(0L);
+
+                Context.Ns.Log.PrintError(LogClass.ServiceAudio, "REV1 magic not found!");
+
+                return 0x499;
+            }
+        }
+
+        private static long RoundUp(long Value, int Size)
+        {
+            return (Value + (Size - 1)) & ~((long)Size - 1);
         }
 
         public long GetAudioDevice(ServiceCtx Context)
