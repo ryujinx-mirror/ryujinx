@@ -6,6 +6,11 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 {
     class IAudioRendererManager : IpcService
     {
+        private const int Rev0Magic = ('R' << 0)  |
+                                      ('E' << 8)  |
+                                      ('V' << 16) |
+                                      ('0' << 24);
+
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
@@ -43,9 +48,11 @@ namespace Ryujinx.Core.OsHle.Services.Aud
             long Unknown24  = Context.RequestData.ReadUInt32();
             long Unknown28  = Context.RequestData.ReadUInt32(); //SplitterCount
             long Unknown2c  = Context.RequestData.ReadUInt32(); //Not used here in FW3.0.1
-            uint RevMagic   = Context.RequestData.ReadUInt32();
+            int RevMagic    = Context.RequestData.ReadInt32();
 
-            if (RevMagic - 0x52455630 <= 3) //REV3 Max is supported
+            int Version = (RevMagic - Rev0Magic) >> 24;
+
+            if (Version <= 3) //REV3 Max is supported
             {
                 long Size  = RoundUp(Unknown8 * 4, 64);
                      Size += (UnknownC << 10);
@@ -56,7 +63,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
                      Size += RoundUp((0x3C0 * (Unknown14 + UnknownC) + 4 * Unknown4) * (Unknown8 + 6), 64);
                      Size += 0x2C0 * (Unknown14 + UnknownC) + 0x30 * (Unknown18 + (4 * Unknown10)) + 0x50;
 
-                if (RevMagic - 0x52455630 >= 3) //IsSplitterSupported
+                if (Version >= 3) //IsSplitterSupported
                 {
                     Size += RoundUp((NodeStatesGetWorkBufferSize((int)UnknownC + 1) + EdgeMatrixGetWorkBufferSize((int)UnknownC + 1)), 16);
                     Size += 0xE0 * Unknown28 + 0x20 * Unknown24 + RoundUp(Unknown28 * 4, 16);
@@ -81,7 +88,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
             {
                 Context.ResponseData.Write(0L);
 
-                Context.Ns.Log.PrintError(LogClass.ServiceAudio, "Library Revision is not supported!");
+                Context.Ns.Log.PrintError(LogClass.ServiceAudio, $"Library Revision 0x{RevMagic:x8} is not supported!");
 
                 return 0x499;
             }
