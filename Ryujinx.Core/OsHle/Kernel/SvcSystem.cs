@@ -40,7 +40,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (Obj == null)
             {
-                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Tried to CloseHandle on invalid handle 0x{Handle:x8}!");
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
@@ -88,9 +88,21 @@ namespace Ryujinx.Core.OsHle.Kernel
             int   HandlesCount =  (int)ThreadState.X2;
             ulong Timeout      =       ThreadState.X3;
 
+            Ns.Log.PrintDebug(LogClass.KernelSvc,
+                "HandlesPtr = "   + HandlesPtr  .ToString("x16") + ", " +
+                "HandlesCount = " + HandlesCount.ToString("x8")  + ", " +
+                "Timeout = "      + Timeout     .ToString("x16"));
+
+            if ((uint)HandlesCount > 0x40)
+            {
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.CountOutOfRange);
+
+                return;
+            }
+
             KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
-            WaitHandle[] Handles = new WaitHandle[HandlesCount];
+            WaitHandle[] Handles = new WaitHandle[HandlesCount + 1];
 
             for (int Index = 0; Index < HandlesCount; Index++)
             {
@@ -110,34 +122,73 @@ namespace Ryujinx.Core.OsHle.Kernel
                 Handles[Index] = SyncObj.WaitEvent;
             }
 
-            Process.Scheduler.Suspend(CurrThread.ProcessorId);
-
-            int HandleIndex;
-
-            ulong Result = 0;
-
-            if (Timeout != ulong.MaxValue)
+            using (AutoResetEvent WaitEvent = new AutoResetEvent(false))
             {
-                HandleIndex = WaitHandle.WaitAny(Handles, NsTimeConverter.GetTimeMs(Timeout));
+                if (!SyncWaits.TryAdd(CurrThread, WaitEvent))
+                {
+                    throw new InvalidOperationException();
+                }
+
+                Handles[HandlesCount] = WaitEvent;
+
+                Process.Scheduler.Suspend(CurrThread.ProcessorId);
+
+                int HandleIndex;
+
+                ulong Result = 0;
+
+                if (Timeout != ulong.MaxValue)
+                {
+                    HandleIndex = WaitHandle.WaitAny(Handles, NsTimeConverter.GetTimeMs(Timeout));
+                }
+                else
+                {
+                    HandleIndex = WaitHandle.WaitAny(Handles);
+                }
 
                 if (HandleIndex == WaitHandle.WaitTimeout)
                 {
                     Result = MakeError(ErrorModule.Kernel, KernelErr.Timeout);
                 }
+                else if (HandleIndex == HandlesCount)
+                {
+                    Result = MakeError(ErrorModule.Kernel, KernelErr.Canceled);
+                }
+
+                SyncWaits.TryRemove(CurrThread, out _);
+
+                Process.Scheduler.Resume(CurrThread);
+
+                ThreadState.X0 = Result;
+
+                if (Result == 0)
+                {
+                    ThreadState.X1 = (ulong)HandleIndex;
+                }
             }
-            else
+        }
+
+        private void SvcCancelSynchronization(AThreadState ThreadState)
+        {
+            int ThreadHandle = (int)ThreadState.X0;
+
+            KThread Thread = GetThread(ThreadState.Tpidr, ThreadHandle);
+
+            if (Thread == null)
             {
-                HandleIndex = WaitHandle.WaitAny(Handles);
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{ThreadHandle:x8}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+
+                return;
             }
 
-            Process.Scheduler.Resume(CurrThread);
-
-            ThreadState.X0 = Result;
-
-            if (Result == 0)
+            if (SyncWaits.TryRemove(Thread, out AutoResetEvent WaitEvent))
             {
-                ThreadState.X1 = (ulong)HandleIndex;
+                WaitEvent.Set();
             }
+
+            ThreadState.X0 = 0;
         }
 
         private void SvcGetSystemTick(AThreadState ThreadState)
@@ -190,13 +241,13 @@ namespace Ryujinx.Core.OsHle.Kernel
 
                 IpcMessage Cmd = new IpcMessage(CmdData, CmdPtr);
 
-                IpcHandler.IpcCall(Ns, Process, Memory, Session, Cmd, CmdPtr);
+                long Result = IpcHandler.IpcCall(Ns, Process, Memory, Session, Cmd, CmdPtr);
 
                 Thread.Yield();
 
                 Process.Scheduler.Resume(CurrThread);
 
-                ThreadState.X0 = 0;
+                ThreadState.X0 = (ulong)Result;
             }
             else
             {

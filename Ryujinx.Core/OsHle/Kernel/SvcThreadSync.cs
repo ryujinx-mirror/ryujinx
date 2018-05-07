@@ -191,6 +191,8 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             InsertWaitingMutexThread(OwnerThreadHandle, WaitThread);
 
+            Ns.Log.PrintDebug(LogClass.KernelSvc, "Entering wait state...");
+
             Process.Scheduler.EnterWait(CurrThread);
         }
 
@@ -296,6 +298,8 @@ namespace Ryujinx.Core.OsHle.Kernel
                     Process.ThreadArbiterList = WaitThread;
                 }
             }
+
+            Ns.Log.PrintDebug(LogClass.KernelSvc, "Entering wait state...");
 
             if (Timeout != ulong.MaxValue)
             {
@@ -407,7 +411,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
                 if (CurrThread != WaitThread)
                 {
-                    if (WaitThread.NextCondVarThread != null)
+                    if (WaitThread.NextMutexThread != null)
                     {
                         throw new InvalidOperationException();
                     }

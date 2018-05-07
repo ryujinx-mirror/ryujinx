@@ -4,7 +4,7 @@ using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle;
 using Ryujinx.Core.Settings;
 using Ryujinx.Graphics.Gal;
-using Ryujinx.Graphics.Gpu;
+using Ryujinx.Core.Gpu;
 using System;
 
 namespace Ryujinx.Core
@@ -15,7 +15,7 @@ namespace Ryujinx.Core
 
         public Logger Log { get; private set; }
 
-        internal NsGpu Gpu { get; private set; }
+        internal NvGpu Gpu { get; private set; }
 
         internal VirtualFileSystem VFs { get; private set; }
 
@@ -45,7 +45,7 @@ namespace Ryujinx.Core
 
             Log = new Logger();
 
-            Gpu = new NsGpu(Renderer);
+            Gpu = new NvGpu(Renderer);
 
             VFs = new VirtualFileSystem();
 

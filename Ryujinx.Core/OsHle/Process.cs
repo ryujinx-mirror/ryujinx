@@ -410,11 +410,7 @@ namespace Ryujinx.Core.OsHle
                     }
                 }
 
-                INvDrvServices.Fds.DeleteProcess(this);
-
-                INvDrvServices.NvMaps    .DeleteProcess(this);
-                INvDrvServices.NvMapsById.DeleteProcess(this);
-                INvDrvServices.NvMapsFb  .DeleteProcess(this);
+                INvDrvServices.UnloadProcess(this);
 
                 AppletState.Dispose();
 

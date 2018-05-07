@@ -5,6 +5,8 @@ using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Ryujinx.Core.OsHle.Kernel
 {
@@ -18,11 +20,15 @@ namespace Ryujinx.Core.OsHle.Kernel
         private Process Process;
         private AMemory Memory;
 
+        private ConcurrentDictionary<KThread, AutoResetEvent> SyncWaits;
+
         private object CondVarLock;
 
         private HashSet<(HSharedMem, long)> MappedSharedMems;
 
         private ulong CurrentHeapSize;
+
+        private const uint SelfHandle = 0xffff8001;
 
         private static Random Rng;
 
@@ -51,6 +57,7 @@ namespace Ryujinx.Core.OsHle.Kernel
                 { 0x16, SvcCloseHandle                   },
                 { 0x17, SvcResetSignal                   },
                 { 0x18, SvcWaitSynchronization           },
+                { 0x19, SvcCancelSynchronization         },
                 { 0x1a, SvcArbitrateLock                 },
                 { 0x1b, SvcArbitrateUnlock               },
                 { 0x1c, SvcWaitProcessWideKeyAtomic      },
@@ -69,6 +76,8 @@ namespace Ryujinx.Core.OsHle.Kernel
             this.Ns      = Ns;
             this.Process = Process;
             this.Memory  = Process.Memory;
+
+            SyncWaits = new ConcurrentDictionary<KThread, AutoResetEvent>();
 
             CondVarLock = new object();
 
@@ -97,6 +106,18 @@ namespace Ryujinx.Core.OsHle.Kernel
                 Process.PrintStackTrace(ThreadState);
 
                 throw new NotImplementedException(e.Id.ToString("x4"));
+            }
+        }
+
+        private KThread GetThread(long Tpidr, int Handle)
+        {
+            if ((uint)Handle == SelfHandle)
+            {
+                return Process.GetThread(Tpidr);
+            }
+            else
+            {
+                return Process.HandleTable.GetData<KThread>(Handle);
             }
         }
 

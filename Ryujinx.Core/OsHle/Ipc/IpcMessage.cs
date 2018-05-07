@@ -174,31 +174,6 @@ namespace Ryujinx.Core.OsHle.Ipc
             return 0;
         }
 
-        public long GetSendBuffPtr()
-        {
-            if (SendBuff.Count > 0 && SendBuff[0].Size != 0)
-            {
-                return SendBuff[0].Position;
-            }
-
-            if (PtrBuff.Count > 0 && PtrBuff[0].Size != 0)
-            {
-                return PtrBuff[0].Position;
-            }
-
-            if (ReceiveBuff.Count > 0 && ReceiveBuff[0].Size != 0)
-            {
-                return ReceiveBuff[0].Position;
-            }
-
-            if (RecvListBuff.Count > 0 && RecvListBuff[0].Size != 0)
-            {
-                return RecvListBuff[0].Position;
-            }
-
-            return -1;
-        }
-
         public long GetBufferType0x21Position()
         {
             if (PtrBuff.Count > 0 && PtrBuff[0].Position != 0)

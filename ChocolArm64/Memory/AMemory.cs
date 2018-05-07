@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace ChocolArm64.Memory
 {
-    public unsafe class AMemory : IDisposable
+    public unsafe class AMemory : IAMemory, IDisposable
     {
         private const long ErgMask = (4 << AThreadState.ErgSizeLog2) - 1;
 

@@ -7,7 +7,7 @@ namespace Ryujinx.Core.OsHle.Ipc
 {
     static class IpcHandler
     {
-        public static void IpcCall(
+        public static long IpcCall(
             Switch     Ns,
             Process    Process,
             AMemory    Memory,
@@ -94,6 +94,8 @@ namespace Ryujinx.Core.OsHle.Ipc
 
                 AMemoryHelper.WriteBytes(Memory, CmdPtr, Response.GetBytes(CmdPtr));
             }
+
+            return 0;
         }
 
         private static IpcMessage FillResponse(IpcMessage Response, long Result, params int[] Values)

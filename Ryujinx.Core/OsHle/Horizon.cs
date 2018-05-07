@@ -20,6 +20,8 @@ namespace Ryujinx.Core.OsHle
 
         public SystemStateMgr SystemState { get; private set; }
 
+        internal MemoryAllocator Allocator { get; private set; }
+
         internal HSharedMem HidSharedMem  { get; private set; }
         internal HSharedMem FontSharedMem { get; private set; }
 
@@ -34,6 +36,8 @@ namespace Ryujinx.Core.OsHle
             Processes = new ConcurrentDictionary<int, Process>();
 
             SystemState = new SystemStateMgr();
+
+            Allocator = new MemoryAllocator();
 
             HidSharedMem  = new HSharedMem();
             FontSharedMem = new HSharedMem();

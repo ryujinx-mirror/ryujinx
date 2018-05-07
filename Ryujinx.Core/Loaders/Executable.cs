@@ -32,9 +32,9 @@ namespace Ryujinx.Core.Loaders
             this.ImageBase = ImageBase;
             this.ImageEnd  = ImageBase;
 
-            WriteData(ImageBase + Exe.TextOffset, Exe.Text, MemoryType.CodeStatic, AMemoryPerm.RX);
-            WriteData(ImageBase + Exe.ROOffset,   Exe.RO,   MemoryType.Normal,     AMemoryPerm.Read);
-            WriteData(ImageBase + Exe.DataOffset, Exe.Data, MemoryType.Normal,     AMemoryPerm.RW);
+            WriteData(ImageBase + Exe.TextOffset, Exe.Text, MemoryType.CodeStatic,  AMemoryPerm.RX);
+            WriteData(ImageBase + Exe.ROOffset,   Exe.RO,   MemoryType.CodeMutable, AMemoryPerm.Read);
+            WriteData(ImageBase + Exe.DataOffset, Exe.Data, MemoryType.CodeMutable, AMemoryPerm.RW);
 
             if (Exe.Mod0Offset == 0)
             {
