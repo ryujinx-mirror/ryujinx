@@ -8,7 +8,7 @@ Contributions are always welcome.
 
 **Building**
 
-To build this emulator, you will need the .NET Core 2.0 (or higher) SDK. https://www.microsoft.com/net/download/
+To build this emulator, you will need the .NET Core 2.1 (RC1) (or higher) SDK. https://www.microsoft.com/net/download/
 In release builds, memory checks are disabled to improve performances.
 
 Or just drag'n'drop the *.NRO / *.NSO or the game folder on the executable if you have a pre-build version.
