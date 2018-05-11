@@ -1,4 +1,4 @@
-![](https://github.com/zoltx23/ryujinx-emu/blob/master/img/Ryujinx_logo_128.png?raw=true) 
+![](https://github.com/zoltx23/ryujinx-emu/blob/master/img/Ryujinx_logo_128.png?raw=true)
 # Ryujinx [![Build status](https://ci.appveyor.com/api/projects/status/ssg4jwu6ve3k594s?svg=true)](https://ci.appveyor.com/project/gdkchan/ryujinx)
 
 Experimental Switch emulator written in C#
@@ -49,7 +49,7 @@ https://openal.org/downloads/OpenAL11CoreSDK.zip
 
  - Config File: `Ryujinx.conf` should be present in executable folder.
    For more informations [you can go here](CONFIG.md).
- 
+
  - If you are a Windows user, you can configure your keys, the logs, install OpenAL, etc... with Ryujinx-Setting.
  [Download it, right here](https://github.com/AcK77/Ryujinx-Settings)
 
@@ -68,8 +68,8 @@ To run this emulator, you need the .NET Core 2.0 (or higher) SDK.
 Run `dotnet run -c Release -- path\to\homebrew.nro` inside the Ryujinx solution folder to run homebrew apps.
 Run `dotnet run -c Release -- path\to\game_exefs_and_romfs_folder` to run official games (they need to be decrypted and extracted first!)
 
-**Compatibility** 
-You can check out the compatibility list within the Wiki. Only a handful of games actually work. 
+**Compatibility**
+You can check out the compatibility list within the Wiki. Only a handful of games actually work.
 
 **Latest build**
 
