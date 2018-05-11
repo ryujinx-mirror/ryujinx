@@ -4,7 +4,10 @@ using ChocolArm64.State;
 
 using NUnit.Framework;
 
+using System;
 using System.Threading;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace Ryujinx.Tests.Cpu
 {
@@ -54,7 +57,9 @@ namespace Ryujinx.Tests.Cpu
         }
 
         protected void SetThreadState(ulong X0 = 0, ulong X1 = 0, ulong X2 = 0, ulong X3 = 0, ulong X31 = 0,
-                                      AVec V0 = default(AVec), AVec V1 = default(AVec), AVec V2 = default(AVec),
+                                      Vector128<float> V0 = default(Vector128<float>),
+                                      Vector128<float> V1 = default(Vector128<float>),
+                                      Vector128<float> V2 = default(Vector128<float>),
                                       bool Overflow = false, bool Carry = false, bool Zero = false, bool Negative = false,
                                       int Fpcr = 0x0, int Fpsr = 0x0)
         {
@@ -93,7 +98,9 @@ namespace Ryujinx.Tests.Cpu
 
         protected AThreadState SingleOpcode(uint Opcode,
                                             ulong X0 = 0, ulong X1 = 0, ulong X2 = 0, ulong X3 = 0, ulong X31 = 0,
-                                            AVec V0 = default(AVec), AVec V1 = default(AVec), AVec V2 = default(AVec),
+                                            Vector128<float> V0 = default(Vector128<float>),
+                                            Vector128<float> V1 = default(Vector128<float>),
+                                            Vector128<float> V2 = default(Vector128<float>),
                                             bool Overflow = false, bool Carry = false, bool Zero = false, bool Negative = false,
                                             int Fpcr = 0x0, int Fpsr = 0x0)
         {
@@ -104,6 +111,43 @@ namespace Ryujinx.Tests.Cpu
             ExecuteOpcodes();
 
             return GetThreadState();
+        }
+
+        protected static double VectorExtractDouble(Vector128<float> Vector, byte Index)
+        {
+            long Value = Sse41.Extract(Sse.StaticCast<float, long>(Vector), Index);
+
+            return BitConverter.Int64BitsToDouble(Value);
+        }
+
+        protected static Vector128<float> MakeVectorE0(double A)
+        {
+            return Sse.StaticCast<long, float>(Sse2.SetVector128(0, BitConverter.DoubleToInt64Bits(A)));
+        }
+
+        protected static Vector128<float> MakeVectorE0(ulong A)
+        {
+            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, A));
+        }
+
+        protected static Vector128<float> MakeVectorE0E1(ulong A, ulong B)
+        {
+            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(B, A));
+        }
+
+        protected static Vector128<float> MakeVectorE1(ulong B)
+        {
+            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(B, 0));
+        }
+
+        protected static ulong GetVectorE0(Vector128<float> Vector)
+        {
+            return Sse41.Extract(Sse.StaticCast<float, ulong>(Vector), 0);
+        }
+
+        protected static ulong GetVectorE1(Vector128<float> Vector)
+        {
+            return Sse41.Extract(Sse.StaticCast<float, ulong>(Vector), 1);
         }
     }
 }

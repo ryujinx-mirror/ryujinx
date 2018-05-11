@@ -3,6 +3,7 @@ using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
 using System.Reflection.Emit;
+using System.Runtime.Intrinsics.X86;
 
 using static ChocolArm64.Instruction.AInstEmitAluHelper;
 using static ChocolArm64.Instruction.AInstEmitSimdHelper;
@@ -13,17 +14,38 @@ namespace ChocolArm64.Instruction
     {
         public static void Cmeq_V(AILEmitterCtx Context)
         {
-            EmitVectorCmp(Context, OpCodes.Beq_S);
+            if (AOptimizations.UseSse2 && Context.CurrOp is AOpCodeSimdReg)
+            {
+                EmitSse2Call(Context, nameof(Sse2.CompareEqual));
+            }
+            else
+            {
+                EmitVectorCmp(Context, OpCodes.Beq_S);
+            }
         }
 
         public static void Cmge_V(AILEmitterCtx Context)
         {
-            EmitVectorCmp(Context, OpCodes.Bge_S);
+            if (AOptimizations.UseSse2 && Context.CurrOp is AOpCodeSimdReg)
+            {
+                EmitSse2Call(Context, nameof(Sse2.CompareGreaterThanOrEqual));
+            }
+            else
+            {
+                EmitVectorCmp(Context, OpCodes.Bge_S);
+            }
         }
 
         public static void Cmgt_V(AILEmitterCtx Context)
         {
-            EmitVectorCmp(Context, OpCodes.Bgt_S);
+            if (AOptimizations.UseSse2 && Context.CurrOp is AOpCodeSimdReg)
+            {
+                EmitSse2Call(Context, nameof(Sse2.CompareGreaterThan));
+            }
+            else
+            {
+                EmitVectorCmp(Context, OpCodes.Bgt_S);
+            }
         }
 
         public static void Cmhi_V(AILEmitterCtx Context)
@@ -112,32 +134,74 @@ namespace ChocolArm64.Instruction
 
         public static void Fcmeq_S(AILEmitterCtx Context)
         {
-            EmitScalarFcmp(Context, OpCodes.Beq_S);
+            if (AOptimizations.UseSse2 && Context.CurrOp is AOpCodeSimdReg)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.CompareEqualScalar));
+            }
+            else
+            {
+                EmitScalarFcmp(Context, OpCodes.Beq_S);
+            }
         }
 
         public static void Fcmeq_V(AILEmitterCtx Context)
         {
-            EmitVectorFcmp(Context, OpCodes.Beq_S);
+            if (AOptimizations.UseSse2 && Context.CurrOp is AOpCodeSimdReg)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.CompareEqual));
+            }
+            else
+            {
+                EmitVectorFcmp(Context, OpCodes.Beq_S);
+            }
         }
 
         public static void Fcmge_S(AILEmitterCtx Context)
         {
-            EmitScalarFcmp(Context, OpCodes.Bge_S);
+            if (AOptimizations.UseSse2 && Context.CurrOp is AOpCodeSimdReg)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.CompareGreaterThanOrEqualScalar));
+            }
+            else
+            {
+                EmitScalarFcmp(Context, OpCodes.Bge_S);
+            }
         }
 
         public static void Fcmge_V(AILEmitterCtx Context)
         {
-            EmitVectorFcmp(Context, OpCodes.Bge_S);
+            if (AOptimizations.UseSse2 && Context.CurrOp is AOpCodeSimdReg)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.CompareGreaterThanOrEqual));
+            }
+            else
+            {
+                EmitVectorFcmp(Context, OpCodes.Bge_S);
+            }
         }
 
         public static void Fcmgt_S(AILEmitterCtx Context)
         {
-            EmitScalarFcmp(Context, OpCodes.Bgt_S);
+            if (AOptimizations.UseSse2 && Context.CurrOp is AOpCodeSimdReg)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.CompareGreaterThanScalar));
+            }
+            else
+            {
+                EmitScalarFcmp(Context, OpCodes.Bgt_S);
+            }
         }
 
         public static void Fcmgt_V(AILEmitterCtx Context)
         {
-            EmitVectorFcmp(Context, OpCodes.Bgt_S);
+            if (AOptimizations.UseSse2 && Context.CurrOp is AOpCodeSimdReg)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.CompareGreaterThan));
+            }
+            else
+            {
+                EmitVectorFcmp(Context, OpCodes.Bgt_S);
+            }
         }
 
         public static void Fcmle_S(AILEmitterCtx Context)

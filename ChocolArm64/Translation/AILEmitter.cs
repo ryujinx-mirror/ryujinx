@@ -3,6 +3,7 @@ using ChocolArm64.State;
 using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
+using System.Runtime.Intrinsics;
 
 namespace ChocolArm64.Translation
 {
@@ -157,7 +158,7 @@ namespace ChocolArm64.Translation
             {
                 case ARegisterType.Flag:   return typeof(bool);
                 case ARegisterType.Int:    return typeof(ulong);
-                case ARegisterType.Vector: return typeof(AVec);
+                case ARegisterType.Vector: return typeof(Vector128<float>);
             }
 
             throw new ArgumentException(nameof(RegType));

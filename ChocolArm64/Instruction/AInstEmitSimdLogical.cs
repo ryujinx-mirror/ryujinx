@@ -2,6 +2,7 @@ using ChocolArm64.Decoder;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System.Reflection.Emit;
+using System.Runtime.Intrinsics.X86;
 
 using static ChocolArm64.Instruction.AInstEmitSimdHelper;
 
@@ -11,7 +12,14 @@ namespace ChocolArm64.Instruction
     {
         public static void And_V(AILEmitterCtx Context)
         {
-            EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.And));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2Call(Context, nameof(Sse2.And));
+            }
+            else
+            {
+                EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.And));
+            }
         }
 
         public static void Bic_V(AILEmitterCtx Context)
@@ -95,7 +103,14 @@ namespace ChocolArm64.Instruction
 
         public static void Eor_V(AILEmitterCtx Context)
         {
-            EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Xor));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2Call(Context, nameof(Sse2.Xor));
+            }
+            else
+            {
+                EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Xor));
+            }
         }
 
         public static void Not_V(AILEmitterCtx Context)
@@ -114,7 +129,14 @@ namespace ChocolArm64.Instruction
 
         public static void Orr_V(AILEmitterCtx Context)
         {
-            EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Or));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2Call(Context, nameof(Sse2.Or));
+            }
+            else
+            {
+                EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Or));
+            }
         }
 
         public static void Orr_Vi(AILEmitterCtx Context)

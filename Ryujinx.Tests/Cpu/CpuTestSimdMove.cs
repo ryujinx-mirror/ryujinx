@@ -1,5 +1,9 @@
 using ChocolArm64.State;
+
 using NUnit.Framework;
+
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace Ryujinx.Tests.Cpu
 {
@@ -10,15 +14,17 @@ namespace Ryujinx.Tests.Cpu
                               [Random(2)] uint B0, [Random(2)] uint B1, [Random(2)] uint B2, [Random(2)] uint B3)
         {
             uint Opcode = 0x4E822820;
-            AVec V1 = new AVec { W0 = A0, W1 = A1, W2 = A2, W3 = A3 };
-            AVec V2 = new AVec { W0 = B0, W1 = B1, W2 = B2, W3 = B3 };
+            Vector128<float> V1 = Sse.StaticCast<uint, float>(Sse2.SetVector128(A3, A2, A1, A0));
+            Vector128<float> V2 = Sse.StaticCast<uint, float>(Sse2.SetVector128(B3, B2, B1, B0));
 
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
-            Assert.That(ThreadState.V0.W0, Is.EqualTo(A0));
-            Assert.That(ThreadState.V0.W1, Is.EqualTo(B0));
-            Assert.That(ThreadState.V0.W2, Is.EqualTo(A2));
-            Assert.That(ThreadState.V0.W3, Is.EqualTo(B2));
+            Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)0);
+
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)0), Is.EqualTo(A0));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)1), Is.EqualTo(B0));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)2), Is.EqualTo(A2));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)3), Is.EqualTo(B2));
         }
 
         [Test, Description("trn1 v0.8b, v1.8b, v2.8b")]
@@ -28,19 +34,19 @@ namespace Ryujinx.Tests.Cpu
                               [Random(2)] byte B4, [Random(1)] byte B5, [Random(2)] byte B6, [Random(1)] byte B7)
         {
             uint Opcode = 0x0E022820;
-            AVec V1 = new AVec { B0 = A0, B1 = A1, B2 = A2, B3 = A3, B4 = A4, B5 = A5, B6 = A6, B7 = A7 };
-            AVec V2 = new AVec { B0 = B0, B1 = B1, B2 = B2, B3 = B3, B4 = B4, B5 = B5, B6 = B6, B7 = B7 };
+            Vector128<float> V1 = Sse.StaticCast<byte, float>(Sse2.SetVector128(0, 0, 0, 0, 0, 0, 0, 0, A7, A6, A5, A4, A3, A2, A1, A0));
+            Vector128<float> V2 = Sse.StaticCast<byte, float>(Sse2.SetVector128(0, 0, 0, 0, 0, 0, 0, 0, B7, B6, B5, B4, B3, B2, B1, B0));
 
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
-            Assert.That(ThreadState.V0.B0, Is.EqualTo(A0));
-            Assert.That(ThreadState.V0.B1, Is.EqualTo(B0));
-            Assert.That(ThreadState.V0.B2, Is.EqualTo(A2));
-            Assert.That(ThreadState.V0.B3, Is.EqualTo(B2));
-            Assert.That(ThreadState.V0.B4, Is.EqualTo(A4));
-            Assert.That(ThreadState.V0.B5, Is.EqualTo(B4));
-            Assert.That(ThreadState.V0.B6, Is.EqualTo(A6));
-            Assert.That(ThreadState.V0.B7, Is.EqualTo(B6));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)0), Is.EqualTo(A0));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)1), Is.EqualTo(B0));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)2), Is.EqualTo(A2));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)3), Is.EqualTo(B2));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)4), Is.EqualTo(A4));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)5), Is.EqualTo(B4));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)6), Is.EqualTo(A6));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)7), Is.EqualTo(B6));
         }
 
         [Test, Description("trn2 v0.4s, v1.4s, v2.4s")]
@@ -48,15 +54,15 @@ namespace Ryujinx.Tests.Cpu
                               [Random(2)] uint B0, [Random(2)] uint B1, [Random(2)] uint B2, [Random(2)] uint B3)
         {
             uint Opcode = 0x4E826820;
-            AVec V1 = new AVec { W0 = A0, W1 = A1, W2 = A2, W3 = A3 };
-            AVec V2 = new AVec { W0 = B0, W1 = B1, W2 = B2, W3 = B3 };
+            Vector128<float> V1 = Sse.StaticCast<uint, float>(Sse2.SetVector128(A3, A2, A1, A0));
+            Vector128<float> V2 = Sse.StaticCast<uint, float>(Sse2.SetVector128(B3, B2, B1, B0));
 
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
-            Assert.That(ThreadState.V0.W0, Is.EqualTo(A1));
-            Assert.That(ThreadState.V0.W1, Is.EqualTo(B1));
-            Assert.That(ThreadState.V0.W2, Is.EqualTo(A3));
-            Assert.That(ThreadState.V0.W3, Is.EqualTo(B3));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)0), Is.EqualTo(A1));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)1), Is.EqualTo(B1));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)2), Is.EqualTo(A3));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)3), Is.EqualTo(B3));
         }
 
         [Test, Description("trn2 v0.8b, v1.8b, v2.8b")]
@@ -66,19 +72,19 @@ namespace Ryujinx.Tests.Cpu
                               [Random(1)] byte B4, [Random(2)] byte B5, [Random(1)] byte B6, [Random(2)] byte B7)
         {
             uint Opcode = 0x0E026820;
-            AVec V1 = new AVec { B0 = A0, B1 = A1, B2 = A2, B3 = A3, B4 = A4, B5 = A5, B6 = A6, B7 = A7 };
-            AVec V2 = new AVec { B0 = B0, B1 = B1, B2 = B2, B3 = B3, B4 = B4, B5 = B5, B6 = B6, B7 = B7 };
+            Vector128<float> V1 = Sse.StaticCast<byte, float>(Sse2.SetVector128(0, 0, 0, 0, 0, 0, 0, 0, A7, A6, A5, A4, A3, A2, A1, A0));
+            Vector128<float> V2 = Sse.StaticCast<byte, float>(Sse2.SetVector128(0, 0, 0, 0, 0, 0, 0, 0, B7, B6, B5, B4, B3, B2, B1, B0));
 
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
-            Assert.That(ThreadState.V0.B0, Is.EqualTo(A1));
-            Assert.That(ThreadState.V0.B1, Is.EqualTo(B1));
-            Assert.That(ThreadState.V0.B2, Is.EqualTo(A3));
-            Assert.That(ThreadState.V0.B3, Is.EqualTo(B3));
-            Assert.That(ThreadState.V0.B4, Is.EqualTo(A5));
-            Assert.That(ThreadState.V0.B5, Is.EqualTo(B5));
-            Assert.That(ThreadState.V0.B6, Is.EqualTo(A7));
-            Assert.That(ThreadState.V0.B7, Is.EqualTo(B7));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)0), Is.EqualTo(A1));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)1), Is.EqualTo(B1));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)2), Is.EqualTo(A3));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)3), Is.EqualTo(B3));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)4), Is.EqualTo(A5));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)5), Is.EqualTo(B5));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)6), Is.EqualTo(A7));
+            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)7), Is.EqualTo(B7));
         }
 
         [TestCase(0u, 0u, 0x2313221221112010ul, 0x0000000000000000ul)]
@@ -92,11 +98,11 @@ namespace Ryujinx.Tests.Cpu
         {
             // ZIP1 V0.<T>, V1.<T>, V2.<T>
             uint Opcode = 0x0E023820 | (Q << 30) | (size << 22);
-            AVec V1 = new AVec { X0 = 0x1716151413121110, X1 = 0x1F1E1D1C1B1A1918 };
-            AVec V2 = new AVec { X0 = 0x2726252423222120, X1 = 0x2F2E2D2C2B2A2928 };
+            Vector128<float> V1 = MakeVectorE0E1(0x1716151413121110, 0x1F1E1D1C1B1A1918);
+            Vector128<float> V2 = MakeVectorE0E1(0x2726252423222120, 0x2F2E2D2C2B2A2928);
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
-            Assert.AreEqual(Result_0, ThreadState.V0.X0);
-            Assert.AreEqual(Result_1, ThreadState.V0.X1);
+            Assert.AreEqual(Result_0, GetVectorE0(ThreadState.V0));
+            Assert.AreEqual(Result_1, GetVectorE1(ThreadState.V0));
         }
 
         [TestCase(0u, 0u, 0x2717261625152414ul, 0x0000000000000000ul)]
@@ -110,11 +116,11 @@ namespace Ryujinx.Tests.Cpu
         {
             // ZIP2 V0.<T>, V1.<T>, V2.<T>
             uint Opcode = 0x0E027820 | (Q << 30) | (size << 22);
-            AVec V1 = new AVec { X0 = 0x1716151413121110, X1 = 0x1F1E1D1C1B1A1918 };
-            AVec V2 = new AVec { X0 = 0x2726252423222120, X1 = 0x2F2E2D2C2B2A2928 };
+            Vector128<float> V1 = MakeVectorE0E1(0x1716151413121110, 0x1F1E1D1C1B1A1918);
+            Vector128<float> V2 = MakeVectorE0E1(0x2726252423222120, 0x2F2E2D2C2B2A2928);
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
-            Assert.AreEqual(Result_0, ThreadState.V0.X0);
-            Assert.AreEqual(Result_1, ThreadState.V0.X1);
+            Assert.AreEqual(Result_0, GetVectorE0(ThreadState.V0));
+            Assert.AreEqual(Result_1, GetVectorE1(ThreadState.V0));
         }
     }
 }

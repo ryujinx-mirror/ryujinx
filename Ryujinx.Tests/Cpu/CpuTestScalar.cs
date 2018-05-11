@@ -1,5 +1,8 @@
 using ChocolArm64.State;
+
 using NUnit.Framework;
+
+using System.Runtime.Intrinsics.X86;
 
 namespace Ryujinx.Tests.Cpu
 {
@@ -25,8 +28,10 @@ namespace Ryujinx.Tests.Cpu
         public void Fmax_S(uint Opcode, ulong A, ulong B, ulong Result)
         {
             // FMAX S0, S1, S2
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: new AVec { X0 = A }, V2: new AVec { X0 = B });
-            Assert.AreEqual(Result, ThreadState.V0.X0);
+            AThreadState ThreadState = SingleOpcode(Opcode,
+                V1: Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, A)),
+                V2: Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, B)));
+            Assert.AreEqual(Result, Sse41.Extract(Sse.StaticCast<float, ulong>(ThreadState.V0), 0));
         }
 
         [TestCase(0x1E225820u, 0x0000000000000000ul, 0x0000000080000000ul, 0x0000000080000000ul)]
@@ -49,8 +54,10 @@ namespace Ryujinx.Tests.Cpu
         public void Fmin_S(uint Opcode, ulong A, ulong B, ulong Result)
         {
             // FMIN S0, S1, S2
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: new AVec { X0 = A }, V2: new AVec { X0 = B });
-            Assert.AreEqual(Result, ThreadState.V0.X0);
+            AThreadState ThreadState = SingleOpcode(Opcode,
+                V1: Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, A)),
+                V2: Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, B)));
+            Assert.AreEqual(Result, Sse41.Extract(Sse.StaticCast<float, ulong>(ThreadState.V0), 0));
         }
     }
 }

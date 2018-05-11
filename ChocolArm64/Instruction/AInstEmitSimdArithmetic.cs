@@ -4,6 +4,7 @@ using ChocolArm64.Translation;
 using System;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.Intrinsics.X86;
 
 using static ChocolArm64.Instruction.AInstEmitSimdHelper;
 
@@ -41,7 +42,14 @@ namespace ChocolArm64.Instruction
 
         public static void Add_V(AILEmitterCtx Context)
         {
-            EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Add));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2Call(Context, nameof(Sse2.Add));
+            }
+            else
+            {
+                EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Add));
+            }
         }
 
         public static void Addhn_V(AILEmitterCtx Context)
@@ -158,7 +166,7 @@ namespace ChocolArm64.Instruction
 
                 Context.Emit(OpCodes.Conv_U1);
 
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountSetBits8));
+                AVectorHelper.EmitCall(Context, nameof(AVectorHelper.CountSetBits8));
 
                 Context.Emit(OpCodes.Conv_U8);
 
@@ -303,12 +311,26 @@ namespace ChocolArm64.Instruction
 
         public static void Fadd_S(AILEmitterCtx Context)
         {
-            EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Add));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.AddScalar));
+            }
+            else
+            {
+                EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Add));
+            }
         }
 
         public static void Fadd_V(AILEmitterCtx Context)
         {
-            EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Add));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.Add));
+            }
+            else
+            {
+                EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Add));
+            }
         }
 
         public static void Faddp_V(AILEmitterCtx Context)
@@ -345,12 +367,26 @@ namespace ChocolArm64.Instruction
 
         public static void Fdiv_S(AILEmitterCtx Context)
         {
-            EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Div));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.DivideScalar));
+            }
+            else
+            {
+                EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Div));
+            }
         }
 
         public static void Fdiv_V(AILEmitterCtx Context)
         {
-            EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Div));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.Divide));
+            }
+            else
+            {
+                EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Div));
+            }
         }
 
         public static void Fmadd_S(AILEmitterCtx Context)
@@ -370,11 +406,11 @@ namespace ChocolArm64.Instruction
             {
                 if (Op.Size == 0)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.MaxF));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.MaxF));
                 }
                 else if (Op.Size == 1)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Max));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Max));
                 }
                 else
                 {
@@ -391,11 +427,11 @@ namespace ChocolArm64.Instruction
             {
                 if (Op.Size == 0)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.MaxF));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.MaxF));
                 }
                 else if (Op.Size == 1)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Max));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Max));
                 }
                 else
                 {
@@ -412,11 +448,11 @@ namespace ChocolArm64.Instruction
             {
                 if (Op.Size == 0)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.MinF));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.MinF));
                 }
                 else if (Op.Size == 1)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Min));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Min));
                 }
                 else
                 {
@@ -435,11 +471,11 @@ namespace ChocolArm64.Instruction
             {
                 if (SizeF == 0)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.MinF));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.MinF));
                 }
                 else if (SizeF == 1)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Min));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Min));
                 }
                 else
                 {
@@ -505,7 +541,14 @@ namespace ChocolArm64.Instruction
 
         public static void Fmul_S(AILEmitterCtx Context)
         {
-            EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Mul));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.MultiplyScalar));
+            }
+            else
+            {
+                EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Mul));
+            }
         }
 
         public static void Fmul_Se(AILEmitterCtx Context)
@@ -515,7 +558,14 @@ namespace ChocolArm64.Instruction
 
         public static void Fmul_V(AILEmitterCtx Context)
         {
-            EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Mul));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.Multiply));
+            }
+            else
+            {
+                EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Mul));
+            }
         }
 
         public static void Fmul_Ve(AILEmitterCtx Context)
@@ -716,11 +766,11 @@ namespace ChocolArm64.Instruction
 
                 if (Op.Size == 0)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.RoundF));
                 }
                 else if (Op.Size == 1)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Round));
                 }
                 else
                 {
@@ -743,11 +793,11 @@ namespace ChocolArm64.Instruction
 
                 if (SizeF == 0)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.RoundF));
                 }
                 else if (SizeF == 1)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Round));
                 }
                 else
                 {
@@ -819,11 +869,11 @@ namespace ChocolArm64.Instruction
 
                 if (Op.Size == 0)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.RoundF));
                 }
                 else if (Op.Size == 1)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Round));
                 }
                 else
                 {
@@ -844,11 +894,11 @@ namespace ChocolArm64.Instruction
 
                 if (Op.Size == 0)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.RoundF));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.RoundF));
                 }
                 else if (Op.Size == 1)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.Round));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Round));
                 }
                 else
                 {
@@ -947,12 +997,26 @@ namespace ChocolArm64.Instruction
 
         public static void Fsub_S(AILEmitterCtx Context)
         {
-            EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Sub));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.SubtractScalar));
+            }
+            else
+            {
+                EmitScalarBinaryOpF(Context, () => Context.Emit(OpCodes.Sub));
+            }
         }
 
         public static void Fsub_V(AILEmitterCtx Context)
         {
-            EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Sub));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2CallF(Context, nameof(Sse2.Subtract));
+            }
+            else
+            {
+                EmitVectorBinaryOpF(Context, () => Context.Emit(OpCodes.Sub));
+            }
         }
 
         public static void Mla_V(AILEmitterCtx Context)
@@ -1066,7 +1130,14 @@ namespace ChocolArm64.Instruction
 
         public static void Sub_V(AILEmitterCtx Context)
         {
-            EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Sub));
+            if (AOptimizations.UseSse2)
+            {
+                EmitSse2Call(Context, nameof(Sse2.Subtract));
+            }
+            else
+            {
+                EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Sub));
+            }
         }
 
         public static void Subhn_V(AILEmitterCtx Context)

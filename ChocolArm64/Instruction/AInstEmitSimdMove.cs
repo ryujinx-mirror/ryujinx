@@ -234,21 +234,21 @@ namespace ChocolArm64.Instruction
 
             switch (Op.Size)
             {
-                case 1: ASoftFallback.EmitCall(Context,
-                    nameof(ASoftFallback.Tbl1_V64),
-                    nameof(ASoftFallback.Tbl1_V128)); break;
+                case 1: AVectorHelper.EmitCall(Context,
+                    nameof(AVectorHelper.Tbl1_V64),
+                    nameof(AVectorHelper.Tbl1_V128)); break;
 
-                case 2: ASoftFallback.EmitCall(Context,
-                    nameof(ASoftFallback.Tbl2_V64),
-                    nameof(ASoftFallback.Tbl2_V128)); break;
+                case 2: AVectorHelper.EmitCall(Context,
+                    nameof(AVectorHelper.Tbl2_V64),
+                    nameof(AVectorHelper.Tbl2_V128)); break;
 
-                case 3: ASoftFallback.EmitCall(Context,
-                    nameof(ASoftFallback.Tbl3_V64),
-                    nameof(ASoftFallback.Tbl3_V128)); break;
+                case 3: AVectorHelper.EmitCall(Context,
+                    nameof(AVectorHelper.Tbl3_V64),
+                    nameof(AVectorHelper.Tbl3_V128)); break;
 
-                case 4: ASoftFallback.EmitCall(Context,
-                    nameof(ASoftFallback.Tbl4_V64),
-                    nameof(ASoftFallback.Tbl4_V128)); break;
+                case 4: AVectorHelper.EmitCall(Context,
+                    nameof(AVectorHelper.Tbl4_V64),
+                    nameof(AVectorHelper.Tbl4_V128)); break;
 
                 default: throw new InvalidOperationException();
             }

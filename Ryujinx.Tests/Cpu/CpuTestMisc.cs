@@ -2,6 +2,8 @@ using ChocolArm64.State;
 
 using NUnit.Framework;
 
+using System.Runtime.Intrinsics.X86;
+
 namespace Ryujinx.Tests.Cpu
 {
     [Category("Misc"), Explicit]
@@ -73,7 +75,9 @@ namespace Ryujinx.Tests.Cpu
             RET
             */
 
-            SetThreadState(V0: new AVec { S0 = A }, V1: new AVec { S0 = B });
+            SetThreadState(
+                V0: Sse.SetScalarVector128(A),
+                V1: Sse.SetScalarVector128(B));
             Opcode(0x1E2E1002);
             Opcode(0x1E201840);
             Opcode(0x1E211841);
@@ -84,7 +88,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
 
-            Assert.That(GetThreadState().V0.S0, Is.EqualTo(16f));
+            Assert.That(Sse41.Extract(GetThreadState().V0, 0), Is.EqualTo(16f));
         }
 
         [TestCase(-20d,  -5d)] // 18 integer solutions.
@@ -120,7 +124,9 @@ namespace Ryujinx.Tests.Cpu
             RET
             */
 
-            SetThreadState(V0: new AVec { D0 = A }, V1: new AVec { D0 = B });
+            SetThreadState(
+                V0: Sse.StaticCast<double, float>(Sse2.SetScalarVector128(A)),
+                V1: Sse.StaticCast<double, float>(Sse2.SetScalarVector128(B)));
             Opcode(0x1E6E1002);
             Opcode(0x1E601840);
             Opcode(0x1E611841);
@@ -131,7 +137,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
 
-            Assert.That(GetThreadState().V0.D0, Is.EqualTo(16d));
+            Assert.That(VectorExtractDouble(GetThreadState().V0, 0), Is.EqualTo(16d));
         }
 
         [Test]

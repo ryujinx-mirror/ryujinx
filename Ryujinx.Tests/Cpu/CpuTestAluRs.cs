@@ -1,14 +1,9 @@
 //#define AluRs
 
-using ChocolArm64.State;
-
 using NUnit.Framework;
 
 namespace Ryujinx.Tests.Cpu
 {
-    using Tester;
-    using Tester.Types;
-
     [Category("AluRs"), Ignore("Tested: first half of 2018.")]
     public sealed class CpuTestAluRs : CpuTest
     {

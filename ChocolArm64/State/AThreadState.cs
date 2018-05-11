@@ -2,6 +2,7 @@ using ChocolArm64.Events;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.Intrinsics;
 
 namespace ChocolArm64.State
 {
@@ -18,10 +19,10 @@ namespace ChocolArm64.State
                      X16, X17, X18, X19, X20, X21, X22, X23,
                      X24, X25, X26, X27, X28, X29, X30, X31;
 
-        public AVec V0,  V1,  V2,  V3,  V4,  V5,  V6,  V7,
-                    V8,  V9,  V10, V11, V12, V13, V14, V15,
-                    V16, V17, V18, V19, V20, V21, V22, V23,
-                    V24, V25, V26, V27, V28, V29, V30, V31;
+        public Vector128<float> V0,  V1,  V2,  V3,  V4,  V5,  V6,  V7,
+                                V8,  V9,  V10, V11, V12, V13, V14, V15,
+                                V16, V17, V18, V19, V20, V21, V22, V23,
+                                V24, V25, V26, V27, V28, V29, V30, V31;
 
         public bool Overflow;
         public bool Carry;

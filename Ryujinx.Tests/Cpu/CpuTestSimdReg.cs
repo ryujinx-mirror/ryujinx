@@ -4,6 +4,8 @@ using ChocolArm64.State;
 
 using NUnit.Framework;
 
+using System.Runtime.Intrinsics;
+
 namespace Ryujinx.Tests.Cpu
 {
     using Tester;
@@ -65,9 +67,9 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x5EE28420; // ADD D0, D1, D2
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A };
-            AVec V2 = new AVec { X0 = B };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.V(1, new Bits(A));
@@ -76,8 +78,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -90,9 +92,9 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A };
-            AVec V2 = new AVec { X0 = B };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.V(1, new Bits(A));
@@ -101,8 +103,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -117,8 +119,8 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -129,8 +131,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -145,9 +147,9 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -158,8 +160,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -175,9 +177,9 @@ namespace Ryujinx.Tests.Cpu
             Bits Op = new Bits(Opcode);
 
             ulong _X0 = TestContext.CurrentContext.Random.NextULong();
-            AVec V0 = new AVec { X0 = _X0 };
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V0 = MakeVectorE0(_X0);
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -188,8 +190,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(_X0));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(_X0));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -202,9 +204,9 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A };
-            AVec V2 = new AVec { X0 = B };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.V(1, new Bits(A));
@@ -213,8 +215,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -229,8 +231,8 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -241,8 +243,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -253,9 +255,9 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x0E221C20; // AND V0.8B, V1.8B, V2.8B
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A };
-            AVec V2 = new AVec { X0 = B };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.V(1, new Bits(A));
@@ -264,8 +266,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -278,8 +280,8 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x4E221C20; // AND V0.16B, V1.16B, V2.16B
             Bits Op = new Bits(Opcode);
 
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -290,8 +292,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -302,9 +304,9 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x0E621C20; // BIC V0.8B, V1.8B, V2.8B
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A };
-            AVec V2 = new AVec { X0 = B };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.V(1, new Bits(A));
@@ -313,8 +315,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -327,8 +329,8 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x4E621C20; // BIC V0.16B, V1.16B, V2.16B
             Bits Op = new Bits(Opcode);
 
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -339,8 +341,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -352,9 +354,9 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x2EE21C20; // BIF V0.8B, V1.8B, V2.8B
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X0 = _Z, X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A };
-            AVec V2 = new AVec { X0 = B };
+            Vector128<float> V0 = MakeVectorE0E1(_Z, TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(0, 0, new Bits(_Z));
@@ -364,8 +366,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -380,9 +382,9 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x6EE21C20; // BIF V0.16B, V1.16B, V2.16B
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X0 = _Z0, X1 = _Z1 };
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V0 = MakeVectorE0E1(_Z0, _Z1);
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(0, 0, new Bits(_Z0));
@@ -395,8 +397,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -408,9 +410,9 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x2EA21C20; // BIT V0.8B, V1.8B, V2.8B
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X0 = _Z, X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A };
-            AVec V2 = new AVec { X0 = B };
+            Vector128<float> V0 = MakeVectorE0E1(_Z, TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(0, 0, new Bits(_Z));
@@ -420,8 +422,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -436,9 +438,9 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x6EA21C20; // BIT V0.16B, V1.16B, V2.16B
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X0 = _Z0, X1 = _Z1 };
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V0 = MakeVectorE0E1(_Z0, _Z1);
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(0, 0, new Bits(_Z0));
@@ -451,8 +453,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -464,9 +466,9 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x2E621C20; // BSL V0.8B, V1.8B, V2.8B
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X0 = _Z, X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A };
-            AVec V2 = new AVec { X0 = B };
+            Vector128<float> V0 = MakeVectorE0E1(_Z, TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(0, 0, new Bits(_Z));
@@ -476,8 +478,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -492,9 +494,9 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x6E621C20; // BSL V0.16B, V1.16B, V2.16B
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X0 = _Z0, X1 = _Z1 };
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V0 = MakeVectorE0E1(_Z0, _Z1);
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(0, 0, new Bits(_Z0));
@@ -507,8 +509,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -519,9 +521,9 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x0EE21C20; // ORN V0.8B, V1.8B, V2.8B
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A };
-            AVec V2 = new AVec { X0 = B };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.V(1, new Bits(A));
@@ -530,8 +532,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -544,8 +546,8 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x4EE21C20; // ORN V0.16B, V1.16B, V2.16B
             Bits Op = new Bits(Opcode);
 
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -556,8 +558,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -568,9 +570,9 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x0EA21C20; // ORR V0.8B, V1.8B, V2.8B
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A };
-            AVec V2 = new AVec { X0 = B };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.V(1, new Bits(A));
@@ -579,8 +581,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -593,8 +595,8 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x4EA21C20; // ORR V0.16B, V1.16B, V2.16B
             Bits Op = new Bits(Opcode);
 
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -605,8 +607,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -621,9 +623,9 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -634,8 +636,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -651,9 +653,9 @@ namespace Ryujinx.Tests.Cpu
             Bits Op = new Bits(Opcode);
 
             ulong _X0 = TestContext.CurrentContext.Random.NextULong();
-            AVec V0 = new AVec { X0 = _X0 };
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V0 = MakeVectorE0(_X0);
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -664,8 +666,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(_X0));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(_X0));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -680,9 +682,9 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -693,8 +695,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -710,9 +712,9 @@ namespace Ryujinx.Tests.Cpu
             Bits Op = new Bits(Opcode);
 
             ulong _X0 = TestContext.CurrentContext.Random.NextULong();
-            AVec V0 = new AVec { X0 = _X0 };
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V0 = MakeVectorE0(_X0);
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -723,8 +725,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(_X0));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(_X0));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -735,9 +737,9 @@ namespace Ryujinx.Tests.Cpu
             uint Opcode = 0x7EE28420; // SUB D0, D1, D2
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A };
-            AVec V2 = new AVec { X0 = B };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.V(1, new Bits(A));
@@ -746,8 +748,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -760,9 +762,9 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A };
-            AVec V2 = new AVec { X0 = B };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.V(1, new Bits(A));
@@ -771,8 +773,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -787,8 +789,8 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -799,8 +801,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 
@@ -815,9 +817,9 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            AVec V0 = new AVec { X1 = TestContext.CurrentContext.Random.NextULong() };
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -828,8 +830,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
-                Assert.That(ThreadState.V0.X1, Is.Zero);
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
             });
         }
 
@@ -845,9 +847,9 @@ namespace Ryujinx.Tests.Cpu
             Bits Op = new Bits(Opcode);
 
             ulong _X0 = TestContext.CurrentContext.Random.NextULong();
-            AVec V0 = new AVec { X0 = _X0 };
-            AVec V1 = new AVec { X0 = A0, X1 = A1 };
-            AVec V2 = new AVec { X0 = B0, X1 = B1 };
+            Vector128<float> V0 = MakeVectorE0(_X0);
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
 
             AArch64.Vpart(1, 0, new Bits(A0));
@@ -858,8 +860,8 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.Multiple(() =>
             {
-                Assert.That(ThreadState.V0.X0, Is.EqualTo(_X0));
-                Assert.That(ThreadState.V0.X1, Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(_X0));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
         }
 #endif

@@ -382,15 +382,15 @@ namespace ChocolArm64.Instruction
 
                 if (SizeF == 0)
                 {
-                    ASoftFallback.EmitCall(Context, Signed
-                        ? nameof(ASoftFallback.SatF32ToS32)
-                        : nameof(ASoftFallback.SatF32ToU32));
+                    AVectorHelper.EmitCall(Context, Signed
+                        ? nameof(AVectorHelper.SatF32ToS32)
+                        : nameof(AVectorHelper.SatF32ToU32));
                 }
                 else /* if (SizeF == 1) */
                 {
-                    ASoftFallback.EmitCall(Context, Signed
-                        ? nameof(ASoftFallback.SatF64ToS64)
-                        : nameof(ASoftFallback.SatF64ToU64));
+                    AVectorHelper.EmitCall(Context, Signed
+                        ? nameof(AVectorHelper.SatF64ToS64)
+                        : nameof(AVectorHelper.SatF64ToU64));
                 }
 
                 if (SizeF == 0)
@@ -420,22 +420,22 @@ namespace ChocolArm64.Instruction
             {
                 if (Size == 0)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.SatF32ToS32));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.SatF32ToS32));
                 }
                 else /* if (Size == 1) */
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.SatF64ToS32));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.SatF64ToS32));
                 }
             }
             else
             {
                 if (Size == 0)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.SatF32ToS64));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.SatF32ToS64));
                 }
                 else /* if (Size == 1) */
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.SatF64ToS64));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.SatF64ToS64));
                 }
             }
         }
@@ -453,22 +453,22 @@ namespace ChocolArm64.Instruction
             {
                 if (Size == 0)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.SatF32ToU32));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.SatF32ToU32));
                 }
                 else /* if (Size == 1) */
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.SatF64ToU32));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.SatF64ToU32));
                 }
             }
             else
             {
                 if (Size == 0)
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.SatF32ToU64));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.SatF32ToU64));
                 }
                 else /* if (Size == 1) */
                 {
-                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.SatF64ToU64));
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.SatF64ToU64));
                 }
             }
         }

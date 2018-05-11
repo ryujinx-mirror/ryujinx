@@ -3,6 +3,8 @@ using ChocolArm64.State;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace ChocolArm64.Memory
 {
@@ -189,33 +191,73 @@ namespace ChocolArm64.Memory
             return ReadUInt64Unchecked(Position);
         }
 
-        public AVec ReadVector8(long Position)
+        public Vector128<float> ReadVector8(long Position)
         {
-            return new AVec() { B0 = ReadByte(Position) };
-        }
-
-        public AVec ReadVector16(long Position)
-        {
-            return new AVec() { H0 = ReadUInt16(Position) };
-        }
-
-        public AVec ReadVector32(long Position)
-        {
-            return new AVec() { W0 = ReadUInt32(Position) };
-        }
-
-        public AVec ReadVector64(long Position)
-        {
-            return new AVec() { X0 = ReadUInt64(Position) };
-        }
-
-        public AVec ReadVector128(long Position)
-        {
-            return new AVec()
+            if (Sse2.IsSupported)
             {
-                X0 = ReadUInt64(Position + 0),
-                X1 = ReadUInt64(Position + 8)
-            };
+                return Sse.StaticCast<byte, float>(Sse2.SetVector128(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ReadByte(Position)));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
+        }
+
+        public Vector128<float> ReadVector16(long Position)
+        {
+            if (Sse2.IsSupported)
+            {
+                return Sse.StaticCast<ushort, float>(Sse2.Insert(Sse2.SetZeroVector128<ushort>(), ReadUInt16(Position), 0));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
+        }
+
+        public Vector128<float> ReadVector32(long Position)
+        {
+            EnsureAccessIsValid(Position + 0, AMemoryPerm.Read);
+            EnsureAccessIsValid(Position + 3, AMemoryPerm.Read);
+
+            if (Sse.IsSupported)
+            {
+                return Sse.LoadScalarVector128((float*)(RamPtr + (uint)Position));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
+        }
+
+        public Vector128<float> ReadVector64(long Position)
+        {
+            EnsureAccessIsValid(Position + 0, AMemoryPerm.Read);
+            EnsureAccessIsValid(Position + 7, AMemoryPerm.Read);
+
+            if (Sse2.IsSupported)
+            {
+                return Sse.StaticCast<double, float>(Sse2.LoadScalarVector128((double*)(RamPtr + (uint)Position)));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
+        }
+
+        public Vector128<float> ReadVector128(long Position)
+        {
+            EnsureAccessIsValid(Position + 0,  AMemoryPerm.Read);
+            EnsureAccessIsValid(Position + 15, AMemoryPerm.Read);
+
+            if (Sse.IsSupported)
+            {
+                return Sse.LoadVector128((float*)(RamPtr + (uint)Position));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
         }
 
         public sbyte ReadSByteUnchecked(long Position)
@@ -258,33 +300,64 @@ namespace ChocolArm64.Memory
             return *((ulong*)(RamPtr + (uint)Position));
         }
 
-        public AVec ReadVector8Unchecked(long Position)
+        public Vector128<float> ReadVector8Unchecked(long Position)
         {
-            return new AVec() { B0 = ReadByteUnchecked(Position) };
-        }
-
-        public AVec ReadVector16Unchecked(long Position)
-        {
-            return new AVec() { H0 = ReadUInt16Unchecked(Position) };
-        }
-
-        public AVec ReadVector32Unchecked(long Position)
-        {
-            return new AVec() { W0 = ReadUInt32Unchecked(Position) };
-        }
-
-        public AVec ReadVector64Unchecked(long Position)
-        {
-            return new AVec() { X0 = ReadUInt64Unchecked(Position) };
-        }
-
-        public AVec ReadVector128Unchecked(long Position)
-        {
-            return new AVec()
+            if (Sse2.IsSupported)
             {
-                X0 = ReadUInt64Unchecked(Position + 0),
-                X1 = ReadUInt64Unchecked(Position + 8)
-            };
+                return Sse.StaticCast<byte, float>(Sse2.SetVector128(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ReadByte(Position)));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
+        }
+
+        public Vector128<float> ReadVector16Unchecked(long Position)
+        {
+            if (Sse2.IsSupported)
+            {
+                return Sse.StaticCast<ushort, float>(Sse2.Insert(Sse2.SetZeroVector128<ushort>(), ReadUInt16Unchecked(Position), 0));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
+        }
+
+        public Vector128<float> ReadVector32Unchecked(long Position)
+        {
+            if (Sse.IsSupported)
+            {
+                return Sse.LoadScalarVector128((float*)(RamPtr + (uint)Position));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
+        }
+
+        public Vector128<float> ReadVector64Unchecked(long Position)
+        {
+            if (Sse2.IsSupported)
+            {
+                return Sse.StaticCast<double, float>(Sse2.LoadScalarVector128((double*)(RamPtr + (uint)Position)));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
+        }
+
+        public Vector128<float> ReadVector128Unchecked(long Position)
+        {
+            if (Sse.IsSupported)
+            {
+                return Sse.LoadVector128((float*)(RamPtr + (uint)Position));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
         }
 
         public void WriteSByte(long Position, sbyte Value)
@@ -338,30 +411,77 @@ namespace ChocolArm64.Memory
             WriteUInt64Unchecked(Position, Value);
         }
 
-        public void WriteVector8(long Position, AVec Value)
+        public void WriteVector8(long Position, Vector128<float> Value)
         {
-            WriteByte(Position, Value.B0);
+            if (Sse41.IsSupported)
+            {
+                WriteByte(Position, Sse41.Extract(Sse.StaticCast<float, byte>(Value), 0));
+            }
+            else if (Sse2.IsSupported)
+            {
+                WriteByte(Position, (byte)Sse2.Extract(Sse.StaticCast<float, ushort>(Value), 0));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
         }
 
-        public void WriteVector16(long Position, AVec Value)
+        public void WriteVector16(long Position, Vector128<float> Value)
         {
-            WriteUInt16(Position, Value.H0);
+            if (Sse2.IsSupported)
+            {
+                WriteUInt16(Position, Sse2.Extract(Sse.StaticCast<float, ushort>(Value), 0));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
         }
 
-        public void WriteVector32(long Position, AVec Value)
+        public void WriteVector32(long Position, Vector128<float> Value)
         {
-            WriteUInt32(Position, Value.W0);
+            EnsureAccessIsValid(Position + 0, AMemoryPerm.Write);
+            EnsureAccessIsValid(Position + 3, AMemoryPerm.Write);
+
+            if (Sse.IsSupported)
+            {
+                Sse.StoreScalar((float*)(RamPtr + (uint)Position), Value);
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
         }
 
-        public void WriteVector64(long Position, AVec Value)
+        public void WriteVector64(long Position, Vector128<float> Value)
         {
-            WriteUInt64(Position, Value.X0);
+            EnsureAccessIsValid(Position + 0, AMemoryPerm.Write);
+            EnsureAccessIsValid(Position + 7, AMemoryPerm.Write);
+
+            if (Sse2.IsSupported)
+            {
+                Sse2.StoreScalar((double*)(RamPtr + (uint)Position), Sse.StaticCast<float, double>(Value));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
         }
 
-        public void WriteVector128(long Position, AVec Value)
+        public void WriteVector128(long Position, Vector128<float> Value)
         {
-            WriteUInt64(Position + 0, Value.X0);
-            WriteUInt64(Position + 8, Value.X1);
+            EnsureAccessIsValid(Position + 0,  AMemoryPerm.Write);
+            EnsureAccessIsValid(Position + 15, AMemoryPerm.Write);
+
+            if (Sse.IsSupported)
+            {
+                Sse.Store((float*)(RamPtr + (uint)Position), Value);
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
         }
 
         public void WriteSByteUnchecked(long Position, sbyte Value)
@@ -404,30 +524,68 @@ namespace ChocolArm64.Memory
             *((ulong*)(RamPtr + (uint)Position)) = Value;
         }
 
-        public void WriteVector8Unchecked(long Position, AVec Value)
+        public void WriteVector8Unchecked(long Position, Vector128<float> Value)
         {
-            WriteByteUnchecked(Position, Value.B0);
+            if (Sse41.IsSupported)
+            {
+                WriteByteUnchecked(Position, Sse41.Extract(Sse.StaticCast<float, byte>(Value), 0));
+            }
+            else if (Sse2.IsSupported)
+            {
+                WriteByteUnchecked(Position, (byte)Sse2.Extract(Sse.StaticCast<float, ushort>(Value), 0));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
         }
 
-        public void WriteVector16Unchecked(long Position, AVec Value)
+        public void WriteVector16Unchecked(long Position, Vector128<float> Value)
         {
-            WriteUInt16Unchecked(Position, Value.H0);
+            if (Sse2.IsSupported)
+            {
+                WriteUInt16Unchecked(Position, Sse2.Extract(Sse.StaticCast<float, ushort>(Value), 0));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
         }
 
-        public void WriteVector32Unchecked(long Position, AVec Value)
+        public void WriteVector32Unchecked(long Position, Vector128<float> Value)
         {
-            WriteUInt32Unchecked(Position, Value.W0);
+            if (Sse.IsSupported)
+            {
+                Sse.StoreScalar((float*)(RamPtr + (uint)Position), Value);
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
         }
 
-        public void WriteVector64Unchecked(long Position, AVec Value)
+        public void WriteVector64Unchecked(long Position, Vector128<float> Value)
         {
-            WriteUInt64Unchecked(Position, Value.X0);
+            if (Sse2.IsSupported)
+            {
+                Sse2.StoreScalar((double*)(RamPtr + (uint)Position), Sse.StaticCast<float, double>(Value));
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
         }
 
-        public void WriteVector128Unchecked(long Position, AVec Value)
+        public void WriteVector128Unchecked(long Position, Vector128<float> Value)
         {
-            WriteUInt64Unchecked(Position + 0, Value.X0);
-            WriteUInt64Unchecked(Position + 8, Value.X1);
+            if (Sse.IsSupported)
+            {
+                Sse.Store((float*)(RamPtr + (uint)Position), Value);
+            }
+            else
+            {
+                throw new PlatformNotSupportedException();
+            }
         }
 
         private void EnsureAccessIsValid(long Position, AMemoryPerm Perm)

@@ -3,6 +3,8 @@ using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
 using System.Reflection;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace ChocolArm64.Instruction
 {
@@ -30,6 +32,129 @@ namespace ChocolArm64.Instruction
         public static int GetImmShr(AOpCodeSimdShImm Op)
         {
             return (8 << (Op.Size + 1)) - Op.Imm;
+        }
+
+        public static void EmitSse2Call(AILEmitterCtx Context, string Name)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            void Ldvec(int Reg)
+            {
+                Context.EmitLdvec(Reg);
+
+                switch (Op.Size)
+                {
+                    case 0: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToSByte)); break;
+                    case 1: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToInt16)); break;
+                    case 2: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToInt32)); break;
+                    case 3: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToInt64)); break;
+                }
+            }
+
+            Ldvec(Op.Rn);
+
+            Type BaseType = null;
+
+            Type[] Types;
+
+            switch (Op.Size)
+            {
+                case 0: BaseType = typeof(Vector128<sbyte>); break;
+                case 1: BaseType = typeof(Vector128<short>); break;
+                case 2: BaseType = typeof(Vector128<int>);   break;
+                case 3: BaseType = typeof(Vector128<long>);  break;
+            }
+
+            if (Op is AOpCodeSimdReg BinOp)
+            {
+                Ldvec(BinOp.Rm);
+
+                Types = new Type[] { BaseType, BaseType };
+            }
+            else
+            {
+                Types = new Type[] { BaseType };
+            }
+
+            Context.EmitCall(typeof(Sse2).GetMethod(Name, Types));
+
+            switch (Op.Size)
+            {
+                case 0: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSByteToSingle)); break;
+                case 1: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInt16ToSingle)); break;
+                case 2: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInt32ToSingle)); break;
+                case 3: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInt64ToSingle)); break;
+            }
+
+            Context.EmitStvec(Op.Rd);
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
+        public static void EmitSse2CallF(AILEmitterCtx Context, string Name)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            void Ldvec(int Reg)
+            {
+                Context.EmitLdvec(Reg);
+
+                if (SizeF == 1)
+                {
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToDouble));
+                }
+            }
+
+            Ldvec(Op.Rn);
+
+            Type BaseType = SizeF == 0
+                ? typeof(Vector128<float>)
+                : typeof(Vector128<double>);
+
+            Type[] Types;
+
+            if (Op is AOpCodeSimdReg BinOp)
+            {
+                Ldvec(BinOp.Rm);
+
+                Types = new Type[] { BaseType, BaseType };
+            }
+            else
+            {
+                Types = new Type[] { BaseType };
+            }
+
+            MethodInfo MthdInfo;
+
+            if (SizeF == 0)
+            {
+                MthdInfo = typeof(Sse).GetMethod(Name, Types);
+            }
+            else /* if (SizeF == 1) */
+            {
+                MthdInfo = typeof(Sse2).GetMethod(Name, Types);
+            }
+
+            Context.EmitCall(MthdInfo);
+
+            if (SizeF == 1)
+            {
+                AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorDoubleToSingle));
+            }
+
+            Context.EmitStvec(Op.Rd);
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
         }
 
         public static void EmitUnaryMathCall(AILEmitterCtx Context, string Name)
@@ -596,9 +721,9 @@ namespace ChocolArm64.Instruction
             Context.EmitLdc_I4(Index);
             Context.EmitLdc_I4(Size);
 
-            ASoftFallback.EmitCall(Context, Signed
-                ? nameof(ASoftFallback.VectorExtractIntSx)
-                : nameof(ASoftFallback.VectorExtractIntZx));
+            AVectorHelper.EmitCall(Context, Signed
+                ? nameof(AVectorHelper.VectorExtractIntSx)
+                : nameof(AVectorHelper.VectorExtractIntZx));
         }
 
         public static void EmitVectorExtractF(AILEmitterCtx Context, int Reg, int Index, int Size)
@@ -610,11 +735,11 @@ namespace ChocolArm64.Instruction
 
             if (Size == 0)
             {
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.VectorExtractSingle));
+                AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorExtractSingle));
             }
             else if (Size == 1)
             {
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.VectorExtractDouble));
+                AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorExtractDouble));
             }
             else
             {
@@ -646,7 +771,7 @@ namespace ChocolArm64.Instruction
             Context.EmitLdc_I4(Index);
             Context.EmitLdc_I4(Size);
 
-            ASoftFallback.EmitCall(Context, nameof(ASoftFallback.VectorInsertInt));
+            AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInsertInt));
 
             Context.EmitStvec(Reg);
         }
@@ -659,7 +784,7 @@ namespace ChocolArm64.Instruction
             Context.EmitLdc_I4(Index);
             Context.EmitLdc_I4(Size);
 
-            ASoftFallback.EmitCall(Context, nameof(ASoftFallback.VectorInsertInt));
+            AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInsertInt));
 
             Context.EmitStvectmp();
         }
@@ -673,7 +798,7 @@ namespace ChocolArm64.Instruction
             Context.EmitLdc_I4(Index);
             Context.EmitLdc_I4(Size);
 
-            ASoftFallback.EmitCall(Context, nameof(ASoftFallback.VectorInsertInt));
+            AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInsertInt));
 
             Context.EmitStvec(Reg);
         }
@@ -687,11 +812,11 @@ namespace ChocolArm64.Instruction
 
             if (Size == 0)
             {
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.VectorInsertSingle));
+                AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInsertSingle));
             }
             else if (Size == 1)
             {
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.VectorInsertDouble));
+                AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInsertDouble));
             }
             else
             {
@@ -710,11 +835,11 @@ namespace ChocolArm64.Instruction
 
             if (Size == 0)
             {
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.VectorInsertSingle));
+                AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInsertSingle));
             }
             else if (Size == 1)
             {
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.VectorInsertDouble));
+                AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInsertDouble));
             }
             else
             {
