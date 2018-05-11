@@ -38,8 +38,13 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvGpuGpu
 
         private static int ZcullGetCtxSize(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
             long OutputPosition = Context.Request.GetBufferType0x22Position();
+
+            NvGpuGpuZcullGetCtxSize Args = new NvGpuGpuZcullGetCtxSize();
+
+            Args.Size = 1;
+
+            AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             Context.Ns.Log.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
@@ -48,8 +53,22 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvGpuGpu
 
         private static int ZcullGetInfo(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
             long OutputPosition = Context.Request.GetBufferType0x22Position();
+
+            NvGpuGpuZcullGetInfo Args = new NvGpuGpuZcullGetInfo();
+
+            Args.WidthAlignPixels           = 0x20;
+            Args.HeightAlignPixels          = 0x20;
+            Args.PixelSquaresByAliquots     = 0x400;
+            Args.AliquotTotal               = 0x800;
+            Args.RegionByteMultiplier       = 0x20;
+            Args.RegionHeaderSize           = 0x20;
+            Args.SubregionHeaderSize        = 0xc0;
+            Args.SubregionWidthAlignPixels  = 0x20;
+            Args.SubregionHeightAlignPixels = 0x40;
+            Args.SubregionCount             = 0x10;
+
+            AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             Context.Ns.Log.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
@@ -128,8 +147,14 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvGpuGpu
 
         private static int GetActiveSlotMask(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
             long OutputPosition = Context.Request.GetBufferType0x22Position();
+
+            NvGpuGpuGetActiveSlotMask Args = new NvGpuGpuGetActiveSlotMask();
+
+            Args.Slot = 0x07;
+            Args.Mask = 0x01;
+
+            AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             Context.Ns.Log.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
