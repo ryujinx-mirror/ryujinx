@@ -1,3 +1,5 @@
+using System;
+
 namespace Ryujinx.Core.Gpu
 {
     class BlockLinearSwizzle : ISwizzle
@@ -16,7 +18,7 @@ namespace Ryujinx.Core.Gpu
             BhShift  = CountLsbZeros(BlockHeight * 8);
             BppShift = CountLsbZeros(Bpp);
 
-            int WidthInGobs = Width * Bpp / 64;
+            int WidthInGobs = (int)MathF.Ceiling(Width * Bpp / 64f);
 
             GobStride = 512 * BlockHeight * WidthInGobs;
 
