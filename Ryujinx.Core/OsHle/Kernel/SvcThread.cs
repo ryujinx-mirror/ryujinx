@@ -87,12 +87,12 @@ namespace Ryujinx.Core.OsHle.Kernel
         {
             int Handle = (int)ThreadState.X1;
 
-            KThread CurrThread = Process.HandleTable.GetData<KThread>(Handle);
+            KThread Thread = GetThread(ThreadState.Tpidr, Handle);
 
-            if (CurrThread != null)
+            if (Thread != null)
             {
                 ThreadState.X0 = 0;
-                ThreadState.X1 = (ulong)CurrThread.ActualPriority;
+                ThreadState.X1 = (ulong)Thread.ActualPriority;
             }
             else
             {
@@ -107,11 +107,11 @@ namespace Ryujinx.Core.OsHle.Kernel
             int Handle   = (int)ThreadState.X0;
             int Priority = (int)ThreadState.X1;
 
-            KThread CurrThread = Process.HandleTable.GetData<KThread>(Handle);
+            KThread Thread = GetThread(ThreadState.Tpidr, Handle);
 
-            if (CurrThread != null)
+            if (Thread != null)
             {
-                CurrThread.SetPriority(Priority);
+                Thread.SetPriority(Priority);
 
                 ThreadState.X0 = 0;
             }
@@ -139,12 +139,12 @@ namespace Ryujinx.Core.OsHle.Kernel
         {
             int Handle = (int)ThreadState.X1;
 
-            KThread CurrThread = Process.HandleTable.GetData<KThread>(Handle);
+            KThread Thread = GetThread(ThreadState.Tpidr, Handle);
 
-            if (CurrThread != null)
+            if (Thread != null)
             {
                 ThreadState.X0 = 0;
-                ThreadState.X1 = (ulong)CurrThread.ThreadId;
+                ThreadState.X1 = (ulong)Thread.ThreadId;
             }
             else
             {

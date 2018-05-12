@@ -28,7 +28,8 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private ulong CurrentHeapSize;
 
-        private const uint SelfHandle = 0xffff8001;
+        private const uint SelfThreadHandle  = 0xffff8000;
+        private const uint SelfProcessHandle = 0xffff8001;
 
         private static Random Rng;
 
@@ -111,7 +112,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private KThread GetThread(long Tpidr, int Handle)
         {
-            if ((uint)Handle == SelfHandle)
+            if ((uint)Handle == SelfThreadHandle)
             {
                 return Process.GetThread(Tpidr);
             }
