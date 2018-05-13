@@ -38,7 +38,9 @@ namespace Ryujinx.Core.OsHle
 
         public KProcessScheduler Scheduler { get; private set; }
 
-        public KThread ThreadArbiterList { get; set; }
+        public KThread ThreadArbiterListHead { get; set; }
+
+        public object ThreadArbiterListLock { get; private set; }
 
         public KProcessHandleTable HandleTable { get; private set; }
 
@@ -69,6 +71,8 @@ namespace Ryujinx.Core.OsHle
             this.ProcessId = ProcessId;
 
             Memory = new AMemory();
+
+            ThreadArbiterListLock = new object();
 
             HandleTable = new KProcessHandleTable();
 
@@ -196,7 +200,7 @@ namespace Ryujinx.Core.OsHle
 
             AThread CpuThread = new AThread(GetTranslator(), Memory, EntryPoint);
 
-            KThread Thread = new KThread(CpuThread, ProcessorId, Priority);
+            KThread Thread = new KThread(CpuThread, this, ProcessorId, Priority);
 
             int Handle = HandleTable.OpenHandle(Thread);
 

@@ -75,7 +75,7 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
             else
             {
-                Process.Scheduler.Suspend(CurrThread.ProcessorId);
+                Process.Scheduler.Suspend(CurrThread);
 
                 Thread.Sleep(NsTimeConverter.GetTimeMs(Ns));
 
@@ -132,7 +132,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private void SvcGetCurrentProcessorNumber(AThreadState ThreadState)
         {
-            ThreadState.X0 = (ulong)Process.GetThread(ThreadState.Tpidr).ProcessorId;
+            ThreadState.X0 = (ulong)Process.GetThread(ThreadState.Tpidr).ActualCore;
         }
 
         private void SvcGetThreadId(AThreadState ThreadState)

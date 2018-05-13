@@ -131,7 +131,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
                 Handles[HandlesCount] = WaitEvent;
 
-                Process.Scheduler.Suspend(CurrThread.ProcessorId);
+                Process.Scheduler.Suspend(CurrThread);
 
                 int HandleIndex;
 
@@ -237,7 +237,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (Session != null)
             {
-                Process.Scheduler.Suspend(CurrThread.ProcessorId);
+                Process.Scheduler.Suspend(CurrThread);
 
                 IpcMessage Cmd = new IpcMessage(CmdData, CmdPtr);
 

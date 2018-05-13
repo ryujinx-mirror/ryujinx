@@ -22,8 +22,6 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private ConcurrentDictionary<KThread, AutoResetEvent> SyncWaits;
 
-        private object CondVarLock;
-
         private HashSet<(HSharedMem, long)> MappedSharedMems;
 
         private ulong CurrentHeapSize;
@@ -79,8 +77,6 @@ namespace Ryujinx.Core.OsHle.Kernel
             this.Memory  = Process.Memory;
 
             SyncWaits = new ConcurrentDictionary<KThread, AutoResetEvent>();
-
-            CondVarLock = new object();
 
             MappedSharedMems = new HashSet<(HSharedMem, long)>();
         }

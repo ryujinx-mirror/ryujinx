@@ -260,17 +260,23 @@ namespace Ryujinx.Core.OsHle.Kernel
             WaitThread.MutexAddress   = MutexAddress;
             WaitThread.CondVarAddress = CondVarAddress;
 
-            lock (CondVarLock)
+            lock (Process.ThreadArbiterListLock)
             {
-                KThread CurrThread = Process.ThreadArbiterList;
+                KThread CurrThread = Process.ThreadArbiterListHead;
 
-                if (CurrThread != null)
+                if (CurrThread == null || CurrThread.ActualPriority > WaitThread.ActualPriority)
+                {
+                    WaitThread.NextCondVarThread = Process.ThreadArbiterListHead;
+
+                    Process.ThreadArbiterListHead = WaitThread;
+                }
+                else
                 {
                     bool DoInsert = CurrThread != WaitThread;
 
                     while (CurrThread.NextCondVarThread != null)
                     {
-                        if (CurrThread.NextCondVarThread.ActualPriority < WaitThread.ActualPriority)
+                        if (CurrThread.NextCondVarThread.ActualPriority > WaitThread.ActualPriority)
                         {
                             break;
                         }
@@ -293,10 +299,6 @@ namespace Ryujinx.Core.OsHle.Kernel
                         CurrThread.NextCondVarThread = WaitThread;
                     }
                 }
-                else
-                {
-                    Process.ThreadArbiterList = WaitThread;
-                }
             }
 
             Ns.Log.PrintDebug(LogClass.KernelSvc, "Entering wait state...");
@@ -315,10 +317,10 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private void CondVarSignal(long CondVarAddress, int Count)
         {
-            lock (CondVarLock)
+            lock (Process.ThreadArbiterListLock)
             {
                 KThread PrevThread = null;
-                KThread CurrThread = Process.ThreadArbiterList;
+                KThread CurrThread = Process.ThreadArbiterListHead;
 
                 while (CurrThread != null && (Count == -1 || Count > 0))
                 {
@@ -330,7 +332,7 @@ namespace Ryujinx.Core.OsHle.Kernel
                         }
                         else
                         {
-                            Process.ThreadArbiterList = CurrThread.NextCondVarThread;
+                            Process.ThreadArbiterListHead = CurrThread.NextCondVarThread;
                         }
 
                         CurrThread.NextCondVarThread = null;
@@ -401,7 +403,7 @@ namespace Ryujinx.Core.OsHle.Kernel
                         return;
                     }
 
-                    if (CurrThread.NextMutexThread.ActualPriority < WaitThread.ActualPriority)
+                    if (CurrThread.NextMutexThread.ActualPriority > WaitThread.ActualPriority)
                     {
                         break;
                     }
