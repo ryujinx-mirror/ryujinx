@@ -155,7 +155,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (IdealCore == -2)
             {
-                //TODO: Get this valcdue from the NPDM file.
+                //TODO: Get this value from the NPDM file.
                 IdealCore = 0;
 
                 CoreMask = 1 << IdealCore;

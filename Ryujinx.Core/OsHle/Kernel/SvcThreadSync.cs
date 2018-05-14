@@ -330,6 +330,28 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
         }
 
+        private void UpdateMutexOwner(KThread CurrThread, KThread NewOwner, long MutexAddress)
+        {
+            //Go through all threads waiting for the mutex,
+            //and update the MutexOwner field to point to the new owner.
+            lock (Process.ThreadSyncLock)
+            {
+                for (int Index = 0; Index < CurrThread.MutexWaiters.Count; Index++)
+                {
+                    KThread Thread = CurrThread.MutexWaiters[Index];
+
+                    if (Thread.MutexAddress == MutexAddress)
+                    {
+                        CurrThread.MutexWaiters.RemoveAt(Index--);
+
+                        Thread.MutexOwner = NewOwner;
+
+                        InsertWaitingMutexThread(NewOwner, Thread);
+                    }
+                }
+            }
+        }
+
         private void InsertWaitingMutexThread(int OwnerThreadHandle, KThread WaitThread)
         {
             KThread OwnerThread = Process.HandleTable.GetData<KThread>(OwnerThreadHandle);
@@ -355,28 +377,6 @@ namespace Ryujinx.Core.OsHle.Kernel
                     OwnerThread.MutexWaiters.Add(WaitThread);
 
                     OwnerThread.UpdatePriority();
-                }
-            }
-        }
-
-        private void UpdateMutexOwner(KThread CurrThread, KThread NewOwner, long MutexAddress)
-        {
-            //Go through all threads waiting for the mutex,
-            //and update the MutexOwner field to point to the new owner.
-            lock (Process.ThreadSyncLock)
-            {
-                for (int Index = 0; Index < CurrThread.MutexWaiters.Count; Index++)
-                {
-                    KThread Thread = CurrThread.MutexWaiters[Index];
-
-                    if (Thread.MutexAddress == MutexAddress)
-                    {
-                        CurrThread.MutexWaiters.RemoveAt(Index--);
-
-                        Thread.MutexOwner = NewOwner;
-
-                        NewOwner.MutexWaiters.Add(Thread);
-                    }
                 }
             }
         }
