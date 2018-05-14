@@ -140,7 +140,14 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvGpuGpu
             long InputPosition  = Context.Request.GetBufferType0x21Position();
             long OutputPosition = Context.Request.GetBufferType0x22Position();
 
-            Context.Ns.Log.PrintStub(LogClass.ServiceNv, "Stubbed.");
+            NvGpuGpuGetTpcMasks Args = AMemoryHelper.Read<NvGpuGpuGetTpcMasks>(Context.Memory, InputPosition);
+
+            if (Args.MaskBufferSize != 0)
+            {
+                Args.TpcMask = 3;
+            }
+
+            AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             return NvResult.Success;
         }

@@ -5,6 +5,7 @@
         public int  MaskBufferSize;
         public int  Reserved;
         public long MaskBufferAddress;
-        public long Unk;
+        public int  TpcMask;
+        public int  Padding;
     }
 }
