@@ -196,6 +196,28 @@ namespace Ryujinx.Core.OsHle.Handles
             Resume(Thread);
         }
 
+        public bool TryRunning(KThread Thread)
+        {
+            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
+            {
+                throw new InvalidOperationException();
+            }
+
+            lock (SchedLock)
+            {
+                if (WaitingToRun.HasThread(SchedThread) && AddActiveCore(Thread))
+                {
+                    WaitingToRun.Remove(SchedThread);
+
+                    RunThread(SchedThread);
+
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
         public void Resume(KThread Thread)
         {
             if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))

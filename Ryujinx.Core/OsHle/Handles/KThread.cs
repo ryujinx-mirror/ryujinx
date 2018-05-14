@@ -22,7 +22,7 @@ namespace Ryujinx.Core.OsHle.Handles
         public int ActualPriority { get; private set; }
         public int WantedPriority { get; private set; }
 
-        public int IdealCore  { get; private set; }
+        public int IdealCore  { get; set; }
         public int ActualCore { get; set; }
 
         public int WaitHandle { get; set; }

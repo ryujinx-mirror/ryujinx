@@ -17,10 +17,27 @@ namespace Ryujinx.Core.OsHle.Kernel
             int  Priority    =  (int)ThreadState.X4;
             int  ProcessorId =  (int)ThreadState.X5;
 
+            if ((uint)Priority > 0x3f)
+            {
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid priority 0x{Priority:x8}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidPriority);
+
+                return;
+            }
+
             if (ProcessorId == -2)
             {
                 //TODO: Get this value from the NPDM file.
                 ProcessorId = 0;
+            }
+            else if ((uint)ProcessorId > 3)
+            {
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid core id 0x{ProcessorId:x8}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidCoreId);
+
+                return;
             }
 
             int Handle = Process.MakeThread(
@@ -125,9 +142,73 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private void SvcSetThreadCoreMask(AThreadState ThreadState)
         {
-            ThreadState.X0 = 0;
+            int  Handle    =  (int)ThreadState.X0;
+            int  IdealCore =  (int)ThreadState.X1;
+            long CoreMask  = (long)ThreadState.X2;
 
-            //TODO: Error codes.
+            KThread Thread = GetThread(ThreadState.Tpidr, Handle);
+
+            if (IdealCore == -2)
+            {
+                //TODO: Get this value from the NPDM file.
+                IdealCore = 0;
+
+                CoreMask = 1 << IdealCore;
+            }
+            else if (IdealCore != -3)
+            {
+                if ((uint)IdealCore > 3)
+                {
+                    Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid core id 0x{IdealCore:x8}!");
+
+                    ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidCoreId);
+
+                    return;
+                }
+
+                if ((CoreMask & (1 << IdealCore)) == 0)
+                {
+                    Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid core mask 0x{CoreMask:x8}!");
+
+                    ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidCoreMask);
+
+                    return;
+                }
+            }
+
+            if (Thread == null)
+            {
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+
+                return;
+            }
+
+            if (IdealCore == -3)
+            {
+                if ((CoreMask & (1 << Thread.IdealCore)) == 0)
+                {
+                    Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid core mask 0x{CoreMask:x8}!");
+
+                    ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidCoreMask);
+
+                    return;
+                }
+            }
+            else
+            {
+                Thread.IdealCore = IdealCore;
+            }
+
+            Thread.CoreMask = (int)CoreMask;
+
+            KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
+
+            Process.Scheduler.Yield(CurrThread);
+            Process.Scheduler.TryRunning(Thread);
+
+            ThreadState.X0 = 0;
         }
 
         private void SvcGetCurrentProcessorNumber(AThreadState ThreadState)
