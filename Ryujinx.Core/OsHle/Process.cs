@@ -38,9 +38,11 @@ namespace Ryujinx.Core.OsHle
 
         public KProcessScheduler Scheduler { get; private set; }
 
-        public KThread ThreadArbiterListHead { get; set; }
+        public List<KThread> ThreadArbiterList { get; private set; }
 
         public object ThreadArbiterListLock { get; private set; }
+
+        public object ThreadSyncLock { get; private set; }
 
         public KProcessHandleTable HandleTable { get; private set; }
 
@@ -72,7 +74,11 @@ namespace Ryujinx.Core.OsHle
 
             Memory = new AMemory();
 
+            ThreadArbiterList = new List<KThread>();
+
             ThreadArbiterListLock = new object();
+
+            ThreadSyncLock = new object();
 
             HandleTable = new KProcessHandleTable();
 

@@ -146,11 +146,16 @@ namespace Ryujinx.Core.OsHle.Kernel
             int  IdealCore =  (int)ThreadState.X1;
             long CoreMask  = (long)ThreadState.X2;
 
+            Ns.Log.PrintDebug(LogClass.KernelSvc,
+                "Handle = "    + Handle   .ToString("x8") + ", " +
+                "IdealCore = " + IdealCore.ToString("x8") + ", " +
+                "CoreMask = "  + CoreMask .ToString("x16"));
+
             KThread Thread = GetThread(ThreadState.Tpidr, Handle);
 
             if (IdealCore == -2)
             {
-                //TODO: Get this value from the NPDM file.
+                //TODO: Get this valcdue from the NPDM file.
                 IdealCore = 0;
 
                 CoreMask = 1 << IdealCore;
@@ -159,14 +164,16 @@ namespace Ryujinx.Core.OsHle.Kernel
             {
                 if ((uint)IdealCore > 3)
                 {
-                    Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid core id 0x{IdealCore:x8}!");
+                    if ((IdealCore | 2) != -1)
+                    {
+                        Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid core id 0x{IdealCore:x8}!");
 
-                    ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidCoreId);
+                        ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidCoreId);
 
-                    return;
+                        return;
+                    }
                 }
-
-                if ((CoreMask & (1 << IdealCore)) == 0)
+                else if ((CoreMask & (1 << IdealCore)) == 0)
                 {
                     Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid core mask 0x{CoreMask:x8}!");
 
@@ -185,27 +192,32 @@ namespace Ryujinx.Core.OsHle.Kernel
                 return;
             }
 
-            if (IdealCore == -3)
-            {
-                if ((CoreMask & (1 << Thread.IdealCore)) == 0)
-                {
-                    Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid core mask 0x{CoreMask:x8}!");
-
-                    ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidCoreMask);
-
-                    return;
-                }
-            }
-            else
+            //-1 is used as "don't care", so the IdealCore value is ignored.
+            //-2 is used as "use NPDM default core id" (handled above).
+            //-3 is used as "don't update", the old IdealCore value is kept.
+            if (IdealCore != -3)
             {
                 Thread.IdealCore = IdealCore;
+            }
+            else if ((CoreMask & (1 << Thread.IdealCore)) == 0)
+            {
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid core mask 0x{CoreMask:x8}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidCoreMask);
+
+                return;
             }
 
             Thread.CoreMask = (int)CoreMask;
 
             KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
+            //Try yielding execution, for the case where the new
+            //core mask allows the thread to run on the current core.
             Process.Scheduler.Yield(CurrThread);
+
+            //Try running the modified thread, for the case where one
+            //of the cores specified on the core mask is free.
             Process.Scheduler.TryRunning(Thread);
 
             ThreadState.X0 = 0;

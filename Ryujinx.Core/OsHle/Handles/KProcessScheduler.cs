@@ -66,16 +66,20 @@ namespace Ryujinx.Core.OsHle.Handles
                     SchedThread.Dispose();
                 }
 
-                SchedulerThread NewThread = WaitingToRun.Pop(Thread.ActualCore);
+                int ActualCore = Thread.ActualCore;
+
+                SchedulerThread NewThread = WaitingToRun.Pop(ActualCore);
 
                 if (NewThread == null)
                 {
-                    Log.PrintDebug(LogClass.KernelScheduler, $"Nothing to run on core {Thread.ActualCore}!");
+                    Log.PrintDebug(LogClass.KernelScheduler, $"Nothing to run on core {ActualCore}!");
 
-                    RemoveActiveCore(Thread.ActualCore);
+                    RemoveActiveCore(ActualCore);
 
                     return;
                 }
+
+                NewThread.Thread.ActualCore = ActualCore;
 
                 RunThread(NewThread);
             }
@@ -146,17 +150,21 @@ namespace Ryujinx.Core.OsHle.Handles
             {
                 PrintDbgThreadInfo(Thread, "suspended.");
 
-                SchedulerThread SchedThread = WaitingToRun.Pop(Thread.ActualCore);
+                int ActualCore = Thread.ActualCore;
+
+                SchedulerThread SchedThread = WaitingToRun.Pop(ActualCore);
 
                 if (SchedThread != null)
                 {
+                    SchedThread.Thread.ActualCore = ActualCore;
+
                     RunThread(SchedThread);
                 }
                 else
                 {
                     Log.PrintDebug(LogClass.KernelScheduler, $"Nothing to run on core {Thread.ActualCore}!");
 
-                    RemoveActiveCore(Thread.ActualCore);
+                    RemoveActiveCore(ActualCore);
                 }
             }
         }
@@ -169,9 +177,9 @@ namespace Ryujinx.Core.OsHle.Handles
             {
                 lock (SchedLock)
                 {
-                    SchedulerThread SchedThread = WaitingToRun.Pop(
-                        Thread.ActualCore,
-                        Thread.ActualPriority);
+                    int ActualCore = Thread.ActualCore;
+
+                    SchedulerThread SchedThread = WaitingToRun.Pop(ActualCore, Thread.ActualPriority);
 
                     if (SchedThread == null)
                     {
@@ -182,6 +190,8 @@ namespace Ryujinx.Core.OsHle.Handles
 
                     if (SchedThread != null)
                     {
+                        SchedThread.Thread.ActualCore = ActualCore;
+
                         RunThread(SchedThread);
                     }
                 }
@@ -198,24 +208,24 @@ namespace Ryujinx.Core.OsHle.Handles
 
         public bool TryRunning(KThread Thread)
         {
-            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
+            //Failing to get the thread here is fine,
+            //the thread may not have been started yet.
+            if (AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
             {
-                throw new InvalidOperationException();
-            }
-
-            lock (SchedLock)
-            {
-                if (WaitingToRun.HasThread(SchedThread) && AddActiveCore(Thread))
+                lock (SchedLock)
                 {
-                    WaitingToRun.Remove(SchedThread);
+                    if (WaitingToRun.HasThread(SchedThread) && AddActiveCore(Thread))
+                    {
+                        WaitingToRun.Remove(SchedThread);
 
-                    RunThread(SchedThread);
+                        RunThread(SchedThread);
 
-                    return true;
+                        return true;
+                    }
                 }
-
-                return false;
             }
+
+            return false;
         }
 
         public void Resume(KThread Thread)
@@ -289,18 +299,25 @@ namespace Ryujinx.Core.OsHle.Handles
 
         private bool AddActiveCore(KThread Thread)
         {
+            int CoreMask;
+
             lock (SchedLock)
             {
                 //First, try running it on Ideal Core.
-                int CoreMask = 1 << Thread.IdealCore;
+                int IdealCore = Thread.IdealCore;
 
-                if ((ActiveCores & CoreMask) == 0)
+                if (IdealCore != -1)
                 {
-                    ActiveCores |= CoreMask;
+                    CoreMask = 1 << IdealCore;
 
-                    Thread.ActualCore = Thread.IdealCore;
+                    if ((ActiveCores & CoreMask) == 0)
+                    {
+                        ActiveCores |= CoreMask;
 
-                    return true;
+                        Thread.ActualCore = IdealCore;
+
+                        return true;
+                    }
                 }
 
                 //If that fails, then try running on any core allowed by Core Mask.
@@ -340,11 +357,12 @@ namespace Ryujinx.Core.OsHle.Handles
         private void PrintDbgThreadInfo(KThread Thread, string Message)
         {
             Log.PrintDebug(LogClass.KernelScheduler, "(" +
-                "ThreadId = "       + Thread.ThreadId       + ", " +
-                "ActualCore = "     + Thread.ActualCore     + ", " +
-                "IdealCore = "      + Thread.IdealCore      + ", " +
-                "ActualPriority = " + Thread.ActualPriority + ", " +
-                "WantedPriority = " + Thread.WantedPriority + ") " + Message);
+                "ThreadId = "       + Thread.ThreadId                + ", " +
+                "CoreMask = 0x"     + Thread.CoreMask.ToString("x1") + ", " +
+                "ActualCore = "     + Thread.ActualCore              + ", " +
+                "IdealCore = "      + Thread.IdealCore               + ", " +
+                "ActualPriority = " + Thread.ActualPriority          + ", " +
+                "WantedPriority = " + Thread.WantedPriority          + ") " + Message);
         }
 
         public void Dispose()
