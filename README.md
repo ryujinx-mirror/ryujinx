@@ -1,4 +1,4 @@
-![](https://github.com/zoltx23/ryujinx-emu/blob/master/img/Ryujinx_logo_128.png?raw=true)
+![](https://ryujinx.github.io/static/img/Ryujinx_logo_128.png)
 # Ryujinx [![Build status](https://ci.appveyor.com/api/projects/status/ssg4jwu6ve3k594s?svg=true)](https://ci.appveyor.com/project/gdkchan/ryujinx)
 
 Experimental Switch emulator written in C#
