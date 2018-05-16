@@ -63,7 +63,7 @@ namespace Ryujinx.Core.OsHle.Handles
                 {
                     KThread Thread = Curr.Thread;
 
-                    if (Thread.ActualPriority <= MinPriority && (Thread.CoreMask & CoreMask) != 0)
+                    if (Thread.ActualPriority < MinPriority && (Thread.CoreMask & CoreMask) != 0)
                     {
                         if (Prev != null)
                         {

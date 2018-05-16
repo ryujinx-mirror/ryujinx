@@ -217,7 +217,6 @@ namespace Ryujinx.Core.OsHle.Kernel
                     UpdateMutexOwner(CurrThread, OwnerThread, MutexAddress);
 
                     CurrThread.UpdatePriority();
-                    OwnerThread.UpdatePriority();
 
                     int HasListeners = OwnerThread.MutexWaiters.Count > 0 ? MutexHasListenersMask : 0;
 

@@ -13,6 +13,8 @@ namespace Ryujinx.Core.OsHle.Handles
 
         private KThread[] CoreThreads;
 
+        private bool[] CoreReschedule;
+
         private object SchedLock;
 
         private Logger Log;
@@ -26,6 +28,8 @@ namespace Ryujinx.Core.OsHle.Handles
             WaitingToRun = new ThreadQueue();
 
             CoreThreads = new KThread[4];
+
+            CoreReschedule = new bool[4];
 
             SchedLock = new object();
         }
@@ -147,9 +151,9 @@ namespace Ryujinx.Core.OsHle.Handles
             {
                 PrintDbgThreadInfo(Thread, "suspended.");
 
-                AllThreads[Thread].NeedsReschedule = false;
-
                 int ActualCore = Thread.ActualCore;
+
+                CoreReschedule[ActualCore] = false;
 
                 SchedulerThread SchedThread = WaitingToRun.Pop(ActualCore);
 
@@ -174,26 +178,21 @@ namespace Ryujinx.Core.OsHle.Handles
         {
             lock (SchedLock)
             {
-                KThread Thread = CoreThreads[Core];
-
-                if (Thread != null && AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
-                {
-                    SchedThread.NeedsReschedule = true;
-                }
+                CoreReschedule[Core] = true;
             }
         }
 
         public void Reschedule(KThread Thread)
         {
-            SchedulerThread SchedThread = AllThreads[Thread];
-
             bool NeedsReschedule;
 
             lock (SchedLock)
             {
-                NeedsReschedule = SchedThread.NeedsReschedule;
+                int ActualCore = Thread.ActualCore;
 
-                SchedThread.NeedsReschedule = false;
+                NeedsReschedule = CoreReschedule[ActualCore];
+
+                CoreReschedule[ActualCore] = false;
             }
 
             if (NeedsReschedule)
@@ -220,7 +219,7 @@ namespace Ryujinx.Core.OsHle.Handles
                     RunThread(NewThread);
                 }
 
-                TryResumingExecution(SchedThread);
+                Resume(Thread);
             }
         }
 

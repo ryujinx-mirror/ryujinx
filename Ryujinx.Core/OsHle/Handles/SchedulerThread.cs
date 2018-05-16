@@ -11,8 +11,6 @@ namespace Ryujinx.Core.OsHle.Handles
 
         public bool IsActive { get; set; }
 
-        public bool NeedsReschedule { get; set; }
-
         public AutoResetEvent   WaitSync     { get; private set; }
         public ManualResetEvent WaitActivity { get; private set; }
         public AutoResetEvent   WaitSched    { get; private set; }
