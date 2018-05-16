@@ -1,6 +1,7 @@
 using Ryujinx.Core.Logging;
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Ryujinx.Core.OsHle.Handles
 {
@@ -10,7 +11,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
         private ThreadQueue WaitingToRun;
 
-        private int ActiveCores;
+        private KThread[] CoreThreads;
 
         private object SchedLock;
 
@@ -23,6 +24,8 @@ namespace Ryujinx.Core.OsHle.Handles
             AllThreads = new ConcurrentDictionary<KThread, SchedulerThread>();
 
             WaitingToRun = new ThreadQueue();
+
+            CoreThreads = new KThread[4];
 
             SchedLock = new object();
         }
@@ -38,7 +41,7 @@ namespace Ryujinx.Core.OsHle.Handles
                     return;
                 }
 
-                if (AddActiveCore(Thread))
+                if (TryAddToCore(Thread))
                 {
                     Thread.Thread.Execute();
 
@@ -74,7 +77,7 @@ namespace Ryujinx.Core.OsHle.Handles
                 {
                     Log.PrintDebug(LogClass.KernelScheduler, $"Nothing to run on core {ActualCore}!");
 
-                    RemoveActiveCore(ActualCore);
+                    CoreThreads[ActualCore] = null;
 
                     return;
                 }
@@ -104,44 +107,38 @@ namespace Ryujinx.Core.OsHle.Handles
             }
         }
 
-        public void EnterWait(KThread Thread)
+        public void EnterWait(KThread Thread, int TimeoutMs = Timeout.Infinite)
         {
-            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
-            {
-                throw new InvalidOperationException();
-            }
+            SchedulerThread SchedThread = AllThreads[Thread];
 
             Suspend(Thread);
 
-            SchedThread.WaitSync.WaitOne();
+            SchedThread.WaitSync.WaitOne(TimeoutMs);
 
             TryResumingExecution(SchedThread);
-        }
-
-        public bool EnterWait(KThread Thread, int Timeout)
-        {
-            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
-            {
-                throw new InvalidOperationException();
-            }
-
-            Suspend(Thread);
-
-            bool Result = SchedThread.WaitSync.WaitOne(Timeout);
-
-            TryResumingExecution(SchedThread);
-
-            return Result;
         }
 
         public void WakeUp(KThread Thread)
         {
-            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
-            {
-                throw new InvalidOperationException();
-            }
+            AllThreads[Thread].WaitSync.Set();
+        }
 
-            SchedThread.WaitSync.Set();
+        public void TryToRun(KThread Thread)
+        {
+            lock (SchedLock)
+            {
+                if (AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
+                {
+                    if (WaitingToRun.HasThread(SchedThread) && TryAddToCore(Thread))
+                    {
+                        RunThread(SchedThread);
+                    }
+                    else
+                    {
+                        SetReschedule(Thread.ProcessorId);
+                    }
+                }
+            }
         }
 
         public void Suspend(KThread Thread)
@@ -149,6 +146,8 @@ namespace Ryujinx.Core.OsHle.Handles
             lock (SchedLock)
             {
                 PrintDbgThreadInfo(Thread, "suspended.");
+
+                AllThreads[Thread].NeedsReschedule = false;
 
                 int ActualCore = Thread.ActualCore;
 
@@ -158,84 +157,76 @@ namespace Ryujinx.Core.OsHle.Handles
                 {
                     SchedThread.Thread.ActualCore = ActualCore;
 
+                    CoreThreads[ActualCore] = SchedThread.Thread;
+
                     RunThread(SchedThread);
                 }
                 else
                 {
                     Log.PrintDebug(LogClass.KernelScheduler, $"Nothing to run on core {Thread.ActualCore}!");
 
-                    RemoveActiveCore(ActualCore);
+                    CoreThreads[ActualCore] = null;
                 }
             }
         }
 
-        public void Yield(KThread Thread)
+        public void SetReschedule(int Core)
         {
-            PrintDbgThreadInfo(Thread, "yielded execution.");
-
-            if (IsActive(Thread))
+            lock (SchedLock)
             {
+                KThread Thread = CoreThreads[Core];
+
+                if (Thread != null && AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
+                {
+                    SchedThread.NeedsReschedule = true;
+                }
+            }
+        }
+
+        public void Reschedule(KThread Thread)
+        {
+            SchedulerThread SchedThread = AllThreads[Thread];
+
+            bool NeedsReschedule;
+
+            lock (SchedLock)
+            {
+                NeedsReschedule = SchedThread.NeedsReschedule;
+
+                SchedThread.NeedsReschedule = false;
+            }
+
+            if (NeedsReschedule)
+            {
+                PrintDbgThreadInfo(Thread, "yielded execution.");
+
                 lock (SchedLock)
                 {
                     int ActualCore = Thread.ActualCore;
 
-                    SchedulerThread SchedThread = WaitingToRun.Pop(ActualCore, Thread.ActualPriority);
+                    SchedulerThread NewThread = WaitingToRun.Pop(ActualCore, Thread.ActualPriority);
 
-                    if (SchedThread == null)
+                    if (NewThread == null)
                     {
                         PrintDbgThreadInfo(Thread, "resumed because theres nothing better to run.");
 
                         return;
                     }
 
-                    if (SchedThread != null)
-                    {
-                        SchedThread.Thread.ActualCore = ActualCore;
+                    NewThread.Thread.ActualCore = ActualCore;
 
-                        RunThread(SchedThread);
-                    }
+                    CoreThreads[ActualCore] = NewThread.Thread;
+
+                    RunThread(NewThread);
                 }
+
+                TryResumingExecution(SchedThread);
             }
-            else
-            {
-                //Just stop running the thread if it's not active,
-                //and run whatever is waiting to run with the higuest priority.
-                Suspend(Thread);
-            }
-
-            Resume(Thread);
-        }
-
-        public bool TryRunning(KThread Thread)
-        {
-            //Failing to get the thread here is fine,
-            //the thread may not have been started yet.
-            if (AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
-            {
-                lock (SchedLock)
-                {
-                    if (WaitingToRun.HasThread(SchedThread) && AddActiveCore(Thread))
-                    {
-                        WaitingToRun.Remove(SchedThread);
-
-                        RunThread(SchedThread);
-
-                        return true;
-                    }
-                }
-            }
-
-            return false;
         }
 
         public void Resume(KThread Thread)
         {
-            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
-            {
-                throw new InvalidOperationException();
-            }
-
-            TryResumingExecution(SchedThread);
+            TryResumingExecution(AllThreads[Thread]);
         }
 
         private void TryResumingExecution(SchedulerThread SchedThread)
@@ -248,7 +239,7 @@ namespace Ryujinx.Core.OsHle.Handles
 
             lock (SchedLock)
             {
-                if (AddActiveCore(Thread))
+                if (TryAddToCore(Thread))
                 {
                     PrintDbgThreadInfo(Thread, "resuming execution...");
 
@@ -256,6 +247,8 @@ namespace Ryujinx.Core.OsHle.Handles
                 }
 
                 WaitingToRun.Push(SchedThread);
+
+                SetReschedule(Thread.ProcessorId);
 
                 PrintDbgThreadInfo(Thread, "entering wait state...");
             }
@@ -287,71 +280,36 @@ namespace Ryujinx.Core.OsHle.Handles
             }
         }
 
-        private bool IsActive(KThread Thread)
+        private bool TryAddToCore(KThread Thread)
         {
-            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
+            //First, try running it on Ideal Core.
+            int IdealCore = Thread.IdealCore;
+
+            if (IdealCore != -1 && CoreThreads[IdealCore] == null)
             {
-                throw new InvalidOperationException();
+                Thread.ActualCore = IdealCore;
+
+                CoreThreads[IdealCore] = Thread;
+
+                return true;
             }
 
-            return SchedThread.IsActive;
-        }
+            //If that fails, then try running on any core allowed by Core Mask.
+            int CoreMask = Thread.CoreMask;
 
-        private bool AddActiveCore(KThread Thread)
-        {
-            int CoreMask;
-
-            lock (SchedLock)
+            for (int Core = 0; Core < CoreThreads.Length; Core++, CoreMask >>= 1)
             {
-                //First, try running it on Ideal Core.
-                int IdealCore = Thread.IdealCore;
-
-                if (IdealCore != -1)
+                if ((CoreMask & 1) != 0 && CoreThreads[Core] == null)
                 {
-                    CoreMask = 1 << IdealCore;
+                    Thread.ActualCore = Core;
 
-                    if ((ActiveCores & CoreMask) == 0)
-                    {
-                        ActiveCores |= CoreMask;
+                    CoreThreads[Core] = Thread;
 
-                        Thread.ActualCore = IdealCore;
-
-                        return true;
-                    }
+                    return true;
                 }
-
-                //If that fails, then try running on any core allowed by Core Mask.
-                CoreMask = Thread.CoreMask & ~ActiveCores;
-
-                if (CoreMask != 0)
-                {
-                    CoreMask &= -CoreMask;
-
-                    ActiveCores |= CoreMask;
-
-                    for (int Bit = 0; Bit < 32; Bit++)
-                    {
-                        if (((CoreMask >> Bit) & 1) != 0)
-                        {
-                            Thread.ActualCore = Bit;
-
-                            return true;
-                        }
-                    }
-
-                    throw new InvalidOperationException();
-                }
-
-                return false;
             }
-        }
 
-        private void RemoveActiveCore(int Core)
-        {
-            lock (SchedLock)
-            {
-                ActiveCores &= ~(1 << Core);
-            }
+            return false;
         }
 
         private void PrintDbgThreadInfo(KThread Thread, string Message)

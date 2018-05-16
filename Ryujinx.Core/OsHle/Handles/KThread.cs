@@ -12,6 +12,8 @@ namespace Ryujinx.Core.OsHle.Handles
         public long MutexAddress   { get; set; }
         public long CondVarAddress { get; set; }
 
+        public bool CondVarSignaled { get; set; }
+
         private Process Process;
 
         public List<KThread> MutexWaiters { get; private set; }
@@ -21,8 +23,9 @@ namespace Ryujinx.Core.OsHle.Handles
         public int ActualPriority { get; private set; }
         public int WantedPriority { get; private set; }
 
-        public int ActualCore { get; set; }
-        public int IdealCore  { get; set; }
+        public int ActualCore  { get; set; }
+        public int ProcessorId { get; set; }
+        public int IdealCore   { get; set; }
 
         public int WaitHandle { get; set; }
 
@@ -31,16 +34,17 @@ namespace Ryujinx.Core.OsHle.Handles
         public KThread(
             AThread Thread,
             Process Process,
-            int     IdealCore,
+            int     ProcessorId,
             int     Priority)
         {
-            this.Thread    = Thread;
-            this.Process   = Process;
-            this.IdealCore = IdealCore;
+            this.Thread      = Thread;
+            this.Process     = Process;
+            this.ProcessorId = ProcessorId;
+            this.IdealCore   = ProcessorId;
 
             MutexWaiters = new List<KThread>();
 
-            CoreMask = 1 << IdealCore;
+            CoreMask = 1 << ProcessorId;
 
             ActualPriority = WantedPriority = Priority;
         }

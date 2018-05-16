@@ -55,13 +55,12 @@ namespace Ryujinx.Core.OsHle.Kernel
         {
             int Handle = (int)ThreadState.X0;
 
-            KThread CurrThread = Process.HandleTable.GetData<KThread>(Handle);
+            KThread NewThread = Process.HandleTable.GetData<KThread>(Handle);
 
-            if (CurrThread != null)
+            if (NewThread != null)
             {
-                Process.Scheduler.StartThread(CurrThread);
-
-                Process.Scheduler.Yield(Process.GetThread(ThreadState.Tpidr));
+                Process.Scheduler.StartThread(NewThread);
+                Process.Scheduler.SetReschedule(NewThread.ProcessorId);
 
                 ThreadState.X0 = 0;
             }
@@ -82,19 +81,19 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private void SvcSleepThread(AThreadState ThreadState)
         {
-            ulong Ns = ThreadState.X0;
+            ulong TimeoutNs = ThreadState.X0;
 
             KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
-            if (Ns == 0)
+            if (TimeoutNs == 0)
             {
-                Process.Scheduler.Yield(CurrThread);
+                Process.Scheduler.SetReschedule(CurrThread.ActualCore);
             }
             else
             {
                 Process.Scheduler.Suspend(CurrThread);
 
-                Thread.Sleep(NsTimeConverter.GetTimeMs(Ns));
+                Thread.Sleep(NsTimeConverter.GetTimeMs(TimeoutNs));
 
                 Process.Scheduler.Resume(CurrThread);
             }
@@ -210,15 +209,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             Thread.CoreMask = (int)CoreMask;
 
-            KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
-
-            //Try yielding execution, for the case where the new
-            //core mask allows the thread to run on the current core.
-            Process.Scheduler.Yield(CurrThread);
-
-            //Try running the modified thread, for the case where one
-            //of the cores specified on the core mask is free.
-            Process.Scheduler.TryRunning(Thread);
+            Process.Scheduler.TryToRun(Thread);
 
             ThreadState.X0 = 0;
         }

@@ -40,8 +40,6 @@ namespace Ryujinx.Core.OsHle
 
         public List<KThread> ThreadArbiterList { get; private set; }
 
-        public object ThreadArbiterListLock { get; private set; }
-
         public object ThreadSyncLock { get; private set; }
 
         public KProcessHandleTable HandleTable { get; private set; }
@@ -75,8 +73,6 @@ namespace Ryujinx.Core.OsHle
             Memory = new AMemory();
 
             ThreadArbiterList = new List<KThread>();
-
-            ThreadArbiterListLock = new object();
 
             ThreadSyncLock = new object();
 

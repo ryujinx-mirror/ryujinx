@@ -96,6 +96,8 @@ namespace Ryujinx.Core.OsHle.Kernel
 
                 Func(ThreadState);
 
+                Process.Scheduler.Reschedule(Process.GetThread(ThreadState.Tpidr));
+
                 Ns.Log.PrintDebug(LogClass.KernelSvc, $"{Func.Method.Name} ended.");
             }
             else
