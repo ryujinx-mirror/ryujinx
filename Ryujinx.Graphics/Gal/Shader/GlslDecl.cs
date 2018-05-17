@@ -28,7 +28,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private Dictionary<int, ShaderDeclInfo> m_Textures;
 
-        private Dictionary<(int, int), ShaderDeclInfo> m_Uniforms;
+        private Dictionary<int, ShaderDeclInfo> m_Uniforms;
 
         private Dictionary<int, ShaderDeclInfo> m_InAttributes;
         private Dictionary<int, ShaderDeclInfo> m_OutAttributes;
@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public IReadOnlyDictionary<int, ShaderDeclInfo> Textures => m_Textures;
 
-        public IReadOnlyDictionary<(int, int), ShaderDeclInfo> Uniforms => m_Uniforms;
+        public IReadOnlyDictionary<int, ShaderDeclInfo> Uniforms => m_Uniforms;
 
         public IReadOnlyDictionary<int, ShaderDeclInfo> InAttributes  => m_InAttributes;
         public IReadOnlyDictionary<int, ShaderDeclInfo> OutAttributes => m_OutAttributes;
@@ -54,7 +54,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             StagePrefix = StagePrefixes[(int)ShaderType] + "_";
 
-            m_Uniforms = new Dictionary<(int, int), ShaderDeclInfo>();
+            m_Uniforms = new Dictionary<int, ShaderDeclInfo>();
 
             m_Textures = new Dictionary<int, ShaderDeclInfo>();
 
@@ -124,11 +124,27 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 case ShaderIrOperCbuf Cbuf:
                 {
-                    string Name = StagePrefix + UniformName + Cbuf.Index + "_" + Cbuf.Offs;
+                    if (m_Uniforms.TryGetValue(Cbuf.Index, out ShaderDeclInfo DeclInfo))
+                    {
+                        DeclInfo.SetCbufOffs(Cbuf.Pos);
+                    }
+                    else
+                    {
+                        string Name = StagePrefix + UniformName + Cbuf.Index;
 
-                    ShaderDeclInfo DeclInfo = new ShaderDeclInfo(Name, Cbuf.Offs, Cbuf.Index);
+                        DeclInfo = new ShaderDeclInfo(Name, Cbuf.Pos, Cbuf.Index);
 
-                    m_Uniforms.TryAdd((Cbuf.Index, Cbuf.Offs), DeclInfo);
+                        m_Uniforms.Add(Cbuf.Index, DeclInfo);
+                    }
+
+                    if (Cbuf.Offs != null)
+                    {
+                        //The constant buffer is being accessed as an array,
+                        //we have no way to know the max element it may access in this case.
+                        //Here, we just assume the array size with arbitrary values.
+                        //TODO: Find a better solution for this.
+                        DeclInfo.SetCbufOffs(Cbuf.Pos + 15);
+                    }
 
                     break;
                 }

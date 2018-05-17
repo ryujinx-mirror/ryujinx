@@ -87,10 +87,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public void Create(long Tag, GalShaderType Type, byte[] Data)
         {
-            Stages.GetOrAdd(Tag, (Key) => ShaderStageFactory(Type, Data));
+            Stages.GetOrAdd(Tag, (Key) => ShaderStageFactory(Type, Tag, Data));
         }
 
-        private ShaderStage ShaderStageFactory(GalShaderType Type, byte[] Data)
+        private ShaderStage ShaderStageFactory(GalShaderType Type, long Tag, byte[] Data)
         {
             GlslProgram Program = GetGlslProgram(Data, Type);
 
@@ -140,11 +140,21 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 foreach (ShaderDeclInfo DeclInfo in Stage.UniformUsage.Where(x => x.Cbuf == Cbuf))
                 {
-                    float Value = BitConverter.ToSingle(Data, DeclInfo.Index * 4);
-
                     int Location = GL.GetUniformLocation(CurrentProgramHandle, DeclInfo.Name);
 
-                    GL.Uniform1(Location, Value);
+                    int Count = Data.Length >> 2;
+
+                    //The Index is the index of the last element,
+                    //so we can add 1 to get the uniform array size.
+                    Count = Math.Min(Count, DeclInfo.Index + 1);
+
+                    unsafe
+                    {
+                        fixed (byte* Ptr = Data)
+                        {
+                            GL.Uniform1(Location, Count, (float*)Ptr);
+                        }
+                    }
                 }
             }
         }

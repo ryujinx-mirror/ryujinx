@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gal.Shader
 {
-    struct GlslProgram
+    public struct GlslProgram
     {
         public string Code { get; private set; }
 

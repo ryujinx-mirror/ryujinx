@@ -23,5 +23,13 @@ namespace Ryujinx.Graphics.Gal
                 Size = NewSize;
             }
         }
+
+        internal void SetCbufOffs(int Offs)
+        {
+            if (Index < Offs)
+            {
+                Index = Offs;
+            }
+        }
     }
 }

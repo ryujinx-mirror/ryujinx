@@ -141,6 +141,13 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private void SvcSetThreadCoreMask(AThreadState ThreadState)
         {
+            //FIXME: This is wrong, but the "correct" way to handle
+            //this svc causes deadlocks when more often.
+            //There is probably something wrong with it still.
+            ThreadState.X0 = 0;
+
+            return;
+
             int  Handle    =  (int)ThreadState.X0;
             int  IdealCore =  (int)ThreadState.X1;
             long CoreMask  = (long)ThreadState.X2;

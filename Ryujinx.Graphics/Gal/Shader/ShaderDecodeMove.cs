@@ -99,6 +99,13 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Imm), OpCode));
         }
 
+        public static void Mov_I32(ShaderIrBlock Block, long OpCode)
+        {
+            ShaderIrOperImm Imm = GetOperImm32_20(OpCode);
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Imm), OpCode));
+        }
+
         public static void Mov_R(ShaderIrBlock Block, long OpCode)
         {
             ShaderIrOperGpr Gpr = GetOperGpr20(OpCode);
@@ -106,17 +113,10 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Gpr), OpCode));
         }
 
-        public static void Mov32i(ShaderIrBlock Block, long OpCode)
-        {
-            ShaderIrOperImm Imm = GetOperImm32_20(OpCode);
-
-            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Imm), OpCode));
-        }
-
         private static void EmitF2f(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
         {
-            bool Na = ((OpCode >> 45) & 1) != 0;
-            bool Aa = ((OpCode >> 49) & 1) != 0;
+            bool NegA = ((OpCode >> 45) & 1) != 0;
+            bool AbsA = ((OpCode >> 49) & 1) != 0;
 
             ShaderIrNode OperA;
 
@@ -129,7 +129,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 default: throw new ArgumentException(nameof(Oper));
             }
 
-            OperA = GetAluAbsNeg(OperA, Aa, Na);
+            OperA = GetAluFabsFneg(OperA, AbsA, NegA);
 
             ShaderIrInst RoundInst = GetRoundInst(OpCode);
 
@@ -153,8 +153,8 @@ namespace Ryujinx.Graphics.Gal.Shader
                 throw new NotImplementedException();
             }
 
-            bool Na = ((OpCode >> 45) & 1) != 0;
-            bool Aa = ((OpCode >> 49) & 1) != 0;
+            bool NegA = ((OpCode >> 45) & 1) != 0;
+            bool AbsA = ((OpCode >> 49) & 1) != 0;
 
             ShaderIrNode OperA;
 
@@ -167,7 +167,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 default: throw new ArgumentException(nameof(Oper));
             }
 
-            OperA = GetAluAbsNeg(OperA, Aa, Na);
+            OperA = GetAluFabsFneg(OperA, AbsA, NegA);
 
             ShaderIrInst RoundInst = GetRoundInst(OpCode);
 
@@ -224,8 +224,8 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             int Sel = (int)(OpCode >> 41) & 3;
 
-            bool Na = ((OpCode >> 45) & 1) != 0;
-            bool Aa = ((OpCode >> 49) & 1) != 0;
+            bool NegA = ((OpCode >> 45) & 1) != 0;
+            bool AbsA = ((OpCode >> 49) & 1) != 0;
 
             ShaderIrNode OperA;
 
@@ -238,7 +238,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 default: throw new ArgumentException(nameof(Oper));
             }
 
-            OperA = GetAluAbsNeg(OperA, Aa, Na);
+            OperA = GetAluIabsIneg(OperA, AbsA, NegA);
 
             bool Signed = Type >= IntType.S8;
 
@@ -253,9 +253,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             if (Size < 32)
             {
-                uint Mask = uint.MaxValue >> (32 - Size);
-
-                OperA = new ShaderIrOp(ShaderIrInst.And, OperA, new ShaderIrOperImm((int)Mask));
+                OperA = ExtendTo32(OperA, Signed, Size);
             }
 
             ShaderIrInst Inst = Signed
@@ -296,7 +294,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 default: throw new ArgumentException(nameof(Oper));
             }
 
-            OperA = GetAluAbsNeg(OperA, AbsA, NegA);
+            OperA = GetAluIabsIneg(OperA, AbsA, NegA);
 
             bool Signed = Type >= IntType.S8;
 
@@ -335,7 +333,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 }
                 else
                 {
-                    OperA = new ShaderIrOp(ShaderIrInst.And, OperA, new ShaderIrOperImm((int)Mask));
+                    OperA = ExtendTo32(OperA, Signed, Size);
                 }
             }
 

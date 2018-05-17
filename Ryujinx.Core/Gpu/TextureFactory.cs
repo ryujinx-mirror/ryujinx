@@ -11,6 +11,11 @@ namespace Ryujinx.Core.Gpu
 
             GalTextureFormat Format = (GalTextureFormat)(Tic[0] & 0x7f);
 
+            GalTextureSource XSource = (GalTextureSource)((Tic[0] >> 19) & 7);
+            GalTextureSource YSource = (GalTextureSource)((Tic[0] >> 22) & 7);
+            GalTextureSource ZSource = (GalTextureSource)((Tic[0] >> 25) & 7);
+            GalTextureSource WSource = (GalTextureSource)((Tic[0] >> 28) & 7);
+
             long TextureAddress = (uint)Tic[1];
 
             TextureAddress |= (long)((ushort)Tic[2]) << 32;
@@ -37,7 +42,15 @@ namespace Ryujinx.Core.Gpu
 
             byte[] Data = TextureReader.Read(Vmm, Texture);
 
-            return new GalTexture(Data, Width, Height, Format);
+            return new GalTexture(
+                Data,
+                Width,
+                Height,
+                Format,
+                XSource,
+                YSource,
+                ZSource,
+                WSource);
         }
 
         public static GalTextureSampler MakeSampler(NvGpu Gpu, NvGpuVmm Vmm, long TscPosition)

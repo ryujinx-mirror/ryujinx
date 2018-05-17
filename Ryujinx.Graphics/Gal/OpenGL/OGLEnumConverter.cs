@@ -81,6 +81,22 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             throw new NotImplementedException(Format.ToString());
         }
 
+        public static All GetTextureSwizzle(GalTextureSource Source)
+        {
+            switch (Source)
+            {
+                case GalTextureSource.Zero:     return All.Zero;
+                case GalTextureSource.Red:      return All.Red;
+                case GalTextureSource.Green:    return All.Green;
+                case GalTextureSource.Blue:     return All.Blue;
+                case GalTextureSource.Alpha:    return All.Alpha;
+                case GalTextureSource.OneInt:   return All.One;
+                case GalTextureSource.OneFloat: return All.One;
+            }
+
+            throw new ArgumentException(nameof(Source));
+        }
+
         public static TextureWrapMode GetTextureWrapMode(GalTextureWrap Wrap)
         {
             switch (Wrap)

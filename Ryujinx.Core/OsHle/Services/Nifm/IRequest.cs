@@ -18,11 +18,12 @@ namespace Ryujinx.Core.OsHle.Services.Nifm
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, GetRequestState               },
-                { 1, GetResult                     },
-                { 2, GetSystemEventReadableHandles },
-                { 3, Cancel                        },
-                { 4, Submit                        },
+                { 0,  GetRequestState                 },
+                { 1,  GetResult                       },
+                { 2,  GetSystemEventReadableHandles   },
+                { 3,  Cancel                          },
+                { 4,  Submit                          },
+                { 11, SetConnectionConfirmationOption }
             };
 
             Event = new KEvent();
@@ -63,6 +64,13 @@ namespace Ryujinx.Core.OsHle.Services.Nifm
         }
 
         public long Submit(ServiceCtx Context)
+        {
+            Context.Ns.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
+
+            return 0;
+        }
+
+        public long SetConnectionConfirmationOption(ServiceCtx Context)
         {
             Context.Ns.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 

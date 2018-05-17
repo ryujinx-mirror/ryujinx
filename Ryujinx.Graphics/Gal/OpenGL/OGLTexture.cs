@@ -51,6 +51,16 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     Type,
                     Texture.Data);
             }
+
+            int SwizzleR = (int)OGLEnumConverter.GetTextureSwizzle(Texture.XSource);
+            int SwizzleG = (int)OGLEnumConverter.GetTextureSwizzle(Texture.YSource);
+            int SwizzleB = (int)OGLEnumConverter.GetTextureSwizzle(Texture.ZSource);
+            int SwizzleA = (int)OGLEnumConverter.GetTextureSwizzle(Texture.WSource);
+
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleR, SwizzleR);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleG, SwizzleG);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleB, SwizzleB);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, SwizzleA);
         }
 
         public void Bind(int Index)

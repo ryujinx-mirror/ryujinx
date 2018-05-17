@@ -1,3 +1,5 @@
+using System;
+
 using static Ryujinx.Graphics.Gal.Shader.ShaderDecodeHelper;
 
 namespace Ryujinx.Graphics.Gal.Shader
@@ -17,6 +19,41 @@ namespace Ryujinx.Graphics.Gal.Shader
                 OperD.Index += Index++;
 
                 Block.AddNode(GetPredNode(new ShaderIrAsg(OperD, OperA), OpCode));
+            }
+        }
+
+        public static void Ld_C(ShaderIrBlock Block, long OpCode)
+        {
+            int Type = (int)(OpCode >> 48) & 7;
+
+            if (Type > 5)
+            {
+                throw new InvalidOperationException();
+            }
+
+            int Count = Type == 5 ? 2 : 1;
+
+            for (int Index = 0; Index < Count; Index++)
+            {
+                ShaderIrOperCbuf OperA = GetOperCbuf36(OpCode);
+                ShaderIrOperGpr  OperD = GetOperGpr0  (OpCode);
+
+                OperA.Pos   += Index;
+                OperD.Index += Index;
+
+                ShaderIrNode Node = OperA;
+
+                if (Type < 4)
+                {
+                    //This is a 8 or 16 bits type.
+                    bool Signed = (Type & 1) != 0;
+
+                    int Size = 8 << (Type >> 1);
+
+                    Node = ExtendTo32(Node, Signed, Size);
+                }
+
+                Block.AddNode(GetPredNode(new ShaderIrAsg(OperD, Node), OpCode));
             }
         }
 

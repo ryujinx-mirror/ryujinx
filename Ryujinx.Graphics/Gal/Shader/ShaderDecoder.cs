@@ -2,14 +2,21 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     static class ShaderDecoder
     {
+        private const bool AddDbgComments = true;
+
         public static ShaderIrBlock DecodeBasicBlock(int[] Code, int Offset)
         {
             ShaderIrBlock Block = new ShaderIrBlock();
 
             while (Offset + 2 <= Code.Length)
             {
-                //Ignore scheduling instructions, which are
-                //written every 32 bytes.
+                int InstPos = Offset * 4;
+
+                Block.Position = InstPos;
+
+                Block.MarkLabel(InstPos);
+
+                //Ignore scheduling instructions, which are written every 32 bytes.
                 if ((Offset & 7) == 0)
                 {
                     Offset += 2;
@@ -24,6 +31,13 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 ShaderDecodeFunc Decode = ShaderOpCodeTable.GetDecoder(OpCode);
 
+                if (AddDbgComments)
+                {
+                    string DbgOpCode = $"0x{InstPos:x8}: 0x{OpCode:x16} ";
+
+                    Block.AddNode(new ShaderIrCmnt(DbgOpCode + (Decode?.Method.Name ?? "???")));
+                }
+
                 if (Decode == null)
                 {
                     continue;
@@ -31,7 +45,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 Decode(Block, OpCode);
 
-                if (Block.GetLastNode() is ShaderIrOp Op && IsFlowChange(Op.Inst))
+                if (Block.GetLastNode() is ShaderIrOp Op && Op.Inst == ShaderIrInst.Exit)
                 {
                     break;
                 }
