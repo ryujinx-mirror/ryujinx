@@ -231,10 +231,12 @@ namespace ChocolArm64
             Set("x00111100x101001000000xxxxxxxxxx", AInstEmit.Fcvtpu_Gp,     typeof(AOpCodeSimdCvt));
             Set("x00111100x111000000000xxxxxxxxxx", AInstEmit.Fcvtzs_Gp,     typeof(AOpCodeSimdCvt));
             Set("x00111100x011000xxxxxxxxxxxxxxxx", AInstEmit.Fcvtzs_Gp_Fix, typeof(AOpCodeSimdCvt));
+            Set("010111101x100001101110xxxxxxxxxx", AInstEmit.Fcvtzs_S,      typeof(AOpCodeSimd));
             Set("0>0011101<100001101110xxxxxxxxxx", AInstEmit.Fcvtzs_V,      typeof(AOpCodeSimd));
             Set("0x0011110>>xxxxx111111xxxxxxxxxx", AInstEmit.Fcvtzs_V,      typeof(AOpCodeSimdShImm));
             Set("x00111100x111001000000xxxxxxxxxx", AInstEmit.Fcvtzu_Gp,     typeof(AOpCodeSimdCvt));
             Set("x00111100x011001xxxxxxxxxxxxxxxx", AInstEmit.Fcvtzu_Gp_Fix, typeof(AOpCodeSimdCvt));
+            Set("011111101x100001101110xxxxxxxxxx", AInstEmit.Fcvtzu_S,      typeof(AOpCodeSimd));
             Set("0>1011101<100001101110xxxxxxxxxx", AInstEmit.Fcvtzu_V,      typeof(AOpCodeSimd));
             Set("0x1011110>>xxxxx111111xxxxxxxxxx", AInstEmit.Fcvtzu_V,      typeof(AOpCodeSimdShImm));
             Set("000111100x1xxxxx000110xxxxxxxxxx", AInstEmit.Fdiv_S,        typeof(AOpCodeSimdReg));

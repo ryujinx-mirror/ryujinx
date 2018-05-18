@@ -28,7 +28,7 @@ namespace Ryushader
 
                 int[] Code = new int[Data.Length / 4];
 
-                for (int Offset = 0; Offset < Data.Length; Offset += 4)
+                for (int Offset = 0; Offset + 4 <= Data.Length; Offset += 4)
                 {
                     int Value = BitConverter.ToInt32(Data, Offset);
 

@@ -126,6 +126,11 @@ namespace ChocolArm64.Instruction
             EmitFcvtzs_Gp_Fix(Context);
         }
 
+        public static void Fcvtzs_S(AILEmitterCtx Context)
+        {
+            EmitScalarFcvtzs(Context);
+        }
+
         public static void Fcvtzs_V(AILEmitterCtx Context)
         {
             EmitVectorFcvtzs(Context);
@@ -139,6 +144,11 @@ namespace ChocolArm64.Instruction
         public static void Fcvtzu_Gp_Fix(AILEmitterCtx Context)
         {
             EmitFcvtzu_Gp_Fix(Context);
+        }
+
+        public static void Fcvtzu_S(AILEmitterCtx Context)
+        {
+            EmitScalarFcvtzu(Context);
         }
 
         public static void Fcvtzu_V(AILEmitterCtx Context)
@@ -351,6 +361,50 @@ namespace ChocolArm64.Instruction
             {
                 EmitVectorZeroUpper(Context, Op.Rd);
             }
+        }
+
+        private static void EmitScalarFcvtzs(AILEmitterCtx Context)
+        {
+            EmitScalarFcvtz(Context, true);
+        }
+
+        private static void EmitScalarFcvtzu(AILEmitterCtx Context)
+        {
+            EmitScalarFcvtz(Context, false);
+        }
+
+        private static void EmitScalarFcvtz(AILEmitterCtx Context, bool Signed)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+            int SizeI = SizeF + 2;
+
+            int FBits = GetFBits(Context);
+
+            EmitVectorExtractF(Context, Op.Rn, 0, SizeF);
+
+            EmitF2iFBitsMul(Context, SizeF, FBits);
+
+            if (SizeF == 0)
+            {
+                AVectorHelper.EmitCall(Context, Signed
+                    ? nameof(AVectorHelper.SatF32ToS32)
+                    : nameof(AVectorHelper.SatF32ToU32));
+            }
+            else /* if (SizeF == 1) */
+            {
+                AVectorHelper.EmitCall(Context, Signed
+                    ? nameof(AVectorHelper.SatF64ToS64)
+                    : nameof(AVectorHelper.SatF64ToU64));
+            }
+
+            if (SizeF == 0)
+            {
+                Context.Emit(OpCodes.Conv_U8);
+            }
+
+            EmitScalarSet(Context, Op.Rd, SizeI);
         }
 
         private static void EmitVectorFcvtzs(AILEmitterCtx Context)
