@@ -5,6 +5,7 @@ using ChocolArm64.State;
 using Ryujinx.Core.Loaders;
 using Ryujinx.Core.Loaders.Executables;
 using Ryujinx.Core.Logging;
+using Ryujinx.Core.OsHle.Diagnostics;
 using Ryujinx.Core.OsHle.Exceptions;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Kernel;
@@ -305,6 +306,10 @@ namespace Ryujinx.Core.OsHle
                 if (!SymbolTable.TryGetValue(Position, out string SubName))
                 {
                     SubName = $"Sub{Position:x16}";
+                }
+                else if (SubName.StartsWith("_Z"))
+                {
+                    SubName = Demangler.Parse(SubName);
                 }
 
                 Trace.AppendLine(" " + SubName + " (" + GetNsoNameAndAddress(Position) + ")");
