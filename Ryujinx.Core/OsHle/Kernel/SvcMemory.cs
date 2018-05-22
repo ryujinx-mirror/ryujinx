@@ -250,6 +250,26 @@ namespace Ryujinx.Core.OsHle.Kernel
             ThreadState.X1 = Handle;
         }
 
+        private void SvcMapPhysicalMemory(AThreadState ThreadState)
+        {
+            long Position = (long)ThreadState.X0;
+            uint Size     = (uint)ThreadState.X1;
+
+            Memory.Manager.Map(Position, Size, (int)MemoryType.Heap, AMemoryPerm.RW);
+
+            ThreadState.X0 = 0;
+        }
+
+        private void SvcUnmapPhysicalMemory(AThreadState ThreadState)
+        {
+            long Position = (long)ThreadState.X0;
+            uint Size     = (uint)ThreadState.X1;
+
+            Memory.Manager.Unmap(Position, Size);
+
+            ThreadState.X0 = 0;
+        }
+
         private static bool IsValidPosition(long Position)
         {
             return Position >= MemoryRegions.AddrSpaceStart &&
