@@ -15,7 +15,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 throw new NotImplementedException();
             }
 
-            int Target = ((int)(OpCode >> 20) << 8) >> 8;
+            long Target = ((int)(OpCode >> 20) << 8) >> 8;
 
             Target += Block.Position + 8;
 

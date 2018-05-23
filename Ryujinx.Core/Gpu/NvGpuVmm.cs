@@ -1,9 +1,11 @@
 using ChocolArm64.Memory;
 using System.Collections.Concurrent;
 
+using Ryujinx.Graphics.Gal;
+
 namespace Ryujinx.Core.Gpu
 {
-    public class NvGpuVmm : IAMemory
+    public class NvGpuVmm : IAMemory, IGalMemory
     {
         public const long AddrSize = 1L << 40;
 

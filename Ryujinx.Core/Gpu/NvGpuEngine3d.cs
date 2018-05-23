@@ -138,16 +138,11 @@ namespace Ryujinx.Core.Gpu
 
                 long Tag = BasePosition + (uint)Offset;
 
-                //TODO: Find a better way to calculate the size.
-                int Size = 0x20000;
-
-                byte[] Code = Vmm.ReadBytes(Tag, Size);
-
                 GalShaderType ShaderType = GetTypeFromProgram(Index);
 
                 Tags[(int)ShaderType] = Tag;
 
-                Gpu.Renderer.CreateShader(Tag, ShaderType, Code);
+                Gpu.Renderer.CreateShader(Vmm, Tag, ShaderType);
                 Gpu.Renderer.BindShader(Tag);
             }
 

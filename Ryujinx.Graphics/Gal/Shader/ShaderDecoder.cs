@@ -4,28 +4,28 @@ namespace Ryujinx.Graphics.Gal.Shader
     {
         private const bool AddDbgComments = true;
 
-        public static ShaderIrBlock DecodeBasicBlock(int[] Code, int Offset)
+        public static ShaderIrBlock DecodeBasicBlock(IGalMemory Memory, long Position)
         {
             ShaderIrBlock Block = new ShaderIrBlock();
 
-            while (Offset + 2 <= Code.Length)
+            while (true)
             {
-                int InstPos = Offset * 4;
+                Block.Position = Position;
 
-                Block.Position = InstPos;
-
-                Block.MarkLabel(InstPos);
+                Block.MarkLabel(Position);
 
                 //Ignore scheduling instructions, which are written every 32 bytes.
-                if ((Offset & 7) == 0)
+                if ((Position & 0x1f) == 0)
                 {
-                    Offset += 2;
+                    Position += 8;
 
                     continue;
                 }
 
-                uint Word0 = (uint)Code[Offset++];
-                uint Word1 = (uint)Code[Offset++];
+                uint Word0 = (uint)Memory.ReadInt32(Position + 0);
+                uint Word1 = (uint)Memory.ReadInt32(Position + 4);
+
+                Position += 8;
 
                 long OpCode = Word0 | (long)Word1 << 32;
 
@@ -33,7 +33,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 if (AddDbgComments)
                 {
-                    string DbgOpCode = $"0x{InstPos:x8}: 0x{OpCode:x16} ";
+                    string DbgOpCode = $"0x{Position:x16}: 0x{OpCode:x16} ";
 
                     Block.AddNode(new ShaderIrCmnt(DbgOpCode + (Decode?.Method.Name ?? "???")));
                 }

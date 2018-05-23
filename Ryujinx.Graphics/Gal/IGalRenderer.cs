@@ -58,7 +58,7 @@ namespace Ryujinx.Graphics.Gal
         void DrawElements(int VbIndex, int First, GalPrimitiveType PrimType);
 
         //Shader
-        void CreateShader(long Tag, GalShaderType Type, byte[] Data);
+        void CreateShader(IGalMemory Memory, long Tag, GalShaderType Type);
 
         IEnumerable<ShaderDeclInfo> GetTextureUsage(long Tag);
 

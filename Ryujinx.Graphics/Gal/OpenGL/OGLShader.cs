@@ -3,7 +3,6 @@ using Ryujinx.Graphics.Gal.Shader;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace Ryujinx.Graphics.Gal.OpenGL
@@ -85,14 +84,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             Programs = new Dictionary<ShaderProgram, int>();
         }
 
-        public void Create(long Tag, GalShaderType Type, byte[] Data)
+        public void Create(IGalMemory Memory, long Tag, GalShaderType Type)
         {
-            Stages.GetOrAdd(Tag, (Key) => ShaderStageFactory(Type, Tag, Data));
+            Stages.GetOrAdd(Tag, (Key) => ShaderStageFactory(Memory, Tag, Type));
         }
 
-        private ShaderStage ShaderStageFactory(GalShaderType Type, long Tag, byte[] Data)
+        private ShaderStage ShaderStageFactory(IGalMemory Memory, long Position, GalShaderType Type)
         {
-            GlslProgram Program = GetGlslProgram(Data, Type);
+            GlslProgram Program = GetGlslProgram(Memory, Position,  Type);
 
             return new ShaderStage(
                 Type,
@@ -101,25 +100,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 Program.Uniforms);
         }
 
-        private GlslProgram GetGlslProgram(byte[] Data, GalShaderType Type)
+        private GlslProgram GetGlslProgram(IGalMemory Memory, long Position, GalShaderType Type)
         {
-            int[] Code = new int[(Data.Length - 0x50) >> 2];
-
-            using (MemoryStream MS = new MemoryStream(Data))
-            {
-                MS.Seek(0x50, SeekOrigin.Begin);
-
-                BinaryReader Reader = new BinaryReader(MS);
-
-                for (int Index = 0; Index < Code.Length; Index++)
-                {
-                    Code[Index] = Reader.ReadInt32();
-                }
-            }
-
             GlslDecompiler Decompiler = new GlslDecompiler();
 
-            return Decompiler.Decompile(Code, Type);
+            return Decompiler.Decompile(Memory, Position + 0x50, Type);
         }
 
         public IEnumerable<ShaderDeclInfo> GetTextureUsage(long Tag)

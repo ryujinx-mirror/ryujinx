@@ -198,14 +198,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             ActionsQueue.Enqueue(() => Rasterizer.DrawElements(VbIndex, First, PrimType));
         }
 
-        public void CreateShader(long Tag, GalShaderType Type, byte[] Data)
+        public void CreateShader(IGalMemory Memory, long Tag, GalShaderType Type)
         {
-            if (Data == null)
+            if (Memory == null)
             {
-                throw new ArgumentNullException(nameof(Data));
+                throw new ArgumentNullException(nameof(Memory));
             }
 
-            Shader.Create(Tag, Type, Data);
+            Shader.Create(Memory, Tag, Type);
         }
 
         public void SetConstBuffer(long Tag, int Cbuf, byte[] Data)

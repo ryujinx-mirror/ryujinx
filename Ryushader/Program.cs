@@ -24,20 +24,14 @@ namespace Ryushader
                     case "f":  ShaderType = GalShaderType.Fragment;       break;
                 }
 
-                byte[] Data = File.ReadAllBytes(args[1]);
-
-                int[] Code = new int[Data.Length / 4];
-
-                for (int Offset = 0; Offset + 4 <= Data.Length; Offset += 4)
+                using (FileStream FS = new FileStream(args[1], FileMode.Open, FileAccess.Read))
                 {
-                    int Value = BitConverter.ToInt32(Data, Offset);
+                    Memory Mem = new Memory(FS);
 
-                    Code[Offset >> 2] = Value;
+                    GlslProgram Program = Decompiler.Decompile(Mem, 0, ShaderType);
+
+                    Console.WriteLine(Program.Code);
                 }
-
-                GlslProgram Program = Decompiler.Decompile(Code, ShaderType);
-
-                Console.WriteLine(Program.Code);
             }
             else
             {
