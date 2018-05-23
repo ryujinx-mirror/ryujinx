@@ -79,7 +79,7 @@ namespace ChocolArm64.Instruction
 
                 Context.Emit(OpCodes.And);
 
-                Context.EmitLdc_I4(0);
+                Context.EmitLdc_I8(0);
 
                 Context.Emit(OpCodes.Bne_Un_S, LblTrue);
 
