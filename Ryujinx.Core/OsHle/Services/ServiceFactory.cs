@@ -97,7 +97,16 @@ namespace Ryujinx.Core.OsHle.Services
                 case "nvdrv:a":
                     return new INvDrvServices();
 
+                case "pctl:s":
+                    return new IParentalControlServiceFactory();
+
+                case "pctl:r":
+                    return new IParentalControlServiceFactory();
+
                 case "pctl:a":
+                    return new IParentalControlServiceFactory();
+
+                case "pctl":
                     return new IParentalControlServiceFactory();
 
                 case "pl:u":

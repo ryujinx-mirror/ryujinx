@@ -20,7 +20,8 @@ namespace Ryujinx.Core.OsHle.Services.Am
                 { 21, GetDesiredLanguage },
                 { 22, SetTerminateResult },
                 { 23, GetDisplayVersion  },
-                { 40, NotifyRunning      }
+                { 40, NotifyRunning      },
+                { 50, GetPseudoDeviceId  }
             };
         }
 
@@ -84,6 +85,16 @@ namespace Ryujinx.Core.OsHle.Services.Am
         public long NotifyRunning(ServiceCtx Context)
         {
             Context.ResponseData.Write(1);
+
+            return 0;
+        }
+
+        public long GetPseudoDeviceId(ServiceCtx Context)
+        {
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            
+            Context.ResponseData.Write(0L);
+            Context.ResponseData.Write(0L);
 
             return 0;
         }
