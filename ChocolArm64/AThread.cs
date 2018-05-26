@@ -30,6 +30,8 @@ namespace ChocolArm64
 
             ThreadState = new AThreadState();
 
+            ThreadState.ExecutionMode = AExecutionMode.AArch64;
+
             ThreadState.Running = true;
         }
 

@@ -14,6 +14,17 @@ namespace ChocolArm64.State
         internal const int ErgSizeLog2 = 4;
         internal const int DczSizeLog2 = 4;
 
+        internal AExecutionMode ExecutionMode;
+
+        //AArch32 state.
+        public uint R0,  R1,  R2,  R3,
+                    R4,  R5,  R6,  R7,
+                    R8,  R9,  R10, R11,
+                    R12, R13, R14, R15;
+
+        public bool Thumb;
+
+        //AArch64 state.
         public ulong X0,  X1,  X2,  X3,  X4,  X5,  X6,  X7,
                      X8,  X9,  X10, X11, X12, X13, X14, X15,
                      X16, X17, X18, X19, X20, X21, X22, X23,

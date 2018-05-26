@@ -1,5 +1,6 @@
 using ChocolArm64.Instruction;
 using ChocolArm64.Memory;
+using ChocolArm64.State;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -19,21 +20,23 @@ namespace ChocolArm64.Decoder
         }
 
         public static ABlock DecodeBasicBlock(
-            ATranslator Translator,
-            AMemory     Memory,
-            long        Start)
+            AThreadState State,
+            ATranslator  Translator,
+            AMemory      Memory,
+            long         Start)
         {
             ABlock Block = new ABlock(Start);
 
-            FillBlock(Memory, Block);
+            FillBlock(State, Memory, Block);
 
             return Block;
         }
 
         public static (ABlock[] Graph, ABlock Root) DecodeSubroutine(
-            ATranslator Translator,
-            AMemory     Memory,
-            long        Start)
+            AThreadState State,
+            ATranslator  Translator,
+            AMemory      Memory,
+            long         Start)
         {
             Dictionary<long, ABlock> Visited    = new Dictionary<long, ABlock>();
             Dictionary<long, ABlock> VisitedEnd = new Dictionary<long, ABlock>();
@@ -60,7 +63,7 @@ namespace ChocolArm64.Decoder
             {
                 ABlock Current = Blocks.Dequeue();
 
-                FillBlock(Memory, Current);
+                FillBlock(State, Memory, Current);
 
                 //Set child blocks. "Branch" is the block the branch instruction
                 //points to (when taken), "Next" is the block at the next address,
@@ -148,7 +151,7 @@ namespace ChocolArm64.Decoder
             return (Graph, Root);
         }
 
-        private static void FillBlock(AMemory Memory, ABlock Block)
+        private static void FillBlock(AThreadState State, AMemory Memory, ABlock Block)
         {
             long Position = Block.Position;
 
@@ -156,7 +159,9 @@ namespace ChocolArm64.Decoder
 
             do
             {
-                OpCode = DecodeOpCode(Memory, Position);
+                //TODO: This needs to be changed to support both AArch32 and AArch64,
+                //once JIT support is introduced on AArch32 aswell.
+                OpCode = DecodeOpCode(State, Memory, Position);
 
                 Block.OpCodes.Add(OpCode);
 
@@ -180,11 +185,21 @@ namespace ChocolArm64.Decoder
                    OpCode.Emitter == AInstEmit.Und;
         }
 
-        public static AOpCode DecodeOpCode(AMemory Memory, long Position)
+        public static AOpCode DecodeOpCode(AThreadState State, AMemory Memory, long Position)
         {
             int OpCode = Memory.ReadInt32(Position);
 
-            AInst Inst = AOpCodeTable.GetInst(OpCode);
+            AInst Inst;
+
+            if (State.ExecutionMode == AExecutionMode.AArch64)
+            {
+                Inst = AOpCodeTable.GetInstA64(OpCode);
+            }
+            else
+            {
+                //TODO: Thumb support.
+                Inst = AOpCodeTable.GetInstA32(OpCode);
+            }
 
             AOpCode DecodedOpCode = new AOpCode(AInst.Undefined, Position, OpCode);
 

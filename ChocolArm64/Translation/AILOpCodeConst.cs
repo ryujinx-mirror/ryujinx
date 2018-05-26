@@ -55,24 +55,8 @@ namespace ChocolArm64.Translation
         {
             switch (Type)
             {
-                case ConstType.Int32: Context.Generator.EmitLdc_I4(Value.I4); break;
-
-                case ConstType.Int64:
-                {
-                    if (Value.I8 >= int.MinValue &&
-                        Value.I8 <= int.MaxValue)
-                    {
-                        Context.Generator.EmitLdc_I4(Value.I4);
-
-                        Context.Generator.Emit(OpCodes.Conv_I8);
-                    }
-                    else
-                    {
-                        Context.Generator.Emit(OpCodes.Ldc_I8, Value.I8);
-                    }
-                    break;
-                }
-
+                case ConstType.Int32:  Context.Generator.EmitLdc_I4(Value.I4);           break;
+                case ConstType.Int64:  Context.Generator.Emit(OpCodes.Ldc_I8, Value.I8); break;
                 case ConstType.Single: Context.Generator.Emit(OpCodes.Ldc_R4, Value.R4); break;
                 case ConstType.Double: Context.Generator.Emit(OpCodes.Ldc_R8, Value.R8); break;
             }

@@ -2,6 +2,7 @@ using ChocolArm64.Decoder;
 using ChocolArm64.Events;
 using ChocolArm64.Instruction;
 using ChocolArm64.Memory;
+using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
 using System.Collections.Concurrent;
@@ -12,8 +13,6 @@ namespace ChocolArm64
 {
     public class ATranslator
     {
-        private HashSet<long> SubBlocks;
-
         private ConcurrentDictionary<long, ATranslatedSub> CachedSubs;
 
         private ConcurrentDictionary<long, string> SymbolTable;
@@ -24,8 +23,6 @@ namespace ChocolArm64
 
         public ATranslator(IReadOnlyDictionary<long, string> SymbolTable = null)
         {
-            SubBlocks = new HashSet<long>();
-
             CachedSubs = new ConcurrentDictionary<long, ATranslatedSub>();
 
             if (SymbolTable != null)
@@ -39,6 +36,35 @@ namespace ChocolArm64
         }
 
         internal void ExecuteSubroutine(AThread Thread, long Position)
+        {
+            //TODO: Both the execute A32/A64 methods should be merged on the future,
+            //when both ISAs are implemented with the interpreter and JIT.
+            //As of now, A32 only has a interpreter and A64 a JIT.
+            AThreadState State  = Thread.ThreadState;
+            AMemory      Memory = Thread.Memory;
+
+            if (State.ExecutionMode == AExecutionMode.AArch32)
+            {
+                ExecuteSubroutineA32(State, Memory);
+            }
+            else
+            {
+                ExecuteSubroutineA64(State, Memory, Position);
+            }
+        }
+
+        private void ExecuteSubroutineA32(AThreadState State, AMemory Memory)
+        {
+            do
+            {
+                AOpCode OpCode = ADecoder.DecodeOpCode(State, Memory, State.R15);
+
+                OpCode.Interpreter(State, Memory, OpCode);
+            }
+            while (State.R15 != 0 && State.Running);
+        }
+
+        private void ExecuteSubroutineA64(AThreadState State, AMemory Memory, long Position)
         {
             do
             {
@@ -54,17 +80,17 @@ namespace ChocolArm64
 
                 if (!CachedSubs.TryGetValue(Position, out ATranslatedSub Sub))
                 {
-                    Sub = TranslateTier0(Thread.Memory, Position);
+                    Sub = TranslateTier0(State, Memory, Position);
                 }
 
                 if (Sub.ShouldReJit())
                 {
-                    TranslateTier1(Thread.Memory, Position);
+                    TranslateTier1(State, Memory, Position);
                 }
 
-                Position = Sub.Execute(Thread.ThreadState, Thread.Memory);
+                Position = Sub.Execute(State, Memory);
             }
-            while (Position != 0 && Thread.ThreadState.Running);
+            while (Position != 0 && State.Running);
         }
 
         internal bool TryGetCachedSub(AOpCode OpCode, out ATranslatedSub Sub)
@@ -89,9 +115,9 @@ namespace ChocolArm64
             return CachedSubs.ContainsKey(Position);
         }
 
-        private ATranslatedSub TranslateTier0(AMemory Memory, long Position)
+        private ATranslatedSub TranslateTier0(AThreadState State, AMemory Memory, long Position)
         {
-            ABlock Block = ADecoder.DecodeBasicBlock(this, Memory, Position);
+            ABlock Block = ADecoder.DecodeBasicBlock(State, this, Memory, Position);
 
             ABlock[] Graph = new ABlock[] { Block };
 
@@ -107,39 +133,18 @@ namespace ChocolArm64
 
             ATranslatedSub Subroutine = Context.GetSubroutine();
 
-            lock (SubBlocks)
-            {
-                if (SubBlocks.Contains(Position))
-                {
-                    SubBlocks.Remove(Position);
-
-                    Subroutine.SetType(ATranslatedSubType.SubBlock);
-                }
-                else
-                {
-                    Subroutine.SetType(ATranslatedSubType.SubTier0);
-                }
-            }
+            Subroutine.SetType(ATranslatedSubType.SubTier0);
 
             CachedSubs.AddOrUpdate(Position, Subroutine, (Key, OldVal) => Subroutine);
 
             AOpCode LastOp = Block.GetLastOp();
 
-            lock (SubBlocks)
-            {
-                if (LastOp.Emitter != AInstEmit.Ret &&
-                    LastOp.Emitter != AInstEmit.Br)
-                {
-                    SubBlocks.Add(LastOp.Position + 4);
-                }
-            }
-
             return Subroutine;
         }
 
-        private void TranslateTier1(AMemory Memory, long Position)
+        private void TranslateTier1(AThreadState State, AMemory Memory, long Position)
         {
-            (ABlock[] Graph, ABlock Root) Cfg = ADecoder.DecodeSubroutine(this, Memory, Position);
+            (ABlock[] Graph, ABlock Root) Cfg = ADecoder.DecodeSubroutine(State, this, Memory, Position);
 
             string SubName = GetSubName(Position);
 
