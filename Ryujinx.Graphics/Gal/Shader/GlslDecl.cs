@@ -4,6 +4,10 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     class GlslDecl
     {
+        public const int TessCoordAttrX  = 0x2f0;
+        public const int TessCoordAttrY  = 0x2f4;
+        public const int TessCoordAttrZ  = 0x2f8;
+        public const int InstanceIdAttr  = 0x2f8;
         public const int VertexIdAttr    = 0x2fc;
         public const int GlPositionWAttr = 0x7c;
 
@@ -48,7 +52,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public GalShaderType ShaderType { get; private set; }
 
-        public GlslDecl(ShaderIrNode[] Nodes, GalShaderType ShaderType)
+        public GlslDecl(ShaderIrBlock[] Blocks, GalShaderType ShaderType)
         {
             this.ShaderType = ShaderType;
 
@@ -75,9 +79,12 @@ namespace Ryujinx.Graphics.Gal.Shader
                 m_OutAttributes.Add(7, new ShaderDeclInfo("gl_Position", -1, 0, 4));
             }
 
-            foreach (ShaderIrNode Node in Nodes)
+            foreach (ShaderIrBlock Block in Blocks)
             {
-                Traverse(null, Node);
+                foreach (ShaderIrNode Node in Block.GetNodes())
+                {
+                    Traverse(null, Node);
+                }
             }
         }
 

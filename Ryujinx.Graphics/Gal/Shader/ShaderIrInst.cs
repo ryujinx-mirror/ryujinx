@@ -65,6 +65,8 @@ namespace Ryujinx.Graphics.Gal.Shader
         Cne,
         Lsl,
         Lsr,
+        Max,
+        Min,
         Mul,
         Neg,
         Not,

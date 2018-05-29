@@ -126,6 +126,21 @@ namespace Ryujinx.Graphics.Gal.Shader
             EmitFsetp(Block, OpCode, ShaderOper.RR);
         }
 
+        public static void Imnmx_C(ShaderIrBlock Block, long OpCode)
+        {
+            EmitImnmx(Block, OpCode, ShaderOper.CR);
+        }
+
+        public static void Imnmx_I(ShaderIrBlock Block, long OpCode)
+        {
+            EmitImnmx(Block, OpCode, ShaderOper.Imm);
+        }
+
+        public static void Imnmx_R(ShaderIrBlock Block, long OpCode)
+        {
+            EmitImnmx(Block, OpCode, ShaderOper.RR);
+        }
+
         public static void Ipa(ShaderIrBlock Block, long OpCode)
         {
             ShaderIrNode OperA = GetOperAbuf28(OpCode);
@@ -263,6 +278,26 @@ namespace Ryujinx.Graphics.Gal.Shader
             bool Signed = ((OpCode >> 48) & 1) != 0;
 
             return Signed ? ShaderIrInst.Asr : ShaderIrInst.Lsr;
+        }
+
+        public static void Xmad_CR(ShaderIrBlock Block, long OpCode)
+        {
+            EmitXmad(Block, OpCode, ShaderOper.CR);
+        }
+
+        public static void Xmad_I(ShaderIrBlock Block, long OpCode)
+        {
+            EmitXmad(Block, OpCode, ShaderOper.Imm);
+        }
+
+        public static void Xmad_RC(ShaderIrBlock Block, long OpCode)
+        {
+            EmitXmad(Block, OpCode, ShaderOper.RC);
+        }
+
+        public static void Xmad_RR(ShaderIrBlock Block, long OpCode)
+        {
+            EmitXmad(Block, OpCode, ShaderOper.RR);
         }
 
         private static void EmitAluBinary(
@@ -412,6 +447,16 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private static void EmitFmnmx(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
         {
+            EmitMnmx(Block, OpCode, true, Oper);
+        }
+
+        private static void EmitImnmx(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        {
+            EmitMnmx(Block, OpCode, false, Oper);
+        }
+
+        private static void EmitMnmx(ShaderIrBlock Block, long OpCode, bool IsFloat, ShaderOper Oper)
+        {
             bool NegB = ((OpCode >> 45) & 1) != 0;
             bool AbsA = ((OpCode >> 46) & 1) != 0;
             bool NegA = ((OpCode >> 48) & 1) != 0;
@@ -419,30 +464,48 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             ShaderIrNode OperA = GetOperGpr8(OpCode), OperB;
 
-            OperA = GetAluFabsFneg(OperA, AbsA, NegA);
+            if (IsFloat)
+            {
+                OperA = GetAluFabsFneg(OperA, AbsA, NegA);
+            }
+            else
+            {
+                OperA = GetAluIabsIneg(OperA, AbsA, NegA);
+            }
 
             switch (Oper)
             {
                 case ShaderOper.CR:   OperB = GetOperCbuf34   (OpCode); break;
+                case ShaderOper.Imm:  OperB = GetOperImm19_20 (OpCode); break;
                 case ShaderOper.Immf: OperB = GetOperImmf19_20(OpCode); break;
                 case ShaderOper.RR:   OperB = GetOperGpr20    (OpCode); break;
 
                 default: throw new ArgumentException(nameof(Oper));
             }
 
-            OperB = GetAluFabsFneg(OperB, AbsB, NegB);
+            if (IsFloat)
+            {
+                OperB = GetAluFabsFneg(OperB, AbsB, NegB);
+            }
+            else
+            {
+                OperB = GetAluIabsIneg(OperB, AbsB, NegB);
+            }
 
             ShaderIrOperPred Pred = GetOperPred39(OpCode);
 
             ShaderIrOp Op;
+
+            ShaderIrInst MaxInst = IsFloat ? ShaderIrInst.Fmax : ShaderIrInst.Max;
+            ShaderIrInst MinInst = IsFloat ? ShaderIrInst.Fmin : ShaderIrInst.Min;
 
             if (Pred.IsConst)
             {
                 bool IsMax = ((OpCode >> 42) & 1) != 0;
 
                 Op = new ShaderIrOp(IsMax
-                    ? ShaderIrInst.Fmax
-                    : ShaderIrInst.Fmin, OperA, OperB);
+                    ? MaxInst
+                    : MinInst, OperA, OperB);
 
                 Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
             }
@@ -450,8 +513,8 @@ namespace Ryujinx.Graphics.Gal.Shader
             {
                 ShaderIrNode PredN = GetOperPred39N(OpCode);
 
-                ShaderIrOp OpMax = new ShaderIrOp(ShaderIrInst.Fmax, OperA, OperB);
-                ShaderIrOp OpMin = new ShaderIrOp(ShaderIrInst.Fmin, OperA, OperB);
+                ShaderIrOp OpMax = new ShaderIrOp(MaxInst, OperA, OperB);
+                ShaderIrOp OpMin = new ShaderIrOp(MinInst, OperA, OperB);
 
                 ShaderIrAsg AsgMax = new ShaderIrAsg(GetOperGpr0(OpCode), OpMax);
                 ShaderIrAsg AsgMin = new ShaderIrAsg(GetOperGpr0(OpCode), OpMin);
@@ -645,6 +708,95 @@ namespace Ryujinx.Graphics.Gal.Shader
             Op = new ShaderIrOp(LopInst, P0Node, P2NNode);
 
             Block.AddNode(GetPredNode(new ShaderIrAsg(P0Node, Op), OpCode));
+        }
+
+        private static void EmitXmad(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        {
+            //TODO: Confirm SignAB/C, it is just a guess.
+            //TODO: Implement Mode 3 (CSFU), what it does?
+            bool SignAB = ((OpCode >> 48) & 1) != 0;
+            bool SignC  = ((OpCode >> 49) & 1) != 0;
+            bool HighB  = ((OpCode >> 52) & 1) != 0;
+            bool HighA  = ((OpCode >> 53) & 1) != 0;
+
+            int Mode = (int)(OpCode >> 50) & 7;
+
+            ShaderIrNode OperA = GetOperGpr8(OpCode), OperB, OperC;
+
+            ShaderIrOperImm Imm16  = new ShaderIrOperImm(16);
+            ShaderIrOperImm ImmMsk = new ShaderIrOperImm(0xffff);
+
+            ShaderIrInst ShiftAB = SignAB ? ShaderIrInst.Asr : ShaderIrInst.Lsr;
+            ShaderIrInst ShiftC  = SignC  ? ShaderIrInst.Asr : ShaderIrInst.Lsr;
+
+            if (HighA)
+            {
+                OperA = new ShaderIrOp(ShiftAB, OperA, Imm16);
+            }
+
+            switch (Oper)
+            {
+                case ShaderOper.CR:  OperB = GetOperCbuf34  (OpCode); break;
+                case ShaderOper.Imm: OperB = GetOperImm19_20(OpCode); break;
+                case ShaderOper.RC:  OperB = GetOperGpr39   (OpCode); break;
+                case ShaderOper.RR:  OperB = GetOperGpr20   (OpCode); break;
+
+                default: throw new ArgumentException(nameof(Oper));
+            }
+
+            bool ProductShiftLeft = false, Merge = false;
+
+            if (Oper == ShaderOper.RC)
+            {
+                OperC = GetOperCbuf34(OpCode);
+            }
+            else
+            {
+                OperC = GetOperGpr39(OpCode);
+
+                ProductShiftLeft = ((OpCode >> 36) & 1) != 0;
+                Merge            = ((OpCode >> 37) & 1) != 0;
+            }
+
+            switch (Mode)
+            {
+                //CLO.
+                case 1: OperC = ExtendTo32(OperC, SignC, 16); break;
+
+                //CHI.
+                case 2: OperC = new ShaderIrOp(ShiftC, OperC, Imm16); break;
+            }
+
+            ShaderIrNode OperBH = OperB;
+
+            if (HighB)
+            {
+                OperBH = new ShaderIrOp(ShiftAB, OperBH, Imm16);
+            }
+
+            ShaderIrOp MulOp = new ShaderIrOp(ShaderIrInst.Mul, OperA, OperBH);
+
+            if (ProductShiftLeft)
+            {
+                MulOp = new ShaderIrOp(ShaderIrInst.Lsl, MulOp, Imm16);
+            }
+
+            ShaderIrOp AddOp = new ShaderIrOp(ShaderIrInst.Add, MulOp, OperC);
+
+            if (Merge)
+            {
+                AddOp = new ShaderIrOp(ShaderIrInst.And, AddOp, ImmMsk);
+                OperB = new ShaderIrOp(ShaderIrInst.Lsl, OperB, Imm16);
+                AddOp = new ShaderIrOp(ShaderIrInst.Or,  AddOp, OperB);
+            }
+
+            if (Mode == 4)
+            {
+                OperB = new ShaderIrOp(ShaderIrInst.Lsl, OperB, Imm16);
+                AddOp = new ShaderIrOp(ShaderIrInst.Or,  AddOp, OperB);
+            }
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), AddOp), OpCode));
         }
     }
 }

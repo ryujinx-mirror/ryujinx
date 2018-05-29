@@ -25,6 +25,8 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private GlslDecl Decl;
 
+        private ShaderIrBlock[] Blocks;
+
         private StringBuilder SB;
 
         public GlslDecompiler()
@@ -37,6 +39,8 @@ namespace Ryujinx.Graphics.Gal.Shader
                 { ShaderIrInst.Asr,    GetAsrExpr    },
                 { ShaderIrInst.Band,   GetBandExpr   },
                 { ShaderIrInst.Bnot,   GetBnotExpr   },
+                { ShaderIrInst.Bor,    GetBorExpr    },
+                { ShaderIrInst.Bxor,   GetBxorExpr   },
                 { ShaderIrInst.Ceil,   GetCeilExpr   },
                 { ShaderIrInst.Ceq,    GetCeqExpr    },
                 { ShaderIrInst.Cge,    GetCgeExpr    },
@@ -50,19 +54,27 @@ namespace Ryujinx.Graphics.Gal.Shader
                 { ShaderIrInst.Fabs,   GetAbsExpr    },
                 { ShaderIrInst.Fadd,   GetAddExpr    },
                 { ShaderIrInst.Fceq,   GetCeqExpr    },
+                { ShaderIrInst.Fcequ,  GetCequExpr   },
                 { ShaderIrInst.Fcge,   GetCgeExpr    },
+                { ShaderIrInst.Fcgeu,  GetCgeuExpr   },
                 { ShaderIrInst.Fcgt,   GetCgtExpr    },
+                { ShaderIrInst.Fcgtu,  GetCgtuExpr   },
                 { ShaderIrInst.Fclamp, GetFclampExpr },
                 { ShaderIrInst.Fcle,   GetCleExpr    },
+                { ShaderIrInst.Fcleu,  GetCleuExpr   },
                 { ShaderIrInst.Fclt,   GetCltExpr    },
+                { ShaderIrInst.Fcltu,  GetCltuExpr   },
+                { ShaderIrInst.Fcnan,  GetCnanExpr   },
                 { ShaderIrInst.Fcne,   GetCneExpr    },
+                { ShaderIrInst.Fcneu,  GetCneuExpr   },
+                { ShaderIrInst.Fcnum,  GetCnumExpr   },
                 { ShaderIrInst.Fcos,   GetFcosExpr   },
                 { ShaderIrInst.Fex2,   GetFex2Expr   },
                 { ShaderIrInst.Ffma,   GetFfmaExpr   },
                 { ShaderIrInst.Flg2,   GetFlg2Expr   },
                 { ShaderIrInst.Floor,  GetFloorExpr  },
-                { ShaderIrInst.Fmax,   GetFmaxExpr   },
-                { ShaderIrInst.Fmin,   GetFminExpr   },
+                { ShaderIrInst.Fmax,   GetMaxExpr    },
+                { ShaderIrInst.Fmin,   GetMinExpr    },
                 { ShaderIrInst.Fmul,   GetMulExpr    },
                 { ShaderIrInst.Fneg,   GetNegExpr    },
                 { ShaderIrInst.Frcp,   GetFrcpExpr   },
@@ -74,6 +86,8 @@ namespace Ryujinx.Graphics.Gal.Shader
                 { ShaderIrInst.Kil,    GetKilExpr    },
                 { ShaderIrInst.Lsl,    GetLslExpr    },
                 { ShaderIrInst.Lsr,    GetLsrExpr    },
+                { ShaderIrInst.Max,    GetMaxExpr    },
+                { ShaderIrInst.Min,    GetMinExpr    },
                 { ShaderIrInst.Mul,    GetMulExpr    },
                 { ShaderIrInst.Neg,    GetNegExpr    },
                 { ShaderIrInst.Not,    GetNotExpr    },
@@ -91,11 +105,9 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public GlslProgram Decompile(IGalMemory Memory, long Position, GalShaderType ShaderType)
         {
-            ShaderIrBlock Block = ShaderDecoder.DecodeBasicBlock(Memory, Position);
+            Blocks = ShaderDecoder.Decode(Memory, Position);
 
-            ShaderIrNode[] Nodes = Block.GetNodes();
-
-            Decl = new GlslDecl(Nodes, ShaderType);
+            Decl = new GlslDecl(Blocks, ShaderType);
 
             SB = new StringBuilder();
 
@@ -108,7 +120,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             PrintDeclGprs();
             PrintDeclPreds();
 
-            PrintBlockScope(Nodes, 0, Nodes.Length, "void main()", 1);
+            PrintBlockScope(Blocks[0], null, null, "void main()", IdentationStr);
 
             string GlslCode = SB.ToString();
 
@@ -230,37 +242,75 @@ namespace Ryujinx.Graphics.Gal.Shader
         }
 
         private void PrintBlockScope(
-            ShaderIrNode[] Nodes,
-            int            Start,
-            int            Count,
-            string         ScopeName,
-            int            IdentationLevel)
+            ShaderIrBlock Block,
+            ShaderIrBlock EndBlock,
+            ShaderIrBlock LoopBlock,
+            string        ScopeName,
+            string        Identation,
+            bool          IsDoWhile = false)
         {
-            string Identation = string.Empty;
+            string UpIdent = Identation.Substring(0, Identation.Length - IdentationStr.Length);
 
-            for (int Index = 0; Index < IdentationLevel - 1; Index++)
+            if (IsDoWhile)
             {
-                Identation += IdentationStr;
+                SB.AppendLine(UpIdent + "do {");
+            }
+            else
+            {
+                SB.AppendLine(UpIdent + ScopeName + " {");
             }
 
-            if (ScopeName != string.Empty)
+            while (Block != null && Block != EndBlock)
             {
-                ScopeName += " ";
+                ShaderIrNode[] Nodes = Block.GetNodes();
+
+                Block = PrintNodes(Block, EndBlock, LoopBlock, Identation, Nodes);
             }
 
-            SB.AppendLine(Identation + ScopeName + "{");
-
-            string LastLine = Identation + "}";
-
-            if (IdentationLevel > 0)
+            if (IsDoWhile)
             {
-                Identation += IdentationStr;
+                SB.AppendLine(UpIdent + "} " + ScopeName + ";");
+            }
+            else
+            {
+                SB.AppendLine(UpIdent + "}");
+            }
+        }
+
+        private ShaderIrBlock PrintNodes(
+            ShaderIrBlock         Block,
+            ShaderIrBlock         EndBlock,
+            ShaderIrBlock         LoopBlock,
+            string                Identation,
+            params ShaderIrNode[] Nodes)
+        {
+            /*
+             * Notes about control flow and if-else/loop generation:
+             * The code assumes that the program has sane control flow,
+             * that is, there's no jumps to a location after another jump or
+             * jump target (except for the end of an if-else block), and backwards
+             * jumps to a location before the last loop dominator.
+             * Such cases needs to be transformed on a step before the GLSL code
+             * generation to ensure that we have sane graphs to work with.
+             * TODO: Such transformation is not yet implemented.
+             */
+            string NewIdent = Identation + IdentationStr;
+
+            ShaderIrBlock LoopTail = GetLoopTailBlock(Block);
+
+            if (LoopTail != null && LoopBlock != Block)
+            {
+                //Shoock! kuma shock! We have a loop here!
+                //The entire sequence needs to be inside a do-while block.
+                ShaderIrBlock LoopEnd = GetDownBlock(LoopTail);
+
+                PrintBlockScope(Block, LoopEnd, Block, "while (false)", NewIdent, IsDoWhile: true);
+
+                return LoopEnd;
             }
 
-            for (int Index = Start; Index < Start + Count; Index++)
+            foreach (ShaderIrNode Node in Nodes)
             {
-                ShaderIrNode Node = Nodes[Index];
-
                 if (Node is ShaderIrCond Cond)
                 {
                     string IfExpr = GetSrcExpr(Cond.Pred, true);
@@ -272,42 +322,41 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                     if (Cond.Child is ShaderIrOp Op && Op.Inst == ShaderIrInst.Bra)
                     {
-                        ShaderIrLabel Label = (ShaderIrLabel)Op.OperandA;
+                        //Branch is a loop branch and would result in infinite recursion.
+                        if (Block.Branch.Position <= Block.Position)
+                        {
+                            SB.AppendLine(Identation + "if (" + IfExpr + ") {");
 
-                        int Target = FindLabel(Nodes, Label, Index + 1);
+                            SB.AppendLine(Identation + IdentationStr + "continue;");
 
-                        int IfCount = Target - Index - 1;
+                            SB.AppendLine(Identation + "}");
+
+                            continue;
+                        }
 
                         string SubScopeName = "if (!" + IfExpr + ")";
 
-                        if (Nodes[Index + IfCount] is ShaderIrOp LastOp && LastOp.Inst == ShaderIrInst.Bra)
+                        PrintBlockScope(Block.Next, Block.Branch, LoopBlock, SubScopeName, NewIdent);
+
+                        ShaderIrBlock IfElseEnd = GetUpBlock(Block.Branch).Branch;
+
+                        if (IfElseEnd?.Position > Block.Branch.Position)
                         {
-                            Target = FindLabel(Nodes, (ShaderIrLabel)LastOp.OperandA, Index + 1);
+                            PrintBlockScope(Block.Branch, IfElseEnd, LoopBlock, "else", NewIdent);
 
-                            int ElseCount = Target - (Index + 1 + IfCount);
-
-                            PrintBlockScope(Nodes, Index + 1, IfCount - 1, SubScopeName, IdentationLevel + 1);
-
-                            PrintBlockScope(Nodes, Index + 1 + IfCount, ElseCount, "else", IdentationLevel + 1);
-
-                            Index += IfCount + ElseCount;
+                            return IfElseEnd;
                         }
-                        else
-                        {
-                            PrintBlockScope(Nodes, Index + 1, IfCount, SubScopeName, IdentationLevel + 1);
 
-                            Index += IfCount;
-                        }
+                        return Block.Branch;
                     }
                     else
                     {
-                        string SubScopeName = "if (" + IfExpr + ")";
+                        SB.AppendLine(Identation + "if (" + IfExpr + ") {");
 
-                        ShaderIrNode[] Child = new ShaderIrNode[] { Cond.Child };
+                        PrintNodes(Block, EndBlock, LoopBlock, NewIdent, Cond.Child);
 
-                        PrintBlockScope(Child, 0, 1, SubScopeName, IdentationLevel + 1);
+                        SB.AppendLine(Identation + "}");
                     }
-
                 }
                 else if (Node is ShaderIrAsg Asg)
                 {
@@ -322,7 +371,16 @@ namespace Ryujinx.Graphics.Gal.Shader
                 }
                 else if (Node is ShaderIrOp Op)
                 {
-                    if (Op.Inst == ShaderIrInst.Exit)
+                    if (Op.Inst == ShaderIrInst.Bra)
+                    {
+                        if (Block.Branch.Position <= Block.Position)
+                        {
+                            SB.AppendLine(Identation + "continue;");
+                        }
+
+                        continue;
+                    }
+                    else if (Op.Inst == ShaderIrInst.Exit)
                     {
                         //Do everything that needs to be done before
                         //the shader ends here.
@@ -336,10 +394,6 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                     SB.AppendLine(Identation + GetSrcExpr(Op, true) + ";");
                 }
-                else if (Node is ShaderIrLabel Label)
-                {
-                    //TODO: Add support for loops here.
-                }
                 else if (Node is ShaderIrCmnt Cmnt)
                 {
                     SB.AppendLine(Identation + "// " + Cmnt.Comment);
@@ -350,22 +404,35 @@ namespace Ryujinx.Graphics.Gal.Shader
                 }
             }
 
-            SB.AppendLine(LastLine);
+            return Block.Next;
         }
 
-        private int FindLabel(ShaderIrNode[] Nodes, ShaderIrLabel Label, int Start)
+        private ShaderIrBlock GetUpBlock(ShaderIrBlock Block)
         {
-            int Target;
+            return Blocks.FirstOrDefault(x => x.EndPosition == Block.Position);
+        }
 
-            for (Target = Start; Target < Nodes.Length; Target++)
+        private ShaderIrBlock GetDownBlock(ShaderIrBlock Block)
+        {
+            return Blocks.FirstOrDefault(x => x.Position == Block.EndPosition);
+        }
+
+        private ShaderIrBlock GetLoopTailBlock(ShaderIrBlock LoopHead)
+        {
+            ShaderIrBlock Tail = null;
+
+            foreach (ShaderIrBlock Block in LoopHead.Sources)
             {
-                if (Nodes[Target] == Label)
+                if (Block.Position >= LoopHead.Position)
                 {
-                    return Target;
+                    if (Tail == null || Tail.Position < Block.Position)
+                    {
+                        Tail = Block;
+                    }
                 }
             }
 
-            throw new InvalidOperationException();
+            return Tail;
         }
 
         private bool IsValidOutOper(ShaderIrNode Node)
@@ -480,9 +547,22 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private string GetName(ShaderIrOperAbuf Abuf)
         {
-            if (Abuf.Offs == GlslDecl.VertexIdAttr)
+            if (Decl.ShaderType == GalShaderType.Vertex)
             {
-                return "gl_VertexID";
+                switch (Abuf.Offs)
+                {
+                    case GlslDecl.VertexIdAttr:   return "gl_VertexID";
+                    case GlslDecl.InstanceIdAttr: return "gl_InstanceID";
+                }
+            }
+            else if (Decl.ShaderType == GalShaderType.TessEvaluation)
+            {
+                switch (Abuf.Offs)
+                {
+                    case GlslDecl.TessCoordAttrX: return "gl_TessCoord.x";
+                    case GlslDecl.TessCoordAttrY: return "gl_TessCoord.y";
+                    case GlslDecl.TessCoordAttrZ: return "gl_TessCoord.z";
+                }
             }
 
             return GetName(Decl.InAttributes, Abuf);
@@ -567,6 +647,10 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private string GetBnotExpr(ShaderIrOp Op) => GetUnaryExpr(Op, "!");
 
+        private string GetBorExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "||");
+
+        private string GetBxorExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "^^");
+
         private string GetCeilExpr(ShaderIrOp Op) => GetUnaryCall(Op, "ceil");
 
         private string GetClampsExpr(ShaderIrOp Op)
@@ -583,12 +667,33 @@ namespace Ryujinx.Graphics.Gal.Shader
                              "uint(" + GetOperExpr(Op, Op.OperandC) + ")))";
         }
 
-        private string GetCltExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "<");
         private string GetCeqExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "==");
-        private string GetCleExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "<=");
-        private string GetCgtExpr(ShaderIrOp Op) => GetBinaryExpr(Op, ">");
-        private string GetCneExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "!=");
+
+        private string GetCequExpr(ShaderIrOp Op) => GetBinaryExprWithNaN(Op, "==");
+
         private string GetCgeExpr(ShaderIrOp Op) => GetBinaryExpr(Op, ">=");
+
+        private string GetCgeuExpr(ShaderIrOp Op) => GetBinaryExprWithNaN(Op, ">=");
+
+        private string GetCgtExpr(ShaderIrOp Op) => GetBinaryExpr(Op, ">");
+
+        private string GetCgtuExpr(ShaderIrOp Op) => GetBinaryExprWithNaN(Op, ">");
+
+        private string GetCleExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "<=");
+
+        private string GetCleuExpr(ShaderIrOp Op) => GetBinaryExprWithNaN(Op, "<=");
+
+        private string GetCltExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "<");
+
+        private string GetCltuExpr(ShaderIrOp Op) => GetBinaryExprWithNaN(Op, "<");
+
+        private string GetCnanExpr(ShaderIrOp Op) => GetUnaryCall(Op, "isnan");
+
+        private string GetCneExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "!=");
+
+        private string GetCneuExpr(ShaderIrOp Op) => GetBinaryExprWithNaN(Op, "!=");
+
+        private string GetCnumExpr(ShaderIrOp Op) => GetUnaryCall(Op, "!isnan");
 
         private string GetExitExpr(ShaderIrOp Op) => "return";
 
@@ -603,9 +708,6 @@ namespace Ryujinx.Graphics.Gal.Shader
         private string GetFlg2Expr(ShaderIrOp Op) => GetUnaryCall(Op, "log2");
 
         private string GetFloorExpr(ShaderIrOp Op) => GetUnaryCall(Op, "floor");
-
-        private string GetFmaxExpr(ShaderIrOp Op) => GetBinaryCall(Op, "max");
-        private string GetFminExpr(ShaderIrOp Op) => GetBinaryCall(Op, "min");
 
         private string GetFrcpExpr(ShaderIrOp Op) => GetUnaryExpr(Op, "1 / ");
 
@@ -633,6 +735,9 @@ namespace Ryujinx.Graphics.Gal.Shader
             return "int(uint(" + GetOperExpr(Op, Op.OperandA) + ") >> " +
                                  GetOperExpr(Op, Op.OperandB) + ")";
         }
+
+        private string GetMaxExpr(ShaderIrOp Op) => GetBinaryCall(Op, "max");
+        private string GetMinExpr(ShaderIrOp Op) => GetBinaryCall(Op, "min");
 
         private string GetMulExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "*");
 
@@ -731,6 +836,18 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             return GetOperExpr(Op, Op.OperandA) + " " + Opr + " " +
                    GetOperExpr(Op, Op.OperandB);
+        }
+
+        private string GetBinaryExprWithNaN(ShaderIrOp Op, string Opr)
+        {
+            string A = GetOperExpr(Op, Op.OperandA);
+            string B = GetOperExpr(Op, Op.OperandB);
+
+            string NaNCheck =
+                " || isnan(" + A + ")" +
+                " || isnan(" + B + ")";
+
+            return A + " " + Opr + " " + B + NaNCheck;
         }
 
         private string GetTernaryExpr(ShaderIrOp Op, string Opr1, string Opr2)

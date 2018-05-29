@@ -59,9 +59,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             switch (Format)
             {
-                case GalTextureFormat.A8B8G8R8: return (PixelFormat.Rgba, PixelType.UnsignedByte);
-                case GalTextureFormat.A1B5G5R5: return (PixelFormat.Rgba, PixelType.UnsignedShort5551);
-                case GalTextureFormat.B5G6R5:   return (PixelFormat.Rgb,  PixelType.UnsignedShort565);
+                case GalTextureFormat.R32G32B32A32: return (PixelFormat.Rgba, PixelType.Float);
+                case GalTextureFormat.R16G16B16A16: return (PixelFormat.Rgba, PixelType.HalfFloat);
+                case GalTextureFormat.A8B8G8R8:     return (PixelFormat.Rgba, PixelType.UnsignedByte);
+                case GalTextureFormat.R32:          return (PixelFormat.Red,  PixelType.Float);
+                case GalTextureFormat.A1B5G5R5:     return (PixelFormat.Rgba, PixelType.UnsignedShort5551);
+                case GalTextureFormat.B5G6R5:       return (PixelFormat.Rgb,  PixelType.UnsignedShort565);
+                case GalTextureFormat.G8R8:         return (PixelFormat.Rg,   PixelType.UnsignedByte);
+                case GalTextureFormat.R8:           return (PixelFormat.Red,  PixelType.UnsignedByte);
             }
 
             throw new NotImplementedException(Format.ToString());
@@ -145,20 +150,20 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             switch (BlendEquation)
             {
+                default:
                 case GalBlendEquation.FuncAdd:             return BlendEquationMode.FuncAdd;
                 case GalBlendEquation.FuncSubtract:        return BlendEquationMode.FuncSubtract;
                 case GalBlendEquation.FuncReverseSubtract: return BlendEquationMode.FuncReverseSubtract;
                 case GalBlendEquation.Min:                 return BlendEquationMode.Min;
                 case GalBlendEquation.Max:                 return BlendEquationMode.Max;
             }
-
-            throw new ArgumentException(nameof(BlendEquation));
         }
 
         public static BlendingFactorSrc GetBlendFactorSrc(GalBlendFactor BlendFactor)
         {
             switch (BlendFactor)
             {
+                default:
                 case GalBlendFactor.Zero:                  return BlendingFactorSrc.Zero;
                 case GalBlendFactor.One:                   return BlendingFactorSrc.One;
                 case GalBlendFactor.SrcColor:              return BlendingFactorSrc.SrcColor;
@@ -179,14 +184,13 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalBlendFactor.Src1Alpha:             return BlendingFactorSrc.Src1Alpha;
                 case GalBlendFactor.OneMinusSrc1Alpha:     return BlendingFactorSrc.OneMinusSrc1Alpha;
             }
-
-            throw new ArgumentException(nameof(BlendFactor));
         }
 
         public static BlendingFactorDest GetBlendFactorDst(GalBlendFactor BlendFactor)
         {
             switch (BlendFactor)
             {
+                default:
                 case GalBlendFactor.Zero:                  return BlendingFactorDest.Zero;
                 case GalBlendFactor.One:                   return BlendingFactorDest.One;
                 case GalBlendFactor.SrcColor:              return BlendingFactorDest.SrcColor;
@@ -207,8 +211,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalBlendFactor.Src1Alpha:             return BlendingFactorDest.Src1Alpha;
                 case GalBlendFactor.OneMinusSrc1Alpha:     return BlendingFactorDest.OneMinusSrc1Alpha;
             }
-
-            throw new ArgumentException(nameof(BlendFactor));
         }
     }
 }

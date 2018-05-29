@@ -15,11 +15,11 @@ namespace Ryujinx.Graphics.Gal.Shader
                 throw new NotImplementedException();
             }
 
-            long Target = ((int)(OpCode >> 20) << 8) >> 8;
+            int Target = ((int)(OpCode >> 20) << 8) >> 8;
 
-            Target += Block.Position + 8;
+            ShaderIrOperImm Imm = new ShaderIrOperImm(Target);
 
-            Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Bra, Block.GetLabel(Target)), OpCode));
+            Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Bra, Imm), OpCode));
         }
 
         public static void Exit(ShaderIrBlock Block, long OpCode)

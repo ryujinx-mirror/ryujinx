@@ -4,44 +4,28 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     class ShaderIrBlock
     {
-        private List<ShaderIrNode> Nodes;
+        public long Position    { get; set; }
+        public long EndPosition { get; set; }
 
-        private Dictionary<long, ShaderIrLabel> LabelsToInsert;
+        public ShaderIrBlock Next   { get; set; }
+        public ShaderIrBlock Branch { get; set; }
 
-        public long Position;
+        public List<ShaderIrBlock> Sources { get; private set; }
 
-        public ShaderIrBlock()
+        public List<ShaderIrNode> Nodes { get; private set; }
+
+        public ShaderIrBlock(long Position)
         {
-            Nodes = new List<ShaderIrNode>();
+            this.Position = Position;
 
-            LabelsToInsert = new Dictionary<long, ShaderIrLabel>();
+            Sources = new List<ShaderIrBlock>();
+
+            Nodes = new List<ShaderIrNode>();
         }
 
         public void AddNode(ShaderIrNode Node)
         {
             Nodes.Add(Node);
-        }
-
-        public ShaderIrLabel GetLabel(long Position)
-        {
-            if (LabelsToInsert.TryGetValue(Position, out ShaderIrLabel Label))
-            {
-                return Label;
-            }
-
-            Label = new ShaderIrLabel();
-
-            LabelsToInsert.Add(Position, Label);
-
-            return Label;
-        }
-
-        public void MarkLabel(long Position)
-        {
-            if (LabelsToInsert.TryGetValue(Position, out ShaderIrLabel Label))
-            {
-                Nodes.Add(Label);
-            }
         }
 
         public ShaderIrNode[] GetNodes()

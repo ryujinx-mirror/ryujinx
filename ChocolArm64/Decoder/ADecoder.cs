@@ -94,7 +94,7 @@ namespace ChocolArm64.Decoder
                     }
                 }
 
-                //If we have on the tree two blocks with the same end position,
+                //If we have on the graph two blocks with the same end position,
                 //then we need to split the bigger block and have two small blocks,
                 //the end position of the bigger "Current" block should then be == to
                 //the position of the "Smaller" block.
