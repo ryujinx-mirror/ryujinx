@@ -182,6 +182,13 @@ namespace Ryujinx.Core.Gpu
 
             Gpu.Renderer.SetBlendEnable(Enable);
 
+            if (!Enable)
+            {
+                //If blend is not enabled, then the other values have no effect.
+                //Note that if it is disabled, the register may contain invalid values.
+                return;
+            }
+
             bool BlendSeparateAlpha = (ReadRegister(NvGpuEngine3dReg.IBlendNSeparateAlpha) & 1) != 0;
 
             GalBlendEquation EquationRgb = (GalBlendEquation)ReadRegister(NvGpuEngine3dReg.IBlendNEquationRgb);
@@ -362,6 +369,7 @@ namespace Ryujinx.Core.Gpu
                 bool Enable = (Control & 0x1000) != 0;
 
                 long VertexPosition = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNAddress + Index * 4);
+                long VertexEndPos   = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNEndAddr + Index * 2);
 
                 if (!Enable)
                 {
@@ -374,11 +382,7 @@ namespace Ryujinx.Core.Gpu
 
                 if (IndexCount != 0)
                 {
-                    Size = GetVertexCountFromIndexBuffer(
-                        Vmm,
-                        IndexPosition,
-                        IndexCount,
-                        IndexSize);
+                    Size = (VertexEndPos - VertexPosition) + 1;
                 }
                 else
                 {
@@ -408,62 +412,6 @@ namespace Ryujinx.Core.Gpu
                     Gpu.Renderer.DrawArrays(Index, VertexFirst, VertexCount, PrimType);
                 }
             }
-        }
-
-        private int GetVertexCountFromIndexBuffer(
-            NvGpuVmm Vmm,
-            long     IndexPosition,
-            int      IndexCount,
-            int      IndexSize)
-        {
-            int MaxIndex = -1;
-
-            if (IndexSize == 2)
-            {
-                while (IndexCount -- > 0)
-                {
-                    ushort Value = Vmm.ReadUInt16(IndexPosition);
-
-                    IndexPosition += 2;
-
-                    if (MaxIndex < Value)
-                    {
-                        MaxIndex = Value;
-                    }
-                }
-            }
-            else if (IndexSize == 1)
-            {
-                while (IndexCount -- > 0)
-                {
-                    byte Value = Vmm.ReadByte(IndexPosition++);
-
-                    if (MaxIndex < Value)
-                    {
-                        MaxIndex = Value;
-                    }
-                }
-            }
-            else if (IndexSize == 4)
-            {
-                while (IndexCount -- > 0)
-                {
-                    uint Value = Vmm.ReadUInt32(IndexPosition);
-
-                    IndexPosition += 2;
-
-                    if (MaxIndex < Value)
-                    {
-                        MaxIndex = (int)Value;
-                    }
-                }
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException(nameof(IndexSize));
-            }
-
-            return MaxIndex + 1;
         }
 
         private void QueryControl(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)

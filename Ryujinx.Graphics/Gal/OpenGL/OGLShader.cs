@@ -91,7 +91,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private ShaderStage ShaderStageFactory(IGalMemory Memory, long Position, GalShaderType Type)
         {
-            GlslProgram Program = GetGlslProgram(Memory, Position,  Type);
+            GlslProgram Program = GetGlslProgram(Memory, Position, Type);
 
             return new ShaderStage(
                 Type,

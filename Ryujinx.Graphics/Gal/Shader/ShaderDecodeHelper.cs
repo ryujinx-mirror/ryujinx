@@ -119,14 +119,24 @@ namespace Ryujinx.Graphics.Gal.Shader
             return new ShaderIrOperImmf(Value);
         }
 
+        public static ShaderIrOperPred GetOperPred0(long OpCode)
+        {
+            return new ShaderIrOperPred((int)(OpCode >> 0) & 7);
+        }
+
         public static ShaderIrOperPred GetOperPred3(long OpCode)
         {
             return new ShaderIrOperPred((int)(OpCode >> 3) & 7);
         }
 
-        public static ShaderIrOperPred GetOperPred0(long OpCode)
+        public static ShaderIrOperPred GetOperPred12(long OpCode)
         {
-            return new ShaderIrOperPred((int)(OpCode >> 0) & 7);
+            return new ShaderIrOperPred((int)(OpCode >> 12) & 7);
+        }
+
+        public static ShaderIrOperPred GetOperPred29(long OpCode)
+        {
+            return new ShaderIrOperPred((int)(OpCode >> 29) & 7);
         }
 
         public static ShaderIrNode GetOperPred39N(long OpCode)
@@ -184,9 +194,21 @@ namespace Ryujinx.Graphics.Gal.Shader
             throw new ArgumentException(nameof(OpCode));
         }
 
-        public static ShaderIrInst GetBLop(long OpCode)
+        public static ShaderIrInst GetBLop45(long OpCode)
         {
             switch ((int)(OpCode >> 45) & 3)
+            {
+                case 0: return ShaderIrInst.Band;
+                case 1: return ShaderIrInst.Bor;
+                case 2: return ShaderIrInst.Bxor;
+            }
+
+            throw new ArgumentException(nameof(OpCode));
+        }
+
+        public static ShaderIrInst GetBLop24(long OpCode)
+        {
+            switch ((int)(OpCode >> 24) & 3)
             {
                 case 0: return ShaderIrInst.Band;
                 case 1: return ShaderIrInst.Bor;

@@ -6,6 +6,8 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     static partial class ShaderDecode
     {
+        private const int TempRegStart = 0x100;
+
         public static void Ld_A(ShaderIrBlock Block, long OpCode)
         {
             ShaderIrNode[] Opers = GetOperAbuf20(OpCode);
@@ -92,6 +94,62 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrAsg(OperA, Op1), OpCode)); //Is this right?
         }
 
+        public static void Tex(ShaderIrBlock Block, long OpCode)
+        {
+            //TODO: Support other formats.
+            ShaderIrOperGpr[] Coords = new ShaderIrOperGpr[2];
+
+            for (int Index = 0; Index < Coords.Length; Index++)
+            {
+                Coords[Index] = GetOperGpr8(OpCode);
+
+                Coords[Index].Index += Index;
+
+                if (Coords[Index].Index > ShaderIrOperGpr.ZRIndex)
+                {
+                    Coords[Index].Index = ShaderIrOperGpr.ZRIndex;
+                }
+            }
+
+            int ChMask = (int)(OpCode >> 31) & 0xf;
+
+            ShaderIrNode OperC = GetOperImm13_36(OpCode);
+
+            for (int Ch = 0; Ch < 4; Ch++)
+            {
+                ShaderIrOperGpr Dst = new ShaderIrOperGpr(TempRegStart + Ch);
+
+                ShaderIrMetaTex Meta = new ShaderIrMetaTex(Ch);
+
+                ShaderIrOp Op = new ShaderIrOp(ShaderIrInst.Texs, Coords[0], Coords[1], OperC, Meta);
+
+                Block.AddNode(GetPredNode(new ShaderIrAsg(Dst, Op), OpCode));
+            }
+
+            int RegInc = 0;
+
+            for (int Ch = 0; Ch < 4; Ch++)
+            {
+                if (!IsChannelUsed(ChMask, Ch))
+                {
+                    continue;
+                }
+
+                ShaderIrOperGpr Src = new ShaderIrOperGpr(TempRegStart + Ch);
+
+                ShaderIrOperGpr Dst = GetOperGpr0(OpCode);
+
+                Dst.Index += RegInc++;
+
+                if (Dst.Index >= ShaderIrOperGpr.ZRIndex)
+                {
+                    continue;
+                }
+
+                Block.AddNode(GetPredNode(new ShaderIrAsg(Dst, Src), OpCode));
+            }
+        }
+
         public static void Texs(ShaderIrBlock Block, long OpCode)
         {
             EmitTex(Block, OpCode, ShaderIrInst.Texs);
@@ -109,11 +167,24 @@ namespace Ryujinx.Graphics.Gal.Shader
             ShaderIrNode OperB = GetOperGpr20   (OpCode);
             ShaderIrNode OperC = GetOperImm13_36(OpCode);
 
+            bool TwoDests = GetOperGpr28(OpCode).Index != ShaderIrOperGpr.ZRIndex;
+
+            int ChMask;
+
+            switch ((OpCode >> 50) & 7)
+            {
+                case 0: ChMask = TwoDests ? 0x7 : 0x1; break;
+                case 1: ChMask = TwoDests ? 0xb : 0x2; break;
+                case 2: ChMask = TwoDests ? 0xd : 0x4; break;
+                case 3: ChMask = TwoDests ? 0xe : 0x8; break;
+                case 4: ChMask = TwoDests ? 0xf : 0x3; break;
+
+                default: throw new InvalidOperationException();
+            }
+
             for (int Ch = 0; Ch < 4; Ch++)
             {
-                //Assign it to a temp because the destination registers
-                //may be used as texture coord input aswell.
-                ShaderIrOperGpr Dst = new ShaderIrOperGpr(0x100 + Ch);
+                ShaderIrOperGpr Dst = new ShaderIrOperGpr(TempRegStart + Ch);
 
                 ShaderIrMetaTex Meta = new ShaderIrMetaTex(Ch);
 
@@ -122,15 +193,22 @@ namespace Ryujinx.Graphics.Gal.Shader
                 Block.AddNode(GetPredNode(new ShaderIrAsg(Dst, Op), OpCode));
             }
 
+            int RegInc = 0;
+
             for (int Ch = 0; Ch < 4; Ch++)
             {
-                ShaderIrOperGpr Src = new ShaderIrOperGpr(0x100 + Ch);
+                if (!IsChannelUsed(ChMask, Ch))
+                {
+                    continue;
+                }
 
-                ShaderIrOperGpr Dst = (Ch >> 1) != 0
+                ShaderIrOperGpr Src = new ShaderIrOperGpr(TempRegStart + Ch);
+
+                ShaderIrOperGpr Dst = (RegInc >> 1) != 0
                     ? GetOperGpr28(OpCode)
                     : GetOperGpr0 (OpCode);
 
-                Dst.Index += Ch & 1;
+                Dst.Index += RegInc++ & 1;
 
                 if (Dst.Index >= ShaderIrOperGpr.ZRIndex)
                 {
@@ -138,7 +216,17 @@ namespace Ryujinx.Graphics.Gal.Shader
                 }
 
                 Block.AddNode(GetPredNode(new ShaderIrAsg(Dst, Src), OpCode));
+
+                /*if (IsScalar)
+                {
+                    break;
+                }*/
             }
+        }
+
+        private static bool IsChannelUsed(int ChMask, int Ch)
+        {
+            return (ChMask & (1 << Ch)) != 0;
         }
     }
 }

@@ -389,6 +389,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                             SB.AppendLine(Identation + "gl_Position.xy *= flip;");
 
                             SB.AppendLine(Identation + GlslDecl.PositionOutAttrName + " = gl_Position;");
+                            SB.AppendLine(Identation + GlslDecl.PositionOutAttrName + ".w = 1;");
                         }
                     }
 
