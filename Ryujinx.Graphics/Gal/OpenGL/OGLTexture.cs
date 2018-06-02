@@ -70,10 +70,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, SwizzleA);
         }
 
-        private GalTexture ConvertAstcTextureToRgba(GalTexture Texture)
+        private static GalTexture ConvertAstcTextureToRgba(GalTexture Texture)
         {
             int TextureBlockWidth  = GetAstcBlockWidth(Texture.Format);
-            int TextureBlockHeight = GetAstcBlockWidth(Texture.Format);
+            int TextureBlockHeight = GetAstcBlockHeight(Texture.Format);
 
             Texture.Data = ASTCDecoder.DecodeToRGBA8888(
                 Texture.Data,
@@ -87,7 +87,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             return Texture;
         }
 
-        private int GetAstcBlockWidth(GalTextureFormat Format)
+        private static int GetAstcBlockWidth(GalTextureFormat Format)
         {
             switch (Format)
             {
@@ -110,7 +110,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             throw new ArgumentException(nameof(Format));
         }
 
-        private int GetAstcBlockHeight(GalTextureFormat Format)
+        private static int GetAstcBlockHeight(GalTextureFormat Format)
         {
             switch (Format)
             {
