@@ -1,3 +1,4 @@
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
@@ -15,6 +16,7 @@ namespace Ryujinx.Core.OsHle.Services.FspSrv
             {
                 { 1,    SetCurrentProcess                    },
                 { 18,   OpenSdCardFileSystem                 },
+                { 22,   CreateSaveDataFileSystem             },
                 { 51,   OpenSaveDataFileSystem               },
                 { 200,  OpenDataStorageByCurrentProcess      },
                 { 203,  OpenPatchDataStorageByCurrentProcess },
@@ -30,6 +32,13 @@ namespace Ryujinx.Core.OsHle.Services.FspSrv
         public long OpenSdCardFileSystem(ServiceCtx Context)
         {
             MakeObject(Context, new IFileSystem(Context.Ns.VFs.GetSdCardPath()));
+
+            return 0;
+        }
+
+        public long CreateSaveDataFileSystem(ServiceCtx Context)
+        {
+            Context.Ns.Log.PrintStub(LogClass.ServiceFs, "Stubbed.");
 
             return 0;
         }

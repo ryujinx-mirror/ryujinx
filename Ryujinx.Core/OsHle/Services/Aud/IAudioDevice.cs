@@ -19,11 +19,17 @@ namespace Ryujinx.Core.OsHle.Services.Aud
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, ListAudioDeviceName         },
-                { 1, SetAudioDeviceOutputVolume  },
-                { 3, GetActiveAudioDeviceName    },
-                { 4, QueryAudioDeviceSystemEvent },
-                { 5, GetActiveChannelCount       }
+                { 0,  ListAudioDeviceName            },
+                { 1,  SetAudioDeviceOutputVolume     },
+                { 3,  GetActiveAudioDeviceName       },
+                { 4,  QueryAudioDeviceSystemEvent    },
+                { 5,  GetActiveChannelCount          },
+                { 6,  ListAudioDeviceNameAuto        },
+                { 7,  SetAudioDeviceOutputVolumeAuto },
+                { 8,  GetAudioDeviceOutputVolumeAuto },
+                { 10, GetActiveAudioDeviceNameAuto   },
+                { 11, QueryAudioDeviceInputEvent     },
+                { 12, QueryAudioDeviceOutputEvent    }
             };
 
             SystemEvent = new KEvent();
@@ -113,6 +119,103 @@ namespace Ryujinx.Core.OsHle.Services.Aud
         public long GetActiveChannelCount(ServiceCtx Context)
         {
             Context.ResponseData.Write(2);
+
+            Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+
+            return 0;
+        }
+
+        public long ListAudioDeviceNameAuto(ServiceCtx Context)
+        {
+            string[] DeviceNames = SystemStateMgr.AudioOutputs;
+
+            Context.ResponseData.Write(DeviceNames.Length);
+
+            (long Position, long Size) = Context.Request.GetBufferType0x22();
+
+            long BasePosition = Position;
+
+            foreach (string Name in DeviceNames)
+            {
+                byte[] Buffer = Encoding.UTF8.GetBytes(Name + '\0');
+
+                if ((Position - BasePosition) + Buffer.Length > Size)
+                {
+                    Context.Ns.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
+
+                    break;
+                }
+
+                AMemoryHelper.WriteBytes(Context.Memory, Position, Buffer);
+
+                Position += Buffer.Length;
+            }
+
+            return 0;
+        }
+
+        public long SetAudioDeviceOutputVolumeAuto(ServiceCtx Context)
+        {
+            float Volume = Context.RequestData.ReadSingle();
+
+            long Position = Context.Request.SendBuff[0].Position;
+            long Size     = Context.Request.SendBuff[0].Size;
+
+            byte[] DeviceNameBuffer = AMemoryHelper.ReadBytes(Context.Memory, Position, Size);
+
+            string DeviceName = Encoding.UTF8.GetString(DeviceNameBuffer);
+
+            Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+
+            return 0;
+        }
+
+        public long GetAudioDeviceOutputVolumeAuto(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(1f);
+
+            Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+
+            return 0;
+        }
+
+        public long GetActiveAudioDeviceNameAuto(ServiceCtx Context)
+        {
+            string Name = Context.Ns.Os.SystemState.ActiveAudioOutput;
+
+            long Position = Context.Request.RecvListBuff[0].Position;
+            long Size     = Context.Request.RecvListBuff[0].Size;
+
+            byte[] DeviceNameBuffer = Encoding.UTF8.GetBytes(Name + '\0');
+
+            if ((ulong)DeviceNameBuffer.Length <= (ulong)Size)
+            {
+                AMemoryHelper.WriteBytes(Context.Memory, Position, DeviceNameBuffer);
+            }
+            else
+            {
+                Context.Ns.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
+            }
+
+            return 0;
+        }
+
+        public long QueryAudioDeviceInputEvent(ServiceCtx Context)
+        {
+            int Handle = Context.Process.HandleTable.OpenHandle(SystemEvent);
+
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
+
+            Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+
+            return 0;
+        }
+
+        public long QueryAudioDeviceOutputEvent(ServiceCtx Context)
+        {
+            int Handle = Context.Process.HandleTable.OpenHandle(SystemEvent);
+
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
             Context.Ns.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 

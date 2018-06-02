@@ -1,4 +1,5 @@
 using ChocolArm64.Memory;
+using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,  GetSize },
+                { 10, Write   },
                 { 11, Read    }
             };
 
@@ -27,6 +29,13 @@ namespace Ryujinx.Core.OsHle.Services.Am
         public long GetSize(ServiceCtx Context)
         {
             Context.ResponseData.Write((long)Storage.Data.Length);
+
+            return 0;
+        }
+
+        public long Write(ServiceCtx Context)
+        {
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }

@@ -13,11 +13,19 @@ namespace Ryujinx.Core.OsHle.Services.Nifm
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 4, CreateGeneralServiceOld }
+                { 4, CreateGeneralServiceOld },
+                { 5, CreateGeneralService    }
             };
         }
 
         public long CreateGeneralServiceOld(ServiceCtx Context)
+        {
+            MakeObject(Context, new IGeneralService());
+
+            return 0;
+        }
+
+        public long CreateGeneralService(ServiceCtx Context)
         {
             MakeObject(Context, new IGeneralService());
 

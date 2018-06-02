@@ -174,14 +174,14 @@ namespace Ryujinx.Core.OsHle.Services.Nv
 
         private static int ProcessIoctl(ServiceCtx Context, int Cmd, IoctlProcessor Processor)
         {
-            if (CmdIn(Cmd) && Context.Request.GetBufferType0x21Position() == 0)
+            if (CmdIn(Cmd) && Context.Request.GetBufferType0x21().Position == 0)
             {
                 Context.Ns.Log.PrintError(LogClass.ServiceNv, "Input buffer is null!");
 
                 return NvResult.InvalidInput;
             }
 
-            if (CmdOut(Cmd) && Context.Request.GetBufferType0x22Position() == 0)
+            if (CmdOut(Cmd) && Context.Request.GetBufferType0x22().Position == 0)
             {
                 Context.Ns.Log.PrintError(LogClass.ServiceNv, "Output buffer is null!");
 

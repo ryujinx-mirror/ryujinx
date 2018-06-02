@@ -23,6 +23,7 @@ namespace Ryujinx.Core.Logging
         ServiceHid,
         ServiceLm,
         ServiceMm,
+        ServiceNfp,
         ServiceNifm,
         ServiceNs,
         ServiceNv,
@@ -32,6 +33,7 @@ namespace Ryujinx.Core.Logging
         ServiceSet,
         ServiceSfdnsres,
         ServiceSm,
+        ServiceSsl,
         ServiceSss,
         ServiceTime,
         ServiceVi

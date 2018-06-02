@@ -36,8 +36,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvMap
 
         private static int Create(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvMapCreate Args = AMemoryHelper.Read<NvMapCreate>(Context.Memory, InputPosition);
 
@@ -61,8 +61,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvMap
 
         private static int FromId(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvMapFromId Args = AMemoryHelper.Read<NvMapFromId>(Context.Memory, InputPosition);
 
@@ -86,8 +86,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvMap
 
         private static int Alloc(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvMapAlloc Args = AMemoryHelper.Read<NvMapAlloc>(Context.Memory, InputPosition);
 
@@ -149,8 +149,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvMap
 
         private static int Free(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvMapFree Args = AMemoryHelper.Read<NvMapFree>(Context.Memory, InputPosition);
 
@@ -188,8 +188,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvMap
 
         private static int Param(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvMapParam Args = AMemoryHelper.Read<NvMapParam>(Context.Memory, InputPosition);
 
@@ -222,8 +222,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvMap
 
         private static int GetId(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvMapGetId Args = AMemoryHelper.Read<NvMapGetId>(Context.Memory, InputPosition);
 

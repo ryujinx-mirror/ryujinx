@@ -13,8 +13,23 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                //...
+                { 0,  CreateLibraryApplet },
+                { 10, CreateStorage       }
             };
+        }
+
+        public long CreateLibraryApplet(ServiceCtx Context)
+        {
+            MakeObject(Context, new ILibraryAppletAccessor());
+
+            return 0;
+        }
+
+        public long CreateStorage(ServiceCtx Context)
+        {
+            MakeObject(Context, new IStorage(StorageHelper.MakeLaunchParams()));
+
+            return 0;
         }
     }
 }

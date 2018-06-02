@@ -38,7 +38,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvGpuGpu
 
         private static int ZcullGetCtxSize(ServiceCtx Context)
         {
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvGpuGpuZcullGetCtxSize Args = new NvGpuGpuZcullGetCtxSize();
 
@@ -53,7 +53,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvGpuGpu
 
         private static int ZcullGetInfo(ServiceCtx Context)
         {
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvGpuGpuZcullGetInfo Args = new NvGpuGpuZcullGetInfo();
 
@@ -77,8 +77,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvGpuGpu
 
         private static int ZbcSetTable(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             Context.Ns.Log.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
@@ -87,8 +87,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvGpuGpu
 
         private static int GetCharacteristics(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvGpuGpuGetCharacteristics Args = AMemoryHelper.Read<NvGpuGpuGetCharacteristics>(Context.Memory, InputPosition);
 
@@ -137,8 +137,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvGpuGpu
 
         private static int GetTpcMasks(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvGpuGpuGetTpcMasks Args = AMemoryHelper.Read<NvGpuGpuGetTpcMasks>(Context.Memory, InputPosition);
 
@@ -154,7 +154,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvGpuGpu
 
         private static int GetActiveSlotMask(ServiceCtx Context)
         {
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvGpuGpuGetActiveSlotMask Args = new NvGpuGpuGetActiveSlotMask();
 
@@ -170,7 +170,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvGpuGpu
 
         private static int GetGpuTime(ServiceCtx Context)
         {
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             Context.Memory.WriteInt64(OutputPosition, GetPTimerNanoSeconds());
 

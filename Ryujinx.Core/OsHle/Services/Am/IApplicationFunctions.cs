@@ -1,7 +1,6 @@
 using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Ryujinx.Core.OsHle.Services.Am
 {
@@ -15,22 +14,22 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 1,  PopLaunchParameter },
-                { 20, EnsureSaveData     },
-                { 21, GetDesiredLanguage },
-                { 22, SetTerminateResult },
-                { 23, GetDisplayVersion  },
-                { 40, NotifyRunning      },
-                { 50, GetPseudoDeviceId  }
+                { 1,  PopLaunchParameter          },
+                { 20, EnsureSaveData              },
+                { 21, GetDesiredLanguage          },
+                { 22, SetTerminateResult          },
+                { 23, GetDisplayVersion           },
+                { 40, NotifyRunning               },
+                { 50, GetPseudoDeviceId           },
+                { 66, InitializeGamePlayRecording },
+                { 67, SetGamePlayRecordingState   }
             };
         }
-
-        private const uint LaunchParamsMagic = 0xc79497ca;
 
         public long PopLaunchParameter(ServiceCtx Context)
         {
             //Only the first 0x18 bytes of the Data seems to be actually used.
-            MakeObject(Context, new IStorage(MakeLaunchParams()));
+            MakeObject(Context, new IStorage(StorageHelper.MakeLaunchParams()));
 
             return 0;
         }
@@ -99,22 +98,20 @@ namespace Ryujinx.Core.OsHle.Services.Am
             return 0;
         }
 
-        private byte[] MakeLaunchParams()
+        public long InitializeGamePlayRecording(ServiceCtx Context)
         {
-            //Size needs to be at least 0x88 bytes otherwise application errors.
-            using (MemoryStream MS = new MemoryStream())
-            {
-                BinaryWriter Writer = new BinaryWriter(MS);
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
-                MS.SetLength(0x88);
+            return 0;
+        }
 
-                Writer.Write(LaunchParamsMagic);
-                Writer.Write(1);  //IsAccountSelected? Only lower 8 bits actually used.
-                Writer.Write(1L); //User Id Low (note: User Id needs to be != 0)
-                Writer.Write(0L); //User Id High
+        public long SetGamePlayRecordingState(ServiceCtx Context)
+        {
+            int State = Context.RequestData.ReadInt32();
 
-                return MS.ToArray();
-            }
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+
+            return 0;
         }
     }
 }

@@ -16,6 +16,7 @@ namespace Ryujinx.Core.OsHle.Services.Acc
             {
                 { 0,   GetUserCount                        },
                 { 3,   ListOpenUsers                       },
+                { 4,   GetLastOpenedUser                   },
                 { 5,   GetProfile                          },
                 { 100, InitializeApplicationInfo           },
                 { 101, GetBaasAccountManagerForApplication }
@@ -33,6 +34,16 @@ namespace Ryujinx.Core.OsHle.Services.Acc
 
         public long ListOpenUsers(ServiceCtx Context)
         {
+            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
+
+            return 0;
+        }
+
+        public long GetLastOpenedUser(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(0L);
+            Context.ResponseData.Write(0L);
+
             Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
 
             return 0;

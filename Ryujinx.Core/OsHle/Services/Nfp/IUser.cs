@@ -1,28 +1,26 @@
-using Ryujinx.Core.Logging;
+﻿using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
-namespace Ryujinx.Core.OsHle.Services.Ssl
+namespace Ryujinx.Core.OsHle.Services.Nfp
 {
-    class ISslService : IpcService
+    class IUser : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public ISslService()
+        public IUser()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 5, SetInterfaceVersion }
+                { 0, Initialize }
             };
         }
 
-        public long SetInterfaceVersion(ServiceCtx Context)
+        public long Initialize(ServiceCtx Context)
         {
-            int Version = Context.RequestData.ReadInt32();
-
-            Context.Ns.Log.PrintStub(LogClass.ServiceSsl, "Stubbed.");
+            Context.Ns.Log.PrintStub(LogClass.ServiceNfp, "Stubbed.");
 
             return 0;
         }

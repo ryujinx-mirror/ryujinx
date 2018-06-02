@@ -40,7 +40,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvHostCtrl
 
         private static int SyncptIncr(ServiceCtx Context)
         {
-            long InputPosition = Context.Request.GetBufferType0x21Position();
+            long InputPosition = Context.Request.GetBufferType0x21().Position;
 
             int Id = Context.Memory.ReadInt32(InputPosition);
 
@@ -71,8 +71,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvHostCtrl
 
         private static int GetConfig(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             string Nv   = AMemoryHelper.ReadAsciiString(Context.Memory, InputPosition + 0,    0x41);
             string Name = AMemoryHelper.ReadAsciiString(Context.Memory, InputPosition + 0x41, 0x41);
@@ -96,8 +96,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvHostCtrl
 
         private static int EventRegister(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             int EventId = Context.Memory.ReadInt32(InputPosition);
 
@@ -108,8 +108,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvHostCtrl
 
         private static int SyncptReadMinOrMax(ServiceCtx Context, bool Max)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvHostCtrlSyncptRead Args = AMemoryHelper.Read<NvHostCtrlSyncptRead>(Context.Memory, InputPosition);
 
@@ -134,8 +134,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvHostCtrl
 
         private static int SyncptWait(ServiceCtx Context, bool Extended)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvHostCtrlSyncptWait Args = AMemoryHelper.Read<NvHostCtrlSyncptWait>(Context.Memory, InputPosition);
 
@@ -202,8 +202,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvHostCtrl
 
         private static int EventWait(ServiceCtx Context, bool Async)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21Position();
-            long OutputPosition = Context.Request.GetBufferType0x22Position();
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvHostCtrlSyncptWaitEx Args = AMemoryHelper.Read<NvHostCtrlSyncptWaitEx>(Context.Memory, InputPosition);
 

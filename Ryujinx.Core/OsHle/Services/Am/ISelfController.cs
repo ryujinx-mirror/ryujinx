@@ -1,4 +1,5 @@
 using Ryujinx.Core.Logging;
+using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 
@@ -10,11 +11,14 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
+        private KEvent LaunchableEvent;
+
         public ISelfController()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 1,  LockExit                              },
+                { 9,  GetLibraryAppletLaunchableEvent       },
                 { 10, SetScreenShotPermission               },
                 { 11, SetOperationModeChangedNotification   },
                 { 12, SetPerformanceModeChangedNotification },
@@ -23,10 +27,25 @@ namespace Ryujinx.Core.OsHle.Services.Am
                 { 16, SetOutOfFocusSuspendingEnabled        },
                 { 50, SetHandlesRequestToDisplay            }
             };
+
+            LaunchableEvent = new KEvent();
         }
 
         public long LockExit(ServiceCtx Context)
         {
+            return 0;
+        }
+
+        public long GetLibraryAppletLaunchableEvent(ServiceCtx Context)
+        {
+            LaunchableEvent.WaitEvent.Set();
+
+            int Handle = Context.Process.HandleTable.OpenHandle(LaunchableEvent);
+
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
+
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+
             return 0;
         }
 

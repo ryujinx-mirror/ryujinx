@@ -8,6 +8,7 @@ using Ryujinx.Core.OsHle.Services.Friend;
 using Ryujinx.Core.OsHle.Services.FspSrv;
 using Ryujinx.Core.OsHle.Services.Hid;
 using Ryujinx.Core.OsHle.Services.Lm;
+using Ryujinx.Core.OsHle.Services.Nfp;
 using Ryujinx.Core.OsHle.Services.Ns;
 using Ryujinx.Core.OsHle.Services.Nv;
 using Ryujinx.Core.OsHle.Services.Pctl;
@@ -78,6 +79,9 @@ namespace Ryujinx.Core.OsHle.Services
 
                 case "lm":
                     return new ILogService();
+
+                case "nfp:user":
+                    return new IUserManager();
 
                 case "nifm:u":
                     return new Nifm.IStaticService();
