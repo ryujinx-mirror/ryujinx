@@ -216,11 +216,6 @@ namespace Ryujinx.Graphics.Gal.Shader
                 }
 
                 Block.AddNode(GetPredNode(new ShaderIrAsg(Dst, Src), OpCode));
-
-                /*if (IsScalar)
-                {
-                    break;
-                }*/
             }
         }
 

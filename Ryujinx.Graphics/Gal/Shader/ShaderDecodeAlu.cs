@@ -620,7 +620,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
         }
 
-        public static void EmitRro(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        private static void EmitRro(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
         {
             //Note: this is a range reduction instruction and is supposed to
             //be used with Mufu, here it just moves the value and ignores the operation.

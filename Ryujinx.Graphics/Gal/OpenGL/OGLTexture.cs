@@ -40,7 +40,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 if (Texture.Format >= GalTextureFormat.Astc2D4x4)
                 {
-                    ConvertAstcTextureToRgba(Texture);
+                    Texture = ConvertAstcTextureToRgba(Texture);
                 }
 
                 const PixelInternalFormat InternalFmt = PixelInternalFormat.Rgba;
@@ -70,14 +70,21 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, SwizzleA);
         }
 
-        private void ConvertAstcTextureToRgba(GalTexture Texture)
+        private GalTexture ConvertAstcTextureToRgba(GalTexture Texture)
         {
+            int TextureBlockWidth  = GetAstcBlockWidth(Texture.Format);
+            int TextureBlockHeight = GetAstcBlockWidth(Texture.Format);
+
             Texture.Data = ASTCDecoder.DecodeToRGBA8888(
                 Texture.Data,
-                GetAstcBlockWidth(Texture.Format),
-                GetAstcBlockHeight(Texture.Format), 1,
+                TextureBlockWidth,
+                TextureBlockHeight, 1,
                 Texture.Width,
                 Texture.Height, 1);
+
+            Texture.Format = GalTextureFormat.A8B8G8R8;
+
+            return Texture;
         }
 
         private int GetAstcBlockWidth(GalTextureFormat Format)

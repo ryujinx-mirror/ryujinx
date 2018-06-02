@@ -27,7 +27,7 @@ namespace ChocolArm64.Instruction
         public static void Ldr(AILEmitterCtx Context)  => EmitLdr(Context, false);
         public static void Ldrs(AILEmitterCtx Context) => EmitLdr(Context, true);
 
-        public static void EmitLdr(AILEmitterCtx Context, bool Signed)
+        private static void EmitLdr(AILEmitterCtx Context, bool Signed)
         {
             AOpCodeMem Op = (AOpCodeMem)Context.CurrOp;
 
@@ -131,7 +131,7 @@ namespace ChocolArm64.Instruction
             EmitReadAndStore(Op.Rt2);
 
             EmitWBackIfNeeded(Context);
-        }        
+        }
 
         public static void Str(AILEmitterCtx Context)
         {

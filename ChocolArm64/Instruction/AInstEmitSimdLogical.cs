@@ -50,7 +50,7 @@ namespace ChocolArm64.Instruction
             EmitBitBif(Context, false);
         }
 
-        public static void EmitBitBif(AILEmitterCtx Context, bool NotRm)
+        private static void EmitBitBif(AILEmitterCtx Context, bool NotRm)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 

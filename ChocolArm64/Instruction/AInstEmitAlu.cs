@@ -218,7 +218,7 @@ namespace ChocolArm64.Instruction
             EmitSubsCCheck(Context);
             EmitSubsVCheck(Context);
             EmitDataStoreS(Context);
-        }      
+        }
 
         public static void Orn(AILEmitterCtx Context)
         {
@@ -244,7 +244,7 @@ namespace ChocolArm64.Instruction
             nameof(ASoftFallback.ReverseBytes32_32),
             nameof(ASoftFallback.ReverseBytes32_64));
 
-        public static void EmitFallback32_64(AILEmitterCtx Context, string Name32, string Name64)
+        private static void EmitFallback32_64(AILEmitterCtx Context, string Name32, string Name64)
         {
             AOpCodeAlu Op = (AOpCodeAlu)Context.CurrOp;
 
@@ -320,7 +320,7 @@ namespace ChocolArm64.Instruction
                 EmitDataLoadRn(Context);
 
                 Context.EmitLdc_I(IntMin);
-                
+
                 Context.Emit(OpCodes.Ceq);
 
                 EmitDataLoadRm(Context);
