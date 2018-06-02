@@ -139,7 +139,7 @@ namespace Ryujinx.Core.OsHle.Services.Nv
 
             return 0;
         }
-        
+
         public long FinishInitialize(ServiceCtx Context)
         {
             Context.Ns.Log.PrintStub(LogClass.ServiceNv, "Stubbed.");

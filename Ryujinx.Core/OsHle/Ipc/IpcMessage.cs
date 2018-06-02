@@ -176,12 +176,16 @@ namespace Ryujinx.Core.OsHle.Ipc
 
         public (long Position, long Size) GetBufferType0x21()
         {
-            if (PtrBuff.Count > 0 && PtrBuff[0].Position != 0 && PtrBuff[0].Size != 0)
+            if (PtrBuff.Count       != 0 &&
+                PtrBuff[0].Position != 0 &&
+                PtrBuff[0].Size     != 0)
             {
                 return (PtrBuff[0].Position, PtrBuff[0].Size);
             }
 
-            if (SendBuff.Count > 0 && SendBuff[0].Position != 0 && SendBuff[0].Size != 0)
+            if (SendBuff.Count       != 0 &&
+                SendBuff[0].Position != 0 &&
+                SendBuff[0].Size     != 0)
             {
                 return (SendBuff[0].Position, SendBuff[0].Size);
             }
@@ -191,12 +195,16 @@ namespace Ryujinx.Core.OsHle.Ipc
 
         public (long Position, long Size) GetBufferType0x22()
         {
-            if (RecvListBuff.Count > 0 && RecvListBuff[0].Position != 0 && RecvListBuff[0].Size != 0)
+            if (RecvListBuff.Count       != 0 &&
+                RecvListBuff[0].Position != 0 &&
+                RecvListBuff[0].Size     != 0)
             {
                 return (RecvListBuff[0].Position, RecvListBuff[0].Size);
             }
 
-            if (ReceiveBuff.Count > 0 && ReceiveBuff[0].Position != 0 && ReceiveBuff[0].Size != 0)
+            if (ReceiveBuff.Count       != 0 &&
+                ReceiveBuff[0].Position != 0 &&
+                ReceiveBuff[0].Size     != 0)
             {
                 return (ReceiveBuff[0].Position, ReceiveBuff[0].Size);
             }

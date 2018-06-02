@@ -48,16 +48,12 @@ namespace Ryujinx.Core.OsHle.Services.Vi
             return Flinger.ProcessParcelRequest(Context, Data, Code);
         }
 
-        //TransactParcelAuto(i32, u32, u32, buffer<unknown, 0x21, 0>) -> buffer<unknown, 0x22, 0>
-        //Buffer C (PtrBuff) and X (ReceiveListBuff) can be used here...
-        //But they are all null during all my tests.
         public long TransactParcelAuto(ServiceCtx Context)
         {
             int Id   = Context.RequestData.ReadInt32();
             int Code = Context.RequestData.ReadInt32();
 
-            long DataPos  = Context.Request.SendBuff[0].Position;
-            long DataSize = Context.Request.SendBuff[0].Size;
+            (long DataPos, long DataSize) = Context.Request.GetBufferType0x21();
 
             byte[] Data = AMemoryHelper.ReadBytes(Context.Memory, DataPos, DataSize);
 
