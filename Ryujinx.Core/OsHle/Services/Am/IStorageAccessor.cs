@@ -35,35 +35,49 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
         public long Write(ServiceCtx Context)
         {
-            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            //TODO: Error conditions.
+            long WritePosition = Context.RequestData.ReadInt64();
+
+            (long Position, long Size) = Context.Request.GetBufferType0x21();
+
+            if (Size > 0)
+            {
+                long MaxSize = Storage.Data.Length - WritePosition;
+
+                if (Size > MaxSize)
+                {
+                    Size = MaxSize;
+                }
+
+                byte[] Data = AMemoryHelper.ReadBytes(Context.Memory, Position, Size);
+
+                Buffer.BlockCopy(Data, 0, Storage.Data, (int)WritePosition, (int)Size);
+            }
 
             return 0;
         }
 
         public long Read(ServiceCtx Context)
         {
+            //TODO: Error conditions.
             long ReadPosition = Context.RequestData.ReadInt64();
 
-            if (Context.Request.RecvListBuff.Count > 0)
+            (long Position, long Size) = Context.Request.GetBufferType0x22();
+
+            byte[] Data;
+
+            if (Storage.Data.Length > Size)
             {
-                long  Position = Context.Request.RecvListBuff[0].Position;
-                short Size     = Context.Request.RecvListBuff[0].Size;
+                Data = new byte[Size];
 
-                byte[] Data;
-
-                if (Storage.Data.Length > Size)
-                {
-                    Data = new byte[Size];
-
-                    Buffer.BlockCopy(Storage.Data, 0, Data, 0, Size);
-                }
-                else
-                {
-                    Data = Storage.Data;
-                }
-
-                AMemoryHelper.WriteBytes(Context.Memory, Position, Data);
+                Buffer.BlockCopy(Storage.Data, 0, Data, 0, (int)Size);
             }
+            else
+            {
+                Data = Storage.Data;
+            }
+
+            AMemoryHelper.WriteBytes(Context.Memory, Position, Data);
 
             return 0;
         }

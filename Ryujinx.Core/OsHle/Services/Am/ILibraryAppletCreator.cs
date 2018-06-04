@@ -27,7 +27,9 @@ namespace Ryujinx.Core.OsHle.Services.Am
 
         public long CreateStorage(ServiceCtx Context)
         {
-            MakeObject(Context, new IStorage(StorageHelper.MakeLaunchParams()));
+            long Size = Context.RequestData.ReadInt64();
+
+            MakeObject(Context, new IStorage(new byte[Size]));
 
             return 0;
         }

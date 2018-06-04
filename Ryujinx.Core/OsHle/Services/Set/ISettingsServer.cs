@@ -28,10 +28,10 @@ namespace Ryujinx.Core.OsHle.Services.Set
 
         public static long GetAvailableLanguageCodes(ServiceCtx Context)
         {
-            long  Position = Context.Request.RecvListBuff[0].Position;
-            short Size     = Context.Request.RecvListBuff[0].Size;
+            long Position = Context.Request.RecvListBuff[0].Position;
+            long Size     = Context.Request.RecvListBuff[0].Size;
 
-            int Count = (int)((uint)Size / 8);
+            int Count = (int)(Size / 8);
 
             if (Count > SystemStateMgr.LanguageCodes.Length)
             {

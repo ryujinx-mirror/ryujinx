@@ -158,8 +158,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
         {
             float Volume = Context.RequestData.ReadSingle();
 
-            long Position = Context.Request.SendBuff[0].Position;
-            long Size     = Context.Request.SendBuff[0].Size;
+            (long Position, long Size) = Context.Request.GetBufferType0x21();
 
             byte[] DeviceNameBuffer = AMemoryHelper.ReadBytes(Context.Memory, Position, Size);
 
@@ -183,8 +182,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
         {
             string Name = Context.Ns.Os.SystemState.ActiveAudioOutput;
 
-            long Position = Context.Request.RecvListBuff[0].Position;
-            long Size     = Context.Request.RecvListBuff[0].Size;
+            (long Position, long Size) = Context.Request.GetBufferType0x22();
 
             byte[] DeviceNameBuffer = Encoding.UTF8.GetBytes(Name + '\0');
 
