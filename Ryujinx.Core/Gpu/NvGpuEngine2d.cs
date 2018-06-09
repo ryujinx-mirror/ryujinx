@@ -98,9 +98,19 @@ namespace Ryujinx.Core.Gpu
 
             if (IsFbTexture)
             {
+                //TODO: Change this when the correct frame buffer resolution is used.
+                //Currently, the frame buffer size is hardcoded to 1280x720.
+                SrcWidth  = 1280;
+                SrcHeight = 720;
+
                 Gpu.Renderer.GetFrameBufferData(Tag, (byte[] Buffer) =>
                 {
-                    CopyTexture(Vmm, DstTexture, Buffer);
+                    CopyTexture(
+                        Vmm,
+                        DstTexture,
+                        Buffer,
+                        SrcWidth,
+                        SrcHeight);
                 });
             }
             else
@@ -109,13 +119,23 @@ namespace Ryujinx.Core.Gpu
 
                 byte[] Buffer = Vmm.ReadBytes(SrcAddress, Size);
 
-                CopyTexture(Vmm, DstTexture, Buffer);
+                CopyTexture(
+                    Vmm,
+                    DstTexture,
+                    Buffer,
+                    SrcWidth,
+                    SrcHeight);
             }
         }
 
-        private void CopyTexture(NvGpuVmm Vmm, Texture Texture, byte[] Buffer)
+        private void CopyTexture(
+            NvGpuVmm Vmm,
+            Texture  Texture,
+            byte[]   Buffer,
+            int      Width,
+            int      Height)
         {
-            TextureWriter.Write(Vmm, Texture, Buffer);
+            TextureWriter.Write(Vmm, Texture, Buffer, Width, Height);
         }
 
         private long MakeInt64From2xInt32(NvGpuEngine2dReg Reg)

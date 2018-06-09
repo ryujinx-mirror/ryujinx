@@ -6,21 +6,28 @@ namespace Ryujinx.Core.Gpu
 {
     static class TextureWriter
     {
-        public static void Write(IAMemory Memory, Texture Texture, byte[] Data)
+        public static void Write(
+            IAMemory Memory,
+            Texture  Texture,
+            byte[]   Data,
+            int      Width,
+            int      Height)
         {
             switch (Texture.Format)
             {
-                case GalTextureFormat.A8B8G8R8: Write4Bpp(Memory, Texture, Data); break;
+                case GalTextureFormat.A8B8G8R8: Write4Bpp(Memory, Texture, Data, Width, Height); break;
 
                 default: throw new NotImplementedException(Texture.Format.ToString());
             }
         }
 
-        private unsafe static void Write4Bpp(IAMemory Memory, Texture Texture, byte[] Data)
+        private unsafe static void Write4Bpp(
+            IAMemory Memory,
+            Texture  Texture,
+            byte[]   Data,
+            int      Width,
+            int      Height)
         {
-            int Width  = Texture.Width;
-            int Height = Texture.Height;
-
             ISwizzle Swizzle = TextureHelper.GetSwizzle(Texture, Width, 4);
 
             (AMemory CpuMem, long Position) = TextureHelper.GetMemoryAndPosition(
