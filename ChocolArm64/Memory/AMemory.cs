@@ -387,12 +387,14 @@ namespace ChocolArm64.Memory
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public Vector128<float> ReadVector32Unchecked(long Position)
         {
             if (Sse.IsSupported)
             {
-                return Sse.LoadScalarVector128((float*)(RamPtr + (uint)Position));
+                byte* Address = RamPtr + (uint)Position;
+
+                return Sse.LoadScalarVector128((float*)Address);
             }
             else
             {
@@ -400,7 +402,7 @@ namespace ChocolArm64.Memory
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public Vector128<float> ReadVector64Unchecked(long Position)
         {
             if (Sse2.IsSupported)
@@ -418,7 +420,9 @@ namespace ChocolArm64.Memory
         {
             if (Sse.IsSupported)
             {
-                return Sse.LoadVector128((float*)(RamPtr + (uint)Position));
+                byte* Address = RamPtr + (uint)Position;
+
+                return Sse.LoadVector128((float*)Address);
             }
             else
             {
@@ -620,7 +624,7 @@ namespace ChocolArm64.Memory
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public void WriteVector32Unchecked(long Position, Vector128<float> Value)
         {
             if (Sse.IsSupported)
@@ -633,7 +637,7 @@ namespace ChocolArm64.Memory
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public void WriteVector64Unchecked(long Position, Vector128<float> Value)
         {
             if (Sse2.IsSupported)
