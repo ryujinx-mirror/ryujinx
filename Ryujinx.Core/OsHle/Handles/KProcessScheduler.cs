@@ -197,30 +197,40 @@ namespace Ryujinx.Core.OsHle.Handles
 
             if (NeedsReschedule)
             {
-                PrintDbgThreadInfo(Thread, "yielded execution.");
+                Yield(Thread, Thread.ActualPriority - 1);
+            }
+        }
 
-                lock (SchedLock)
+        public void Yield(KThread Thread)
+        {
+            Yield(Thread, Thread.ActualPriority);
+        }
+
+        private void Yield(KThread Thread, int MinPriority)
+        {
+            PrintDbgThreadInfo(Thread, "yielded execution.");
+
+            lock (SchedLock)
+            {
+                int ActualCore = Thread.ActualCore;
+
+                SchedulerThread NewThread = WaitingToRun.Pop(ActualCore, MinPriority);
+
+                if (NewThread == null)
                 {
-                    int ActualCore = Thread.ActualCore;
+                    PrintDbgThreadInfo(Thread, "resumed because theres nothing better to run.");
 
-                    SchedulerThread NewThread = WaitingToRun.Pop(ActualCore, Thread.ActualPriority);
-
-                    if (NewThread == null)
-                    {
-                        PrintDbgThreadInfo(Thread, "resumed because theres nothing better to run.");
-
-                        return;
-                    }
-
-                    NewThread.Thread.ActualCore = ActualCore;
-
-                    CoreThreads[ActualCore] = NewThread.Thread;
-
-                    RunThread(NewThread);
+                    return;
                 }
 
-                Resume(Thread);
+                NewThread.Thread.ActualCore = ActualCore;
+
+                CoreThreads[ActualCore] = NewThread.Thread;
+
+                RunThread(NewThread);
             }
+
+            Resume(Thread);
         }
 
         public void Resume(KThread Thread)

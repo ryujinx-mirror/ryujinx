@@ -87,7 +87,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
             if (TimeoutNs == 0)
             {
-                Process.Scheduler.SetReschedule(CurrThread.ActualCore);
+                Process.Scheduler.Yield(CurrThread);
             }
             else
             {

@@ -2,7 +2,7 @@ namespace Ryujinx.Core.OsHle.Handles
 {
     class ThreadQueue
     {
-        private const int LowestPriority = 0x40;
+        private const int LowestPriority = 0x3f;
 
         private SchedulerThread Head;
 
@@ -63,7 +63,7 @@ namespace Ryujinx.Core.OsHle.Handles
                 {
                     KThread Thread = Curr.Thread;
 
-                    if (Thread.ActualPriority < MinPriority && (Thread.CoreMask & CoreMask) != 0)
+                    if (Thread.ActualPriority <= MinPriority && (Thread.CoreMask & CoreMask) != 0)
                     {
                         if (Prev != null)
                         {

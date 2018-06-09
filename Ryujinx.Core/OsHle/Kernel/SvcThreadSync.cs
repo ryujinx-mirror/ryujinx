@@ -206,7 +206,7 @@ namespace Ryujinx.Core.OsHle.Kernel
         {
             lock (Process.ThreadSyncLock)
             {
-                //This is the new thread that will not own the mutex.
+                //This is the new thread that will now own the mutex.
                 //If no threads are waiting for the lock, then it should be null.
                 KThread OwnerThread = PopThread(CurrThread.MutexWaiters, x => x.MutexAddress == MutexAddress);
 
