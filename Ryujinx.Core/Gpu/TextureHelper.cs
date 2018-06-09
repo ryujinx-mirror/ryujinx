@@ -1,4 +1,5 @@
 using ChocolArm64.Memory;
+using Ryujinx.Graphics.Gal;
 using System;
 
 namespace Ryujinx.Core.Gpu
@@ -19,6 +20,43 @@ namespace Ryujinx.Core.Gpu
             }
 
             throw new NotImplementedException(Texture.Swizzle.ToString());
+        }
+
+        public static int GetTextureSize(GalTexture Texture)
+        {
+            switch (Texture.Format)
+            {
+                case GalTextureFormat.R32G32B32A32: return Texture.Width * Texture.Height * 16;
+                case GalTextureFormat.R16G16B16A16: return Texture.Width * Texture.Height * 8;
+                case GalTextureFormat.A8B8G8R8:     return Texture.Width * Texture.Height * 4;
+                case GalTextureFormat.R32:          return Texture.Width * Texture.Height * 4;
+                case GalTextureFormat.A1B5G5R5:     return Texture.Width * Texture.Height * 2;
+                case GalTextureFormat.B5G6R5:       return Texture.Width * Texture.Height * 2;
+                case GalTextureFormat.G8R8:         return Texture.Width * Texture.Height * 2;
+                case GalTextureFormat.R8:           return Texture.Width * Texture.Height;
+
+                case GalTextureFormat.BC1:
+                case GalTextureFormat.BC4:
+                {
+                    int W = (Texture.Width  + 3) / 4;
+                    int H = (Texture.Height + 3) / 4;
+
+                    return W * H * 8;
+                }
+
+                case GalTextureFormat.BC2:
+                case GalTextureFormat.BC3:
+                case GalTextureFormat.BC5:
+                case GalTextureFormat.Astc2D4x4:
+                {
+                    int W = (Texture.Width  + 3) / 4;
+                    int H = (Texture.Height + 3) / 4;
+
+                    return W * H * 16;
+                }
+            }
+
+            throw new NotImplementedException(Texture.Format.ToString());
         }
 
         public static (AMemory Memory, long Position) GetMemoryAndPosition(

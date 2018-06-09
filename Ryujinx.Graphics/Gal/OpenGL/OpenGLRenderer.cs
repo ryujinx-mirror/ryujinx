@@ -156,46 +156,54 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             ActionsQueue.Enqueue(() => Rasterizer.ClearBuffers(RtIndex, Flags));
         }
 
-        public void SetVertexArray(int VbIndex, int Stride, byte[] Buffer, GalVertexAttrib[] Attribs)
+        public bool IsVboCached(long Tag, long DataSize)
+        {
+            return Rasterizer.IsVboCached(Tag, DataSize);
+        }
+
+        public bool IsIboCached(long Tag, long DataSize)
+        {
+            return Rasterizer.IsIboCached(Tag, DataSize);
+        }
+
+        public void CreateVbo(long Tag, byte[] Buffer)
+        {
+            ActionsQueue.Enqueue(() => Rasterizer.CreateVbo(Tag, Buffer));
+        }
+
+        public void CreateIbo(long Tag, byte[] Buffer)
+        {
+            ActionsQueue.Enqueue(() => Rasterizer.CreateIbo(Tag, Buffer));
+        }
+
+        public void SetVertexArray(int VbIndex, int Stride, long VboTag, GalVertexAttrib[] Attribs)
         {
             if ((uint)VbIndex > 31)
             {
                 throw new ArgumentOutOfRangeException(nameof(VbIndex));
             }
 
-            ActionsQueue.Enqueue(() => Rasterizer.SetVertexArray(VbIndex, Stride,
-                Buffer  ?? throw new ArgumentNullException(nameof(Buffer)),
-                Attribs ?? throw new ArgumentNullException(nameof(Attribs))));
-        }
-
-        public void SetIndexArray(byte[] Buffer, GalIndexFormat Format)
-        {
-            if (Buffer == null)
+            if (Attribs == null)
             {
-                throw new ArgumentNullException(nameof(Buffer));
+                throw new ArgumentNullException(nameof(Attribs));
             }
 
-            ActionsQueue.Enqueue(() => Rasterizer.SetIndexArray(Buffer, Format));
+            ActionsQueue.Enqueue(() => Rasterizer.SetVertexArray(VbIndex, Stride, VboTag, Attribs));
         }
 
-        public void DrawArrays(int VbIndex, int First, int PrimCount, GalPrimitiveType PrimType)
+        public void SetIndexArray(long Tag, int Size, GalIndexFormat Format)
         {
-            if ((uint)VbIndex > 31)
-            {
-                throw new ArgumentOutOfRangeException(nameof(VbIndex));
-            }
-
-            ActionsQueue.Enqueue(() => Rasterizer.DrawArrays(VbIndex, First, PrimCount, PrimType));
+            ActionsQueue.Enqueue(() => Rasterizer.SetIndexArray(Tag, Size, Format));
         }
 
-        public void DrawElements(int VbIndex, int First, GalPrimitiveType PrimType)
+        public void DrawArrays(int First, int PrimCount, GalPrimitiveType PrimType)
         {
-            if ((uint)VbIndex > 31)
-            {
-                throw new ArgumentOutOfRangeException(nameof(VbIndex));
-            }
+            ActionsQueue.Enqueue(() => Rasterizer.DrawArrays(First, PrimCount, PrimType));
+        }
 
-            ActionsQueue.Enqueue(() => Rasterizer.DrawElements(VbIndex, First, PrimType));
+        public void DrawElements(long IboTag, int First, GalPrimitiveType PrimType)
+        {
+            ActionsQueue.Enqueue(() => Rasterizer.DrawElements(IboTag, First, PrimType));
         }
 
         public void CreateShader(IGalMemory Memory, long Tag, GalShaderType Type)
@@ -253,19 +261,24 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             ActionsQueue.Enqueue(() => Shader.BindProgram());
         }
 
-        public void SetTextureAndSampler(int Index, GalTexture Texture, GalTextureSampler Sampler)
+        public void SetTextureAndSampler(long Tag, byte[] Data, GalTexture Texture, GalTextureSampler Sampler)
         {
             ActionsQueue.Enqueue(() =>
             {
-                this.Texture.Set(Index, Texture);
+                this.Texture.Create(Tag, Data, Texture);
 
                 OGLTexture.Set(Sampler);
             });
         }
 
-        public void BindTexture(int Index)
+        public bool TryGetCachedTexture(long Tag, long DataSize, out GalTexture Texture)
         {
-            ActionsQueue.Enqueue(() => Texture.Bind(Index));
+            return this.Texture.TryGetCachedTexture(Tag, DataSize, out Texture);
+        }
+
+        public void BindTexture(long Tag, int Index)
+        {
+            ActionsQueue.Enqueue(() => Texture.Bind(Tag, Index));
         }
     }
 }

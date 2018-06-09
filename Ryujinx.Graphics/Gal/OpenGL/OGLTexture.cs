@@ -6,18 +6,38 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 {
     class OGLTexture
     {
-        private int[] Textures;
+        private class TCE
+        {
+            public int Handle;
+
+            public GalTexture Texture;
+
+            public TCE(int Handle, GalTexture Texture)
+            {
+                this.Handle  = Handle;
+                this.Texture = Texture;
+            }
+        }
+
+        private OGLCachedResource<TCE> TextureCache;
 
         public OGLTexture()
         {
-            Textures = new int[80];
+            TextureCache = new OGLCachedResource<TCE>(DeleteTexture);
         }
 
-        public void Set(int Index, GalTexture Texture)
+        private static void DeleteTexture(TCE CachedTexture)
         {
-            GL.ActiveTexture(TextureUnit.Texture0 + Index);
+            GL.DeleteTexture(CachedTexture.Handle);
+        }
 
-            Bind(Index);
+        public void Create(long Tag, byte[] Data, GalTexture Texture)
+        {
+            int Handle = GL.GenTexture();
+
+            TextureCache.AddOrUpdate(Tag, new TCE(Handle, Texture), (uint)Data.Length);
+
+            GL.BindTexture(TextureTarget.Texture2D, Handle);
 
             const int Level  = 0; //TODO: Support mipmap textures.
             const int Border = 0;
@@ -33,14 +53,24 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     Texture.Width,
                     Texture.Height,
                     Border,
-                    Texture.Data.Length,
-                    Texture.Data);
+                    Data.Length,
+                    Data);
             }
             else
             {
                 if (Texture.Format >= GalTextureFormat.Astc2D4x4)
                 {
-                    Texture = ConvertAstcTextureToRgba(Texture);
+                    int TextureBlockWidth  = GetAstcBlockWidth(Texture.Format);
+                    int TextureBlockHeight = GetAstcBlockHeight(Texture.Format);
+
+                    Data = ASTCDecoder.DecodeToRGBA8888(
+                        Data,
+                        TextureBlockWidth,
+                        TextureBlockHeight, 1,
+                        Texture.Width,
+                        Texture.Height, 1);
+
+                    Texture.Format = GalTextureFormat.A8B8G8R8;
                 }
 
                 const PixelInternalFormat InternalFmt = PixelInternalFormat.Rgba;
@@ -56,7 +86,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     Border,
                     Format,
                     Type,
-                    Texture.Data);
+                    Data);
             }
 
             int SwizzleR = (int)OGLEnumConverter.GetTextureSwizzle(Texture.XSource);
@@ -68,23 +98,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleG, SwizzleG);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleB, SwizzleB);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, SwizzleA);
-        }
-
-        private static GalTexture ConvertAstcTextureToRgba(GalTexture Texture)
-        {
-            int TextureBlockWidth  = GetAstcBlockWidth(Texture.Format);
-            int TextureBlockHeight = GetAstcBlockHeight(Texture.Format);
-
-            Texture.Data = ASTCDecoder.DecodeToRGBA8888(
-                Texture.Data,
-                TextureBlockWidth,
-                TextureBlockHeight, 1,
-                Texture.Width,
-                Texture.Height, 1);
-
-            Texture.Format = GalTextureFormat.A8B8G8R8;
-
-            return Texture;
         }
 
         private static int GetAstcBlockWidth(GalTextureFormat Format)
@@ -133,11 +146,31 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             throw new ArgumentException(nameof(Format));
         }
 
-        public void Bind(int Index)
+        public bool TryGetCachedTexture(long Tag, long DataSize, out GalTexture Texture)
         {
-            int Handle = EnsureTextureInitialized(Index);
+            if (TextureCache.TryGetSize(Tag, out long Size) && Size == DataSize)
+            {
+                if (TextureCache.TryGetValue(Tag, out TCE CachedTexture))
+                {
+                    Texture = CachedTexture.Texture;
 
-            GL.BindTexture(TextureTarget.Texture2D, Handle);
+                    return true;
+                }
+            }
+
+            Texture = default(GalTexture);
+
+            return false;
+        }
+
+        public void Bind(long Tag, int Index)
+        {
+            if (TextureCache.TryGetValue(Tag, out TCE CachedTexture))
+            {
+                GL.ActiveTexture(TextureUnit.Texture0 + Index);
+
+                GL.BindTexture(TextureTarget.Texture2D, CachedTexture.Handle);
+            }
         }
 
         public static void Set(GalTextureSampler Sampler)
@@ -178,18 +211,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
 
             return false;
-        }
-
-        private int EnsureTextureInitialized(int TexIndex)
-        {
-            int Handle = Textures[TexIndex];
-
-            if (Handle == 0)
-            {
-                Handle = Textures[TexIndex] = GL.GenTexture();
-            }
-
-            return Handle;
         }
     }
 }

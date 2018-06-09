@@ -4,7 +4,7 @@ using System;
 
 namespace Ryujinx.Core.Gpu
 {
-    public static class TextureWriter
+    static class TextureWriter
     {
         public static void Write(IAMemory Memory, Texture Texture, byte[] Data)
         {

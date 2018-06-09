@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Ryujinx.Core.Gpu
 {
-    public class NvGpu
+    class NvGpu
     {
         public IGalRenderer Renderer { get; private set; }
 

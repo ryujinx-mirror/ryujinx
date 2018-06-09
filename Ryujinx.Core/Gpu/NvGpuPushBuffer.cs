@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Ryujinx.Core.Gpu
 {
-    public static class NvGpuPushBuffer
+    static class NvGpuPushBuffer
     {
         private enum SubmissionMode
         {

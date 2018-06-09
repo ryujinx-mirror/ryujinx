@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Core.Gpu
 {
-    public class NvGpuEngine2d : INvGpuEngine
+    class NvGpuEngine2d : INvGpuEngine
     {
         private enum CopyOperation
         {

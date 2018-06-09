@@ -4,7 +4,7 @@ using System;
 
 namespace Ryujinx.Core.Gpu
 {
-    public static class TextureReader
+    static class TextureReader
     {
         public static byte[] Read(IAMemory Memory, Texture Texture)
         {

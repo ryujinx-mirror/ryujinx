@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 namespace Ryujinx.Core.Gpu
 {
-    public class NvGpuFifo
+    class NvGpuFifo
     {
         private const int MacrosCount    = 0x80;
         private const int MacroIndexMask = MacrosCount - 1;

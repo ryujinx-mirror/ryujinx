@@ -2,8 +2,6 @@ namespace Ryujinx.Graphics.Gal
 {
     public struct GalTexture
     {
-        public byte[] Data;
-
         public int Width;
         public int Height;
 
@@ -15,7 +13,6 @@ namespace Ryujinx.Graphics.Gal
         public GalTextureSource WSource;
 
         public GalTexture(
-            byte[]           Data,
             int              Width,
             int              Height,
             GalTextureFormat Format,
@@ -24,7 +21,6 @@ namespace Ryujinx.Graphics.Gal
             GalTextureSource ZSource,
             GalTextureSource WSource)
         {
-            this.Data    = Data;
             this.Width   = Width;
             this.Height  = Height;
             this.Format  = Format;

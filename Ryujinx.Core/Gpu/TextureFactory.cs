@@ -5,7 +5,7 @@ namespace Ryujinx.Core.Gpu
 {
     static class TextureFactory
     {
-        public static GalTexture MakeTexture(NvGpu Gpu, NvGpuVmm Vmm, long TicPosition)
+        public static GalTexture MakeTexture(NvGpuVmm Vmm, long TicPosition)
         {
             int[] Tic = ReadWords(Vmm, TicPosition, 8);
 
@@ -15,6 +15,25 @@ namespace Ryujinx.Core.Gpu
             GalTextureSource YSource = (GalTextureSource)((Tic[0] >> 22) & 7);
             GalTextureSource ZSource = (GalTextureSource)((Tic[0] >> 25) & 7);
             GalTextureSource WSource = (GalTextureSource)((Tic[0] >> 28) & 7);
+
+            int Width  = (Tic[4] & 0xffff) + 1;
+            int Height = (Tic[5] & 0xffff) + 1;
+
+            return new GalTexture(
+                Width,
+                Height,
+                Format,
+                XSource,
+                YSource,
+                ZSource,
+                WSource);
+        }
+
+        public static byte[] GetTextureData(NvGpuVmm Vmm, long TicPosition)
+        {
+            int[] Tic = ReadWords(Vmm, TicPosition, 8);
+
+            GalTextureFormat Format = (GalTextureFormat)(Tic[0] & 0x7f);
 
             long TextureAddress = (uint)Tic[1];
 
@@ -40,17 +59,7 @@ namespace Ryujinx.Core.Gpu
                 Swizzle,
                 Format);
 
-            byte[] Data = TextureReader.Read(Vmm, Texture);
-
-            return new GalTexture(
-                Data,
-                Width,
-                Height,
-                Format,
-                XSource,
-                YSource,
-                ZSource,
-                WSource);
+            return TextureReader.Read(Vmm, Texture);
         }
 
         public static GalTextureSampler MakeSampler(NvGpu Gpu, NvGpuVmm Vmm, long TscPosition)

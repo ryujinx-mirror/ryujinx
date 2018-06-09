@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 
 namespace Ryujinx.Core.Gpu
 {
-    public struct NvGpuPBEntry
+    struct NvGpuPBEntry
     {
         public int Method { get; private set; }
 

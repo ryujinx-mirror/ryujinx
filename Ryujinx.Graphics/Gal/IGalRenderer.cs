@@ -49,13 +49,21 @@ namespace Ryujinx.Graphics.Gal
         //Rasterizer
         void ClearBuffers(int RtIndex, GalClearBufferFlags Flags);
 
-        void SetVertexArray(int VbIndex, int Stride, byte[] Buffer, GalVertexAttrib[] Attribs);
+        bool IsVboCached(long Tag, long DataSize);
 
-        void SetIndexArray(byte[] Buffer, GalIndexFormat Format);
+        bool IsIboCached(long Tag, long DataSize);
 
-        void DrawArrays(int VbIndex, int First, int PrimCount, GalPrimitiveType PrimType);
+        void CreateVbo(long Tag, byte[] Buffer);
 
-        void DrawElements(int VbIndex, int First, GalPrimitiveType PrimType);
+        void CreateIbo(long Tag, byte[] Buffer);
+
+        void SetVertexArray(int VbIndex, int Stride, long VboTag, GalVertexAttrib[] Attribs);
+
+        void SetIndexArray(long Tag, int Size, GalIndexFormat Format);
+
+        void DrawArrays(int First, int PrimCount, GalPrimitiveType PrimType);
+
+        void DrawElements(long IboTag, int First, GalPrimitiveType PrimType);
 
         //Shader
         void CreateShader(IGalMemory Memory, long Tag, GalShaderType Type);
@@ -73,8 +81,10 @@ namespace Ryujinx.Graphics.Gal
         void BindProgram();
 
         //Texture
-        void SetTextureAndSampler(int Index, GalTexture Texture, GalTextureSampler Sampler);
+        void SetTextureAndSampler(long Tag, byte[] Data, GalTexture Texture, GalTextureSampler Sampler);
 
-        void BindTexture(int Index);
+        bool TryGetCachedTexture(long Tag, long DataSize, out GalTexture Texture);
+
+        void BindTexture(long Tag, int Index);
     }
 }

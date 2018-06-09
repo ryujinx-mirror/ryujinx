@@ -4,24 +4,24 @@ using System.Collections.Concurrent;
 
 namespace Ryujinx.Core.Gpu
 {
-    public class NvGpuVmm : IAMemory, IGalMemory
+    class NvGpuVmm : IAMemory, IGalMemory
     {
         public const long AddrSize = 1L << 40;
 
-        private const int  PTLvl0Bits = 14;
-        private const int  PTLvl1Bits = 14;
-        private const int  PTPageBits = 12;
+        private const int PTLvl0Bits = 14;
+        private const int PTLvl1Bits = 14;
+        private const int PTPageBits = 12;
 
-        private const int  PTLvl0Size = 1 << PTLvl0Bits;
-        private const int  PTLvl1Size = 1 << PTLvl1Bits;
-        public  const int  PageSize   = 1 << PTPageBits;
+        private const int PTLvl0Size = 1 << PTLvl0Bits;
+        private const int PTLvl1Size = 1 << PTLvl1Bits;
+        public  const int PageSize   = 1 << PTPageBits;
 
-        private const int  PTLvl0Mask = PTLvl0Size - 1;
-        private const int  PTLvl1Mask = PTLvl1Size - 1;
-        public  const int  PageMask   = PageSize   - 1;
+        private const int PTLvl0Mask = PTLvl0Size - 1;
+        private const int PTLvl1Mask = PTLvl1Size - 1;
+        public  const int PageMask   = PageSize   - 1;
 
-        private const int  PTLvl0Bit = PTPageBits + PTLvl1Bits;
-        private const int  PTLvl1Bit = PTPageBits;
+        private const int PTLvl0Bit = PTPageBits + PTLvl1Bits;
+        private const int PTLvl1Bit = PTPageBits;
 
         public AMemory Memory { get; private set; }
 
@@ -37,6 +37,8 @@ namespace Ryujinx.Core.Gpu
 
         private ConcurrentDictionary<long, MappedMemory> Maps;
 
+        private NvGpuVmmCache Cache;
+
         private const long PteUnmapped = -1;
         private const long PteReserved = -2;
 
@@ -47,6 +49,8 @@ namespace Ryujinx.Core.Gpu
             this.Memory = Memory;
 
             Maps = new ConcurrentDictionary<long, MappedMemory>();
+
+            Cache = new NvGpuVmmCache();
 
             PageTable = new long[PTLvl0Size][];
         }
@@ -268,6 +272,13 @@ namespace Ryujinx.Core.Gpu
             }
 
             PageTable[L0][L1] = TgtAddr;
+        }
+
+        public bool IsRegionModified(long Position, long Size, NvGpuBufferType BufferType)
+        {
+            long PA = GetPhysicalAddress(Position);
+
+            return Cache.IsRegionModified(Memory, BufferType, Position, PA, Size);
         }
 
         public byte ReadByte(long Position)

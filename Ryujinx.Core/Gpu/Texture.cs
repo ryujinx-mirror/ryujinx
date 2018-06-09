@@ -2,7 +2,7 @@ using Ryujinx.Graphics.Gal;
 
 namespace Ryujinx.Core.Gpu
 {
-    public struct Texture
+    struct Texture
     {
         public long Position { get; private set; }
 
