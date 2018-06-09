@@ -69,8 +69,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
                 Context.Memory,
                 Context.Request.SendBuff[0].Position);
 
-            byte[] Buffer = AMemoryHelper.ReadBytes(
-                Context.Memory,
+            byte[] Buffer = Context.Memory.ReadBytes(
                 Data.SampleBufferPtr,
                 Data.SampleBufferSize);
 

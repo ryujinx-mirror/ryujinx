@@ -75,7 +75,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
             long Position = Context.Request.SendBuff[0].Position;
             long Size     = Context.Request.SendBuff[0].Size;
 
-            byte[] DeviceNameBuffer = AMemoryHelper.ReadBytes(Context.Memory, Position, Size);
+            byte[] DeviceNameBuffer = Context.Memory.ReadBytes(Position, Size);
 
             string DeviceName = Encoding.ASCII.GetString(DeviceNameBuffer);
 
@@ -160,7 +160,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
             (long Position, long Size) = Context.Request.GetBufferType0x21();
 
-            byte[] DeviceNameBuffer = AMemoryHelper.ReadBytes(Context.Memory, Position, Size);
+            byte[] DeviceNameBuffer = Context.Memory.ReadBytes(Position, Size);
 
             string DeviceName = Encoding.UTF8.GetString(DeviceNameBuffer);
 

@@ -330,7 +330,7 @@ namespace Ryujinx.Core.Gpu
         {
             Position = GetPhysicalAddress(Position);
 
-            return AMemoryHelper.ReadBytes(Memory, Position, Size);
+            return Memory.ReadBytes(Position, Size);
         }
 
         public void WriteByte(long Position, byte Value)

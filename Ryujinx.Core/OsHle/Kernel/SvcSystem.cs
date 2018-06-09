@@ -233,7 +233,7 @@ namespace Ryujinx.Core.OsHle.Kernel
         {
             KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
-            byte[] CmdData = AMemoryHelper.ReadBytes(Memory, CmdPtr, Size);
+            byte[] CmdData = Memory.ReadBytes(CmdPtr, Size);
 
             KSession Session = Process.HandleTable.GetData<KSession>(Handle);
 

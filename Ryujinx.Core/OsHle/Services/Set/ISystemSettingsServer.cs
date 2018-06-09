@@ -97,8 +97,8 @@ namespace Ryujinx.Core.OsHle.Services.Set
             long ReplyPos  = Context.Request.ReceiveBuff[0].Position;
             long ReplySize = Context.Request.ReceiveBuff[0].Size;
 
-            byte[] Class = AMemoryHelper.ReadBytes(Context.Memory, ClassPos, ClassSize);
-            byte[] Name  = AMemoryHelper.ReadBytes(Context.Memory, NamePos, NameSize);
+            byte[] Class = Context.Memory.ReadBytes(ClassPos, ClassSize);
+            byte[] Name  = Context.Memory.ReadBytes(NamePos, NameSize);
 
             string AskedSetting = Encoding.ASCII.GetString(Class).Trim('\0') + "!" + Encoding.ASCII.GetString(Name).Trim('\0');
 

@@ -49,7 +49,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
                     Size = MaxSize;
                 }
 
-                byte[] Data = AMemoryHelper.ReadBytes(Context.Memory, Position, Size);
+                byte[] Data = Context.Memory.ReadBytes(Position, Size);
 
                 Buffer.BlockCopy(Data, 0, Storage.Data, (int)WritePosition, (int)Size);
             }

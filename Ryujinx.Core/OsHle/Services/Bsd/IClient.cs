@@ -102,9 +102,8 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
             //https://github.com/TuxSH/ftpd/blob/switch_pr/source/ftp.c#L1634
             //https://linux.die.net/man/2/poll
 
-            byte[] SentBuffer = AMemoryHelper.ReadBytes(Context.Memory,
-                                                        Context.Request.SendBuff[0].Position,
-                                                        Context.Request.SendBuff[0].Size);
+            byte[] SentBuffer = Context.Memory.ReadBytes(Context.Request.SendBuff[0].Position,
+                                                         Context.Request.SendBuff[0].Size);
 
             int SocketId        = Get32(SentBuffer, 0);
             int RequestedEvents = Get16(SentBuffer, 4);
@@ -152,9 +151,8 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
             int SocketId    = Context.RequestData.ReadInt32();
             int SocketFlags = Context.RequestData.ReadInt32();
 
-            byte[] SentBuffer = AMemoryHelper.ReadBytes(Context.Memory,
-                                                        Context.Request.SendBuff[0].Position,
-                                                        Context.Request.SendBuff[0].Size);
+            byte[] SentBuffer = Context.Memory.ReadBytes(Context.Request.SendBuff[0].Position,
+                                                         Context.Request.SendBuff[0].Size);
 
             try
             {
@@ -180,13 +178,11 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
             int SocketId    = Context.RequestData.ReadInt32();
             int SocketFlags = Context.RequestData.ReadInt32();
 
-            byte[] SentBuffer = AMemoryHelper.ReadBytes(Context.Memory,
-                                                        Context.Request.SendBuff[0].Position,
-                                                        Context.Request.SendBuff[0].Size);
+            byte[] SentBuffer = Context.Memory.ReadBytes(Context.Request.SendBuff[0].Position,
+                                                         Context.Request.SendBuff[0].Size);
 
-            byte[] AddressBuffer = AMemoryHelper.ReadBytes(Context.Memory,
-                                                           Context.Request.SendBuff[1].Position,
-                                                           Context.Request.SendBuff[1].Size);
+            byte[] AddressBuffer = Context.Memory.ReadBytes(Context.Request.SendBuff[1].Position,
+                                                            Context.Request.SendBuff[1].Size);
 
             if (!Sockets[SocketId].Handle.Connected)
             {
@@ -291,9 +287,8 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
         {
             int SocketId = Context.RequestData.ReadInt32();
 
-            byte[] AddressBuffer = AMemoryHelper.ReadBytes(Context.Memory,
-                                                           Context.Request.SendBuff[0].Position,
-                                                           Context.Request.SendBuff[0].Size);
+            byte[] AddressBuffer = Context.Memory.ReadBytes(Context.Request.SendBuff[0].Position,
+                                                            Context.Request.SendBuff[0].Size);
 
             try
             {
@@ -316,9 +311,8 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
         {
             int SocketId = Context.RequestData.ReadInt32();
 
-            byte[] AddressBuffer = AMemoryHelper.ReadBytes(Context.Memory,
-                                                           Context.Request.SendBuff[0].Position,
-                                                           Context.Request.SendBuff[0].Size);
+            byte[] AddressBuffer = Context.Memory.ReadBytes(Context.Request.SendBuff[0].Position,
+                                                            Context.Request.SendBuff[0].Size);
 
             try
             {
@@ -369,9 +363,8 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
             SocketOptionLevel SocketLevel      = (SocketOptionLevel)Context.RequestData.ReadInt32();
             SocketOptionName  SocketOptionName =  (SocketOptionName)Context.RequestData.ReadInt32();
 
-            byte[] SocketOptionValue = AMemoryHelper.ReadBytes(Context.Memory,
-                                                               Context.Request.PtrBuff[0].Position,
-                                                               Context.Request.PtrBuff[0].Size);
+            byte[] SocketOptionValue = Context.Memory.ReadBytes(Context.Request.PtrBuff[0].Position,
+                                                                Context.Request.PtrBuff[0].Size);
 
             int OptionValue = Get32(SocketOptionValue, 0);
 

@@ -301,6 +301,15 @@ namespace ChocolArm64.Memory
             return *((ulong*)(RamPtr + (uint)Position));
         }
 
+        public byte[] ReadBytes(long Position, long Size)
+        {
+            EnsureRangeIsValid(Position, Size, AMemoryPerm.Read);
+
+            byte[] Result = new byte[Size];
+            Marshal.Copy((IntPtr)(RamPtr + (uint)Position), Result, 0, (int)Size);
+            return Result;
+        }
+
         public Vector128<float> ReadVector8Unchecked(long Position)
         {
             if (Sse2.IsSupported)
@@ -608,6 +617,17 @@ namespace ChocolArm64.Memory
             if (!Manager.HasPermission(Position, Perm))
             {
                 throw new VmmAccessViolationException(Position, Perm);
+            }
+        }
+
+        private void EnsureRangeIsValid(long Position, long Size, AMemoryPerm Perm)
+        {
+            long EndPos = (Position + Size);
+            Position = Position & ~AMemoryMgr.PageMask; //check base of each page
+            while (Position < EndPos)
+            {
+                EnsureAccessIsValid(Position, Perm);
+                Position += AMemoryMgr.PageSize;
             }
         }
 

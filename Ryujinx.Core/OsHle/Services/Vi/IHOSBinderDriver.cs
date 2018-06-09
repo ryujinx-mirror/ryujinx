@@ -41,7 +41,7 @@ namespace Ryujinx.Core.OsHle.Services.Vi
             long DataPos  = Context.Request.SendBuff[0].Position;
             long DataSize = Context.Request.SendBuff[0].Size;
 
-            byte[] Data = AMemoryHelper.ReadBytes(Context.Memory, DataPos, DataSize);
+            byte[] Data = Context.Memory.ReadBytes(DataPos, DataSize);
 
             Data = Parcel.GetParcelData(Data);
 
@@ -55,7 +55,7 @@ namespace Ryujinx.Core.OsHle.Services.Vi
 
             (long DataPos, long DataSize) = Context.Request.GetBufferType0x21();
 
-            byte[] Data = AMemoryHelper.ReadBytes(Context.Memory, DataPos, DataSize);
+            byte[] Data = Context.Memory.ReadBytes(DataPos, DataSize);
 
             Data = Parcel.GetParcelData(Data);
 

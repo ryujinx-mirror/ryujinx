@@ -23,8 +23,7 @@ namespace Ryujinx.Core.OsHle.Services.Lm
 
         public long Log(ServiceCtx Context)
         {
-            byte[] LogBuffer = AMemoryHelper.ReadBytes(
-                Context.Memory,
+            byte[] LogBuffer = Context.Memory.ReadBytes(
                 Context.Request.PtrBuff[0].Position,
                 Context.Request.PtrBuff[0].Size);
 

@@ -62,7 +62,7 @@ namespace Ryujinx.Core.OsHle.Services.FspSrv
             long Offset = Context.RequestData.ReadInt64();
             long Size   = Context.RequestData.ReadInt64();
 
-            byte[] Data = AMemoryHelper.ReadBytes(Context.Memory, Position, Size);
+            byte[] Data = Context.Memory.ReadBytes(Position, Size);
 
             BaseStream.Seek(Offset, SeekOrigin.Begin);
             BaseStream.Write(Data, 0, (int)Size);

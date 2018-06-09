@@ -22,18 +22,6 @@ namespace ChocolArm64.Memory
             }
         }
 
-        public static byte[] ReadBytes(AMemory Memory, long Position, long Size)
-        {
-            byte[] Data = new byte[Size];
-
-            for (long Offs = 0; Offs < Size; Offs++)
-            {
-                Data[Offs] = (byte)Memory.ReadByte(Position + Offs);
-            }
-
-            return Data;
-        }
-
         public static void WriteBytes(AMemory Memory, long Position, byte[] Data)
         {
             for (int Offs = 0; Offs < Data.Length; Offs++)
