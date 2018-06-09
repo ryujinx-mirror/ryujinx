@@ -355,11 +355,18 @@ namespace ChocolArm64.Memory
 
         public byte[] ReadBytes(long Position, long Size)
         {
+            if ((uint)Size > int.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(Size));
+            }
+
             EnsureRangeIsValid(Position, Size, AMemoryPerm.Read);
 
-            byte[] Result = new byte[Size];
-            Marshal.Copy((IntPtr)(RamPtr + (uint)Position), Result, 0, (int)Size);
-            return Result;
+            byte[] Data = new byte[Size];
+
+            Marshal.Copy((IntPtr)(RamPtr + (uint)Position), Data, 0, (int)Size);
+
+            return Data;
         }
 
         public Vector128<float> ReadVector8Unchecked(long Position)
@@ -392,9 +399,7 @@ namespace ChocolArm64.Memory
         {
             if (Sse.IsSupported)
             {
-                byte* Address = RamPtr + (uint)Position;
-
-                return Sse.LoadScalarVector128((float*)Address);
+                return Sse.LoadScalarVector128((float*)(RamPtr + (uint)Position));
             }
             else
             {
@@ -420,9 +425,7 @@ namespace ChocolArm64.Memory
         {
             if (Sse.IsSupported)
             {
-                byte* Address = RamPtr + (uint)Position;
-
-                return Sse.LoadVector128((float*)Address);
+                return Sse.LoadVector128((float*)(RamPtr + (uint)Position));
             }
             else
             {
@@ -678,11 +681,12 @@ namespace ChocolArm64.Memory
 
         private void EnsureRangeIsValid(long Position, long Size, AMemoryPerm Perm)
         {
-            long EndPos = (Position + Size);
-            Position = Position & ~AMemoryMgr.PageMask; //check base of each page
-            while (Position < EndPos)
+            long EndPos = Position + Size;
+
+            while ((ulong)Position < (ulong)EndPos)
             {
                 EnsureAccessIsValid(Position, Perm);
+
                 Position += AMemoryMgr.PageSize;
             }
         }
