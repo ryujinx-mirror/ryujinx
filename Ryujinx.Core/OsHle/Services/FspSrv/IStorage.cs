@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 using System.IO;
@@ -43,7 +42,7 @@ namespace Ryujinx.Core.OsHle.Services.FspSrv
                 BaseStream.Seek(Offset, SeekOrigin.Begin);
                 BaseStream.Read(Data, 0, Data.Length);
 
-                AMemoryHelper.WriteBytes(Context.Memory, BuffDesc.Position, Data);
+                Context.Memory.WriteBytes(BuffDesc.Position, Data);
             }
 
             return 0;

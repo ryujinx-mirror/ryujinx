@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
 using Ryujinx.Core.OsHle.Ipc;
@@ -60,7 +59,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
                     break;
                 }
 
-                AMemoryHelper.WriteBytes(Context.Memory, Position, Buffer);
+                Context.Memory.WriteBytes(Position, Buffer);
 
                 Position += Buffer.Length;
             }
@@ -95,7 +94,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
             if ((ulong)DeviceNameBuffer.Length <= (ulong)Size)
             {
-                AMemoryHelper.WriteBytes(Context.Memory, Position, DeviceNameBuffer);
+                Context.Memory.WriteBytes(Position, DeviceNameBuffer);
             }
             else
             {
@@ -146,7 +145,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
                     break;
                 }
 
-                AMemoryHelper.WriteBytes(Context.Memory, Position, Buffer);
+                Context.Memory.WriteBytes(Position, Buffer);
 
                 Position += Buffer.Length;
             }
@@ -188,7 +187,7 @@ namespace Ryujinx.Core.OsHle.Services.Aud
 
             if ((ulong)DeviceNameBuffer.Length <= (ulong)Size)
             {
-                AMemoryHelper.WriteBytes(Context.Memory, Position, DeviceNameBuffer);
+                Context.Memory.WriteBytes(Position, DeviceNameBuffer);
             }
             else
             {

@@ -22,14 +22,6 @@ namespace ChocolArm64.Memory
             }
         }
 
-        public static void WriteBytes(AMemory Memory, long Position, byte[] Data)
-        {
-            for (int Offs = 0; Offs < Data.Length; Offs++)
-            {
-                Memory.WriteByte(Position + Offs, Data[Offs]);
-            }
-        }
-
         public unsafe static T Read<T>(AMemory Memory, long Position) where T : struct
         {
             long Size = Marshal.SizeOf<T>();

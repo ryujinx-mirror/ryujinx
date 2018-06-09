@@ -92,7 +92,7 @@ namespace Ryujinx.Core.OsHle.Ipc
                     throw new NotImplementedException(Request.Type.ToString());
                 }
 
-                AMemoryHelper.WriteBytes(Memory, CmdPtr, Response.GetBytes(CmdPtr));
+                Memory.WriteBytes(CmdPtr, Response.GetBytes(CmdPtr));
             }
 
             return 0;

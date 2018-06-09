@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using Ryujinx.Core.Gpu;
 using Ryujinx.Core.Logging;
 using Ryujinx.Core.OsHle.Handles;
@@ -9,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+
 using static Ryujinx.Core.OsHle.Services.Android.Parcel;
 
 namespace Ryujinx.Core.OsHle.Services.Android
@@ -272,7 +272,7 @@ namespace Ryujinx.Core.OsHle.Services.Android
 
             byte[] Reply = MakeParcel(Data, new byte[0]);
 
-            AMemoryHelper.WriteBytes(Context.Memory, ReplyPos, Reply);
+            Context.Memory.WriteBytes(ReplyPos, Reply);
 
             return 0;
         }

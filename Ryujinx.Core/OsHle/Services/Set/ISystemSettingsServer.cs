@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Ipc;
 using Ryujinx.Core.Settings;
 using System;
@@ -30,17 +29,17 @@ namespace Ryujinx.Core.OsHle.Services.Set
             long ReplyPos  = Context.Request.RecvListBuff[0].Position;
             long ReplySize = Context.Request.RecvListBuff[0].Size;
 
-            byte MajorFWVersion = 0x03;
-            byte MinorFWVersion = 0x00;
-            byte MicroFWVersion = 0x00;
-            byte Unknown        = 0x00; //Build?
+            const byte MajorFWVersion = 0x03;
+            const byte MinorFWVersion = 0x00;
+            const byte MicroFWVersion = 0x00;
+            const byte Unknown        = 0x00; //Build?
 
-            int RevisionNumber  = 0x0A;
+            const int RevisionNumber = 0x0A;
 
-            string Platform     = "NX";
-            string UnknownHex   = "7fbde2b0bba4d14107bf836e4643043d9f6c8e47";
-            string Version      = "3.0.0";
-            string Build        = "NintendoSDK Firmware for NX 3.0.0-10.0";
+            const string Platform   = "NX";
+            const string UnknownHex = "7fbde2b0bba4d14107bf836e4643043d9f6c8e47";
+            const string Version    = "3.0.0";
+            const string Build      = "NintendoSDK Firmware for NX 3.0.0-10.0";
 
             //http://switchbrew.org/index.php?title=System_Version_Title
             using (MemoryStream MS = new MemoryStream(0x100))
@@ -57,15 +56,18 @@ namespace Ryujinx.Core.OsHle.Services.Set
                 Writer.Write(Encoding.ASCII.GetBytes(Platform));
 
                 MS.Seek(0x28, SeekOrigin.Begin);
+
                 Writer.Write(Encoding.ASCII.GetBytes(UnknownHex));
 
                 MS.Seek(0x68, SeekOrigin.Begin);
+
                 Writer.Write(Encoding.ASCII.GetBytes(Version));
 
                 MS.Seek(0x80, SeekOrigin.Begin);
+
                 Writer.Write(Encoding.ASCII.GetBytes(Build));
 
-                AMemoryHelper.WriteBytes(Context.Memory, ReplyPos, MS.ToArray());
+                Context.Memory.WriteBytes(ReplyPos, MS.ToArray());
             }
 
             return 0;
@@ -85,7 +87,7 @@ namespace Ryujinx.Core.OsHle.Services.Set
             Context.Ns.Settings.ThemeColor = (ColorSet)ColorSetId;
             return 0;
         }
-        
+
         public static long GetSettingsItemValue(ServiceCtx Context)
         {
             long ClassPos  = Context.Request.PtrBuff[0].Position;
@@ -111,11 +113,11 @@ namespace Ryujinx.Core.OsHle.Services.Set
                 if (NxSetting is string StringValue)
                 {
                     if (StringValue.Length + 1 > ReplySize)
-                    { 
+                    {
                         Context.Ns.Log.PrintError(Logging.LogClass.ServiceSet, $"{AskedSetting} String value size is too big!");
                     }
                     else
-                    { 
+                    {
                         SettingBuffer = Encoding.ASCII.GetBytes(StringValue + "\0");
                     }
                 }
@@ -132,7 +134,7 @@ namespace Ryujinx.Core.OsHle.Services.Set
                     throw new NotImplementedException(NxSetting.GetType().Name);
                 }
 
-                AMemoryHelper.WriteBytes(Context.Memory, ReplyPos, SettingBuffer);
+                Context.Memory.WriteBytes(ReplyPos, SettingBuffer);
 
                 Context.Ns.Log.PrintDebug(Logging.LogClass.ServiceSet, $"{AskedSetting} set value: {NxSetting} as {NxSetting.GetType()}");
             }

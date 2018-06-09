@@ -353,22 +353,6 @@ namespace ChocolArm64.Memory
             return *((ulong*)(RamPtr + (uint)Position));
         }
 
-        public byte[] ReadBytes(long Position, long Size)
-        {
-            if ((uint)Size > int.MaxValue)
-            {
-                throw new ArgumentOutOfRangeException(nameof(Size));
-            }
-
-            EnsureRangeIsValid(Position, Size, AMemoryPerm.Read);
-
-            byte[] Data = new byte[Size];
-
-            Marshal.Copy((IntPtr)(RamPtr + (uint)Position), Data, 0, (int)Size);
-
-            return Data;
-        }
-
         public Vector128<float> ReadVector8Unchecked(long Position)
         {
             if (Sse2.IsSupported)
@@ -431,6 +415,22 @@ namespace ChocolArm64.Memory
             {
                 throw new PlatformNotSupportedException();
             }
+        }
+
+        public byte[] ReadBytes(long Position, long Size)
+        {
+            if ((uint)Size > int.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(Size));
+            }
+
+            EnsureRangeIsValid(Position, Size, AMemoryPerm.Read);
+
+            byte[] Data = new byte[Size];
+
+            Marshal.Copy((IntPtr)(RamPtr + (uint)Position), Data, 0, (int)Size);
+
+            return Data;
         }
 
         public void WriteSByte(long Position, sbyte Value)
@@ -666,6 +666,27 @@ namespace ChocolArm64.Memory
             }
         }
 
+        public void WriteBytes(long Position, byte[] Data)
+        {
+            EnsureRangeIsValid(Position, (uint)Data.Length, AMemoryPerm.Write);
+
+            Marshal.Copy(Data, 0, (IntPtr)(RamPtr + (uint)Position), Data.Length);
+        }
+
+        private void EnsureRangeIsValid(long Position, long Size, AMemoryPerm Perm)
+        {
+            long EndPos = Position + Size;
+
+            Position &= ~AMemoryMgr.PageMask;
+
+            while ((ulong)Position < (ulong)EndPos)
+            {
+                EnsureAccessIsValid(Position, Perm);
+
+                Position += AMemoryMgr.PageSize;
+            }
+        }
+
         private void EnsureAccessIsValid(long Position, AMemoryPerm Perm)
         {
             if (!Manager.IsMapped(Position))
@@ -676,18 +697,6 @@ namespace ChocolArm64.Memory
             if (!Manager.HasPermission(Position, Perm))
             {
                 throw new VmmAccessViolationException(Position, Perm);
-            }
-        }
-
-        private void EnsureRangeIsValid(long Position, long Size, AMemoryPerm Perm)
-        {
-            long EndPos = Position + Size;
-
-            while ((ulong)Position < (ulong)EndPos)
-            {
-                EnsureAccessIsValid(Position, Perm);
-
-                Position += AMemoryMgr.PageSize;
             }
         }
 

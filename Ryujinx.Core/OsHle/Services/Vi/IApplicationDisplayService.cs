@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Ipc;
 using System.Collections.Generic;
 using System.IO;
@@ -104,7 +103,7 @@ namespace Ryujinx.Core.OsHle.Services.Vi
 
             byte[] Parcel = MakeIGraphicsBufferProducer(ParcelPtr);
 
-            AMemoryHelper.WriteBytes(Context.Memory, ParcelPtr, Parcel);
+            Context.Memory.WriteBytes(ParcelPtr, Parcel);
 
             Context.ResponseData.Write((long)Parcel.Length);
 
@@ -129,7 +128,7 @@ namespace Ryujinx.Core.OsHle.Services.Vi
 
             byte[] Parcel = MakeIGraphicsBufferProducer(ParcelPtr);
 
-            AMemoryHelper.WriteBytes(Context.Memory, ParcelPtr, Parcel);
+            Context.Memory.WriteBytes(ParcelPtr, Parcel);
 
             Context.ResponseData.Write(0L);
             Context.ResponseData.Write((long)Parcel.Length);

@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Ipc;
 using System;
 using System.Collections.Generic;
@@ -76,7 +75,7 @@ namespace Ryujinx.Core.OsHle.Services.Am
                 Data = Storage.Data;
             }
 
-            AMemoryHelper.WriteBytes(Context.Memory, Position, Data);
+            Context.Memory.WriteBytes(Position, Data);
 
             return 0;
         }

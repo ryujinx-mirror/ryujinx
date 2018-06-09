@@ -404,7 +404,7 @@ namespace Ryujinx.Core.Gpu
         {
             Position = GetPhysicalAddress(Position);
 
-            AMemoryHelper.WriteBytes(Memory, Position, Data);
+            Memory.WriteBytes(Position, Data);
         }
     }
 }

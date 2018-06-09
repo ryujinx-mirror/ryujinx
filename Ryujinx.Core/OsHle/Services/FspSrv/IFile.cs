@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Ipc;
 using System;
 using System.Collections.Generic;
@@ -47,7 +46,7 @@ namespace Ryujinx.Core.OsHle.Services.FspSrv
 
             int ReadSize = BaseStream.Read(Data, 0, (int)Size);
 
-            AMemoryHelper.WriteBytes(Context.Memory, Position, Data);
+            Context.Memory.WriteBytes(Position, Data);
 
             Context.ResponseData.Write((long)ReadSize);
 

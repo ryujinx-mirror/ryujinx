@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Ipc;
 using Ryujinx.Core.OsHle.Utilities;
 using System.Collections.Generic;
@@ -131,7 +130,7 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
 
                 //Logging.Debug("Received Buffer:" + Environment.NewLine + Logging.HexDump(ReceivedBuffer));
 
-                AMemoryHelper.WriteBytes(Context.Memory, Context.Request.ReceiveBuff[0].Position, ReceivedBuffer);
+                Context.Memory.WriteBytes(Context.Request.ReceiveBuff[0].Position, ReceivedBuffer);
 
                 Context.ResponseData.Write(BytesRead);
                 Context.ResponseData.Write(0);
@@ -266,7 +265,7 @@ namespace Ryujinx.Core.OsHle.Services.Bsd
 
                     Writer.Write(IpAddress);
 
-                    AMemoryHelper.WriteBytes(Context.Memory, AddrBufferPtr, MS.ToArray());
+                    Context.Memory.WriteBytes(AddrBufferPtr, MS.ToArray());
 
                     Context.ResponseData.Write(Sockets.Count - 1);
                     Context.ResponseData.Write(0);

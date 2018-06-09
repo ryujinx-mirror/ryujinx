@@ -102,7 +102,7 @@ namespace Ryujinx.Core.Loaders
         {
             Memory.Manager.Map(Position, Data.Length, (int)Type, AMemoryPerm.Write);
 
-            AMemoryHelper.WriteBytes(Memory, Position, Data);
+            Memory.WriteBytes(Position, Data);
 
             Memory.Manager.Reprotect(Position, Data.Length, Perm);
         }

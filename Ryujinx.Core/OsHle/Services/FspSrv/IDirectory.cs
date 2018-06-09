@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using Ryujinx.Core.OsHle.Ipc;
 using System;
 using System.Collections.Generic;
@@ -78,7 +77,7 @@ namespace Ryujinx.Core.OsHle.Services.FspSrv
 
             byte[] NameBuffer = Encoding.UTF8.GetBytes(Path.GetFileName(FullPath));
 
-            AMemoryHelper.WriteBytes(Context.Memory, Position, NameBuffer);
+            Context.Memory.WriteBytes(Position, NameBuffer);
 
             int  Type = 0;
             long Size = 0;
