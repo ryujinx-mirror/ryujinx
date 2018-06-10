@@ -1,5 +1,6 @@
 ﻿using ChocolArm64.Memory;
 using Ryujinx.Core.Logging;
+using Ryujinx.Core.OsHle;
 using Ryujinx.Core.OsHle.Handles;
 using System;
 
@@ -85,11 +86,16 @@ namespace Ryujinx.Core.Input
             {
                 ShMemPositions = SharedMem.GetVirtualPositions();
 
-                (AMemory Memory, long Position) ShMem = ShMemPositions[ShMemPositions.Length - 1];
+                (AMemory Memory, long Position) = ShMemPositions[ShMemPositions.Length - 1];
 
-                Log.PrintInfo(LogClass.Hid, $"HID shared memory successfully mapped to 0x{ShMem.Position:x16}!");
+                for (long Offset = 0; Offset < Horizon.HidSize; Offset += 8)
+                {
+                    Memory.WriteInt64Unchecked(Position + Offset, 0);
+                }
 
-                Init(ShMem.Memory, ShMem.Position);
+                Log.PrintInfo(LogClass.Hid, $"HID shared memory successfully mapped to 0x{Position:x16}!");
+
+                Init(Memory, Position);
             }
         }
 
@@ -186,18 +192,22 @@ namespace Ryujinx.Core.Input
 
                     ControllerOffset += HidControllersLayoutHeaderSize;
 
+                    long LastEntryOffset = ControllerOffset + LastEntry * HidControllersInputEntrySize;
+
                     ControllerOffset += CurrEntry * HidControllersInputEntrySize;
 
-                    Memory.WriteInt64Unchecked(ControllerOffset + 0x0,  Timestamp);
-                    Memory.WriteInt64Unchecked(ControllerOffset + 0x8,  Timestamp);
+                    long SampleCounter = Memory.ReadInt64Unchecked(LastEntryOffset) + 1;
+
+                    Memory.WriteInt64Unchecked(ControllerOffset + 0x0,  SampleCounter);
+                    Memory.WriteInt64Unchecked(ControllerOffset + 0x8,  SampleCounter);
 
                     Memory.WriteInt64Unchecked(ControllerOffset + 0x10, (uint)Buttons);
 
                     Memory.WriteInt32Unchecked(ControllerOffset + 0x18, LeftStick.DX);
                     Memory.WriteInt32Unchecked(ControllerOffset + 0x1c, LeftStick.DY);
 
-                    Memory.WriteInt64Unchecked(ControllerOffset + 0x20, RightStick.DX);
-                    Memory.WriteInt64Unchecked(ControllerOffset + 0x24, RightStick.DY);
+                    Memory.WriteInt32Unchecked(ControllerOffset + 0x20, RightStick.DX);
+                    Memory.WriteInt32Unchecked(ControllerOffset + 0x24, RightStick.DY);
 
                     Memory.WriteInt64Unchecked(ControllerOffset + 0x28,
                         (uint)HidControllerConnState.Controller_State_Connected |
