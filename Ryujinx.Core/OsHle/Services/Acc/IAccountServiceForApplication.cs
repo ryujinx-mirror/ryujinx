@@ -15,6 +15,8 @@ namespace Ryujinx.Core.OsHle.Services.Acc
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,   GetUserCount                        },
+                { 1,   GetUserExistence                    },
+                { 2,   ListAllUsers                        },
                 { 3,   ListOpenUsers                       },
                 { 4,   GetLastOpenedUser                   },
                 { 5,   GetProfile                          },
@@ -31,7 +33,23 @@ namespace Ryujinx.Core.OsHle.Services.Acc
 
             return 0;
         }
+        
+        public long GetUserExistence(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(1);
 
+            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
+
+            return 0;
+        }
+
+        public long ListAllUsers(ServiceCtx Context)
+        {
+            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
+
+            return 0;
+        }
+        
         public long ListOpenUsers(ServiceCtx Context)
         {
             Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");

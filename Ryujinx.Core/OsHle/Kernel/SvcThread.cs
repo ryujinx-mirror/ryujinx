@@ -139,6 +139,28 @@ namespace Ryujinx.Core.OsHle.Kernel
             }
         }
 
+        private void SvcGetThreadCoreMask(AThreadState ThreadState)
+        {
+            int Handle = (int)ThreadState.X2;
+
+            Ns.Log.PrintDebug(LogClass.KernelSvc, "Handle = " + Handle.ToString("x8"));
+
+            KThread Thread = GetThread(ThreadState.Tpidr, Handle);
+
+            if (Thread != null)
+            {
+                ThreadState.X0 = 0;
+                ThreadState.X1 = (ulong)Thread.IdealCore;
+                ThreadState.X2 = (ulong)Thread.CoreMask;
+            }
+            else
+            {
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+            }
+        }
+        
         private void SvcSetThreadCoreMask(AThreadState ThreadState)
         {
             //FIXME: This is wrong, but the "correct" way to handle

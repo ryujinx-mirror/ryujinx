@@ -47,6 +47,7 @@ namespace Ryujinx.Core.OsHle.Kernel
                 { 0x0b, SvcSleepThread                   },
                 { 0x0c, SvcGetThreadPriority             },
                 { 0x0d, SvcSetThreadPriority             },
+                { 0x0e, SvcGetThreadCoreMask             },
                 { 0x0f, SvcSetThreadCoreMask             },
                 { 0x10, SvcGetCurrentProcessorNumber     },
                 { 0x12, SvcClearEvent                    },
