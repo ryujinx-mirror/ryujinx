@@ -254,7 +254,7 @@ namespace Ryujinx.Core.OsHle.Kernel
             WaitThread.MutexAddress   = MutexAddress;
             WaitThread.CondVarAddress = CondVarAddress;
 
-            lock (Process.ThreadArbiterList)
+            lock (Process.ThreadSyncLock)
             {
                 WaitThread.CondVarSignaled = false;
 
@@ -267,11 +267,17 @@ namespace Ryujinx.Core.OsHle.Kernel
             {
                 Process.Scheduler.EnterWait(WaitThread, NsTimeConverter.GetTimeMs(Timeout));
 
-                lock (Process.ThreadArbiterList)
+                lock (Process.ThreadSyncLock)
                 {
-                    if (!WaitThread.CondVarSignaled)
+                    WaitThread.MutexOwner?.MutexWaiters.Remove(WaitThread);
+
+                    if (!WaitThread.CondVarSignaled || WaitThread.MutexOwner != null)
                     {
+                        WaitThread.MutexOwner = null;
+
                         Process.ThreadArbiterList.Remove(WaitThread);
+
+                        Ns.Log.PrintDebug(LogClass.KernelSvc, "Timed out...");
 
                         return false;
                     }
@@ -287,7 +293,7 @@ namespace Ryujinx.Core.OsHle.Kernel
 
         private void CondVarSignal(KThread CurrThread, long CondVarAddress, int Count)
         {
-            lock (Process.ThreadArbiterList)
+            lock (Process.ThreadSyncLock)
             {
                 while (Count == -1 || Count-- > 0)
                 {
