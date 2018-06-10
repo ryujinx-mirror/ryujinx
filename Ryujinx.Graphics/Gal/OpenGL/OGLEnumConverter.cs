@@ -76,11 +76,12 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             switch (Format)
             {
-                case GalTextureFormat.BC1: return PixelInternalFormat.CompressedRgbaS3tcDxt1Ext;
-                case GalTextureFormat.BC2: return PixelInternalFormat.CompressedRgbaS3tcDxt3Ext;
-                case GalTextureFormat.BC3: return PixelInternalFormat.CompressedRgbaS3tcDxt5Ext;
-                case GalTextureFormat.BC4: return PixelInternalFormat.CompressedRedRgtc1;
-                case GalTextureFormat.BC5: return PixelInternalFormat.CompressedRgRgtc2;
+                case GalTextureFormat.BC7U: return PixelInternalFormat.CompressedRgbaBptcUnorm;
+                case GalTextureFormat.BC1:  return PixelInternalFormat.CompressedRgbaS3tcDxt1Ext;
+                case GalTextureFormat.BC2:  return PixelInternalFormat.CompressedRgbaS3tcDxt3Ext;
+                case GalTextureFormat.BC3:  return PixelInternalFormat.CompressedRgbaS3tcDxt5Ext;
+                case GalTextureFormat.BC4:  return PixelInternalFormat.CompressedRedRgtc1;
+                case GalTextureFormat.BC5:  return PixelInternalFormat.CompressedRgRgtc2;
             }
 
             throw new NotImplementedException(Format.ToString());

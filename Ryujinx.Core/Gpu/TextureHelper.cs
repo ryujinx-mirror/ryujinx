@@ -44,6 +44,7 @@ namespace Ryujinx.Core.Gpu
                     return W * H * 8;
                 }
 
+                case GalTextureFormat.BC7U:
                 case GalTextureFormat.BC2:
                 case GalTextureFormat.BC3:
                 case GalTextureFormat.BC5:

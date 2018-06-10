@@ -18,6 +18,7 @@ namespace Ryujinx.Core.Gpu
                 case GalTextureFormat.B5G6R5:       return Read565     (Memory, Texture);
                 case GalTextureFormat.G8R8:         return Read2Bpp    (Memory, Texture);
                 case GalTextureFormat.R8:           return Read1Bpp    (Memory, Texture);
+                case GalTextureFormat.BC7U:         return Read16Bpt4x4(Memory, Texture);
                 case GalTextureFormat.BC1:          return Read8Bpt4x4 (Memory, Texture);
                 case GalTextureFormat.BC2:          return Read16Bpt4x4(Memory, Texture);
                 case GalTextureFormat.BC3:          return Read16Bpt4x4(Memory, Texture);

@@ -140,10 +140,8 @@ namespace Ryujinx.Core.OsHle.Services.Nv.NvGpuAS
 
             if (Size == 0)
             {
-                Size = Map.Size;
+                Size = (uint)Map.Size;
             }
-
-            Size = Map.Size;
 
             int Result = NvResult.Success;
 
