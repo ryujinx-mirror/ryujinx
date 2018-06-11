@@ -19,13 +19,13 @@ namespace Ryujinx.Core.OsHle.Services.Am
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, GetEventHandle       },
-                { 1, ReceiveMessage       },
-                { 5, GetOperationMode     },
-                { 6, GetPerformanceMode   },
-                { 8, GetBootMode          },
-                { 9, GetCurrentFocusState },
-                { 60, GetDefaultDisplayResolution },
+                { 0, GetEventHandle                          },
+                { 1, ReceiveMessage                          },
+                { 5, GetOperationMode                        },
+                { 6, GetPerformanceMode                      },
+                { 8, GetBootMode                             },
+                { 9, GetCurrentFocusState                    },
+                { 60, GetDefaultDisplayResolution            },
                 { 61, GetDefaultDisplayResolutionChangeEvent }
             };
 
