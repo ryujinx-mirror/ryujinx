@@ -12,7 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ChocolArm64\ChocolArm64.csproj" />
     <ProjectReference Include="..\Ryujinx.Audio\Ryujinx.Audio.csproj" />
-    <ProjectReference Include="..\Ryujinx.Core\Ryujinx.Core.csproj" />
+    <ProjectReference Include="..\Ryujinx.HLE\Ryujinx.HLE.csproj" />
     <ProjectReference Include="..\Ryujinx.Graphics\Ryujinx.Graphics.csproj" />
   </ItemGroup>
   <ItemGroup>

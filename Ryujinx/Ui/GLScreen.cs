@@ -1,9 +1,9 @@
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Input;
-using Ryujinx.Core;
-using Ryujinx.Core.Input;
 using Ryujinx.Graphics.Gal;
+using Ryujinx.HLE;
+using Ryujinx.HLE.Input;
 using System;
 
 namespace Ryujinx

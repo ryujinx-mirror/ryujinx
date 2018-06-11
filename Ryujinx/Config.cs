@@ -1,5 +1,5 @@
-﻿using Ryujinx.Core.Input;
-using Ryujinx.Core.Logging;
+﻿using Ryujinx.HLE.Input;
+using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
