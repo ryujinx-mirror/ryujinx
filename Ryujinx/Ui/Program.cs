@@ -1,8 +1,8 @@
 ﻿using Ryujinx.Audio;
 using Ryujinx.Audio.OpenAL;
-using Ryujinx.Core;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Gal.OpenGL;
+using Ryujinx.HLE;
 using System;
 using System.IO;
 
