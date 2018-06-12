@@ -159,7 +159,8 @@ namespace Ryujinx.Graphics.Gal.Shader
                 case ShaderIrOperAbuf Abuf:
                 {
                     //This is a built-in input variable.
-                    if (Abuf.Offs == VertexIdAttr)
+                    if (Abuf.Offs == VertexIdAttr ||
+                        Abuf.Offs == InstanceIdAttr)
                     {
                         break;
                     }
