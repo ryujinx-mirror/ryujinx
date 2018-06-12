@@ -131,8 +131,7 @@ namespace Ryujinx.HLE.Input
             long BaseControllerOffset = Position + HidControllersOffset + 8 * HidControllerSize;
 
             HidControllerType Type =
-                HidControllerType.ControllerType_Handheld |
-                HidControllerType.ControllerType_JoyconPair;
+                HidControllerType.ControllerType_Handheld;
 
             bool IsHalf = false;
 
