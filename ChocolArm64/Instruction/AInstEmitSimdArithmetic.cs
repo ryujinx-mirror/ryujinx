@@ -309,6 +309,14 @@ namespace ChocolArm64.Instruction
             });
         }
 
+        public static void Fabs_V(AILEmitterCtx Context)
+        {
+            EmitVectorUnaryOpF(Context, () =>
+            {
+                EmitUnaryMathCall(Context, nameof(Math.Abs));
+            });
+        }
+
         public static void Fadd_S(AILEmitterCtx Context)
         {
             if (AOptimizations.UseSse2)
