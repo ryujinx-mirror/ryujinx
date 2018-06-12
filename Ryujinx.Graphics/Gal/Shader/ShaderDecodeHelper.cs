@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             for (int Index = 0; Index <= Size; Index++)
             {
-                Opers[Index] = new ShaderIrOperAbuf(Abuf, Reg);
+                Opers[Index] = new ShaderIrOperAbuf(Abuf + Index * 4, Reg);
             }
 
             return Opers;
