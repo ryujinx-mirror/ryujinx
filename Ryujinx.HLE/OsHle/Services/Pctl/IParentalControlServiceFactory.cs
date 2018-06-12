@@ -13,13 +13,25 @@ namespace Ryujinx.HLE.OsHle.Services.Pctl
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, CreateService }
+                { 0, CreateService                  },
+                { 1, CreateServiceWithoutInitialize }
             };
         }
 
-        public static long CreateService(ServiceCtx Context)
+        public long CreateService(ServiceCtx Context)
         {
             MakeObject(Context, new IParentalControlService());
+
+            return 0;
+        }
+
+        public long CreateServiceWithoutInitialize(ServiceCtx Context)
+        {
+            IParentalControlService Service = new IParentalControlService();
+
+            Service.Initialized = true;
+
+            MakeObject(Context, Service);
 
             return 0;
         }
