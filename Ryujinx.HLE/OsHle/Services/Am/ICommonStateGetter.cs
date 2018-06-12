@@ -90,8 +90,6 @@ namespace Ryujinx.HLE.OsHle.Services.Am
             Context.ResponseData.Write(1280);
             Context.ResponseData.Write(720);
 
-            // Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
-
             return 0;
         }
 
