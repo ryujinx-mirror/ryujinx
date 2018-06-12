@@ -13,17 +13,23 @@ namespace Ryujinx.HLE.OsHle.Services.Am
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
+        private KEvent DisplayResolutionChangeEvent;
+
         public ICommonStateGetter()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, GetEventHandle       },
-                { 1, ReceiveMessage       },
-                { 5, GetOperationMode     },
-                { 6, GetPerformanceMode   },
-                { 8, GetBootMode          },
-                { 9, GetCurrentFocusState }
+                { 0, GetEventHandle                          },
+                { 1, ReceiveMessage                          },
+                { 5, GetOperationMode                        },
+                { 6, GetPerformanceMode                      },
+                { 8, GetBootMode                             },
+                { 9, GetCurrentFocusState                    },
+                { 60, GetDefaultDisplayResolution            },
+                { 61, GetDefaultDisplayResolutionChangeEvent }
             };
+
+            DisplayResolutionChangeEvent = new KEvent();
         }
 
         public long GetEventHandle(ServiceCtx Context)
@@ -75,6 +81,25 @@ namespace Ryujinx.HLE.OsHle.Services.Am
         public long GetCurrentFocusState(ServiceCtx Context)
         {
             Context.ResponseData.Write((byte)Context.Process.AppletState.FocusState);
+
+            return 0;
+        }
+
+        public long GetDefaultDisplayResolution(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(1280);
+            Context.ResponseData.Write(720);
+
+            return 0;
+        }
+
+        public long GetDefaultDisplayResolutionChangeEvent(ServiceCtx Context)
+        {
+            int Handle = Context.Process.HandleTable.OpenHandle(DisplayResolutionChangeEvent);
+
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
+
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
