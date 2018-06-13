@@ -136,8 +136,9 @@ namespace Ryujinx.HLE.Gpu
             {
                 switch (SubChannels[PBEntry.SubChannel])
                 {
-                    case NvGpuEngine._2d: Call2dMethod(Vmm, PBEntry); break;
-                    case NvGpuEngine._3d: Call3dMethod(Vmm, PBEntry); break;
+                    case NvGpuEngine._2d: Call2dMethod (Vmm, PBEntry); break;
+                    case NvGpuEngine._3d: Call3dMethod (Vmm, PBEntry); break;
+                    case NvGpuEngine.Dma: CallDmaMethod(Vmm, PBEntry); break;
                 }
             }
         }
@@ -169,6 +170,11 @@ namespace Ryujinx.HLE.Gpu
                     Macros[MacroIndex].Execute(Vmm, PBEntry.Arguments[0]);
                 }
             }
+        }
+
+        private void CallDmaMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        {
+            Gpu.EngineDma.CallMethod(Vmm, PBEntry);
         }
     }
 }

@@ -9,8 +9,9 @@ namespace Ryujinx.HLE.Gpu
 
         public NvGpuFifo Fifo { get; private set; }
 
-        public NvGpuEngine2d Engine2d { get; private set; }
-        public NvGpuEngine3d Engine3d { get; private set; }
+        public NvGpuEngine2d  Engine2d  { get; private set; }
+        public NvGpuEngine3d  Engine3d  { get; private set; }
+        public NvGpuEngineDma EngineDma { get; private set; }
 
         private Thread FifoProcessing;
 
@@ -22,8 +23,9 @@ namespace Ryujinx.HLE.Gpu
 
             Fifo = new NvGpuFifo(this);
 
-            Engine2d = new NvGpuEngine2d(this);
-            Engine3d = new NvGpuEngine3d(this);
+            Engine2d  = new NvGpuEngine2d(this);
+            Engine3d  = new NvGpuEngine3d(this);
+            EngineDma = new NvGpuEngineDma(this);
 
             KeepRunning = true;
 
