@@ -27,11 +27,7 @@ namespace Ryujinx.HLE.OsHle.Services.Pctl
 
         public long CreateServiceWithoutInitialize(ServiceCtx Context)
         {
-            IParentalControlService Service = new IParentalControlService();
-
-            Service.Initialized = true;
-
-            MakeObject(Context, Service);
+            MakeObject(Context, new IParentalControlService(false));
 
             return 0;
         }
