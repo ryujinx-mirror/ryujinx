@@ -15,7 +15,8 @@ namespace Ryujinx.HLE.OsHle.Services.Set
             {
                 { 0, GetLanguageCode               },
                 { 1, GetAvailableLanguageCodes     },
-                { 3, GetAvailableLanguageCodeCount }
+                { 3, GetAvailableLanguageCodeCount },
+                { 5, GetAvailableLanguageCodes2    }
             };
         }
 
@@ -27,10 +28,28 @@ namespace Ryujinx.HLE.OsHle.Services.Set
         }
 
         public static long GetAvailableLanguageCodes(ServiceCtx Context)
-        {
-            long Position = Context.Request.RecvListBuff[0].Position;
-            long Size     = Context.Request.RecvListBuff[0].Size;
+        {			
+			GetAvailableLanguagesCodesMethod(Context.Request.RecvListBuff[0].Position, Context.Request.RecvListBuff[0].Size, Context);
+			
+			return 0;
+        }
 
+        public static long GetAvailableLanguageCodeCount(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(SystemStateMgr.LanguageCodes.Length);
+
+            return 0;
+        }
+        
+        public static long GetAvailableLanguageCodes2(ServiceCtx Context)
+        {
+			GetAvailableLanguagesCodesMethod(Context.Request.ReceiveBuff[0].Position, Context.Request.ReceiveBuff[0].Size, Context);
+			
+			return 0;
+        }
+        
+		public static long GetAvailableLanguagesCodesMethod(long Position, long Size, ServiceCtx Context)
+		{
             int Count = (int)(Size / 8);
 
             if (Count > SystemStateMgr.LanguageCodes.Length)
@@ -46,15 +65,8 @@ namespace Ryujinx.HLE.OsHle.Services.Set
             }
 
             Context.ResponseData.Write(Count);
-
-            return 0;
-        }
-
-        public static long GetAvailableLanguageCodeCount(ServiceCtx Context)
-        {
-            Context.ResponseData.Write(SystemStateMgr.LanguageCodes.Length);
-
-            return 0;
-        }
+			
+			return 0;
+		}         
     }
 }
