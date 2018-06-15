@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
                 { 0, ListAudioOuts     },
                 { 1, OpenAudioOut      },
                 { 2, ListAudioOutsAuto },
-		{ 3, OpenAudioOutAuto  }
+                { 3, OpenAudioOutAuto  }
             };
         }
 
@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
             return 0;
         }
         
-        public long ListAudioOutsMethod(ServiceCtx Context, long Position, long Size)
+        public void ListAudioOutsMethod(ServiceCtx Context, long Position, long Size)
         {
             int NameCount = 0;
 
@@ -75,19 +75,17 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
             }
 
             Context.ResponseData.Write(NameCount);
-
-            return 0;
         }
         
-        public long OpenAudioOutMethod(ServiceCtx Context, long SendPosition, long SendSize, long ReceivePosition, long ReceiveSize)
+        public void OpenAudioOutMethod(ServiceCtx Context, long SendPosition, long SendSize, long ReceivePosition, long ReceiveSize)
         {
             IAalOutput AudioOut = Context.Ns.AudioOut;
                 
             string DeviceName = AMemoryHelper.ReadAsciiString(
                 Context.Memory,
                 SendPosition,
-	        SendSize
-	    );
+                SendSize
+            );
             
             if (DeviceName == string.Empty)
             {
@@ -103,8 +101,7 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
             else
             {
                 Context.Ns.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {ReceiveSize} too small!");
-            }    
-                
+            }       
 
             int SampleRate = Context.RequestData.ReadInt32();
             int Channels   = Context.RequestData.ReadInt32();
@@ -136,8 +133,6 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
             Context.ResponseData.Write(Channels);
             Context.ResponseData.Write((int)Format);
             Context.ResponseData.Write((int)PlaybackState.Stopped);
-
-            return 0;
         }
     }
 }
