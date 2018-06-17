@@ -20,16 +20,45 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, ListAudioOuts },
-                { 1, OpenAudioOut  }
+                { 0, ListAudioOuts     },
+                { 1, OpenAudioOut      },
+                { 2, ListAudioOutsAuto },
+                { 3, OpenAudioOutAuto  }
             };
         }
 
         public long ListAudioOuts(ServiceCtx Context)
-        {
-            long Position = Context.Request.ReceiveBuff[0].Position;
-            long Size     = Context.Request.ReceiveBuff[0].Size;
+        {   
+            ListAudioOutsMethod(Context, Context.Request.ReceiveBuff[0].Position, Context.Request.ReceiveBuff[0].Size);
 
+            return 0;
+        }
+
+        public long OpenAudioOut(ServiceCtx Context)
+        {
+            OpenAudioOutMethod(Context, Context.Request.SendBuff[0].Position, Context.Request.SendBuff[0].Size,
+                Context.Request.ReceiveBuff[0].Position, Context.Request.ReceiveBuff[0].Size);
+
+            return 0;
+        }
+        
+        public long ListAudioOutsAuto(ServiceCtx Context)
+        { 
+            ListAudioOutsMethod(Context, Context.Request.GetBufferType0x22().Position, Context.Request.GetBufferType0x22().Size);
+
+            return 0;
+        }
+		
+        public long OpenAudioOutAuto(ServiceCtx Context)
+        {
+            OpenAudioOutMethod(Context, Context.Request.GetBufferType0x21().Position, Context.Request.GetBufferType0x21().Size,
+                Context.Request.GetBufferType0x22().Position, Context.Request.GetBufferType0x22().Size);
+
+            return 0;
+        }
+        
+        public void ListAudioOutsMethod(ServiceCtx Context, long Position, long Size)
+        {
             int NameCount = 0;
 
             byte[] DeviceNameBuffer = Encoding.ASCII.GetBytes(DefaultAudioOutput + "\0");
@@ -46,37 +75,33 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
             }
 
             Context.ResponseData.Write(NameCount);
-
-            return 0;
         }
-
-        public long OpenAudioOut(ServiceCtx Context)
+        
+        public void OpenAudioOutMethod(ServiceCtx Context, long SendPosition, long SendSize, long ReceivePosition, long ReceiveSize)
         {
             IAalOutput AudioOut = Context.Ns.AudioOut;
-
+                
             string DeviceName = AMemoryHelper.ReadAsciiString(
                 Context.Memory,
-                Context.Request.SendBuff[0].Position,
-                Context.Request.SendBuff[0].Size);
-
+                SendPosition,
+                SendSize
+            );
+            
             if (DeviceName == string.Empty)
             {
                 DeviceName = DefaultAudioOutput;
             }
 
-            long Position = Context.Request.ReceiveBuff[0].Position;
-            long Size     = Context.Request.ReceiveBuff[0].Size;
-
             byte[] DeviceNameBuffer = Encoding.ASCII.GetBytes(DeviceName + "\0");
 
-            if ((ulong)DeviceNameBuffer.Length <= (ulong)Size)
+            if ((ulong)DeviceNameBuffer.Length <= (ulong)ReceiveSize)
             {
-                Context.Memory.WriteBytes(Position, DeviceNameBuffer);
+                Context.Memory.WriteBytes(ReceivePosition, DeviceNameBuffer);
             }
             else
             {
-                Context.Ns.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
-            }
+                Context.Ns.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {ReceiveSize} too small!");
+            }       
 
             int SampleRate = Context.RequestData.ReadInt32();
             int Channels   = Context.RequestData.ReadInt32();
@@ -108,8 +133,6 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
             Context.ResponseData.Write(Channels);
             Context.ResponseData.Write((int)Format);
             Context.ResponseData.Write((int)PlaybackState.Stopped);
-
-            return 0;
         }
     }
 }
