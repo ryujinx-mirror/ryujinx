@@ -345,7 +345,7 @@ namespace Ryujinx.HLE.Gpu
                 throw new InvalidOperationException();
             }
 
-            if (IndexSize != 0)
+            if (IndexCount != 0)
             {
                 int IbSize = IndexCount * IndexSize;
 
