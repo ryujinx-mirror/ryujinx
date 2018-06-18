@@ -1,4 +1,3 @@
-using Ryujinx.Graphics.Gal;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.Gpu

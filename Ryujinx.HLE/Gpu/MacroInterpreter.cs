@@ -56,7 +56,7 @@ namespace Ryujinx.HLE.Gpu
 
         private int PipeOp;
 
-        private long Pc;
+        private int Pc;
 
         public MacroInterpreter(NvGpuFifo PFifo, INvGpuEngine Engine)
         {
@@ -68,7 +68,7 @@ namespace Ryujinx.HLE.Gpu
             Gprs = new int[8];
         }
 
-        public void Execute(NvGpuVmm Vmm, long Position, int Param)
+        public void Execute(NvGpuVmm Vmm, int[] Mme, int Position, int Param)
         {
             Reset();
 
@@ -76,13 +76,13 @@ namespace Ryujinx.HLE.Gpu
 
             Pc = Position;
 
-            FetchOpCode(Vmm);
+            FetchOpCode(Mme);
 
-            while (Step(Vmm));
+            while (Step(Vmm, Mme));
 
             //Due to the delay slot, we still need to execute
             //one more instruction before we actually exit.
-            Step(Vmm);
+            Step(Vmm, Mme);
         }
 
         private void Reset()
@@ -98,11 +98,11 @@ namespace Ryujinx.HLE.Gpu
             Carry = false;
         }
 
-        private bool Step(NvGpuVmm Vmm)
+        private bool Step(NvGpuVmm Vmm, int[] Mme)
         {
-            long BaseAddr = Pc - 4;
+            int BaseAddr = Pc - 1;
 
-            FetchOpCode(Vmm);
+            FetchOpCode(Mme);
 
             if ((OpCode & 7) < 7)
             {
@@ -205,13 +205,13 @@ namespace Ryujinx.HLE.Gpu
 
                 if (Taken)
                 {
-                    Pc = BaseAddr + (GetImm() << 2);
+                    Pc = BaseAddr + GetImm();
 
                     bool NoDelays = (OpCode & 0x20) != 0;
 
                     if (NoDelays)
                     {
-                        FetchOpCode(Vmm);
+                        FetchOpCode(Mme);
                     }
 
                     return true;
@@ -223,13 +223,11 @@ namespace Ryujinx.HLE.Gpu
             return !Exit;
         }
 
-        private void FetchOpCode(NvGpuVmm Vmm)
+        private void FetchOpCode(int[] Mme)
         {
             OpCode = PipeOp;
 
-            PipeOp = Vmm.ReadInt32(Pc);
-
-            Pc += 4;
+            PipeOp = Mme[Pc++];
         }
 
         private int GetAluResult()

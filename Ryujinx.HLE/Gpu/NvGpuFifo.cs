@@ -7,6 +7,10 @@ namespace Ryujinx.HLE.Gpu
         private const int MacrosCount    = 0x80;
         private const int MacroIndexMask = MacrosCount - 1;
 
+        //Note: The size of the macro memory is unknown, we just make
+        //a guess here and use 256kb as the size. Increase if needed.
+        private const int MmeWords = 256 * 256;
+
         private NvGpu Gpu;
 
         private ConcurrentQueue<(NvGpuVmm, NvGpuPBEntry)> BufferQueue;
@@ -15,11 +19,11 @@ namespace Ryujinx.HLE.Gpu
 
         private struct CachedMacro
         {
-            public long Position { get; private set; }
+            public int Position { get; private set; }
 
             private MacroInterpreter Interpreter;
 
-            public CachedMacro(NvGpuFifo PFifo, INvGpuEngine Engine, long Position)
+            public CachedMacro(NvGpuFifo PFifo, INvGpuEngine Engine, int Position)
             {
                 this.Position = Position;
 
@@ -31,16 +35,18 @@ namespace Ryujinx.HLE.Gpu
                 Interpreter?.Fifo.Enqueue(Param);
             }
 
-            public void Execute(NvGpuVmm Vmm, int Param)
+            public void Execute(NvGpuVmm Vmm, int[] Mme, int Param)
             {
-                Interpreter?.Execute(Vmm, Position, Param);
+                Interpreter?.Execute(Vmm, Mme, Position, Param);
             }
         }
 
-        private long CurrMacroPosition;
-        private int  CurrMacroBindIndex;
+        private int CurrMacroPosition;
+        private int CurrMacroBindIndex;
 
         private CachedMacro[] Macros;
+
+        private int[] Mme;
 
         public NvGpuFifo(NvGpu Gpu)
         {
@@ -51,6 +57,8 @@ namespace Ryujinx.HLE.Gpu
             SubChannels = new NvGpuEngine[8];
 
             Macros = new CachedMacro[MacrosCount];
+
+            Mme = new int[MmeWords];
         }
 
         public void PushBuffer(NvGpuVmm Vmm, NvGpuPBEntry[] Buffer)
@@ -95,22 +103,16 @@ namespace Ryujinx.HLE.Gpu
 
                     case NvGpuFifoMeth.SetMacroUploadAddress:
                     {
-                        CurrMacroPosition = (long)((ulong)PBEntry.Arguments[0] << 2);
+                        CurrMacroPosition = PBEntry.Arguments[0];
 
                         break;
                     }
 
                     case NvGpuFifoMeth.SendMacroCodeData:
                     {
-                        long Position = CurrMacroPosition;
-
                         foreach (int Arg in PBEntry.Arguments)
                         {
-                            Vmm.WriteInt32(Position, Arg);
-
-                            CurrMacroPosition += 4;
-
-                            Position += 4;
+                            Mme[CurrMacroPosition++] = Arg;
                         }
                         break;
                     }
@@ -124,7 +126,7 @@ namespace Ryujinx.HLE.Gpu
 
                     case NvGpuFifoMeth.BindMacro:
                     {
-                        long Position = (long)((ulong)PBEntry.Arguments[0] << 2);
+                        int Position = PBEntry.Arguments[0];
 
                         Macros[CurrMacroBindIndex] = new CachedMacro(this, Gpu.Engine3d, Position);
 
@@ -167,7 +169,7 @@ namespace Ryujinx.HLE.Gpu
                 }
                 else
                 {
-                    Macros[MacroIndex].Execute(Vmm, PBEntry.Arguments[0]);
+                    Macros[MacroIndex].Execute(Vmm, Mme, PBEntry.Arguments[0]);
                 }
             }
         }
