@@ -9,7 +9,7 @@ namespace Ryujinx.Tests.Cpu
 {
     public class CpuTestSimdMove : CpuTest
     {
-        [Test, Description("trn1 v0.4s, v1.4s, v2.4s")]
+        [Test, Description("TRN1 V0.4S, V1.4S, V2.4S")]
         public void Trn1_V_4S([Random(2)] uint A0, [Random(2)] uint A1, [Random(2)] uint A2, [Random(2)] uint A3,
                               [Random(2)] uint B0, [Random(2)] uint B1, [Random(2)] uint B2, [Random(2)] uint B3)
         {
@@ -27,7 +27,7 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)3), Is.EqualTo(B2));
         }
 
-        [Test, Description("trn1 v0.8b, v1.8b, v2.8b")]
+        [Test, Description("TRN1 V0.8B, V1.8B, V2.8B")]
         public void Trn1_V_8B([Random(2)] byte A0, [Random(1)] byte A1, [Random(2)] byte A2, [Random(1)] byte A3,
                               [Random(2)] byte A4, [Random(1)] byte A5, [Random(2)] byte A6, [Random(1)] byte A7,
                               [Random(2)] byte B0, [Random(1)] byte B1, [Random(2)] byte B2, [Random(1)] byte B3,
@@ -49,7 +49,7 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)7), Is.EqualTo(B6));
         }
 
-        [Test, Description("trn2 v0.4s, v1.4s, v2.4s")]
+        [Test, Description("TRN2 V0.4S, V1.4S, V2.4S")]
         public void Trn2_V_4S([Random(2)] uint A0, [Random(2)] uint A1, [Random(2)] uint A2, [Random(2)] uint A3,
                               [Random(2)] uint B0, [Random(2)] uint B1, [Random(2)] uint B2, [Random(2)] uint B3)
         {
@@ -65,7 +65,7 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)3), Is.EqualTo(B3));
         }
 
-        [Test, Description("trn2 v0.8b, v1.8b, v2.8b")]
+        [Test, Description("TRN2 V0.8B, V1.8B, V2.8B")]
         public void Trn2_V_8B([Random(1)] byte A0, [Random(2)] byte A1, [Random(1)] byte A2, [Random(2)] byte A3,
                               [Random(1)] byte A4, [Random(2)] byte A5, [Random(1)] byte A6, [Random(2)] byte A7,
                               [Random(1)] byte B0, [Random(2)] byte B1, [Random(1)] byte B2, [Random(2)] byte B3,

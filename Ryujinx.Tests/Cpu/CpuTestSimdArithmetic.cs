@@ -49,6 +49,32 @@ namespace Ryujinx.Tests.Cpu
             });
         }
 
+        [TestCase(0x1E224820u, 0x0000000000000000ul, 0x0000000080000000ul, 0x0000000000000000ul)]
+        [TestCase(0x1E224820u, 0x0000000080000000ul, 0x0000000000000000ul, 0x0000000000000000ul)]
+        [TestCase(0x1E224820u, 0x0000000080000000ul, 0x0000000080000000ul, 0x0000000080000000ul)]
+        [TestCase(0x1E224820u, 0x0000000080000000ul, 0x000000003DCCCCCDul, 0x000000003DCCCCCDul)]
+        [TestCase(0x1E224820u, 0x000000003DCCCCCDul, 0x000000003C9623B1ul, 0x000000003DCCCCCDul)]
+        [TestCase(0x1E224820u, 0x000000008BA98D27ul, 0x0000000000000076ul, 0x0000000000000076ul)]
+        [TestCase(0x1E224820u, 0x00000000807FFFFFul, 0x000000007F7FFFFFul, 0x000000007F7FFFFFul)]
+        [TestCase(0x1E224820u, 0x000000007F7FFFFFul, 0x00000000807FFFFFul, 0x000000007F7FFFFFul)]
+        [TestCase(0x1E224820u, 0x000000007FC00000ul, 0x000000003F800000ul, 0x000000007FC00000ul)]
+        [TestCase(0x1E224820u, 0x000000003F800000ul, 0x000000007FC00000ul, 0x000000007FC00000ul)]
+        [TestCase(0x1E224820u, 0x000000007F800001ul, 0x000000007FC00042ul, 0x000000007FC00001ul, Ignore = "NaN test.")]
+        [TestCase(0x1E224820u, 0x000000007FC00042ul, 0x000000007F800001ul, 0x000000007FC00001ul, Ignore = "NaN test.")]
+        [TestCase(0x1E224820u, 0x000000007FC0000Aul, 0x000000007FC0000Bul, 0x000000007FC0000Aul, Ignore = "NaN test.")]
+        [TestCase(0x1E624820u, 0x0000000000000000ul, 0x8000000000000000ul, 0x0000000000000000ul)]
+        [TestCase(0x1E624820u, 0x8000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul)]
+        [TestCase(0x1E624820u, 0x8000000000000000ul, 0x8000000000000000ul, 0x8000000000000000ul)]
+        [TestCase(0x1E624820u, 0x8000000000000000ul, 0x3FF3333333333333ul, 0x3FF3333333333333ul)]
+        public void Fmax_S(uint Opcode, ulong A, ulong B, ulong Result)
+        {
+            // FMAX S0, S1, S2
+            AThreadState ThreadState = SingleOpcode(Opcode,
+                V1: Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, A)),
+                V2: Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, B)));
+            Assert.AreEqual(Result, Sse41.Extract(Sse.StaticCast<float, ulong>(ThreadState.V0), 0));
+        }
+
         [TestCase(0x80000000u, 0x80000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u)]
         [TestCase(0x00000000u, 0x00000000u, 0x80000000u, 0x80000000u, 0x00000000u, 0x00000000u)]
         [TestCase(0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u, 0x80000000u)]
@@ -73,6 +99,32 @@ namespace Ryujinx.Tests.Cpu
                 Assert.AreEqual(Result0, GetVectorE0(ThreadState.V0));
                 Assert.AreEqual(Result1, GetVectorE1(ThreadState.V0));
             });
+        }
+
+        [TestCase(0x1E225820u, 0x0000000000000000ul, 0x0000000080000000ul, 0x0000000080000000ul)]
+        [TestCase(0x1E225820u, 0x0000000080000000ul, 0x0000000000000000ul, 0x0000000080000000ul)]
+        [TestCase(0x1E225820u, 0x0000000080000000ul, 0x0000000080000000ul, 0x0000000080000000ul)]
+        [TestCase(0x1E225820u, 0x0000000080000000ul, 0x000000003DCCCCCDul, 0x0000000080000000ul)]
+        [TestCase(0x1E225820u, 0x000000003DCCCCCDul, 0x000000003C9623B1ul, 0x000000003C9623B1ul)]
+        [TestCase(0x1E225820u, 0x000000008BA98D27ul, 0x0000000000000076ul, 0x000000008BA98D27ul)]
+        [TestCase(0x1E225820u, 0x00000000807FFFFFul, 0x000000007F7FFFFFul, 0x00000000807FFFFFul)]
+        [TestCase(0x1E225820u, 0x000000007F7FFFFFul, 0x00000000807FFFFFul, 0x00000000807FFFFFul)]
+        [TestCase(0x1E225820u, 0x000000007FC00000ul, 0x000000003F800000ul, 0x000000007FC00000ul)]
+        [TestCase(0x1E225820u, 0x000000003F800000ul, 0x000000007FC00000ul, 0x000000007FC00000ul)]
+        [TestCase(0x1E225820u, 0x000000007F800001ul, 0x000000007FC00042ul, 0x000000007FC00001ul, Ignore = "NaN test.")]
+        [TestCase(0x1E225820u, 0x000000007FC00042ul, 0x000000007F800001ul, 0x000000007FC00001ul, Ignore = "NaN test.")]
+        [TestCase(0x1E225820u, 0x000000007FC0000Aul, 0x000000007FC0000Bul, 0x000000007FC0000Aul, Ignore = "NaN test.")]
+        [TestCase(0x1E625820u, 0x0000000000000000ul, 0x8000000000000000ul, 0x8000000000000000ul)]
+        [TestCase(0x1E625820u, 0x8000000000000000ul, 0x0000000000000000ul, 0x8000000000000000ul)]
+        [TestCase(0x1E625820u, 0x8000000000000000ul, 0x8000000000000000ul, 0x8000000000000000ul)]
+        [TestCase(0x1E625820u, 0x8000000000000000ul, 0x3FF3333333333333ul, 0x8000000000000000ul)]
+        public void Fmin_S(uint Opcode, ulong A, ulong B, ulong Result)
+        {
+            // FMIN S0, S1, S2
+            AThreadState ThreadState = SingleOpcode(Opcode,
+                V1: Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, A)),
+                V2: Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, B)));
+            Assert.AreEqual(Result, Sse41.Extract(Sse.StaticCast<float, ulong>(ThreadState.V0), 0));
         }
 
         [TestCase(0x80000000u, 0x80000000u, 0x00000000u, 0x00000000u, 0x80000000u, 0x80000000u)]
@@ -101,7 +153,7 @@ namespace Ryujinx.Tests.Cpu
             });
         }
 
-        [Test, Description("fmul s6, s1, v0.s[2]")]
+        [Test, Description("FMUL S6, S1, V0.S[2]")]
         public void Fmul_Se([Random(10)] float A, [Random(10)] float B)
         {
             AThreadState ThreadState = SingleOpcode(0x5F809826,
@@ -111,7 +163,15 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(Sse41.Extract(ThreadState.V6, (byte)0), Is.EqualTo(A * B));
         }
 
-        [Test, Description("frecpe v2.4s, v0.4s")]
+        [Test, Description("FRECPE D0, D1")]
+        public void Frecpe_S([Random(100)] double A)
+        {
+            AThreadState ThreadState = SingleOpcode(0x5EE1D820, V1: MakeVectorE0(A));
+
+            Assert.That(VectorExtractDouble(ThreadState.V0, 0), Is.EqualTo(1 / A));
+        }
+
+        [Test, Description("FRECPE V2.4S, V0.4S")]
         public void Frecpe_V([Random(100)] float A)
         {
             AThreadState ThreadState = SingleOpcode(0x4EA1D802, V0: Sse.SetAllVector128(A));
@@ -122,15 +182,17 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(Sse41.Extract(ThreadState.V2, (byte)3), Is.EqualTo(1 / A));
         }
 
-        [Test, Description("frecpe d0, d1")]
-        public void Frecpe_S([Random(100)] double A)
+        [Test, Description("FRECPS D0, D1, D2")]
+        public void Frecps_S([Random(10)] double A, [Random(10)] double B)
         {
-            AThreadState ThreadState = SingleOpcode(0x5EE1D820, V1: MakeVectorE0(A));
+            AThreadState ThreadState = SingleOpcode(0x5E62FC20,
+                V1: MakeVectorE0(A),
+                V2: MakeVectorE0(B));
 
-            Assert.That(VectorExtractDouble(ThreadState.V0, 0), Is.EqualTo(1 / A));
+            Assert.That(VectorExtractDouble(ThreadState.V0, 0), Is.EqualTo(2 - (A * B)));
         }
 
-        [Test, Description("frecps v4.4s, v2.4s, v0.4s")]
+        [Test, Description("FRECPS V4.4S, V2.4S, V0.4S")]
         public void Frecps_V([Random(10)] float A, [Random(10)] float B)
         {
             AThreadState ThreadState = SingleOpcode(0x4E20FC44,
@@ -141,16 +203,6 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(Sse41.Extract(ThreadState.V4, (byte)1), Is.EqualTo(2 - (A * B)));
             Assert.That(Sse41.Extract(ThreadState.V4, (byte)2), Is.EqualTo(2 - (A * B)));
             Assert.That(Sse41.Extract(ThreadState.V4, (byte)3), Is.EqualTo(2 - (A * B)));
-        }
-
-        [Test, Description("frecps d0, d1, d2")]
-        public void Frecps_S([Random(10)] double A, [Random(10)] double B)
-        {
-            AThreadState ThreadState = SingleOpcode(0x5E62FC20,
-                V1: MakeVectorE0(A),
-                V2: MakeVectorE0(B));
-
-            Assert.That(VectorExtractDouble(ThreadState.V0, 0), Is.EqualTo(2 - (A * B)));
         }
 
         [TestCase(0x3FE66666u, false, 0x40000000u)]

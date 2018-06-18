@@ -1,9 +1,14 @@
 //#define Bfm
 
+using ChocolArm64.State;
+
 using NUnit.Framework;
 
 namespace Ryujinx.Tests.Cpu
 {
+    using Tester;
+    using Tester.Types;
+
     [Category("Bfm"), Ignore("Tested: first half of 2018.")]
     public sealed class CpuTestBfm : CpuTest
     {

@@ -1,9 +1,14 @@
 //#define CcmpImm
 
+using ChocolArm64.State;
+
 using NUnit.Framework;
 
 namespace Ryujinx.Tests.Cpu
 {
+    using Tester;
+    using Tester.Types;
+
     [Category("CcmpImm"), Ignore("Tested: first half of 2018.")]
     public sealed class CpuTestCcmpImm : CpuTest
     {
