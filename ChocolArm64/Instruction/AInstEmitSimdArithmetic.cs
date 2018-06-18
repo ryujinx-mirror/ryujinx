@@ -341,6 +341,20 @@ namespace ChocolArm64.Instruction
             }
         }
 
+        public static void Faddp_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            EmitVectorExtractF(Context, Op.Rn, 0, SizeF);
+            EmitVectorExtractF(Context, Op.Rn, 1, SizeF);
+
+            Context.Emit(OpCodes.Add);
+
+            EmitScalarSetF(Context, Op.Rd, SizeF);
+        }
+
         public static void Faddp_V(AILEmitterCtx Context)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
