@@ -153,13 +153,9 @@ namespace ChocolArm64.Instruction
 
         public static long SMulHi128(long LHS, long RHS)
         {
-            bool LSign = (LHS < 0);
-            bool RSign = (RHS < 0);
-
-            long Result = (long)UMulHi128((ulong)(LSign ? -LHS : LHS), (ulong)(RSign ? -RHS : RHS));
-
-            if (LSign != RSign && LHS != 0 && RHS != 0)
-                return ~Result; //for negative results, hi 64-bits start at 0xFFF... and count back
+            long Result = (long)UMulHi128((ulong)(LHS), (ulong)(RHS));
+            if (LHS < 0) Result -= RHS;
+            if (RHS < 0) Result -= LHS;
             return Result;
         }
 
