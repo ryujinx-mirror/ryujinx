@@ -23,8 +23,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 OGLEnumConverter.GetBlendEquation(Equation));
 
             GL.BlendFunc(
-                OGLEnumConverter.GetBlendFactorSrc(FuncSrc),
-                OGLEnumConverter.GetBlendFactorDst(FuncDst));
+                OGLEnumConverter.GetBlendFactor(FuncSrc),
+                OGLEnumConverter.GetBlendFactor(FuncDst));
         }
 
         public void SetSeparate(
@@ -40,10 +40,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 OGLEnumConverter.GetBlendEquation(EquationAlpha));
 
             GL.BlendFuncSeparate(
-                OGLEnumConverter.GetBlendFactorSrc(FuncSrcRgb),
-                OGLEnumConverter.GetBlendFactorDst(FuncDstRgb),
-                OGLEnumConverter.GetBlendFactorSrc(FuncSrcAlpha),
-                OGLEnumConverter.GetBlendFactorDst(FuncDstAlpha));
+                (BlendingFactorSrc)OGLEnumConverter.GetBlendFactor(FuncSrcRgb),
+                (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(FuncDstRgb),
+                (BlendingFactorSrc)OGLEnumConverter.GetBlendFactor(FuncSrcAlpha),
+                (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(FuncDstAlpha));
         }
     }
 }

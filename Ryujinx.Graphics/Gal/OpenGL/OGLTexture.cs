@@ -44,7 +44,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             if (IsCompressedTextureFormat(Texture.Format))
             {
-                PixelInternalFormat InternalFmt = OGLEnumConverter.GetCompressedTextureFormat(Texture.Format);
+                InternalFormat InternalFmt = OGLEnumConverter.GetCompressedTextureFormat(Texture.Format);
 
                 GL.CompressedTexImage2D(
                     TextureTarget.Texture2D,
