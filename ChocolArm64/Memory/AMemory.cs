@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using System.Threading;
 
 namespace ChocolArm64.Memory
 {
@@ -15,32 +16,18 @@ namespace ChocolArm64.Memory
 
         public AMemoryMgr Manager { get; private set; }
 
-        private struct ExMonitor
+        private class ArmMonitor
         {
-            public long Position { get; private set; }
-
-            private bool ExState;
-
-            public ExMonitor(long Position, bool ExState)
-            {
-                this.Position = Position;
-                this.ExState  = ExState;
-            }
+            public long Position;
+            public bool ExState;
 
             public bool HasExclusiveAccess(long Position)
             {
                 return this.Position == Position && ExState;
             }
-
-            public void Reset()
-            {
-                ExState = false;
-            }
         }
 
-        private Dictionary<int, ExMonitor> Monitors;
-
-        private HashSet<long> ExAddrs;
+        private Dictionary<int, ArmMonitor> Monitors;
 
         public IntPtr Ram { get; private set; }
 
@@ -50,9 +37,7 @@ namespace ChocolArm64.Memory
         {
             Manager = new AMemoryMgr();
 
-            Monitors = new Dictionary<int, ExMonitor>();
-
-            ExAddrs = new HashSet<long>();
+            Monitors = new Dictionary<int, ArmMonitor>();
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -66,16 +51,13 @@ namespace ChocolArm64.Memory
             RamPtr = (byte*)Ram;
         }
 
-        public void RemoveMonitor(int ThreadId)
+        public void RemoveMonitor(AThreadState State)
         {
             lock (Monitors)
             {
-                if (Monitors.TryGetValue(ThreadId, out ExMonitor Monitor))
-                {
-                    ExAddrs.Remove(Monitor.Position);
-                }
+                ClearExclusive(State);
 
-                Monitors.Remove(ThreadId);
+                Monitors.Remove(State.ThreadId);
             }
         }
 
@@ -85,66 +67,85 @@ namespace ChocolArm64.Memory
 
             lock (Monitors)
             {
-                if (Monitors.TryGetValue(ThreadState.ThreadId, out ExMonitor Monitor))
+                foreach (ArmMonitor Mon in Monitors.Values)
                 {
-                    ExAddrs.Remove(Monitor.Position);
+                    if (Mon.Position == Position && Mon.ExState)
+                    {
+                        Mon.ExState = false;
+                    }
                 }
 
-                bool ExState = ExAddrs.Add(Position);
-
-                Monitor = new ExMonitor(Position, ExState);
-
-                if (!Monitors.TryAdd(ThreadState.ThreadId, Monitor))
+                if (!Monitors.TryGetValue(ThreadState.ThreadId, out ArmMonitor ThreadMon))
                 {
-                    Monitors[ThreadState.ThreadId] = Monitor;
+                    ThreadMon = new ArmMonitor();
+
+                    Monitors.Add(ThreadState.ThreadId, ThreadMon);
                 }
+
+                ThreadMon.Position = Position;
+                ThreadMon.ExState  = true;
             }
         }
 
         public bool TestExclusive(AThreadState ThreadState, long Position)
         {
+            //Note: Any call to this method also should be followed by a
+            //call to ClearExclusiveForStore if this method returns true.
             Position &= ~ErgMask;
 
-            lock (Monitors)
-            {
-                if (!Monitors.TryGetValue(ThreadState.ThreadId, out ExMonitor Monitor))
-                {
-                    return false;
-                }
+            Monitor.Enter(Monitors);
 
-                return Monitor.HasExclusiveAccess(Position);
+            if (!Monitors.TryGetValue(ThreadState.ThreadId, out ArmMonitor ThreadMon))
+            {
+                return false;
             }
+
+            bool ExState = ThreadMon.HasExclusiveAccess(Position);
+
+            if (!ExState)
+            {
+                Monitor.Exit(Monitors);
+            }
+
+            return ExState;
+        }
+
+        public void ClearExclusiveForStore(AThreadState ThreadState)
+        {
+            if (Monitors.TryGetValue(ThreadState.ThreadId, out ArmMonitor ThreadMon))
+            {
+                ThreadMon.ExState = false;
+            }
+
+            Monitor.Exit(Monitors);
         }
 
         public void ClearExclusive(AThreadState ThreadState)
         {
             lock (Monitors)
             {
-                if (Monitors.TryGetValue(ThreadState.ThreadId, out ExMonitor Monitor))
+                if (Monitors.TryGetValue(ThreadState.ThreadId, out ArmMonitor ThreadMon))
                 {
-                    Monitor.Reset();
-                    ExAddrs.Remove(Monitor.Position);
+                    ThreadMon.ExState = false;
                 }
             }
         }
 
-        public bool AcquireAddress(long Position)
+        public void WriteInt32ToSharedAddr(long Position, int Value)
         {
-            Position &= ~ErgMask;
+            long MaskedPosition = Position & ~ErgMask;
 
             lock (Monitors)
             {
-                return ExAddrs.Add(Position);
-            }
-        }
+                foreach (ArmMonitor Mon in Monitors.Values)
+                {
+                    if (Mon.Position == MaskedPosition && Mon.ExState)
+                    {
+                        Mon.ExState = false;
+                    }
+                }
 
-        public void ReleaseAddress(long Position)
-        {
-            Position &= ~ErgMask;
-
-            lock (Monitors)
-            {
-                ExAddrs.Remove(Position);
+                WriteInt32(Position, Value);
             }
         }
 

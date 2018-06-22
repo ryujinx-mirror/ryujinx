@@ -127,19 +127,31 @@ namespace Ryujinx.HLE.OsHle.Handles
             AllThreads[Thread].WaitSync.Set();
         }
 
-        public void TryToRun(KThread Thread)
+        public void ChangeCore(KThread Thread, int IdealCore, int CoreMask)
         {
             lock (SchedLock)
             {
-                if (AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
+                if (IdealCore != -3)
                 {
+                    Thread.IdealCore = IdealCore;
+                }
+
+                Thread.CoreMask = CoreMask;
+
+                if (AllThreads.ContainsKey(Thread))
+                {
+                    SetReschedule(Thread.ActualCore);
+
+                    SchedulerThread SchedThread = AllThreads[Thread];
+
+                    //Note: Aways if the thread is on the queue first, and try
+                    //adding to a new core later, to ensure that a thread that
+                    //is already running won't be added to another core.
                     if (WaitingToRun.HasThread(SchedThread) && TryAddToCore(Thread))
                     {
+                        WaitingToRun.Remove(SchedThread);
+
                         RunThread(SchedThread);
-                    }
-                    else
-                    {
-                        SetReschedule(Thread.ProcessorId);
                     }
                 }
             }
@@ -216,18 +228,18 @@ namespace Ryujinx.HLE.OsHle.Handles
 
                 SchedulerThread NewThread = WaitingToRun.Pop(ActualCore, MinPriority);
 
-                if (NewThread == null)
+                if (NewThread != null)
                 {
-                    PrintDbgThreadInfo(Thread, "resumed because theres nothing better to run.");
+                    NewThread.Thread.ActualCore = ActualCore;
 
-                    return;
+                    CoreThreads[ActualCore] = NewThread.Thread;
+
+                    RunThread(NewThread);
                 }
-
-                NewThread.Thread.ActualCore = ActualCore;
-
-                CoreThreads[ActualCore] = NewThread.Thread;
-
-                RunThread(NewThread);
+                else
+                {
+                    CoreThreads[ActualCore] = null;
+                }
             }
 
             Resume(Thread);

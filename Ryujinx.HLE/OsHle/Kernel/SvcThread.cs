@@ -83,6 +83,8 @@ namespace Ryujinx.HLE.OsHle.Kernel
         {
             ulong TimeoutNs = ThreadState.X0;
 
+            Ns.Log.PrintDebug(LogClass.KernelSvc, "Timeout = " + TimeoutNs.ToString("x16"));
+
             KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
             if (TimeoutNs == 0)
@@ -122,6 +124,10 @@ namespace Ryujinx.HLE.OsHle.Kernel
         {
             int Handle   = (int)ThreadState.X0;
             int Priority = (int)ThreadState.X1;
+
+            Ns.Log.PrintDebug(LogClass.KernelSvc,
+                "Handle = "   + Handle  .ToString("x8") + ", " +
+                "Priority = " + Priority.ToString("x8"));
 
             KThread Thread = GetThread(ThreadState.Tpidr, Handle);
 
@@ -163,13 +169,6 @@ namespace Ryujinx.HLE.OsHle.Kernel
 
         private void SvcSetThreadCoreMask(AThreadState ThreadState)
         {
-            //FIXME: This is wrong, but the "correct" way to handle
-            //this svc causes deadlocks when more often.
-            //There is probably something wrong with it still.
-            ThreadState.X0 = 0;
-
-            return;
-
             int  Handle    =  (int)ThreadState.X0;
             int  IdealCore =  (int)ThreadState.X1;
             long CoreMask  = (long)ThreadState.X2;
@@ -188,7 +187,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
 
                 CoreMask = 1 << IdealCore;
             }
-            else if (IdealCore != -3)
+            else
             {
                 if ((uint)IdealCore > 3)
                 {
@@ -223,11 +222,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
             //-1 is used as "don't care", so the IdealCore value is ignored.
             //-2 is used as "use NPDM default core id" (handled above).
             //-3 is used as "don't update", the old IdealCore value is kept.
-            if (IdealCore != -3)
-            {
-                Thread.IdealCore = IdealCore;
-            }
-            else if ((CoreMask & (1 << Thread.IdealCore)) == 0)
+            if (IdealCore == -3 && (CoreMask & (1 << Thread.IdealCore)) == 0)
             {
                 Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid core mask 0x{CoreMask:x8}!");
 
@@ -236,9 +231,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
                 return;
             }
 
-            Thread.CoreMask = (int)CoreMask;
-
-            Process.Scheduler.TryToRun(Thread);
+            Process.Scheduler.ChangeCore(Thread, IdealCore, (int)CoreMask);
 
             ThreadState.X0 = 0;
         }

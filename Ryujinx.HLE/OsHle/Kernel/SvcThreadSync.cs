@@ -2,9 +2,6 @@ using ChocolArm64.State;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.OsHle.Handles;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 
 using static Ryujinx.HLE.OsHle.ErrorCode;
 
@@ -143,11 +140,9 @@ namespace Ryujinx.HLE.OsHle.Kernel
                 return;
             }
 
-            KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
+            KThread WaitThread = Process.GetThread(ThreadState.Tpidr);
 
-            MutexUnlock(CurrThread, MutexAddress);
-
-            if (!CondVarWait(CurrThread, ThreadHandle, MutexAddress, CondVarAddress, Timeout))
+            if (!CondVarWait(WaitThread, ThreadHandle, MutexAddress, CondVarAddress, Timeout))
             {
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.Timeout);
 
@@ -168,7 +163,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
 
             KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
-            CondVarSignal(CurrThread, CondVarAddress, Count);
+            CondVarSignal(ThreadState, CurrThread, CondVarAddress, Count);
 
             ThreadState.X0 = 0;
         }
@@ -182,7 +177,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
         {
             lock (Process.ThreadSyncLock)
             {
-                int MutexValue = Process.Memory.ReadInt32(MutexAddress);
+                int MutexValue = Memory.ReadInt32(MutexAddress);
 
                 Ns.Log.PrintDebug(LogClass.KernelSvc, "MutexValue = " + MutexValue.ToString("x8"));
 
@@ -194,7 +189,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
                 CurrThread.WaitHandle   = WaitThreadHandle;
                 CurrThread.MutexAddress = MutexAddress;
 
-                InsertWaitingMutexThread(OwnerThreadHandle, WaitThread);
+                InsertWaitingMutexThreadUnsafe(OwnerThreadHandle, WaitThread);
             }
 
             Ns.Log.PrintDebug(LogClass.KernelSvc, "Entering wait state...");
@@ -208,25 +203,29 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 //This is the new thread that will now own the mutex.
                 //If no threads are waiting for the lock, then it should be null.
-                KThread OwnerThread = PopThread(CurrThread.MutexWaiters, x => x.MutexAddress == MutexAddress);
+                (KThread OwnerThread, int Count) = PopMutexThreadUnsafe(CurrThread, MutexAddress);
+
+                if (OwnerThread == CurrThread)
+                {
+                    throw new InvalidOperationException();
+                }
 
                 if (OwnerThread != null)
                 {
                     //Remove all waiting mutex from the old owner,
                     //and insert then on the new owner.
-                    UpdateMutexOwner(CurrThread, OwnerThread, MutexAddress);
+                    UpdateMutexOwnerUnsafe(CurrThread, OwnerThread, MutexAddress);
 
                     CurrThread.UpdatePriority();
 
-                    int HasListeners = OwnerThread.MutexWaiters.Count > 0 ? MutexHasListenersMask : 0;
+                    int HasListeners = Count >= 2 ? MutexHasListenersMask : 0;
 
-                    Process.Memory.WriteInt32(MutexAddress, HasListeners | OwnerThread.WaitHandle);
+                    Memory.WriteInt32ToSharedAddr(MutexAddress, HasListeners | OwnerThread.WaitHandle);
 
                     OwnerThread.WaitHandle     = 0;
                     OwnerThread.MutexAddress   = 0;
                     OwnerThread.CondVarAddress = 0;
-
-                    OwnerThread.MutexOwner = null;
+                    OwnerThread.MutexOwner     = null;
 
                     OwnerThread.UpdatePriority();
 
@@ -236,7 +235,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
                 }
                 else
                 {
-                    Process.Memory.WriteInt32(MutexAddress, 0);
+                    Memory.WriteInt32ToSharedAddr(MutexAddress, 0);
 
                     Ns.Log.PrintDebug(LogClass.KernelSvc, "No threads waiting mutex!");
                 }
@@ -256,6 +255,8 @@ namespace Ryujinx.HLE.OsHle.Kernel
 
             lock (Process.ThreadSyncLock)
             {
+                MutexUnlock(WaitThread, MutexAddress);
+
                 WaitThread.CondVarSignaled = false;
 
                 Process.ThreadArbiterList.Add(WaitThread);
@@ -269,11 +270,15 @@ namespace Ryujinx.HLE.OsHle.Kernel
 
                 lock (Process.ThreadSyncLock)
                 {
-                    WaitThread.MutexOwner?.MutexWaiters.Remove(WaitThread);
-
                     if (!WaitThread.CondVarSignaled || WaitThread.MutexOwner != null)
                     {
-                        WaitThread.MutexOwner = null;
+                        if (WaitThread.MutexOwner != null)
+                        {
+                            WaitThread.MutexOwner.MutexWaiters.Remove(WaitThread);
+                            WaitThread.MutexOwner.UpdatePriority();
+
+                            WaitThread.MutexOwner = null;
+                        }
 
                         Process.ThreadArbiterList.Remove(WaitThread);
 
@@ -291,13 +296,17 @@ namespace Ryujinx.HLE.OsHle.Kernel
             return true;
         }
 
-        private void CondVarSignal(KThread CurrThread, long CondVarAddress, int Count)
+        private void CondVarSignal(
+            AThreadState ThreadState,
+            KThread      CurrThread,
+            long         CondVarAddress,
+            int          Count)
         {
             lock (Process.ThreadSyncLock)
             {
                 while (Count == -1 || Count-- > 0)
                 {
-                    KThread WaitThread = PopThread(Process.ThreadArbiterList, x => x.CondVarAddress == CondVarAddress);
+                    KThread WaitThread = PopCondVarThreadUnsafe(CondVarAddress);
 
                     if (WaitThread == null)
                     {
@@ -308,16 +317,37 @@ namespace Ryujinx.HLE.OsHle.Kernel
 
                     WaitThread.CondVarSignaled = true;
 
-                    AcquireMutexValue(WaitThread.MutexAddress);
+                    long MutexAddress = WaitThread.MutexAddress;
 
-                    int MutexValue = Process.Memory.ReadInt32(WaitThread.MutexAddress);
+                    Memory.SetExclusive(ThreadState, MutexAddress);
+
+                    int MutexValue = Memory.ReadInt32(MutexAddress);
+
+                    while (MutexValue != 0)
+                    {
+                        if (Memory.TestExclusive(ThreadState, MutexAddress))
+                        {
+                            //Wait until the lock is released.
+                            InsertWaitingMutexThreadUnsafe(MutexValue & ~MutexHasListenersMask, WaitThread);
+
+                            Memory.WriteInt32(MutexAddress, MutexValue | MutexHasListenersMask);
+
+                            Memory.ClearExclusiveForStore(ThreadState);
+
+                            break;
+                        }
+
+                        Memory.SetExclusive(ThreadState, MutexAddress);
+
+                        MutexValue = Memory.ReadInt32(MutexAddress);
+                    }
 
                     Ns.Log.PrintDebug(LogClass.KernelSvc, "MutexValue = " + MutexValue.ToString("x8"));
 
                     if (MutexValue == 0)
                     {
                         //Give the lock to this thread.
-                        Process.Memory.WriteInt32(WaitThread.MutexAddress, WaitThread.WaitHandle);
+                        Memory.WriteInt32ToSharedAddr(MutexAddress, WaitThread.WaitHandle);
 
                         WaitThread.WaitHandle     = 0;
                         WaitThread.MutexAddress   = 0;
@@ -329,46 +359,28 @@ namespace Ryujinx.HLE.OsHle.Kernel
 
                         Process.Scheduler.WakeUp(WaitThread);
                     }
-                    else
-                    {
-                        //Wait until the lock is released.
-                        MutexValue &= ~MutexHasListenersMask;
-
-                        InsertWaitingMutexThread(MutexValue, WaitThread);
-
-                        MutexValue |= MutexHasListenersMask;
-
-                        Process.Memory.WriteInt32(WaitThread.MutexAddress, MutexValue);
-                    }
-
-                    ReleaseMutexValue(WaitThread.MutexAddress);
                 }
             }
         }
 
-        private void UpdateMutexOwner(KThread CurrThread, KThread NewOwner, long MutexAddress)
+        private void UpdateMutexOwnerUnsafe(KThread CurrThread, KThread NewOwner, long MutexAddress)
         {
             //Go through all threads waiting for the mutex,
             //and update the MutexOwner field to point to the new owner.
-            lock (Process.ThreadSyncLock)
+            for (int Index = 0; Index < CurrThread.MutexWaiters.Count; Index++)
             {
-                for (int Index = 0; Index < CurrThread.MutexWaiters.Count; Index++)
+                KThread Thread = CurrThread.MutexWaiters[Index];
+
+                if (Thread.MutexAddress == MutexAddress)
                 {
-                    KThread Thread = CurrThread.MutexWaiters[Index];
+                    CurrThread.MutexWaiters.RemoveAt(Index--);
 
-                    if (Thread.MutexAddress == MutexAddress)
-                    {
-                        CurrThread.MutexWaiters.RemoveAt(Index--);
-
-                        Thread.MutexOwner = NewOwner;
-
-                        InsertWaitingMutexThread(NewOwner, Thread);
-                    }
+                    InsertWaitingMutexThreadUnsafe(NewOwner, Thread);
                 }
             }
         }
 
-        private void InsertWaitingMutexThread(int OwnerThreadHandle, KThread WaitThread)
+        private void InsertWaitingMutexThreadUnsafe(int OwnerThreadHandle, KThread WaitThread)
         {
             KThread OwnerThread = Process.HandleTable.GetData<KThread>(OwnerThreadHandle);
 
@@ -379,47 +391,73 @@ namespace Ryujinx.HLE.OsHle.Kernel
                 return;
             }
 
-            InsertWaitingMutexThread(OwnerThread, WaitThread);
+            InsertWaitingMutexThreadUnsafe(OwnerThread, WaitThread);
         }
 
-        private void InsertWaitingMutexThread(KThread OwnerThread, KThread WaitThread)
+        private void InsertWaitingMutexThreadUnsafe(KThread OwnerThread, KThread WaitThread)
         {
-            lock (Process.ThreadSyncLock)
+            WaitThread.MutexOwner = OwnerThread;
+
+            if (!OwnerThread.MutexWaiters.Contains(WaitThread))
             {
-                WaitThread.MutexOwner = OwnerThread;
+                OwnerThread.MutexWaiters.Add(WaitThread);
 
-                if (!OwnerThread.MutexWaiters.Contains(WaitThread))
+                OwnerThread.UpdatePriority();
+            }
+        }
+
+        private (KThread, int) PopMutexThreadUnsafe(KThread OwnerThread, long MutexAddress)
+        {
+            int Count = 0;
+
+            KThread WakeThread = null;
+
+            foreach (KThread Thread in OwnerThread.MutexWaiters)
+            {
+                if (Thread.MutexAddress != MutexAddress)
                 {
-                    OwnerThread.MutexWaiters.Add(WaitThread);
+                    continue;
+                }
 
-                    OwnerThread.UpdatePriority();
+                if (WakeThread == null || Thread.ActualPriority < WakeThread.ActualPriority)
+                {
+                    WakeThread = Thread;
+                }
+
+                Count++;
+            }
+
+            if (WakeThread != null)
+            {
+                OwnerThread.MutexWaiters.Remove(WakeThread);
+            }
+
+            return (WakeThread, Count);
+        }
+
+        private KThread PopCondVarThreadUnsafe(long CondVarAddress)
+        {
+            KThread WakeThread = null;
+
+            foreach (KThread Thread in Process.ThreadArbiterList)
+            {
+                if (Thread.CondVarAddress != CondVarAddress)
+                {
+                    continue;
+                }
+
+                if (WakeThread == null || Thread.ActualPriority < WakeThread.ActualPriority)
+                {
+                    WakeThread = Thread;
                 }
             }
-        }
 
-        private KThread PopThread(List<KThread> Threads, Func<KThread, bool> Predicate)
-        {
-            KThread Thread = Threads.OrderBy(x => x.ActualPriority).FirstOrDefault(Predicate);
-
-            if (Thread != null)
+            if (WakeThread != null)
             {
-                Threads.Remove(Thread);
+                Process.ThreadArbiterList.Remove(WakeThread);
             }
 
-            return Thread;
-        }
-
-        private void AcquireMutexValue(long MutexAddress)
-        {
-            while (!Process.Memory.AcquireAddress(MutexAddress))
-            {
-                Thread.Yield();
-            }
-        }
-
-        private void ReleaseMutexValue(long MutexAddress)
-        {
-            Process.Memory.ReleaseAddress(MutexAddress);
+            return WakeThread;
         }
 
         private bool IsPointingInsideKernel(long Address)

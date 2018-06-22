@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.OsHle.Handles
                     return;
                 }
 
-                if (Head == null || Head.Thread.ActualPriority > Wait.Thread.ActualPriority)
+                if (Head == null || Head.Thread.ActualPriority >= Wait.Thread.ActualPriority)
                 {
                     Wait.Next = Head;
 
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.OsHle.Handles
 
                 while (Curr.Next != null)
                 {
-                    if (Curr.Next.Thread.ActualPriority > Wait.Thread.ActualPriority)
+                    if (Curr.Next.Thread.ActualPriority >= Wait.Thread.ActualPriority)
                     {
                         break;
                     }

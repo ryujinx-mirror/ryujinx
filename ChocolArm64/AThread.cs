@@ -46,7 +46,7 @@ namespace ChocolArm64
             {
                 Translator.ExecuteSubroutine(this, EntryPoint);
 
-                Memory.RemoveMonitor(ThreadId);
+                Memory.RemoveMonitor(ThreadState);
 
                 WorkFinished?.Invoke(this, EventArgs.Empty);
             });
