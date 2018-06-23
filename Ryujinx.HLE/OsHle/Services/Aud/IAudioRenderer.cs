@@ -36,6 +36,9 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
         public long RequestUpdateAudioRenderer(ServiceCtx Context)
         {
             long OutputPosition = Context.Request.ReceiveBuff[0].Position;
+            long OutputSize     = Context.Request.ReceiveBuff[0].Size;
+
+            AMemoryHelper.FillWithZeros(Context.Memory, OutputPosition, (int)OutputSize);
 
             long InputPosition = Context.Request.SendBuff[0].Position;
 
@@ -52,26 +55,28 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
             OutputDataHeader.EffectsSize            = Params.EffectCount * 0x10;
             OutputDataHeader.SinksSize              = Params.SinkCount   * 0x20;
             OutputDataHeader.PerformanceManagerSize = 0x10;
-            OutputDataHeader.TotalSize              = Marshal.SizeOf(OutputDataHeader) + OutputDataHeader.BehaviorSize + OutputDataHeader.MemoryPoolsSize +
-                OutputDataHeader.VoicesSize + OutputDataHeader.EffectsSize + OutputDataHeader.SinksSize + OutputDataHeader.PerformanceManagerSize;
+            OutputDataHeader.TotalSize              = Marshal.SizeOf(OutputDataHeader) +
+                                                      OutputDataHeader.BehaviorSize    +
+                                                      OutputDataHeader.MemoryPoolsSize +
+                                                      OutputDataHeader.VoicesSize      +
+                                                      OutputDataHeader.EffectsSize     +
+                                                      OutputDataHeader.SinksSize       +
+                                                      OutputDataHeader.PerformanceManagerSize;
 
             AMemoryHelper.Write(Context.Memory, OutputPosition, OutputDataHeader);
 
             for (int Offset = 0x40; Offset < 0x40 + OutputDataHeader.MemoryPoolsSize; Offset += 0x10, MemoryPoolOffset += 0x20)
             {
-                MemoryPoolStates PoolState = (MemoryPoolStates) Context.Memory.ReadInt32(InputPosition + MemoryPoolOffset + 0x10);
+                MemoryPoolState PoolState = (MemoryPoolState)Context.Memory.ReadInt32(InputPosition + MemoryPoolOffset + 0x10);
 
-                if (PoolState == MemoryPoolStates.RequestAttach)
+                //TODO: Figure out what the other values does.
+                if (PoolState == MemoryPoolState.RequestAttach)
                 {
-                    Context.Memory.WriteInt32(OutputPosition + Offset, (int)MemoryPoolStates.Attached);
+                    Context.Memory.WriteInt32(OutputPosition + Offset, (int)MemoryPoolState.Attached);
                 }
-                else if (PoolState == MemoryPoolStates.RequestDetach)
+                else if (PoolState == MemoryPoolState.RequestDetach)
                 {
-                    Context.Memory.WriteInt32(OutputPosition + Offset, (int)MemoryPoolStates.Detached);
-                }
-                else
-                {
-                    Context.Memory.WriteInt32(OutputPosition + Offset, (int)PoolState);
+                    Context.Memory.WriteInt32(OutputPosition + Offset, (int)MemoryPoolState.Detached);
                 }
             }
 
@@ -118,4 +123,3 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
         }
     }
 }
- 
