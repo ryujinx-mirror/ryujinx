@@ -163,9 +163,9 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvMap
                 return NvResult.InvalidInput;
             }
 
-            long RefCount = Map.DecrementRefCount();
+            long OldRefCount = Map.DecrementRefCount();
 
-            if (RefCount <= 0)
+            if (OldRefCount <= 1)
             {
                 DeleteNvMap(Context, Args.Handle);
 
@@ -178,7 +178,7 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvMap
                 Args.Flags = FlagNotFreedYet;
             }
 
-            Args.RefCount = RefCount;
+            Args.RefCount = OldRefCount;
             Args.Size     = Map.Size;
 
             AMemoryHelper.Write(Context.Memory, OutputPosition, Args);

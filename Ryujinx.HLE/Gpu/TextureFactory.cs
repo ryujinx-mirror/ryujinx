@@ -41,6 +41,17 @@ namespace Ryujinx.HLE.Gpu
 
             TextureSwizzle Swizzle = (TextureSwizzle)((Tic[2] >> 21) & 7);
 
+            if (Swizzle == TextureSwizzle.BlockLinear ||
+                Swizzle == TextureSwizzle.BlockLinearColorKey)
+            {
+                TextureAddress &= ~0x1ffL;
+            }
+            else if (Swizzle == TextureSwizzle.Pitch ||
+                     Swizzle == TextureSwizzle.PitchColorKey)
+            {
+                TextureAddress &= ~0x1fL;
+            }
+
             int Pitch = (Tic[3] & 0xffff) << 5;
 
             int BlockHeightLog2 = (Tic[3] >> 3) & 7;

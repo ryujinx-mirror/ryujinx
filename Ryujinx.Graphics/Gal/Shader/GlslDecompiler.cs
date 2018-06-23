@@ -80,6 +80,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 { ShaderIrInst.Frcp,   GetFrcpExpr   },
                 { ShaderIrInst.Frsq,   GetFrsqExpr   },
                 { ShaderIrInst.Fsin,   GetFsinExpr   },
+                { ShaderIrInst.Fsqrt,  GetFsqrtExpr  },
                 { ShaderIrInst.Ftos,   GetFtosExpr   },
                 { ShaderIrInst.Ftou,   GetFtouExpr   },
                 { ShaderIrInst.Ipa,    GetIpaExpr    },
@@ -715,6 +716,8 @@ namespace Ryujinx.Graphics.Gal.Shader
         private string GetFrsqExpr(ShaderIrOp Op) => GetUnaryCall(Op, "inversesqrt");
 
         private string GetFsinExpr(ShaderIrOp Op) => GetUnaryCall(Op, "sin");
+
+        private string GetFsqrtExpr(ShaderIrOp Op) => GetUnaryCall(Op, "sqrt");
 
         private string GetFtosExpr(ShaderIrOp Op)
         {

@@ -10,6 +10,7 @@ namespace Ryujinx.HLE.Gpu
         {
             switch (Texture.Swizzle)
             {
+                case TextureSwizzle._1dBuffer:
                 case TextureSwizzle.Pitch:
                 case TextureSwizzle.PitchColorKey:
                      return new LinearSwizzle(Texture.Pitch, Bpp);

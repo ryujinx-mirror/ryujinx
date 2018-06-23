@@ -248,6 +248,15 @@ namespace Ryujinx.HLE.Gpu
 
             int TextureHandle = Vmm.ReadInt32(Position);
 
+            if (TextureHandle == 0)
+            {
+                //TODO: Is this correct?
+                //Some games like puyo puyo will have 0 handles.
+                //It may be just normal behaviour or a bug caused by sync issues.
+                //The game does initialize the value properly after through.
+                return;
+            }
+
             int TicIndex = (TextureHandle >>  0) & 0xfffff;
             int TscIndex = (TextureHandle >> 20) & 0xfff;
 
@@ -314,7 +323,7 @@ namespace Ryujinx.HLE.Gpu
                     continue;
                 }
 
-                for (int Cbuf = 0; Cbuf < ConstBuffers.Length; Cbuf++)
+                for (int Cbuf = 0; Cbuf < ConstBuffers[Index].Length; Cbuf++)
                 {
                     ConstBuffer Cb = ConstBuffers[Index][Cbuf];
 

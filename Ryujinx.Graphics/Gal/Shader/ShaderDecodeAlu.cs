@@ -217,7 +217,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public static void Mufu(ShaderIrBlock Block, long OpCode)
         {
-            int SubOp = (int)(OpCode >> 20) & 7;
+            int SubOp = (int)(OpCode >> 20) & 0xf;
 
             bool AbsA = ((OpCode >> 46) & 1) != 0;
             bool NegA = ((OpCode >> 48) & 1) != 0;
@@ -226,12 +226,13 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             switch (SubOp)
             {
-                case 0: Inst = ShaderIrInst.Fcos; break;
-                case 1: Inst = ShaderIrInst.Fsin; break;
-                case 2: Inst = ShaderIrInst.Fex2; break;
-                case 3: Inst = ShaderIrInst.Flg2; break;
-                case 4: Inst = ShaderIrInst.Frcp; break;
-                case 5: Inst = ShaderIrInst.Frsq; break;
+                case 0: Inst = ShaderIrInst.Fcos;  break;
+                case 1: Inst = ShaderIrInst.Fsin;  break;
+                case 2: Inst = ShaderIrInst.Fex2;  break;
+                case 3: Inst = ShaderIrInst.Flg2;  break;
+                case 4: Inst = ShaderIrInst.Frcp;  break;
+                case 5: Inst = ShaderIrInst.Frsq;  break;
+                case 8: Inst = ShaderIrInst.Fsqrt; break;
 
                 default: throw new NotImplementedException(SubOp.ToString());
             }

@@ -24,14 +24,14 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvMap
             this.Size = Size;
         }
 
-        public long IncrementRefCount()
+        public void IncrementRefCount()
         {
-            return Interlocked.Increment(ref Dupes);
+            Interlocked.Increment(ref Dupes);
         }
 
         public long DecrementRefCount()
         {
-            return Interlocked.Decrement(ref Dupes);
+            return Interlocked.Decrement(ref Dupes) + 1;
         }
     }
 }

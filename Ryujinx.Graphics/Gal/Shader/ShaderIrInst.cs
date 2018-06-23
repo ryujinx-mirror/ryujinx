@@ -43,6 +43,7 @@ namespace Ryujinx.Graphics.Gal.Shader
         Frcp,
         Frsq,
         Fsin,
+        Fsqrt,
         Ftos,
         Ftou,
         Ipa,
