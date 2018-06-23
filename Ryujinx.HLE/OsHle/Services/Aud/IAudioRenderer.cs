@@ -1,8 +1,10 @@
+using ChocolArm64.Memory;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.OsHle.Handles;
 using Ryujinx.HLE.OsHle.Ipc;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.OsHle.Services.Aud
 {
@@ -14,7 +16,9 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
 
         private KEvent UpdateEvent;
 
-        public IAudioRenderer()
+        private AudioRendererParameter Params;
+
+        public IAudioRenderer(AudioRendererParameter Params)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -25,26 +29,50 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
             };
 
             UpdateEvent = new KEvent();
+
+            this.Params = Params;
         }
 
         public long RequestUpdateAudioRenderer(ServiceCtx Context)
         {
-            //(buffer<unknown, 5, 0>) -> (buffer<unknown, 6, 0>, buffer<unknown, 6, 0>)
+            long OutputPosition = Context.Request.ReceiveBuff[0].Position;
 
-            long Position = Context.Request.ReceiveBuff[0].Position;
+            long InputPosition = Context.Request.SendBuff[0].Position;
 
-            //0x40 bytes header
-            Context.Memory.WriteInt32(Position + 0x4, 0xb0); //Behavior Out State Size? (note: this is the last section)
-            Context.Memory.WriteInt32(Position + 0x8, 0x18e0); //Memory Pool Out State Size?
-            Context.Memory.WriteInt32(Position + 0xc, 0x600); //Voice Out State Size?
-            Context.Memory.WriteInt32(Position + 0x14, 0xe0); //Effect Out State Size?
-            Context.Memory.WriteInt32(Position + 0x1c, 0x20); //Sink Out State Size?
-            Context.Memory.WriteInt32(Position + 0x20, 0x10); //Performance Out State Size?
-            Context.Memory.WriteInt32(Position + 0x3c, 0x20e0); //Total Size (including 0x40 bytes header)
+            UpdateDataHeader InputDataHeader = AMemoryHelper.Read<UpdateDataHeader>(Context.Memory, InputPosition);
 
-            for (int Offset = 0x40; Offset < 0x40 + 0x18e0; Offset += 0x10)
+            int MemoryPoolOffset = Marshal.SizeOf(InputDataHeader) + InputDataHeader.BehaviorSize;
+
+            UpdateDataHeader OutputDataHeader = new UpdateDataHeader();
+
+            OutputDataHeader.Revision               = Params.Revision;
+            OutputDataHeader.BehaviorSize           = 0xb0;
+            OutputDataHeader.MemoryPoolsSize        = (Params.EffectCount + (Params.VoiceCount * 4)) * 0x10;
+            OutputDataHeader.VoicesSize             = Params.VoiceCount  * 0x10;
+            OutputDataHeader.EffectsSize            = Params.EffectCount * 0x10;
+            OutputDataHeader.SinksSize              = Params.SinkCount   * 0x20;
+            OutputDataHeader.PerformanceManagerSize = 0x10;
+            OutputDataHeader.TotalSize              = Marshal.SizeOf(OutputDataHeader) + OutputDataHeader.BehaviorSize + OutputDataHeader.MemoryPoolsSize +
+                OutputDataHeader.VoicesSize + OutputDataHeader.EffectsSize + OutputDataHeader.SinksSize + OutputDataHeader.PerformanceManagerSize;
+
+            AMemoryHelper.Write(Context.Memory, OutputPosition, OutputDataHeader);
+
+            for (int Offset = 0x40; Offset < 0x40 + OutputDataHeader.MemoryPoolsSize; Offset += 0x10, MemoryPoolOffset += 0x20)
             {
-                Context.Memory.WriteInt32(Position + Offset, 5);
+                MemoryPoolStates PoolState = (MemoryPoolStates) Context.Memory.ReadInt32(InputPosition + MemoryPoolOffset + 0x10);
+
+                if (PoolState == MemoryPoolStates.RequestAttach)
+                {
+                    Context.Memory.WriteInt32(OutputPosition + Offset, (int)MemoryPoolStates.Attached);
+                }
+                else if (PoolState == MemoryPoolStates.RequestDetach)
+                {
+                    Context.Memory.WriteInt32(OutputPosition + Offset, (int)MemoryPoolStates.Detached);
+                }
+                else
+                {
+                    Context.Memory.WriteInt32(OutputPosition + Offset, (int)PoolState);
+                }
             }
 
             //TODO: We shouldn't be signaling this here.
@@ -90,3 +118,4 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
         }
     }
 }
+ 

@@ -1,6 +1,7 @@
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.OsHle.Ipc;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.OsHle.Services.Aud
 {
@@ -29,7 +30,23 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
         {
             //Same buffer as GetAudioRendererWorkBufferSize is receive here.
 
-            MakeObject(Context, new IAudioRenderer());
+            AudioRendererParameter Params = new AudioRendererParameter();
+
+            Params.SampleRate    = Context.RequestData.ReadInt32();
+            Params.SampleCount   = Context.RequestData.ReadInt32();
+            Params.Unknown8      = Context.RequestData.ReadInt32();
+            Params.UnknownC      = Context.RequestData.ReadInt32();
+            Params.VoiceCount    = Context.RequestData.ReadInt32();
+            Params.SinkCount     = Context.RequestData.ReadInt32();
+            Params.EffectCount   = Context.RequestData.ReadInt32();
+            Params.Unknown1C     = Context.RequestData.ReadInt32();
+            Params.Unknown20     = Context.RequestData.ReadInt32();
+            Params.SplitterCount = Context.RequestData.ReadInt32();
+            Params.Unknown28     = Context.RequestData.ReadInt32();
+            Params.Unknown2C     = Context.RequestData.ReadInt32();
+            Params.Revision      = Context.RequestData.ReadInt32();
+
+            MakeObject(Context, new IAudioRenderer(Params));
 
             return 0;
         }
@@ -48,7 +65,7 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
             long Unknown24  = Context.RequestData.ReadUInt32();
             long Unknown28  = Context.RequestData.ReadUInt32(); //SplitterCount
             long Unknown2c  = Context.RequestData.ReadUInt32(); //Not used here in FW3.0.1
-            int RevMagic    = Context.RequestData.ReadInt32();
+            int  RevMagic   = Context.RequestData.ReadInt32();
 
             int Version = (RevMagic - Rev0Magic) >> 24;
 
