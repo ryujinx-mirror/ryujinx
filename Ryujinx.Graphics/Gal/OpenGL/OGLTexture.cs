@@ -4,7 +4,7 @@ using System;
 
 namespace Ryujinx.Graphics.Gal.OpenGL
 {
-    class OGLTexture
+    public class OGLTexture : IGalTexture
     {
         private class TCE
         {
@@ -31,11 +31,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.DeleteTexture(CachedTexture.Handle);
         }
 
-        public void Create(long Tag, byte[] Data, GalTexture Texture)
+        public void Create(long Key, byte[] Data, GalTexture Texture)
         {
             int Handle = GL.GenTexture();
 
-            TextureCache.AddOrUpdate(Tag, new TCE(Handle, Texture), (uint)Data.Length);
+            TextureCache.AddOrUpdate(Key, new TCE(Handle, Texture), (uint)Data.Length);
 
             GL.BindTexture(TextureTarget.Texture2D, Handle);
 
@@ -146,11 +146,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             throw new ArgumentException(nameof(Format));
         }
 
-        public bool TryGetCachedTexture(long Tag, long DataSize, out GalTexture Texture)
+        public bool TryGetCachedTexture(long Key, long DataSize, out GalTexture Texture)
         {
-            if (TextureCache.TryGetSize(Tag, out long Size) && Size == DataSize)
+            if (TextureCache.TryGetSize(Key, out long Size) && Size == DataSize)
             {
-                if (TextureCache.TryGetValue(Tag, out TCE CachedTexture))
+                if (TextureCache.TryGetValue(Key, out TCE CachedTexture))
                 {
                     Texture = CachedTexture.Texture;
 
@@ -163,9 +163,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             return false;
         }
 
-        public void Bind(long Tag, int Index)
+        public void Bind(long Key, int Index)
         {
-            if (TextureCache.TryGetValue(Tag, out TCE CachedTexture))
+            if (TextureCache.TryGetValue(Key, out TCE CachedTexture))
             {
                 GL.ActiveTexture(TextureUnit.Texture0 + Index);
 
@@ -173,7 +173,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
         }
 
-        public static void Set(GalTextureSampler Sampler)
+        public void SetSampler(GalTextureSampler Sampler)
         {
             int WrapS = (int)OGLEnumConverter.GetTextureWrapMode(Sampler.AddressU);
             int WrapT = (int)OGLEnumConverter.GetTextureWrapMode(Sampler.AddressV);

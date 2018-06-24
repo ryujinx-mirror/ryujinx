@@ -1,4 +1,3 @@
-using Ryujinx.HLE.OsHle.Utilities;
 using System;
 using System.IO;
 
@@ -24,7 +23,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
         public FSAccessControl      FSAccessControl;
         public ServiceAccessControl ServiceAccessControl;
         public KernelAccessControl  KernelAccessControl;
-        
+
         public const long ACIDMagic = 'A' << 0 | 'C' << 8 | 'I' << 16 | 'D' << 24;
 
         public ACID(Stream ACIDStream, int Offset)

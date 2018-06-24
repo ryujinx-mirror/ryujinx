@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Ryujinx.Graphics.Gal.OpenGL
 {
-    class OGLShader
+    public class OGLShader : IGalShader
     {
         private class ShaderStage : IDisposable
         {
@@ -84,9 +84,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             Programs = new Dictionary<ShaderProgram, int>();
         }
 
-        public void Create(IGalMemory Memory, long Tag, GalShaderType Type)
+        public void Create(IGalMemory Memory, long Key, GalShaderType Type)
         {
-            Stages.GetOrAdd(Tag, (Key) => ShaderStageFactory(Memory, Tag, Type));
+            Stages.GetOrAdd(Key, (Stage) => ShaderStageFactory(Memory, Key, Type));
         }
 
         private ShaderStage ShaderStageFactory(IGalMemory Memory, long Position, GalShaderType Type)
@@ -107,9 +107,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             return Decompiler.Decompile(Memory, Position + 0x50, Type);
         }
 
-        public IEnumerable<ShaderDeclInfo> GetTextureUsage(long Tag)
+        public IEnumerable<ShaderDeclInfo> GetTextureUsage(long Key)
         {
-            if (Stages.TryGetValue(Tag, out ShaderStage Stage))
+            if (Stages.TryGetValue(Key, out ShaderStage Stage))
             {
                 return Stage.TextureUsage;
             }
@@ -117,11 +117,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             return Enumerable.Empty<ShaderDeclInfo>();
         }
 
-        public void SetConstBuffer(long Tag, int Cbuf, byte[] Data)
+        public void SetConstBuffer(long Key, int Cbuf, byte[] Data)
         {
             BindProgram();
 
-            if (Stages.TryGetValue(Tag, out ShaderStage Stage))
+            if (Stages.TryGetValue(Key, out ShaderStage Stage))
             {
                 foreach (ShaderDeclInfo DeclInfo in Stage.UniformUsage.Where(x => x.Cbuf == Cbuf))
                 {
@@ -144,7 +144,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
         }
 
-        public void SetUniform1(string UniformName, int Value)
+        public void EnsureTextureBinding(string UniformName, int Value)
         {
             BindProgram();
 
@@ -153,18 +153,18 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.Uniform1(Location, Value);
         }
 
-        public void SetUniform2F(string UniformName, float X, float Y)
+        public void SetFlip(float X, float Y)
         {
             BindProgram();
 
-            int Location = GL.GetUniformLocation(CurrentProgramHandle, UniformName);
+            int Location = GL.GetUniformLocation(CurrentProgramHandle, GlslDecl.FlipUniformName);
 
             GL.Uniform2(Location, X, Y);
         }
 
-        public void Bind(long Tag)
+        public void Bind(long Key)
         {
-            if (Stages.TryGetValue(Tag, out ShaderStage Stage))
+            if (Stages.TryGetValue(Key, out ShaderStage Stage))
             {
                 Bind(Stage);
             }

@@ -1,5 +1,5 @@
 using Ryujinx.Graphics.Gal;
-using Ryujinx.HLE.Gpu;
+using Ryujinx.HLE.Gpu.Texture;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.OsHle.Handles;
 using Ryujinx.HLE.OsHle.Services.Nv.NvMap;
@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+
 using static Ryujinx.HLE.OsHle.Services.Android.Parcel;
 
 namespace Ryujinx.HLE.OsHle.Services.Android
@@ -339,7 +340,7 @@ namespace Ryujinx.HLE.OsHle.Services.Android
                 Rotate = -MathF.PI * 0.5f;
             }
 
-            Renderer.SetFrameBufferTransform(ScaleX, ScaleY, Rotate, OffsX, OffsY);
+            Renderer.QueueAction(() => Renderer.FrameBuffer.SetTransform(ScaleX, ScaleY, Rotate, OffsX, OffsY));
 
             //TODO: Support double buffering here aswell, it is broken for GPU
             //frame buffers because it seems to be completely out of sync.
@@ -347,17 +348,17 @@ namespace Ryujinx.HLE.OsHle.Services.Android
             {
                 //Frame buffer is rendered to by the GPU, we can just
                 //bind the frame buffer texture, it's not necessary to read anything.
-                Renderer.SetFrameBuffer(FbAddr);
+                Renderer.QueueAction(() => Renderer.FrameBuffer.Set(FbAddr));
             }
             else
             {
                 //Frame buffer is not set on the GPU registers, in this case
                 //assume that the app is manually writing to it.
-                Texture Texture = new Texture(FbAddr, FbWidth, FbHeight);
+                TextureInfo Texture = new TextureInfo(FbAddr, FbWidth, FbHeight);
 
                 byte[] Data = TextureReader.Read(Context.Memory, Texture);
 
-                Renderer.SetFrameBuffer(Data, FbWidth, FbHeight);
+                Renderer.QueueAction(() => Renderer.FrameBuffer.Set(Data, FbWidth, FbHeight));
             }
 
             Context.Ns.Gpu.Renderer.QueueAction(() => ReleaseBuffer(Slot));

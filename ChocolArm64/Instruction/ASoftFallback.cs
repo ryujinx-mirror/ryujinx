@@ -1,6 +1,5 @@
 using ChocolArm64.Translation;
 using System;
-using System.Numerics;
 
 namespace ChocolArm64.Instruction
 {

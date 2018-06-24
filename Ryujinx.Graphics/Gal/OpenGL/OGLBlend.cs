@@ -2,7 +2,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace Ryujinx.Graphics.Gal.OpenGL
 {
-    class OGLBlend
+    public class OGLBlend : IGalBlend
     {
         public void Enable()
         {

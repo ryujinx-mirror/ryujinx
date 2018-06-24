@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gal.OpenGL
 {
-    class OGLFrameBuffer
+    public class OGLFrameBuffer : IGalFrameBuffer
     {
         private struct Rect
         {
@@ -16,9 +16,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             public Rect(int X, int Y, int Width, int Height)
             {
-                this.X     = X;
-                this.Y     = Y;
-                this.Width = Width;
+                this.X      = X;
+                this.Y      = Y;
+                this.Width  = Width;
                 this.Height = Height;
             }
         }
@@ -76,14 +76,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             Shader = new ShaderProgram();
         }
 
-        public void Create(long Tag, int Width, int Height)
+        public void Create(long Key, int Width, int Height)
         {
             //TODO: We should either use the original frame buffer size,
             //or just remove the Width/Height arguments.
             Width  = Window.Width;
             Height = Window.Height;
 
-            if (Fbs.TryGetValue(Tag, out FrameBuffer Fb))
+            if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
             {
                 if (Fb.Width  != Width ||
                     Fb.Height != Height)
@@ -127,12 +127,12 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             GL.Viewport(0, 0, Width, Height);
 
-            Fbs.Add(Tag, Fb);
+            Fbs.Add(Key, Fb);
         }
 
-        public void Bind(long Tag)
+        public void Bind(long Key)
         {
-            if (Fbs.TryGetValue(Tag, out FrameBuffer Fb))
+            if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
             {
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, Fb.Handle);
 
@@ -140,9 +140,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
         }
 
-        public void BindTexture(long Tag, int Index)
+        public void BindTexture(long Key, int Index)
         {
-            if (Fbs.TryGetValue(Tag, out FrameBuffer Fb))
+            if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
             {
                 GL.ActiveTexture(TextureUnit.Texture0 + Index);
 
@@ -150,9 +150,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
         }
 
-        public void Set(long Tag)
+        public void Set(long Key)
         {
-            if (Fbs.TryGetValue(Tag, out FrameBuffer Fb))
+            if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
             {
                 CurrTexHandle = Fb.TexHandle;
             }
@@ -185,9 +185,16 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             CurrTexHandle = RawFbTexHandle;
         }
 
-        public void SetTransform(Matrix2 Transform, Vector2 Offs)
+        public void SetTransform(float SX, float SY, float Rotate, float TX, float TY)
         {
             EnsureInitialized();
+
+            Matrix2 Transform;
+
+            Transform  = Matrix2.CreateScale(SX, SY);
+            Transform *= Matrix2.CreateRotation(Rotate);
+
+            Vector2 Offs = new Vector2(TX, TY);
 
             int CurrentProgram = GL.GetInteger(GetPName.CurrentProgram);
 
@@ -270,9 +277,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
         }
 
-        public void GetBufferData(long Tag, Action<byte[]> Callback)
+        public void GetBufferData(long Key, Action<byte[]> Callback)
         {
-            if (Fbs.TryGetValue(Tag, out FrameBuffer Fb))
+            if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
             {
                 GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, Fb.Handle);
 

@@ -1,84 +1,119 @@
 ﻿using System.Diagnostics;
 using System.Timers;
 
+
 namespace Ryujinx.HLE
 {
     public class PerformanceStatistics
     {
-        Stopwatch ExecutionTime = new Stopwatch();
-        Timer ResetTimer = new Timer(1000);
+        private const double FrameRateWeight = 0.5;
 
-        long CurrentGameFrameEnded;
-        long CurrentSystemFrameEnded;
-        long CurrentSystemFrameStart;
-        long LastGameFrameEnded;
-        long LastSystemFrameEnded;
+        private const int FrameTypeSystem = 0;
+        private const int FrameTypeGame   = 1;
 
-        double AccumulatedGameFrameTime;
-        double AccumulatedSystemFrameTime;
-        double CurrentGameFrameTime;
-        double CurrentSystemFrameTime;
-        double PreviousGameFrameTime;
-        double PreviousSystemFrameTime;
-        public double GameFrameRate   { get; private set; }
-        public double SystemFrameRate { get; private set; }
-        public long SystemFramesRendered;
-        public long GameFramesRendered;
-        public long ElapsedMilliseconds => ExecutionTime.ElapsedMilliseconds;
-        public long ElapsedMicroseconds => (long)
-                (((double)ExecutionTime.ElapsedTicks / Stopwatch.Frequency) * 1000000);
-        public long ElapsedNanoseconds => (long)
-                (((double)ExecutionTime.ElapsedTicks / Stopwatch.Frequency) * 1000000000);
+        private double[] AverageFrameRate;
+        private double[] AccumulatedFrameTime;
+        private double[] PreviousFrameTime;
+
+        private long[] FramesRendered;
+
+        private object[] FrameLock;
+
+        private double TicksToSeconds;
+
+        private Stopwatch ExecutionTime;
+
+        private Timer ResetTimer;
 
         public PerformanceStatistics()
         {
+            AverageFrameRate     = new double[2];
+            AccumulatedFrameTime = new double[2];
+            PreviousFrameTime    = new double[2];
+
+            FramesRendered = new long[2];
+
+            FrameLock = new object[] { new object(), new object() };
+
+            ExecutionTime = new Stopwatch();
+
             ExecutionTime.Start();
+
+            ResetTimer = new Timer(1000);
+
             ResetTimer.Elapsed += ResetTimerElapsed;
+
             ResetTimer.AutoReset = true;
+
             ResetTimer.Start();
+
+            TicksToSeconds = 1.0 / Stopwatch.Frequency;
         }
 
         private void ResetTimerElapsed(object sender, ElapsedEventArgs e)
         {
-            ResetStatistics();
+            CalculateAverageFrameRate(FrameTypeSystem);
+            CalculateAverageFrameRate(FrameTypeGame);
         }
 
-        public void StartSystemFrame()
+        private void CalculateAverageFrameRate(int FrameType)
         {
-            PreviousSystemFrameTime = CurrentSystemFrameTime;
-            LastSystemFrameEnded = CurrentSystemFrameEnded;
-            CurrentSystemFrameStart = ElapsedMicroseconds;
+            double FrameRate = 0;
+
+            if (AccumulatedFrameTime[FrameType] > 0)
+            {
+                FrameRate = FramesRendered[FrameType] / AccumulatedFrameTime[FrameType];
+            }
+
+            lock (FrameLock[FrameType])
+            {
+                AverageFrameRate[FrameType] = LinearInterpolate(AverageFrameRate[FrameType], FrameRate);
+
+                FramesRendered[FrameType] = 0;
+
+                AccumulatedFrameTime[FrameType] = 0;
+            }
         }
 
-        public void EndSystemFrame()
+        private double LinearInterpolate(double Old, double New)
         {
-            CurrentSystemFrameEnded = ElapsedMicroseconds;
-            CurrentSystemFrameTime = CurrentSystemFrameEnded - CurrentSystemFrameStart;
-            AccumulatedSystemFrameTime += CurrentSystemFrameTime;
-            SystemFramesRendered++;
+            return Old * (1.0 - FrameRateWeight) + New * FrameRateWeight;
+        }
+
+        public void RecordSystemFrameTime()
+        {
+            RecordFrameTime(FrameTypeSystem);
         }
 
         public void RecordGameFrameTime()
         {
-            CurrentGameFrameEnded = ElapsedMicroseconds;
-            CurrentGameFrameTime = CurrentGameFrameEnded - LastGameFrameEnded;
-            PreviousGameFrameTime = CurrentGameFrameTime;
-            LastGameFrameEnded = CurrentGameFrameEnded;
-            AccumulatedGameFrameTime += CurrentGameFrameTime;
-            GameFramesRendered++;
+            RecordFrameTime(FrameTypeGame);
         }
 
-        public void ResetStatistics()
+        private void RecordFrameTime(int FrameType)
         {
-            GameFrameRate = 1000 / ((AccumulatedGameFrameTime / GameFramesRendered) / 1000);
-            GameFrameRate = double.IsNaN(GameFrameRate) ? 0 : GameFrameRate;
-            SystemFrameRate = 1000 / ((AccumulatedSystemFrameTime / SystemFramesRendered) / 1000);
-            SystemFrameRate = double.IsNaN(SystemFrameRate) ? 0 : SystemFrameRate;
+            double CurrentFrameTime = ExecutionTime.ElapsedTicks * TicksToSeconds;
 
-            GameFramesRendered = 0;
-            SystemFramesRendered = 0;
-            AccumulatedGameFrameTime = 0;
-            AccumulatedSystemFrameTime = 0;
+            double ElapsedFrameTime = CurrentFrameTime - PreviousFrameTime[FrameType];
+
+            PreviousFrameTime[FrameType] = CurrentFrameTime;
+
+            lock (FrameLock[FrameType])
+            {
+                AccumulatedFrameTime[FrameType] += ElapsedFrameTime;
+
+                FramesRendered[FrameType]++;
+            }
+        }
+
+        public double GetSystemFrameRate()
+        {
+            return AverageFrameRate[FrameTypeSystem];
+        }
+
+        public double GetGameFrameRate()
+        {
+            return AverageFrameRate[FrameTypeGame];
         }
     }
 }

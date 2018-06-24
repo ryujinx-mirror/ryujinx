@@ -1,6 +1,4 @@
 using Ryujinx.HLE.OsHle.Utilities;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -29,7 +27,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
 
         public ACI0 ACI0;
         public ACID ACID;
-        
+
         public const long NpdmMagic = 'M' << 0 | 'E' << 8 | 'T' << 16 | 'A' << 24;
 
         public Npdm(Stream NPDMStream)
@@ -61,7 +59,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
             // ProcessCategory (0: regular title, 1: kernel built-in). Should be 0 here.
             ProcessCategory = EndianSwap.Swap32(Reader.ReadInt32());
 
-            // Main entrypoint stack size 
+            // Main entrypoint stack size
             // (Should(?) be page-aligned. In non-nspwn scenarios, values of 0 can also rarely break in Horizon.
             // This might be something auto-adapting or a security feature of some sort ?)
             MainEntrypointStackSize = Reader.ReadInt32();

@@ -26,6 +26,8 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public const string FragmentOutputName = "FragColor";
 
+        public const string FlipUniformName = "flip";
+
         private string[] StagePrefixes = new string[] { "vp", "tcp", "tep", "gp", "fp" };
 
         private string StagePrefix;

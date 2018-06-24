@@ -1,4 +1,3 @@
-using Ryujinx.HLE.OsHle.Utilities;
 using System;
 using System.IO;
 
@@ -20,7 +19,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
         public KernelAccessControl  KernelAccessControl;
 
         public const long ACI0Magic = 'A' << 0 | 'C' << 8 | 'I' << 16 | '0' << 24;
-        
+
         public ACI0(Stream ACI0Stream, int Offset)
         {
             ACI0Stream.Seek(Offset, SeekOrigin.Begin);

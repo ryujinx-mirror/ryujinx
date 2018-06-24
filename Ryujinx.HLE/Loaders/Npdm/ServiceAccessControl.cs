@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -25,7 +24,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
 
                 int Length             = ((ControlByte & 0x07)) + 1;
                 bool RegisterAllowed   = ((ControlByte & 0x80) != 0);
-                
+
                 Services.Add((Encoding.ASCII.GetString(Reader.ReadBytes(Length), 0, Length), RegisterAllowed));
 
                 ByteReaded += Length + 1;
