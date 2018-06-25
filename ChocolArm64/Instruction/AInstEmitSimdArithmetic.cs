@@ -1145,6 +1145,16 @@ namespace ChocolArm64.Instruction
             EmitQxtn(Context, Signed: true, Scalar: false);
         }
 
+        public static void Sqxtun_S(AILEmitterCtx Context)
+        {
+            EmitQxtn(Context, Signed: false, Scalar: true);
+        }
+
+        public static void Sqxtun_V(AILEmitterCtx Context)
+        {
+            EmitQxtn(Context, Signed: false, Scalar: false);
+        }
+
         public static void Sub_S(AILEmitterCtx Context)
         {
             EmitScalarBinaryOpZx(Context, () => Context.Emit(OpCodes.Sub));
