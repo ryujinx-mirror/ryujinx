@@ -1,6 +1,7 @@
 using ChocolArm64.Decoder;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
+using System;
 using System.Reflection.Emit;
 using System.Runtime.Intrinsics.X86;
 
@@ -144,7 +145,22 @@ namespace ChocolArm64.Instruction
             EmitVectorImmBinaryOp(Context, () => Context.Emit(OpCodes.Or));
         }
 
+        public static void Rev16_V(AILEmitterCtx Context)
+        {
+            EmitRev_V(Context, ContainerSize: 1);
+        }
+
+        public static void Rev32_V(AILEmitterCtx Context)
+        {
+            EmitRev_V(Context, ContainerSize: 2);
+        }
+
         public static void Rev64_V(AILEmitterCtx Context)
+        {
+            EmitRev_V(Context, ContainerSize: 3);
+        }
+
+        private static void EmitRev_V(AILEmitterCtx Context, int ContainerSize)
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
@@ -152,14 +168,24 @@ namespace ChocolArm64.Instruction
 
             int Elems = Bytes >> Op.Size;
 
-            int RevIndex = Elems - 1;
+            if (Op.Size >= ContainerSize)
+            {
+                throw new InvalidOperationException();
+            }
+
+            int ContainerMask = (1 << (ContainerSize - Op.Size)) - 1;
 
             for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
             {
-                EmitVectorExtractZx(Context, Op.Rn, RevIndex--, Op.Size);
+                int RevIndex = Index ^ ContainerMask;
 
-                EmitVectorInsert(Context, Op.Rd, Index, Op.Size);
+                EmitVectorExtractZx(Context, Op.Rn, RevIndex, Op.Size);
+
+                EmitVectorInsertTmp(Context, Index, Op.Size);
             }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
 
             if (Op.RegisterSize == ARegisterSize.SIMD64)
             {
