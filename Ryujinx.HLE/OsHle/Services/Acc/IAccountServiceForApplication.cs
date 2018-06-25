@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.OsHle.Services.Acc
 
         public long GetLastOpenedUser(ServiceCtx Context)
         {
-            Context.ResponseData.Write(0L);
+            Context.ResponseData.Write(1L);
             Context.ResponseData.Write(0L);
 
             Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
