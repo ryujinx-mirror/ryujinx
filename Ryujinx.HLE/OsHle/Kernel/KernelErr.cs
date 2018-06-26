@@ -13,5 +13,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
         public const int Canceled         = 118;
         public const int CountOutOfRange  = 119;
         public const int InvalidInfo      = 120;
+        public const int InvalidThread    = 122;
+        public const int InvalidState     = 125;
     }
 }

@@ -47,6 +47,8 @@ namespace Ryujinx.HLE.OsHle.Handles
 
                 if (TryAddToCore(Thread))
                 {
+                    SchedThread.IsRunning = true;
+
                     Thread.Thread.Execute();
 
                     PrintDbgThreadInfo(Thread, "running.");
@@ -94,10 +96,7 @@ namespace Ryujinx.HLE.OsHle.Handles
 
         public void SetThreadActivity(KThread Thread, bool Active)
         {
-            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
-            {
-                throw new InvalidOperationException();
-            }
+            SchedulerThread SchedThread = AllThreads[Thread];
 
             SchedThread.IsActive = Active;
 
@@ -109,6 +108,16 @@ namespace Ryujinx.HLE.OsHle.Handles
             {
                 SchedThread.WaitActivity.Reset();
             }
+        }
+
+        public bool IsThreadRunning(KThread Thread)
+        {
+            if (!AllThreads.TryGetValue(Thread, out SchedulerThread SchedThread))
+            {
+                return false;
+            }
+
+            return SchedThread.IsRunning;
         }
 
         public void EnterWait(KThread Thread, int TimeoutMs = Timeout.Infinite)
@@ -161,6 +170,8 @@ namespace Ryujinx.HLE.OsHle.Handles
         {
             lock (SchedLock)
             {
+                AllThreads[Thread].IsRunning = false;
+
                 PrintDbgThreadInfo(Thread, "suspended.");
 
                 int ActualCore = Thread.ActualCore;
@@ -252,6 +263,8 @@ namespace Ryujinx.HLE.OsHle.Handles
 
         private void TryResumingExecution(SchedulerThread SchedThread)
         {
+            SchedThread.IsRunning = false;
+
             KThread Thread = SchedThread.Thread;
 
             PrintDbgThreadInfo(Thread, "trying to resume...");
@@ -262,6 +275,8 @@ namespace Ryujinx.HLE.OsHle.Handles
             {
                 if (TryAddToCore(Thread))
                 {
+                    SchedThread.IsRunning = true;
+
                     PrintDbgThreadInfo(Thread, "resuming execution...");
 
                     return;
@@ -291,6 +306,8 @@ namespace Ryujinx.HLE.OsHle.Handles
             {
                 PrintDbgThreadInfo(SchedThread.Thread, "running.");
             }
+
+            SchedThread.IsRunning = true;
         }
 
         public void Resort(KThread Thread)

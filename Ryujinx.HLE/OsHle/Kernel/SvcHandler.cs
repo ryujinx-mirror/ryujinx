@@ -72,7 +72,8 @@ namespace Ryujinx.HLE.OsHle.Kernel
                 { 0x29, SvcGetInfo                       },
                 { 0x2c, SvcMapPhysicalMemory             },
                 { 0x2d, SvcUnmapPhysicalMemory           },
-                { 0x32, SvcSetThreadActivity             }
+                { 0x32, SvcSetThreadActivity             },
+                { 0x33, SvcGetThreadContext3             }
             };
 
             this.Ns      = Ns;

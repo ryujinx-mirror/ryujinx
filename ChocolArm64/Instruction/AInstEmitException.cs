@@ -25,6 +25,7 @@ namespace ChocolArm64.Instruction
 
             Context.EmitLdarg(ATranslatedSub.StateArgIdx);
 
+            Context.EmitLdc_I8(Op.Position);
             Context.EmitLdc_I4(Op.Id);
 
             Context.EmitPrivateCall(typeof(AThreadState), MthdName);

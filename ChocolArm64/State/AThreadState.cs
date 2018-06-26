@@ -51,6 +51,17 @@ namespace ChocolArm64.State
         public int Fpcr { get; set; }
         public int Fpsr { get; set; }
 
+        public int Psr
+        {
+            get
+            {
+                return (Negative ? (int)APState.N : 0) |
+                       (Zero     ? (int)APState.Z : 0) |
+                       (Carry    ? (int)APState.C : 0) |
+                       (Overflow ? (int)APState.V : 0);
+            }
+        }
+
         public uint CtrEl0   => 0x8444c004;
         public uint DczidEl0 => 0x00000004;
 
@@ -89,14 +100,14 @@ namespace ChocolArm64.State
             TickCounter.Start();
         }
 
-        internal void OnBreak(int Imm)
+        internal void OnBreak(long Position, int Imm)
         {
-            Break?.Invoke(this, new AInstExceptionEventArgs(Imm));
+            Break?.Invoke(this, new AInstExceptionEventArgs(Position, Imm));
         }
 
-        internal void OnSvcCall(int Imm)
+        internal void OnSvcCall(long Position, int Imm)
         {
-            SvcCall?.Invoke(this, new AInstExceptionEventArgs(Imm));
+            SvcCall?.Invoke(this, new AInstExceptionEventArgs(Position, Imm));
         }
 
         internal void OnUndefined(long Position, int RawOpCode)

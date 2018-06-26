@@ -205,6 +205,8 @@ namespace Ryujinx.HLE.OsHle
 
             KThread Thread = new KThread(CpuThread, this, ProcessorId, Priority);
 
+            Thread.LastPc = EntryPoint;
+
             int Handle = HandleTable.OpenHandle(Thread);
 
             int ThreadId = GetFreeTlsSlot(CpuThread);

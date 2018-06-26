@@ -29,6 +29,8 @@ namespace Ryujinx.HLE.OsHle.Handles
 
         public int WaitHandle { get; set; }
 
+        public long LastPc { get; set; }
+
         public int ThreadId => Thread.ThreadId;
 
         public KThread(

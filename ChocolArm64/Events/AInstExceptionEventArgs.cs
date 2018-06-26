@@ -4,11 +4,13 @@ namespace ChocolArm64.Events
 {
     public class AInstExceptionEventArgs : EventArgs
     {
-        public int Id { get; private set; }
+        public long Position { get; private set; }
+        public int  Id       { get; private set; }
 
-        public AInstExceptionEventArgs(int Id)
+        public AInstExceptionEventArgs(long Position, int Id)
         {
-            this.Id = Id;
+            this.Position = Position;
+            this.Id       = Id;
         }
     }
 }
