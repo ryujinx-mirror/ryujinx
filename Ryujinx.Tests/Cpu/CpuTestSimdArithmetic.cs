@@ -176,10 +176,13 @@ namespace Ryujinx.Tests.Cpu
         {
             AThreadState ThreadState = SingleOpcode(0x4EA1D802, V0: Sse.SetAllVector128(A));
 
-            Assert.That(Sse41.Extract(ThreadState.V2, (byte)0), Is.EqualTo(1 / A));
-            Assert.That(Sse41.Extract(ThreadState.V2, (byte)1), Is.EqualTo(1 / A));
-            Assert.That(Sse41.Extract(ThreadState.V2, (byte)2), Is.EqualTo(1 / A));
-            Assert.That(Sse41.Extract(ThreadState.V2, (byte)3), Is.EqualTo(1 / A));
+            Assert.Multiple(() =>
+            {
+                Assert.That(Sse41.Extract(ThreadState.V2, (byte)0), Is.EqualTo(1 / A));
+                Assert.That(Sse41.Extract(ThreadState.V2, (byte)1), Is.EqualTo(1 / A));
+                Assert.That(Sse41.Extract(ThreadState.V2, (byte)2), Is.EqualTo(1 / A));
+                Assert.That(Sse41.Extract(ThreadState.V2, (byte)3), Is.EqualTo(1 / A));
+            });
         }
 
         [Test, Description("FRECPS D0, D1, D2")]
@@ -199,10 +202,13 @@ namespace Ryujinx.Tests.Cpu
                 V2: Sse.SetAllVector128(A),
                 V0: Sse.SetAllVector128(B));
 
-            Assert.That(Sse41.Extract(ThreadState.V4, (byte)0), Is.EqualTo(2 - (A * B)));
-            Assert.That(Sse41.Extract(ThreadState.V4, (byte)1), Is.EqualTo(2 - (A * B)));
-            Assert.That(Sse41.Extract(ThreadState.V4, (byte)2), Is.EqualTo(2 - (A * B)));
-            Assert.That(Sse41.Extract(ThreadState.V4, (byte)3), Is.EqualTo(2 - (A * B)));
+            Assert.Multiple(() =>
+            {
+                Assert.That(Sse41.Extract(ThreadState.V4, (byte)0), Is.EqualTo(2 - (A * B)));
+                Assert.That(Sse41.Extract(ThreadState.V4, (byte)1), Is.EqualTo(2 - (A * B)));
+                Assert.That(Sse41.Extract(ThreadState.V4, (byte)2), Is.EqualTo(2 - (A * B)));
+                Assert.That(Sse41.Extract(ThreadState.V4, (byte)3), Is.EqualTo(2 - (A * B)));
+            });
         }
 
         [TestCase(0x3FE66666u, false, 0x40000000u)]

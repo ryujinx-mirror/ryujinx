@@ -113,6 +113,22 @@ namespace Ryujinx.Tests.Cpu
             return GetThreadState();
         }
 
+        protected static Vector128<float> MakeVectorE0(double A0)
+        {
+            return Sse.StaticCast<long, float>(Sse2.SetVector128(0, BitConverter.DoubleToInt64Bits(A0)));
+        }
+
+        protected static Vector128<float> MakeVectorE0E1(double A0, double A1)
+        {
+            return Sse.StaticCast<long, float>(Sse2.SetVector128(BitConverter.DoubleToInt64Bits(A1),
+                                                                 BitConverter.DoubleToInt64Bits(A0)));
+        }
+
+        protected static Vector128<float> MakeVectorE1(double A1)
+        {
+            return Sse.StaticCast<long, float>(Sse2.SetVector128(BitConverter.DoubleToInt64Bits(A1), 0));
+        }
+
         protected static double VectorExtractDouble(Vector128<float> Vector, byte Index)
         {
             long Value = Sse41.Extract(Sse.StaticCast<float, long>(Vector), Index);
@@ -120,24 +136,19 @@ namespace Ryujinx.Tests.Cpu
             return BitConverter.Int64BitsToDouble(Value);
         }
 
-        protected static Vector128<float> MakeVectorE0(double A)
+        protected static Vector128<float> MakeVectorE0(ulong A0)
         {
-            return Sse.StaticCast<long, float>(Sse2.SetVector128(0, BitConverter.DoubleToInt64Bits(A)));
+            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, A0));
         }
 
-        protected static Vector128<float> MakeVectorE0(ulong A)
+        protected static Vector128<float> MakeVectorE0E1(ulong A0, ulong A1)
         {
-            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, A));
+            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(A1, A0));
         }
 
-        protected static Vector128<float> MakeVectorE0E1(ulong A, ulong B)
+        protected static Vector128<float> MakeVectorE1(ulong A1)
         {
-            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(B, A));
-        }
-
-        protected static Vector128<float> MakeVectorE1(ulong B)
-        {
-            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(B, 0));
+            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(A1, 0));
         }
 
         protected static ulong GetVectorE0(Vector128<float> Vector)

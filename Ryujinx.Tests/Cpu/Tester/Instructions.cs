@@ -1826,7 +1826,7 @@ namespace Ryujinx.Tests.Cpu.Tester
         // addp_advsimd_pair.html
         public static void Addp_S(Bits size, Bits Rn, Bits Rd)
         {
-            /* Decode Scalar */
+            /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
 
@@ -1875,7 +1875,7 @@ namespace Ryujinx.Tests.Cpu.Tester
         {
             const bool U = false;
 
-            /* Decode */
+            /* Decode Vector */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
 
@@ -1917,7 +1917,7 @@ namespace Ryujinx.Tests.Cpu.Tester
         {
             const bool U = true;
 
-            /* Decode */
+            /* Decode Vector */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
 
@@ -2654,6 +2654,37 @@ namespace Ryujinx.Tests.Cpu.Tester
             V(d, result);
         }
 
+        // cnt_advsimd.html
+        public static void Cnt_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size != '00' then ReservedValue(); */
+
+            int esize = 8;
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / 8;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(datasize, n);
+
+            BigInteger count;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                count = (BigInteger)BitCount(Elem(operand, e, esize));
+
+                Elem(result, e, esize, count.SubBigInteger(esize - 1, 0));
+            }
+
+            V(d, result);
+        }
+
         // neg_advsimd.html#NEG_asisdmisc_R
         public static void Neg_S(Bits size, Bits Rn, Bits Rd)
         {
@@ -2745,7 +2776,7 @@ namespace Ryujinx.Tests.Cpu.Tester
         // not_advsimd.html
         public static void Not_V(bool Q, Bits Rn, Bits Rd)
         {
-            /* Decode */
+            /* Decode Vector */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
 
@@ -3095,7 +3126,7 @@ namespace Ryujinx.Tests.Cpu.Tester
         // addp_advsimd_vec.html
         public static void Addp_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
         {
-            /* Decode Vector */
+            /* Decode */
             int d = (int)UInt(Rd);
             int n = (int)UInt(Rn);
             int m = (int)UInt(Rm);

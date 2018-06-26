@@ -3,6 +3,7 @@ using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
@@ -34,11 +35,27 @@ namespace ChocolArm64.Instruction
             return (8 << (Op.Size + 1)) - Op.Imm;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void EmitSse2Call(AILEmitterCtx Context, string Name)
         {
-            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+            EmitSseCall(Context, Name, typeof(Sse2));
+        }
 
-            int SizeF = Op.Size & 1;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void EmitSse41Call(AILEmitterCtx Context, string Name)
+        {
+            EmitSseCall(Context, Name, typeof(Sse41));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void EmitSse42Call(AILEmitterCtx Context, string Name)
+        {
+            EmitSseCall(Context, Name, typeof(Sse42));
+        }
+
+        private static void EmitSseCall(AILEmitterCtx Context, string Name, Type Type)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
             void Ldvec(int Reg)
             {
@@ -57,8 +74,6 @@ namespace ChocolArm64.Instruction
 
             Type BaseType = null;
 
-            Type[] Types;
-
             switch (Op.Size)
             {
                 case 0: BaseType = typeof(Vector128<sbyte>); break;
@@ -71,14 +86,12 @@ namespace ChocolArm64.Instruction
             {
                 Ldvec(BinOp.Rm);
 
-                Types = new Type[] { BaseType, BaseType };
+                Context.EmitCall(Type.GetMethod(Name, new Type[] { BaseType, BaseType }));
             }
             else
             {
-                Types = new Type[] { BaseType };
+                Context.EmitCall(Type.GetMethod(Name, new Type[] { BaseType }));
             }
-
-            Context.EmitCall(typeof(Sse2).GetMethod(Name, Types));
 
             switch (Op.Size)
             {
@@ -96,7 +109,7 @@ namespace ChocolArm64.Instruction
             }
         }
 
-        public static void EmitSse2CallF(AILEmitterCtx Context, string Name)
+        public static void EmitSseOrSse2CallF(AILEmitterCtx Context, string Name)
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
@@ -114,35 +127,30 @@ namespace ChocolArm64.Instruction
 
             Ldvec(Op.Rn);
 
-            Type BaseType = SizeF == 0
-                ? typeof(Vector128<float>)
-                : typeof(Vector128<double>);
+            Type Type;
+            Type BaseType;
 
-            Type[] Types;
+            if (SizeF == 0)
+            {
+                Type = typeof(Sse);
+                BaseType = typeof(Vector128<float>);
+            }
+            else /* if (SizeF == 1) */
+            {
+                Type = typeof(Sse2);
+                BaseType = typeof(Vector128<double>);
+            }
 
             if (Op is AOpCodeSimdReg BinOp)
             {
                 Ldvec(BinOp.Rm);
 
-                Types = new Type[] { BaseType, BaseType };
+                Context.EmitCall(Type.GetMethod(Name, new Type[] { BaseType, BaseType }));
             }
             else
             {
-                Types = new Type[] { BaseType };
+                Context.EmitCall(Type.GetMethod(Name, new Type[] { BaseType }));
             }
-
-            MethodInfo MthdInfo;
-
-            if (SizeF == 0)
-            {
-                MthdInfo = typeof(Sse).GetMethod(Name, Types);
-            }
-            else /* if (SizeF == 1) */
-            {
-                MthdInfo = typeof(Sse2).GetMethod(Name, Types);
-            }
-
-            Context.EmitCall(MthdInfo);
 
             if (SizeF == 1)
             {

@@ -586,6 +586,24 @@ namespace Ryujinx.Tests.Cpu.Tester
             return (x >= 0 ? x : -x);
         }
 
+        // shared_pseudocode.html#impl-shared.BitCount.1
+        public static int BitCount(Bits x)
+        {
+            int N = x.Count;
+
+            int result = 0;
+
+            for (int i = 0; i <= N - 1; i++)
+            {
+                if (x[i])
+                {
+                    result = result + 1;
+                }
+            }
+
+            return result;
+        }
+
         // shared_pseudocode.html#impl-shared.CountLeadingSignBits.1
         public static int CountLeadingSignBits(Bits x)
         {

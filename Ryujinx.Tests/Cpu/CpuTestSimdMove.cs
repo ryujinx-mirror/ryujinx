@@ -19,12 +19,13 @@ namespace Ryujinx.Tests.Cpu
 
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
-            Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)0);
-
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)0), Is.EqualTo(A0));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)1), Is.EqualTo(B0));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)2), Is.EqualTo(A2));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)3), Is.EqualTo(B2));
+            Assert.Multiple(() =>
+            {
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)0), Is.EqualTo(A0));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)1), Is.EqualTo(B0));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)2), Is.EqualTo(A2));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)3), Is.EqualTo(B2));
+            });
         }
 
         [Test, Description("TRN1 V0.8B, V1.8B, V2.8B")]
@@ -39,14 +40,17 @@ namespace Ryujinx.Tests.Cpu
 
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)0), Is.EqualTo(A0));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)1), Is.EqualTo(B0));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)2), Is.EqualTo(A2));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)3), Is.EqualTo(B2));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)4), Is.EqualTo(A4));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)5), Is.EqualTo(B4));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)6), Is.EqualTo(A6));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)7), Is.EqualTo(B6));
+            Assert.Multiple(() =>
+            {
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)0), Is.EqualTo(A0));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)1), Is.EqualTo(B0));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)2), Is.EqualTo(A2));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)3), Is.EqualTo(B2));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)4), Is.EqualTo(A4));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)5), Is.EqualTo(B4));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)6), Is.EqualTo(A6));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)7), Is.EqualTo(B6));
+            });
         }
 
         [Test, Description("TRN2 V0.4S, V1.4S, V2.4S")]
@@ -59,10 +63,13 @@ namespace Ryujinx.Tests.Cpu
 
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)0), Is.EqualTo(A1));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)1), Is.EqualTo(B1));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)2), Is.EqualTo(A3));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)3), Is.EqualTo(B3));
+            Assert.Multiple(() =>
+            {
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)0), Is.EqualTo(A1));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)1), Is.EqualTo(B1));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)2), Is.EqualTo(A3));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V0), (byte)3), Is.EqualTo(B3));
+            });
         }
 
         [Test, Description("TRN2 V0.8B, V1.8B, V2.8B")]
@@ -77,14 +84,17 @@ namespace Ryujinx.Tests.Cpu
 
             AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, V2: V2);
 
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)0), Is.EqualTo(A1));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)1), Is.EqualTo(B1));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)2), Is.EqualTo(A3));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)3), Is.EqualTo(B3));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)4), Is.EqualTo(A5));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)5), Is.EqualTo(B5));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)6), Is.EqualTo(A7));
-            Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)7), Is.EqualTo(B7));
+            Assert.Multiple(() =>
+            {
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)0), Is.EqualTo(A1));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)1), Is.EqualTo(B1));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)2), Is.EqualTo(A3));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)3), Is.EqualTo(B3));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)4), Is.EqualTo(A5));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)5), Is.EqualTo(B5));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)6), Is.EqualTo(A7));
+                Assert.That(Sse41.Extract(Sse.StaticCast<float, byte>(ThreadState.V0), (byte)7), Is.EqualTo(B7));
+            });
         }
 
         [TestCase(0u, 0u, 0x2313221221112010ul, 0x0000000000000000ul)]

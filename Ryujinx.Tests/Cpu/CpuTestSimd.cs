@@ -628,6 +628,47 @@ namespace Ryujinx.Tests.Cpu
             });
         }
 
+        [Test, Description("CNT <Vd>.<T>, <Vn>.<T>")]
+        public void Cnt_V_8B([ValueSource("_8B_")] [Random(1)] ulong A)
+        {
+            uint Opcode = 0x0E205820; // CNT V0.8B, V1.8B
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.V(1, new Bits(A));
+            SimdFp.Cnt_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
+            });
+        }
+
+        [Test, Pairwise, Description("CNT <Vd>.<T>, <Vn>.<T>")]
+        public void Cnt_V_16B([ValueSource("_8B_")] [Random(1)] ulong A0,
+                              [ValueSource("_8B_")] [Random(1)] ulong A1)
+        {
+            uint Opcode = 0x4E205820; // CNT V0.16B, V1.16B
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1);
+
+            AArch64.Vpart(1, 0, new Bits(A0));
+            AArch64.Vpart(1, 1, new Bits(A1));
+            SimdFp.Cnt_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
         [Test, Description("NEG <V><d>, <V><n>")]
         public void Neg_S_D([ValueSource("_1D_")] [Random(1)] ulong A)
         {

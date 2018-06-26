@@ -319,9 +319,9 @@ namespace ChocolArm64.Instruction
 
         public static void Fadd_S(AILEmitterCtx Context)
         {
-            if (AOptimizations.UseSse2)
+            if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSse2CallF(Context, nameof(Sse2.AddScalar));
+                EmitSseOrSse2CallF(Context, nameof(Sse.AddScalar));
             }
             else
             {
@@ -331,9 +331,9 @@ namespace ChocolArm64.Instruction
 
         public static void Fadd_V(AILEmitterCtx Context)
         {
-            if (AOptimizations.UseSse2)
+            if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSse2CallF(Context, nameof(Sse2.Add));
+                EmitSseOrSse2CallF(Context, nameof(Sse.Add));
             }
             else
             {
@@ -389,9 +389,9 @@ namespace ChocolArm64.Instruction
 
         public static void Fdiv_S(AILEmitterCtx Context)
         {
-            if (AOptimizations.UseSse2)
+            if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSse2CallF(Context, nameof(Sse2.DivideScalar));
+                EmitSseOrSse2CallF(Context, nameof(Sse.DivideScalar));
             }
             else
             {
@@ -401,9 +401,9 @@ namespace ChocolArm64.Instruction
 
         public static void Fdiv_V(AILEmitterCtx Context)
         {
-            if (AOptimizations.UseSse2)
+            if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSse2CallF(Context, nameof(Sse2.Divide));
+                EmitSseOrSse2CallF(Context, nameof(Sse.Divide));
             }
             else
             {
@@ -563,9 +563,9 @@ namespace ChocolArm64.Instruction
 
         public static void Fmul_S(AILEmitterCtx Context)
         {
-            if (AOptimizations.UseSse2)
+            if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSse2CallF(Context, nameof(Sse2.MultiplyScalar));
+                EmitSseOrSse2CallF(Context, nameof(Sse.MultiplyScalar));
             }
             else
             {
@@ -580,9 +580,9 @@ namespace ChocolArm64.Instruction
 
         public static void Fmul_V(AILEmitterCtx Context)
         {
-            if (AOptimizations.UseSse2)
+            if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSse2CallF(Context, nameof(Sse2.Multiply));
+                EmitSseOrSse2CallF(Context, nameof(Sse.Multiply));
             }
             else
             {
@@ -1019,9 +1019,9 @@ namespace ChocolArm64.Instruction
 
         public static void Fsub_S(AILEmitterCtx Context)
         {
-            if (AOptimizations.UseSse2)
+            if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSse2CallF(Context, nameof(Sse2.SubtractScalar));
+                EmitSseOrSse2CallF(Context, nameof(Sse.SubtractScalar));
             }
             else
             {
@@ -1031,9 +1031,9 @@ namespace ChocolArm64.Instruction
 
         public static void Fsub_V(AILEmitterCtx Context)
         {
-            if (AOptimizations.UseSse2)
+            if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSse2CallF(Context, nameof(Sse2.Subtract));
+                EmitSseOrSse2CallF(Context, nameof(Sse.Subtract));
             }
             else
             {
