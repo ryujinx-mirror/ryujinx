@@ -851,6 +851,82 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(((ThreadState.Fpsr >> 27) & 1) != 0, Is.EqualTo(Shared.FPSR[27]));
         }
 
+        [Test, Description("SQXTUN <Vb><d>, <Va><n>")]
+        public void Sqxtun_S_HB_SH_DS([ValueSource("_1H1S1D_")] [Random(1)] ulong A,
+                                      [Values(0b00u, 0b01u, 0b10u)] uint size) // <HB, SH, DS>
+        {
+            uint Opcode = 0x7E212820; // SQXTUN B0, H1
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(TestContext.CurrentContext.Random.NextULong(),
+                                                 TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0(A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(TestContext.CurrentContext.Random.NextULong()));
+            AArch64.V(1, new Bits(A));
+            SimdFp.Sqxtun_S(Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
+            });
+            Assert.That(((ThreadState.Fpsr >> 27) & 1) != 0, Is.EqualTo(Shared.FPSR[27]));
+        }
+
+        [Test, Pairwise, Description("SQXTUN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
+        public void Sqxtun_V_8H8B_4S4H_2D2S([ValueSource("_4H2S1D_")] [Random(1)] ulong A0,
+                                            [ValueSource("_4H2S1D_")] [Random(1)] ulong A1,
+                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H8B, 4S4H, 2D2S>
+        {
+            uint Opcode = 0x2E212820; // SQXTUN V0.8B, V1.8H
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE1(TestContext.CurrentContext.Random.NextULong());
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(1, 0, new Bits(A0));
+            AArch64.Vpart(1, 1, new Bits(A1));
+            SimdFp.Sqxtun_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.V(64, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.Zero);
+            });
+            Assert.That(((ThreadState.Fpsr >> 27) & 1) != 0, Is.EqualTo(Shared.FPSR[27]));
+        }
+
+        [Test, Pairwise, Description("SQXTUN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
+        public void Sqxtun_V_8H16B_4S8H_2D4S([ValueSource("_4H2S1D_")] [Random(1)] ulong A0,
+                                             [ValueSource("_4H2S1D_")] [Random(1)] ulong A1,
+                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H16B, 4S8H, 2D4S>
+        {
+            uint Opcode = 0x6E212820; // SQXTUN2 V0.16B, V1.8H
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            ulong _X0 = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> V0 = MakeVectorE0(_X0);
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(1, 0, new Bits(A0));
+            AArch64.Vpart(1, 1, new Bits(A1));
+            SimdFp.Sqxtun_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(_X0));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+            Assert.That(((ThreadState.Fpsr >> 27) & 1) != 0, Is.EqualTo(Shared.FPSR[27]));
+        }
+
         [Test, Description("UQXTN <Vb><d>, <Va><n>")]
         public void Uqxtn_S_HB_SH_DS([ValueSource("_1H1S1D_")] [Random(1)] ulong A,
                                      [Values(0b00u, 0b01u, 0b10u)] uint size) // <HB, SH, DS>

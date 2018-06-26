@@ -2889,6 +2889,86 @@ namespace Ryujinx.Tests.Cpu.Tester
             Vpart(d, part, result);
         }
 
+        // sqxtun_advsimd.html#SQXTUN_asisdmisc_N
+        public static void Sqxtun_S(Bits size, Bits Rn, Bits Rd)
+        {
+            /* Decode Scalar */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = esize;
+            int part = 0;
+            int elements = 1;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(2 * datasize, n);
+            Bits element;
+            bool sat;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element = Elem(operand, e, 2 * esize);
+
+                (Bits _result, bool _sat) = UnsignedSatQ(SInt(element), esize);
+                Elem(result, e, esize, _result);
+                sat = _sat;
+
+                if (sat)
+                {
+                    /* FPSR.QC = '1'; */
+                    FPSR[27] = true; // TODO: Add named fields.
+                }
+            }
+
+            Vpart(d, part, result);
+        }
+
+        // sqxtun_advsimd.html#SQXTUN_asimdmisc_N
+        public static void Sqxtun_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = 64;
+            int part = (int)UInt(Q);
+            int elements = datasize / esize;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(2 * datasize, n);
+            Bits element;
+            bool sat;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element = Elem(operand, e, 2 * esize);
+
+                (Bits _result, bool _sat) = UnsignedSatQ(SInt(element), esize);
+                Elem(result, e, esize, _result);
+                sat = _sat;
+
+                if (sat)
+                {
+                    /* FPSR.QC = '1'; */
+                    FPSR[27] = true; // TODO: Add named fields.
+                }
+            }
+
+            Vpart(d, part, result);
+        }
+
         // uqxtn_advsimd.html#UQXTN_asisdmisc_N
         public static void Uqxtn_S(Bits size, Bits Rn, Bits Rd)
         {
