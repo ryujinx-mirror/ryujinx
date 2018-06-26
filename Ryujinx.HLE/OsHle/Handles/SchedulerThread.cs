@@ -11,8 +11,6 @@ namespace Ryujinx.HLE.OsHle.Handles
 
         public bool IsActive { get; set; }
 
-        public bool IsRunning { get; set; }
-
         public AutoResetEvent   WaitSync     { get; private set; }
         public ManualResetEvent WaitActivity { get; private set; }
         public AutoResetEvent   WaitSched    { get; private set; }

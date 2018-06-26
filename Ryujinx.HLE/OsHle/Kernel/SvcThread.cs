@@ -306,15 +306,6 @@ namespace Ryujinx.HLE.OsHle.Kernel
                 return;
             }
 
-            if (Process.Scheduler.IsThreadRunning(Thread))
-            {
-                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Thread handle 0x{Handle:x8} is running!");
-
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidState);
-
-                return;
-            }
-
             Memory.WriteUInt64(Position + 0x0,  ThreadState.X0);
             Memory.WriteUInt64(Position + 0x8,  ThreadState.X1);
             Memory.WriteUInt64(Position + 0x10, ThreadState.X2);
