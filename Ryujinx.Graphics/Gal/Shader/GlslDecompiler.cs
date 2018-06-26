@@ -145,7 +145,9 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             foreach (ShaderDeclInfo DeclInfo in Decl.Uniforms.Values.OrderBy(DeclKeySelector))
             {
-                SB.AppendLine($"uniform {GetDecl(DeclInfo)}[{DeclInfo.Index + 1}];");
+                SB.AppendLine($"layout (std140) uniform {DeclInfo.Name} {{");
+                SB.AppendLine($"{IdentationStr}vec4 {DeclInfo.Name}_data[{DeclInfo.Index / 4 + 1}];");
+                SB.AppendLine($"}};");
             }
 
             if (Decl.Uniforms.Count > 0)
@@ -530,15 +532,15 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             if (Cbuf.Offs != null)
             {
-                //Note: We assume that the register value is always a multiple of 4.
-                //This may not be aways the case.
-                string Offset = "(floatBitsToInt(" + GetSrcExpr(Cbuf.Offs) + ") >> 2)";
+                string Offset = "floatBitsToInt(" + GetSrcExpr(Cbuf.Offs) + ")";
 
-                return DeclInfo.Name + "[" + Cbuf.Pos + " + " + Offset + "]";
+                string Index = "(" + Cbuf.Pos * 4 + " + " + Offset + ")";
+
+                return $"{DeclInfo.Name}_data[{Index} / 16][({Index} / 4) % 4]";
             }
             else
             {
-                return DeclInfo.Name + "[" + Cbuf.Pos + "]";
+                return $"{DeclInfo.Name}_data[{Cbuf.Pos / 4}][{Cbuf.Pos % 4}]";
             }
         }
 
