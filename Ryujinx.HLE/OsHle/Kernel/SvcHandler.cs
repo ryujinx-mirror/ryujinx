@@ -94,6 +94,8 @@ namespace Ryujinx.HLE.OsHle.Kernel
         {
             AThreadState ThreadState = (AThreadState)sender;
 
+            Process.GetThread(ThreadState.Tpidr).LastPc = e.Position;
+
             if (SvcFuncs.TryGetValue(e.Id, out SvcFunc Func))
             {
                 Ns.Log.PrintDebug(LogClass.KernelSvc, $"{Func.Method.Name} called.");
