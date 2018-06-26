@@ -83,7 +83,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             Memory = new byte[MaxSize];
 
-            GL.CreateBuffers(1, out int Handle);
+            GL.GenBuffers(1, out int Handle);
 
             GL.BindBuffer(Target, Handle);
 
