@@ -283,7 +283,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
                 return FreeBinding;
             }
-            
+
             BindUniformBuffersIfNotNull(Current.Vertex);
             BindUniformBuffersIfNotNull(Current.TessControl);
             BindUniformBuffersIfNotNull(Current.TessEvaluation);

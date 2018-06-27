@@ -106,6 +106,31 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             return IboCache.TryGetSize(Key, out long Size) && Size == DataSize;
         }
 
+        public void EnableCullFace()
+        {
+            GL.Enable(EnableCap.CullFace);
+        }
+
+        public void DisableCullFace()
+        {
+            GL.Disable(EnableCap.CullFace);
+        }
+
+        public void EnableDepthTest()
+        {
+            GL.Enable(EnableCap.DepthTest);
+        }
+
+        public void DisableDepthTest()
+        {
+            GL.Disable(EnableCap.DepthTest);
+        }
+
+        public void SetDepthFunction(GalComparisonOp Func)
+        {
+            GL.DepthFunc(OGLEnumConverter.GetDepthFunc(Func));
+        }
+
         public void CreateVbo(long Key, byte[] Buffer)
         {
             int Handle = GL.GenBuffer();

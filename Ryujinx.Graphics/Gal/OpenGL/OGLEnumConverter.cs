@@ -5,6 +5,17 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 {
     static class OGLEnumConverter
     {
+        public static DepthFunction GetDepthFunc(GalComparisonOp Func)
+        {
+            if ((int)Func >= (int)DepthFunction.Never &&
+                (int)Func <= (int)DepthFunction.Always)
+            {
+                return (DepthFunction)Func;
+            }
+
+            throw new ArgumentException(nameof(Func));
+        }
+
         public static DrawElementsType GetDrawElementsType(GalIndexFormat Format)
         {
             switch (Format)

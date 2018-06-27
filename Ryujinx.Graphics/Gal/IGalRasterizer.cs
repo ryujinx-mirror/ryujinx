@@ -8,6 +8,16 @@ namespace Ryujinx.Graphics.Gal
 
         bool IsIboCached(long Key, long DataSize);
 
+        void EnableCullFace();
+
+        void DisableCullFace();
+
+        void EnableDepthTest();
+
+        void DisableDepthTest();
+
+        void SetDepthFunction(GalComparisonOp Func);
+
         void CreateVbo(long Key, byte[] Buffer);
 
         void CreateIbo(long Key, byte[] Buffer);

@@ -79,6 +79,8 @@ namespace Ryujinx.HLE.Gpu.Engines
 
             Gpu.Renderer.Shader.BindProgram();
 
+            SetCullFace();
+            SetDepth();
             SetAlphaBlending();
 
             UploadTextures(Vmm, Keys);
@@ -98,8 +100,7 @@ namespace Ryujinx.HLE.Gpu.Engines
 
             SetFrameBuffer(Vmm, 0);
 
-            //TODO: Enable this once the frame buffer problems are fixed.
-            //Gpu.Renderer.ClearBuffers(Layer, Flags);
+            Gpu.Renderer.Rasterizer.ClearBuffers(Layer, Flags);
         }
 
         private void SetFrameBuffer(NvGpuVmm Vmm, int FbIndex)
@@ -175,6 +176,16 @@ namespace Ryujinx.HLE.Gpu.Engines
             }
 
             throw new ArgumentOutOfRangeException(nameof(Program));
+        }
+
+        private void SetCullFace()
+        {
+            //TODO.
+        }
+
+        private void SetDepth()
+        {
+            //TODO.
         }
 
         private void SetAlphaBlending()
@@ -434,16 +445,7 @@ namespace Ryujinx.HLE.Gpu.Engines
 
                 int Stride = Control & 0xfff;
 
-                long VbSize = 0;
-
-                if (IndexCount != 0)
-                {
-                    VbSize = (VertexEndPos - VertexPosition) + 1;
-                }
-                else
-                {
-                    VbSize = VertexCount * Stride;
-                }
+                long VbSize = (VertexEndPos - VertexPosition) + 1;
 
                 bool VboCached = Gpu.Renderer.Rasterizer.IsVboCached(VertexPosition, VbSize);
 
