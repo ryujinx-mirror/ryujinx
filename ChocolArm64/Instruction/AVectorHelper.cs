@@ -422,6 +422,15 @@ namespace ChocolArm64.Instruction
             {
                 return Sse41.Extract(Vector, Index);
             }
+            else if (Sse2.IsSupported)
+            {
+                Vector128<ushort> ShortVector = Sse.StaticCast<float, ushort>(Vector);
+
+                int Low  = Sse2.Extract(ShortVector, (byte)(Index * 2 + 0));
+                int High = Sse2.Extract(ShortVector, (byte)(Index * 2 + 1));
+
+                return BitConverter.Int32BitsToSingle(Low | (High << 16));
+            }
 
             throw new PlatformNotSupportedException();
         }
@@ -508,6 +517,20 @@ namespace ChocolArm64.Instruction
             if (Sse41.IsSupported)
             {
                 return Sse41.Insert(Vector, Value, (byte)(Index << 4));
+            }
+            else if (Sse2.IsSupported)
+            {
+                int IntValue = BitConverter.SingleToInt32Bits(Value);
+
+                ushort Low  = (ushort)(IntValue >> 0);
+                ushort High = (ushort)(IntValue >> 16);
+
+                Vector128<ushort> ShortVector = Sse.StaticCast<float, ushort>(Vector);
+
+                ShortVector = Sse2.Insert(ShortVector, Low,  (byte)(Index * 2 + 0));
+                ShortVector = Sse2.Insert(ShortVector, High, (byte)(Index * 2 + 1));
+
+                return Sse.StaticCast<ushort, float>(ShortVector);
             }
 
             throw new PlatformNotSupportedException();
