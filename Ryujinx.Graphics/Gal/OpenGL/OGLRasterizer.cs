@@ -54,6 +54,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         private struct IbInfo
         {
             public int Count;
+            public int ElemSizeLog2;
 
             public DrawElementsType Type;
         }
@@ -206,6 +207,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             IndexBuffer.Type = OGLEnumConverter.GetDrawElementsType(Format);
 
             IndexBuffer.Count = Size >> (int)Format;
+
+            IndexBuffer.ElemSizeLog2 = (int)Format;
         }
 
         public void DrawArrays(int First, int PrimCount, GalPrimitiveType PrimType)
@@ -220,7 +223,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.DrawArrays(OGLEnumConverter.GetPrimitiveType(PrimType), First, PrimCount);
         }
 
-        public void DrawElements(long IboKey, int First, GalPrimitiveType PrimType)
+        public void DrawElements(long IboKey, int First, int VertexBase, GalPrimitiveType PrimType)
         {
             if (!IboCache.TryGetValue(IboKey, out int IboHandle))
             {
@@ -233,7 +236,18 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, IboHandle);
 
-            GL.DrawElements(Mode, IndexBuffer.Count, IndexBuffer.Type, First);
+            First <<= IndexBuffer.ElemSizeLog2;
+
+            if (VertexBase != 0)
+            {
+                IntPtr Indices = new IntPtr(First);
+
+                GL.DrawElementsBaseVertex(Mode, IndexBuffer.Count, IndexBuffer.Type, Indices, VertexBase);
+            }
+            else
+            {
+                GL.DrawElements(Mode, IndexBuffer.Count, IndexBuffer.Type, First);
+            }
         }
     }
 }

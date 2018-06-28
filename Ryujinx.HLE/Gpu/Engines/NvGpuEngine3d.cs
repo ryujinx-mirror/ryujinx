@@ -487,7 +487,9 @@ namespace Ryujinx.HLE.Gpu.Engines
 
             if (IndexCount != 0)
             {
-                Gpu.Renderer.Rasterizer.DrawElements(IndexPosition, IndexFirst, PrimType);
+                int VertexBase = ReadRegister(NvGpuEngine3dReg.VertexArrayElemBase);
+
+                Gpu.Renderer.Rasterizer.DrawElements(IndexPosition, IndexFirst, VertexBase, PrimType);
             }
             else
             {

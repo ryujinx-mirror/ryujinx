@@ -28,6 +28,6 @@ namespace Ryujinx.Graphics.Gal
 
         void DrawArrays(int First, int PrimCount, GalPrimitiveType PrimType);
 
-        void DrawElements(long IboKey, int First, GalPrimitiveType PrimType);
+        void DrawElements(long IboKey, int First, int VertexBase, GalPrimitiveType PrimType);
     }
 }
