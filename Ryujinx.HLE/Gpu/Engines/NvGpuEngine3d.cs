@@ -94,30 +94,28 @@ namespace Ryujinx.HLE.Gpu.Engines
 
             int FbIndex = (Arg0 >> 6) & 0xf;
 
-            int Layer = (Arg0 >> 10) & 0x3ff;
-
             GalClearBufferFlags Flags = (GalClearBufferFlags)(Arg0 & 0x3f);
 
-            SetFrameBuffer(Vmm, 0);
+            SetFrameBuffer(Vmm, FbIndex);
 
-            Gpu.Renderer.Rasterizer.ClearBuffers(Layer, Flags);
+            Gpu.Renderer.Rasterizer.ClearBuffers(Flags);
         }
 
         private void SetFrameBuffer(NvGpuVmm Vmm, int FbIndex)
         {
             long VA = MakeInt64From2xInt32(NvGpuEngine3dReg.FrameBufferNAddress + FbIndex * 0x10);
 
-            long PA = Vmm.GetPhysicalAddress(VA);
+            long Key = Vmm.GetPhysicalAddress(VA);
 
-            FrameBuffers.Add(PA);
+            FrameBuffers.Add(Key);
 
             int Width  = ReadRegister(NvGpuEngine3dReg.FrameBufferNWidth  + FbIndex * 0x10);
             int Height = ReadRegister(NvGpuEngine3dReg.FrameBufferNHeight + FbIndex * 0x10);
 
             //Note: Using the Width/Height results seems to give incorrect results.
             //Maybe the size of all frame buffers is hardcoded to screen size? This seems unlikely.
-            Gpu.Renderer.FrameBuffer.Create(PA, 1280, 720);
-            Gpu.Renderer.FrameBuffer.Bind(PA);
+            Gpu.Renderer.FrameBuffer.Create(Key, 1280, 720);
+            Gpu.Renderer.FrameBuffer.Bind(Key);
         }
 
         private long[] UploadShaders(NvGpuVmm Vmm)

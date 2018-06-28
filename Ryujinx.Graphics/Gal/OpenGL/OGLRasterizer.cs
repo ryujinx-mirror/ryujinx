@@ -70,18 +70,15 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             IndexBuffer = new IbInfo();
         }
 
-        public void ClearBuffers(int RtIndex, GalClearBufferFlags Flags)
+        public void ClearBuffers(GalClearBufferFlags Flags)
         {
-            ClearBufferMask Mask = 0;
+            ClearBufferMask Mask = ClearBufferMask.ColorBufferBit;
 
-            //TODO: Use glColorMask to clear just the specified channels.
-            if (Flags.HasFlag(GalClearBufferFlags.ColorRed)   &&
-                Flags.HasFlag(GalClearBufferFlags.ColorGreen) &&
-                Flags.HasFlag(GalClearBufferFlags.ColorBlue)  &&
-                Flags.HasFlag(GalClearBufferFlags.ColorAlpha))
-            {
-                Mask = ClearBufferMask.ColorBufferBit;
-            }
+            GL.ColorMask(
+                Flags.HasFlag(GalClearBufferFlags.ColorRed),
+                Flags.HasFlag(GalClearBufferFlags.ColorGreen),
+                Flags.HasFlag(GalClearBufferFlags.ColorBlue),
+                Flags.HasFlag(GalClearBufferFlags.ColorAlpha));
 
             if (Flags.HasFlag(GalClearBufferFlags.Depth))
             {
@@ -94,6 +91,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
 
             GL.Clear(Mask);
+
+            GL.ColorMask(true, true, true, true);
         }
 
         public bool IsVboCached(long Key, long DataSize)
