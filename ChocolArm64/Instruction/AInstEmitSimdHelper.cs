@@ -260,6 +260,13 @@ namespace ChocolArm64.Instruction
             EmitScalarOpByElemF(Context, Emit, Op.Index, Ternary: false);
         }
 
+        public static void EmitScalarTernaryOpByElemF(AILEmitterCtx Context, Action Emit)
+        {
+            AOpCodeSimdRegElemF Op = (AOpCodeSimdRegElemF)Context.CurrOp;
+
+            EmitScalarOpByElemF(Context, Emit, Op.Index, Ternary: true);
+        }
+
         public static void EmitScalarOpByElemF(AILEmitterCtx Context, Action Emit, int Elem, bool Ternary)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;

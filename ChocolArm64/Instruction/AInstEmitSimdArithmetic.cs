@@ -516,6 +516,15 @@ namespace ChocolArm64.Instruction
             Fmin_S(Context);
         }
 
+        public static void Fmla_Se(AILEmitterCtx Context)
+        {
+            EmitScalarTernaryOpByElemF(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Add);
+            });
+        }
+
         public static void Fmla_V(AILEmitterCtx Context)
         {
             EmitVectorTernaryOpF(Context, () =>
