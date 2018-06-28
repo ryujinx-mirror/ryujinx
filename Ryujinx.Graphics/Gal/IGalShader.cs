@@ -6,6 +6,8 @@ namespace Ryujinx.Graphics.Gal
     {
         void Create(IGalMemory Memory, long Key, GalShaderType Type);
 
+        void Create(IGalMemory Memory, long VpAPos, long Key, GalShaderType Type);
+
         IEnumerable<ShaderDeclInfo> GetTextureUsage(long Key);
 
         void SetConstBuffer(long Key, int Cbuf, byte[] Data);

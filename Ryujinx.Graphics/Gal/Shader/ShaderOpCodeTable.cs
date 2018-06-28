@@ -39,14 +39,15 @@ namespace Ryujinx.Graphics.Gal.Shader
             Set("0101110010110x", ShaderDecode.F2i_R);
             Set("0100110001011x", ShaderDecode.Fadd_C);
             Set("0011100x01011x", ShaderDecode.Fadd_I);
+            Set("000010xxxxxxxx", ShaderDecode.Fadd_I32);
             Set("0101110001011x", ShaderDecode.Fadd_R);
             Set("010010011xxxxx", ShaderDecode.Ffma_CR);
-            Set("001100101xxxxx", ShaderDecode.Ffma_I);
+            Set("0011001x1xxxxx", ShaderDecode.Ffma_I);
             Set("010100011xxxxx", ShaderDecode.Ffma_RC);
             Set("010110011xxxxx", ShaderDecode.Ffma_RR);
-            Set("00011110xxxxxx", ShaderDecode.Fmul_I32);
             Set("0100110001101x", ShaderDecode.Fmul_C);
             Set("0011100x01101x", ShaderDecode.Fmul_I);
+            Set("00011110xxxxxx", ShaderDecode.Fmul_I32);
             Set("0101110001101x", ShaderDecode.Fmul_R);
             Set("0100110001100x", ShaderDecode.Fmnmx_C);
             Set("0011100x01100x", ShaderDecode.Fmnmx_I);

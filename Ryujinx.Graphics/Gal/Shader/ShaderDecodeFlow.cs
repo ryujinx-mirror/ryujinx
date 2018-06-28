@@ -24,7 +24,14 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public static void Exit(ShaderIrBlock Block, long OpCode)
         {
-            Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Exit), OpCode));
+            int CCode = (int)OpCode & 0x1f;
+
+            //TODO: Figure out what the other condition codes mean...
+            if (CCode == 0xf)
+            {
+                Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Exit), OpCode));
+            }
+
         }
 
         public static void Kil(ShaderIrBlock Block, long OpCode)

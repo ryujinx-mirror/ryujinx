@@ -31,6 +31,24 @@ namespace Ryujinx.Graphics.Gal.Shader
             EmitAluBinaryF(Block, OpCode, ShaderOper.Immf, ShaderIrInst.Fadd);
         }
 
+        public static void Fadd_I32(ShaderIrBlock Block, long OpCode)
+        {
+            ShaderIrNode OperA = GetOperGpr8     (OpCode);
+            ShaderIrNode OperB = GetOperImmf32_20(OpCode);
+
+            bool NegB = ((OpCode >> 53) & 1) != 0;
+            bool AbsA = ((OpCode >> 54) & 1) != 0;
+            bool NegA = ((OpCode >> 56) & 1) != 0;
+            bool AbsB = ((OpCode >> 57) & 1) != 0;
+
+            OperA = GetAluFabsFneg(OperA, AbsA, NegA);
+            OperB = GetAluFabsFneg(OperB, AbsB, NegB);
+
+            ShaderIrOp Op = new ShaderIrOp(ShaderIrInst.Fadd, OperA, OperB);
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
+        }
+
         public static void Fadd_R(ShaderIrBlock Block, long OpCode)
         {
             EmitAluBinaryF(Block, OpCode, ShaderOper.RR, ShaderIrInst.Fadd);

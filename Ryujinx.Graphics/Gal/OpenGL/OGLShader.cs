@@ -97,25 +97,43 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public void Create(IGalMemory Memory, long Key, GalShaderType Type)
         {
-            Stages.GetOrAdd(Key, (Stage) => ShaderStageFactory(Memory, Key, Type));
+            Stages.GetOrAdd(Key, (Stage) => ShaderStageFactory(Memory, Key, 0, false, Type));
         }
 
-        private ShaderStage ShaderStageFactory(IGalMemory Memory, long Position, GalShaderType Type)
+        public void Create(IGalMemory Memory, long VpAPos, long Key, GalShaderType Type)
         {
-            GlslProgram Program = GetGlslProgram(Memory, Position, Type);
+            Stages.GetOrAdd(Key, (Stage) => ShaderStageFactory(Memory, VpAPos, Key, true, Type));
+        }
+
+        private ShaderStage ShaderStageFactory(
+            IGalMemory    Memory,
+            long          Position,
+            long          PositionB,
+            bool          IsDualVp,
+            GalShaderType Type)
+        {
+            GlslProgram Program;
+
+            GlslDecompiler Decompiler = new GlslDecompiler();
+
+            if (IsDualVp)
+            {
+                Program = Decompiler.Decompile(
+                    Memory,
+                    Position  + 0x50,
+                    PositionB + 0x50,
+                    Type);
+            }
+            else
+            {
+                Program = Decompiler.Decompile(Memory, Position + 0x50, Type);
+            }
 
             return new ShaderStage(
                 Type,
                 Program.Code,
                 Program.Textures,
                 Program.Uniforms);
-        }
-
-        private GlslProgram GetGlslProgram(IGalMemory Memory, long Position, GalShaderType Type)
-        {
-            GlslDecompiler Decompiler = new GlslDecompiler();
-
-            return Decompiler.Decompile(Memory, Position + 0x50, Type);
         }
 
         public IEnumerable<ShaderDeclInfo> GetTextureUsage(long Key)

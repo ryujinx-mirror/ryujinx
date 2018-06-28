@@ -11,31 +11,41 @@ namespace Ryujinx.Graphics.Gal.Shader
         public const int VertexIdAttr    = 0x2fc;
         public const int GlPositionWAttr = 0x7c;
 
+        public const int MaxUboSize = 1024;
+
+        public const int GlPositionVec4Index = 7;
+
         private const int AttrStartIndex = 8;
         private const int TexStartIndex = 8;
 
         public const string PositionOutAttrName = "position";
 
-        private const string InAttrName  = "in_attr";
-        private const string OutAttrName = "out_attr";
+        private const string TextureName = "tex";
         private const string UniformName = "c";
 
-        private const string GprName     = "gpr";
-        private const string PredName    = "pred";
-        private const string TextureName = "tex";
+        private const string AttrName    = "attr";
+        private const string InAttrName  = "in_"  + AttrName;
+        private const string OutAttrName = "out_" + AttrName;
+
+        private const string GprName  = "gpr";
+        private const string PredName = "pred";
 
         public const string FragmentOutputName = "FragColor";
 
         public const string FlipUniformName = "flip";
+
+        public const string ProgramName  = "program";
+        public const string ProgramAName = ProgramName + "_a";
+        public const string ProgramBName = ProgramName + "_b";
 
         private string[] StagePrefixes = new string[] { "vp", "tcp", "tep", "gp", "fp" };
 
         private string StagePrefix;
 
         private Dictionary<int, ShaderDeclInfo> m_Textures;
-
         private Dictionary<int, ShaderDeclInfo> m_Uniforms;
 
+        private Dictionary<int, ShaderDeclInfo> m_Attributes;
         private Dictionary<int, ShaderDeclInfo> m_InAttributes;
         private Dictionary<int, ShaderDeclInfo> m_OutAttributes;
 
@@ -43,9 +53,9 @@ namespace Ryujinx.Graphics.Gal.Shader
         private Dictionary<int, ShaderDeclInfo> m_Preds;
 
         public IReadOnlyDictionary<int, ShaderDeclInfo> Textures => m_Textures;
-
         public IReadOnlyDictionary<int, ShaderDeclInfo> Uniforms => m_Uniforms;
 
+        public IReadOnlyDictionary<int, ShaderDeclInfo> Attributes    => m_Attributes;
         public IReadOnlyDictionary<int, ShaderDeclInfo> InAttributes  => m_InAttributes;
         public IReadOnlyDictionary<int, ShaderDeclInfo> OutAttributes => m_OutAttributes;
 
@@ -54,31 +64,28 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public GalShaderType ShaderType { get; private set; }
 
-        public GlslDecl(ShaderIrBlock[] Blocks, GalShaderType ShaderType)
+        private GlslDecl(GalShaderType ShaderType)
         {
             this.ShaderType = ShaderType;
 
-            StagePrefix = StagePrefixes[(int)ShaderType] + "_";
-
             m_Uniforms = new Dictionary<int, ShaderDeclInfo>();
-
             m_Textures = new Dictionary<int, ShaderDeclInfo>();
 
+            m_Attributes    = new Dictionary<int, ShaderDeclInfo>();
             m_InAttributes  = new Dictionary<int, ShaderDeclInfo>();
             m_OutAttributes = new Dictionary<int, ShaderDeclInfo>();
 
             m_Gprs  = new Dictionary<int, ShaderDeclInfo>();
             m_Preds = new Dictionary<int, ShaderDeclInfo>();
+        }
+
+        public GlslDecl(ShaderIrBlock[] Blocks, GalShaderType ShaderType) : this(ShaderType)
+        {
+            StagePrefix = StagePrefixes[(int)ShaderType] + "_";
 
             if (ShaderType == GalShaderType.Fragment)
             {
                 m_Gprs.Add(0, new ShaderDeclInfo(FragmentOutputName, 0, 0, 4));
-
-                m_InAttributes.Add(7, new ShaderDeclInfo(PositionOutAttrName, -1, 0, 4));
-            }
-            else
-            {
-                m_OutAttributes.Add(7, new ShaderDeclInfo("gl_Position", -1, 0, 4));
             }
 
             foreach (ShaderIrBlock Block in Blocks)
@@ -87,6 +94,57 @@ namespace Ryujinx.Graphics.Gal.Shader
                 {
                     Traverse(null, Node);
                 }
+            }
+        }
+
+        public static GlslDecl Merge(GlslDecl VpA, GlslDecl VpB)
+        {
+            GlslDecl Combined = new GlslDecl(GalShaderType.Vertex);
+
+            Merge(Combined.m_Textures, VpA.m_Textures, VpB.m_Textures);
+            Merge(Combined.m_Uniforms, VpA.m_Uniforms, VpB.m_Uniforms);
+
+            Merge(Combined.m_Attributes,    VpA.m_Attributes,    VpB.m_Attributes);
+            Merge(Combined.m_OutAttributes, VpA.m_OutAttributes, VpB.m_OutAttributes);
+
+            Merge(Combined.m_Gprs,  VpA.m_Gprs,  VpB.m_Gprs);
+            Merge(Combined.m_Preds, VpA.m_Preds, VpB.m_Preds);
+
+            //Merge input attributes.
+            foreach (KeyValuePair<int, ShaderDeclInfo> KV in VpA.m_InAttributes)
+            {
+                Combined.m_InAttributes.TryAdd(KV.Key, KV.Value);
+            }
+
+            foreach (KeyValuePair<int, ShaderDeclInfo> KV in VpB.m_InAttributes)
+            {
+                //If Vertex Program A already writes to this attribute,
+                //then we don't need to add it as an input attribute since
+                //Vertex Program A will already have written to it anyway,
+                //and there's no guarantee that there is an input attribute
+                //for this slot.
+                if (!VpA.m_OutAttributes.ContainsKey(KV.Key))
+                {
+                    Combined.m_InAttributes.TryAdd(KV.Key, KV.Value);
+                }
+            }
+
+            return Combined;
+        }
+
+        private static void Merge(
+            Dictionary<int, ShaderDeclInfo> C,
+            Dictionary<int, ShaderDeclInfo> A,
+            Dictionary<int, ShaderDeclInfo> B)
+        {
+            foreach (KeyValuePair<int, ShaderDeclInfo> KV in A)
+            {
+                C.TryAdd(KV.Key, KV.Value);
+            }
+
+            foreach (KeyValuePair<int, ShaderDeclInfo> KV in B)
+            {
+                C.TryAdd(KV.Key, KV.Value);
             }
         }
 
@@ -133,28 +191,14 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 case ShaderIrOperCbuf Cbuf:
                 {
-                    if (m_Uniforms.TryGetValue(Cbuf.Index, out ShaderDeclInfo DeclInfo))
-                    {
-                        DeclInfo.SetCbufOffs(Cbuf.Pos);
-                    }
-                    else
+                    if (!m_Uniforms.ContainsKey(Cbuf.Index))
                     {
                         string Name = StagePrefix + UniformName + Cbuf.Index;
 
-                        DeclInfo = new ShaderDeclInfo(Name, Cbuf.Pos, Cbuf.Index);
+                        ShaderDeclInfo DeclInfo = new ShaderDeclInfo(Name, Cbuf.Pos, Cbuf.Index);
 
                         m_Uniforms.Add(Cbuf.Index, DeclInfo);
                     }
-
-                    if (Cbuf.Offs != null)
-                    {
-                        //The constant buffer is being accessed as an array,
-                        //we have no way to know the max element it may access in this case.
-                        //Here, we just assume the array size with arbitrary values.
-                        //TODO: Find a better solution for this.
-                        DeclInfo.SetCbufOffs(Cbuf.Pos + 15);
-                    }
-
                     break;
                 }
 
@@ -171,6 +215,11 @@ namespace Ryujinx.Graphics.Gal.Shader
                     int Elem  = (Abuf.Offs >> 2) & 3;
 
                     int GlslIndex = Index - AttrStartIndex;
+
+                    if (GlslIndex < 0)
+                    {
+                        return;
+                    }
 
                     ShaderDeclInfo DeclInfo;
 
@@ -195,6 +244,12 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                     DeclInfo.Enlarge(Elem + 1);
 
+                    if (!m_Attributes.ContainsKey(Index))
+                    {
+                        DeclInfo = new ShaderDeclInfo(AttrName + GlslIndex, GlslIndex, 0, 4);
+
+                        m_Attributes.Add(Index, DeclInfo);
+                    }
                     break;
                 }
 
@@ -224,7 +279,10 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private bool HasName(Dictionary<int, ShaderDeclInfo> Decls, int Index)
         {
-            int VecIndex = Index >> 2;
+            //This is used to check if the dictionary already contains
+            //a entry for a vector at a given index position.
+            //Used to enable turning gprs into vectors.
+            int VecIndex = Index & ~3;
 
             if (Decls.TryGetValue(VecIndex, out ShaderDeclInfo DeclInfo))
             {
