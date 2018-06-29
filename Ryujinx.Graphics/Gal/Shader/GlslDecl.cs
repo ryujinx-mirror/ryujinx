@@ -15,6 +15,8 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public const int GlPositionVec4Index = 7;
 
+        public const int PositionOutAttrLocation = 15;
+
         private const int AttrStartIndex = 8;
         private const int TexStartIndex = 8;
 

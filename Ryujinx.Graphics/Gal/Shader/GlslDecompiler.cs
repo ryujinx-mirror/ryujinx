@@ -208,7 +208,7 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             if (Decl.ShaderType == GalShaderType.Fragment)
             {
-                SB.AppendLine("in vec4 " + GlslDecl.PositionOutAttrName + ";");
+                SB.AppendLine("layout (location = " + GlslDecl.PositionOutAttrLocation + ") in vec4 " + GlslDecl.PositionOutAttrName + ";");
             }
 
             PrintDeclAttributes(Decl.InAttributes.Values, "in");
@@ -218,7 +218,7 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             if (Decl.ShaderType == GalShaderType.Vertex)
             {
-                SB.AppendLine("out vec4 " + GlslDecl.PositionOutAttrName + ";");
+                SB.AppendLine("layout (location = " + GlslDecl.PositionOutAttrLocation + ") out vec4 " + GlslDecl.PositionOutAttrName + ";");
             }
 
             PrintDeclAttributes(Decl.OutAttributes.Values, "out");
