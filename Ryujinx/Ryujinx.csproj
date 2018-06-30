@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RuntimeIdentifiers>win10-x64;osx-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win10-x64;osx-x64;linux-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="OpenTK.NetStandard" Version="1.0.4" />
