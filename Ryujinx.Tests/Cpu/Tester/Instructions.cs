@@ -4074,6 +4074,184 @@ namespace Ryujinx.Tests.Cpu.Tester
             Vpart(d, part, result);
         }
 
+        // saba_advsimd.html
+        public static void Saba_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+            const bool ac = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+            bool accumulate = (ac == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger element1;
+            BigInteger element2;
+            Bits absdiff;
+
+            Bits result = (accumulate ? V(datasize, d) : Zeros(datasize));
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                absdiff = Abs(element1 - element2).SubBigInteger(esize - 1, 0);
+
+                Elem(result, e, esize, Elem(result, e, esize) + absdiff);
+            }
+
+            V(d, result);
+        }
+
+        // sabal_advsimd.html
+        public static void Sabal_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+            const bool op = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = 64;
+            int part = (int)UInt(Q);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+            bool accumulate = (op == false);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1 = Vpart(datasize, n, part);
+            Bits operand2 = Vpart(datasize, m, part);
+            BigInteger element1;
+            BigInteger element2;
+            Bits absdiff;
+
+            Bits result = (accumulate ? V(2 * datasize, d) : Zeros(2 * datasize));
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                absdiff = Abs(element1 - element2).SubBigInteger(2 * esize - 1, 0);
+
+                Elem(result, e, 2 * esize, Elem(result, e, 2 * esize) + absdiff);
+            }
+
+            V(d, result);
+        }
+
+        // sabd_advsimd.html
+        public static void Sabd_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+            const bool ac = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+            bool accumulate = (ac == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger element1;
+            BigInteger element2;
+            Bits absdiff;
+
+            Bits result = (accumulate ? V(datasize, d) : Zeros(datasize));
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                absdiff = Abs(element1 - element2).SubBigInteger(esize - 1, 0);
+
+                Elem(result, e, esize, Elem(result, e, esize) + absdiff);
+            }
+
+            V(d, result);
+        }
+
+        // sabdl_advsimd.html
+        public static void Sabdl_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+            const bool op = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = 64;
+            int part = (int)UInt(Q);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+            bool accumulate = (op == false);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1 = Vpart(datasize, n, part);
+            Bits operand2 = Vpart(datasize, m, part);
+            BigInteger element1;
+            BigInteger element2;
+            Bits absdiff;
+
+            Bits result = (accumulate ? V(2 * datasize, d) : Zeros(2 * datasize));
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                absdiff = Abs(element1 - element2).SubBigInteger(2 * esize - 1, 0);
+
+                Elem(result, e, 2 * esize, Elem(result, e, 2 * esize) + absdiff);
+            }
+
+            V(d, result);
+        }
+
         // sub_advsimd.html#SUB_asisdsame_only
         public static void Sub_S(Bits size, Bits Rm, Bits Rn, Bits Rd)
         {
@@ -4216,6 +4394,184 @@ namespace Ryujinx.Tests.Cpu.Tester
             }
 
             Vpart(d, part, result);
+        }
+
+        // uaba_advsimd.html
+        public static void Uaba_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = true;
+            const bool ac = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+            bool accumulate = (ac == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger element1;
+            BigInteger element2;
+            Bits absdiff;
+
+            Bits result = (accumulate ? V(datasize, d) : Zeros(datasize));
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                absdiff = Abs(element1 - element2).SubBigInteger(esize - 1, 0);
+
+                Elem(result, e, esize, Elem(result, e, esize) + absdiff);
+            }
+
+            V(d, result);
+        }
+
+        // uabal_advsimd.html
+        public static void Uabal_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = true;
+            const bool op = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = 64;
+            int part = (int)UInt(Q);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+            bool accumulate = (op == false);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1 = Vpart(datasize, n, part);
+            Bits operand2 = Vpart(datasize, m, part);
+            BigInteger element1;
+            BigInteger element2;
+            Bits absdiff;
+
+            Bits result = (accumulate ? V(2 * datasize, d) : Zeros(2 * datasize));
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                absdiff = Abs(element1 - element2).SubBigInteger(2 * esize - 1, 0);
+
+                Elem(result, e, 2 * esize, Elem(result, e, 2 * esize) + absdiff);
+            }
+
+            V(d, result);
+        }
+
+        // uabd_advsimd.html
+        public static void Uabd_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = true;
+            const bool ac = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+            bool accumulate = (ac == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger element1;
+            BigInteger element2;
+            Bits absdiff;
+
+            Bits result = (accumulate ? V(datasize, d) : Zeros(datasize));
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                absdiff = Abs(element1 - element2).SubBigInteger(esize - 1, 0);
+
+                Elem(result, e, esize, Elem(result, e, esize) + absdiff);
+            }
+
+            V(d, result);
+        }
+
+        // uabdl_advsimd.html
+        public static void Uabdl_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = true;
+            const bool op = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = 64;
+            int part = (int)UInt(Q);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+            bool accumulate = (op == false);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand1 = Vpart(datasize, n, part);
+            Bits operand2 = Vpart(datasize, m, part);
+            BigInteger element1;
+            BigInteger element2;
+            Bits absdiff;
+
+            Bits result = (accumulate ? V(2 * datasize, d) : Zeros(2 * datasize));
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                absdiff = Abs(element1 - element2).SubBigInteger(2 * esize - 1, 0);
+
+                Elem(result, e, 2 * esize, Elem(result, e, 2 * esize) + absdiff);
+            }
+
+            V(d, result);
         }
 #endregion
     }

@@ -483,6 +483,11 @@ namespace ChocolArm64.Instruction
             EmitVectorOp(Context, Emit, OperFlags.RnRm, true);
         }
 
+        public static void EmitVectorTernaryOpSx(AILEmitterCtx Context, Action Emit)
+        {
+            EmitVectorOp(Context, Emit, OperFlags.RdRnRm, true);
+        }
+
         public static void EmitVectorUnaryOpZx(AILEmitterCtx Context, Action Emit)
         {
             EmitVectorOp(Context, Emit, OperFlags.Rn, false);

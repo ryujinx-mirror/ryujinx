@@ -22,19 +22,6 @@ namespace ChocolArm64.Instruction
             EmitVectorUnaryOpSx(Context, () => EmitAbs(Context));
         }
 
-        private static void EmitAbs(AILEmitterCtx Context)
-        {
-            AILLabel LblTrue = new AILLabel();
-
-            Context.Emit(OpCodes.Dup);
-            Context.Emit(OpCodes.Ldc_I4_0);
-            Context.Emit(OpCodes.Bge_S, LblTrue);
-
-            Context.Emit(OpCodes.Neg);
-
-            Context.MarkLabel(LblTrue);
-        }
-
         public static void Add_S(AILEmitterCtx Context)
         {
             EmitScalarBinaryOpZx(Context, () => Context.Emit(OpCodes.Add));
@@ -179,6 +166,19 @@ namespace ChocolArm64.Instruction
             }
         }
 
+        private static void EmitAbs(AILEmitterCtx Context)
+        {
+            AILLabel LblTrue = new AILLabel();
+
+            Context.Emit(OpCodes.Dup);
+            Context.Emit(OpCodes.Ldc_I4_0);
+            Context.Emit(OpCodes.Bge_S, LblTrue);
+
+            Context.Emit(OpCodes.Neg);
+
+            Context.MarkLabel(LblTrue);
+        }
+
         private static void EmitHighNarrow(AILEmitterCtx Context, Action Emit, bool Round)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
@@ -187,6 +187,8 @@ namespace ChocolArm64.Instruction
             int ESize = 8 << Op.Size;
 
             int Part = Op.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
+
+            long RoundConst = 1L << (ESize - 1);
 
             for (int Index = 0; Index < Elems; Index++)
             {
@@ -197,7 +199,7 @@ namespace ChocolArm64.Instruction
 
                 if (Round)
                 {
-                    Context.EmitLdc_I8(1L << (ESize - 1));
+                    Context.EmitLdc_I8(RoundConst);
 
                     Context.Emit(OpCodes.Add);
                 }
@@ -220,10 +222,10 @@ namespace ChocolArm64.Instruction
             int Elems = (!Scalar ? 8 >> Op.Size : 1);
             int ESize = 8 << Op.Size;
 
+            int Part = (!Scalar & (Op.RegisterSize == ARegisterSize.SIMD128) ? Elems : 0);
+
             int TMaxValue = (SignedDst ? (1 << (ESize - 1)) - 1 : (int)((1L << ESize) - 1L));
             int TMinValue = (SignedDst ? -((1 << (ESize - 1))) : 0);
-
-            int Part = (!Scalar & (Op.RegisterSize == ARegisterSize.SIMD128) ? Elems : 0);
 
             Context.EmitLdc_I8(0L);
             Context.EmitSttmp();
@@ -1107,6 +1109,46 @@ namespace ChocolArm64.Instruction
             EmitHighNarrow(Context, () => Context.Emit(OpCodes.Sub), Round: true);
         }
 
+        public static void Saba_V(AILEmitterCtx Context)
+        {
+            EmitVectorTernaryOpSx(Context, () =>
+            {
+                Context.Emit(OpCodes.Sub);
+                EmitAbs(Context);
+
+                Context.Emit(OpCodes.Add);
+            });
+        }
+
+        public static void Sabal_V(AILEmitterCtx Context)
+        {
+            EmitVectorWidenRnRmTernaryOpSx(Context, () =>
+            {
+                Context.Emit(OpCodes.Sub);
+                EmitAbs(Context);
+
+                Context.Emit(OpCodes.Add);
+            });
+        }
+
+        public static void Sabd_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpSx(Context, () =>
+            {
+                Context.Emit(OpCodes.Sub);
+                EmitAbs(Context);
+            });
+        }
+
+        public static void Sabdl_V(AILEmitterCtx Context)
+        {
+            EmitVectorWidenRnRmBinaryOpSx(Context, () =>
+            {
+                Context.Emit(OpCodes.Sub);
+                EmitAbs(Context);
+            });
+        }
+
         public static void Saddw_V(AILEmitterCtx Context)
         {
             EmitVectorWidenRmBinaryOpSx(Context, () => Context.Emit(OpCodes.Add));
@@ -1186,23 +1228,44 @@ namespace ChocolArm64.Instruction
             EmitHighNarrow(Context, () => Context.Emit(OpCodes.Sub), Round: false);
         }
 
+        public static void Uaba_V(AILEmitterCtx Context)
+        {
+            EmitVectorTernaryOpZx(Context, () =>
+            {
+                Context.Emit(OpCodes.Sub);
+                EmitAbs(Context);
+
+                Context.Emit(OpCodes.Add);
+            });
+        }
+
+        public static void Uabal_V(AILEmitterCtx Context)
+        {
+            EmitVectorWidenRnRmTernaryOpZx(Context, () =>
+            {
+                Context.Emit(OpCodes.Sub);
+                EmitAbs(Context);
+
+                Context.Emit(OpCodes.Add);
+            });
+        }
+
         public static void Uabd_V(AILEmitterCtx Context)
         {
-            EmitVectorBinaryOpZx(Context, () => EmitAbd(Context));
+            EmitVectorBinaryOpZx(Context, () =>
+            {
+                Context.Emit(OpCodes.Sub);
+                EmitAbs(Context);
+            });
         }
 
         public static void Uabdl_V(AILEmitterCtx Context)
         {
-            EmitVectorWidenRnRmBinaryOpZx(Context, () => EmitAbd(Context));
-        }
-
-        private static void EmitAbd(AILEmitterCtx Context)
-        {
-            Context.Emit(OpCodes.Sub);
-
-            Type[] Types = new Type[] { typeof(long) };
-
-            Context.EmitCall(typeof(Math).GetMethod(nameof(Math.Abs), Types));
+            EmitVectorWidenRnRmBinaryOpZx(Context, () =>
+            {
+                Context.Emit(OpCodes.Sub);
+                EmitAbs(Context);
+            });
         }
 
         public static void Uaddl_V(AILEmitterCtx Context)
