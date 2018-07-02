@@ -1,4 +1,5 @@
 using Ryujinx.HLE.OsHle.Ipc;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.OsHle.Services.Time
@@ -9,15 +10,18 @@ namespace Ryujinx.HLE.OsHle.Services.Time
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
+        private static readonly DateTime StartupDate = DateTime.UtcNow;
+
         public IStaticService()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, GetStandardUserSystemClock    },
-                { 1, GetStandardNetworkSystemClock },
-                { 2, GetStandardSteadyClock        },
-                { 3, GetTimeZoneService            },
-                { 4, GetStandardLocalSystemClock   }
+                { 0,   GetStandardUserSystemClock                 },
+                { 1,   GetStandardNetworkSystemClock              },
+                { 2,   GetStandardSteadyClock                     },
+                { 3,   GetTimeZoneService                         },
+                { 4,   GetStandardLocalSystemClock                },
+                { 300, CalculateMonotonicSystemClockBaseTimePoint }
             };
         }
 
@@ -52,6 +56,16 @@ namespace Ryujinx.HLE.OsHle.Services.Time
         public long GetStandardLocalSystemClock(ServiceCtx Context)
         {
             MakeObject(Context, new ISystemClock(SystemClockType.Local));
+
+            return 0;
+        }
+
+        public long CalculateMonotonicSystemClockBaseTimePoint(ServiceCtx Context)
+        {
+            long TimeOffset              = (long)(DateTime.UtcNow - StartupDate).TotalSeconds;
+            long SystemClockContextEpoch = Context.RequestData.ReadInt64();
+
+            Context.ResponseData.Write(TimeOffset + SystemClockContextEpoch);
 
             return 0;
         }

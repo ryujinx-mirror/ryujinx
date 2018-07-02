@@ -4,6 +4,7 @@ namespace Ryujinx.HLE.OsHle.Services.Time
     {
         User,
         Network,
-        Local
+        Local,
+        EphemeralNetwork
     }
 }
