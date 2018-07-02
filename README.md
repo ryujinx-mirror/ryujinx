@@ -46,9 +46,32 @@ https://openal.org/downloads/OpenAL11CoreSDK.zip
 	 - Plus = +
 	 - R = U
 	 - ZR = O
+   - For more information on how to configure these buttons see [CONFIG.md](CONFIG.md)
+
+ - Controller Input is partially supported:
+   - Left Joycon:
+     - Analog Stick = Left Analog Stick
+	 - DPad Up = DPad Up
+	 - DPad Down = DPad Down
+	 - DPad Left = DPad Left
+	 - DPad Right = DPad Right
+	 - Minus = Select / Back / Share
+	 - L = Left Shoulder Button
+	 - ZL = Left Trigger
+	 
+   - Right Joycon:
+	 - Analog Stick = Right Analog Stick
+	 - A = B / Circle
+	 - B = A / Cross
+	 - X = Y / Triangle
+	 - Y = X / Square
+	 - Plus = Start / Options
+	 - R = Right Shoulder Button
+	 - ZR = Right Trigger
+   - For more information on how to configure these buttons see [CONFIG.md](CONFIG.md)
 
  - Config File: `Ryujinx.conf` should be present in executable folder.
-   For more informations [you can go here](CONFIG.md).
+   For more information [you can go here](CONFIG.md).
 
  - If you are a Windows user, you can configure your keys, the logs, install OpenAL, etc... with Ryujinx-Setting.
  [Download it, right here](https://github.com/AcK77/Ryujinx-Settings)

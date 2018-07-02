@@ -1,7 +1,6 @@
-//TODO: This is only used by Config, it doesn't belong to Core.
-namespace Ryujinx.HLE.Input
+namespace Ryujinx.UI.Input
 {
-    public struct JoyConLeft
+    public struct JoyConKeyboardLeft
     {
         public int StickUp;
         public int StickDown;
@@ -15,11 +14,9 @@ namespace Ryujinx.HLE.Input
         public int ButtonMinus;
         public int ButtonL;
         public int ButtonZL;
-        public int ButtonSL;
-        public int ButtonSR;
     }
 
-    public struct JoyConRight
+    public struct JoyConKeyboardRight
     {
         public int StickUp;
         public int StickDown;
@@ -33,13 +30,11 @@ namespace Ryujinx.HLE.Input
         public int ButtonPlus;
         public int ButtonR;
         public int ButtonZR;
-        public int ButtonSL;
-        public int ButtonSR;
     }
 
-    public struct JoyCon
+    public struct JoyConKeyboard
     {
-        public JoyConLeft Left;
-        public JoyConRight Right;
+        public JoyConKeyboardLeft Left;
+        public JoyConKeyboardRight Right;
     }
 }
