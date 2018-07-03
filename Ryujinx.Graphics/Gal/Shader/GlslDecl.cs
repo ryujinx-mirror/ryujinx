@@ -9,6 +9,7 @@ namespace Ryujinx.Graphics.Gal.Shader
         public const int TessCoordAttrZ  = 0x2f8;
         public const int InstanceIdAttr  = 0x2f8;
         public const int VertexIdAttr    = 0x2fc;
+        public const int FaceAttr        = 0x3fc;
         public const int GlPositionWAttr = 0x7c;
 
         public const int MaxUboSize = 1024;
@@ -208,7 +209,8 @@ namespace Ryujinx.Graphics.Gal.Shader
                 {
                     //This is a built-in input variable.
                     if (Abuf.Offs == VertexIdAttr ||
-                        Abuf.Offs == InstanceIdAttr)
+                        Abuf.Offs == InstanceIdAttr ||
+                        Abuf.Offs == FaceAttr)
                     {
                         break;
                     }

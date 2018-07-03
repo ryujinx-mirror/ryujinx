@@ -658,6 +658,14 @@ namespace Ryujinx.Graphics.Gal.Shader
                     case GlslDecl.TessCoordAttrZ: return "gl_TessCoord.z";
                 }
             }
+            else if (Decl.ShaderType == GalShaderType.Fragment)
+            {
+                switch (Abuf.Offs)
+                {
+                    //Note: It's a guess that Maxwell's face is 1 when gl_FrontFacing == true
+                    case GlslDecl.FaceAttr: return "(gl_FrontFacing ? 1 : 0)";
+                }
+            }
 
             return GetAttrTempName(Abuf);
         }
@@ -1084,7 +1092,8 @@ namespace Ryujinx.Graphics.Gal.Shader
             {
                 case ShaderIrOperAbuf Abuf:
                     return Abuf.Offs == GlslDecl.VertexIdAttr ||
-                           Abuf.Offs == GlslDecl.InstanceIdAttr
+                           Abuf.Offs == GlslDecl.InstanceIdAttr ||
+                           Abuf.Offs == GlslDecl.FaceAttr
                         ? OperType.I32
                         : OperType.F32;
 

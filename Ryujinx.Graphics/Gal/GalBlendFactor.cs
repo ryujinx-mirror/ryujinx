@@ -20,6 +20,7 @@ namespace Ryujinx.Graphics.Gal
         ConstantColor         = 0x61,
         OneMinusConstantColor = 0x62,
         ConstantAlpha         = 0x63,
-        OneMinusConstantAlpha = 0x64
+        OneMinusConstantAlpha = 0x64,
+        ConstantColorG80      = 0xc001
     }
 }

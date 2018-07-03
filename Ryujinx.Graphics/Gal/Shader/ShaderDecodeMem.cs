@@ -8,6 +8,29 @@ namespace Ryujinx.Graphics.Gal.Shader
     {
         private const int TempRegStart = 0x100;
 
+        private const int ____ = 0x0;
+        private const int R___ = 0x1;
+        private const int _G__ = 0x2;
+        private const int RG__ = 0x3;
+        private const int __B_ = 0x4;
+        private const int RGB_ = 0x7;
+        private const int ___A = 0x8;
+        private const int R__A = 0x9;
+        private const int _G_A = 0xa;
+        private const int RG_A = 0xb;
+        private const int __BA = 0xc;
+        private const int R_BA = 0xd;
+        private const int _GBA = 0xe;
+        private const int RGBA = 0xf;
+
+        private static int[,] MaskLut = new int[,]
+        {
+            { ____, ____, ____, ____, ____, ____, ____, ____ },
+            { R___, _G__, __B_, ___A, RG__, ____, ____, ____ },
+            { R___, _G__, __B_, ___A, RG__, R__A, _G_A, __BA },
+            { RGB_, RG_A, R_BA, _GBA, RGBA, ____, ____, ____ }
+        };
+
         public static void Ld_A(ShaderIrBlock Block, long OpCode)
         {
             ShaderIrNode[] Opers = GetOperAbuf20(OpCode);
@@ -167,20 +190,12 @@ namespace Ryujinx.Graphics.Gal.Shader
             ShaderIrNode OperB = GetOperGpr20   (OpCode);
             ShaderIrNode OperC = GetOperImm13_36(OpCode);
 
-            bool TwoDests = GetOperGpr28(OpCode).Index != ShaderIrOperGpr.ZRIndex;
+            int LutIndex;
 
-            int ChMask;
+            LutIndex = GetOperGpr0(OpCode).Index != ShaderIrOperGpr.ZRIndex ? 1 : 0;
+            LutIndex |= GetOperGpr28(OpCode).Index != ShaderIrOperGpr.ZRIndex ? 2 : 0;
 
-            switch ((OpCode >> 50) & 7)
-            {
-                case 0: ChMask = TwoDests ? 0x7 : 0x1; break;
-                case 1: ChMask = TwoDests ? 0xb : 0x2; break;
-                case 2: ChMask = TwoDests ? 0xd : 0x4; break;
-                case 3: ChMask = TwoDests ? 0xe : 0x8; break;
-                case 4: ChMask = TwoDests ? 0xf : 0x3; break;
-
-                default: throw new InvalidOperationException();
-            }
+            int ChMask = MaskLut[LutIndex, (OpCode >> 50) & 7];
 
             for (int Ch = 0; Ch < 4; Ch++)
             {

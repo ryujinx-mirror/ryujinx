@@ -187,7 +187,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalBlendFactor.OneMinusSrcAlpha:      return BlendingFactor.OneMinusSrcAlpha;
                 case GalBlendFactor.DstAlpha:              return BlendingFactor.DstAlpha;
                 case GalBlendFactor.OneMinusDstAlpha:      return BlendingFactor.OneMinusDstAlpha;
-                case GalBlendFactor.ConstantColor:         return BlendingFactor.ConstantColor;
                 case GalBlendFactor.OneMinusConstantColor: return BlendingFactor.OneMinusConstantColor;
                 case GalBlendFactor.ConstantAlpha:         return BlendingFactor.ConstantAlpha;
                 case GalBlendFactor.OneMinusConstantAlpha: return BlendingFactor.OneMinusConstantAlpha;
@@ -196,6 +195,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalBlendFactor.OneMinusSrc1Color:     return (BlendingFactor)BlendingFactorSrc.OneMinusSrc1Color;
                 case GalBlendFactor.Src1Alpha:             return BlendingFactor.Src1Alpha;
                 case GalBlendFactor.OneMinusSrc1Alpha:     return (BlendingFactor)BlendingFactorSrc.OneMinusSrc1Alpha;
+
+                case GalBlendFactor.ConstantColor:
+                case GalBlendFactor.ConstantColorG80:
+                    return BlendingFactor.ConstantColor;
             }
 
             throw new ArgumentException(nameof(BlendFactor));
