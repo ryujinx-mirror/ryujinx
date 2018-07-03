@@ -132,12 +132,12 @@ namespace ChocolArm64.Instruction
 
             if (SizeF == 0)
             {
-                Type = typeof(Sse);
+                Type     = typeof(Sse);
                 BaseType = typeof(Vector128<float>);
             }
             else /* if (SizeF == 1) */
             {
-                Type = typeof(Sse2);
+                Type     = typeof(Sse2);
                 BaseType = typeof(Vector128<double>);
             }
 
@@ -707,6 +707,46 @@ namespace ChocolArm64.Instruction
 
             Context.EmitLdvectmp();
             Context.EmitStvec(Op.Rd);
+        }
+
+        public static void EmitVectorPairwiseOpSx(AILEmitterCtx Context, Action Emit)
+        {
+            EmitVectorPairwiseOp(Context, Emit, true);
+        }
+
+        public static void EmitVectorPairwiseOpZx(AILEmitterCtx Context, Action Emit)
+        {
+            EmitVectorPairwiseOp(Context, Emit, false);
+        }
+
+        private static void EmitVectorPairwiseOp(AILEmitterCtx Context, Action Emit, bool Signed)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+
+            int Elems = Bytes >> Op.Size;
+            int Half  = Elems >> 1;
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                int Elem = (Index & (Half - 1)) << 1;
+
+                EmitVectorExtract(Context, Index < Half ? Op.Rn : Op.Rm, Elem + 0, Op.Size, Signed);
+                EmitVectorExtract(Context, Index < Half ? Op.Rn : Op.Rm, Elem + 1, Op.Size, Signed);
+
+                Emit();
+
+                EmitVectorInsertTmp(Context, Index, Op.Size);
+            }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
         }
 
         public static void EmitScalarSet(AILEmitterCtx Context, int Reg, int Size)

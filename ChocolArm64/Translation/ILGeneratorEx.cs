@@ -63,7 +63,7 @@ namespace ChocolArm64
             else
             {
                 throw new ArgumentOutOfRangeException(nameof(Index));
-            } 
+            }
         }
 
         public static void EmitLdloc(this ILGenerator Generator, int Index)
@@ -89,7 +89,7 @@ namespace ChocolArm64
                         throw new ArgumentOutOfRangeException(nameof(Index));
                     }
                     break;
-            }            
+            }
         }
 
         public static void EmitStloc(this ILGenerator Generator, int Index)
@@ -123,7 +123,7 @@ namespace ChocolArm64
             for (int Index = 0; Index < Count; Index++)
             {
                 Generator.EmitLdarg(Index);
-            }         
+            }
         }
     }
 }
