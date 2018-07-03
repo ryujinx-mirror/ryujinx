@@ -151,9 +151,9 @@ namespace ChocolArm64.Instruction
             {
                 EmitVectorExtractZx(Context, Op.Rn, Index, 0);
 
-                Context.Emit(OpCodes.Conv_U1);
+                Context.Emit(OpCodes.Conv_U4);
 
-                AVectorHelper.EmitCall(Context, nameof(AVectorHelper.CountSetBits8));
+                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountSetBits8));
 
                 Context.Emit(OpCodes.Conv_U8);
 

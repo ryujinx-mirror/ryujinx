@@ -1974,13 +1974,13 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             switch (Bits.Concat(op, U))
             {
-                default:
                 case Bits bits when bits == "00":
                     comparison = CompareOp.CompareOp_GT;
                     break;
                 case Bits bits when bits == "01":
                     comparison = CompareOp.CompareOp_GE;
                     break;
+                default:
                 case Bits bits when bits == "10":
                     comparison = CompareOp.CompareOp_EQ;
                     break;
@@ -2004,13 +2004,13 @@ namespace Ryujinx.Tests.Cpu.Tester
 
                 switch (comparison)
                 {
-                    default:
                     case CompareOp.CompareOp_GT:
                         test_passed = (element > (BigInteger)0);
                         break;
                     case CompareOp.CompareOp_GE:
                         test_passed = (element >= (BigInteger)0);
                         break;
+                    default:
                     case CompareOp.CompareOp_EQ:
                         test_passed = (element == (BigInteger)0);
                         break;
@@ -2048,13 +2048,13 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             switch (Bits.Concat(op, U))
             {
-                default:
                 case Bits bits when bits == "00":
                     comparison = CompareOp.CompareOp_GT;
                     break;
                 case Bits bits when bits == "01":
                     comparison = CompareOp.CompareOp_GE;
                     break;
+                default:
                 case Bits bits when bits == "10":
                     comparison = CompareOp.CompareOp_EQ;
                     break;
@@ -2078,13 +2078,13 @@ namespace Ryujinx.Tests.Cpu.Tester
 
                 switch (comparison)
                 {
-                    default:
                     case CompareOp.CompareOp_GT:
                         test_passed = (element > (BigInteger)0);
                         break;
                     case CompareOp.CompareOp_GE:
                         test_passed = (element >= (BigInteger)0);
                         break;
+                    default:
                     case CompareOp.CompareOp_EQ:
                         test_passed = (element == (BigInteger)0);
                         break;
@@ -2122,10 +2122,10 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             switch (Bits.Concat(op, U))
             {
-                default:
                 case Bits bits when bits == "00":
                     comparison = CompareOp.CompareOp_GT;
                     break;
+                default:
                 case Bits bits when bits == "01":
                     comparison = CompareOp.CompareOp_GE;
                     break;
@@ -2152,10 +2152,10 @@ namespace Ryujinx.Tests.Cpu.Tester
 
                 switch (comparison)
                 {
-                    default:
                     case CompareOp.CompareOp_GT:
                         test_passed = (element > (BigInteger)0);
                         break;
+                    default:
                     case CompareOp.CompareOp_GE:
                         test_passed = (element >= (BigInteger)0);
                         break;
@@ -2196,10 +2196,10 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             switch (Bits.Concat(op, U))
             {
-                default:
                 case Bits bits when bits == "00":
                     comparison = CompareOp.CompareOp_GT;
                     break;
+                default:
                 case Bits bits when bits == "01":
                     comparison = CompareOp.CompareOp_GE;
                     break;
@@ -2226,10 +2226,10 @@ namespace Ryujinx.Tests.Cpu.Tester
 
                 switch (comparison)
                 {
-                    default:
                     case CompareOp.CompareOp_GT:
                         test_passed = (element > (BigInteger)0);
                         break;
+                    default:
                     case CompareOp.CompareOp_GE:
                         test_passed = (element >= (BigInteger)0);
                         break;
@@ -2418,7 +2418,6 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             switch (Bits.Concat(op, U))
             {
-                default:
                 case Bits bits when bits == "00":
                     comparison = CompareOp.CompareOp_GT;
                     break;
@@ -2428,6 +2427,7 @@ namespace Ryujinx.Tests.Cpu.Tester
                 case Bits bits when bits == "10":
                     comparison = CompareOp.CompareOp_EQ;
                     break;
+                default:
                 case Bits bits when bits == "11":
                     comparison = CompareOp.CompareOp_LE;
                     break;
@@ -2448,7 +2448,6 @@ namespace Ryujinx.Tests.Cpu.Tester
 
                 switch (comparison)
                 {
-                    default:
                     case CompareOp.CompareOp_GT:
                         test_passed = (element > (BigInteger)0);
                         break;
@@ -2458,6 +2457,7 @@ namespace Ryujinx.Tests.Cpu.Tester
                     case CompareOp.CompareOp_EQ:
                         test_passed = (element == (BigInteger)0);
                         break;
+                    default:
                     case CompareOp.CompareOp_LE:
                         test_passed = (element <= (BigInteger)0);
                         break;
@@ -2492,7 +2492,6 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             switch (Bits.Concat(op, U))
             {
-                default:
                 case Bits bits when bits == "00":
                     comparison = CompareOp.CompareOp_GT;
                     break;
@@ -2502,6 +2501,7 @@ namespace Ryujinx.Tests.Cpu.Tester
                 case Bits bits when bits == "10":
                     comparison = CompareOp.CompareOp_EQ;
                     break;
+                default:
                 case Bits bits when bits == "11":
                     comparison = CompareOp.CompareOp_LE;
                     break;
@@ -2522,7 +2522,6 @@ namespace Ryujinx.Tests.Cpu.Tester
 
                 switch (comparison)
                 {
-                    default:
                     case CompareOp.CompareOp_GT:
                         test_passed = (element > (BigInteger)0);
                         break;
@@ -2532,6 +2531,7 @@ namespace Ryujinx.Tests.Cpu.Tester
                     case CompareOp.CompareOp_EQ:
                         test_passed = (element == (BigInteger)0);
                         break;
+                    default:
                     case CompareOp.CompareOp_LE:
                         test_passed = (element <= (BigInteger)0);
                         break;
@@ -2576,7 +2576,6 @@ namespace Ryujinx.Tests.Cpu.Tester
 
                 switch (comparison)
                 {
-                    default:
                     case CompareOp.CompareOp_GT:
                         test_passed = (element > (BigInteger)0);
                         break;
@@ -2589,6 +2588,7 @@ namespace Ryujinx.Tests.Cpu.Tester
                     case CompareOp.CompareOp_LE:
                         test_passed = (element <= (BigInteger)0);
                         break;
+                    default:
                     case CompareOp.CompareOp_LT:
                         test_passed = (element < (BigInteger)0);
                         break;
@@ -2630,7 +2630,6 @@ namespace Ryujinx.Tests.Cpu.Tester
 
                 switch (comparison)
                 {
-                    default:
                     case CompareOp.CompareOp_GT:
                         test_passed = (element > (BigInteger)0);
                         break;
@@ -2643,6 +2642,7 @@ namespace Ryujinx.Tests.Cpu.Tester
                     case CompareOp.CompareOp_LE:
                         test_passed = (element <= (BigInteger)0);
                         break;
+                    default:
                     case CompareOp.CompareOp_LT:
                         test_passed = (element < (BigInteger)0);
                         break;
@@ -2796,6 +2796,265 @@ namespace Ryujinx.Tests.Cpu.Tester
                 element = Elem(operand, e, esize);
 
                 Elem(result, e, esize, NOT(element));
+            }
+
+            V(d, result);
+        }
+
+        // rbit_advsimd.html
+        public static void Rbit_V(bool Q, Bits Rn, Bits Rd)
+        {
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            int esize = 8;
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / 8;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(datasize, n);
+            Bits element;
+            Bits rev = new Bits(esize);
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element = Elem(operand, e, esize);
+
+                for (int i = 0; i <= esize - 1; i++)
+                {
+                    rev[esize - 1 - i] = element[i];
+                }
+
+                Elem(result, e, esize, rev);
+            }
+
+            V(d, result);
+        }
+
+        // rev16_advsimd.html
+        public static void Rev16_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+            const bool o0 = true;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            // size=esize:   B(0),  H(1),  S(1), D(S)
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+
+            // op=REVx: 64(0), 32(1), 16(2)
+            Bits op = Bits.Concat(o0, U);
+
+            // => op+size: 
+            //    64+B = 0, 64+H = 1, 64+S = 2, 64+D = X
+            //    32+B = 1, 32+H = 2, 32+S = X, 32+D = X
+            //    16+B = 2, 16+H = X, 16+S = X, 16+D = X
+            //     8+B = X,  8+H = X,  8+S = X,  8+D = X
+            // => 3-(op+size) (index bits in group)
+            //    64/B = 3, 64+H = 2, 64+S = 1, 64+D = X
+            //    32+B = 2, 32+H = 1, 32+S = X, 32+D = X
+            //    16+B = 1, 16+H = X, 16+S = X, 16+D = X
+            //     8+B = X,  8+H = X,  8+S = X,  8+D = X
+
+            // index bits within group: 1, 2, 3
+            /* if UInt(op) + UInt(size) >= 3 then UnallocatedEncoding(); */
+
+            int container_size;
+
+            switch (op)
+            {
+                default:
+                case Bits bits when bits == "10":
+                    container_size = 16;
+                    break;
+                case Bits bits when bits == "01":
+                    container_size = 32;
+                    break;
+                case Bits bits when bits == "00":
+                    container_size = 64;
+                    break;
+            }
+
+            int containers = datasize / container_size;
+            int elements_per_container = container_size / esize;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(datasize, n);
+
+            int element = 0;
+            int rev_element;
+
+            for (int c = 0; c <= containers - 1; c++)
+            {
+                rev_element = element + elements_per_container - 1;
+
+                for (int e = 0; e <= elements_per_container - 1; e++)
+                {
+                    Elem(result, rev_element, esize, Elem(operand, element, esize));
+
+                    element = element + 1;
+                    rev_element = rev_element - 1;
+                }
+            }
+
+            V(d, result);
+        }
+
+        // rev32_advsimd.html
+        public static void Rev32_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            const bool U = true;
+            const bool o0 = false;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            // size=esize:   B(0),  H(1),  S(1), D(S)
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+
+            // op=REVx: 64(0), 32(1), 16(2)
+            Bits op = Bits.Concat(o0, U);
+
+            // => op+size: 
+            //    64+B = 0, 64+H = 1, 64+S = 2, 64+D = X
+            //    32+B = 1, 32+H = 2, 32+S = X, 32+D = X
+            //    16+B = 2, 16+H = X, 16+S = X, 16+D = X
+            //     8+B = X,  8+H = X,  8+S = X,  8+D = X
+            // => 3-(op+size) (index bits in group)
+            //    64/B = 3, 64+H = 2, 64+S = 1, 64+D = X
+            //    32+B = 2, 32+H = 1, 32+S = X, 32+D = X
+            //    16+B = 1, 16+H = X, 16+S = X, 16+D = X
+            //     8+B = X,  8+H = X,  8+S = X,  8+D = X
+
+            // index bits within group: 1, 2, 3
+            /* if UInt(op) + UInt(size) >= 3 then UnallocatedEncoding(); */
+
+            int container_size;
+
+            switch (op)
+            {
+                case Bits bits when bits == "10":
+                    container_size = 16;
+                    break;
+                default:
+                case Bits bits when bits == "01":
+                    container_size = 32;
+                    break;
+                case Bits bits when bits == "00":
+                    container_size = 64;
+                    break;
+            }
+
+            int containers = datasize / container_size;
+            int elements_per_container = container_size / esize;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(datasize, n);
+
+            int element = 0;
+            int rev_element;
+
+            for (int c = 0; c <= containers - 1; c++)
+            {
+                rev_element = element + elements_per_container - 1;
+
+                for (int e = 0; e <= elements_per_container - 1; e++)
+                {
+                    Elem(result, rev_element, esize, Elem(operand, element, esize));
+
+                    element = element + 1;
+                    rev_element = rev_element - 1;
+                }
+            }
+
+            V(d, result);
+        }
+
+        // rev64_advsimd.html
+        public static void Rev64_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+            const bool o0 = false;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            // size=esize:   B(0),  H(1),  S(1), D(S)
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+
+            // op=REVx: 64(0), 32(1), 16(2)
+            Bits op = Bits.Concat(o0, U);
+
+            // => op+size: 
+            //    64+B = 0, 64+H = 1, 64+S = 2, 64+D = X
+            //    32+B = 1, 32+H = 2, 32+S = X, 32+D = X
+            //    16+B = 2, 16+H = X, 16+S = X, 16+D = X
+            //     8+B = X,  8+H = X,  8+S = X,  8+D = X
+            // => 3-(op+size) (index bits in group)
+            //    64/B = 3, 64+H = 2, 64+S = 1, 64+D = X
+            //    32+B = 2, 32+H = 1, 32+S = X, 32+D = X
+            //    16+B = 1, 16+H = X, 16+S = X, 16+D = X
+            //     8+B = X,  8+H = X,  8+S = X,  8+D = X
+
+            // index bits within group: 1, 2, 3
+            /* if UInt(op) + UInt(size) >= 3 then UnallocatedEncoding(); */
+
+            int container_size;
+
+            switch (op)
+            {
+                case Bits bits when bits == "10":
+                    container_size = 16;
+                    break;
+                case Bits bits when bits == "01":
+                    container_size = 32;
+                    break;
+                default:
+                case Bits bits when bits == "00":
+                    container_size = 64;
+                    break;
+            }
+
+            int containers = datasize / container_size;
+            int elements_per_container = container_size / esize;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand = V(datasize, n);
+
+            int element = 0;
+            int rev_element;
+
+            for (int c = 0; c <= containers - 1; c++)
+            {
+                rev_element = element + elements_per_container - 1;
+
+                for (int e = 0; e <= elements_per_container - 1; e++)
+                {
+                    Elem(result, rev_element, esize, Elem(operand, element, esize));
+
+                    element = element + 1;
+                    rev_element = rev_element - 1;
+                }
             }
 
             V(d, result);

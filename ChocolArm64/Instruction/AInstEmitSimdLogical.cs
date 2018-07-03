@@ -56,8 +56,9 @@ namespace ChocolArm64.Instruction
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
             int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Elems = Bytes >> Op.Size;
 
-            for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
+            for (int Index = 0; Index < Elems; Index++)
             {
                 EmitVectorExtractZx(Context, Op.Rd, Index, Op.Size);
                 EmitVectorExtractZx(Context, Op.Rn, Index, Op.Size);
@@ -145,6 +146,31 @@ namespace ChocolArm64.Instruction
             EmitVectorImmBinaryOp(Context, () => Context.Emit(OpCodes.Or));
         }
 
+        public static void Rbit_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int Elems = Op.RegisterSize == ARegisterSize.SIMD128 ? 16 : 8;
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                EmitVectorExtractZx(Context, Op.Rn, Index, 0);
+
+                Context.Emit(OpCodes.Conv_U4);
+
+                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.ReverseBits8));
+
+                Context.Emit(OpCodes.Conv_U8);
+
+                EmitVectorInsert(Context, Op.Rd, Index, 0);
+            }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
         public static void Rev16_V(AILEmitterCtx Context)
         {
             EmitRev_V(Context, ContainerSize: 1);
@@ -164,18 +190,17 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
-
-            int Elems = Bytes >> Op.Size;
-
             if (Op.Size >= ContainerSize)
             {
                 throw new InvalidOperationException();
             }
 
+            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Elems = Bytes >> Op.Size;
+
             int ContainerMask = (1 << (ContainerSize - Op.Size)) - 1;
 
-            for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
+            for (int Index = 0; Index < Elems; Index++)
             {
                 int RevIndex = Index ^ ContainerMask;
 

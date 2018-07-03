@@ -30,6 +30,14 @@ namespace ChocolArm64.Instruction
             return (ulong)Size;
         }
 
+        public static uint CountSetBits8(uint Value)
+        {
+            Value = ((Value >> 1) & 0x55) + (Value & 0x55);
+            Value = ((Value >> 2) & 0x33) + (Value & 0x33);
+
+            return (Value >> 4) + (Value & 0x0f);
+        }
+
         private const uint Crc32RevPoly  = 0xedb88320;
         private const uint Crc32cRevPoly = 0x82f63b78;
 
@@ -89,6 +97,14 @@ namespace ChocolArm64.Instruction
             return Crc;
         }
 
+        public static uint ReverseBits8(uint Value)
+        {
+            Value = ((Value & 0xaa) >> 1) | ((Value & 0x55) << 1);
+            Value = ((Value & 0xcc) >> 2) | ((Value & 0x33) << 2);
+
+            return (Value >> 4) | ((Value & 0x0f) << 4);
+        }
+
         public static uint ReverseBits32(uint Value)
         {
             Value = ((Value & 0xaaaaaaaa) >> 1) | ((Value & 0x55555555) << 1);
@@ -101,10 +117,10 @@ namespace ChocolArm64.Instruction
 
         public static ulong ReverseBits64(ulong Value)
         {
-            Value = ((Value & 0xaaaaaaaaaaaaaaaa) >>  1) | ((Value & 0x5555555555555555) <<  1);
-            Value = ((Value & 0xcccccccccccccccc) >>  2) | ((Value & 0x3333333333333333) <<  2);
-            Value = ((Value & 0xf0f0f0f0f0f0f0f0) >>  4) | ((Value & 0x0f0f0f0f0f0f0f0f) <<  4);
-            Value = ((Value & 0xff00ff00ff00ff00) >>  8) | ((Value & 0x00ff00ff00ff00ff) <<  8);
+            Value = ((Value & 0xaaaaaaaaaaaaaaaa) >> 1 ) | ((Value & 0x5555555555555555) << 1 );
+            Value = ((Value & 0xcccccccccccccccc) >> 2 ) | ((Value & 0x3333333333333333) << 2 );
+            Value = ((Value & 0xf0f0f0f0f0f0f0f0) >> 4 ) | ((Value & 0x0f0f0f0f0f0f0f0f) << 4 );
+            Value = ((Value & 0xff00ff00ff00ff00) >> 8 ) | ((Value & 0x00ff00ff00ff00ff) << 8 );
             Value = ((Value & 0xffff0000ffff0000) >> 16) | ((Value & 0x0000ffff0000ffff) << 16);
 
             return (Value >> 32) | (Value << 32);

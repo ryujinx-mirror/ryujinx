@@ -93,14 +93,6 @@ namespace ChocolArm64.Instruction
                    Value < ulong.MinValue ? ulong.MinValue : (ulong)Value;
         }
 
-        public static int CountSetBits8(byte Value)
-        {
-            return ((Value >> 0) & 1) + ((Value >> 1) & 1) +
-                   ((Value >> 2) & 1) + ((Value >> 3) & 1) +
-                   ((Value >> 4) & 1) + ((Value >> 5) & 1) +
-                   ((Value >> 6) & 1) +  (Value >> 7);
-        }
-
         public static double Max(double LHS, double RHS)
         {
             if (LHS == 0.0 && RHS == 0.0)
