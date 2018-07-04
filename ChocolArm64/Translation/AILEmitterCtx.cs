@@ -187,11 +187,6 @@ namespace ChocolArm64.Translation
                 Ldloc(Tmp3Index, AIoType.Int, OptOpLastCompare.RegisterSize);
                 Ldloc(Tmp4Index, AIoType.Int, OptOpLastCompare.RegisterSize);
 
-                if (OptOpLastCompare.Emitter == AInstEmit.Adds)
-                {
-                    Emit(OpCodes.Neg);
-                }
-
                 ILOp = BranchOps[Cond];
             }
             else if (IntCond < 14)
