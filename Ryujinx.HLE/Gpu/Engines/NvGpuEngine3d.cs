@@ -79,8 +79,10 @@ namespace Ryujinx.HLE.Gpu.Engines
 
             Gpu.Renderer.Shader.BindProgram();
 
+            SetFrontFace();
             SetCullFace();
             SetDepth();
+            SetStencil();
             SetAlphaBlending();
 
             UploadTextures(Vmm, Keys);
@@ -173,14 +175,8 @@ namespace Ryujinx.HLE.Gpu.Engines
                 Gpu.Renderer.Shader.Bind(Key);
             }
 
-            int RawSX = ReadRegister(NvGpuEngine3dReg.ViewportScaleX);
-            int RawSY = ReadRegister(NvGpuEngine3dReg.ViewportScaleY);
-
-            float SX = BitConverter.Int32BitsToSingle(RawSX);
-            float SY = BitConverter.Int32BitsToSingle(RawSY);
-
-            float SignX = MathF.Sign(SX);
-            float SignY = MathF.Sign(SY);
+            float SignX = GetFlipSign(NvGpuEngine3dReg.ViewportScaleX);
+            float SignY = GetFlipSign(NvGpuEngine3dReg.ViewportScaleY);
 
             Gpu.Renderer.Shader.SetFlip(SignX, SignY);
 
@@ -202,14 +198,145 @@ namespace Ryujinx.HLE.Gpu.Engines
             throw new ArgumentOutOfRangeException(nameof(Program));
         }
 
+        private void SetFrontFace()
+        {
+            float SignX = GetFlipSign(NvGpuEngine3dReg.ViewportScaleX);
+            float SignY = GetFlipSign(NvGpuEngine3dReg.ViewportScaleY);
+
+            GalFrontFace FrontFace = (GalFrontFace)ReadRegister(NvGpuEngine3dReg.FrontFace);
+
+            //Flipping breaks facing. Flipping front facing too fixes it
+            if (SignX != SignY)
+            {
+                switch (FrontFace)
+                {
+                    case GalFrontFace.CW:
+                        FrontFace = GalFrontFace.CCW;
+                        break;
+
+                    case GalFrontFace.CCW:
+                        FrontFace = GalFrontFace.CW;
+                        break;
+                }
+            }
+
+            Gpu.Renderer.Rasterizer.SetFrontFace(FrontFace);
+        }
+
         private void SetCullFace()
         {
-            //TODO.
+            bool Enable = (ReadRegister(NvGpuEngine3dReg.CullFaceEnable) & 1) != 0;
+
+            if (Enable)
+            {
+                Gpu.Renderer.Rasterizer.EnableCullFace();
+            }
+            else
+            {
+                Gpu.Renderer.Rasterizer.DisableCullFace();
+            }
+
+            if (!Enable)
+            {
+                return;
+            }
+
+            GalCullFace CullFace = (GalCullFace)ReadRegister(NvGpuEngine3dReg.CullFace);
+
+            Gpu.Renderer.Rasterizer.SetCullFace(CullFace);
         }
 
         private void SetDepth()
         {
-            //TODO.
+            float ClearDepth = ReadRegisterFloat(NvGpuEngine3dReg.ClearDepth);
+
+            Gpu.Renderer.Rasterizer.SetClearDepth(ClearDepth);
+
+            bool Enable = (ReadRegister(NvGpuEngine3dReg.DepthTestEnable) & 1) != 0;
+
+            if (Enable)
+            {
+                Gpu.Renderer.Rasterizer.EnableDepthTest();
+            }
+            else
+            {
+                Gpu.Renderer.Rasterizer.DisableDepthTest();
+            }
+
+            if (!Enable)
+            {
+                return;
+            }
+
+            GalComparisonOp Func = (GalComparisonOp)ReadRegister(NvGpuEngine3dReg.DepthTestFunction);
+
+            Gpu.Renderer.Rasterizer.SetDepthFunction(Func);
+        }
+
+        private void SetStencil()
+        {
+            int ClearStencil = ReadRegister(NvGpuEngine3dReg.ClearStencil);
+
+            Gpu.Renderer.Rasterizer.SetClearStencil(ClearStencil);
+
+            bool Enable = (ReadRegister(NvGpuEngine3dReg.StencilEnable) & 1) != 0;
+
+            if (Enable)
+            {
+                Gpu.Renderer.Rasterizer.EnableStencilTest();
+            }
+            else
+            {
+                Gpu.Renderer.Rasterizer.DisableStencilTest();
+            }
+
+            if (!Enable)
+            {
+                return;
+            }
+
+            void SetFaceStencil(
+                bool IsFrontFace,
+                NvGpuEngine3dReg Func,
+                NvGpuEngine3dReg FuncRef,
+                NvGpuEngine3dReg FuncMask,
+                NvGpuEngine3dReg OpFail,
+                NvGpuEngine3dReg OpZFail,
+                NvGpuEngine3dReg OpZPass,
+                NvGpuEngine3dReg Mask)
+            {
+                Gpu.Renderer.Rasterizer.SetStencilFunction(
+                    IsFrontFace,
+                    (GalComparisonOp)ReadRegister(Func),
+                    ReadRegister(FuncRef),
+                    ReadRegister(FuncMask));
+
+                Gpu.Renderer.Rasterizer.SetStencilOp(
+                    IsFrontFace,
+                    (GalStencilOp)ReadRegister(OpFail),
+                    (GalStencilOp)ReadRegister(OpZFail),
+                    (GalStencilOp)ReadRegister(OpZPass));
+
+                Gpu.Renderer.Rasterizer.SetStencilMask(IsFrontFace, ReadRegister(Mask));
+            }
+
+            SetFaceStencil(false,
+                NvGpuEngine3dReg.StencilBackFuncFunc,
+                NvGpuEngine3dReg.StencilBackFuncRef,
+                NvGpuEngine3dReg.StencilBackFuncMask,
+                NvGpuEngine3dReg.StencilBackOpFail,
+                NvGpuEngine3dReg.StencilBackOpZFail,
+                NvGpuEngine3dReg.StencilBackOpZPass,
+                NvGpuEngine3dReg.StencilBackMask);
+
+            SetFaceStencil(true,
+                NvGpuEngine3dReg.StencilFrontFuncFunc,
+                NvGpuEngine3dReg.StencilFrontFuncRef,
+                NvGpuEngine3dReg.StencilFrontFuncMask,
+                NvGpuEngine3dReg.StencilFrontOpFail,
+                NvGpuEngine3dReg.StencilFrontOpZFail,
+                NvGpuEngine3dReg.StencilFrontOpZPass,
+                NvGpuEngine3dReg.StencilFrontMask);
         }
 
         private void SetAlphaBlending()
@@ -549,6 +676,11 @@ namespace Ryujinx.HLE.Gpu.Engines
             ConstBuffers[Stage][Index].Size = ReadRegister(NvGpuEngine3dReg.ConstBufferSize);
         }
 
+        private float GetFlipSign(NvGpuEngine3dReg Reg)
+        {
+            return MathF.Sign(ReadRegisterFloat(Reg));
+        }
+
         private long MakeInt64From2xInt32(NvGpuEngine3dReg Reg)
         {
             return
@@ -569,6 +701,11 @@ namespace Ryujinx.HLE.Gpu.Engines
         private int ReadRegister(NvGpuEngine3dReg Reg)
         {
             return Registers[(int)Reg];
+        }
+
+        private float ReadRegisterFloat(NvGpuEngine3dReg Reg)
+        {
+            return BitConverter.Int32BitsToSingle(ReadRegister(Reg));
         }
 
         private void WriteRegister(NvGpuEngine3dReg Reg, int Value)

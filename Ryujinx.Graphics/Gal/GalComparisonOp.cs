@@ -2,13 +2,13 @@ namespace Ryujinx.Graphics.Gal
 {
     public enum GalComparisonOp
     {
-        Never    = 0x200,
-        Less     = 0x201,
-        Equal    = 0x202,
-        Lequal   = 0x203,
-        Greater  = 0x204,
-        NotEqual = 0x205,
-        Gequal   = 0x206,
-        Always   = 0x207
+        Never    = 0x1,
+        Less     = 0x2,
+        Equal    = 0x3,
+        Lequal   = 0x4,
+        Greater  = 0x5,
+        NotEqual = 0x6,
+        Gequal   = 0x7,
+        Always   = 0x8
     }
 }

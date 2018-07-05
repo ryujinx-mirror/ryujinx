@@ -106,6 +106,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             return IboCache.TryGetSize(Key, out long Size) && Size == DataSize;
         }
 
+        public void SetFrontFace(GalFrontFace FrontFace)
+        {
+            GL.FrontFace(OGLEnumConverter.GetFrontFace(FrontFace));
+        }
+
         public void EnableCullFace()
         {
             GL.Enable(EnableCap.CullFace);
@@ -114,6 +119,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         public void DisableCullFace()
         {
             GL.Disable(EnableCap.CullFace);
+        }
+
+        public void SetCullFace(GalCullFace CullFace)
+        {
+            GL.CullFace(OGLEnumConverter.GetCullFace(CullFace));
         }
 
         public void EnableDepthTest()
@@ -129,6 +139,49 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         public void SetDepthFunction(GalComparisonOp Func)
         {
             GL.DepthFunc(OGLEnumConverter.GetDepthFunc(Func));
+        }
+
+        public void SetClearDepth(float Depth)
+        {
+            GL.ClearDepth(Depth);
+        }
+
+        public void EnableStencilTest()
+        {
+            GL.Enable(EnableCap.StencilTest);
+        }
+
+        public void DisableStencilTest()
+        {
+            GL.Disable(EnableCap.StencilTest);
+        }
+
+        public void SetStencilFunction(bool IsFrontFace, GalComparisonOp Func, int Ref, int Mask)
+        {
+            GL.StencilFuncSeparate(
+                IsFrontFace ? StencilFace.Front : StencilFace.Back,
+                OGLEnumConverter.GetStencilFunc(Func),
+                Ref,
+                Mask);
+        }
+
+        public void SetStencilOp(bool IsFrontFace, GalStencilOp Fail, GalStencilOp ZFail, GalStencilOp ZPass)
+        {
+            GL.StencilOpSeparate(
+                IsFrontFace ? StencilFace.Front : StencilFace.Back,
+                OGLEnumConverter.GetStencilOp(Fail),
+                OGLEnumConverter.GetStencilOp(ZFail),
+                OGLEnumConverter.GetStencilOp(ZPass));
+        }
+
+        public void SetStencilMask(bool IsFrontFace, int Mask)
+        {
+            GL.StencilMaskSeparate(IsFrontFace ? StencilFace.Front : StencilFace.Back, Mask);
+        }
+
+        public void SetClearStencil(int Stencil)
+        {
+            GL.ClearStencil(Stencil);
         }
 
         public void CreateVbo(long Key, byte[] Buffer)

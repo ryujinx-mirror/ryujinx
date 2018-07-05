@@ -8,15 +8,33 @@ namespace Ryujinx.Graphics.Gal
 
         bool IsIboCached(long Key, long DataSize);
 
+        void SetFrontFace(GalFrontFace FrontFace);
+
         void EnableCullFace();
 
         void DisableCullFace();
+
+        void SetCullFace(GalCullFace CullFace);
 
         void EnableDepthTest();
 
         void DisableDepthTest();
 
         void SetDepthFunction(GalComparisonOp Func);
+
+        void SetClearDepth(float Depth);
+
+        void EnableStencilTest();
+
+        void DisableStencilTest();
+
+        void SetStencilFunction(bool IsFrontFace, GalComparisonOp Func, int Ref, int Mask);
+
+        void SetStencilOp(bool IsFrontFace, GalStencilOp Fail, GalStencilOp ZFail, GalStencilOp ZPass);
+
+        void SetStencilMask(bool IsFrontFace, int Mask);
+
+        void SetClearStencil(int Stencil);
 
         void CreateVbo(long Key, byte[] Buffer);
 
