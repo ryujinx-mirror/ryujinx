@@ -239,7 +239,19 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 EnsureInitialized();
 
-                bool AlphaBlendEnable = GL.GetInteger(GetPName.Blend) != 0;
+                //bool CullFaceEnable = GL.IsEnabled(EnableCap.CullFace);
+
+                bool DepthTestEnable = GL.IsEnabled(EnableCap.DepthTest);
+
+                bool StencilTestEnable = GL.IsEnabled(EnableCap.StencilTest);
+
+                bool AlphaBlendEnable = GL.IsEnabled(EnableCap.Blend);
+
+                //GL.Disable(EnableCap.CullFace);
+
+                GL.Disable(EnableCap.DepthTest);
+
+                GL.Disable(EnableCap.StencilTest);
 
                 GL.Disable(EnableCap.Blend);
 
@@ -267,6 +279,21 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, CurrFbHandle);
 
                 GL.UseProgram(CurrentProgram);
+
+                //if (CullFaceEnable)
+                //{
+                //    GL.Enable(EnableCap.CullFace);
+                //}
+
+                if (DepthTestEnable)
+                {
+                    GL.Enable(EnableCap.DepthTest);
+                }
+
+                if (StencilTestEnable)
+                {
+                    GL.Enable(EnableCap.StencilTest);
+                }
 
                 if (AlphaBlendEnable)
                 {

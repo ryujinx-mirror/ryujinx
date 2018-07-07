@@ -79,8 +79,9 @@ namespace Ryujinx.HLE.Gpu.Engines
 
             Gpu.Renderer.Shader.BindProgram();
 
-            SetFrontFace();
-            SetCullFace();
+            //Note: Uncomment SetFrontFace SetCullFace when flipping issues are solved
+            //SetFrontFace();
+            //SetCullFace();
             SetDepth();
             SetStencil();
             SetAlphaBlending();
