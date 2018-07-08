@@ -85,6 +85,7 @@ namespace Ryujinx.HLE.Gpu.Engines
             SetDepth();
             SetStencil();
             SetAlphaBlending();
+            SetPrimitiveRestart();
 
             UploadTextures(Vmm, Keys);
             UploadUniforms(Vmm);
@@ -387,6 +388,29 @@ namespace Ryujinx.HLE.Gpu.Engines
             {
                 Gpu.Renderer.Blend.Set(EquationRgb, FuncSrcRgb, FuncDstRgb);
             }
+        }
+
+        private void SetPrimitiveRestart()
+        {
+            bool Enable = (ReadRegister(NvGpuEngine3dReg.PrimRestartEnable) & 1) != 0;
+
+            if (Enable)
+            {
+                Gpu.Renderer.Rasterizer.EnablePrimitiveRestart();
+            }
+            else
+            {
+                Gpu.Renderer.Rasterizer.DisablePrimitiveRestart();
+            }
+
+            if (!Enable)
+            {
+                return;
+            }
+
+            uint Index = (uint)ReadRegister(NvGpuEngine3dReg.PrimRestartIndex);
+
+            Gpu.Renderer.Rasterizer.SetPrimitiveRestartIndex(Index);
         }
 
         private void UploadTextures(NvGpuVmm Vmm, long[] Keys)

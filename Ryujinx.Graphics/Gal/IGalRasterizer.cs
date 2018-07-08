@@ -36,6 +36,12 @@ namespace Ryujinx.Graphics.Gal
 
         void SetClearStencil(int Stencil);
 
+        void EnablePrimitiveRestart();
+
+        void DisablePrimitiveRestart();
+
+        void SetPrimitiveRestartIndex(uint Index);
+
         void CreateVbo(long Key, byte[] Buffer);
 
         void CreateIbo(long Key, byte[] Buffer);

@@ -184,6 +184,21 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.ClearStencil(Stencil);
         }
 
+        public void EnablePrimitiveRestart()
+        {
+            GL.Enable(EnableCap.PrimitiveRestart);
+        }
+
+        public void DisablePrimitiveRestart()
+        {
+            GL.Disable(EnableCap.PrimitiveRestart);
+        }
+
+        public void SetPrimitiveRestartIndex(uint Index)
+        {
+            GL.PrimitiveRestartIndex(Index);
+        }
+
         public void CreateVbo(long Key, byte[] Buffer)
         {
             int Handle = GL.GenBuffer();

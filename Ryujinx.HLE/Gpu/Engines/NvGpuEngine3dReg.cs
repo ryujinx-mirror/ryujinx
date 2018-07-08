@@ -50,6 +50,8 @@ namespace Ryujinx.HLE.Gpu.Engines
         StencilBackFuncFunc  = 0x569,
         ShaderAddress        = 0x582,
         VertexBeginGl        = 0x586,
+        PrimRestartEnable    = 0x591,
+        PrimRestartIndex     = 0x592,
         IndexArrayAddress    = 0x5f2,
         IndexArrayEndAddr    = 0x5f4,
         IndexArrayFormat     = 0x5f6,
