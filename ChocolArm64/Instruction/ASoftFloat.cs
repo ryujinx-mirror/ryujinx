@@ -50,14 +50,8 @@ namespace ChocolArm64.Instruction
             long x_exp = (long)((x_bits >> 52) & 0x7FF);
             ulong scaled = x_bits & ((1ul << 52) - 1);
 
-            if (x_exp == 0x7ff)
+            if (x_exp == 0x7FF && scaled != 0)
             {
-                if (scaled == 0)
-                {
-                    // Infinity -> Zero
-                    return BitConverter.Int64BitsToDouble((long)x_sign);
-                }
-
                 // NaN
                 return BitConverter.Int64BitsToDouble((long)(x_bits | 0x0008000000000000));
             }
@@ -77,6 +71,18 @@ namespace ChocolArm64.Instruction
                     x_exp--;
                 }
                 scaled <<= 1;
+            }
+
+            if (x_sign != 0)
+            {
+                // Negative -> NaN
+                return BitConverter.Int64BitsToDouble((long)0x7ff8000000000000);
+            }
+
+            if (x_exp == 0x7ff && scaled == 0)
+            {
+                // Infinity -> Zero
+                return BitConverter.Int64BitsToDouble((long)x_sign);
             }
 
             if (((ulong)x_exp & 1) == 1)
