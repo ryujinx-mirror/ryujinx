@@ -163,26 +163,18 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(Sse41.Extract(ThreadState.V6, (byte)0), Is.EqualTo(A * B));
         }
 
-        [Test, Description("FRECPE D0, D1")]
-        public void Frecpe_S([Random(100)] double A)
+        [TestCase(0x00000000u, 0x7F800000u)]
+        [TestCase(0x80000000u, 0xFF800000u)]
+        [TestCase(0x00FFF000u, 0x7E000000u)]
+        [TestCase(0x41200000u, 0x3DCC8000u)]
+        [TestCase(0xC1200000u, 0xBDCC8000u)]
+        [TestCase(0x001FFFFFu, 0x7F800000u)]
+        [TestCase(0x007FF000u, 0x7E800000u)]
+        public void Frecpe_S(uint A, uint Result)
         {
-            AThreadState ThreadState = SingleOpcode(0x5EE1D820, V1: MakeVectorE0(A));
-
-            Assert.That(VectorExtractDouble(ThreadState.V0, 0), Is.EqualTo(1 / A));
-        }
-
-        [Test, Description("FRECPE V2.4S, V0.4S")]
-        public void Frecpe_V([Random(100)] float A)
-        {
-            AThreadState ThreadState = SingleOpcode(0x4EA1D802, V0: Sse.SetAllVector128(A));
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(Sse41.Extract(ThreadState.V2, (byte)0), Is.EqualTo(1 / A));
-                Assert.That(Sse41.Extract(ThreadState.V2, (byte)1), Is.EqualTo(1 / A));
-                Assert.That(Sse41.Extract(ThreadState.V2, (byte)2), Is.EqualTo(1 / A));
-                Assert.That(Sse41.Extract(ThreadState.V2, (byte)3), Is.EqualTo(1 / A));
-            });
+            Vector128<float> V1 = MakeVectorE0(A);
+            AThreadState ThreadState = SingleOpcode(0x5EA1D820, V1: V1);
+            Assert.AreEqual(Result, GetVectorE0(ThreadState.V0));
         }
 
         [Test, Description("FRECPS D0, D1, D2")]
@@ -202,12 +194,13 @@ namespace Ryujinx.Tests.Cpu
                 V2: Sse.SetAllVector128(A),
                 V0: Sse.SetAllVector128(B));
 
+            float Result = (float)(2 - ((double)A * (double)B));
             Assert.Multiple(() =>
             {
-                Assert.That(Sse41.Extract(ThreadState.V4, (byte)0), Is.EqualTo(2 - (A * B)));
-                Assert.That(Sse41.Extract(ThreadState.V4, (byte)1), Is.EqualTo(2 - (A * B)));
-                Assert.That(Sse41.Extract(ThreadState.V4, (byte)2), Is.EqualTo(2 - (A * B)));
-                Assert.That(Sse41.Extract(ThreadState.V4, (byte)3), Is.EqualTo(2 - (A * B)));
+                Assert.That(Sse41.Extract(ThreadState.V4, (byte)0), Is.EqualTo(Result));
+                Assert.That(Sse41.Extract(ThreadState.V4, (byte)1), Is.EqualTo(Result));
+                Assert.That(Sse41.Extract(ThreadState.V4, (byte)2), Is.EqualTo(Result));
+                Assert.That(Sse41.Extract(ThreadState.V4, (byte)3), Is.EqualTo(Result));
             });
         }
 
