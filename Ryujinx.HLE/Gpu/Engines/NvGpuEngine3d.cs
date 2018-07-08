@@ -464,19 +464,17 @@ namespace Ryujinx.HLE.Gpu.Engines
 
             GalTextureSampler Sampler = TextureFactory.MakeSampler(Gpu, Vmm, TscPosition);
 
-            long TextureAddress = Vmm.ReadInt64(TicPosition + 4) & 0xffffffffffff;
+            long Key = Vmm.ReadInt64(TicPosition + 4) & 0xffffffffffff;
 
-            long Key = TextureAddress;
+            Key = Vmm.GetPhysicalAddress(Key);
 
-            TextureAddress = Vmm.GetPhysicalAddress(TextureAddress);
-
-            if (IsFrameBufferPosition(TextureAddress))
+            if (IsFrameBufferPosition(Key))
             {
                 //This texture is a frame buffer texture,
                 //we shouldn't read anything from memory and bind
                 //the frame buffer texture instead, since we're not
                 //really writing anything to memory.
-                Gpu.Renderer.FrameBuffer.BindTexture(TextureAddress, TexIndex);
+                Gpu.Renderer.FrameBuffer.BindTexture(Key, TexIndex);
             }
             else
             {
@@ -544,6 +542,8 @@ namespace Ryujinx.HLE.Gpu.Engines
         {
             long IndexPosition = MakeInt64From2xInt32(NvGpuEngine3dReg.IndexArrayAddress);
 
+            long IboKey = Vmm.GetPhysicalAddress(IndexPosition);
+
             int IndexEntryFmt = ReadRegister(NvGpuEngine3dReg.IndexArrayFormat);
             int IndexFirst    = ReadRegister(NvGpuEngine3dReg.IndexBatchFirst);
             int IndexCount    = ReadRegister(NvGpuEngine3dReg.IndexBatchCount);
@@ -561,16 +561,16 @@ namespace Ryujinx.HLE.Gpu.Engines
             {
                 int IbSize = IndexCount * IndexEntrySize;
 
-                bool IboCached = Gpu.Renderer.Rasterizer.IsIboCached(IndexPosition, (uint)IbSize);
+                bool IboCached = Gpu.Renderer.Rasterizer.IsIboCached(IboKey, (uint)IbSize);
 
-                if (!IboCached || Vmm.IsRegionModified(IndexPosition, (uint)IbSize, NvGpuBufferType.Index))
+                if (!IboCached || Vmm.IsRegionModified(IboKey, (uint)IbSize, NvGpuBufferType.Index))
                 {
                     byte[] Data = Vmm.ReadBytes(IndexPosition, (uint)IbSize);
 
-                    Gpu.Renderer.Rasterizer.CreateIbo(IndexPosition, Data);
+                    Gpu.Renderer.Rasterizer.CreateIbo(IboKey, Data);
                 }
 
-                Gpu.Renderer.Rasterizer.SetIndexArray(IndexPosition, IbSize, IndexFormat);
+                Gpu.Renderer.Rasterizer.SetIndexArray(IboKey, IbSize, IndexFormat);
             }
 
             List<GalVertexAttrib>[] Attribs = new List<GalVertexAttrib>[32];
@@ -619,20 +619,22 @@ namespace Ryujinx.HLE.Gpu.Engines
                     continue;
                 }
 
+                long VboKey = Vmm.GetPhysicalAddress(VertexPosition);
+
                 int Stride = Control & 0xfff;
 
                 long VbSize = (VertexEndPos - VertexPosition) + 1;
 
-                bool VboCached = Gpu.Renderer.Rasterizer.IsVboCached(VertexPosition, VbSize);
+                bool VboCached = Gpu.Renderer.Rasterizer.IsVboCached(VboKey, VbSize);
 
-                if (!VboCached || Vmm.IsRegionModified(VertexPosition, VbSize, NvGpuBufferType.Vertex))
+                if (!VboCached || Vmm.IsRegionModified(VboKey, VbSize, NvGpuBufferType.Vertex))
                 {
                     byte[] Data = Vmm.ReadBytes(VertexPosition, VbSize);
 
-                    Gpu.Renderer.Rasterizer.CreateVbo(VertexPosition, Data);
+                    Gpu.Renderer.Rasterizer.CreateVbo(VboKey, Data);
                 }
 
-                Gpu.Renderer.Rasterizer.SetVertexArray(Index, Stride, VertexPosition, Attribs[Index].ToArray());
+                Gpu.Renderer.Rasterizer.SetVertexArray(Index, Stride, VboKey, Attribs[Index].ToArray());
             }
 
             GalPrimitiveType PrimType = (GalPrimitiveType)(PrimCtrl & 0xffff);
@@ -641,7 +643,7 @@ namespace Ryujinx.HLE.Gpu.Engines
             {
                 int VertexBase = ReadRegister(NvGpuEngine3dReg.VertexArrayElemBase);
 
-                Gpu.Renderer.Rasterizer.DrawElements(IndexPosition, IndexFirst, VertexBase, PrimType);
+                Gpu.Renderer.Rasterizer.DrawElements(IboKey, IndexFirst, VertexBase, PrimType);
             }
             else
             {

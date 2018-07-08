@@ -11,43 +11,53 @@ namespace Ryujinx.HLE.Gpu.Memory
 
         private class CachedPage
         {
-            private List<(long Start, long End)> Regions;
+            private struct Range
+            {
+                public long Start;
+                public long End;
+
+                public Range(long Start, long End)
+                {
+                    this.Start = Start;
+                    this.End   = End;
+                }
+            }
+
+            private List<Range>[] Regions;
 
             public LinkedListNode<long> Node { get; set; }
 
-            public int Count => Regions.Count;
-
             public int Timestamp { get; private set; }
 
-            public long PABase { get; private set; }
-
-            public NvGpuBufferType BufferType { get; private set; }
-
-            public CachedPage(long PABase, NvGpuBufferType BufferType)
+            public CachedPage()
             {
-                this.PABase     = PABase;
-                this.BufferType = BufferType;
+                Regions = new List<Range>[(int)NvGpuBufferType.Count];
 
-                Regions = new List<(long, long)>();
+                for (int Index = 0; Index < Regions.Length; Index++)
+                {
+                    Regions[Index] = new List<Range>();
+                }
             }
 
-            public bool AddRange(long Start, long End)
+            public bool AddRange(long Start, long End, NvGpuBufferType BufferType)
             {
-                for (int Index = 0; Index < Regions.Count; Index++)
-                {
-                    (long RgStart, long RgEnd) = Regions[Index];
+                List<Range> BtRegions = Regions[(int)BufferType];
 
-                    if (Start >= RgStart && End <= RgEnd)
+                for (int Index = 0; Index < BtRegions.Count; Index++)
+                {
+                    Range Rg = BtRegions[Index];
+
+                    if (Start >= Rg.Start && End <= Rg.End)
                     {
                         return false;
                     }
 
-                    if (Start <= RgEnd && RgStart <= End)
+                    if (Start <= Rg.End && Rg.Start <= End)
                     {
-                        long MinStart = Math.Min(RgStart, Start);
-                        long MaxEnd   = Math.Max(RgEnd,   End);
+                        long MinStart = Math.Min(Rg.Start, Start);
+                        long MaxEnd   = Math.Max(Rg.End,   End);
 
-                        Regions[Index] = (MinStart, MaxEnd);
+                        BtRegions[Index] = new Range(MinStart, MaxEnd);
 
                         Timestamp = Environment.TickCount;
 
@@ -55,11 +65,23 @@ namespace Ryujinx.HLE.Gpu.Memory
                     }
                 }
 
-                Regions.Add((Start, End));
+                BtRegions.Add(new Range(Start, End));
 
                 Timestamp = Environment.TickCount;
 
                 return true;
+            }
+
+            public int GetTotalCount()
+            {
+                int Count = 0;
+
+                for (int Index = 0; Index < Regions.Length; Index++)
+                {
+                    Count += Regions[Index].Count;
+                }
+
+                return Count;
             }
         }
 
@@ -76,71 +98,61 @@ namespace Ryujinx.HLE.Gpu.Memory
             SortedCache = new LinkedList<long>();
         }
 
-        public bool IsRegionModified(
-            AMemory         Memory,
-            NvGpuBufferType BufferType,
-            long            VA,
-            long            PA,
-            long            Size)
+        public bool IsRegionModified(AMemory Memory, NvGpuBufferType BufferType, long PA, long Size)
         {
+            bool[] Modified = Memory.IsRegionModified(PA, Size);
+
+            if (Modified == null)
+            {
+                return true;
+            }
+
             ClearCachedPagesIfNeeded();
 
             long PageSize = Memory.GetHostPageSize();
 
             long Mask = PageSize - 1;
 
-            long VAEnd = VA + Size;
             long PAEnd = PA + Size;
 
             bool RegMod = false;
 
-            while (VA < VAEnd)
-            {
-                long Key    = VA & ~Mask;
-                long PABase = PA & ~Mask;
+            int Index = 0;
 
-                long VAPgEnd = Math.Min((VA + PageSize) & ~Mask, VAEnd);
+            while (PA < PAEnd)
+            {
+                long Key = PA & ~Mask;
+
                 long PAPgEnd = Math.Min((PA + PageSize) & ~Mask, PAEnd);
 
                 bool IsCached = Cache.TryGetValue(Key, out CachedPage Cp);
 
-                bool PgReset = false;
-
-                if (!IsCached)
+                if (IsCached)
                 {
-                    Cp = new CachedPage(PABase, BufferType);
+                    CpCount -= Cp.GetTotalCount();
 
-                    Cache.Add(Key, Cp);
+                    SortedCache.Remove(Cp.Node);
                 }
                 else
                 {
-                    CpCount -= Cp.Count;
+                    Cp = new CachedPage();
 
-                    SortedCache.Remove(Cp.Node);
-
-                    if (Cp.PABase     != PABase ||
-                        Cp.BufferType != BufferType)
-                    {
-                        PgReset = true;
-                    }
+                    Cache.Add(Key, Cp);
                 }
 
-                PgReset |= Memory.IsRegionModified(PA, PAPgEnd - PA) && IsCached;
-
-                if (PgReset)
+                if (Modified[Index++] && IsCached)
                 {
-                    Cp = new CachedPage(PABase, BufferType);
+                    Cp = new CachedPage();
 
                     Cache[Key] = Cp;
                 }
 
                 Cp.Node = SortedCache.AddLast(Key);
 
-                RegMod |= Cp.AddRange(VA, VAPgEnd);
+                RegMod |= Cp.AddRange(PA, PAPgEnd, BufferType);
 
-                CpCount += Cp.Count;
+                CpCount += Cp.GetTotalCount();
 
-                VA = VAPgEnd;
                 PA = PAPgEnd;
             }
 
@@ -169,7 +181,7 @@ namespace Ryujinx.HLE.Gpu.Memory
 
                 Cache.Remove(Key);
 
-                CpCount -= Cp.Count;
+                CpCount -= Cp.GetTotalCount();
 
                 TimeDelta = RingDelta(Cp.Timestamp, Timestamp);
             }

@@ -274,11 +274,9 @@ namespace Ryujinx.HLE.Gpu.Memory
             PageTable[L0][L1] = TgtAddr;
         }
 
-        public bool IsRegionModified(long Position, long Size, NvGpuBufferType BufferType)
+        public bool IsRegionModified(long PA, long Size, NvGpuBufferType BufferType)
         {
-            long PA = GetPhysicalAddress(Position);
-
-            return Cache.IsRegionModified(Memory, BufferType, Position, PA, Size);
+            return Cache.IsRegionModified(Memory, BufferType, PA, Size);
         }
 
         public byte ReadByte(long Position)

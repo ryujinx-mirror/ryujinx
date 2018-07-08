@@ -4,6 +4,7 @@ namespace Ryujinx.HLE.Gpu.Memory
     {
         Index,
         Vertex,
-        Texture
+        Texture,
+        Count
     }
 }

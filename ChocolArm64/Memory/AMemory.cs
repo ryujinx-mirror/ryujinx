@@ -33,19 +33,25 @@ namespace ChocolArm64.Memory
 
         private byte* RamPtr;
 
+        private int HostPageSize;
+
         public AMemory()
         {
             Manager = new AMemoryMgr();
 
             Monitors = new Dictionary<int, ArmMonitor>();
 
+            IntPtr Size = (IntPtr)AMemoryMgr.RamSize + AMemoryMgr.PageSize;
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                Ram = AMemoryWin32.Allocate((IntPtr)AMemoryMgr.RamSize + AMemoryMgr.PageSize);
+                Ram = AMemoryWin32.Allocate(Size);
+
+                HostPageSize = AMemoryWin32.GetPageSize(Ram, Size);
             }
             else
             {
-                Ram = Marshal.AllocHGlobal((IntPtr)AMemoryMgr.RamSize + AMemoryMgr.PageSize);
+                Ram = Marshal.AllocHGlobal(Size);
             }
 
             RamPtr = (byte*)Ram;
@@ -149,49 +155,53 @@ namespace ChocolArm64.Memory
             }
         }
 
-        public long GetHostPageSize()
+        public int GetHostPageSize()
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return AMemoryMgr.PageSize;
-            }
-
-            IntPtr MemAddress = new IntPtr(RamPtr);
-            IntPtr MemSize    = new IntPtr(AMemoryMgr.RamSize);
-
-            long PageSize = AMemoryWin32.IsRegionModified(MemAddress, MemSize, Reset: false);
-
-            if (PageSize < 1)
-            {
-                throw new InvalidOperationException();
-            }
-
-            return PageSize;
+            return HostPageSize;
         }
 
-        public bool IsRegionModified(long Position, long Size)
+        public bool[] IsRegionModified(long Position, long Size)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return true;
+                return null;
             }
 
             long EndPos = Position + Size;
 
             if ((ulong)EndPos < (ulong)Position)
             {
-                return false;
+                return null;
             }
 
             if ((ulong)EndPos > AMemoryMgr.RamSize)
             {
-                return false;
+                return null;
             }
 
             IntPtr MemAddress = new IntPtr(RamPtr + Position);
             IntPtr MemSize    = new IntPtr(Size);
 
-            return AMemoryWin32.IsRegionModified(MemAddress, MemSize, Reset: true) != 0;
+            int HostPageMask = HostPageSize - 1;
+
+            Position &= ~HostPageMask;
+
+            Size = EndPos - Position;
+
+            IntPtr[] Addresses  = new IntPtr[(Size + HostPageMask) / HostPageSize];
+
+            AMemoryWin32.IsRegionModified(MemAddress, MemSize, Addresses, out int Count);
+
+            bool[] Modified = new bool[Addresses.Length];
+
+            for (int Index = 0; Index < Count; Index++)
+            {
+                long VA = Addresses[Index].ToInt64() - Ram.ToInt64();
+
+                Modified[(VA - Position) / HostPageSize] = true;
+            }
+
+            return Modified;
         }
 
         public sbyte ReadSByte(long Position)

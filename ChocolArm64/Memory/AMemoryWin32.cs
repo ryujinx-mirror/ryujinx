@@ -49,7 +49,7 @@ namespace ChocolArm64.Memory
             VirtualFree(Address, IntPtr.Zero, MEM_RELEASE);
         }
 
-        public unsafe static long IsRegionModified(IntPtr Address, IntPtr Size, bool Reset)
+        public unsafe static int GetPageSize(IntPtr Address, IntPtr Size)
         {
             IntPtr[] Addresses = new IntPtr[1];
 
@@ -57,17 +57,36 @@ namespace ChocolArm64.Memory
 
             long Granularity;
 
-            int Flags = Reset ? WRITE_WATCH_FLAG_RESET : 0;
-
             GetWriteWatch(
-                Flags,
+                0,
                 Address,
                 Size,
                 Addresses,
                 &Count,
                 &Granularity);
 
-            return Count != 0 ? Granularity : 0;
+            return (int)Granularity;
+        }
+
+        public unsafe static void IsRegionModified(
+            IntPtr   Address,
+            IntPtr   Size,
+            IntPtr[] Addresses,
+            out int  AddrCount)
+        {
+            long Count = Addresses.Length;
+
+            long Granularity;
+
+            GetWriteWatch(
+                WRITE_WATCH_FLAG_RESET,
+                Address,
+                Size,
+                Addresses,
+                &Count,
+                &Granularity);
+
+            AddrCount = (int)Count;
         }
     }
 }
