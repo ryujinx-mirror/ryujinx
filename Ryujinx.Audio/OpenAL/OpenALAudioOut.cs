@@ -20,7 +20,7 @@ namespace Ryujinx.Audio.OpenAL
             public int SourceId { get; private set; }
 
             public int SampleRate { get; private set; }
-            
+
             public ALFormat Format { get; private set; }
 
             private ReleaseCallback Callback;
@@ -153,7 +153,7 @@ namespace Ryujinx.Audio.OpenAL
                     ShouldCallReleaseCallback = true;
                 }
             }
-            
+
             private void SyncQueuedTags()
             {
                 AL.GetSource(SourceId, ALGetSourcei.BuffersQueued,    out int QueuedCount);
@@ -249,11 +249,6 @@ namespace Ryujinx.Audio.OpenAL
 
         private ALFormat GetALFormat(int Channels, AudioFormat Format)
         {
-            if (Channels < 1 || Channels > 2)
-            {
-                throw new ArgumentOutOfRangeException(nameof(Channels));
-            }
-
             if (Channels == 1)
             {
                 switch (Format)
@@ -262,13 +257,25 @@ namespace Ryujinx.Audio.OpenAL
                     case AudioFormat.PcmInt16: return ALFormat.Mono16;
                 }
             }
-            else /* if (Channels == 2) */
+            else if (Channels == 2)
             {
                 switch (Format)
                 {
                     case AudioFormat.PcmInt8:  return ALFormat.Stereo8;
                     case AudioFormat.PcmInt16: return ALFormat.Stereo16;
                 }
+            }
+            else if (Channels == 6)
+            {
+                switch (Format)
+                {
+                    case AudioFormat.PcmInt8:  return ALFormat.Multi51Chn8Ext;
+                    case AudioFormat.PcmInt16: return ALFormat.Multi51Chn16Ext;
+                }
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(nameof(Channels));
             }
 
             throw new ArgumentException(nameof(Format));
@@ -288,7 +295,7 @@ namespace Ryujinx.Audio.OpenAL
             {
                 return Td.ContainsBuffer(Tag);
             }
-            
+
             return false;
         }
 
@@ -298,7 +305,7 @@ namespace Ryujinx.Audio.OpenAL
             {
                 return Td.GetReleasedBuffers(MaxCount);
             }
-            
+
             return null;
         }
 
