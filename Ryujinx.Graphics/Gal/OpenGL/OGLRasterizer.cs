@@ -71,6 +71,18 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             IndexBuffer = new IbInfo();
         }
 
+        public void LockCaches()
+        {
+            VboCache.Lock();
+            IboCache.Lock();
+        }
+
+        public void UnlockCaches()
+        {
+            VboCache.Unlock();
+            IboCache.Unlock();
+        }
+
         public void ClearBuffers(GalClearBufferFlags Flags)
         {
             ClearBufferMask Mask = ClearBufferMask.ColorBufferBit;
@@ -223,7 +235,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.BufferData(BufferTarget.ElementArrayBuffer, Length, Buffer, BufferUsageHint.StreamDraw);
         }
 
-        public void SetVertexArray(int VbIndex, int Stride, long VboKey, GalVertexAttrib[] Attribs)
+        public void SetVertexArray(int Stride, long VboKey, GalVertexAttrib[] Attribs)
         {
             if (!VboCache.TryGetValue(VboKey, out int VboHandle))
             {
@@ -270,7 +282,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
         }
 
-        public void SetIndexArray(long Key, int Size, GalIndexFormat Format)
+        public void SetIndexArray(int Size, GalIndexFormat Format)
         {
             IndexBuffer.Type = OGLEnumConverter.GetDrawElementsType(Format);
 

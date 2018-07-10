@@ -36,6 +36,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private DeleteValue DeleteValueCallback;
 
+        private Queue<T> DeletePending;
+
+        private bool Locked;
+
         public OGLCachedResource(DeleteValue DeleteValueCallback)
         {
             if (DeleteValueCallback == null)
@@ -48,11 +52,33 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             Cache = new Dictionary<long, CacheBucket>();
 
             SortedCache = new LinkedList<long>();
+
+            DeletePending = new Queue<T>();
+        }
+
+        public void Lock()
+        {
+            Locked = true;
+        }
+
+        public void Unlock()
+        {
+            Locked = false;
+
+            while (DeletePending.TryDequeue(out T Value))
+            {
+                DeleteValueCallback(Value);
+            }
+
+            ClearCacheIfNeeded();
         }
 
         public void AddOrUpdate(long Key, T Value, long Size)
         {
-            ClearCacheIfNeeded();
+            if (!Locked)
+            {
+                ClearCacheIfNeeded();
+            }
 
             LinkedListNode<long> Node = SortedCache.AddLast(Key);
 
@@ -60,7 +86,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             if (Cache.TryGetValue(Key, out CacheBucket Bucket))
             {
-                DeleteValueCallback(Bucket.Value);
+                if (Locked)
+                {
+                    DeletePending.Enqueue(Bucket.Value);
+                }
+                else
+                {
+                    DeleteValueCallback(Bucket.Value);
+                }
 
                 SortedCache.Remove(Bucket.Node);
 
@@ -77,6 +110,12 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             if (Cache.TryGetValue(Key, out CacheBucket Bucket))
             {
                 Value = Bucket.Value;
+
+                SortedCache.Remove(Bucket.Node);
+
+                LinkedListNode<long> Node = SortedCache.AddLast(Key);
+
+                Cache[Key] = new CacheBucket(Value, Bucket.DataSize, Node);
 
                 return true;
             }

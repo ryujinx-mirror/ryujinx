@@ -26,6 +26,16 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             TextureCache = new OGLCachedResource<TCE>(DeleteTexture);
         }
 
+        public void LockCache()
+        {
+            TextureCache.Lock();
+        }
+
+        public void UnlockCache()
+        {
+            TextureCache.Unlock();
+        }
+
         private static void DeleteTexture(TCE CachedTexture)
         {
             GL.DeleteTexture(CachedTexture.Handle);

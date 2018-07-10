@@ -28,15 +28,25 @@ namespace Ryujinx.HLE.Gpu.Texture
         {
             switch (Texture.Format)
             {
-                case GalTextureFormat.R32G32B32A32: return Texture.Width * Texture.Height * 16;
-                case GalTextureFormat.R16G16B16A16: return Texture.Width * Texture.Height * 8;
-                case GalTextureFormat.A8B8G8R8:     return Texture.Width * Texture.Height * 4;
-                case GalTextureFormat.R32:          return Texture.Width * Texture.Height * 4;
-                case GalTextureFormat.A1B5G5R5:     return Texture.Width * Texture.Height * 2;
-                case GalTextureFormat.B5G6R5:       return Texture.Width * Texture.Height * 2;
-                case GalTextureFormat.G8R8:         return Texture.Width * Texture.Height * 2;
-                case GalTextureFormat.R16:          return Texture.Width * Texture.Height * 2;
-                case GalTextureFormat.R8:           return Texture.Width * Texture.Height;
+                case GalTextureFormat.R32G32B32A32:
+                    return Texture.Width * Texture.Height * 16;
+
+                case GalTextureFormat.R16G16B16A16:
+                    return Texture.Width * Texture.Height * 8;
+
+                case GalTextureFormat.A8B8G8R8:
+                case GalTextureFormat.R32:
+                case GalTextureFormat.ZF32:
+                    return Texture.Width * Texture.Height * 4;
+
+                case GalTextureFormat.A1B5G5R5:
+                case GalTextureFormat.B5G6R5:
+                case GalTextureFormat.G8R8:
+                case GalTextureFormat.R16:
+                    return Texture.Width * Texture.Height * 2;
+
+                case GalTextureFormat.R8:
+                    return Texture.Width * Texture.Height;
 
                 case GalTextureFormat.BC1:
                 case GalTextureFormat.BC4:

@@ -73,6 +73,8 @@ namespace Ryujinx.HLE.Gpu.Engines
 
         private void VertexEndGl(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
         {
+            LockCaches();
+
             SetFrameBuffer(Vmm, 0);
 
             long[] Keys = UploadShaders(Vmm);
@@ -90,6 +92,20 @@ namespace Ryujinx.HLE.Gpu.Engines
             UploadTextures(Vmm, Keys);
             UploadUniforms(Vmm);
             UploadVertexArrays(Vmm);
+
+            UnlockCaches();
+        }
+
+        private void LockCaches()
+        {
+            Gpu.Renderer.Rasterizer.LockCaches();
+            Gpu.Renderer.Texture.LockCache();
+        }
+
+        private void UnlockCaches()
+        {
+            Gpu.Renderer.Rasterizer.UnlockCaches();
+            Gpu.Renderer.Texture.UnlockCache();
         }
 
         private void ClearBuffers(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
@@ -570,7 +586,7 @@ namespace Ryujinx.HLE.Gpu.Engines
                     Gpu.Renderer.Rasterizer.CreateIbo(IboKey, Data);
                 }
 
-                Gpu.Renderer.Rasterizer.SetIndexArray(IboKey, IbSize, IndexFormat);
+                Gpu.Renderer.Rasterizer.SetIndexArray(IbSize, IndexFormat);
             }
 
             List<GalVertexAttrib>[] Attribs = new List<GalVertexAttrib>[32];
@@ -634,7 +650,7 @@ namespace Ryujinx.HLE.Gpu.Engines
                     Gpu.Renderer.Rasterizer.CreateVbo(VboKey, Data);
                 }
 
-                Gpu.Renderer.Rasterizer.SetVertexArray(Index, Stride, VboKey, Attribs[Index].ToArray());
+                Gpu.Renderer.Rasterizer.SetVertexArray(Stride, VboKey, Attribs[Index].ToArray());
             }
 
             GalPrimitiveType PrimType = (GalPrimitiveType)(PrimCtrl & 0xffff);
