@@ -85,6 +85,8 @@ If you have some homebrew that currently doesn't work within the emulator, you c
 For help, support, suggestions, or if you just want to get in touch with the team; join our Discord server!  
 https://discord.gg/VkQYXAZ
 
+For donation support, please take a look at our Patreon: https://www.patreon.com/ryujinx
+
 **Running**
 
 To run this emulator, you need the .NET Core 2.1 (or higher) SDK *and* the OpenAL 11 Core SDK.  
@@ -92,6 +94,7 @@ Run `dotnet run -c Release -- path\to\homebrew.nro` inside the Ryujinx solution 
 Run `dotnet run -c Release -- path\to\game_exefs_and_romfs_folder` to run official games (they need to be decrypted and extracted first!)
 
 **Compatibility**
+
 You can check out the compatibility list within the Wiki. Only a handful of games actually work.
 
 **Latest build**
