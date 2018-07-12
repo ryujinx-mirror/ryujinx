@@ -1,5 +1,6 @@
 using Ryujinx.HLE.Gpu.Memory;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Ryujinx.HLE.Gpu.Engines
 {
@@ -17,6 +18,8 @@ namespace Ryujinx.HLE.Gpu.Engines
         private ConcurrentQueue<(NvGpuVmm, NvGpuPBEntry)> BufferQueue;
 
         private NvGpuEngine[] SubChannels;
+
+        public AutoResetEvent Event { get; private set; }
 
         private struct CachedMacro
         {
@@ -60,6 +63,8 @@ namespace Ryujinx.HLE.Gpu.Engines
             Macros = new CachedMacro[MacrosCount];
 
             Mme = new int[MmeWords];
+
+            Event = new AutoResetEvent(false);
         }
 
         public void PushBuffer(NvGpuVmm Vmm, NvGpuPBEntry[] Buffer)
@@ -68,6 +73,8 @@ namespace Ryujinx.HLE.Gpu.Engines
             {
                 BufferQueue.Enqueue((Vmm, PBEntry));
             }
+
+            Event.Set();
         }
 
         public void DispatchCalls()

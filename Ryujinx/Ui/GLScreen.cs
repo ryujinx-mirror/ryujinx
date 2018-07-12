@@ -5,6 +5,9 @@ using Ryujinx.Graphics.Gal;
 using Ryujinx.HLE;
 using Ryujinx.HLE.Input;
 using System;
+using System.Threading;
+
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace Ryujinx
 {
@@ -16,6 +19,8 @@ namespace Ryujinx
         private const float TouchScreenRatioX = (float)TouchScreenWidth  / TouchScreenHeight;
         private const float TouchScreenRatioY = (float)TouchScreenHeight / TouchScreenWidth;
 
+        private const int TargetFPS = 60;
+
         private Switch Ns;
 
         private IGalRenderer Renderer;
@@ -23,6 +28,14 @@ namespace Ryujinx
         private KeyboardState? Keyboard = null;
 
         private MouseState? Mouse = null;
+
+        private Thread RenderThread;
+
+        private bool ResizeEvent;
+
+        private bool TitleEvent;
+
+        private string NewTitle;
 
         public GLScreen(Switch Ns, IGalRenderer Renderer)
             : base(1280, 720,
@@ -36,13 +49,85 @@ namespace Ryujinx
             Location = new Point(
                 (DisplayDevice.Default.Width  / 2) - (Width  / 2),
                 (DisplayDevice.Default.Height / 2) - (Height / 2));
+
+            ResizeEvent = false;
+
+            TitleEvent = false;
         }
 
-        protected override void OnLoad(EventArgs e)
+        private void RenderLoop()
         {
-            VSync = VSyncMode.On;
+            MakeCurrent();
+
+            Stopwatch Chrono = new Stopwatch();
+
+            Chrono.Start();
+
+            long TicksPerFrame = Stopwatch.Frequency / TargetFPS;
+
+            long Ticks = 0;
+
+            while (Exists && !IsExiting)
+            {
+                if (Ns.WaitFifo())
+                {
+                    Ns.ProcessFrame();
+                }
+
+                Renderer.RunActions();
+
+                if (ResizeEvent)
+                {
+                    ResizeEvent = false;
+
+                    Renderer.FrameBuffer.SetWindowSize(Width, Height);
+                }
+
+                Ticks += Chrono.ElapsedTicks;
+
+                Chrono.Restart();
+
+                if (Ticks >= TicksPerFrame)
+                {
+                    RenderFrame();
+
+                    //Queue max. 1 vsync
+                    Ticks = Math.Min(Ticks - TicksPerFrame, TicksPerFrame);
+                }
+            }
+        }
+
+        public void MainLoop()
+        {
+            VSync = VSyncMode.Off;
+
+            Visible = true;
 
             Renderer.FrameBuffer.SetWindowSize(Width, Height);
+
+            Context.MakeCurrent(null);
+
+            //OpenTK doesn't like sleeps in its thread, to avoid this a renderer thread is created
+            RenderThread = new Thread(RenderLoop);
+
+            RenderThread.Start();
+
+            while (Exists && !IsExiting)
+            {
+                ProcessEvents();
+
+                if (!IsExiting)
+                {
+                    UpdateFrame();
+
+                    if (TitleEvent)
+                    {
+                        TitleEvent = false;
+
+                        Title = NewTitle;
+                    }
+                }
+            }
         }
         
         private bool IsGamePadButtonPressedFromString(GamePadState GamePad, string Button)
@@ -99,7 +184,7 @@ namespace Ryujinx
             }
         }
 
-        protected override void OnUpdateFrame(FrameEventArgs e)
+        private new void UpdateFrame()
         {
             HidControllerButtons CurrentButton = 0;
             HidJoystickPosition  LeftJoystick;
@@ -278,13 +363,9 @@ namespace Ryujinx
                 CurrentButton,
                 LeftJoystick,
                 RightJoystick);
-
-            Ns.ProcessFrame();
-
-            Renderer.RunActions();
         }
 
-        protected override void OnRenderFrame(FrameEventArgs e)
+        private new void RenderFrame()
         {
             Renderer.FrameBuffer.Render();
 
@@ -293,16 +374,25 @@ namespace Ryujinx
             double HostFps = Ns.Statistics.GetSystemFrameRate();
             double GameFps = Ns.Statistics.GetGameFrameRate();
 
-            Title = $"Ryujinx | Host FPS: {HostFps:0.0} | Game FPS: {GameFps:0.0}";
+            NewTitle = $"Ryujinx | Host FPS: {HostFps:0.0} | Game FPS: {GameFps:0.0}";
+
+            TitleEvent = true;
 
             SwapBuffers();
 
             Ns.Os.SignalVsync();
         }
 
+        protected override void OnUnload(EventArgs e)
+        {
+            RenderThread.Join();
+
+            base.OnUnload(e);
+        }
+
         protected override void OnResize(EventArgs e)
         {
-            Renderer.FrameBuffer.SetWindowSize(Width, Height);
+            ResizeEvent = true;
         }
 
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
