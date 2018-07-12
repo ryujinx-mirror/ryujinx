@@ -45,10 +45,10 @@ namespace ChocolArm64.Instruction
             {
                 if (SizeF == 0)
                 {
-                    //TODO: This need the half precision floating point type,
-                    //that is not yet supported on .NET. We should probably
-                    //do our own implementation on the meantime.
-                    throw new NotImplementedException();
+                    EmitVectorExtractZx(Context, Op.Rn, Part + Index, 1);
+                    Context.Emit(OpCodes.Conv_U2);
+
+                    Context.EmitCall(typeof(ASoftFloat), nameof(ASoftFloat.ConvertHalfToSingle));
                 }
                 else /* if (SizeF == 1) */
                 {

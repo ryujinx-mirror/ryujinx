@@ -225,5 +225,41 @@ namespace ChocolArm64.Instruction
 
             return 2.0 + op1 * op2;
         }
+
+        public static float ConvertHalfToSingle(ushort x)
+        {
+            uint x_sign = (uint)(x >> 15) & 0x0001;
+            uint x_exp = (uint)(x >> 10) & 0x001F;
+            uint x_mantissa = (uint)x & 0x03FF;
+
+            if (x_exp == 0 && x_mantissa == 0)
+            {
+                // Zero
+                return BitConverter.Int32BitsToSingle((int)(x_sign << 31));
+            }
+
+            if (x_exp == 0x1F)
+            {
+                // NaN or Infinity
+                return BitConverter.Int32BitsToSingle((int)((x_sign << 31) | 0x7F800000 | (x_mantissa << 13)));
+            }
+
+            int exponent = (int)x_exp - 15;
+
+            if (x_exp == 0)
+            {
+                // Denormal
+                x_mantissa <<= 1;
+                while ((x_mantissa & 0x0400) == 0)
+                {
+                    x_mantissa <<= 1;
+                    exponent--;
+                }
+                x_mantissa &= 0x03FF;
+            }
+
+            uint new_exp = (uint)((exponent + 127) & 0xFF) << 23;
+            return BitConverter.Int32BitsToSingle((int)((x_sign << 31) | new_exp | (x_mantissa << 13)));
+        }
     }
 }
