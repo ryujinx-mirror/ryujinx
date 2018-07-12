@@ -2,6 +2,7 @@ using ChocolArm64.Memory;
 using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Concurrent;
+using System.Text;
 using System.Threading;
 
 namespace Ryujinx.HLE.OsHle.Services.Nv.NvHostCtrl
@@ -10,9 +11,16 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvHostCtrl
     {
         private static ConcurrentDictionary<Process, NvHostCtrlUserCtx> UserCtxs;
 
+        private static bool IsProductionMode = true;
+
         static NvHostCtrlIoctl()
         {
             UserCtxs = new ConcurrentDictionary<Process, NvHostCtrlUserCtx>();
+
+            if (Set.NxSettings.Settings.TryGetValue("nv!rmos_set_production_mode", out object ProductionModeSetting))
+            {
+                IsProductionMode = ((string)ProductionModeSetting) != "0"; // Default value is ""
+            }
         }
 
         public static int ProcessIoctl(ServiceCtx Context, int Cmd)
@@ -71,17 +79,52 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvHostCtrl
 
         private static int GetConfig(ServiceCtx Context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            if (!IsProductionMode)
+            {
+                long InputPosition  = Context.Request.GetBufferType0x21().Position;
+                long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            string Nv   = AMemoryHelper.ReadAsciiString(Context.Memory, InputPosition + 0,    0x41);
-            string Name = AMemoryHelper.ReadAsciiString(Context.Memory, InputPosition + 0x41, 0x41);
+                string Domain = AMemoryHelper.ReadAsciiString(Context.Memory, InputPosition + 0, 0x41);
+                string Name   = AMemoryHelper.ReadAsciiString(Context.Memory, InputPosition + 0x41, 0x41);
 
-            Context.Memory.WriteByte(OutputPosition + 0x82, 0);
+                if (Set.NxSettings.Settings.TryGetValue($"{Domain}!{Name}", out object NvSetting))
+                {
+                    byte[] SettingBuffer = new byte[0x101];
 
-            Context.Ns.Log.PrintStub(LogClass.ServiceNv, "Stubbed.");
+                    if (NvSetting is string StringValue)
+                    {
+                        if (StringValue.Length > 0x100)
+                        {
+                            Context.Ns.Log.PrintError(Logging.LogClass.ServiceNv, $"{Domain}!{Name} String value size is too big!");
+                        }
+                        else
+                        {
+                            SettingBuffer = Encoding.ASCII.GetBytes(StringValue + "\0");
+                        }
+                    }
 
-            return NvResult.Success;
+                    if (NvSetting is int IntValue)
+                    {
+                        SettingBuffer = BitConverter.GetBytes(IntValue);
+                    }
+                    else if (NvSetting is bool BoolValue)
+                    {
+                        SettingBuffer[0] = BoolValue ? (byte)1 : (byte)0;
+                    }
+                    else
+                    {
+                        throw new NotImplementedException(NvSetting.GetType().Name);
+                    }
+
+                    Context.Memory.WriteBytes(OutputPosition + 0x82, SettingBuffer);
+
+                    Context.Ns.Log.PrintDebug(Logging.LogClass.ServiceNv, $"Got setting {Domain}!{Name}");
+                }
+                
+                return NvResult.Success;
+            }
+
+            return NvResult.NotAvailableInProduction;
         }
 
         private static int EventWait(ServiceCtx Context)
