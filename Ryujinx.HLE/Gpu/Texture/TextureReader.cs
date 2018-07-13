@@ -10,23 +10,36 @@ namespace Ryujinx.HLE.Gpu.Texture
         {
             switch (Texture.Format)
             {
-                case GalTextureFormat.R32G32B32A32: return Read16Bpp   (Memory, Texture);
-                case GalTextureFormat.R16G16B16A16: return Read8Bpp    (Memory, Texture);
-                case GalTextureFormat.A8B8G8R8:     return Read4Bpp    (Memory, Texture);
-                case GalTextureFormat.R32:          return Read4Bpp    (Memory, Texture);
-                case GalTextureFormat.A1B5G5R5:     return Read5551    (Memory, Texture);
-                case GalTextureFormat.B5G6R5:       return Read565     (Memory, Texture);
-                case GalTextureFormat.G8R8:         return Read2Bpp    (Memory, Texture);
-                case GalTextureFormat.R16:          return Read2Bpp    (Memory, Texture);
-                case GalTextureFormat.R8:           return Read1Bpp    (Memory, Texture);
-                case GalTextureFormat.BC7U:         return Read16Bpt4x4(Memory, Texture);
-                case GalTextureFormat.BC1:          return Read8Bpt4x4 (Memory, Texture);
-                case GalTextureFormat.BC2:          return Read16Bpt4x4(Memory, Texture);
-                case GalTextureFormat.BC3:          return Read16Bpt4x4(Memory, Texture);
-                case GalTextureFormat.BC4:          return Read8Bpt4x4 (Memory, Texture);
-                case GalTextureFormat.BC5:          return Read16Bpt4x4(Memory, Texture);
-                case GalTextureFormat.ZF32:         return Read4Bpp    (Memory, Texture);
-                case GalTextureFormat.Astc2D4x4:    return Read16Bpt4x4(Memory, Texture);
+                case GalTextureFormat.R32G32B32A32: return Read16Bpp                 (Memory, Texture);
+                case GalTextureFormat.R16G16B16A16: return Read8Bpp                  (Memory, Texture);
+                case GalTextureFormat.A8B8G8R8:     return Read4Bpp                  (Memory, Texture);
+                case GalTextureFormat.R32:          return Read4Bpp                  (Memory, Texture);
+                case GalTextureFormat.A1B5G5R5:     return Read5551                  (Memory, Texture);
+                case GalTextureFormat.B5G6R5:       return Read565                   (Memory, Texture);
+                case GalTextureFormat.G8R8:         return Read2Bpp                  (Memory, Texture);
+                case GalTextureFormat.R16:          return Read2Bpp                  (Memory, Texture);
+                case GalTextureFormat.R8:           return Read1Bpp                  (Memory, Texture);
+                case GalTextureFormat.BC7U:         return Read16BptCompressedTexture(Memory, Texture, 4, 4);
+                case GalTextureFormat.BC1:          return Read8Bpt4x4               (Memory, Texture);
+                case GalTextureFormat.BC2:          return Read16BptCompressedTexture(Memory, Texture, 4, 4);
+                case GalTextureFormat.BC3:          return Read16BptCompressedTexture(Memory, Texture, 4, 4);
+                case GalTextureFormat.BC4:          return Read8Bpt4x4               (Memory, Texture);
+                case GalTextureFormat.BC5:          return Read16BptCompressedTexture(Memory, Texture, 4, 4);
+                case GalTextureFormat.ZF32:         return Read4Bpp                  (Memory, Texture);
+                case GalTextureFormat.Astc2D4x4:    return Read16BptCompressedTexture(Memory, Texture, 4, 4);
+                case GalTextureFormat.Astc2D5x5:    return Read16BptCompressedTexture(Memory, Texture, 5, 5);
+                case GalTextureFormat.Astc2D6x6:    return Read16BptCompressedTexture(Memory, Texture, 6, 6);
+                case GalTextureFormat.Astc2D8x8:    return Read16BptCompressedTexture(Memory, Texture, 8, 8);
+                case GalTextureFormat.Astc2D10x10:  return Read16BptCompressedTexture(Memory, Texture, 10, 10); 
+                case GalTextureFormat.Astc2D12x12:  return Read16BptCompressedTexture(Memory, Texture, 12, 12);
+                case GalTextureFormat.Astc2D5x4:    return Read16BptCompressedTexture(Memory, Texture, 5, 4);
+                case GalTextureFormat.Astc2D6x5:    return Read16BptCompressedTexture(Memory, Texture, 6, 5);
+                case GalTextureFormat.Astc2D8x6:    return Read16BptCompressedTexture(Memory, Texture, 8, 6);
+                case GalTextureFormat.Astc2D10x8:   return Read16BptCompressedTexture(Memory, Texture, 10, 8);
+                case GalTextureFormat.Astc2D12x10:  return Read16BptCompressedTexture(Memory, Texture, 12, 10);
+                case GalTextureFormat.Astc2D8x5:    return Read16BptCompressedTexture(Memory, Texture, 8, 5);
+                case GalTextureFormat.Astc2D10x5:   return Read16BptCompressedTexture(Memory, Texture, 10, 5);
+                case GalTextureFormat.Astc2D10x6:   return Read16BptCompressedTexture(Memory, Texture, 10, 6);
             }
 
             throw new NotImplementedException(Texture.Format.ToString());
@@ -307,10 +320,10 @@ namespace Ryujinx.HLE.Gpu.Texture
             return Output;
         }
 
-        private unsafe static byte[] Read16Bpt4x4(IAMemory Memory, TextureInfo Texture)
+        private unsafe static byte[] Read16BptCompressedTexture(IAMemory Memory, TextureInfo Texture, int BlockWidth, int BlockHeight)
         {
-            int Width  = (Texture.Width  + 3) / 4;
-            int Height = (Texture.Height + 3) / 4;
+            int Width  = (Texture.Width  + (BlockWidth - 1)) / BlockWidth;
+            int Height = (Texture.Height + (BlockHeight - 1)) / BlockHeight;
 
             byte[] Output = new byte[Width * Height * 16];
 
