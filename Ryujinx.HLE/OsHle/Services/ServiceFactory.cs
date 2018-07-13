@@ -18,6 +18,7 @@ using Ryujinx.HLE.OsHle.Services.Prepo;
 using Ryujinx.HLE.OsHle.Services.Set;
 using Ryujinx.HLE.OsHle.Services.Sfdnsres;
 using Ryujinx.HLE.OsHle.Services.Sm;
+using Ryujinx.HLE.OsHle.Services.Spl;
 using Ryujinx.HLE.OsHle.Services.Ssl;
 using Ryujinx.HLE.OsHle.Services.Vi;
 using System;
@@ -65,6 +66,9 @@ namespace Ryujinx.HLE.OsHle.Services
 
                 case "caps:ss":
                     return new IScreenshotService();
+
+                case "csrng":
+                    return new IRandomInterface();
 
                 case "friend:a":
                     return new IServiceCreator();
