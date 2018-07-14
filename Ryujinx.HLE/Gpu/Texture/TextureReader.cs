@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.Gpu.Texture
                 case GalTextureFormat.Astc2D5x5:    return Read16BptCompressedTexture(Memory, Texture, 5, 5);
                 case GalTextureFormat.Astc2D6x6:    return Read16BptCompressedTexture(Memory, Texture, 6, 6);
                 case GalTextureFormat.Astc2D8x8:    return Read16BptCompressedTexture(Memory, Texture, 8, 8);
-                case GalTextureFormat.Astc2D10x10:  return Read16BptCompressedTexture(Memory, Texture, 10, 10); 
+                case GalTextureFormat.Astc2D10x10:  return Read16BptCompressedTexture(Memory, Texture, 10, 10);
                 case GalTextureFormat.Astc2D12x12:  return Read16BptCompressedTexture(Memory, Texture, 12, 12);
                 case GalTextureFormat.Astc2D5x4:    return Read16BptCompressedTexture(Memory, Texture, 5, 4);
                 case GalTextureFormat.Astc2D6x5:    return Read16BptCompressedTexture(Memory, Texture, 6, 5);

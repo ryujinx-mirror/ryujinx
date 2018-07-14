@@ -216,7 +216,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private void PrintDeclOutAttributes()
         {
-            if (Decl.ShaderType == GalShaderType.Vertex)
+            if (Decl.ShaderType != GalShaderType.Fragment)
             {
                 SB.AppendLine("layout (location = " + GlslDecl.PositionOutAttrLocation + ") out vec4 " + GlslDecl.PositionOutAttrName + ";");
             }
@@ -337,7 +337,10 @@ namespace Ryujinx.Graphics.Gal.Shader
             if (Decl.ShaderType == GalShaderType.Vertex)
             {
                 SB.AppendLine(IdentationStr + "gl_Position.xy *= " + GlslDecl.FlipUniformName + ";");
+            }
 
+            if (Decl.ShaderType != GalShaderType.Fragment)
+            {
                 SB.AppendLine(IdentationStr + GlslDecl.PositionOutAttrName + " = gl_Position;");
                 SB.AppendLine(IdentationStr + GlslDecl.PositionOutAttrName + ".w = 1;");
             }
@@ -598,9 +601,6 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             switch (Op.Inst)
             {
-                case ShaderIrInst.Frcp:
-                    return true;
-
                 case ShaderIrInst.Ipa:
                 case ShaderIrInst.Texq:
                 case ShaderIrInst.Texs:
@@ -608,8 +608,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                     return false;
             }
 
-            return Op.OperandB != null ||
-                   Op.OperandC != null;
+            return true;
         }
 
         private string GetName(ShaderIrOperCbuf Cbuf)
@@ -711,13 +710,13 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
             else
             {
-                return Imm.Value.ToString(CultureInfo.InvariantCulture);
+                return GetIntConst(Imm.Value);
             }
         }
 
         private string GetValue(ShaderIrOperImmf Immf)
         {
-            return Immf.Value.ToString(CultureInfo.InvariantCulture);
+            return GetFloatConst(Immf.Value);
         }
 
         private string GetName(ShaderIrOperPred Pred)
@@ -1047,7 +1046,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                             if (!float.IsNaN(Value) && !float.IsInfinity(Value))
                             {
-                                return Value.ToString(CultureInfo.InvariantCulture);
+                                return GetFloatConst(Value);
                             }
                         }
                         break;
@@ -1062,6 +1061,20 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
 
             return Expr;
+        }
+
+        private static string GetIntConst(int Value)
+        {
+            string Expr = Value.ToString(CultureInfo.InvariantCulture);
+
+            return Value < 0 ? "(" + Expr + ")" : Expr;
+        }
+
+        private static string GetFloatConst(float Value)
+        {
+            string Expr = Value.ToString(CultureInfo.InvariantCulture);
+
+            return Value < 0 ? "(" + Expr + ")" : Expr;
         }
 
         private static OperType GetDstNodeType(ShaderIrNode Node)

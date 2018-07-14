@@ -172,6 +172,8 @@ namespace Ryujinx.HLE.Gpu.Engines
 
             for (; Index < 6; Index++)
             {
+                GalShaderType Type = GetTypeFromProgram(Index);
+
                 int Control = ReadRegister(NvGpuEngine3dReg.ShaderNControl + Index * 0x10);
                 int Offset  = ReadRegister(NvGpuEngine3dReg.ShaderNOffset  + Index * 0x10);
 
@@ -180,16 +182,16 @@ namespace Ryujinx.HLE.Gpu.Engines
 
                 if (!Enable)
                 {
+                    Gpu.Renderer.Shader.Unbind(Type);
+
                     continue;
                 }
 
                 long Key = BasePosition + (uint)Offset;
 
-                GalShaderType ShaderType = GetTypeFromProgram(Index);
+                Keys[(int)Type] = Key;
 
-                Keys[(int)ShaderType] = Key;
-
-                Gpu.Renderer.Shader.Create(Vmm, Key, ShaderType);
+                Gpu.Renderer.Shader.Create(Vmm, Key, Type);
                 Gpu.Renderer.Shader.Bind(Key);
             }
 

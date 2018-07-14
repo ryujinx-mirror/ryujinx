@@ -203,6 +203,18 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
         }
 
+        public void Unbind(GalShaderType Type)
+        {
+            switch (Type)
+            {
+                case GalShaderType.Vertex:         Current.Vertex         = null; break;
+                case GalShaderType.TessControl:    Current.TessControl    = null; break;
+                case GalShaderType.TessEvaluation: Current.TessEvaluation = null; break;
+                case GalShaderType.Geometry:       Current.Geometry       = null; break;
+                case GalShaderType.Fragment:       Current.Fragment       = null; break;
+            }
+        }
+
         public void BindProgram()
         {
             if (Current.Vertex   == null ||

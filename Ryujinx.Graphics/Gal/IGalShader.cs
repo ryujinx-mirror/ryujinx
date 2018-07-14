@@ -18,6 +18,8 @@ namespace Ryujinx.Graphics.Gal
 
         void Bind(long Key);
 
+        void Unbind(GalShaderType Type);
+
         void BindProgram();
     }
 }
