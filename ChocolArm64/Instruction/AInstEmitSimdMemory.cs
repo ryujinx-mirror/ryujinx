@@ -105,13 +105,14 @@ namespace ChocolArm64.Instruction
                     throw new InvalidOperationException();
                 }
 
-                int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+                int Bytes = Op.GetBitsCount() >> 3;
+                int Elems = Bytes >> Op.Size;
 
                 for (int SElem = 0; SElem < Op.SElems; SElem++)
                 {
                     int Rt = (Op.Rt + SElem) & 0x1f;
 
-                    for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
+                    for (int Index = 0; Index < Elems; Index++)
                     {
                         EmitMemAddress();
 

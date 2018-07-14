@@ -14,9 +14,10 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdIns Op = (AOpCodeSimdIns)Context.CurrOp;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
+            int Elems = Bytes >> Op.Size;
 
-            for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
+            for (int Index = 0; Index < Elems; Index++)
             {
                 Context.EmitLdintzr(Op.Rn);
 
@@ -42,9 +43,10 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdIns Op = (AOpCodeSimdIns)Context.CurrOp;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
+            int Elems = Bytes >> Op.Size;
 
-            for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
+            for (int Index = 0; Index < Elems; Index++)
             {
                 EmitVectorExtractZx(Context, Op.Rn, Op.DstIndex, Op.Size);
 
@@ -64,7 +66,7 @@ namespace ChocolArm64.Instruction
             Context.EmitLdvec(Op.Rd);
             Context.EmitStvectmp();
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
 
             int Position = Op.Imm4;
 
@@ -329,7 +331,7 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
 
             int Elems = Bytes >> Op.Size;
 
@@ -355,7 +357,7 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
 
             int Elems = Bytes >> Op.Size;
             int Half  = Elems >> 1;
@@ -382,7 +384,7 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
 
             int Elems = Bytes >> Op.Size;
             int Half  = Elems >> 1;

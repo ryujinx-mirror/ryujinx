@@ -55,7 +55,7 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
             int Elems = Bytes >> Op.Size;
 
             for (int Index = 0; Index < Elems; Index++)
@@ -195,7 +195,7 @@ namespace ChocolArm64.Instruction
                 throw new InvalidOperationException();
             }
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
             int Elems = Bytes >> Op.Size;
 
             int ContainerMask = (1 << (ContainerSize - Op.Size)) - 1;

@@ -3,6 +3,7 @@ using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -417,7 +418,7 @@ namespace ChocolArm64.Instruction
 
             int SizeF = Op.Size & 1;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
 
             for (int Index = 0; Index < (Bytes >> SizeF + 2); Index++)
             {
@@ -467,7 +468,7 @@ namespace ChocolArm64.Instruction
 
             int SizeF = Op.Size & 1;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
 
             for (int Index = 0; Index < (Bytes >> SizeF + 2); Index++)
             {
@@ -527,9 +528,10 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
+            int Elems = Bytes >> Op.Size;
 
-            for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
+            for (int Index = 0; Index < Elems; Index++)
             {
                 if (Opers.HasFlag(OperFlags.Rd))
                 {
@@ -582,9 +584,10 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
+            int Elems = Bytes >> Op.Size;
 
-            for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
+            for (int Index = 0; Index < Elems; Index++)
             {
                 if (Ternary)
                 {
@@ -622,9 +625,10 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimdImm Op = (AOpCodeSimdImm)Context.CurrOp;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
+            int Elems = Bytes >> Op.Size;
 
-            for (int Index = 0; Index < (Bytes >> Op.Size); Index++)
+            for (int Index = 0; Index < Elems; Index++)
             {
                 if (Binary)
                 {
@@ -739,11 +743,11 @@ namespace ChocolArm64.Instruction
             EmitVectorPairwiseOp(Context, Emit, false);
         }
 
-        private static void EmitVectorPairwiseOp(AILEmitterCtx Context, Action Emit, bool Signed)
+        public static void EmitVectorPairwiseOp(AILEmitterCtx Context, Action Emit, bool Signed)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
-            int Bytes = Context.CurrOp.GetBitsCount() >> 3;
+            int Bytes = Op.GetBitsCount() >> 3;
 
             int Elems = Bytes >> Op.Size;
             int Half  = Elems >> 1;
@@ -767,6 +771,117 @@ namespace ChocolArm64.Instruction
             {
                 EmitVectorZeroUpper(Context, Op.Rd);
             }
+        }
+
+        public static void EmitScalarSaturatingNarrowOpSxSx(AILEmitterCtx Context, Action Emit)
+        {
+            EmitSaturatingNarrowOp(Context, Emit, true, true, true);
+        }
+
+        public static void EmitScalarSaturatingNarrowOpSxZx(AILEmitterCtx Context, Action Emit)
+        {
+            EmitSaturatingNarrowOp(Context, Emit, true, false, true);
+        }
+
+        public static void EmitScalarSaturatingNarrowOpZxZx(AILEmitterCtx Context, Action Emit)
+        {
+            EmitSaturatingNarrowOp(Context, Emit, false, false, true);
+        }
+
+        public static void EmitVectorSaturatingNarrowOpSxSx(AILEmitterCtx Context, Action Emit)
+        {
+            EmitSaturatingNarrowOp(Context, Emit, true, true, false);
+        }
+
+        public static void EmitVectorSaturatingNarrowOpSxZx(AILEmitterCtx Context, Action Emit)
+        {
+            EmitSaturatingNarrowOp(Context, Emit, true, false, false);
+        }
+
+        public static void EmitVectorSaturatingNarrowOpZxZx(AILEmitterCtx Context, Action Emit)
+        {
+            EmitSaturatingNarrowOp(Context, Emit, false, false, false);
+        }
+
+        public static void EmitSaturatingNarrowOp(
+            AILEmitterCtx Context,
+            Action        Emit,
+            bool          SignedSrc,
+            bool          SignedDst,
+            bool          Scalar)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int Elems = !Scalar ? 8 >> Op.Size : 1;
+            int ESize = 8 << Op.Size;
+
+            int Part = !Scalar && (Op.RegisterSize == ARegisterSize.SIMD128) ? Elems : 0;
+
+            long TMaxValue = SignedDst ? (1 << (ESize - 1)) - 1 : (1L << ESize) - 1L;
+            long TMinValue = SignedDst ? -((1 << (ESize - 1))) : 0;
+
+            Context.EmitLdc_I8(0L);
+            Context.EmitSttmp();
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                AILLabel LblLe    = new AILLabel();
+                AILLabel LblGeEnd = new AILLabel();
+
+                EmitVectorExtract(Context, Op.Rn, Index, Op.Size + 1, SignedSrc);
+
+                Emit();
+
+                Context.Emit(OpCodes.Dup);
+
+                Context.EmitLdc_I8(TMaxValue);
+
+                Context.Emit(SignedSrc ? OpCodes.Ble_S : OpCodes.Ble_Un_S, LblLe);
+
+                Context.Emit(OpCodes.Pop);
+
+                Context.EmitLdc_I8(TMaxValue);
+                Context.EmitLdc_I8(0x8000000L);
+                Context.EmitSttmp();
+
+                Context.Emit(OpCodes.Br_S, LblGeEnd);
+
+                Context.MarkLabel(LblLe);
+
+                Context.Emit(OpCodes.Dup);
+
+                Context.EmitLdc_I8(TMinValue);
+
+                Context.Emit(SignedSrc ? OpCodes.Bge_S : OpCodes.Bge_Un_S, LblGeEnd);
+
+                Context.Emit(OpCodes.Pop);
+
+                Context.EmitLdc_I8(TMinValue);
+                Context.EmitLdc_I8(0x8000000L);
+                Context.EmitSttmp();
+
+                Context.MarkLabel(LblGeEnd);
+
+                if (Scalar)
+                {
+                    EmitVectorZeroLower(Context, Op.Rd);
+                }
+
+                EmitVectorInsert(Context, Op.Rd, Part + Index, Op.Size);
+            }
+
+            if (Part == 0)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+
+            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
+            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
+            Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpsr));
+            Context.EmitLdtmp();
+            Context.Emit(OpCodes.Conv_I4);
+            Context.Emit(OpCodes.Or);
+            Context.EmitCallPropSet(typeof(AThreadState), nameof(AThreadState.Fpsr));
         }
 
         public static void EmitScalarSet(AILEmitterCtx Context, int Reg, int Size)
