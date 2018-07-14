@@ -87,7 +87,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
 
             KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
-            if (TimeoutNs == 0)
+            if (TimeoutNs == 0 || TimeoutNs == ulong.MaxValue)
             {
                 Process.Scheduler.Yield(CurrThread);
             }
