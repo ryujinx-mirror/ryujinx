@@ -101,11 +101,13 @@ namespace ChocolArm64.Instruction
             int Bytes = Op.GetBitsCount() >> 3;
             int Elems = Bytes >> Op.Size;
 
+            int ESize = 8 << Op.Size;
+
             for (int Index = 0; Index < Elems; Index++)
             {
                 EmitVectorExtractZx(Context, Op.Rn, Index, Op.Size);
 
-                Context.EmitLdc_I4(8 << Op.Size);
+                Context.EmitLdc_I4(ESize);
 
                 Emit();
 

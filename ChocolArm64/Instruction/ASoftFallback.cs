@@ -12,22 +12,42 @@ namespace ChocolArm64.Instruction
 
         public static ulong CountLeadingSigns(ulong Value, int Size)
         {
-            return CountLeadingZeros((Value >> 1) ^ Value, Size - 1);
-        }
+            Value ^= Value >> 1;
 
-        public static ulong CountLeadingZeros(ulong Value, int Size)
-        {
-            int HighBit = Size - 1;
+            int HighBit = Size - 2;
 
             for (int Bit = HighBit; Bit >= 0; Bit--)
             {
-                if (((Value >> Bit) & 1) != 0)
+                if (((Value >> Bit) & 0b1) != 0)
                 {
                     return (ulong)(HighBit - Bit);
                 }
             }
 
-            return (ulong)Size;
+            return (ulong)(Size - 1);
+        }
+
+        private static readonly byte[] ClzNibbleTbl = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+        public static ulong CountLeadingZeros(ulong Value, int Size)
+        {
+            if (Value == 0)
+            {
+                return (ulong)Size;
+            }
+
+            int NibbleIdx = Size;
+            int PreCount, Count = 0;
+
+            do
+            {
+                NibbleIdx -= 4;
+                PreCount = ClzNibbleTbl[(Value >> NibbleIdx) & 0b1111];
+                Count += PreCount;
+            }
+            while (PreCount == 4);
+
+            return (ulong)Count;
         }
 
         public static uint CountSetBits8(uint Value)
@@ -61,8 +81,8 @@ namespace ChocolArm64.Instruction
 
         private static uint Crc32w(uint Crc, uint Poly, uint Val)
         {
-            Crc = Crc32(Crc, Poly, (byte)(Val >> 0));
-            Crc = Crc32(Crc, Poly, (byte)(Val >> 8));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 0 ));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 8 ));
             Crc = Crc32(Crc, Poly, (byte)(Val >> 16));
             Crc = Crc32(Crc, Poly, (byte)(Val >> 24));
 
@@ -71,8 +91,8 @@ namespace ChocolArm64.Instruction
 
         private static uint Crc32x(uint Crc, uint Poly, ulong Val)
         {
-            Crc = Crc32(Crc, Poly, (byte)(Val >> 0));
-            Crc = Crc32(Crc, Poly, (byte)(Val >> 8));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 0 ));
+            Crc = Crc32(Crc, Poly, (byte)(Val >> 8 ));
             Crc = Crc32(Crc, Poly, (byte)(Val >> 16));
             Crc = Crc32(Crc, Poly, (byte)(Val >> 24));
             Crc = Crc32(Crc, Poly, (byte)(Val >> 32));
@@ -168,9 +188,10 @@ namespace ChocolArm64.Instruction
 
         public static long SMulHi128(long LHS, long RHS)
         {
-            long Result = (long)UMulHi128((ulong)(LHS), (ulong)(RHS));
+            long Result = (long)UMulHi128((ulong)LHS, (ulong)RHS);
             if (LHS < 0) Result -= RHS;
             if (RHS < 0) Result -= LHS;
+
             return Result;
         }
 
@@ -187,6 +208,7 @@ namespace ChocolArm64.Instruction
             ulong Z1 = T & 0xFFFFFFFF;
             ulong Z0 = T >> 32;
             Z1 += LLow * RHigh;
+
             return LHigh * RHigh + Z0 + (Z1 >> 32);
         }
     }
