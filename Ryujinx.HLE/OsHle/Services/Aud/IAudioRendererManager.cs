@@ -67,7 +67,7 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
                     ((Params.SinkCount + Params.MixCount) * 0x3C0 + Params.SampleCount * 4) *
                     (Params.Unknown8 + 6), 64);
                 Size += (Params.SinkCount + Params.MixCount) * 0x2C0;
-                Size += (Params.EffectCount + 4 * Params.VoiceCount) * 0x30 + 0x50;
+                Size += (Params.EffectCount + Params.VoiceCount * 4) * 0x30 + 0x50;
 
                 if (IsSplitterSupported)
                 {
