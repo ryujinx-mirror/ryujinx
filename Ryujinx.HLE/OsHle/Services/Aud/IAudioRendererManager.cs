@@ -51,7 +51,7 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
 
             int Revision = (Params.Revision - Rev0Magic) >> 24;
 
-            if (Revision <= Rev) //REV3 Max is supported
+            if (Revision <= Rev)
             {
                 bool IsSplitterSupported = Revision >= 3;
 
