@@ -23,11 +23,11 @@ namespace Ryujinx.HLE.OsHle.Services.Nv
         private static Dictionary<string, IoctlProcessor> IoctlProcessors =
                    new Dictionary<string, IoctlProcessor>()
         {
-            { "/dev/nvhost-as-gpu",   ProcessIoctlNvGpuAS       },
-            { "/dev/nvhost-ctrl",     ProcessIoctlNvHostCtrl    },
-            { "/dev/nvhost-ctrl-gpu", ProcessIoctlNvGpuGpu      },
-            { "/dev/nvhost-gpu",      ProcessIoctlNvHostChannel },
-            { "/dev/nvmap",           ProcessIoctlNvMap         }
+            { "/dev/nvhost-as-gpu",   ProcessIoctlNvGpuAS    },
+            { "/dev/nvhost-ctrl",     ProcessIoctlNvHostCtrl },
+            { "/dev/nvhost-ctrl-gpu", ProcessIoctlNvGpuGpu   },
+            { "/dev/nvhost-gpu",      ProcessIoctlNvHostGpu  },
+            { "/dev/nvmap",           ProcessIoctlNvMap      }
         };
 
         public static GlobalStateTable Fds { get; private set; }
@@ -44,6 +44,7 @@ namespace Ryujinx.HLE.OsHle.Services.Nv
                 { 3,  Initialize       },
                 { 4,  QueryEvent       },
                 { 8,  SetClientPid     },
+                { 11, Ioctl            },
                 { 13, FinishInitialize }
             };
 
@@ -162,9 +163,9 @@ namespace Ryujinx.HLE.OsHle.Services.Nv
             return ProcessIoctl(Context, Cmd, NvGpuGpuIoctl.ProcessIoctl);
         }
 
-        private static int ProcessIoctlNvHostChannel(ServiceCtx Context, int Cmd)
+        private static int ProcessIoctlNvHostGpu(ServiceCtx Context, int Cmd)
         {
-            return ProcessIoctl(Context, Cmd, NvHostChannelIoctl.ProcessIoctl);
+            return ProcessIoctl(Context, Cmd, NvHostChannelIoctl.ProcessIoctlGpu);
         }
 
         private static int ProcessIoctlNvMap(ServiceCtx Context, int Cmd)
@@ -206,6 +207,8 @@ namespace Ryujinx.HLE.OsHle.Services.Nv
             Fds.DeleteProcess(Process);
 
             NvGpuASIoctl.UnloadProcess(Process);
+
+            NvHostChannelIoctl.UnloadProcess(Process);
 
             NvHostCtrlIoctl.UnloadProcess(Process);
 
