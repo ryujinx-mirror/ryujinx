@@ -8,14 +8,14 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
         public int SampleRate;
         public int SampleCount;
         public int Unknown8;
-        public int UnknownC;
+        public int MixCount;
         public int VoiceCount;
         public int SinkCount;
         public int EffectCount;
-        public int Unknown1C;
-        public int Unknown20;
+        public int PerformanceManagerCount;
+        public int VoiceDropEnable;
         public int SplitterCount;
-        public int Unknown28;
+        public int SplitterDestinationDataCount;
         public int Unknown2C;
         public int Revision;
     }

@@ -1,15 +1,15 @@
-﻿namespace Ryujinx.HLE.OsHle.Services.Aud
+﻿namespace Ryujinx.HLE.OsHle.Services.Aud.AudioRenderer
 {
     struct UpdateDataHeader
     {
         public int Revision;
         public int BehaviorSize;
-        public int MemoryPoolsSize;
-        public int VoicesSize;
+        public int MemoryPoolSize;
+        public int VoiceSize;
         public int VoiceResourceSize;
-        public int EffectsSize;
-        public int MixesSize;
-        public int SinksSize;
+        public int EffectSize;
+        public int MixeSize;
+        public int SinkSize;
         public int PerformanceManagerSize;
         public int Unknown24;
         public int Unknown28;

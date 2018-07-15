@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.OsHle.Services.Aud
+﻿namespace Ryujinx.HLE.OsHle.Services.Aud.AudioRenderer
 {
     enum MemoryPoolState : int
     {

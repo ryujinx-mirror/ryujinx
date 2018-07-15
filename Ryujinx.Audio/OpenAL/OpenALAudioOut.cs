@@ -3,6 +3,7 @@ using OpenTK.Audio.OpenAL;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Ryujinx.Audio.OpenAL
@@ -226,15 +227,9 @@ namespace Ryujinx.Audio.OpenAL
             while (KeepPolling);
         }
 
-        public int OpenTrack(
-            int             SampleRate,
-            int             Channels,
-            ReleaseCallback Callback,
-            out AudioFormat Format)
+        public int OpenTrack(int SampleRate, int Channels, ReleaseCallback Callback)
         {
-            Format = AudioFormat.PcmInt16;
-
-            Track Td = new Track(SampleRate, GetALFormat(Channels, Format), Callback);
+            Track Td = new Track(SampleRate, GetALFormat(Channels), Callback);
 
             for (int Id = 0; Id < MaxTracks; Id++)
             {
@@ -247,38 +242,16 @@ namespace Ryujinx.Audio.OpenAL
             return -1;
         }
 
-        private ALFormat GetALFormat(int Channels, AudioFormat Format)
+        private ALFormat GetALFormat(int Channels)
         {
-            if (Channels == 1)
+            switch (Channels)
             {
-                switch (Format)
-                {
-                    case AudioFormat.PcmInt8:  return ALFormat.Mono8;
-                    case AudioFormat.PcmInt16: return ALFormat.Mono16;
-                }
-            }
-            else if (Channels == 2)
-            {
-                switch (Format)
-                {
-                    case AudioFormat.PcmInt8:  return ALFormat.Stereo8;
-                    case AudioFormat.PcmInt16: return ALFormat.Stereo16;
-                }
-            }
-            else if (Channels == 6)
-            {
-                switch (Format)
-                {
-                    case AudioFormat.PcmInt8:  return ALFormat.Multi51Chn8Ext;
-                    case AudioFormat.PcmInt16: return ALFormat.Multi51Chn16Ext;
-                }
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException(nameof(Channels));
+                case 1: return ALFormat.Mono16;
+                case 2: return ALFormat.Stereo16;
+                case 6: return ALFormat.Multi51Chn16Ext;
             }
 
-            throw new ArgumentException(nameof(Format));
+            throw new ArgumentOutOfRangeException(nameof(Channels));
         }
 
         public void CloseTrack(int Track)
@@ -309,13 +282,15 @@ namespace Ryujinx.Audio.OpenAL
             return null;
         }
 
-        public void AppendBuffer(int Track, long Tag, byte[] Buffer)
+        public void AppendBuffer<T>(int Track, long Tag, T[] Buffer) where T : struct
         {
             if (Tracks.TryGetValue(Track, out Track Td))
             {
                 int BufferId = Td.AppendBuffer(Tag);
 
-                AL.BufferData(BufferId, Td.Format, Buffer, Buffer.Length, Td.SampleRate);
+                int Size = Buffer.Length * Marshal.SizeOf<T>();
+
+                AL.BufferData<T>(BufferId, Td.Format, Buffer, Size, Td.SampleRate);
 
                 AL.SourceQueueBuffer(Td.SourceId, BufferId);
 
@@ -366,7 +341,5 @@ namespace Ryujinx.Audio.OpenAL
 
             return PlaybackState.Stopped;
         }
-
-
     }
 }

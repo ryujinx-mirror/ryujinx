@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvMap
                 return NvResult.InvalidInput;
             }
 
-            int Size = IntUtils.RoundUp(Args.Size, NvGpuVmm.PageSize);
+            int Size = IntUtils.AlignUp(Args.Size, NvGpuVmm.PageSize);
 
             Args.Handle = AddNvMap(Context, new NvMapHandle(Size));
 
@@ -121,7 +121,7 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvMap
                 Map.Align =       Args.Align;
                 Map.Kind  = (byte)Args.Kind;
 
-                int Size = IntUtils.RoundUp(Map.Size, NvGpuVmm.PageSize);
+                int Size = IntUtils.AlignUp(Map.Size, NvGpuVmm.PageSize);
 
                 long Address = Args.Address;
 

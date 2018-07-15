@@ -1,12 +1,12 @@
-namespace Ryujinx.Audio
+namespace Ryujinx.HLE.OsHle.Services.Aud
 {
-    public enum AudioFormat
+    enum SampleFormat : byte
     {
         Invalid  = 0,
         PcmInt8  = 1,
         PcmInt16 = 2,
-        PcmImt24 = 3,
-        PcmImt32 = 4,
+        PcmInt24 = 3,
+        PcmInt32 = 4,
         PcmFloat = 5,
         Adpcm    = 6
     }

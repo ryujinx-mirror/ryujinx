@@ -3,6 +3,7 @@ using Ryujinx.Audio;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.OsHle.Handles;
 using Ryujinx.HLE.OsHle.Ipc;
+using Ryujinx.HLE.OsHle.Services.Aud.AudioOut;
 using System.Collections.Generic;
 using System.Text;
 
@@ -154,13 +155,13 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
 
             IAalOutput AudioOut = Context.Ns.AudioOut;
 
-            int Track = AudioOut.OpenTrack(SampleRate, Channels, Callback, out AudioFormat Format);
+            int Track = AudioOut.OpenTrack(SampleRate, Channels, Callback);
 
             MakeObject(Context, new IAudioOut(AudioOut, ReleaseEvent, Track));
 
             Context.ResponseData.Write(SampleRate);
             Context.ResponseData.Write(Channels);
-            Context.ResponseData.Write((int)Format);
+            Context.ResponseData.Write((int)SampleFormat.PcmInt16);
             Context.ResponseData.Write((int)PlaybackState.Stopped);
 
             return 0;
