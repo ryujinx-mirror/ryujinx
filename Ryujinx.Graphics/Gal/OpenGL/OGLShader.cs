@@ -118,6 +118,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             if (IsDualVp)
             {
+                ShaderDumper.Dump(Memory, Position  + 0x50, Type, "a");
+                ShaderDumper.Dump(Memory, PositionB + 0x50, Type, "b");
+
                 Program = Decompiler.Decompile(
                     Memory,
                     Position  + 0x50,
@@ -126,6 +129,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
             else
             {
+                ShaderDumper.Dump(Memory, Position + 0x50, Type);
+
                 Program = Decompiler.Decompile(Memory, Position + 0x50, Type);
             }
 
