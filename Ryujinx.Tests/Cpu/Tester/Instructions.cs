@@ -4655,6 +4655,74 @@ namespace Ryujinx.Tests.Cpu.Tester
             Vpart(d, part, result);
         }
 
+        // trn1_advsimd.html
+        public static void Trn1_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool op = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size:Q == '110' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+            int part = (int)UInt(op);
+            int pairs = elements / 2;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+
+            for (int p = 0; p <= pairs - 1; p++)
+            {
+                Elem(result, 2 * p + 0, esize, Elem(operand1, 2 * p + part, esize));
+                Elem(result, 2 * p + 1, esize, Elem(operand2, 2 * p + part, esize));
+            }
+
+            V(d, result);
+        }
+
+        // trn2_advsimd.html
+        public static void Trn2_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool op = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size:Q == '110' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+            int part = (int)UInt(op);
+            int pairs = elements / 2;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+
+            for (int p = 0; p <= pairs - 1; p++)
+            {
+                Elem(result, 2 * p + 0, esize, Elem(operand1, 2 * p + part, esize));
+                Elem(result, 2 * p + 1, esize, Elem(operand2, 2 * p + part, esize));
+            }
+
+            V(d, result);
+        }
+
         // uaba_advsimd.html
         public static void Uaba_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
         {
@@ -4828,6 +4896,146 @@ namespace Ryujinx.Tests.Cpu.Tester
                 absdiff = Abs(element1 - element2).SubBigInteger(2 * esize - 1, 0);
 
                 Elem(result, e, 2 * esize, Elem(result, e, 2 * esize) + absdiff);
+            }
+
+            V(d, result);
+        }
+
+        // uzp1_advsimd.html
+        public static void Uzp1_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool op = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size:Q == '110' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+            int part = (int)UInt(op);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operandl = V(datasize, n);
+            Bits operandh = V(datasize, m);
+
+            Bits zipped = Bits.Concat(operandh, operandl);
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                Elem(result, e, esize, Elem(zipped, 2 * e + part, esize));
+            }
+
+            V(d, result);
+        }
+
+        // uzp2_advsimd.html
+        public static void Uzp2_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool op = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size:Q == '110' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+            int part = (int)UInt(op);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operandl = V(datasize, n);
+            Bits operandh = V(datasize, m);
+
+            Bits zipped = Bits.Concat(operandh, operandl);
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                Elem(result, e, esize, Elem(zipped, 2 * e + part, esize));
+            }
+
+            V(d, result);
+        }
+
+        // zip1_advsimd.html
+        public static void Zip1_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool op = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size:Q == '110' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+            int part = (int)UInt(op);
+            int pairs = elements / 2;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+
+            int @base = part * pairs;
+
+            for (int p = 0; p <= pairs - 1; p++)
+            {
+                Elem(result, 2 * p + 0, esize, Elem(operand1, @base + p, esize));
+                Elem(result, 2 * p + 1, esize, Elem(operand2, @base + p, esize));
+            }
+
+            V(d, result);
+        }
+
+        // zip2_advsimd.html
+        public static void Zip2_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool op = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size:Q == '110' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+            int part = (int)UInt(op);
+            int pairs = elements / 2;
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+
+            int @base = part * pairs;
+
+            for (int p = 0; p <= pairs - 1; p++)
+            {
+                Elem(result, 2 * p + 0, esize, Elem(operand1, @base + p, esize));
+                Elem(result, 2 * p + 1, esize, Elem(operand2, @base + p, esize));
             }
 
             V(d, result);

@@ -163,11 +163,18 @@ namespace ChocolArm64.Instruction
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
             int Elems = 8 >> Op.Size;
+
             int ESize = 8 << Op.Size;
 
             int Part = Op.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
 
             long RoundConst = 1L << (ESize - 1);
+
+            if (Part != 0)
+            {
+                Context.EmitLdvec(Op.Rd);
+                Context.EmitStvectmp();
+            }
 
             for (int Index = 0; Index < Elems; Index++)
             {
@@ -185,8 +192,11 @@ namespace ChocolArm64.Instruction
 
                 Context.EmitLsr(ESize);
 
-                EmitVectorInsert(Context, Op.Rd, Part + Index, Op.Size);
+                EmitVectorInsertTmp(Context, Part + Index, Op.Size);
             }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
 
             if (Part == 0)
             {
