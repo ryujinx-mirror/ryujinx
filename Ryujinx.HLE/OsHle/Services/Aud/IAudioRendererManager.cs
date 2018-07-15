@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.OsHle.Services.Aud
 
         private const int Rev = 4;
 
-        public const int RevMagic = Rev0Magic + Rev;
+        public const int RevMagic = Rev0Magic + (Rev << 24);
 
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
