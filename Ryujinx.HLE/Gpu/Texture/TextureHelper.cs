@@ -54,6 +54,8 @@ namespace Ryujinx.HLE.Gpu.Texture
                     return CompressedTextureSize(Texture.Width, Texture.Height, 4, 4, 8);
                 }
 
+                case GalTextureFormat.BC6H_SF16:
+                case GalTextureFormat.BC6H_UF16:
                 case GalTextureFormat.BC7U:
                 case GalTextureFormat.BC2:
                 case GalTextureFormat.BC3:
