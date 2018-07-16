@@ -48,18 +48,24 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeMemEx Op = (AOpCodeMemEx)Context.CurrOp;
 
-            if (AccType.HasFlag(AccessType.Ordered))
+            bool Ordered   = (AccType & AccessType.Ordered)   != 0;
+            bool Exclusive = (AccType & AccessType.Exclusive) != 0;
+
+            if (Ordered)
             {
                 EmitBarrier(Context);
             }
 
-            if (AccType.HasFlag(AccessType.Exclusive))
+            if (Exclusive)
             {
                 EmitMemoryCall(Context, nameof(AMemory.SetExclusive), Op.Rn);
             }
 
-            Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
             Context.EmitLdint(Op.Rn);
+            Context.EmitSttmp();
+
+            Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
+            Context.EmitLdtmp();
 
             EmitReadZxCall(Context, Op.Size);
 
@@ -68,7 +74,7 @@ namespace ChocolArm64.Instruction
             if (Pair)
             {
                 Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
-                Context.EmitLdint(Op.Rn);
+                Context.EmitLdtmp();
                 Context.EmitLdc_I(8 << Op.Size);
 
                 Context.Emit(OpCodes.Add);
@@ -104,7 +110,10 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeMemEx Op = (AOpCodeMemEx)Context.CurrOp;
 
-            if (AccType.HasFlag(AccessType.Ordered))
+            bool Ordered   = (AccType & AccessType.Ordered)   != 0;
+            bool Exclusive = (AccType & AccessType.Exclusive) != 0;
+
+            if (Ordered)
             {
                 EmitBarrier(Context);
             }
@@ -112,7 +121,7 @@ namespace ChocolArm64.Instruction
             AILLabel LblEx  = new AILLabel();
             AILLabel LblEnd = new AILLabel();
 
-            if (AccType.HasFlag(AccessType.Exclusive))
+            if (Exclusive)
             {
                 EmitMemoryCall(Context, nameof(AMemory.TestExclusive), Op.Rn);
 
@@ -145,7 +154,7 @@ namespace ChocolArm64.Instruction
                 EmitWriteCall(Context, Op.Size);
             }
 
-            if (AccType.HasFlag(AccessType.Exclusive))
+            if (Exclusive)
             {
                 Context.EmitLdc_I8(0);
                 Context.EmitStintzr(Op.Rs);
