@@ -2,6 +2,7 @@ using ChocolArm64.Memory;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.OsHle;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Ryujinx.HLE.Loaders
 {
@@ -15,6 +16,8 @@ namespace Ryujinx.HLE.Loaders
 
         public string Name { get; private set; }
 
+        public string FilePath { get; private set; }
+
         private AMemory Memory;
 
         public long ImageBase { get; private set; }
@@ -26,8 +29,9 @@ namespace Ryujinx.HLE.Loaders
 
             m_SymbolTable = new Dictionary<long, string>();
 
-            Name = Exe.Name;
+            FilePath = Exe.FilePath;
 
+            Name = Path.GetFileNameWithoutExtension(FilePath.Replace(Homebrew.TemporaryNroSuffix, ""));
             this.Memory    = Memory;
             this.ImageBase = ImageBase;
             this.ImageEnd  = ImageBase;

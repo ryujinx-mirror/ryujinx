@@ -68,6 +68,7 @@ namespace Ryujinx
                 };
 
                 Screen.MainLoop();
+                Ns.OnFinish(EventArgs.Empty);
             }
 
             Environment.Exit(0);

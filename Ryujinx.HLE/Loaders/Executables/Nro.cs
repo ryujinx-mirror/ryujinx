@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.Loaders.Executables
 {
     class Nro : IExecutable
     {
-        public string Name { get; private set; }
+        public string FilePath { get; private set; }
 
         public byte[] Text { get; private set; }
         public byte[] RO   { get; private set; }
@@ -16,9 +16,9 @@ namespace Ryujinx.HLE.Loaders.Executables
         public int DataOffset { get; private set; }
         public int BssSize    { get; private set; }
 
-        public Nro(Stream Input, string Name)
+        public Nro(Stream Input, string FilePath)
         {
-            this.Name = Name;
+            this.FilePath = FilePath;
 
             BinaryReader Reader = new BinaryReader(Input);
 

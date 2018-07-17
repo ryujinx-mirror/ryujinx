@@ -45,6 +45,35 @@ namespace Ryujinx.HLE
 
         public string GetGameSavesPath() => MakeDirAndGetFullPath(NandPath);
 
+        public string SwitchPathToSystemPath(string SwitchPath)
+        {
+            string[] Parts = SwitchPath.Split(":");
+            if (Parts.Length != 2)
+            {
+                return null;
+            }
+            return GetFullPath(MakeDirAndGetFullPath(Parts[0]), Parts[1]);
+        }
+
+        public string SystemPathToSwitchPath(string SystemPath)
+        {
+            string BaseSystemPath = GetBasePath() + "/";
+            if (SystemPath.StartsWith(BaseSystemPath))
+            {
+                string RawPath = SystemPath.Replace(BaseSystemPath, "");
+                int FirstSeparatorOffset = RawPath.IndexOf('/');
+                if (FirstSeparatorOffset == -1)
+                {
+                    return $"{RawPath}:/";
+                }
+
+                string BasePath = RawPath.Substring(0, FirstSeparatorOffset);
+                string FileName = RawPath.Substring(FirstSeparatorOffset + 1);
+                return $"{BasePath}:/{FileName}";
+            }
+            return null;
+        }
+
         private string MakeDirAndGetFullPath(string Dir)
         {
             string FullPath = Path.Combine(GetBasePath(), Dir);

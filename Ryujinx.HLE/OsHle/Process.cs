@@ -13,6 +13,7 @@ using Ryujinx.HLE.OsHle.Services.Nv;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Ryujinx.HLE.OsHle
@@ -155,7 +156,9 @@ namespace Ryujinx.HLE.OsHle
             {
                 HbAbiDataPosition = AMemoryHelper.PageRoundUp(Executables[0].ImageEnd);
 
-                Homebrew.WriteHbAbiData(Memory, HbAbiDataPosition, Handle);
+                string SwitchPath = Ns.VFs.SystemPathToSwitchPath(Executables[0].FilePath);
+
+                Homebrew.WriteHbAbiData(Memory, HbAbiDataPosition, Handle, SwitchPath);
 
                 MainThread.Thread.ThreadState.X0 = (ulong)HbAbiDataPosition;
                 MainThread.Thread.ThreadState.X1 = ulong.MaxValue;
@@ -400,6 +403,11 @@ namespace Ryujinx.HLE.OsHle
         {
             if (Disposing && !Disposed)
             {
+                if (NeedsHbAbi && Executables[0].FilePath.EndsWith(Homebrew.TemporaryNroSuffix))
+                {
+                    File.Delete(Executables[0].FilePath);
+                }
+
                 //If there is still some thread running, disposing the objects is not
                 //safe as the thread may try to access those resources. Instead, we set
                 //the flag to have the Process disposed when all threads finishes.

@@ -81,8 +81,9 @@ namespace Ryujinx.HLE
             Gpu.Fifo.DispatchCalls();
         }
 
-        internal virtual void OnFinish(EventArgs e)
+        public virtual void OnFinish(EventArgs e)
         {
+            Os.Dispose();
             Finish?.Invoke(this, e);
         }
 

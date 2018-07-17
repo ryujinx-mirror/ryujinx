@@ -1,11 +1,14 @@
 ﻿using ChocolArm64.Memory;
+using System.Text;
 
 namespace Ryujinx.HLE.OsHle
 {
     static class Homebrew
     {
+        public const string TemporaryNroSuffix = ".ryu_tmp.nro";
+
         //http://switchbrew.org/index.php?title=Homebrew_ABI
-        public static void WriteHbAbiData(AMemory Memory, long Position, int MainThreadHandle)
+        public static void WriteHbAbiData(AMemory Memory, long Position, int MainThreadHandle, string SwitchPath)
         {
             Memory.Manager.Map(Position, AMemoryMgr.PageSize, (int)MemoryType.Normal, AMemoryPerm.RW);
 
@@ -14,6 +17,11 @@ namespace Ryujinx.HLE.OsHle
 
             //NextLoadPath
             WriteConfigEntry(Memory, ref Position, 2, 0, Position + 0x200, Position + 0x400);
+
+            // Argv
+            long ArgvPosition = Position + 0xC00;
+            WriteConfigEntry(Memory, ref Position, 5, 0, 0, ArgvPosition);
+            Memory.WriteBytes(ArgvPosition, Encoding.ASCII.GetBytes(SwitchPath + "\0"));
 
             //AppletType
             WriteConfigEntry(Memory, ref Position, 7);

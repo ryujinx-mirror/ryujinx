@@ -87,19 +87,36 @@ namespace Ryujinx.HLE.OsHle
             MainProcess.Run();
         }
 
-        public void LoadProgram(string FileName)
+        public void LoadProgram(string FilePath)
         {
-            bool IsNro = Path.GetExtension(FileName).ToLower() == ".nro";
+            bool IsNro = Path.GetExtension(FilePath).ToLower() == ".nro";
 
-            string Name = Path.GetFileNameWithoutExtension(FileName);
+            string Name = Path.GetFileNameWithoutExtension(FilePath);
+            string SwitchFilePath = Ns.VFs.SystemPathToSwitchPath(FilePath);
+
+            if (IsNro && (SwitchFilePath == null || !SwitchFilePath.StartsWith("sdmc:/")))
+            {
+                // TODO: avoid copying the file if we are already inside a sdmc directory
+                string SwitchPath = $"sdmc:/switch/{Name}{Homebrew.TemporaryNroSuffix}";
+                string TempPath = Ns.VFs.SwitchPathToSystemPath(SwitchPath);
+
+                string SwitchDir = Path.GetDirectoryName(TempPath);
+                if (!Directory.Exists(SwitchDir))
+                {
+                    Directory.CreateDirectory(SwitchDir);
+                }
+                File.Copy(FilePath, TempPath, true);
+
+                FilePath = TempPath;
+            }
 
             Process MainProcess = MakeProcess();
 
-            using (FileStream Input = new FileStream(FileName, FileMode.Open))
+            using (FileStream Input = new FileStream(FilePath, FileMode.Open))
             {
                 MainProcess.LoadProgram(IsNro
-                    ? (IExecutable)new Nro(Input, Name)
-                    : (IExecutable)new Nso(Input, Name));
+                    ? (IExecutable)new Nro(Input, FilePath)
+                    : (IExecutable)new Nso(Input, FilePath));
             }
 
             MainProcess.SetEmptyArgs();
