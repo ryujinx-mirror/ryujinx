@@ -156,6 +156,11 @@ namespace Ryujinx.Graphics.Gal.Shader
             return new ShaderIrOperPred((int)(OpCode >> 39) & 7);
         }
 
+        public static ShaderIrOperPred GetOperPred48(long OpCode)
+        {
+            return new ShaderIrOperPred((int)((OpCode >> 48) & 7));
+        }
+
         public static ShaderIrInst GetCmp(long OpCode)
         {
             switch ((int)(OpCode >> 49) & 7)

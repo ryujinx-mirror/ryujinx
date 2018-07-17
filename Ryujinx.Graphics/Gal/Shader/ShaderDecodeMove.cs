@@ -113,6 +113,21 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Gpr), OpCode));
         }
 
+        public static void Sel_C(ShaderIrBlock Block, long OpCode)
+        {
+            EmitSel(Block, OpCode, ShaderOper.CR);
+        }
+
+        public static void Sel_I(ShaderIrBlock Block, long OpCode)
+        {
+            EmitSel(Block, OpCode, ShaderOper.Imm);
+        }
+
+        public static void Sel_R(ShaderIrBlock Block, long OpCode)
+        {
+            EmitSel(Block, OpCode, ShaderOper.RR);
+        }
+
         private static void EmitF2f(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
         {
             bool NegA = ((OpCode >> 45) & 1) != 0;
@@ -338,6 +353,28 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
 
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), OperA), OpCode));
+        }
+
+        private static void EmitSel(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        {
+            ShaderIrOperGpr Dst  = GetOperGpr0   (OpCode);
+            ShaderIrNode    Pred = GetOperPred39N(OpCode);
+
+            ShaderIrNode ResultA = GetOperGpr8(OpCode);
+            ShaderIrNode ResultB;
+
+            switch (Oper)
+            {
+                case ShaderOper.CR:  ResultB = GetOperCbuf34  (OpCode); break;
+                case ShaderOper.Imm: ResultB = GetOperImm19_20(OpCode); break;
+                case ShaderOper.RR:  ResultB = GetOperGpr20   (OpCode); break;
+
+                default: throw new ArgumentException(nameof(Oper));
+            }
+
+            Block.AddNode(GetPredNode(new ShaderIrCond(Pred, new ShaderIrAsg(Dst, ResultA), false), OpCode));
+
+            Block.AddNode(GetPredNode(new ShaderIrCond(Pred, new ShaderIrAsg(Dst, ResultB), true),  OpCode));
         }
 
         private static IntType GetIntType(long OpCode)
