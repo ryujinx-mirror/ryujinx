@@ -31,7 +31,11 @@ namespace Ryujinx.HLE.Loaders
 
             FilePath = Exe.FilePath;
 
-            Name = Path.GetFileNameWithoutExtension(FilePath.Replace(Homebrew.TemporaryNroSuffix, ""));
+            if (FilePath != null)
+            {
+                Name = Path.GetFileNameWithoutExtension(FilePath.Replace(Homebrew.TemporaryNroSuffix, ""));
+            }
+
             this.Memory    = Memory;
             this.ImageBase = ImageBase;
             this.ImageEnd  = ImageBase;

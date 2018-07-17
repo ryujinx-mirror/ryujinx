@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.Loaders.Executables
             HasDataHash      = 1 << 5
         }
 
-        public Nso(Stream Input, string Name)
+        public Nso(Stream Input, string FilePath)
         {
             this.FilePath = FilePath;
 
