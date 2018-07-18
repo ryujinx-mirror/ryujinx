@@ -14,6 +14,7 @@ namespace Ryujinx.Graphics.Gal
         G8R8         = 0x18,
         R16          = 0x1b,
         R8           = 0x1d,
+        BF10GF11RF11 = 0x21,
         BC1          = 0x24,
         BC2          = 0x25,
         BC3          = 0x26,
