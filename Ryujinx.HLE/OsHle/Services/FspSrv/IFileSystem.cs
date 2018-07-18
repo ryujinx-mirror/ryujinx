@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.OsHle.Services.FspSrv
                 { 10, Commit                     },
                 { 11, GetFreeSpaceSize           },
                 { 12, GetTotalSpaceSize          },
-                //{ 13, CleanDirectoryRecursively  },
+                { 13, CleanDirectoryRecursively  },
                 //{ 14, GetFileTimeStampRaw        }
             };
 
@@ -46,8 +46,6 @@ namespace Ryujinx.HLE.OsHle.Services.FspSrv
 
         public long CreateFile(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
-
             string Name = ReadUtf8String(Context);
 
             long Mode = Context.RequestData.ReadInt64();
@@ -80,8 +78,6 @@ namespace Ryujinx.HLE.OsHle.Services.FspSrv
 
         public long DeleteFile(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
-
             string Name = ReadUtf8String(Context);
 
             string FileName = Context.Ns.VFs.GetFullPath(Path, Name);
@@ -103,8 +99,6 @@ namespace Ryujinx.HLE.OsHle.Services.FspSrv
 
         public long CreateDirectory(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
-
             string Name = ReadUtf8String(Context);
 
             string DirName = Context.Ns.VFs.GetFullPath(Path, Name);
@@ -141,8 +135,6 @@ namespace Ryujinx.HLE.OsHle.Services.FspSrv
 
         private long DeleteDirectory(ServiceCtx Context, bool Recursive)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
-
             string Name = ReadUtf8String(Context);
 
             string DirName = Context.Ns.VFs.GetFullPath(Path, Name);
@@ -220,8 +212,6 @@ namespace Ryujinx.HLE.OsHle.Services.FspSrv
 
         public long GetEntryType(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
-
             string Name = ReadUtf8String(Context);
 
             string FileName = Context.Ns.VFs.GetFullPath(Path, Name);
@@ -246,8 +236,6 @@ namespace Ryujinx.HLE.OsHle.Services.FspSrv
 
         public long OpenFile(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
-
             int FilterFlags = Context.RequestData.ReadInt32();
 
             string Name = ReadUtf8String(Context);
@@ -282,8 +270,6 @@ namespace Ryujinx.HLE.OsHle.Services.FspSrv
 
         public long OpenDirectory(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
-
             int FilterFlags = Context.RequestData.ReadInt32();
 
             string Name = ReadUtf8String(Context);
@@ -321,8 +307,6 @@ namespace Ryujinx.HLE.OsHle.Services.FspSrv
 
         public long GetFreeSpaceSize(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
-
             string Name = ReadUtf8String(Context);
 
             Context.ResponseData.Write(Context.Ns.VFs.GetDrive().AvailableFreeSpace);
@@ -332,11 +316,40 @@ namespace Ryujinx.HLE.OsHle.Services.FspSrv
 
         public long GetTotalSpaceSize(ServiceCtx Context)
         {
-            long Position = Context.Request.PtrBuff[0].Position;
-
             string Name = ReadUtf8String(Context);
 
             Context.ResponseData.Write(Context.Ns.VFs.GetDrive().TotalSize);
+
+            return 0;
+        }
+
+        public long CleanDirectoryRecursively(ServiceCtx Context)
+        {
+            string Name = ReadUtf8String(Context);
+
+            string DirName = Context.Ns.VFs.GetFullPath(Path, Name);
+
+            if (!Directory.Exists(DirName))
+            {
+                return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
+            }
+
+            if (IsPathAlreadyInUse(DirName))
+            {
+                return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
+            }
+
+            foreach (string Entry in Directory.EnumerateFileSystemEntries(DirName))
+            {
+                if (Directory.Exists(Entry))
+                {
+                    Directory.Delete(Entry, true);
+                }
+                else if (File.Exists(Entry))
+                {
+                    File.Delete(Entry);
+                }
+            }
 
             return 0;
         }
