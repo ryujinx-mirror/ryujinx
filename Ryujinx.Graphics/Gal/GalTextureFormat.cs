@@ -19,6 +19,7 @@ namespace Ryujinx.Graphics.Gal
         BC3          = 0x26,
         BC4          = 0x27,
         BC5          = 0x28,
+        Z24S8        = 0x29,
         ZF32         = 0x2f,
         Astc2D4x4    = 0x40,
         Astc2D5x5    = 0x41,
