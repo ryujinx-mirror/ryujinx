@@ -364,7 +364,7 @@ namespace ChocolArm64.Instruction
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
             int Bytes = Op.GetBitsCount() >> 3;
-            int Elems = (!Scalar ? Bytes >> Op.Size : 1);
+            int Elems = !Scalar ? Bytes >> Op.Size : 1;
 
             ulong SzMask = ulong.MaxValue >> (64 - (8 << Op.Size));
 
@@ -408,7 +408,7 @@ namespace ChocolArm64.Instruction
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
 
             int Bytes = Op.GetBitsCount() >> 3;
-            int Elems = (!Scalar ? Bytes >> Op.Size : 1);
+            int Elems = !Scalar ? Bytes >> Op.Size : 1;
 
             ulong SzMask = ulong.MaxValue >> (64 - (8 << Op.Size));
 

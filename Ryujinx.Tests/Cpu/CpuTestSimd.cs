@@ -1377,6 +1377,60 @@ namespace Ryujinx.Tests.Cpu
             });
             Assert.That(((ThreadState.Fpsr >> 27) & 1) != 0, Is.EqualTo(Shared.FPSR[27]));
         }
+
+        [Test, Description("XTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
+        public void Xtn_V_8H8B_4S4H_2D2S([Values(0u)] uint Rd,
+                                         [Values(1u, 0u)] uint Rn,
+                                         [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
+                                         [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
+                                         [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H8B, 4S4H, 2D2S>
+        {
+            uint Opcode = 0x0E212800; // XTN V0.8B, V0.8H
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
+            SimdFp.Xtn_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Description("XTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
+        public void Xtn_V_8H16B_4S8H_2D4S([Values(0u)] uint Rd,
+                                          [Values(1u, 0u)] uint Rn,
+                                          [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
+                                          [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
+                                          [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H16B, 4S8H, 2D4S>
+        {
+            uint Opcode = 0x4E212800; // XTN2 V0.16B, V0.8H
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
+            SimdFp.Xtn_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
 #endif
     }
 }
