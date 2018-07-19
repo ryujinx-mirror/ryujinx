@@ -9,10 +9,12 @@ namespace Ryujinx.HLE.OsHle.Handles
 
         public int CoreMask { get; set; }
 
-        public long MutexAddress   { get; set; }
-        public long CondVarAddress { get; set; }
+        public long MutexAddress       { get; set; }
+        public long CondVarAddress     { get; set; }
+        public long ArbiterWaitAddress { get; set; }
 
         public bool CondVarSignaled { get; set; }
+        public bool ArbiterSignaled { get; set; }
 
         private Process Process;
 

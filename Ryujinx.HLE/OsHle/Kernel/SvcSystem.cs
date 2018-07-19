@@ -294,7 +294,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
                 InfoType == 19 ||
                 InfoType == 20)
             {
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidInfo);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidEnumValue);
 
                 return;
             }

@@ -197,6 +197,57 @@ namespace Ryujinx.HLE.OsHle.Kernel
             Process.Scheduler.EnterWait(CurrThread);
         }
 
+        private void SvcWaitForAddress(AThreadState ThreadState)
+        {
+            long            Address = (long)ThreadState.X0;
+            ArbitrationType Type    = (ArbitrationType)ThreadState.X1;
+            int             Value   = (int)ThreadState.X2;
+            ulong           Timeout = ThreadState.X3;
+
+            Ns.Log.PrintDebug(LogClass.KernelSvc,
+                "Address = "         + Address.ToString("x16") + ", " +
+                "ArbitrationType = " + Type   .ToString()      + ", " +
+                "Value = "           + Value  .ToString("x8")  + ", " +
+                "Timeout = "         + Timeout.ToString("x16"));
+
+            if (IsPointingInsideKernel(Address))
+            {
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid address 0x{Address:x16}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
+
+                return;
+            }
+
+            if (IsWordAddressUnaligned(Address))
+            {
+                Ns.Log.PrintWarning(LogClass.KernelSvc, $"Unaligned address 0x{Address:x16}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAlignment);
+
+                return;
+            }
+
+            switch (Type)
+            {
+                case ArbitrationType.WaitIfLessThan:
+                    ThreadState.X0 = AddressArbiter.WaitForAddressIfLessThan(Process, ThreadState, Memory, Address, Value, Timeout, false);
+                    break;
+
+                case ArbitrationType.DecrementAndWaitIfLessThan:
+                    ThreadState.X0 = AddressArbiter.WaitForAddressIfLessThan(Process, ThreadState, Memory, Address, Value, Timeout, true);
+                    break;
+
+                case ArbitrationType.WaitIfEqual:
+                    ThreadState.X0 = AddressArbiter.WaitForAddressIfEqual(Process, ThreadState, Memory, Address, Value, Timeout);
+                    break;
+
+                default:
+                    ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidEnumValue);
+                    break;
+            }
+        }
+
         private void MutexUnlock(KThread CurrThread, long MutexAddress)
         {
             lock (Process.ThreadSyncLock)
