@@ -55,9 +55,11 @@ namespace Ryujinx.HLE.Gpu.Texture
 
             int Pitch = (Tic[3] & 0xffff) << 5;
 
-            int BlockHeightLog2 = (Tic[3] >> 3) & 7;
+            int BlockHeightLog2 = (Tic[3] >> 3)  & 7;
+            int TileWidthLog2   = (Tic[3] >> 10) & 7;
 
             int BlockHeight = 1 << BlockHeightLog2;
+            int TileWidth   = 1 << TileWidthLog2;
 
             int Width  = (Tic[4] & 0xffff) + 1;
             int Height = (Tic[5] & 0xffff) + 1;
@@ -68,6 +70,7 @@ namespace Ryujinx.HLE.Gpu.Texture
                 Height,
                 Pitch,
                 BlockHeight,
+                TileWidth,
                 Swizzle,
                 Format);
 

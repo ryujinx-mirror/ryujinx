@@ -11,6 +11,7 @@ namespace Ryujinx.HLE.Gpu.Texture
         public int Pitch  { get; private set; }
 
         public int BlockHeight { get; private set; }
+        public int TileWidth   { get; private set; }
 
         public TextureSwizzle Swizzle { get; private set; }
 
@@ -29,6 +30,8 @@ namespace Ryujinx.HLE.Gpu.Texture
 
             BlockHeight = 16;
 
+            TileWidth = 1;
+
             Swizzle = TextureSwizzle.BlockLinear;
 
             Format = GalTextureFormat.A8B8G8R8;
@@ -40,16 +43,18 @@ namespace Ryujinx.HLE.Gpu.Texture
             int              Height,
             int              Pitch,
             int              BlockHeight,
+            int              TileWidth,
             TextureSwizzle   Swizzle,
             GalTextureFormat Format)
         {
-            this.Position    = Position;
-            this.Width       = Width;
-            this.Height      = Height;
-            this.Pitch       = Pitch;
-            this.BlockHeight = BlockHeight;
-            this.Swizzle     = Swizzle;
-            this.Format      = Format;
+            this.Position     = Position;
+            this.Width        = Width;
+            this.Height       = Height;
+            this.Pitch        = Pitch;
+            this.BlockHeight  = BlockHeight;
+            this.TileWidth    = TileWidth;
+            this.Swizzle      = Swizzle;
+            this.Format       = Format;
         }
     }
 }

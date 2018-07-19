@@ -132,10 +132,22 @@ namespace Ryujinx.HLE.Gpu.Engines
             int Width  = ReadRegister(NvGpuEngine3dReg.FrameBufferNWidth  + FbIndex * 0x10);
             int Height = ReadRegister(NvGpuEngine3dReg.FrameBufferNHeight + FbIndex * 0x10);
 
-            //Note: Using the Width/Height results seems to give incorrect results.
-            //Maybe the size of all frame buffers is hardcoded to screen size? This seems unlikely.
-            Gpu.Renderer.FrameBuffer.Create(Key, 1280, 720);
+            float TX = ReadRegisterFloat(NvGpuEngine3dReg.ViewportNTranslateX + FbIndex * 4);
+            float TY = ReadRegisterFloat(NvGpuEngine3dReg.ViewportNTranslateY + FbIndex * 4);
+
+            float SX = ReadRegisterFloat(NvGpuEngine3dReg.ViewportNScaleX + FbIndex * 4);
+            float SY = ReadRegisterFloat(NvGpuEngine3dReg.ViewportNScaleY + FbIndex * 4);
+
+            int VpX = (int)MathF.Max(0, TX - MathF.Abs(SX));
+            int VpY = (int)MathF.Max(0, TY - MathF.Abs(SY));
+
+            int VpW = (int)(TX + MathF.Abs(SX)) - VpX;
+            int VpH = (int)(TY + MathF.Abs(SY)) - VpY;
+
+            Gpu.Renderer.FrameBuffer.Create(Key, Width, Height);
             Gpu.Renderer.FrameBuffer.Bind(Key);
+
+            Gpu.Renderer.FrameBuffer.SetViewport(VpX, VpY, VpW, VpH);
         }
 
         private long[] UploadShaders(NvGpuVmm Vmm)
@@ -195,8 +207,8 @@ namespace Ryujinx.HLE.Gpu.Engines
                 Gpu.Renderer.Shader.Bind(Key);
             }
 
-            float SignX = GetFlipSign(NvGpuEngine3dReg.ViewportScaleX);
-            float SignY = GetFlipSign(NvGpuEngine3dReg.ViewportScaleY);
+            float SignX = GetFlipSign(NvGpuEngine3dReg.ViewportNScaleX);
+            float SignY = GetFlipSign(NvGpuEngine3dReg.ViewportNScaleY);
 
             Gpu.Renderer.Shader.SetFlip(SignX, SignY);
 
@@ -220,8 +232,8 @@ namespace Ryujinx.HLE.Gpu.Engines
 
         private void SetFrontFace()
         {
-            float SignX = GetFlipSign(NvGpuEngine3dReg.ViewportScaleX);
-            float SignY = GetFlipSign(NvGpuEngine3dReg.ViewportScaleY);
+            float SignX = GetFlipSign(NvGpuEngine3dReg.ViewportNScaleX);
+            float SignY = GetFlipSign(NvGpuEngine3dReg.ViewportNScaleY);
 
             GalFrontFace FrontFace = (GalFrontFace)ReadRegister(NvGpuEngine3dReg.FrontFace);
 

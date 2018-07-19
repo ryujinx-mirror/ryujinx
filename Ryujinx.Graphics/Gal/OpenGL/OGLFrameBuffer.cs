@@ -78,11 +78,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public void Create(long Key, int Width, int Height)
         {
-            //TODO: We should either use the original frame buffer size,
-            //or just remove the Width/Height arguments.
-            Width  = Window.Width;
-            Height = Window.Height;
-
             if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
             {
                 if (Fb.Width  != Width ||
@@ -124,8 +119,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 0);
 
             GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
-
-            GL.Viewport(0, 0, Width, Height);
 
             Fbs.Add(Key, Fb);
         }
@@ -230,7 +223,16 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             Viewport = new Rect(X, Y, Width, Height);
 
-            //TODO
+            SetViewport(Viewport);
+        }
+
+        private void SetViewport(Rect Viewport)
+        {
+            GL.Viewport(
+                Viewport.X,
+                Viewport.Y,
+                Viewport.Width,
+                Viewport.Height);
         }
 
         public void Render()
@@ -300,9 +302,37 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     GL.Enable(EnableCap.Blend);
                 }
 
-                //GL.Viewport(0, 0, 1280, 720);
+                SetViewport(Viewport);
             }
         }
+
+        public void Copy(
+            long SrcKey,
+            long DstKey,
+            int  SrcX0,
+            int  SrcY0,
+            int  SrcX1,
+            int  SrcY1,
+            int  DstX0,
+            int  DstY0,
+            int  DstX1,
+            int  DstY1)
+        {
+            if (Fbs.TryGetValue(SrcKey, out FrameBuffer SrcFb) &&
+                Fbs.TryGetValue(DstKey, out FrameBuffer DstFb))
+            {
+                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, SrcFb.Handle);
+                GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, DstFb.Handle);
+
+                GL.Clear(ClearBufferMask.ColorBufferBit);
+
+                GL.BlitFramebuffer(
+                    SrcX0, SrcY0, SrcX1, SrcY1,
+                    DstX0, DstY0, DstX1, DstY1,
+                    ClearBufferMask.ColorBufferBit,
+                    BlitFramebufferFilter.Linear);
+            }
+}
 
         public void GetBufferData(long Key, Action<byte[]> Callback)
         {
@@ -329,13 +359,35 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
         }
 
-        private void SetViewport(Rect Viewport)
+        public void SetBufferData(
+            long             Key,
+            int              Width,
+            int              Height,
+            GalTextureFormat Format,
+            byte[]           Buffer)
         {
-            GL.Viewport(
-                Viewport.X,
-                Viewport.Y,
-                Viewport.Width,
-                Viewport.Height);
+            if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
+            {
+                GL.BindTexture(TextureTarget.Texture2D, Fb.TexHandle);
+
+                const int Level  = 0;
+                const int Border = 0;
+
+                const PixelInternalFormat InternalFmt = PixelInternalFormat.Rgba;
+
+                (PixelFormat GlFormat, PixelType Type) = OGLEnumConverter.GetTextureFormat(Format);
+
+                GL.TexImage2D(
+                    TextureTarget.Texture2D,
+                    Level,
+                    InternalFmt,
+                    Width,
+                    Height,
+                    Border,
+                    GlFormat,
+                    Type,
+                    Buffer);
+            }
         }
 
         private void EnsureInitialized()

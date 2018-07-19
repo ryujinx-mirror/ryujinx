@@ -279,8 +279,8 @@ namespace Ryujinx.HLE.OsHle.Services.Android
 
         private void SendFrameBuffer(ServiceCtx Context, int Slot)
         {
-            int FbWidth  = 1280;
-            int FbHeight = 720;
+            int FbWidth  = BufferQueue[Slot].Data.Width;
+            int FbHeight = BufferQueue[Slot].Data.Height;
 
             int NvMapHandle  = BitConverter.ToInt32(BufferQueue[Slot].Data.RawData, 0x4c);
             int BufferOffset = BitConverter.ToInt32(BufferQueue[Slot].Data.RawData, 0x50);

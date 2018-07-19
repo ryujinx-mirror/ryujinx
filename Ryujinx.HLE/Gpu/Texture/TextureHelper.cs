@@ -7,8 +7,14 @@ namespace Ryujinx.HLE.Gpu.Texture
 {
     static class TextureHelper
     {
-        public static ISwizzle GetSwizzle(TextureInfo Texture, int Width, int Bpp)
+        public static ISwizzle GetSwizzle(TextureInfo Texture, int BlockWidth, int Bpp)
         {
+            int Width = (Texture.Width + (BlockWidth - 1)) / BlockWidth;
+
+            int AlignMask = Texture.TileWidth * (64 / Bpp) - 1;
+
+            Width = (Width + AlignMask) & ~AlignMask;
+
             switch (Texture.Swizzle)
             {
                 case TextureSwizzle._1dBuffer:
