@@ -118,20 +118,20 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             if (IsDualVp)
             {
-                ShaderDumper.Dump(Memory, Position  + 0x50, Type, "a");
-                ShaderDumper.Dump(Memory, PositionB + 0x50, Type, "b");
+                ShaderDumper.Dump(Memory, Position,  Type, "a");
+                ShaderDumper.Dump(Memory, PositionB, Type, "b");
 
                 Program = Decompiler.Decompile(
                     Memory,
-                    Position  + 0x50,
-                    PositionB + 0x50,
+                    Position,
+                    PositionB,
                     Type);
             }
             else
             {
-                ShaderDumper.Dump(Memory, Position + 0x50, Type);
+                ShaderDumper.Dump(Memory, Position, Type);
 
-                Program = Decompiler.Decompile(Memory, Position + 0x50, Type);
+                Program = Decompiler.Decompile(Memory, Position, Type);
             }
 
             return new ShaderStage(
@@ -198,6 +198,16 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private void Bind(ShaderStage Stage)
         {
+            if (Stage.Type == GalShaderType.Geometry)
+            {
+                //Enhanced layouts are required for Geometry shaders
+                //skip this stage if current driver has no ARB_enhanced_layouts
+                if (!OGLExtension.HasEnhancedLayouts())
+                {
+                    return;
+                }
+            }
+
             switch (Stage.Type)
             {
                 case GalShaderType.Vertex:         Current.Vertex         = Stage; break;

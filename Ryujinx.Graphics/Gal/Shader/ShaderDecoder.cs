@@ -4,6 +4,8 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     static class ShaderDecoder
     {
+        private const long HeaderSize = 0x50;
+
         private const bool AddDbgComments = true;
 
         public static ShaderIrBlock[] Decode(IGalMemory Memory, long Start)
@@ -32,13 +34,13 @@ namespace Ryujinx.Graphics.Gal.Shader
                 return Output;
             }
 
-            ShaderIrBlock Entry = Enqueue(Start);
+            ShaderIrBlock Entry = Enqueue(Start + HeaderSize);
 
             while (Blocks.Count > 0)
             {
                 ShaderIrBlock Current = Blocks.Dequeue();
 
-                FillBlock(Memory, Current);
+                FillBlock(Memory, Current, Start + HeaderSize);
 
                 //Set child blocks. "Branch" is the block the branch instruction
                 //points to (when taken), "Next" is the block at the next address,
@@ -122,14 +124,14 @@ namespace Ryujinx.Graphics.Gal.Shader
             return Graph;
         }
 
-        private static void FillBlock(IGalMemory Memory, ShaderIrBlock Block)
+        private static void FillBlock(IGalMemory Memory, ShaderIrBlock Block, long Beginning)
         {
             long Position = Block.Position;
 
             do
             {
                 //Ignore scheduling instructions, which are written every 32 bytes.
-                if ((Position & 0x1f) == 0)
+                if (((Position - Beginning) & 0x1f) == 0)
                 {
                     Position += 8;
 
@@ -147,7 +149,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 if (AddDbgComments)
                 {
-                    string DbgOpCode = $"0x{(Position - 8):x16}: 0x{OpCode:x16} ";
+                    string DbgOpCode = $"0x{(Position - Beginning - 8):x16}: 0x{OpCode:x16} ";
 
                     DbgOpCode += (Decode?.Method.Name ?? "???");
 

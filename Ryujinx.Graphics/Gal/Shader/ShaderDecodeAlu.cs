@@ -442,6 +442,41 @@ namespace Ryujinx.Graphics.Gal.Shader
             return Signed ? ShaderIrInst.Asr : ShaderIrInst.Lsr;
         }
 
+        public static void Vmad(ShaderIrBlock Block, long OpCode)
+        {
+            ShaderIrNode OperA = GetOperGpr8(OpCode);
+
+            ShaderIrNode OperB;
+
+            if (((OpCode >> 50) & 1) != 0)
+            {
+                OperB = GetOperGpr20(OpCode);
+            }
+            else
+            {
+                OperB = GetOperImm19_20(OpCode);
+            }
+
+            ShaderIrOperGpr OperC = GetOperGpr39(OpCode);
+
+            ShaderIrNode Tmp = new ShaderIrOp(ShaderIrInst.Mul, OperA, OperB);
+
+            ShaderIrNode Final = new ShaderIrOp(ShaderIrInst.Add, Tmp, OperC);
+
+            int Shr = (int)((OpCode >> 51) & 3);
+
+            if (Shr != 0)
+            {
+                int Shift = (Shr == 2) ? 15 : 7;
+
+                Final = new ShaderIrOp(ShaderIrInst.Lsr, Final, new ShaderIrOperImm(Shift));
+            }
+
+            Block.AddNode(new ShaderIrCmnt("Stubbed. Instruction is reduced to a * b + c"));
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Final), OpCode));
+        }
+
         public static void Xmad_CR(ShaderIrBlock Block, long OpCode)
         {
             EmitXmad(Block, OpCode, ShaderOper.CR);
@@ -818,6 +853,8 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
 
             OperA = GetAluFabsFneg(OperA, AbsA, NegA);
+
+            Block.AddNode(new ShaderIrCmnt("Stubbed."));
 
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), OperA), OpCode));
         }

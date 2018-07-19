@@ -7,14 +7,15 @@ namespace Ryujinx.Graphics.Gal.Shader
         public static ShaderIrOperAbuf[] GetOperAbuf20(long OpCode)
         {
             int Abuf = (int)(OpCode >> 20) & 0x3ff;
-            int Reg  = (int)(OpCode >> 39) & 0xff;
             int Size = (int)(OpCode >> 47) & 3;
+
+            ShaderIrOperGpr Vertex = GetOperGpr39(OpCode);
 
             ShaderIrOperAbuf[] Opers = new ShaderIrOperAbuf[Size + 1];
 
             for (int Index = 0; Index <= Size; Index++)
             {
-                Opers[Index] = new ShaderIrOperAbuf(Abuf + Index * 4, Reg);
+                Opers[Index] = new ShaderIrOperAbuf(Abuf + Index * 4, Vertex);
             }
 
             return Opers;
@@ -23,9 +24,8 @@ namespace Ryujinx.Graphics.Gal.Shader
         public static ShaderIrOperAbuf GetOperAbuf28(long OpCode)
         {
             int Abuf = (int)(OpCode >> 28) & 0x3ff;
-            int Reg  = (int)(OpCode >> 39) & 0xff;
 
-            return new ShaderIrOperAbuf(Abuf, Reg);
+            return new ShaderIrOperAbuf(Abuf, GetOperGpr39(OpCode));
         }
 
         public static ShaderIrOperCbuf GetOperCbuf34(long OpCode)

@@ -35,6 +35,9 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             ShaderIrNode[] Opers = GetOperAbuf20(OpCode);
 
+            //Used by GS
+            ShaderIrOperGpr Vertex = GetOperGpr39(OpCode);
+
             int Index = 0;
 
             foreach (ShaderIrNode OperA in Opers)

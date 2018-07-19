@@ -74,6 +74,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             Set("0100110000100x", ShaderDecode.Imnmx_C);
             Set("0011100x00100x", ShaderDecode.Imnmx_I);
             Set("0101110000100x", ShaderDecode.Imnmx_R);
+            Set("1110111111010x", ShaderDecode.Isberd);
             Set("11100000xxxxxx", ShaderDecode.Ipa);
             Set("0100110000011x", ShaderDecode.Iscadd_C);
             Set("0011100x00011x", ShaderDecode.Iscadd_I);
@@ -95,7 +96,9 @@ namespace Ryujinx.Graphics.Gal.Shader
             Set("0011100x10011x", ShaderDecode.Mov_I);
             Set("000000010000xx", ShaderDecode.Mov_I32);
             Set("0101110010011x", ShaderDecode.Mov_R);
+            Set("1111000011001x", ShaderDecode.Mov_S);
             Set("0101000010000x", ShaderDecode.Mufu);
+            Set("1111101111100x", ShaderDecode.Out_R);
             Set("0101000010010x", ShaderDecode.Psetp);
             Set("0100110010010x", ShaderDecode.Rro_C);
             Set("0011100x10010x", ShaderDecode.Rro_I);
@@ -114,6 +117,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             Set("1101111101001x", ShaderDecode.Texq);
             Set("1101100xxxxxxx", ShaderDecode.Texs);
             Set("1101101xxxxxxx", ShaderDecode.Tlds);
+            Set("01011111xxxxxx", ShaderDecode.Vmad);
             Set("0100111xxxxxxx", ShaderDecode.Xmad_CR);
             Set("0011011x00xxxx", ShaderDecode.Xmad_I);
             Set("010100010xxxxx", ShaderDecode.Xmad_RC);

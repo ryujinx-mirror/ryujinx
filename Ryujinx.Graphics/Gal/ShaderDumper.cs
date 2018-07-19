@@ -18,13 +18,21 @@ namespace Ryujinx.Graphics.Gal
 
             string FileName = "Shader" + DumpIndex.ToString("d4") + "." + ShaderExtension(Type) + ExtSuffix + ".bin";
 
-            string FilePath = Path.Combine(DumpDir(), FileName);
+            string FullPath = Path.Combine(FullDir(), FileName);
+            string CodePath = Path.Combine(CodeDir(), FileName);
 
             DumpIndex++;
 
-            using (FileStream Output = File.Create(FilePath))
-            using (BinaryWriter Writer = new BinaryWriter(Output))
+            using (FileStream FullFile = File.Create(FullPath))
+            using (FileStream CodeFile = File.Create(CodePath))
+            using (BinaryWriter FullWriter = new BinaryWriter(FullFile))
+            using (BinaryWriter CodeWriter = new BinaryWriter(CodeFile))
             {
+                for (long i = 0; i < 0x50; i += 4)
+                {
+                    FullWriter.Write(Memory.ReadInt32(Position + i));
+                }
+
                 long Offset = 0;
 
                 ulong Instruction = 0;
@@ -32,8 +40,8 @@ namespace Ryujinx.Graphics.Gal
                 //Dump until a NOP instruction is found
                 while ((Instruction >> 52 & 0xfff8) != 0x50b0)
                 {
-                    uint Word0 = (uint)Memory.ReadInt32(Position + Offset + 0);
-                    uint Word1 = (uint)Memory.ReadInt32(Position + Offset + 4);
+                    uint Word0 = (uint)Memory.ReadInt32(Position + 0x50 + Offset + 0);
+                    uint Word1 = (uint)Memory.ReadInt32(Position + 0x50 + Offset + 4);
 
                     Instruction = Word0 | (ulong)Word1 << 32;
 
@@ -44,7 +52,8 @@ namespace Ryujinx.Graphics.Gal
                         break;
                     }
 
-                    Writer.Write(Instruction);
+                    FullWriter.Write(Instruction);
+                    CodeWriter.Write(Instruction);
 
                     Offset += 8;
                 }
@@ -52,11 +61,22 @@ namespace Ryujinx.Graphics.Gal
                 //Align to meet nvdisasm requeriments
                 while (Offset % 0x20 != 0)
                 {
-                    Writer.Write(0);
+                    FullWriter.Write(0);
+                    CodeWriter.Write(0);
 
                     Offset += 4;
                 }
             }
+        }
+
+        private static string FullDir()
+        {
+            return CreateAndReturn(Path.Combine(DumpDir(), "Full"));
+        }
+
+        private static string CodeDir()
+        {
+            return CreateAndReturn(Path.Combine(DumpDir(), "Code"));
         }
 
         private static string DumpDir()
@@ -77,6 +97,16 @@ namespace Ryujinx.Graphics.Gal
             }
 
             return RuntimeDir;
+        }
+
+        private static string CreateAndReturn(string Dir)
+        {
+            if (!Directory.Exists(Dir))
+            {
+                Directory.CreateDirectory(Dir);
+            }
+
+            return Dir;
         }
 
         private static string ShaderExtension(GalShaderType Type)

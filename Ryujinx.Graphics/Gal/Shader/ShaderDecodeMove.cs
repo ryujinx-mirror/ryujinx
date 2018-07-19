@@ -85,6 +85,16 @@ namespace Ryujinx.Graphics.Gal.Shader
             EmitI2i(Block, OpCode, ShaderOper.RR);
         }
 
+        public static void Isberd(ShaderIrBlock Block, long OpCode)
+        {
+            //This instruction seems to be used to translate from an address to a vertex index in a GS
+            //Stub it as such
+
+            Block.AddNode(new ShaderIrCmnt("Stubbed."));
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), GetOperGpr8(OpCode)), OpCode));
+        }
+
         public static void Mov_C(ShaderIrBlock Block, long OpCode)
         {
             ShaderIrOperCbuf Cbuf = GetOperCbuf34(OpCode);
@@ -126,6 +136,16 @@ namespace Ryujinx.Graphics.Gal.Shader
         public static void Sel_R(ShaderIrBlock Block, long OpCode)
         {
             EmitSel(Block, OpCode, ShaderOper.RR);
+        }
+
+        public static void Mov_S(ShaderIrBlock Block, long OpCode)
+        {
+            Block.AddNode(new ShaderIrCmnt("Stubbed."));
+
+            //Zero is used as a special number to get a valid "0 * 0 + VertexIndex" in a GS
+            ShaderIrNode Source = new ShaderIrOperImm(0);
+
+            Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Source), OpCode));
         }
 
         private static void EmitF2f(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
