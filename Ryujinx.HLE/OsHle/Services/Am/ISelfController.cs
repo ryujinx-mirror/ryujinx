@@ -17,7 +17,9 @@ namespace Ryujinx.HLE.OsHle.Services.Am
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
+                { 0,  Exit                                  },
                 { 1,  LockExit                              },
+                { 2,  UnlockExit                            },
                 { 9,  GetLibraryAppletLaunchableEvent       },
                 { 10, SetScreenShotPermission               },
                 { 11, SetOperationModeChangedNotification   },
@@ -31,8 +33,24 @@ namespace Ryujinx.HLE.OsHle.Services.Am
             LaunchableEvent = new KEvent();
         }
 
+        public long Exit(ServiceCtx Context)
+        {
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            
+            return 0;
+        }
+
         public long LockExit(ServiceCtx Context)
         {
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            
+            return 0;
+        }
+
+        public long UnlockExit(ServiceCtx Context)
+        {
+            Context.Ns.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            
             return 0;
         }
 
