@@ -211,28 +211,28 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.PrimitiveRestartIndex(Index);
         }
 
-        public void CreateVbo(long Key, byte[] Buffer)
+        public void CreateVbo(long Key, int DataSize, IntPtr HostAddress)
         {
             int Handle = GL.GenBuffer();
 
-            VboCache.AddOrUpdate(Key, Handle, (uint)Buffer.Length);
+            VboCache.AddOrUpdate(Key, Handle, (uint)DataSize);
 
-            IntPtr Length = new IntPtr(Buffer.Length);
+            IntPtr Length = new IntPtr(DataSize);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, Handle);
-            GL.BufferData(BufferTarget.ArrayBuffer, Length, Buffer, BufferUsageHint.StreamDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, Length, HostAddress, BufferUsageHint.StreamDraw);
         }
 
-        public void CreateIbo(long Key, byte[] Buffer)
+        public void CreateIbo(long Key, int DataSize, IntPtr HostAddress)
         {
             int Handle = GL.GenBuffer();
 
-            IboCache.AddOrUpdate(Key, Handle, (uint)Buffer.Length);
+            IboCache.AddOrUpdate(Key, Handle, (uint)DataSize);
 
-            IntPtr Length = new IntPtr(Buffer.Length);
+            IntPtr Length = new IntPtr(DataSize);
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, Handle);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, Length, Buffer, BufferUsageHint.StreamDraw);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, Length, HostAddress, BufferUsageHint.StreamDraw);
         }
 
         public void SetVertexArray(int Stride, long VboKey, GalVertexAttrib[] Attribs)

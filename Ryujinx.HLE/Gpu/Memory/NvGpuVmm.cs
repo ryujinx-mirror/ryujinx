@@ -1,5 +1,6 @@
 using ChocolArm64.Memory;
 using Ryujinx.Graphics.Gal;
+using System;
 using System.Collections.Concurrent;
 
 namespace Ryujinx.HLE.Gpu.Memory
@@ -277,6 +278,11 @@ namespace Ryujinx.HLE.Gpu.Memory
         public bool IsRegionModified(long PA, long Size, NvGpuBufferType BufferType)
         {
             return Cache.IsRegionModified(Memory, BufferType, PA, Size);
+        }
+
+        public IntPtr GetHostAddress(long Position, long Size)
+        {
+            return Memory.GetHostAddress(GetPhysicalAddress(Position), Size);
         }
 
         public byte ReadByte(long Position)
