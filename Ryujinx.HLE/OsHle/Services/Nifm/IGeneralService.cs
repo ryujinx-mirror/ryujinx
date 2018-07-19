@@ -50,7 +50,7 @@ namespace Ryujinx.HLE.OsHle.Services.Nifm
 
             Context.ResponseData.Write(BitConverter.ToUInt32(Address.GetAddressBytes()));
 
-            Context.Ns.Log.PrintInfo(LogClass.ServiceNifm, "Console's local IP is " + Address.ToString());
+            Context.Ns.Log.PrintInfo(LogClass.ServiceNifm, $"Console's local IP is {Address.ToString()}");
 
             return 0;
         }
