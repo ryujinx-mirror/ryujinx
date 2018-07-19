@@ -57,11 +57,11 @@ namespace Ryujinx.HLE
 
         public string SystemPathToSwitchPath(string SystemPath)
         {
-            string BaseSystemPath = GetBasePath() + "/";
+            string BaseSystemPath = GetBasePath() + Path.DirectorySeparatorChar;
             if (SystemPath.StartsWith(BaseSystemPath))
             {
                 string RawPath = SystemPath.Replace(BaseSystemPath, "");
-                int FirstSeparatorOffset = RawPath.IndexOf('/');
+                int FirstSeparatorOffset = RawPath.IndexOf(Path.DirectorySeparatorChar);
                 if (FirstSeparatorOffset == -1)
                 {
                     return $"{RawPath}:/";

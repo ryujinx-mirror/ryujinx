@@ -96,7 +96,6 @@ namespace Ryujinx.HLE.OsHle
 
             if (IsNro && (SwitchFilePath == null || !SwitchFilePath.StartsWith("sdmc:/")))
             {
-                // TODO: avoid copying the file if we are already inside a sdmc directory
                 string SwitchPath = $"sdmc:/switch/{Name}{Homebrew.TemporaryNroSuffix}";
                 string TempPath = Ns.VFs.SwitchPathToSystemPath(SwitchPath);
 
