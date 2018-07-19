@@ -1,0 +1,28 @@
+version: 1.0.{build}
+branches:
+  only:
+  - master
+image: Visual Studio 2017
+configuration: Release
+build_script:
+- ps: >-
+    dotnet --version
+
+    dotnet publish -c Release -r win-x64
+    
+    dotnet publish -c Release -r linux-x64
+    
+    dotnet publish -c Release -r osx-x64
+
+    7z a ryujinx-$env:APPVEYOR_BUILD_VERSION-win_x64.zip $env:APPVEYOR_BUILD_FOLDER\Ryujinx\bin\Release\netcoreapp2.1\win-x64\publish\
+
+    7z a ryujinx-$env:APPVEYOR_BUILD_VERSION-linux_x64.tar $env:APPVEYOR_BUILD_FOLDER\Ryujinx\bin\Release\netcoreapp2.1\linux-x64\publish\
+
+    7z a  ryujinx-$env:APPVEYOR_BUILD_VERSION-linux_x64.tar.gz ryujinx-$env:APPVEYOR_BUILD_VERSION-linux_x64.tar
+
+    7z a ryujinx-$env:APPVEYOR_BUILD_VERSION-osx_x64.zip $env:APPVEYOR_BUILD_FOLDER\Ryujinx\bin\Release\netcoreapp2.1\osx-x64\publish\
+
+artifacts:
+- path: ryujinx-%APPVEYOR_BUILD_VERSION%-win_x64.zip
+- path: ryujinx-%APPVEYOR_BUILD_VERSION%-linux_x64.tar.gz
+- path: ryujinx-%APPVEYOR_BUILD_VERSION%-osx_x64.zip
