@@ -117,7 +117,7 @@ namespace Ryujinx.HLE.OsHle.Services.Time
                 TimeZoneInfo Info = TimeZoneInfo.FindSystemTimeZoneById(TzID);
                 byte[] TzData     = Encoding.ASCII.GetBytes(Info.Id);
 
-                // FIXME: This is not in ANY cases accurate, but the games don't about the content of the buffer, they only pass it.
+                // FIXME: This is not in ANY cases accurate, but the games don't care about the content of the buffer, they only pass it.
                 // TODO: Reverse the TZif2 conversion in PCV to make this match with real hardware.
                 Context.Memory.WriteBytes(BufferPosition, TzData);
             }
