@@ -2,6 +2,7 @@ using Ryujinx.HLE.OsHle.Services.Acc;
 using Ryujinx.HLE.OsHle.Services.Am;
 using Ryujinx.HLE.OsHle.Services.Apm;
 using Ryujinx.HLE.OsHle.Services.Aud;
+using Ryujinx.HLE.OsHle.Services.Bcat;
 using Ryujinx.HLE.OsHle.Services.Bsd;
 using Ryujinx.HLE.OsHle.Services.Caps;
 using Ryujinx.HLE.OsHle.Services.Friend;
@@ -55,6 +56,18 @@ namespace Ryujinx.HLE.OsHle.Services
                 case "audren:u":
                     return new IAudioRendererManager();
 
+                case "bcat:a":
+                    return new Bcat.IServiceCreator();
+
+                case "bcat:m":
+                    return new Bcat.IServiceCreator();
+
+                case "bcat:u":
+                    return new Bcat.IServiceCreator();
+
+                case "bcat:s":
+                    return new Bcat.IServiceCreator();
+
                 case "bsd:s":
                     return new IClient();
 
@@ -71,10 +84,10 @@ namespace Ryujinx.HLE.OsHle.Services
                     return new IRandomInterface();
 
                 case "friend:a":
-                    return new IServiceCreator();
+                    return new Friend.IServiceCreator();
 
                 case "friend:u":
-                    return new IServiceCreator();
+                    return new Friend.IServiceCreator();
 
                 case "fsp-srv":
                     return new IFileSystemProxy();
