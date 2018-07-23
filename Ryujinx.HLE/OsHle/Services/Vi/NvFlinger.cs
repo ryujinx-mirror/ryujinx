@@ -293,54 +293,17 @@ namespace Ryujinx.HLE.OsHle.Services.Android
 
             Rect Crop = BufferQueue[Slot].Crop;
 
-            int RealWidth  = FbWidth;
-            int RealHeight = FbHeight;
+            bool FlipX = BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipX);
+            bool FlipY = BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipY);
 
-            float XSign = BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipX) ? -1 : 1;
-            float YSign = BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipY) ? -1 : 1;
+            //Rotation is being ignored
 
-            float ScaleX = 1;
-            float ScaleY = 1;
+            int Top    = Crop.Top;
+            int Left   = Crop.Left;
+            int Right  = Crop.Right;
+            int Bottom = Crop.Bottom;
 
-            float OffsX = 0;
-            float OffsY = 0;
-
-            if (Crop.Right  != 0 &&
-                Crop.Bottom != 0)
-            {
-                //Who knows if this is right, I was never good with math...
-                RealWidth  = Crop.Right  - Crop.Left;
-                RealHeight = Crop.Bottom - Crop.Top;
-
-                if (BufferQueue[Slot].Transform.HasFlag(HalTransform.Rotate90))
-                {
-                    ScaleY = (float)FbHeight / RealHeight;
-                    ScaleX = (float)FbWidth  / RealWidth;
-
-                    OffsY = ((-(float)Crop.Left / Crop.Right)  + ScaleX - 1) * -XSign;
-                    OffsX = ((-(float)Crop.Top  / Crop.Bottom) + ScaleY - 1) * -YSign;
-                }
-                else
-                {
-                    ScaleX = (float)FbWidth  / RealWidth;
-                    ScaleY = (float)FbHeight / RealHeight;
-
-                    OffsX = ((-(float)Crop.Left / Crop.Right)  + ScaleX - 1) *  XSign;
-                    OffsY = ((-(float)Crop.Top  / Crop.Bottom) + ScaleY - 1) * -YSign;
-                }
-            }
-
-            ScaleX *= XSign;
-            ScaleY *= YSign;
-
-            float Rotate = 0;
-
-            if (BufferQueue[Slot].Transform.HasFlag(HalTransform.Rotate90))
-            {
-                Rotate = -MathF.PI * 0.5f;
-            }
-
-            Renderer.QueueAction(() => Renderer.FrameBuffer.SetTransform(ScaleX, ScaleY, Rotate, OffsX, OffsY));
+            Renderer.QueueAction(() => Renderer.FrameBuffer.SetTransform(FlipX, FlipY, Top, Left, Right, Bottom));
 
             //TODO: Support double buffering here aswell, it is broken for GPU
             //frame buffers because it seems to be completely out of sync.

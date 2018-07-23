@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Gal
 
         void Set(byte[] Data, int Width, int Height);
 
-        void SetTransform(float SX, float SY, float Rotate, float TX, float TY);
+        void SetTransform(bool FlipX, bool FlipY, int Top, int Left, int Right, int Bottom);
 
         void SetWindowSize(int Width, int Height);
 
