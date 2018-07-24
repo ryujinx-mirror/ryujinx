@@ -1,6 +1,8 @@
+using ChocolArm64.Memory;
 using Ryujinx.HLE.OsHle.Ipc;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 using static Ryujinx.HLE.OsHle.Services.Android.Parcel;
 
@@ -22,6 +24,7 @@ namespace Ryujinx.HLE.OsHle.Services.Vi
                 { 101,  GetSystemDisplayService              },
                 { 102,  GetManagerDisplayService             },
                 { 103,  GetIndirectDisplayTransactionService },
+                { 1000, ListDisplays                         },
                 { 1010, OpenDisplay                          },
                 { 1020, CloseDisplay                         },
                 { 1102, GetDisplayResolution                 },
@@ -60,6 +63,24 @@ namespace Ryujinx.HLE.OsHle.Services.Vi
         public long GetIndirectDisplayTransactionService(ServiceCtx Context)
         {
             MakeObject(Context, new IHOSBinderDriver(Context.Ns.Gpu.Renderer));
+
+            return 0;
+        }
+
+        public long ListDisplays(ServiceCtx Context)
+        {
+            long RecBuffPtr = Context.Request.ReceiveBuff[0].Position;
+
+            AMemoryHelper.FillWithZeros(Context.Memory, RecBuffPtr, 0x60);
+
+            //Add only the default display to buffer
+            Context.Memory.WriteBytes(RecBuffPtr, Encoding.ASCII.GetBytes("Default"));
+            Context.Memory.WriteInt64(RecBuffPtr + 0x40, 0x1L);
+            Context.Memory.WriteInt64(RecBuffPtr + 0x48, 0x1L);
+            Context.Memory.WriteInt64(RecBuffPtr + 0x50, 1920L);
+            Context.Memory.WriteInt64(RecBuffPtr + 0x58, 1080L);
+
+            Context.ResponseData.Write(1L);
 
             return 0;
         }
