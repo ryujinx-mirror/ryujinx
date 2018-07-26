@@ -257,7 +257,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             GL.UseProgram(Handle);
 
-            BindUniformBuffers(Handle);
+            if (CurrentProgramHandle != Handle)
+            {
+                BindUniformBuffers(Handle);
+            }
 
             CurrentProgramHandle = Handle;
         }
