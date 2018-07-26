@@ -45,7 +45,7 @@ namespace ChocolArm64
             SetA64("11101010xx0xxxxxxxxxxxxxxxxxxxxx", AInstEmit.Ands,          typeof(AOpCodeAluRs));
             SetA64("x0011010110xxxxx001010xxxxxxxxxx", AInstEmit.Asrv,          typeof(AOpCodeAluRs));
             SetA64("000101xxxxxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.B,             typeof(AOpCodeBImmAl));
-            SetA64("01010100xxxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.B_Cond,        typeof(AOpCodeBImmCond));
+            SetA64("01010100xxxxxxxxxxxxxxxxxxx0xxxx", AInstEmit.B_Cond,        typeof(AOpCodeBImmCond));
             SetA64("00110011000xxxxx0xxxxxxxxxxxxxxx", AInstEmit.Bfm,           typeof(AOpCodeBfm));
             SetA64("1011001101xxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Bfm,           typeof(AOpCodeBfm));
             SetA64("00001010xx1xxxxx0xxxxxxxxxxxxxxx", AInstEmit.Bic,           typeof(AOpCodeAluRs));
@@ -53,8 +53,8 @@ namespace ChocolArm64
             SetA64("01101010xx1xxxxx0xxxxxxxxxxxxxxx", AInstEmit.Bics,          typeof(AOpCodeAluRs));
             SetA64("11101010xx1xxxxxxxxxxxxxxxxxxxxx", AInstEmit.Bics,          typeof(AOpCodeAluRs));
             SetA64("100101xxxxxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Bl,            typeof(AOpCodeBImmAl));
-            SetA64("11010110001xxxxx000000xxxxxxxxxx", AInstEmit.Blr,           typeof(AOpCodeBReg));
-            SetA64("11010110000xxxxx000000xxxxxxxxxx", AInstEmit.Br,            typeof(AOpCodeBReg));
+            SetA64("1101011000111111000000xxxxx00000", AInstEmit.Blr,           typeof(AOpCodeBReg));
+            SetA64("1101011000011111000000xxxxx00000", AInstEmit.Br,            typeof(AOpCodeBReg));
             SetA64("11010100001xxxxxxxxxxxxxxxx00000", AInstEmit.Brk,           typeof(AOpCodeException));
             SetA64("x0110101xxxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Cbnz,          typeof(AOpCodeBImmCmp));
             SetA64("x0110100xxxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Cbz,           typeof(AOpCodeBImmCmp));
@@ -127,7 +127,7 @@ namespace ChocolArm64
             SetA64("11111000100xxxxxxxxx00xxxxxxxxxx", AInstEmit.Pfrm,          typeof(AOpCodeMemImm));
             SetA64("11011000xxxxxxxxxxxxxxxxxxxxxxxx", AInstEmit.Pfrm,          typeof(AOpCodeMemLit));
             SetA64("x101101011000000000000xxxxxxxxxx", AInstEmit.Rbit,          typeof(AOpCodeAlu));
-            SetA64("11010110010xxxxx000000xxxxxxxxxx", AInstEmit.Ret,           typeof(AOpCodeBReg));
+            SetA64("1101011001011111000000xxxxx00000", AInstEmit.Ret,           typeof(AOpCodeBReg));
             SetA64("x101101011000000000001xxxxxxxxxx", AInstEmit.Rev16,         typeof(AOpCodeAlu));
             SetA64("x101101011000000000010xxxxxxxxxx", AInstEmit.Rev32,         typeof(AOpCodeAlu));
             SetA64("1101101011000000000011xxxxxxxxxx", AInstEmit.Rev64,         typeof(AOpCodeAlu));
