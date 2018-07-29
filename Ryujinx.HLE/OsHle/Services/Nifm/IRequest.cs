@@ -12,7 +12,8 @@ namespace Ryujinx.HLE.OsHle.Services.Nifm
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private KEvent Event;
+        private KEvent Event0;
+        private KEvent Event1;
 
         public IRequest()
         {
@@ -26,12 +27,13 @@ namespace Ryujinx.HLE.OsHle.Services.Nifm
                 { 11, SetConnectionConfirmationOption }
             };
 
-            Event = new KEvent();
+            Event0 = new KEvent();
+            Event1 = new KEvent();
         }
 
         public long GetRequestState(ServiceCtx Context)
         {
-            Context.ResponseData.Write(0);
+            Context.ResponseData.Write(1);
 
             Context.Ns.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
@@ -45,13 +47,12 @@ namespace Ryujinx.HLE.OsHle.Services.Nifm
             return 0;
         }
 
-        //GetSystemEventReadableHandles() -> (KObject, KObject)
         public long GetSystemEventReadableHandles(ServiceCtx Context)
         {
-            //FIXME: Is this supposed to return 2 events?
-            int Handle = Context.Process.HandleTable.OpenHandle(Event);
+            int Handle0 = Context.Process.HandleTable.OpenHandle(Event0);
+            int Handle1 = Context.Process.HandleTable.OpenHandle(Event1);
 
-            Context.Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle0, Handle1);
 
             return 0;
         }
@@ -86,7 +87,8 @@ namespace Ryujinx.HLE.OsHle.Services.Nifm
         {
             if (Disposing)
             {
-                Event.Dispose();
+                Event0.Dispose();
+                Event1.Dispose();
             }
         }
     }

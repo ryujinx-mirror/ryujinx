@@ -50,9 +50,18 @@ namespace Ryujinx.HLE.OsHle.Services
                 int DomainWord0 = Context.RequestData.ReadInt32();
                 int DomainObjId = Context.RequestData.ReadInt32();
 
-                long Padding = Context.RequestData.ReadInt64();
+                int DomainCmd       = (DomainWord0 >> 0)  & 0xff;
+                int InputObjCount   = (DomainWord0 >> 8)  & 0xff;
+                int DataPayloadSize = (DomainWord0 >> 16) & 0xffff;
 
-                int DomainCmd = DomainWord0 & 0xff;
+                Context.RequestData.BaseStream.Seek(0x10 + DataPayloadSize, SeekOrigin.Begin);
+
+                for (int Index = 0; Index < InputObjCount; Index++)
+                {
+                    Context.Request.ObjectIds.Add(Context.RequestData.ReadInt32());
+                }
+
+                Context.RequestData.BaseStream.Seek(0x10, SeekOrigin.Begin);
 
                 if (DomainCmd == 1)
                 {
@@ -88,14 +97,14 @@ namespace Ryujinx.HLE.OsHle.Services
 
                 if (IsDomain)
                 {
-                    foreach (int Id in Context.Response.ResponseObjIds)
+                    foreach (int Id in Context.Response.ObjectIds)
                     {
                         Context.ResponseData.Write(Id);
                     }
 
                     Context.ResponseData.BaseStream.Seek(0, SeekOrigin.Begin);
 
-                    Context.ResponseData.Write(Context.Response.ResponseObjIds.Count);
+                    Context.ResponseData.Write(Context.Response.ObjectIds.Count);
                 }
 
                 Context.ResponseData.BaseStream.Seek(IsDomain ? 0x10 : 0, SeekOrigin.Begin);
@@ -117,7 +126,7 @@ namespace Ryujinx.HLE.OsHle.Services
 
             if (Service.IsDomain)
             {
-                Context.Response.ResponseObjIds.Add(Service.Add(Obj));
+                Context.Response.ObjectIds.Add(Service.Add(Obj));
             }
             else
             {
@@ -127,6 +136,26 @@ namespace Ryujinx.HLE.OsHle.Services
 
                 Context.Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
             }
+        }
+
+        protected static T GetObject<T>(ServiceCtx Context, int Index) where T : IpcService
+        {
+            IpcService Service = Context.Session.Service;
+
+            if (!Service.IsDomain)
+            {
+                int Handle = Context.Request.HandleDesc.ToMove[Index];
+
+                KSession Session = Context.Process.HandleTable.GetData<KSession>(Handle);
+
+                return Session?.Service is T ? (T)Session.Service : null;
+            }
+
+            int ObjId = Context.Request.ObjectIds[Index];
+
+            IIpcService Obj = Service.GetObject(ObjId);
+
+            return Obj is T ? (T)Obj : null;
         }
 
         private int Add(IIpcService Obj)

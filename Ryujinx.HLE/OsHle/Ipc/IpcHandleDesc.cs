@@ -47,13 +47,15 @@ namespace Ryujinx.HLE.OsHle.Ipc
             HasPId = true;
         }
 
-        public static IpcHandleDesc MakeCopy(int Handle) => new IpcHandleDesc(
-                new int[] { Handle },
-                new int[0]);
+        public static IpcHandleDesc MakeCopy(params int[] Handles)
+        {
+            return new IpcHandleDesc(Handles, new int[0]);
+        }
 
-        public static IpcHandleDesc MakeMove(int Handle) => new IpcHandleDesc(
-                new int[0],
-                new int[] { Handle });
+        public static IpcHandleDesc MakeMove(params int[] Handles)
+        {
+            return new IpcHandleDesc(new int[0], Handles);
+        }
 
         public byte[] GetBytes()
         {

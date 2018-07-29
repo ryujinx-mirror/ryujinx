@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.OsHle.Ipc
         public List<IpcBuffDesc>         ExchangeBuff { get; private set; }
         public List<IpcRecvListBuffDesc> RecvListBuff { get; private set; }
 
-        public List<int> ResponseObjIds { get; private set; }
+        public List<int> ObjectIds { get; private set; }
 
         public byte[] RawData { get; set; }
 
@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.OsHle.Ipc
             ExchangeBuff = new List<IpcBuffDesc>();
             RecvListBuff = new List<IpcRecvListBuffDesc>();
 
-            ResponseObjIds = new List<int>();
+            ObjectIds = new List<int>();
         }
 
         public IpcMessage(byte[] Data, long CmdPtr) : this()
