@@ -25,6 +25,8 @@ namespace Ryujinx.HLE.Gpu.Engines
 
         private HashSet<long> FrameBuffers;
 
+        private List<long>[] UploadedKeys;
+
         public NvGpuEngine3d(NvGpu Gpu)
         {
             this.Gpu = Gpu;
@@ -57,6 +59,13 @@ namespace Ryujinx.HLE.Gpu.Engines
             }
 
             FrameBuffers = new HashSet<long>();
+
+            UploadedKeys = new List<long>[(int)NvGpuBufferType.Count];
+
+            for (int i = 0; i < UploadedKeys.Length; i++)
+            {
+                UploadedKeys[i] = new List<long>();
+            }
         }
 
         public void CallMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
@@ -516,7 +525,7 @@ namespace Ryujinx.HLE.Gpu.Engines
 
                 if (Gpu.Renderer.Texture.TryGetCachedTexture(Key, Size, out GalTexture Texture))
                 {
-                    if (NewTexture.Equals(Texture) && !Vmm.IsRegionModified(Key, Size, NvGpuBufferType.Texture))
+                    if (NewTexture.Equals(Texture) && !QueryKeyUpload(Vmm, Key, Size, NvGpuBufferType.Texture))
                     {
                         Gpu.Renderer.Texture.Bind(Key, TexIndex);
 
@@ -593,7 +602,7 @@ namespace Ryujinx.HLE.Gpu.Engines
 
                 bool IboCached = Gpu.Renderer.Rasterizer.IsIboCached(IboKey, (uint)IbSize);
 
-                if (!IboCached || Vmm.IsRegionModified(IboKey, (uint)IbSize, NvGpuBufferType.Index))
+                if (!IboCached || QueryKeyUpload(Vmm, IboKey, (uint)IbSize, NvGpuBufferType.Index))
                 {
                     IntPtr DataAddress = Vmm.GetHostAddress(IndexPosition, IbSize);
 
@@ -657,7 +666,7 @@ namespace Ryujinx.HLE.Gpu.Engines
 
                 bool VboCached = Gpu.Renderer.Rasterizer.IsVboCached(VboKey, VbSize);
 
-                if (!VboCached || Vmm.IsRegionModified(VboKey, VbSize, NvGpuBufferType.Vertex))
+                if (!VboCached || QueryKeyUpload(Vmm, VboKey, VbSize, NvGpuBufferType.Vertex))
                 {
                     IntPtr DataAddress = Vmm.GetHostAddress(VertexPosition, VbSize);
 
@@ -692,6 +701,11 @@ namespace Ryujinx.HLE.Gpu.Engines
 
             if (Mode == 0)
             {
+                foreach (List<long> Uploaded in UploadedKeys)
+                {
+                    Uploaded.Clear();
+                }
+
                 //Write mode.
                 Vmm.WriteInt32(Position, Seq);
             }
@@ -773,6 +787,20 @@ namespace Ryujinx.HLE.Gpu.Engines
         public bool IsFrameBufferPosition(long Position)
         {
             return FrameBuffers.Contains(Position);
+        }
+
+        private bool QueryKeyUpload(NvGpuVmm Vmm, long Key, long Size, NvGpuBufferType Type)
+        {
+            List<long> Uploaded = UploadedKeys[(int)Type];
+
+            if (Uploaded.Contains(Key))
+            {
+                return false;
+            }
+
+            Uploaded.Add(Key);
+
+            return Vmm.IsRegionModified(Key, Size, Type);
         }
     }
 }

@@ -160,23 +160,23 @@ namespace ChocolArm64.Memory
             return HostPageSize;
         }
 
-        public bool[] IsRegionModified(long Position, long Size)
+        public (bool[], long) IsRegionModified(long Position, long Size)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return null;
+                return (null, 0);
             }
 
             long EndPos = Position + Size;
 
             if ((ulong)EndPos < (ulong)Position)
             {
-                return null;
+                return (null, 0);
             }
 
             if ((ulong)EndPos > AMemoryMgr.RamSize)
             {
-                return null;
+                return (null, 0);
             }
 
             IntPtr MemAddress = new IntPtr(RamPtr + Position);
@@ -201,7 +201,7 @@ namespace ChocolArm64.Memory
                 Modified[(VA - Position) / HostPageSize] = true;
             }
 
-            return Modified;
+            return (Modified, Count);
         }
 
         public IntPtr GetHostAddress(long Position, long Size)
