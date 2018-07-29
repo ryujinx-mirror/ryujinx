@@ -21,7 +21,8 @@ namespace Ryujinx.HLE.OsHle.Ipc
             {
                 BinaryReader ReqReader = new BinaryReader(Raw);
 
-                if (Request.Type == IpcMessageType.Request)
+                if (Request.Type == IpcMessageType.Request ||
+                    Request.Type == IpcMessageType.RequestWithContext)
                 {
                     Response.Type = IpcMessageType.Response;
 
@@ -44,7 +45,8 @@ namespace Ryujinx.HLE.OsHle.Ipc
                         Response.RawData = ResMS.ToArray();
                     }
                 }
-                else if (Request.Type == IpcMessageType.Control)
+                else if (Request.Type == IpcMessageType.Control ||
+                         Request.Type == IpcMessageType.ControlWithContext)
                 {
                     long Magic = ReqReader.ReadInt64();
                     long CmdId = ReqReader.ReadInt64();
