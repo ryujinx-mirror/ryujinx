@@ -222,7 +222,8 @@ namespace Ryujinx.Audio.OpenAL
                     Td.CallReleaseCallbackIfNeeded();
                 }
 
-                Thread.Yield();
+                //If it's not slept it will waste cycles
+                Thread.Sleep(10);
             }
             while (KeepPolling);
         }
