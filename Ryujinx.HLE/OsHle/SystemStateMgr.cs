@@ -5,8 +5,6 @@ namespace Ryujinx.HLE.OsHle
 {
     public class SystemStateMgr
     {
-        internal static Npdm TitleMetadata { get; set; }
-
         internal static string[] LanguageCodes = new string[]
         {
             "ja",

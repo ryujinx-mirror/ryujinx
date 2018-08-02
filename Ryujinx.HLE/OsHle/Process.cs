@@ -4,6 +4,7 @@ using ChocolArm64.Memory;
 using ChocolArm64.State;
 using Ryujinx.HLE.Loaders;
 using Ryujinx.HLE.Loaders.Executables;
+using Ryujinx.HLE.Loaders.Npdm;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.OsHle.Diagnostics;
 using Ryujinx.HLE.OsHle.Exceptions;
@@ -47,6 +48,8 @@ namespace Ryujinx.HLE.OsHle
         public KProcessHandleTable HandleTable { get; private set; }
 
         public AppletStateMgr AppletState { get; private set; }
+
+        public Npdm Metadata { get; set; }
 
         private SvcHandler SvcHandler;
 

@@ -85,13 +85,13 @@ namespace Ryujinx.HLE.OsHle
 
                 using (FileStream Input = new FileStream(File, FileMode.Open))
                 {
-                    SystemStateMgr.TitleMetadata = new Npdm(Input);
+                    MainProcess.Metadata = new Npdm(Input);
                 }
             }
 
             LoadNpdm("*.npdm");
 
-            if (!SystemStateMgr.TitleMetadata.Is64Bits)
+            if (!MainProcess.Metadata.Is64Bits)
             {
                 throw new Exception("32-bit titles are unsupported!");
             }
