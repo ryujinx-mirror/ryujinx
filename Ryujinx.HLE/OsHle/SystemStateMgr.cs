@@ -1,9 +1,12 @@
+using Ryujinx.HLE.Loaders.Npdm;
 using System;
 
 namespace Ryujinx.HLE.OsHle
 {
     public class SystemStateMgr
     {
+        internal static Npdm TitleMetadata { get; set; }
+
         internal static string[] LanguageCodes = new string[]
         {
             "ja",
