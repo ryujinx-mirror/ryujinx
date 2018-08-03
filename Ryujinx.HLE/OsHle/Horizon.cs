@@ -93,7 +93,7 @@ namespace Ryujinx.HLE.OsHle
 
             if (!MainProcess.Metadata.Is64Bits)
             {
-                throw new Exception("32-bit titles are unsupported!");
+                throw new NotImplementedException("32-bit titles are unsupported!");
             }
 
             LoadNso("rtld");
