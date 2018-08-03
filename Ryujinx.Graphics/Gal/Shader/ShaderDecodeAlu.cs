@@ -871,11 +871,12 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private static void EmitSet(ShaderIrBlock Block, long OpCode, bool IsFloat, ShaderOper Oper)
         {
-            bool NegA      = ((OpCode >> 43) & 1) != 0;
-            bool AbsB      = ((OpCode >> 44) & 1) != 0;
-            bool BoolFloat = ((OpCode >> 52) & 1) != 0;
-            bool NegB      = ((OpCode >> 53) & 1) != 0;
-            bool AbsA      = ((OpCode >> 54) & 1) != 0;
+            bool NegA = ((OpCode >> 43) & 1) != 0;
+            bool AbsB = ((OpCode >> 44) & 1) != 0;
+            bool NegB = ((OpCode >> 53) & 1) != 0;
+            bool AbsA = ((OpCode >> 54) & 1) != 0;
+
+            bool BoolFloat = ((OpCode >> (IsFloat ? 52 : 44)) & 1) != 0;
 
             ShaderIrNode OperA = GetOperGpr8(OpCode), OperB;
 
