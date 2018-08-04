@@ -1193,9 +1193,9 @@ namespace Ryujinx.Tests.Cpu.Tester
                 result = BigInteger.Pow(2, N) - 1;
                 saturated = true;
             }
-            else if (i < 0)
+            else if (i < (BigInteger)0)
             {
-                result = 0;
+                result = (BigInteger)0;
                 saturated = true;
             }
             else
