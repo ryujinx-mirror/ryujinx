@@ -174,14 +174,14 @@ namespace Ryujinx.HLE.OsHle.Kernel
 
                 AMemoryHelper.FillWithZeros(Memory, Src, (int)Size);
 
+                SharedMem.AddVirtualPosition(Memory, Src, Size);
+
                 Memory.Manager.Reprotect(Src, Size, (AMemoryPerm)Perm);
 
                 lock (MappedSharedMems)
                 {
-                    MappedSharedMems.Add((SharedMem, Src));
+                    MappedSharedMems.Add((SharedMem, Src, Size));
                 }
-
-                SharedMem.AddVirtualPosition(Memory, Src);
 
                 ThreadState.X0 = 0;
             }
@@ -210,11 +210,11 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 Memory.Manager.Unmap(Src, Size, (int)MemoryType.SharedMemory);
 
-                SharedMem.RemoveVirtualPosition(Memory, Src);
+                SharedMem.RemoveVirtualPosition(Memory, Src, Size);
 
                 lock (MappedSharedMems)
                 {
-                    MappedSharedMems.Remove((SharedMem, Src));
+                    MappedSharedMems.Remove((SharedMem, Src, Size));
                 }
 
                 ThreadState.X0 = 0;

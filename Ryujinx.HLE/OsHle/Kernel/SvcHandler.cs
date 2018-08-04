@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
 
         private ConcurrentDictionary<KThread, AutoResetEvent> SyncWaits;
 
-        private HashSet<(HSharedMem, long)> MappedSharedMems;
+        private HashSet<(HSharedMem, long, long)> MappedSharedMems;
 
         private ulong CurrentHeapSize;
 
@@ -83,7 +83,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
 
             SyncWaits = new ConcurrentDictionary<KThread, AutoResetEvent>();
 
-            MappedSharedMems = new HashSet<(HSharedMem, long)>();
+            MappedSharedMems = new HashSet<(HSharedMem, long, long)>();
         }
 
         static SvcHandler()
@@ -138,9 +138,9 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 lock (MappedSharedMems)
                 {
-                    foreach ((HSharedMem SharedMem, long Position) in MappedSharedMems)
+                    foreach ((HSharedMem SharedMem, long Position, long Size) in MappedSharedMems)
                     {
-                        SharedMem.RemoveVirtualPosition(Memory, Position);
+                        SharedMem.RemoveVirtualPosition(Memory, Position, Size);
                     }
 
                     MappedSharedMems.Clear();

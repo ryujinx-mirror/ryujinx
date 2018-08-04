@@ -1,6 +1,6 @@
-namespace Ryujinx.HLE.OsHle.Services.Pl
+namespace Ryujinx.HLE.Font
 {
-    enum SharedFontType
+    public enum SharedFontType
     {
         JapanUsEurope       = 0,
         SimplifiedChinese   = 1,

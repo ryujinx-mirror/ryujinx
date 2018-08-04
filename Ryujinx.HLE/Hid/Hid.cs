@@ -67,7 +67,7 @@ namespace Ryujinx.HLE.Input
 
         private object ShMemLock;
 
-        private (AMemory, long)[] ShMemPositions;
+        private (AMemory, long, long)[] ShMemPositions;
 
         public Hid(Logger Log)
         {
@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.Input
 
             ShMemLock = new object();
 
-            ShMemPositions = new (AMemory, long)[0];
+            ShMemPositions = new (AMemory, long, long)[0];
         }
 
         internal void ShMemMap(object sender, EventArgs e)
@@ -86,7 +86,7 @@ namespace Ryujinx.HLE.Input
             {
                 ShMemPositions = SharedMem.GetVirtualPositions();
 
-                (AMemory Memory, long Position) = ShMemPositions[ShMemPositions.Length - 1];
+                (AMemory Memory, long Position, long Size) = ShMemPositions[ShMemPositions.Length - 1];
 
                 for (long Offset = 0; Offset < Horizon.HidSize; Offset += 8)
                 {
@@ -167,7 +167,7 @@ namespace Ryujinx.HLE.Input
         {
             lock (ShMemLock)
             {
-                foreach ((AMemory Memory, long Position) in ShMemPositions)
+                foreach ((AMemory Memory, long Position, long Size) in ShMemPositions)
                 {
                     long ControllerOffset = Position + HidControllersOffset;
 
@@ -218,7 +218,7 @@ namespace Ryujinx.HLE.Input
         {
             lock (ShMemLock)
             {
-                foreach ((AMemory Memory, long Position) in ShMemPositions)
+                foreach ((AMemory Memory, long Position, long Size) in ShMemPositions)
                 {
                     long TouchScreenOffset = Position + HidTouchScreenOffset;
 

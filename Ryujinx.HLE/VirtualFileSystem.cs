@@ -8,6 +8,7 @@ namespace Ryujinx.HLE
         private const string BasePath   = "RyuFs";
         private const string NandPath   = "nand";
         private const string SdCardPath = "sdmc";
+        private const string SystemPath = "system";
 
         public Stream RomFs { get; private set; }
 
@@ -44,6 +45,8 @@ namespace Ryujinx.HLE
         public string GetSdCardPath() => MakeDirAndGetFullPath(SdCardPath);
 
         public string GetGameSavesPath() => MakeDirAndGetFullPath(NandPath);
+
+        public string GetSystemPath() => MakeDirAndGetFullPath(SystemPath);
 
         public string SwitchPathToSystemPath(string SwitchPath)
         {

@@ -4,6 +4,7 @@ namespace Ryujinx.HLE.Logging
     {
         Audio,
         Cpu,
+        Font,
         Gpu,
         Hid,
         Kernel,
