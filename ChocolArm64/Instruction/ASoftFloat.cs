@@ -372,7 +372,7 @@ namespace ChocolArm64.Instruction
                 op2 = float.PositiveInfinity;
             }
 
-            return Max(op1, op2);
+            return Min(op1, op2);
         }
 
         public static double MinNum(double op1, double op2)
