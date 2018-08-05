@@ -335,98 +335,66 @@ namespace ChocolArm64.Instruction
 
         public static void Fmax_S(AILEmitterCtx Context)
         {
-            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
-
             EmitScalarBinaryOpF(Context, () =>
             {
-                if (Op.Size == 0)
-                {
-                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.MaxF));
-                }
-                else if (Op.Size == 1)
-                {
-                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Max));
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
+                EmitBinarySoftFloatCall(Context, nameof(ASoftFloat.Max));
             });
         }
 
         public static void Fmax_V(AILEmitterCtx Context)
         {
-            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
-
             EmitVectorBinaryOpF(Context, () =>
             {
-                if (Op.Size == 0)
-                {
-                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.MaxF));
-                }
-                else if (Op.Size == 1)
-                {
-                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Max));
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
-            });
-        }
-
-        public static void Fmin_S(AILEmitterCtx Context)
-        {
-            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
-
-            EmitScalarBinaryOpF(Context, () =>
-            {
-                if (Op.Size == 0)
-                {
-                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.MinF));
-                }
-                else if (Op.Size == 1)
-                {
-                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Min));
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
-            });
-        }
-
-        public static void Fmin_V(AILEmitterCtx Context)
-        {
-            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
-
-            int SizeF = Op.Size & 1;
-
-            EmitVectorBinaryOpF(Context, () =>
-            {
-                if (SizeF == 0)
-                {
-                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.MinF));
-                }
-                else if (SizeF == 1)
-                {
-                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Min));
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
+                EmitBinarySoftFloatCall(Context, nameof(ASoftFloat.Max));
             });
         }
 
         public static void Fmaxnm_S(AILEmitterCtx Context)
         {
-            Fmax_S(Context);
+            EmitScalarBinaryOpF(Context, () =>
+            {
+                EmitBinarySoftFloatCall(Context, nameof(ASoftFloat.MaxNum));
+            });
+        }
+
+        public static void Fmaxnm_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpF(Context, () =>
+            {
+                EmitBinarySoftFloatCall(Context, nameof(ASoftFloat.MaxNum));
+            });
+        }
+
+        public static void Fmin_S(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpF(Context, () =>
+            {
+                EmitBinarySoftFloatCall(Context, nameof(ASoftFloat.Min));
+            });
+        }
+
+        public static void Fmin_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpF(Context, () =>
+            {
+                EmitBinarySoftFloatCall(Context, nameof(ASoftFloat.Min));
+            });
         }
 
         public static void Fminnm_S(AILEmitterCtx Context)
         {
-            Fmin_S(Context);
+            EmitScalarBinaryOpF(Context, () =>
+            {
+                EmitBinarySoftFloatCall(Context, nameof(ASoftFloat.MinNum));
+            });
+        }
+
+        public static void Fminnm_V(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpF(Context, () =>
+            {
+                EmitBinarySoftFloatCall(Context, nameof(ASoftFloat.MinNum));
+            });
         }
 
         public static void Fmla_Se(AILEmitterCtx Context)
