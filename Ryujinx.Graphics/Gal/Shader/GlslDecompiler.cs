@@ -23,8 +23,6 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private const int MaxVertexInput = 3;
 
-        private static string[] ElemTypes = new string[] { "float", "vec2", "vec3", "vec4" };
-
         private GlslDecl Decl;
 
         private ShaderHeader Header, HeaderB;
@@ -266,7 +264,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                     {
                         if (DeclInfo.Index >= 0)
                         {
-                            SB.AppendLine(IdentationStr + "layout (location = " + DeclInfo.Index + ") " + GetDecl(DeclInfo) + "; ");
+                            SB.AppendLine(IdentationStr + "layout (location = " + DeclInfo.Index + ") vec4 " + DeclInfo.Name + "; ");
                         }
                     }
 
@@ -297,7 +295,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             {
                 if (DeclInfo.Index >= 0)
                 {
-                    SB.AppendLine("layout (location = " + DeclInfo.Index + ") " + InOut + " " + GetDecl(DeclInfo) + ";");
+                    SB.AppendLine("layout (location = " + DeclInfo.Index + ") " + InOut + " vec4 " + DeclInfo.Name + ";");
 
                     Count++;
                 }
@@ -331,7 +329,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 }
                 else if (DeclInfo.Name == GlslDecl.FragmentOutputName)
                 {
-                    Name = "layout (location = 0) out " + GetDecl(DeclInfo) + Suffix + ";" + Environment.NewLine;
+                    Name = "layout (location = 0) out vec4 " + DeclInfo.Name + Suffix + ";" + Environment.NewLine;
                 }
                 else
                 {
@@ -354,7 +352,14 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private string GetDecl(ShaderDeclInfo DeclInfo)
         {
-            return ElemTypes[DeclInfo.Size - 1] + " " + DeclInfo.Name;
+            if (DeclInfo.Size == 4)
+            {
+                return "vec4 " + DeclInfo.Name;
+            }
+            else
+            {
+                return "float " + DeclInfo.Name;
+            }
         }
 
         private void PrintMain()
@@ -370,13 +375,11 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 ShaderDeclInfo DeclInfo = KV.Value;
 
-                string Swizzle = ".xyzw".Substring(0, DeclInfo.Size + 1);
-
                 if (Decl.ShaderType == GalShaderType.Geometry)
                 {
                     for (int Vertex = 0; Vertex < MaxVertexInput; Vertex++)
                     {
-                        string Dst = Attr.Name + "[" + Vertex + "]" + Swizzle;
+                        string Dst = Attr.Name + "[" + Vertex + "]";
 
                         string Src = "block_in[" + Vertex + "]." + DeclInfo.Name;
 
@@ -385,7 +388,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 }
                 else
                 {
-                    SB.AppendLine(IdentationStr + Attr.Name + Swizzle + " = " + DeclInfo.Name + ";");
+                    SB.AppendLine(IdentationStr + Attr.Name + " = " + DeclInfo.Name + ";");
                 }
             }
 
@@ -418,8 +421,6 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 ShaderDeclInfo DeclInfo = KV.Value;
 
-                string Swizzle = ".xyzw".Substring(0, DeclInfo.Size + 1);
-
                 string Name = Attr.Name;
 
                 if (Decl.ShaderType == GalShaderType.Geometry)
@@ -427,7 +428,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                     Name += "[0]";
                 }
 
-                SB.AppendLine(Identation + DeclInfo.Name + " = " + Name + Swizzle + ";");
+                SB.AppendLine(Identation + DeclInfo.Name + " = " + Name + ";");
             }
 
             if (Decl.ShaderType == GalShaderType.Vertex)
