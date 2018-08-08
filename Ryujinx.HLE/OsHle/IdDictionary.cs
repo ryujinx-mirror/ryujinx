@@ -8,8 +8,6 @@ namespace Ryujinx.HLE.OsHle
     {
         private ConcurrentDictionary<int, object> Objs;
 
-        private int FreeIdHint = 1;
-
         public IdDictionary()
         {
             Objs = new ConcurrentDictionary<int, object>();
@@ -21,16 +19,6 @@ namespace Ryujinx.HLE.OsHle
         }
 
         public int Add(object Data)
-        {
-            if (Objs.TryAdd(FreeIdHint, Data))
-            {
-                return FreeIdHint++;
-            }
-
-            return AddSlow(Data);
-        }
-
-        private int AddSlow(object Data)
         {
             for (int Id = 1; Id < int.MaxValue; Id++)
             {
@@ -67,8 +55,6 @@ namespace Ryujinx.HLE.OsHle
         {
             if (Objs.TryRemove(Id, out object Obj))
             {
-                FreeIdHint = Id;
-
                 return Obj;
             }
 
