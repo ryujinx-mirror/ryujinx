@@ -158,6 +158,42 @@ namespace ChocolArm64.Instruction
             Context.MarkLabel(LblTrue);
         }
 
+        private static void EmitDoublingMultiplyHighHalf(AILEmitterCtx Context, bool Round)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int ESize = 8 << Op.Size;
+
+            Context.Emit(OpCodes.Mul);
+
+            if (!Round)
+            {
+                Context.EmitAsr(ESize - 1);
+            }
+            else
+            {
+                long RoundConst = 1L << (ESize - 1);
+
+                AILLabel LblTrue = new AILLabel();
+
+                Context.EmitLsl(1);
+
+                Context.EmitLdc_I8(RoundConst);
+
+                Context.Emit(OpCodes.Add);
+
+                Context.EmitAsr(ESize);
+
+                Context.Emit(OpCodes.Dup);
+                Context.EmitLdc_I8((long)int.MinValue);
+                Context.Emit(OpCodes.Bne_Un_S, LblTrue);
+
+                Context.Emit(OpCodes.Neg);
+
+                Context.MarkLabel(LblTrue);
+            }
+        }
+
         private static void EmitHighNarrow(AILEmitterCtx Context, Action Emit, bool Round)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
@@ -1040,6 +1076,16 @@ namespace ChocolArm64.Instruction
             EmitVectorSaturatingBinaryOpSx(Context, SaturatingFlags.Add);
         }
 
+        public static void Sqdmulh_S(AILEmitterCtx Context)
+        {
+            EmitSaturatingBinaryOp(Context, () => EmitDoublingMultiplyHighHalf(Context, Round: false), SaturatingFlags.ScalarSx);
+        }
+
+        public static void Sqdmulh_V(AILEmitterCtx Context)
+        {
+            EmitSaturatingBinaryOp(Context, () => EmitDoublingMultiplyHighHalf(Context, Round: false), SaturatingFlags.VectorSx);
+        }
+
         public static void Sqneg_S(AILEmitterCtx Context)
         {
             EmitScalarSaturatingUnaryOpSx(Context, () => Context.Emit(OpCodes.Neg));
@@ -1048,6 +1094,16 @@ namespace ChocolArm64.Instruction
         public static void Sqneg_V(AILEmitterCtx Context)
         {
             EmitVectorSaturatingUnaryOpSx(Context, () => Context.Emit(OpCodes.Neg));
+        }
+
+        public static void Sqrdmulh_S(AILEmitterCtx Context)
+        {
+            EmitSaturatingBinaryOp(Context, () => EmitDoublingMultiplyHighHalf(Context, Round: true), SaturatingFlags.ScalarSx);
+        }
+
+        public static void Sqrdmulh_V(AILEmitterCtx Context)
+        {
+            EmitSaturatingBinaryOp(Context, () => EmitDoublingMultiplyHighHalf(Context, Round: true), SaturatingFlags.VectorSx);
         }
 
         public static void Sqsub_S(AILEmitterCtx Context)

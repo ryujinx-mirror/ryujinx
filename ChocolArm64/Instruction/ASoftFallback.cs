@@ -11,6 +11,107 @@ namespace ChocolArm64.Instruction
             Context.EmitCall(typeof(ASoftFallback), MthdName);
         }
 
+#region "Saturating"
+        public static long SignedSrcSignedDstSatQ(long op, int Size, AThreadState State)
+        {
+            int ESize = 8 << Size;
+
+            long TMaxValue =  (1L << (ESize - 1)) - 1L;
+            long TMinValue = -(1L << (ESize - 1));
+
+            if (op > TMaxValue)
+            {
+                SetFpsrQCFlag(State);
+
+                return TMaxValue;
+            }
+            else if (op < TMinValue)
+            {
+                SetFpsrQCFlag(State);
+
+                return TMinValue;
+            }
+            else
+            {
+                return op;
+            }
+        }
+
+        public static ulong SignedSrcUnsignedDstSatQ(long op, int Size, AThreadState State)
+        {
+            int ESize = 8 << Size;
+
+            ulong TMaxValue = (1UL << ESize) - 1UL;
+            ulong TMinValue =  0UL;
+
+            if (op > (long)TMaxValue)
+            {
+                SetFpsrQCFlag(State);
+
+                return TMaxValue;
+            }
+            else if (op < (long)TMinValue)
+            {
+                SetFpsrQCFlag(State);
+
+                return TMinValue;
+            }
+            else
+            {
+                return (ulong)op;
+            }
+        }
+
+        public static long UnsignedSrcSignedDstSatQ(ulong op, int Size, AThreadState State)
+        {
+            int ESize = 8 << Size;
+
+            long TMaxValue = (1L << (ESize - 1)) - 1L;
+
+            if (op > (ulong)TMaxValue)
+            {
+                SetFpsrQCFlag(State);
+
+                return TMaxValue;
+            }
+            else
+            {
+                return (long)op;
+            }
+        }
+
+        public static ulong UnsignedSrcUnsignedDstSatQ(ulong op, int Size, AThreadState State)
+        {
+            int ESize = 8 << Size;
+
+            ulong TMaxValue = (1UL << ESize) - 1UL;
+
+            if (op > TMaxValue)
+            {
+                SetFpsrQCFlag(State);
+
+                return TMaxValue;
+            }
+            else
+            {
+                return op;
+            }
+        }
+
+        public static long UnarySignedSatQAbsOrNeg(long op, AThreadState State)
+        {
+            if (op == long.MinValue)
+            {
+                SetFpsrQCFlag(State);
+
+                return long.MaxValue;
+            }
+            else
+            {
+                return op;
+            }
+        }
+
         public static long BinarySignedSatQAdd(long op1, long op2, AThreadState State)
         {
             long Add = op1 + op2;
@@ -185,99 +286,15 @@ namespace ChocolArm64.Instruction
             }
         }
 
-        public static long SignedSrcSignedDstSatQ(long op, int Size, AThreadState State)
-        {
-            int ESize = 8 << Size;
-
-            long TMaxValue =  (1L << (ESize - 1)) - 1L;
-            long TMinValue = -(1L << (ESize - 1));
-
-            if (op > TMaxValue)
-            {
-                SetFpsrQCFlag(State);
-
-                return TMaxValue;
-            }
-            else if (op < TMinValue)
-            {
-                SetFpsrQCFlag(State);
-
-                return TMinValue;
-            }
-            else
-            {
-                return op;
-            }
-        }
-
-        public static ulong SignedSrcUnsignedDstSatQ(long op, int Size, AThreadState State)
-        {
-            int ESize = 8 << Size;
-
-            ulong TMaxValue = (1UL << ESize) - 1UL;
-            ulong TMinValue =  0UL;
-
-            if (op > (long)TMaxValue)
-            {
-                SetFpsrQCFlag(State);
-
-                return TMaxValue;
-            }
-            else if (op < (long)TMinValue)
-            {
-                SetFpsrQCFlag(State);
-
-                return TMinValue;
-            }
-            else
-            {
-                return (ulong)op;
-            }
-        }
-
-        public static long UnsignedSrcSignedDstSatQ(ulong op, int Size, AThreadState State)
-        {
-            int ESize = 8 << Size;
-
-            long TMaxValue = (1L << (ESize - 1)) - 1L;
-
-            if (op > (ulong)TMaxValue)
-            {
-                SetFpsrQCFlag(State);
-
-                return TMaxValue;
-            }
-            else
-            {
-                return (long)op;
-            }
-        }
-
-        public static ulong UnsignedSrcUnsignedDstSatQ(ulong op, int Size, AThreadState State)
-        {
-            int ESize = 8 << Size;
-
-            ulong TMaxValue = (1UL << ESize) - 1UL;
-
-            if (op > TMaxValue)
-            {
-                SetFpsrQCFlag(State);
-
-                return TMaxValue;
-            }
-            else
-            {
-                return op;
-            }
-        }
-
         private static void SetFpsrQCFlag(AThreadState State)
         {
             const int QCFlagBit = 27;
 
             State.Fpsr |= 1 << QCFlagBit;
         }
+#endregion
 
+#region "Count"
         public static ulong CountLeadingSigns(ulong Value, int Size)
         {
             Value ^= Value >> 1;
@@ -325,7 +342,9 @@ namespace ChocolArm64.Instruction
 
             return (Value >> 4) + (Value & 0x0f);
         }
+#endregion
 
+#region "Crc32"
         private const uint Crc32RevPoly  = 0xedb88320;
         private const uint Crc32cRevPoly = 0x82f63b78;
 
@@ -384,7 +403,9 @@ namespace ChocolArm64.Instruction
 
             return Crc;
         }
+#endregion
 
+#region "Reverse"
         public static uint ReverseBits8(uint Value)
         {
             Value = ((Value & 0xaa) >> 1) | ((Value & 0x55) << 1);
@@ -453,7 +474,9 @@ namespace ChocolArm64.Instruction
 
             throw new ArgumentException(nameof(Size));
         }
+#endregion
 
+#region "MultiplyHigh"
         public static long SMulHi128(long LHS, long RHS)
         {
             long Result = (long)UMulHi128((ulong)LHS, (ulong)RHS);
@@ -479,5 +502,6 @@ namespace ChocolArm64.Instruction
 
             return LHigh * RHigh + Z0 + (Z1 >> 32);
         }
+#endregion
     }
 }

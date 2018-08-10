@@ -90,7 +90,7 @@ namespace Ryujinx.Tests.Cpu
         private const int RndCnt = 1;
 
         [Test, Description("ABS <V><d>, <V><n>")]
-        public void Abs_S_D([Values(0u)] uint Rd,
+        public void Abs_S_D([Values(0u)]     uint Rd,
                             [Values(1u, 0u)] uint Rn,
                             [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
                             [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
@@ -115,7 +115,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("ABS <Vd>.<T>, <Vn>.<T>")]
-        public void Abs_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Abs_V_8B_4H_2S([Values(0u)]     uint Rd,
                                    [Values(1u, 0u)] uint Rn,
                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -142,7 +142,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("ABS <Vd>.<T>, <Vn>.<T>")]
-        public void Abs_V_16B_8H_4S_2D([Values(0u)] uint Rd,
+        public void Abs_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                        [Values(1u, 0u)] uint Rn,
                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -169,7 +169,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("ADDP <V><d>, <Vn>.<T>")]
-        public void Addp_S_2DD([Values(0u)] uint Rd,
+        public void Addp_S_2DD([Values(0u)]     uint Rd,
                                [Values(1u, 0u)] uint Rn,
                                [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
                                [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
@@ -194,7 +194,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("ADDV <V><d>, <Vn>.<T>")]
-        public void Addv_V_8BB_4HH([Values(0u)] uint Rd,
+        public void Addv_V_8BB_4HH([Values(0u)]     uint Rd,
                                    [Values(1u, 0u)] uint Rn,
                                    [ValueSource("_8B4H_")] [Random(RndCnt)] ulong Z,
                                    [ValueSource("_8B4H_")] [Random(RndCnt)] ulong A,
@@ -221,7 +221,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("ADDV <V><d>, <Vn>.<T>")]
-        public void Addv_V_16BB_8HH_4SS([Values(0u)] uint Rd,
+        public void Addv_V_16BB_8HH_4SS([Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                         [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -248,7 +248,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CLS <Vd>.<T>, <Vn>.<T>")]
-        public void Cls_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Cls_V_8B_4H_2S([Values(0u)]     uint Rd,
                                    [Values(1u, 0u)] uint Rn,
                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -275,7 +275,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CLS <Vd>.<T>, <Vn>.<T>")]
-        public void Cls_V_16B_8H_4S([Values(0u)] uint Rd,
+        public void Cls_V_16B_8H_4S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -302,7 +302,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
-        public void Clz_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Clz_V_8B_4H_2S([Values(0u)]     uint Rd,
                                    [Values(1u, 0u)] uint Rn,
                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -329,7 +329,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
-        public void Clz_V_16B_8H_4S([Values(0u)] uint Rd,
+        public void Clz_V_16B_8H_4S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -356,7 +356,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMEQ <V><d>, <V><n>, #0")]
-        public void Cmeq_S_D([Values(0u)] uint Rd,
+        public void Cmeq_S_D([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
@@ -381,7 +381,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMEQ <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmeq_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Cmeq_V_8B_4H_2S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -408,7 +408,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMEQ <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmeq_V_16B_8H_4S_2D([Values(0u)] uint Rd,
+        public void Cmeq_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -435,7 +435,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMGE <V><d>, <V><n>, #0")]
-        public void Cmge_S_D([Values(0u)] uint Rd,
+        public void Cmge_S_D([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
@@ -460,7 +460,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMGE <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmge_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Cmge_V_8B_4H_2S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -487,7 +487,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMGE <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmge_V_16B_8H_4S_2D([Values(0u)] uint Rd,
+        public void Cmge_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -514,7 +514,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMGT <V><d>, <V><n>, #0")]
-        public void Cmgt_S_D([Values(0u)] uint Rd,
+        public void Cmgt_S_D([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
@@ -539,7 +539,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMGT <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmgt_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Cmgt_V_8B_4H_2S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -566,7 +566,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMGT <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmgt_V_16B_8H_4S_2D([Values(0u)] uint Rd,
+        public void Cmgt_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -593,7 +593,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMLE <V><d>, <V><n>, #0")]
-        public void Cmle_S_D([Values(0u)] uint Rd,
+        public void Cmle_S_D([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
@@ -618,7 +618,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMLE <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmle_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Cmle_V_8B_4H_2S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -645,7 +645,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMLE <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmle_V_16B_8H_4S_2D([Values(0u)] uint Rd,
+        public void Cmle_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -672,7 +672,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMLT <V><d>, <V><n>, #0")]
-        public void Cmlt_S_D([Values(0u)] uint Rd,
+        public void Cmlt_S_D([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
@@ -697,7 +697,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMLT <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmlt_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Cmlt_V_8B_4H_2S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -724,7 +724,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CMLT <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmlt_V_16B_8H_4S_2D([Values(0u)] uint Rd,
+        public void Cmlt_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -751,7 +751,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CNT <Vd>.<T>, <Vn>.<T>")]
-        public void Cnt_V_8B([Values(0u)] uint Rd,
+        public void Cnt_V_8B([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
                              [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
@@ -776,7 +776,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("CNT <Vd>.<T>, <Vn>.<T>")]
-        public void Cnt_V_16B([Values(0u)] uint Rd,
+        public void Cnt_V_16B([Values(0u)]     uint Rd,
                               [Values(1u, 0u)] uint Rn,
                               [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
                               [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
@@ -801,7 +801,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("NEG <V><d>, <V><n>")]
-        public void Neg_S_D([Values(0u)] uint Rd,
+        public void Neg_S_D([Values(0u)]     uint Rd,
                             [Values(1u, 0u)] uint Rn,
                             [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
                             [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
@@ -826,7 +826,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("NEG <Vd>.<T>, <Vn>.<T>")]
-        public void Neg_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Neg_V_8B_4H_2S([Values(0u)]     uint Rd,
                                    [Values(1u, 0u)] uint Rn,
                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -853,7 +853,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("NEG <Vd>.<T>, <Vn>.<T>")]
-        public void Neg_V_16B_8H_4S_2D([Values(0u)] uint Rd,
+        public void Neg_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                        [Values(1u, 0u)] uint Rn,
                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -880,7 +880,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("NOT <Vd>.<T>, <Vn>.<T>")]
-        public void Not_V_8B([Values(0u)] uint Rd,
+        public void Not_V_8B([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
                              [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
@@ -905,7 +905,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("NOT <Vd>.<T>, <Vn>.<T>")]
-        public void Not_V_16B([Values(0u)] uint Rd,
+        public void Not_V_16B([Values(0u)]     uint Rd,
                               [Values(1u, 0u)] uint Rn,
                               [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
                               [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
@@ -930,7 +930,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("RBIT <Vd>.<T>, <Vn>.<T>")]
-        public void Rbit_V_8B([Values(0u)] uint Rd,
+        public void Rbit_V_8B([Values(0u)]     uint Rd,
                               [Values(1u, 0u)] uint Rn,
                               [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
                               [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
@@ -955,7 +955,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("RBIT <Vd>.<T>, <Vn>.<T>")]
-        public void Rbit_V_16B([Values(0u)] uint Rd,
+        public void Rbit_V_16B([Values(0u)]     uint Rd,
                                [Values(1u, 0u)] uint Rn,
                                [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
                                [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
@@ -980,7 +980,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("REV16 <Vd>.<T>, <Vn>.<T>")]
-        public void Rev16_V_8B([Values(0u)] uint Rd,
+        public void Rev16_V_8B([Values(0u)]     uint Rd,
                                [Values(1u, 0u)] uint Rn,
                                [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
                                [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
@@ -1005,7 +1005,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("REV16 <Vd>.<T>, <Vn>.<T>")]
-        public void Rev16_V_16B([Values(0u)] uint Rd,
+        public void Rev16_V_16B([Values(0u)]     uint Rd,
                                 [Values(1u, 0u)] uint Rn,
                                 [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
                                 [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
@@ -1030,7 +1030,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("REV32 <Vd>.<T>, <Vn>.<T>")]
-        public void Rev32_V_8B_4H([Values(0u)] uint Rd,
+        public void Rev32_V_8B_4H([Values(0u)]     uint Rd,
                                   [Values(1u, 0u)] uint Rn,
                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong Z,
                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong A,
@@ -1057,7 +1057,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("REV32 <Vd>.<T>, <Vn>.<T>")]
-        public void Rev32_V_16B_8H([Values(0u)] uint Rd,
+        public void Rev32_V_16B_8H([Values(0u)]     uint Rd,
                                    [Values(1u, 0u)] uint Rn,
                                    [ValueSource("_8B4H_")] [Random(RndCnt)] ulong Z,
                                    [ValueSource("_8B4H_")] [Random(RndCnt)] ulong A,
@@ -1084,7 +1084,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("REV64 <Vd>.<T>, <Vn>.<T>")]
-        public void Rev64_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Rev64_V_8B_4H_2S([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -1111,7 +1111,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("REV64 <Vd>.<T>, <Vn>.<T>")]
-        public void Rev64_V_16B_8H_4S([Values(0u)] uint Rd,
+        public void Rev64_V_16B_8H_4S([Values(0u)]     uint Rd,
                                       [Values(1u, 0u)] uint Rn,
                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -1138,7 +1138,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SQABS <V><d>, <V><n>")]
-        public void Sqabs_S_B_H_S_D([Values(0u)] uint Rd,
+        public void Sqabs_S_B_H_S_D([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong Z,
                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong A,
@@ -1169,7 +1169,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SQABS <Vd>.<T>, <Vn>.<T>")]
-        public void Sqabs_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Sqabs_V_8B_4H_2S([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -1200,7 +1200,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SQABS <Vd>.<T>, <Vn>.<T>")]
-        public void Sqabs_V_16B_8H_4S_2D([Values(0u)] uint Rd,
+        public void Sqabs_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                          [Values(1u, 0u)] uint Rn,
                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -1231,7 +1231,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SQNEG <V><d>, <V><n>")]
-        public void Sqneg_S_B_H_S_D([Values(0u)] uint Rd,
+        public void Sqneg_S_B_H_S_D([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong Z,
                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong A,
@@ -1262,7 +1262,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SQNEG <Vd>.<T>, <Vn>.<T>")]
-        public void Sqneg_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Sqneg_V_8B_4H_2S([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -1293,7 +1293,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SQNEG <Vd>.<T>, <Vn>.<T>")]
-        public void Sqneg_V_16B_8H_4S_2D([Values(0u)] uint Rd,
+        public void Sqneg_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                          [Values(1u, 0u)] uint Rn,
                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -1324,7 +1324,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SQXTN <Vb><d>, <Va><n>")]
-        public void Sqxtn_S_HB_SH_DS([Values(0u)] uint Rd,
+        public void Sqxtn_S_HB_SH_DS([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong A,
@@ -1355,7 +1355,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Sqxtn_V_8H8B_4S4H_2D2S([Values(0u)] uint Rd,
+        public void Sqxtn_V_8H8B_4S4H_2D2S([Values(0u)]     uint Rd,
                                            [Values(1u, 0u)] uint Rn,
                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -1386,7 +1386,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Sqxtn_V_8H16B_4S8H_2D4S([Values(0u)] uint Rd,
+        public void Sqxtn_V_8H16B_4S8H_2D4S([Values(0u)]     uint Rd,
                                             [Values(1u, 0u)] uint Rn,
                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -1417,7 +1417,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SQXTUN <Vb><d>, <Va><n>")]
-        public void Sqxtun_S_HB_SH_DS([Values(0u)] uint Rd,
+        public void Sqxtun_S_HB_SH_DS([Values(0u)]     uint Rd,
                                       [Values(1u, 0u)] uint Rn,
                                       [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong Z,
                                       [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong A,
@@ -1448,7 +1448,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SQXTUN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Sqxtun_V_8H8B_4S4H_2D2S([Values(0u)] uint Rd,
+        public void Sqxtun_V_8H8B_4S4H_2D2S([Values(0u)]     uint Rd,
                                             [Values(1u, 0u)] uint Rn,
                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -1479,7 +1479,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SQXTUN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Sqxtun_V_8H16B_4S8H_2D4S([Values(0u)] uint Rd,
+        public void Sqxtun_V_8H16B_4S8H_2D4S([Values(0u)]     uint Rd,
                                              [Values(1u, 0u)] uint Rn,
                                              [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                              [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -1510,7 +1510,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SUQADD <V><d>, <V><n>")]
-        public void Suqadd_S_B_H_S_D([Values(0u)] uint Rd,
+        public void Suqadd_S_B_H_S_D([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong A,
@@ -1541,7 +1541,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SUQADD <Vd>.<T>, <Vn>.<T>")]
-        public void Suqadd_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Suqadd_V_8B_4H_2S([Values(0u)]     uint Rd,
                                       [Values(1u, 0u)] uint Rn,
                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -1572,7 +1572,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("SUQADD <Vd>.<T>, <Vn>.<T>")]
-        public void Suqadd_V_16B_8H_4S_2D([Values(0u)] uint Rd,
+        public void Suqadd_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                           [Values(1u, 0u)] uint Rn,
                                           [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                           [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -1603,7 +1603,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("UQXTN <Vb><d>, <Va><n>")]
-        public void Uqxtn_S_HB_SH_DS([Values(0u)] uint Rd,
+        public void Uqxtn_S_HB_SH_DS([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong A,
@@ -1634,7 +1634,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("UQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Uqxtn_V_8H8B_4S4H_2D2S([Values(0u)] uint Rd,
+        public void Uqxtn_V_8H8B_4S4H_2D2S([Values(0u)]     uint Rd,
                                            [Values(1u, 0u)] uint Rn,
                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -1665,7 +1665,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("UQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Uqxtn_V_8H16B_4S8H_2D4S([Values(0u)] uint Rd,
+        public void Uqxtn_V_8H16B_4S8H_2D4S([Values(0u)]     uint Rd,
                                             [Values(1u, 0u)] uint Rn,
                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -1696,7 +1696,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("USQADD <V><d>, <V><n>")]
-        public void Usqadd_S_B_H_S_D([Values(0u)] uint Rd,
+        public void Usqadd_S_B_H_S_D([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong A,
@@ -1727,7 +1727,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("USQADD <Vd>.<T>, <Vn>.<T>")]
-        public void Usqadd_V_8B_4H_2S([Values(0u)] uint Rd,
+        public void Usqadd_V_8B_4H_2S([Values(0u)]     uint Rd,
                                       [Values(1u, 0u)] uint Rn,
                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
@@ -1758,7 +1758,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("USQADD <Vd>.<T>, <Vn>.<T>")]
-        public void Usqadd_V_16B_8H_4S_2D([Values(0u)] uint Rd,
+        public void Usqadd_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                           [Values(1u, 0u)] uint Rn,
                                           [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                           [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -1789,7 +1789,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("XTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Xtn_V_8H8B_4S4H_2D2S([Values(0u)] uint Rd,
+        public void Xtn_V_8H8B_4S4H_2D2S([Values(0u)]     uint Rd,
                                          [Values(1u, 0u)] uint Rn,
                                          [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                          [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
@@ -1816,7 +1816,7 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Description("XTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Xtn_V_8H16B_4S8H_2D4S([Values(0u)] uint Rd,
+        public void Xtn_V_8H16B_4S8H_2D4S([Values(0u)]     uint Rd,
                                           [Values(1u, 0u)] uint Rn,
                                           [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                           [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,

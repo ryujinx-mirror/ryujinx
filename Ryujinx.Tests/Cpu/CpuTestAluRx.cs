@@ -9,7 +9,7 @@ namespace Ryujinx.Tests.Cpu
     using Tester;
     using Tester.Types;
 
-    [Category("AluRx"), Ignore("Tested: first half of 2018.")]
+    [Category("AluRx"), Ignore("Tested: second half of 2018.")]
     public sealed class CpuTestAluRx : CpuTest
     {
 #if AluRx

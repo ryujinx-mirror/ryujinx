@@ -9,7 +9,7 @@ namespace Ryujinx.Tests.Cpu
     using Tester;
     using Tester.Types;
 
-    [Category("CcmpImm"), Ignore("Tested: first half of 2018.")]
+    [Category("CcmpImm"), Ignore("Tested: second half of 2018.")]
     public sealed class CpuTestCcmpImm : CpuTest
     {
 #if CcmpImm

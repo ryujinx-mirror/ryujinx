@@ -5075,6 +5075,210 @@ namespace Ryujinx.Tests.Cpu.Tester
             V(d, result);
         }
 
+        // sqdmulh_advsimd_vec.html#SQDMULH_asisdsame_only
+        public static void Sqdmulh_S(Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+
+            /* Decode Scalar */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' || size == '00' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = esize;
+            int elements = 1;
+
+            bool rounding = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger round_const = (rounding ? (BigInteger)1 << (esize - 1) : 0);
+            BigInteger element1;
+            BigInteger element2;
+            BigInteger product;
+            bool sat;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = SInt(Elem(operand1, e, esize));
+                element2 = SInt(Elem(operand2, e, esize));
+
+                product = (2 * element1 * element2) + round_const;
+
+                (Bits _result, bool _sat) = SignedSatQ(product >> esize, esize);
+                Elem(result, e, esize, _result);
+                sat = _sat;
+
+                if (sat)
+                {
+                    /* FPSR.QC = '1'; */
+                    FPSR[27] = true; // TODO: Add named fields.
+                }
+            }
+
+            V(d, result);
+        }
+
+        // sqdmulh_advsimd_vec.html#SQDMULH_asimdsame_only
+        public static void Sqdmulh_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' || size == '00' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool rounding = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger round_const = (rounding ? (BigInteger)1 << (esize - 1) : 0);
+            BigInteger element1;
+            BigInteger element2;
+            BigInteger product;
+            bool sat;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = SInt(Elem(operand1, e, esize));
+                element2 = SInt(Elem(operand2, e, esize));
+
+                product = (2 * element1 * element2) + round_const;
+
+                (Bits _result, bool _sat) = SignedSatQ(product >> esize, esize);
+                Elem(result, e, esize, _result);
+                sat = _sat;
+
+                if (sat)
+                {
+                    /* FPSR.QC = '1'; */
+                    FPSR[27] = true; // TODO: Add named fields.
+                }
+            }
+
+            V(d, result);
+        }
+
+        // sqrdmulh_advsimd_vec.html#SQRDMULH_asisdsame_only
+        public static void Sqrdmulh_S(Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = true;
+
+            /* Decode Scalar */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' || size == '00' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = esize;
+            int elements = 1;
+
+            bool rounding = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger round_const = (rounding ? (BigInteger)1 << (esize - 1) : 0);
+            BigInteger element1;
+            BigInteger element2;
+            BigInteger product;
+            bool sat;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = SInt(Elem(operand1, e, esize));
+                element2 = SInt(Elem(operand2, e, esize));
+
+                product = (2 * element1 * element2) + round_const;
+
+                (Bits _result, bool _sat) = SignedSatQ(product >> esize, esize);
+                Elem(result, e, esize, _result);
+                sat = _sat;
+
+                if (sat)
+                {
+                    /* FPSR.QC = '1'; */
+                    FPSR[27] = true; // TODO: Add named fields.
+                }
+            }
+
+            V(d, result);
+        }
+
+        // sqrdmulh_advsimd_vec.html#SQRDMULH_asimdsame_only
+        public static void Sqrdmulh_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = true;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' || size == '00' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool rounding = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger round_const = (rounding ? (BigInteger)1 << (esize - 1) : 0);
+            BigInteger element1;
+            BigInteger element2;
+            BigInteger product;
+            bool sat;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = SInt(Elem(operand1, e, esize));
+                element2 = SInt(Elem(operand2, e, esize));
+
+                product = (2 * element1 * element2) + round_const;
+
+                (Bits _result, bool _sat) = SignedSatQ(product >> esize, esize);
+                Elem(result, e, esize, _result);
+                sat = _sat;
+
+                if (sat)
+                {
+                    /* FPSR.QC = '1'; */
+                    FPSR[27] = true; // TODO: Add named fields.
+                }
+            }
+
+            V(d, result);
+        }
+
         // sqsub_advsimd.html#SQSUB_asisdsame_only
         public static void Sqsub_S(Bits size, Bits Rm, Bits Rn, Bits Rd)
         {

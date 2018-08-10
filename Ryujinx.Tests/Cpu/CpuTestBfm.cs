@@ -9,7 +9,7 @@ namespace Ryujinx.Tests.Cpu
     using Tester;
     using Tester.Types;
 
-    [Category("Bfm"), Ignore("Tested: first half of 2018.")]
+    [Category("Bfm"), Ignore("Tested: second half of 2018.")]
     public sealed class CpuTestBfm : CpuTest
     {
 #if Bfm

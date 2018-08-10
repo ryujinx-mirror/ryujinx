@@ -804,7 +804,7 @@ namespace ChocolArm64.Instruction
             ScalarZx = Scalar,
 
             VectorSx = Signed,
-            VectorZx = 0,
+            VectorZx = 0
         }
 
         public static void EmitScalarSaturatingUnaryOpSx(AILEmitterCtx Context, Action Emit)
@@ -837,7 +837,14 @@ namespace ChocolArm64.Instruction
 
                 Emit();
 
-                EmitUnarySignedSatQAbsOrNeg(Context, Op.Size);
+                if (Op.Size <= 2)
+                {
+                    EmitSatQ(Context, Op.Size, true, true);
+                }
+                else /* if (Op.Size == 3) */
+                {
+                    EmitUnarySignedSatQAbsOrNeg(Context);
+                }
 
                 EmitVectorInsertTmp(Context, Index, Op.Size);
             }
@@ -853,25 +860,25 @@ namespace ChocolArm64.Instruction
 
         public static void EmitScalarSaturatingBinaryOpSx(AILEmitterCtx Context, SaturatingFlags Flags)
         {
-            EmitSaturatingBinaryOp(Context, SaturatingFlags.ScalarSx | Flags);
+            EmitSaturatingBinaryOp(Context, () => { }, SaturatingFlags.ScalarSx | Flags);
         }
 
         public static void EmitScalarSaturatingBinaryOpZx(AILEmitterCtx Context, SaturatingFlags Flags)
         {
-            EmitSaturatingBinaryOp(Context, SaturatingFlags.ScalarZx | Flags);
+            EmitSaturatingBinaryOp(Context, () => { }, SaturatingFlags.ScalarZx | Flags);
         }
 
         public static void EmitVectorSaturatingBinaryOpSx(AILEmitterCtx Context, SaturatingFlags Flags)
         {
-            EmitSaturatingBinaryOp(Context, SaturatingFlags.VectorSx | Flags);
+            EmitSaturatingBinaryOp(Context, () => { }, SaturatingFlags.VectorSx | Flags);
         }
 
         public static void EmitVectorSaturatingBinaryOpZx(AILEmitterCtx Context, SaturatingFlags Flags)
         {
-            EmitSaturatingBinaryOp(Context, SaturatingFlags.VectorZx | Flags);
+            EmitSaturatingBinaryOp(Context, () => { }, SaturatingFlags.VectorZx | Flags);
         }
 
-        public static void EmitSaturatingBinaryOp(AILEmitterCtx Context, SaturatingFlags Flags)
+        public static void EmitSaturatingBinaryOp(AILEmitterCtx Context, Action Emit, SaturatingFlags Flags)
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
@@ -936,6 +943,20 @@ namespace ChocolArm64.Instruction
                     {
                         EmitBinarySatQAccumulate(Context, Signed);
                     }
+
+                    EmitVectorInsertTmp(Context, Index, Op.Size);
+                }
+            }
+            else
+            {
+                for (int Index = 0; Index < Elems; Index++)
+                {
+                    EmitVectorExtract(Context,                   Op.Rn, Index, Op.Size, Signed);
+                    EmitVectorExtract(Context, ((AOpCodeSimdReg)Op).Rm, Index, Op.Size, Signed);
+
+                    Emit();
+
+                    EmitSatQ(Context, Op.Size, true, Signed);
 
                     EmitVectorInsertTmp(Context, Index, Op.Size);
                 }
@@ -1080,29 +1101,17 @@ namespace ChocolArm64.Instruction
             }
         }
 
-        // TSrc (8bit, 16bit, 32bit, 64bit) == TDst (8bit, 16bit, 32bit, 64bit); signed.
-        public static void EmitUnarySignedSatQAbsOrNeg(AILEmitterCtx Context, int Size)
+        // TSrc (64bit) == TDst (64bit); signed.
+        public static void EmitUnarySignedSatQAbsOrNeg(AILEmitterCtx Context)
         {
-            int ESize = 8 << Size;
+            if (((AOpCodeSimd)Context.CurrOp).Size < 3)
+            {
+                throw new InvalidOperationException();
+            }
 
-            long TMaxValue =  (1L << (ESize - 1)) - 1L;
-            long TMinValue = -(1L << (ESize - 1));
+            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
 
-            AILLabel LblFalse = new AILLabel();
-
-            Context.Emit(OpCodes.Dup);
-            Context.Emit(OpCodes.Neg);
-            Context.EmitLdc_I8(TMinValue);
-            Context.Emit(OpCodes.Ceq);
-            Context.Emit(OpCodes.Brfalse_S, LblFalse);
-
-            Context.Emit(OpCodes.Pop);
-
-            EmitSetFpsrQCFlag(Context);
-
-            Context.EmitLdc_I8(TMaxValue);
-
-            Context.MarkLabel(LblFalse);
+            ASoftFallback.EmitCall(Context, nameof(ASoftFallback.UnarySignedSatQAbsOrNeg));
         }
 
         // TSrcs (64bit) == TDst (64bit); signed, unsigned.
@@ -1148,22 +1157,6 @@ namespace ChocolArm64.Instruction
             ASoftFallback.EmitCall(Context, Signed
                 ? nameof(ASoftFallback.BinarySignedSatQAcc)
                 : nameof(ASoftFallback.BinaryUnsignedSatQAcc));
-        }
-
-        public static void EmitSetFpsrQCFlag(AILEmitterCtx Context)
-        {
-            const int QCFlagBit = 27;
-
-            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
-
-            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
-            Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpsr));
-
-            Context.EmitLdc_I4(1 << QCFlagBit);
-
-            Context.Emit(OpCodes.Or);
-
-            Context.EmitCallPropSet(typeof(AThreadState), nameof(AThreadState.Fpsr));
         }
 
         public static void EmitScalarSet(AILEmitterCtx Context, int Reg, int Size)

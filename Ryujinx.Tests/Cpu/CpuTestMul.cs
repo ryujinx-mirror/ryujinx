@@ -9,7 +9,7 @@ namespace Ryujinx.Tests.Cpu
     using Tester;
     using Tester.Types;
 
-    [Category("Mul"), Ignore("Tested: first half of 2018.")]
+    [Category("Mul"), Ignore("Tested: second half of 2018.")]
     public sealed class CpuTestMul : CpuTest
     {
 #if Mul
