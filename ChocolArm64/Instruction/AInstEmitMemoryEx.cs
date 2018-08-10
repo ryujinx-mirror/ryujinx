@@ -75,7 +75,7 @@ namespace ChocolArm64.Instruction
             {
                 Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
                 Context.EmitLdtmp();
-                Context.EmitLdc_I(8 << Op.Size);
+                Context.EmitLdc_I8(1 << Op.Size);
 
                 Context.Emit(OpCodes.Add);
 
@@ -145,7 +145,7 @@ namespace ChocolArm64.Instruction
             {
                 Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
                 Context.EmitLdint(Op.Rn);
-                Context.EmitLdc_I(8 << Op.Size);
+                Context.EmitLdc_I8(1 << Op.Size);
 
                 Context.Emit(OpCodes.Add);
 
