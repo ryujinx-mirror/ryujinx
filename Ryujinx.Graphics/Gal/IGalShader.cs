@@ -11,11 +11,7 @@ namespace Ryujinx.Graphics.Gal
 
         IEnumerable<ShaderDeclInfo> GetTextureUsage(long Key);
 
-        void SetConstBuffer(long Key, int Cbuf, int DataSize, IntPtr HostAddress);
-
         void EnsureTextureBinding(string UniformName, int Value);
-
-        void SetFlip(float X, float Y);
 
         void Bind(long Key);
 

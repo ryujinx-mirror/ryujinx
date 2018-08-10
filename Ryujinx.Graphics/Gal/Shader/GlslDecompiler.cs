@@ -220,7 +220,11 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             if (Decl.ShaderType == GalShaderType.Vertex)
             {
-                SB.AppendLine("uniform vec2 " + GlslDecl.FlipUniformName + ";");
+                SB.AppendLine("layout (std140) uniform " + GlslDecl.ExtraUniformBlockName + "{");
+
+                SB.AppendLine(IdentationStr + "vec2 " + GlslDecl.FlipUniformName + ";");
+
+                SB.AppendLine("};");
             }
 
             SB.AppendLine();

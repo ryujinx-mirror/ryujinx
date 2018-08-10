@@ -35,6 +35,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public const string FragmentOutputName = "FragColor";
 
+        public const string ExtraUniformBlockName = "Extra";
         public const string FlipUniformName = "flip";
 
         public const string ProgramName  = "program";

@@ -8,13 +8,15 @@ namespace Ryujinx.Graphics.Gal
 
         void RunActions();
 
-        IGalBlend Blend { get; }
+        IGalConstBuffer Buffer { get; }
 
         IGalFrameBuffer FrameBuffer { get; }
 
         IGalRasterizer Rasterizer { get; }
 
         IGalShader Shader { get; }
+
+        IGalPipeline Pipeline { get; }
 
         IGalTexture Texture { get; }
     }

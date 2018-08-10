@@ -7,11 +7,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
     {
         public int Handle { get; protected set; }
 
-        public int Size { get; protected set; }
+        public long Size { get; protected set; }
 
         protected BufferTarget Target { get; private set; }
 
-        public OGLStreamBuffer(BufferTarget Target, int Size)
+        public OGLStreamBuffer(BufferTarget Target, long Size)
         {
             this.Target = Target;
             this.Size   = Size;
@@ -20,14 +20,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             GL.BindBuffer(Target, Handle);
 
-            GL.BufferData(Target, Size, IntPtr.Zero, BufferUsageHint.StreamDraw);
+            GL.BufferData(Target, (IntPtr)Size, IntPtr.Zero, BufferUsageHint.StreamDraw);
         }
 
-        public void SetData(int Size, IntPtr HostAddress)
+        public void SetData(long Size, IntPtr HostAddress)
         {
             GL.BindBuffer(Target, Handle);
 
-            GL.BufferSubData(Target, IntPtr.Zero, Size, HostAddress);
+            GL.BufferSubData(Target, IntPtr.Zero, (IntPtr)Size, HostAddress);
         }
 
         public void Dispose()

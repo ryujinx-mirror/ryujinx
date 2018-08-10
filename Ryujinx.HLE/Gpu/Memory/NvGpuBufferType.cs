@@ -5,6 +5,7 @@ namespace Ryujinx.HLE.Gpu.Memory
         Index,
         Vertex,
         Texture,
+        ConstBuffer,
         Count
     }
 }

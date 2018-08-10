@@ -16,6 +16,7 @@ namespace Ryujinx.HLE.Gpu.Engines
         ViewportNVert        = 0x301,
         VertexArrayFirst     = 0x35d,
         VertexArrayCount     = 0x35e,
+        ClearNColor          = 0x360,
         ClearDepth           = 0x364,
         ClearStencil         = 0x368,
         StencilBackFuncRef   = 0x3d5,
