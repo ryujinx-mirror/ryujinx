@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.OsHle
 
         internal string ActiveAudioOutput { get; private set; }
         
-        public bool DockedMode { get; set; }
+        public static bool DockedMode { get; set; }
 
         public SystemStateMgr()
         {
