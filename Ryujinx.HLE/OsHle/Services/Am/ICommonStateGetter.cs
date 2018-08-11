@@ -58,7 +58,8 @@ namespace Ryujinx.HLE.OsHle.Services.Am
 
         public long GetOperationMode(ServiceCtx Context)
         {
-            OperationMode Mode = DockedMode?OperationMode.Docked:  OperationMode.Handheld;
+            OperationMode Mode = DockedMode ? OperationMode.Docked : OperationMode.Handheld;
+
             Context.ResponseData.Write((byte)Mode);
 
             return 0;
@@ -66,7 +67,8 @@ namespace Ryujinx.HLE.OsHle.Services.Am
 
         public long GetPerformanceMode(ServiceCtx Context)
         {
-            Apm.PerformanceMode Mode = DockedMode?Apm.PerformanceMode.Docked:  Apm.PerformanceMode.Handheld;
+            Apm.PerformanceMode Mode = DockedMode ? Apm.PerformanceMode.Docked : Apm.PerformanceMode.Handheld;
+
             Context.ResponseData.Write((byte)Mode);
 
             return 0;
