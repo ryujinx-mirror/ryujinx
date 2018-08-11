@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+using static Ryujinx.HLE.OsHle.SystemStateMgr;
+
 namespace Ryujinx
 {
     public static class Config
@@ -31,6 +33,8 @@ namespace Ryujinx
             Log.SetEnable(LogLevel.Info,    Convert.ToBoolean(Parser.Value("Logging_Enable_Info")));
             Log.SetEnable(LogLevel.Warning, Convert.ToBoolean(Parser.Value("Logging_Enable_Warn")));
             Log.SetEnable(LogLevel.Error,   Convert.ToBoolean(Parser.Value("Logging_Enable_Error")));
+            
+            DockedMode = Convert.ToBoolean(Parser.Value("Docked_Mode"));
 
             string[] FilteredLogClasses = Parser.Value("Logging_Filtered_Classes").Split(',', StringSplitOptions.RemoveEmptyEntries);
 
