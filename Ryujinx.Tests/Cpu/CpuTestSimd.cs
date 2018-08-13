@@ -1137,6 +1137,114 @@ namespace Ryujinx.Tests.Cpu
             });
         }
 
+        [Test, Description("SADALP <Vd>.<Ta>, <Vn>.<Tb>")]
+        public void Sadalp_V_8B4H_4H2S_2S1D([Values(0u)]     uint Rd,
+                                            [Values(1u, 0u)] uint Rn,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B4H, 4H2S, 2S1D>
+        {
+            uint Opcode = 0x0E206800; // SADALP V0.4H, V0.8B
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0(A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.V(1, new Bits(A));
+            SimdFp.Sadalp_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Description("SADALP <Vd>.<Ta>, <Vn>.<Tb>")]
+        public void Sadalp_V_16B8H_8H4S_4S2D([Values(0u)]     uint Rd,
+                                             [Values(1u, 0u)] uint Rn,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
+        {
+            uint Opcode = 0x4E206800; // SADALP V0.8H, V0.16B
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
+            SimdFp.Sadalp_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Description("SADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
+        public void Saddlp_V_8B4H_4H2S_2S1D([Values(0u)]     uint Rd,
+                                            [Values(1u, 0u)] uint Rn,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B4H, 4H2S, 2S1D>
+        {
+            uint Opcode = 0x0E202800; // SADDLP V0.4H, V0.8B
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0(A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.V(1, new Bits(A));
+            SimdFp.Saddlp_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Description("SADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
+        public void Saddlp_V_16B8H_8H4S_4S2D([Values(0u)]     uint Rd,
+                                             [Values(1u, 0u)] uint Rn,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
+        {
+            uint Opcode = 0x4E202800; // SADDLP V0.8H, V0.16B
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
+            SimdFp.Saddlp_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
         [Test, Description("SQABS <V><d>, <V><n>")]
         public void Sqabs_S_B_H_S_D([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
@@ -1600,6 +1708,114 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+        }
+
+        [Test, Description("UADALP <Vd>.<Ta>, <Vn>.<Tb>")]
+        public void Uadalp_V_8B4H_4H2S_2S1D([Values(0u)]     uint Rd,
+                                            [Values(1u, 0u)] uint Rn,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B4H, 4H2S, 2S1D>
+        {
+            uint Opcode = 0x2E206800; // UADALP V0.4H, V0.8B
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0(A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.V(1, new Bits(A));
+            SimdFp.Uadalp_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Description("UADALP <Vd>.<Ta>, <Vn>.<Tb>")]
+        public void Uadalp_V_16B8H_8H4S_4S2D([Values(0u)]     uint Rd,
+                                             [Values(1u, 0u)] uint Rn,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
+        {
+            uint Opcode = 0x6E206800; // UADALP V0.8H, V0.16B
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
+            SimdFp.Uadalp_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Description("UADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
+        public void Uaddlp_V_8B4H_4H2S_2S1D([Values(0u)]     uint Rd,
+                                            [Values(1u, 0u)] uint Rn,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B4H, 4H2S, 2S1D>
+        {
+            uint Opcode = 0x2E202800; // UADDLP V0.4H, V0.8B
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0(A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.V(1, new Bits(A));
+            SimdFp.Uaddlp_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Description("UADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
+        public void Uaddlp_V_16B8H_8H4S_4S2D([Values(0u)]     uint Rd,
+                                             [Values(1u, 0u)] uint Rn,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
+        {
+            uint Opcode = 0x6E202800; // UADDLP V0.8H, V0.16B
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcode |= ((size & 3) << 22);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
+            SimdFp.Uaddlp_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
         }
 
         [Test, Description("UQXTN <Vb><d>, <Va><n>")]

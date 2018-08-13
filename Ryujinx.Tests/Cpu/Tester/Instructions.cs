@@ -3060,6 +3060,90 @@ namespace Ryujinx.Tests.Cpu.Tester
             V(d, result);
         }
 
+        // sadalp_advsimd.html
+        public static void Sadalp_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+            const bool op = true;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / (2 * esize);
+
+            bool acc = (op == true);
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand = V(datasize, n);
+            Bits sum;
+            BigInteger op1;
+            BigInteger op2;
+
+            Bits result = (acc ? V(datasize, d) : Zeros(datasize));
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                op1 = Int(Elem(operand, 2 * e + 0, esize), unsigned);
+                op2 = Int(Elem(operand, 2 * e + 1, esize), unsigned);
+
+                sum = (op1 + op2).SubBigInteger(2 * esize - 1, 0);
+
+                Elem(result, e, 2 * esize, Elem(result, e, 2 * esize) + sum);
+            }
+
+            V(d, result);
+        }
+
+        // saddlp_advsimd.html
+        public static void Saddlp_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+            const bool op = false;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / (2 * esize);
+
+            bool acc = (op == true);
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand = V(datasize, n);
+            Bits sum;
+            BigInteger op1;
+            BigInteger op2;
+
+            Bits result = (acc ? V(datasize, d) : Zeros(datasize));
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                op1 = Int(Elem(operand, 2 * e + 0, esize), unsigned);
+                op2 = Int(Elem(operand, 2 * e + 1, esize), unsigned);
+
+                sum = (op1 + op2).SubBigInteger(2 * esize - 1, 0);
+
+                Elem(result, e, 2 * esize, Elem(result, e, 2 * esize) + sum);
+            }
+
+            V(d, result);
+        }
+
         // sqabs_advsimd.html#SQABS_asisdmisc_R
         public static void Sqabs_S(Bits size, Bits Rn, Bits Rd)
         {
@@ -3517,6 +3601,90 @@ namespace Ryujinx.Tests.Cpu.Tester
                     /* FPSR.QC = '1'; */
                     FPSR[27] = true; // TODO: Add named fields.
                 }
+            }
+
+            V(d, result);
+        }
+
+        // uadalp_advsimd.html
+        public static void Uadalp_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            const bool U = true;
+            const bool op = true;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / (2 * esize);
+
+            bool acc = (op == true);
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand = V(datasize, n);
+            Bits sum;
+            BigInteger op1;
+            BigInteger op2;
+
+            Bits result = (acc ? V(datasize, d) : Zeros(datasize));
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                op1 = Int(Elem(operand, 2 * e + 0, esize), unsigned);
+                op2 = Int(Elem(operand, 2 * e + 1, esize), unsigned);
+
+                sum = (op1 + op2).SubBigInteger(2 * esize - 1, 0);
+
+                Elem(result, e, 2 * esize, Elem(result, e, 2 * esize) + sum);
+            }
+
+            V(d, result);
+        }
+
+        // uaddlp_advsimd.html
+        public static void Uaddlp_V(bool Q, Bits size, Bits Rn, Bits Rd)
+        {
+            const bool U = true;
+            const bool op = false;
+
+            /* Decode Vector */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / (2 * esize);
+
+            bool acc = (op == true);
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits operand = V(datasize, n);
+            Bits sum;
+            BigInteger op1;
+            BigInteger op2;
+
+            Bits result = (acc ? V(datasize, d) : Zeros(datasize));
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                op1 = Int(Elem(operand, 2 * e + 0, esize), unsigned);
+                op2 = Int(Elem(operand, 2 * e + 1, esize), unsigned);
+
+                sum = (op1 + op2).SubBigInteger(2 * esize - 1, 0);
+
+                Elem(result, e, 2 * esize, Elem(result, e, 2 * esize) + sum);
             }
 
             V(d, result);

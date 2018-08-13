@@ -158,6 +158,41 @@ namespace ChocolArm64.Instruction
             Context.MarkLabel(LblTrue);
         }
 
+        private static void EmitAddLongPairwise(AILEmitterCtx Context, bool Signed, bool Accumulate)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int Words = Op.GetBitsCount() >> 4;
+            int Pairs = Words >> Op.Size;
+
+            for (int Index = 0; Index < Pairs; Index++)
+            {
+                int Idx = Index << 1;
+
+                EmitVectorExtract(Context, Op.Rn, Idx,     Op.Size, Signed);
+                EmitVectorExtract(Context, Op.Rn, Idx + 1, Op.Size, Signed);
+
+                Context.Emit(OpCodes.Add);
+
+                if (Accumulate)
+                {
+                    EmitVectorExtract(Context, Op.Rd, Index, Op.Size + 1, Signed);
+
+                    Context.Emit(OpCodes.Add);
+                }
+
+                EmitVectorInsertTmp(Context, Index, Op.Size + 1);
+            }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
         private static void EmitDoublingMultiplyHighHalf(AILEmitterCtx Context, bool Round)
         {
             AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
@@ -992,6 +1027,16 @@ namespace ChocolArm64.Instruction
             });
         }
 
+        public static void Sadalp_V(AILEmitterCtx Context)
+        {
+            EmitAddLongPairwise(Context, Signed: true, Accumulate: true);
+        }
+
+        public static void Saddlp_V(AILEmitterCtx Context)
+        {
+            EmitAddLongPairwise(Context, Signed: true, Accumulate: false);
+        }
+
         public static void Saddw_V(AILEmitterCtx Context)
         {
             EmitVectorWidenRmBinaryOpSx(Context, () => Context.Emit(OpCodes.Add));
@@ -1213,9 +1258,19 @@ namespace ChocolArm64.Instruction
             });
         }
 
+        public static void Uadalp_V(AILEmitterCtx Context)
+        {
+            EmitAddLongPairwise(Context, Signed: false, Accumulate: true);
+        }
+
         public static void Uaddl_V(AILEmitterCtx Context)
         {
             EmitVectorWidenRnRmBinaryOpZx(Context, () => Context.Emit(OpCodes.Add));
+        }
+
+        public static void Uaddlp_V(AILEmitterCtx Context)
+        {
+            EmitAddLongPairwise(Context, Signed: false, Accumulate: false);
         }
 
         public static void Uaddlv_V(AILEmitterCtx Context)
