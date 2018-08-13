@@ -1,13 +1,17 @@
 using Ryujinx.HLE.Input;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.OsHle.Ipc;
+using Ryujinx.HLE.OsHle.Handles;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.OsHle.Services.Hid
 {
-    class IHidServer : IpcService
+    class IHidServer : IpcService, IDisposable
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
+
+        private KEvent NpadStyleSetUpdateEvent;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
@@ -26,6 +30,7 @@ namespace Ryujinx.HLE.OsHle.Services.Hid
                 { 101, GetSupportedNpadStyleSet                },
                 { 102, SetSupportedNpadIdType                  },
                 { 103, ActivateNpad                            },
+                { 106, AcquireNpadStyleSetUpdateEventHandle    },
                 { 108, GetPlayerLedPattern                     },
                 { 120, SetNpadJoyHoldType                      },
                 { 121, GetNpadJoyHoldType                      },
@@ -39,6 +44,8 @@ namespace Ryujinx.HLE.OsHle.Services.Hid
                 { 203, CreateActiveVibrationDeviceList         },
                 { 206, SendVibrationValues                     }
             };
+
+            NpadStyleSetUpdateEvent = new KEvent();
         }
 
         public long CreateAppletResource(ServiceCtx Context)
@@ -100,6 +107,15 @@ namespace Ryujinx.HLE.OsHle.Services.Hid
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
             Context.Ns.Log.PrintStub(LogClass.ServiceHid, "Stubbed.");
+
+            return 0;
+        }
+
+        public long AcquireNpadStyleSetUpdateEventHandle(ServiceCtx Context)
+        {
+            int Handle = Context.Process.HandleTable.OpenHandle(NpadStyleSetUpdateEvent);
+
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
             return 0;
         }
@@ -265,6 +281,19 @@ namespace Ryujinx.HLE.OsHle.Services.Hid
             Context.Ns.Log.PrintStub(LogClass.ServiceHid, "Stubbed.");
 
             return 0;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool Disposing)
+        {
+            if (Disposing)
+            {
+                NpadStyleSetUpdateEvent.Dispose();
+            }
         }
     }
 }
