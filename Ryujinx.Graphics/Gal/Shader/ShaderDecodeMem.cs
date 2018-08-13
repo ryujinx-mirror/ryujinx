@@ -26,8 +26,8 @@ namespace Ryujinx.Graphics.Gal.Shader
         private static int[,] MaskLut = new int[,]
         {
             { ____, ____, ____, ____, ____, ____, ____, ____ },
-            { R___, _G__, __B_, ___A, RG__, ____, ____, ____ },
             { R___, _G__, __B_, ___A, RG__, R__A, _G_A, __BA },
+            { R___, _G__, __B_, ___A, RG__, ____, ____, ____ },
             { RGB_, RG_A, R_BA, _GBA, RGBA, ____, ____, ____ }
         };
 
@@ -209,8 +209,15 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             int LutIndex;
 
-            LutIndex  = GetOperGpr0(OpCode).Index != ShaderIrOperGpr.ZRIndex ? 1 : 0;
+            LutIndex  = GetOperGpr0 (OpCode).Index != ShaderIrOperGpr.ZRIndex ? 1 : 0;
             LutIndex |= GetOperGpr28(OpCode).Index != ShaderIrOperGpr.ZRIndex ? 2 : 0;
+
+            if (LutIndex == 0)
+            {
+                //Both registers are RZ, color is not written anywhere.
+                //So, the intruction is basically a no-op.
+                return;
+            }
 
             int ChMask = MaskLut[LutIndex, (OpCode >> 50) & 7];
 
@@ -227,6 +234,26 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             int RegInc = 0;
 
+            ShaderIrOperGpr GetDst()
+            {
+                ShaderIrOperGpr Dst;
+
+                switch (LutIndex)
+                {
+                    case 1: Dst = GetOperGpr0 (OpCode); break;
+                    case 2: Dst = GetOperGpr28(OpCode); break;
+                    case 3: Dst = (RegInc >> 1) != 0
+                        ? GetOperGpr28(OpCode)
+                        : GetOperGpr0 (OpCode); break;
+
+                    default: throw new InvalidOperationException();
+                }
+
+                Dst.Index += RegInc++ & 1;
+
+                return Dst;
+            }
+
             for (int Ch = 0; Ch < 4; Ch++)
             {
                 if (!IsChannelUsed(ChMask, Ch))
@@ -236,18 +263,12 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 ShaderIrOperGpr Src = new ShaderIrOperGpr(TempRegStart + Ch);
 
-                ShaderIrOperGpr Dst = (RegInc >> 1) != 0
-                    ? GetOperGpr28(OpCode)
-                    : GetOperGpr0 (OpCode);
+                ShaderIrOperGpr Dst = GetDst();
 
-                Dst.Index += RegInc++ & 1;
-
-                if (Dst.Index >= ShaderIrOperGpr.ZRIndex)
+                if (Dst.Index != ShaderIrOperGpr.ZRIndex)
                 {
-                    continue;
+                    Block.AddNode(GetPredNode(new ShaderIrAsg(Dst, Src), OpCode));
                 }
-
-                Block.AddNode(GetPredNode(new ShaderIrAsg(Dst, Src), OpCode));
             }
         }
 
