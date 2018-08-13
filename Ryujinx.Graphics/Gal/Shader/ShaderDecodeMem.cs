@@ -122,6 +122,16 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public static void Tex(ShaderIrBlock Block, long OpCode)
         {
+            EmitTex(Block, OpCode, GprHandle: false);
+        }
+
+        public static void Tex_B(ShaderIrBlock Block, long OpCode)
+        {
+            EmitTex(Block, OpCode, GprHandle: true);
+        }
+
+        private static void EmitTex(ShaderIrBlock Block, long OpCode, bool GprHandle)
+        {
             //TODO: Support other formats.
             ShaderIrOperGpr[] Coords = new ShaderIrOperGpr[2];
 
@@ -139,7 +149,11 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             int ChMask = (int)(OpCode >> 31) & 0xf;
 
-            ShaderIrNode OperC = GetOperImm13_36(OpCode);
+            ShaderIrNode OperC = GprHandle
+                ? (ShaderIrNode)GetOperGpr20   (OpCode)
+                : (ShaderIrNode)GetOperImm13_36(OpCode);
+
+            ShaderIrInst Inst = GprHandle ? ShaderIrInst.Texb : ShaderIrInst.Texs;
 
             for (int Ch = 0; Ch < 4; Ch++)
             {
@@ -147,7 +161,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 ShaderIrMetaTex Meta = new ShaderIrMetaTex(Ch);
 
-                ShaderIrOp Op = new ShaderIrOp(ShaderIrInst.Texs, Coords[0], Coords[1], OperC, Meta);
+                ShaderIrOp Op = new ShaderIrOp(Inst, Coords[0], Coords[1], OperC, Meta);
 
                 Block.AddNode(GetPredNode(new ShaderIrAsg(Dst, Op), OpCode));
             }
@@ -178,15 +192,15 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public static void Texs(ShaderIrBlock Block, long OpCode)
         {
-            EmitTex(Block, OpCode, ShaderIrInst.Texs);
+            EmitTexs(Block, OpCode, ShaderIrInst.Texs);
         }
 
         public static void Tlds(ShaderIrBlock Block, long OpCode)
         {
-            EmitTex(Block, OpCode, ShaderIrInst.Txlf);
+            EmitTexs(Block, OpCode, ShaderIrInst.Txlf);
         }
 
-        private static void EmitTex(ShaderIrBlock Block, long OpCode, ShaderIrInst Inst)
+        private static void EmitTexs(ShaderIrBlock Block, long OpCode, ShaderIrInst Inst)
         {
             //TODO: Support other formats.
             ShaderIrNode OperA = GetOperGpr8    (OpCode);
@@ -195,7 +209,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             int LutIndex;
 
-            LutIndex = GetOperGpr0(OpCode).Index != ShaderIrOperGpr.ZRIndex ? 1 : 0;
+            LutIndex  = GetOperGpr0(OpCode).Index != ShaderIrOperGpr.ZRIndex ? 1 : 0;
             LutIndex |= GetOperGpr28(OpCode).Index != ShaderIrOperGpr.ZRIndex ? 2 : 0;
 
             int ChMask = MaskLut[LutIndex, (OpCode >> 50) & 7];

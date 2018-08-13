@@ -98,6 +98,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 { ShaderIrInst.Or,     GetOrExpr     },
                 { ShaderIrInst.Stof,   GetStofExpr   },
                 { ShaderIrInst.Sub,    GetSubExpr    },
+                { ShaderIrInst.Texb,   GetTexbExpr   },
                 { ShaderIrInst.Texq,   GetTexqExpr   },
                 { ShaderIrInst.Texs,   GetTexsExpr   },
                 { ShaderIrInst.Trunc,  GetTruncExpr  },
@@ -174,10 +175,12 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             string GlslCode = SB.ToString();
 
-            return new GlslProgram(
-                GlslCode,
-                Decl.Textures.Values,
-                Decl.Uniforms.Values);
+            List<ShaderDeclInfo> TextureInfo = new List<ShaderDeclInfo>();
+
+            TextureInfo.AddRange(Decl.Textures.Values);
+            TextureInfo.AddRange(IterateCbTextures());
+
+            return new GlslProgram(GlslCode, TextureInfo, Decl.Uniforms.Values);
         }
 
         private void PrintDeclHeader()
@@ -213,7 +216,25 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private void PrintDeclTextures()
         {
+            foreach (ShaderDeclInfo DeclInfo in IterateCbTextures())
+            {
+                SB.AppendLine("uniform sampler2D " + DeclInfo.Name + ";");
+            }
+
             PrintDecls(Decl.Textures, "uniform sampler2D");
+        }
+
+        private IEnumerable<ShaderDeclInfo> IterateCbTextures()
+        {
+            HashSet<string> Names = new HashSet<string>();
+
+            foreach (ShaderDeclInfo DeclInfo in Decl.CbTextures.Values.OrderBy(DeclKeySelector))
+            {
+                if (Names.Add(DeclInfo.Name))
+                {
+                    yield return DeclInfo;
+                }
+            }
         }
 
         private void PrintDeclUniforms()
@@ -993,6 +1014,22 @@ namespace Ryujinx.Graphics.Gal.Shader
         }
 
         private string GetSubExpr(ShaderIrOp Op) => GetBinaryExpr(Op, "-");
+
+        private string GetTexbExpr(ShaderIrOp Op)
+        {
+            ShaderIrMetaTex Meta = (ShaderIrMetaTex)Op.MetaData;
+
+            if (!Decl.CbTextures.TryGetValue(Op, out ShaderDeclInfo DeclInfo))
+            {
+                throw new InvalidOperationException();
+            }
+
+            string Coords = GetTexSamplerCoords(Op);
+
+            string Ch = "rgba".Substring(Meta.Elem, 1);
+
+            return "texture(" + DeclInfo.Name + ", " + Coords + ")." + Ch;
+        }
 
         private string GetTexqExpr(ShaderIrOp Op)
         {

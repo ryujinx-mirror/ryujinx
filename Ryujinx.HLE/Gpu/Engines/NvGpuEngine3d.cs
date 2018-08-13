@@ -309,7 +309,7 @@ namespace Ryujinx.HLE.Gpu.Engines
         private void SetStencil(GalPipelineState State)
         {
             State.StencilTestEnabled = (ReadRegister(NvGpuEngine3dReg.StencilEnable) & 1) != 0;
-            
+
             if (State.StencilTestEnabled)
             {
                 State.StencilBackFuncFunc = (GalComparisonOp)ReadRegister(NvGpuEngine3dReg.StencilBackFuncFunc);
@@ -364,17 +364,26 @@ namespace Ryujinx.HLE.Gpu.Engines
 
             int TextureCbIndex = ReadRegister(NvGpuEngine3dReg.TextureCbIndex);
 
-            //Note: On the emulator renderer, Texture Unit 0 is
-            //reserved for drawing the frame buffer.
-            int TexIndex = 1;
+            int TexIndex = 0;
 
             for (int Index = 0; Index < Keys.Length; Index++)
             {
                 foreach (ShaderDeclInfo DeclInfo in Gpu.Renderer.Shader.GetTextureUsage(Keys[Index]))
                 {
-                    long Position = ConstBuffers[Index][TextureCbIndex].Position;
+                    long Position;
 
-                    UploadTexture(Vmm, Position, TexIndex, DeclInfo.Index);
+                    if (DeclInfo.IsCb)
+                    {
+                        Position = ConstBuffers[Index][DeclInfo.Cbuf].Position;
+                    }
+                    else
+                    {
+                        Position = ConstBuffers[Index][TextureCbIndex].Position;
+                    }
+
+                    int TextureHandle = Vmm.ReadInt32(Position + DeclInfo.Index * 4);
+
+                    UploadTexture(Vmm, TexIndex, TextureHandle);
 
                     Gpu.Renderer.Shader.EnsureTextureBinding(DeclInfo.Name, TexIndex);
 
@@ -383,12 +392,8 @@ namespace Ryujinx.HLE.Gpu.Engines
             }
         }
 
-        private void UploadTexture(NvGpuVmm Vmm, long BasePosition, int TexIndex, int HndIndex)
+        private void UploadTexture(NvGpuVmm Vmm, int TexIndex, int TextureHandle)
         {
-            long Position = BasePosition + HndIndex * 4;
-
-            int TextureHandle = Vmm.ReadInt32(Position);
-
             if (TextureHandle == 0)
             {
                 //TODO: Is this correct?
@@ -601,6 +606,10 @@ namespace Ryujinx.HLE.Gpu.Engines
 
                 Gpu.Renderer.Rasterizer.DrawArrays(VertexFirst, VertexCount, PrimType);
             }
+
+            //Is the GPU really clearing those registers after draw?
+            WriteRegister(NvGpuEngine3dReg.IndexBatchFirst, 0);
+            WriteRegister(NvGpuEngine3dReg.IndexBatchCount, 0);
         }
 
         private void QueryControl(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)

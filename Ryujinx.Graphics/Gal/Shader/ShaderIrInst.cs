@@ -47,6 +47,7 @@ namespace Ryujinx.Graphics.Gal.Shader
         Ftos,
         Ftou,
         Ipa,
+        Texb,
         Texs,
         Trunc,
         F_End,
@@ -83,7 +84,7 @@ namespace Ryujinx.Graphics.Gal.Shader
         Bra,
         Exit,
         Kil,
-        
+
         Emit,
         Cut
     }

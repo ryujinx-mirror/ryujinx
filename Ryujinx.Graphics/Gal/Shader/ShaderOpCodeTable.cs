@@ -114,6 +114,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             Set("0101110000101x", ShaderDecode.Shr_R);
             Set("1110111111110x", ShaderDecode.St_A);
             Set("110000xxxx111x", ShaderDecode.Tex);
+            Set("1101111010111x", ShaderDecode.Tex_B);
             Set("1101111101001x", ShaderDecode.Texq);
             Set("1101100xxxxxxx", ShaderDecode.Texs);
             Set("1101101xxxxxxx", ShaderDecode.Tlds);

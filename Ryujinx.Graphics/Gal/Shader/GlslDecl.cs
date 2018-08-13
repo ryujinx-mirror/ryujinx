@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gal.Shader
@@ -19,7 +20,7 @@ namespace Ryujinx.Graphics.Gal.Shader
         public const int PositionOutAttrLocation = 15;
 
         private const int AttrStartIndex = 8;
-        private const int TexStartIndex = 8;
+        private const int TexStartIndex  = 8;
 
         public const string PositionOutAttrName = "position";
 
@@ -46,6 +47,8 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private string StagePrefix;
 
+        private Dictionary<ShaderIrOp, ShaderDeclInfo> m_CbTextures;
+
         private Dictionary<int, ShaderDeclInfo> m_Textures;
         private Dictionary<int, ShaderDeclInfo> m_Uniforms;
 
@@ -55,6 +58,8 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private Dictionary<int, ShaderDeclInfo> m_Gprs;
         private Dictionary<int, ShaderDeclInfo> m_Preds;
+
+        public IReadOnlyDictionary<ShaderIrOp, ShaderDeclInfo> CbTextures => m_CbTextures;
 
         public IReadOnlyDictionary<int, ShaderDeclInfo> Textures => m_Textures;
         public IReadOnlyDictionary<int, ShaderDeclInfo> Uniforms => m_Uniforms;
@@ -72,8 +77,10 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             this.ShaderType = ShaderType;
 
-            m_Uniforms = new Dictionary<int, ShaderDeclInfo>();
+            m_CbTextures = new Dictionary<ShaderIrOp, ShaderDeclInfo>();
+
             m_Textures = new Dictionary<int, ShaderDeclInfo>();
+            m_Uniforms = new Dictionary<int, ShaderDeclInfo>();
 
             m_Attributes    = new Dictionary<int, ShaderDeclInfo>();
             m_InAttributes  = new Dictionary<int, ShaderDeclInfo>();
@@ -89,14 +96,16 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             if (ShaderType == GalShaderType.Fragment)
             {
-                m_Gprs.Add(0, new ShaderDeclInfo(FragmentOutputName, 0, 0, 4));
+                m_Gprs.Add(0, new ShaderDeclInfo(FragmentOutputName, 0, false, 0, 4));
             }
 
             foreach (ShaderIrBlock Block in Blocks)
             {
-                foreach (ShaderIrNode Node in Block.GetNodes())
+                ShaderIrNode[] Nodes = Block.GetNodes();
+
+                foreach (ShaderIrNode Node in Nodes)
                 {
-                    Traverse(null, Node);
+                    Traverse(Nodes, null, Node);
                 }
             }
         }
@@ -152,31 +161,31 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
         }
 
-        private void Traverse(ShaderIrNode Parent, ShaderIrNode Node)
+        private void Traverse(ShaderIrNode[] Nodes, ShaderIrNode Parent, ShaderIrNode Node)
         {
             switch (Node)
             {
                 case ShaderIrAsg Asg:
                 {
-                    Traverse(Asg, Asg.Dst);
-                    Traverse(Asg, Asg.Src);
+                    Traverse(Nodes, Asg, Asg.Dst);
+                    Traverse(Nodes, Asg, Asg.Src);
 
                     break;
                 }
 
                 case ShaderIrCond Cond:
                 {
-                    Traverse(Cond, Cond.Pred);
-                    Traverse(Cond, Cond.Child);
+                    Traverse(Nodes, Cond, Cond.Pred);
+                    Traverse(Nodes, Cond, Cond.Child);
 
                     break;
                 }
 
                 case ShaderIrOp Op:
                 {
-                    Traverse(Op, Op.OperandA);
-                    Traverse(Op, Op.OperandB);
-                    Traverse(Op, Op.OperandC);
+                    Traverse(Nodes, Op, Op.OperandA);
+                    Traverse(Nodes, Op, Op.OperandB);
+                    Traverse(Nodes, Op, Op.OperandC);
 
                     if (Op.Inst == ShaderIrInst.Texq ||
                         Op.Inst == ShaderIrInst.Texs ||
@@ -190,6 +199,38 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                         m_Textures.TryAdd(Handle, new ShaderDeclInfo(Name, Handle));
                     }
+                    else if (Op.Inst == ShaderIrInst.Texb)
+                    {
+                        ShaderIrNode HandleSrc = null;
+
+                        int Index = Array.IndexOf(Nodes, Parent) - 1;
+
+                        for (; Index >= 0; Index--)
+                        {
+                            ShaderIrNode Curr = Nodes[Index];
+
+                            if (Curr is ShaderIrAsg Asg && Asg.Dst is ShaderIrOperGpr Gpr)
+                            {
+                                if (Gpr.Index == ((ShaderIrOperGpr)Op.OperandC).Index)
+                                {
+                                    HandleSrc = Asg.Src;
+
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (HandleSrc != null && HandleSrc is ShaderIrOperCbuf Cbuf)
+                        {
+                            string Name = StagePrefix + TextureName + "_cb" + Cbuf.Index + "_" + Cbuf.Pos;
+
+                            m_CbTextures.Add(Op, new ShaderDeclInfo(Name, Cbuf.Pos, true, Cbuf.Index));
+                        }
+                        else
+                        {
+                            throw new NotImplementedException("Shader TEX.B instruction is not fully supported!");
+                        }
+                    }
                     break;
                 }
 
@@ -199,7 +240,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                     {
                         string Name = StagePrefix + UniformName + Cbuf.Index;
 
-                        ShaderDeclInfo DeclInfo = new ShaderDeclInfo(Name, Cbuf.Pos, Cbuf.Index);
+                        ShaderDeclInfo DeclInfo = new ShaderDeclInfo(Name, Cbuf.Pos, true, Cbuf.Index);
 
                         m_Uniforms.Add(Cbuf.Index, DeclInfo);
                     }
@@ -252,12 +293,13 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                     if (!m_Attributes.ContainsKey(Index))
                     {
-                        DeclInfo = new ShaderDeclInfo(AttrName + GlslIndex, GlslIndex, 0, 4);
+                        DeclInfo = new ShaderDeclInfo(AttrName + GlslIndex, GlslIndex, false, 0, 4);
 
                         m_Attributes.Add(Index, DeclInfo);
                     }
 
-                    Traverse(Abuf, Abuf.Vertex);
+                    Traverse(Nodes, Abuf, Abuf.Vertex);
+
                     break;
                 }
 
