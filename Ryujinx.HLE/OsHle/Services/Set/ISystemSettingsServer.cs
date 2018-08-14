@@ -1,5 +1,5 @@
 using Ryujinx.HLE.OsHle.Ipc;
-using Ryujinx.HLE.Settings;
+using Ryujinx.HLE.OsHle.SystemState;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.OsHle.Services.Set
 
         public static long GetColorSetId(ServiceCtx Context)
         {
-            Context.ResponseData.Write((int)Context.Ns.Settings.ThemeColor);
+            Context.ResponseData.Write((int)Context.Ns.Os.SystemState.ThemeColor);
 
             return 0;
         }
@@ -84,7 +84,8 @@ namespace Ryujinx.HLE.OsHle.Services.Set
         {
             int ColorSetId = Context.RequestData.ReadInt32();
 
-            Context.Ns.Settings.ThemeColor = (ColorSet)ColorSetId;
+            Context.Ns.Os.SystemState.ThemeColor = (ColorSet)ColorSetId;
+
             return 0;
         }
 
@@ -121,6 +122,7 @@ namespace Ryujinx.HLE.OsHle.Services.Set
                         SettingBuffer = Encoding.ASCII.GetBytes(StringValue + "\0");
                     }
                 }
+
                 if (NxSetting is int IntValue)
                 {
                     SettingBuffer = BitConverter.GetBytes(IntValue);

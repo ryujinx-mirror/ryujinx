@@ -11,6 +11,7 @@ using Ryujinx.HLE.OsHle.Exceptions;
 using Ryujinx.HLE.OsHle.Handles;
 using Ryujinx.HLE.OsHle.Kernel;
 using Ryujinx.HLE.OsHle.Services.Nv;
+using Ryujinx.HLE.OsHle.SystemState;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

@@ -5,7 +5,6 @@ using Ryujinx.HLE.Gpu;
 using Ryujinx.HLE.Input;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.OsHle;
-using Ryujinx.HLE.Settings;
 using System;
 
 namespace Ryujinx.HLE
@@ -21,8 +20,6 @@ namespace Ryujinx.HLE
         internal VirtualFileSystem VFs { get; private set; }
 
         public Horizon Os { get; private set; }
-
-        public SystemSettings Settings { get; private set; }
 
         public PerformanceStatistics Statistics { get; private set; }
 
@@ -54,8 +51,6 @@ namespace Ryujinx.HLE
 
             Os = new Horizon(this);
 
-            Settings = new SystemSettings();
-
             Statistics = new PerformanceStatistics();
 
             Hid = new Hid(Log);
@@ -67,12 +62,6 @@ namespace Ryujinx.HLE
 
             Os.FontSharedMem.MemoryMapped   += Font.ShMemMap;
             Os.FontSharedMem.MemoryUnmapped += Font.ShMemUnmap;
-
-            Settings.User = new Profile()
-            {
-                Username = "Ryujinx",
-                UserId   = "000123456789abcdef09876543210000"
-            };
         }
 
         public void LoadCart(string ExeFsDir, string RomFsFile = null)

@@ -1,13 +1,12 @@
-using Ryujinx.UI.Input;
+using Ryujinx.HLE;
 using Ryujinx.HLE.Logging;
+using Ryujinx.UI.Input;
 using System;
 using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-
-using static Ryujinx.HLE.OsHle.SystemStateMgr;
 
 namespace Ryujinx
 {
@@ -16,7 +15,7 @@ namespace Ryujinx
         public static JoyConKeyboard   JoyConKeyboard   { get; private set; }
         public static JoyConController JoyConController { get; private set; }
 
-        public static void Read(Logger Log)
+        public static void Read(Switch Device)
         {
             string IniFolder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
@@ -28,13 +27,13 @@ namespace Ryujinx
 
             GraphicsConfig.ShadersDumpPath = Parser.Value("Graphics_Shaders_Dump_Path");
 
-            Log.SetEnable(LogLevel.Debug,   Convert.ToBoolean(Parser.Value("Logging_Enable_Debug")));
-            Log.SetEnable(LogLevel.Stub,    Convert.ToBoolean(Parser.Value("Logging_Enable_Stub")));
-            Log.SetEnable(LogLevel.Info,    Convert.ToBoolean(Parser.Value("Logging_Enable_Info")));
-            Log.SetEnable(LogLevel.Warning, Convert.ToBoolean(Parser.Value("Logging_Enable_Warn")));
-            Log.SetEnable(LogLevel.Error,   Convert.ToBoolean(Parser.Value("Logging_Enable_Error")));
-            
-            DockedMode = Convert.ToBoolean(Parser.Value("Docked_Mode"));
+            Device.Log.SetEnable(LogLevel.Debug,   Convert.ToBoolean(Parser.Value("Logging_Enable_Debug")));
+            Device.Log.SetEnable(LogLevel.Stub,    Convert.ToBoolean(Parser.Value("Logging_Enable_Stub")));
+            Device.Log.SetEnable(LogLevel.Info,    Convert.ToBoolean(Parser.Value("Logging_Enable_Info")));
+            Device.Log.SetEnable(LogLevel.Warning, Convert.ToBoolean(Parser.Value("Logging_Enable_Warn")));
+            Device.Log.SetEnable(LogLevel.Error,   Convert.ToBoolean(Parser.Value("Logging_Enable_Error")));
+
+            Device.Os.SystemState.DockedMode = Convert.ToBoolean(Parser.Value("Docked_Mode"));
 
             string[] FilteredLogClasses = Parser.Value("Logging_Filtered_Classes").Split(',', StringSplitOptions.RemoveEmptyEntries);
 
@@ -46,7 +45,7 @@ namespace Ryujinx
             {
                 foreach (LogClass Class in Enum.GetValues(typeof(LogClass)))
                 {
-                    Log.SetEnable(Class, false);
+                    Device.Log.SetEnable(Class, false);
                 }
             }
 
@@ -58,7 +57,7 @@ namespace Ryujinx
                     {
                         if (Class.ToString().ToLower().Contains(LogClass.Trim().ToLower()))
                         {
-                            Log.SetEnable(Class, true);
+                            Device.Log.SetEnable(Class, true);
                         }
                     }
                 }

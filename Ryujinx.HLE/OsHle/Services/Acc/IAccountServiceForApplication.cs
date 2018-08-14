@@ -1,6 +1,10 @@
+using ChocolArm64.Memory;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.OsHle.Ipc;
+using Ryujinx.HLE.OsHle.SystemState;
 using System.Collections.Generic;
+
+using static Ryujinx.HLE.OsHle.ErrorCode;
 
 namespace Ryujinx.HLE.OsHle.Services.Acc
 {
@@ -27,49 +31,80 @@ namespace Ryujinx.HLE.OsHle.Services.Acc
 
         public long GetUserCount(ServiceCtx Context)
         {
-            Context.ResponseData.Write(0);
-
-            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
+            Context.ResponseData.Write(Context.Ns.Os.SystemState.GetUserCount());
 
             return 0;
         }
 
         public long GetUserExistence(ServiceCtx Context)
         {
-            Context.ResponseData.Write(1);
+            UserId Uuid = new UserId(
+                Context.RequestData.ReadInt64(),
+                Context.RequestData.ReadInt64());
 
-            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
+            Context.ResponseData.Write(Context.Ns.Os.SystemState.TryGetUser(Uuid, out _) ? 1 : 0);
 
             return 0;
         }
 
         public long ListAllUsers(ServiceCtx Context)
         {
-            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
-
-            return 0;
+            return WriteUserList(Context, Context.Ns.Os.SystemState.GetAllUsers());
         }
 
         public long ListOpenUsers(ServiceCtx Context)
         {
-            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
+            return WriteUserList(Context, Context.Ns.Os.SystemState.GetOpenUsers());
+        }
+
+        private long WriteUserList(ServiceCtx Context, IEnumerable<UserProfile> Profiles)
+        {
+            long OutputPosition = Context.Request.RecvListBuff[0].Position;
+            long OutputSize     = Context.Request.RecvListBuff[0].Size;
+
+            long Offset = 0;
+
+            foreach (UserProfile Profile in Profiles)
+            {
+                if ((ulong)Offset + 16 > (ulong)OutputSize)
+                {
+                    break;
+                }
+
+                byte[] Uuid = Profile.Uuid.Bytes;
+
+                for (int Index = Uuid.Length - 1; Index >= 0; Index--)
+                {
+                    Context.Memory.WriteByte(OutputPosition + Offset++, Uuid[Index]);
+                }
+            }
 
             return 0;
         }
 
         public long GetLastOpenedUser(ServiceCtx Context)
         {
-            Context.ResponseData.Write(1L);
-            Context.ResponseData.Write(0L);
+            UserProfile LastOpened = Context.Ns.Os.SystemState.LastOpenUser;
 
-            Context.Ns.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
+            LastOpened.Uuid.Write(Context.ResponseData);
 
             return 0;
         }
 
         public long GetProfile(ServiceCtx Context)
         {
-            MakeObject(Context, new IProfile());
+            UserId Uuid = new UserId(
+                Context.RequestData.ReadInt64(),
+                Context.RequestData.ReadInt64());
+
+            if (!Context.Ns.Os.SystemState.TryGetUser(Uuid, out UserProfile Profile))
+            {
+                Context.Ns.Log.PrintWarning(LogClass.ServiceAcc, $"User 0x{Uuid} not found!");
+
+                return MakeError(ErrorModule.Account, AccErr.UserNotFound);
+            }
+
+            MakeObject(Context, new IProfile(Profile));
 
             return 0;
         }

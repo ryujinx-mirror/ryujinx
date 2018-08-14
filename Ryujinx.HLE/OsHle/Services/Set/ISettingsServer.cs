@@ -1,4 +1,5 @@
 using Ryujinx.HLE.OsHle.Ipc;
+using Ryujinx.HLE.OsHle.SystemState;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.OsHle.Services.Set

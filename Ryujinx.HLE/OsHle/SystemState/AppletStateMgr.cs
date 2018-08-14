@@ -3,7 +3,7 @@ using Ryujinx.HLE.OsHle.Services.Am;
 using System;
 using System.Collections.Concurrent;
 
-namespace Ryujinx.HLE.OsHle
+namespace Ryujinx.HLE.OsHle.SystemState
 {
     class AppletStateMgr : IDisposable
     {

@@ -1,4 +1,4 @@
-namespace Ryujinx.HLE.Settings
+namespace Ryujinx.HLE.OsHle.SystemState
 {
     public enum ColorSet
     {

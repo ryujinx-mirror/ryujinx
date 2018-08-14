@@ -1,4 +1,4 @@
-namespace Ryujinx.HLE.OsHle
+namespace Ryujinx.HLE.OsHle.SystemState
 {
     public enum SystemLanguage
     {

@@ -242,6 +242,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
                 Process.Scheduler.Suspend(CurrThread);
 
                 IpcMessage Cmd = new IpcMessage(CmdData, CmdPtr);
+
                 long Result = IpcHandler.IpcCall(Ns, Process, Memory, Session, Cmd, CmdPtr);
 
                 Thread.Yield();

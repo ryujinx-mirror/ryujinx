@@ -11,13 +11,13 @@ namespace Ryujinx.HLE.OsHle.Utilities
         {
             InputString = InputString + "\0";
 
-            int ByteCount = Encoding.GetByteCount(InputString);
+            int BytesCount = Encoding.GetByteCount(InputString);
 
             byte[] Output = new byte[Size];
 
-            if (ByteCount < Size)
+            if (BytesCount < Size)
             {
-                Encoding.GetBytes(InputString, 0, InputString.Length, Output, Size - ByteCount);
+                Encoding.GetBytes(InputString, 0, InputString.Length, Output, 0);
             }
             else
             {
@@ -35,15 +35,14 @@ namespace Ryujinx.HLE.OsHle.Utilities
 
         public static byte[] HexToBytes(string HexString)
         {
-            //Ignore last charactor if HexLength % 2 != 0
+            //Ignore last charactor if HexLength % 2 != 0.
             int BytesInHex = HexString.Length / 2;
 
             byte[] Output = new byte[BytesInHex];
 
             for (int Index = 0; Index < BytesInHex; Index++)
             {
-                Output[Index] = byte.Parse(HexString.Substring(Index * 2, 2),
-                    NumberStyles.HexNumber);
+                Output[Index] = byte.Parse(HexString.Substring(Index * 2, 2), NumberStyles.HexNumber);
             }
 
             return Output;

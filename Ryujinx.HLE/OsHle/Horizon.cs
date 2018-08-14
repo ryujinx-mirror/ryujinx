@@ -2,6 +2,7 @@ using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Npdm;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.OsHle.Handles;
+using Ryujinx.HLE.OsHle.SystemState;
 using System;
 using System.Collections.Concurrent;
 using System.IO;

@@ -1,6 +1,7 @@
 using ChocolArm64.Memory;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.OsHle.Ipc;
+using Ryujinx.HLE.OsHle.SystemState;
 using Ryujinx.HLE.OsHle.Utilities;
 using System.Collections.Generic;
 using System.Text;
@@ -13,13 +14,17 @@ namespace Ryujinx.HLE.OsHle.Services.Acc
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public IProfile()
+        private UserProfile Profile;
+
+        public IProfile(UserProfile Profile)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, Get     },
                 { 1, GetBase }
             };
+
+            this.Profile = Profile;
         }
 
         public long Get(ServiceCtx Context)
@@ -32,20 +37,18 @@ namespace Ryujinx.HLE.OsHle.Services.Acc
 
             Context.Memory.WriteInt32(Position, 0);
             Context.Memory.WriteInt32(Position + 4, 1);
-            Context.Memory.WriteByte(Position + 8, 1);
+            Context.Memory.WriteInt64(Position + 8, 1);
 
             return GetBase(Context);
         }
 
         public long GetBase(ServiceCtx Context)
         {
-            ProfileBase ProfileBase = new ProfileBase(Context.Ns.Settings.User);
+            Profile.Uuid.Write(Context.ResponseData);
 
-            Context.ResponseData.Write(ProfileBase.UserId.ToBytes());
-            Context.ResponseData.Write(ProfileBase.Timestamp);
+            Context.ResponseData.Write(Profile.LastModifiedTimestamp);
 
-            int    ByteCount = Encoding.UTF8.GetByteCount(ProfileBase.Username);
-            byte[] Username  = StringUtils.GetFixedLengthBytes(ProfileBase.Username, 0x20, Encoding.UTF8);
+            byte[] Username = StringUtils.GetFixedLengthBytes(Profile.Name, 0x20, Encoding.UTF8);
 
             Context.ResponseData.Write(Username);
 

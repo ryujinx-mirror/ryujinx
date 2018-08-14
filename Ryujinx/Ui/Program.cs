@@ -20,7 +20,7 @@ namespace Ryujinx
 
             Switch Ns = new Switch(Renderer, AudioOut);
 
-            Config.Read(Ns.Log);
+            Config.Read(Ns);
 
             Ns.Log.Updated += ConsoleLog.PrintLog;
 
