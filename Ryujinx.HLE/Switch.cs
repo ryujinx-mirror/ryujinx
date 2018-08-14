@@ -67,6 +67,12 @@ namespace Ryujinx.HLE
 
             Os.FontSharedMem.MemoryMapped   += Font.ShMemMap;
             Os.FontSharedMem.MemoryUnmapped += Font.ShMemUnmap;
+
+            Settings.User = new Profile()
+            {
+                Username = "Ryujinx",
+                UserId   = "000123456789abcdef09876543210000"
+            };
         }
 
         public void LoadCart(string ExeFsDir, string RomFsFile = null)
