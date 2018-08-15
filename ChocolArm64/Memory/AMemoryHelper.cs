@@ -26,12 +26,9 @@ namespace ChocolArm64.Memory
         {
             long Size = Marshal.SizeOf<T>();
 
-            if ((ulong)(Position + Size) > AMemoryMgr.AddrSize)
-            {
-                throw new ArgumentOutOfRangeException(nameof(Position));
-            }
+            Memory.EnsureRangeIsValid(Position, Size);
 
-            IntPtr Ptr = new IntPtr((byte*)Memory.Ram + Position);
+            IntPtr Ptr = (IntPtr)Memory.Translate(Position);
 
             return Marshal.PtrToStructure<T>(Ptr);
         }
@@ -40,12 +37,9 @@ namespace ChocolArm64.Memory
         {
             long Size = Marshal.SizeOf<T>();
 
-            if ((ulong)(Position + Size) > AMemoryMgr.AddrSize)
-            {
-                throw new ArgumentOutOfRangeException(nameof(Position));
-            }
+            Memory.EnsureRangeIsValid(Position, Size);
 
-            IntPtr Ptr = new IntPtr((byte*)Memory.Ram + Position);
+            IntPtr Ptr = (IntPtr)Memory.TranslateWrite(Position);
 
             Marshal.StructureToPtr<T>(Value, Ptr, false);
         }
@@ -68,16 +62,6 @@ namespace ChocolArm64.Memory
 
                 return Encoding.ASCII.GetString(MS.ToArray());
             }
-        }
-
-        public static long PageRoundUp(long Value)
-        {
-            return (Value + AMemoryMgr.PageMask) & ~AMemoryMgr.PageMask;
-        }
-
-        public static long PageRoundDown(long Value)
-        {
-            return Value & ~AMemoryMgr.PageMask;
         }
     }
 }

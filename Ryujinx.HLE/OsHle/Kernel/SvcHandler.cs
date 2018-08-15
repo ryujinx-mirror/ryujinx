@@ -10,7 +10,7 @@ using System.Threading;
 
 namespace Ryujinx.HLE.OsHle.Kernel
 {
-    partial class SvcHandler : IDisposable
+    partial class SvcHandler
     {
         private delegate void SvcFunc(AThreadState ThreadState);
 
@@ -21,10 +21,6 @@ namespace Ryujinx.HLE.OsHle.Kernel
         private AMemory Memory;
 
         private ConcurrentDictionary<KThread, AutoResetEvent> SyncWaits;
-
-        private HashSet<(HSharedMem, long, long)> MappedSharedMems;
-
-        private ulong CurrentHeapSize;
 
         private const uint SelfThreadHandle  = 0xffff8000;
         private const uint SelfProcessHandle = 0xffff8001;
@@ -82,8 +78,6 @@ namespace Ryujinx.HLE.OsHle.Kernel
             this.Memory  = Process.Memory;
 
             SyncWaits = new ConcurrentDictionary<KThread, AutoResetEvent>();
-
-            MappedSharedMems = new HashSet<(HSharedMem, long, long)>();
         }
 
         static SvcHandler()
@@ -124,27 +118,6 @@ namespace Ryujinx.HLE.OsHle.Kernel
             else
             {
                 return Process.HandleTable.GetData<KThread>(Handle);
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool Disposing)
-        {
-            if (Disposing)
-            {
-                lock (MappedSharedMems)
-                {
-                    foreach ((HSharedMem SharedMem, long Position, long Size) in MappedSharedMems)
-                    {
-                        SharedMem.RemoveVirtualPosition(Memory, Position, Size);
-                    }
-
-                    MappedSharedMems.Clear();
-                }
             }
         }
     }

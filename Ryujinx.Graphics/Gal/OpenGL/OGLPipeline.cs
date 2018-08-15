@@ -279,7 +279,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 if (Stage != null)
                 {
-                    foreach (ShaderDeclInfo DeclInfo in Stage.UniformUsage)
+                    foreach (ShaderDeclInfo DeclInfo in Stage.ConstBufferUsage)
                     {
                         long Key = New.ConstBufferKeys[(int)Stage.Type][DeclInfo.Cbuf];
 

@@ -1,4 +1,5 @@
 using ChocolArm64.Memory;
+using Ryujinx.HLE.Memory;
 using System;
 using System.Collections.Generic;
 
@@ -129,14 +130,11 @@ namespace Ryujinx.HLE.Gpu.Memory
         {
             (bool[] Modified, long ModifiedCount) = Memory.IsRegionModified(PA, Size);
 
-            if (Modified == null)
-            {
-                return true;
-            }
+            PA = Memory.GetPhysicalAddress(PA);
 
             ClearCachedPagesIfNeeded();
 
-            long PageSize = Memory.GetHostPageSize();
+            long PageSize = AMemory.PageSize;
 
             EnsureResidencyInitialized(PageSize);
 
@@ -159,9 +157,9 @@ namespace Ryujinx.HLE.Gpu.Memory
 
             while (PA < PAEnd)
             {
-                long Key = PA & ~Mask;
+                long Key = PA & ~AMemory.PageMask;
 
-                long PAPgEnd = Math.Min((PA + PageSize) & ~Mask, PAEnd);
+                long PAPgEnd = Math.Min((PA + AMemory.PageSize) & ~AMemory.PageMask, PAEnd);
 
                 bool IsCached = Cache.TryGetValue(Key, out CachedPage Cp);
 
@@ -228,7 +226,7 @@ namespace Ryujinx.HLE.Gpu.Memory
         {
             if (Residency == null)
             {
-                Residency = new HashSet<long>[AMemoryMgr.RamSize / PageSize];
+                Residency = new HashSet<long>[DeviceMemory.RamSize / PageSize];
 
                 for (int i = 0; i < Residency.Length; i++)
                 {

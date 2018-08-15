@@ -1,4 +1,4 @@
-namespace Ryujinx.HLE.Font
+namespace Ryujinx.HLE.OsHle.Font
 {
     public enum SharedFontType
     {
@@ -7,6 +7,7 @@ namespace Ryujinx.HLE.Font
         SimplifiedChineseEx = 2,
         TraditionalChinese  = 3,
         Korean              = 4,
-        NintendoEx          = 5
+        NintendoEx          = 5,
+        Count
     }
 }

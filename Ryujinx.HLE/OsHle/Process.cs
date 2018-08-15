@@ -12,6 +12,7 @@ using Ryujinx.HLE.OsHle.Handles;
 using Ryujinx.HLE.OsHle.Kernel;
 using Ryujinx.HLE.OsHle.Services.Nv;
 using Ryujinx.HLE.OsHle.SystemState;
+using Ryujinx.HLE.OsHle.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -22,13 +23,9 @@ namespace Ryujinx.HLE.OsHle
 {
     class Process : IDisposable
     {
-        private const int TlsSize = 0x200;
-
-        private const int TotalTlsSlots = (int)MemoryRegions.TlsPagesSize / TlsSize;
-
         private const int TickFreq = 19_200_000;
 
-        private Switch Ns;
+        public Switch Ns { get; private set; }
 
         public bool NeedsHbAbi { get; private set; }
 
@@ -40,21 +37,23 @@ namespace Ryujinx.HLE.OsHle
 
         public AMemory Memory { get; private set; }
 
+        public KMemoryManager MemoryManager { get; private set; }
+
+        private List<KTlsPageManager> TlsPages;
+
         public KProcessScheduler Scheduler { get; private set; }
 
         public List<KThread> ThreadArbiterList { get; private set; }
 
         public object ThreadSyncLock { get; private set; }
 
+        public Npdm MetaData { get; private set; }
+
         public KProcessHandleTable HandleTable { get; private set; }
 
         public AppletStateMgr AppletState { get; private set; }
 
-        public Npdm Metadata { get; set; }
-
         private SvcHandler SvcHandler;
-
-        private ConcurrentDictionary<int, AThread> TlsSlots;
 
         private ConcurrentDictionary<long, KThread> Threads;
 
@@ -70,13 +69,18 @@ namespace Ryujinx.HLE.OsHle
 
         private bool Disposed;
 
-        public Process(Switch Ns, KProcessScheduler Scheduler, int ProcessId)
+        public Process(Switch Ns, KProcessScheduler Scheduler, int ProcessId, Npdm MetaData)
         {
             this.Ns        = Ns;
             this.Scheduler = Scheduler;
+            this.MetaData  = MetaData;
             this.ProcessId = ProcessId;
 
-            Memory = new AMemory();
+            Memory = new AMemory(Ns.Memory.RamPointer);
+
+            MemoryManager = new KMemoryManager(this);
+
+            TlsPages = new List<KTlsPageManager>();
 
             ThreadArbiterList = new List<KThread>();
 
@@ -88,18 +92,11 @@ namespace Ryujinx.HLE.OsHle
 
             SvcHandler = new SvcHandler(Ns, this);
 
-            TlsSlots = new ConcurrentDictionary<int, AThread>();
-
             Threads = new ConcurrentDictionary<long, KThread>();
 
             Executables = new List<Executable>();
 
-            ImageBase = MemoryRegions.AddrSpaceStart;
-
-            MapRWMemRegion(
-                MemoryRegions.TlsPagesAddress,
-                MemoryRegions.TlsPagesSize,
-                MemoryType.ThreadLocal);
+            ImageBase = MemoryManager.CodeRegionStart;
         }
 
         public void LoadProgram(IExecutable Program)
@@ -111,17 +108,17 @@ namespace Ryujinx.HLE.OsHle
 
             Ns.Log.PrintInfo(LogClass.Loader, $"Image base at 0x{ImageBase:x16}.");
 
-            Executable Executable = new Executable(Program, Memory, ImageBase);
+            Executable Executable = new Executable(Program, MemoryManager, Memory, ImageBase);
 
             Executables.Add(Executable);
 
-            ImageBase = AMemoryHelper.PageRoundUp(Executable.ImageEnd);
+            ImageBase = IntUtils.AlignUp(Executable.ImageEnd, KMemoryManager.PageSize);
         }
 
         public void SetEmptyArgs()
         {
             //TODO: This should be part of Run.
-            ImageBase += AMemoryMgr.PageSize;
+            ImageBase += KMemoryManager.PageSize;
         }
 
         public bool Run(bool NeedsHbAbi = false)
@@ -140,14 +137,19 @@ namespace Ryujinx.HLE.OsHle
 
             MakeSymbolTable();
 
-            MapRWMemRegion(
-                MemoryRegions.MainStackAddress,
-                MemoryRegions.MainStackSize,
-                MemoryType.Normal);
+            long MainStackTop = MemoryManager.CodeRegionEnd - KMemoryManager.PageSize;
 
-            long StackTop = MemoryRegions.MainStackAddress + MemoryRegions.MainStackSize;
+            long MainStackSize = 1 * 1024 * 1024;
 
-            int Handle = MakeThread(Executables[0].ImageBase, StackTop, 0, 44, 0);
+            long MainStackBottom = MainStackTop - MainStackSize;
+
+            MemoryManager.HleMapCustom(
+                MainStackBottom,
+                MainStackSize,
+                MemoryState.MappedMemory,
+                MemoryPermission.ReadAndWrite);
+
+            int Handle = MakeThread(Executables[0].ImageBase, MainStackTop, 0, 44, 0);
 
             if (Handle == -1)
             {
@@ -158,7 +160,15 @@ namespace Ryujinx.HLE.OsHle
 
             if (NeedsHbAbi)
             {
-                HbAbiDataPosition = AMemoryHelper.PageRoundUp(Executables[0].ImageEnd);
+                HbAbiDataPosition = IntUtils.AlignUp(Executables[0].ImageEnd, KMemoryManager.PageSize);
+
+                const long HbAbiDataSize = KMemoryManager.PageSize;
+
+                MemoryManager.HleMapCustom(
+                    HbAbiDataPosition,
+                    HbAbiDataSize,
+                    MemoryState.MappedMemory,
+                    MemoryPermission.ReadAndWrite);
 
                 string SwitchPath = Ns.VFs.SystemPathToSwitchPath(Executables[0].FilePath);
 
@@ -173,11 +183,6 @@ namespace Ryujinx.HLE.OsHle
             return true;
         }
 
-        private void MapRWMemRegion(long Position, long Size, MemoryType Type)
-        {
-            Memory.Manager.Map(Position, Size, (int)Type, AMemoryPerm.RW);
-        }
-
         public void StopAllThreadsAsync()
         {
             if (Disposed)
@@ -190,9 +195,9 @@ namespace Ryujinx.HLE.OsHle
                 MainThread.Thread.StopExecution();
             }
 
-            foreach (AThread Thread in TlsSlots.Values)
+            foreach (KThread Thread in Threads.Values)
             {
-                Thread.StopExecution();
+                Thread.Thread.StopExecution();
             }
         }
 
@@ -216,9 +221,9 @@ namespace Ryujinx.HLE.OsHle
 
             int Handle = HandleTable.OpenHandle(Thread);
 
-            int ThreadId = GetFreeTlsSlot(CpuThread);
+            long Tpidr = GetFreeTls();
 
-            long Tpidr = MemoryRegions.TlsPagesAddress + ThreadId * TlsSize;
+            int ThreadId = (int)((Tpidr - MemoryManager.TlsIoRegionStart) / 0x200) + 1;
 
             CpuThread.ThreadState.ProcessId = ProcessId;
             CpuThread.ThreadState.ThreadId  = ThreadId;
@@ -238,6 +243,32 @@ namespace Ryujinx.HLE.OsHle
             Threads.TryAdd(CpuThread.ThreadState.Tpidr, Thread);
 
             return Handle;
+        }
+
+        private long GetFreeTls()
+        {
+            long Position;
+
+            lock (TlsPages)
+            {
+                for (int Index = 0; Index < TlsPages.Count; Index++)
+                {
+                    if (TlsPages[Index].TryGetFreeTlsAddr(out Position))
+                    {
+                        return Position;
+                    }
+                }
+
+                long PagePosition = MemoryManager.HleMapTlsPage();
+
+                KTlsPageManager TlsPage = new KTlsPageManager(PagePosition);
+
+                TlsPages.Add(TlsPage);
+
+                TlsPage.TryGetFreeTlsAddr(out Position);
+            }
+
+            return Position;
         }
 
         private void BreakHandler(object sender, AInstExceptionEventArgs e)
@@ -346,25 +377,10 @@ namespace Ryujinx.HLE.OsHle
             return Name;
         }
 
-        private int GetFreeTlsSlot(AThread Thread)
-        {
-            for (int Index = 1; Index < TotalTlsSlots; Index++)
-            {
-                if (TlsSlots.TryAdd(Index, Thread))
-                {
-                    return Index;
-                }
-            }
-
-            throw new InvalidOperationException();
-        }
-
         private void ThreadFinished(object sender, EventArgs e)
         {
             if (sender is AThread Thread)
             {
-                TlsSlots.TryRemove(GetTlsSlot(Thread.ThreadState.Tpidr), out _);
-
                 Threads.TryRemove(Thread.ThreadState.Tpidr, out KThread KernelThread);
 
                 Scheduler.RemoveThread(KernelThread);
@@ -372,7 +388,7 @@ namespace Ryujinx.HLE.OsHle
                 KernelThread.WaitEvent.Set();
             }
 
-            if (TlsSlots.Count == 0)
+            if (Threads.Count == 0)
             {
                 if (ShouldDispose)
                 {
@@ -381,11 +397,6 @@ namespace Ryujinx.HLE.OsHle
 
                 Ns.Os.ExitProcess(ProcessId);
             }
-        }
-
-        private int GetTlsSlot(long Position)
-        {
-            return (int)((Position - MemoryRegions.TlsPagesAddress) / TlsSize);
         }
 
         public KThread GetThread(long Tpidr)
@@ -411,7 +422,7 @@ namespace Ryujinx.HLE.OsHle
                 //safe as the thread may try to access those resources. Instead, we set
                 //the flag to have the Process disposed when all threads finishes.
                 //Note: This may not happen if the guest code gets stuck on a infinite loop.
-                if (TlsSlots.Count > 0)
+                if (Threads.Count > 0)
                 {
                     ShouldDispose = true;
 
@@ -438,10 +449,6 @@ namespace Ryujinx.HLE.OsHle
                 INvDrvServices.UnloadProcess(this);
 
                 AppletState.Dispose();
-
-                SvcHandler.Dispose();
-
-                Memory.Dispose();
 
                 Ns.Log.PrintInfo(LogClass.Loader, $"Process {ProcessId} exiting...");
             }

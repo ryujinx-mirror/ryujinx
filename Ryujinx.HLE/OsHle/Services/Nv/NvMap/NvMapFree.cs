@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvMap
     {
         public int  Handle;
         public int  Padding;
-        public long RefCount;
+        public long Address;
         public int  Size;
         public int  Flags;
     }

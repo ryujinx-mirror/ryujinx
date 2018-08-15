@@ -26,7 +26,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid mutex address 0x{MutexAddress:x16}!");
 
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.NoAccessPerm);
 
                 return;
             }
@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 Ns.Log.PrintWarning(LogClass.KernelSvc, $"Unaligned mutex address 0x{MutexAddress:x16}!");
 
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAlignment);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
 
                 return;
             }
@@ -79,7 +79,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid mutex address 0x{MutexAddress:x16}!");
 
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.NoAccessPerm);
 
                 return;
             }
@@ -88,7 +88,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 Ns.Log.PrintWarning(LogClass.KernelSvc, $"Unaligned mutex address 0x{MutexAddress:x16}!");
 
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAlignment);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
 
                 return;
             }
@@ -115,7 +115,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid mutex address 0x{MutexAddress:x16}!");
 
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.NoAccessPerm);
 
                 return;
             }
@@ -124,7 +124,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 Ns.Log.PrintWarning(LogClass.KernelSvc, $"Unaligned mutex address 0x{MutexAddress:x16}!");
 
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAlignment);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
 
                 return;
             }
@@ -214,7 +214,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid address 0x{Address:x16}!");
 
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.NoAccessPerm);
 
                 return;
             }
@@ -223,7 +223,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 Ns.Log.PrintWarning(LogClass.KernelSvc, $"Unaligned address 0x{Address:x16}!");
 
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAlignment);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
 
                 return;
             }

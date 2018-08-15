@@ -204,7 +204,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
                 {
                     Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid core mask 0x{CoreMask:x8}!");
 
-                    ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidCoreMask);
+                    ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidMaskValue);
 
                     return;
                 }
@@ -226,7 +226,7 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 Ns.Log.PrintWarning(LogClass.KernelSvc, $"Invalid core mask 0x{CoreMask:x8}!");
 
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidCoreMask);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidMaskValue);
 
                 return;
             }

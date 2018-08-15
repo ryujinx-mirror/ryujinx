@@ -5,6 +5,7 @@ using ChocolArm64.State;
 using NUnit.Framework;
 
 using System;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Threading;
@@ -19,6 +20,8 @@ namespace Ryujinx.Tests.Cpu
 
         private long EntryPoint;
 
+        private IntPtr RamPointer;
+
         private AMemory Memory;
         private AThread Thread;
 
@@ -31,15 +34,16 @@ namespace Ryujinx.Tests.Cpu
             EntryPoint = Position;
 
             ATranslator Translator = new ATranslator();
-            Memory = new AMemory();
-            Memory.Manager.Map(Position, Size, 2, AMemoryPerm.Read | AMemoryPerm.Write | AMemoryPerm.Execute);
+            RamPointer = Marshal.AllocHGlobal(new IntPtr(Size));
+            Memory = new AMemory(RamPointer);
+            Memory.Map(Position, 0, Size);
             Thread = new AThread(Translator, Memory, EntryPoint);
         }
 
         [TearDown]
         public void Teardown()
         {
-            Memory.Dispose();
+            Marshal.FreeHGlobal(RamPointer);
             Memory = null;
             Thread = null;
         }
@@ -52,7 +56,7 @@ namespace Ryujinx.Tests.Cpu
 
         protected void Opcode(uint Opcode)
         {
-            Thread.Memory.WriteUInt32Unchecked(Position, Opcode);
+            Thread.Memory.WriteUInt32(Position, Opcode);
             Position += 4;
         }
 

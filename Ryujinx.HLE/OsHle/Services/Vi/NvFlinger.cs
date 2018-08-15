@@ -159,7 +159,7 @@ namespace Ryujinx.HLE.OsHle.Services.Android
 
             int Slot = GetFreeSlotBlocking(Width, Height);
 
-            return MakeReplyParcel(Context, Slot, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            return MakeReplyParcel(Context, Slot, 1, 0x24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         }
 
         private long GbpQueueBuffer(ServiceCtx Context, BinaryReader ParcelReader)

@@ -1,6 +1,8 @@
 using ChocolArm64.Memory;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.OsHle;
+using Ryujinx.HLE.OsHle.Handles;
+using Ryujinx.HLE.OsHle.Utilities;
 using System.Collections.Generic;
 using System.IO;
 
@@ -18,12 +20,14 @@ namespace Ryujinx.HLE.Loaders
 
         public string FilePath { get; private set; }
 
-        private AMemory Memory;
-
         public long ImageBase { get; private set; }
         public long ImageEnd  { get; private set; }
 
-        public Executable(IExecutable Exe, AMemory Memory, long ImageBase)
+        private AMemory Memory;
+
+        private KMemoryManager MemoryManager;
+
+        public Executable(IExecutable Exe, KMemoryManager MemoryManager, AMemory Memory, long ImageBase)
         {
             Dynamic = new List<ElfDyn>();
 
@@ -36,23 +40,34 @@ namespace Ryujinx.HLE.Loaders
                 Name = Path.GetFileNameWithoutExtension(FilePath.Replace(Homebrew.TemporaryNroSuffix, ""));
             }
 
-            this.Memory    = Memory;
-            this.ImageBase = ImageBase;
-            this.ImageEnd  = ImageBase;
+            this.Memory        = Memory;
+            this.MemoryManager = MemoryManager;
+            this.ImageBase     = ImageBase;
+            this.ImageEnd      = ImageBase;
 
-            WriteData(ImageBase + Exe.TextOffset, Exe.Text, MemoryType.CodeStatic,  AMemoryPerm.RX);
-            WriteData(ImageBase + Exe.ROOffset,   Exe.RO,   MemoryType.CodeMutable, AMemoryPerm.Read);
-            WriteData(ImageBase + Exe.DataOffset, Exe.Data, MemoryType.CodeMutable, AMemoryPerm.RW);
+            long TextPosition = ImageBase + (uint)Exe.TextOffset;
+            long ROPosition   = ImageBase + (uint)Exe.ROOffset;
+            long DataPosition = ImageBase + (uint)Exe.DataOffset;
+
+            long TextSize = (uint)IntUtils.AlignUp(Exe.Text.Length, KMemoryManager.PageSize);
+            long ROSize   = (uint)IntUtils.AlignUp(Exe.RO.Length,   KMemoryManager.PageSize);
+            long DataSize = (uint)IntUtils.AlignUp(Exe.Data.Length, KMemoryManager.PageSize);
+
+            long DataAndBssSize = (uint)IntUtils.AlignUp(Exe.BssSize, KMemoryManager.PageSize) + DataSize;
+
+            ImageEnd = DataPosition + DataAndBssSize;
+
+            MemoryManager.HleMapProcessCode(TextPosition, TextSize + ROSize + DataAndBssSize);
+
+            MemoryManager.SetProcessMemoryPermission(ROPosition,   ROSize,         MemoryPermission.Read);
+            MemoryManager.SetProcessMemoryPermission(DataPosition, DataAndBssSize, MemoryPermission.ReadAndWrite);
+
+            Memory.WriteBytes(TextPosition, Exe.Text);
+            Memory.WriteBytes(ROPosition,   Exe.RO);
+            Memory.WriteBytes(DataPosition, Exe.Data);
 
             if (Exe.Mod0Offset == 0)
             {
-                int BssOffset = Exe.DataOffset + Exe.Data.Length;
-                int BssSize   = Exe.BssSize;
-
-                MapBss(ImageBase + BssOffset, BssSize);
-
-                ImageEnd = ImageBase + BssOffset + BssSize;
-
                 return;
             }
 
@@ -65,10 +80,6 @@ namespace Ryujinx.HLE.Loaders
             long EhHdrStartOffset = Memory.ReadInt32(Mod0Offset + 0x10) + Mod0Offset;
             long EhHdrEndOffset   = Memory.ReadInt32(Mod0Offset + 0x14) + Mod0Offset;
             long ModObjOffset     = Memory.ReadInt32(Mod0Offset + 0x18) + Mod0Offset;
-
-            MapBss(BssStartOffset, BssEndOffset - BssStartOffset);
-
-            ImageEnd = BssEndOffset;
 
             while (true)
             {
@@ -100,24 +111,6 @@ namespace Ryujinx.HLE.Loaders
 
                 SymTblAddr += SymEntSize;
             }
-        }
-
-        private void WriteData(
-            long        Position,
-            byte[]      Data,
-            MemoryType  Type,
-            AMemoryPerm Perm)
-        {
-            Memory.Manager.Map(Position, Data.Length, (int)Type, AMemoryPerm.Write);
-
-            Memory.WriteBytes(Position, Data);
-
-            Memory.Manager.Reprotect(Position, Data.Length, Perm);
-        }
-
-        private void MapBss(long Position, long Size)
-        {
-            Memory.Manager.Map(Position, Size, (int)MemoryType.Normal, AMemoryPerm.RW);
         }
 
         private ElfRel GetRelocation(long Position)

@@ -23,8 +23,6 @@ namespace Ryujinx
 
             IniParser Parser = new IniParser(IniPath);
 
-            AOptimizations.DisableMemoryChecks = !Convert.ToBoolean(Parser.Value("Enable_Memory_Checks"));
-
             GraphicsConfig.ShadersDumpPath = Parser.Value("Graphics_Shaders_Dump_Path");
 
             Device.Log.SetEnable(LogLevel.Debug,   Convert.ToBoolean(Parser.Value("Logging_Enable_Debug")));

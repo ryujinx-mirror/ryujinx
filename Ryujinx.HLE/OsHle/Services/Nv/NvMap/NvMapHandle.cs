@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvMap
 
         public long DecrementRefCount()
         {
-            return Interlocked.Decrement(ref Dupes) + 1;
+            return Interlocked.Decrement(ref Dupes);
         }
     }
 }

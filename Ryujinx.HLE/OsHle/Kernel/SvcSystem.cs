@@ -18,8 +18,6 @@ namespace Ryujinx.HLE.OsHle.Kernel
 
         private const bool EnableProcessDebugging = false;
 
-        private const bool IsVirtualMemoryEnabled = true; //This is always true(?)
-
         private void SvcExitProcess(AThreadState ThreadState)
         {
             Ns.Os.ExitProcess(ThreadState.ProcessId);
@@ -53,12 +51,11 @@ namespace Ryujinx.HLE.OsHle.Kernel
             {
                 Session.Dispose();
             }
-            else if (Obj is HTransferMem TMem)
+            else if (Obj is KTransferMemory TransferMemory)
             {
-                TMem.Memory.Manager.Reprotect(
-                    TMem.Position,
-                    TMem.Size,
-                    TMem.Perm);
+                Process.MemoryManager.ResetTransferMemory(
+                    TransferMemory.Position,
+                    TransferMemory.Size);
             }
 
             ThreadState.X0 = 0;
@@ -306,27 +303,29 @@ namespace Ryujinx.HLE.OsHle.Kernel
                     break;
 
                 case 2:
-                    ThreadState.X1 = MemoryRegions.MapRegionAddress;
+                    ThreadState.X1 = (ulong)Process.MemoryManager.MapRegionStart;
                     break;
 
                 case 3:
-                    ThreadState.X1 = MemoryRegions.MapRegionSize;
+                    ThreadState.X1 = (ulong)Process.MemoryManager.MapRegionEnd -
+                                     (ulong)Process.MemoryManager.MapRegionStart;
                     break;
 
                 case 4:
-                    ThreadState.X1 = MemoryRegions.HeapRegionAddress;
+                    ThreadState.X1 = (ulong)Process.MemoryManager.HeapRegionStart;
                     break;
 
                 case 5:
-                    ThreadState.X1 = MemoryRegions.HeapRegionSize;
+                    ThreadState.X1 = (ulong)Process.MemoryManager.HeapRegionEnd -
+                                     (ulong)Process.MemoryManager.HeapRegionStart;
                     break;
 
                 case 6:
-                    ThreadState.X1 = MemoryRegions.TotalMemoryAvailable;
+                    ThreadState.X1 = (ulong)Process.Ns.Memory.Allocator.TotalAvailableSize;
                     break;
 
                 case 7:
-                    ThreadState.X1 = MemoryRegions.TotalMemoryUsed + CurrentHeapSize;
+                    ThreadState.X1 = (ulong)Process.Ns.Memory.Allocator.TotalUsedSize;
                     break;
 
                 case 8:
@@ -338,23 +337,29 @@ namespace Ryujinx.HLE.OsHle.Kernel
                     break;
 
                 case 12:
-                    ThreadState.X1 = MemoryRegions.AddrSpaceStart;
+                    ThreadState.X1 = (ulong)Process.MemoryManager.AddrSpaceStart;
                     break;
 
                 case 13:
-                    ThreadState.X1 = MemoryRegions.AddrSpaceSize;
+                    ThreadState.X1 = (ulong)Process.MemoryManager.AddrSpaceEnd -
+                                     (ulong)Process.MemoryManager.AddrSpaceStart;
                     break;
 
                 case 14:
-                    ThreadState.X1 = MemoryRegions.MapRegionAddress;
+                    ThreadState.X1 = (ulong)Process.MemoryManager.NewMapRegionStart;
                     break;
 
                 case 15:
-                    ThreadState.X1 = MemoryRegions.MapRegionSize;
+                    ThreadState.X1 = (ulong)Process.MemoryManager.NewMapRegionEnd -
+                                     (ulong)Process.MemoryManager.NewMapRegionStart;
                     break;
 
                 case 16:
-                    ThreadState.X1 = IsVirtualMemoryEnabled ? 1 : 0;
+                    ThreadState.X1 = (ulong)(Process.MetaData?.SystemResourceSize ?? 0);
+                    break;
+
+                case 17:
+                    ThreadState.X1 = (ulong)Process.MemoryManager.PersonalMmHeapUsage;
                     break;
 
                 default:

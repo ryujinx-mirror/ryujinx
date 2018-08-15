@@ -129,7 +129,8 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvMap
                 {
                     //When the address is zero, we need to allocate
                     //our own backing memory for the NvMap.
-                    if (!Context.Ns.Os.Allocator.TryAllocate((uint)Size, out Address))
+                    //TODO: Is this allocation inside the transfer memory?
+                    if (!Context.Ns.Memory.Allocator.TryAllocate((uint)Size, out Address))
                     {
                         Result = NvResult.OutOfMemory;
                     }
@@ -163,23 +164,22 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvMap
                 return NvResult.InvalidInput;
             }
 
-            long OldRefCount = Map.DecrementRefCount();
-
-            if (OldRefCount <= 1)
+            if (Map.DecrementRefCount() <= 0)
             {
                 DeleteNvMap(Context, Args.Handle);
 
                 Context.Ns.Log.PrintInfo(LogClass.ServiceNv, $"Deleted map {Args.Handle}!");
 
-                Args.Flags = 0;
+                Args.Address = Map.Address;
+                Args.Flags   = 0;
             }
             else
             {
-                Args.Flags = FlagNotFreedYet;
+                Args.Address = 0;
+                Args.Flags   = FlagNotFreedYet;
             }
 
-            Args.RefCount = OldRefCount;
-            Args.Size     = Map.Size;
+            Args.Size = Map.Size;
 
             AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
 

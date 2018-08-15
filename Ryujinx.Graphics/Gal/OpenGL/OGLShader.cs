@@ -72,8 +72,18 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             return new OGLShaderStage(
                 Type,
                 Program.Code,
-                Program.Textures,
-                Program.Uniforms);
+                Program.Uniforms,
+                Program.Textures);
+        }
+
+        public IEnumerable<ShaderDeclInfo> GetConstBufferUsage(long Key)
+        {
+            if (Stages.TryGetValue(Key, out OGLShaderStage Stage))
+            {
+                return Stage.ConstBufferUsage;
+            }
+
+            return Enumerable.Empty<ShaderDeclInfo>();
         }
 
         public IEnumerable<ShaderDeclInfo> GetTextureUsage(long Key)
@@ -224,7 +234,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 if (Stage != null)
                 {
-                    foreach (ShaderDeclInfo DeclInfo in Stage.UniformUsage)
+                    foreach (ShaderDeclInfo DeclInfo in Stage.ConstBufferUsage)
                     {
                         int BlockIndex = GL.GetUniformBlockIndex(ProgramHandle, DeclInfo.Name);
 

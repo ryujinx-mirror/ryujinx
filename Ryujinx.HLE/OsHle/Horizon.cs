@@ -1,6 +1,7 @@
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Npdm;
 using Ryujinx.HLE.Logging;
+using Ryujinx.HLE.OsHle.Font;
 using Ryujinx.HLE.OsHle.Handles;
 using Ryujinx.HLE.OsHle.SystemState;
 using System;
@@ -12,7 +13,7 @@ namespace Ryujinx.HLE.OsHle
     public class Horizon : IDisposable
     {
         internal const int HidSize  = 0x40000;
-        internal const int FontSize = 0x50;
+        internal const int FontSize = 0x1100000;
 
         private Switch Ns;
 
@@ -22,10 +23,10 @@ namespace Ryujinx.HLE.OsHle
 
         public SystemStateMgr SystemState { get; private set; }
 
-        internal MemoryAllocator Allocator { get; private set; }
+        internal KSharedMemory HidSharedMem  { get; private set; }
+        internal KSharedMemory FontSharedMem { get; private set; }
 
-        internal HSharedMem HidSharedMem  { get; private set; }
-        internal HSharedMem FontSharedMem { get; private set; }
+        internal SharedFontManager Font { get; private set; }
 
         internal KEvent VsyncEvent { get; private set; }
 
@@ -39,10 +40,16 @@ namespace Ryujinx.HLE.OsHle
 
             SystemState = new SystemStateMgr();
 
-            Allocator = new MemoryAllocator();
+            if (!Ns.Memory.Allocator.TryAllocate(HidSize,  out long HidPA) ||
+                !Ns.Memory.Allocator.TryAllocate(FontSize, out long FontPA))
+            {
+                throw new InvalidOperationException();
+            }
 
-            HidSharedMem  = new HSharedMem();
-            FontSharedMem = new HSharedMem();
+            HidSharedMem  = new KSharedMemory(HidPA, HidSize);
+            FontSharedMem = new KSharedMemory(FontPA, FontSize);
+
+            Font = new SharedFontManager(Ns, FontSharedMem.PA);
 
             VsyncEvent = new KEvent();
         }
@@ -54,7 +61,25 @@ namespace Ryujinx.HLE.OsHle
                 Ns.VFs.LoadRomFs(RomFsFile);
             }
 
-            Process MainProcess = MakeProcess();
+            string NpdmFileName = Path.Combine(ExeFsDir, "main.npdm");
+
+            Npdm MetaData = null;
+
+            if (File.Exists(NpdmFileName))
+            {
+                Ns.Log.PrintInfo(LogClass.Loader, $"Loading main.npdm...");
+
+                using (FileStream Input = new FileStream(NpdmFileName, FileMode.Open))
+                {
+                    MetaData = new Npdm(Input);
+                }
+            }
+            else
+            {
+                Ns.Log.PrintWarning(LogClass.Loader, $"NPDM file not found, using default values!");
+            }
+
+            Process MainProcess = MakeProcess(MetaData);
 
             void LoadNso(string FileName)
             {
@@ -78,21 +103,7 @@ namespace Ryujinx.HLE.OsHle
                 }
             }
 
-            void LoadNpdm(string FileName)
-            {
-                string File = Directory.GetFiles(ExeFsDir, FileName)[0];
-
-                Ns.Log.PrintInfo(LogClass.Loader, "Loading Title Metadata...");
-
-                using (FileStream Input = new FileStream(File, FileMode.Open))
-                {
-                    MainProcess.Metadata = new Npdm(Input);
-                }
-            }
-
-            LoadNpdm("*.npdm");
-
-            if (!MainProcess.Metadata.Is64Bits)
+            if (!MainProcess.MetaData.Is64Bits)
             {
                 throw new NotImplementedException("32-bit titles are unsupported!");
             }
@@ -145,7 +156,7 @@ namespace Ryujinx.HLE.OsHle
 
         public void SignalVsync() => VsyncEvent.WaitEvent.Set();
 
-        private Process MakeProcess()
+        private Process MakeProcess(Npdm MetaData = null)
         {
             Process Process;
 
@@ -158,7 +169,7 @@ namespace Ryujinx.HLE.OsHle
                     ProcessId++;
                 }
 
-                Process = new Process(Ns, Scheduler, ProcessId);
+                Process = new Process(Ns, Scheduler, ProcessId, MetaData);
 
                 Processes.TryAdd(ProcessId, Process);
             }

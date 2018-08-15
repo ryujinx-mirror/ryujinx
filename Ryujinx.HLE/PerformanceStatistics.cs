@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Timers;
 
-
 namespace Ryujinx.HLE
 {
     public class PerformanceStatistics

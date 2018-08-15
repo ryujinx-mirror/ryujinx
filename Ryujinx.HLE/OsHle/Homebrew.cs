@@ -10,23 +10,23 @@ namespace Ryujinx.HLE.OsHle
         //http://switchbrew.org/index.php?title=Homebrew_ABI
         public static void WriteHbAbiData(AMemory Memory, long Position, int MainThreadHandle, string SwitchPath)
         {
-            Memory.Manager.Map(Position, AMemoryMgr.PageSize, (int)MemoryType.Normal, AMemoryPerm.RW);
-
-            //MainThreadHandle
+            //MainThreadHandle.
             WriteConfigEntry(Memory, ref Position, 1, 0, MainThreadHandle);
 
-            //NextLoadPath
+            //NextLoadPath.
             WriteConfigEntry(Memory, ref Position, 2, 0, Position + 0x200, Position + 0x400);
 
-            // Argv
+            //Argv.
             long ArgvPosition = Position + 0xC00;
-            WriteConfigEntry(Memory, ref Position, 5, 0, 0, ArgvPosition);
+
             Memory.WriteBytes(ArgvPosition, Encoding.ASCII.GetBytes(SwitchPath + "\0"));
 
-            //AppletType
+            WriteConfigEntry(Memory, ref Position, 5, 0, 0, ArgvPosition);
+
+            //AppletType.
             WriteConfigEntry(Memory, ref Position, 7);
 
-            //EndOfList
+            //EndOfList.
             WriteConfigEntry(Memory, ref Position, 0);
         }
 

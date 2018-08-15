@@ -120,7 +120,7 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvHostCtrl
 
                     Context.Ns.Log.PrintDebug(Logging.LogClass.ServiceNv, $"Got setting {Domain}!{Name}");
                 }
-                
+
                 return NvResult.Success;
             }
 

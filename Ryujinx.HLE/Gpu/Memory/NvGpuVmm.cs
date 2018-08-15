@@ -1,7 +1,6 @@
 using ChocolArm64.Memory;
 using Ryujinx.Graphics.Gal;
 using System;
-using System.Collections.Concurrent;
 
 namespace Ryujinx.HLE.Gpu.Memory
 {
@@ -26,18 +25,6 @@ namespace Ryujinx.HLE.Gpu.Memory
 
         public AMemory Memory { get; private set; }
 
-        private struct MappedMemory
-        {
-            public long Size;
-
-            public MappedMemory(long Size)
-            {
-                this.Size = Size;
-            }
-        }
-
-        private ConcurrentDictionary<long, MappedMemory> Maps;
-
         private NvGpuVmmCache Cache;
 
         private const long PteUnmapped = -1;
@@ -49,8 +36,6 @@ namespace Ryujinx.HLE.Gpu.Memory
         {
             this.Memory = Memory;
 
-            Maps = new ConcurrentDictionary<long, MappedMemory>();
-
             Cache = new NvGpuVmmCache();
 
             PageTable = new long[PTLvl0Size][];
@@ -60,14 +45,6 @@ namespace Ryujinx.HLE.Gpu.Memory
         {
             lock (PageTable)
             {
-                for (long Offset = 0; Offset < Size; Offset += PageSize)
-                {
-                    if (GetPte(VA + Offset) != PteReserved)
-                    {
-                        return Map(PA, Size);
-                    }
-                }
-
                 for (long Offset = 0; Offset < Size; Offset += PageSize)
                 {
                     SetPte(VA + Offset, PA + Offset);
@@ -85,10 +62,6 @@ namespace Ryujinx.HLE.Gpu.Memory
 
                 if (VA != -1)
                 {
-                    MappedMemory Map = new MappedMemory(Size);
-
-                    Maps.AddOrUpdate(VA, Map, (Key, Old) => Map);
-
                     for (long Offset = 0; Offset < Size; Offset += PageSize)
                     {
                         SetPte(VA + Offset, PA + Offset);
@@ -99,19 +72,7 @@ namespace Ryujinx.HLE.Gpu.Memory
             }
         }
 
-        public bool Unmap(long VA)
-        {
-            if (Maps.TryRemove(VA, out MappedMemory Map))
-            {
-                Free(VA, Map.Size);
-
-                return true;
-            }
-
-            return false;
-        }
-
-        public long Reserve(long VA, long Size, long Align)
+        public long ReserveFixed(long VA, long Size)
         {
             lock (PageTable)
             {
@@ -119,7 +80,7 @@ namespace Ryujinx.HLE.Gpu.Memory
                 {
                     if (IsPageInUse(VA + Offset))
                     {
-                        return Reserve(Size, Align);
+                        return -1;
                     }
                 }
 
@@ -163,7 +124,9 @@ namespace Ryujinx.HLE.Gpu.Memory
 
         private long GetFreePosition(long Size, long Align = 1)
         {
-            long Position = 0;
+            //Note: Address 0 is not considered valid by the driver,
+            //when 0 is returned it's considered a mapping error.
+            long Position = PageSize;
             long FreeSize = 0;
 
             if (Align < 1)

@@ -11,5 +11,15 @@ namespace Ryujinx.HLE.OsHle.Utilities
         {
             return (Value + (Size - 1)) & ~((long)Size - 1);
         }
+
+        public static int AlignDown(int Value, int Size)
+        {
+            return Value & ~(Size - 1);
+        }
+
+        public static long AlignDown(long Value, int Size)
+        {
+            return Value & ~((long)Size - 1);
+        }
     }
 }

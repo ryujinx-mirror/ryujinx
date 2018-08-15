@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.Gpu.Texture
 
                     int Pixel = *(int*)(BuffPtr + InOffs);
 
-                    CpuMem.WriteInt32Unchecked(Position + Offset, Pixel);
+                    CpuMem.WriteInt32(Position + Offset, Pixel);
 
                     InOffs += 4;
                 }

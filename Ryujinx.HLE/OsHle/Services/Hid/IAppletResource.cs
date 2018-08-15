@@ -10,9 +10,9 @@ namespace Ryujinx.HLE.OsHle.Services.Hid
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private HSharedMem HidSharedMem;
+        private KSharedMemory HidSharedMem;
 
-        public IAppletResource(HSharedMem HidSharedMem)
+        public IAppletResource(KSharedMemory HidSharedMem)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {

@@ -11,11 +11,13 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvGpuAS
     {
         private const int FlagFixedOffset = 1;
 
-        private static ConcurrentDictionary<Process, NvGpuVmm> Vmms;
+        private const int FlagRemapSubRange = 0x100;
+
+        private static ConcurrentDictionary<Process, NvGpuASCtx> ASCtxs;
 
         static NvGpuASIoctl()
         {
-            Vmms = new ConcurrentDictionary<Process, NvGpuVmm>();
+            ASCtxs = new ConcurrentDictionary<Process, NvGpuASCtx>();
         }
 
         public static int ProcessIoctl(ServiceCtx Context, int Cmd)
@@ -29,7 +31,7 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvGpuAS
                 case 0x4106: return MapBufferEx (Context);
                 case 0x4108: return GetVaRegions(Context);
                 case 0x4109: return InitializeEx(Context);
-                case 0x4114: return Remap       (Context);
+                case 0x4114: return Remap       (Context, Cmd);
             }
 
             throw new NotImplementedException(Cmd.ToString("x8"));
@@ -52,29 +54,38 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvGpuAS
 
             NvGpuASAllocSpace Args = AMemoryHelper.Read<NvGpuASAllocSpace>(Context.Memory, InputPosition);
 
-            NvGpuVmm Vmm = GetVmm(Context);
+            NvGpuASCtx ASCtx = GetASCtx(Context);
 
             ulong Size = (ulong)Args.Pages *
                          (ulong)Args.PageSize;
 
-            if ((Args.Flags & FlagFixedOffset) != 0)
-            {
-                Args.Offset = Vmm.Reserve(Args.Offset, (long)Size, 1);
-            }
-            else
-            {
-                Args.Offset = Vmm.Reserve((long)Size, 1);
-            }
-
             int Result = NvResult.Success;
 
-            if (Args.Offset < 0)
+            lock (ASCtx)
             {
-                Args.Offset = 0;
+                //Note: When the fixed offset flag is not set,
+                //the Offset field holds the alignment size instead.
+                if ((Args.Flags & FlagFixedOffset) != 0)
+                {
+                    Args.Offset = ASCtx.Vmm.ReserveFixed(Args.Offset, (long)Size);
+                }
+                else
+                {
+                    Args.Offset = ASCtx.Vmm.Reserve((long)Size, Args.Offset);
+                }
 
-                Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"No memory to allocate size {Size:x16}!");
+                if (Args.Offset < 0)
+                {
+                    Args.Offset = 0;
 
-                Result = NvResult.OutOfMemory;
+                    Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Failed to allocate size {Size:x16}!");
+
+                    Result = NvResult.OutOfMemory;
+                }
+                else
+                {
+                    ASCtx.AddReservation(Args.Offset, (long)Size);
+                }
             }
 
             AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
@@ -89,14 +100,29 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvGpuAS
 
             NvGpuASAllocSpace Args = AMemoryHelper.Read<NvGpuASAllocSpace>(Context.Memory, InputPosition);
 
-            NvGpuVmm Vmm = GetVmm(Context);
+            NvGpuASCtx ASCtx = GetASCtx(Context);
 
-            ulong Size = (ulong)Args.Pages *
-                         (ulong)Args.PageSize;
+            int Result = NvResult.Success;
 
-            Vmm.Free(Args.Offset, (long)Size);
+            lock (ASCtx)
+            {
+                ulong Size = (ulong)Args.Pages *
+                             (ulong)Args.PageSize;
 
-            return NvResult.Success;
+                if (ASCtx.RemoveReservation(Args.Offset))
+                {
+                    ASCtx.Vmm.Free(Args.Offset, (long)Size);
+                }
+                else
+                {
+                    Context.Ns.Log.PrintWarning(LogClass.ServiceNv,
+                        $"Failed to free offset 0x{Args.Offset:x16} size 0x{Size:x16}!");
+
+                    Result = NvResult.InvalidInput;
+                }
+            }
+
+            return Result;
         }
 
         private static int UnmapBuffer(ServiceCtx Context)
@@ -106,11 +132,21 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvGpuAS
 
             NvGpuASUnmapBuffer Args = AMemoryHelper.Read<NvGpuASUnmapBuffer>(Context.Memory, InputPosition);
 
-            NvGpuVmm Vmm = GetVmm(Context);
+            NvGpuASCtx ASCtx = GetASCtx(Context);
 
-            if (!Vmm.Unmap(Args.Offset))
+            lock (ASCtx)
             {
-                Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Invalid buffer offset {Args.Offset:x16}!");
+                if (ASCtx.RemoveMap(Args.Offset, out long Size))
+                {
+                    if (Size != 0)
+                    {
+                        ASCtx.Vmm.Free(Args.Offset, Size);
+                    }
+                }
+                else
+                {
+                    Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Invalid buffer offset {Args.Offset:x16}!");
+                }
             }
 
             return NvResult.Success;
@@ -118,12 +154,14 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvGpuAS
 
         private static int MapBufferEx(ServiceCtx Context)
         {
+            const string MapErrorMsg = "Failed to map fixed buffer with offset 0x{0:x16} and size 0x{1:x16}!";
+
             long InputPosition  = Context.Request.GetBufferType0x21().Position;
             long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             NvGpuASMapBufferEx Args = AMemoryHelper.Read<NvGpuASMapBufferEx>(Context.Memory, InputPosition);
 
-            NvGpuVmm Vmm = GetVmm(Context);
+            NvGpuASCtx ASCtx = GetASCtx(Context);
 
             NvMapHandle Map = NvMapIoctl.GetNvMapWithFb(Context, Args.NvMapHandle);
 
@@ -134,7 +172,39 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvGpuAS
                 return NvResult.InvalidInput;
             }
 
-            long PA = Map.Address + Args.BufferOffset;
+            long PA;
+
+            if ((Args.Flags & FlagRemapSubRange) != 0)
+            {
+                lock (ASCtx)
+                {
+                    if (ASCtx.TryGetMapPhysicalAddress(Args.Offset, out PA))
+                    {
+                        long VA = Args.Offset + Args.BufferOffset;
+
+                        PA += Args.BufferOffset;
+
+                        if (ASCtx.Vmm.Map(PA, VA, Args.MappingSize) < 0)
+                        {
+                            string Msg = string.Format(MapErrorMsg, VA, Args.MappingSize);
+
+                            Context.Ns.Log.PrintWarning(LogClass.ServiceNv, Msg);
+
+                            return NvResult.InvalidInput;
+                        }
+
+                        return NvResult.Success;
+                    }
+                    else
+                    {
+                        Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Address 0x{Args.Offset:x16} not mapped!");
+
+                        return NvResult.InvalidInput;
+                    }
+                }
+            }
+
+            PA = Map.Address + Args.BufferOffset;
 
             long Size = Args.MappingSize;
 
@@ -145,39 +215,43 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvGpuAS
 
             int Result = NvResult.Success;
 
-            //Note: When the fixed offset flag is not set,
-            //the Offset field holds the alignment size instead.
-            if ((Args.Flags & FlagFixedOffset) != 0)
+            lock (ASCtx)
             {
-                long MapEnd = Args.Offset + Args.MappingSize;
+                //Note: When the fixed offset flag is not set,
+                //the Offset field holds the alignment size instead.
+                bool VaAllocated = (Args.Flags & FlagFixedOffset) == 0;
 
-                if ((ulong)MapEnd <= (ulong)Args.Offset)
+                if (!VaAllocated)
                 {
-                    Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Offset 0x{Args.Offset:x16} and size 0x{Args.MappingSize:x16} results in a overflow!");
+                    if (ASCtx.ValidateFixedBuffer(Args.Offset, Size))
+                    {
+                        Args.Offset = ASCtx.Vmm.Map(PA, Args.Offset, Size);
+                    }
+                    else
+                    {
+                        string Msg = string.Format(MapErrorMsg, Args.Offset, Size);
 
-                    return NvResult.InvalidInput;
+                        Context.Ns.Log.PrintWarning(LogClass.ServiceNv, Msg);
+
+                        Result = NvResult.InvalidInput;
+                    }
                 }
-
-                if ((Args.Offset & NvGpuVmm.PageMask) != 0)
+                else
                 {
-                    Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Offset 0x{Args.Offset:x16} is not page aligned!");
-
-                    return NvResult.InvalidInput;
+                    Args.Offset = ASCtx.Vmm.Map(PA, Size);
                 }
-
-                Args.Offset = Vmm.Map(PA, Args.Offset, Size);
-            }
-            else
-            {
-                Args.Offset = Vmm.Map(PA, Size);
 
                 if (Args.Offset < 0)
                 {
                     Args.Offset = 0;
 
-                    Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"No memory to map size {Args.MappingSize:x16}!");
+                    Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Failed to map size 0x{Size:x16}!");
 
                     Result = NvResult.InvalidInput;
+                }
+                else
+                {
+                    ASCtx.AddMap(Args.Offset, Size, PA, VaAllocated);
                 }
             }
 
@@ -206,38 +280,50 @@ namespace Ryujinx.HLE.OsHle.Services.Nv.NvGpuAS
             return NvResult.Success;
         }
 
-        private static int Remap(ServiceCtx Context)
+        private static int Remap(ServiceCtx Context, int Cmd)
         {
+            int Count = ((Cmd >> 16) & 0xff) / 0x14;
+
             long InputPosition  = Context.Request.GetBufferType0x21().Position;
 
-            NvGpuASRemap Args = AMemoryHelper.Read<NvGpuASRemap>(Context.Memory, InputPosition);
-
-            NvGpuVmm Vmm = GetVmm(Context);
-
-            NvMapHandle Map = NvMapIoctl.GetNvMapWithFb(Context, Args.NvMapHandle);
-
-            if (Map == null)
+            for (int Index = 0; Index < Count; Index++, InputPosition += 0x14)
             {
-                Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Invalid NvMap handle 0x{Args.NvMapHandle:x8}!");
+                NvGpuASRemap Args = AMemoryHelper.Read<NvGpuASRemap>(Context.Memory, InputPosition);
 
-                return NvResult.InvalidInput;
+                NvGpuVmm Vmm = GetASCtx(Context).Vmm;
+
+                NvMapHandle Map = NvMapIoctl.GetNvMapWithFb(Context, Args.NvMapHandle);
+
+                if (Map == null)
+                {
+                    Context.Ns.Log.PrintWarning(LogClass.ServiceNv, $"Invalid NvMap handle 0x{Args.NvMapHandle:x8}!");
+
+                    return NvResult.InvalidInput;
+                }
+
+                long Result = Vmm.Map(Map.Address, (long)(uint)Args.Offset << 16,
+                                                   (long)(uint)Args.Pages  << 16);
+
+                if (Result < 0)
+                {
+                    Context.Ns.Log.PrintWarning(LogClass.ServiceNv,
+                        $"Page 0x{Args.Offset:x16} size 0x{Args.Pages:x16} not allocated!");
+
+                    return NvResult.InvalidInput;
+                }
             }
-
-            //FIXME: This is most likely wrong...
-            Vmm.Map(Map.Address, (long)(uint)Args.Offset << 16,
-                                 (long)(uint)Args.Pages  << 16);
 
             return NvResult.Success;
         }
 
-        public static NvGpuVmm GetVmm(ServiceCtx Context)
+        public static NvGpuASCtx GetASCtx(ServiceCtx Context)
         {
-            return Vmms.GetOrAdd(Context.Process, (Key) => new NvGpuVmm(Context.Memory));
+            return ASCtxs.GetOrAdd(Context.Process, (Key) => new NvGpuASCtx(Context));
         }
 
         public static void UnloadProcess(Process Process)
         {
-            Vmms.TryRemove(Process, out _);
+            ASCtxs.TryRemove(Process, out _);
         }
     }
 }

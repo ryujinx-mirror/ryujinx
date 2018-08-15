@@ -45,46 +45,21 @@ namespace ChocolArm64.Instruction
             {
                 switch (Size)
                 {
-                    case 0: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.ReadVector8Unchecked)
-                        : nameof(AMemory.ReadVector8); break;
-
-                    case 1: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.ReadVector16Unchecked)
-                        : nameof(AMemory.ReadVector16); break;
-
-                    case 2: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.ReadVector32Unchecked)
-                        : nameof(AMemory.ReadVector32); break;
-
-                    case 3: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.ReadVector64Unchecked)
-                        : nameof(AMemory.ReadVector64); break;
-
-                    case 4: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.ReadVector128Unchecked)
-                        : nameof(AMemory.ReadVector128); break;
+                    case 0: Name = nameof(AMemory.ReadVector8);   break;
+                    case 1: Name = nameof(AMemory.ReadVector16);  break;
+                    case 2: Name = nameof(AMemory.ReadVector32);  break;
+                    case 3: Name = nameof(AMemory.ReadVector64);  break;
+                    case 4: Name = nameof(AMemory.ReadVector128); break;
                 }
             }
             else
             {
                 switch (Size)
                 {
-                    case 0: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.ReadByteUnchecked)
-                        : nameof(AMemory.ReadByte); break;
-
-                    case 1: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.ReadUInt16Unchecked)
-                        : nameof(AMemory.ReadUInt16); break;
-
-                    case 2: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.ReadUInt32Unchecked)
-                        : nameof(AMemory.ReadUInt32); break;
-
-                    case 3: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.ReadUInt64Unchecked)
-                        : nameof(AMemory.ReadUInt64); break;
+                    case 0: Name = nameof(AMemory.ReadByte);   break;
+                    case 1: Name = nameof(AMemory.ReadUInt16); break;
+                    case 2: Name = nameof(AMemory.ReadUInt32); break;
+                    case 3: Name = nameof(AMemory.ReadUInt64); break;
                 }
             }
 
@@ -132,46 +107,21 @@ namespace ChocolArm64.Instruction
             {
                 switch (Size)
                 {
-                    case 0: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.WriteVector8Unchecked)
-                        : nameof(AMemory.WriteVector8); break;
-
-                    case 1: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.WriteVector16Unchecked)
-                        : nameof(AMemory.WriteVector16); break;
-
-                    case 2: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.WriteVector32Unchecked)
-                        : nameof(AMemory.WriteVector32); break;
-
-                    case 3: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.WriteVector64Unchecked)
-                        : nameof(AMemory.WriteVector64); break;
-
-                    case 4: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.WriteVector128Unchecked)
-                        : nameof(AMemory.WriteVector128); break;
+                    case 0: Name = nameof(AMemory.WriteVector8);   break;
+                    case 1: Name = nameof(AMemory.WriteVector16);  break;
+                    case 2: Name = nameof(AMemory.WriteVector32);  break;
+                    case 3: Name = nameof(AMemory.WriteVector64);  break;
+                    case 4: Name = nameof(AMemory.WriteVector128); break;
                 }
             }
             else
             {
                 switch (Size)
                 {
-                    case 0: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.WriteByteUnchecked)
-                        : nameof(AMemory.WriteByte); break;
-
-                    case 1: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.WriteUInt16Unchecked)
-                        : nameof(AMemory.WriteUInt16); break;
-
-                    case 2: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.WriteUInt32Unchecked)
-                        : nameof(AMemory.WriteUInt32); break;
-
-                    case 3: Name = AOptimizations.DisableMemoryChecks
-                        ? nameof(AMemory.WriteUInt64Unchecked)
-                        : nameof(AMemory.WriteUInt64); break;
+                    case 0: Name = nameof(AMemory.WriteByte);   break;
+                    case 1: Name = nameof(AMemory.WriteUInt16); break;
+                    case 2: Name = nameof(AMemory.WriteUInt32); break;
+                    case 3: Name = nameof(AMemory.WriteUInt64); break;
                 }
             }
 
