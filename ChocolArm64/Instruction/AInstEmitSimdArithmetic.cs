@@ -305,7 +305,7 @@ namespace ChocolArm64.Instruction
         {
             if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.AddScalar));
+                EmitScalarSseOrSse2CallF(Context, nameof(Sse.AddScalar));
             }
             else
             {
@@ -317,7 +317,7 @@ namespace ChocolArm64.Instruction
         {
             if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.Add));
+                EmitVectorSseOrSse2CallF(Context, nameof(Sse.Add));
             }
             else
             {
@@ -375,7 +375,7 @@ namespace ChocolArm64.Instruction
         {
             if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.DivideScalar));
+                EmitScalarSseOrSse2CallF(Context, nameof(Sse.DivideScalar));
             }
             else
             {
@@ -387,7 +387,7 @@ namespace ChocolArm64.Instruction
         {
             if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.Divide));
+                EmitVectorSseOrSse2CallF(Context, nameof(Sse.Divide));
             }
             else
             {
@@ -526,7 +526,7 @@ namespace ChocolArm64.Instruction
         {
             if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.MultiplyScalar));
+                EmitScalarSseOrSse2CallF(Context, nameof(Sse.MultiplyScalar));
             }
             else
             {
@@ -543,7 +543,7 @@ namespace ChocolArm64.Instruction
         {
             if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.Multiply));
+                EmitVectorSseOrSse2CallF(Context, nameof(Sse.Multiply));
             }
             else
             {
@@ -910,7 +910,7 @@ namespace ChocolArm64.Instruction
         {
             if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.SubtractScalar));
+                EmitScalarSseOrSse2CallF(Context, nameof(Sse.SubtractScalar));
             }
             else
             {
@@ -922,7 +922,7 @@ namespace ChocolArm64.Instruction
         {
             if (AOptimizations.UseSse && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.Subtract));
+                EmitVectorSseOrSse2CallF(Context, nameof(Sse.Subtract));
             }
             else
             {

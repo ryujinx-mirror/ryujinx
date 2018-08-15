@@ -110,7 +110,17 @@ namespace ChocolArm64.Instruction
             }
         }
 
-        public static void EmitSseOrSse2CallF(AILEmitterCtx Context, string Name)
+        public static void EmitScalarSseOrSse2CallF(AILEmitterCtx Context, string Name)
+        {
+            EmitSseOrSse2CallF(Context, Name, true);
+        }
+
+        public static void EmitVectorSseOrSse2CallF(AILEmitterCtx Context, string Name)
+        {
+            EmitSseOrSse2CallF(Context, Name, false);
+        }
+
+        public static void EmitSseOrSse2CallF(AILEmitterCtx Context, string Name, bool Scalar)
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
@@ -160,7 +170,18 @@ namespace ChocolArm64.Instruction
 
             Context.EmitStvec(Op.Rd);
 
-            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            if (Scalar)
+            {
+                if (SizeF == 0)
+                {
+                    EmitVectorZero32_128(Context, Op.Rd);
+                }
+                else /* if (SizeF == 1) */
+                {
+                    EmitVectorZeroUpper(Context, Op.Rd);
+                }
+            }
+            else if (Op.RegisterSize == ARegisterSize.SIMD64)
             {
                 EmitVectorZeroUpper(Context, Op.Rd);
             }
@@ -1236,6 +1257,15 @@ namespace ChocolArm64.Instruction
         public static void EmitVectorZeroUpper(AILEmitterCtx Context, int Rd)
         {
             EmitVectorInsert(Context, Rd, 1, 3, 0);
+        }
+
+        public static void EmitVectorZero32_128(AILEmitterCtx Context, int Reg)
+        {
+            Context.EmitLdvec(Reg);
+
+            AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorZero32_128));
+
+            Context.EmitStvec(Reg);
         }
 
         public static void EmitVectorInsert(AILEmitterCtx Context, int Reg, int Index, int Size)

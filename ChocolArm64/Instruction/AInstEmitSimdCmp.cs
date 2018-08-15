@@ -158,7 +158,7 @@ namespace ChocolArm64.Instruction
             if (Context.CurrOp is AOpCodeSimdReg && AOptimizations.UseSse
                                                  && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.CompareEqualScalar));
+                EmitScalarSseOrSse2CallF(Context, nameof(Sse.CompareEqualScalar));
             }
             else
             {
@@ -171,7 +171,7 @@ namespace ChocolArm64.Instruction
             if (Context.CurrOp is AOpCodeSimdReg && AOptimizations.UseSse
                                                  && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.CompareEqual));
+                EmitVectorSseOrSse2CallF(Context, nameof(Sse.CompareEqual));
             }
             else
             {
@@ -184,7 +184,7 @@ namespace ChocolArm64.Instruction
             if (Context.CurrOp is AOpCodeSimdReg && AOptimizations.UseSse
                                                  && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.CompareGreaterThanOrEqualScalar));
+                EmitScalarSseOrSse2CallF(Context, nameof(Sse.CompareGreaterThanOrEqualScalar));
             }
             else
             {
@@ -197,7 +197,7 @@ namespace ChocolArm64.Instruction
             if (Context.CurrOp is AOpCodeSimdReg && AOptimizations.UseSse
                                                  && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.CompareGreaterThanOrEqual));
+                EmitVectorSseOrSse2CallF(Context, nameof(Sse.CompareGreaterThanOrEqual));
             }
             else
             {
@@ -210,7 +210,7 @@ namespace ChocolArm64.Instruction
             if (Context.CurrOp is AOpCodeSimdReg && AOptimizations.UseSse
                                                  && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.CompareGreaterThanScalar));
+                EmitScalarSseOrSse2CallF(Context, nameof(Sse.CompareGreaterThanScalar));
             }
             else
             {
@@ -223,7 +223,7 @@ namespace ChocolArm64.Instruction
             if (Context.CurrOp is AOpCodeSimdReg && AOptimizations.UseSse
                                                  && AOptimizations.UseSse2)
             {
-                EmitSseOrSse2CallF(Context, nameof(Sse.CompareGreaterThan));
+                EmitVectorSseOrSse2CallF(Context, nameof(Sse.CompareGreaterThan));
             }
             else
             {
