@@ -80,6 +80,14 @@ namespace Ryujinx.HLE.Gpu.Engines
             }
         }
 
+        public void ResetCache()
+        {
+            foreach (List<long> Uploaded in UploadedKeys)
+            {
+                Uploaded.Clear();
+            }
+        }
+
         private void VertexEndGl(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
         {
             LockCaches();
@@ -623,11 +631,6 @@ namespace Ryujinx.HLE.Gpu.Engines
 
             if (Mode == 0)
             {
-                foreach (List<long> Uploaded in UploadedKeys)
-                {
-                    Uploaded.Clear();
-                }
-
                 //Write mode.
                 Vmm.WriteInt32(Position, Seq);
             }
@@ -649,6 +652,8 @@ namespace Ryujinx.HLE.Gpu.Engines
             }
 
             WriteRegister(NvGpuEngine3dReg.ConstBufferOffset, Offset);
+
+            UploadedKeys[(int)NvGpuBufferType.ConstBuffer].Clear();
         }
 
         private void CbBind(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)

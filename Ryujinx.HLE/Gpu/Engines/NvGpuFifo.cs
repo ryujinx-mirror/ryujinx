@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.Gpu.Engines
 
         private NvGpu Gpu;
 
-        private ConcurrentQueue<(NvGpuVmm, NvGpuPBEntry)> BufferQueue;
+        private ConcurrentQueue<(NvGpuVmm, NvGpuPBEntry[])> BufferQueue;
 
         private NvGpuEngine[] SubChannels;
 
@@ -56,7 +56,7 @@ namespace Ryujinx.HLE.Gpu.Engines
         {
             this.Gpu = Gpu;
 
-            BufferQueue = new ConcurrentQueue<(NvGpuVmm, NvGpuPBEntry)>();
+            BufferQueue = new ConcurrentQueue<(NvGpuVmm, NvGpuPBEntry[])>();
 
             SubChannels = new NvGpuEngine[8];
 
@@ -69,10 +69,7 @@ namespace Ryujinx.HLE.Gpu.Engines
 
         public void PushBuffer(NvGpuVmm Vmm, NvGpuPBEntry[] Buffer)
         {
-            foreach (NvGpuPBEntry PBEntry in Buffer)
-            {
-                BufferQueue.Enqueue((Vmm, PBEntry));
-            }
+            BufferQueue.Enqueue((Vmm, Buffer));
 
             Event.Set();
         }
@@ -82,16 +79,27 @@ namespace Ryujinx.HLE.Gpu.Engines
             while (Step());
         }
 
+        private (NvGpuVmm Vmm, NvGpuPBEntry[] Pb) Curr;
+
+        private int CurrPbEntryIndex;
+
         public bool Step()
         {
-            if (BufferQueue.TryDequeue(out (NvGpuVmm Vmm, NvGpuPBEntry PBEntry) Tuple))
+            while (Curr.Pb == null || Curr.Pb.Length <= CurrPbEntryIndex)
             {
-                CallMethod(Tuple.Vmm, Tuple.PBEntry);
+                if (!BufferQueue.TryDequeue(out Curr))
+                {
+                    return false;
+                }
 
-                return true;
+                Gpu.Engine3d.ResetCache();
+
+                CurrPbEntryIndex = 0;
             }
 
-            return false;
+            CallMethod(Curr.Vmm, Curr.Pb[CurrPbEntryIndex++]);
+
+            return true;
         }
 
         private void CallMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
