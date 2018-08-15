@@ -26,7 +26,9 @@ namespace Ryujinx.HLE.OsHle.Services.Time
                 { 3,   LoadLocationNameList      },
                 { 4,   LoadTimeZoneRule          },
                 { 100, ToCalendarTime            },
-                { 101, ToCalendarTimeWithMyRule  }
+                { 101, ToCalendarTimeWithMyRule  },
+                { 201, ToPosixTime               },
+                { 202, ToPosixTimeWithMyRule     }
             };
         }
 
@@ -189,6 +191,77 @@ namespace Ryujinx.HLE.OsHle.Services.Time
             long PosixTime = Context.RequestData.ReadInt64();
 
             return ToCalendarTimeWithTz(Context, PosixTime, TimeZone);
+        }
+
+        public long ToPosixTime(ServiceCtx Context)
+        {
+            long BufferPosition = Context.Request.SendBuff[0].Position;
+            long BufferSize     = Context.Request.SendBuff[0].Size;
+
+            ushort Year   = Context.RequestData.ReadUInt16();
+            byte   Month  = Context.RequestData.ReadByte();
+            byte   Day    = Context.RequestData.ReadByte();
+            byte   Hour   = Context.RequestData.ReadByte();
+            byte   Minute = Context.RequestData.ReadByte();
+            byte   Second = Context.RequestData.ReadByte();
+
+            DateTime CalendarTime = new DateTime(Year, Month, Day, Hour, Minute, Second);
+
+            if (BufferSize != 0x4000)
+            {
+                Context.Ns.Log.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{BufferSize:x} (expected 0x4000)");
+            }
+
+            // TODO: Reverse the TZif2 conversion in PCV to make this match with real hardware.
+            byte[] TzData = Context.Memory.ReadBytes(BufferPosition, 0x24);
+            string TzID   = Encoding.ASCII.GetString(TzData).TrimEnd('\0');
+
+            long ResultCode = 0;
+
+            // Check if the Time Zone exists, otherwise error out.
+            try
+            {
+                TimeZoneInfo Info = TimeZoneInfo.FindSystemTimeZoneById(TzID);
+
+                return ToPosixTimeWithTz(Context, CalendarTime, Info);
+            }
+            catch (TimeZoneNotFoundException e)
+            {
+                Context.Ns.Log.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {TzID} (len: {TzID.Length})");
+                ResultCode = 0x7BA74;
+            }
+
+            return ResultCode;
+        }
+
+        public long ToPosixTimeWithMyRule(ServiceCtx Context)
+        {
+            ushort Year   = Context.RequestData.ReadUInt16();
+            byte   Month  = Context.RequestData.ReadByte();
+            byte   Day    = Context.RequestData.ReadByte();
+            byte   Hour   = Context.RequestData.ReadByte();
+            byte   Minute = Context.RequestData.ReadByte();
+            byte   Second = Context.RequestData.ReadByte();
+
+            DateTime CalendarTime = new DateTime(Year, Month, Day, Hour, Minute, Second, DateTimeKind.Local);
+
+            return ToPosixTimeWithTz(Context, CalendarTime, TimeZone);
+        }
+
+        private long ToPosixTimeWithTz(ServiceCtx Context, DateTime CalendarTime, TimeZoneInfo Info)
+        {
+            DateTime CalenderTimeUTC = TimeZoneInfo.ConvertTimeToUtc(CalendarTime, Info);
+
+            long PosixTime = ((DateTimeOffset)CalenderTimeUTC).ToUnixTimeSeconds();
+
+            long Position = Context.Request.RecvListBuff[0].Position;
+            long Size     = Context.Request.RecvListBuff[0].Size;
+
+            Context.Memory.WriteInt64(Position, PosixTime);
+
+            Context.ResponseData.Write(1);
+
+            return 0;
         }
     }
 }
