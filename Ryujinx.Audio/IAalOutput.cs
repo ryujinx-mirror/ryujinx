@@ -1,6 +1,8 @@
+using System;
+
 namespace Ryujinx.Audio
 {
-    public interface IAalOutput
+    public interface IAalOutput : IDisposable
     {
         int OpenTrack(int SampleRate, int Channels, ReleaseCallback Callback);
 

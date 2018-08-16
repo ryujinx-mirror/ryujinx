@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.Gpu.Texture
                 case GalTextureFormat.Astc2D10x6:   return Read16BptCompressedTexture(Memory, Texture, 10, 6);
              }
 
-            throw new NotImplementedException(Texture.Format.ToString());
+            throw new NotImplementedException("0x" + Texture.Format.ToString("x2"));
         }
 
         private unsafe static byte[] Read1Bpp(IAMemory Memory, TextureInfo Texture)

@@ -40,9 +40,6 @@ namespace ChocolArm64.State
         public bool Zero;
         public bool Negative;
 
-        public int ProcessId;
-        public int ThreadId;
-
         public bool Running { get; set; }
 
         public long TpidrEl0 { get; set; }
@@ -98,6 +95,11 @@ namespace ChocolArm64.State
             TickCounter = new Stopwatch();
 
             TickCounter.Start();
+        }
+
+        internal bool Synchronize()
+        {
+            return Running;
         }
 
         internal void OnBreak(long Position, int Imm)

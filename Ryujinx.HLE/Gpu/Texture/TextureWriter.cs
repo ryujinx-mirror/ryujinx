@@ -1,6 +1,4 @@
 using ChocolArm64.Memory;
-using Ryujinx.Graphics.Gal;
-using System;
 
 namespace Ryujinx.HLE.Gpu.Texture
 {

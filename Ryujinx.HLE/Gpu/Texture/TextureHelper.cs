@@ -140,7 +140,7 @@ namespace Ryujinx.HLE.Gpu.Texture
                 }
             }
 
-            throw new NotImplementedException(Texture.Format.ToString());
+            throw new NotImplementedException("0x" + Texture.Format.ToString("x2"));
         }
 
         public static int CompressedTextureSize(int TextureWidth, int TextureHeight, int BlockWidth, int BlockHeight, int Bpb)

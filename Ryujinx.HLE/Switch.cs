@@ -1,10 +1,10 @@
 using Ryujinx.Audio;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.HLE.Gpu;
+using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.Input;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.Memory;
-using Ryujinx.HLE.OsHle;
 using System;
 
 namespace Ryujinx.HLE
@@ -19,15 +19,13 @@ namespace Ryujinx.HLE
 
         internal NvGpu Gpu { get; private set; }
 
-        internal VirtualFileSystem VFs { get; private set; }
+        internal VirtualFileSystem FileSystem { get; private set; }
 
-        public Horizon Os { get; private set; }
+        public Horizon System { get; private set; }
 
         public PerformanceStatistics Statistics { get; private set; }
 
         public Hid Hid { get; private set; }
-
-        public event EventHandler Finish;
 
         public Switch(IGalRenderer Renderer, IAalOutput AudioOut)
         {
@@ -49,23 +47,23 @@ namespace Ryujinx.HLE
 
             Gpu = new NvGpu(Renderer);
 
-            VFs = new VirtualFileSystem();
+            FileSystem = new VirtualFileSystem();
 
-            Os = new Horizon(this);
+            System = new Horizon(this);
 
             Statistics = new PerformanceStatistics();
 
-            Hid = new Hid(this, Os.HidSharedMem.PA);
+            Hid = new Hid(this, System.HidSharedMem.PA);
         }
 
         public void LoadCart(string ExeFsDir, string RomFsFile = null)
         {
-            Os.LoadCart(ExeFsDir, RomFsFile);
+            System.LoadCart(ExeFsDir, RomFsFile);
         }
 
         public void LoadProgram(string FileName)
         {
-            Os.LoadProgram(FileName);
+            System.LoadProgram(FileName);
         }
 
         public bool WaitFifo()
@@ -78,10 +76,11 @@ namespace Ryujinx.HLE
             Gpu.Fifo.DispatchCalls();
         }
 
-        public virtual void OnFinish(EventArgs e)
+        internal void Unload()
         {
-            Os.Dispose();
-            Finish?.Invoke(this, e);
+            FileSystem.Dispose();
+
+            Memory.Dispose();
         }
 
         public void Dispose()
@@ -93,8 +92,7 @@ namespace Ryujinx.HLE
         {
             if (Disposing)
             {
-                Os.Dispose();
-                VFs.Dispose();
+                System.Dispose();
             }
         }
     }

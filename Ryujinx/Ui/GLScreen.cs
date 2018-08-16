@@ -4,7 +4,6 @@ using OpenTK.Input;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.HLE;
 using Ryujinx.HLE.Input;
-using Ryujinx.UI.Input;
 using System;
 using System.Threading;
 
@@ -19,7 +18,7 @@ namespace Ryujinx
 
         private const int TargetFPS = 60;
 
-        private Switch Ns;
+        private Switch Device;
 
         private IGalRenderer Renderer;
 
@@ -35,13 +34,13 @@ namespace Ryujinx
 
         private string NewTitle;
 
-        public GLScreen(Switch Ns, IGalRenderer Renderer)
+        public GLScreen(Switch Device, IGalRenderer Renderer)
             : base(1280, 720,
             new GraphicsMode(), "Ryujinx", 0,
             DisplayDevice.Default, 3, 3,
             GraphicsContextFlags.ForwardCompatible)
         {
-            this.Ns       = Ns;
+            this.Device   = Device;
             this.Renderer = Renderer;
 
             Location = new Point(
@@ -63,9 +62,9 @@ namespace Ryujinx
 
             while (Exists && !IsExiting)
             {
-                if (Ns.WaitFifo())
+                if (Device.WaitFifo())
                 {
-                    Ns.ProcessFrame();
+                    Device.ProcessFrame();
                 }
 
                 Renderer.RunActions();
@@ -152,7 +151,7 @@ namespace Ryujinx
 
             //Controller Input
             CurrentButton |= Config.JoyConController.GetButtons();
-                
+
             //Keyboard has priority stick-wise
             if (LeftJoystickDX == 0 && LeftJoystickDY == 0)
             {
@@ -163,7 +162,7 @@ namespace Ryujinx
             {
                 (RightJoystickDX, RightJoystickDY) = Config.JoyConController.GetRightStick();
             }
-            
+
             LeftJoystick = new HidJoystickPosition
             {
                 DX = LeftJoystickDX,
@@ -226,23 +225,23 @@ namespace Ryujinx
 
                     HasTouch = true;
 
-                    Ns.Hid.SetTouchPoints(CurrentPoint);
+                    Device.Hid.SetTouchPoints(CurrentPoint);
                 }
             }
 
             if (!HasTouch)
             {
-                Ns.Hid.SetTouchPoints();
+                Device.Hid.SetTouchPoints();
             }
 
-            Ns.Hid.SetJoyconButton(
+            Device.Hid.SetJoyconButton(
                 HidControllerId.CONTROLLER_HANDHELD,
                 HidControllerLayouts.Handheld_Joined,
                 CurrentButton,
                 LeftJoystick,
                 RightJoystick);
 
-            Ns.Hid.SetJoyconButton(
+            Device.Hid.SetJoyconButton(
                 HidControllerId.CONTROLLER_HANDHELD,
                 HidControllerLayouts.Main,
                 CurrentButton,
@@ -254,10 +253,10 @@ namespace Ryujinx
         {
             Renderer.FrameBuffer.Render();
 
-            Ns.Statistics.RecordSystemFrameTime();
+            Device.Statistics.RecordSystemFrameTime();
 
-            double HostFps = Ns.Statistics.GetSystemFrameRate();
-            double GameFps = Ns.Statistics.GetGameFrameRate();
+            double HostFps = Device.Statistics.GetSystemFrameRate();
+            double GameFps = Device.Statistics.GetGameFrameRate();
 
             NewTitle = $"Ryujinx | Host FPS: {HostFps:0.0} | Game FPS: {GameFps:0.0}";
 
@@ -265,7 +264,7 @@ namespace Ryujinx
 
             SwapBuffers();
 
-            Ns.Os.SignalVsync();
+            Device.System.SignalVsync();
         }
 
         protected override void OnUnload(EventArgs e)

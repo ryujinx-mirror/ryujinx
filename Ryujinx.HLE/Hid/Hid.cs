@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.OsHle;
+﻿using Ryujinx.HLE.HOS;
 using System;
 
 namespace Ryujinx.HLE.Input

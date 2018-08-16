@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace Ryujinx.Audio.OpenAL
 {
-    public class OpenALAudioOut : IAalOutput
+    public class OpenALAudioOut : IAalOutput, IDisposable
     {
         private const int MaxTracks = 256;
 
@@ -222,10 +222,17 @@ namespace Ryujinx.Audio.OpenAL
                     Td.CallReleaseCallbackIfNeeded();
                 }
 
-                //If it's not slept it will waste cycles
+                //If it's not slept it will waste cycles.
                 Thread.Sleep(10);
             }
             while (KeepPolling);
+
+            foreach (Track Td in Tracks.Values)
+            {
+                Td.Dispose();
+            }
+
+            Tracks.Clear();
         }
 
         public int OpenTrack(int SampleRate, int Channels, ReleaseCallback Callback)
@@ -341,6 +348,19 @@ namespace Ryujinx.Audio.OpenAL
             }
 
             return PlaybackState.Stopped;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool Disposing)
+        {
+            if (Disposing)
+            {
+                KeepPolling = false;
+            }
         }
     }
 }

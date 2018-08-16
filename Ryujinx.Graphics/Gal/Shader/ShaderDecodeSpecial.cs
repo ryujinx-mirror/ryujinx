@@ -1,6 +1,4 @@
-﻿using System;
-
-using static Ryujinx.Graphics.Gal.Shader.ShaderDecodeHelper;
+﻿using static Ryujinx.Graphics.Gal.Shader.ShaderDecodeHelper;
 
 namespace Ryujinx.Graphics.Gal.Shader
 {

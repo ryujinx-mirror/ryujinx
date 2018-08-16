@@ -18,8 +18,6 @@ namespace ChocolArm64
 
         public event EventHandler WorkFinished;
 
-        public int ThreadId => ThreadState.ThreadId;
-
         private int IsExecuting;
 
         public AThread(ATranslator Translator, AMemory Memory, long EntryPoint)

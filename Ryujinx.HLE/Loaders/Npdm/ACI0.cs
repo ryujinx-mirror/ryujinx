@@ -1,55 +1,53 @@
-using System;
+using Ryujinx.HLE.Exceptions;
 using System.IO;
 
 namespace Ryujinx.HLE.Loaders.Npdm
 {
     class ACI0
     {
-        public string TitleId;
+        private const int ACI0Magic = 'A' << 0 | 'C' << 8 | 'I' << 16 | '0' << 24;
 
-        private int FSAccessHeaderOffset;
-        private int FSAccessHeaderSize;
-        private int ServiceAccessControlOffset;
-        private int ServiceAccessControlSize;
-        private int KernelAccessControlOffset;
-        private int KernelAccessControlSize;
+        public long TitleId { get; private set; }
 
-        public FSAccessHeader       FSAccessHeader;
-        public ServiceAccessControl ServiceAccessControl;
-        public KernelAccessControl  KernelAccessControl;
+        public int   FsVersion            { get; private set; }
+        public ulong FsPermissionsBitmask { get; private set; }
 
-        public const long ACI0Magic = 'A' << 0 | 'C' << 8 | 'I' << 16 | '0' << 24;
+        public ServiceAccessControl ServiceAccessControl { get; private set; }
+        public KernelAccessControl  KernelAccessControl  { get; private set; }
 
-        public ACI0(Stream ACI0Stream, int Offset)
+        public ACI0(Stream Stream, int Offset)
         {
-            ACI0Stream.Seek(Offset, SeekOrigin.Begin);
+            Stream.Seek(Offset, SeekOrigin.Begin);
 
-            BinaryReader Reader = new BinaryReader(ACI0Stream);
+            BinaryReader Reader = new BinaryReader(Stream);
 
             if (Reader.ReadInt32() != ACI0Magic)
             {
                 throw new InvalidNpdmException("ACI0 Stream doesn't contain ACI0 section!");
             }
 
-            ACI0Stream.Seek(0x0C, SeekOrigin.Current);
+            Stream.Seek(0xc, SeekOrigin.Current);
 
-            byte[] TempTitleId = Reader.ReadBytes(8);
-            Array.Reverse(TempTitleId);
-            TitleId = BitConverter.ToString(TempTitleId).Replace("-", "");
+            TitleId = Reader.ReadInt64();
 
-            // Reserved (Not currently used, potentially to be used for lowest title ID in future.)
-            ACI0Stream.Seek(0x08, SeekOrigin.Current);
+            //Reserved.
+            Stream.Seek(8, SeekOrigin.Current);
 
-            FSAccessHeaderOffset       = Reader.ReadInt32();
-            FSAccessHeaderSize         = Reader.ReadInt32();
-            ServiceAccessControlOffset = Reader.ReadInt32();
-            ServiceAccessControlSize   = Reader.ReadInt32();
-            KernelAccessControlOffset  = Reader.ReadInt32();
-            KernelAccessControlSize    = Reader.ReadInt32();
+            int FsAccessHeaderOffset       = Reader.ReadInt32();
+            int FsAccessHeaderSize         = Reader.ReadInt32();
+            int ServiceAccessControlOffset = Reader.ReadInt32();
+            int ServiceAccessControlSize   = Reader.ReadInt32();
+            int KernelAccessControlOffset  = Reader.ReadInt32();
+            int KernelAccessControlSize    = Reader.ReadInt32();
 
-            FSAccessHeader       = new FSAccessHeader(ACI0Stream, Offset + FSAccessHeaderOffset, FSAccessHeaderSize);
-            ServiceAccessControl = new ServiceAccessControl(ACI0Stream, Offset + ServiceAccessControlOffset, ServiceAccessControlSize);
-            KernelAccessControl  = new KernelAccessControl(ACI0Stream, Offset + KernelAccessControlOffset, KernelAccessControlSize);
+            FsAccessHeader FsAccessHeader = new FsAccessHeader(Stream, Offset + FsAccessHeaderOffset, FsAccessHeaderSize);
+
+            FsVersion            = FsAccessHeader.Version;
+            FsPermissionsBitmask = FsAccessHeader.PermissionsBitmask;
+
+            ServiceAccessControl = new ServiceAccessControl(Stream, Offset + ServiceAccessControlOffset, ServiceAccessControlSize);
+
+            KernelAccessControl = new KernelAccessControl(Stream, Offset + KernelAccessControlOffset, KernelAccessControlSize);
         }
     }
 }

@@ -41,7 +41,7 @@ namespace ChocolArm64.Memory
             }
         }
 
-        private Dictionary<int, ArmMonitor> Monitors;
+        private Dictionary<AThreadState, ArmMonitor> Monitors;
 
         private ConcurrentDictionary<long, IntPtr> ObservedPages;
 
@@ -53,7 +53,7 @@ namespace ChocolArm64.Memory
 
         public AMemory(IntPtr Ram)
         {
-            Monitors = new Dictionary<int, ArmMonitor>();
+            Monitors = new Dictionary<AThreadState, ArmMonitor>();
 
             ObservedPages = new ConcurrentDictionary<long, IntPtr>();
 
@@ -75,7 +75,7 @@ namespace ChocolArm64.Memory
             {
                 ClearExclusive(State);
 
-                Monitors.Remove(State.ThreadId);
+                Monitors.Remove(State);
             }
         }
 
@@ -93,11 +93,11 @@ namespace ChocolArm64.Memory
                     }
                 }
 
-                if (!Monitors.TryGetValue(ThreadState.ThreadId, out ArmMonitor ThreadMon))
+                if (!Monitors.TryGetValue(ThreadState, out ArmMonitor ThreadMon))
                 {
                     ThreadMon = new ArmMonitor();
 
-                    Monitors.Add(ThreadState.ThreadId, ThreadMon);
+                    Monitors.Add(ThreadState, ThreadMon);
                 }
 
                 ThreadMon.Position = Position;
@@ -113,7 +113,7 @@ namespace ChocolArm64.Memory
 
             Monitor.Enter(Monitors);
 
-            if (!Monitors.TryGetValue(ThreadState.ThreadId, out ArmMonitor ThreadMon))
+            if (!Monitors.TryGetValue(ThreadState, out ArmMonitor ThreadMon))
             {
                 return false;
             }
@@ -130,7 +130,7 @@ namespace ChocolArm64.Memory
 
         public void ClearExclusiveForStore(AThreadState ThreadState)
         {
-            if (Monitors.TryGetValue(ThreadState.ThreadId, out ArmMonitor ThreadMon))
+            if (Monitors.TryGetValue(ThreadState, out ArmMonitor ThreadMon))
             {
                 ThreadMon.ExState = false;
             }
@@ -142,7 +142,7 @@ namespace ChocolArm64.Memory
         {
             lock (Monitors)
             {
-                if (Monitors.TryGetValue(ThreadState.ThreadId, out ArmMonitor ThreadMon))
+                if (Monitors.TryGetValue(ThreadState, out ArmMonitor ThreadMon))
                 {
                     ThreadMon.ExState = false;
                 }

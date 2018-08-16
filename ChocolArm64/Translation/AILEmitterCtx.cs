@@ -110,11 +110,32 @@ namespace ChocolArm64.Translation
             if (OpcIndex == 0)
             {
                 MarkLabel(GetLabel(CurrBlock.Position));
+
+                EmitSynchronization();
             }
 
             CurrOp.Emitter(this);
 
             ILBlock.Add(new AILBarrier());
+        }
+
+        private void EmitSynchronization()
+        {
+            EmitLdarg(ATranslatedSub.StateArgIdx);
+
+            EmitPrivateCall(typeof(AThreadState), nameof(AThreadState.Synchronize));
+
+            EmitLdc_I4(0);
+
+            AILLabel LblContinue = new AILLabel();
+
+            Emit(OpCodes.Bne_Un_S, LblContinue);
+
+            EmitLdc_I8(0);
+
+            Emit(OpCodes.Ret);
+
+            MarkLabel(LblContinue);
         }
 
         public bool TryOptEmitSubroutineCall()

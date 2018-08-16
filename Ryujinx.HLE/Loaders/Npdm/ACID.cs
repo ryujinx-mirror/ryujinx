@@ -1,36 +1,29 @@
-using System;
+using Ryujinx.HLE.Exceptions;
 using System.IO;
 
 namespace Ryujinx.HLE.Loaders.Npdm
 {
     class ACID
     {
-        public byte[] RSA2048Signature;
-        public byte[] RSA2048Modulus;
-        public int    Unknown1;
-        public int    Flags;
+        private const int ACIDMagic = 'A' << 0 | 'C' << 8 | 'I' << 16 | 'D' << 24;
 
-        public string TitleIdRangeMin;
-        public string TitleIdRangeMax;
+        public byte[] RSA2048Signature { get; private set; }
+        public byte[] RSA2048Modulus   { get; private set; }
+        public int    Unknown1         { get; private set; }
+        public int    Flags            { get; private set; }
 
-        private int FSAccessControlOffset;
-        private int FSAccessControlSize;
-        private int ServiceAccessControlOffset;
-        private int ServiceAccessControlSize;
-        private int KernelAccessControlOffset;
-        private int KernelAccessControlSize;
+        public long TitleIdRangeMin { get; private set; }
+        public long TitleIdRangeMax { get; private set; }
 
-        public FSAccessControl      FSAccessControl;
-        public ServiceAccessControl ServiceAccessControl;
-        public KernelAccessControl  KernelAccessControl;
+        public FsAccessControl      FsAccessControl      { get; private set; }
+        public ServiceAccessControl ServiceAccessControl { get; private set; }
+        public KernelAccessControl  KernelAccessControl  { get; private set; }
 
-        public const long ACIDMagic = 'A' << 0 | 'C' << 8 | 'I' << 16 | 'D' << 24;
-
-        public ACID(Stream ACIDStream, int Offset)
+        public ACID(Stream Stream, int Offset)
         {
-            ACIDStream.Seek(Offset, SeekOrigin.Begin);
+            Stream.Seek(Offset, SeekOrigin.Begin);
 
-            BinaryReader Reader = new BinaryReader(ACIDStream);
+            BinaryReader Reader = new BinaryReader(Stream);
 
             RSA2048Signature = Reader.ReadBytes(0x100);
             RSA2048Modulus   = Reader.ReadBytes(0x100);
@@ -40,28 +33,29 @@ namespace Ryujinx.HLE.Loaders.Npdm
                 throw new InvalidNpdmException("ACID Stream doesn't contain ACID section!");
             }
 
-            Unknown1 = Reader.ReadInt32(); // Size field used with the above signature(?).
-            Reader.ReadInt32(); // Padding / Unused
-            Flags = Reader.ReadInt32(); // Bit0 must be 1 on retail, on devunit 0 is also allowed. Bit1 is unknown.
+            //Size field used with the above signature (?).
+            Unknown1 = Reader.ReadInt32();
 
-            byte[] TempTitleIdRangeMin = Reader.ReadBytes(8);
-            Array.Reverse(TempTitleIdRangeMin);
-            TitleIdRangeMin = BitConverter.ToString(TempTitleIdRangeMin).Replace("-", "");
+            Reader.ReadInt32();
 
-            byte[] TempTitleIdRangeMax = Reader.ReadBytes(8);
-            Array.Reverse(TempTitleIdRangeMax);
-            TitleIdRangeMax = BitConverter.ToString(TempTitleIdRangeMax).Replace("-", "");
+            //Bit0 must be 1 on retail, on devunit 0 is also allowed. Bit1 is unknown.
+            Flags = Reader.ReadInt32();
 
-            FSAccessControlOffset      = Reader.ReadInt32();
-            FSAccessControlSize        = Reader.ReadInt32();
-            ServiceAccessControlOffset = Reader.ReadInt32();
-            ServiceAccessControlSize   = Reader.ReadInt32();
-            KernelAccessControlOffset  = Reader.ReadInt32();
-            KernelAccessControlSize    = Reader.ReadInt32();
+            TitleIdRangeMin = Reader.ReadInt64();
+            TitleIdRangeMax = Reader.ReadInt64();
 
-            FSAccessControl      = new FSAccessControl(ACIDStream, Offset + FSAccessControlOffset, FSAccessControlSize);
-            ServiceAccessControl = new ServiceAccessControl(ACIDStream, Offset + ServiceAccessControlOffset, ServiceAccessControlSize);
-            KernelAccessControl  = new KernelAccessControl(ACIDStream, Offset + KernelAccessControlOffset, KernelAccessControlSize);
+            int FsAccessControlOffset      = Reader.ReadInt32();
+            int FsAccessControlSize        = Reader.ReadInt32();
+            int ServiceAccessControlOffset = Reader.ReadInt32();
+            int ServiceAccessControlSize   = Reader.ReadInt32();
+            int KernelAccessControlOffset  = Reader.ReadInt32();
+            int KernelAccessControlSize    = Reader.ReadInt32();
+
+            FsAccessControl = new FsAccessControl(Stream, Offset + FsAccessControlOffset, FsAccessControlSize);
+
+            ServiceAccessControl = new ServiceAccessControl(Stream, Offset + ServiceAccessControlOffset, ServiceAccessControlSize);
+
+            KernelAccessControl = new KernelAccessControl(Stream, Offset + KernelAccessControlOffset, KernelAccessControlSize);
         }
     }
 }
