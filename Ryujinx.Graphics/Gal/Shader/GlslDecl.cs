@@ -6,6 +6,9 @@ namespace Ryujinx.Graphics.Gal.Shader
     class GlslDecl
     {
         public const int LayerAttr       = 0x064;
+        public const int PointSizeAttr   = 0x06c;
+        public const int PointCoordAttrX = 0x2e0;
+        public const int PointCoordAttrY = 0x2e4;
         public const int TessCoordAttrX  = 0x2f0;
         public const int TessCoordAttrY  = 0x2f4;
         public const int TessCoordAttrZ  = 0x2f8;
@@ -249,11 +252,14 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 case ShaderIrOperAbuf Abuf:
                 {
-                    //This is a built-in input variable.
-                    if (Abuf.Offs == VertexIdAttr ||
-                        Abuf.Offs == InstanceIdAttr ||
-                        Abuf.Offs == FaceAttr ||
-                        Abuf.Offs == LayerAttr)
+                    //This is a built-in variable.
+                    if (Abuf.Offs == LayerAttr       ||
+                        Abuf.Offs == PointSizeAttr   ||
+                        Abuf.Offs == PointCoordAttrX ||
+                        Abuf.Offs == PointCoordAttrY ||
+                        Abuf.Offs == VertexIdAttr    ||
+                        Abuf.Offs == InstanceIdAttr  ||
+                        Abuf.Offs == FaceAttr)
                     {
                         break;
                     }

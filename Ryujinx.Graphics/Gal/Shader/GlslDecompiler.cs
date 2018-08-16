@@ -795,6 +795,9 @@ namespace Ryujinx.Graphics.Gal.Shader
             {
                 switch (Abuf.Offs)
                 {
+                    case GlslDecl.PointCoordAttrX: return "gl_PointCoord.x";
+                    case GlslDecl.PointCoordAttrY: return "gl_PointCoord.y";
+
                     //Note: It's a guess that Maxwell's face is 1 when gl_FrontFacing == true
                     case GlslDecl.FaceAttr: return "(gl_FrontFacing ? 1 : 0)";
                 }
@@ -813,7 +816,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             if (!Decl.Attributes.TryGetValue(Index, out ShaderDeclInfo DeclInfo))
             {
                 //Handle special vec4 attributes here
-                //(for example, index 7 is aways gl_Position).
+                //(for example, index 7 is always gl_Position).
                 if (Index == GlslDecl.GlPositionVec4Index)
                 {
                     string Name =
@@ -821,6 +824,10 @@ namespace Ryujinx.Graphics.Gal.Shader
                         Decl.ShaderType != GalShaderType.Geometry ? GlslDecl.PositionOutAttrName : "gl_Position";
 
                     return Name + Swizzle;
+                }
+                else if (Abuf.Offs == GlslDecl.PointSizeAttr)
+                {
+                    return "gl_PointSize";
                 }
 
                 throw new InvalidOperationException();
@@ -1265,9 +1272,9 @@ namespace Ryujinx.Graphics.Gal.Shader
             switch (Node)
             {
                 case ShaderIrOperAbuf Abuf:
-                    return Abuf.Offs == GlslDecl.LayerAttr ||
+                    return Abuf.Offs == GlslDecl.LayerAttr      ||
                            Abuf.Offs == GlslDecl.InstanceIdAttr ||
-                           Abuf.Offs == GlslDecl.VertexIdAttr ||
+                           Abuf.Offs == GlslDecl.VertexIdAttr   ||
                            Abuf.Offs == GlslDecl.FaceAttr
                         ? OperType.I32
                         : OperType.F32;
