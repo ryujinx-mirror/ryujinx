@@ -14,14 +14,13 @@ namespace Ryujinx.Tests.Cpu.Tester.Types
 
         public Bits(bool[] values) => bits = new BitArray(values);
         public Bits(byte[] bytes) => bits = new BitArray(bytes);
-        public Bits(Bits bits) => this.bits = new BitArray(bits.bits);
+        public Bits(Bits bits) => this.bits = new BitArray(bits.bits); // Clone: deep copy.
         public Bits(int length) => bits = new BitArray(length);
         public Bits(int length, bool defaultValue) => bits = new BitArray(length, defaultValue);
         private Bits(BitArray bitArray) => bits = new BitArray(bitArray);
         public Bits(ulong value) => bits = new BitArray(BitConverter.GetBytes(value));
         public Bits(uint value) => bits = new BitArray(BitConverter.GetBytes(value));
-        public Bits(ushort value) => bits = new BitArray(BitConverter.GetBytes(value));
-        public Bits(byte value) => bits = new BitArray(new byte[1] {value});
+        public Bits(BigInteger value) => bits = new BitArray(value.ToByteArray());
 
         private BitArray ToBitArray() => new BitArray(bits);
         public ulong ToUInt64()
@@ -40,21 +39,21 @@ namespace Ryujinx.Tests.Cpu.Tester.Types
 
             return BitConverter.ToUInt32(dst, 0);
         }
-        public ushort ToUInt16()
+        public BigInteger ToBigInteger()
         {
-            byte[] dst = new byte[2];
+            if (bits.Count != 64 &&
+                bits.Count != 32 &&
+                bits.Count != 16 &&
+                bits.Count != 8)
+            {
+                throw new InvalidOperationException();
+            }
+
+            byte[] dst = new byte[bits.Count / 8];
 
             bits.CopyTo(dst, 0);
 
-            return BitConverter.ToUInt16(dst, 0);
-        }
-        public byte ToByte()
-        {
-            byte[] dst = new byte[1];
-
-            bits.CopyTo(dst, 0);
-
-            return dst[0];
+            return new BigInteger(dst);
         }
 
         public bool this[int index] // ASL: "<>".
@@ -101,7 +100,7 @@ namespace Ryujinx.Tests.Cpu.Tester.Types
         }
 
         public bool IsReadOnly { get => false; } // Mutable.
-        public int Count { get => bits.Count; }
+        public int Count { get => bits.Count; } // Not resizable.
         public bool IsSynchronized { get => bits.IsSynchronized; }
         public object SyncRoot { get => bits.SyncRoot; }
         public Bits And(Bits value) => new Bits(new BitArray(this.bits).And(value.bits)); // Immutable.
@@ -180,17 +179,7 @@ namespace Ryujinx.Tests.Cpu.Tester.Types
                 throw new ArgumentNullException();
             }
 
-            BigInteger dst;
-
-            switch (left.Count)
-            {
-                case  8: dst = left.ToByte()   + right; break;
-                case 16: dst = left.ToUInt16() + right; break;
-                case 32: dst = left.ToUInt32() + right; break;
-                case 64: dst = left.ToUInt64() + right; break;
-
-                default: throw new ArgumentOutOfRangeException();
-            }
+            BigInteger dst = left.ToBigInteger() + right;
 
             return dst.SubBigInteger(left.Count - 1, 0);
         }
@@ -203,20 +192,10 @@ namespace Ryujinx.Tests.Cpu.Tester.Types
 
             if (left.Count != right.Count)
             {
-                throw new ArgumentException();
+                throw new InvalidOperationException();
             }
 
-            BigInteger dst;
-
-            switch (left.Count)
-            {
-                case  8: dst = left.ToByte()   + (BigInteger)right.ToByte();   break;
-                case 16: dst = left.ToUInt16() + (BigInteger)right.ToUInt16(); break;
-                case 32: dst = left.ToUInt32() + (BigInteger)right.ToUInt32(); break;
-                case 64: dst = left.ToUInt64() + (BigInteger)right.ToUInt64(); break;
-
-                default: throw new ArgumentOutOfRangeException();
-            }
+            BigInteger dst = left.ToBigInteger() + right.ToBigInteger();
 
             return dst.SubBigInteger(left.Count - 1, 0);
         }
@@ -229,20 +208,10 @@ namespace Ryujinx.Tests.Cpu.Tester.Types
 
             if (left.Count != right.Count)
             {
-                throw new ArgumentException();
+                throw new InvalidOperationException();
             }
 
-            BigInteger dst;
-
-            switch (left.Count)
-            {
-                case  8: dst = left.ToByte()   - (BigInteger)right.ToByte();   break;
-                case 16: dst = left.ToUInt16() - (BigInteger)right.ToUInt16(); break;
-                case 32: dst = left.ToUInt32() - (BigInteger)right.ToUInt32(); break;
-                case 64: dst = left.ToUInt64() - (BigInteger)right.ToUInt64(); break;
-
-                default: throw new ArgumentOutOfRangeException();
-            }
+            BigInteger dst = left.ToBigInteger() - right.ToBigInteger();
 
             return dst.SubBigInteger(left.Count - 1, 0);
         }

@@ -3144,6 +3144,34 @@ namespace Ryujinx.Tests.Cpu.Tester
             V(d, result);
         }
 
+        // sha256su0_advsimd.html
+        public static void Sha256su0_V(Bits Rn, Bits Rd)
+        {
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+
+            /* if !HaveCryptoExt() then UnallocatedEncoding(); */
+
+            /* Operation */
+            /* CheckCryptoEnabled64(); */
+
+            Bits result = new Bits(128);
+            Bits operand1 = V(128, d);
+            Bits operand2 = V(128, n);
+            Bits T = Bits.Concat(operand2[31, 0], operand1[127, 32]); // bits(128)
+            Bits elt; // bits(32)
+
+            for (int e = 0; e <= 3; e++)
+            {
+                elt = Elem(T, e, 32);
+                elt = EOR(EOR(ROR(elt, 7), ROR(elt, 18)), LSR(elt, 3));
+                Elem(result, e, 32, elt + Elem(operand1, e, 32));
+            }
+
+            V(d, result);
+        }
+
         // sqabs_advsimd.html#SQABS_asisdmisc_R
         public static void Sqabs_S(Bits size, Bits Rn, Bits Rd)
         {
@@ -5140,6 +5168,84 @@ namespace Ryujinx.Tests.Cpu.Tester
                 }
 
                 Elem(result, e, 2 * esize, sum.SubBigInteger(2 * esize - 1, 0));
+            }
+
+            V(d, result);
+        }
+
+        // sha256h_advsimd.html
+        public static void Sha256h_V(Bits Rm, Bits Rn, Bits Rd)
+        {
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if !HaveCryptoExt() then UnallocatedEncoding(); */
+
+            /* Operation */
+            /* CheckCryptoEnabled64(); */
+
+            Bits result = SHA256hash(V(128, d), V(128, n), V(128, m), true);
+
+            V(d, result);
+        }
+
+        // sha256h2_advsimd.html
+        public static void Sha256h2_V(Bits Rm, Bits Rn, Bits Rd)
+        {
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if !HaveCryptoExt() then UnallocatedEncoding(); */
+
+            /* Operation */
+            /* CheckCryptoEnabled64(); */
+
+            Bits result = SHA256hash(V(128, n), V(128, d), V(128, m), false);
+
+            V(d, result);
+        }
+
+        // sha256su1_advsimd.html
+        public static void Sha256su1_V(Bits Rm, Bits Rn, Bits Rd)
+        {
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if !HaveCryptoExt() then UnallocatedEncoding(); */
+
+            /* Operation */
+            /* CheckCryptoEnabled64(); */
+
+            Bits result = new Bits(128);
+            Bits operand1 = V(128, d);
+            Bits operand2 = V(128, n);
+            Bits operand3 = V(128, m);
+            Bits T0 = Bits.Concat(operand3[31, 0], operand2[127, 32]); // bits(128)
+            Bits T1; // bits(64)
+            Bits elt; // bits(32)
+
+            T1 = operand3[127, 64];
+            for (int e = 0; e <= 1; e++)
+            {
+                elt = Elem(T1, e, 32);
+                elt = EOR(EOR(ROR(elt, 17), ROR(elt, 19)), LSR(elt, 10));
+                elt = elt + Elem(operand1, e, 32) + Elem(T0, e, 32);
+                Elem(result, e, 32, elt);
+            }
+
+            T1 = result[63, 0];
+            for (int e = 2; e <= 3; e++)
+            {
+                elt = Elem(T1, e - 2, 32);
+                elt = EOR(EOR(ROR(elt, 17), ROR(elt, 19)), LSR(elt, 10));
+                elt = elt + Elem(operand1, e, 32) + Elem(T0, e, 32);
+                Elem(result, e, 32, elt);
             }
 
             V(d, result);

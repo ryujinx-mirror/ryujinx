@@ -14,7 +14,7 @@ namespace Ryujinx.Tests.Cpu.Tester.Types
                 throw new IndexOutOfRangeException();
             }
 
-            Bits src = new Bits(x.ToByteArray());
+            Bits src = new Bits(x);
             bool[] dst = new bool[highIndex - lowIndex + 1];
 
             for (int i = lowIndex, n = 0; i <= highIndex; i++, n++)

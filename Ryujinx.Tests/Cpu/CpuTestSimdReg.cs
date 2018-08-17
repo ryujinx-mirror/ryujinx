@@ -1747,6 +1747,117 @@ namespace Ryujinx.Tests.Cpu
             });
         }
 
+        [Test, Explicit, Description("SHA256H <Qd>, <Qn>, <Vm>.4S")] // 2916 tests.
+        public void Sha256h_V([Values(0u)]     uint Rd,
+                              [Values(1u, 0u)] uint Rn,
+                              [Values(2u, 0u)] uint Rm,
+                              [Random(3)] ulong Z0, [Random(3)] ulong Z1,
+                              [Random(3)] ulong A0, [Random(3)] ulong A1,
+                              [Random(3)] ulong B0, [Random(3)] ulong B1)
+        {
+            uint Opcode = 0x5E004000; // SHA256H Q0, Q0, V0.4S
+            Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z0, Z1);
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
+
+            AArch64.Vpart(0, 0, new Bits(Z0)); AArch64.Vpart(0, 1, new Bits(Z1));
+            AArch64.Vpart(1, 0, new Bits(A0)); AArch64.Vpart(1, 1, new Bits(A1));
+            AArch64.Vpart(2, 0, new Bits(B0)); AArch64.Vpart(2, 1, new Bits(B1));
+            SimdFp.Sha256h_V(Op[20, 16], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+
+                Assert.That(GetVectorE0(ThreadState.V1), Is.EqualTo(AArch64.Vpart(64, 1, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V1), Is.EqualTo(AArch64.Vpart(64, 1, 1).ToUInt64()));
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V2), Is.EqualTo(AArch64.Vpart(64, 2, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V2), Is.EqualTo(AArch64.Vpart(64, 2, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Explicit, Description("SHA256H2 <Qd>, <Qn>, <Vm>.4S")] // 2916 tests.
+        public void Sha256h2_V([Values(0u)]     uint Rd,
+                               [Values(1u, 0u)] uint Rn,
+                               [Values(2u, 0u)] uint Rm,
+                               [Random(3)] ulong Z0, [Random(3)] ulong Z1,
+                               [Random(3)] ulong A0, [Random(3)] ulong A1,
+                               [Random(3)] ulong B0, [Random(3)] ulong B1)
+        {
+            uint Opcode = 0x5E005000; // SHA256H2 Q0, Q0, V0.4S
+            Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z0, Z1);
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
+
+            AArch64.Vpart(0, 0, new Bits(Z0)); AArch64.Vpart(0, 1, new Bits(Z1));
+            AArch64.Vpart(1, 0, new Bits(A0)); AArch64.Vpart(1, 1, new Bits(A1));
+            AArch64.Vpart(2, 0, new Bits(B0)); AArch64.Vpart(2, 1, new Bits(B1));
+            SimdFp.Sha256h2_V(Op[20, 16], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+
+                Assert.That(GetVectorE0(ThreadState.V1), Is.EqualTo(AArch64.Vpart(64, 1, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V1), Is.EqualTo(AArch64.Vpart(64, 1, 1).ToUInt64()));
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V2), Is.EqualTo(AArch64.Vpart(64, 2, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V2), Is.EqualTo(AArch64.Vpart(64, 2, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Explicit, Description("SHA256SU1 <Vd>.4S, <Vn>.4S, <Vm>.4S")] // 2916 tests.
+        public void Sha256su1_V([Values(0u)]     uint Rd,
+                                [Values(1u, 0u)] uint Rn,
+                                [Values(2u, 0u)] uint Rm,
+                                [Random(3)] ulong Z0, [Random(3)] ulong Z1,
+                                [Random(3)] ulong A0, [Random(3)] ulong A1,
+                                [Random(3)] ulong B0, [Random(3)] ulong B1)
+        {
+            uint Opcode = 0x5E006000; // SHA256SU1 V0.4S, V0.4S, V0.4S
+            Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z0, Z1);
+            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
+
+            AArch64.Vpart(0, 0, new Bits(Z0)); AArch64.Vpart(0, 1, new Bits(Z1));
+            AArch64.Vpart(1, 0, new Bits(A0)); AArch64.Vpart(1, 1, new Bits(A1));
+            AArch64.Vpart(2, 0, new Bits(B0)); AArch64.Vpart(2, 1, new Bits(B1));
+            SimdFp.Sha256su1_V(Op[20, 16], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V1), Is.EqualTo(AArch64.Vpart(64, 1, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V1), Is.EqualTo(AArch64.Vpart(64, 1, 1).ToUInt64()));
+
+                Assert.That(GetVectorE0(ThreadState.V2), Is.EqualTo(AArch64.Vpart(64, 2, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V2), Is.EqualTo(AArch64.Vpart(64, 2, 1).ToUInt64()));
+            });
+        }
+
         [Test, Pairwise, Description("SQADD <V><d>, <V><n>, <V><m>")]
         public void Sqadd_S_B_H_S_D([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,

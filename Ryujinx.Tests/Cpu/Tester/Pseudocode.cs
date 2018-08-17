@@ -469,7 +469,7 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             if (N == esize)
             {
-                return new Bits(input);
+                return new Bits(input); // Clone.
             }
 
             half = N / 2;
@@ -556,7 +556,7 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             if (shift == 0)
             {
-                result = new Bits(x);
+                result = new Bits(x); // Clone.
             }
             else
             {
@@ -720,7 +720,7 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             if (shift == 0)
             {
-                result = new Bits(x);
+                result = new Bits(x); // Clone.
             }
             else
             {
@@ -755,7 +755,7 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             if (shift == 0)
             {
-                result = new Bits(x);
+                result = new Bits(x); // Clone.
             }
             else
             {
@@ -826,7 +826,7 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             if (shift == 0)
             {
-                result = new Bits(x);
+                result = new Bits(x); // Clone.
             }
             else
             {
@@ -1008,7 +1008,7 @@ namespace Ryujinx.Tests.Cpu.Tester
 
             /* assert N > 32; */
 
-            Bits data = new Bits(_data);
+            Bits data = new Bits(_data); // Clone.
 
             for (int i = N - 1; i >= 32; i--)
             {
@@ -1019,6 +1019,75 @@ namespace Ryujinx.Tests.Cpu.Tester
             }
 
             return data[31, 0];
+        }
+#endregion
+
+#region "functions/crypto/"
+        // shared_pseudocode.html#impl-shared.ROL.2
+        public static Bits ROL(Bits x, int shift)
+        {
+            int N = x.Count;
+
+            /* assert shift >= 0 && shift <= N; */
+
+            if (shift == 0)
+            {
+                return new Bits(x); // Clone.
+            }
+
+            return ROR(x, N - shift);
+        }
+
+        // shared_pseudocode.html#impl-shared.SHA256hash.4
+        public static Bits SHA256hash(Bits _X, Bits _Y, Bits W, bool part1)
+        {
+            Bits X = new Bits(_X); // Clone.
+            Bits Y = new Bits(_Y); // Clone.
+
+            Bits chs, maj, t; // bits(32)
+
+            for (int e = 0; e <= 3; e++)
+            {
+                chs = SHAchoose(Y[31, 0], Y[63, 32], Y[95, 64]);
+                maj = SHAmajority(X[31, 0], X[63, 32], X[95, 64]);
+
+                t = Y[127, 96] + SHAhashSIGMA1(Y[31, 0]) + chs + Elem(W, e, 32);
+
+                X[127, 96] = t + X[127, 96];
+                Y[127, 96] = t + SHAhashSIGMA0(X[31, 0]) + maj;
+
+                // TODO: Implement ASL: "<,>" as C#: "Bits.Split()".
+                /* <Y, X> = ROL(Y : X, 32); */
+                Bits YX = ROL(Bits.Concat(Y, X), 32);
+                Y = YX[255, 128];
+                X = YX[127, 0];
+            }
+
+            return (part1 ? X : Y);
+        }
+
+        // shared_pseudocode.html#impl-shared.SHAchoose.3
+        public static Bits SHAchoose(Bits x, Bits y, Bits z)
+        {
+            return EOR(AND(EOR(y, z), x), z);
+        }
+
+        // shared_pseudocode.html#impl-shared.SHAhashSIGMA0.1
+        public static Bits SHAhashSIGMA0(Bits x)
+        {
+            return EOR(EOR(ROR(x, 2), ROR(x, 13)), ROR(x, 22));
+        }
+
+        // shared_pseudocode.html#impl-shared.SHAhashSIGMA1.1
+        public static Bits SHAhashSIGMA1(Bits x)
+        {
+            return EOR(EOR(ROR(x, 6), ROR(x, 11)), ROR(x, 25));
+        }
+
+        // shared_pseudocode.html#impl-shared.SHAmajority.3
+        public static Bits SHAmajority(Bits x, Bits y, Bits z)
+        {
+            return OR(AND(x, y), AND(OR(x, y), z));
         }
 #endregion
 

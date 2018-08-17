@@ -1,9 +1,14 @@
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace ChocolArm64.Instruction
 {
+    using static AVectorHelper;
+
     static class ASoftFallback
     {
         public static void EmitCall(AILEmitterCtx Context, string MthdName)
@@ -402,6 +407,154 @@ namespace ChocolArm64.Instruction
             }
 
             return Crc;
+        }
+#endregion
+
+#region "Sha256"
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> HashLower(Vector128<float> hash_abcd, Vector128<float> hash_efgh, Vector128<float> wk)
+        {
+            return SHA256hash(hash_abcd, hash_efgh, wk, true);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> HashUpper(Vector128<float> hash_efgh, Vector128<float> hash_abcd, Vector128<float> wk)
+        {
+            return SHA256hash(hash_abcd, hash_efgh, wk, false);
+        }
+
+        public static Vector128<float> SchedulePart1(Vector128<float> w0_3, Vector128<float> w4_7)
+        {
+            Vector128<float> result = new Vector128<float>();
+
+            for (int e = 0; e <= 3; e++)
+            {
+                uint elt = (uint)VectorExtractIntZx(e <= 2 ? w0_3 : w4_7, (byte)(e <= 2 ? e + 1 : 0), 2);
+
+                elt = elt.Ror(7) ^ elt.Ror(18) ^ elt.Lsr(3);
+
+                elt += (uint)VectorExtractIntZx(w0_3, (byte)e, 2);
+
+                result = VectorInsertInt((ulong)elt, result, (byte)e, 2);
+            }
+
+            return result;
+        }
+
+        public static Vector128<float> SchedulePart2(Vector128<float> w0_3, Vector128<float> w8_11, Vector128<float> w12_15)
+        {
+            Vector128<float> result = new Vector128<float>();
+
+            ulong T1 = VectorExtractIntZx(w12_15, (byte)1, 3);
+
+            for (int e = 0; e <= 1; e++)
+            {
+                uint elt = T1.ULongPart(e);
+
+                elt = elt.Ror(17) ^ elt.Ror(19) ^ elt.Lsr(10);
+
+                elt += (uint)VectorExtractIntZx(w0_3, (byte)e, 2);
+                elt += (uint)VectorExtractIntZx(w8_11, (byte)(e + 1), 2);
+
+                result = VectorInsertInt((ulong)elt, result, (byte)e, 2);
+            }
+
+            T1 = VectorExtractIntZx(result, (byte)0, 3);
+
+            for (int e = 2; e <= 3; e++)
+            {
+                uint elt = T1.ULongPart(e - 2);
+
+                elt = elt.Ror(17) ^ elt.Ror(19) ^ elt.Lsr(10);
+
+                elt += (uint)VectorExtractIntZx(w0_3, (byte)e, 2);
+                elt += (uint)VectorExtractIntZx(e == 2 ? w8_11 : w12_15, (byte)(e == 2 ? 3 : 0), 2);
+
+                result = VectorInsertInt((ulong)elt, result, (byte)e, 2);
+            }
+
+            return result;
+        }
+
+        private static Vector128<float> SHA256hash(Vector128<float> X, Vector128<float> Y, Vector128<float> W, bool part1)
+        {
+            for (int e = 0; e <= 3; e++)
+            {
+                uint chs = SHAchoose((uint)VectorExtractIntZx(Y, (byte)0, 2),
+                                     (uint)VectorExtractIntZx(Y, (byte)1, 2),
+                                     (uint)VectorExtractIntZx(Y, (byte)2, 2));
+
+                uint maj = SHAmajority((uint)VectorExtractIntZx(X, (byte)0, 2),
+                                       (uint)VectorExtractIntZx(X, (byte)1, 2),
+                                       (uint)VectorExtractIntZx(X, (byte)2, 2));
+
+                uint t1 = (uint)VectorExtractIntZx(Y, (byte)3, 2);
+                t1 += SHAhashSIGMA1((uint)VectorExtractIntZx(Y, (byte)0, 2)) + chs;
+                t1 += (uint)VectorExtractIntZx(W, (byte)e, 2);
+
+                uint t2 = t1 + (uint)VectorExtractIntZx(X, (byte)3, 2);
+                X = VectorInsertInt((ulong)t2, X, (byte)3, 2);
+                t2 = t1 + SHAhashSIGMA0((uint)VectorExtractIntZx(X, (byte)0, 2)) + maj;
+                Y = VectorInsertInt((ulong)t2, Y, (byte)3, 2);
+
+                Rol32_256(ref Y, ref X);
+            }
+
+            return part1 ? X : Y;
+        }
+
+        private static void Rol32_256(ref Vector128<float> Y, ref Vector128<float> X)
+        {
+            if (!Sse2.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
+            uint yE3 = (uint)VectorExtractIntZx(Y, (byte)3, 2);
+            uint xE3 = (uint)VectorExtractIntZx(X, (byte)3, 2);
+
+            Y = Sse.StaticCast<uint, float>(Sse2.ShiftLeftLogical128BitLane(Sse.StaticCast<float, uint>(Y), (byte)4));
+            X = Sse.StaticCast<uint, float>(Sse2.ShiftLeftLogical128BitLane(Sse.StaticCast<float, uint>(X), (byte)4));
+
+            Y = VectorInsertInt((ulong)xE3, Y, (byte)0, 2);
+            X = VectorInsertInt((ulong)yE3, X, (byte)0, 2);
+        }
+
+        private static uint SHAhashSIGMA0(uint x)
+        {
+            return x.Ror(2) ^ x.Ror(13) ^ x.Ror(22);
+        }
+
+        private static uint SHAhashSIGMA1(uint x)
+        {
+            return x.Ror(6) ^ x.Ror(11) ^ x.Ror(25);
+        }
+
+        private static uint SHAmajority(uint x, uint y, uint z)
+        {
+            return (x & y) | ((x | y) & z);
+        }
+
+        private static uint SHAchoose(uint x, uint y, uint z)
+        {
+            return ((y ^ z) & x) ^ z;
+        }
+
+        private static uint Ror(this uint value, int count)
+        {
+            return (value >> count) | (value << (32 - count));
+        }
+
+        private static uint Lsr(this uint value, int count)
+        {
+            return value >> count;
+        }
+
+        private static uint ULongPart(this ulong value, int part)
+        {
+            return part == 0
+                ? (uint)(value & 0xFFFFFFFFUL)
+                : (uint)(value >> 32);
         }
 #endregion
 
