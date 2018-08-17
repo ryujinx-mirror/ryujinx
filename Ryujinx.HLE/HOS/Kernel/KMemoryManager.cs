@@ -259,9 +259,9 @@ namespace Ryujinx.HLE.HOS.Kernel
 
                         InsertBlock(FreeAddr, PagesCount, MemoryState.Unmapped);
 
-                        CpuMemory.Unmap(FreeAddr, DiffSize);
-
                         FreePages(FreeAddr, PagesCount);
+
+                        CpuMemory.Unmap(FreeAddr, DiffSize);
                     }
                 }
             }
@@ -631,7 +631,14 @@ namespace Ryujinx.HLE.HOS.Kernel
                     {
                         long CurrSize = GetSizeInRange(Info, Position, End);
 
-                        CpuMemory.Map(Info.Position, PA, CurrSize);
+                        long MapPosition = Info.Position;
+
+                        if ((ulong)MapPosition < (ulong)Position)
+                        {
+                            MapPosition = Position;
+                        }
+
+                        CpuMemory.Map(MapPosition, PA, CurrSize);
 
                         PA += CurrSize;
                     }
@@ -705,9 +712,9 @@ namespace Ryujinx.HLE.HOS.Kernel
 
                 InsertBlock(Position, PagesCount, MemoryState.Unmapped);
 
-                CpuMemory.Unmap(Position, Size);
-
                 FreePages(Position, PagesCount);
+
+                CpuMemory.Unmap(Position, Size);
 
                 return 0;
             }
@@ -736,6 +743,11 @@ namespace Ryujinx.HLE.HOS.Kernel
             for (long Page = 0; Page < PagesCount; Page++)
             {
                 long VA = Position + Page * PageSize;
+
+                if (!CpuMemory.IsMapped(VA))
+                {
+                    continue;
+                }
 
                 long PA = CpuMemory.GetPhysicalAddress(VA);
 
