@@ -1,25 +1,25 @@
 namespace Ryujinx.Graphics.Gal
 {
-    public struct GalTexture
+    public struct GalImage
     {
         public int Width;
         public int Height;
 
-        public GalTextureFormat Format;
+        public GalImageFormat Format;
 
         public GalTextureSource XSource;
         public GalTextureSource YSource;
         public GalTextureSource ZSource;
         public GalTextureSource WSource;
 
-        public GalTexture(
+        public GalImage(
             int              Width,
             int              Height,
-            GalTextureFormat Format,
-            GalTextureSource XSource,
-            GalTextureSource YSource,
-            GalTextureSource ZSource,
-            GalTextureSource WSource)
+            GalImageFormat   Format,
+            GalTextureSource XSource = GalTextureSource.Red,
+            GalTextureSource YSource = GalTextureSource.Green,
+            GalTextureSource ZSource = GalTextureSource.Blue,
+            GalTextureSource WSource = GalTextureSource.Alpha)
         {
             this.Width   = Width;
             this.Height  = Height;

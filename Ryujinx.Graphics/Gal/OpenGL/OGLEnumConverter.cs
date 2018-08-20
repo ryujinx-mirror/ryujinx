@@ -125,40 +125,71 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             throw new ArgumentException(nameof(Type));
         }
 
-        public static (PixelFormat, PixelType) GetTextureFormat(GalTextureFormat Format)
+        public static (PixelInternalFormat, PixelFormat, PixelType) GetImageFormat(GalImageFormat Format)
         {
             switch (Format)
             {
-                case GalTextureFormat.R32G32B32A32: return (PixelFormat.Rgba,           PixelType.Float);
-                case GalTextureFormat.R16G16B16A16: return (PixelFormat.Rgba,           PixelType.HalfFloat);
-                case GalTextureFormat.A8B8G8R8:     return (PixelFormat.Rgba,           PixelType.UnsignedByte);
-                case GalTextureFormat.A2B10G10R10:  return (PixelFormat.Rgba,           PixelType.UnsignedInt2101010Reversed);
-                case GalTextureFormat.R32:          return (PixelFormat.Red,            PixelType.Float);
-                case GalTextureFormat.A1B5G5R5:     return (PixelFormat.Rgba,           PixelType.UnsignedShort5551);
-                case GalTextureFormat.B5G6R5:       return (PixelFormat.Rgb,            PixelType.UnsignedShort565);
-                case GalTextureFormat.G8R8:         return (PixelFormat.Rg,             PixelType.UnsignedByte);
-                case GalTextureFormat.R16:          return (PixelFormat.Red,            PixelType.HalfFloat);
-                case GalTextureFormat.R8:           return (PixelFormat.Red,            PixelType.UnsignedByte);
-                case GalTextureFormat.ZF32:         return (PixelFormat.DepthComponent, PixelType.Float);
-                case GalTextureFormat.BF10GF11RF11: return (PixelFormat.Rgb,            PixelType.UnsignedInt10F11F11FRev);
-                case GalTextureFormat.Z24S8:        return (PixelFormat.DepthStencil,   PixelType.UnsignedInt248);
+                case GalImageFormat.R32G32B32A32_SFLOAT:      return (PixelInternalFormat.Rgba32f,      PixelFormat.Rgba,        PixelType.Float);
+                case GalImageFormat.R32G32B32A32_SINT:        return (PixelInternalFormat.Rgba32i,      PixelFormat.RgbaInteger, PixelType.Int);
+                case GalImageFormat.R32G32B32A32_UINT:        return (PixelInternalFormat.Rgba32ui,     PixelFormat.RgbaInteger, PixelType.UnsignedInt);
+                case GalImageFormat.R16G16B16A16_SFLOAT:      return (PixelInternalFormat.Rgba16f,      PixelFormat.Rgba,        PixelType.HalfFloat);
+                case GalImageFormat.R16G16B16A16_SINT:        return (PixelInternalFormat.Rgba16i,      PixelFormat.RgbaInteger, PixelType.Short);
+                case GalImageFormat.R16G16B16A16_UINT:        return (PixelInternalFormat.Rgba16ui,     PixelFormat.RgbaInteger, PixelType.UnsignedShort);
+                case GalImageFormat.A8B8G8R8_SNORM_PACK32:    return (PixelInternalFormat.Rgba8Snorm,   PixelFormat.Rgba,        PixelType.Byte);
+                case GalImageFormat.A8B8G8R8_UNORM_PACK32:    return (PixelInternalFormat.Rgba8,        PixelFormat.Rgba,        PixelType.UnsignedByte);
+                case GalImageFormat.A8B8G8R8_SINT_PACK32:     return (PixelInternalFormat.Rgba8i,       PixelFormat.RgbaInteger, PixelType.Byte);
+                case GalImageFormat.A8B8G8R8_UINT_PACK32:     return (PixelInternalFormat.Rgba8ui,      PixelFormat.RgbaInteger, PixelType.UnsignedByte);
+                case GalImageFormat.A8B8G8R8_SRGB_PACK32:     return (PixelInternalFormat.Srgb8Alpha8,  PixelFormat.Rgba,        PixelType.UnsignedByte);
+                case GalImageFormat.A2B10G10R10_UINT_PACK32:  return (PixelInternalFormat.Rgb10A2ui,    PixelFormat.RgbaInteger, PixelType.UnsignedInt2101010Reversed);
+                case GalImageFormat.A2B10G10R10_UNORM_PACK32: return (PixelInternalFormat.Rgb10A2,      PixelFormat.Rgba,        PixelType.UnsignedInt2101010Reversed);
+                case GalImageFormat.R32_SFLOAT:               return (PixelInternalFormat.R32f,         PixelFormat.Red,         PixelType.Float);
+                case GalImageFormat.R32_SINT:                 return (PixelInternalFormat.R32i,         PixelFormat.Red,         PixelType.Int);
+                case GalImageFormat.R32_UINT:                 return (PixelInternalFormat.R32ui,        PixelFormat.Red,         PixelType.UnsignedInt);
+                case GalImageFormat.A1R5G5B5_UNORM_PACK16:    return (PixelInternalFormat.Rgb5A1,       PixelFormat.Rgba,        PixelType.UnsignedShort5551);
+                case GalImageFormat.B5G6R5_UNORM_PACK16:      return (PixelInternalFormat.Rgba,         PixelFormat.Rgb,         PixelType.UnsignedShort565);
+                case GalImageFormat.R16G16_SFLOAT:            return (PixelInternalFormat.Rg16f,        PixelFormat.Rg,          PixelType.HalfFloat);
+                case GalImageFormat.R16G16_SINT:              return (PixelInternalFormat.Rg16i,        PixelFormat.RgInteger,   PixelType.Short);
+                case GalImageFormat.R16G16_SNORM:             return (PixelInternalFormat.Rg16Snorm,    PixelFormat.Rg,          PixelType.Byte);
+                case GalImageFormat.R16G16_UNORM:             return (PixelInternalFormat.Rg16,         PixelFormat.Rg,          PixelType.UnsignedShort);
+                case GalImageFormat.R8G8_SINT:                return (PixelInternalFormat.Rg8i,         PixelFormat.RgInteger,   PixelType.Byte);
+                case GalImageFormat.R8G8_SNORM:               return (PixelInternalFormat.Rg8Snorm,     PixelFormat.Rg,          PixelType.Byte);
+                case GalImageFormat.R8G8_UINT:                return (PixelInternalFormat.Rg8ui,        PixelFormat.RgInteger,   PixelType.UnsignedByte);
+                case GalImageFormat.R8G8_UNORM:               return (PixelInternalFormat.Rg8,          PixelFormat.Rg,          PixelType.UnsignedByte);
+                case GalImageFormat.R16_SFLOAT:               return (PixelInternalFormat.R16f,         PixelFormat.Red,         PixelType.HalfFloat);
+                case GalImageFormat.R16_SINT:                 return (PixelInternalFormat.R16i,         PixelFormat.RedInteger,  PixelType.Short);
+                case GalImageFormat.R16_SNORM:                return (PixelInternalFormat.R16Snorm,     PixelFormat.Red,         PixelType.Byte);
+                case GalImageFormat.R16_UINT:                 return (PixelInternalFormat.R16ui,        PixelFormat.RedInteger,  PixelType.UnsignedShort);
+                case GalImageFormat.R16_UNORM:                return (PixelInternalFormat.R16,          PixelFormat.Red,         PixelType.UnsignedShort);
+                case GalImageFormat.R8_SINT:                  return (PixelInternalFormat.R8i,          PixelFormat.RedInteger,  PixelType.Byte);
+                case GalImageFormat.R8_SNORM:                 return (PixelInternalFormat.R8Snorm,      PixelFormat.Red,         PixelType.Byte);
+                case GalImageFormat.R8_UINT:                  return (PixelInternalFormat.R8ui,         PixelFormat.RedInteger,  PixelType.UnsignedByte);
+                case GalImageFormat.R8_UNORM:                 return (PixelInternalFormat.R8,           PixelFormat.Red,         PixelType.UnsignedByte);
+                case GalImageFormat.B10G11R11_UFLOAT_PACK32:  return (PixelInternalFormat.R11fG11fB10f, PixelFormat.Rgb,         PixelType.UnsignedInt10F11F11FRev);
+
+                case GalImageFormat.R4G4B4A4_UNORM_PACK16_REVERSED: return (PixelInternalFormat.Rgba4, PixelFormat.Rgba, PixelType.UnsignedShort4444Reversed);
+
+                case GalImageFormat.D24_UNORM_S8_UINT: return (PixelInternalFormat.Depth24Stencil8,   PixelFormat.DepthStencil,   PixelType.UnsignedInt248);
+                case GalImageFormat.D32_SFLOAT:        return (PixelInternalFormat.DepthComponent32f, PixelFormat.DepthComponent, PixelType.Float);
+                case GalImageFormat.D16_UNORM:         return (PixelInternalFormat.DepthComponent16,  PixelFormat.DepthComponent, PixelType.UnsignedShort);
             }
 
             throw new NotImplementedException(Format.ToString());
         }
 
-        public static InternalFormat GetCompressedTextureFormat(GalTextureFormat Format)
+        public static InternalFormat GetCompressedImageFormat(GalImageFormat Format)
         {
             switch (Format)
             {
-                case GalTextureFormat.BC6H_UF16: return InternalFormat.CompressedRgbBptcUnsignedFloat;
-                case GalTextureFormat.BC6H_SF16: return InternalFormat.CompressedRgbBptcSignedFloat;
-                case GalTextureFormat.BC7U:      return InternalFormat.CompressedRgbaBptcUnorm;
-                case GalTextureFormat.BC1:       return InternalFormat.CompressedRgbaS3tcDxt1Ext;
-                case GalTextureFormat.BC2:       return InternalFormat.CompressedRgbaS3tcDxt3Ext;
-                case GalTextureFormat.BC3:       return InternalFormat.CompressedRgbaS3tcDxt5Ext;
-                case GalTextureFormat.BC4:       return InternalFormat.CompressedRedRgtc1;
-                case GalTextureFormat.BC5:       return InternalFormat.CompressedRgRgtc2;
+                case GalImageFormat.BC6H_UFLOAT_BLOCK:    return InternalFormat.CompressedRgbBptcUnsignedFloat;
+                case GalImageFormat.BC6H_SFLOAT_BLOCK:    return InternalFormat.CompressedRgbBptcSignedFloat;
+                case GalImageFormat.BC7_UNORM_BLOCK:      return InternalFormat.CompressedRgbaBptcUnorm;
+                case GalImageFormat.BC1_RGBA_UNORM_BLOCK: return InternalFormat.CompressedRgbaS3tcDxt1Ext;
+                case GalImageFormat.BC2_UNORM_BLOCK:      return InternalFormat.CompressedRgbaS3tcDxt3Ext;
+                case GalImageFormat.BC3_UNORM_BLOCK:      return InternalFormat.CompressedRgbaS3tcDxt5Ext;
+                case GalImageFormat.BC4_SNORM_BLOCK:      return InternalFormat.CompressedSignedRedRgtc1;
+                case GalImageFormat.BC4_UNORM_BLOCK:      return InternalFormat.CompressedRedRgtc1;
+                case GalImageFormat.BC5_SNORM_BLOCK:      return InternalFormat.CompressedSignedRgRgtc2;
+                case GalImageFormat.BC5_UNORM_BLOCK:      return InternalFormat.CompressedRgRgtc2;
             }
 
             throw new NotImplementedException(Format.ToString());

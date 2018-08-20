@@ -30,117 +30,151 @@ namespace Ryujinx.HLE.Gpu.Texture
             throw new NotImplementedException(Texture.Swizzle.ToString());
         }
 
-        public static int GetTextureSize(GalTexture Texture)
+        public static int GetTextureSize(GalImage Image)
         {
-            switch (Texture.Format)
+            switch (Image.Format)
             {
-                case GalTextureFormat.R32G32B32A32:
-                    return Texture.Width * Texture.Height * 16;
+                case GalImageFormat.R32G32B32A32_SFLOAT:
+                case GalImageFormat.R32G32B32A32_SINT:
+                case GalImageFormat.R32G32B32A32_UINT:
+                    return Image.Width * Image.Height * 16;
 
-                case GalTextureFormat.R16G16B16A16:
-                    return Texture.Width * Texture.Height * 8;
+                case GalImageFormat.R16G16B16A16_SFLOAT:
+                case GalImageFormat.R16G16B16A16_SINT:
+                case GalImageFormat.R16G16B16A16_SNORM:
+                case GalImageFormat.R16G16B16A16_UINT:
+                case GalImageFormat.R16G16B16A16_UNORM:
+                    return Image.Width * Image.Height * 8;
 
-                case GalTextureFormat.A8B8G8R8:
-                case GalTextureFormat.A2B10G10R10:
-                case GalTextureFormat.R32:
-                case GalTextureFormat.ZF32:
-                case GalTextureFormat.BF10GF11RF11:
-                case GalTextureFormat.Z24S8:
-                    return Texture.Width * Texture.Height * 4;
+                case GalImageFormat.A8B8G8R8_SINT_PACK32:
+                case GalImageFormat.A8B8G8R8_SNORM_PACK32:
+                case GalImageFormat.A8B8G8R8_UINT_PACK32:
+                case GalImageFormat.A8B8G8R8_UNORM_PACK32:
+                case GalImageFormat.A8B8G8R8_SRGB_PACK32:
+                case GalImageFormat.A2B10G10R10_SINT_PACK32:
+                case GalImageFormat.A2B10G10R10_SNORM_PACK32:
+                case GalImageFormat.A2B10G10R10_UINT_PACK32:
+                case GalImageFormat.A2B10G10R10_UNORM_PACK32:
+                case GalImageFormat.R16G16_SFLOAT:
+                case GalImageFormat.R16G16_SINT:
+                case GalImageFormat.R16G16_SNORM:
+                case GalImageFormat.R16G16_UINT:
+                case GalImageFormat.R16G16_UNORM:
+                case GalImageFormat.R32_SFLOAT:
+                case GalImageFormat.R32_SINT:
+                case GalImageFormat.R32_UINT:
+                case GalImageFormat.D32_SFLOAT:
+                case GalImageFormat.B10G11R11_UFLOAT_PACK32:
+                case GalImageFormat.D24_UNORM_S8_UINT:
+                    return Image.Width * Image.Height * 4;
 
-                case GalTextureFormat.A1B5G5R5:
-                case GalTextureFormat.B5G6R5:
-                case GalTextureFormat.G8R8:
-                case GalTextureFormat.R16:
-                    return Texture.Width * Texture.Height * 2;
+                case GalImageFormat.B4G4R4A4_UNORM_PACK16:
+                case GalImageFormat.A1R5G5B5_UNORM_PACK16:
+                case GalImageFormat.B5G6R5_UNORM_PACK16:
+                case GalImageFormat.R8G8_SINT:
+                case GalImageFormat.R8G8_SNORM:
+                case GalImageFormat.R8G8_UINT:
+                case GalImageFormat.R8G8_UNORM:
+                case GalImageFormat.R16_SFLOAT:
+                case GalImageFormat.R16_SINT:
+                case GalImageFormat.R16_SNORM:
+                case GalImageFormat.R16_UINT:
+                case GalImageFormat.R16_UNORM:
+                case GalImageFormat.D16_UNORM:
+                    return Image.Width * Image.Height * 2;
 
-                case GalTextureFormat.R8:
-                    return Texture.Width * Texture.Height;
+                case GalImageFormat.R8_SINT:
+                case GalImageFormat.R8_SNORM:
+                case GalImageFormat.R8_UINT:
+                case GalImageFormat.R8_UNORM:
+                    return Image.Width * Image.Height;
 
-                case GalTextureFormat.BC1:
-                case GalTextureFormat.BC4:
+                case GalImageFormat.BC1_RGBA_UNORM_BLOCK:
+                case GalImageFormat.BC4_SNORM_BLOCK:
+                case GalImageFormat.BC4_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 4, 4, 8);
+                    return CompressedTextureSize(Image.Width, Image.Height, 4, 4, 8);
                 }
 
-                case GalTextureFormat.BC6H_SF16:
-                case GalTextureFormat.BC6H_UF16:
-                case GalTextureFormat.BC7U:
-                case GalTextureFormat.BC2:
-                case GalTextureFormat.BC3:
-                case GalTextureFormat.BC5:
-                case GalTextureFormat.Astc2D4x4:
+                case GalImageFormat.BC6H_SFLOAT_BLOCK:
+                case GalImageFormat.BC6H_UFLOAT_BLOCK:
+                case GalImageFormat.BC7_UNORM_BLOCK:
+                case GalImageFormat.BC2_UNORM_BLOCK:
+                case GalImageFormat.BC3_UNORM_BLOCK:
+                case GalImageFormat.BC5_SNORM_BLOCK:
+                case GalImageFormat.BC5_UNORM_BLOCK:
+                case GalImageFormat.ASTC_4x4_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 4, 4, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 4, 4, 16);
                 }
 
-                case GalTextureFormat.Astc2D5x5:
+                case GalImageFormat.ASTC_5x5_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 5, 5, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 5, 5, 16);
                 }
 
-                case GalTextureFormat.Astc2D6x6:
+                case GalImageFormat.ASTC_6x6_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 6, 6, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 6, 6, 16);
                 }
 
-                case GalTextureFormat.Astc2D8x8:
+                case GalImageFormat.ASTC_8x8_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 8, 8, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 8, 8, 16);
                 }
 
-                case GalTextureFormat.Astc2D10x10:
+                case GalImageFormat.ASTC_10x10_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 10, 10, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 10, 10, 16);
                 }
 
-                case GalTextureFormat.Astc2D12x12:
+                case GalImageFormat.ASTC_12x12_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 12, 12, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 12, 12, 16);
                 }
 
-                case GalTextureFormat.Astc2D5x4:
+                case GalImageFormat.ASTC_5x4_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 5, 4, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 5, 4, 16);
                 }
 
-                case GalTextureFormat.Astc2D6x5:
+                case GalImageFormat.ASTC_6x5_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 6, 5, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 6, 5, 16);
                 }
 
-                case GalTextureFormat.Astc2D8x6:
+                case GalImageFormat.ASTC_8x6_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 8, 6, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 8, 6, 16);
                 }
 
-                case GalTextureFormat.Astc2D10x8:
+                case GalImageFormat.ASTC_10x8_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 10, 8, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 10, 8, 16);
                 }
 
-                case GalTextureFormat.Astc2D12x10:
+                case GalImageFormat.ASTC_12x10_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 12, 10, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 12, 10, 16);
                 }
 
-                case GalTextureFormat.Astc2D8x5:
+                case GalImageFormat.ASTC_8x5_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 8, 5, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 8, 5, 16);
                 }
 
-                case GalTextureFormat.Astc2D10x5:
+                case GalImageFormat.ASTC_10x5_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 10, 5, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 10, 5, 16);
                 }
 
-                case GalTextureFormat.Astc2D10x6:
+                case GalImageFormat.ASTC_10x6_UNORM_BLOCK:
                 {
-                    return CompressedTextureSize(Texture.Width, Texture.Height, 10, 6, 16);
+                    return CompressedTextureSize(Image.Width, Image.Height, 10, 6, 16);
                 }
             }
 
-            throw new NotImplementedException("0x" + Texture.Format.ToString("x2"));
+            throw new NotImplementedException("0x" + Image.Format.ToString("x2"));
         }
 
         public static int CompressedTextureSize(int TextureWidth, int TextureHeight, int BlockWidth, int BlockHeight, int Bpb)

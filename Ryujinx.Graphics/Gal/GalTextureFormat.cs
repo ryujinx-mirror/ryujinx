@@ -9,6 +9,7 @@ namespace Ryujinx.Graphics.Gal
         R32          = 0xf,
         BC6H_SF16    = 0x10,
         BC6H_UF16    = 0x11,
+        A4B4G4R4     = 0x12,
         A1B5G5R5     = 0x14,
         B5G6R5       = 0x15,
         BC7U         = 0x17,

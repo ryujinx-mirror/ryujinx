@@ -23,15 +23,15 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             Buffer = new OGLConstBuffer();
 
-            FrameBuffer = new OGLFrameBuffer();
+            Texture = new OGLTexture();
+
+            FrameBuffer = new OGLFrameBuffer(Texture as OGLTexture);
 
             Rasterizer = new OGLRasterizer();
 
             Shader = new OGLShader(Buffer as OGLConstBuffer);
 
             Pipeline = new OGLPipeline(Buffer as OGLConstBuffer, Rasterizer as OGLRasterizer, Shader as OGLShader);
-
-            Texture = new OGLTexture();
 
             ActionsQueue = new ConcurrentQueue<Action>();
         }

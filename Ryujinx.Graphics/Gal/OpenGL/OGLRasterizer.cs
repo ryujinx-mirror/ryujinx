@@ -3,7 +3,7 @@ using System;
 
 namespace Ryujinx.Graphics.Gal.OpenGL
 {
-    public class OGLRasterizer : IGalRasterizer
+    class OGLRasterizer : IGalRasterizer
     {
         private int[] VertexBuffers;
 
@@ -44,35 +44,28 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public void ClearBuffers(
             GalClearBufferFlags Flags,
+            int Attachment,
             float Red, float Green, float Blue, float Alpha,
             float Depth,
             int Stencil)
         {
-            ClearBufferMask Mask = ClearBufferMask.ColorBufferBit;
-
             GL.ColorMask(
                 Flags.HasFlag(GalClearBufferFlags.ColorRed),
                 Flags.HasFlag(GalClearBufferFlags.ColorGreen),
                 Flags.HasFlag(GalClearBufferFlags.ColorBlue),
                 Flags.HasFlag(GalClearBufferFlags.ColorAlpha));
 
+            GL.ClearBuffer(ClearBuffer.Color, Attachment, new float[] { Red, Green, Blue, Alpha });
+
             if (Flags.HasFlag(GalClearBufferFlags.Depth))
             {
-                Mask |= ClearBufferMask.DepthBufferBit;
+                GL.ClearBuffer(ClearBuffer.Depth, 0, ref Depth);
             }
 
             if (Flags.HasFlag(GalClearBufferFlags.Stencil))
             {
-                Mask |= ClearBufferMask.StencilBufferBit;
+                GL.ClearBuffer(ClearBuffer.Stencil, 0, ref Stencil);
             }
-
-            GL.ClearColor(Red, Green, Blue, Alpha);
-
-            GL.ClearDepth(Depth);
-
-            GL.ClearStencil(Stencil);
-
-            GL.Clear(Mask);
 
             GL.ColorMask(true, true, true, true);
         }

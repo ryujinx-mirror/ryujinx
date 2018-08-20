@@ -154,16 +154,12 @@ namespace Ryujinx.HLE.Gpu.Engines
             }
             else if (IsDstFb)
             {
-                //Texture -> Frame Buffer copy.
-                const GalTextureFormat Format = GalTextureFormat.A8B8G8R8;
-
                 byte[] Buffer = TextureReader.Read(Vmm, SrcTexture());
 
                 Gpu.Renderer.FrameBuffer.SetBufferData(
                     DstKey,
                     DstWidth,
                     DstHeight,
-                    Format,
                     Buffer);
             }
             else

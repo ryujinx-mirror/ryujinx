@@ -6,11 +6,16 @@ namespace Ryujinx.HLE.Gpu.Texture
 {
     static class TextureFactory
     {
-        public static GalTexture MakeTexture(NvGpuVmm Vmm, long TicPosition)
+        public static GalImage MakeTexture(NvGpuVmm Vmm, long TicPosition)
         {
             int[] Tic = ReadWords(Vmm, TicPosition, 8);
 
-            GalTextureFormat Format = (GalTextureFormat)(Tic[0] & 0x7f);
+            GalTextureType RType = (GalTextureType)((Tic[0] >> 7)  & 7);
+            GalTextureType GType = (GalTextureType)((Tic[0] >> 10) & 7);
+            GalTextureType BType = (GalTextureType)((Tic[0] >> 13) & 7);
+            GalTextureType AType = (GalTextureType)((Tic[0] >> 16) & 7);
+
+            GalImageFormat Format = ImageFormatConverter.ConvertTexture((GalTextureFormat)(Tic[0] & 0x7f), RType, GType, BType, AType);
 
             GalTextureSource XSource = (GalTextureSource)((Tic[0] >> 19) & 7);
             GalTextureSource YSource = (GalTextureSource)((Tic[0] >> 22) & 7);
@@ -20,7 +25,7 @@ namespace Ryujinx.HLE.Gpu.Texture
             int Width  = (Tic[4] & 0xffff) + 1;
             int Height = (Tic[5] & 0xffff) + 1;
 
-            return new GalTexture(
+            return new GalImage(
                 Width,
                 Height,
                 Format,

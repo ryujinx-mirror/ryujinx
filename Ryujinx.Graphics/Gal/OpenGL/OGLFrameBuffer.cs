@@ -1,10 +1,9 @@
 using OpenTK.Graphics.OpenGL;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gal.OpenGL
 {
-    public class OGLFrameBuffer : IGalFrameBuffer
+    class OGLFrameBuffer : IGalFrameBuffer
     {
         private struct Rect
         {
@@ -15,49 +14,37 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             public Rect(int X, int Y, int Width, int Height)
             {
-                this.X      = X;
-                this.Y      = Y;
-                this.Width  = Width;
+                this.X = X;
+                this.Y = Y;
+                this.Width = Width;
                 this.Height = Height;
             }
         }
 
-        private class FrameBuffer
+        private static readonly DrawBuffersEnum[] DrawBuffers = new DrawBuffersEnum[]
         {
-            public int Width  { get; set; }
-            public int Height { get; set; }
-
-            public int Handle    { get; private set; }
-            public int RbHandle  { get; private set; }
-            public int TexHandle { get; private set; }
-
-            public FrameBuffer(int Width, int Height, bool HasRenderBuffer)
-            {
-                this.Width  = Width;
-                this.Height = Height;
-
-                Handle    = GL.GenFramebuffer();
-                TexHandle = GL.GenTexture();
-
-                if (HasRenderBuffer)
-                {
-                    RbHandle = GL.GenRenderbuffer();
-                }
-            }
-        }
+            DrawBuffersEnum.ColorAttachment0,
+            DrawBuffersEnum.ColorAttachment1,
+            DrawBuffersEnum.ColorAttachment2,
+            DrawBuffersEnum.ColorAttachment3,
+            DrawBuffersEnum.ColorAttachment4,
+            DrawBuffersEnum.ColorAttachment5,
+            DrawBuffersEnum.ColorAttachment6,
+            DrawBuffersEnum.ColorAttachment7,
+        };
 
         private const int NativeWidth  = 1280;
         private const int NativeHeight = 720;
 
-        private Dictionary<long, FrameBuffer> Fbs;
+        private const GalImageFormat RawFormat = GalImageFormat.A8B8G8R8_UNORM_PACK32;
+
+        private OGLTexture Texture;
+
+        private ImageHandler RawTex;
+        private ImageHandler ReadTex;
 
         private Rect Viewport;
         private Rect Window;
-
-        private FrameBuffer CurrFb;
-        private FrameBuffer CurrReadFb;
-
-        private FrameBuffer RawFb;
 
         private bool FlipX;
         private bool FlipY;
@@ -67,111 +54,144 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         private int CropRight;
         private int CropBottom;
 
-        public OGLFrameBuffer()
+        //This framebuffer is used to attach guest rendertargets,
+        //think of it as a dummy OpenGL VAO
+        private int DummyFrameBuffer;
+
+        //These framebuffers are used to blit images
+        private int SrcFb;
+        private int DstFb;
+
+        //Holds current attachments, used to avoid unnecesary calls to OpenGL
+        private int[] ColorAttachments;
+
+        private int DepthAttachment;
+        private int StencilAttachment;
+
+        public OGLFrameBuffer(OGLTexture Texture)
         {
-            Fbs = new Dictionary<long, FrameBuffer>();
+            ColorAttachments = new int[8];
+
+            this.Texture = Texture;
         }
 
-        public void Create(long Key, int Width, int Height)
+        public void BindColor(long Key, int Attachment)
         {
-            if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
+            if (Texture.TryGetImage(Key, out ImageHandler Tex))
             {
-                if (Fb.Width  != Width ||
-                    Fb.Height != Height)
-                {
-                    SetupTexture(Fb.TexHandle, Width, Height);
+                EnsureFrameBuffer();
 
-                    Fb.Width  = Width;
-                    Fb.Height = Height;
-                }
-
-                return;
+                Attach(ref ColorAttachments[Attachment], Tex.Handle, FramebufferAttachment.ColorAttachment0 + Attachment);
             }
-
-            Fb = new FrameBuffer(Width, Height, true);
-
-            SetupTexture(Fb.TexHandle, Width, Height);
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, Fb.Handle);
-
-            GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, Fb.RbHandle);
-
-            GL.RenderbufferStorage(
-                RenderbufferTarget.Renderbuffer,
-                RenderbufferStorage.Depth24Stencil8,
-                Width,
-                Height);
-
-            GL.FramebufferRenderbuffer(
-                FramebufferTarget.Framebuffer,
-                FramebufferAttachment.DepthStencilAttachment,
-                RenderbufferTarget.Renderbuffer,
-                Fb.RbHandle);
-
-            GL.FramebufferTexture(
-                FramebufferTarget.Framebuffer,
-                FramebufferAttachment.ColorAttachment0,
-                Fb.TexHandle,
-                0);
-
-            GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
-
-            Fbs.Add(Key, Fb);
+            else
+            {
+                UnbindColor(Attachment);
+            }
         }
 
-        public void Bind(long Key)
+        public void UnbindColor(int Attachment)
         {
-            if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
-            {
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, Fb.Handle);
+            EnsureFrameBuffer();
 
-                CurrFb = Fb;
+            Attach(ref ColorAttachments[Attachment], 0, FramebufferAttachment.ColorAttachment0 + Attachment);
+        }
+        
+        public void BindZeta(long Key)
+        {
+            if (Texture.TryGetImage(Key, out ImageHandler Tex))
+            {
+                EnsureFrameBuffer();
+
+                if (Tex.HasDepth && Tex.HasStencil)
+                {
+                    if (DepthAttachment   != Tex.Handle ||
+                        StencilAttachment != Tex.Handle)
+                    {
+                        GL.FramebufferTexture(
+                            FramebufferTarget.DrawFramebuffer,
+                            FramebufferAttachment.DepthStencilAttachment,
+                            Tex.Handle,
+                            0);
+
+                        DepthAttachment = Tex.Handle;
+
+                        StencilAttachment = Tex.Handle;
+                    }
+                }
+                else if (Tex.HasDepth)
+                {
+                    Attach(ref DepthAttachment, Tex.Handle, FramebufferAttachment.DepthAttachment);
+
+                    Attach(ref StencilAttachment, 0, FramebufferAttachment.StencilAttachment);
+                }
+                else if (Tex.HasStencil)
+                {
+                    Attach(ref DepthAttachment, 0, FramebufferAttachment.DepthAttachment);
+
+                    Attach(ref StencilAttachment, Tex.Handle, FramebufferAttachment.StencilAttachment);
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+            else
+            {
+                UnbindZeta();
+            }
+        }
+
+        public void UnbindZeta()
+        {
+            EnsureFrameBuffer();
+
+            if (DepthAttachment   != 0 ||
+                StencilAttachment != 0)
+            {
+                GL.FramebufferTexture(
+                    FramebufferTarget.DrawFramebuffer,
+                    FramebufferAttachment.DepthStencilAttachment,
+                    0,
+                    0);
+
+                DepthAttachment = 0;
+
+                StencilAttachment = 0;
             }
         }
 
         public void BindTexture(long Key, int Index)
         {
-            if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
+            if (Texture.TryGetImage(Key, out ImageHandler Tex))
             {
                 GL.ActiveTexture(TextureUnit.Texture0 + Index);
 
-                GL.BindTexture(TextureTarget.Texture2D, Fb.TexHandle);
+                GL.BindTexture(TextureTarget.Texture2D, Tex.Handle);
             }
         }
 
         public void Set(long Key)
         {
-            if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
+            if (Texture.TryGetImage(Key, out ImageHandler Tex))
             {
-                CurrReadFb = Fb;
+                ReadTex = Tex;
             }
         }
 
         public void Set(byte[] Data, int Width, int Height)
         {
-            if (RawFb == null)
+            if (RawTex == null)
             {
-                CreateRawFb(Width, Height);
+                RawTex = new ImageHandler();
             }
 
-            if (RawFb.Width  != Width ||
-                RawFb.Height != Height)
-            {
-                SetupTexture(RawFb.TexHandle, Width, Height);
+            RawTex.EnsureSetup(new GalImage(Width, Height, RawFormat));
 
-                RawFb.Width  = Width;
-                RawFb.Height = Height;
-            }
+            GL.BindTexture(TextureTarget.Texture2D, RawTex.Handle);
 
-            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, Width, Height, RawTex.PixelFormat, RawTex.PixelType, Data);
 
-            GL.BindTexture(TextureTarget.Texture2D, RawFb.TexHandle);
-
-            (PixelFormat Format, PixelType Type) = OGLEnumConverter.GetTextureFormat(GalTextureFormat.A8B8G8R8);
-
-            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, Width, Height, Format, Type, Data);
-
-            CurrReadFb = RawFb;
+            ReadTex = RawTex;
         }
 
         public void SetTransform(bool FlipX, bool FlipY, int Top, int Left, int Right, int Bottom)
@@ -208,60 +228,71 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public void Render()
         {
-            if (CurrReadFb != null)
+            if (ReadTex == null)
             {
-                int SrcX0, SrcX1, SrcY0, SrcY1;
-
-                if (CropLeft == 0 && CropRight == 0)
-                {
-                    SrcX0 = 0;
-                    SrcX1 = CurrReadFb.Width;
-                }
-                else
-                {
-                    SrcX0 = CropLeft;
-                    SrcX1 = CropRight;
-                }
-
-                if (CropTop == 0 && CropBottom == 0)
-                {
-                    SrcY0 = 0;
-                    SrcY1 = CurrReadFb.Height;
-                }
-                else
-                {
-                    SrcY0 = CropTop;
-                    SrcY1 = CropBottom;
-                }
-
-                float RatioX = MathF.Min(1f, (Window.Height * (float)NativeWidth)  / ((float)NativeHeight * Window.Width));
-                float RatioY = MathF.Min(1f, (Window.Width  * (float)NativeHeight) / ((float)NativeWidth  * Window.Height));
-
-                int DstWidth  = (int)(Window.Width  * RatioX);
-                int DstHeight = (int)(Window.Height * RatioY);
-
-                int DstPaddingX = (Window.Width  - DstWidth)  / 2;
-                int DstPaddingY = (Window.Height - DstHeight) / 2;
-
-                int DstX0 = FlipX ? Window.Width - DstPaddingX : DstPaddingX;
-                int DstX1 = FlipX ? DstPaddingX : Window.Width - DstPaddingX;
-
-                int DstY0 = FlipY ? DstPaddingY : Window.Height - DstPaddingY;
-                int DstY1 = FlipY ? Window.Height - DstPaddingY : DstPaddingY;
-
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-
-                GL.Viewport(0, 0, Window.Width, Window.Height);
-
-                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, CurrReadFb.Handle);
-
-                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-                GL.BlitFramebuffer(
-                    SrcX0, SrcY0, SrcX1, SrcY1,
-                    DstX0, DstY0, DstX1, DstY1,
-                    ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
+                return;
             }
+
+            int SrcX0, SrcX1, SrcY0, SrcY1;
+
+            if (CropLeft == 0 && CropRight == 0)
+            {
+                SrcX0 = 0;
+                SrcX1 = ReadTex.Width;
+            }
+            else
+            {
+                SrcX0 = CropLeft;
+                SrcX1 = CropRight;
+            }
+
+            if (CropTop == 0 && CropBottom == 0)
+            {
+                SrcY0 = 0;
+                SrcY1 = ReadTex.Height;
+            }
+            else
+            {
+                SrcY0 = CropTop;
+                SrcY1 = CropBottom;
+            }
+
+            float RatioX = MathF.Min(1f, (Window.Height * (float)NativeWidth)  / ((float)NativeHeight * Window.Width));
+            float RatioY = MathF.Min(1f, (Window.Width  * (float)NativeHeight) / ((float)NativeWidth  * Window.Height));
+
+            int DstWidth  = (int)(Window.Width  * RatioX);
+            int DstHeight = (int)(Window.Height * RatioY);
+
+            int DstPaddingX = (Window.Width  - DstWidth)  / 2;
+            int DstPaddingY = (Window.Height - DstHeight) / 2;
+
+            int DstX0 = FlipX ? Window.Width - DstPaddingX : DstPaddingX;
+            int DstX1 = FlipX ? DstPaddingX : Window.Width - DstPaddingX;
+
+            int DstY0 = FlipY ? DstPaddingY : Window.Height - DstPaddingY;
+            int DstY1 = FlipY ? Window.Height - DstPaddingY : DstPaddingY;
+
+            if (SrcFb == 0) SrcFb = GL.GenFramebuffer();
+
+            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
+
+            GL.Viewport(0, 0, Window.Width, Window.Height);
+
+            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, SrcFb);
+
+            GL.FramebufferTexture(FramebufferTarget.ReadFramebuffer, FramebufferAttachment.ColorAttachment0, ReadTex.Handle, 0);
+
+            GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
+            GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+
+            GL.BlitFramebuffer(
+                SrcX0, SrcY0, SrcX1, SrcY1,
+                DstX0, DstY0, DstX1, DstY1,
+                ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
+
+            EnsureFrameBuffer();
         }
 
         public void Copy(
@@ -276,39 +307,80 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             int  DstX1,
             int  DstY1)
         {
-            if (Fbs.TryGetValue(SrcKey, out FrameBuffer SrcFb) &&
-                Fbs.TryGetValue(DstKey, out FrameBuffer DstFb))
+            if (Texture.TryGetImage(SrcKey, out ImageHandler SrcTex) &&
+                Texture.TryGetImage(DstKey, out ImageHandler DstTex))
             {
-                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, SrcFb.Handle);
-                GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, DstFb.Handle);
+                if (SrcTex.HasColor != DstTex.HasColor ||
+                    SrcTex.HasDepth != DstTex.HasDepth ||
+                    SrcTex.HasStencil != DstTex.HasStencil)
+                {
+                    throw new NotImplementedException();
+                }
 
-                GL.Clear(ClearBufferMask.ColorBufferBit);
-
-                GL.BlitFramebuffer(
-                    SrcX0, SrcY0, SrcX1, SrcY1,
-                    DstX0, DstY0, DstX1, DstY1,
-                    ClearBufferMask.ColorBufferBit,
-                    BlitFramebufferFilter.Linear);
+                if (SrcTex.HasColor)
+                {
+                    CopyTextures(
+                        SrcX0, SrcY0, SrcX1, SrcY1,
+                        DstX0, DstY0, DstX1, DstY1,
+                        SrcTex.Handle,
+                        DstTex.Handle,
+                        FramebufferAttachment.ColorAttachment0,
+                        ClearBufferMask.ColorBufferBit,
+                        true);
+                }
+                else if (SrcTex.HasDepth && SrcTex.HasStencil)
+                {
+                    CopyTextures(
+                        SrcX0, SrcY0, SrcX1, SrcY1,
+                        DstX0, DstY0, DstX1, DstY1,
+                        SrcTex.Handle,
+                        DstTex.Handle,
+                        FramebufferAttachment.DepthStencilAttachment,
+                        ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit,
+                        false);
+                }
+                else if (SrcTex.HasDepth)
+                {
+                    CopyTextures(
+                        SrcX0, SrcY0, SrcX1, SrcY1,
+                        DstX0, DstY0, DstX1, DstY1,
+                        SrcTex.Handle,
+                        DstTex.Handle,
+                        FramebufferAttachment.DepthAttachment,
+                        ClearBufferMask.DepthBufferBit,
+                        false);
+                }
+                else if (SrcTex.HasStencil)
+                {
+                    CopyTextures(
+                        SrcX0, SrcY0, SrcX1, SrcY1,
+                        DstX0, DstY0, DstX1, DstY1,
+                        SrcTex.Handle,
+                        DstTex.Handle,
+                        FramebufferAttachment.StencilAttachment,
+                        ClearBufferMask.StencilBufferBit,
+                        false);
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
             }
-}
+        }
 
         public void GetBufferData(long Key, Action<byte[]> Callback)
         {
-            if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
+            if (Texture.TryGetImage(Key, out ImageHandler Tex))
             {
-                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, Fb.Handle);
+                byte[] Data = new byte[Tex.Width * Tex.Height * ImageHandler.MaxBpp];
 
-                byte[] Data = new byte[Fb.Width * Fb.Height * 4];
+                GL.BindTexture(TextureTarget.Texture2D, Tex.Handle);
 
-                (PixelFormat Format, PixelType Type) = OGLEnumConverter.GetTextureFormat(GalTextureFormat.A8B8G8R8);
-
-                GL.ReadPixels(
+                GL.GetTexImage(
+                    TextureTarget.Texture2D,
                     0,
-                    0,
-                    Fb.Width,
-                    Fb.Height,
-                    Format,
-                    Type,
+                    Tex.PixelFormat,
+                    Tex.PixelType,
                     Data);
 
                 Callback(Data);
@@ -319,83 +391,101 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             long             Key,
             int              Width,
             int              Height,
-            GalTextureFormat Format,
             byte[]           Buffer)
         {
-            if (Fbs.TryGetValue(Key, out FrameBuffer Fb))
+            if (Texture.TryGetImage(Key, out ImageHandler Tex))
             {
-                GL.BindTexture(TextureTarget.Texture2D, Fb.TexHandle);
+                GL.BindTexture(TextureTarget.Texture2D, Tex.Handle);
 
                 const int Level  = 0;
                 const int Border = 0;
 
-                const PixelInternalFormat InternalFmt = PixelInternalFormat.Rgba;
-
-                (PixelFormat GlFormat, PixelType Type) = OGLEnumConverter.GetTextureFormat(Format);
-
                 GL.TexImage2D(
                     TextureTarget.Texture2D,
                     Level,
-                    InternalFmt,
+                    Tex.InternalFormat,
                     Width,
                     Height,
                     Border,
-                    GlFormat,
-                    Type,
+                    Tex.PixelFormat,
+                    Tex.PixelType,
                     Buffer);
             }
         }
 
-        private void CreateRawFb(int Width, int Height)
+        private void EnsureFrameBuffer()
         {
-            if (RawFb == null)
+            if (DummyFrameBuffer == 0)
             {
-                RawFb = new FrameBuffer(Width, Height, false);
+                DummyFrameBuffer = GL.GenFramebuffer();
+            }
 
-                SetupTexture(RawFb.TexHandle, Width, Height);
+            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, DummyFrameBuffer);
 
-                RawFb.Width = Width;
-                RawFb.Height = Height;
+            GL.DrawBuffers(8, DrawBuffers);
+        }
 
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, RawFb.Handle);
-
+        private void Attach(ref int OldHandle, int NewHandle, FramebufferAttachment FbAttachment)
+        {
+            if (OldHandle != NewHandle)
+            {
                 GL.FramebufferTexture(
-                    FramebufferTarget.Framebuffer,
-                    FramebufferAttachment.ColorAttachment0,
-                    RawFb.TexHandle,
+                    FramebufferTarget.DrawFramebuffer,
+                    FbAttachment,
+                    NewHandle,
                     0);
 
-                GL.Viewport(0, 0, Width, Height);
+                OldHandle = NewHandle;
             }
         }
 
-        private void SetupTexture(int Handle, int Width, int Height)
+        private void CopyTextures(
+            int SrcX0,
+            int SrcY0,
+            int SrcX1,
+            int SrcY1,
+            int DstX0,
+            int DstY0,
+            int DstX1,
+            int DstY1,
+            int SrcTexture,
+            int DstTexture,
+            FramebufferAttachment Attachment,
+            ClearBufferMask Mask,
+            bool Color)
         {
-            GL.BindTexture(TextureTarget.Texture2D, Handle);
+            if (SrcFb == 0) SrcFb = GL.GenFramebuffer();
+            if (DstFb == 0) DstFb = GL.GenFramebuffer();
 
-            const int MinFilter = (int)TextureMinFilter.Linear;
-            const int MagFilter = (int)TextureMagFilter.Linear;
+            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, SrcFb);
+            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, DstFb);
 
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, MinFilter);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, MagFilter);
+            GL.FramebufferTexture(
+                FramebufferTarget.ReadFramebuffer,
+                Attachment,
+                SrcTexture,
+                0);
 
-            (PixelFormat Format, PixelType Type) = OGLEnumConverter.GetTextureFormat(GalTextureFormat.A8B8G8R8);
+            GL.FramebufferTexture(
+                FramebufferTarget.DrawFramebuffer,
+                Attachment,
+                DstTexture,
+                0);
 
-            const PixelInternalFormat InternalFmt = PixelInternalFormat.Rgba;
+            if (Color)
+            {
+                GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+            }
 
-            const int Level  = 0;
-            const int Border = 0;
+            GL.Clear(Mask);
 
-            GL.TexImage2D(
-                TextureTarget.Texture2D,
-                Level,
-                InternalFmt,
-                Width,
-                Height,
-                Border,
-                Format,
-                Type,
-                IntPtr.Zero);
+            GL.BlitFramebuffer(
+                SrcX0, SrcY0, SrcX1, SrcY1,
+                DstX0, DstY0, DstX1, DstY1,
+                Mask,
+                Color ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest);
+
+            EnsureFrameBuffer();
         }
     }
 }
