@@ -25,23 +25,41 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             { GalVertexAttribSize._11_11_10,    3 }
         };
 
-        private static Dictionary<GalVertexAttribSize, VertexAttribPointerType> AttribTypes =
+        private static Dictionary<GalVertexAttribSize, VertexAttribPointerType> SignedAttribTypes =
                    new Dictionary<GalVertexAttribSize, VertexAttribPointerType>()
         {
-            { GalVertexAttribSize._32_32_32_32, VertexAttribPointerType.Int   },
-            { GalVertexAttribSize._32_32_32,    VertexAttribPointerType.Int   },
-            { GalVertexAttribSize._16_16_16_16, VertexAttribPointerType.Short },
-            { GalVertexAttribSize._32_32,       VertexAttribPointerType.Int   },
-            { GalVertexAttribSize._16_16_16,    VertexAttribPointerType.Short },
-            { GalVertexAttribSize._8_8_8_8,     VertexAttribPointerType.Byte  },
-            { GalVertexAttribSize._16_16,       VertexAttribPointerType.Short },
-            { GalVertexAttribSize._32,          VertexAttribPointerType.Int   },
-            { GalVertexAttribSize._8_8_8,       VertexAttribPointerType.Byte  },
-            { GalVertexAttribSize._8_8,         VertexAttribPointerType.Byte  },
-            { GalVertexAttribSize._16,          VertexAttribPointerType.Short },
-            { GalVertexAttribSize._8,           VertexAttribPointerType.Byte  },
-            { GalVertexAttribSize._10_10_10_2,  VertexAttribPointerType.Int   }, //?
-            { GalVertexAttribSize._11_11_10,    VertexAttribPointerType.Int   }  //?
+            { GalVertexAttribSize._32_32_32_32, VertexAttribPointerType.Int           },
+            { GalVertexAttribSize._32_32_32,    VertexAttribPointerType.Int           },
+            { GalVertexAttribSize._16_16_16_16, VertexAttribPointerType.Short         },
+            { GalVertexAttribSize._32_32,       VertexAttribPointerType.Int           },
+            { GalVertexAttribSize._16_16_16,    VertexAttribPointerType.Short         },
+            { GalVertexAttribSize._8_8_8_8,     VertexAttribPointerType.Byte          },
+            { GalVertexAttribSize._16_16,       VertexAttribPointerType.Short         },
+            { GalVertexAttribSize._32,          VertexAttribPointerType.Int           },
+            { GalVertexAttribSize._8_8_8,       VertexAttribPointerType.Byte          },
+            { GalVertexAttribSize._8_8,         VertexAttribPointerType.Byte          },
+            { GalVertexAttribSize._16,          VertexAttribPointerType.Short         },
+            { GalVertexAttribSize._8,           VertexAttribPointerType.Byte          },
+            { GalVertexAttribSize._10_10_10_2,  VertexAttribPointerType.Int2101010Rev }
+        };
+
+        private static Dictionary<GalVertexAttribSize, VertexAttribPointerType> UnsignedAttribTypes =
+                   new Dictionary<GalVertexAttribSize, VertexAttribPointerType>()
+        {
+            { GalVertexAttribSize._32_32_32_32, VertexAttribPointerType.UnsignedInt             },
+            { GalVertexAttribSize._32_32_32,    VertexAttribPointerType.UnsignedInt             },
+            { GalVertexAttribSize._16_16_16_16, VertexAttribPointerType.UnsignedShort           },
+            { GalVertexAttribSize._32_32,       VertexAttribPointerType.UnsignedInt             },
+            { GalVertexAttribSize._16_16_16,    VertexAttribPointerType.UnsignedShort           },
+            { GalVertexAttribSize._8_8_8_8,     VertexAttribPointerType.UnsignedByte            },
+            { GalVertexAttribSize._16_16,       VertexAttribPointerType.UnsignedShort           },
+            { GalVertexAttribSize._32,          VertexAttribPointerType.UnsignedInt             },
+            { GalVertexAttribSize._8_8_8,       VertexAttribPointerType.UnsignedByte            },
+            { GalVertexAttribSize._8_8,         VertexAttribPointerType.UnsignedByte            },
+            { GalVertexAttribSize._16,          VertexAttribPointerType.UnsignedShort           },
+            { GalVertexAttribSize._8,           VertexAttribPointerType.UnsignedByte            },
+            { GalVertexAttribSize._10_10_10_2,  VertexAttribPointerType.UnsignedInt2101010Rev   },
+            { GalVertexAttribSize._11_11_10,    VertexAttribPointerType.UnsignedInt10F11F11FRev }
         };
 
         private GalPipelineState Old;
@@ -326,7 +344,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
                     bool Unsigned =
                         Attrib.Type == GalVertexAttribType.Unorm ||
-                        Attrib.Type == GalVertexAttribType.Uint ||
+                        Attrib.Type == GalVertexAttribType.Uint  ||
                         Attrib.Type == GalVertexAttribType.Uscaled;
 
                     bool Normalize =
@@ -341,7 +359,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     }
                     else
                     {
-                        Type = AttribTypes[Attrib.Size] + (Unsigned ? 1 : 0);
+                        if (Unsigned)
+                        {
+                            Type = UnsignedAttribTypes[Attrib.Size];
+                        }
+                        else
+                        {
+                            Type = SignedAttribTypes[Attrib.Size];
+                        }
                     }
 
                     int Size = AttribElements[Attrib.Size];
