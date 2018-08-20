@@ -410,6 +410,42 @@ namespace ChocolArm64.Instruction
         }
 #endregion
 
+#region "Aes"
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> Decrypt(Vector128<float> value, Vector128<float> roundKey)
+        {
+            if (!Sse.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
+            return ACryptoHelper.AESInvSubBytes(ACryptoHelper.AESInvShiftRows(Sse.Xor(value, roundKey)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> Encrypt(Vector128<float> value, Vector128<float> roundKey)
+        {
+            if (!Sse.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
+            return ACryptoHelper.AESSubBytes(ACryptoHelper.AESShiftRows(Sse.Xor(value, roundKey)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> InverseMixColumns(Vector128<float> value)
+        {
+            return ACryptoHelper.AESInvMixColumns(value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> MixColumns(Vector128<float> value)
+        {
+            return ACryptoHelper.AESMixColumns(value);
+        }
+#endregion
+
 #region "Sha256"
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector128<float> HashLower(Vector128<float> hash_abcd, Vector128<float> hash_efgh, Vector128<float> wk)
