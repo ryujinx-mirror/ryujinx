@@ -35,13 +35,6 @@ namespace Ryujinx.Graphics.Gal.Shader
                 (int)(OpCode >> 20) & 0x3fff);
         }
 
-        public static ShaderIrOperCbuf GetOperCbuf36(long OpCode)
-        {
-            return new ShaderIrOperCbuf(
-                (int)(OpCode >> 36) & 0x1f,
-                (int)(OpCode >> 22) & 0x3fff, GetOperGpr8(OpCode));
-        }
-
         public static ShaderIrOperGpr GetOperGpr8(long OpCode)
         {
             return new ShaderIrOperGpr((int)(OpCode >> 8) & 0xff);

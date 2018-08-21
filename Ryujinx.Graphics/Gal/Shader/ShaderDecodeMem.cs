@@ -52,22 +52,34 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public static void Ld_C(ShaderIrBlock Block, long OpCode)
         {
-            int Type = (int)(OpCode >> 48) & 7;
+            int CbufPos   = (int)(OpCode >> 22) & 0x3fff;
+            int CbufIndex = (int)(OpCode >> 36) & 0x1f;
+            int Type      = (int)(OpCode >> 48) & 7;
 
             if (Type > 5)
             {
                 throw new InvalidOperationException();
             }
 
+            ShaderIrOperGpr Temp = ShaderIrOperGpr.MakeTemporary();
+
+            Block.AddNode(new ShaderIrAsg(Temp, GetOperGpr8(OpCode)));
+
             int Count = Type == 5 ? 2 : 1;
 
             for (int Index = 0; Index < Count; Index++)
             {
-                ShaderIrOperCbuf OperA = GetOperCbuf36(OpCode);
-                ShaderIrOperGpr  OperD = GetOperGpr0  (OpCode);
+                ShaderIrOperCbuf OperA = new ShaderIrOperCbuf(CbufIndex, CbufPos, Temp);
+
+                ShaderIrOperGpr OperD = GetOperGpr0(OpCode);
 
                 OperA.Pos   += Index;
                 OperD.Index += Index;
+
+                if (!OperD.IsValidRegister)
+                {
+                    break;
+                }
 
                 ShaderIrNode Node = OperA;
 
