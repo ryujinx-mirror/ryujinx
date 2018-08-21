@@ -9,9 +9,9 @@ namespace Ryujinx.HLE.HOS.Kernel
     {
         private void SvcSetHeapSize(AThreadState ThreadState)
         {
-            long Size = (long)ThreadState.X1;
+            ulong Size = ThreadState.X1;
 
-            if ((Size & 0x1fffff) != 0 || Size != (uint)Size)
+            if ((Size & 0xFFFFFFFE001FFFFF) != 0)
             {
                 Device.Log.PrintWarning(LogClass.KernelSvc, $"Heap size 0x{Size:x16} is not aligned!");
 
@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
-            long Result = Process.MemoryManager.TrySetHeapSize(Size, out long Position);
+            long Result = Process.MemoryManager.TrySetHeapSize((long)Size, out long Position);
 
             ThreadState.X0 = (ulong)Result;
 
