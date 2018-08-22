@@ -22,9 +22,9 @@ namespace Ryujinx.HLE.HOS.Services.Lm
 
         public long Log(ServiceCtx Context)
         {
-            byte[] LogBuffer = Context.Memory.ReadBytes(
-                Context.Request.PtrBuff[0].Position,
-                Context.Request.PtrBuff[0].Size);
+
+            (long BufPos, long BufSize) = Context.Request.GetBufferType0x21();
+            byte[] LogBuffer = Context.Memory.ReadBytes(BufPos, BufSize);
 
             using (MemoryStream MS = new MemoryStream(LogBuffer))
             {
@@ -50,19 +50,35 @@ namespace Ryujinx.HLE.HOS.Services.Lm
 
                     string FieldStr = string.Empty;
 
-                    if (Field == LmLogField.Skip)
+                    if (Field == LmLogField.Start)
                     {
-                        Reader.ReadByte();
+                        Reader.ReadBytes(Size);
 
                         continue;
+                    }
+                    else if (Field == LmLogField.Stop)
+                    {
+                        break;
                     }
                     else if (Field == LmLogField.Line)
                     {
                         FieldStr = Field + ": " + Reader.ReadInt32();
                     }
-                    else
+                    else if (Field == LmLogField.DropCount)
+                    {
+                        FieldStr = Field + ": " + Reader.ReadInt64();
+                    }
+                    else if (Field == LmLogField.Time)
+                    {
+                        FieldStr = Field + ": " + Reader.ReadInt64() + "s";
+                    }
+                    else if (Field < LmLogField.Count)
                     {
                         FieldStr = Field + ": \"" + Encoding.UTF8.GetString(Reader.ReadBytes(Size)) + "\"";
+                    }
+                    else
+                    {
+                        FieldStr = "Field" + Field + ": \"" + Encoding.UTF8.GetString(Reader.ReadBytes(Size)) + "\"";
                     }
 
                     SB.AppendLine(" " + FieldStr);
