@@ -11,8 +11,6 @@ namespace Ryujinx.Graphics.Gal
         IEnumerable<ShaderDeclInfo> GetConstBufferUsage(long Key);
         IEnumerable<ShaderDeclInfo> GetTextureUsage(long Key);
 
-        void EnsureTextureBinding(string UniformName, int Value);
-
         void Bind(long Key);
 
         void Unbind(GalShaderType Type);

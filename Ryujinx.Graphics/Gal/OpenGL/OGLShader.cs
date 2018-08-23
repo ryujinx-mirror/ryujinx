@@ -96,15 +96,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             return Enumerable.Empty<ShaderDeclInfo>();
         }
 
-        public void EnsureTextureBinding(string UniformName, int Value)
-        {
-            BindProgram();
-
-            int Location = GL.GetUniformLocation(CurrentProgramHandle, UniformName);
-
-            GL.Uniform1(Location, Value);
-        }
-
         public unsafe void SetFlip(float X, float Y)
         {
             BindProgram();
@@ -188,6 +179,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 CheckProgramLink(Handle);
 
                 BindUniformBlocks(Handle);
+                BindTextureLocations(Handle);
 
                 Programs.Add(Current, Handle);
             }
@@ -256,6 +248,34 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             BindUniformBlocksIfNotNull(Current.TessEvaluation);
             BindUniformBlocksIfNotNull(Current.Geometry);
             BindUniformBlocksIfNotNull(Current.Fragment);
+        }
+
+        private void BindTextureLocations(int ProgramHandle)
+        {
+            int Index = 0;
+
+            void BindTexturesIfNotNull(OGLShaderStage Stage)
+            {
+                if (Stage != null)
+                {
+                    foreach (ShaderDeclInfo Decl in Stage.TextureUsage)
+                    {
+                        int Location = GL.GetUniformLocation(ProgramHandle, Decl.Name);
+
+                        GL.Uniform1(Location, Index);
+
+                        Index++;
+                    }
+                }
+            }
+
+            GL.UseProgram(ProgramHandle);
+
+            BindTexturesIfNotNull(Current.Vertex);
+            BindTexturesIfNotNull(Current.TessControl);
+            BindTexturesIfNotNull(Current.TessEvaluation);
+            BindTexturesIfNotNull(Current.Geometry);
+            BindTexturesIfNotNull(Current.Fragment);
         }
 
         private static void CheckProgramLink(int Handle)

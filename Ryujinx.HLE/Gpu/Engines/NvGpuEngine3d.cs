@@ -442,8 +442,6 @@ namespace Ryujinx.HLE.Gpu.Engines
 
                     UploadTexture(Vmm, TexIndex, TextureHandle);
 
-                    Gpu.Renderer.Shader.EnsureTextureBinding(DeclInfo.Name, TexIndex);
-
                     TexIndex++;
                 }
             }
