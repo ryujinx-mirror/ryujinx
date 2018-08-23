@@ -1,5 +1,30 @@
-﻿namespace Ryujinx.Graphics.Gal.Shader
+﻿using System;
+
+namespace Ryujinx.Graphics.Gal.Shader
 {
+    struct OmapTarget
+    {
+        public bool Red;
+        public bool Green;
+        public bool Blue;
+        public bool Alpha;
+
+        public bool Enabled => Red || Green || Blue || Alpha;
+
+        public bool ComponentEnabled(int Component)
+        {
+            switch (Component)
+            {
+                case 0: return Red;
+                case 1: return Green;
+                case 2: return Blue;
+                case 3: return Alpha;
+            }
+
+            throw new ArgumentException(nameof(Component));
+        }
+    }
+
     class ShaderHeader
     {
         public const int PointList     = 1;
@@ -29,6 +54,10 @@
         public int MaxOutputVertexCount { get; private set; }
         public int StoreReqStart        { get; private set; }
         public int StoreReqEnd          { get; private set; }
+
+        public OmapTarget[] OmapTargets    { get; private set; }
+        public bool         OmapSampleMask { get; private set; }
+        public bool         OmapDepth      { get; private set; }
 
         public ShaderHeader(IGalMemory Memory, long Position)
         {
@@ -61,6 +90,50 @@
             MaxOutputVertexCount = ReadBits(CommonWord4,  0, 12);
             StoreReqStart        = ReadBits(CommonWord4, 12,  8);
             StoreReqEnd          = ReadBits(CommonWord4, 24,  8);
+
+            //Type 2 (fragment?) reading
+            uint Type2OmapTarget = (uint)Memory.ReadInt32(Position + 72);
+            uint Type2Omap       = (uint)Memory.ReadInt32(Position + 76);
+
+            OmapTargets = new OmapTarget[8];
+
+            for (int i = 0; i < OmapTargets.Length; i++)
+            {
+                int Offset = i * 4;
+
+                OmapTargets[i] = new OmapTarget
+                {
+                    Red   = ReadBits(Type2OmapTarget, Offset + 0, 1) != 0,
+                    Green = ReadBits(Type2OmapTarget, Offset + 1, 1) != 0,
+                    Blue  = ReadBits(Type2OmapTarget, Offset + 2, 1) != 0,
+                    Alpha = ReadBits(Type2OmapTarget, Offset + 3, 1) != 0
+                };
+            }
+
+            OmapSampleMask = ReadBits(Type2Omap, 0, 1) != 0;
+            OmapDepth      = ReadBits(Type2Omap, 1, 1) != 0;
+        }
+
+        public int DepthRegister
+        {
+            get
+            {
+                int Count = 0;
+
+                for (int Index = 0; Index < OmapTargets.Length; Index++)
+                {
+                    for (int Component = 0; Component < 4; Component++)
+                    {
+                        if (OmapTargets[Index].ComponentEnabled(Component))
+                        {
+                            Count++;
+                        }
+                    }
+                }
+
+                // Depth register is always two registers after the last color output
+                return Count + 1;
+            }
         }
 
         private static int ReadBits(uint Word, int Offset, int BitWidth)

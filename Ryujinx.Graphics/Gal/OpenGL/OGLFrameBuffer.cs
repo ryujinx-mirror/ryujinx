@@ -21,18 +21,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
         }
 
-        private static readonly DrawBuffersEnum[] DrawBuffers = new DrawBuffersEnum[]
-        {
-            DrawBuffersEnum.ColorAttachment0,
-            DrawBuffersEnum.ColorAttachment1,
-            DrawBuffersEnum.ColorAttachment2,
-            DrawBuffersEnum.ColorAttachment3,
-            DrawBuffersEnum.ColorAttachment4,
-            DrawBuffersEnum.ColorAttachment5,
-            DrawBuffersEnum.ColorAttachment6,
-            DrawBuffersEnum.ColorAttachment7,
-        };
-
         private const int NativeWidth  = 1280;
         private const int NativeHeight = 720;
 
@@ -192,6 +180,25 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, Width, Height, RawTex.PixelFormat, RawTex.PixelType, Data);
 
             ReadTex = RawTex;
+        }
+
+        public void SetMap(int[] Map)
+        {
+            if (Map != null && Map.Length > 0)
+            {
+                DrawBuffersEnum[] Mode = new DrawBuffersEnum[Map.Length];
+
+                for (int i = 0; i < Map.Length; i++)
+                {
+                    Mode[i] = DrawBuffersEnum.ColorAttachment0 + Map[i];
+                }
+
+                GL.DrawBuffers(Mode.Length, Mode);
+            }
+            else
+            {
+                GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+            }
         }
 
         public void SetTransform(bool FlipX, bool FlipY, int Top, int Left, int Right, int Bottom)
@@ -421,8 +428,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
 
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, DummyFrameBuffer);
-
-            GL.DrawBuffers(8, DrawBuffers);
         }
 
         private void Attach(ref int OldHandle, int NewHandle, FramebufferAttachment FbAttachment)

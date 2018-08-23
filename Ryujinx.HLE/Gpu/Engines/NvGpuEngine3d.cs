@@ -102,9 +102,14 @@ namespace Ryujinx.HLE.Gpu.Engines
             SetAlphaBlending(State);
             SetPrimitiveRestart(State);
 
-            //Enabling multiple framebuffer attachments cause graphics reggresions
-            SetFrameBuffer(Vmm, 0);
+            for (int FbIndex = 0; FbIndex < 8; FbIndex++)
+            {
+                SetFrameBuffer(Vmm, 0);
+            }
+            
             SetZeta(Vmm);
+
+            SetRenderTargets();
 
             long[] Keys = UploadShaders(Vmm);
 
@@ -412,6 +417,33 @@ namespace Ryujinx.HLE.Gpu.Engines
             if (State.PrimitiveRestartEnabled)
             {
                 State.PrimitiveRestartIndex = (uint)ReadRegister(NvGpuEngine3dReg.PrimRestartIndex);
+            }
+        }
+
+        private void SetRenderTargets()
+        {
+            bool SeparateFragData = (ReadRegister(NvGpuEngine3dReg.RTSeparateFragData) & 1) != 0;
+
+            if (SeparateFragData)
+            {
+                uint Control = (uint)(ReadRegister(NvGpuEngine3dReg.RTControl));
+
+                uint Count = Control & 0xf;
+
+                int[] Map = new int[Count];
+
+                for (int i = 0; i < Count; i++)
+                {
+                    int Shift = 4 + i * 3;
+
+                    Map[i] = (int)((Control >> Shift) & 7);
+                }
+
+                Gpu.Renderer.FrameBuffer.SetMap(Map);
+            }
+            else
+            {
+                Gpu.Renderer.FrameBuffer.SetMap(null);
             }
         }
 
