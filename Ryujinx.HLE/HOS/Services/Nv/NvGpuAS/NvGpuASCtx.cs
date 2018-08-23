@@ -187,7 +187,10 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
                 {
                     Left = Middle + 1;
 
-                    LtRg = Rg;
+                    if ((ulong)Position > Rg.Start)
+                    {
+                        LtRg = Rg;
+                    }
                 }
             }
 
