@@ -174,39 +174,39 @@ namespace Ryujinx.HLE.HOS.Ipc
             return 0;
         }
 
-        public (long Position, long Size) GetBufferType0x21()
+        public (long Position, long Size) GetBufferType0x21(int Index = 0)
         {
-            if (PtrBuff.Count       != 0 &&
-                PtrBuff[0].Position != 0 &&
-                PtrBuff[0].Size     != 0)
+            if (PtrBuff.Count > Index &&
+                PtrBuff[Index].Position != 0 &&
+                PtrBuff[Index].Size     != 0)
             {
-                return (PtrBuff[0].Position, PtrBuff[0].Size);
+                return (PtrBuff[Index].Position, PtrBuff[Index].Size);
             }
 
-            if (SendBuff.Count       != 0 &&
-                SendBuff[0].Position != 0 &&
-                SendBuff[0].Size     != 0)
+            if (SendBuff.Count > Index &&
+                SendBuff[Index].Position != 0 &&
+                SendBuff[Index].Size     != 0)
             {
-                return (SendBuff[0].Position, SendBuff[0].Size);
+                return (SendBuff[Index].Position, SendBuff[Index].Size);
             }
 
             return (0, 0);
         }
 
-        public (long Position, long Size) GetBufferType0x22()
+        public (long Position, long Size) GetBufferType0x22(int Index = 0)
         {
-            if (RecvListBuff.Count       != 0 &&
-                RecvListBuff[0].Position != 0 &&
-                RecvListBuff[0].Size     != 0)
+            if (RecvListBuff.Count > Index &&
+                RecvListBuff[Index].Position != 0 &&
+                RecvListBuff[Index].Size     != 0)
             {
-                return (RecvListBuff[0].Position, RecvListBuff[0].Size);
+                return (RecvListBuff[Index].Position, RecvListBuff[Index].Size);
             }
 
-            if (ReceiveBuff.Count       != 0 &&
-                ReceiveBuff[0].Position != 0 &&
-                ReceiveBuff[0].Size     != 0)
+            if (ReceiveBuff.Count > Index &&
+                ReceiveBuff[Index].Position != 0 &&
+                ReceiveBuff[Index].Size     != 0)
             {
-                return (ReceiveBuff[0].Position, ReceiveBuff[0].Size);
+                return (ReceiveBuff[Index].Position, ReceiveBuff[Index].Size);
             }
 
             return (0, 0);
