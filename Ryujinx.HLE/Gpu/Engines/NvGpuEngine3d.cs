@@ -27,6 +27,8 @@ namespace Ryujinx.HLE.Gpu.Engines
 
         private List<long>[] UploadedKeys;
 
+        private int CurrentInstance = 0;
+
         public NvGpuEngine3d(NvGpu Gpu)
         {
             this.Gpu = Gpu;
@@ -654,9 +656,24 @@ namespace Ryujinx.HLE.Gpu.Engines
                 long VertexPosition = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNAddress + Index * 4);
                 long VertexEndPos   = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNEndAddr + Index * 2);
 
-                long VboKey = Vmm.GetPhysicalAddress(VertexPosition);
+                int VertexDivisor = ReadRegister(NvGpuEngine3dReg.VertexArrayNDivisor + Index * 4);
+
+                bool Instanced = (ReadRegister(NvGpuEngine3dReg.VertexArrayNInstance + Index) & 1) != 0;
 
                 int Stride = Control & 0xfff;
+
+                if (Instanced && VertexDivisor != 0)
+                {
+                    VertexPosition += Stride * (CurrentInstance / VertexDivisor);
+                }
+
+                if (VertexPosition > VertexEndPos)
+                {
+                    //Instance is invalid, ignore the draw call
+                    continue;
+                }
+
+                long VboKey = Vmm.GetPhysicalAddress(VertexPosition);
 
                 long VbSize = (VertexEndPos - VertexPosition) + 1;
 
@@ -669,10 +686,12 @@ namespace Ryujinx.HLE.Gpu.Engines
                     Gpu.Renderer.Rasterizer.CreateVbo(VboKey, (int)VbSize, DataAddress);
                 }
 
-                State.VertexBindings[Index].Enabled = true;
-                State.VertexBindings[Index].Stride  = Stride;
-                State.VertexBindings[Index].VboKey  = VboKey;
-                State.VertexBindings[Index].Attribs = Attribs[Index].ToArray();
+                State.VertexBindings[Index].Enabled   = true;
+                State.VertexBindings[Index].Stride    = Stride;
+                State.VertexBindings[Index].VboKey    = VboKey;
+                State.VertexBindings[Index].Instanced = Instanced;
+                State.VertexBindings[Index].Divisor   = VertexDivisor;
+                State.VertexBindings[Index].Attribs   = Attribs[Index].ToArray();
             }
         }
 
@@ -682,6 +701,25 @@ namespace Ryujinx.HLE.Gpu.Engines
             int PrimCtrl   = ReadRegister(NvGpuEngine3dReg.VertexBeginGl);
 
             GalPrimitiveType PrimType = (GalPrimitiveType)(PrimCtrl & 0xffff);
+
+            bool InstanceNext = ((PrimCtrl >> 26) & 1) != 0;
+            bool InstanceCont = ((PrimCtrl >> 27) & 1) != 0;
+
+            if (InstanceNext && InstanceCont)
+            {
+                throw new InvalidOperationException("GPU tried to increase and reset instance count at the same time");
+            }
+
+            if (InstanceNext)
+            {
+                CurrentInstance++;
+            }
+            else if (!InstanceCont)
+            {
+                CurrentInstance = 0;
+            }
+
+            State.Instance = CurrentInstance;
 
             Gpu.Renderer.Pipeline.Bind(State);
 

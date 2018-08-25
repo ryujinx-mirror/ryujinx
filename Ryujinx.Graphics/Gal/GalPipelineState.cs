@@ -7,6 +7,8 @@
         public bool Enabled;
         public int Stride;
         public long VboKey;
+        public bool Instanced;
+        public int Divisor;
         public GalVertexAttrib[] Attribs;
     }
 
@@ -21,6 +23,8 @@
 
         public float FlipX;
         public float FlipY;
+
+        public int Instance;
 
         public GalFrontFace FrontFace;
 

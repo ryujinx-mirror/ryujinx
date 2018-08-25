@@ -241,9 +241,14 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             if (Decl.ShaderType == GalShaderType.Vertex)
             {
-                SB.AppendLine("layout (std140) uniform " + GlslDecl.ExtraUniformBlockName + "{");
+                //Memory layout here is [flip_x, flip_y, instance, unused]
+                //It's using 4 bytes, not 8
+
+                SB.AppendLine("layout (std140) uniform " + GlslDecl.ExtraUniformBlockName + " {");
 
                 SB.AppendLine(IdentationStr + "vec2 " + GlslDecl.FlipUniformName + ";");
+
+                SB.AppendLine(IdentationStr + "int " + GlslDecl.InstanceUniformName + ";");
 
                 SB.AppendLine("};");
             }
@@ -816,7 +821,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 switch (Abuf.Offs)
                 {
                     case GlslDecl.VertexIdAttr:   return "gl_VertexID";
-                    case GlslDecl.InstanceIdAttr: return "gl_InstanceID";
+                    case GlslDecl.InstanceIdAttr: return GlslDecl.InstanceUniformName;
                 }
             }
             else if (Decl.ShaderType == GalShaderType.TessEvaluation)

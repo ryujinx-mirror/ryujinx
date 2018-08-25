@@ -126,9 +126,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             BindVertexLayout(New);
 
-            if (New.FlipX != Old.FlipX || New.FlipY != Old.FlipY)
+            if (New.FlipX != Old.FlipX || New.FlipY != Old.FlipY || New.Instance != Old.Instance)
             {
-                Shader.SetFlip(New.FlipX, New.FlipY);
+                Shader.SetExtraData(New.FlipX, New.FlipY, New.Instance);
             }
 
             //Note: Uncomment SetFrontFace and SetCullFace when flipping issues are solved
@@ -290,8 +290,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private void BindConstBuffers(GalPipelineState New)
         {
-            //Index 0 is reserved
-            int FreeBinding = 1;
+            int FreeBinding = OGLShader.ReservedCbufCount;
 
             void BindIfNotNull(OGLShaderStage Stage)
             {
@@ -384,6 +383,15 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     else
                     {
                         GL.VertexAttribPointer(Attrib.Index, Size, Type, Normalize, Binding.Stride, Offset);
+                    }
+
+                    if (Binding.Instanced && Binding.Divisor != 0)
+                    {
+                        GL.VertexAttribDivisor(Attrib.Index, 1);
+                    }
+                    else
+                    {
+                        GL.VertexAttribDivisor(Attrib.Index, 0);
                     }
                 }
             }

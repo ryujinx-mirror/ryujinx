@@ -41,6 +41,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public const string ExtraUniformBlockName = "Extra";
         public const string FlipUniformName = "flip";
+        public const string InstanceUniformName = "instance";
 
         public const string ProgramName  = "program";
         public const string ProgramAName = ProgramName + "_a";
