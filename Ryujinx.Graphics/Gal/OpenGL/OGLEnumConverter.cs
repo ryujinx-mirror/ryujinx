@@ -215,16 +215,31 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             switch (Wrap)
             {
-                case GalTextureWrap.Repeat:              return TextureWrapMode.Repeat;
-                case GalTextureWrap.MirroredRepeat:      return TextureWrapMode.MirroredRepeat;
-                case GalTextureWrap.ClampToEdge:         return TextureWrapMode.ClampToEdge;
-                case GalTextureWrap.ClampToBorder:       return TextureWrapMode.ClampToBorder;
-                case GalTextureWrap.Clamp:               return TextureWrapMode.Clamp;
+                case GalTextureWrap.Repeat:         return TextureWrapMode.Repeat;
+                case GalTextureWrap.MirroredRepeat: return TextureWrapMode.MirroredRepeat;
+                case GalTextureWrap.ClampToEdge:    return TextureWrapMode.ClampToEdge;
+                case GalTextureWrap.ClampToBorder:  return TextureWrapMode.ClampToBorder;
+                case GalTextureWrap.Clamp:          return TextureWrapMode.Clamp;
+            }
 
-                //TODO: Those needs extensions (and are currently wrong).
-                case GalTextureWrap.MirrorClampToEdge:   return TextureWrapMode.ClampToEdge;
-                case GalTextureWrap.MirrorClampToBorder: return TextureWrapMode.ClampToBorder;
-                case GalTextureWrap.MirrorClamp:         return TextureWrapMode.Clamp;
+            if (OGLExtension.HasTextureMirrorClamp())
+            {
+                switch (Wrap)
+                {
+                    case GalTextureWrap.MirrorClampToEdge:   return (TextureWrapMode)ExtTextureMirrorClamp.MirrorClampToEdgeExt;
+                    case GalTextureWrap.MirrorClampToBorder: return (TextureWrapMode)ExtTextureMirrorClamp.MirrorClampToBorderExt;
+                    case GalTextureWrap.MirrorClamp:         return (TextureWrapMode)ExtTextureMirrorClamp.MirrorClampExt;
+                }
+            }
+            else
+            {
+                //Fallback to non-mirrored clamps
+                switch (Wrap)
+                {
+                    case GalTextureWrap.MirrorClampToEdge:   return TextureWrapMode.ClampToEdge;
+                    case GalTextureWrap.MirrorClampToBorder: return TextureWrapMode.ClampToBorder;
+                    case GalTextureWrap.MirrorClamp:         return TextureWrapMode.Clamp;
+                }
             }
 
             throw new ArgumentException(nameof(Wrap));

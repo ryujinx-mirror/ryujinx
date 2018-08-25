@@ -8,11 +8,20 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private static bool EnhancedLayouts;
 
+        private static bool TextureMirrorClamp;
+
         public static bool HasEnhancedLayouts()
         {
             EnsureInitialized();
 
             return EnhancedLayouts;
+        }
+
+        public static bool HasTextureMirrorClamp()
+        {
+            EnsureInitialized();
+
+            return TextureMirrorClamp;
         }
 
         private static void EnsureInitialized()
@@ -23,6 +32,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
 
             EnhancedLayouts = HasExtension("GL_ARB_enhanced_layouts");
+
+            TextureMirrorClamp = HasExtension("GL_EXT_texture_mirror_clamp");
         }
 
         private static bool HasExtension(string Name)
