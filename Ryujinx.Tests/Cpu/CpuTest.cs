@@ -119,22 +119,42 @@ namespace Ryujinx.Tests.Cpu
 
         protected static Vector128<float> MakeVectorE0(double E0)
         {
+            if (!Sse2.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
             return Sse.StaticCast<long, float>(Sse2.SetVector128(0, BitConverter.DoubleToInt64Bits(E0)));
         }
 
         protected static Vector128<float> MakeVectorE0E1(double E0, double E1)
         {
-            return Sse.StaticCast<long, float>(Sse2.SetVector128(BitConverter.DoubleToInt64Bits(E1),
-                                                                 BitConverter.DoubleToInt64Bits(E0)));
+            if (!Sse2.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
+            return Sse.StaticCast<long, float>(
+                Sse2.SetVector128(BitConverter.DoubleToInt64Bits(E1), BitConverter.DoubleToInt64Bits(E0)));
         }
 
         protected static Vector128<float> MakeVectorE1(double E1)
         {
+            if (!Sse2.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
             return Sse.StaticCast<long, float>(Sse2.SetVector128(BitConverter.DoubleToInt64Bits(E1), 0));
         }
 
         protected static double VectorExtractDouble(Vector128<float> Vector, byte Index)
         {
+            if (!Sse41.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
             long Value = Sse41.Extract(Sse.StaticCast<float, long>(Vector), Index);
 
             return BitConverter.Int64BitsToDouble(Value);
@@ -142,26 +162,51 @@ namespace Ryujinx.Tests.Cpu
 
         protected static Vector128<float> MakeVectorE0(ulong E0)
         {
+            if (!Sse2.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
             return Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, E0));
         }
 
         protected static Vector128<float> MakeVectorE0E1(ulong E0, ulong E1)
         {
+            if (!Sse2.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
             return Sse.StaticCast<ulong, float>(Sse2.SetVector128(E1, E0));
         }
 
         protected static Vector128<float> MakeVectorE1(ulong E1)
         {
+            if (!Sse2.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
             return Sse.StaticCast<ulong, float>(Sse2.SetVector128(E1, 0));
         }
 
         protected static ulong GetVectorE0(Vector128<float> Vector)
         {
+            if (!Sse41.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
             return Sse41.Extract(Sse.StaticCast<float, ulong>(Vector), (byte)0);
         }
 
         protected static ulong GetVectorE1(Vector128<float> Vector)
         {
+            if (!Sse41.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
             return Sse41.Extract(Sse.StaticCast<float, ulong>(Vector), (byte)1);
         }
     }

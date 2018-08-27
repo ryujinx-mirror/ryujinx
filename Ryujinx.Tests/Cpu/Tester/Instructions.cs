@@ -5251,6 +5251,88 @@ namespace Ryujinx.Tests.Cpu.Tester
             V(d, result);
         }
 
+        // shadd_advsimd.html
+        public static void Shadd_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger element1;
+            BigInteger element2;
+            BigInteger sum;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                sum = element1 + element2;
+
+                Elem(result, e, esize, sum.SubBigInteger(esize, 1));
+            }
+
+            V(d, result);
+        }
+
+        // shsub_advsimd.html
+        public static void Shsub_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger element1;
+            BigInteger element2;
+            BigInteger diff;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                diff = element1 - element2;
+
+                Elem(result, e, esize, diff.SubBigInteger(esize, 1));
+            }
+
+            V(d, result);
+        }
+
         // sqadd_advsimd.html#SQADD_asisdsame_only
         public static void Sqadd_S(Bits size, Bits Rm, Bits Rn, Bits Rd)
         {
@@ -5646,6 +5728,44 @@ namespace Ryujinx.Tests.Cpu.Tester
                     /* FPSR.QC = '1'; */
                     FPSR[27] = true; // TODO: Add named fields.
                 }
+            }
+
+            V(d, result);
+        }
+
+        // srhadd_advsimd.html
+        public static void Srhadd_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = false;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger element1;
+            BigInteger element2;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                Elem(result, e, esize, (element1 + element2 + 1).SubBigInteger(esize, 1));
             }
 
             V(d, result);
@@ -6143,6 +6263,88 @@ namespace Ryujinx.Tests.Cpu.Tester
             V(d, result);
         }
 
+        // uhadd_advsimd.html
+        public static void Uhadd_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger element1;
+            BigInteger element2;
+            BigInteger sum;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                sum = element1 + element2;
+
+                Elem(result, e, esize, sum.SubBigInteger(esize, 1));
+            }
+
+            V(d, result);
+        }
+
+        // uhsub_advsimd.html
+        public static void Uhsub_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger element1;
+            BigInteger element2;
+            BigInteger diff;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                diff = element1 - element2;
+
+                Elem(result, e, esize, diff.SubBigInteger(esize, 1));
+            }
+
+            V(d, result);
+        }
+
         // uqadd_advsimd.html#UQADD_asisdsame_only
         public static void Uqadd_S(Bits size, Bits Rm, Bits Rn, Bits Rd)
         {
@@ -6334,6 +6536,44 @@ namespace Ryujinx.Tests.Cpu.Tester
                     /* FPSR.QC = '1'; */
                     FPSR[27] = true; // TODO: Add named fields.
                 }
+            }
+
+            V(d, result);
+        }
+
+        // urhadd_advsimd.html
+        public static void Urhadd_V(bool Q, Bits size, Bits Rm, Bits Rn, Bits Rd)
+        {
+            const bool U = true;
+
+            /* Decode */
+            int d = (int)UInt(Rd);
+            int n = (int)UInt(Rn);
+            int m = (int)UInt(Rm);
+
+            /* if size == '11' then ReservedValue(); */
+
+            int esize = 8 << (int)UInt(size);
+            int datasize = (Q ? 128 : 64);
+            int elements = datasize / esize;
+
+            bool unsigned = (U == true);
+
+            /* Operation */
+            /* CheckFPAdvSIMDEnabled64(); */
+
+            Bits result = new Bits(datasize);
+            Bits operand1 = V(datasize, n);
+            Bits operand2 = V(datasize, m);
+            BigInteger element1;
+            BigInteger element2;
+
+            for (int e = 0; e <= elements - 1; e++)
+            {
+                element1 = Int(Elem(operand1, e, esize), unsigned);
+                element2 = Int(Elem(operand2, e, esize), unsigned);
+
+                Elem(result, e, esize, (element1 + element2 + 1).SubBigInteger(esize, 1));
             }
 
             V(d, result);

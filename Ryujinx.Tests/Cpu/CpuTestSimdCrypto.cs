@@ -10,7 +10,7 @@ namespace Ryujinx.Tests.Cpu
 {
     public class CpuTestSimdCrypto : CpuTest
     {
-        [Test, Explicit, Description("AESD <Vd>.16B, <Vn>.16B")]
+        [Test, Description("AESD <Vd>.16B, <Vn>.16B")]
         public void Aesd_V([Values(0u)] uint Rd,
                            [Values(1u)] uint Rn,
                            [Values(0x7B5B546573745665ul)] ulong ValueH,
@@ -39,7 +39,7 @@ namespace Ryujinx.Tests.Cpu
             });
         }
 
-        [Test, Explicit, Description("AESE <Vd>.16B, <Vn>.16B")]
+        [Test, Description("AESE <Vd>.16B, <Vn>.16B")]
         public void Aese_V([Values(0u)] uint Rd,
                            [Values(1u)] uint Rn,
                            [Values(0x7B5B546573745665ul)] ulong ValueH,
@@ -68,7 +68,7 @@ namespace Ryujinx.Tests.Cpu
             });
         }
 
-        [Test, Explicit, Description("AESIMC <Vd>.16B, <Vn>.16B")]
+        [Test, Description("AESIMC <Vd>.16B, <Vn>.16B")]
         public void Aesimc_V([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [Values(0x8DCAB9DC035006BCul)] ulong ValueH,
@@ -100,7 +100,7 @@ namespace Ryujinx.Tests.Cpu
             }
         }
 
-        [Test, Explicit, Description("AESMC <Vd>.16B, <Vn>.16B")]
+        [Test, Description("AESMC <Vd>.16B, <Vn>.16B")]
         public void Aesmc_V([Values(0u)]     uint Rd,
                             [Values(1u, 0u)] uint Rn,
                             [Values(0x627A6F6644B109C8ul)] ulong ValueH,

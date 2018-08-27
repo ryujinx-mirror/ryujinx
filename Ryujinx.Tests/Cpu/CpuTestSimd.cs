@@ -1245,11 +1245,11 @@ namespace Ryujinx.Tests.Cpu
             });
         }
 
-        [Test, Explicit, Description("SHA256SU0 <Vd>.4S, <Vn>.4S")] // 1250 tests.
+        [Test, Pairwise, Description("SHA256SU0 <Vd>.4S, <Vn>.4S")]
         public void Sha256su0_V([Values(0u)]     uint Rd,
                                 [Values(1u, 0u)] uint Rn,
-                                [Random(5)] ulong Z0, [Random(5)] ulong Z1,
-                                [Random(5)] ulong A0, [Random(5)] ulong A1)
+                                [Random(RndCnt * 2)] ulong Z0, [Random(RndCnt * 2)] ulong Z1,
+                                [Random(RndCnt * 2)] ulong A0, [Random(RndCnt * 2)] ulong A1)
         {
             uint Opcode = 0x5E282800; // SHA256SU0 V0.4S, V0.4S
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
