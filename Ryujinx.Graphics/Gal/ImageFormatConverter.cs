@@ -237,7 +237,7 @@ namespace Ryujinx.Graphics.Gal
                 case GalImageFormat.D24_UNORM_S8_UINT:
                 case GalImageFormat.D32_SFLOAT:
                 case GalImageFormat.D16_UNORM:
-                    return true;
+                    return false;
             }
 
             throw new NotImplementedException(Format.ToString());
