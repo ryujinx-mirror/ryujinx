@@ -6,32 +6,32 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     static partial class ShaderDecode
     {
-        public static void Bfe_C(ShaderIrBlock Block, long OpCode)
+        public static void Bfe_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitBfe(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Bfe_I(ShaderIrBlock Block, long OpCode)
+        public static void Bfe_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitBfe(Block, OpCode, ShaderOper.Imm);
         }
 
-        public static void Bfe_R(ShaderIrBlock Block, long OpCode)
+        public static void Bfe_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitBfe(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Fadd_C(ShaderIrBlock Block, long OpCode)
+        public static void Fadd_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFadd(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Fadd_I(ShaderIrBlock Block, long OpCode)
+        public static void Fadd_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFadd(Block, OpCode, ShaderOper.Immf);
         }
 
-        public static void Fadd_I32(ShaderIrBlock Block, long OpCode)
+        public static void Fadd_I32(ShaderIrBlock Block, long OpCode, long Position)
         {
             ShaderIrNode OperA = GetOperGpr8     (OpCode);
             ShaderIrNode OperB = GetOperImmf32_20(OpCode);
@@ -49,47 +49,47 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
         }
 
-        public static void Fadd_R(ShaderIrBlock Block, long OpCode)
+        public static void Fadd_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFadd(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Ffma_CR(ShaderIrBlock Block, long OpCode)
+        public static void Ffma_CR(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFfma(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Ffma_I(ShaderIrBlock Block, long OpCode)
+        public static void Ffma_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFfma(Block, OpCode, ShaderOper.Immf);
         }
 
-        public static void Ffma_RC(ShaderIrBlock Block, long OpCode)
+        public static void Ffma_RC(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFfma(Block, OpCode, ShaderOper.RC);
         }
 
-        public static void Ffma_RR(ShaderIrBlock Block, long OpCode)
+        public static void Ffma_RR(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFfma(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Fmnmx_C(ShaderIrBlock Block, long OpCode)
+        public static void Fmnmx_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFmnmx(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Fmnmx_I(ShaderIrBlock Block, long OpCode)
+        public static void Fmnmx_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFmnmx(Block, OpCode, ShaderOper.Immf);
         }
 
-        public static void Fmnmx_R(ShaderIrBlock Block, long OpCode)
+        public static void Fmnmx_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFmnmx(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Fmul_I32(ShaderIrBlock Block, long OpCode)
+        public static void Fmul_I32(ShaderIrBlock Block, long OpCode, long Position)
         {
             ShaderIrNode OperA = GetOperGpr8     (OpCode);
             ShaderIrNode OperB = GetOperImmf32_20(OpCode);
@@ -99,62 +99,62 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
         }
 
-        public static void Fmul_C(ShaderIrBlock Block, long OpCode)
+        public static void Fmul_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFmul(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Fmul_I(ShaderIrBlock Block, long OpCode)
+        public static void Fmul_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFmul(Block, OpCode, ShaderOper.Immf);
         }
 
-        public static void Fmul_R(ShaderIrBlock Block, long OpCode)
+        public static void Fmul_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFmul(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Fset_C(ShaderIrBlock Block, long OpCode)
+        public static void Fset_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFset(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Fset_I(ShaderIrBlock Block, long OpCode)
+        public static void Fset_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFset(Block, OpCode, ShaderOper.Immf);
         }
 
-        public static void Fset_R(ShaderIrBlock Block, long OpCode)
+        public static void Fset_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFset(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Fsetp_C(ShaderIrBlock Block, long OpCode)
+        public static void Fsetp_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFsetp(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Fsetp_I(ShaderIrBlock Block, long OpCode)
+        public static void Fsetp_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFsetp(Block, OpCode, ShaderOper.Immf);
         }
 
-        public static void Fsetp_R(ShaderIrBlock Block, long OpCode)
+        public static void Fsetp_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitFsetp(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Iadd_C(ShaderIrBlock Block, long OpCode)
+        public static void Iadd_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIadd(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Iadd_I(ShaderIrBlock Block, long OpCode)
+        public static void Iadd_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIadd(Block, OpCode, ShaderOper.Imm);
         }
 
-        public static void Iadd_I32(ShaderIrBlock Block, long OpCode)
+        public static void Iadd_I32(ShaderIrBlock Block, long OpCode, long Position)
         {
             ShaderIrNode OperA = GetOperGpr8    (OpCode);
             ShaderIrNode OperB = GetOperImm32_20(OpCode);
@@ -168,42 +168,42 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
         }
 
-        public static void Iadd_R(ShaderIrBlock Block, long OpCode)
+        public static void Iadd_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIadd(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Iadd3_C(ShaderIrBlock Block, long OpCode)
+        public static void Iadd3_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIadd3(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Iadd3_I(ShaderIrBlock Block, long OpCode)
+        public static void Iadd3_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIadd3(Block, OpCode, ShaderOper.Imm);
         }
 
-        public static void Iadd3_R(ShaderIrBlock Block, long OpCode)
+        public static void Iadd3_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIadd3(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Imnmx_C(ShaderIrBlock Block, long OpCode)
+        public static void Imnmx_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitImnmx(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Imnmx_I(ShaderIrBlock Block, long OpCode)
+        public static void Imnmx_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitImnmx(Block, OpCode, ShaderOper.Imm);
         }
 
-        public static void Imnmx_R(ShaderIrBlock Block, long OpCode)
+        public static void Imnmx_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitImnmx(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Ipa(ShaderIrBlock Block, long OpCode)
+        public static void Ipa(ShaderIrBlock Block, long OpCode, long Position)
         {
             ShaderIrNode OperA = GetOperAbuf28(OpCode);
             ShaderIrNode OperB = GetOperGpr20 (OpCode);
@@ -213,52 +213,52 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
         }
 
-        public static void Iscadd_C(ShaderIrBlock Block, long OpCode)
+        public static void Iscadd_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIscadd(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Iscadd_I(ShaderIrBlock Block, long OpCode)
+        public static void Iscadd_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIscadd(Block, OpCode, ShaderOper.Imm);
         }
 
-        public static void Iscadd_R(ShaderIrBlock Block, long OpCode)
+        public static void Iscadd_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIscadd(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Iset_C(ShaderIrBlock Block, long OpCode)
+        public static void Iset_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIset(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Iset_I(ShaderIrBlock Block, long OpCode)
+        public static void Iset_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIset(Block, OpCode, ShaderOper.Imm);
         }
 
-        public static void Iset_R(ShaderIrBlock Block, long OpCode)
+        public static void Iset_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIset(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Isetp_C(ShaderIrBlock Block, long OpCode)
+        public static void Isetp_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIsetp(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Isetp_I(ShaderIrBlock Block, long OpCode)
+        public static void Isetp_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIsetp(Block, OpCode, ShaderOper.Imm);
         }
 
-        public static void Isetp_R(ShaderIrBlock Block, long OpCode)
+        public static void Isetp_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitIsetp(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Lop_I32(ShaderIrBlock Block, long OpCode)
+        public static void Lop_I32(ShaderIrBlock Block, long OpCode, long Position)
         {
             int SubOp = (int)(OpCode >> 53) & 3;
 
@@ -292,22 +292,22 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
         }
 
-        public static void Lop_C(ShaderIrBlock Block, long OpCode)
+        public static void Lop_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitLop(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Lop_I(ShaderIrBlock Block, long OpCode)
+        public static void Lop_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitLop(Block, OpCode, ShaderOper.Imm);
         }
 
-        public static void Lop_R(ShaderIrBlock Block, long OpCode)
+        public static void Lop_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitLop(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Mufu(ShaderIrBlock Block, long OpCode)
+        public static void Mufu(ShaderIrBlock Block, long OpCode, long Position)
         {
             int SubOp = (int)(OpCode >> 20) & 0xf;
 
@@ -336,7 +336,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
         }
 
-        public static void Psetp(ShaderIrBlock Block, long OpCode)
+        public static void Psetp(ShaderIrBlock Block, long OpCode, long Position)
         {
             bool NegA = ((OpCode >> 15) & 1) != 0;
             bool NegB = ((OpCode >> 32) & 1) != 0;
@@ -390,47 +390,47 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrAsg(P0Node, Op), OpCode));
         }
 
-        public static void Rro_C(ShaderIrBlock Block, long OpCode)
+        public static void Rro_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitRro(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Rro_I(ShaderIrBlock Block, long OpCode)
+        public static void Rro_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitRro(Block, OpCode, ShaderOper.Immf);
         }
 
-        public static void Rro_R(ShaderIrBlock Block, long OpCode)
+        public static void Rro_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitRro(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Shl_C(ShaderIrBlock Block, long OpCode)
+        public static void Shl_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitAluBinary(Block, OpCode, ShaderOper.CR, ShaderIrInst.Lsl);
         }
 
-        public static void Shl_I(ShaderIrBlock Block, long OpCode)
+        public static void Shl_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitAluBinary(Block, OpCode, ShaderOper.Imm, ShaderIrInst.Lsl);
         }
 
-        public static void Shl_R(ShaderIrBlock Block, long OpCode)
+        public static void Shl_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitAluBinary(Block, OpCode, ShaderOper.RR, ShaderIrInst.Lsl);
         }
 
-        public static void Shr_C(ShaderIrBlock Block, long OpCode)
+        public static void Shr_C(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitAluBinary(Block, OpCode, ShaderOper.CR, GetShrInst(OpCode));
         }
 
-        public static void Shr_I(ShaderIrBlock Block, long OpCode)
+        public static void Shr_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitAluBinary(Block, OpCode, ShaderOper.Imm, GetShrInst(OpCode));
         }
 
-        public static void Shr_R(ShaderIrBlock Block, long OpCode)
+        public static void Shr_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitAluBinary(Block, OpCode, ShaderOper.RR, GetShrInst(OpCode));
         }
@@ -442,7 +442,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             return Signed ? ShaderIrInst.Asr : ShaderIrInst.Lsr;
         }
 
-        public static void Vmad(ShaderIrBlock Block, long OpCode)
+        public static void Vmad(ShaderIrBlock Block, long OpCode, long Position)
         {
             ShaderIrNode OperA = GetOperGpr8(OpCode);
 
@@ -477,22 +477,22 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Final), OpCode));
         }
 
-        public static void Xmad_CR(ShaderIrBlock Block, long OpCode)
+        public static void Xmad_CR(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitXmad(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Xmad_I(ShaderIrBlock Block, long OpCode)
+        public static void Xmad_I(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitXmad(Block, OpCode, ShaderOper.Imm);
         }
 
-        public static void Xmad_RC(ShaderIrBlock Block, long OpCode)
+        public static void Xmad_RC(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitXmad(Block, OpCode, ShaderOper.RC);
         }
 
-        public static void Xmad_RR(ShaderIrBlock Block, long OpCode)
+        public static void Xmad_RR(ShaderIrBlock Block, long OpCode, long Position)
         {
             EmitXmad(Block, OpCode, ShaderOper.RR);
         }

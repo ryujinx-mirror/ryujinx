@@ -1,4 +1,4 @@
 namespace Ryujinx.Graphics.Gal.Shader
 {
-    delegate void ShaderDecodeFunc(ShaderIrBlock Block, long OpCode);
+    delegate void ShaderDecodeFunc(ShaderIrBlock Block, long OpCode, long Position);
 }

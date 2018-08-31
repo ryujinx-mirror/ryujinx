@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     static partial class ShaderDecode
     {
-        public static void Out_R(ShaderIrBlock Block, long OpCode)
+        public static void Out_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             //TODO: Those registers have to be used for something
             ShaderIrOperGpr Gpr0  = GetOperGpr0(OpCode);

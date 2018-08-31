@@ -84,6 +84,8 @@ namespace Ryujinx.Graphics.Gal.Shader
         Bra,
         Exit,
         Kil,
+        Ssy,
+        Sync,
 
         Emit,
         Cut

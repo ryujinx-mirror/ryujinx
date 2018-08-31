@@ -50,15 +50,27 @@ namespace Ryujinx.Graphics.Gal.Shader
                 {
                     ShaderIrNode LastNode = Current.GetLastNode();
 
-                    ShaderIrOp Op = GetInnermostOp(LastNode);
+                    ShaderIrOp InnerOp = GetInnermostOp(LastNode);
 
-                    if (Op?.Inst == ShaderIrInst.Bra)
+                    if (InnerOp?.Inst == ShaderIrInst.Bra)
                     {
-                        int Offset = ((ShaderIrOperImm)Op.OperandA).Value;
+                        int Offset = ((ShaderIrOperImm)InnerOp.OperandA).Value;
 
                         long Target = Current.EndPosition + Offset;
 
                         Current.Branch = Enqueue(Target, Current);
+                    }
+
+                    foreach (ShaderIrNode Node in Current.Nodes)
+                    {
+                        if (Node is ShaderIrOp CurrOp && CurrOp.Inst == ShaderIrInst.Ssy)
+                        {
+                            int Offset = ((ShaderIrOperImm)CurrOp.OperandA).Value;
+
+                            long Target = Offset;
+
+                            Current.Branch = Enqueue(Target, Current);
+                        }
                     }
 
                     if (NodeHasNext(LastNode))
@@ -157,7 +169,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                     {
                         int Offset = ((int)(OpCode >> 20) << 8) >> 8;
 
-                        long Target = Position + Offset;
+                        long Target = Position + Offset - Beginning;
 
                         DbgOpCode += " (0x" + Target.ToString("x16") + ")";
                     }
@@ -170,7 +182,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                     continue;
                 }
 
-                Decode(Block, OpCode);
+                Decode(Block, OpCode, Position);
             }
             while (!IsFlowChange(Block.GetLastNode()));
 

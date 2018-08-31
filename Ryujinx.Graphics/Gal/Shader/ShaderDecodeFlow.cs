@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     static partial class ShaderDecode
     {
-        public static void Bra(ShaderIrBlock Block, long OpCode)
+        public static void Bra(ShaderIrBlock Block, long OpCode, long Position)
         {
             if ((OpCode & 0x20) != 0)
             {
@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Bra, Imm), OpCode));
         }
 
-        public static void Exit(ShaderIrBlock Block, long OpCode)
+        public static void Exit(ShaderIrBlock Block, long OpCode, long Position)
         {
             int CCode = (int)OpCode & 0x1f;
 
@@ -34,9 +34,34 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         }
 
-        public static void Kil(ShaderIrBlock Block, long OpCode)
+        public static void Kil(ShaderIrBlock Block, long OpCode, long Position)
         {
             Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Kil), OpCode));
+        }
+
+        public static void Ssy(ShaderIrBlock Block, long OpCode, long Position)
+        {
+            if ((OpCode & 0x20) != 0)
+            {
+                //This reads the target offset from the constant buffer.
+                //Almost impossible to support with GLSL.
+                throw new NotImplementedException();
+            }
+
+            int Offset = ((int)(OpCode >> 20) << 8) >> 8;
+
+            int Target = (int)(Position + Offset);
+
+            ShaderIrOperImm Imm = new ShaderIrOperImm(Target);
+
+            Block.AddNode(new ShaderIrOp(ShaderIrInst.Ssy, Imm));
+        }
+
+        public static void Sync(ShaderIrBlock Block, long OpCode, long Position)
+        {
+            //TODO: Implement Sync condition codes
+
+            Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Sync), OpCode));
         }
     }
 }
