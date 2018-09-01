@@ -125,7 +125,7 @@ namespace Ryujinx.Graphics.Gal
                     break;
             }
 
-            throw new NotImplementedException("0x" + Format.ToString("x2") + " " + Type.ToString());
+            throw new NotImplementedException("0x" + ((int)Format).ToString("x2") + " " + Type.ToString());
         }
 
         public static GalImageFormat ConvertFrameBuffer(GalFrameBufferFormat Format)
