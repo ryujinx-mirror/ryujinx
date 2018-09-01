@@ -106,6 +106,26 @@ namespace ChocolArm64.Instruction
             }
         }
 
+        public static void Fcvtns_S(AILEmitterCtx Context)
+        {
+            EmitFcvtn(Context, Signed: true, Scalar: true);
+        }
+
+        public static void Fcvtns_V(AILEmitterCtx Context)
+        {
+            EmitFcvtn(Context, Signed: true, Scalar: false);
+        }
+
+        public static void Fcvtnu_S(AILEmitterCtx Context)
+        {
+            EmitFcvtn(Context, Signed: false, Scalar: true);
+        }
+
+        public static void Fcvtnu_V(AILEmitterCtx Context)
+        {
+            EmitFcvtn(Context, Signed: false, Scalar: false);
+        }
+
         public static void Fcvtps_Gp(AILEmitterCtx Context)
         {
             EmitFcvt_s_Gp(Context, () => EmitUnaryMathCall(Context, nameof(Math.Ceiling)));
@@ -247,6 +267,54 @@ namespace ChocolArm64.Instruction
             else
             {
                 throw new ArgumentOutOfRangeException(nameof(Size));
+            }
+        }
+
+        private static void EmitFcvtn(AILEmitterCtx Context, bool Signed, bool Scalar)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+            int SizeI = SizeF + 2;
+
+            int Bytes = Op.GetBitsCount() >> 3;
+            int Elems = !Scalar ? Bytes >> SizeI : 1;
+
+            if (Scalar && (SizeF == 0))
+            {
+                EmitVectorZeroLowerTmp(Context);
+            }
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                EmitVectorExtractF(Context, Op.Rn, Index, SizeF);
+
+                EmitRoundMathCall(Context, MidpointRounding.ToEven);
+
+                if (SizeF == 0)
+                {
+                    AVectorHelper.EmitCall(Context, Signed
+                        ? nameof(AVectorHelper.SatF32ToS32)
+                        : nameof(AVectorHelper.SatF32ToU32));
+
+                    Context.Emit(OpCodes.Conv_U8);
+                }
+                else /* if (SizeF == 1) */
+                {
+                    AVectorHelper.EmitCall(Context, Signed
+                        ? nameof(AVectorHelper.SatF64ToS64)
+                        : nameof(AVectorHelper.SatF64ToU64));
+                }
+
+                EmitVectorInsertTmp(Context, Index, SizeI);
+            }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
+
+            if ((Op.RegisterSize == ARegisterSize.SIMD64) || Scalar)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
             }
         }
 

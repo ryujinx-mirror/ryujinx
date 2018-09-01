@@ -1032,6 +1032,11 @@ namespace ChocolArm64.Instruction
             EmitAddLongPairwise(Context, Signed: true, Accumulate: true);
         }
 
+        public static void Saddl_V(AILEmitterCtx Context)
+        {
+            EmitVectorWidenRnRmBinaryOpSx(Context, () => Context.Emit(OpCodes.Add));
+        }
+
         public static void Saddlp_V(AILEmitterCtx Context)
         {
             EmitAddLongPairwise(Context, Signed: true, Accumulate: false);
@@ -1217,6 +1222,11 @@ namespace ChocolArm64.Instruction
             });
         }
 
+        public static void Ssubl_V(AILEmitterCtx Context)
+        {
+            EmitVectorWidenRnRmBinaryOpSx(Context, () => Context.Emit(OpCodes.Sub));
+        }
+
         public static void Ssubw_V(AILEmitterCtx Context)
         {
             EmitVectorWidenRmBinaryOpSx(Context, () => Context.Emit(OpCodes.Sub));
@@ -1391,6 +1401,24 @@ namespace ChocolArm64.Instruction
             EmitVectorPairwiseOpZx(Context, () => Context.EmitCall(MthdInfo));
         }
 
+        public static void Umlal_V(AILEmitterCtx Context)
+        {
+            EmitVectorWidenRnRmTernaryOpZx(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Add);
+            });
+        }
+
+        public static void Umlsl_V(AILEmitterCtx Context)
+        {
+            EmitVectorWidenRnRmTernaryOpZx(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Sub);
+            });
+        }
+
         public static void Umull_V(AILEmitterCtx Context)
         {
             EmitVectorWidenRnRmBinaryOpZx(Context, () => Context.Emit(OpCodes.Mul));
@@ -1448,6 +1476,11 @@ namespace ChocolArm64.Instruction
         public static void Usqadd_V(AILEmitterCtx Context)
         {
             EmitVectorSaturatingBinaryOpZx(Context, SaturatingFlags.Accumulate);
+        }
+
+        public static void Usubl_V(AILEmitterCtx Context)
+        {
+            EmitVectorWidenRnRmBinaryOpZx(Context, () => Context.Emit(OpCodes.Sub));
         }
 
         public static void Usubw_V(AILEmitterCtx Context)

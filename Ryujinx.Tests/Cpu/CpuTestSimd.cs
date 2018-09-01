@@ -85,11 +85,80 @@ namespace Ryujinx.Tests.Cpu
                                  0x8000000080000000ul, 0x7FFFFFFFFFFFFFFFul,
                                  0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul };
         }
+
+        private static ulong[] _1S_F_()
+        {
+            return new ulong[]
+            {
+                0x00000000FFFFFFFFul, // -QNaN (all ones payload)
+                0x00000000FFBFFFFFul, // -SNaN (all ones payload)
+                0x00000000FF800000ul, // -INF
+                0x00000000FF7FFFFFul, // -Max Normal, float.MinValue
+                0x0000000080800000ul, // -Min Normal
+                0x00000000807FFFFFul, // -Max SubNormal
+                0x0000000080000001ul, // -Min SubNormal
+                0x0000000080000000ul, // -0
+                0x0000000000000000ul, // +0
+                0x0000000000000001ul, // +Min SubNormal
+                0x00000000007FFFFFul, // +Max SubNormal
+                0x0000000000800000ul, // +Min Normal
+                0x000000007F7FFFFFul, // +Max Normal, float.MaxValue
+                0x000000007F800000ul, // +INF
+                0x000000007FBFFFFFul, // +SNaN (all ones payload)
+                0x000000007FFFFFFFul  // +QNaN (all ones payload)
+            };
+        }
+
+        private static ulong[] _2S_F_()
+        {
+            return new ulong[]
+            {
+                0xFFFFFFFFFFFFFFFFul, // -QNaN (all ones payload)
+                0xFFBFFFFFFFBFFFFFul, // -SNaN (all ones payload)
+                0xFF800000FF800000ul, // -INF
+                0xFF7FFFFFFF7FFFFFul, // -Max Normal, float.MinValue
+                0x8080000080800000ul, // -Min Normal
+                0x807FFFFF807FFFFFul, // -Max SubNormal
+                0x8000000180000001ul, // -Min SubNormal
+                0x8000000080000000ul, // -0
+                0x0000000000000000ul, // +0
+                0x0000000100000001ul, // +Min SubNormal
+                0x007FFFFF007FFFFFul, // +Max SubNormal
+                0x0080000000800000ul, // +Min Normal
+                0x7F7FFFFF7F7FFFFFul, // +Max Normal, float.MaxValue
+                0x7F8000007F800000ul, // +INF
+                0x7FBFFFFF7FBFFFFFul, // +SNaN (all ones payload)
+                0x7FFFFFFF7FFFFFFFul  // +QNaN (all ones payload)
+            };
+        }
+
+        private static ulong[] _1D_F_()
+        {
+            return new ulong[]
+            {
+                0xFFFFFFFFFFFFFFFFul, // -QNaN (all ones payload)
+                0xFFF7FFFFFFFFFFFFul, // -SNaN (all ones payload)
+                0xFFF0000000000000ul, // -INF
+                0xFFEFFFFFFFFFFFFFul, // -Max Normal, double.MinValue
+                0x8010000000000000ul, // -Min Normal
+                0x800FFFFFFFFFFFFFul, // -Max SubNormal
+                0x8000000000000001ul, // -Min SubNormal
+                0x8000000000000000ul, // -0
+                0x0000000000000000ul, // +0
+                0x0000000000000001ul, // +Min SubNormal
+                0x000FFFFFFFFFFFFFul, // +Max SubNormal
+                0x0010000000000000ul, // +Min Normal
+                0x7FEFFFFFFFFFFFFFul, // +Max Normal, double.MaxValue
+                0x7FF0000000000000ul, // +INF
+                0x7FF7FFFFFFFFFFFFul, // +SNaN (all ones payload)
+                0x7FFFFFFFFFFFFFFFul  // +QNaN (all ones payload)
+            };
+        }
 #endregion
 
-        private const int RndCnt = 1;
+        private const int RndCnt = 4;
 
-        [Test, Description("ABS <V><d>, <V><n>")]
+        [Test, Pairwise, Description("ABS <V><d>, <V><n>")]
         public void Abs_S_D([Values(0u)]     uint Rd,
                             [Values(1u, 0u)] uint Rn,
                             [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
@@ -115,7 +184,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("ABS <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("ABS <Vd>.<T>, <Vn>.<T>")]
         public void Abs_V_8B_4H_2S([Values(0u)]     uint Rd,
                                    [Values(1u, 0u)] uint Rn,
                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -143,7 +212,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("ABS <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("ABS <Vd>.<T>, <Vn>.<T>")]
         public void Abs_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                        [Values(1u, 0u)] uint Rn,
                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
@@ -171,7 +240,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("ADDP <V><d>, <Vn>.<T>")]
+        [Test, Pairwise, Description("ADDP <V><d>, <Vn>.<T>")]
         public void Addp_S_2DD([Values(0u)]     uint Rd,
                                [Values(1u, 0u)] uint Rn,
                                [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
@@ -197,7 +266,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("ADDV <V><d>, <Vn>.<T>")]
+        [Test, Pairwise, Description("ADDV <V><d>, <Vn>.<T>")]
         public void Addv_V_8BB_4HH([Values(0u)]     uint Rd,
                                    [Values(1u, 0u)] uint Rn,
                                    [ValueSource("_8B4H_")] [Random(RndCnt)] ulong Z,
@@ -225,7 +294,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("ADDV <V><d>, <Vn>.<T>")]
+        [Test, Pairwise, Description("ADDV <V><d>, <Vn>.<T>")]
         public void Addv_V_16BB_8HH_4SS([Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -253,7 +322,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CLS <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("CLS <Vd>.<T>, <Vn>.<T>")]
         public void Cls_V_8B_4H_2S([Values(0u)]     uint Rd,
                                    [Values(1u, 0u)] uint Rn,
                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -281,7 +350,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CLS <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("CLS <Vd>.<T>, <Vn>.<T>")]
         public void Cls_V_16B_8H_4S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -309,7 +378,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
         public void Clz_V_8B_4H_2S([Values(0u)]     uint Rd,
                                    [Values(1u, 0u)] uint Rn,
                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -337,7 +406,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
         public void Clz_V_16B_8H_4S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -365,7 +434,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMEQ <V><d>, <V><n>, #0")]
+        [Test, Pairwise, Description("CMEQ <V><d>, <V><n>, #0")]
         public void Cmeq_S_D([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
@@ -391,7 +460,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMEQ <Vd>.<T>, <Vn>.<T>, #0")]
+        [Test, Pairwise, Description("CMEQ <Vd>.<T>, <Vn>.<T>, #0")]
         public void Cmeq_V_8B_4H_2S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -419,7 +488,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMEQ <Vd>.<T>, <Vn>.<T>, #0")]
+        [Test, Pairwise, Description("CMEQ <Vd>.<T>, <Vn>.<T>, #0")]
         public void Cmeq_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
@@ -447,7 +516,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMGE <V><d>, <V><n>, #0")]
+        [Test, Pairwise, Description("CMGE <V><d>, <V><n>, #0")]
         public void Cmge_S_D([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
@@ -473,7 +542,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMGE <Vd>.<T>, <Vn>.<T>, #0")]
+        [Test, Pairwise, Description("CMGE <Vd>.<T>, <Vn>.<T>, #0")]
         public void Cmge_V_8B_4H_2S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -501,7 +570,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMGE <Vd>.<T>, <Vn>.<T>, #0")]
+        [Test, Pairwise, Description("CMGE <Vd>.<T>, <Vn>.<T>, #0")]
         public void Cmge_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
@@ -529,7 +598,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMGT <V><d>, <V><n>, #0")]
+        [Test, Pairwise, Description("CMGT <V><d>, <V><n>, #0")]
         public void Cmgt_S_D([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
@@ -555,7 +624,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMGT <Vd>.<T>, <Vn>.<T>, #0")]
+        [Test, Pairwise, Description("CMGT <Vd>.<T>, <Vn>.<T>, #0")]
         public void Cmgt_V_8B_4H_2S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -583,7 +652,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMGT <Vd>.<T>, <Vn>.<T>, #0")]
+        [Test, Pairwise, Description("CMGT <Vd>.<T>, <Vn>.<T>, #0")]
         public void Cmgt_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
@@ -611,7 +680,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMLE <V><d>, <V><n>, #0")]
+        [Test, Pairwise, Description("CMLE <V><d>, <V><n>, #0")]
         public void Cmle_S_D([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
@@ -637,7 +706,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMLE <Vd>.<T>, <Vn>.<T>, #0")]
+        [Test, Pairwise, Description("CMLE <Vd>.<T>, <Vn>.<T>, #0")]
         public void Cmle_V_8B_4H_2S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -665,7 +734,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMLE <Vd>.<T>, <Vn>.<T>, #0")]
+        [Test, Pairwise, Description("CMLE <Vd>.<T>, <Vn>.<T>, #0")]
         public void Cmle_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
@@ -693,7 +762,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMLT <V><d>, <V><n>, #0")]
+        [Test, Pairwise, Description("CMLT <V><d>, <V><n>, #0")]
         public void Cmlt_S_D([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
@@ -719,7 +788,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMLT <Vd>.<T>, <Vn>.<T>, #0")]
+        [Test, Pairwise, Description("CMLT <Vd>.<T>, <Vn>.<T>, #0")]
         public void Cmlt_V_8B_4H_2S([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -747,7 +816,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CMLT <Vd>.<T>, <Vn>.<T>, #0")]
+        [Test, Pairwise, Description("CMLT <Vd>.<T>, <Vn>.<T>, #0")]
         public void Cmlt_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
@@ -775,7 +844,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CNT <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("CNT <Vd>.<T>, <Vn>.<T>")]
         public void Cnt_V_8B([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
@@ -801,7 +870,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("CNT <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("CNT <Vd>.<T>, <Vn>.<T>")]
         public void Cnt_V_16B([Values(0u)]     uint Rd,
                               [Values(1u, 0u)] uint Rn,
                               [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
@@ -827,7 +896,243 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("NEG <V><d>, <V><n>")]
+        [Test, Pairwise, Description("FCVTNS <V><d>, <V><n>")]
+        public void Fcvtns_S_S([Values(0u)]     uint Rd,
+                               [Values(1u, 0u)] uint Rn,
+                               [ValueSource("_1S_F_")] [Random(RndCnt)] ulong Z,
+                               [ValueSource("_1S_F_")] [Random(RndCnt)] ulong A)
+        {
+            //const int FZFlagBit = 24; // Flush-to-zero mode control bit.
+
+            //const int IDCFlagBit = 7; // Input Denormal cumulative floating-point exception bit.
+            //const int IXCFlagBit = 4; // Inexact cumulative floating-point exception bit.
+            //const int IOCFlagBit = 0; // Invalid Operation cumulative floating-point exception bit.
+
+            uint Opcode = 0x5E21A800; // FCVTNS S0, S0
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Bits Op = new Bits(Opcode);
+
+            //int Fpcr = 1 << FZFlagBit; // Flush-to-zero mode enabled.
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0(A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1/*, Fpcr: Fpcr*/);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.V(1, new Bits(A));
+            //Shared.FPCR = new Bits((uint)Fpcr);
+            SimdFp.Fcvtns_S(Op[22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+
+            /*Assert.Multiple(() =>
+            {
+                Assert.That(((ThreadState.Fpsr >> IDCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[IDCFlagBit]));
+                Assert.That(((ThreadState.Fpsr >> IXCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[IXCFlagBit]));
+                Assert.That(((ThreadState.Fpsr >> IOCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[IOCFlagBit]));
+            });*/
+        }
+
+        [Test, Pairwise, Description("FCVTNS <V><d>, <V><n>")]
+        public void Fcvtns_S_D([Values(0u)]     uint Rd,
+                               [Values(1u, 0u)] uint Rn,
+                               [ValueSource("_1D_F_")] [Random(RndCnt)] ulong Z,
+                               [ValueSource("_1D_F_")] [Random(RndCnt)] ulong A)
+        {
+            uint Opcode = 0x5E61A800; // FCVTNS D0, D0
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0(A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.V(1, new Bits(A));
+            SimdFp.Fcvtns_S(Op[22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Pairwise, Description("FCVTNS <Vd>.<T>, <Vn>.<T>")]
+        public void Fcvtns_V_2S_4S([Values(0u)]     uint Rd,
+                                   [Values(1u, 0u)] uint Rn,
+                                   [ValueSource("_2S_F_")] [Random(RndCnt)] ulong Z,
+                                   [ValueSource("_2S_F_")] [Random(RndCnt)] ulong A,
+                                   [Values(0b0u, 0b1u)] uint Q) // <2S, 4S>
+        {
+            uint Opcode = 0x0E21A800; // FCVTNS V0.2S, V0.2S
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcode |= ((Q & 1) << 30);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A * Q));
+            SimdFp.Fcvtns_V(Op[30], Op[22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Pairwise, Description("FCVTNS <Vd>.<T>, <Vn>.<T>")]
+        public void Fcvtns_V_2D([Values(0u)]     uint Rd,
+                                [Values(1u, 0u)] uint Rn,
+                                [ValueSource("_1D_F_")] [Random(RndCnt)] ulong Z,
+                                [ValueSource("_1D_F_")] [Random(RndCnt)] ulong A)
+        {
+            uint Opcode = 0x4E61A800; // FCVTNS V0.2D, V0.2D
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
+            SimdFp.Fcvtns_V(Op[30], Op[22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Pairwise, Description("FCVTNU <V><d>, <V><n>")]
+        public void Fcvtnu_S_S([Values(0u)]     uint Rd,
+                               [Values(1u, 0u)] uint Rn,
+                               [ValueSource("_1S_F_")] [Random(RndCnt)] ulong Z,
+                               [ValueSource("_1S_F_")] [Random(RndCnt)] ulong A)
+        {
+            //const int FZFlagBit = 24; // Flush-to-zero mode control bit.
+
+            //const int IDCFlagBit = 7; // Input Denormal cumulative floating-point exception bit.
+            //const int IXCFlagBit = 4; // Inexact cumulative floating-point exception bit.
+            //const int IOCFlagBit = 0; // Invalid Operation cumulative floating-point exception bit.
+
+            uint Opcode = 0x7E21A800; // FCVTNU S0, S0
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Bits Op = new Bits(Opcode);
+
+            //int Fpcr = 1 << FZFlagBit; // Flush-to-zero mode enabled.
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0(A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1/*, Fpcr: Fpcr*/);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.V(1, new Bits(A));
+            //Shared.FPCR = new Bits((uint)Fpcr);
+            SimdFp.Fcvtnu_S(Op[22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+
+            /*Assert.Multiple(() =>
+            {
+                Assert.That(((ThreadState.Fpsr >> IDCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[IDCFlagBit]));
+                Assert.That(((ThreadState.Fpsr >> IXCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[IXCFlagBit]));
+                Assert.That(((ThreadState.Fpsr >> IOCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[IOCFlagBit]));
+            });*/
+        }
+
+        [Test, Pairwise, Description("FCVTNU <V><d>, <V><n>")]
+        public void Fcvtnu_S_D([Values(0u)]     uint Rd,
+                               [Values(1u, 0u)] uint Rn,
+                               [ValueSource("_1D_F_")] [Random(RndCnt)] ulong Z,
+                               [ValueSource("_1D_F_")] [Random(RndCnt)] ulong A)
+        {
+            uint Opcode = 0x7E61A800; // FCVTNU D0, D0
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0(A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.V(1, new Bits(A));
+            SimdFp.Fcvtnu_S(Op[22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Pairwise, Description("FCVTNU <Vd>.<T>, <Vn>.<T>")]
+        public void Fcvtnu_V_2S_4S([Values(0u)]     uint Rd,
+                                   [Values(1u, 0u)] uint Rn,
+                                   [ValueSource("_2S_F_")] [Random(RndCnt)] ulong Z,
+                                   [ValueSource("_2S_F_")] [Random(RndCnt)] ulong A,
+                                   [Values(0b0u, 0b1u)] uint Q) // <2S, 4S>
+        {
+            uint Opcode = 0x2E21A800; // FCVTNU V0.2S, V0.2S
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcode |= ((Q & 1) << 30);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A * Q));
+            SimdFp.Fcvtnu_V(Op[30], Op[22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Pairwise, Description("FCVTNU <Vd>.<T>, <Vn>.<T>")]
+        public void Fcvtnu_V_2D([Values(0u)]     uint Rd,
+                                [Values(1u, 0u)] uint Rn,
+                                [ValueSource("_1D_F_")] [Random(RndCnt)] ulong Z,
+                                [ValueSource("_1D_F_")] [Random(RndCnt)] ulong A)
+        {
+            uint Opcode = 0x6E61A800; // FCVTNU V0.2D, V0.2D
+            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Bits Op = new Bits(Opcode);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+
+            AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
+            AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
+            SimdFp.Fcvtnu_V(Op[30], Op[22], Op[9, 5], Op[4, 0]);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
+                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
+            });
+        }
+
+        [Test, Pairwise, Description("NEG <V><d>, <V><n>")]
         public void Neg_S_D([Values(0u)]     uint Rd,
                             [Values(1u, 0u)] uint Rn,
                             [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
@@ -853,7 +1158,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("NEG <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("NEG <Vd>.<T>, <Vn>.<T>")]
         public void Neg_V_8B_4H_2S([Values(0u)]     uint Rd,
                                    [Values(1u, 0u)] uint Rn,
                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -881,7 +1186,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("NEG <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("NEG <Vd>.<T>, <Vn>.<T>")]
         public void Neg_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                        [Values(1u, 0u)] uint Rn,
                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
@@ -909,7 +1214,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("NOT <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("NOT <Vd>.<T>, <Vn>.<T>")]
         public void Not_V_8B([Values(0u)]     uint Rd,
                              [Values(1u, 0u)] uint Rn,
                              [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
@@ -935,7 +1240,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("NOT <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("NOT <Vd>.<T>, <Vn>.<T>")]
         public void Not_V_16B([Values(0u)]     uint Rd,
                               [Values(1u, 0u)] uint Rn,
                               [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
@@ -961,7 +1266,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("RBIT <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("RBIT <Vd>.<T>, <Vn>.<T>")]
         public void Rbit_V_8B([Values(0u)]     uint Rd,
                               [Values(1u, 0u)] uint Rn,
                               [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
@@ -987,7 +1292,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("RBIT <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("RBIT <Vd>.<T>, <Vn>.<T>")]
         public void Rbit_V_16B([Values(0u)]     uint Rd,
                                [Values(1u, 0u)] uint Rn,
                                [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
@@ -1013,7 +1318,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("REV16 <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("REV16 <Vd>.<T>, <Vn>.<T>")]
         public void Rev16_V_8B([Values(0u)]     uint Rd,
                                [Values(1u, 0u)] uint Rn,
                                [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
@@ -1039,7 +1344,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("REV16 <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("REV16 <Vd>.<T>, <Vn>.<T>")]
         public void Rev16_V_16B([Values(0u)]     uint Rd,
                                 [Values(1u, 0u)] uint Rn,
                                 [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
@@ -1065,7 +1370,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("REV32 <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("REV32 <Vd>.<T>, <Vn>.<T>")]
         public void Rev32_V_8B_4H([Values(0u)]     uint Rd,
                                   [Values(1u, 0u)] uint Rn,
                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong Z,
@@ -1093,7 +1398,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("REV32 <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("REV32 <Vd>.<T>, <Vn>.<T>")]
         public void Rev32_V_16B_8H([Values(0u)]     uint Rd,
                                    [Values(1u, 0u)] uint Rn,
                                    [ValueSource("_8B4H_")] [Random(RndCnt)] ulong Z,
@@ -1121,7 +1426,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("REV64 <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("REV64 <Vd>.<T>, <Vn>.<T>")]
         public void Rev64_V_8B_4H_2S([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -1149,7 +1454,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("REV64 <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("REV64 <Vd>.<T>, <Vn>.<T>")]
         public void Rev64_V_16B_8H_4S([Values(0u)]     uint Rd,
                                       [Values(1u, 0u)] uint Rn,
                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -1177,7 +1482,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SADALP <Vd>.<Ta>, <Vn>.<Tb>")]
+        [Test, Pairwise, Description("SADALP <Vd>.<Ta>, <Vn>.<Tb>")]
         public void Sadalp_V_8B4H_4H2S_2S1D([Values(0u)]     uint Rd,
                                             [Values(1u, 0u)] uint Rn,
                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -1205,7 +1510,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SADALP <Vd>.<Ta>, <Vn>.<Tb>")]
+        [Test, Pairwise, Description("SADALP <Vd>.<Ta>, <Vn>.<Tb>")]
         public void Sadalp_V_16B8H_8H4S_4S2D([Values(0u)]     uint Rd,
                                              [Values(1u, 0u)] uint Rn,
                                              [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -1233,7 +1538,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
+        [Test, Pairwise, Description("SADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
         public void Saddlp_V_8B4H_4H2S_2S1D([Values(0u)]     uint Rd,
                                             [Values(1u, 0u)] uint Rn,
                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -1261,7 +1566,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
+        [Test, Pairwise, Description("SADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
         public void Saddlp_V_16B8H_8H4S_4S2D([Values(0u)]     uint Rd,
                                              [Values(1u, 0u)] uint Rn,
                                              [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -1292,8 +1597,8 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("SHA256SU0 <Vd>.4S, <Vn>.4S")]
         public void Sha256su0_V([Values(0u)]     uint Rd,
                                 [Values(1u, 0u)] uint Rn,
-                                [Random(RndCnt * 2)] ulong Z0, [Random(RndCnt * 2)] ulong Z1,
-                                [Random(RndCnt * 2)] ulong A0, [Random(RndCnt * 2)] ulong A1)
+                                [Random(RndCnt / 2)] ulong Z0, [Random(RndCnt / 2)] ulong Z1,
+                                [Random(RndCnt / 2)] ulong A0, [Random(RndCnt / 2)] ulong A1)
         {
             uint Opcode = 0x5E282800; // SHA256SU0 V0.4S, V0.4S
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
@@ -1320,27 +1625,26 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SQABS <V><d>, <V><n>")]
+        [Test, Pairwise, Description("SQABS <V><d>, <V><n>")]
         public void Sqabs_S_B_H_S_D([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong Z,
                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong A,
                                     [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <B, H, S, D>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x5E207800; // SQABS B0, B0
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.V(1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Sqabs_S(Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1348,31 +1652,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SQABS <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("SQABS <Vd>.<T>, <Vn>.<T>")]
         public void Sqabs_V_8B_4H_2S([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
                                      [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x0E207800; // SQABS V0.8B, V0.8B
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.V(1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Sqabs_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1380,31 +1683,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SQABS <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("SQABS <Vd>.<T>, <Vn>.<T>")]
         public void Sqabs_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                          [Values(1u, 0u)] uint Rn,
                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
                                          [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x4E207800; // SQABS V0.16B, V0.16B
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Sqabs_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1412,31 +1714,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SQNEG <V><d>, <V><n>")]
+        [Test, Pairwise, Description("SQNEG <V><d>, <V><n>")]
         public void Sqneg_S_B_H_S_D([Values(0u)]     uint Rd,
                                     [Values(1u, 0u)] uint Rn,
                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong Z,
                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong A,
                                     [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <B, H, S, D>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x7E207800; // SQNEG B0, B0
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.V(1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Sqneg_S(Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1444,31 +1745,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SQNEG <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("SQNEG <Vd>.<T>, <Vn>.<T>")]
         public void Sqneg_V_8B_4H_2S([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
                                      [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x2E207800; // SQNEG V0.8B, V0.8B
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.V(1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Sqneg_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1476,31 +1776,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SQNEG <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("SQNEG <Vd>.<T>, <Vn>.<T>")]
         public void Sqneg_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                          [Values(1u, 0u)] uint Rn,
                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
                                          [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x6E207800; // SQNEG V0.16B, V0.16B
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Sqneg_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1508,31 +1807,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SQXTN <Vb><d>, <Va><n>")]
+        [Test, Pairwise, Description("SQXTN <Vb><d>, <Va><n>")]
         public void Sqxtn_S_HB_SH_DS([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong A,
                                      [Values(0b00u, 0b01u, 0b10u)] uint size) // <HB, SH, DS>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x5E214800; // SQXTN B0, H0
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.V(1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Sqxtn_S(Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1540,31 +1838,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
+        [Test, Pairwise, Description("SQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
         public void Sqxtn_V_8H8B_4S4H_2D2S([Values(0u)]     uint Rd,
                                            [Values(1u, 0u)] uint Rn,
                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H8B, 4S4H, 2D2S>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x0E214800; // SQXTN V0.8B, V0.8H
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Sqxtn_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1572,31 +1869,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
+        [Test, Pairwise, Description("SQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
         public void Sqxtn_V_8H16B_4S8H_2D4S([Values(0u)]     uint Rd,
                                             [Values(1u, 0u)] uint Rn,
                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H16B, 4S8H, 2D4S>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x4E214800; // SQXTN2 V0.16B, V0.8H
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Sqxtn_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1604,31 +1900,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SQXTUN <Vb><d>, <Va><n>")]
+        [Test, Pairwise, Description("SQXTUN <Vb><d>, <Va><n>")]
         public void Sqxtun_S_HB_SH_DS([Values(0u)]     uint Rd,
                                       [Values(1u, 0u)] uint Rn,
                                       [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong Z,
                                       [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong A,
                                       [Values(0b00u, 0b01u, 0b10u)] uint size) // <HB, SH, DS>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x7E212800; // SQXTUN B0, H0
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.V(1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Sqxtun_S(Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1636,31 +1931,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SQXTUN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
+        [Test, Pairwise, Description("SQXTUN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
         public void Sqxtun_V_8H8B_4S4H_2D2S([Values(0u)]     uint Rd,
                                             [Values(1u, 0u)] uint Rn,
                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H8B, 4S4H, 2D2S>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x2E212800; // SQXTUN V0.8B, V0.8H
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Sqxtun_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1668,31 +1962,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SQXTUN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
+        [Test, Pairwise, Description("SQXTUN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
         public void Sqxtun_V_8H16B_4S8H_2D4S([Values(0u)]     uint Rd,
                                              [Values(1u, 0u)] uint Rn,
                                              [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                              [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
                                              [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H16B, 4S8H, 2D4S>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x6E212800; // SQXTUN2 V0.16B, V0.8H
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Sqxtun_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1700,31 +1993,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SUQADD <V><d>, <V><n>")]
+        [Test, Pairwise, Description("SUQADD <V><d>, <V><n>")]
         public void Suqadd_S_B_H_S_D([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong A,
                                      [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <B, H, S, D>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x5E203800; // SUQADD B0, B0
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.V(1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Suqadd_S(Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1732,31 +2024,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SUQADD <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("SUQADD <Vd>.<T>, <Vn>.<T>")]
         public void Suqadd_V_8B_4H_2S([Values(0u)]     uint Rd,
                                       [Values(1u, 0u)] uint Rn,
                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
                                       [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x0E203800; // SUQADD V0.8B, V0.8B
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.V(1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Suqadd_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1764,31 +2055,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("SUQADD <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("SUQADD <Vd>.<T>, <Vn>.<T>")]
         public void Suqadd_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                           [Values(1u, 0u)] uint Rn,
                                           [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                           [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
                                           [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x4E203800; // SUQADD V0.16B, V0.16B
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Suqadd_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1796,11 +2086,11 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("UADALP <Vd>.<Ta>, <Vn>.<Tb>")]
+        [Test, Pairwise, Description("UADALP <Vd>.<Ta>, <Vn>.<Tb>")]
         public void Uadalp_V_8B4H_4H2S_2S1D([Values(0u)]     uint Rd,
                                             [Values(1u, 0u)] uint Rn,
                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -1828,7 +2118,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("UADALP <Vd>.<Ta>, <Vn>.<Tb>")]
+        [Test, Pairwise, Description("UADALP <Vd>.<Ta>, <Vn>.<Tb>")]
         public void Uadalp_V_16B8H_8H4S_4S2D([Values(0u)]     uint Rd,
                                              [Values(1u, 0u)] uint Rn,
                                              [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -1856,7 +2146,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("UADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
+        [Test, Pairwise, Description("UADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
         public void Uaddlp_V_8B4H_4H2S_2S1D([Values(0u)]     uint Rd,
                                             [Values(1u, 0u)] uint Rn,
                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -1884,7 +2174,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("UADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
+        [Test, Pairwise, Description("UADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
         public void Uaddlp_V_16B8H_8H4S_4S2D([Values(0u)]     uint Rd,
                                              [Values(1u, 0u)] uint Rn,
                                              [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
@@ -1912,27 +2202,26 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("UQXTN <Vb><d>, <Va><n>")]
+        [Test, Pairwise, Description("UQXTN <Vb><d>, <Va><n>")]
         public void Uqxtn_S_HB_SH_DS([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong A,
                                      [Values(0b00u, 0b01u, 0b10u)] uint size) // <HB, SH, DS>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x7E214800; // UQXTN B0, H0
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.V(1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Uqxtn_S(Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1940,31 +2229,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("UQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
+        [Test, Pairwise, Description("UQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
         public void Uqxtn_V_8H8B_4S4H_2D2S([Values(0u)]     uint Rd,
                                            [Values(1u, 0u)] uint Rn,
                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H8B, 4S4H, 2D2S>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x2E214800; // UQXTN V0.8B, V0.8H
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Uqxtn_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -1972,31 +2260,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("UQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
+        [Test, Pairwise, Description("UQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
         public void Uqxtn_V_8H16B_4S8H_2D4S([Values(0u)]     uint Rd,
                                             [Values(1u, 0u)] uint Rn,
                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H16B, 4S8H, 2D4S>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x6E214800; // UQXTN2 V0.16B, V0.8H
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Uqxtn_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -2004,31 +2291,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("USQADD <V><d>, <V><n>")]
+        [Test, Pairwise, Description("USQADD <V><d>, <V><n>")]
         public void Usqadd_S_B_H_S_D([Values(0u)]     uint Rd,
                                      [Values(1u, 0u)] uint Rn,
                                      [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong Z,
                                      [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong A,
                                      [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <B, H, S, D>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x7E203800; // USQADD B0, B0
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.V(1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Usqadd_S(Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -2036,31 +2322,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("USQADD <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("USQADD <Vd>.<T>, <Vn>.<T>")]
         public void Usqadd_V_8B_4H_2S([Values(0u)]     uint Rd,
                                       [Values(1u, 0u)] uint Rn,
                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
                                       [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x2E203800; // USQADD V0.8B, V0.8B
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.V(1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Usqadd_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -2068,31 +2353,30 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("USQADD <Vd>.<T>, <Vn>.<T>")]
+        [Test, Pairwise, Description("USQADD <Vd>.<T>, <Vn>.<T>")]
         public void Usqadd_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
                                           [Values(1u, 0u)] uint Rn,
                                           [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
                                           [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
                                           [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
+            const int QCFlagBit = 27; // Cumulative saturation bit.
+
             uint Opcode = 0x6E203800; // USQADD V0.16B, V0.16B
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((size & 3) << 22);
             Bits Op = new Bits(Opcode);
 
-            int Fpsr = (int)TestContext.CurrentContext.Random.NextUInt();
-
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, Fpsr: Fpsr);
+            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             AArch64.Vpart(0, 0, new Bits(Z)); AArch64.Vpart(0, 1, new Bits(Z));
             AArch64.Vpart(1, 0, new Bits(A)); AArch64.Vpart(1, 1, new Bits(A));
-            Shared.FPSR = new Bits((uint)Fpsr);
             SimdFp.Usqadd_V(Op[30], Op[23, 22], Op[9, 5], Op[4, 0]);
 
             Assert.Multiple(() =>
@@ -2100,11 +2384,11 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
-            Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            Assert.That(((ThreadState.Fpsr >> QCFlagBit) & 1) != 0, Is.EqualTo(Shared.FPSR[QCFlagBit]));
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("XTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
+        [Test, Pairwise, Description("XTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
         public void Xtn_V_8H8B_4S4H_2D2S([Values(0u)]     uint Rd,
                                          [Values(1u, 0u)] uint Rn,
                                          [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
@@ -2132,7 +2416,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Description("XTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
+        [Test, Pairwise, Description("XTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
         public void Xtn_V_8H16B_4S8H_2D4S([Values(0u)]     uint Rd,
                                           [Values(1u, 0u)] uint Rn,
                                           [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,

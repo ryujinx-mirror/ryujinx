@@ -5,21 +5,19 @@
 
 // https://alastairreid.github.io/asl-lexical-syntax/
 
-// | ------------------------|----------------------------------- |
-// | ASL                     | C#                                 |
-// | ------------------------|----------------------------------- |
-// | bit, bits(1); boolean   | bool                               |
-// | bits                    | Bits                               |
-// | integer                 | BigInteger, int                    |
-// | real                    | decimal                            |
-// | ------------------------|----------------------------------- |
-// | '0'; FALSE              | false                              |
-// | '1'; TRUE               | true                               |
-// | '010'                   | "010"                              |
-// | bitsX IN {bitsY, bitsZ} | (bitsX == bitsY || bitsX == bitsZ) |
-// | DIV                     | /                                  |
-// | MOD                     | %                                  |
-// | ------------------------|----------------------------------- |
+// | ------------------------|-------------------------------- |
+// | ASL                     | C#                              |
+// | ------------------------|-------------------------------- |
+// | bit, bits(1); boolean   | bool                            |
+// | bits                    | Bits                            |
+// | integer                 | BigInteger, int                 |
+// | real                    | decimal; double, float          |
+// | ------------------------|-------------------------------- |
+// | '0'; FALSE              | false                           |
+// | '1'; TRUE               | true                            |
+// | '010'                   | "010"                           |
+// | DIV, MOD                | /, %                            |
+// | ------------------------|-------------------------------- |
 
 using System;
 using System.Numerics;
@@ -107,6 +105,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             /* SP_EL1 = bits(64) UNKNOWN; */
             SP_EL1.SetAll(false);
 
+            FPCR.SetAll(false); // TODO: Add named fields.
             FPSR.SetAll(false); // TODO: Add named fields.
         }
 
@@ -458,6 +457,7 @@ namespace Ryujinx.Tests.Cpu.Tester
 #endregion
 
 #region "instrs/vector/reduce/reduceop/"
+        // shared_pseudocode.html#impl-aarch64.Reduce.3
         public static Bits Reduce(ReduceOp op, Bits input, int esize)
         {
             int N = input.Count;
@@ -528,6 +528,7 @@ namespace Ryujinx.Tests.Cpu.Tester
             SP_EL0 = new Bits(64, false);
             SP_EL1 = new Bits(64, false);
 
+            FPCR = new Bits(32, false); // TODO: Add named fields.
             FPSR = new Bits(32, false); // TODO: Add named fields.
 
             PSTATE.N = false;
@@ -817,6 +818,36 @@ namespace Ryujinx.Tests.Cpu.Tester
             return (decimal)value;
         }
 
+        /* */
+        public static float Real_32(BigInteger value)
+        {
+            if (value == BigInteger.Pow((BigInteger)2.0f, 1000))
+            {
+                return float.PositiveInfinity;
+            }
+            if (value == -BigInteger.Pow((BigInteger)2.0f, 1000))
+            {
+                return float.NegativeInfinity;
+            }
+
+            return (float)value;
+        }
+
+        /* */
+        public static double Real_64(BigInteger value)
+        {
+            if (value == BigInteger.Pow((BigInteger)2.0, 10000))
+            {
+                return double.PositiveInfinity;
+            }
+            if (value == -BigInteger.Pow((BigInteger)2.0, 10000))
+            {
+                return double.NegativeInfinity;
+            }
+
+            return (double)value;
+        }
+
         // shared_pseudocode.html#impl-shared.ROR.2
         public static Bits ROR(Bits x, int shift)
         {
@@ -879,6 +910,36 @@ namespace Ryujinx.Tests.Cpu.Tester
         public static BigInteger RoundDown(decimal x)
         {
             return (BigInteger)Decimal.Floor(x);
+        }
+
+        /* */
+        public static BigInteger RoundDown_32(float x)
+        {
+            if (float.IsPositiveInfinity(x))
+            {
+                return BigInteger.Pow((BigInteger)2.0f, 1000);
+            }
+            if (float.IsNegativeInfinity(x))
+            {
+                return -BigInteger.Pow((BigInteger)2.0f, 1000);
+            }
+
+            return (BigInteger)MathF.Floor(x);
+        }
+
+        /* */
+        public static BigInteger RoundDown_64(double x)
+        {
+            if (double.IsPositiveInfinity(x))
+            {
+                return BigInteger.Pow((BigInteger)2.0, 10000);
+            }
+            if (double.IsNegativeInfinity(x))
+            {
+                return -BigInteger.Pow((BigInteger)2.0, 10000);
+            }
+
+            return (BigInteger)Math.Floor(x);
         }
 
         // shared_pseudocode.html#impl-shared.RoundTowardsZero.1
@@ -1091,6 +1152,398 @@ namespace Ryujinx.Tests.Cpu.Tester
         }
 #endregion
 
+#region "functions/float/fpdecoderounding/"
+        /* shared_pseudocode.html#impl-shared.FPDecodeRounding.1 */
+        public static FPRounding FPDecodeRounding(Bits rmode)
+        {
+            switch (rmode)
+            {
+                default:
+                case Bits bits when bits == "00":
+                    return FPRounding.FPRounding_TIEEVEN; // N
+                case Bits bits when bits == "01":
+                    return FPRounding.FPRounding_POSINF;  // P
+                case Bits bits when bits == "10":
+                    return FPRounding.FPRounding_NEGINF;  // M
+                case Bits bits when bits == "11":
+                    return FPRounding.FPRounding_ZERO;    // Z
+            }
+        }
+#endregion
+
+#region "functions/float/fpexc/"
+        // shared_pseudocode.html#FPExc
+        public enum FPExc {FPExc_InvalidOp, FPExc_DivideByZero, FPExc_Overflow,
+                           FPExc_Underflow, FPExc_Inexact, FPExc_InputDenorm};
+#endregion
+
+#region "functions/float/fpprocessexception/"
+        // shared_pseudocode.html#impl-shared.FPProcessException.2
+        public static void FPProcessException(FPExc exception, Bits _fpcr)
+        {
+            Bits fpcr = new Bits(_fpcr); // Clone.
+
+            int cumul;
+
+            // Determine the cumulative exception bit number
+            switch (exception)
+            {
+                default:
+                case FPExc.FPExc_InvalidOp:    cumul = 0; break;
+                case FPExc.FPExc_DivideByZero: cumul = 1; break;
+                case FPExc.FPExc_Overflow:     cumul = 2; break;
+                case FPExc.FPExc_Underflow:    cumul = 3; break;
+                case FPExc.FPExc_Inexact:      cumul = 4; break;
+                case FPExc.FPExc_InputDenorm:  cumul = 7; break;
+            }
+
+            int enable = cumul + 8;
+
+            if (fpcr[enable])
+            {
+                // Trapping of the exception enabled.
+                // It is IMPLEMENTATION DEFINED whether the enable bit may be set at all, and
+                // if so then how exceptions may be accumulated before calling FPTrapException()
+                /* IMPLEMENTATION_DEFINED "floating-point trap handling"; */
+
+                throw new NotImplementedException();
+            }/*
+            else if (UsingAArch32())
+            {
+                // Set the cumulative exception bit
+                FPSCR<cumul> = '1';
+            }*/
+            else
+            {
+                // Set the cumulative exception bit
+                FPSR[cumul] = true;
+            }
+        }
+#endregion
+
+#region "functions/float/fprounding/"
+        // shared_pseudocode.html#FPRounding
+        public enum FPRounding {FPRounding_TIEEVEN, FPRounding_POSINF,
+                                FPRounding_NEGINF, FPRounding_ZERO,
+                                FPRounding_TIEAWAY, FPRounding_ODD};
+#endregion
+
+#region "functions/float/fptofixed/"
+        /* shared_pseudocode.html#impl-shared.FPToFixed.5 */
+        public static Bits FPToFixed(int M, Bits op, int fbits, bool unsigned, Bits _fpcr, FPRounding rounding)
+        {
+            int N = op.Count;
+
+            /* assert N IN {16,32,64}; */
+            /* assert M IN {16,32,64}; */
+            /* assert fbits >= 0; */
+            /* assert rounding != FPRounding_ODD; */
+
+            Bits fpcr = new Bits(_fpcr); // Clone.
+
+            if (N == 16)
+            {
+                throw new NotImplementedException();
+            }
+            else if (N == 32)
+            {
+                // Unpack using fpcr to determine if subnormals are flushed-to-zero
+                (FPType type, bool sign, float value) = FPUnpack_32(op, fpcr);
+
+                // If NaN, set cumulative flag or take exception
+                if (type == FPType.FPType_SNaN || type == FPType.FPType_QNaN)
+                {
+                    FPProcessException(FPExc.FPExc_InvalidOp, fpcr);
+                }
+
+                // Scale by fractional bits and produce integer rounded towards minus-infinity
+                value = value * MathF.Pow(2.0f, fbits);
+                BigInteger int_result = RoundDown_32(value);
+                float error = value - Real_32(int_result);
+
+                if (float.IsNaN(error))
+                {
+                    error = 0.0f;
+                }
+
+                // Determine whether supplied rounding mode requires an increment
+                bool round_up;
+
+                switch (rounding)
+                {
+                    default:
+                    case FPRounding.FPRounding_TIEEVEN:
+                        round_up = (error > 0.5f || (error == 0.5f && int_result.SubBigInteger(0)));
+                        break;
+                    case FPRounding.FPRounding_POSINF:
+                        round_up = (error != 0.0f);
+                        break;
+                    case FPRounding.FPRounding_NEGINF:
+                        round_up = false;
+                        break;
+                    case FPRounding.FPRounding_ZERO:
+                        round_up = (error != 0.0f && int_result < (BigInteger)0);
+                        break;
+                    case FPRounding.FPRounding_TIEAWAY:
+                        round_up = (error > 0.5f || (error == 0.5f && int_result >= (BigInteger)0));
+                        break;
+                }
+
+                if (round_up)
+                {
+                    int_result = int_result + 1;
+                }
+
+                // Generate saturated result and exceptions
+                (Bits result, bool overflow) = SatQ(int_result, M, unsigned);
+
+                if (overflow)
+                {
+                    FPProcessException(FPExc.FPExc_InvalidOp, fpcr);
+                }
+                else if (error != 0.0f)
+                {
+                    FPProcessException(FPExc.FPExc_Inexact, fpcr);
+                }
+
+                return result;
+            }
+            else /* if (N == 64) */
+            {
+                // Unpack using fpcr to determine if subnormals are flushed-to-zero
+                (FPType type, bool sign, double value) = FPUnpack_64(op, fpcr);
+
+                // If NaN, set cumulative flag or take exception
+                if (type == FPType.FPType_SNaN || type == FPType.FPType_QNaN)
+                {
+                    FPProcessException(FPExc.FPExc_InvalidOp, fpcr);
+                }
+
+                // Scale by fractional bits and produce integer rounded towards minus-infinity
+                value = value * Math.Pow(2.0, fbits);
+                BigInteger int_result = RoundDown_64(value);
+                double error = value - Real_64(int_result);
+
+                if (double.IsNaN(error))
+                {
+                    error = 0.0;
+                }
+
+                // Determine whether supplied rounding mode requires an increment
+                bool round_up;
+
+                switch (rounding)
+                {
+                    default:
+                    case FPRounding.FPRounding_TIEEVEN:
+                        round_up = (error > 0.5 || (error == 0.5 && int_result.SubBigInteger(0)));
+                        break;
+                    case FPRounding.FPRounding_POSINF:
+                        round_up = (error != 0.0);
+                        break;
+                    case FPRounding.FPRounding_NEGINF:
+                        round_up = false;
+                        break;
+                    case FPRounding.FPRounding_ZERO:
+                        round_up = (error != 0.0 && int_result < (BigInteger)0);
+                        break;
+                    case FPRounding.FPRounding_TIEAWAY:
+                        round_up = (error > 0.5 || (error == 0.5 && int_result >= (BigInteger)0));
+                        break;
+                }
+
+                if (round_up)
+                {
+                    int_result = int_result + 1;
+                }
+
+                // Generate saturated result and exceptions
+                (Bits result, bool overflow) = SatQ(int_result, M, unsigned);
+
+                if (overflow)
+                {
+                    FPProcessException(FPExc.FPExc_InvalidOp, fpcr);
+                }
+                else if (error != 0.0)
+                {
+                    FPProcessException(FPExc.FPExc_Inexact, fpcr);
+                }
+
+                return result;
+            }
+        }
+#endregion
+
+#region "functions/float/fptype/"
+        // shared_pseudocode.html#FPType
+        public enum FPType {FPType_Nonzero, FPType_Zero, FPType_Infinity,
+                            FPType_QNaN, FPType_SNaN};
+#endregion
+
+#region "functions/float/fpunpack/"
+        /* shared_pseudocode.html#impl-shared.FPUnpack.2 */
+        /* shared_pseudocode.html#impl-shared.FPUnpackBase.2 */
+        /*public static (FPType, bool, real) FPUnpack_16(Bits fpval, Bits _fpcr)
+        {
+            int N = fpval.Count;
+
+            // assert N == 16;
+
+            Bits fpcr = new Bits(_fpcr); // Clone.
+
+            fpcr[26] = false;
+
+            return FPUnpackBase_16(fpval, fpcr);
+        }*/
+        public static (FPType, bool, float) FPUnpack_32(Bits fpval, Bits _fpcr)
+        {
+            int N = fpval.Count;
+
+            /* assert N == 32; */
+
+            Bits fpcr = new Bits(_fpcr); // Clone.
+
+            FPType type;
+            float value;
+
+            bool sign   = fpval[31];
+            Bits exp32  = fpval[30, 23];
+            Bits frac32 = fpval[22, 0];
+
+            if (IsZero(exp32))
+            {
+                // Produce zero if value is zero or flush-to-zero is selected.
+                if (IsZero(frac32) || fpcr[24])
+                {
+                    type = FPType.FPType_Zero;
+                    value = 0.0f;
+
+                    // Denormalized input flushed to zero
+                    if (!IsZero(frac32))
+                    {
+                        FPProcessException(FPExc.FPExc_InputDenorm, fpcr);
+                    }
+                }
+                else
+                {
+                    type = FPType.FPType_Nonzero;
+                    value = MathF.Pow(2.0f, -126) * (Real_32(UInt(frac32)) * MathF.Pow(2.0f, -23));
+                }
+            }
+            else if (IsOnes(exp32))
+            {
+                if (IsZero(frac32))
+                {
+                    type = FPType.FPType_Infinity;
+                    /* value = 2.0^1000000; */
+                    value = MathF.Pow(2.0f, 1000);
+                }
+                else
+                {
+                    type = frac32[22] ? FPType.FPType_QNaN : FPType.FPType_SNaN;
+                    value = 0.0f;
+                }
+            }
+            else
+            {
+                type = FPType.FPType_Nonzero;
+                value = MathF.Pow(2.0f, (int)UInt(exp32) - 127) * (1.0f + Real_32(UInt(frac32)) * MathF.Pow(2.0f, -23));
+            }
+
+            if (sign)
+            {
+                value = -value;
+            }
+
+            return (type, sign, value);
+        }
+        public static (FPType, bool, double) FPUnpack_64(Bits fpval, Bits _fpcr)
+        {
+            int N = fpval.Count;
+
+            /* assert N == 64; */
+
+            Bits fpcr = new Bits(_fpcr); // Clone.
+
+            FPType type;
+            double value;
+
+            bool sign   = fpval[63];
+            Bits exp64  = fpval[62, 52];
+            Bits frac64 = fpval[51, 0];
+
+            if (IsZero(exp64))
+            {
+                // Produce zero if value is zero or flush-to-zero is selected.
+                if (IsZero(frac64) || fpcr[24])
+                {
+                    type = FPType.FPType_Zero;
+                    value = 0.0;
+
+                    // Denormalized input flushed to zero
+                    if (!IsZero(frac64))
+                    {
+                        FPProcessException(FPExc.FPExc_InputDenorm, fpcr);
+                    }
+                }
+                else
+                {
+                    type = FPType.FPType_Nonzero;
+                    value = Math.Pow(2.0, -1022) * (Real_64(UInt(frac64)) * Math.Pow(2.0, -52));
+                }
+            }
+            else if (IsOnes(exp64))
+            {
+                if (IsZero(frac64))
+                {
+                    type = FPType.FPType_Infinity;
+                    /* value = 2.0^1000000; */
+                    value = Math.Pow(2.0, 10000);
+                }
+                else
+                {
+                    type = frac64[51] ? FPType.FPType_QNaN : FPType.FPType_SNaN;
+                    value = 0.0;
+                }
+            }
+            else
+            {
+                type = FPType.FPType_Nonzero;
+                value = Math.Pow(2.0, (int)UInt(exp64) - 1023) * (1.0 + Real_64(UInt(frac64)) * Math.Pow(2.0, -52));
+            }
+
+            if (sign)
+            {
+                value = -value;
+            }
+
+            return (type, sign, value);
+        }
+
+        /* shared_pseudocode.html#impl-shared.FPUnpackCV.2 */
+        /* shared_pseudocode.html#impl-shared.FPUnpackBase.2 */
+        /*public static (FPType, bool, real) FPUnpackCV_16(Bits fpval, Bits _fpcr)
+        {
+            int N = fpval.Count;
+
+            // assert N == 16;
+
+            Bits fpcr = new Bits(_fpcr); // Clone.
+
+            fpcr[19] = false;
+
+            return FPUnpackBase_16(fpval, fpcr);
+        }*/
+        public static (FPType, bool, float) FPUnpackCV_32(Bits fpval, Bits _fpcr)
+        {
+            return FPUnpack_32(fpval, _fpcr);
+        }
+        public static (FPType, bool, double) FPUnpackCV_64(Bits fpval, Bits _fpcr)
+        {
+            return FPUnpack_64(fpval, _fpcr);
+        }
+#endregion
+
 #region "functions/integer/"
         /* shared_pseudocode.html#impl-shared.AddWithCarry.3 */
         public static (Bits, Bits) AddWithCarry(int N, Bits x, Bits y, bool carry_in)
@@ -1117,7 +1570,12 @@ namespace Ryujinx.Tests.Cpu.Tester
         public static Bits SP_EL0;
         public static Bits SP_EL1;
 
+        public static Bits FPCR; // TODO: Add named fields.
+        // [ 31 | 30 | 29 | 28 | 27 | 26  | 25 | 24 | 23 22 | 21 20  | 19   | 18 17 16 | 15  | 14 | 13 | 12  | 11  | 10  | 9   | 8   | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 ]
+        // [ 0  | 0  | 0  | 0  | 0  | AHP | DN | FZ | RMode | Stride | FZ16 | Len      | IDE | 0  | 0  | IXE | UFE | OFE | DZE | IOE | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 ]
         public static Bits FPSR; // TODO: Add named fields.
+        // [ 31 | 30 | 29 | 28 | 27 | 26 | 25 | 24 | 23 | 22 | 21 | 20 | 19 | 18 | 17 | 16 | 15 | 14 | 13 | 12 | 11 | 10 | 9 | 8 | 7   | 6 | 5 | 4   | 3   | 2   | 1   | 0   ]
+        // [ N  | Z  | C  | V  | QC | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0  | 0 | 0 | IDC | 0 | 0 | IXC | UFC | OFC | DZC | IOC ]
 #endregion
 
 #region "functions/system/"
@@ -1178,6 +1636,8 @@ namespace Ryujinx.Tests.Cpu.Tester
         /* shared_pseudocode.html#impl-shared.HaveEL.1 */
         public static bool HaveEL(Bits el)
         {
+            // TODO: Implement ASL: "IN" as C#: "Bits.In()".
+            /* if el IN {EL1,EL0} then */
             if (el == EL1 || el == EL0)
             {
                 return true; // EL1 and EL0 must exist
