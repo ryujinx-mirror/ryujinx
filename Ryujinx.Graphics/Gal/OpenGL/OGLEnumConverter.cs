@@ -171,9 +171,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
                 case GalImageFormat.R4G4B4A4_UNORM_PACK16_REVERSED: return (PixelInternalFormat.Rgba4, PixelFormat.Rgba, PixelType.UnsignedShort4444Reversed);
 
-                case GalImageFormat.D24_UNORM_S8_UINT: return (PixelInternalFormat.Depth24Stencil8,   PixelFormat.DepthStencil,   PixelType.UnsignedInt248);
-                case GalImageFormat.D32_SFLOAT:        return (PixelInternalFormat.DepthComponent32f, PixelFormat.DepthComponent, PixelType.Float);
-                case GalImageFormat.D16_UNORM:         return (PixelInternalFormat.DepthComponent16,  PixelFormat.DepthComponent, PixelType.UnsignedShort);
+                case GalImageFormat.D24_UNORM_S8_UINT:  return (PixelInternalFormat.Depth24Stencil8,   PixelFormat.DepthStencil,   PixelType.UnsignedInt248);
+                case GalImageFormat.D32_SFLOAT:         return (PixelInternalFormat.DepthComponent32f, PixelFormat.DepthComponent, PixelType.Float);
+                case GalImageFormat.D16_UNORM:          return (PixelInternalFormat.DepthComponent16,  PixelFormat.DepthComponent, PixelType.UnsignedShort);
+                case GalImageFormat.D32_SFLOAT_S8_UINT: return (PixelInternalFormat.Depth32fStencil8,  PixelFormat.DepthStencil,   PixelType.Float32UnsignedInt248Rev);
             }
 
             throw new NotImplementedException(Format.ToString());

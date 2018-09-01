@@ -33,6 +33,7 @@ namespace Ryujinx.HLE.Gpu.Texture
                 case GalTextureFormat.BC4:          return Read8Bpt4x4               (Memory, Texture);
                 case GalTextureFormat.BC5:          return Read16BptCompressedTexture(Memory, Texture, 4, 4);
                 case GalTextureFormat.ZF32:         return Read4Bpp                  (Memory, Texture);
+                case GalTextureFormat.ZF32_X24S8:   return Read8Bpp                  (Memory, Texture);
                 case GalTextureFormat.Astc2D4x4:    return Read16BptCompressedTexture(Memory, Texture, 4, 4);
                 case GalTextureFormat.Astc2D5x5:    return Read16BptCompressedTexture(Memory, Texture, 5, 5);
                 case GalTextureFormat.Astc2D6x6:    return Read16BptCompressedTexture(Memory, Texture, 6, 6);

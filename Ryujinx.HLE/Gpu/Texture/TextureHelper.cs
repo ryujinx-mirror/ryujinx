@@ -44,6 +44,7 @@ namespace Ryujinx.HLE.Gpu.Texture
                 case GalImageFormat.R16G16B16A16_SNORM:
                 case GalImageFormat.R16G16B16A16_UINT:
                 case GalImageFormat.R16G16B16A16_UNORM:
+                case GalImageFormat.D32_SFLOAT_S8_UINT:
                 case GalImageFormat.R32G32_SFLOAT:
                 case GalImageFormat.R32G32_SINT:
                 case GalImageFormat.R32G32_UINT:
