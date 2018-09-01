@@ -52,6 +52,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CCMN <Wn>, <Wm>, #<nzcv>, <cond>")]
@@ -87,6 +88,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CCMP <Xn>, <Xm>, #<nzcv>, <cond>")]
@@ -122,6 +124,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CCMP <Wn>, <Wm>, #<nzcv>, <cond>")]
@@ -157,6 +160,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 #endif
     }

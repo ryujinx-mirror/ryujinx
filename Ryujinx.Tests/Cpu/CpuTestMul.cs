@@ -53,6 +53,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("MADD <Wd>, <Wn>, <Wm>, <Wa>")]
@@ -89,6 +90,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(_W31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("MSUB <Xd>, <Xn>, <Xm>, <Xa>")]
@@ -125,6 +127,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("MSUB <Wd>, <Wn>, <Wm>, <Wa>")]
@@ -161,6 +164,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(_W31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SMADDL <Xd>, <Wn>, <Wm>, <Xa>")]
@@ -197,6 +201,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("UMADDL <Xd>, <Wn>, <Wm>, <Xa>")]
@@ -233,6 +238,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SMSUBL <Xd>, <Wn>, <Wm>, <Xa>")]
@@ -269,6 +275,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("UMSUBL <Xd>, <Wn>, <Wm>, <Xa>")]
@@ -305,6 +312,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SMULH <Xd>, <Xn>, <Xm>")]
@@ -337,6 +345,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("UMULH <Xd>, <Xn>, <Xm>")]
@@ -369,6 +378,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 #endif
     }

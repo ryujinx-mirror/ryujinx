@@ -54,6 +54,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CSEL <Wd>, <Wn>, <Wm>, <cond>")]
@@ -91,6 +92,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(_W31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CSINC <Xd>, <Xn>, <Xm>, <cond>")]
@@ -128,6 +130,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CSINC <Wd>, <Wn>, <Wm>, <cond>")]
@@ -165,6 +168,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(_W31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CSINV <Xd>, <Xn>, <Xm>, <cond>")]
@@ -202,6 +206,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CSINV <Wd>, <Wn>, <Wm>, <cond>")]
@@ -239,6 +244,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(_W31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CSNEG <Xd>, <Xn>, <Xm>, <cond>")]
@@ -276,6 +282,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CSNEG <Wd>, <Wn>, <Wm>, <cond>")]
@@ -313,6 +320,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(_W31));
             }
+            CompareAgainstUnicorn();
         }
 #endif
     }

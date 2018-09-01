@@ -33,6 +33,7 @@ namespace Ryujinx.Tests.Cpu
                 V1: Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, A)),
                 V2: Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, B)));
             Assert.AreEqual(Result, Sse41.Extract(Sse.StaticCast<float, ulong>(ThreadState.V0), 0));
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x80000000u, 0x80000000u, 0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u)]
@@ -59,6 +60,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.AreEqual(Result0, GetVectorE0(ThreadState.V0));
                 Assert.AreEqual(Result1, GetVectorE1(ThreadState.V0));
             });
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x1E225820u, 0x0000000000000000ul, 0x0000000080000000ul, 0x0000000080000000ul)]
@@ -85,6 +87,7 @@ namespace Ryujinx.Tests.Cpu
                 V1: Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, A)),
                 V2: Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, B)));
             Assert.AreEqual(Result, Sse41.Extract(Sse.StaticCast<float, ulong>(ThreadState.V0), 0));
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x80000000u, 0x80000000u, 0x00000000u, 0x00000000u, 0x80000000u, 0x80000000u)]
@@ -111,6 +114,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.AreEqual(Result0, GetVectorE0(ThreadState.V0));
                 Assert.AreEqual(Result1, GetVectorE1(ThreadState.V0));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("FMUL S6, S1, V0.S[2]")]
@@ -121,6 +125,7 @@ namespace Ryujinx.Tests.Cpu
                 V0: Sse.SetVector128(0, B, 0, 0));
 
             Assert.That(Sse41.Extract(ThreadState.V6, (byte)0), Is.EqualTo(A * B));
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x00000000u, 0x7F800000u)]
@@ -135,6 +140,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0(A);
             AThreadState ThreadState = SingleOpcode(0x5EA1D820, V1: V1);
             Assert.AreEqual(Result, GetVectorE0(ThreadState.V0));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("FRECPS D0, D1, D2")]
@@ -145,6 +151,7 @@ namespace Ryujinx.Tests.Cpu
                 V2: MakeVectorE0(B));
 
             Assert.That(VectorExtractDouble(ThreadState.V0, 0), Is.EqualTo(2 - (A * B)));
+            //CompareAgainstUnicorn(); // Not accurate enough
         }
 
         [Test, Description("FRECPS V4.4S, V2.4S, V0.4S")]
@@ -163,6 +170,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(Sse41.Extract(ThreadState.V4, (byte)2), Is.EqualTo(Result));
                 Assert.That(Sse41.Extract(ThreadState.V4, (byte)3), Is.EqualTo(Result));
             });
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x3FE66666u, false, 0x40000000u)]
@@ -213,6 +221,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0(A);
             AThreadState ThreadState = SingleOpcode(0x1E264020, V1: V1, Fpcr: FpcrTemp);
             Assert.AreEqual(Result, GetVectorE0(ThreadState.V0));
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x6E618820u, 0x3FF3333333333333ul, 0x3FF3333333333333ul, false, 0x3FF0000000000000ul, 0x3FF0000000000000ul)]
@@ -240,6 +249,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.AreEqual(Result0, GetVectorE0(ThreadState.V0));
                 Assert.AreEqual(Result1, GetVectorE1(ThreadState.V0));
             });
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x3FE66666u, 'N', false, 0x40000000u)]
@@ -310,6 +320,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0(A);
             AThreadState ThreadState = SingleOpcode(0x1E27C020, V1: V1, Fpcr: FpcrTemp);
             Assert.AreEqual(Result, GetVectorE0(ThreadState.V0));
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x6EE19820u, 0x3FF3333333333333ul, 0x3FF3333333333333ul, 'N', false, 0x3FF0000000000000ul, 0x3FF0000000000000ul)]
@@ -376,6 +387,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.AreEqual(Result0, GetVectorE0(ThreadState.V0));
                 Assert.AreEqual(Result1, GetVectorE1(ThreadState.V0));
             });
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x3FE66666u, false, 0x3F800000u)]
@@ -426,6 +438,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0(A);
             AThreadState ThreadState = SingleOpcode(0x1E254020, V1: V1, Fpcr: FpcrTemp);
             Assert.AreEqual(Result, GetVectorE0(ThreadState.V0));
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x4E619820u, 0x3FF3333333333333ul, 0x3FF3333333333333ul, false, 0x3FF0000000000000ul, 0x3FF0000000000000ul)]
@@ -450,6 +463,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.AreEqual(Result0, GetVectorE0(ThreadState.V0));
                 Assert.AreEqual(Result1, GetVectorE1(ThreadState.V0));
             });
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x3FE66666u, false, 0x40000000u)]
@@ -500,6 +514,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0(A);
             AThreadState ThreadState = SingleOpcode(0x1E264020, V1: V1, Fpcr: FpcrTemp);
             Assert.AreEqual(Result, GetVectorE0(ThreadState.V0));
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x4E618820u, 0x3FF3333333333333ul, 0x3FF3333333333333ul, false, 0x3FF0000000000000ul, 0x3FF0000000000000ul)]
@@ -527,6 +542,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.AreEqual(Result0, GetVectorE0(ThreadState.V0));
                 Assert.AreEqual(Result1, GetVectorE1(ThreadState.V0));
             });
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x3FE66666u, false, 0x40000000u)]
@@ -577,6 +593,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0(A);
             AThreadState ThreadState = SingleOpcode(0x1E24C020, V1: V1, Fpcr: FpcrTemp);
             Assert.AreEqual(Result, GetVectorE0(ThreadState.V0));
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x4EE18820u, 0x3FF3333333333333ul, 0x3FF3333333333333ul, false, 0x4000000000000000ul, 0x4000000000000000ul)]
@@ -601,6 +618,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.AreEqual(Result0, GetVectorE0(ThreadState.V0));
                 Assert.AreEqual(Result1, GetVectorE1(ThreadState.V0));
             });
+            CompareAgainstUnicorn();
         }
 
     	[TestCase(0x3FE66666u, 'N', false, 0x40000000u)]
@@ -671,6 +689,7 @@ namespace Ryujinx.Tests.Cpu
         	Vector128<float> V1 = MakeVectorE0(A);
         	AThreadState ThreadState = SingleOpcode(0x1E274020, V1: V1, Fpcr: FpcrTemp);
         	Assert.AreEqual(Result, GetVectorE0(ThreadState.V0));
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x6E619820u, 0x3FF3333333333333ul, 0x3FF3333333333333ul, 'N', false, 0x3FF0000000000000ul, 0x3FF0000000000000ul)]
@@ -737,6 +756,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.AreEqual(Result0, GetVectorE0(ThreadState.V0));
                 Assert.AreEqual(Result1, GetVectorE1(ThreadState.V0));
             });
+            CompareAgainstUnicorn();
         }
 
         [TestCase(0x41200000u, 0x3EA18000u)]
@@ -745,6 +765,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0(A);
             AThreadState ThreadState = SingleOpcode(0x7EA1D820, V1: V1);
             Assert.AreEqual(Result, GetVectorE0(ThreadState.V0));
+            CompareAgainstUnicorn();
         }
     }
 }

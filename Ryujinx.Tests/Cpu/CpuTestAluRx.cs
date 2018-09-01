@@ -66,6 +66,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(SP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADD <Xd|SP>, <Xn|SP>, <W><m>{, <extend> {#<amount>}}")]
@@ -116,6 +117,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(SP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADD <Xd|SP>, <Xn|SP>, <W><m>{, <extend> {#<amount>}}")]
@@ -166,6 +168,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(SP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADD <Xd|SP>, <Xn|SP>, <W><m>{, <extend> {#<amount>}}")]
@@ -216,6 +219,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(SP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADD <Wd|WSP>, <Wn|WSP>, <Wm>{, <extend> {#<amount>}}")]
@@ -266,6 +270,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(WSP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADD <Wd|WSP>, <Wn|WSP>, <Wm>{, <extend> {#<amount>}}")]
@@ -316,6 +321,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(WSP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADD <Wd|WSP>, <Wn|WSP>, <Wm>{, <extend> {#<amount>}}")]
@@ -366,6 +372,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(WSP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADDS <Xd>, <Xn|SP>, <X><m>{, <extend> {#<amount>}}")]
@@ -410,6 +417,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADDS <Xd>, <Xn|SP>, <W><m>{, <extend> {#<amount>}}")]
@@ -455,6 +463,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADDS <Xd>, <Xn|SP>, <W><m>{, <extend> {#<amount>}}")]
@@ -500,6 +509,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADDS <Xd>, <Xn|SP>, <W><m>{, <extend> {#<amount>}}")]
@@ -545,6 +555,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADDS <Wd>, <Wn|WSP>, <Wm>{, <extend> {#<amount>}}")]
@@ -590,6 +601,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADDS <Wd>, <Wn|WSP>, <Wm>{, <extend> {#<amount>}}")]
@@ -635,6 +647,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADDS <Wd>, <Wn|WSP>, <Wm>{, <extend> {#<amount>}}")]
@@ -680,6 +693,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUB <Xd|SP>, <Xn|SP>, <X><m>{, <extend> {#<amount>}}")]
@@ -729,6 +743,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(SP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUB <Xd|SP>, <Xn|SP>, <W><m>{, <extend> {#<amount>}}")]
@@ -779,6 +794,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(SP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUB <Xd|SP>, <Xn|SP>, <W><m>{, <extend> {#<amount>}}")]
@@ -829,6 +845,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(SP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUB <Xd|SP>, <Xn|SP>, <W><m>{, <extend> {#<amount>}}")]
@@ -879,6 +896,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(SP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUB <Wd|WSP>, <Wn|WSP>, <Wm>{, <extend> {#<amount>}}")]
@@ -929,6 +947,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(WSP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUB <Wd|WSP>, <Wn|WSP>, <Wm>{, <extend> {#<amount>}}")]
@@ -979,6 +998,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(WSP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUB <Wd|WSP>, <Wn|WSP>, <Wm>{, <extend> {#<amount>}}")]
@@ -1029,6 +1049,7 @@ namespace Ryujinx.Tests.Cpu
 
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(WSP));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUBS <Xd>, <Xn|SP>, <X><m>{, <extend> {#<amount>}}")]
@@ -1073,6 +1094,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUBS <Xd>, <Xn|SP>, <W><m>{, <extend> {#<amount>}}")]
@@ -1118,6 +1140,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUBS <Xd>, <Xn|SP>, <W><m>{, <extend> {#<amount>}}")]
@@ -1163,6 +1186,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUBS <Xd>, <Xn|SP>, <W><m>{, <extend> {#<amount>}}")]
@@ -1208,6 +1232,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUBS <Wd>, <Wn|WSP>, <Wm>{, <extend> {#<amount>}}")]
@@ -1253,6 +1278,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUBS <Wd>, <Wn|WSP>, <Wm>{, <extend> {#<amount>}}")]
@@ -1298,6 +1324,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUBS <Wd>, <Wn|WSP>, <Wm>{, <extend> {#<amount>}}")]
@@ -1343,6 +1370,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(ThreadState.Carry,    Is.EqualTo(Shared.PSTATE.C));
                 Assert.That(ThreadState.Overflow, Is.EqualTo(Shared.PSTATE.V));
             });
+            CompareAgainstUnicorn();
         }
 #endif
     }

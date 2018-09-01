@@ -35,6 +35,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V1), (byte)2), Is.EqualTo(Result));
                 Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V1), (byte)3), Is.EqualTo(Result));
             });
+            CompareAgainstUnicorn();
         }
     }
 }

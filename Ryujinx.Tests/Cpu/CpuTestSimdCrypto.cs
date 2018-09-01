@@ -37,6 +37,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V1), Is.EqualTo(RoundKeyL));
                 Assert.That(GetVectorE1(ThreadState.V1), Is.EqualTo(RoundKeyH));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("AESE <Vd>.16B, <Vn>.16B")]
@@ -66,6 +67,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V1), Is.EqualTo(RoundKeyL));
                 Assert.That(GetVectorE1(ThreadState.V1), Is.EqualTo(RoundKeyH));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("AESIMC <Vd>.16B, <Vn>.16B")]
@@ -98,6 +100,7 @@ namespace Ryujinx.Tests.Cpu
                     Assert.That(GetVectorE1(ThreadState.V1), Is.EqualTo(ValueH));
                 });
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("AESMC <Vd>.16B, <Vn>.16B")]
@@ -130,6 +133,7 @@ namespace Ryujinx.Tests.Cpu
                     Assert.That(GetVectorE1(ThreadState.V1), Is.EqualTo(ValueH));
                 });
             }
+            CompareAgainstUnicorn();
         }
     }
 }

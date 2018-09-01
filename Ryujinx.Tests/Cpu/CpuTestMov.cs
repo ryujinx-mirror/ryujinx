@@ -46,6 +46,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("MOVK <Wd>, #<imm>{, LSL #<shift>}")]
@@ -75,6 +76,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(_W31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("MOVN <Xd>, #<imm>{, LSL #<shift>}")]
@@ -102,6 +104,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("MOVN <Wd>, #<imm>{, LSL #<shift>}")]
@@ -129,6 +132,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(_W31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("MOVZ <Xd>, #<imm>{, LSL #<shift>}")]
@@ -156,6 +160,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("MOVZ <Wd>, #<imm>{, LSL #<shift>}")]
@@ -183,6 +188,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(_W31));
             }
+            CompareAgainstUnicorn();
         }
 #endif
     }

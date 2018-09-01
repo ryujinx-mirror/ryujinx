@@ -52,6 +52,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(BitConverter.GetBytes(VectorExtractDouble(ThreadState.V0, (byte)0)), Is.EquivalentTo(Exp));
                 Assert.That(VectorExtractDouble(ThreadState.V0, (byte)1), Is.Zero);
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("FCMEQ S0, S1, S2 | FCMGE S0, S1, S2 | FCMGT S0, S1, S2")]
@@ -84,6 +85,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(Sse41.Extract(ThreadState.V0, (byte)2), Is.Zero);
                 Assert.That(Sse41.Extract(ThreadState.V0, (byte)3), Is.Zero);
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("FCMEQ V0.2D, V1.2D, V2.2D | FCMGE V0.2D, V1.2D, V2.2D | FCMGT V0.2D, V1.2D, V2.2D")]
@@ -113,6 +115,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(BitConverter.GetBytes(VectorExtractDouble(ThreadState.V0, (byte)0)), Is.EquivalentTo(Exp));
                 Assert.That(BitConverter.GetBytes(VectorExtractDouble(ThreadState.V0, (byte)1)), Is.EquivalentTo(Exp));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("FCMEQ V0.2S, V1.2S, V2.2S | FCMGE V0.2S, V1.2S, V2.2S | FCMGT V0.2S, V1.2S, V2.2S")]
@@ -145,6 +148,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(Sse41.Extract(ThreadState.V0, (byte)2), Is.Zero);
                 Assert.That(Sse41.Extract(ThreadState.V0, (byte)3), Is.Zero);
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("FCMEQ V0.4S, V1.4S, V2.4S | FCMGE V0.4S, V1.4S, V2.4S | FCMGT V0.4S, V1.4S, V2.4S")]
@@ -176,6 +180,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(BitConverter.GetBytes(Sse41.Extract(ThreadState.V0, (byte)2)), Is.EquivalentTo(Exp));
                 Assert.That(BitConverter.GetBytes(Sse41.Extract(ThreadState.V0, (byte)3)), Is.EquivalentTo(Exp));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("FCMGT D0, D1, #0.0 | FCMGE D0, D1, #0.0 | FCMEQ D0, D1, #0.0 | FCMLE D0, D1, #0.0 | FCMLT D0, D1, #0.0")]
@@ -214,6 +219,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(BitConverter.GetBytes(VectorExtractDouble(ThreadState.V0, (byte)0)), Is.EquivalentTo(Exp));
                 Assert.That(VectorExtractDouble(ThreadState.V0, (byte)1), Is.Zero);
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("FCMGT S0, S1, #0.0 | FCMGE S0, S1, #0.0 | FCMEQ S0, S1, #0.0 | FCMLE S0, S1, #0.0 | FCMLT S0, S1, #0.0")]
@@ -254,6 +260,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(Sse41.Extract(ThreadState.V0, (byte)2), Is.Zero);
                 Assert.That(Sse41.Extract(ThreadState.V0, (byte)3), Is.Zero);
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("FCMGT V0.2D, V1.2D, #0.0 | FCMGE V0.2D, V1.2D, #0.0 | FCMEQ V0.2D, V1.2D, #0.0 | FCMLE V0.2D, V1.2D, #0.0 | FCMLT V0.2D, V1.2D, #0.0")]
@@ -291,6 +298,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(BitConverter.GetBytes(VectorExtractDouble(ThreadState.V0, (byte)0)), Is.EquivalentTo(Exp));
                 Assert.That(BitConverter.GetBytes(VectorExtractDouble(ThreadState.V0, (byte)1)), Is.EquivalentTo(Exp));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("FCMGT V0.2S, V1.2S, #0.0 | FCMGE V0.2S, V1.2S, #0.0 | FCMEQ V0.2S, V1.2S, #0.0 | FCMLE V0.2S, V1.2S, #0.0 | FCMLT V0.2S, V1.2S, #0.0")]
@@ -331,6 +339,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(Sse41.Extract(ThreadState.V0, (byte)2), Is.Zero);
                 Assert.That(Sse41.Extract(ThreadState.V0, (byte)3), Is.Zero);
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("FCMGT V0.4S, V1.4S, #0.0 | FCMGE V0.4S, V1.4S, #0.0 | FCMEQ V0.4S, V1.4S, #0.0 | FCMLE V0.4S, V1.4S, #0.0 | FCMLT V0.4S, V1.4S, #0.0")]
@@ -370,6 +379,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(BitConverter.GetBytes(Sse41.Extract(ThreadState.V0, (byte)2)), Is.EquivalentTo(Exp));
                 Assert.That(BitConverter.GetBytes(Sse41.Extract(ThreadState.V0, (byte)3)), Is.EquivalentTo(Exp));
             });
+            CompareAgainstUnicorn();
         }
     }
 }

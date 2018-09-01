@@ -50,6 +50,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("BFM <Wd>, <Wn>, #<immr>, #<imms>")]
@@ -83,6 +84,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(_W31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SBFM <Xd>, <Xn>, #<immr>, #<imms>")]
@@ -114,6 +116,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SBFM <Wd>, <Wn>, #<immr>, #<imms>")]
@@ -145,6 +148,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(_W31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("UBFM <Xd>, <Xn>, #<immr>, #<imms>")]
@@ -176,6 +180,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((ulong)ThreadState.X31, Is.EqualTo(_X31));
             }
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("UBFM <Wd>, <Wn>, #<immr>, #<imms>")]
@@ -207,6 +212,7 @@ namespace Ryujinx.Tests.Cpu
             {
                 Assert.That((uint)ThreadState.X31, Is.EqualTo(_W31));
             }
+            CompareAgainstUnicorn();
         }
 #endif
     }

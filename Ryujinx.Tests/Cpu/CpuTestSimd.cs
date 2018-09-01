@@ -112,6 +112,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ABS <Vd>.<T>, <Vn>.<T>")]
@@ -139,6 +140,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ABS <Vd>.<T>, <Vn>.<T>")]
@@ -166,6 +168,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADDP <V><d>, <Vn>.<T>")]
@@ -191,6 +194,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADDV <V><d>, <Vn>.<T>")]
@@ -218,6 +222,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("ADDV <V><d>, <Vn>.<T>")]
@@ -245,6 +250,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CLS <Vd>.<T>, <Vn>.<T>")]
@@ -272,6 +278,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CLS <Vd>.<T>, <Vn>.<T>")]
@@ -299,6 +306,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
@@ -326,6 +334,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
@@ -353,6 +362,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMEQ <V><d>, <V><n>, #0")]
@@ -378,6 +388,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMEQ <Vd>.<T>, <Vn>.<T>, #0")]
@@ -405,6 +416,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMEQ <Vd>.<T>, <Vn>.<T>, #0")]
@@ -432,6 +444,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMGE <V><d>, <V><n>, #0")]
@@ -457,6 +470,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMGE <Vd>.<T>, <Vn>.<T>, #0")]
@@ -484,6 +498,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMGE <Vd>.<T>, <Vn>.<T>, #0")]
@@ -511,6 +526,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMGT <V><d>, <V><n>, #0")]
@@ -536,6 +552,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMGT <Vd>.<T>, <Vn>.<T>, #0")]
@@ -563,6 +580,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMGT <Vd>.<T>, <Vn>.<T>, #0")]
@@ -590,6 +608,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMLE <V><d>, <V><n>, #0")]
@@ -615,6 +634,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMLE <Vd>.<T>, <Vn>.<T>, #0")]
@@ -642,6 +662,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMLE <Vd>.<T>, <Vn>.<T>, #0")]
@@ -669,6 +690,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMLT <V><d>, <V><n>, #0")]
@@ -694,6 +716,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMLT <Vd>.<T>, <Vn>.<T>, #0")]
@@ -721,6 +744,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CMLT <Vd>.<T>, <Vn>.<T>, #0")]
@@ -748,6 +772,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CNT <Vd>.<T>, <Vn>.<T>")]
@@ -773,6 +798,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("CNT <Vd>.<T>, <Vn>.<T>")]
@@ -798,6 +824,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("NEG <V><d>, <V><n>")]
@@ -823,6 +850,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("NEG <Vd>.<T>, <Vn>.<T>")]
@@ -850,6 +878,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("NEG <Vd>.<T>, <Vn>.<T>")]
@@ -877,6 +906,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("NOT <Vd>.<T>, <Vn>.<T>")]
@@ -902,6 +932,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("NOT <Vd>.<T>, <Vn>.<T>")]
@@ -927,6 +958,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("RBIT <Vd>.<T>, <Vn>.<T>")]
@@ -952,6 +984,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("RBIT <Vd>.<T>, <Vn>.<T>")]
@@ -977,6 +1010,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("REV16 <Vd>.<T>, <Vn>.<T>")]
@@ -1002,6 +1036,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("REV16 <Vd>.<T>, <Vn>.<T>")]
@@ -1027,6 +1062,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("REV32 <Vd>.<T>, <Vn>.<T>")]
@@ -1054,6 +1090,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("REV32 <Vd>.<T>, <Vn>.<T>")]
@@ -1081,6 +1118,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("REV64 <Vd>.<T>, <Vn>.<T>")]
@@ -1108,6 +1146,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("REV64 <Vd>.<T>, <Vn>.<T>")]
@@ -1135,6 +1174,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SADALP <Vd>.<Ta>, <Vn>.<Tb>")]
@@ -1162,6 +1202,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SADALP <Vd>.<Ta>, <Vn>.<Tb>")]
@@ -1189,6 +1230,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
@@ -1216,6 +1258,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
@@ -1243,6 +1286,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("SHA256SU0 <Vd>.4S, <Vn>.4S")]
@@ -1273,6 +1317,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V1), Is.EqualTo(AArch64.Vpart(64, 1, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V1), Is.EqualTo(AArch64.Vpart(64, 1, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SQABS <V><d>, <V><n>")]
@@ -1304,6 +1349,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SQABS <Vd>.<T>, <Vn>.<T>")]
@@ -1335,6 +1381,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SQABS <Vd>.<T>, <Vn>.<T>")]
@@ -1366,6 +1413,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SQNEG <V><d>, <V><n>")]
@@ -1397,6 +1445,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SQNEG <Vd>.<T>, <Vn>.<T>")]
@@ -1428,6 +1477,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SQNEG <Vd>.<T>, <Vn>.<T>")]
@@ -1459,6 +1509,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SQXTN <Vb><d>, <Va><n>")]
@@ -1490,6 +1541,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
@@ -1521,6 +1573,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
@@ -1552,6 +1605,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SQXTUN <Vb><d>, <Va><n>")]
@@ -1583,6 +1637,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SQXTUN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
@@ -1614,6 +1669,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SQXTUN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
@@ -1645,6 +1701,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUQADD <V><d>, <V><n>")]
@@ -1676,6 +1733,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUQADD <Vd>.<T>, <Vn>.<T>")]
@@ -1707,6 +1765,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("SUQADD <Vd>.<T>, <Vn>.<T>")]
@@ -1738,6 +1797,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("UADALP <Vd>.<Ta>, <Vn>.<Tb>")]
@@ -1765,6 +1825,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("UADALP <Vd>.<Ta>, <Vn>.<Tb>")]
@@ -1792,6 +1853,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("UADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
@@ -1819,6 +1881,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("UADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
@@ -1846,6 +1909,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("UQXTN <Vb><d>, <Va><n>")]
@@ -1877,6 +1941,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("UQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
@@ -1908,6 +1973,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("UQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
@@ -1939,6 +2005,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("USQADD <V><d>, <V><n>")]
@@ -1970,6 +2037,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("USQADD <Vd>.<T>, <Vn>.<T>")]
@@ -2001,6 +2069,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("USQADD <Vd>.<T>, <Vn>.<T>")]
@@ -2032,6 +2101,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
             Assert.That(ThreadState.Fpsr, Is.EqualTo((int)Shared.FPSR.ToUInt32()));
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("XTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
@@ -2059,6 +2129,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 
         [Test, Description("XTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
@@ -2086,6 +2157,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 0).ToUInt64()));
                 Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(AArch64.Vpart(64, 0, 1).ToUInt64()));
             });
+            CompareAgainstUnicorn();
         }
 #endif
     }

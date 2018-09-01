@@ -5,6 +5,10 @@
     <RuntimeIdentifiers>win10-x64;osx-x64;linux-x64</RuntimeIdentifiers>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
+
+    <TargetOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">windows</TargetOS>
+    <TargetOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">osx</TargetOS>
+    <TargetOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">linux</TargetOS>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -20,6 +24,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ChocolArm64\ChocolArm64.csproj" />
+    <ProjectReference Include="..\Ryujinx.Tests.Unicorn\Ryujinx.Tests.Unicorn.csproj" />
   </ItemGroup>
+
+  <Target Name="CopyUnicorn" AfterTargets="Build">
+    <Copy SourceFiles="..\Ryujinx.Tests.Unicorn\libs\$(TargetOS)\unicorn.dll" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
+    <Copy SourceFiles="..\Ryujinx.Tests.Unicorn\libs\$(TargetOS)\libunicorn.dylib" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
+    <Copy SourceFiles="..\Ryujinx.Tests.Unicorn\libs\$(TargetOS)\libunicorn.so" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
+  </Target>
 
 </Project>
