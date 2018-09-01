@@ -7,13 +7,13 @@ using static Ryujinx.HLE.HOS.ErrorCode;
 
 namespace Ryujinx.HLE.HOS.Services.Acc
 {
-    class IAccountServiceForApplication : IpcService
+    class IAccountService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public IAccountServiceForApplication()
+        public IAccountService()
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {

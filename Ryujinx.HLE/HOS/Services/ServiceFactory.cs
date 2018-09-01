@@ -31,7 +31,10 @@ namespace Ryujinx.HLE.HOS.Services
             switch (Name)
             {
                 case "acc:u0":
-                    return new IAccountServiceForApplication();
+                    return new IAccountService();
+
+                case "acc:u1":
+                    return new IAccountService();
 
                 case "aoc:u":
                     return new IAddOnContentManager();
