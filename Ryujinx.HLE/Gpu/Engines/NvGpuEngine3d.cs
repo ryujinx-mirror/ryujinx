@@ -108,7 +108,7 @@ namespace Ryujinx.HLE.Gpu.Engines
             {
                 SetFrameBuffer(Vmm, 0);
             }
-            
+
             SetZeta(Vmm);
 
             SetRenderTargets();
@@ -228,7 +228,7 @@ namespace Ryujinx.HLE.Gpu.Engines
             }
 
             long Key = Vmm.GetPhysicalAddress(ZA);
-            
+
             int Width  = ReadRegister(NvGpuEngine3dReg.ZetaHoriz);
             int Height = ReadRegister(NvGpuEngine3dReg.ZetaVert);
 
@@ -748,22 +748,43 @@ namespace Ryujinx.HLE.Gpu.Engines
             WriteRegister(NvGpuEngine3dReg.IndexBatchCount, 0);
         }
 
+        private enum QueryMode
+        {
+            WriteSeq,
+            Sync,
+            WriteCounterAndTimestamp
+        }
+
         private void QueryControl(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
         {
+            WriteRegister(PBEntry);
+
             long Position = MakeInt64From2xInt32(NvGpuEngine3dReg.QueryAddress);
 
             int Seq  = Registers[(int)NvGpuEngine3dReg.QuerySequence];
             int Ctrl = Registers[(int)NvGpuEngine3dReg.QueryControl];
 
-            int Mode = Ctrl & 3;
+            QueryMode Mode = (QueryMode)(Ctrl & 3);
 
-            if (Mode == 0)
+            switch (Mode)
             {
-                //Write mode.
-                Vmm.WriteInt32(Position, Seq);
-            }
+                case QueryMode.WriteSeq: Vmm.WriteInt32(Position, Seq); break;
 
-            WriteRegister(PBEntry);
+                case QueryMode.WriteCounterAndTimestamp:
+                {
+                    //TODO: Implement counters.
+                    long Counter = 1;
+
+                    long Timestamp = (uint)Environment.TickCount;
+
+                    Timestamp = (long)(Timestamp * 615384.615385);
+
+                    Vmm.WriteInt64(Position + 0, Counter);
+                    Vmm.WriteInt64(Position + 8, Timestamp);
+
+                    break;
+                }
+            }
         }
 
         private void CbData(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
