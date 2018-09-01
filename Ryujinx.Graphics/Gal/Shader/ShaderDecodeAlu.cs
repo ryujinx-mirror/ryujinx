@@ -208,7 +208,11 @@ namespace Ryujinx.Graphics.Gal.Shader
             ShaderIrNode OperA = GetOperAbuf28(OpCode);
             ShaderIrNode OperB = GetOperGpr20 (OpCode);
 
-            ShaderIrOp Op = new ShaderIrOp(ShaderIrInst.Ipa, OperA, OperB);
+            ShaderIpaMode Mode = (ShaderIpaMode)((OpCode >> 54) & 3);
+
+            ShaderIrMetaIpa Meta = new ShaderIrMetaIpa(Mode);
+
+            ShaderIrOp Op = new ShaderIrOp(ShaderIrInst.Ipa, OperA, OperB, null, Meta);
 
             Block.AddNode(GetPredNode(new ShaderIrAsg(GetOperGpr0(OpCode), Op), OpCode));
         }

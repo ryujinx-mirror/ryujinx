@@ -1026,7 +1026,31 @@ namespace Ryujinx.Graphics.Gal.Shader
             return "int(uint(" + GetOperExpr(Op, Op.OperandA) + "))";
         }
 
-        private string GetIpaExpr(ShaderIrOp Op) => GetSrcExpr(Op.OperandA);
+        private string GetIpaExpr(ShaderIrOp Op)
+        {
+            ShaderIrMetaIpa Meta = (ShaderIrMetaIpa)Op.MetaData;
+
+            ShaderIrOperAbuf Abuf = (ShaderIrOperAbuf)Op.OperandA;
+
+            if (Meta.Mode == ShaderIpaMode.Pass)
+            {
+                int Index = Abuf.Offs >> 4;
+                int Elem = (Abuf.Offs >> 2) & 3;
+
+                if (Decl.ShaderType == GalShaderType.Fragment && Index == GlslDecl.GlPositionVec4Index)
+                {
+                    switch (Elem)
+                    {
+                        case 0: return "gl_FragCoord.x";
+                        case 1: return "gl_FragCoord.y";
+                        case 2: return "gl_FragCoord.z";
+                        case 3: return "1";
+                    }
+                }
+            }
+
+            return GetSrcExpr(Op.OperandA);
+        }
 
         private string GetKilExpr(ShaderIrOp Op) => "discard";
 
