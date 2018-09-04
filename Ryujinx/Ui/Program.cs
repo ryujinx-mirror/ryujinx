@@ -22,7 +22,7 @@ namespace Ryujinx
 
             Config.Read(Device);
 
-            Device.Log.Updated += ConsoleLog.PrintLog;
+            Device.Log.Updated += ConsoleLog.Log;
 
             if (args.Length == 1)
             {
