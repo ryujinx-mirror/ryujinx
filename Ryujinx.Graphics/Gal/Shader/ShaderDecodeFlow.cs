@@ -15,11 +15,11 @@ namespace Ryujinx.Graphics.Gal.Shader
                 throw new NotImplementedException();
             }
 
-            int Target = ((int)(OpCode >> 20) << 8) >> 8;
+            int Target = OpCode.Branch();
 
             ShaderIrOperImm Imm = new ShaderIrOperImm(Target);
 
-            Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Bra, Imm), OpCode));
+            Block.AddNode(OpCode.PredNode(new ShaderIrOp(ShaderIrInst.Bra, Imm)));
         }
 
         public static void Exit(ShaderIrBlock Block, long OpCode, long Position)
@@ -29,14 +29,14 @@ namespace Ryujinx.Graphics.Gal.Shader
             //TODO: Figure out what the other condition codes mean...
             if (CCode == 0xf)
             {
-                Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Exit), OpCode));
+                Block.AddNode(OpCode.PredNode(new ShaderIrOp(ShaderIrInst.Exit)));
             }
 
         }
 
         public static void Kil(ShaderIrBlock Block, long OpCode, long Position)
         {
-            Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Kil), OpCode));
+            Block.AddNode(OpCode.PredNode(new ShaderIrOp(ShaderIrInst.Kil)));
         }
 
         public static void Ssy(ShaderIrBlock Block, long OpCode, long Position)
@@ -48,7 +48,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 throw new NotImplementedException();
             }
 
-            int Offset = ((int)(OpCode >> 20) << 8) >> 8;
+            int Offset = OpCode.Branch();
 
             int Target = (int)(Position + Offset);
 
@@ -61,7 +61,7 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             //TODO: Implement Sync condition codes
 
-            Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Sync), OpCode));
+            Block.AddNode(OpCode.PredNode(new ShaderIrOp(ShaderIrInst.Sync)));
         }
     }
 }

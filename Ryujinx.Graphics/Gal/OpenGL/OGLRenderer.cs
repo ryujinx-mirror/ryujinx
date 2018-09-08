@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
     {
         public IGalConstBuffer Buffer { get; private set; }
 
-        public IGalFrameBuffer FrameBuffer { get; private set; }
+        public IGalRenderTarget RenderTarget { get; private set; }
 
         public IGalRasterizer Rasterizer { get; private set; }
 
@@ -25,7 +25,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             Texture = new OGLTexture();
 
-            FrameBuffer = new OGLFrameBuffer(Texture as OGLTexture);
+            RenderTarget = new OGLRenderTarget(Texture as OGLTexture);
 
             Rasterizer = new OGLRasterizer();
 

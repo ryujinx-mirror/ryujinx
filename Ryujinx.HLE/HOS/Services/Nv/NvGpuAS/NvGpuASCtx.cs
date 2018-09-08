@@ -1,4 +1,4 @@
-using Ryujinx.HLE.Gpu.Memory;
+using Ryujinx.Graphics.Memory;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS

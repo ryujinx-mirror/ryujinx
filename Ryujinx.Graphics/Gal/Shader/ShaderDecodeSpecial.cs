@@ -7,20 +7,20 @@ namespace Ryujinx.Graphics.Gal.Shader
         public static void Out_R(ShaderIrBlock Block, long OpCode, long Position)
         {
             //TODO: Those registers have to be used for something
-            ShaderIrOperGpr Gpr0  = GetOperGpr0(OpCode);
-            ShaderIrOperGpr Gpr8  = GetOperGpr8(OpCode);
-            ShaderIrOperGpr Gpr20 = GetOperGpr20(OpCode);
+            ShaderIrOperGpr Gpr0  = OpCode.Gpr0();
+            ShaderIrOperGpr Gpr8  = OpCode.Gpr8();
+            ShaderIrOperGpr Gpr20 = OpCode.Gpr20();
 
-            int Type = (int)((OpCode >> 39) & 3);
+            int Type = OpCode.Read(39, 3);
 
             if ((Type & 1) != 0)
             {
-                Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Emit), OpCode));
+                Block.AddNode(OpCode.PredNode(new ShaderIrOp(ShaderIrInst.Emit)));
             }
 
             if ((Type & 2) != 0)
             {
-                Block.AddNode(GetPredNode(new ShaderIrOp(ShaderIrInst.Cut), OpCode));
+                Block.AddNode(OpCode.PredNode(new ShaderIrOp(ShaderIrInst.Cut)));
             }
         }
     }

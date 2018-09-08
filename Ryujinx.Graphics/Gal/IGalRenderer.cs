@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.Gal
 
         IGalConstBuffer Buffer { get; }
 
-        IGalFrameBuffer FrameBuffer { get; }
+        IGalRenderTarget RenderTarget { get; }
 
         IGalRasterizer Rasterizer { get; }
 

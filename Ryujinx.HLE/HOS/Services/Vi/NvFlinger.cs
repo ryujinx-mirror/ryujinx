@@ -1,5 +1,5 @@
 using Ryujinx.Graphics.Gal;
-using Ryujinx.HLE.Gpu.Texture;
+using Ryujinx.Graphics.Texture;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Services.Nv.NvMap;
 using Ryujinx.HLE.Logging;
@@ -303,7 +303,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
             int Right  = Crop.Right;
             int Bottom = Crop.Bottom;
 
-            Renderer.QueueAction(() => Renderer.FrameBuffer.SetTransform(FlipX, FlipY, Top, Left, Right, Bottom));
+            Renderer.QueueAction(() => Renderer.RenderTarget.SetTransform(FlipX, FlipY, Top, Left, Right, Bottom));
 
             //TODO: Support double buffering here aswell, it is broken for GPU
             //frame buffers because it seems to be completely out of sync.
@@ -311,7 +311,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
             {
                 //Frame buffer is rendered to by the GPU, we can just
                 //bind the frame buffer texture, it's not necessary to read anything.
-                Renderer.QueueAction(() => Renderer.FrameBuffer.Set(FbAddr));
+                Renderer.QueueAction(() => Renderer.RenderTarget.Set(FbAddr));
             }
             else
             {
@@ -321,7 +321,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
 
                 byte[] Data = TextureReader.Read(Context.Memory, Texture);
 
-                Renderer.QueueAction(() => Renderer.FrameBuffer.Set(Data, FbWidth, FbHeight));
+                Renderer.QueueAction(() => Renderer.RenderTarget.Set(Data, FbWidth, FbHeight));
             }
 
             Context.Device.Gpu.Renderer.QueueAction(() => ReleaseBuffer(Slot));

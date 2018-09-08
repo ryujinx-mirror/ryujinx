@@ -73,7 +73,7 @@ namespace Ryujinx
                 {
                     ResizeEvent = false;
 
-                    Renderer.FrameBuffer.SetWindowSize(Width, Height);
+                    Renderer.RenderTarget.SetWindowSize(Width, Height);
                 }
 
                 Ticks += Chrono.ElapsedTicks;
@@ -96,7 +96,7 @@ namespace Ryujinx
 
             Visible = true;
 
-            Renderer.FrameBuffer.SetWindowSize(Width, Height);
+            Renderer.RenderTarget.SetWindowSize(Width, Height);
 
             Context.MakeCurrent(null);
 
@@ -251,7 +251,7 @@ namespace Ryujinx
 
         private new void RenderFrame()
         {
-            Renderer.FrameBuffer.Render();
+            Renderer.RenderTarget.Render();
 
             Device.Statistics.RecordSystemFrameTime();
 

@@ -1,5 +1,5 @@
 using ChocolArm64.Memory;
-using Ryujinx.HLE.Gpu.Memory;
+using Ryujinx.Graphics.Memory;
 using Ryujinx.HLE.HOS.Services.Nv.NvGpuAS;
 using Ryujinx.HLE.Logging;
 using System;

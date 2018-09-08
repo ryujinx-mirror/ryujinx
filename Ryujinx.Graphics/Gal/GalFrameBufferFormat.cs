@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.Graphics.Gal
 {
-    public enum GalFrameBufferFormat
+    public enum GalSurfaceFormat
     {
         Bitmap               = 0x1c,
         Unknown1D            = 0x1d,
