@@ -957,6 +957,15 @@ namespace ChocolArm64.Instruction
             });
         }
 
+        public static void Mls_Ve(AILEmitterCtx Context)
+        {
+            EmitVectorTernaryOpByElemZx(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Sub);
+            });
+        }
+
         public static void Mul_V(AILEmitterCtx Context)
         {
             EmitVectorBinaryOpZx(Context, () => Context.Emit(OpCodes.Mul));

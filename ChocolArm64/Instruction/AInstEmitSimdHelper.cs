@@ -626,6 +626,9 @@ namespace ChocolArm64.Instruction
             int Bytes = Op.GetBitsCount() >> 3;
             int Elems = Bytes >> Op.Size;
 
+            EmitVectorExtract(Context, Op.Rm, Elem, Op.Size, Signed);
+            Context.EmitSttmp();
+
             for (int Index = 0; Index < Elems; Index++)
             {
                 if (Ternary)
@@ -634,7 +637,7 @@ namespace ChocolArm64.Instruction
                 }
 
                 EmitVectorExtract(Context, Op.Rn, Index, Op.Size, Signed);
-                EmitVectorExtract(Context, Op.Rm, Elem,  Op.Size, Signed);
+                Context.EmitLdtmp();
 
                 Emit();
 

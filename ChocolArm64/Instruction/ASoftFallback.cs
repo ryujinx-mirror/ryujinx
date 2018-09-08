@@ -16,6 +16,92 @@ namespace ChocolArm64.Instruction
             Context.EmitCall(typeof(ASoftFallback), MthdName);
         }
 
+#region "ShrImm_64"
+        public static long SignedShrImm_64(long Value, long RoundConst, int Shift)
+        {
+            if (RoundConst == 0L)
+            {
+                if (Shift <= 63)
+                {
+                    return Value >> Shift;
+                }
+                else /* if (Shift == 64) */
+                {
+                    if (Value < 0L)
+                    {
+                        return -1L;
+                    }
+                    else
+                    {
+                        return 0L;
+                    }
+                }
+            }
+            else /* if (RoundConst == 1L << (Shift - 1)) */
+            {
+                if (Shift <= 63)
+                {
+                    long Add = Value + RoundConst;
+
+                    if ((~Value & (Value ^ Add)) < 0L)
+                    {
+                        return (long)((ulong)Add >> Shift);
+                    }
+                    else
+                    {
+                        return Add >> Shift;
+                    }
+                }
+                else /* if (Shift == 64) */
+                {
+                    return 0L;
+                }
+            }
+        }
+
+        public static ulong UnsignedShrImm_64(ulong Value, long RoundConst, int Shift)
+        {
+            if (RoundConst == 0L)
+            {
+                if (Shift <= 63)
+                {
+                    return Value >> Shift;
+                }
+                else /* if (Shift == 64) */
+                {
+                    return 0UL;
+                }
+            }
+            else /* if (RoundConst == 1L << (Shift - 1)) */
+            {
+                ulong Add = Value + (ulong)RoundConst;
+
+                if ((Add < Value) && (Add < (ulong)RoundConst))
+                {
+                    if (Shift <= 63)
+                    {
+                        return (Add >> Shift) | (0x8000000000000000UL >> (Shift - 1));
+                    }
+                    else /* if (Shift == 64) */
+                    {
+                        return 1UL;
+                    }
+                }
+                else
+                {
+                    if (Shift <= 63)
+                    {
+                        return Add >> Shift;
+                    }
+                    else /* if (Shift == 64) */
+                    {
+                        return 0UL;
+                    }
+                }
+            }
+        }
+#endregion
+
 #region "Saturating"
         public static long SignedSrcSignedDstSatQ(long op, int Size, AThreadState State)
         {

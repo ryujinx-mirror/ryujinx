@@ -27,6 +27,10 @@ namespace ChocolArm64
             return -1;
         }
 
+        private static readonly sbyte[] HbsNibbleTbl = { -1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3 };
+
+        public static int HighestBitSetNibble(int Value) => HbsNibbleTbl[Value & 0b1111];
+
         public static long Replicate(long Bits, int Size)
         {
             long Output = 0;

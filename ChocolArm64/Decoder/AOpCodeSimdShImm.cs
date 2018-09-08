@@ -10,7 +10,7 @@ namespace ChocolArm64.Decoder
         {
             Imm = (OpCode >> 16) & 0x7f;
 
-            Size = ABitUtils.HighestBitSet32(Imm >> 3);
+            Size = ABitUtils.HighestBitSetNibble(Imm >> 3);
         }
     }
 }
