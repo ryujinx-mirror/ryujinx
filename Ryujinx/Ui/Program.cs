@@ -50,9 +50,25 @@ namespace Ryujinx
                 }
                 else if (File.Exists(args[0]))
                 {
-                    Console.WriteLine("Loading as homebrew.");
-
-                    Device.LoadProgram(args[0]);
+                    switch (Path.GetExtension(args[0]).ToLowerInvariant())
+                    {
+                        case ".xci":
+                            Console.WriteLine("Loading as XCI.");
+                            Device.LoadXci(args[0]);
+                            break;
+                        case ".nca":
+                            Console.WriteLine("Loading as NCA.");
+                            Device.LoadNca(args[0]);
+                            break;
+                        case ".nsp":
+                            Console.WriteLine("Loading as NSP.");
+                            Device.LoadNsp(args[0]);
+                            break;
+                        default:
+                            Console.WriteLine("Loading as homebrew.");
+                            Device.LoadProgram(args[0]);
+                            break;
+                    }
                 }
             }
             else

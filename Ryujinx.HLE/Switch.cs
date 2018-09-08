@@ -61,6 +61,21 @@ namespace Ryujinx.HLE
             System.LoadCart(ExeFsDir, RomFsFile);
         }
 
+        public void LoadXci(string XciFile)
+        {
+            System.LoadXci(XciFile);
+        }
+
+        public void LoadNca(string NcaFile)
+        {
+            System.LoadNca(NcaFile);
+        }
+
+        public void LoadNsp(string NspFile)
+        {
+            System.LoadNsp(NspFile);
+        }
+
         public void LoadProgram(string FileName)
         {
             System.LoadProgram(FileName);

@@ -1,3 +1,4 @@
+using LibHac;
 using Ryujinx.HLE.HOS.Font;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.SystemState;
@@ -7,6 +8,7 @@ using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -30,6 +32,8 @@ namespace Ryujinx.HLE.HOS
 
         internal KEvent VsyncEvent { get; private set; }
 
+        internal Keyset KeySet { get; private set; }
+
         public Horizon(Switch Device)
         {
             this.Device = Device;
@@ -52,6 +56,8 @@ namespace Ryujinx.HLE.HOS
             Font = new SharedFontManager(Device, FontSharedMem.PA);
 
             VsyncEvent = new KEvent();
+
+            LoadKeySet();
         }
 
         public void LoadCart(string ExeFsDir, string RomFsFile = null)
@@ -119,6 +125,179 @@ namespace Ryujinx.HLE.HOS
             MainProcess.Run();
         }
 
+        public void LoadXci(string XciFile)
+        {
+            FileStream File = new FileStream(XciFile, FileMode.Open, FileAccess.Read);
+
+            Xci Xci = new Xci(KeySet, File);
+
+            Nca Nca = GetXciMainNca(Xci);
+
+            if (Nca == null)
+            {
+                Device.Log.PrintError(LogClass.Loader, "Unable to load XCI");
+
+                return;
+            }
+
+            LoadNca(Nca);
+        }
+
+        private Nca GetXciMainNca(Xci Xci)
+        {
+            if (Xci.SecurePartition == null)
+            {
+                throw new InvalidDataException("Could not find XCI secure partition");
+            }
+
+            Nca MainNca = null;
+            Nca PatchNca = null;
+
+            foreach (PfsFileEntry FileEntry in Xci.SecurePartition.Files.Where(x => x.Name.EndsWith(".nca")))
+            {
+                Stream NcaStream = Xci.SecurePartition.OpenFile(FileEntry);
+
+                Nca Nca = new Nca(KeySet, NcaStream, true);
+
+                if (Nca.Header.ContentType == ContentType.Program)
+                {
+                    if (Nca.Sections.Any(x => x?.Type == SectionType.Romfs))
+                    {
+                        MainNca = Nca;
+                    }
+                    else if (Nca.Sections.Any(x => x?.Type == SectionType.Bktr))
+                    {
+                        PatchNca = Nca;
+                    }
+                }
+            }
+
+            if (MainNca == null)
+            {
+                Device.Log.PrintError(LogClass.Loader, "Could not find an Application NCA in the provided XCI file");
+            }
+
+            MainNca.SetBaseNca(PatchNca);
+
+            return MainNca;
+        }
+
+        public void LoadNca(string NcaFile)
+        {
+            FileStream File = new FileStream(NcaFile, FileMode.Open, FileAccess.Read);
+
+            Nca Nca = new Nca(KeySet, File, true);
+
+            LoadNca(Nca);
+        }
+
+        public void LoadNsp(string NspFile)
+        {
+            FileStream File = new FileStream(NspFile, FileMode.Open, FileAccess.Read);
+
+            Pfs Nsp = new Pfs(File);
+
+            PfsFileEntry TicketFile = Nsp.Files.FirstOrDefault(x => x.Name.EndsWith(".tik"));
+
+            // Load title key from the NSP's ticket in case the user doesn't have a title key file
+            if (TicketFile != null)
+            {
+                // todo Change when Ticket(Stream) overload is added
+                Ticket Ticket = new Ticket(new BinaryReader(Nsp.OpenFile(TicketFile)));
+
+                KeySet.TitleKeys[Ticket.RightsId] = Ticket.GetTitleKey(KeySet);
+            }
+
+            foreach (PfsFileEntry NcaFile in Nsp.Files.Where(x => x.Name.EndsWith(".nca")))
+            {
+                Nca Nca = new Nca(KeySet, Nsp.OpenFile(NcaFile), true);
+
+                if (Nca.Header.ContentType == ContentType.Program)
+                {
+                    LoadNca(Nca);
+
+                    return;
+                }
+            }
+
+            Device.Log.PrintError(LogClass.Loader, "Could not find an Application NCA in the provided NSP file");
+        }
+
+        public void LoadNca(Nca Nca)
+        {
+            NcaSection RomfsSection = Nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
+            NcaSection ExefsSection = Nca.Sections.FirstOrDefault(x => x?.IsExefs == true);
+
+            if (ExefsSection == null)
+            {
+                Device.Log.PrintError(LogClass.Loader, "No ExeFS found in NCA");
+
+                return;
+            }
+
+            if (RomfsSection == null)
+            {
+                Device.Log.PrintError(LogClass.Loader, "No RomFS found in NCA");
+
+                return;
+            }
+
+            Stream RomfsStream = Nca.OpenSection(RomfsSection.SectionNum, false);
+            Device.FileSystem.SetRomFs(RomfsStream);
+
+            Stream ExefsStream = Nca.OpenSection(ExefsSection.SectionNum, false);
+            Pfs Exefs = new Pfs(ExefsStream);
+
+            Npdm MetaData = null;
+
+            if (Exefs.FileExists("main.npdm"))
+            {
+                Device.Log.PrintInfo(LogClass.Loader, "Loading main.npdm...");
+
+                MetaData = new Npdm(Exefs.OpenFile("main.npdm"));
+            }
+            else
+            {
+                Device.Log.PrintWarning(LogClass.Loader, $"NPDM file not found, using default values!");
+            }
+
+            Process MainProcess = MakeProcess(MetaData);
+
+            void LoadNso(string Filename)
+            {
+                foreach (PfsFileEntry File in Exefs.Files.Where(x => x.Name.StartsWith(Filename)))
+                {
+                    if (Path.GetExtension(File.Name) != string.Empty)
+                    {
+                        continue;
+                    }
+
+                    Device.Log.PrintInfo(LogClass.Loader, $"Loading {Filename}...");
+
+                    string Name = Path.GetFileNameWithoutExtension(File.Name);
+
+                    Nso Program = new Nso(Exefs.OpenFile(File), Name);
+
+                    MainProcess.LoadProgram(Program);
+                }
+            }
+
+            if (!MainProcess.MetaData.Is64Bits)
+            {
+                throw new NotImplementedException("32-bit titles are unsupported!");
+            }
+
+            LoadNso("rtld");
+
+            MainProcess.SetEmptyArgs();
+
+            LoadNso("main");
+            LoadNso("subsdk");
+            LoadNso("sdk");
+
+            MainProcess.Run();
+        }
+
         public void LoadProgram(string FilePath)
         {
             bool IsNro = Path.GetExtension(FilePath).ToLower() == ".nro";
@@ -154,6 +333,42 @@ namespace Ryujinx.HLE.HOS
 
             MainProcess.SetEmptyArgs();
             MainProcess.Run(IsNro);
+        }
+
+        public void LoadKeySet()
+        {
+            string KeyFile        = null;
+            string TitleKeyFile   = null;
+            string ConsoleKeyFile = null;
+
+            string Home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+            LoadSetAtPath(Path.Combine(Home, ".switch"));
+            LoadSetAtPath(Device.FileSystem.GetSystemPath());
+
+            KeySet = ExternalKeys.ReadKeyFile(KeyFile, TitleKeyFile, ConsoleKeyFile);
+
+            void LoadSetAtPath(string BasePath)
+            {
+                string LocalKeyFile        = Path.Combine(BasePath,    "prod.keys");
+                string LocalTitleKeyFile   = Path.Combine(BasePath,   "title.keys");
+                string LocalConsoleKeyFile = Path.Combine(BasePath, "console.keys");
+
+                if (File.Exists(LocalKeyFile))
+                {
+                    KeyFile = LocalKeyFile;
+                }
+
+                if (File.Exists(LocalTitleKeyFile))
+                {
+                    TitleKeyFile = LocalTitleKeyFile;
+                }
+
+                if (File.Exists(LocalConsoleKeyFile))
+                {
+                    ConsoleKeyFile = LocalConsoleKeyFile;
+                }
+            }
         }
 
         public void SignalVsync() => VsyncEvent.WaitEvent.Set();

@@ -17,6 +17,12 @@ namespace Ryujinx.HLE
             RomFs = new FileStream(FileName, FileMode.Open, FileAccess.Read);
         }
 
+        public void SetRomFs(Stream RomfsStream)
+        {
+            RomFs?.Close();
+            RomFs = RomfsStream;
+        }
+
         public string GetFullPath(string BasePath, string FileName)
         {
             if (FileName.StartsWith("//"))
