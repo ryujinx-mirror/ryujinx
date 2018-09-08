@@ -33,9 +33,10 @@ namespace Ryujinx.Tests.Cpu
         static CpuTest()
         {
             UnicornAvailable = UnicornAArch64.IsAvailable();
+
             if (!UnicornAvailable)
             {
-                Console.WriteLine("WARNING: Could not find unicorn");
+                Console.WriteLine("WARNING: Could not find Unicorn.");
             }
         }
 
@@ -43,7 +44,7 @@ namespace Ryujinx.Tests.Cpu
         public void Setup()
         {
             Position = 0x1000;
-            Size = 0x1000;
+            Size     = 0x1000;
 
             EntryPoint = Position;
 
@@ -79,10 +80,12 @@ namespace Ryujinx.Tests.Cpu
         protected void Opcode(uint Opcode)
         {
             Thread.Memory.WriteUInt32(Position, Opcode);
+
             if (UnicornAvailable)
             {
                 UnicornEmu.MemoryWrite32((ulong)Position, Opcode);
             }
+
             Position += 4;
         }
 
@@ -97,14 +100,18 @@ namespace Ryujinx.Tests.Cpu
             Thread.ThreadState.X1 = X1;
             Thread.ThreadState.X2 = X2;
             Thread.ThreadState.X3 = X3;
+
             Thread.ThreadState.X31 = X31;
+
             Thread.ThreadState.V0 = V0;
             Thread.ThreadState.V1 = V1;
             Thread.ThreadState.V2 = V2;
+
             Thread.ThreadState.Overflow = Overflow;
-            Thread.ThreadState.Carry = Carry;
-            Thread.ThreadState.Zero = Zero;
+            Thread.ThreadState.Carry    = Carry;
+            Thread.ThreadState.Zero     = Zero;
             Thread.ThreadState.Negative = Negative;
+
             Thread.ThreadState.Fpcr = Fpcr;
             Thread.ThreadState.Fpsr = Fpsr;
 
@@ -114,14 +121,18 @@ namespace Ryujinx.Tests.Cpu
                 UnicornEmu.X[1] = X1;
                 UnicornEmu.X[2] = X2;
                 UnicornEmu.X[3] = X3;
+
                 UnicornEmu.SP = X31;
+
                 UnicornEmu.Q[0] = V0;
                 UnicornEmu.Q[1] = V1;
                 UnicornEmu.Q[2] = V2;
+
                 UnicornEmu.OverflowFlag = Overflow;
-                UnicornEmu.CarryFlag = Carry;
-                UnicornEmu.ZeroFlag = Zero;
+                UnicornEmu.CarryFlag    = Carry;
+                UnicornEmu.ZeroFlag     = Zero;
                 UnicornEmu.NegativeFlag = Negative;
+
                 UnicornEmu.Fpcr = Fpcr;
                 UnicornEmu.Fpsr = Fpsr;
             }
@@ -144,10 +155,7 @@ namespace Ryujinx.Tests.Cpu
             }
         }
 
-        protected AThreadState GetThreadState()
-        {
-            return Thread.ThreadState;
-        }
+        protected AThreadState GetThreadState() => Thread.ThreadState;
 
         protected AThreadState SingleOpcode(uint Opcode,
                                             ulong X0 = 0, ulong X1 = 0, ulong X2 = 0, ulong X3 = 0, ulong X31 = 0,
@@ -166,23 +174,44 @@ namespace Ryujinx.Tests.Cpu
             return GetThreadState();
         }
 
-        protected void CompareAgainstUnicorn()
+        [Flags]
+        protected enum FPSR
+        {
+            None = 0,
+
+            /// <summary>Invalid Operation cumulative floating-point exception bit.</summary>
+            IOC = 1 << 0,
+            /// <summary>Divide by Zero cumulative floating-point exception bit.</summary>
+            DZC = 1 << 1,
+            /// <summary>Overflow cumulative floating-point exception bit.</summary>
+            OFC = 1 << 2,
+            /// <summary>Underflow cumulative floating-point exception bit.</summary>
+            UFC = 1 << 3,
+            /// <summary>Inexact cumulative floating-point exception bit.</summary>
+            IXC = 1 << 4,
+            /// <summary>Input Denormal cumulative floating-point exception bit.</summary>
+            IDC = 1 << 7,
+            /// <summary>Cumulative saturation bit.</summary>
+            QC  = 1 << 27
+        }
+
+        protected void CompareAgainstUnicorn(FPSR FpsrMask = FPSR.None)
         {
             if (!UnicornAvailable)
             {
                 return;
             }
 
-            Assert.That(Thread.ThreadState.X0, Is.EqualTo(UnicornEmu.X[0]));
-            Assert.That(Thread.ThreadState.X1, Is.EqualTo(UnicornEmu.X[1]));
-            Assert.That(Thread.ThreadState.X2, Is.EqualTo(UnicornEmu.X[2]));
-            Assert.That(Thread.ThreadState.X3, Is.EqualTo(UnicornEmu.X[3]));
-            Assert.That(Thread.ThreadState.X4, Is.EqualTo(UnicornEmu.X[4]));
-            Assert.That(Thread.ThreadState.X5, Is.EqualTo(UnicornEmu.X[5]));
-            Assert.That(Thread.ThreadState.X6, Is.EqualTo(UnicornEmu.X[6]));
-            Assert.That(Thread.ThreadState.X7, Is.EqualTo(UnicornEmu.X[7]));
-            Assert.That(Thread.ThreadState.X8, Is.EqualTo(UnicornEmu.X[8]));
-            Assert.That(Thread.ThreadState.X9, Is.EqualTo(UnicornEmu.X[9]));
+            Assert.That(Thread.ThreadState.X0,  Is.EqualTo(UnicornEmu.X[0]));
+            Assert.That(Thread.ThreadState.X1,  Is.EqualTo(UnicornEmu.X[1]));
+            Assert.That(Thread.ThreadState.X2,  Is.EqualTo(UnicornEmu.X[2]));
+            Assert.That(Thread.ThreadState.X3,  Is.EqualTo(UnicornEmu.X[3]));
+            Assert.That(Thread.ThreadState.X4,  Is.EqualTo(UnicornEmu.X[4]));
+            Assert.That(Thread.ThreadState.X5,  Is.EqualTo(UnicornEmu.X[5]));
+            Assert.That(Thread.ThreadState.X6,  Is.EqualTo(UnicornEmu.X[6]));
+            Assert.That(Thread.ThreadState.X7,  Is.EqualTo(UnicornEmu.X[7]));
+            Assert.That(Thread.ThreadState.X8,  Is.EqualTo(UnicornEmu.X[8]));
+            Assert.That(Thread.ThreadState.X9,  Is.EqualTo(UnicornEmu.X[9]));
             Assert.That(Thread.ThreadState.X10, Is.EqualTo(UnicornEmu.X[10]));
             Assert.That(Thread.ThreadState.X11, Is.EqualTo(UnicornEmu.X[11]));
             Assert.That(Thread.ThreadState.X12, Is.EqualTo(UnicornEmu.X[12]));
@@ -204,17 +233,19 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(Thread.ThreadState.X28, Is.EqualTo(UnicornEmu.X[28]));
             Assert.That(Thread.ThreadState.X29, Is.EqualTo(UnicornEmu.X[29]));
             Assert.That(Thread.ThreadState.X30, Is.EqualTo(UnicornEmu.X[30]));
+
             Assert.That(Thread.ThreadState.X31, Is.EqualTo(UnicornEmu.SP));
-            Assert.That(Thread.ThreadState.V0, Is.EqualTo(UnicornEmu.Q[0]));
-            Assert.That(Thread.ThreadState.V1, Is.EqualTo(UnicornEmu.Q[1]));
-            Assert.That(Thread.ThreadState.V2, Is.EqualTo(UnicornEmu.Q[2]));
-            Assert.That(Thread.ThreadState.V3, Is.EqualTo(UnicornEmu.Q[3]));
-            Assert.That(Thread.ThreadState.V4, Is.EqualTo(UnicornEmu.Q[4]));
-            Assert.That(Thread.ThreadState.V5, Is.EqualTo(UnicornEmu.Q[5]));
-            Assert.That(Thread.ThreadState.V6, Is.EqualTo(UnicornEmu.Q[6]));
-            Assert.That(Thread.ThreadState.V7, Is.EqualTo(UnicornEmu.Q[7]));
-            Assert.That(Thread.ThreadState.V8, Is.EqualTo(UnicornEmu.Q[8]));
-            Assert.That(Thread.ThreadState.V9, Is.EqualTo(UnicornEmu.Q[9]));
+
+            Assert.That(Thread.ThreadState.V0,  Is.EqualTo(UnicornEmu.Q[0]));
+            Assert.That(Thread.ThreadState.V1,  Is.EqualTo(UnicornEmu.Q[1]));
+            Assert.That(Thread.ThreadState.V2,  Is.EqualTo(UnicornEmu.Q[2]));
+            Assert.That(Thread.ThreadState.V3,  Is.EqualTo(UnicornEmu.Q[3]));
+            Assert.That(Thread.ThreadState.V4,  Is.EqualTo(UnicornEmu.Q[4]));
+            Assert.That(Thread.ThreadState.V5,  Is.EqualTo(UnicornEmu.Q[5]));
+            Assert.That(Thread.ThreadState.V6,  Is.EqualTo(UnicornEmu.Q[6]));
+            Assert.That(Thread.ThreadState.V7,  Is.EqualTo(UnicornEmu.Q[7]));
+            Assert.That(Thread.ThreadState.V8,  Is.EqualTo(UnicornEmu.Q[8]));
+            Assert.That(Thread.ThreadState.V9,  Is.EqualTo(UnicornEmu.Q[9]));
             Assert.That(Thread.ThreadState.V10, Is.EqualTo(UnicornEmu.Q[10]));
             Assert.That(Thread.ThreadState.V11, Is.EqualTo(UnicornEmu.Q[11]));
             Assert.That(Thread.ThreadState.V12, Is.EqualTo(UnicornEmu.Q[12]));
@@ -238,11 +269,13 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(Thread.ThreadState.V30, Is.EqualTo(UnicornEmu.Q[30]));
             Assert.That(Thread.ThreadState.V31, Is.EqualTo(UnicornEmu.Q[31]));
             Assert.That(Thread.ThreadState.V31, Is.EqualTo(UnicornEmu.Q[31]));
-            Assert.That(Thread.ThreadState.Fpcr, Is.EqualTo(UnicornEmu.Fpcr));
-            Assert.That(Thread.ThreadState.Fpsr & 0x08000000, Is.EqualTo(UnicornEmu.Fpsr & 0x08000000));
+
+            Assert.That(Thread.ThreadState.Fpcr,                 Is.EqualTo(UnicornEmu.Fpcr));
+            Assert.That(Thread.ThreadState.Fpsr & (int)FpsrMask, Is.EqualTo(UnicornEmu.Fpsr & (int)FpsrMask));
+
             Assert.That(Thread.ThreadState.Overflow, Is.EqualTo(UnicornEmu.OverflowFlag));
-            Assert.That(Thread.ThreadState.Carry, Is.EqualTo(UnicornEmu.CarryFlag));
-            Assert.That(Thread.ThreadState.Zero, Is.EqualTo(UnicornEmu.ZeroFlag));
+            Assert.That(Thread.ThreadState.Carry,    Is.EqualTo(UnicornEmu.CarryFlag));
+            Assert.That(Thread.ThreadState.Zero,     Is.EqualTo(UnicornEmu.ZeroFlag));
             Assert.That(Thread.ThreadState.Negative, Is.EqualTo(UnicornEmu.NegativeFlag));
         }
 

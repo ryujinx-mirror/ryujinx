@@ -22,6 +22,7 @@ namespace Ryujinx.Tests.Cpu
         {
             uint Opcode = 0x4E285800; // AESD V0.16B, V0.16B
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+
             Vector128<float> V0 = MakeVectorE0E1(RoundKeyL ^ ValueL, RoundKeyH ^ ValueH);
             Vector128<float> V1 = MakeVectorE0E1(RoundKeyL,          RoundKeyH);
 
@@ -37,6 +38,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V1), Is.EqualTo(RoundKeyL));
                 Assert.That(GetVectorE1(ThreadState.V1), Is.EqualTo(RoundKeyH));
             });
+
             CompareAgainstUnicorn();
         }
 
@@ -52,6 +54,7 @@ namespace Ryujinx.Tests.Cpu
         {
             uint Opcode = 0x4E284800; // AESE V0.16B, V0.16B
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+
             Vector128<float> V0 = MakeVectorE0E1(RoundKeyL ^ ValueL, RoundKeyH ^ ValueH);
             Vector128<float> V1 = MakeVectorE0E1(RoundKeyL,          RoundKeyH);
 
@@ -67,6 +70,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(ThreadState.V1), Is.EqualTo(RoundKeyL));
                 Assert.That(GetVectorE1(ThreadState.V1), Is.EqualTo(RoundKeyH));
             });
+
             CompareAgainstUnicorn();
         }
 
@@ -80,6 +84,7 @@ namespace Ryujinx.Tests.Cpu
         {
             uint Opcode = 0x4E287800; // AESIMC V0.16B, V0.16B
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+
             Vector128<float> V = MakeVectorE0E1(ValueL, ValueH);
 
             AThreadState ThreadState = SingleOpcode(
@@ -100,6 +105,7 @@ namespace Ryujinx.Tests.Cpu
                     Assert.That(GetVectorE1(ThreadState.V1), Is.EqualTo(ValueH));
                 });
             }
+
             CompareAgainstUnicorn();
         }
 
@@ -113,6 +119,7 @@ namespace Ryujinx.Tests.Cpu
         {
             uint Opcode = 0x4E286800; // AESMC V0.16B, V0.16B
             Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+
             Vector128<float> V = MakeVectorE0E1(ValueL, ValueH);
 
             AThreadState ThreadState = SingleOpcode(
@@ -133,6 +140,7 @@ namespace Ryujinx.Tests.Cpu
                     Assert.That(GetVectorE1(ThreadState.V1), Is.EqualTo(ValueH));
                 });
             }
+
             CompareAgainstUnicorn();
         }
     }

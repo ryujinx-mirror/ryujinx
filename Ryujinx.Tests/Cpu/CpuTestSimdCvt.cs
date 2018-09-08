@@ -23,7 +23,8 @@ namespace Ryujinx.Tests.Cpu
         [TestCase((ushort)0x0001, 0x33800000u)] // 5.96046448e-8 (Smallest Subnormal)
         public void Fcvtl_V_f16(ushort Value, uint Result)
         {
-            uint Opcode = 0x0E217801;
+            uint Opcode = 0x0E217801; // FCVTL V1.4S, V0.4H
+
             Vector128<float> V0 = Sse.StaticCast<ushort, float>(Sse2.SetAllVector128(Value));
 
             AThreadState ThreadState = SingleOpcode(Opcode, V0: V0);
@@ -35,6 +36,7 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V1), (byte)2), Is.EqualTo(Result));
                 Assert.That(Sse41.Extract(Sse.StaticCast<float, uint>(ThreadState.V1), (byte)3), Is.EqualTo(Result));
             });
+
             CompareAgainstUnicorn();
         }
     }
