@@ -1,14 +1,18 @@
+using Ryujinx.HLE.HOS;
 using System;
 using System.IO;
 
-namespace Ryujinx.HLE
+namespace Ryujinx.HLE.FileSystem
 {
     class VirtualFileSystem : IDisposable
     {
-        private const string BasePath   = "RyuFs";
-        private const string NandPath   = "nand";
-        private const string SdCardPath = "sdmc";
-        private const string SystemPath = "system";
+        public const string BasePath   = "RyuFs";
+        public const string NandPath   = "nand";
+        public const string SdCardPath = "sdmc";
+        public const string SystemPath = "system";
+
+        public static string SystemNandPath = Path.Combine(NandPath, "system");
+        public static string UserNandPath   = Path.Combine(NandPath, "user");
 
         public Stream RomFs { get; private set; }
 
@@ -50,9 +54,14 @@ namespace Ryujinx.HLE
 
         public string GetSdCardPath() => MakeDirAndGetFullPath(SdCardPath);
 
-        public string GetGameSavesPath() => MakeDirAndGetFullPath(NandPath);
+        public string GetNandPath() => MakeDirAndGetFullPath(NandPath);
 
         public string GetSystemPath() => MakeDirAndGetFullPath(SystemPath);
+
+        public string GetGameSavePath(SaveInfo Save, ServiceCtx Context)
+        {
+            return MakeDirAndGetFullPath(SaveHelper.GetSavePath(Save, Context));
+        }
 
         public string SwitchPathToSystemPath(string SwitchPath)
         {

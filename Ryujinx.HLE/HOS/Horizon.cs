@@ -109,7 +109,7 @@ namespace Ryujinx.HLE.HOS
                 }
             }
 
-            if (!MainProcess.MetaData.Is64Bits)
+            if (!(MainProcess.MetaData?.Is64Bits ?? true))
             {
                 throw new NotImplementedException("32-bit titles are unsupported!");
             }

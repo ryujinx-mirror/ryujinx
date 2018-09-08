@@ -1,5 +1,6 @@
+using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
+using Ryujinx.HLE.HOS.SystemState;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.FspSrv
@@ -14,13 +15,13 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 1,    SetCurrentProcess                    },
-                { 18,   OpenSdCardFileSystem                 },
-                { 22,   CreateSaveDataFileSystem             },
-                { 51,   OpenSaveDataFileSystem               },
-                { 200,  OpenDataStorageByCurrentProcess      },
-                { 203,  OpenPatchDataStorageByCurrentProcess },
-                { 1005, GetGlobalAccessLogMode               }
+                { 1,    SetCurrentProcess                        },
+                { 18,   OpenSdCardFileSystem                     },
+                { 51,   OpenSaveDataFileSystem                   },
+                { 52,   OpenSaveDataFileSystemBySystemSaveDataId },
+                { 200,  OpenDataStorageByCurrentProcess          },
+                { 203,  OpenPatchDataStorageByCurrentProcess     },
+                { 1005, GetGlobalAccessLogMode                   }
             };
         }
 
@@ -36,16 +37,16 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
-        public long CreateSaveDataFileSystem(ServiceCtx Context)
+        public long OpenSaveDataFileSystem(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceFs, "Stubbed.");
+            LoadSaveDataFileSystem(Context);
 
             return 0;
         }
 
-        public long OpenSaveDataFileSystem(ServiceCtx Context)
+        public long OpenSaveDataFileSystemBySystemSaveDataId(ServiceCtx Context)
         {
-            MakeObject(Context, new IFileSystem(Context.Device.FileSystem.GetGameSavesPath()));
+            LoadSaveDataFileSystem(Context);
 
             return 0;
         }
@@ -69,6 +70,25 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             Context.ResponseData.Write(0);
 
             return 0;
+        }
+
+        public void LoadSaveDataFileSystem(ServiceCtx Context)
+        {
+            SaveSpaceId SaveSpaceId = (SaveSpaceId)Context.RequestData.ReadInt64();
+
+            long TitleId = Context.RequestData.ReadInt64();
+
+            UserId UserId = new UserId(
+                Context.RequestData.ReadInt64(), 
+                Context.RequestData.ReadInt64());
+
+            long SaveId = Context.RequestData.ReadInt64();
+
+            SaveDataType SaveDataType = (SaveDataType)Context.RequestData.ReadByte();
+
+            SaveInfo SaveInfo = new SaveInfo(TitleId, SaveId, SaveDataType, UserId, SaveSpaceId);
+
+            MakeObject(Context, new IFileSystem(Context.Device.FileSystem.GetGameSavePath(SaveInfo, Context)));
         }
     }
 }
