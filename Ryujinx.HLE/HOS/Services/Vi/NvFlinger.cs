@@ -199,6 +199,11 @@ namespace Ryujinx.HLE.HOS.Services.Android
 
             SendFrameBuffer(Context, Slot);
 
+            if (Context.Device.EnableDeviceVsync)
+            {
+                Context.Device.VsyncEvent.WaitOne();
+            }
+
             return MakeReplyParcel(Context, 1280, 720, 0, 0, 0);
         }
 

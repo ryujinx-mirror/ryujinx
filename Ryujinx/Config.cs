@@ -33,6 +33,8 @@ namespace Ryujinx
 
             Device.System.State.DockedMode = Convert.ToBoolean(Parser.Value("Docked_Mode"));
 
+            Device.EnableDeviceVsync = Convert.ToBoolean(Parser.Value("Enable_Vsync"));
+
             string[] FilteredLogClasses = Parser.Value("Logging_Filtered_Classes").Split(',', StringSplitOptions.RemoveEmptyEntries);
 
             //When the classes are specified on the list, we only

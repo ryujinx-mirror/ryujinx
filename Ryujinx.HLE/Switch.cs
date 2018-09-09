@@ -7,6 +7,7 @@ using Ryujinx.HLE.Input;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.Memory;
 using System;
+using System.Threading;
 
 namespace Ryujinx.HLE
 {
@@ -27,6 +28,12 @@ namespace Ryujinx.HLE
         public PerformanceStatistics Statistics { get; private set; }
 
         public Hid Hid { get; private set; }
+
+        public bool EnableDeviceVsync { get; set; } = true;
+
+        public AutoResetEvent VsyncEvent { get; private set; }
+
+        public event EventHandler Finish;
 
         public Switch(IGalRenderer Renderer, IAalOutput AudioOut)
         {
@@ -55,6 +62,8 @@ namespace Ryujinx.HLE
             Statistics = new PerformanceStatistics();
 
             Hid = new Hid(this, System.HidSharedMem.PA);
+
+            VsyncEvent = new AutoResetEvent(true);
         }
 
         public void LoadCart(string ExeFsDir, string RomFsFile = null)
@@ -109,6 +118,8 @@ namespace Ryujinx.HLE
             if (Disposing)
             {
                 System.Dispose();
+
+                VsyncEvent.Dispose();
             }
         }
     }
