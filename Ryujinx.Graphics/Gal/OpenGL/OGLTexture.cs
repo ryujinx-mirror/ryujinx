@@ -82,7 +82,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                         Image.Height,
                         1);
 
-                    Image.Format = GalImageFormat.R8G8 | (Image.Format & GalImageFormat.FormatMask);
+                    Image.Format = GalImageFormat.R8G8 | (Image.Format & GalImageFormat.TypeMask);
                 }
 
                 (PixelInternalFormat InternalFormat, PixelFormat Format, PixelType Type) = OGLEnumConverter.GetImageFormat(Image.Format);

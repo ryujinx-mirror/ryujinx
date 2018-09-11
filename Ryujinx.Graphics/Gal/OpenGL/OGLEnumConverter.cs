@@ -176,7 +176,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalImageFormat.D32_S8 | GalImageFormat.Uint:   return (PixelInternalFormat.Depth32fStencil8,  PixelFormat.DepthStencil,   PixelType.Float32UnsignedInt248Rev);
             }
 
-            throw new NotImplementedException(Format.ToString());
+            throw new NotImplementedException($"{Format & GalImageFormat.FormatMask} {Format & GalImageFormat.TypeMask}");
         }
 
         public static InternalFormat GetCompressedImageFormat(GalImageFormat Format)
@@ -195,7 +195,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalImageFormat.BC5       | GalImageFormat.Unorm: return InternalFormat.CompressedRgRgtc2;
             }
 
-            throw new NotImplementedException(Format.ToString());
+            throw new NotImplementedException($"{Format & GalImageFormat.FormatMask} {Format & GalImageFormat.TypeMask}");
         }
 
         public static All GetTextureSwizzle(GalTextureSource Source)
