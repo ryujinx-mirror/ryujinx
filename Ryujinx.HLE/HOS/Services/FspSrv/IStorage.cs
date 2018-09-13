@@ -39,8 +39,11 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
                 byte[] Data = new byte[Size];
 
-                BaseStream.Seek(Offset, SeekOrigin.Begin);
-                BaseStream.Read(Data, 0, Data.Length);
+                lock (BaseStream)
+                {
+                    BaseStream.Seek(Offset, SeekOrigin.Begin);
+                    BaseStream.Read(Data, 0, Data.Length);
+                }
 
                 Context.Memory.WriteBytes(BuffDesc.Position, Data);
             }
