@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx", "Ryujinx\Ryujinx.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Tests", "Ryujinx.Tests\Ryujinx.Tests.csproj", "{EBB55AEA-C7D7-4DEB-BF96-FA1789E225E9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Tests.Unicorn", "Ryujinx.Tests.Unicorn\Ryujinx.Tests.Unicorn.csproj", "{D8F72938-78EF-4E8C-BAFE-531C9C3C8F15}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.HLE", "Ryujinx.HLE\Ryujinx.HLE.csproj", "{CB92CFF9-1D62-4D4F-9E88-8130EF61E351}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChocolArm64", "ChocolArm64\ChocolArm64.csproj", "{2345A1A7-8DEF-419B-9AFB-4DFD41D20D05}"
@@ -33,6 +35,10 @@ Global
 		{EBB55AEA-C7D7-4DEB-BF96-FA1789E225E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBB55AEA-C7D7-4DEB-BF96-FA1789E225E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBB55AEA-C7D7-4DEB-BF96-FA1789E225E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8F72938-78EF-4E8C-BAFE-531C9C3C8F15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8F72938-78EF-4E8C-BAFE-531C9C3C8F15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8F72938-78EF-4E8C-BAFE-531C9C3C8F15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8F72938-78EF-4E8C-BAFE-531C9C3C8F15}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CB92CFF9-1D62-4D4F-9E88-8130EF61E351}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CB92CFF9-1D62-4D4F-9E88-8130EF61E351}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB92CFF9-1D62-4D4F-9E88-8130EF61E351}.Release|Any CPU.ActiveCfg = Release|Any CPU
