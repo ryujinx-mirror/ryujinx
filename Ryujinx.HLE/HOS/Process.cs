@@ -3,7 +3,7 @@ using ChocolArm64.Events;
 using ChocolArm64.Memory;
 using ChocolArm64.State;
 using Ryujinx.HLE.Exceptions;
-using Ryujinx.HLE.HOS.Diagnostics;
+using Ryujinx.HLE.HOS.Diagnostics.Demangler;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Services.Nv;
 using Ryujinx.HLE.HOS.SystemState;
