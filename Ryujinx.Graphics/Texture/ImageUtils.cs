@@ -56,30 +56,31 @@ namespace Ryujinx.Graphics.Texture
                 { GalTextureFormat.Z24S8,        GalImageFormat.D24_S8               | Unorm                        },
                 { GalTextureFormat.ZF32,         GalImageFormat.D32                                        | Sfloat },
                 { GalTextureFormat.ZF32_X24S8,   GalImageFormat.D32_S8               | Unorm                        },
+                { GalTextureFormat.Z16,          GalImageFormat.D16                  | Unorm                        },
 
                 //Compressed formats
-                { GalTextureFormat.BC6H_SF16,   GalImageFormat.BC6H_SF16  | Unorm         },
-                { GalTextureFormat.BC6H_UF16,   GalImageFormat.BC6H_UF16  | Unorm         },
-                { GalTextureFormat.BC7U,        GalImageFormat.BC7        | Unorm         },
-                { GalTextureFormat.BC1,         GalImageFormat.BC1_RGBA   | Unorm         },
-                { GalTextureFormat.BC2,         GalImageFormat.BC2        | Unorm         },
-                { GalTextureFormat.BC3,         GalImageFormat.BC3        | Unorm         },
-                { GalTextureFormat.BC4,         GalImageFormat.BC4        | Unorm | Snorm },
-                { GalTextureFormat.BC5,         GalImageFormat.BC5        | Unorm | Snorm },
-                { GalTextureFormat.Astc2D4x4,   GalImageFormat.ASTC_4x4   | Unorm         },
-                { GalTextureFormat.Astc2D5x5,   GalImageFormat.ASTC_5x5   | Unorm         },
-                { GalTextureFormat.Astc2D6x6,   GalImageFormat.ASTC_6x6   | Unorm         },
-                { GalTextureFormat.Astc2D8x8,   GalImageFormat.ASTC_8x8   | Unorm         },
-                { GalTextureFormat.Astc2D10x10, GalImageFormat.ASTC_10x10 | Unorm         },
-                { GalTextureFormat.Astc2D12x12, GalImageFormat.ASTC_12x12 | Unorm         },
-                { GalTextureFormat.Astc2D5x4,   GalImageFormat.ASTC_5x4   | Unorm         },
-                { GalTextureFormat.Astc2D6x5,   GalImageFormat.ASTC_6x5   | Unorm         },
-                { GalTextureFormat.Astc2D8x6,   GalImageFormat.ASTC_8x6   | Unorm         },
-                { GalTextureFormat.Astc2D10x8,  GalImageFormat.ASTC_10x8  | Unorm         },
-                { GalTextureFormat.Astc2D12x10, GalImageFormat.ASTC_12x10 | Unorm         },
-                { GalTextureFormat.Astc2D8x5,   GalImageFormat.ASTC_8x5   | Unorm         },
-                { GalTextureFormat.Astc2D10x5,  GalImageFormat.ASTC_10x5  | Unorm         },
-                { GalTextureFormat.Astc2D10x6,  GalImageFormat.ASTC_10x6  | Unorm         }
+                { GalTextureFormat.BC6H_SF16,   GalImageFormat.BC6H_SF16  | Unorm                  },
+                { GalTextureFormat.BC6H_UF16,   GalImageFormat.BC6H_UF16                  | Sfloat },
+                { GalTextureFormat.BC7U,        GalImageFormat.BC7        | Unorm                  },
+                { GalTextureFormat.BC1,         GalImageFormat.BC1_RGBA   | Unorm                  },
+                { GalTextureFormat.BC2,         GalImageFormat.BC2        | Unorm                  },
+                { GalTextureFormat.BC3,         GalImageFormat.BC3        | Unorm                  },
+                { GalTextureFormat.BC4,         GalImageFormat.BC4        | Unorm | Snorm          },
+                { GalTextureFormat.BC5,         GalImageFormat.BC5        | Unorm | Snorm          },
+                { GalTextureFormat.Astc2D4x4,   GalImageFormat.ASTC_4x4   | Unorm                  },
+                { GalTextureFormat.Astc2D5x5,   GalImageFormat.ASTC_5x5   | Unorm                  },
+                { GalTextureFormat.Astc2D6x6,   GalImageFormat.ASTC_6x6   | Unorm                  },
+                { GalTextureFormat.Astc2D8x8,   GalImageFormat.ASTC_8x8   | Unorm                  },
+                { GalTextureFormat.Astc2D10x10, GalImageFormat.ASTC_10x10 | Unorm                  },
+                { GalTextureFormat.Astc2D12x12, GalImageFormat.ASTC_12x12 | Unorm                  },
+                { GalTextureFormat.Astc2D5x4,   GalImageFormat.ASTC_5x4   | Unorm                  },
+                { GalTextureFormat.Astc2D6x5,   GalImageFormat.ASTC_6x5   | Unorm                  },
+                { GalTextureFormat.Astc2D8x6,   GalImageFormat.ASTC_8x6   | Unorm                  },
+                { GalTextureFormat.Astc2D10x8,  GalImageFormat.ASTC_10x8  | Unorm                  },
+                { GalTextureFormat.Astc2D12x10, GalImageFormat.ASTC_12x10 | Unorm                  },
+                { GalTextureFormat.Astc2D8x5,   GalImageFormat.ASTC_8x5   | Unorm                  },
+                { GalTextureFormat.Astc2D10x5,  GalImageFormat.ASTC_10x5  | Unorm                  },
+                { GalTextureFormat.Astc2D10x6,  GalImageFormat.ASTC_10x6  | Unorm                  }
             };
 
         private static readonly Dictionary<GalImageFormat, ImageDescriptor> s_ImageTable =
@@ -167,6 +168,7 @@ namespace Ryujinx.Graphics.Texture
             switch (Format)
             {
                 case GalSurfaceFormat.RGBA32Float:    return GalImageFormat.R32G32B32A32   | Sfloat;
+                case GalSurfaceFormat.RGBA32Uint:     return GalImageFormat.R32G32B32A32   | Uint;
                 case GalSurfaceFormat.RGBA16Float:    return GalImageFormat.R16G16B16A16   | Sfloat;
                 case GalSurfaceFormat.RG32Float:      return GalImageFormat.R32G32         | Sfloat;
                 case GalSurfaceFormat.RG32Sint:       return GalImageFormat.R32G32         | Sint;
@@ -184,7 +186,10 @@ namespace Ryujinx.Graphics.Texture
                 case GalSurfaceFormat.RG8Unorm:       return GalImageFormat.R8G8           | Unorm;
                 case GalSurfaceFormat.RG8Snorm:       return GalImageFormat.R8             | Snorm;
                 case GalSurfaceFormat.R16Float:       return GalImageFormat.R16            | Sfloat;
+                case GalSurfaceFormat.R16Unorm:       return GalImageFormat.R16            | Unorm;
                 case GalSurfaceFormat.R8Unorm:        return GalImageFormat.R8             | Unorm;
+                case GalSurfaceFormat.B5G6R5Unorm:    return GalImageFormat.B5G6R5         | Unorm;
+                case GalSurfaceFormat.BGR5A1Unorm:    return GalImageFormat.A1R5G5B5       | Unorm;
             }
 
             throw new NotImplementedException(Format.ToString());

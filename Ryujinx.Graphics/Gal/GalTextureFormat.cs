@@ -26,6 +26,7 @@ namespace Ryujinx.Graphics.Gal
         Z24S8        = 0x29,
         ZF32         = 0x2f,
         ZF32_X24S8   = 0x30,
+        Z16          = 0x3a,
         Astc2D4x4    = 0x40,
         Astc2D5x5    = 0x41,
         Astc2D6x6    = 0x42,
