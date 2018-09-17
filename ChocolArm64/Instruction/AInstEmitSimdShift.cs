@@ -10,6 +10,11 @@ namespace ChocolArm64.Instruction
 {
     static partial class AInstEmit
     {
+        public static void Rshrn_V(AILEmitterCtx Context)
+        {
+            EmitVectorShrImmNarrowOpZx(Context, Round: true);
+        }
+
         public static void Shl_S(AILEmitterCtx Context)
         {
             AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
@@ -45,9 +50,7 @@ namespace ChocolArm64.Instruction
 
         public static void Shrn_V(AILEmitterCtx Context)
         {
-            AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
-
-            EmitVectorShImmNarrowBinaryZx(Context, () => Context.Emit(OpCodes.Shr_Un), GetImmShr(Op));
+            EmitVectorShrImmNarrowOpZx(Context, Round: false);
         }
 
         public static void Sli_V(AILEmitterCtx Context)
@@ -85,26 +88,44 @@ namespace ChocolArm64.Instruction
             }
         }
 
+        public static void Sqrshrn_S(AILEmitterCtx Context)
+        {
+            EmitRoundShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.ScalarSxSx);
+        }
+
         public static void Sqrshrn_V(AILEmitterCtx Context)
         {
-            AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
+            EmitRoundShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.VectorSxSx);
+        }
 
-            int Shift = GetImmShr(Op);
+        public static void Sqrshrun_S(AILEmitterCtx Context)
+        {
+            EmitRoundShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.ScalarSxZx);
+        }
 
-            long RoundConst = 1L << (Shift - 1);
+        public static void Sqrshrun_V(AILEmitterCtx Context)
+        {
+            EmitRoundShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.VectorSxZx);
+        }
 
-            Action Emit = () =>
-            {
-                Context.EmitLdc_I8(RoundConst);
+        public static void Sqshrn_S(AILEmitterCtx Context)
+        {
+            EmitShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.ScalarSxSx);
+        }
 
-                Context.Emit(OpCodes.Add);
+        public static void Sqshrn_V(AILEmitterCtx Context)
+        {
+            EmitShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.VectorSxSx);
+        }
 
-                Context.EmitLdc_I4(Shift);
+        public static void Sqshrun_S(AILEmitterCtx Context)
+        {
+            EmitShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.ScalarSxZx);
+        }
 
-                Context.Emit(OpCodes.Shr);
-            };
-
-            EmitVectorSaturatingNarrowOpSxSx(Context, Emit);
+        public static void Sqshrun_V(AILEmitterCtx Context)
+        {
+            EmitShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.VectorSxZx);
         }
 
         public static void Srshr_S(AILEmitterCtx Context)
@@ -157,6 +178,26 @@ namespace ChocolArm64.Instruction
         public static void Ssra_V(AILEmitterCtx Context)
         {
             EmitVectorShrImmOpSx(Context, ShrImmFlags.Accumulate);
+        }
+
+        public static void Uqrshrn_S(AILEmitterCtx Context)
+        {
+            EmitRoundShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.ScalarZxZx);
+        }
+
+        public static void Uqrshrn_V(AILEmitterCtx Context)
+        {
+            EmitRoundShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.VectorZxZx);
+        }
+
+        public static void Uqshrn_S(AILEmitterCtx Context)
+        {
+            EmitShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.ScalarZxZx);
+        }
+
+        public static void Uqshrn_V(AILEmitterCtx Context)
+        {
+            EmitShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.VectorZxZx);
         }
 
         public static void Urshr_S(AILEmitterCtx Context)
@@ -367,6 +408,138 @@ namespace ChocolArm64.Instruction
             }
         }
 
+        private static void EmitVectorShrImmNarrowOpZx(AILEmitterCtx Context, bool Round)
+        {
+            AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
+
+            int Shift = GetImmShr(Op);
+
+            long RoundConst = 1L << (Shift - 1);
+
+            int Elems = 8 >> Op.Size;
+
+            int Part = Op.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
+
+            if (Part != 0)
+            {
+                Context.EmitLdvec(Op.Rd);
+                Context.EmitStvectmp();
+            }
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                EmitVectorExtractZx(Context, Op.Rn, Index, Op.Size + 1);
+
+                if (Round)
+                {
+                    Context.EmitLdc_I8(RoundConst);
+
+                    Context.Emit(OpCodes.Add);
+                }
+
+                Context.EmitLdc_I4(Shift);
+
+                Context.Emit(OpCodes.Shr_Un);
+
+                EmitVectorInsertTmp(Context, Part + Index, Op.Size);
+            }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
+
+            if (Part == 0)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
+        [Flags]
+        private enum ShrImmSaturatingNarrowFlags
+        {
+            Scalar    = 1 << 0,
+            SignedSrc = 1 << 1,
+            SignedDst = 1 << 2,
+
+            Round = 1 << 3,
+
+            ScalarSxSx = Scalar | SignedSrc | SignedDst,
+            ScalarSxZx = Scalar | SignedSrc,
+            ScalarZxZx = Scalar,
+
+            VectorSxSx = SignedSrc | SignedDst,
+            VectorSxZx = SignedSrc,
+            VectorZxZx = 0
+        }
+
+        private static void EmitRoundShrImmSaturatingNarrowOp(AILEmitterCtx Context, ShrImmSaturatingNarrowFlags Flags)
+        {
+            EmitShrImmSaturatingNarrowOp(Context, ShrImmSaturatingNarrowFlags.Round | Flags);
+        }
+
+        private static void EmitShrImmSaturatingNarrowOp(AILEmitterCtx Context, ShrImmSaturatingNarrowFlags Flags)
+        {
+            AOpCodeSimdShImm Op = (AOpCodeSimdShImm)Context.CurrOp;
+
+            bool Scalar    = (Flags & ShrImmSaturatingNarrowFlags.Scalar)    != 0;
+            bool SignedSrc = (Flags & ShrImmSaturatingNarrowFlags.SignedSrc) != 0;
+            bool SignedDst = (Flags & ShrImmSaturatingNarrowFlags.SignedDst) != 0;
+            bool Round     = (Flags & ShrImmSaturatingNarrowFlags.Round)     != 0;
+
+            int Shift = GetImmShr(Op);
+
+            long RoundConst = 1L << (Shift - 1);
+
+            int Elems = !Scalar ? 8 >> Op.Size : 1;
+
+            int Part = !Scalar && (Op.RegisterSize == ARegisterSize.SIMD128) ? Elems : 0;
+
+            if (Scalar)
+            {
+                EmitVectorZeroLowerTmp(Context);
+            }
+
+            if (Part != 0)
+            {
+                Context.EmitLdvec(Op.Rd);
+                Context.EmitStvectmp();
+            }
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                EmitVectorExtract(Context, Op.Rn, Index, Op.Size + 1, SignedSrc);
+
+                if (Op.Size <= 1 || !Round)
+                {
+                    if (Round)
+                    {
+                        Context.EmitLdc_I8(RoundConst);
+
+                        Context.Emit(OpCodes.Add);
+                    }
+
+                    Context.EmitLdc_I4(Shift);
+
+                    Context.Emit(SignedSrc ? OpCodes.Shr : OpCodes.Shr_Un);
+                }
+                else /* if (Op.Size == 2 && Round) */
+                {
+                    EmitShrImm_64(Context, SignedSrc, RoundConst, Shift); // Shift <= 32
+                }
+
+                EmitSatQ(Context, Op.Size, SignedSrc, SignedDst);
+
+                EmitVectorInsertTmp(Context, Part + Index, Op.Size);
+            }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
+
+            if (Part == 0)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
         // Dst_64 = (Int(Src_64, Signed) + RoundConst) >> Shift;
         private static void EmitShrImm_64(
             AILEmitterCtx Context,
@@ -374,52 +547,12 @@ namespace ChocolArm64.Instruction
             long RoundConst,
             int  Shift)
         {
-            if (((AOpCodeSimd)Context.CurrOp).Size < 3)
-            {
-                throw new InvalidOperationException();
-            }
-
             Context.EmitLdc_I8(RoundConst);
             Context.EmitLdc_I4(Shift);
 
             ASoftFallback.EmitCall(Context, Signed
                 ? nameof(ASoftFallback.SignedShrImm_64)
                 : nameof(ASoftFallback.UnsignedShrImm_64));
-        }
-
-        private static void EmitVectorShImmNarrowBinarySx(AILEmitterCtx Context, Action Emit, int Imm)
-        {
-            EmitVectorShImmNarrowBinaryOp(Context, Emit, Imm, true);
-        }
-
-        private static void EmitVectorShImmNarrowBinaryZx(AILEmitterCtx Context, Action Emit, int Imm)
-        {
-            EmitVectorShImmNarrowBinaryOp(Context, Emit, Imm, false);
-        }
-
-        private static void EmitVectorShImmNarrowBinaryOp(AILEmitterCtx Context, Action Emit, int Imm, bool Signed)
-        {
-            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
-
-            int Elems = 8 >> Op.Size;
-
-            int Part = Op.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
-
-            for (int Index = 0; Index < Elems; Index++)
-            {
-                EmitVectorExtract(Context, Op.Rn, Index, Op.Size + 1, Signed);
-
-                Context.EmitLdc_I4(Imm);
-
-                Emit();
-
-                EmitVectorInsert(Context, Op.Rd, Part + Index, Op.Size);
-            }
-
-            if (Part == 0)
-            {
-                EmitVectorZeroUpper(Context, Op.Rd);
-            }
         }
 
         private static void EmitVectorShImmWidenBinarySx(AILEmitterCtx Context, Action Emit, int Imm)

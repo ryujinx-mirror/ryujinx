@@ -93,6 +93,7 @@ namespace Ryujinx.Tests.Cpu
                                       Vector128<float> V0 = default(Vector128<float>),
                                       Vector128<float> V1 = default(Vector128<float>),
                                       Vector128<float> V2 = default(Vector128<float>),
+                                      Vector128<float> V3 = default(Vector128<float>),
                                       bool Overflow = false, bool Carry = false, bool Zero = false, bool Negative = false,
                                       int Fpcr = 0x0, int Fpsr = 0x0)
         {
@@ -106,6 +107,7 @@ namespace Ryujinx.Tests.Cpu
             Thread.ThreadState.V0 = V0;
             Thread.ThreadState.V1 = V1;
             Thread.ThreadState.V2 = V2;
+            Thread.ThreadState.V3 = V3;
 
             Thread.ThreadState.Overflow = Overflow;
             Thread.ThreadState.Carry    = Carry;
@@ -127,6 +129,7 @@ namespace Ryujinx.Tests.Cpu
                 UnicornEmu.Q[0] = V0;
                 UnicornEmu.Q[1] = V1;
                 UnicornEmu.Q[2] = V2;
+                UnicornEmu.Q[3] = V3;
 
                 UnicornEmu.OverflowFlag = Overflow;
                 UnicornEmu.CarryFlag    = Carry;
@@ -162,13 +165,14 @@ namespace Ryujinx.Tests.Cpu
                                             Vector128<float> V0 = default(Vector128<float>),
                                             Vector128<float> V1 = default(Vector128<float>),
                                             Vector128<float> V2 = default(Vector128<float>),
+                                            Vector128<float> V3 = default(Vector128<float>),
                                             bool Overflow = false, bool Carry = false, bool Zero = false, bool Negative = false,
                                             int Fpcr = 0x0, int Fpsr = 0x0)
         {
             this.Opcode(Opcode);
             this.Opcode(0xD4200000); // BRK #0
             this.Opcode(0xD65F03C0); // RET
-            SetThreadState(X0, X1, X2, X3, X31, V0, V1, V2, Overflow, Carry, Zero, Negative, Fpcr, Fpsr);
+            SetThreadState(X0, X1, X2, X3, X31, V0, V1, V2, V3, Overflow, Carry, Zero, Negative, Fpcr, Fpsr);
             ExecuteOpcodes();
 
             return GetThreadState();
@@ -195,11 +199,28 @@ namespace Ryujinx.Tests.Cpu
             QC  = 1 << 27
         }
 
-        protected void CompareAgainstUnicorn(FPSR FpsrMask = FPSR.None)
+        protected enum FpSkips { None, IfNaN_S, IfNaN_D };
+
+        protected enum FpUseTolerance { None, OneUlps_S, OneUlps_D };
+
+        protected void CompareAgainstUnicorn(
+            FPSR           FpsrMask       = FPSR.None,
+            FpSkips        FpSkips        = FpSkips.None,
+            FpUseTolerance FpUseTolerance = FpUseTolerance.None)
         {
             if (!UnicornAvailable)
             {
                 return;
+            }
+
+            if (FpSkips == FpSkips.IfNaN_S && float.IsNaN(VectorExtractSingle(UnicornEmu.Q[0], (byte)0)))
+            {
+                Assert.Ignore("NaN test.");
+            }
+
+            if (FpSkips == FpSkips.IfNaN_D && double.IsNaN(VectorExtractDouble(UnicornEmu.Q[0], (byte)0)))
+            {
+                Assert.Ignore("NaN test.");
             }
 
             Assert.That(Thread.ThreadState.X0,  Is.EqualTo(UnicornEmu.X[0]));
@@ -236,7 +257,51 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.That(Thread.ThreadState.X31, Is.EqualTo(UnicornEmu.SP));
 
-            Assert.That(Thread.ThreadState.V0,  Is.EqualTo(UnicornEmu.Q[0]));
+            if (FpUseTolerance == FpUseTolerance.None)
+            {
+                Assert.That(Thread.ThreadState.V0, Is.EqualTo(UnicornEmu.Q[0]));
+            }
+            else
+            {
+                if (!Is.EqualTo(UnicornEmu.Q[0]).ApplyTo(Thread.ThreadState.V0).IsSuccess)
+                {
+                    if (FpUseTolerance == FpUseTolerance.OneUlps_S)
+                    {
+                        if (float.IsNormal   (VectorExtractSingle(UnicornEmu.Q[0], (byte)0)) ||
+                            float.IsSubnormal(VectorExtractSingle(UnicornEmu.Q[0], (byte)0)))
+                        {
+                            Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)0),
+                                Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)0)).Within(1).Ulps);
+                            Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)1),
+                                Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)1)).Within(1).Ulps);
+                            Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)2),
+                                Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)2)).Within(1).Ulps);
+                            Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)3),
+                                Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)3)).Within(1).Ulps);
+                        }
+                        else
+                        {
+                            Assert.That(Thread.ThreadState.V0, Is.EqualTo(UnicornEmu.Q[0]));
+                        }
+                    }
+
+                    if (FpUseTolerance == FpUseTolerance.OneUlps_D)
+                    {
+                        if (double.IsNormal   (VectorExtractDouble(UnicornEmu.Q[0], (byte)0)) ||
+                            double.IsSubnormal(VectorExtractDouble(UnicornEmu.Q[0], (byte)0)))
+                        {
+                            Assert.That   (VectorExtractDouble(Thread.ThreadState.V0, (byte)0),
+                                Is.EqualTo(VectorExtractDouble(UnicornEmu.Q[0],       (byte)0)).Within(1).Ulps);
+                            Assert.That   (VectorExtractDouble(Thread.ThreadState.V0, (byte)1),
+                                Is.EqualTo(VectorExtractDouble(UnicornEmu.Q[0],       (byte)1)).Within(1).Ulps);
+                        }
+                        else
+                        {
+                            Assert.That(Thread.ThreadState.V0, Is.EqualTo(UnicornEmu.Q[0]));
+                        }
+                    }
+                }
+            }
             Assert.That(Thread.ThreadState.V1,  Is.EqualTo(UnicornEmu.Q[1]));
             Assert.That(Thread.ThreadState.V2,  Is.EqualTo(UnicornEmu.Q[2]));
             Assert.That(Thread.ThreadState.V3,  Is.EqualTo(UnicornEmu.Q[3]));
@@ -310,6 +375,18 @@ namespace Ryujinx.Tests.Cpu
             return Sse.StaticCast<long, float>(Sse2.SetVector128(BitConverter.DoubleToInt64Bits(E1), 0));
         }
 
+        protected static float VectorExtractSingle(Vector128<float> Vector, byte Index)
+        {
+            if (!Sse41.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
+            int Value = Sse41.Extract(Sse.StaticCast<float, int>(Vector), Index);
+
+            return BitConverter.Int32BitsToSingle(Value);
+        }
+
         protected static double VectorExtractDouble(Vector128<float> Vector, byte Index)
         {
             if (!Sse41.IsSupported)
@@ -370,6 +447,48 @@ namespace Ryujinx.Tests.Cpu
             }
 
             return Sse41.Extract(Sse.StaticCast<float, ulong>(Vector), (byte)1);
+        }
+
+        protected static uint GenNormal_S()
+        {
+            uint Rnd;
+
+            do      Rnd = TestContext.CurrentContext.Random.NextUInt();
+            while ((Rnd & 0x7F800000u) == 0u ||
+                   (Rnd & 0x7F800000u) == 0x7F800000u);
+
+            return Rnd;
+        }
+
+        protected static uint GenSubNormal_S()
+        {
+            uint Rnd;
+
+            do      Rnd = TestContext.CurrentContext.Random.NextUInt();
+            while ((Rnd & 0x007FFFFFu) == 0u);
+
+            return Rnd & 0x807FFFFFu;
+        }
+
+        protected static ulong GenNormal_D()
+        {
+            ulong Rnd;
+
+            do      Rnd = TestContext.CurrentContext.Random.NextULong();
+            while ((Rnd & 0x7FF0000000000000ul) == 0ul ||
+                   (Rnd & 0x7FF0000000000000ul) == 0x7FF0000000000000ul);
+
+            return Rnd;
+        }
+
+        protected static ulong GenSubNormal_D()
+        {
+            ulong Rnd;
+
+            do      Rnd = TestContext.CurrentContext.Random.NextULong();
+            while ((Rnd & 0x000FFFFFFFFFFFFFul) == 0ul);
+
+            return Rnd & 0x800FFFFFFFFFFFFFul;
         }
     }
 }

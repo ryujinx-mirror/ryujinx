@@ -1004,56 +1004,14 @@ namespace ChocolArm64.Instruction
 
             ScalarSxSx = Scalar | SignedSrc | SignedDst,
             ScalarSxZx = Scalar | SignedSrc,
-            ScalarZxSx = Scalar | SignedDst,
             ScalarZxZx = Scalar,
 
             VectorSxSx = SignedSrc | SignedDst,
             VectorSxZx = SignedSrc,
-            VectorZxSx = SignedDst,
             VectorZxZx = 0
         }
 
-        public static void EmitScalarSaturatingNarrowOpSxSx(AILEmitterCtx Context, Action Emit)
-        {
-            EmitSaturatingNarrowOp(Context, Emit, SaturatingNarrowFlags.ScalarSxSx);
-        }
-
-        public static void EmitScalarSaturatingNarrowOpSxZx(AILEmitterCtx Context, Action Emit)
-        {
-            EmitSaturatingNarrowOp(Context, Emit, SaturatingNarrowFlags.ScalarSxZx);
-        }
-
-        public static void EmitScalarSaturatingNarrowOpZxSx(AILEmitterCtx Context, Action Emit)
-        {
-            EmitSaturatingNarrowOp(Context, Emit, SaturatingNarrowFlags.ScalarZxSx);
-        }
-
-        public static void EmitScalarSaturatingNarrowOpZxZx(AILEmitterCtx Context, Action Emit)
-        {
-            EmitSaturatingNarrowOp(Context, Emit, SaturatingNarrowFlags.ScalarZxZx);
-        }
-
-        public static void EmitVectorSaturatingNarrowOpSxSx(AILEmitterCtx Context, Action Emit)
-        {
-            EmitSaturatingNarrowOp(Context, Emit, SaturatingNarrowFlags.VectorSxSx);
-        }
-
-        public static void EmitVectorSaturatingNarrowOpSxZx(AILEmitterCtx Context, Action Emit)
-        {
-            EmitSaturatingNarrowOp(Context, Emit, SaturatingNarrowFlags.VectorSxZx);
-        }
-
-        public static void EmitVectorSaturatingNarrowOpZxSx(AILEmitterCtx Context, Action Emit)
-        {
-            EmitSaturatingNarrowOp(Context, Emit, SaturatingNarrowFlags.VectorZxSx);
-        }
-
-        public static void EmitVectorSaturatingNarrowOpZxZx(AILEmitterCtx Context, Action Emit)
-        {
-            EmitSaturatingNarrowOp(Context, Emit, SaturatingNarrowFlags.VectorZxZx);
-        }
-
-        public static void EmitSaturatingNarrowOp(AILEmitterCtx Context, Action Emit, SaturatingNarrowFlags Flags)
+        public static void EmitSaturatingNarrowOp(AILEmitterCtx Context, SaturatingNarrowFlags Flags)
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
@@ -1079,8 +1037,6 @@ namespace ChocolArm64.Instruction
             for (int Index = 0; Index < Elems; Index++)
             {
                 EmitVectorExtract(Context, Op.Rn, Index, Op.Size + 1, SignedSrc);
-
-                Emit();
 
                 EmitSatQ(Context, Op.Size, SignedSrc, SignedDst);
 

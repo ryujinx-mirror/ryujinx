@@ -1199,22 +1199,22 @@ namespace ChocolArm64.Instruction
 
         public static void Sqxtn_S(AILEmitterCtx Context)
         {
-            EmitScalarSaturatingNarrowOpSxSx(Context, () => { });
+            EmitSaturatingNarrowOp(Context, SaturatingNarrowFlags.ScalarSxSx);
         }
 
         public static void Sqxtn_V(AILEmitterCtx Context)
         {
-            EmitVectorSaturatingNarrowOpSxSx(Context, () => { });
+            EmitSaturatingNarrowOp(Context, SaturatingNarrowFlags.VectorSxSx);
         }
 
         public static void Sqxtun_S(AILEmitterCtx Context)
         {
-            EmitScalarSaturatingNarrowOpSxZx(Context, () => { });
+            EmitSaturatingNarrowOp(Context, SaturatingNarrowFlags.ScalarSxZx);
         }
 
         public static void Sqxtun_V(AILEmitterCtx Context)
         {
-            EmitVectorSaturatingNarrowOpSxZx(Context, () => { });
+            EmitSaturatingNarrowOp(Context, SaturatingNarrowFlags.VectorSxZx);
         }
 
         public static void Srhadd_V(AILEmitterCtx Context)
@@ -1455,12 +1455,12 @@ namespace ChocolArm64.Instruction
 
         public static void Uqxtn_S(AILEmitterCtx Context)
         {
-            EmitScalarSaturatingNarrowOpZxZx(Context, () => { });
+            EmitSaturatingNarrowOp(Context, SaturatingNarrowFlags.ScalarZxZx);
         }
 
         public static void Uqxtn_V(AILEmitterCtx Context)
         {
-            EmitVectorSaturatingNarrowOpZxZx(Context, () => { });
+            EmitSaturatingNarrowOp(Context, SaturatingNarrowFlags.VectorZxZx);
         }
 
         public static void Urhadd_V(AILEmitterCtx Context)
