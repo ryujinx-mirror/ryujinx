@@ -28,15 +28,11 @@ namespace Ryujinx.Audio.OpenAL
 
             public PlaybackState State { get; set; }
 
-            private bool ShouldCallReleaseCallback;
-
             private ConcurrentDictionary<long, int> Buffers;
 
             private Queue<long> QueuedTagsQueue;
 
             private Queue<long> ReleasedTagsQueue;
-
-            private int LastReleasedCount;
 
             private bool Disposed;
 
@@ -59,8 +55,6 @@ namespace Ryujinx.Audio.OpenAL
 
             public bool ContainsBuffer(long Tag)
             {
-                SyncQueuedTags();
-
                 foreach (long QueuedTag in QueuedTagsQueue)
                 {
                     if (QueuedTag == Tag)
@@ -72,20 +66,29 @@ namespace Ryujinx.Audio.OpenAL
                 return false;
             }
 
-            public long[] GetReleasedBuffers(int MaxCount)
+            public long[] GetReleasedBuffers(int Count)
             {
-                ClearReleased();
+                AL.GetSource(SourceId, ALGetSourcei.BuffersProcessed, out int ReleasedCount);
+
+                ReleasedCount += ReleasedTagsQueue.Count;
+
+                if (Count > ReleasedCount)
+                {
+                    Count = ReleasedCount;
+                }
 
                 List<long> Tags = new List<long>();
 
-                HashSet<long> Unique = new HashSet<long>();
-
-                while (MaxCount-- > 0 && ReleasedTagsQueue.TryDequeue(out long Tag))
+                while (Count-- > 0 && ReleasedTagsQueue.TryDequeue(out long Tag))
                 {
-                    if (Unique.Add(Tag))
-                    {
-                        Tags.Add(Tag);
-                    }
+                    Tags.Add(Tag);
+                }
+
+                while (Count-- > 0 && QueuedTagsQueue.TryDequeue(out long Tag))
+                {
+                    AL.SourceUnqueueBuffers(SourceId, 1);
+
+                    Tags.Add(Tag);
                 }
 
                 return Tags.ToArray();
@@ -112,64 +115,24 @@ namespace Ryujinx.Audio.OpenAL
                 return Id;
             }
 
-            public void ClearReleased()
+            public void CallReleaseCallbackIfNeeded()
             {
-                SyncQueuedTags();
-
                 AL.GetSource(SourceId, ALGetSourcei.BuffersProcessed, out int ReleasedCount);
-
-                CheckReleaseChanges(ReleasedCount);
 
                 if (ReleasedCount > 0)
                 {
-                    AL.SourceUnqueueBuffers(SourceId, ReleasedCount);
-                }
-            }
+                    //If we signal, then we also need to have released buffers available
+                    //to return when GetReleasedBuffers is called.
+                    //If playback needs to be re-started due to all buffers being processed,
+                    //then OpenAL zeros the counts (ReleasedCount), so we keep it on the queue.
+                    while (ReleasedCount-- > 0 && QueuedTagsQueue.TryDequeue(out long Tag))
+                    {
+                        AL.SourceUnqueueBuffers(SourceId, 1);
 
-            public void CallReleaseCallbackIfNeeded()
-            {
-                CheckReleaseChanges();
-
-                if (ShouldCallReleaseCallback)
-                {
-                    ShouldCallReleaseCallback = false;
+                        ReleasedTagsQueue.Enqueue(Tag);
+                    }
 
                     Callback();
-                }
-            }
-
-            private void CheckReleaseChanges()
-            {
-                AL.GetSource(SourceId, ALGetSourcei.BuffersProcessed, out int ReleasedCount);
-
-                CheckReleaseChanges(ReleasedCount);
-            }
-
-            private void CheckReleaseChanges(int NewReleasedCount)
-            {
-                if (LastReleasedCount != NewReleasedCount)
-                {
-                    LastReleasedCount = NewReleasedCount;
-
-                    ShouldCallReleaseCallback = true;
-                }
-            }
-
-            private void SyncQueuedTags()
-            {
-                AL.GetSource(SourceId, ALGetSourcei.BuffersQueued,    out int QueuedCount);
-                AL.GetSource(SourceId, ALGetSourcei.BuffersProcessed, out int ReleasedCount);
-
-                QueuedCount -= ReleasedCount;
-
-                while (QueuedTagsQueue.Count > QueuedCount)
-                {
-                    ReleasedTagsQueue.Enqueue(QueuedTagsQueue.Dequeue());
-                }
-
-                while (ReleasedTagsQueue.Count > MaxReleased)
-                {
-                    ReleasedTagsQueue.Dequeue();
                 }
             }
 
@@ -266,7 +229,10 @@ namespace Ryujinx.Audio.OpenAL
         {
             if (Tracks.TryRemove(Track, out Track Td))
             {
-                Td.Dispose();
+                lock (Td)
+                {
+                    Td.Dispose();
+                }
             }
         }
 
@@ -274,7 +240,10 @@ namespace Ryujinx.Audio.OpenAL
         {
             if (Tracks.TryGetValue(Track, out Track Td))
             {
-                return Td.ContainsBuffer(Tag);
+                lock (Td)
+                {
+                    return Td.ContainsBuffer(Tag);
+                }
             }
 
             return false;
@@ -284,7 +253,10 @@ namespace Ryujinx.Audio.OpenAL
         {
             if (Tracks.TryGetValue(Track, out Track Td))
             {
-                return Td.GetReleasedBuffers(MaxCount);
+                lock (Td)
+                {
+                    return Td.GetReleasedBuffers(MaxCount);
+                }
             }
 
             return null;
@@ -294,15 +266,18 @@ namespace Ryujinx.Audio.OpenAL
         {
             if (Tracks.TryGetValue(Track, out Track Td))
             {
-                int BufferId = Td.AppendBuffer(Tag);
+                lock (Td)
+                {
+                    int BufferId = Td.AppendBuffer(Tag);
 
-                int Size = Buffer.Length * Marshal.SizeOf<T>();
+                    int Size = Buffer.Length * Marshal.SizeOf<T>();
 
-                AL.BufferData<T>(BufferId, Td.Format, Buffer, Size, Td.SampleRate);
+                    AL.BufferData<T>(BufferId, Td.Format, Buffer, Size, Td.SampleRate);
 
-                AL.SourceQueueBuffer(Td.SourceId, BufferId);
+                    AL.SourceQueueBuffer(Td.SourceId, BufferId);
 
-                StartPlaybackIfNeeded(Td);
+                    StartPlaybackIfNeeded(Td);
+                }
             }
         }
 
@@ -310,9 +285,12 @@ namespace Ryujinx.Audio.OpenAL
         {
             if (Tracks.TryGetValue(Track, out Track Td))
             {
-                Td.State = PlaybackState.Playing;
+                lock (Td)
+                {
+                    Td.State = PlaybackState.Playing;
 
-                StartPlaybackIfNeeded(Td);
+                    StartPlaybackIfNeeded(Td);
+                }
             }
         }
 
@@ -324,8 +302,6 @@ namespace Ryujinx.Audio.OpenAL
 
             if (State != ALSourceState.Playing && Td.State == PlaybackState.Playing)
             {
-                Td.ClearReleased();
-
                 AL.SourcePlay(Td.SourceId);
             }
         }
@@ -334,9 +310,12 @@ namespace Ryujinx.Audio.OpenAL
         {
             if (Tracks.TryGetValue(Track, out Track Td))
             {
-                Td.State = PlaybackState.Stopped;
+                lock (Td)
+                {
+                    Td.State = PlaybackState.Stopped;
 
-                AL.SourceStop(Td.SourceId);
+                    AL.SourceStop(Td.SourceId);
+                }
             }
         }
 
