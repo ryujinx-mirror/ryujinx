@@ -26,14 +26,14 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long GetCommonStateGetter(ServiceCtx Context)
         {
-            MakeObject(Context, new ICommonStateGetter());
+            MakeObject(Context, new ICommonStateGetter(Context.Device.System));
 
             return 0;
         }
 
         public long GetSelfController(ServiceCtx Context)
         {
-            MakeObject(Context, new ISelfController());
+            MakeObject(Context, new ISelfController(Context.Device.System));
 
             return 0;
         }

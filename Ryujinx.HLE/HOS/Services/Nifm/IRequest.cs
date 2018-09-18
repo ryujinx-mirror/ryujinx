@@ -1,12 +1,11 @@
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.Logging;
-using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Nifm
 {
-    class IRequest : IpcService, IDisposable
+    class IRequest : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
@@ -15,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
         private KEvent Event0;
         private KEvent Event1;
 
-        public IRequest()
+        public IRequest(Horizon System)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -27,8 +26,8 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
                 { 11, SetConnectionConfirmationOption }
             };
 
-            Event0 = new KEvent();
-            Event1 = new KEvent();
+            Event0 = new KEvent(System);
+            Event1 = new KEvent(System);
         }
 
         public long GetRequestState(ServiceCtx Context)
@@ -76,20 +75,6 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
             Context.Device.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool Disposing)
-        {
-            if (Disposing)
-            {
-                Event0.Dispose();
-                Event1.Dispose();
-            }
         }
     }
 }

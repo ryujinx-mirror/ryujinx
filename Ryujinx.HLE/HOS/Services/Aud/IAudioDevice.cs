@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         private KEvent SystemEvent;
 
-        public IAudioDevice()
+        public IAudioDevice(Horizon System)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -32,10 +32,10 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                 { 12, QueryAudioDeviceOutputEvent    }
             };
 
-            SystemEvent = new KEvent();
+            SystemEvent = new KEvent(System);
 
             //TODO: We shouldn't be signaling this here.
-            SystemEvent.WaitEvent.Set();
+            SystemEvent.Signal();
         }
 
         public long ListAudioDeviceName(ServiceCtx Context)

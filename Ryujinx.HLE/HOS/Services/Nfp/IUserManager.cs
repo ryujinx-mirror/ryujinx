@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
 
         public long GetUserInterface(ServiceCtx Context)
         {
-            MakeObject(Context, new IUser());
+            MakeObject(Context, new IUser(Context.Device.System));
 
             return 0;
         }

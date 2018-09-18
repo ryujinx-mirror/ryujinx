@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         private KEvent StateChangedEvent;
 
-        public ILibraryAppletAccessor()
+        public ILibraryAppletAccessor(Horizon System)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -24,12 +24,12 @@ namespace Ryujinx.HLE.HOS.Services.Am
                 { 101, PopOutData                 }
             };
 
-            StateChangedEvent = new KEvent();
+            StateChangedEvent = new KEvent(System);
         }
 
         public long GetAppletStateChangedEvent(ServiceCtx Context)
         {
-            StateChangedEvent.WaitEvent.Set();
+            StateChangedEvent.Signal();
 
             int Handle = Context.Process.HandleTable.OpenHandle(StateChangedEvent);
 

@@ -41,7 +41,9 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         public long GetRelayService(ServiceCtx Context)
         {
-            MakeObject(Context, new IHOSBinderDriver(Context.Device.Gpu.Renderer));
+            MakeObject(Context, new IHOSBinderDriver(
+                Context.Device.System,
+                Context.Device.Gpu.Renderer));
 
             return 0;
         }
@@ -62,7 +64,9 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         public long GetIndirectDisplayTransactionService(ServiceCtx Context)
         {
-            MakeObject(Context, new IHOSBinderDriver(Context.Device.Gpu.Renderer));
+            MakeObject(Context, new IHOSBinderDriver(
+                Context.Device.System,
+                Context.Device.Gpu.Renderer));
 
             return 0;
         }

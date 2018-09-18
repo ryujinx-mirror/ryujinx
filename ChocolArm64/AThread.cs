@@ -10,11 +10,9 @@ namespace ChocolArm64
         public AThreadState ThreadState { get; private set; }
         public AMemory      Memory      { get; private set; }
 
-        private long EntryPoint;
-
         private ATranslator Translator;
 
-        private Thread Work;
+        public Thread Work;
 
         public event EventHandler WorkFinished;
 
@@ -24,13 +22,21 @@ namespace ChocolArm64
         {
             this.Translator = Translator;
             this.Memory     = Memory;
-            this.EntryPoint = EntryPoint;
 
             ThreadState = new AThreadState();
 
             ThreadState.ExecutionMode = AExecutionMode.AArch64;
 
             ThreadState.Running = true;
+
+            Work = new Thread(delegate()
+            {
+                Translator.ExecuteSubroutine(this, EntryPoint);
+
+                Memory.RemoveMonitor(ThreadState.Core);
+
+                WorkFinished?.Invoke(this, EventArgs.Empty);
+            });
         }
 
         public bool Execute()
@@ -40,14 +46,7 @@ namespace ChocolArm64
                 return false;
             }
 
-            Work = new Thread(delegate()
-            {
-                Translator.ExecuteSubroutine(this, EntryPoint);
-
-                Memory.RemoveMonitor(ThreadState);
-
-                WorkFinished?.Invoke(this, EventArgs.Empty);
-            });
+            Work.Name = "cpu_thread_" + Work.ManagedThreadId;
 
             Work.Start();
 
@@ -57,6 +56,11 @@ namespace ChocolArm64
         public void StopExecution()
         {
             ThreadState.Running = false;
+        }
+
+        public void RequestInterrupt()
+        {
+            ThreadState.RequestInterrupt();
         }
 
         public bool IsCurrentThread()

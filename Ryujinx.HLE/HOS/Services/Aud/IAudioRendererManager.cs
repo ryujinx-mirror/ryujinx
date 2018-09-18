@@ -40,7 +40,11 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             AudioRendererParameter Params = GetAudioRendererParameter(Context);
 
-            MakeObject(Context, new IAudioRenderer(Context.Memory, AudioOut, Params));
+            MakeObject(Context, new IAudioRenderer(
+                Context.Device.System,
+                Context.Memory,
+                AudioOut,
+                Params));
 
             return 0;
         }
@@ -161,7 +165,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
         {
             long UserId = Context.RequestData.ReadInt64();
 
-            MakeObject(Context, new IAudioDevice());
+            MakeObject(Context, new IAudioDevice(Context.Device.System));
 
             return 0;
         }

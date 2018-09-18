@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         private KEvent DisplayResolutionChangeEvent;
 
-        public ICommonStateGetter()
+        public ICommonStateGetter(Horizon System)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
                 { 61, GetDefaultDisplayResolutionChangeEvent  }
             };
 
-            DisplayResolutionChangeEvent = new KEvent();
+            DisplayResolutionChangeEvent = new KEvent(System);
         }
 
         public long GetEventHandle(ServiceCtx Context)

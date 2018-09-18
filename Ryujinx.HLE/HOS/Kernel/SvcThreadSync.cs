@@ -1,6 +1,5 @@
 using ChocolArm64.State;
 using Ryujinx.HLE.Logging;
-using System;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
 
@@ -8,18 +7,90 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     partial class SvcHandler
     {
-        private const int MutexHasListenersMask = 0x40000000;
+        private void SvcWaitSynchronization(AThreadState ThreadState)
+        {
+            long HandlesPtr   = (long)ThreadState.X1;
+            int  HandlesCount =  (int)ThreadState.X2;
+            long Timeout      = (long)ThreadState.X3;
+
+            Device.Log.PrintDebug(LogClass.KernelSvc,
+                "HandlesPtr = 0x"   + HandlesPtr  .ToString("x16") + ", " +
+                "HandlesCount = 0x" + HandlesCount.ToString("x8")  + ", " +
+                "Timeout = 0x"      + Timeout     .ToString("x16"));
+
+            if ((uint)HandlesCount > 0x40)
+            {
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.CountOutOfRange);
+
+                return;
+            }
+
+            KSynchronizationObject[] SyncObjs = new KSynchronizationObject[HandlesCount];
+
+            for (int Index = 0; Index < HandlesCount; Index++)
+            {
+                int Handle = Memory.ReadInt32(HandlesPtr + Index * 4);
+
+                KSynchronizationObject SyncObj = Process.HandleTable.GetData<KSynchronizationObject>(Handle);
+
+                SyncObjs[Index] = SyncObj;
+            }
+
+            int HndIndex = (int)ThreadState.X1;
+
+            ulong High = ThreadState.X1 & (0xffffffffUL << 32);
+
+            long Result = System.Synchronization.WaitFor(SyncObjs, Timeout, ref HndIndex);
+
+            if (Result != 0)
+            {
+                if (Result == MakeError(ErrorModule.Kernel, KernelErr.Timeout) ||
+                    Result == MakeError(ErrorModule.Kernel, KernelErr.Cancelled))
+                {
+                    Device.Log.PrintDebug(LogClass.KernelSvc, $"Operation failed with error 0x{Result:x}!");
+                }
+                else
+                {
+                    Device.Log.PrintWarning(LogClass.KernelSvc, $"Operation failed with error 0x{Result:x}!");
+                }
+            }
+
+            ThreadState.X0 = (ulong)Result;
+            ThreadState.X1 = (uint)HndIndex | High;
+        }
+
+        private void SvcCancelSynchronization(AThreadState ThreadState)
+        {
+            int ThreadHandle = (int)ThreadState.X0;
+
+            Device.Log.PrintDebug(LogClass.KernelSvc, "ThreadHandle = 0x" + ThreadHandle.ToString("x8"));
+
+            KThread Thread = Process.HandleTable.GetData<KThread>(ThreadHandle);
+
+            if (Thread == null)
+            {
+                Device.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{ThreadHandle:x8}!");
+
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+
+                return;
+            }
+
+            Thread.CancelSynchronization();
+
+            ThreadState.X0 = 0;
+        }
 
         private void SvcArbitrateLock(AThreadState ThreadState)
         {
-            int  OwnerThreadHandle =  (int)ThreadState.X0;
-            long MutexAddress      = (long)ThreadState.X1;
-            int  WaitThreadHandle  =  (int)ThreadState.X2;
+            int  OwnerHandle     =  (int)ThreadState.X0;
+            long MutexAddress    = (long)ThreadState.X1;
+            int  RequesterHandle =  (int)ThreadState.X2;
 
             Device.Log.PrintDebug(LogClass.KernelSvc,
-                "OwnerThreadHandle = 0x" + OwnerThreadHandle.ToString("x8")  + ", " +
-                "MutexAddress = 0x"      + MutexAddress     .ToString("x16") + ", " +
-                "WaitThreadHandle = 0x"  + WaitThreadHandle .ToString("x8"));
+                "OwnerHandle = 0x"     + OwnerHandle    .ToString("x8")  + ", " +
+                "MutexAddress = 0x"    + MutexAddress   .ToString("x16") + ", " +
+                "RequesterHandle = 0x" + RequesterHandle.ToString("x8"));
 
             if (IsPointingInsideKernel(MutexAddress))
             {
@@ -39,33 +110,19 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
-            KThread OwnerThread = Process.HandleTable.GetData<KThread>(OwnerThreadHandle);
+            long Result = System.AddressArbiter.ArbitrateLock(
+                Process,
+                Memory,
+                OwnerHandle,
+                MutexAddress,
+                RequesterHandle);
 
-            if (OwnerThread == null)
+            if (Result != 0)
             {
-                Device.Log.PrintWarning(LogClass.KernelSvc, $"Invalid owner thread handle 0x{OwnerThreadHandle:x8}!");
-
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
-
-                return;
+                Device.Log.PrintWarning(LogClass.KernelSvc, $"Operation failed with error 0x{Result:x}!");
             }
 
-            KThread WaitThread = Process.HandleTable.GetData<KThread>(WaitThreadHandle);
-
-            if (WaitThread == null)
-            {
-                Device.Log.PrintWarning(LogClass.KernelSvc, $"Invalid requesting thread handle 0x{WaitThreadHandle:x8}!");
-
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
-
-                return;
-            }
-
-            KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
-
-            MutexLock(CurrThread, WaitThread, OwnerThreadHandle, WaitThreadHandle, MutexAddress);
-
-            ThreadState.X0 = 0;
+            ThreadState.X0 = (ulong)Result;
         }
 
         private void SvcArbitrateUnlock(AThreadState ThreadState)
@@ -92,9 +149,14 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
-            MutexUnlock(Process.GetThread(ThreadState.Tpidr), MutexAddress);
+            long Result = System.AddressArbiter.ArbitrateUnlock(Memory, MutexAddress);
 
-            ThreadState.X0 = 0;
+            if (Result != 0)
+            {
+                Device.Log.PrintWarning(LogClass.KernelSvc, $"Operation failed with error 0x{Result:x}!");
+            }
+
+            ThreadState.X0 = (ulong)Result;
         }
 
         private void SvcWaitProcessWideKeyAtomic(AThreadState ThreadState)
@@ -102,7 +164,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             long  MutexAddress   = (long)ThreadState.X0;
             long  CondVarAddress = (long)ThreadState.X1;
             int   ThreadHandle   =  (int)ThreadState.X2;
-            ulong Timeout        =       ThreadState.X3;
+            long  Timeout        = (long)ThreadState.X3;
 
             Device.Log.PrintDebug(LogClass.KernelSvc,
                 "MutexAddress = 0x"   + MutexAddress  .ToString("x16") + ", " +
@@ -128,86 +190,54 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
-            KThread Thread = Process.HandleTable.GetData<KThread>(ThreadHandle);
+            long Result = System.AddressArbiter.WaitProcessWideKeyAtomic(
+                Memory,
+                MutexAddress,
+                CondVarAddress,
+                ThreadHandle,
+                Timeout);
 
-            if (Thread == null)
+            if (Result != 0)
             {
-                Device.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{ThreadHandle:x8}!");
-
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
-
-                return;
+                if (Result == MakeError(ErrorModule.Kernel, KernelErr.Timeout))
+                {
+                    Device.Log.PrintDebug(LogClass.KernelSvc, $"Operation failed with error 0x{Result:x}!");
+                }
+                else
+                {
+                    Device.Log.PrintWarning(LogClass.KernelSvc, $"Operation failed with error 0x{Result:x}!");
+                }
             }
 
-            KThread WaitThread = Process.GetThread(ThreadState.Tpidr);
-
-            if (!CondVarWait(WaitThread, ThreadHandle, MutexAddress, CondVarAddress, Timeout))
-            {
-                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.Timeout);
-
-                return;
-            }
-
-            ThreadState.X0 = 0;
+            ThreadState.X0 = (ulong)Result;
         }
 
         private void SvcSignalProcessWideKey(AThreadState ThreadState)
         {
-            long CondVarAddress = (long)ThreadState.X0;
-            int  Count          =  (int)ThreadState.X1;
+            long Address = (long)ThreadState.X0;
+            int  Count   =  (int)ThreadState.X1;
 
             Device.Log.PrintDebug(LogClass.KernelSvc,
-                "CondVarAddress = 0x" + CondVarAddress.ToString("x16") + ", " +
-                "Count = 0x"          + Count         .ToString("x8"));
+                "Address = 0x" + Address.ToString("x16") + ", " +
+                "Count = 0x"   + Count  .ToString("x8"));
 
-            KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
-
-            CondVarSignal(ThreadState, CurrThread, CondVarAddress, Count);
+            System.AddressArbiter.SignalProcessWideKey(Process, Memory, Address, Count);
 
             ThreadState.X0 = 0;
         }
 
-        private void MutexLock(
-            KThread CurrThread,
-            KThread WaitThread,
-            int     OwnerThreadHandle,
-            int     WaitThreadHandle,
-            long    MutexAddress)
-        {
-            lock (Process.ThreadSyncLock)
-            {
-                int MutexValue = Memory.ReadInt32(MutexAddress);
-
-                Device.Log.PrintDebug(LogClass.KernelSvc, "MutexValue = 0x" + MutexValue.ToString("x8"));
-
-                if (MutexValue != (OwnerThreadHandle | MutexHasListenersMask))
-                {
-                    return;
-                }
-
-                CurrThread.WaitHandle   = WaitThreadHandle;
-                CurrThread.MutexAddress = MutexAddress;
-
-                InsertWaitingMutexThreadUnsafe(OwnerThreadHandle, WaitThread);
-            }
-
-            Device.Log.PrintDebug(LogClass.KernelSvc, "Entering wait state...");
-
-            Process.Scheduler.EnterWait(CurrThread);
-        }
-
         private void SvcWaitForAddress(AThreadState ThreadState)
         {
-            long            Address = (long)ThreadState.X0;
+            long            Address =            (long)ThreadState.X0;
             ArbitrationType Type    = (ArbitrationType)ThreadState.X1;
-            int             Value   = (int)ThreadState.X2;
-            ulong           Timeout = ThreadState.X3;
+            int             Value   =             (int)ThreadState.X2;
+            long            Timeout =            (long)ThreadState.X3;
 
             Device.Log.PrintDebug(LogClass.KernelSvc,
-                "Address = 0x"         + Address.ToString("x16") + ", " +
-                "ArbitrationType = 0x" + Type   .ToString()      + ", " +
-                "Value = 0x"           + Value  .ToString("x8")  + ", " +
-                "Timeout = 0x"         + Timeout.ToString("x16"));
+                "Address = 0x" + Address.ToString("x16") + ", " +
+                "Type = "      + Type   .ToString()      + ", " +
+                "Value = 0x"   + Value  .ToString("x8")  + ", " +
+                "Timeout = 0x" + Timeout.ToString("x16"));
 
             if (IsPointingInsideKernel(Address))
             {
@@ -227,287 +257,93 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
+            long Result;
+
             switch (Type)
             {
                 case ArbitrationType.WaitIfLessThan:
-                    ThreadState.X0 = AddressArbiter.WaitForAddressIfLessThan(Process, ThreadState, Memory, Address, Value, Timeout, false);
+                    Result = System.AddressArbiter.WaitForAddressIfLessThan(Memory, Address, Value, false, Timeout);
                     break;
 
                 case ArbitrationType.DecrementAndWaitIfLessThan:
-                    ThreadState.X0 = AddressArbiter.WaitForAddressIfLessThan(Process, ThreadState, Memory, Address, Value, Timeout, true);
+                    Result = System.AddressArbiter.WaitForAddressIfLessThan(Memory, Address, Value, true, Timeout);
                     break;
 
                 case ArbitrationType.WaitIfEqual:
-                    ThreadState.X0 = AddressArbiter.WaitForAddressIfEqual(Process, ThreadState, Memory, Address, Value, Timeout);
+                    Result = System.AddressArbiter.WaitForAddressIfEqual(Memory, Address, Value, Timeout);
                     break;
 
                 default:
-                    ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidEnumValue);
+                    Result = MakeError(ErrorModule.Kernel, KernelErr.InvalidEnumValue);
                     break;
             }
+
+            if (Result != 0)
+            {
+                Device.Log.PrintWarning(LogClass.KernelSvc, $"Operation failed with error 0x{Result:x}!");
+            }
+
+            ThreadState.X0 = (ulong)Result;
         }
 
-        private void MutexUnlock(KThread CurrThread, long MutexAddress)
+        private void SvcSignalToAddress(AThreadState ThreadState)
         {
-            lock (Process.ThreadSyncLock)
+            long       Address =       (long)ThreadState.X0;
+            SignalType Type    = (SignalType)ThreadState.X1;
+            int        Value   =        (int)ThreadState.X2;
+            int        Count   =        (int)ThreadState.X3;
+
+            Device.Log.PrintDebug(LogClass.KernelSvc,
+                "Address = 0x" + Address.ToString("x16") + ", " +
+                "Type = "      + Type   .ToString()      + ", " +
+                "Value = 0x"   + Value  .ToString("x8")  + ", " +
+                "Count = 0x"   + Count  .ToString("x8"));
+
+            if (IsPointingInsideKernel(Address))
             {
-                //This is the new thread that will now own the mutex.
-                //If no threads are waiting for the lock, then it should be null.
-                (KThread OwnerThread, int Count) = PopMutexThreadUnsafe(CurrThread, MutexAddress);
+                Device.Log.PrintWarning(LogClass.KernelSvc, $"Invalid address 0x{Address:x16}!");
 
-                if (OwnerThread == CurrThread)
-                {
-                    throw new InvalidOperationException();
-                }
-
-                if (OwnerThread != null)
-                {
-                    //Remove all waiting mutex from the old owner,
-                    //and insert then on the new owner.
-                    UpdateMutexOwnerUnsafe(CurrThread, OwnerThread, MutexAddress);
-
-                    CurrThread.UpdatePriority();
-
-                    int HasListeners = Count >= 2 ? MutexHasListenersMask : 0;
-
-                    Memory.WriteInt32ToSharedAddr(MutexAddress, HasListeners | OwnerThread.WaitHandle);
-
-                    OwnerThread.WaitHandle     = 0;
-                    OwnerThread.MutexAddress   = 0;
-                    OwnerThread.CondVarAddress = 0;
-                    OwnerThread.MutexOwner     = null;
-
-                    OwnerThread.UpdatePriority();
-
-                    Process.Scheduler.WakeUp(OwnerThread);
-
-                    Device.Log.PrintDebug(LogClass.KernelSvc, "Gave mutex to thread id " + OwnerThread.ThreadId + "!");
-                }
-                else
-                {
-                    Memory.WriteInt32ToSharedAddr(MutexAddress, 0);
-
-                    Device.Log.PrintDebug(LogClass.KernelSvc, "No threads waiting mutex!");
-                }
-            }
-        }
-
-        private bool CondVarWait(
-            KThread WaitThread,
-            int     WaitThreadHandle,
-            long    MutexAddress,
-            long    CondVarAddress,
-            ulong   Timeout)
-        {
-            WaitThread.WaitHandle     = WaitThreadHandle;
-            WaitThread.MutexAddress   = MutexAddress;
-            WaitThread.CondVarAddress = CondVarAddress;
-
-            lock (Process.ThreadSyncLock)
-            {
-                MutexUnlock(WaitThread, MutexAddress);
-
-                WaitThread.CondVarSignaled = false;
-
-                Process.ThreadArbiterList.Add(WaitThread);
-            }
-
-            Device.Log.PrintDebug(LogClass.KernelSvc, "Entering wait state...");
-
-            if (Timeout != ulong.MaxValue)
-            {
-                Process.Scheduler.EnterWait(WaitThread, NsTimeConverter.GetTimeMs(Timeout));
-
-                lock (Process.ThreadSyncLock)
-                {
-                    if (!WaitThread.CondVarSignaled || WaitThread.MutexOwner != null)
-                    {
-                        if (WaitThread.MutexOwner != null)
-                        {
-                            WaitThread.MutexOwner.MutexWaiters.Remove(WaitThread);
-                            WaitThread.MutexOwner.UpdatePriority();
-
-                            WaitThread.MutexOwner = null;
-                        }
-
-                        Process.ThreadArbiterList.Remove(WaitThread);
-
-                        Device.Log.PrintDebug(LogClass.KernelSvc, "Timed out...");
-
-                        return false;
-                    }
-                }
-            }
-            else
-            {
-                Process.Scheduler.EnterWait(WaitThread);
-            }
-
-            return true;
-        }
-
-        private void CondVarSignal(
-            AThreadState ThreadState,
-            KThread      CurrThread,
-            long         CondVarAddress,
-            int          Count)
-        {
-            lock (Process.ThreadSyncLock)
-            {
-                while (Count == -1 || Count-- > 0)
-                {
-                    KThread WaitThread = PopCondVarThreadUnsafe(CondVarAddress);
-
-                    if (WaitThread == null)
-                    {
-                        Device.Log.PrintDebug(LogClass.KernelSvc, "No more threads to wake up!");
-
-                        break;
-                    }
-
-                    WaitThread.CondVarSignaled = true;
-
-                    long MutexAddress = WaitThread.MutexAddress;
-
-                    Memory.SetExclusive(ThreadState, MutexAddress);
-
-                    int MutexValue = Memory.ReadInt32(MutexAddress);
-
-                    while (MutexValue != 0)
-                    {
-                        if (Memory.TestExclusive(ThreadState, MutexAddress))
-                        {
-                            //Wait until the lock is released.
-                            InsertWaitingMutexThreadUnsafe(MutexValue & ~MutexHasListenersMask, WaitThread);
-
-                            Memory.WriteInt32(MutexAddress, MutexValue | MutexHasListenersMask);
-
-                            Memory.ClearExclusiveForStore(ThreadState);
-
-                            break;
-                        }
-
-                        Memory.SetExclusive(ThreadState, MutexAddress);
-
-                        MutexValue = Memory.ReadInt32(MutexAddress);
-                    }
-
-                    Device.Log.PrintDebug(LogClass.KernelSvc, "MutexValue = 0x" + MutexValue.ToString("x8"));
-
-                    if (MutexValue == 0)
-                    {
-                        //Give the lock to this thread.
-                        Memory.WriteInt32ToSharedAddr(MutexAddress, WaitThread.WaitHandle);
-
-                        WaitThread.WaitHandle     = 0;
-                        WaitThread.MutexAddress   = 0;
-                        WaitThread.CondVarAddress = 0;
-
-                        WaitThread.MutexOwner?.UpdatePriority();
-
-                        WaitThread.MutexOwner = null;
-
-                        Process.Scheduler.WakeUp(WaitThread);
-                    }
-                }
-            }
-        }
-
-        private void UpdateMutexOwnerUnsafe(KThread CurrThread, KThread NewOwner, long MutexAddress)
-        {
-            //Go through all threads waiting for the mutex,
-            //and update the MutexOwner field to point to the new owner.
-            for (int Index = 0; Index < CurrThread.MutexWaiters.Count; Index++)
-            {
-                KThread Thread = CurrThread.MutexWaiters[Index];
-
-                if (Thread.MutexAddress == MutexAddress)
-                {
-                    CurrThread.MutexWaiters.RemoveAt(Index--);
-
-                    InsertWaitingMutexThreadUnsafe(NewOwner, Thread);
-                }
-            }
-        }
-
-        private void InsertWaitingMutexThreadUnsafe(int OwnerThreadHandle, KThread WaitThread)
-        {
-            KThread OwnerThread = Process.HandleTable.GetData<KThread>(OwnerThreadHandle);
-
-            if (OwnerThread == null)
-            {
-                Device.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{OwnerThreadHandle:x8}!");
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.NoAccessPerm);
 
                 return;
             }
 
-            InsertWaitingMutexThreadUnsafe(OwnerThread, WaitThread);
-        }
-
-        private void InsertWaitingMutexThreadUnsafe(KThread OwnerThread, KThread WaitThread)
-        {
-            WaitThread.MutexOwner = OwnerThread;
-
-            if (!OwnerThread.MutexWaiters.Contains(WaitThread))
+            if (IsAddressNotWordAligned(Address))
             {
-                OwnerThread.MutexWaiters.Add(WaitThread);
+                Device.Log.PrintWarning(LogClass.KernelSvc, $"Unaligned address 0x{Address:x16}!");
 
-                OwnerThread.UpdatePriority();
-            }
-        }
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidAddress);
 
-        private (KThread, int) PopMutexThreadUnsafe(KThread OwnerThread, long MutexAddress)
-        {
-            int Count = 0;
-
-            KThread WakeThread = null;
-
-            foreach (KThread Thread in OwnerThread.MutexWaiters)
-            {
-                if (Thread.MutexAddress != MutexAddress)
-                {
-                    continue;
-                }
-
-                if (WakeThread == null || Thread.ActualPriority < WakeThread.ActualPriority)
-                {
-                    WakeThread = Thread;
-                }
-
-                Count++;
+                return;
             }
 
-            if (WakeThread != null)
+            long Result;
+
+            switch (Type)
             {
-                OwnerThread.MutexWaiters.Remove(WakeThread);
+                case SignalType.Signal:
+                    Result = System.AddressArbiter.Signal(Address, Count);
+                    break;
+
+                case SignalType.SignalAndIncrementIfEqual:
+                    Result = System.AddressArbiter.SignalAndIncrementIfEqual(Memory, Address, Value, Count);
+                    break;
+
+                case SignalType.SignalAndModifyIfEqual:
+                    Result = System.AddressArbiter.SignalAndModifyIfEqual(Memory, Address, Value, Count);
+                    break;
+
+                default:
+                    Result = MakeError(ErrorModule.Kernel, KernelErr.InvalidEnumValue);
+                    break;
             }
 
-            return (WakeThread, Count);
-        }
-
-        private KThread PopCondVarThreadUnsafe(long CondVarAddress)
-        {
-            KThread WakeThread = null;
-
-            foreach (KThread Thread in Process.ThreadArbiterList)
+            if (Result != 0)
             {
-                if (Thread.CondVarAddress != CondVarAddress)
-                {
-                    continue;
-                }
-
-                if (WakeThread == null || Thread.ActualPriority < WakeThread.ActualPriority)
-                {
-                    WakeThread = Thread;
-                }
+                Device.Log.PrintWarning(LogClass.KernelSvc, $"Operation failed with error 0x{Result:x}!");
             }
 
-            if (WakeThread != null)
-            {
-                Process.ThreadArbiterList.Remove(WakeThread);
-            }
-
-            return WakeThread;
+            ThreadState.X0 = (ulong)Result;
         }
 
         private bool IsPointingInsideKernel(long Address)

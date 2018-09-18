@@ -12,7 +12,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Nv
 {
-    class INvDrvServices : IpcService, IDisposable
+    class INvDrvServices : IpcService
     {
         private delegate int IoctlProcessor(ServiceCtx Context, int Cmd);
 
@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
         private KEvent Event;
 
-        public INvDrvServices()
+        public INvDrvServices(Horizon System)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
                 { 13, FinishInitialize }
             };
 
-            Event = new KEvent();
+            Event = new KEvent(System);
         }
 
         static INvDrvServices()
@@ -213,19 +213,6 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             NvHostCtrlIoctl.UnloadProcess(Process);
 
             NvMapIoctl.UnloadProcess(Process);
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool Disposing)
-        {
-            if (Disposing)
-            {
-                Event.Dispose();
-            }
         }
     }
 }

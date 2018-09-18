@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long CreateLibraryApplet(ServiceCtx Context)
         {
-            MakeObject(Context, new ILibraryAppletAccessor());
+            MakeObject(Context, new ILibraryAppletAccessor(Context.Device.System));
 
             return 0;
         }

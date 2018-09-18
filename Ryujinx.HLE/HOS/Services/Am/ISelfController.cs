@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         private KEvent LaunchableEvent;
 
-        public ISelfController()
+        public ISelfController(Horizon System)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
                 { 50, SetHandlesRequestToDisplay            }
             };
 
-            LaunchableEvent = new KEvent();
+            LaunchableEvent = new KEvent(System);
         }
 
         public long Exit(ServiceCtx Context)
@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long GetLibraryAppletLaunchableEvent(ServiceCtx Context)
         {
-            LaunchableEvent.WaitEvent.Set();
+            LaunchableEvent.Signal();
 
             int Handle = Context.Process.HandleTable.OpenHandle(LaunchableEvent);
 

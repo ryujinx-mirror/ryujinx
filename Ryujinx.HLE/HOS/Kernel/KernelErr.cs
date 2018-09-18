@@ -2,6 +2,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     static class KernelErr
     {
+        public const int ThreadTerminating = 59;
         public const int InvalidSize       = 101;
         public const int InvalidAddress    = 102;
         public const int OutOfMemory       = 104;
@@ -13,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         public const int InvalidHandle     = 114;
         public const int InvalidMaskValue  = 116;
         public const int Timeout           = 117;
-        public const int Canceled          = 118;
+        public const int Cancelled         = 118;
         public const int CountOutOfRange   = 119;
         public const int InvalidEnumValue  = 120;
         public const int InvalidThread     = 122;

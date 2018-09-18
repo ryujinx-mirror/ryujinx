@@ -146,11 +146,11 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                 Channels = DefaultChannelsCount;
             }
 
-            KEvent ReleaseEvent = new KEvent();
+            KEvent ReleaseEvent = new KEvent(Context.Device.System);
 
             ReleaseCallback Callback = () =>
             {
-                ReleaseEvent.WaitEvent.Set();
+                ReleaseEvent.Signal();
             };
 
             IAalOutput AudioOut = Context.Device.AudioOut;

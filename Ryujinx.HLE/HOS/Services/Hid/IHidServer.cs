@@ -2,12 +2,11 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.Input;
 using Ryujinx.HLE.Logging;
-using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
 {
-    class IHidServer : IpcService, IDisposable
+    class IHidServer : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
@@ -15,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public IHidServer()
+        public IHidServer(Horizon System)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -45,7 +44,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                 { 206, SendVibrationValues                     }
             };
 
-            NpadStyleSetUpdateEvent = new KEvent();
+            NpadStyleSetUpdateEvent = new KEvent(System);
         }
 
         public long CreateAppletResource(ServiceCtx Context)
@@ -281,19 +280,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Context.Device.Log.PrintStub(LogClass.ServiceHid, "Stubbed.");
 
             return 0;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool Disposing)
-        {
-            if (Disposing)
-            {
-                NpadStyleSetUpdateEvent.Dispose();
-            }
         }
     }
 }

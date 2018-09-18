@@ -1,11 +1,10 @@
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Services.Am;
-using System;
 using System.Collections.Concurrent;
 
 namespace Ryujinx.HLE.HOS.SystemState
 {
-    class AppletStateMgr : IDisposable
+    class AppletStateMgr
     {
         private ConcurrentQueue<MessageInfo> Messages;
 
@@ -13,11 +12,11 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         public KEvent MessageEvent { get; private set; }
 
-        public AppletStateMgr()
+        public AppletStateMgr(Horizon System)
         {
             Messages = new ConcurrentQueue<MessageInfo>();
 
-            MessageEvent = new KEvent();
+            MessageEvent = new KEvent(System);
         }
 
         public void SetFocus(bool IsFocused)
@@ -33,30 +32,17 @@ namespace Ryujinx.HLE.HOS.SystemState
         {
             Messages.Enqueue(Message);
 
-            MessageEvent.WaitEvent.Set();
+            MessageEvent.Signal();
         }
 
         public bool TryDequeueMessage(out MessageInfo Message)
         {
             if (Messages.Count < 2)
             {
-                MessageEvent.WaitEvent.Reset();
+                MessageEvent.Reset();
             }
 
             return Messages.TryDequeue(out Message);
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool Disposing)
-        {
-            if (Disposing)
-            {
-                MessageEvent.Dispose();
-            }
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         private NvFlinger Flinger;
 
-        public IHOSBinderDriver(IGalRenderer Renderer)
+        public IHOSBinderDriver(Horizon System, IGalRenderer Renderer)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -27,9 +27,9 @@ namespace Ryujinx.HLE.HOS.Services.Vi
                 { 3, TransactParcelAuto }
             };
 
-            BinderEvent = new KEvent();
+            BinderEvent = new KEvent(System);
 
-            BinderEvent.WaitEvent.Set();
+            BinderEvent.Signal();
 
             Flinger = new NvFlinger(Renderer, BinderEvent);
         }
@@ -93,8 +93,6 @@ namespace Ryujinx.HLE.HOS.Services.Vi
         {
             if (Disposing)
             {
-                BinderEvent.Dispose();
-
                 Flinger.Dispose();
             }
         }

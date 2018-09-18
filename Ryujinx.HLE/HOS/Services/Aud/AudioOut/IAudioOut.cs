@@ -155,8 +155,6 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioOut
             if (Disposing)
             {
                 AudioOut.CloseTrack(Track);
-
-                ReleaseEvent.Dispose();
             }
         }
     }

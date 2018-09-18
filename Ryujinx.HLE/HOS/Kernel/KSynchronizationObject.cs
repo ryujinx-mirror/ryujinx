@@ -1,28 +1,38 @@
-using System;
-using System.Threading;
+using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Kernel
 {
-    class KSynchronizationObject : IDisposable
+    class KSynchronizationObject
     {
-        public ManualResetEvent WaitEvent { get; private set; }
+        public LinkedList<KThread> WaitingThreads;
 
-        public KSynchronizationObject()
+        protected Horizon System;
+
+        public KSynchronizationObject(Horizon System)
         {
-            WaitEvent = new ManualResetEvent(false);
+            this.System = System;
+
+            WaitingThreads = new LinkedList<KThread>();
         }
 
-        public void Dispose()
+        public LinkedListNode<KThread> AddWaitingThread(KThread Thread)
         {
-            Dispose(true);
+            return WaitingThreads.AddLast(Thread);
         }
 
-        protected virtual void Dispose(bool Disposing)
+        public void RemoveWaitingThread(LinkedListNode<KThread> Node)
         {
-            if (Disposing)
-            {
-                WaitEvent.Dispose();
-            }
+            WaitingThreads.Remove(Node);
+        }
+
+        public virtual void Signal()
+        {
+            System.Synchronization.SignalObject(this);
+        }
+
+        public virtual bool IsSignaled()
+        {
+            return false;
         }
     }
 }

@@ -41,6 +41,9 @@ namespace ChocolArm64.State
         public bool Negative;
 
         public bool Running { get; set; }
+        public int  Core    { get; set; }
+
+        private bool Interrupted;
 
         public long TpidrEl0 { get; set; }
         public long Tpidr    { get; set; }
@@ -73,6 +76,7 @@ namespace ChocolArm64.State
             }
         }
 
+        public event EventHandler<EventArgs>               Interrupt;
         public event EventHandler<AInstExceptionEventArgs> Break;
         public event EventHandler<AInstExceptionEventArgs> SvcCall;
         public event EventHandler<AInstUndefinedEventArgs> Undefined;
@@ -99,7 +103,24 @@ namespace ChocolArm64.State
 
         internal bool Synchronize()
         {
+            if (Interrupted)
+            {
+                Interrupted = false;
+
+                OnInterrupt();
+            }
+
             return Running;
+        }
+
+        internal void RequestInterrupt()
+        {
+            Interrupted = true;
+        }
+
+        private void OnInterrupt()
+        {
+            Interrupt?.Invoke(this, EventArgs.Empty);
         }
 
         internal void OnBreak(long Position, int Imm)

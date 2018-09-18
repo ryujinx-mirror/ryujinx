@@ -7,6 +7,7 @@ using Ryujinx.HLE.Loaders.Npdm;
 using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -19,11 +20,21 @@ namespace Ryujinx.HLE.HOS
 
         private Switch Device;
 
-        private KProcessScheduler Scheduler;
-
         private ConcurrentDictionary<int, Process> Processes;
 
         public SystemStateMgr State { get; private set; }
+
+        internal KRecursiveLock CriticalSectionLock { get; private set; }
+
+        internal KScheduler Scheduler { get; private set; }
+
+        internal KTimeManager TimeManager { get; private set; }
+
+        internal KAddressArbiter AddressArbiter { get; private set; }
+
+        internal KSynchronization Synchronization { get; private set; }
+
+        internal LinkedList<KThread> Withholders { get; private set; }
 
         internal KSharedMemory HidSharedMem  { get; private set; }
         internal KSharedMemory FontSharedMem { get; private set; }
@@ -34,15 +45,27 @@ namespace Ryujinx.HLE.HOS
 
         internal Keyset KeySet { get; private set; }
 
+        private bool HasStarted;
+
         public Horizon(Switch Device)
         {
             this.Device = Device;
 
-            Scheduler = new KProcessScheduler(Device.Log);
-
             Processes = new ConcurrentDictionary<int, Process>();
 
             State = new SystemStateMgr();
+
+            CriticalSectionLock = new KRecursiveLock(this);
+
+            Scheduler = new KScheduler(this);
+
+            TimeManager = new KTimeManager();
+
+            AddressArbiter = new KAddressArbiter(this);
+
+            Synchronization = new KSynchronization(this);
+
+            Withholders = new LinkedList<KThread>();
 
             if (!Device.Memory.Allocator.TryAllocate(HidSize,  out long HidPA) ||
                 !Device.Memory.Allocator.TryAllocate(FontSize, out long FontPA))
@@ -55,7 +78,7 @@ namespace Ryujinx.HLE.HOS
 
             Font = new SharedFontManager(Device, FontSharedMem.PA);
 
-            VsyncEvent = new KEvent();
+            VsyncEvent = new KEvent(this);
 
             LoadKeySet();
         }
@@ -371,10 +394,15 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
-        public void SignalVsync() => VsyncEvent.WaitEvent.Set();
+        public void SignalVsync()
+        {
+            VsyncEvent.Signal();
+        }
 
         private Process MakeProcess(Npdm MetaData = null)
         {
+            HasStarted = true;
+
             Process Process;
 
             lock (Processes)
@@ -386,7 +414,7 @@ namespace Ryujinx.HLE.HOS
                     ProcessId++;
                 }
 
-                Process = new Process(Device, Scheduler, ProcessId, MetaData);
+                Process = new Process(Device, ProcessId, MetaData);
 
                 Processes.TryAdd(ProcessId, Process);
             }
@@ -409,18 +437,29 @@ namespace Ryujinx.HLE.HOS
 
                 if (Processes.Count == 0)
                 {
-                    Unload();
+                    Scheduler.Dispose();
+
+                    TimeManager.Dispose();
 
                     Device.Unload();
                 }
             }
         }
 
-        private void Unload()
+        public void EnableMultiCoreScheduling()
         {
-            VsyncEvent.Dispose();
+            if (!HasStarted)
+            {
+                Scheduler.MultiCoreScheduling = true;
+            }
+        }
 
-            Scheduler.Dispose();
+        public void DisableMultiCoreScheduling()
+        {
+            if (!HasStarted)
+            {
+                Scheduler.MultiCoreScheduling = false;
+            }
         }
 
         public void Dispose()

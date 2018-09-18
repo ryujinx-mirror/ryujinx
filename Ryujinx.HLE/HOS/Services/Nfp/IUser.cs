@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
 
         private KEvent AvailabilityChangeEvent;
 
-        public IUser()
+        public IUser(Horizon System)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -37,9 +37,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
                 { 23, AttachAvailabilityChangeEvent }
             };
 
-            ActivateEvent           = new KEvent();
-            DeactivateEvent         = new KEvent();
-            AvailabilityChangeEvent = new KEvent();
+            ActivateEvent           = new KEvent(System);
+            DeactivateEvent         = new KEvent(System);
+            AvailabilityChangeEvent = new KEvent(System);
         }
 
         public long Initialize(ServiceCtx Context)

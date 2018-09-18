@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
         {
             int Unknown = Context.RequestData.ReadInt32();
 
-            MakeObject(Context, new IRequest());
+            MakeObject(Context, new IRequest(Context.Device.System));
 
             Context.Device.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 

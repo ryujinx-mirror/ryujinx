@@ -40,12 +40,6 @@ namespace Ryujinx.HLE.HOS
 
         private List<KTlsPageManager> TlsPages;
 
-        public KProcessScheduler Scheduler { get; private set; }
-
-        public List<KThread> ThreadArbiterList { get; private set; }
-
-        public object ThreadSyncLock { get; private set; }
-
         public Npdm MetaData { get; private set; }
 
         public KProcessHandleTable HandleTable { get; private set; }
@@ -62,14 +56,11 @@ namespace Ryujinx.HLE.HOS
 
         private long ImageBase;
 
-        private bool ShouldDispose;
-
         private bool Disposed;
 
-        public Process(Switch Device, KProcessScheduler Scheduler, int ProcessId, Npdm MetaData)
+        public Process(Switch Device, int ProcessId, Npdm MetaData)
         {
             this.Device    = Device;
-            this.Scheduler = Scheduler;
             this.MetaData  = MetaData;
             this.ProcessId = ProcessId;
 
@@ -79,13 +70,9 @@ namespace Ryujinx.HLE.HOS
 
             TlsPages = new List<KTlsPageManager>();
 
-            ThreadArbiterList = new List<KThread>();
-
-            ThreadSyncLock = new object();
-
             HandleTable = new KProcessHandleTable();
 
-            AppletState = new AppletStateMgr();
+            AppletState = new AppletStateMgr(Device.System);
 
             SvcHandler = new SvcHandler(Device, this);
 
@@ -171,14 +158,16 @@ namespace Ryujinx.HLE.HOS
 
                 Homebrew.WriteHbAbiData(Memory, HbAbiDataPosition, Handle, SwitchPath);
 
-                MainThread.Thread.ThreadState.X0 = (ulong)HbAbiDataPosition;
-                MainThread.Thread.ThreadState.X1 = ulong.MaxValue;
+                MainThread.Context.ThreadState.X0 = (ulong)HbAbiDataPosition;
+                MainThread.Context.ThreadState.X1 = ulong.MaxValue;
             }
 
-            Scheduler.StartThread(MainThread);
+            MainThread.TimeUp();
 
             return true;
         }
+
+        private int ThreadIdCtr = 1;
 
         public int MakeThread(
             long EntryPoint,
@@ -196,9 +185,9 @@ namespace Ryujinx.HLE.HOS
 
             long Tpidr = GetFreeTls();
 
-            int ThreadId = (int)((Tpidr - MemoryManager.TlsIoRegionStart) / 0x200) + 1;
+            int ThreadId = ThreadIdCtr++; //(int)((Tpidr - MemoryManager.TlsIoRegionStart) / 0x200) + 1;
 
-            KThread Thread = new KThread(CpuThread, this, ProcessorId, Priority, ThreadId);
+            KThread Thread = new KThread(CpuThread, this, Device.System, ProcessorId, Priority, ThreadId);
 
             Thread.LastPc = EntryPoint;
 
@@ -211,6 +200,7 @@ namespace Ryujinx.HLE.HOS
             CpuThread.ThreadState.X1  = (ulong)Handle;
             CpuThread.ThreadState.X31 = (ulong)StackTop;
 
+            CpuThread.ThreadState.Interrupt += InterruptHandler;
             CpuThread.ThreadState.Break     += BreakHandler;
             CpuThread.ThreadState.SvcCall   += SvcHandler.SvcCall;
             CpuThread.ThreadState.Undefined += UndefinedHandler;
@@ -246,6 +236,11 @@ namespace Ryujinx.HLE.HOS
             }
 
             return Position;
+        }
+
+        private void InterruptHandler(object sender, EventArgs e)
+        {
+            Device.System.Scheduler.ContextSwitch();
         }
 
         private void BreakHandler(object sender, AInstExceptionEventArgs e)
@@ -359,10 +354,6 @@ namespace Ryujinx.HLE.HOS
             if (sender is AThread Thread)
             {
                 Threads.TryRemove(Thread.ThreadState.Tpidr, out KThread KernelThread);
-
-                Scheduler.RemoveThread(KernelThread);
-
-                KernelThread.WaitEvent.Set();
             }
 
             if (Threads.Count == 0)
@@ -400,8 +391,6 @@ namespace Ryujinx.HLE.HOS
 
             INvDrvServices.UnloadProcess(this);
 
-            AppletState.Dispose();
-
             if (NeedsHbAbi && Executables.Count > 0 && Executables[0].FilePath.EndsWith(Homebrew.TemporaryNroSuffix))
             {
                 File.Delete(Executables[0].FilePath);
@@ -423,9 +412,7 @@ namespace Ryujinx.HLE.HOS
                 {
                     foreach (KThread Thread in Threads.Values)
                     {
-                        Thread.Thread.StopExecution();
-
-                        Scheduler.ForceWakeUp(Thread);
+                        Device.System.Scheduler.StopThread(Thread);
                     }
                 }
                 else

@@ -38,7 +38,11 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         private int Track;
 
-        public IAudioRenderer(AMemory Memory, IAalOutput AudioOut, AudioRendererParameter Params)
+        public IAudioRenderer(
+            Horizon                System,
+            AMemory                Memory,
+            IAalOutput             AudioOut,
+            AudioRendererParameter Params)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -48,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
                 { 7, QuerySystemEvent           }
             };
 
-            UpdateEvent = new KEvent();
+            UpdateEvent = new KEvent(System);
 
             this.Memory   = Memory;
             this.AudioOut = AudioOut;
@@ -68,7 +72,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         private void AudioCallback()
         {
-            UpdateEvent.WaitEvent.Set();
+            UpdateEvent.Signal();
         }
 
         private static T[] CreateArray<T>(int Size) where T : new()
@@ -310,8 +314,6 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             if (Disposing)
             {
                 AudioOut.CloseTrack(Track);
-
-                UpdateEvent.Dispose();
             }
         }
     }

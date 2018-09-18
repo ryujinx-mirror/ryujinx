@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         private KEvent ChannelEvent;
 
-        public IHomeMenuFunctions()
+        public IHomeMenuFunctions(Horizon System)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
             };
 
             //ToDo: Signal this Event somewhere in future.
-            ChannelEvent = new KEvent();
+            ChannelEvent = new KEvent(System);
         }
 
         public long RequestToGetForeground(ServiceCtx Context)

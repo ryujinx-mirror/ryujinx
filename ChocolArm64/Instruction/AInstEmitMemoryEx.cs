@@ -1,5 +1,6 @@
 using ChocolArm64.Decoder;
 using ChocolArm64.Memory;
+using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
 using System.Reflection.Emit;
@@ -169,6 +170,8 @@ namespace ChocolArm64.Instruction
         {
             Context.EmitLdarg(ATranslatedSub.MemoryArgIdx);
             Context.EmitLdarg(ATranslatedSub.StateArgIdx);
+
+            Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Core));
 
             if (Rn != -1)
             {
