@@ -10,12 +10,14 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public static ShaderIrBlock[] Decode(IGalMemory Memory, long Start)
         {
-            Dictionary<long, ShaderIrBlock> Visited    = new Dictionary<long, ShaderIrBlock>();
-            Dictionary<long, ShaderIrBlock> VisitedEnd = new Dictionary<long, ShaderIrBlock>();
+            Dictionary<int, ShaderIrBlock> Visited    = new Dictionary<int, ShaderIrBlock>();
+            Dictionary<int, ShaderIrBlock> VisitedEnd = new Dictionary<int, ShaderIrBlock>();
 
             Queue<ShaderIrBlock> Blocks = new Queue<ShaderIrBlock>();
 
-            ShaderIrBlock Enqueue(long Position, ShaderIrBlock Source = null)
+            long Beginning = Start + HeaderSize;
+
+            ShaderIrBlock Enqueue(int Position, ShaderIrBlock Source = null)
             {
                 if (!Visited.TryGetValue(Position, out ShaderIrBlock Output))
                 {
@@ -34,13 +36,13 @@ namespace Ryujinx.Graphics.Gal.Shader
                 return Output;
             }
 
-            ShaderIrBlock Entry = Enqueue(Start + HeaderSize);
+            ShaderIrBlock Entry = Enqueue(0);
 
             while (Blocks.Count > 0)
             {
                 ShaderIrBlock Current = Blocks.Dequeue();
 
-                FillBlock(Memory, Current, Start + HeaderSize);
+                FillBlock(Memory, Current, Beginning);
 
                 //Set child blocks. "Branch" is the block the branch instruction
                 //points to (when taken), "Next" is the block at the next address,
@@ -54,20 +56,18 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                     if (InnerOp?.Inst == ShaderIrInst.Bra)
                     {
-                        int Offset = ((ShaderIrOperImm)InnerOp.OperandA).Value;
-
-                        long Target = Current.EndPosition + Offset;
+                        int Target = ((ShaderIrOperImm)InnerOp.OperandA).Value;
 
                         Current.Branch = Enqueue(Target, Current);
                     }
 
                     foreach (ShaderIrNode Node in Current.Nodes)
                     {
-                        if (Node is ShaderIrOp CurrOp && CurrOp.Inst == ShaderIrInst.Ssy)
-                        {
-                            int Offset = ((ShaderIrOperImm)CurrOp.OperandA).Value;
+                        InnerOp = GetInnermostOp(Node);
 
-                            long Target = Offset;
+                        if (InnerOp is ShaderIrOp CurrOp && CurrOp.Inst == ShaderIrInst.Ssy)
+                        {
+                            int Target = ((ShaderIrOperImm)CurrOp.OperandA).Value;
 
                             Current.Branch = Enqueue(Target, Current);
                         }
@@ -112,15 +112,15 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             while (Visited.Count > 0)
             {
-                ulong FirstPos = ulong.MaxValue;
+                uint FirstPos = uint.MaxValue;
 
                 foreach (ShaderIrBlock Block in Visited.Values)
                 {
-                    if (FirstPos > (ulong)Block.Position)
-                        FirstPos = (ulong)Block.Position;
+                    if (FirstPos > (uint)Block.Position)
+                        FirstPos = (uint)Block.Position;
                 }
 
-                ShaderIrBlock Current = Visited[(long)FirstPos];
+                ShaderIrBlock Current = Visited[(int)FirstPos];
 
                 do
                 {
@@ -138,20 +138,20 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private static void FillBlock(IGalMemory Memory, ShaderIrBlock Block, long Beginning)
         {
-            long Position = Block.Position;
+            int Position = Block.Position;
 
             do
             {
                 //Ignore scheduling instructions, which are written every 32 bytes.
-                if (((Position - Beginning) & 0x1f) == 0)
+                if ((Position & 0x1f) == 0)
                 {
                     Position += 8;
 
                     continue;
                 }
 
-                uint Word0 = (uint)Memory.ReadInt32(Position + 0);
-                uint Word1 = (uint)Memory.ReadInt32(Position + 4);
+                uint Word0 = (uint)Memory.ReadInt32(Position + Beginning + 0);
+                uint Word1 = (uint)Memory.ReadInt32(Position + Beginning + 4);
 
                 Position += 8;
 
@@ -161,7 +161,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 if (AddDbgComments)
                 {
-                    string DbgOpCode = $"0x{(Position - Beginning - 8):x16}: 0x{OpCode:x16} ";
+                    string DbgOpCode = $"0x{(Position - 8):x16}: 0x{OpCode:x16} ";
 
                     DbgOpCode += (Decode?.Method.Name ?? "???");
 
@@ -169,7 +169,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                     {
                         int Offset = ((int)(OpCode >> 20) << 8) >> 8;
 
-                        long Target = Position + Offset - Beginning;
+                        long Target = Position + Offset;
 
                         DbgOpCode += " (0x" + Target.ToString("x16") + ")";
                     }

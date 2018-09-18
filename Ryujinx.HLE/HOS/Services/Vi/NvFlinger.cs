@@ -1,6 +1,7 @@
 using Ryujinx.Graphics.Gal;
-using Ryujinx.Graphics.Texture;
+using Ryujinx.Graphics.Memory;
 using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Services.Nv.NvGpuAS;
 using Ryujinx.HLE.HOS.Services.Nv.NvMap;
 using Ryujinx.HLE.Logging;
 using System;
@@ -19,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
 
         private Dictionary<(string, int), ServiceProcessParcel> Commands;
 
-        private KEvent ReleaseEvent;
+        private KEvent BinderEvent;
 
         private IGalRenderer Renderer;
 
@@ -67,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
 
         private bool Disposed;
 
-        public NvFlinger(IGalRenderer Renderer, KEvent ReleaseEvent)
+        public NvFlinger(IGalRenderer Renderer, KEvent BinderEvent)
         {
             Commands = new Dictionary<(string, int), ServiceProcessParcel>()
             {
@@ -82,8 +83,8 @@ namespace Ryujinx.HLE.HOS.Services.Android
                 { ("android.gui.IGraphicBufferProducer", 0xe), GbpPreallocBuffer }
             };
 
-            this.Renderer     = Renderer;
-            this.ReleaseEvent = ReleaseEvent;
+            this.Renderer    = Renderer;
+            this.BinderEvent = BinderEvent;
 
             BufferQueue = new BufferEntry[0x40];
 
@@ -301,42 +302,41 @@ namespace Ryujinx.HLE.HOS.Services.Android
             bool FlipX = BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipX);
             bool FlipY = BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipY);
 
-            //Rotation is being ignored
+            //Note: Rotation is being ignored.
 
             int Top    = Crop.Top;
             int Left   = Crop.Left;
             int Right  = Crop.Right;
             int Bottom = Crop.Bottom;
 
-            Renderer.QueueAction(() => Renderer.RenderTarget.SetTransform(FlipX, FlipY, Top, Left, Right, Bottom));
+            NvGpuVmm Vmm = NvGpuASIoctl.GetASCtx(Context).Vmm;
 
-            //TODO: Support double buffering here aswell, it is broken for GPU
-            //frame buffers because it seems to be completely out of sync.
-            if (Context.Device.Gpu.Engine3d.IsFrameBufferPosition(FbAddr))
+            Renderer.QueueAction(() =>
             {
-                //Frame buffer is rendered to by the GPU, we can just
-                //bind the frame buffer texture, it's not necessary to read anything.
-                Renderer.QueueAction(() => Renderer.RenderTarget.Set(FbAddr));
-            }
-            else
-            {
-                //Frame buffer is not set on the GPU registers, in this case
-                //assume that the app is manually writing to it.
-                TextureInfo Texture = new TextureInfo(FbAddr, FbWidth, FbHeight);
+                if (!Renderer.Texture.TryGetImage(FbAddr, out GalImage Image))
+                {
+                    Image = new GalImage(
+                        FbWidth,
+                        FbHeight, 1, 16,
+                        GalMemoryLayout.BlockLinear,
+                        GalImageFormat.A8B8G8R8 | GalImageFormat.Unorm);
+                }
 
-                byte[] Data = TextureReader.Read(Context.Memory, Texture);
+                Context.Device.Gpu.ResourceManager.ClearPbCache();
+                Context.Device.Gpu.ResourceManager.SendTexture(Vmm, FbAddr, Image);
 
-                Renderer.QueueAction(() => Renderer.RenderTarget.Set(Data, FbWidth, FbHeight));
-            }
+                Renderer.RenderTarget.SetTransform(FlipX, FlipY, Top, Left, Right, Bottom);
+                Renderer.RenderTarget.Set(FbAddr);
 
-            Context.Device.Gpu.Renderer.QueueAction(() => ReleaseBuffer(Slot));
+                ReleaseBuffer(Slot);
+            });
         }
 
         private void ReleaseBuffer(int Slot)
         {
             BufferQueue[Slot].State = BufferState.Free;
 
-            ReleaseEvent.WaitEvent.Set();
+            BinderEvent.WaitEvent.Set();
 
             lock (WaitBufferFree)
             {

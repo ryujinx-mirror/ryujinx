@@ -17,43 +17,19 @@ namespace Ryujinx.Graphics.Texture
             GalTextureSource ZSource = (GalTextureSource)((Tic[0] >> 25) & 7);
             GalTextureSource WSource = (GalTextureSource)((Tic[0] >> 28) & 7);
 
-            int Width  = (Tic[4] & 0xffff) + 1;
-            int Height = (Tic[5] & 0xffff) + 1;
-
-            return new GalImage(
-                Width,
-                Height,
-                Format,
-                XSource,
-                YSource,
-                ZSource,
-                WSource);
-        }
-
-        public static byte[] GetTextureData(NvGpuVmm Vmm, long TicPosition)
-        {
-            int[] Tic = ReadWords(Vmm, TicPosition, 8);
-
-            GalImageFormat Format = GetImageFormat(Tic);
-
-            long TextureAddress = (uint)Tic[1];
-
-            TextureAddress |= (long)((ushort)Tic[2]) << 32;
-
             TextureSwizzle Swizzle = (TextureSwizzle)((Tic[2] >> 21) & 7);
+
+            GalMemoryLayout Layout;
 
             if (Swizzle == TextureSwizzle.BlockLinear ||
                 Swizzle == TextureSwizzle.BlockLinearColorKey)
             {
-                TextureAddress &= ~0x1ffL;
+                Layout = GalMemoryLayout.BlockLinear;
             }
-            else if (Swizzle == TextureSwizzle.Pitch ||
-                     Swizzle == TextureSwizzle.PitchColorKey)
+            else
             {
-                TextureAddress &= ~0x1fL;
+                Layout = GalMemoryLayout.Pitch;
             }
-
-            int Pitch = (Tic[3] & 0xffff) << 5;
 
             int BlockHeightLog2 = (Tic[3] >> 3)  & 7;
             int TileWidthLog2   = (Tic[3] >> 10) & 7;
@@ -64,17 +40,17 @@ namespace Ryujinx.Graphics.Texture
             int Width  = (Tic[4] & 0xffff) + 1;
             int Height = (Tic[5] & 0xffff) + 1;
 
-            TextureInfo Texture = new TextureInfo(
-                TextureAddress,
+            return new GalImage(
                 Width,
                 Height,
-                Pitch,
-                BlockHeight,
                 TileWidth,
-                Swizzle,
-                Format);
-
-            return TextureReader.Read(Vmm, Texture);
+                BlockHeight,
+                Layout,
+                Format,
+                XSource,
+                YSource,
+                ZSource,
+                WSource);
         }
 
         public static GalTextureSampler MakeSampler(NvGpu Gpu, NvGpuVmm Vmm, long TscPosition)
@@ -107,7 +83,7 @@ namespace Ryujinx.Graphics.Texture
 
         private static GalImageFormat GetImageFormat(int[] Tic)
         {
-            GalTextureType RType = (GalTextureType)((Tic[0] >> 7) & 7);
+            GalTextureType RType = (GalTextureType)((Tic[0] >> 7)  & 7);
             GalTextureType GType = (GalTextureType)((Tic[0] >> 10) & 7);
             GalTextureType BType = (GalTextureType)((Tic[0] >> 13) & 7);
             GalTextureType AType = (GalTextureType)((Tic[0] >> 16) & 7);

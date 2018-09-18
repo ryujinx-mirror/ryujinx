@@ -641,6 +641,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                     default:
                         SB.AppendLine(Identation + GetSrcExpr(Op, true) + ";");
+
                         break;
                 }
             }

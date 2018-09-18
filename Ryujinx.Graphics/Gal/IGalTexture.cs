@@ -5,13 +5,13 @@ namespace Ryujinx.Graphics.Gal
         void LockCache();
         void UnlockCache();
 
+        void Create(long Key, int Size, GalImage Image);
+
         void Create(long Key, byte[] Data, GalImage Image);
 
-        void CreateFb(long Key, long Size, GalImage Image);
+        bool TryGetImage(long Key, out GalImage Image);
 
-        bool TryGetCachedTexture(long Key, long DataSize, out GalImage Image);
-
-        void Bind(long Key, int Index);
+        void Bind(long Key, int Index, GalImage Image);
 
         void SetSampler(GalTextureSampler Sampler);
     }

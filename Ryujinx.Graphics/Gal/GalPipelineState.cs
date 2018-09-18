@@ -21,6 +21,8 @@
 
         public GalVertexBinding[] VertexBindings;
 
+        public bool FramebufferSrgb;
+
         public float FlipX;
         public float FlipY;
 

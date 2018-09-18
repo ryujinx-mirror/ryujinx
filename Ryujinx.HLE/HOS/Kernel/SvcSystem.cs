@@ -288,7 +288,8 @@ namespace Ryujinx.HLE.HOS.Kernel
             //Fail for info not available on older Kernel versions.
             if (InfoType == 18 ||
                 InfoType == 19 ||
-                InfoType == 20)
+                InfoType == 20 ||
+                InfoType == 21)
             {
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidEnumValue);
 

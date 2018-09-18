@@ -31,7 +31,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             { RGB_, RG_A, R_BA, _GBA, RGBA, ____, ____, ____ }
         };
 
-        public static void Ld_A(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Ld_A(ShaderIrBlock Block, long OpCode, int Position)
         {
             ShaderIrNode[] Opers = OpCode.Abuf20();
 
@@ -50,7 +50,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
         }
 
-        public static void Ld_C(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Ld_C(ShaderIrBlock Block, long OpCode, int Position)
         {
             int CbufPos   = OpCode.Read(22, 0x3fff);
             int CbufIndex = OpCode.Read(36, 0x1f);
@@ -97,7 +97,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
         }
 
-        public static void St_A(ShaderIrBlock Block, long OpCode, long Position)
+        public static void St_A(ShaderIrBlock Block, long OpCode, int Position)
         {
             ShaderIrNode[] Opers = OpCode.Abuf20();
 
@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
         }
 
-        public static void Texq(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Texq(ShaderIrBlock Block, long OpCode, int Position)
         {
             ShaderIrNode OperD = OpCode.Gpr0();
             ShaderIrNode OperA = OpCode.Gpr8();
@@ -132,12 +132,12 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OperA, Op1))); //Is this right?
         }
 
-        public static void Tex(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Tex(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitTex(Block, OpCode, GprHandle: false);
         }
 
-        public static void Tex_B(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Tex_B(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitTex(Block, OpCode, GprHandle: true);
         }
@@ -202,12 +202,12 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
         }
 
-        public static void Texs(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Texs(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitTexs(Block, OpCode, ShaderIrInst.Texs);
         }
 
-        public static void Tlds(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Tlds(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitTexs(Block, OpCode, ShaderIrInst.Txlf);
         }

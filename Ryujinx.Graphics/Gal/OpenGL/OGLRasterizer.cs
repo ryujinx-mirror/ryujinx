@@ -113,14 +113,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             IndexBuffer.ElemSizeLog2 = (int)Format;
         }
 
-        public void DrawArrays(int First, int PrimCount, GalPrimitiveType PrimType)
+        public void DrawArrays(int First, int Count, GalPrimitiveType PrimType)
         {
-            if (PrimCount == 0)
+            if (Count == 0)
             {
                 return;
             }
 
-            GL.DrawArrays(OGLEnumConverter.GetPrimitiveType(PrimType), First, PrimCount);
+            GL.DrawArrays(OGLEnumConverter.GetPrimitiveType(PrimType), First, Count);
         }
 
         public void DrawElements(long IboKey, int First, int VertexBase, GalPrimitiveType PrimType)

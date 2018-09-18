@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private KEvent ReleaseEvent;
+        private KEvent BinderEvent;
 
         private NvFlinger Flinger;
 
@@ -27,9 +27,11 @@ namespace Ryujinx.HLE.HOS.Services.Vi
                 { 3, TransactParcelAuto }
             };
 
-            ReleaseEvent = new KEvent();
+            BinderEvent = new KEvent();
 
-            Flinger = new NvFlinger(Renderer, ReleaseEvent);
+            BinderEvent.WaitEvent.Set();
+
+            Flinger = new NvFlinger(Renderer, BinderEvent);
         }
 
         public long TransactParcel(ServiceCtx Context)
@@ -75,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             int  Id  = Context.RequestData.ReadInt32();
             uint Unk = Context.RequestData.ReadUInt32();
 
-            int Handle = Context.Process.HandleTable.OpenHandle(ReleaseEvent);
+            int Handle = Context.Process.HandleTable.OpenHandle(BinderEvent);
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
 
@@ -91,7 +93,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
         {
             if (Disposing)
             {
-                ReleaseEvent.Dispose();
+                BinderEvent.Dispose();
 
                 Flinger.Dispose();
             }

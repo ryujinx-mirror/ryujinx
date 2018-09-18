@@ -28,16 +28,64 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.DeleteTexture(CachedImage.Handle);
         }
 
-        public void Create(long Key, byte[] Data, GalImage Image)
+        public void Create(long Key, int Size, GalImage Image)
         {
             int Handle = GL.GenTexture();
-
-            TextureCache.AddOrUpdate(Key, new ImageHandler(Handle, Image), (uint)Data.Length);
 
             GL.BindTexture(TextureTarget.Texture2D, Handle);
 
             const int Level  = 0; //TODO: Support mipmap textures.
             const int Border = 0;
+
+            TextureCache.AddOrUpdate(Key, new ImageHandler(Handle, Image), (uint)Size);
+
+            GalImageFormat TypeLess = Image.Format & GalImageFormat.FormatMask;
+
+            bool IsASTC = TypeLess >= GalImageFormat.ASTC_BEGIN && TypeLess <= GalImageFormat.ASTC_END;
+
+            if (ImageUtils.IsCompressed(Image.Format) && !IsASTC)
+            {
+                InternalFormat InternalFmt = OGLEnumConverter.GetCompressedImageFormat(Image.Format);
+
+                GL.CompressedTexImage2D(
+                    TextureTarget.Texture2D,
+                    Level,
+                    InternalFmt,
+                    Image.Width,
+                    Image.Height,
+                    Border,
+                    Size,
+                    IntPtr.Zero);
+            }
+            else
+            {
+                (PixelInternalFormat InternalFmt,
+                 PixelFormat         Format,
+                 PixelType           Type) = OGLEnumConverter.GetImageFormat(Image.Format);
+
+                GL.TexImage2D(
+                    TextureTarget.Texture2D,
+                    Level,
+                    InternalFmt,
+                    Image.Width,
+                    Image.Height,
+                    Border,
+                    Format,
+                    Type,
+                    IntPtr.Zero);
+            }
+        }
+
+        public void Create(long Key, byte[] Data, GalImage Image)
+        {
+            int Handle = GL.GenTexture();
+
+            GL.BindTexture(TextureTarget.Texture2D, Handle);
+
+            const int Level  = 0; //TODO: Support mipmap textures.
+            const int Border = 0;
+
+            TextureCache.AddOrUpdate(Key, new ImageHandler(Handle, Image), (uint)Data.Length);
 
             GalImageFormat TypeLess = Image.Format & GalImageFormat.FormatMask;
 
@@ -62,8 +110,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 //TODO: Use KHR_texture_compression_astc_hdr when available
                 if (IsASTC)
                 {
-                    int TextureBlockWidth  = GetAstcBlockWidth(Image.Format);
-                    int TextureBlockHeight = GetAstcBlockHeight(Image.Format);
+                    int TextureBlockWidth  = ImageUtils.GetBlockWidth(Image.Format);
+                    int TextureBlockHeight = ImageUtils.GetBlockHeight(Image.Format);
 
                     Data = ASTCDecoder.DecodeToRGBA8888(
                         Data,
@@ -85,12 +133,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     Image.Format = GalImageFormat.R8G8 | (Image.Format & GalImageFormat.TypeMask);
                 }
 
-                (PixelInternalFormat InternalFormat, PixelFormat Format, PixelType Type) = OGLEnumConverter.GetImageFormat(Image.Format);
+                (PixelInternalFormat InternalFmt,
+                 PixelFormat         Format,
+                 PixelType           Type) = OGLEnumConverter.GetImageFormat(Image.Format);
 
                 GL.TexImage2D(
                     TextureTarget.Texture2D,
                     Level,
-                    InternalFormat,
+                    InternalFmt,
                     Image.Width,
                     Image.Height,
                     Border,
@@ -98,31 +148,23 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     Type,
                     Data);
             }
-
-            int SwizzleR = (int)OGLEnumConverter.GetTextureSwizzle(Image.XSource);
-            int SwizzleG = (int)OGLEnumConverter.GetTextureSwizzle(Image.YSource);
-            int SwizzleB = (int)OGLEnumConverter.GetTextureSwizzle(Image.ZSource);
-            int SwizzleA = (int)OGLEnumConverter.GetTextureSwizzle(Image.WSource);
-
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleR, SwizzleR);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleG, SwizzleG);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleB, SwizzleB);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, SwizzleA);
         }
 
-        public void CreateFb(long Key, long Size, GalImage Image)
+        public bool TryGetImage(long Key, out GalImage Image)
         {
-            if (!TryGetImage(Key, out ImageHandler CachedImage))
+            if (TextureCache.TryGetValue(Key, out ImageHandler CachedImage))
             {
-                CachedImage = new ImageHandler();
+                Image = CachedImage.Image;
 
-                TextureCache.AddOrUpdate(Key, CachedImage, Size);
+                return true;
             }
 
-            CachedImage.EnsureSetup(Image);
+            Image = default(GalImage);
+
+            return false;
         }
 
-        public bool TryGetImage(long Key, out ImageHandler CachedImage)
+        public bool TryGetImageHandler(long Key, out ImageHandler CachedImage)
         {
             if (TextureCache.TryGetValue(Key, out CachedImage))
             {
@@ -134,76 +176,23 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             return false;
         }
 
-        private static int GetAstcBlockWidth(GalImageFormat Format)
-        {
-            switch (Format)
-            {
-                case GalImageFormat.ASTC_4x4   | GalImageFormat.Unorm: return 4;
-                case GalImageFormat.ASTC_5x5   | GalImageFormat.Unorm: return 5;
-                case GalImageFormat.ASTC_6x6   | GalImageFormat.Unorm: return 6;
-                case GalImageFormat.ASTC_8x8   | GalImageFormat.Unorm: return 8;
-                case GalImageFormat.ASTC_10x10 | GalImageFormat.Unorm: return 10;
-                case GalImageFormat.ASTC_12x12 | GalImageFormat.Unorm: return 12;
-                case GalImageFormat.ASTC_5x4   | GalImageFormat.Unorm: return 5;
-                case GalImageFormat.ASTC_6x5   | GalImageFormat.Unorm: return 6;
-                case GalImageFormat.ASTC_8x6   | GalImageFormat.Unorm: return 8;
-                case GalImageFormat.ASTC_10x8  | GalImageFormat.Unorm: return 10;
-                case GalImageFormat.ASTC_12x10 | GalImageFormat.Unorm: return 12;
-                case GalImageFormat.ASTC_8x5   | GalImageFormat.Unorm: return 8;
-                case GalImageFormat.ASTC_10x5  | GalImageFormat.Unorm: return 10;
-                case GalImageFormat.ASTC_10x6  | GalImageFormat.Unorm: return 10;
-            }
-
-            throw new ArgumentException(nameof(Format));
-        }
-
-        private static int GetAstcBlockHeight(GalImageFormat Format)
-        {
-            switch (Format)
-            {
-                case GalImageFormat.ASTC_4x4   | GalImageFormat.Unorm: return 4;
-                case GalImageFormat.ASTC_5x5   | GalImageFormat.Unorm: return 5;
-                case GalImageFormat.ASTC_6x6   | GalImageFormat.Unorm: return 6;
-                case GalImageFormat.ASTC_8x8   | GalImageFormat.Unorm: return 8;
-                case GalImageFormat.ASTC_10x10 | GalImageFormat.Unorm: return 10;
-                case GalImageFormat.ASTC_12x12 | GalImageFormat.Unorm: return 12;
-                case GalImageFormat.ASTC_5x4   | GalImageFormat.Unorm: return 4;
-                case GalImageFormat.ASTC_6x5   | GalImageFormat.Unorm: return 5;
-                case GalImageFormat.ASTC_8x6   | GalImageFormat.Unorm: return 6;
-                case GalImageFormat.ASTC_10x8  | GalImageFormat.Unorm: return 8;
-                case GalImageFormat.ASTC_12x10 | GalImageFormat.Unorm: return 10;
-                case GalImageFormat.ASTC_8x5   | GalImageFormat.Unorm: return 5;
-                case GalImageFormat.ASTC_10x5  | GalImageFormat.Unorm: return 5;
-                case GalImageFormat.ASTC_10x6  | GalImageFormat.Unorm: return 6;
-            }
-
-            throw new ArgumentException(nameof(Format));
-        }
-
-        public bool TryGetCachedTexture(long Key, long DataSize, out GalImage Image)
-        {
-            if (TextureCache.TryGetSize(Key, out long Size) && Size == DataSize)
-            {
-                if (TextureCache.TryGetValue(Key, out ImageHandler CachedImage))
-                {
-                    Image = CachedImage.Image;
-
-                    return true;
-                }
-            }
-
-            Image = default(GalImage);
-
-            return false;
-        }
-
-        public void Bind(long Key, int Index)
+        public void Bind(long Key, int Index, GalImage Image)
         {
             if (TextureCache.TryGetValue(Key, out ImageHandler CachedImage))
             {
                 GL.ActiveTexture(TextureUnit.Texture0 + Index);
 
                 GL.BindTexture(TextureTarget.Texture2D, CachedImage.Handle);
+
+                int[] SwizzleRgba = new int[]
+                {
+                    (int)OGLEnumConverter.GetTextureSwizzle(Image.XSource),
+                    (int)OGLEnumConverter.GetTextureSwizzle(Image.YSource),
+                    (int)OGLEnumConverter.GetTextureSwizzle(Image.ZSource),
+                    (int)OGLEnumConverter.GetTextureSwizzle(Image.WSource)
+                };
+
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleRgba, SwizzleRgba);
             }
         }
 

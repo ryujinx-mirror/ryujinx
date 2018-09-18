@@ -1,5 +1,3 @@
-using System;
-
 namespace Ryujinx.Graphics.Gal.Shader
 {
     static class ShaderDecodeHelper

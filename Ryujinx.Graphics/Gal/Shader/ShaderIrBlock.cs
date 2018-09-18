@@ -4,8 +4,8 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     class ShaderIrBlock
     {
-        public long Position    { get; set; }
-        public long EndPosition { get; set; }
+        public int Position    { get; set; }
+        public int EndPosition { get; set; }
 
         public ShaderIrBlock Next   { get; set; }
         public ShaderIrBlock Branch { get; set; }
@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public List<ShaderIrNode> Nodes { get; private set; }
 
-        public ShaderIrBlock(long Position)
+        public ShaderIrBlock(int Position)
         {
             this.Position = Position;
 

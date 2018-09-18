@@ -1,22 +1,16 @@
-using System;
-
 namespace Ryujinx.Graphics.Gal
 {
     public interface IGalRenderTarget
     {
-        void BindColor(long Key, int Attachment);
+        void BindColor(long Key, int Attachment, GalImage Image);
 
         void UnbindColor(int Attachment);
 
-        void BindZeta(long Key);
+        void BindZeta(long Key, GalImage Image);
 
         void UnbindZeta();
 
-        void BindTexture(long Key, int Index);
-
         void Set(long Key);
-
-        void Set(byte[] Data, int Width, int Height);
 
         void SetMap(int[] Map);
 
@@ -40,12 +34,8 @@ namespace Ryujinx.Graphics.Gal
             int  DstX1,
             int  DstY1);
 
-        void GetBufferData(long Key, Action<byte[]> Callback);
+        void Reinterpret(long Key, GalImage NewImage);
 
-        void SetBufferData(
-            long             Key,
-            int              Width,
-            int              Height,
-            byte[]           Buffer);
+        byte[] GetData(long Key);
     }
 }

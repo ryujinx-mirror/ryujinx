@@ -24,7 +24,7 @@ namespace Ryujinx.Graphics.Gal
 
         void SetIndexArray(int Size, GalIndexFormat Format);
 
-        void DrawArrays(int First, int PrimCount, GalPrimitiveType PrimType);
+        void DrawArrays(int First, int Count, GalPrimitiveType PrimType);
 
         void DrawElements(long IboKey, int First, int VertexBase, GalPrimitiveType PrimType);
     }

@@ -23,8 +23,6 @@ namespace Ryujinx.Graphics
 
         private ConstBuffer[][] ConstBuffers;
 
-        private HashSet<long> FrameBuffers;
-
         private List<long>[] UploadedKeys;
 
         private int CurrentInstance = 0;
@@ -60,8 +58,6 @@ namespace Ryujinx.Graphics
                 ConstBuffers[Index] = new ConstBuffer[18];
             }
 
-            FrameBuffers = new HashSet<long>();
-
             UploadedKeys = new List<long>[(int)NvGpuBufferType.Count];
 
             for (int i = 0; i < UploadedKeys.Length; i++)
@@ -96,7 +92,7 @@ namespace Ryujinx.Graphics
 
             GalPipelineState State = new GalPipelineState();
 
-            SetFlip(State);
+            SetFrameBuffer(State);
             SetFrontFace(State);
             SetCullFace(State);
             SetDepth(State);
@@ -104,10 +100,7 @@ namespace Ryujinx.Graphics
             SetAlphaBlending(State);
             SetPrimitiveRestart(State);
 
-            for (int FbIndex = 0; FbIndex < 8; FbIndex++)
-            {
-                SetFrameBuffer(Vmm, 0);
-            }
+            SetFrameBuffer(Vmm, 0);
 
             SetZeta(Vmm);
 
@@ -173,9 +166,9 @@ namespace Ryujinx.Graphics
         {
             long VA = MakeInt64From2xInt32(NvGpuEngine3dReg.FrameBufferNAddress + FbIndex * 0x10);
 
-            int Format = ReadRegister(NvGpuEngine3dReg.FrameBufferNFormat + FbIndex * 0x10);
+            int SurfFormat = ReadRegister(NvGpuEngine3dReg.FrameBufferNFormat + FbIndex * 0x10);
 
-            if (VA == 0 || Format == 0)
+            if (VA == 0 || SurfFormat == 0)
             {
                 Gpu.Renderer.RenderTarget.UnbindColor(FbIndex);
 
@@ -184,10 +177,14 @@ namespace Ryujinx.Graphics
 
             long Key = Vmm.GetPhysicalAddress(VA);
 
-            FrameBuffers.Add(Key);
-
             int Width  = ReadRegister(NvGpuEngine3dReg.FrameBufferNWidth  + FbIndex * 0x10);
             int Height = ReadRegister(NvGpuEngine3dReg.FrameBufferNHeight + FbIndex * 0x10);
+
+            int BlockDim = ReadRegister(NvGpuEngine3dReg.FrameBufferNBlockDim + FbIndex * 0x10);
+
+            int GobBlockHeight = 1 << ((BlockDim >> 4) & 7);
+
+            GalMemoryLayout Layout = (GalMemoryLayout)((BlockDim >> 12) & 1);
 
             float TX = ReadRegisterFloat(NvGpuEngine3dReg.ViewportNTranslateX + FbIndex * 8);
             float TY = ReadRegisterFloat(NvGpuEngine3dReg.ViewportNTranslateY + FbIndex * 8);
@@ -201,48 +198,54 @@ namespace Ryujinx.Graphics
             int VpW = (int)(TX + MathF.Abs(SX)) - VpX;
             int VpH = (int)(TY + MathF.Abs(SY)) - VpY;
 
-            GalImageFormat ImageFormat = ImageUtils.ConvertSurface((GalSurfaceFormat)Format);
+            GalImageFormat Format = ImageUtils.ConvertSurface((GalSurfaceFormat)SurfFormat);
 
-            GalImage Image = new GalImage(Width, Height, ImageFormat);
+            GalImage Image = new GalImage(Width, Height, 1, GobBlockHeight, Layout, Format);
 
-            long Size = ImageUtils.GetSize(Image);
-
-            Gpu.Renderer.Texture.CreateFb(Key, Size, Image);
-
-            Gpu.Renderer.RenderTarget.BindColor(Key, FbIndex);
+            Gpu.ResourceManager.SendColorBuffer(Vmm, Key, FbIndex, Image);
 
             Gpu.Renderer.RenderTarget.SetViewport(VpX, VpY, VpW, VpH);
         }
 
+        private void SetFrameBuffer(GalPipelineState State)
+        {
+            State.FramebufferSrgb = (ReadRegister(NvGpuEngine3dReg.FrameBufferSrgb) & 1) != 0;
+
+            State.FlipX = GetFlipSign(NvGpuEngine3dReg.ViewportNScaleX);
+            State.FlipY = GetFlipSign(NvGpuEngine3dReg.ViewportNScaleY);
+        }
+
         private void SetZeta(NvGpuVmm Vmm)
         {
-            long ZA = MakeInt64From2xInt32(NvGpuEngine3dReg.ZetaAddress);
+            long VA = MakeInt64From2xInt32(NvGpuEngine3dReg.ZetaAddress);
 
-            int Format = ReadRegister(NvGpuEngine3dReg.ZetaFormat);
+            int ZetaFormat = ReadRegister(NvGpuEngine3dReg.ZetaFormat);
+
+            int BlockDim = ReadRegister(NvGpuEngine3dReg.ZetaBlockDimensions);
+
+            int GobBlockHeight = 1 << ((BlockDim >> 4) & 7);
+
+            GalMemoryLayout Layout = (GalMemoryLayout)((BlockDim >> 12) & 1); //?
 
             bool ZetaEnable = (ReadRegister(NvGpuEngine3dReg.ZetaEnable) & 1) != 0;
 
-            if (ZA == 0 || Format == 0 || !ZetaEnable)
+            if (VA == 0 || ZetaFormat == 0 || !ZetaEnable)
             {
                 Gpu.Renderer.RenderTarget.UnbindZeta();
 
                 return;
             }
 
-            long Key = Vmm.GetPhysicalAddress(ZA);
+            long Key = Vmm.GetPhysicalAddress(VA);
 
             int Width  = ReadRegister(NvGpuEngine3dReg.ZetaHoriz);
             int Height = ReadRegister(NvGpuEngine3dReg.ZetaVert);
 
-            GalImageFormat ImageFormat = ImageUtils.ConvertZeta((GalZetaFormat)Format);
+            GalImageFormat Format = ImageUtils.ConvertZeta((GalZetaFormat)ZetaFormat);
 
-            GalImage Image = new GalImage(Width, Height, ImageFormat);
+            GalImage Image = new GalImage(Width, Height, 1, GobBlockHeight, Layout, Format);
 
-            long Size = ImageUtils.GetSize(Image);
-
-            Gpu.Renderer.Texture.CreateFb(Key, Size, Image);
-
-            Gpu.Renderer.RenderTarget.BindZeta(Key);
+            Gpu.ResourceManager.SendZetaBuffer(Vmm, Key, Image);
         }
 
         private long[] UploadShaders(NvGpuVmm Vmm)
@@ -320,12 +323,6 @@ namespace Ryujinx.Graphics
             }
 
             throw new ArgumentOutOfRangeException(nameof(Program));
-        }
-
-        private void SetFlip(GalPipelineState State)
-        {
-            State.FlipX = GetFlipSign(NvGpuEngine3dReg.ViewportNScaleX);
-            State.FlipY = GetFlipSign(NvGpuEngine3dReg.ViewportNScaleY);
         }
 
         private void SetFrontFace(GalPipelineState State)
@@ -504,53 +501,30 @@ namespace Ryujinx.Graphics
             TicPosition += TicIndex * 0x20;
             TscPosition += TscIndex * 0x20;
 
+            GalImage Image = TextureFactory.MakeTexture(Vmm, TicPosition);
+
             GalTextureSampler Sampler = TextureFactory.MakeSampler(Gpu, Vmm, TscPosition);
 
             long Key = Vmm.ReadInt64(TicPosition + 4) & 0xffffffffffff;
+
+            if (Image.Layout == GalMemoryLayout.BlockLinear)
+            {
+                Key &= ~0x1ffL;
+            }
+            else if (Image.Layout == GalMemoryLayout.Pitch)
+            {
+                Key &= ~0x1fL;
+            }
 
             Key = Vmm.GetPhysicalAddress(Key);
 
             if (Key == -1)
             {
-                //FIXME: Should'nt ignore invalid addresses.
+                //FIXME: Shouldn't ignore invalid addresses.
                 return;
             }
 
-            if (IsFrameBufferPosition(Key))
-            {
-                //This texture is a frame buffer texture,
-                //we shouldn't read anything from memory and bind
-                //the frame buffer texture instead, since we're not
-                //really writing anything to memory.
-                Gpu.Renderer.RenderTarget.BindTexture(Key, TexIndex);
-            }
-            else
-            {
-                GalImage NewImage = TextureFactory.MakeTexture(Vmm, TicPosition);
-
-                long Size = (uint)ImageUtils.GetSize(NewImage);
-
-                bool HasCachedTexture = false;
-
-                if (Gpu.Renderer.Texture.TryGetCachedTexture(Key, Size, out GalImage Image))
-                {
-                    if (NewImage.Equals(Image) && !QueryKeyUpload(Vmm, Key, Size, NvGpuBufferType.Texture))
-                    {
-                        Gpu.Renderer.Texture.Bind(Key, TexIndex);
-
-                        HasCachedTexture = true;
-                    }
-                }
-
-                if (!HasCachedTexture)
-                {
-                    byte[] Data = TextureFactory.GetTextureData(Vmm, TicPosition);
-
-                    Gpu.Renderer.Texture.Create(Key, Data, NewImage);
-                }
-
-                Gpu.Renderer.Texture.Bind(Key, TexIndex);
-            }
+            Gpu.ResourceManager.SendTexture(Vmm, Key, Image, TexIndex);
 
             Gpu.Renderer.Texture.SetSampler(Sampler);
         }
@@ -874,11 +848,6 @@ namespace Ryujinx.Graphics
         private void WriteRegister(NvGpuEngine3dReg Reg, int Value)
         {
             Registers[(int)Reg] = Value;
-        }
-
-        public bool IsFrameBufferPosition(long Position)
-        {
-            return FrameBuffers.Contains(Position);
         }
 
         private bool QueryKeyUpload(NvGpuVmm Vmm, long Key, long Size, NvGpuBufferType Type)

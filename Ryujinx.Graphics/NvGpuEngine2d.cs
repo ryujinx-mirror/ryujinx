@@ -1,7 +1,6 @@
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
 using Ryujinx.Graphics.Texture;
-using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics
@@ -62,25 +61,25 @@ namespace Ryujinx.Graphics
         {
             CopyOperation Operation = (CopyOperation)ReadRegister(NvGpuEngine2dReg.CopyOperation);
 
+            int  SrcFormat = ReadRegister(NvGpuEngine2dReg.SrcFormat);
             bool SrcLinear = ReadRegister(NvGpuEngine2dReg.SrcLinear) != 0;
             int  SrcWidth  = ReadRegister(NvGpuEngine2dReg.SrcWidth);
             int  SrcHeight = ReadRegister(NvGpuEngine2dReg.SrcHeight);
             int  SrcPitch  = ReadRegister(NvGpuEngine2dReg.SrcPitch);
             int  SrcBlkDim = ReadRegister(NvGpuEngine2dReg.SrcBlockDimensions);
 
+            int  DstFormat = ReadRegister(NvGpuEngine2dReg.DstFormat);
             bool DstLinear = ReadRegister(NvGpuEngine2dReg.DstLinear) != 0;
             int  DstWidth  = ReadRegister(NvGpuEngine2dReg.DstWidth);
             int  DstHeight = ReadRegister(NvGpuEngine2dReg.DstHeight);
             int  DstPitch  = ReadRegister(NvGpuEngine2dReg.DstPitch);
             int  DstBlkDim = ReadRegister(NvGpuEngine2dReg.DstBlockDimensions);
 
-            TextureSwizzle SrcSwizzle = SrcLinear
-                ? TextureSwizzle.Pitch
-                : TextureSwizzle.BlockLinear;
+            GalImageFormat SrcImgFormat = ImageUtils.ConvertSurface((GalSurfaceFormat)SrcFormat);
+            GalImageFormat DstImgFormat = ImageUtils.ConvertSurface((GalSurfaceFormat)DstFormat);
 
-            TextureSwizzle DstSwizzle = DstLinear
-                ? TextureSwizzle.Pitch
-                : TextureSwizzle.BlockLinear;
+            GalMemoryLayout SrcLayout = GetLayout(SrcLinear);
+            GalMemoryLayout DstLayout = GetLayout(DstLinear);
 
             int SrcBlockHeight = 1 << ((SrcBlkDim >> 4) & 0xf);
             int DstBlockHeight = 1 << ((DstBlkDim >> 4) & 0xf);
@@ -91,91 +90,41 @@ namespace Ryujinx.Graphics
             long SrcKey = Vmm.GetPhysicalAddress(SrcAddress);
             long DstKey = Vmm.GetPhysicalAddress(DstAddress);
 
-            bool IsSrcFb = Gpu.Engine3d.IsFrameBufferPosition(SrcKey);
-            bool IsDstFb = Gpu.Engine3d.IsFrameBufferPosition(DstKey);
+            GalImage SrcTexture = new GalImage(
+                SrcWidth,
+                SrcHeight, 1,
+                SrcBlockHeight,
+                SrcLayout,
+                SrcImgFormat);
 
-            TextureInfo SrcTexture()
-            {
-                return new TextureInfo(
-                    SrcAddress,
-                    SrcWidth,
-                    SrcHeight,
-                    SrcPitch,
-                    SrcBlockHeight, 1,
-                    SrcSwizzle,
-                    GalImageFormat.A8B8G8R8 | GalImageFormat.Unorm);
-            }
+            GalImage DstTexture = new GalImage(
+                DstWidth,
+                DstHeight, 1,
+                DstBlockHeight,
+                DstLayout,
+                DstImgFormat);
 
-            TextureInfo DstTexture()
-            {
-                return new TextureInfo(
-                    DstAddress,
-                    DstWidth,
-                    DstHeight,
-                    DstPitch,
-                    DstBlockHeight, 1,
-                    DstSwizzle,
-                    GalImageFormat.A8B8G8R8 | GalImageFormat.Unorm);
-            }
+            Gpu.ResourceManager.SendTexture(Vmm, SrcKey, SrcTexture);
+            Gpu.ResourceManager.SendTexture(Vmm, DstKey, DstTexture);
 
-            //TODO: fb -> fb copies, tex -> fb copies, formats other than RGBA8,
-            //make it throw for unimpl stuff (like the copy mode)...
-            if (IsSrcFb && IsDstFb)
-            {
-                //Frame Buffer -> Frame Buffer copy.
-                Gpu.Renderer.RenderTarget.Copy(
-                    SrcKey,
-                    DstKey,
-                    0,
-                    0,
-                    SrcWidth,
-                    SrcHeight,
-                    0,
-                    0,
-                    DstWidth,
-                    DstHeight);
-            }
-            if (IsSrcFb)
-            {
-                //Frame Buffer -> Texture copy.
-                Gpu.Renderer.RenderTarget.GetBufferData(SrcKey, (byte[] Buffer) =>
-                {
-                    TextureInfo Src = SrcTexture();
-                    TextureInfo Dst = DstTexture();
+            Gpu.Renderer.RenderTarget.Copy(
+                SrcKey,
+                DstKey,
+                0,
+                0,
+                SrcWidth,
+                SrcHeight,
+                0,
+                0,
+                DstWidth,
+                DstHeight);
+        }
 
-                    if (Src.Width  != Dst.Width ||
-                        Src.Height != Dst.Height)
-                    {
-                        throw new NotImplementedException("Texture resizing is not supported");
-                    }
-
-                    TextureWriter.Write(Vmm, Dst, Buffer);
-                });
-            }
-            else if (IsDstFb)
-            {
-                byte[] Buffer = TextureReader.Read(Vmm, SrcTexture());
-
-                Gpu.Renderer.RenderTarget.SetBufferData(
-                    DstKey,
-                    DstWidth,
-                    DstHeight,
-                    Buffer);
-            }
-            else
-            {
-                //Texture -> Texture copy.
-                TextureInfo Src = SrcTexture();
-                TextureInfo Dst = DstTexture();
-
-                if (Src.Width  != Dst.Width ||
-                    Src.Height != Dst.Height)
-                {
-                    throw new NotImplementedException("Texture resizing is not supported");
-                }
-
-                TextureWriter.Write(Vmm, Dst, TextureReader.Read(Vmm, Src));
-            }
+        private static GalMemoryLayout GetLayout(bool Linear)
+        {
+            return Linear
+                ? GalMemoryLayout.Pitch
+                : GalMemoryLayout.BlockLinear;
         }
 
         private long MakeInt64From2xInt32(NvGpuEngine2dReg Reg)

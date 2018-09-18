@@ -1,10 +1,8 @@
-﻿using static Ryujinx.Graphics.Gal.Shader.ShaderDecodeHelper;
-
-namespace Ryujinx.Graphics.Gal.Shader
+﻿namespace Ryujinx.Graphics.Gal.Shader
 {
     static partial class ShaderDecode
     {
-        public static void Out_R(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Out_R(ShaderIrBlock Block, long OpCode, int Position)
         {
             //TODO: Those registers have to be used for something
             ShaderIrOperGpr Gpr0  = OpCode.Gpr0();

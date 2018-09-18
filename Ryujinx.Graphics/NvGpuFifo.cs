@@ -94,6 +94,8 @@ namespace Ryujinx.Graphics
 
                 Gpu.Engine3d.ResetCache();
 
+                Gpu.ResourceManager.ClearPbCache();
+
                 CurrPbEntryIndex = 0;
             }
 
@@ -104,19 +106,35 @@ namespace Ryujinx.Graphics
 
         private void CallMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
         {
+            if ((NvGpuFifoMeth)PBEntry.Method == NvGpuFifoMeth.BindChannel)
+            {
+                NvGpuEngine Engine = (NvGpuEngine)PBEntry.Arguments[0];
+
+                SubChannels[PBEntry.SubChannel] = Engine;
+            }
+            else
+            {
+                switch (SubChannels[PBEntry.SubChannel])
+                {
+                    case NvGpuEngine._2d:  Call2dMethod  (Vmm, PBEntry); break;
+                    case NvGpuEngine._3d:  Call3dMethod  (Vmm, PBEntry); break;
+                    case NvGpuEngine.P2mf: CallP2mfMethod(Vmm, PBEntry); break;
+                    case NvGpuEngine.M2mf: CallM2mfMethod(Vmm, PBEntry); break;
+                }
+            }
+        }
+
+        private void Call2dMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        {
+            Gpu.Engine2d.CallMethod(Vmm, PBEntry);
+        }
+
+        private void Call3dMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        {
             if (PBEntry.Method < 0x80)
             {
                 switch ((NvGpuFifoMeth)PBEntry.Method)
                 {
-                    case NvGpuFifoMeth.BindChannel:
-                    {
-                        NvGpuEngine Engine = (NvGpuEngine)PBEntry.Arguments[0];
-
-                        SubChannels[PBEntry.SubChannel] = Engine;
-
-                        break;
-                    }
-
                     case NvGpuFifoMeth.SetMacroUploadAddress:
                     {
                         CurrMacroPosition = PBEntry.Arguments[0];
@@ -150,25 +168,7 @@ namespace Ryujinx.Graphics
                     }
                 }
             }
-            else
-            {
-                switch (SubChannels[PBEntry.SubChannel])
-                {
-                    case NvGpuEngine._2d: Call2dMethod (Vmm, PBEntry); break;
-                    case NvGpuEngine._3d: Call3dMethod (Vmm, PBEntry); break;
-                    case NvGpuEngine.Dma: CallDmaMethod(Vmm, PBEntry); break;
-                }
-            }
-        }
-
-        private void Call2dMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
-        {
-            Gpu.Engine2d.CallMethod(Vmm, PBEntry);
-        }
-
-        private void Call3dMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
-        {
-            if (PBEntry.Method < 0xe00)
+            else if (PBEntry.Method < 0xe00)
             {
                 Gpu.Engine3d.CallMethod(Vmm, PBEntry);
             }
@@ -190,9 +190,14 @@ namespace Ryujinx.Graphics
             }
         }
 
-        private void CallDmaMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        private void CallP2mfMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
         {
-            Gpu.EngineDma.CallMethod(Vmm, PBEntry);
+            Gpu.EngineP2mf.CallMethod(Vmm, PBEntry);
+        }
+
+        private void CallM2mfMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        {
+            Gpu.EngineM2mf.CallMethod(Vmm, PBEntry);
         }
     }
 }

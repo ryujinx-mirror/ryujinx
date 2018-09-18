@@ -3,7 +3,6 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.Utilities;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;

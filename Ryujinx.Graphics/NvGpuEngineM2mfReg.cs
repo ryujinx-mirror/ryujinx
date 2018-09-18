@@ -1,11 +1,14 @@
 namespace Ryujinx.Graphics
 {
-    enum NvGpuEngineDmaReg
+    enum NvGpuEngineM2mfReg
     {
         SrcAddress = 0x100,
         DstAddress = 0x102,
         SrcPitch   = 0x104,
         DstPitch   = 0x105,
+        XCount     = 0x106,
+        YCount     = 0x107,
+        Swizzle    = 0x1c2,
         DstBlkDim  = 0x1c3,
         DstSizeX   = 0x1c4,
         DstSizeY   = 0x1c5,

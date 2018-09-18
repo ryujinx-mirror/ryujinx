@@ -25,67 +25,67 @@ namespace Ryujinx.Graphics.Gal.Shader
             F64 = 3
         }
 
-        public static void F2f_C(ShaderIrBlock Block, long OpCode, long Position)
+        public static void F2f_C(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitF2f(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void F2f_I(ShaderIrBlock Block, long OpCode, long Position)
+        public static void F2f_I(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitF2f(Block, OpCode, ShaderOper.Immf);
         }
 
-        public static void F2f_R(ShaderIrBlock Block, long OpCode, long Position)
+        public static void F2f_R(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitF2f(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void F2i_C(ShaderIrBlock Block, long OpCode, long Position)
+        public static void F2i_C(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitF2i(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void F2i_I(ShaderIrBlock Block, long OpCode, long Position)
+        public static void F2i_I(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitF2i(Block, OpCode, ShaderOper.Immf);
         }
 
-        public static void F2i_R(ShaderIrBlock Block, long OpCode, long Position)
+        public static void F2i_R(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitF2i(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void I2f_C(ShaderIrBlock Block, long OpCode, long Position)
+        public static void I2f_C(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitI2f(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void I2f_I(ShaderIrBlock Block, long OpCode, long Position)
+        public static void I2f_I(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitI2f(Block, OpCode, ShaderOper.Imm);
         }
 
-        public static void I2f_R(ShaderIrBlock Block, long OpCode, long Position)
+        public static void I2f_R(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitI2f(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void I2i_C(ShaderIrBlock Block, long OpCode, long Position)
+        public static void I2i_C(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitI2i(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void I2i_I(ShaderIrBlock Block, long OpCode, long Position)
+        public static void I2i_I(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitI2i(Block, OpCode, ShaderOper.Imm);
         }
 
-        public static void I2i_R(ShaderIrBlock Block, long OpCode, long Position)
+        public static void I2i_R(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitI2i(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Isberd(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Isberd(ShaderIrBlock Block, long OpCode, int Position)
         {
             //This instruction seems to be used to translate from an address to a vertex index in a GS
             //Stub it as such
@@ -95,50 +95,50 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), OpCode.Gpr8())));
         }
 
-        public static void Mov_C(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Mov_C(ShaderIrBlock Block, long OpCode, int Position)
         {
             ShaderIrOperCbuf Cbuf = OpCode.Cbuf34();
 
             Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Cbuf)));
         }
 
-        public static void Mov_I(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Mov_I(ShaderIrBlock Block, long OpCode, int Position)
         {
             ShaderIrOperImm Imm = OpCode.Imm19_20();
 
             Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Imm)));
         }
 
-        public static void Mov_I32(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Mov_I32(ShaderIrBlock Block, long OpCode, int Position)
         {
             ShaderIrOperImm Imm = OpCode.Imm32_20();
 
             Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Imm)));
         }
 
-        public static void Mov_R(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Mov_R(ShaderIrBlock Block, long OpCode, int Position)
         {
             ShaderIrOperGpr Gpr = OpCode.Gpr20();
 
             Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Gpr)));
         }
 
-        public static void Sel_C(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Sel_C(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitSel(Block, OpCode, ShaderOper.CR);
         }
 
-        public static void Sel_I(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Sel_I(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitSel(Block, OpCode, ShaderOper.Imm);
         }
 
-        public static void Sel_R(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Sel_R(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitSel(Block, OpCode, ShaderOper.RR);
         }
 
-        public static void Mov_S(ShaderIrBlock Block, long OpCode, long Position)
+        public static void Mov_S(ShaderIrBlock Block, long OpCode, int Position)
         {
             Block.AddNode(new ShaderIrCmnt("Stubbed."));
 

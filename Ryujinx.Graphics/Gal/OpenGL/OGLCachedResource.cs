@@ -22,9 +22,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             public CacheBucket(T Value, long DataSize, LinkedListNode<long> Node)
             {
-                this.Value     = Value;
-                this.DataSize  = DataSize;
-                this.Node      = Node;
+                this.Value    = Value;
+                this.DataSize = DataSize;
+                this.Node     = Node;
 
                 Timestamp = Environment.TickCount;
             }

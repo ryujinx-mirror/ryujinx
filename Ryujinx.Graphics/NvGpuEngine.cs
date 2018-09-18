@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics
         _2d     = 0x902d,
         _3d     = 0xb197,
         Compute = 0xb1c0,
-        Kepler  = 0xa140,
-        Dma     = 0xb0b5
+        P2mf    = 0xa140,
+        M2mf    = 0xb0b5
     }
 }
