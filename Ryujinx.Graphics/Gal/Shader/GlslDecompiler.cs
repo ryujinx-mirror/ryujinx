@@ -360,7 +360,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private void PrintDeclSsy()
         {
-            SB.AppendLine("uint " + GlslDecl.SsyCursorName + ";");
+            SB.AppendLine("uint " + GlslDecl.SsyCursorName + "= 0;");
 
             SB.AppendLine("uint " + GlslDecl.SsyStackName + "[" + GlslDecl.SsyStackSize + "];" + Environment.NewLine);
         }
