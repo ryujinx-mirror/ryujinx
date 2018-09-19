@@ -2,6 +2,7 @@ using ChocolArm64;
 using ChocolArm64.Events;
 using ChocolArm64.Memory;
 using ChocolArm64.State;
+using LibHac;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Diagnostics.Demangler;
 using Ryujinx.HLE.HOS.Kernel;
@@ -41,6 +42,8 @@ namespace Ryujinx.HLE.HOS
         private List<KTlsPageManager> TlsPages;
 
         public Npdm MetaData { get; private set; }
+
+        public Nacp ControlData { get; set; }
 
         public KProcessHandleTable HandleTable { get; private set; }
 
