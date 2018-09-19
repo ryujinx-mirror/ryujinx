@@ -35,14 +35,6 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeBImmAl Op = (AOpCodeBImmAl)Context.CurrOp;
 
-            if (AOptimizations.GenerateCallStack)
-            {
-                Context.EmitLdarg(ATranslatedSub.StateArgIdx);
-                Context.EmitLdc_I8(Op.Imm);
-
-                Context.EmitPrivateCall(typeof(AThreadState), nameof(AThreadState.EnterMethod));
-            }
-
             Context.EmitLdc_I(Op.Position + 4);
             Context.EmitStint(AThreadState.LRIndex);
             Context.EmitStoreState();
@@ -80,14 +72,6 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeBReg Op = (AOpCodeBReg)Context.CurrOp;
 
-            if (AOptimizations.GenerateCallStack)
-            {
-                Context.EmitLdarg(ATranslatedSub.StateArgIdx);
-                Context.EmitLdintzr(Op.Rn);
-
-                Context.EmitPrivateCall(typeof(AThreadState), nameof(AThreadState.EnterMethod));
-            }
-
             Context.EmitLdc_I(Op.Position + 4);
             Context.EmitStint(AThreadState.LRIndex);
             Context.EmitStoreState();
@@ -99,14 +83,6 @@ namespace ChocolArm64.Instruction
         public static void Br(AILEmitterCtx Context)
         {
             AOpCodeBReg Op = (AOpCodeBReg)Context.CurrOp;
-
-            if (AOptimizations.GenerateCallStack)
-            {
-                Context.EmitLdarg(ATranslatedSub.StateArgIdx);
-                Context.EmitLdintzr(Op.Rn);
-
-                Context.EmitPrivateCall(typeof(AThreadState), nameof(AThreadState.JumpMethod));
-            }
 
             Context.EmitStoreState();
             Context.EmitLdintzr(Op.Rn);
@@ -129,13 +105,6 @@ namespace ChocolArm64.Instruction
 
         public static void Ret(AILEmitterCtx Context)
         {
-            if (AOptimizations.GenerateCallStack)
-            {
-                Context.EmitLdarg(ATranslatedSub.StateArgIdx);
-
-                Context.EmitPrivateCall(typeof(AThreadState), nameof(AThreadState.ExitMethod));
-            }
-
             Context.EmitStoreState();
             Context.EmitLdint(AThreadState.LRIndex);
 

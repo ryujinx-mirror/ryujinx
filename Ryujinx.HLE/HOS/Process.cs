@@ -55,8 +55,6 @@ namespace Ryujinx.HLE.HOS
 
         private List<Executable> Executables;
 
-        private Dictionary<long, string> SymbolTable;
-
         private long ImageBase;
 
         private bool Disposed;
@@ -121,8 +119,6 @@ namespace Ryujinx.HLE.HOS
             {
                 return false;
             }
-
-            MakeSymbolTable();
 
             long MainStackTop = MemoryManager.CodeRegionEnd - KMemoryManager.PageSize;
 
@@ -256,31 +252,6 @@ namespace Ryujinx.HLE.HOS
             throw new UndefinedInstructionException(e.Position, e.RawOpCode);
         }
 
-        private void MakeSymbolTable()
-        {
-            SymbolTable = new Dictionary<long, string>();
-
-            foreach (Executable Exe in Executables)
-            {
-                foreach (KeyValuePair<long, string> KV in Exe.SymbolTable)
-                {
-                    SymbolTable.TryAdd(Exe.ImageBase + KV.Key, KV.Value);
-                }
-            }
-        }
-
-        private ATranslator GetTranslator()
-        {
-            if (Translator == null)
-            {
-                Translator = new ATranslator(SymbolTable);
-
-                Translator.CpuTrace += CpuTraceHandler;
-            }
-
-            return Translator;
-        }
-
         public void EnableCpuTracing()
         {
             Translator.EnableCpuTrace = true;
@@ -293,32 +264,53 @@ namespace Ryujinx.HLE.HOS
 
         private void CpuTraceHandler(object sender, ACpuTraceEventArgs e)
         {
-            string NsoName = string.Empty;
+            Executable Exe = GetExecutable(e.Position);
 
-            for (int Index = Executables.Count - 1; Index >= 0; Index--)
+            if (Exe == null)
             {
-                if (e.Position >= Executables[Index].ImageBase)
-                {
-                    NsoName = $"{(e.Position - Executables[Index].ImageBase):x16}";
-
-                    break;
-                }
+                return;
             }
 
-            Device.Log.PrintDebug(LogClass.Cpu, $"Executing at 0x{e.Position:x16} {e.SubName} {NsoName}");
+            if (!TryGetSubName(Exe, e.Position, out string SubName))
+            {
+                SubName = string.Empty;
+            }
+
+            long Offset = e.Position - Exe.ImageBase;
+
+            string ExeNameWithAddr = $"{Exe.Name}:0x{Offset:x8}";
+
+            Device.Log.PrintDebug(LogClass.Cpu, ExeNameWithAddr + " " + SubName);
+        }
+
+        private ATranslator GetTranslator()
+        {
+            if (Translator == null)
+            {
+                Translator = new ATranslator();
+
+                Translator.CpuTrace += CpuTraceHandler;
+            }
+
+            return Translator;
         }
 
         public void PrintStackTrace(AThreadState ThreadState)
         {
-            long[] Positions = ThreadState.GetCallStack();
-
             StringBuilder Trace = new StringBuilder();
 
             Trace.AppendLine("Guest stack trace:");
 
-            foreach (long Position in Positions)
+            void AppendTrace(long Position)
             {
-                if (!SymbolTable.TryGetValue(Position, out string SubName))
+                Executable Exe = GetExecutable(Position);
+
+                if (Exe == null)
+                {
+                    return;
+                }
+
+                if (!TryGetSubName(Exe, Position, out string SubName))
                 {
                     SubName = $"Sub{Position:x16}";
                 }
@@ -327,29 +319,77 @@ namespace Ryujinx.HLE.HOS
                     SubName = Demangler.Parse(SubName);
                 }
 
-                Trace.AppendLine(" " + SubName + " (" + GetNsoNameAndAddress(Position) + ")");
+                long Offset = Position - Exe.ImageBase;
+
+                string ExeNameWithAddr = $"{Exe.Name}:0x{Offset:x8}";
+
+                Trace.AppendLine(" " + ExeNameWithAddr + " " + SubName);
+            }
+
+            long FramePointer = (long)ThreadState.X29;
+
+            while (FramePointer != 0)
+            {
+                AppendTrace(Memory.ReadInt64(FramePointer + 8));
+
+                FramePointer = Memory.ReadInt64(FramePointer);
             }
 
             Device.Log.PrintInfo(LogClass.Cpu, Trace.ToString());
         }
 
-        private string GetNsoNameAndAddress(long Position)
+        private bool TryGetSubName(Executable Exe, long Position, out string Name)
+        {
+            Position -= Exe.ImageBase;
+
+            int Left  = 0;
+            int Right = Exe.SymbolTable.Count - 1;
+
+            while (Left <= Right)
+            {
+                int Size = Right - Left;
+
+                int Middle = Left + (Size >> 1);
+
+                ElfSym Symbol = Exe.SymbolTable[Middle];
+
+                long EndPosition = Symbol.Value + Symbol.Size;
+
+                if ((ulong)Position >= (ulong)Symbol.Value && (ulong)Position < (ulong)EndPosition)
+                {
+                    Name = Symbol.Name;
+
+                    return true;
+                }
+
+                if ((ulong)Position < (ulong)Symbol.Value)
+                {
+                    Right = Middle - 1;
+                }
+                else
+                {
+                    Left = Middle + 1;
+                }
+            }
+
+            Name = null;
+
+            return false;
+        }
+
+        private Executable GetExecutable(long Position)
         {
             string Name = string.Empty;
 
             for (int Index = Executables.Count - 1; Index >= 0; Index--)
             {
-                if (Position >= Executables[Index].ImageBase)
+                if ((ulong)Position >= (ulong)Executables[Index].ImageBase)
                 {
-                    long Offset = Position - Executables[Index].ImageBase;
-
-                    Name = $"{Executables[Index].Name}:{Offset:x8}";
-
-                    break;
+                    return Executables[Index];
                 }
             }
 
-            return Name;
+            return null;
         }
 
         private void ThreadFinished(object sender, EventArgs e)

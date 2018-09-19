@@ -1,38 +1,24 @@
 using ChocolArm64.Decoder;
 using ChocolArm64.Events;
-using ChocolArm64.Instruction;
 using ChocolArm64.Memory;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Reflection.Emit;
 
 namespace ChocolArm64
 {
     public class ATranslator
     {
-        private ConcurrentDictionary<long, ATranslatedSub> CachedSubs;
-
-        private ConcurrentDictionary<long, string> SymbolTable;
+        private ATranslatorCache Cache;
 
         public event EventHandler<ACpuTraceEventArgs> CpuTrace;
 
         public bool EnableCpuTrace { get; set; }
 
-        public ATranslator(IReadOnlyDictionary<long, string> SymbolTable = null)
+        public ATranslator()
         {
-            CachedSubs = new ConcurrentDictionary<long, ATranslatedSub>();
-
-            if (SymbolTable != null)
-            {
-                this.SymbolTable = new ConcurrentDictionary<long, string>(SymbolTable);
-            }
-            else
-            {
-                this.SymbolTable = new ConcurrentDictionary<long, string>();
-            }
+            Cache = new ATranslatorCache();
         }
 
         internal void ExecuteSubroutine(AThread Thread, long Position)
@@ -70,15 +56,10 @@ namespace ChocolArm64
             {
                 if (EnableCpuTrace)
                 {
-                    if (!SymbolTable.TryGetValue(Position, out string SubName))
-                    {
-                        SubName = string.Empty;
-                    }
-
-                    CpuTrace?.Invoke(this, new ACpuTraceEventArgs(Position, SubName));
+                    CpuTrace?.Invoke(this, new ACpuTraceEventArgs(Position));
                 }
 
-                if (!CachedSubs.TryGetValue(Position, out ATranslatedSub Sub))
+                if (!Cache.TryGetSubroutine(Position, out ATranslatedSub Sub))
                 {
                     Sub = TranslateTier0(State, Memory, Position);
                 }
@@ -93,37 +74,20 @@ namespace ChocolArm64
             while (Position != 0 && State.Running);
         }
 
-        internal bool TryGetCachedSub(AOpCode OpCode, out ATranslatedSub Sub)
-        {
-            if (OpCode.Emitter != AInstEmit.Bl)
-            {
-                Sub = null;
-
-                return false;
-            }
-
-            return TryGetCachedSub(((AOpCodeBImmAl)OpCode).Imm, out Sub);
-        }
-
-        internal bool TryGetCachedSub(long Position, out ATranslatedSub Sub)
-        {
-            return CachedSubs.TryGetValue(Position, out Sub);
-        }
-
         internal bool HasCachedSub(long Position)
         {
-            return CachedSubs.ContainsKey(Position);
+            return Cache.HasSubroutine(Position);
         }
 
         private ATranslatedSub TranslateTier0(AThreadState State, AMemory Memory, long Position)
         {
-            ABlock Block = ADecoder.DecodeBasicBlock(State, this, Memory, Position);
+            ABlock Block = ADecoder.DecodeBasicBlock(State, Memory, Position);
 
             ABlock[] Graph = new ABlock[] { Block };
 
-            string SubName = GetSubName(Position);
+            string SubName = GetSubroutineName(Position);
 
-            AILEmitterCtx Context = new AILEmitterCtx(this, Graph, Block, SubName);
+            AILEmitterCtx Context = new AILEmitterCtx(Cache, Graph, Block, SubName);
 
             do
             {
@@ -135,7 +99,7 @@ namespace ChocolArm64
 
             Subroutine.SetType(ATranslatedSubType.SubTier0);
 
-            CachedSubs.AddOrUpdate(Position, Subroutine, (Key, OldVal) => Subroutine);
+            Cache.AddOrUpdate(Position, Subroutine, Block.OpCodes.Count);
 
             AOpCode LastOp = Block.GetLastOp();
 
@@ -144,13 +108,11 @@ namespace ChocolArm64
 
         private void TranslateTier1(AThreadState State, AMemory Memory, long Position)
         {
-            (ABlock[] Graph, ABlock Root) Cfg = ADecoder.DecodeSubroutine(State, this, Memory, Position);
+            (ABlock[] Graph, ABlock Root) = ADecoder.DecodeSubroutine(Cache, State, Memory, Position);
 
-            string SubName = GetSubName(Position);
+            string SubName = GetSubroutineName(Position);
 
-            PropagateName(Cfg.Graph, SubName);
-
-            AILEmitterCtx Context = new AILEmitterCtx(this, Cfg.Graph, Cfg.Root, SubName);
+            AILEmitterCtx Context = new AILEmitterCtx(Cache, Graph, Root, SubName);
 
             if (Context.CurrBlock.Position != Position)
             {
@@ -165,11 +127,11 @@ namespace ChocolArm64
 
             //Mark all methods that calls this method for ReJiting,
             //since we can now call it directly which is faster.
-            if (CachedSubs.TryGetValue(Position, out ATranslatedSub OldSub))
+            if (Cache.TryGetSubroutine(Position, out ATranslatedSub OldSub))
             {
                 foreach (long CallerPos in OldSub.GetCallerPositions())
                 {
-                    if (CachedSubs.TryGetValue(Position, out ATranslatedSub CallerSub))
+                    if (Cache.TryGetSubroutine(Position, out ATranslatedSub CallerSub))
                     {
                         CallerSub.MarkForReJit();
                     }
@@ -180,27 +142,24 @@ namespace ChocolArm64
 
             Subroutine.SetType(ATranslatedSubType.SubTier1);
 
-            CachedSubs.AddOrUpdate(Position, Subroutine, (Key, OldVal) => Subroutine);
+            Cache.AddOrUpdate(Position, Subroutine, GetGraphInstCount(Graph));
         }
 
-        private string GetSubName(long Position)
+        private string GetSubroutineName(long Position)
         {
-            return SymbolTable.GetOrAdd(Position, $"Sub{Position:x16}");
+            return $"Sub{Position:x16}";
         }
 
-        private void PropagateName(ABlock[] Graph, string Name)
+        private int GetGraphInstCount(ABlock[] Graph)
         {
+            int Size = 0;
+
             foreach (ABlock Block in Graph)
             {
-                AOpCode LastOp = Block.GetLastOp();
-
-                if (LastOp != null &&
-                   (LastOp.Emitter == AInstEmit.Bl ||
-                    LastOp.Emitter == AInstEmit.Blr))
-                {
-                    SymbolTable.TryAdd(LastOp.Position + 4, Name);
-                }
+                Size += Block.OpCodes.Count;
             }
+
+            return Size;
         }
     }
 }

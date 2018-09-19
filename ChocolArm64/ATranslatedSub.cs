@@ -13,6 +13,8 @@ namespace ChocolArm64
     {
         private delegate long AA64Subroutine(AThreadState Register, AMemory Memory);
 
+        private const int MinCallCountForReJit = 250;
+
         private AA64Subroutine ExecDelegate;
 
         public static int StateArgIdx  { get; private set; }
@@ -32,8 +34,6 @@ namespace ChocolArm64
 
         private bool NeedsReJit;
 
-        private int MinCallCountForReJit = 250;
-
         public ATranslatedSub(DynamicMethod Method, List<ARegister> Params)
         {
             if (Method == null)
@@ -46,8 +46,8 @@ namespace ChocolArm64
                 throw new ArgumentNullException(nameof(Params));
             }
 
-            this.Method  = Method;
-            this.Params  = Params.AsReadOnly();
+            this.Method = Method;
+            this.Params = Params.AsReadOnly();
 
             Callers = new HashSet<long>();
 

@@ -6,12 +6,9 @@ namespace ChocolArm64.Events
     {
         public long Position { get; private set; }
 
-        public string SubName { get; private set; }
-
-        public ACpuTraceEventArgs(long Position, string SubName)
+        public ACpuTraceEventArgs(long Position)
         {
             this.Position = Position;
-            this.SubName  = SubName;
         }
     }
 }
