@@ -28,7 +28,10 @@ namespace Ryujinx.HLE.HOS.Kernel
                 Thread.LastScheduledTicks = (uint)Environment.TickCount;
             }
 
-            ContextSwitchNeeded = true;
+            if (SelectedThread != CurrentThread)
+            {
+                ContextSwitchNeeded = true;
+            }
         }
 
         public void UpdateCurrentThread()
@@ -57,11 +60,6 @@ namespace Ryujinx.HLE.HOS.Kernel
 
                 CurrentThread.Context.Execute();
             }
-        }
-
-        public void RemoveThread(KThread Thread)
-        {
-            //TODO.
         }
     }
 }

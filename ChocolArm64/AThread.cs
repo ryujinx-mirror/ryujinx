@@ -46,8 +46,6 @@ namespace ChocolArm64
                 return false;
             }
 
-            Work.Name = "cpu_thread_" + Work.ManagedThreadId;
-
             Work.Start();
 
             return true;

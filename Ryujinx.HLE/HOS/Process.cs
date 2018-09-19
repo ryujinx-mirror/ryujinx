@@ -356,7 +356,10 @@ namespace Ryujinx.HLE.HOS
         {
             if (sender is AThread Thread)
             {
-                Threads.TryRemove(Thread.ThreadState.Tpidr, out KThread KernelThread);
+                if (Threads.TryRemove(Thread.ThreadState.Tpidr, out KThread KernelThread))
+                {
+                    Device.System.Scheduler.RemoveThread(KernelThread);
+                }
             }
 
             if (Threads.Count == 0)

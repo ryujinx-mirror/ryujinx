@@ -2,6 +2,7 @@ using ChocolArm64.Events;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 
 namespace ChocolArm64.State
@@ -13,6 +14,8 @@ namespace ChocolArm64.State
 
         internal const int ErgSizeLog2 = 4;
         internal const int DczSizeLog2 = 4;
+
+        private const int MinInstForCheck = 4000000;
 
         internal AExecutionMode ExecutionMode;
 
@@ -44,6 +47,8 @@ namespace ChocolArm64.State
         public int  Core    { get; set; }
 
         private bool Interrupted;
+
+        private int SyncCount;
 
         public long TpidrEl0 { get; set; }
         public long Tpidr    { get; set; }
@@ -101,13 +106,16 @@ namespace ChocolArm64.State
             TickCounter.Start();
         }
 
-        internal bool Synchronize()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal bool Synchronize(int BbWeight)
         {
-            if (Interrupted)
-            {
-                Interrupted = false;
+            //Firing a interrupt frequently is expensive, so we only
+            //do it after a given number of instructions has executed.
+            SyncCount += BbWeight;
 
-                OnInterrupt();
+            if (SyncCount >= MinInstForCheck)
+            {
+                CheckInterrupt();
             }
 
             return Running;
@@ -118,9 +126,17 @@ namespace ChocolArm64.State
             Interrupted = true;
         }
 
-        private void OnInterrupt()
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void CheckInterrupt()
         {
-            Interrupt?.Invoke(this, EventArgs.Empty);
+            SyncCount = 0;
+
+            if (Interrupted)
+            {
+                Interrupted = false;
+
+                Interrupt?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         internal void OnBreak(long Position, int Imm)

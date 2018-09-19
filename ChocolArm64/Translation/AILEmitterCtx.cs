@@ -123,6 +123,8 @@ namespace ChocolArm64.Translation
         {
             EmitLdarg(ATranslatedSub.StateArgIdx);
 
+            EmitLdc_I4(CurrBlock.OpCodes.Count);
+
             EmitPrivateCall(typeof(AThreadState), nameof(AThreadState.Synchronize));
 
             EmitLdc_I4(0);

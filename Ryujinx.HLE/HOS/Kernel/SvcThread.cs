@@ -81,8 +81,6 @@ namespace Ryujinx.HLE.HOS.Kernel
             CurrentThread.Exit();
 
             System.Scheduler.StopThread(CurrentThread);
-
-            System.Scheduler.CoreContexts[CurrentThread.CurrentCore].RemoveThread(CurrentThread);
         }
 
         private void SvcSleepThread(AThreadState ThreadState)
