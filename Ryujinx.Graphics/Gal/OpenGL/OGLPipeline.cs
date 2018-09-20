@@ -85,6 +85,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 CullFace = GalCullFace.Back,
 
                 DepthTestEnabled = false,
+                DepthWriteEnabled = true,
                 DepthFunc = GalComparisonOp.Less,
 
                 StencilTestEnabled = false,
@@ -138,19 +139,19 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             //Note: Uncomment SetFrontFace and SetCullFace when flipping issues are solved
 
-            //if (New.FrontFace != O.FrontFace)
+            //if (New.FrontFace != Old.FrontFace)
             //{
             //    GL.FrontFace(OGLEnumConverter.GetFrontFace(New.FrontFace));
             //}
 
-            //if (New.CullFaceEnabled != O.CullFaceEnabled)
+            //if (New.CullFaceEnabled != Old.CullFaceEnabled)
             //{
             //    Enable(EnableCap.CullFace, New.CullFaceEnabled);
             //}
 
             //if (New.CullFaceEnabled)
             //{
-            //    if (New.CullFace != O.CullFace)
+            //    if (New.CullFace != Old.CullFace)
             //    {
             //        GL.CullFace(OGLEnumConverter.GetCullFace(New.CullFace));
             //    }
@@ -159,6 +160,13 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             if (New.DepthTestEnabled != Old.DepthTestEnabled)
             {
                 Enable(EnableCap.DepthTest, New.DepthTestEnabled);
+            }
+
+            if (New.DepthWriteEnabled != Old.DepthWriteEnabled)
+            {
+                Rasterizer.DepthWriteEnabled = New.DepthWriteEnabled;
+
+                GL.DepthMask(New.DepthWriteEnabled);
             }
 
             if (New.DepthTestEnabled)

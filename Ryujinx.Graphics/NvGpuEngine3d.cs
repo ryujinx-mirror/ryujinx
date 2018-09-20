@@ -209,7 +209,7 @@ namespace Ryujinx.Graphics
 
         private void SetFrameBuffer(GalPipelineState State)
         {
-            State.FramebufferSrgb = (ReadRegister(NvGpuEngine3dReg.FrameBufferSrgb) & 1) != 0;
+            State.FramebufferSrgb = ReadRegisterBool(NvGpuEngine3dReg.FrameBufferSrgb);
 
             State.FlipX = GetFlipSign(NvGpuEngine3dReg.ViewportNScaleX);
             State.FlipY = GetFlipSign(NvGpuEngine3dReg.ViewportNScaleY);
@@ -227,7 +227,7 @@ namespace Ryujinx.Graphics
 
             GalMemoryLayout Layout = (GalMemoryLayout)((BlockDim >> 12) & 1); //?
 
-            bool ZetaEnable = (ReadRegister(NvGpuEngine3dReg.ZetaEnable) & 1) != 0;
+            bool ZetaEnable = ReadRegisterBool(NvGpuEngine3dReg.ZetaEnable);
 
             if (VA == 0 || ZetaFormat == 0 || !ZetaEnable)
             {
@@ -352,7 +352,7 @@ namespace Ryujinx.Graphics
 
         private void SetCullFace(GalPipelineState State)
         {
-            State.CullFaceEnabled = (ReadRegister(NvGpuEngine3dReg.CullFaceEnable) & 1) != 0;
+            State.CullFaceEnabled = ReadRegisterBool(NvGpuEngine3dReg.CullFaceEnable);
 
             if (State.CullFaceEnabled)
             {
@@ -362,7 +362,9 @@ namespace Ryujinx.Graphics
 
         private void SetDepth(GalPipelineState State)
         {
-            State.DepthTestEnabled = (ReadRegister(NvGpuEngine3dReg.DepthTestEnable) & 1) != 0;
+            State.DepthTestEnabled = ReadRegisterBool(NvGpuEngine3dReg.DepthTestEnable);
+
+            State.DepthWriteEnabled = ReadRegisterBool(NvGpuEngine3dReg.DepthWriteEnable);
 
             if (State.DepthTestEnabled)
             {
@@ -372,7 +374,7 @@ namespace Ryujinx.Graphics
 
         private void SetStencil(GalPipelineState State)
         {
-            State.StencilTestEnabled = (ReadRegister(NvGpuEngine3dReg.StencilEnable) & 1) != 0;
+            State.StencilTestEnabled = ReadRegisterBool(NvGpuEngine3dReg.StencilEnable);
 
             if (State.StencilTestEnabled)
             {
@@ -397,11 +399,11 @@ namespace Ryujinx.Graphics
         private void SetAlphaBlending(GalPipelineState State)
         {
             //TODO: Support independent blend properly.
-            State.BlendEnabled = (ReadRegister(NvGpuEngine3dReg.IBlendNEnable) & 1) != 0;
+            State.BlendEnabled = ReadRegisterBool(NvGpuEngine3dReg.IBlendNEnable);
 
             if (State.BlendEnabled)
             {
-                State.BlendSeparateAlpha = (ReadRegister(NvGpuEngine3dReg.IBlendNSeparateAlpha) & 1) != 0;
+                State.BlendSeparateAlpha = ReadRegisterBool(NvGpuEngine3dReg.IBlendNSeparateAlpha);
 
                 State.BlendEquationRgb   = (GalBlendEquation)ReadRegister(NvGpuEngine3dReg.IBlendNEquationRgb);
                 State.BlendFuncSrcRgb    =   (GalBlendFactor)ReadRegister(NvGpuEngine3dReg.IBlendNFuncSrcRgb);
@@ -414,7 +416,7 @@ namespace Ryujinx.Graphics
 
         private void SetPrimitiveRestart(GalPipelineState State)
         {
-            State.PrimitiveRestartEnabled = (ReadRegister(NvGpuEngine3dReg.PrimRestartEnable) & 1) != 0;
+            State.PrimitiveRestartEnabled = ReadRegisterBool(NvGpuEngine3dReg.PrimRestartEnable);
 
             if (State.PrimitiveRestartEnabled)
             {
@@ -424,7 +426,7 @@ namespace Ryujinx.Graphics
 
         private void SetRenderTargets()
         {
-            bool SeparateFragData = (ReadRegister(NvGpuEngine3dReg.RTSeparateFragData) & 1) != 0;
+            bool SeparateFragData = ReadRegisterBool(NvGpuEngine3dReg.RTSeparateFragData);
 
             if (SeparateFragData)
             {
@@ -635,7 +637,7 @@ namespace Ryujinx.Graphics
 
                 int VertexDivisor = ReadRegister(NvGpuEngine3dReg.VertexArrayNDivisor + Index * 4);
 
-                bool Instanced = (ReadRegister(NvGpuEngine3dReg.VertexArrayNInstance + Index) & 1) != 0;
+                bool Instanced = ReadRegisterBool(NvGpuEngine3dReg.VertexArrayNInstance + Index);
 
                 int Stride = Control & 0xfff;
 
@@ -843,6 +845,11 @@ namespace Ryujinx.Graphics
         private float ReadRegisterFloat(NvGpuEngine3dReg Reg)
         {
             return BitConverter.Int32BitsToSingle(ReadRegister(Reg));
+        }
+
+        private bool ReadRegisterBool(NvGpuEngine3dReg Reg)
+        {
+            return (ReadRegister(Reg) & 1) != 0;
         }
 
         private void WriteRegister(NvGpuEngine3dReg Reg, int Value)

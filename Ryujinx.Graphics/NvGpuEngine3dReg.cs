@@ -35,6 +35,7 @@ namespace Ryujinx.Graphics
         ZetaArrayMode        = 0x48c,
         DepthTestEnable      = 0x4b3,
         IBlendEnable         = 0x4b9,
+        DepthWriteEnable     = 0x4ba,
         DepthTestFunction    = 0x4c3,
         BlendSeparateAlpha   = 0x4cf,
         BlendEquationRgb     = 0x4d0,

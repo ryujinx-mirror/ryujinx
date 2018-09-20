@@ -5,6 +5,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 {
     class OGLRasterizer : IGalRasterizer
     {
+        public bool DepthWriteEnabled { set; private get; }
+
         private int[] VertexBuffers;
 
         private OGLCachedResource<int> VboCache;
@@ -28,6 +30,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             IboCache = new OGLCachedResource<int>(GL.DeleteBuffer);
 
             IndexBuffer = new IbInfo();
+
+            DepthWriteEnabled = true;
         }
 
         public void LockCaches()
@@ -49,6 +53,12 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             float Depth,
             int Stencil)
         {
+            //OpenGL needs glDepthMask to be enabled to clear it
+            if (!DepthWriteEnabled)
+            {
+                GL.DepthMask(true);
+            }
+
             GL.ColorMask(
                 Flags.HasFlag(GalClearBufferFlags.ColorRed),
                 Flags.HasFlag(GalClearBufferFlags.ColorGreen),
@@ -68,6 +78,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
 
             GL.ColorMask(true, true, true, true);
+
+            if (!DepthWriteEnabled)
+            {
+                GL.DepthMask(false);
+            }
         }
 
         public bool IsVboCached(long Key, long DataSize)

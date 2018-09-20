@@ -52,7 +52,7 @@ namespace Ryujinx.Graphics.Texture
                 { GalTextureFormat.G8R8,         GalImageFormat.G8R8         | Snorm | Unorm | Sint | Uint          },
                 { GalTextureFormat.R16,          GalImageFormat.R16          | Snorm | Unorm | Sint | Uint | Sfloat },
                 { GalTextureFormat.R8,           GalImageFormat.R8           | Snorm | Unorm | Sint | Uint          },
-                { GalTextureFormat.R16G16,       GalImageFormat.R16G16       | Snorm                                },
+                { GalTextureFormat.R16G16,       GalImageFormat.R16G16       | Snorm                       | Sfloat },
                 { GalTextureFormat.R32,          GalImageFormat.R32                          | Sint | Uint | Sfloat },
                 { GalTextureFormat.A4B4G4R4,     GalImageFormat.A4B4G4R4             | Unorm                        },
                 { GalTextureFormat.A1B5G5R5,     GalImageFormat.A1R5G5B5             | Unorm                        },

@@ -34,6 +34,7 @@
         public GalCullFace CullFace;
 
         public bool DepthTestEnabled;
+        public bool DepthWriteEnabled;
         public GalComparisonOp DepthFunc;
 
         public bool StencilTestEnabled;
