@@ -1260,7 +1260,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int Unknown0 = Context.RequestData.ReadInt32();
 
-            Context.ResponseData.Write((byte)0x1); //FullKeyController is always connected ?
+            Context.ResponseData.Write(true); //FullKeyController is always connected ?
 
             Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. Unknown0: {Unknown0} - Connected: true");
 
@@ -1272,7 +1272,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int NpadId = Context.RequestData.ReadInt32();
 
-            Context.ResponseData.Write((byte)0x1); //Npad always got a battery ?
+            Context.ResponseData.Write(true); //Npad always got a battery ?
 
             Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - HasBattery: true");
 
@@ -1284,8 +1284,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int NpadId = Context.RequestData.ReadInt32();
 
-            Context.ResponseData.Write((byte)0x1); //Npad always got a left battery ?
-            Context.ResponseData.Write((byte)0x1); //Npad always got a right battery ?
+            Context.ResponseData.Write(true); //Npad always got a left battery ?
+            Context.ResponseData.Write(true); //Npad always got a right battery ?
 
             Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - HasLeftBattery: true - HasRightBattery: true");
 
