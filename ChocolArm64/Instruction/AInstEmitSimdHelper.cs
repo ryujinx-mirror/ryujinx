@@ -813,6 +813,42 @@ namespace ChocolArm64.Instruction
             }
         }
 
+        public static void EmitVectorPairwiseOpF(AILEmitterCtx Context, Action Emit)
+        {
+            AOpCodeSimdReg Op = (AOpCodeSimdReg)Context.CurrOp;
+
+            int SizeF = Op.Size & 1;
+
+            int Words = Op.GetBitsCount() >> 4;
+            int Pairs = Words >> SizeF + 2;
+
+            for (int Index = 0; Index < Pairs; Index++)
+            {
+                int Idx = Index << 1;
+
+                EmitVectorExtractF(Context, Op.Rn, Idx,     SizeF);
+                EmitVectorExtractF(Context, Op.Rn, Idx + 1, SizeF);
+
+                Emit();
+
+                EmitVectorExtractF(Context, Op.Rm, Idx,     SizeF);
+                EmitVectorExtractF(Context, Op.Rm, Idx + 1, SizeF);
+
+                Emit();
+
+                EmitVectorInsertTmpF(Context, Pairs + Index, SizeF);
+                EmitVectorInsertTmpF(Context,         Index, SizeF);
+            }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
         [Flags]
         public enum SaturatingFlags
         {
