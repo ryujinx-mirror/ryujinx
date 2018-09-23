@@ -32,14 +32,14 @@ namespace Ryujinx.HLE.HOS.SystemState
         {
             Messages.Enqueue(Message);
 
-            MessageEvent.Signal();
+            MessageEvent.ReadableEvent.Signal();
         }
 
         public bool TryDequeueMessage(out MessageInfo Message)
         {
             if (Messages.Count < 2)
             {
-                MessageEvent.Reset();
+                MessageEvent.ReadableEvent.Clear();
             }
 
             return Messages.TryDequeue(out Message);

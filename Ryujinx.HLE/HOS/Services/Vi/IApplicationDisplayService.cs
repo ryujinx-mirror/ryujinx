@@ -1,6 +1,8 @@
 using ChocolArm64.Memory;
 using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel;
 using System.Collections.Generic;
+using System;
 using System.IO;
 using System.Text;
 
@@ -178,7 +180,10 @@ namespace Ryujinx.HLE.HOS.Services.Vi
         {
             string Name = GetDisplayName(Context);
 
-            int Handle = Context.Process.HandleTable.OpenHandle(Context.Device.System.VsyncEvent);
+            if (Context.Process.HandleTable.GenerateHandle(Context.Device.System.VsyncEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 

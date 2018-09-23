@@ -51,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return 0;
             }
 
-            KThread MutexOwner = Process.HandleTable.GetData<KThread>(OwnerHandle);
+            KThread MutexOwner = Process.HandleTable.GetObject<KThread>(OwnerHandle);
 
             if (MutexOwner == null)
             {
@@ -282,7 +282,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             MutexValue &= ~HasListenersMask;
 
-            KThread MutexOwner = Process.HandleTable.GetData<KThread>(MutexValue);
+            KThread MutexOwner = Process.HandleTable.GetObject<KThread>(MutexValue);
 
             if (MutexOwner != null)
             {

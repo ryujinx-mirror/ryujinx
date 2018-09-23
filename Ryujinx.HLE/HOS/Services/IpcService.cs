@@ -132,7 +132,10 @@ namespace Ryujinx.HLE.HOS.Services
             {
                 KSession Session = new KSession(Obj, Context.Session.ServiceName);
 
-                int Handle = Context.Process.HandleTable.OpenHandle(Session);
+                if (Context.Process.HandleTable.GenerateHandle(Session, out int Handle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
 
                 Context.Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
             }
@@ -146,7 +149,7 @@ namespace Ryujinx.HLE.HOS.Services
             {
                 int Handle = Context.Request.HandleDesc.ToMove[Index];
 
-                KSession Session = Context.Process.HandleTable.GetData<KSession>(Handle);
+                KSession Session = Context.Process.HandleTable.GetObject<KSession>(Handle);
 
                 return Session?.Service is T ? (T)Session.Service : null;
             }

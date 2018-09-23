@@ -72,7 +72,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         private void AudioCallback()
         {
-            UpdateEvent.Signal();
+            UpdateEvent.ReadableEvent.Signal();
         }
 
         private static T[] CreateArray<T>(int Size) where T : new()
@@ -218,7 +218,10 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         public long QuerySystemEvent(ServiceCtx Context)
         {
-            int Handle = Context.Process.HandleTable.OpenHandle(UpdateEvent);
+            if (Context.Process.HandleTable.GenerateHandle(UpdateEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 

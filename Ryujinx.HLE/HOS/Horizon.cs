@@ -71,6 +71,8 @@ namespace Ryujinx.HLE.HOS
 
             Withholders = new LinkedList<KThread>();
 
+            Scheduler.StartAutoPreemptionThread();
+
             if (!Device.Memory.Allocator.TryAllocate(HidSize,  out long HidPA) ||
                 !Device.Memory.Allocator.TryAllocate(FontSize, out long FontPA))
             {
@@ -212,7 +214,7 @@ namespace Ryujinx.HLE.HOS
             }
 
             MainNca.SetBaseNca(PatchNca);
-            
+
             if (ControlNca != null)
             {
                 ReadControlData(ControlNca);
@@ -466,7 +468,7 @@ namespace Ryujinx.HLE.HOS
 
         public void SignalVsync()
         {
-            VsyncEvent.Signal();
+            VsyncEvent.ReadableEvent.Signal();
         }
 
         private Process MakeProcess(Npdm MetaData = null)

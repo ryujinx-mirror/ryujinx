@@ -53,7 +53,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         {
             int Handle = (int)ThreadState.X0;
 
-            KThread Thread = Process.HandleTable.GetData<KThread>(Handle);
+            KThread Thread = Process.HandleTable.GetObject<KThread>(Handle);
 
             if (Thread != null)
             {
@@ -112,7 +112,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         {
             int Handle = (int)ThreadState.X1;
 
-            KThread Thread = GetThread(ThreadState.Tpidr, Handle);
+            KThread Thread = Process.HandleTable.GetKThread(Handle);
 
             if (Thread != null)
             {
@@ -138,7 +138,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             //TODO: NPDM check.
 
-            KThread Thread = GetThread(ThreadState.Tpidr, Handle);
+            KThread Thread = Process.HandleTable.GetKThread(Handle);
 
             if (Thread == null)
             {
@@ -160,7 +160,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             Device.Log.PrintDebug(LogClass.KernelSvc, "Handle = 0x" + Handle.ToString("x8"));
 
-            KThread Thread = GetThread(ThreadState.Tpidr, Handle);
+            KThread Thread = Process.HandleTable.GetKThread(Handle);
 
             if (Thread != null)
             {
@@ -178,12 +178,12 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         private void SvcSetThreadCoreMask(AThreadState ThreadState)
         {
-            int  ThreadHandle  =  (int)ThreadState.X0;
+            int  Handle        =  (int)ThreadState.X0;
             int  PrefferedCore =  (int)ThreadState.X1;
             long AffinityMask  = (long)ThreadState.X2;
 
             Device.Log.PrintDebug(LogClass.KernelSvc,
-                "ThreadHandle = 0x"  + ThreadHandle .ToString("x8") + ", " +
+                "Handle = 0x"        + Handle       .ToString("x8") + ", " +
                 "PrefferedCore = 0x" + PrefferedCore.ToString("x8") + ", " +
                 "AffinityMask = 0x"  + AffinityMask .ToString("x16"));
 
@@ -219,11 +219,11 @@ namespace Ryujinx.HLE.HOS.Kernel
                 }
             }
 
-            KThread Thread = GetThread(ThreadState.Tpidr, ThreadHandle);
+            KThread Thread = Process.HandleTable.GetKThread(Handle);
 
             if (Thread == null)
             {
-                Device.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{ThreadHandle:x8}!");
+                Device.Log.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
@@ -249,7 +249,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         {
             int Handle = (int)ThreadState.X1;
 
-            KThread Thread = GetThread(ThreadState.Tpidr, Handle);
+            KThread Thread = Process.HandleTable.GetKThread(Handle);
 
             if (Thread != null)
             {
@@ -269,7 +269,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             int  Handle = (int)ThreadState.X0;
             bool Pause  = (int)ThreadState.X1 == 1;
 
-            KThread Thread = Process.HandleTable.GetData<KThread>(Handle);
+            KThread Thread = Process.HandleTable.GetObject<KThread>(Handle);
 
             if (Thread == null)
             {
@@ -304,7 +304,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             long Position = (long)ThreadState.X0;
             int  Handle   =  (int)ThreadState.X1;
 
-            KThread Thread = Process.HandleTable.GetData<KThread>(Handle);
+            KThread Thread = Process.HandleTable.GetObject<KThread>(Handle);
 
             if (Thread == null)
             {

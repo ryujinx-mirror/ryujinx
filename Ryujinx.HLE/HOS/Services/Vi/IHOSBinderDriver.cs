@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
             BinderEvent = new KEvent(System);
 
-            BinderEvent.Signal();
+            BinderEvent.ReadableEvent.Signal();
 
             Flinger = new NvFlinger(Renderer, BinderEvent);
         }
@@ -77,7 +77,10 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             int  Id  = Context.RequestData.ReadInt32();
             uint Unk = Context.RequestData.ReadUInt32();
 
-            int Handle = Context.Process.HandleTable.OpenHandle(BinderEvent);
+            if (Context.Process.HandleTable.GenerateHandle(BinderEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
 

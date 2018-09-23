@@ -39,9 +39,6 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private const uint SelfThreadHandle  = 0xffff8000;
-        private const uint SelfProcessHandle = 0xffff8001;
-
         private static Random Rng;
 
         public SvcHandler(Switch Device, Process Process)
@@ -63,12 +60,13 @@ namespace Ryujinx.HLE.HOS.Kernel
                 { 0x0e, SvcGetThreadCoreMask             },
                 { 0x0f, SvcSetThreadCoreMask             },
                 { 0x10, SvcGetCurrentProcessorNumber     },
-                { 0x12, SvcClearEvent                    },
+                { 0x11, SignalEvent64                    },
+                { 0x12, ClearEvent64                     },
                 { 0x13, SvcMapSharedMemory               },
                 { 0x14, SvcUnmapSharedMemory             },
                 { 0x15, SvcCreateTransferMemory          },
                 { 0x16, SvcCloseHandle                   },
-                { 0x17, SvcResetSignal                   },
+                { 0x17, ResetSignal64                    },
                 { 0x18, SvcWaitSynchronization           },
                 { 0x19, SvcCancelSynchronization         },
                 { 0x1a, SvcArbitrateLock                 },
@@ -88,7 +86,8 @@ namespace Ryujinx.HLE.HOS.Kernel
                 { 0x32, SvcSetThreadActivity             },
                 { 0x33, SvcGetThreadContext3             },
                 { 0x34, SvcWaitForAddress                },
-                { 0x35, SvcSignalToAddress               }
+                { 0x35, SvcSignalToAddress               },
+                { 0x45, CreateEvent64                    }
             };
 
             this.Device  = Device;
@@ -121,18 +120,6 @@ namespace Ryujinx.HLE.HOS.Kernel
                 Process.PrintStackTrace(ThreadState);
 
                 throw new NotImplementedException($"0x{e.Id:x4}");
-            }
-        }
-
-        private KThread GetThread(long Tpidr, int Handle)
-        {
-            if ((uint)Handle == SelfThreadHandle)
-            {
-                return Process.GetThread(Tpidr);
-            }
-            else
-            {
-                return Process.HandleTable.GetData<KThread>(Handle);
             }
         }
     }

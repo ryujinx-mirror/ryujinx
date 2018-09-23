@@ -1,5 +1,6 @@
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
@@ -24,7 +25,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         public long GetSharedMemoryHandle(ServiceCtx Context)
         {
-            int Handle = Context.Process.HandleTable.OpenHandle(HidSharedMem);
+            if (Context.Process.HandleTable.GenerateHandle(HidSharedMem, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 

@@ -1,5 +1,6 @@
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Sm
@@ -59,7 +60,10 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             KSession Session = new KSession(ServiceFactory.MakeService(Context.Device.System, Name), Name);
 
-            int Handle = Context.Process.HandleTable.OpenHandle(Session);
+            if (Context.Process.HandleTable.GenerateHandle(Session, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
 

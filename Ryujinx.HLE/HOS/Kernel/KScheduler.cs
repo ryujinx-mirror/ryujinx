@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Kernel
 {
@@ -35,12 +34,6 @@ namespace Ryujinx.HLE.HOS.Kernel
             {
                 CoreContexts[Core] = new KCoreContext(this, CoreManager);
             }
-
-            Thread PreemptionThread = new Thread(PreemptCurrentThread);
-
-            KeepPreempting = true;
-
-            PreemptionThread.Start();
         }
 
         private void PreemptThreads()

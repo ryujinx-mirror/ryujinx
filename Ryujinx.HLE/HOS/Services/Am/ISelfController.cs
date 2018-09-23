@@ -1,6 +1,7 @@
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.Logging;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Am
@@ -57,9 +58,12 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long GetLibraryAppletLaunchableEvent(ServiceCtx Context)
         {
-            LaunchableEvent.Signal();
+            LaunchableEvent.ReadableEvent.Signal();
 
-            int Handle = Context.Process.HandleTable.OpenHandle(LaunchableEvent);
+            if (Context.Process.HandleTable.GenerateHandle(LaunchableEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 

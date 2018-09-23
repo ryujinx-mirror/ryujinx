@@ -2,6 +2,7 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Logging;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -35,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             SystemEvent = new KEvent(System);
 
             //TODO: We shouldn't be signaling this here.
-            SystemEvent.Signal();
+            SystemEvent.ReadableEvent.Signal();
         }
 
         public long ListAudioDeviceName(ServiceCtx Context)
@@ -107,7 +108,10 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         public long QueryAudioDeviceSystemEvent(ServiceCtx Context)
         {
-            int Handle = Context.Process.HandleTable.OpenHandle(SystemEvent);
+            if (Context.Process.HandleTable.GenerateHandle(SystemEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
@@ -200,7 +204,10 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         public long QueryAudioDeviceInputEvent(ServiceCtx Context)
         {
-            int Handle = Context.Process.HandleTable.OpenHandle(SystemEvent);
+            if (Context.Process.HandleTable.GenerateHandle(SystemEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
@@ -211,7 +218,10 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         public long QueryAudioDeviceOutputEvent(ServiceCtx Context)
         {
-            int Handle = Context.Process.HandleTable.OpenHandle(SystemEvent);
+            if (Context.Process.HandleTable.GenerateHandle(SystemEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 

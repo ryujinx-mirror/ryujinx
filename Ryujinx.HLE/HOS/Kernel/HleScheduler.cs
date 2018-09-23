@@ -15,6 +15,15 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         private bool KeepPreempting;
 
+        public void StartAutoPreemptionThread()
+        {
+            Thread PreemptionThread = new Thread(PreemptCurrentThread);
+
+            KeepPreempting = true;
+
+            PreemptionThread.Start();
+        }
+
         public void ContextSwitch()
         {
             lock (CoreContexts)

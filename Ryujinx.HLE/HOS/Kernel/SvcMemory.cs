@@ -276,7 +276,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
-            KSharedMemory SharedMemory = Process.HandleTable.GetData<KSharedMemory>(Handle);
+            KSharedMemory SharedMemory = Process.HandleTable.GetObject<KSharedMemory>(Handle);
 
             if (SharedMemory == null)
             {
@@ -348,7 +348,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
-            KSharedMemory SharedMemory = Process.HandleTable.GetData<KSharedMemory>(Handle);
+            KSharedMemory SharedMemory = Process.HandleTable.GetObject<KSharedMemory>(Handle);
 
             if (SharedMemory == null)
             {
@@ -425,9 +425,9 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             KTransferMemory TransferMemory = new KTransferMemory(Position, Size);
 
-            int Handle = Process.HandleTable.OpenHandle(TransferMemory);
+            KernelResult Result = Process.HandleTable.GenerateHandle(TransferMemory, out int Handle);
 
-            ThreadState.X0 = 0;
+            ThreadState.X0 = (uint)Result;
             ThreadState.X1 = (ulong)Handle;
         }
 

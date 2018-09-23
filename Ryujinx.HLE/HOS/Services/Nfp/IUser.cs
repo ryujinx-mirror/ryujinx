@@ -2,6 +2,7 @@
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.Input;
 using Ryujinx.HLE.Logging;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Nfp
@@ -55,7 +56,10 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
         {
             Context.Device.Log.PrintStub(LogClass.ServiceNfp, "Stubbed.");
 
-            int Handle = Context.Process.HandleTable.OpenHandle(ActivateEvent);
+            if (Context.Process.HandleTable.GenerateHandle(ActivateEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);;
 
@@ -66,7 +70,10 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
         {
             Context.Device.Log.PrintStub(LogClass.ServiceNfp, "Stubbed.");
 
-            int Handle = Context.Process.HandleTable.OpenHandle(DeactivateEvent);
+            if (Context.Process.HandleTable.GenerateHandle(DeactivateEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
@@ -104,7 +111,10 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
         {
             Context.Device.Log.PrintStub(LogClass.ServiceNfp, "Stubbed.");
 
-            int Handle = Context.Process.HandleTable.OpenHandle(AvailabilityChangeEvent);
+            if (Context.Process.HandleTable.GenerateHandle(AvailabilityChangeEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 

@@ -1,5 +1,6 @@
 using ChocolArm64.State;
 using Ryujinx.HLE.Logging;
+using System.Collections.Generic;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
 
@@ -25,22 +26,27 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
-            KSynchronizationObject[] SyncObjs = new KSynchronizationObject[HandlesCount];
+            List<KSynchronizationObject> SyncObjs = new List<KSynchronizationObject>();
 
             for (int Index = 0; Index < HandlesCount; Index++)
             {
                 int Handle = Memory.ReadInt32(HandlesPtr + Index * 4);
 
-                KSynchronizationObject SyncObj = Process.HandleTable.GetData<KSynchronizationObject>(Handle);
+                KSynchronizationObject SyncObj = Process.HandleTable.GetObject<KSynchronizationObject>(Handle);
 
-                SyncObjs[Index] = SyncObj;
+                if (SyncObj == null)
+                {
+                    break;
+                }
+
+                SyncObjs.Add(SyncObj);
             }
 
             int HndIndex = (int)ThreadState.X1;
 
             ulong High = ThreadState.X1 & (0xffffffffUL << 32);
 
-            long Result = System.Synchronization.WaitFor(SyncObjs, Timeout, ref HndIndex);
+            long Result = System.Synchronization.WaitFor(SyncObjs.ToArray(), Timeout, ref HndIndex);
 
             if (Result != 0)
             {
@@ -65,7 +71,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             Device.Log.PrintDebug(LogClass.KernelSvc, "ThreadHandle = 0x" + ThreadHandle.ToString("x8"));
 
-            KThread Thread = Process.HandleTable.GetData<KThread>(ThreadHandle);
+            KThread Thread = Process.HandleTable.GetKThread(ThreadHandle);
 
             if (Thread == null)
             {

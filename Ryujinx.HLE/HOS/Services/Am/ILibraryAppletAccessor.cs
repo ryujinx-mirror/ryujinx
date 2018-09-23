@@ -1,6 +1,7 @@
 ﻿using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.Logging;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Am
@@ -29,9 +30,12 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long GetAppletStateChangedEvent(ServiceCtx Context)
         {
-            StateChangedEvent.Signal();
+            StateChangedEvent.ReadableEvent.Signal();
 
-            int Handle = Context.Process.HandleTable.OpenHandle(StateChangedEvent);
+            if (Context.Process.HandleTable.GenerateHandle(StateChangedEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 

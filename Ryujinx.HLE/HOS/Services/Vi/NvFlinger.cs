@@ -338,7 +338,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
         {
             BufferQueue[Slot].State = BufferState.Free;
 
-            BinderEvent.Signal();
+            BinderEvent.ReadableEvent.Signal();
 
             WaitBufferFree.Set();
         }

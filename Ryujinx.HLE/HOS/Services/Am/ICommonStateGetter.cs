@@ -1,6 +1,7 @@
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.Logging;
+using System;
 using System.Collections.Generic;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
@@ -36,7 +37,10 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             KEvent Event = Context.Process.AppletState.MessageEvent;
 
-            int Handle = Context.Process.HandleTable.OpenHandle(Event);
+            if (Context.Process.HandleTable.GenerateHandle(Event.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
@@ -103,7 +107,10 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long GetDefaultDisplayResolutionChangeEvent(ServiceCtx Context)
         {
-            int Handle = Context.Process.HandleTable.OpenHandle(DisplayResolutionChangeEvent);
+            if (Context.Process.HandleTable.GenerateHandle(DisplayResolutionChangeEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 

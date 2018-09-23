@@ -123,7 +123,10 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             int EventId = Context.RequestData.ReadInt32();
 
             //TODO: Use Fd/EventId, different channels have different events.
-            int Handle = Context.Process.HandleTable.OpenHandle(Event);
+            if (Context.Process.HandleTable.GenerateHandle(Event.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 

@@ -73,7 +73,10 @@ namespace Ryujinx.HLE.HOS.Ipc
                         {
                             int Unknown = ReqReader.ReadInt32();
 
-                            int Handle = Process.HandleTable.OpenHandle(Session);
+                            if (Process.HandleTable.GenerateHandle(Session, out int Handle) != KernelResult.Success)
+                            {
+                                throw new InvalidOperationException("Out of handles!");
+                            }
 
                             Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
 

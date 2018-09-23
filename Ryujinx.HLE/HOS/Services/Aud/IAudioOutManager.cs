@@ -150,7 +150,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             ReleaseCallback Callback = () =>
             {
-                ReleaseEvent.Signal();
+                ReleaseEvent.ReadableEvent.Signal();
             };
 
             IAalOutput AudioOut = Context.Device.AudioOut;

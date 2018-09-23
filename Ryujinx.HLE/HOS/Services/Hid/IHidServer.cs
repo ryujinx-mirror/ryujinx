@@ -2,7 +2,6 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.Input;
 using Ryujinx.HLE.Logging;
-using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
 
@@ -219,7 +218,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long XpadId = Context.RequestData.ReadInt64();
 
-            XpadIdEventHandle = Context.Process.HandleTable.OpenHandle(XpadIdEvent);
+            if (Context.Process.HandleTable.GenerateHandle(XpadIdEvent, out XpadIdEventHandle) == 0)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(XpadIdEventHandle);
 
@@ -411,7 +413,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             SixAxisSensorFusionEnabled = Context.RequestData.ReadBoolean();
             int  SixAxisSensorHandle   = Context.RequestData.ReadInt32();
             long AppletResourceUserId  = Context.RequestData.ReadInt64();
-            
+
             Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
                                                               $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
                                                               $"SixAxisSensorFusionEnabled: {SixAxisSensorFusionEnabled}");
@@ -619,7 +621,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         // IsSixAxisSensorAtRest(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId) -> bool IsAsRest
         public long IsSixAxisSensorAtRest(ServiceCtx Context)
-        { 
+        {
             int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
@@ -712,7 +714,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  NpadId               = Context.RequestData.ReadInt32();
             long NpadStyleSet         = Context.RequestData.ReadInt64();
 
-            int Handle = Context.Process.HandleTable.OpenHandle(NpadStyleSetUpdateEvent);
+            if (Context.Process.HandleTable.GenerateHandle(NpadStyleSetUpdateEvent, out int Handle) == 0)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
@@ -1135,7 +1140,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int  ConsoleSixAxisSensorHandle = Context.RequestData.ReadInt32();
             long AppletResourceUserId       = Context.RequestData.ReadInt64();
-            
+
             Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
                                                               $"ConsoleSixAxisSensorHandle: {ConsoleSixAxisSensorHandle}");
 
@@ -1351,7 +1356,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            int Handle = Context.Process.HandleTable.OpenHandle(PalmaOperationCompleteEvent);
+            if (Context.Process.HandleTable.GenerateHandle(PalmaOperationCompleteEvent, out int Handle) == 0)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
@@ -1393,7 +1401,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  PalmaConnectionHandle = Context.RequestData.ReadInt32();
             long FrModeType            = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " + 
+            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
                                                               $"FrModeType: {FrModeType}");
 
             return 0;

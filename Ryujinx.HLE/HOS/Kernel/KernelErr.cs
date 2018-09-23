@@ -6,6 +6,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         public const int InvalidSize       = 101;
         public const int InvalidAddress    = 102;
         public const int OutOfMemory       = 104;
+        public const int HandleTableFull   = 105;
         public const int NoAccessPerm      = 106;
         public const int InvalidPermission = 108;
         public const int InvalidMemRange   = 110;

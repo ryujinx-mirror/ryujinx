@@ -67,7 +67,10 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioOut
 
         public long RegisterBufferEvent(ServiceCtx Context)
         {
-            int Handle = Context.Process.HandleTable.OpenHandle(ReleaseEvent);
+            if (Context.Process.HandleTable.GenerateHandle(ReleaseEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
