@@ -225,7 +225,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalTextureWrap.Clamp:          return TextureWrapMode.Clamp;
             }
 
-            if (OGLExtension.HasTextureMirrorClamp())
+            if (OGLExtension.TextureMirrorClamp)
             {
                 switch (Wrap)
                 {

@@ -100,7 +100,10 @@ namespace Ryujinx.Graphics
             SetAlphaBlending(State);
             SetPrimitiveRestart(State);
 
-            SetFrameBuffer(Vmm, 0);
+            for (int FbIndex = 0; FbIndex < 8; FbIndex++)
+            {
+                SetFrameBuffer(Vmm, FbIndex);
+            }
 
             SetZeta(Vmm);
 
@@ -154,6 +157,10 @@ namespace Ryujinx.Graphics
 
             SetZeta(Vmm);
 
+            SetRenderTargets();
+
+            Gpu.Renderer.RenderTarget.Bind();
+
             Gpu.Renderer.Rasterizer.ClearBuffers(
                 Flags,
                 FbIndex,
@@ -204,7 +211,7 @@ namespace Ryujinx.Graphics
 
             Gpu.ResourceManager.SendColorBuffer(Vmm, Key, FbIndex, Image);
 
-            Gpu.Renderer.RenderTarget.SetViewport(VpX, VpY, VpW, VpH);
+            Gpu.Renderer.RenderTarget.SetViewport(FbIndex, VpX, VpY, VpW, VpH);
         }
 
         private void SetFrameBuffer(GalPipelineState State)
@@ -426,14 +433,15 @@ namespace Ryujinx.Graphics
 
         private void SetRenderTargets()
         {
-            bool SeparateFragData = ReadRegisterBool(NvGpuEngine3dReg.RTSeparateFragData);
+            //Commercial games do not seem to 
+            //bool SeparateFragData = ReadRegisterBool(NvGpuEngine3dReg.RTSeparateFragData);
 
-            if (SeparateFragData)
+            uint Control = (uint)(ReadRegister(NvGpuEngine3dReg.RTControl));
+
+            uint Count = Control & 0xf;
+
+            if (Count > 0)
             {
-                uint Control = (uint)(ReadRegister(NvGpuEngine3dReg.RTControl));
-
-                uint Count = Control & 0xf;
-
                 int[] Map = new int[Count];
 
                 for (int i = 0; i < Count; i++)
@@ -701,6 +709,8 @@ namespace Ryujinx.Graphics
             State.Instance = CurrentInstance;
 
             Gpu.Renderer.Pipeline.Bind(State);
+
+            Gpu.Renderer.RenderTarget.Bind();
 
             if (IndexCount != 0)
             {

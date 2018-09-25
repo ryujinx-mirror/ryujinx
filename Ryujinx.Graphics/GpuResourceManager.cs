@@ -46,7 +46,7 @@ namespace Ryujinx.Graphics
                 Gpu.Renderer.Texture.Create(Position, (int)Size, NewImage);
             }
 
-            Gpu.Renderer.RenderTarget.BindColor(Position, Attachment, NewImage);
+            Gpu.Renderer.RenderTarget.BindColor(Position, Attachment);
         }
 
         public void SendZetaBuffer(NvGpuVmm Vmm, long Position, GalImage NewImage)
@@ -60,7 +60,7 @@ namespace Ryujinx.Graphics
                 Gpu.Renderer.Texture.Create(Position, (int)Size, NewImage);
             }
 
-            Gpu.Renderer.RenderTarget.BindZeta(Position, NewImage);
+            Gpu.Renderer.RenderTarget.BindZeta(Position);
         }
 
         public void SendTexture(NvGpuVmm Vmm, long Position, GalImage NewImage, int TexIndex = -1)

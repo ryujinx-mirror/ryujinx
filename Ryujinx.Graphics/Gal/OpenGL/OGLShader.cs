@@ -133,7 +133,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 //Enhanced layouts are required for Geometry shaders
                 //skip this stage if current driver has no ARB_enhanced_layouts
-                if (!OGLExtension.HasEnhancedLayouts())
+                if (!OGLExtension.EnhancedLayouts)
                 {
                     return;
                 }

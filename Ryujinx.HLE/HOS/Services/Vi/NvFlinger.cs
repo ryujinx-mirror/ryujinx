@@ -328,7 +328,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
                 Context.Device.Gpu.ResourceManager.SendTexture(Vmm, FbAddr, Image);
 
                 Renderer.RenderTarget.SetTransform(FlipX, FlipY, Top, Left, Right, Bottom);
-                Renderer.RenderTarget.Set(FbAddr);
+                Renderer.RenderTarget.Present(FbAddr);
 
                 ReleaseBuffer(Slot);
             });
