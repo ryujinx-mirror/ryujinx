@@ -3,6 +3,8 @@ using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
 using System.Reflection.Emit;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 using static ChocolArm64.Instruction.AInstEmitSimdHelper;
 
@@ -14,11 +16,48 @@ namespace ChocolArm64.Instruction
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
-            EmitVectorExtractF(Context, Op.Rn, 0, Op.Size);
+            if (AOptimizations.UseSse2)
+            {
+                if (Op.Size == 1 && Op.Opc == 0)
+                {
+                    //Double -> Single.
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleZero));
 
-            EmitFloatCast(Context, Op.Opc);
+                    EmitLdvecWithCastToDouble(Context, Op.Rn);
 
-            EmitScalarSetF(Context, Op.Rd, Op.Opc);
+                    Type[] Types = new Type[] { typeof(Vector128<float>), typeof(Vector128<double>) };
+
+                    Context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertScalarToVector128Single), Types));
+
+                    Context.EmitStvec(Op.Rd);
+                }
+                else if (Op.Size == 0 && Op.Opc == 1)
+                {
+                    //Single -> Double.
+                    AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorDoubleZero));
+
+                    Context.EmitLdvec(Op.Rn);
+
+                    Type[] Types = new Type[] { typeof(Vector128<double>), typeof(Vector128<float>) };
+
+                    Context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertScalarToVector128Double), Types));
+
+                    EmitStvecWithCastFromDouble(Context, Op.Rd);
+                }
+                else
+                {
+                    //Invalid encoding.
+                    throw new InvalidOperationException();
+                }
+            }
+            else
+            {
+                EmitVectorExtractF(Context, Op.Rn, 0, Op.Size);
+
+                EmitFloatCast(Context, Op.Opc);
+
+                EmitScalarSetF(Context, Op.Rd, Op.Opc);
+            }
         }
 
         public static void Fcvtas_Gp(AILEmitterCtx Context)

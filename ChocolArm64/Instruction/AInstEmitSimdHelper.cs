@@ -4,7 +4,6 @@ using ChocolArm64.Translation;
 using System;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
@@ -12,6 +11,38 @@ namespace ChocolArm64.Instruction
 {
     static class AInstEmitSimdHelper
     {
+        public static readonly Type[] IntTypesPerSizeLog2 = new Type[]
+        {
+            typeof(sbyte),
+            typeof(short),
+            typeof(int),
+            typeof(long)
+        };
+
+        public static readonly Type[] UIntTypesPerSizeLog2 = new Type[]
+        {
+            typeof(byte),
+            typeof(ushort),
+            typeof(uint),
+            typeof(ulong)
+        };
+
+        public static readonly Type[] VectorIntTypesPerSizeLog2 = new Type[]
+        {
+            typeof(Vector128<sbyte>),
+            typeof(Vector128<short>),
+            typeof(Vector128<int>),
+            typeof(Vector128<long>)
+        };
+
+        public static readonly Type[] VectorUIntTypesPerSizeLog2 = new Type[]
+        {
+            typeof(Vector128<byte>),
+            typeof(Vector128<ushort>),
+            typeof(Vector128<uint>),
+            typeof(Vector128<ulong>)
+        };
+
         [Flags]
         public enum OperFlags
         {
@@ -36,56 +67,32 @@ namespace ChocolArm64.Instruction
             return (8 << (Op.Size + 1)) - Op.Imm;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void EmitSse2Call(AILEmitterCtx Context, string Name)
+        public static void EmitSse2Op(AILEmitterCtx Context, string Name)
         {
-            EmitSseCall(Context, Name, typeof(Sse2));
+            EmitSseOp(Context, Name, typeof(Sse2));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void EmitSse41Call(AILEmitterCtx Context, string Name)
+        public static void EmitSse41Op(AILEmitterCtx Context, string Name)
         {
-            EmitSseCall(Context, Name, typeof(Sse41));
+            EmitSseOp(Context, Name, typeof(Sse41));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void EmitSse42Call(AILEmitterCtx Context, string Name)
+        public static void EmitSse42Op(AILEmitterCtx Context, string Name)
         {
-            EmitSseCall(Context, Name, typeof(Sse42));
+            EmitSseOp(Context, Name, typeof(Sse42));
         }
 
-        private static void EmitSseCall(AILEmitterCtx Context, string Name, Type Type)
+        private static void EmitSseOp(AILEmitterCtx Context, string Name, Type Type)
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
-            void Ldvec(int Reg)
-            {
-                Context.EmitLdvec(Reg);
+            EmitLdvecWithSignedCast(Context, Op.Rn, Op.Size);
 
-                switch (Op.Size)
-                {
-                    case 0: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToSByte)); break;
-                    case 1: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToInt16)); break;
-                    case 2: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToInt32)); break;
-                    case 3: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToInt64)); break;
-                }
-            }
-
-            Ldvec(Op.Rn);
-
-            Type BaseType = null;
-
-            switch (Op.Size)
-            {
-                case 0: BaseType = typeof(Vector128<sbyte>); break;
-                case 1: BaseType = typeof(Vector128<short>); break;
-                case 2: BaseType = typeof(Vector128<int>);   break;
-                case 3: BaseType = typeof(Vector128<long>);  break;
-            }
+            Type BaseType = VectorIntTypesPerSizeLog2[Op.Size];
 
             if (Op is AOpCodeSimdReg BinOp)
             {
-                Ldvec(BinOp.Rm);
+                EmitLdvecWithSignedCast(Context, BinOp.Rm, Op.Size);
 
                 Context.EmitCall(Type.GetMethod(Name, new Type[] { BaseType, BaseType }));
             }
@@ -94,15 +101,7 @@ namespace ChocolArm64.Instruction
                 Context.EmitCall(Type.GetMethod(Name, new Type[] { BaseType }));
             }
 
-            switch (Op.Size)
-            {
-                case 0: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSByteToSingle)); break;
-                case 1: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInt16ToSingle)); break;
-                case 2: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInt32ToSingle)); break;
-                case 3: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInt64ToSingle)); break;
-            }
-
-            Context.EmitStvec(Op.Rd);
+            EmitStvecWithSignedCast(Context, Op.Rd, Op.Size);
 
             if (Op.RegisterSize == ARegisterSize.SIMD64)
             {
@@ -110,17 +109,91 @@ namespace ChocolArm64.Instruction
             }
         }
 
-        public static void EmitScalarSseOrSse2CallF(AILEmitterCtx Context, string Name)
+        public static void EmitLdvecWithSignedCast(AILEmitterCtx Context, int Reg, int Size)
         {
-            EmitSseOrSse2CallF(Context, Name, true);
+            Context.EmitLdvec(Reg);
+
+            switch (Size)
+            {
+                case 0: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToSByte)); break;
+                case 1: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToInt16)); break;
+                case 2: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToInt32)); break;
+                case 3: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToInt64)); break;
+
+                default: throw new ArgumentOutOfRangeException(nameof(Size));
+            }
         }
 
-        public static void EmitVectorSseOrSse2CallF(AILEmitterCtx Context, string Name)
+        public static void EmitLdvecWithCastToDouble(AILEmitterCtx Context, int Reg)
         {
-            EmitSseOrSse2CallF(Context, Name, false);
+            Context.EmitLdvec(Reg);
+
+            AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToDouble));
         }
 
-        public static void EmitSseOrSse2CallF(AILEmitterCtx Context, string Name, bool Scalar)
+        public static void EmitStvecWithCastFromDouble(AILEmitterCtx Context, int Reg)
+        {
+            AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorDoubleToSingle));
+
+            Context.EmitStvec(Reg);
+        }
+
+        public static void EmitLdvecWithUnsignedCast(AILEmitterCtx Context, int Reg, int Size)
+        {
+            Context.EmitLdvec(Reg);
+
+            switch (Size)
+            {
+                case 0: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToByte));   break;
+                case 1: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToUInt16)); break;
+                case 2: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToUInt32)); break;
+                case 3: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleToUInt64)); break;
+
+                default: throw new ArgumentOutOfRangeException(nameof(Size));
+            }
+        }
+
+        public static void EmitStvecWithSignedCast(AILEmitterCtx Context, int Reg, int Size)
+        {
+            switch (Size)
+            {
+                case 0: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSByteToSingle)); break;
+                case 1: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInt16ToSingle)); break;
+                case 2: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInt32ToSingle)); break;
+                case 3: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorInt64ToSingle)); break;
+
+                default: throw new ArgumentOutOfRangeException(nameof(Size));
+            }
+
+            Context.EmitStvec(Reg);
+        }
+
+        public static void EmitStvecWithUnsignedCast(AILEmitterCtx Context, int Reg, int Size)
+        {
+            switch (Size)
+            {
+                case 0: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorByteToSingle));   break;
+                case 1: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorUInt16ToSingle)); break;
+                case 2: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorUInt32ToSingle)); break;
+                case 3: AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorUInt64ToSingle)); break;
+
+                default: throw new ArgumentOutOfRangeException(nameof(Size));
+            }
+
+            Context.EmitStvec(Reg);
+        }
+
+        public static void EmitScalarSseOrSse2OpF(AILEmitterCtx Context, string Name)
+        {
+            EmitSseOrSse2OpF(Context, Name, true);
+        }
+
+        public static void EmitVectorSseOrSse2OpF(AILEmitterCtx Context, string Name)
+        {
+            EmitSseOrSse2OpF(Context, Name, false);
+        }
+
+        public static void EmitSseOrSse2OpF(AILEmitterCtx Context, string Name, bool Scalar)
         {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
@@ -1183,8 +1256,21 @@ namespace ChocolArm64.Instruction
 
         public static void EmitScalarSetF(AILEmitterCtx Context, int Reg, int Size)
         {
-            EmitVectorZeroAll(Context, Reg);
-            EmitVectorInsertF(Context, Reg, 0, Size);
+            if (AOptimizations.UseSse41 && Size == 0)
+            {
+                //If the type is float, we can perform insertion and
+                //zero the upper bits with a single instruction (INSERTPS);
+                Context.EmitLdvec(Reg);
+
+                AVectorHelper.EmitCall(Context, nameof(AVectorHelper.Sse41VectorInsertScalarSingle));
+
+                Context.EmitStvec(Reg);
+            }
+            else
+            {
+                EmitVectorZeroAll(Context, Reg);
+                EmitVectorInsertF(Context, Reg, 0, Size);
+            }
         }
 
         public static void EmitVectorExtractSx(AILEmitterCtx Context, int Reg, int Index, int Size)
@@ -1235,8 +1321,17 @@ namespace ChocolArm64.Instruction
 
         public static void EmitVectorZeroAll(AILEmitterCtx Context, int Rd)
         {
-            EmitVectorZeroLower(Context, Rd);
-            EmitVectorZeroUpper(Context, Rd);
+            if (AOptimizations.UseSse2)
+            {
+                AVectorHelper.EmitCall(Context, nameof(AVectorHelper.VectorSingleZero));
+
+                Context.EmitStvec(Rd);
+            }
+            else
+            {
+                EmitVectorZeroLower(Context, Rd);
+                EmitVectorZeroUpper(Context, Rd);
+            }
         }
 
         public static void EmitVectorZeroLower(AILEmitterCtx Context, int Rd)
@@ -1249,9 +1344,32 @@ namespace ChocolArm64.Instruction
             EmitVectorInsertTmp(Context, 0, 3, 0);
         }
 
-        public static void EmitVectorZeroUpper(AILEmitterCtx Context, int Rd)
+        public static void EmitVectorZeroUpper(AILEmitterCtx Context, int Reg)
         {
-            EmitVectorInsert(Context, Rd, 1, 3, 0);
+            if (AOptimizations.UseSse2)
+            {
+                //TODO: Use MoveScalar once it is fixed, as of the
+                //time of writing it just crashes the JIT.
+                EmitLdvecWithUnsignedCast(Context, Reg, 3);
+
+                Type[] Types = new Type[] { typeof(Vector128<ulong>), typeof(byte) };
+
+                //Context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.MoveScalar), Types));
+
+                Context.EmitLdc_I4(8);
+
+                Context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftLeftLogical128BitLane), Types));
+
+                Context.EmitLdc_I4(8);
+
+                Context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), Types));
+
+                EmitStvecWithUnsignedCast(Context, Reg, 3);
+            }
+            else
+            {
+                EmitVectorInsert(Context, Reg, 1, 3, 0);
+            }
         }
 
         public static void EmitVectorZero32_128(AILEmitterCtx Context, int Reg)
