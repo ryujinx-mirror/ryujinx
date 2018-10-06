@@ -68,6 +68,8 @@ namespace Ryujinx
                 Device.System.EnableMultiCoreScheduling();
             }
 
+            Device.System.EnableFsIntegrityChecks = Convert.ToBoolean(Parser.Value("Enable_FS_Integrity_Checks"));
+
             JoyConKeyboard = new JoyConKeyboard(
 
                 new JoyConKeyboardLeft
