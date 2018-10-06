@@ -80,14 +80,14 @@ namespace Ryujinx.Tests.Cpu
 
         private static IEnumerable<ulong> _1S_F_()
         {
-            yield return 0x00000000FF7FFFFFul; // -Max Normal (float.MinValue)
+            yield return 0x00000000FF7FFFFFul; // -Max Normal    (float.MinValue)
             yield return 0x0000000080800000ul; // -Min Normal
-            yield return 0x00000000807FFFFFul; // -Max SubNormal
-            yield return 0x0000000080000001ul; // -Min SubNormal
-            yield return 0x000000007F7FFFFFul; // +Max Normal (float.MaxValue)
+            yield return 0x00000000807FFFFFul; // -Max Subnormal
+            yield return 0x0000000080000001ul; // -Min Subnormal (-float.Epsilon)
+            yield return 0x000000007F7FFFFFul; // +Max Normal    (float.MaxValue)
             yield return 0x0000000000800000ul; // +Min Normal
-            yield return 0x00000000007FFFFFul; // +Max SubNormal
-            yield return 0x0000000000000001ul; // +Min SubNormal
+            yield return 0x00000000007FFFFFul; // +Max Subnormal
+            yield return 0x0000000000000001ul; // +Min Subnormal (float.Epsilon)
 
             if (!NoZeros)
             {
@@ -103,17 +103,17 @@ namespace Ryujinx.Tests.Cpu
 
             if (!NoNaNs)
             {
-                yield return 0x00000000FFFFFFFFul; // -QNaN (all ones payload)
-                yield return 0x00000000FFBFFFFFul; // -SNaN (all ones payload)
-                yield return 0x000000007FFFFFFFul; // +QNaN (all ones payload)
-                yield return 0x000000007FBFFFFFul; // +SNaN (all ones payload)
+                yield return 0x00000000FFC00000ul; // -QNaN (all zeros payload) (float.NaN)
+                yield return 0x00000000FFBFFFFFul; // -SNaN (all ones  payload)
+                yield return 0x000000007FC00000ul; // +QNaN (all zeros payload) (-float.NaN) (DefaultNaN)
+                yield return 0x000000007FBFFFFFul; // +SNaN (all ones  payload)
             }
 
             for (int Cnt = 1; Cnt <= RndCnt; Cnt++)
             {
                 ulong Grbg = TestContext.CurrentContext.Random.NextUInt();
                 ulong Rnd1 = GenNormal_S();
-                ulong Rnd2 = GenSubNormal_S();
+                ulong Rnd2 = GenSubnormal_S();
 
                 yield return (Grbg << 32) | Rnd1;
                 yield return (Grbg << 32) | Rnd2;
@@ -122,14 +122,14 @@ namespace Ryujinx.Tests.Cpu
 
         private static IEnumerable<ulong> _2S_F_()
         {
-            yield return 0xFF7FFFFFFF7FFFFFul; // -Max Normal (float.MinValue)
+            yield return 0xFF7FFFFFFF7FFFFFul; // -Max Normal    (float.MinValue)
             yield return 0x8080000080800000ul; // -Min Normal
-            yield return 0x807FFFFF807FFFFFul; // -Max SubNormal
-            yield return 0x8000000180000001ul; // -Min SubNormal
-            yield return 0x7F7FFFFF7F7FFFFFul; // +Max Normal (float.MaxValue)
+            yield return 0x807FFFFF807FFFFFul; // -Max Subnormal
+            yield return 0x8000000180000001ul; // -Min Subnormal (-float.Epsilon)
+            yield return 0x7F7FFFFF7F7FFFFFul; // +Max Normal    (float.MaxValue)
             yield return 0x0080000000800000ul; // +Min Normal
-            yield return 0x007FFFFF007FFFFFul; // +Max SubNormal
-            yield return 0x0000000100000001ul; // +Min SubNormal
+            yield return 0x007FFFFF007FFFFFul; // +Max Subnormal
+            yield return 0x0000000100000001ul; // +Min Subnormal (float.Epsilon)
 
             if (!NoZeros)
             {
@@ -145,16 +145,16 @@ namespace Ryujinx.Tests.Cpu
 
             if (!NoNaNs)
             {
-                yield return 0xFFFFFFFFFFFFFFFFul; // -QNaN (all ones payload)
-                yield return 0xFFBFFFFFFFBFFFFFul; // -SNaN (all ones payload)
-                yield return 0x7FFFFFFF7FFFFFFFul; // +QNaN (all ones payload)
-                yield return 0x7FBFFFFF7FBFFFFFul; // +SNaN (all ones payload)
+                yield return 0xFFC00000FFC00000ul; // -QNaN (all zeros payload) (float.NaN)
+                yield return 0xFFBFFFFFFFBFFFFFul; // -SNaN (all ones  payload)
+                yield return 0x7FC000007FC00000ul; // +QNaN (all zeros payload) (-float.NaN) (DefaultNaN)
+                yield return 0x7FBFFFFF7FBFFFFFul; // +SNaN (all ones  payload)
             }
 
             for (int Cnt = 1; Cnt <= RndCnt; Cnt++)
             {
                 ulong Rnd1 = GenNormal_S();
-                ulong Rnd2 = GenSubNormal_S();
+                ulong Rnd2 = GenSubnormal_S();
 
                 yield return (Rnd1 << 32) | Rnd1;
                 yield return (Rnd2 << 32) | Rnd2;
@@ -163,14 +163,14 @@ namespace Ryujinx.Tests.Cpu
 
         private static IEnumerable<ulong> _1D_F_()
         {
-            yield return 0xFFEFFFFFFFFFFFFFul; // -Max Normal (double.MinValue)
+            yield return 0xFFEFFFFFFFFFFFFFul; // -Max Normal    (double.MinValue)
             yield return 0x8010000000000000ul; // -Min Normal
-            yield return 0x800FFFFFFFFFFFFFul; // -Max SubNormal
-            yield return 0x8000000000000001ul; // -Min SubNormal
-            yield return 0x7FEFFFFFFFFFFFFFul; // +Max Normal (double.MaxValue)
+            yield return 0x800FFFFFFFFFFFFFul; // -Max Subnormal
+            yield return 0x8000000000000001ul; // -Min Subnormal (-double.Epsilon)
+            yield return 0x7FEFFFFFFFFFFFFFul; // +Max Normal    (double.MaxValue)
             yield return 0x0010000000000000ul; // +Min Normal
-            yield return 0x000FFFFFFFFFFFFFul; // +Max SubNormal
-            yield return 0x0000000000000001ul; // +Min SubNormal
+            yield return 0x000FFFFFFFFFFFFFul; // +Max Subnormal
+            yield return 0x0000000000000001ul; // +Min Subnormal (double.Epsilon)
 
             if (!NoZeros)
             {
@@ -186,16 +186,16 @@ namespace Ryujinx.Tests.Cpu
 
             if (!NoNaNs)
             {
-                yield return 0xFFFFFFFFFFFFFFFFul; // -QNaN (all ones payload)
-                yield return 0xFFF7FFFFFFFFFFFFul; // -SNaN (all ones payload)
-                yield return 0x7FFFFFFFFFFFFFFFul; // +QNaN (all ones payload)
-                yield return 0x7FF7FFFFFFFFFFFFul; // +SNaN (all ones payload)
+                yield return 0xFFF8000000000000ul; // -QNaN (all zeros payload) (double.NaN)
+                yield return 0xFFF7FFFFFFFFFFFFul; // -SNaN (all ones  payload)
+                yield return 0x7FF8000000000000ul; // +QNaN (all zeros payload) (-double.NaN) (DefaultNaN)
+                yield return 0x7FF7FFFFFFFFFFFFul; // +SNaN (all ones  payload)
             }
 
             for (int Cnt = 1; Cnt <= RndCnt; Cnt++)
             {
                 ulong Rnd1 = GenNormal_D();
-                ulong Rnd2 = GenSubNormal_D();
+                ulong Rnd2 = GenSubnormal_D();
 
                 yield return Rnd1;
                 yield return Rnd2;
@@ -204,6 +204,72 @@ namespace Ryujinx.Tests.Cpu
 #endregion
 
 #region "ValueSource (Opcodes)"
+        private static uint[] _F_Add_Div_Mul_MulX_Sub_S_S_()
+        {
+            return new uint[]
+            {
+                0x1E222820u, // FADD  S0, S1, S2
+                0x1E221820u, // FDIV  S0, S1, S2
+                0x1E220820u, // FMUL  S0, S1, S2
+                0x5E22DC20u, // FMULX S0, S1, S2
+                0x1E223820u  // FSUB  S0, S1, S2
+            };
+        }
+
+        private static uint[] _F_Add_Div_Mul_MulX_Sub_S_D_()
+        {
+            return new uint[]
+            {
+                0x1E622820u, // FADD  D0, D1, D2
+                0x1E621820u, // FDIV  D0, D1, D2
+                0x1E620820u, // FMUL  D0, D1, D2
+                0x5E62DC20u, // FMULX D0, D1, D2
+                0x1E623820u  // FSUB  D0, D1, D2
+            };
+        }
+
+        private static uint[] _F_Add_Div_Mul_MulX_Sub_V_2S_4S_()
+        {
+            return new uint[]
+            {
+                0x0E20D400u, // FADD  V0.2S, V0.2S, V0.2S
+                0x2E20FC00u, // FDIV  V0.2S, V0.2S, V0.2S
+                0x2E20DC00u, // FMUL  V0.2S, V0.2S, V0.2S
+                0x0E20DC00u, // FMULX V0.2S, V0.2S, V0.2S
+                0x0EA0D400u  // FSUB  V0.2S, V0.2S, V0.2S
+            };
+        }
+
+        private static uint[] _F_Add_Div_Mul_MulX_Sub_V_2D_()
+        {
+            return new uint[]
+            {
+                0x4E60D400u, // FADD  V0.2D, V0.2D, V0.2D
+                0x6E60FC00u, // FDIV  V0.2D, V0.2D, V0.2D
+                0x6E60DC00u, // FMUL  V0.2D, V0.2D, V0.2D
+                0x4E60DC00u, // FMULX V0.2D, V0.2D, V0.2D
+                0x4EE0D400u  // FSUB  V0.2D, V0.2D, V0.2D
+            };
+        }
+
+        private static uint[] _Fmadd_Fmsub_S_S_()
+        {
+            return new uint[]
+            {
+                0x1F020C20u, // FMADD S0, S1, S2, S3
+                0x1F028C20u  // FMSUB S0, S1, S2, S3
+            };
+        }
+
+        private static uint[] _Fmadd_Fmsub_S_D_()
+        {
+            return new uint[]
+            {
+                0x1F420C20u, // FMADD D0, D1, D2, D3
+                0x1F428C20u  // FMSUB D0, D1, D2, D3
+            };
+        }
+
         private static uint[] _F_Max_Min_Nm_S_S_()
         {
             return new uint[]
@@ -249,6 +315,42 @@ namespace Ryujinx.Tests.Cpu
                 0x4EE0F400u, // FMIN   V0.2D, V0.2D, V0.2D
                 0x4EE0C400u, // FMINNM V0.2D, V0.2D, V0.2D
                 0x6EE0F400u  // FMINP  V0.2D, V0.2D, V0.2D
+            };
+        }
+
+        private static uint[] _Frecps_Frsqrts_S_S_()
+        {
+            return new uint[]
+            {
+                0x5E22FC20u, // FRECPS  S0, S1, S2
+                0x5EA2FC20u  // FRSQRTS S0, S1, S2
+            };
+        }
+
+        private static uint[] _Frecps_Frsqrts_S_D_()
+        {
+            return new uint[]
+            {
+                0x5E62FC20u, // FRECPS  D0, D1, D2
+                0x5EE2FC20u  // FRSQRTS D0, D1, D2
+            };
+        }
+
+        private static uint[] _Frecps_Frsqrts_V_2S_4S_()
+        {
+            return new uint[]
+            {
+                0x0E20FC00u, // FRECPS  V0.2S, V0.2S, V0.2S
+                0x0EA0FC00u  // FRSQRTS V0.2S, V0.2S, V0.2S
+            };
+        }
+
+        private static uint[] _Frecps_Frsqrts_V_2D_()
+        {
+            return new uint[]
+            {
+                0x4E60FC00u, // FRECPS  V0.2D, V0.2D, V0.2D
+                0x4EE0FC00u  // FRSQRTS V0.2D, V0.2D, V0.2D
             };
         }
 #endregion
@@ -1035,46 +1137,122 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("FMADD <Sd>, <Sn>, <Sm>, <Sa>")]
-        public void Fmadd_S_S([ValueSource("_1S_F_")] ulong A,
-                              [ValueSource("_1S_F_")] ulong B,
-                              [ValueSource("_1S_F_")] ulong C)
+        [Test, Pairwise]
+        public void F_Add_Div_Mul_MulX_Sub_S_S([ValueSource("_F_Add_Div_Mul_MulX_Sub_S_S_")] uint Opcodes,
+                                               [ValueSource("_1S_F_")] ulong A,
+                                               [ValueSource("_1S_F_")] ulong B)
         {
-            //const int DNFlagBit = 25; // Default NaN mode control bit.
-            //const int FZFlagBit = 24; // Flush-to-zero mode control bit.
+            ulong Z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
 
-            uint Opcode = 0x1F020C20; // FMADD S0, S1, S2, S3
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
 
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+
+            CompareAgainstUnicorn(FpsrMask: FPSR.IOC | FPSR.DZC);
+        }
+
+        [Test, Pairwise]
+        public void F_Add_Div_Mul_MulX_Sub_S_D([ValueSource("_F_Add_Div_Mul_MulX_Sub_S_D_")] uint Opcodes,
+                                               [ValueSource("_1D_F_")] ulong A,
+                                               [ValueSource("_1D_F_")] ulong B)
+        {
+            ulong Z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> V0 = MakeVectorE1(Z);
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
+
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+
+            CompareAgainstUnicorn(FpsrMask: FPSR.IOC | FPSR.DZC);
+        }
+
+        [Test, Pairwise]
+        public void F_Add_Div_Mul_MulX_Sub_V_2S_4S([ValueSource("_F_Add_Div_Mul_MulX_Sub_V_2S_4S_")] uint Opcodes,
+                                                   [Values(0u)]     uint Rd,
+                                                   [Values(1u, 0u)] uint Rn,
+                                                   [Values(2u, 0u)] uint Rm,
+                                                   [ValueSource("_2S_F_")] ulong Z,
+                                                   [ValueSource("_2S_F_")] ulong A,
+                                                   [ValueSource("_2S_F_")] ulong B,
+                                                   [Values(0b0u, 0b1u)] uint Q) // <2S, 4S>
+        {
+            Opcodes |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcodes |= ((Q & 1) << 30);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
+            Vector128<float> V2 = MakeVectorE0E1(B, B * Q);
+
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+
+            CompareAgainstUnicorn(FpsrMask: FPSR.IOC | FPSR.DZC);
+        }
+
+        [Test, Pairwise]
+        public void F_Add_Div_Mul_MulX_Sub_V_2D([ValueSource("_F_Add_Div_Mul_MulX_Sub_V_2D_")] uint Opcodes,
+                                                [Values(0u)]     uint Rd,
+                                                [Values(1u, 0u)] uint Rn,
+                                                [Values(2u, 0u)] uint Rm,
+                                                [ValueSource("_1D_F_")] ulong Z,
+                                                [ValueSource("_1D_F_")] ulong A,
+                                                [ValueSource("_1D_F_")] ulong B)
+        {
+            Opcodes |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> V2 = MakeVectorE0E1(B, B);
+
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+
+            CompareAgainstUnicorn(FpsrMask: FPSR.IOC | FPSR.DZC);
+        }
+
+        [Test, Pairwise] // Fused.
+        public void Fmadd_Fmsub_S_S([ValueSource("_Fmadd_Fmsub_S_S_")] uint Opcodes,
+                                    [ValueSource("_1S_F_")] ulong A,
+                                    [ValueSource("_1S_F_")] ulong B,
+                                    [ValueSource("_1S_F_")] ulong C)
+        {
             ulong Z = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
             Vector128<float> V2 = MakeVectorE0(B);
             Vector128<float> V3 = MakeVectorE0(C);
 
-            //int Fpcr  = 1 << DNFlagBit; // Any operation involving one or more NaNs returns the Default NaN.
-                //Fpcr |= 1 << FZFlagBit; // Flush-to-zero mode enabled.
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2, V3: V3/*, Fpcr: Fpcr*/);
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, V3: V3, Fpcr: Fpcr);
 
-            CompareAgainstUnicorn(/*FpsrMask: FPSR.IDC | FPSR.IOC, */FpSkips: FpSkips.IfNaN_S/*, FpUseTolerance: FpUseTolerance.OneUlps_S*/);
+            CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_S);
         }
 
-        [Test, Pairwise, Description("FMADD <Dd>, <Dn>, <Dm>, <Da>")]
-        public void Fmadd_S_D([ValueSource("_1D_F_")] ulong A,
-                              [ValueSource("_1D_F_")] ulong B,
-                              [ValueSource("_1D_F_")] ulong C)
+        [Test, Pairwise] // Fused.
+        public void Fmadd_Fmsub_S_D([ValueSource("_Fmadd_Fmsub_S_D_")] uint Opcodes,
+                                    [ValueSource("_1D_F_")] ulong A,
+                                    [ValueSource("_1D_F_")] ulong B,
+                                    [ValueSource("_1D_F_")] ulong C)
         {
-            uint Opcode = 0x1F420C20; // FMADD D0, D1, D2, D3
-
             ulong Z = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> V0 = MakeVectorE1(Z);
             Vector128<float> V1 = MakeVectorE0(A);
             Vector128<float> V2 = MakeVectorE0(B);
             Vector128<float> V3 = MakeVectorE0(C);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2, V3: V3);
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
 
-            CompareAgainstUnicorn(FpSkips: FpSkips.IfNaN_D/*, FpUseTolerance: FpUseTolerance.OneUlps_D*/);
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, V3: V3, Fpcr: Fpcr);
+
+            CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_D);
         }
 
         [Test, Pairwise]
@@ -1082,20 +1260,16 @@ namespace Ryujinx.Tests.Cpu
                                      [ValueSource("_1S_F_")] ulong A,
                                      [ValueSource("_1S_F_")] ulong B)
         {
-            //const int DNFlagBit = 25; // Default NaN mode control bit.
-            //const int FZFlagBit = 24; // Flush-to-zero mode control bit.
-
             ulong Z = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
             Vector128<float> V2 = MakeVectorE0(B);
 
-            //int Fpcr  = 1 << DNFlagBit; // Any operation involving one or more NaNs returns the Default NaN.
-                //Fpcr |= 1 << FZFlagBit; // Flush-to-zero mode enabled.
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2/*, Fpcr: Fpcr*/);
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
 
-            CompareAgainstUnicorn(/*FpsrMask: FPSR.IDC | FPSR.IOC*/);
+            CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
         }
 
         [Test, Pairwise]
@@ -1108,9 +1282,11 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0(A);
             Vector128<float> V2 = MakeVectorE0(B);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2);
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
 
-            CompareAgainstUnicorn();
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+
+            CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
         }
 
         [Test, Pairwise]
@@ -1123,9 +1299,6 @@ namespace Ryujinx.Tests.Cpu
                                            [ValueSource("_2S_F_")] ulong B,
                                            [Values(0b0u, 0b1u)] uint Q) // <2S, 4S>
         {
-            //const int DNFlagBit = 25; // Default NaN mode control bit.
-            //const int FZFlagBit = 24; // Flush-to-zero mode control bit.
-
             Opcodes |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcodes |= ((Q & 1) << 30);
 
@@ -1133,12 +1306,11 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
             Vector128<float> V2 = MakeVectorE0E1(B, B * Q);
 
-            //int Fpcr  = 1 << DNFlagBit; // Any operation involving one or more NaNs returns the Default NaN.
-                //Fpcr |= 1 << FZFlagBit; // Flush-to-zero mode enabled.
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2/*, Fpcr: Fpcr*/);
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
 
-            CompareAgainstUnicorn(/*FpsrMask: FPSR.IDC | FPSR.IOC*/);
+            CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
         }
 
         [Test, Pairwise]
@@ -1156,9 +1328,91 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0E1(A, A);
             Vector128<float> V2 = MakeVectorE0E1(B, B);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2);
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
 
-            CompareAgainstUnicorn();
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+
+            CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
+        }
+
+        [Test, Pairwise] // Fused.
+        public void Frecps_Frsqrts_S_S([ValueSource("_Frecps_Frsqrts_S_S_")] uint Opcodes,
+                                       [ValueSource("_1S_F_")] ulong A,
+                                       [ValueSource("_1S_F_")] ulong B)
+        {
+            ulong Z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
+
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+
+            CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_S);
+        }
+
+        [Test, Pairwise] // Fused.
+        public void Frecps_Frsqrts_S_D([ValueSource("_Frecps_Frsqrts_S_D_")] uint Opcodes,
+                                       [ValueSource("_1D_F_")] ulong A,
+                                       [ValueSource("_1D_F_")] ulong B)
+        {
+            ulong Z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> V0 = MakeVectorE1(Z);
+            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> V2 = MakeVectorE0(B);
+
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+
+            CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_D);
+        }
+
+        [Test, Pairwise] // Fused.
+        public void Frecps_Frsqrts_V_2S_4S([ValueSource("_Frecps_Frsqrts_V_2S_4S_")] uint Opcodes,
+                                           [Values(0u)]     uint Rd,
+                                           [Values(1u, 0u)] uint Rn,
+                                           [Values(2u, 0u)] uint Rm,
+                                           [ValueSource("_2S_F_")] ulong Z,
+                                           [ValueSource("_2S_F_")] ulong A,
+                                           [ValueSource("_2S_F_")] ulong B,
+                                           [Values(0b0u, 0b1u)] uint Q) // <2S, 4S>
+        {
+            Opcodes |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcodes |= ((Q & 1) << 30);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
+            Vector128<float> V2 = MakeVectorE0E1(B, B * Q);
+
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+
+            CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_S);
+        }
+
+        [Test, Pairwise] // Fused.
+        public void Frecps_Frsqrts_V_2D([ValueSource("_Frecps_Frsqrts_V_2D_")] uint Opcodes,
+                                        [Values(0u)]     uint Rd,
+                                        [Values(1u, 0u)] uint Rn,
+                                        [Values(2u, 0u)] uint Rm,
+                                        [ValueSource("_1D_F_")] ulong Z,
+                                        [ValueSource("_1D_F_")] ulong A,
+                                        [ValueSource("_1D_F_")] ulong B)
+        {
+            Opcodes |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
+
+            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> V2 = MakeVectorE0E1(B, B);
+
+            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+
+            CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_D);
         }
 
         [Test, Pairwise, Description("ORN <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]

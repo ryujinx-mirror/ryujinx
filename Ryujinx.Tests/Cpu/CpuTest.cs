@@ -178,8 +178,15 @@ namespace Ryujinx.Tests.Cpu
             return GetThreadState();
         }
 
-        [Flags]
-        protected enum FPSR
+        /// <summary>Floating-point Control Register.</summary>
+        protected enum FPCR
+        {
+            /// <summary>Default NaN mode control bit.</summary>
+            DN = 25
+        }
+
+        /// <summary>Floating-point Status Register.</summary>
+        [Flags] protected enum FPSR
         {
             None = 0,
 
@@ -195,32 +202,43 @@ namespace Ryujinx.Tests.Cpu
             IXC = 1 << 4,
             /// <summary>Input Denormal cumulative floating-point exception bit.</summary>
             IDC = 1 << 7,
+
             /// <summary>Cumulative saturation bit.</summary>
-            QC  = 1 << 27
+            QC = 1 << 27
         }
 
-        protected enum FpSkips { None, IfNaN_S, IfNaN_D };
+        [Flags] protected enum FpSkips
+        {
+            None = 0,
 
-        protected enum FpUseTolerance { None, OneUlps_S, OneUlps_D };
+            IfNaN_S = 1,
+            IfNaN_D = 2,
+
+            IfUnderflow = 4,
+            IfOverflow  = 8
+        }
+
+        protected enum FpTolerances
+        {
+            None,
+
+            UpToOneUlps_S,
+            UpToOneUlps_D
+        }
 
         protected void CompareAgainstUnicorn(
-            FPSR           FpsrMask       = FPSR.None,
-            FpSkips        FpSkips        = FpSkips.None,
-            FpUseTolerance FpUseTolerance = FpUseTolerance.None)
+            FPSR         FpsrMask     = FPSR.None,
+            FpSkips      FpSkips      = FpSkips.None,
+            FpTolerances FpTolerances = FpTolerances.None)
         {
             if (!UnicornAvailable)
             {
                 return;
             }
 
-            if (FpSkips == FpSkips.IfNaN_S && float.IsNaN(VectorExtractSingle(UnicornEmu.Q[0], (byte)0)))
+            if (FpSkips != FpSkips.None)
             {
-                Assert.Ignore("NaN test.");
-            }
-
-            if (FpSkips == FpSkips.IfNaN_D && double.IsNaN(VectorExtractDouble(UnicornEmu.Q[0], (byte)0)))
-            {
-                Assert.Ignore("NaN test.");
+                ManageFpSkips(FpSkips);
             }
 
             Assert.That(Thread.ThreadState.X0,  Is.EqualTo(UnicornEmu.X[0]));
@@ -257,50 +275,13 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.That(Thread.ThreadState.X31, Is.EqualTo(UnicornEmu.SP));
 
-            if (FpUseTolerance == FpUseTolerance.None)
+            if (FpTolerances == FpTolerances.None)
             {
                 Assert.That(Thread.ThreadState.V0, Is.EqualTo(UnicornEmu.Q[0]));
             }
             else
             {
-                if (!Is.EqualTo(UnicornEmu.Q[0]).ApplyTo(Thread.ThreadState.V0).IsSuccess)
-                {
-                    if (FpUseTolerance == FpUseTolerance.OneUlps_S)
-                    {
-                        if (float.IsNormal   (VectorExtractSingle(UnicornEmu.Q[0], (byte)0)) ||
-                            float.IsSubnormal(VectorExtractSingle(UnicornEmu.Q[0], (byte)0)))
-                        {
-                            Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)0),
-                                Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)0)).Within(1).Ulps);
-                            Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)1),
-                                Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)1)).Within(1).Ulps);
-                            Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)2),
-                                Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)2)).Within(1).Ulps);
-                            Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)3),
-                                Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)3)).Within(1).Ulps);
-                        }
-                        else
-                        {
-                            Assert.That(Thread.ThreadState.V0, Is.EqualTo(UnicornEmu.Q[0]));
-                        }
-                    }
-
-                    if (FpUseTolerance == FpUseTolerance.OneUlps_D)
-                    {
-                        if (double.IsNormal   (VectorExtractDouble(UnicornEmu.Q[0], (byte)0)) ||
-                            double.IsSubnormal(VectorExtractDouble(UnicornEmu.Q[0], (byte)0)))
-                        {
-                            Assert.That   (VectorExtractDouble(Thread.ThreadState.V0, (byte)0),
-                                Is.EqualTo(VectorExtractDouble(UnicornEmu.Q[0],       (byte)0)).Within(1).Ulps);
-                            Assert.That   (VectorExtractDouble(Thread.ThreadState.V0, (byte)1),
-                                Is.EqualTo(VectorExtractDouble(UnicornEmu.Q[0],       (byte)1)).Within(1).Ulps);
-                        }
-                        else
-                        {
-                            Assert.That(Thread.ThreadState.V0, Is.EqualTo(UnicornEmu.Q[0]));
-                        }
-                    }
-                }
+                ManageFpTolerances(FpTolerances);
             }
             Assert.That(Thread.ThreadState.V1,  Is.EqualTo(UnicornEmu.Q[1]));
             Assert.That(Thread.ThreadState.V2,  Is.EqualTo(UnicornEmu.Q[2]));
@@ -342,6 +323,90 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(Thread.ThreadState.Carry,    Is.EqualTo(UnicornEmu.CarryFlag));
             Assert.That(Thread.ThreadState.Zero,     Is.EqualTo(UnicornEmu.ZeroFlag));
             Assert.That(Thread.ThreadState.Negative, Is.EqualTo(UnicornEmu.NegativeFlag));
+        }
+
+        private void ManageFpSkips(FpSkips FpSkips)
+        {
+            if (FpSkips.HasFlag(FpSkips.IfNaN_S))
+            {
+                if (float.IsNaN(VectorExtractSingle(UnicornEmu.Q[0], (byte)0)))
+                {
+                    Assert.Ignore("NaN test.");
+                }
+            }
+            else if (FpSkips.HasFlag(FpSkips.IfNaN_D))
+            {
+                if (double.IsNaN(VectorExtractDouble(UnicornEmu.Q[0], (byte)0)))
+                {
+                    Assert.Ignore("NaN test.");
+                }
+            }
+
+            if (FpSkips.HasFlag(FpSkips.IfUnderflow))
+            {
+                if ((UnicornEmu.Fpsr & (int)FPSR.UFC) != 0)
+                {
+                    Assert.Ignore("Underflow test.");
+                }
+            }
+
+            if (FpSkips.HasFlag(FpSkips.IfOverflow))
+            {
+                if ((UnicornEmu.Fpsr & (int)FPSR.OFC) != 0)
+                {
+                    Assert.Ignore("Overflow test.");
+                }
+            }
+        }
+
+        private void ManageFpTolerances(FpTolerances FpTolerances)
+        {
+            if (!Is.EqualTo(UnicornEmu.Q[0]).ApplyTo(Thread.ThreadState.V0).IsSuccess)
+            {
+                if (FpTolerances == FpTolerances.UpToOneUlps_S)
+                {
+                    if (IsNormalOrSubnormal_S(VectorExtractSingle(UnicornEmu.Q[0],       (byte)0)) &&
+                        IsNormalOrSubnormal_S(VectorExtractSingle(Thread.ThreadState.V0, (byte)0)))
+                    {
+                        Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)0),
+                            Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)0)).Within(1).Ulps);
+                        Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)1),
+                            Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)1)).Within(1).Ulps);
+                        Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)2),
+                            Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)2)).Within(1).Ulps);
+                        Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)3),
+                            Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)3)).Within(1).Ulps);
+
+                        Console.WriteLine(FpTolerances);
+                    }
+                    else
+                    {
+                        Assert.That(Thread.ThreadState.V0, Is.EqualTo(UnicornEmu.Q[0]));
+                    }
+                }
+
+                if (FpTolerances == FpTolerances.UpToOneUlps_D)
+                {
+                    if (IsNormalOrSubnormal_D(VectorExtractDouble(UnicornEmu.Q[0],       (byte)0)) &&
+                        IsNormalOrSubnormal_D(VectorExtractDouble(Thread.ThreadState.V0, (byte)0)))
+                    {
+                        Assert.That   (VectorExtractDouble(Thread.ThreadState.V0, (byte)0),
+                            Is.EqualTo(VectorExtractDouble(UnicornEmu.Q[0],       (byte)0)).Within(1).Ulps);
+                        Assert.That   (VectorExtractDouble(Thread.ThreadState.V0, (byte)1),
+                            Is.EqualTo(VectorExtractDouble(UnicornEmu.Q[0],       (byte)1)).Within(1).Ulps);
+
+                        Console.WriteLine(FpTolerances);
+                    }
+                    else
+                    {
+                        Assert.That(Thread.ThreadState.V0, Is.EqualTo(UnicornEmu.Q[0]));
+                    }
+                }
+            }
+
+            bool IsNormalOrSubnormal_S(float f)  => float.IsNormal(f)  || float.IsSubnormal(f);
+
+            bool IsNormalOrSubnormal_D(double d) => double.IsNormal(d) || double.IsSubnormal(d);
         }
 
         protected static Vector128<float> MakeVectorE0(double E0)
@@ -453,14 +518,14 @@ namespace Ryujinx.Tests.Cpu
         {
             uint Rnd;
 
-            do      Rnd = TestContext.CurrentContext.Random.NextUInt();
-            while ((Rnd & 0x7F800000u) == 0u ||
-                   (Rnd & 0x7F800000u) == 0x7F800000u);
+            do       Rnd = TestContext.CurrentContext.Random.NextUInt();
+            while (( Rnd & 0x7F800000u) == 0u ||
+                   (~Rnd & 0x7F800000u) == 0u);
 
             return Rnd;
         }
 
-        protected static uint GenSubNormal_S()
+        protected static uint GenSubnormal_S()
         {
             uint Rnd;
 
@@ -474,14 +539,14 @@ namespace Ryujinx.Tests.Cpu
         {
             ulong Rnd;
 
-            do      Rnd = TestContext.CurrentContext.Random.NextULong();
-            while ((Rnd & 0x7FF0000000000000ul) == 0ul ||
-                   (Rnd & 0x7FF0000000000000ul) == 0x7FF0000000000000ul);
+            do       Rnd = TestContext.CurrentContext.Random.NextULong();
+            while (( Rnd & 0x7FF0000000000000ul) == 0ul ||
+                   (~Rnd & 0x7FF0000000000000ul) == 0ul);
 
             return Rnd;
         }
 
-        protected static ulong GenSubNormal_D()
+        protected static ulong GenSubnormal_D()
         {
             ulong Rnd;
 

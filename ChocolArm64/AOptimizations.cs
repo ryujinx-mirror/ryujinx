@@ -2,6 +2,8 @@ using System.Runtime.Intrinsics.X86;
 
 public static class AOptimizations
 {
+    internal static bool FastFP = true;
+
     private static bool UseAllSseIfAvailable = true;
 
     private static bool UseSseIfAvailable   = true;

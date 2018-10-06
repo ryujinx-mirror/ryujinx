@@ -306,24 +306,18 @@ namespace ChocolArm64.Instruction
 
             int SizeF = Op.Size & 1;
 
-            Context.EmitLdc_I4((int)RoundMode);
-
             MethodInfo MthdInfo;
-
-            Type[] Types = new Type[] { null, typeof(MidpointRounding) };
-
-            Types[0] = SizeF == 0
-                ? typeof(float)
-                : typeof(double);
 
             if (SizeF == 0)
             {
-                MthdInfo = typeof(MathF).GetMethod(nameof(MathF.Round), Types);
+                MthdInfo = typeof(MathF).GetMethod(nameof(MathF.Round), new Type[] { typeof(float), typeof(MidpointRounding) });
             }
             else /* if (SizeF == 1) */
             {
-                MthdInfo = typeof(Math).GetMethod(nameof(Math.Round), Types);
+                MthdInfo = typeof(Math).GetMethod(nameof(Math.Round), new Type[] { typeof(double), typeof(MidpointRounding) });
             }
+
+            Context.EmitLdc_I4((int)RoundMode);
 
             Context.EmitCall(MthdInfo);
         }
@@ -348,24 +342,17 @@ namespace ChocolArm64.Instruction
             Context.EmitCall(MthdInfo);
         }
 
-        public static void EmitBinarySoftFloatCall(AILEmitterCtx Context, string Name)
+        public static void EmitSoftFloatCall(AILEmitterCtx Context, string Name)
         {
             IAOpCodeSimd Op = (IAOpCodeSimd)Context.CurrOp;
 
-            int SizeF = Op.Size & 1;
+            Type Type = (Op.Size & 1) == 0
+                ? typeof(ASoftFloat_32)
+                : typeof(ASoftFloat_64);
 
-            MethodInfo MthdInfo;
+            Context.EmitLdarg(ATranslatedSub.StateArgIdx);
 
-            if (SizeF == 0)
-            {
-                MthdInfo = typeof(ASoftFloat).GetMethod(Name, new Type[] { typeof(float), typeof(float) });
-            }
-            else /* if (SizeF == 1) */
-            {
-                MthdInfo = typeof(ASoftFloat).GetMethod(Name, new Type[] { typeof(double), typeof(double) });
-            }
-
-            Context.EmitCall(MthdInfo);
+            Context.EmitCall(Type, Name);
         }
 
         public static void EmitScalarBinaryOpByElemF(AILEmitterCtx Context, Action Emit)
