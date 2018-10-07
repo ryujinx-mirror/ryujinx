@@ -1,5 +1,6 @@
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.Logging;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Mm
@@ -14,10 +15,23 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 4, Initialize },
-                { 6, SetAndWait },
-                { 7, Get        }
+                { 1, InitializeOld },
+                { 4, Initialize    },
+                { 6, SetAndWait    },
+                { 7, Get           }
             };
+        }
+
+        // InitializeOld(u32, u32, u32)
+        public long InitializeOld(ServiceCtx Context)
+        {
+            int Unknown0 = Context.RequestData.ReadInt32();
+            int Unknown1 = Context.RequestData.ReadInt32();
+            int Unknown2 = Context.RequestData.ReadInt32();
+
+            Context.Device.Log.PrintStub(LogClass.ServiceMm, "Stubbed.");
+
+            return 0;
         }
 
         public long Initialize(ServiceCtx Context)

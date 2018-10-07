@@ -6,6 +6,7 @@ using Ryujinx.HLE.HOS.Services.Bsd;
 using Ryujinx.HLE.HOS.Services.Caps;
 using Ryujinx.HLE.HOS.Services.FspSrv;
 using Ryujinx.HLE.HOS.Services.Hid;
+using Ryujinx.HLE.HOS.Services.Irs;
 using Ryujinx.HLE.HOS.Services.Lm;
 using Ryujinx.HLE.HOS.Services.Mm;
 using Ryujinx.HLE.HOS.Services.Nfp;
@@ -95,6 +96,9 @@ namespace Ryujinx.HLE.HOS.Services
 
                 case "hid":
                     return new IHidServer(System);
+
+                case "irs":
+                    return new IIrSensorServer();
 
                 case "lm":
                     return new ILogService();

@@ -38,6 +38,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         private int Track;
 
+        private PlayState PlayState;
+
         public IAudioRenderer(
             Horizon                System,
             AMemory                Memory,
@@ -46,6 +48,10 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
+                { 0, GetSampleRate              },
+                { 1, GetSampleCount             },
+                { 2, GetMixBufferCount          },
+                { 3, GetState                   },
                 { 4, RequestUpdateAudioRenderer },
                 { 5, StartAudioRenderer         },
                 { 6, StopAudioRenderer          },
@@ -68,6 +74,42 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             Voices = CreateArray<VoiceContext>(Params.VoiceCount);
 
             InitializeAudioOut();
+
+            PlayState = PlayState.Stopped;
+        }
+
+        //  GetSampleRate() -> u32
+        public long GetSampleRate(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(Params.SampleRate);
+
+            return 0;
+        }
+
+        //  GetSampleCount() -> u32
+        public long GetSampleCount(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(Params.SampleCount);
+
+            return 0;
+        }
+
+        // GetMixBufferCount() -> u32
+        public long GetMixBufferCount(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(Params.MixCount);
+
+            return 0;
+        }
+
+        // GetState() -> u32
+        private long GetState(ServiceCtx Context)
+        {
+            Context.ResponseData.Write((int)PlayState);
+
+            Context.Device.Log.PrintStub(LogClass.ServiceAudio, $"Stubbed. Renderer State: {Enum.GetName(typeof(PlayState), PlayState)}");
+
+            return 0;
         }
 
         private void AudioCallback()
@@ -206,12 +248,16 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
         {
             Context.Device.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
+            PlayState = PlayState.Playing;
+
             return 0;
         }
 
         public long StopAudioRenderer(ServiceCtx Context)
         {
             Context.Device.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+
+            PlayState = PlayState.Stopped;
 
             return 0;
         }

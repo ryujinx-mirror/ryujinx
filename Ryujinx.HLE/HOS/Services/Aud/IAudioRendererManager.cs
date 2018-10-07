@@ -3,6 +3,7 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Services.Aud.AudioRenderer;
 using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.Utilities;
+using System;
 using System.Collections.Generic;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
@@ -28,9 +29,10 @@ namespace Ryujinx.HLE.HOS.Services.Aud
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
-                { 0, OpenAudioRenderer              },
-                { 1, GetAudioRendererWorkBufferSize },
-                { 2, GetAudioDevice                 }
+                { 0, OpenAudioRenderer                     },
+                { 1, GetAudioRendererWorkBufferSize        },
+                { 2, GetAudioDeviceService                 },
+                { 4, GetAudioDeviceServiceWithRevisionInfo }
             };
         }
 
@@ -161,13 +163,26 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return Result / 8;
         }
 
-        public long GetAudioDevice(ServiceCtx Context)
+        // GetAudioDeviceService(nn::applet::AppletResourceUserId) -> object<nn::audio::detail::IAudioDevice>
+        public long GetAudioDeviceService(ServiceCtx Context)
         {
-            long UserId = Context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
             MakeObject(Context, new IAudioDevice(Context.Device.System));
 
             return 0;
+        }
+
+        // GetAudioDeviceServiceWithRevisionInfo(nn::applet::AppletResourceUserId, u32) -> object<nn::audio::detail::IAudioDevice>
+        private long GetAudioDeviceServiceWithRevisionInfo(ServiceCtx Context)
+        {
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
+            int  RevisionInfo         = Context.RequestData.ReadInt32();
+
+            Context.Device.Log.PrintStub(LogClass.ServiceAudio, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                                $"RevisionInfo: {RevisionInfo}");
+
+            return GetAudioDeviceService(Context);
         }
     }
 }

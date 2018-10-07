@@ -14,6 +14,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         private KEvent LaunchableEvent;
 
+        private int IdleTimeDetectionExtension;
+
         public ISelfController(Horizon System)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
@@ -29,7 +31,9 @@ namespace Ryujinx.HLE.HOS.Services.Am
                 { 14, SetRestartMessageEnabled              },
                 { 16, SetOutOfFocusSuspendingEnabled        },
                 { 19, SetScreenShotImageOrientation         },
-                { 50, SetHandlesRequestToDisplay            }
+                { 50, SetHandlesRequestToDisplay            },
+                { 62, SetIdleTimeDetectionExtension         },
+                { 63, GetIdleTimeDetectionExtension         }
             };
 
             LaunchableEvent = new KEvent(System);
@@ -142,6 +146,26 @@ namespace Ryujinx.HLE.HOS.Services.Am
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
             Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+
+            return 0;
+        }
+
+        // SetIdleTimeDetectionExtension(u32)
+        public long SetIdleTimeDetectionExtension(ServiceCtx Context)
+        {
+            IdleTimeDetectionExtension = Context.RequestData.ReadInt32();
+
+            Context.Device.Log.PrintStub(LogClass.ServiceAm, $"Stubbed. IdleTimeDetectionExtension: {IdleTimeDetectionExtension}");
+
+            return 0;
+        }
+
+        // GetIdleTimeDetectionExtension() -> u32
+        public long GetIdleTimeDetectionExtension(ServiceCtx Context)
+        {
+            Context.ResponseData.Write(IdleTimeDetectionExtension);
+
+            Context.Device.Log.PrintStub(LogClass.ServiceAm, $"Stubbed. IdleTimeDetectionExtension: {IdleTimeDetectionExtension}");
 
             return 0;
         }
