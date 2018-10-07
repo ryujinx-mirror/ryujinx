@@ -1,6 +1,7 @@
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Logging;
+using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Friend
@@ -24,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
         // nn::friends::GetFriendListGetFriendListIds(nn::account::Uid, int Unknown0, nn::friends::detail::ipc::SizedFriendFilter, ulong Unknown1) -> int CounterIds,  array<nn::account::NetworkServiceAccountId>
         public long GetFriendList(ServiceCtx Context)
         {
-            UserId Uuid = new UserId(
+            UInt128 Uuid = new UInt128(
                 Context.RequestData.ReadInt64(),
                 Context.RequestData.ReadInt64());
 
@@ -45,7 +46,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
             // There are no friends online, so we return 0 because the nn::account::NetworkServiceAccountId array is empty.
             Context.ResponseData.Write(0);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceFriend, $"Stubbed. UserId: {Uuid.UserIdHex} - " +
+            Context.Device.Log.PrintStub(LogClass.ServiceFriend, $"Stubbed. UserId: {Uuid.ToString()} - " +
                                                                  $"Unknown0: {Unknown0} - " +
                                                                  $"PresenceStatus: {Filter.PresenceStatus} - " +
                                                                  $"IsFavoriteOnly: {Filter.IsFavoriteOnly} - " +
@@ -61,7 +62,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
         // DeclareCloseOnlinePlaySession(nn::account::Uid)
         public long DeclareCloseOnlinePlaySession(ServiceCtx Context)
         {
-            UserId Uuid = new UserId(
+            UInt128 Uuid = new UInt128(
                 Context.RequestData.ReadInt64(),
                 Context.RequestData.ReadInt64());
 
@@ -70,7 +71,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
                 Profile.OnlinePlayState = OpenCloseState.Closed;
             }
 
-            Context.Device.Log.PrintStub(LogClass.ServiceFriend, $"Stubbed. Uuid: {Uuid.UserIdHex} - " +
+            Context.Device.Log.PrintStub(LogClass.ServiceFriend, $"Stubbed. Uuid: {Uuid.ToString()} - " +
                                                                  $"OnlinePlayState: {Profile.OnlinePlayState}");
 
             return 0;
@@ -79,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
         // UpdateUserPresence(nn::account::Uid, ulong Unknown0) -> buffer<Unknown1, type: 0x19, size: 0xe0>
         public long UpdateUserPresence(ServiceCtx Context)
         {
-            UserId Uuid = new UserId(
+            UInt128 Uuid = new UInt128(
                 Context.RequestData.ReadInt64(),
                 Context.RequestData.ReadInt64());
 
@@ -90,7 +91,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 
             //Todo: Write the buffer content.
 
-            Context.Device.Log.PrintStub(LogClass.ServiceFriend, $"Stubbed. Uuid: {Uuid.UserIdHex} - " +
+            Context.Device.Log.PrintStub(LogClass.ServiceFriend, $"Stubbed. Uuid: {Uuid.ToString()} - " +
                                                                  $"Unknown0: {Unknown0}");
 
             return 0;

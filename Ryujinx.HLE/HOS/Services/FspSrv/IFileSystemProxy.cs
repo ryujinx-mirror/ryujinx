@@ -1,6 +1,6 @@
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.SystemState;
+using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.FspSrv
@@ -78,7 +78,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             long TitleId = Context.RequestData.ReadInt64();
 
-            UserId UserId = new UserId(
+            UInt128 UserId = new UInt128(
                 Context.RequestData.ReadInt64(), 
                 Context.RequestData.ReadInt64());
 

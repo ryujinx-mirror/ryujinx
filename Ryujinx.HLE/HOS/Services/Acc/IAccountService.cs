@@ -1,6 +1,7 @@
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Logging;
+using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
@@ -37,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
         public long GetUserExistence(ServiceCtx Context)
         {
-            UserId Uuid = new UserId(
+            UInt128 Uuid = new UInt128(
                 Context.RequestData.ReadInt64(),
                 Context.RequestData.ReadInt64());
 
@@ -70,12 +71,8 @@ namespace Ryujinx.HLE.HOS.Services.Acc
                     break;
                 }
 
-                byte[] Uuid = Profile.Uuid.Bytes;
-
-                for (int Index = Uuid.Length - 1; Index >= 0; Index--)
-                {
-                    Context.Memory.WriteByte(OutputPosition + Offset++, Uuid[Index]);
-                }
+                Context.Memory.WriteInt64(OutputPosition, Profile.Uuid.High);
+                Context.Memory.WriteInt64(OutputPosition + 8, Profile.Uuid.Low);
             }
 
             return 0;
@@ -92,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
         public long GetProfile(ServiceCtx Context)
         {
-            UserId Uuid = new UserId(
+            UInt128 Uuid = new UInt128(
                 Context.RequestData.ReadInt64(),
                 Context.RequestData.ReadInt64());
 
