@@ -247,9 +247,17 @@ namespace Ryujinx.HLE.HOS.Kernel
             long Unknown = (long)ThreadState.X1;
             long Info    = (long)ThreadState.X2;
 
-            Process.PrintStackTrace(ThreadState);
+            if ((Reason & (1 << 31)) == 0)
+            {
+                Process.PrintStackTrace(ThreadState);
 
-            throw new GuestBrokeExecutionException();
+                throw new GuestBrokeExecutionException();
+            }
+            else
+            {
+                Device.Log.PrintInfo(LogClass.KernelSvc, "Debugger triggered");
+                Process.PrintStackTrace(ThreadState);
+            }
         }
 
         private void SvcOutputDebugString(AThreadState ThreadState)
