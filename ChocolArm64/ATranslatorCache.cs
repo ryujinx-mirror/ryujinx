@@ -8,9 +8,14 @@ namespace ChocolArm64
 {
     class ATranslatorCache
     {
-        private const int MaxTotalSize          = 2 * 1024 * 256;
-        private const int MaxTimeDelta          = 30000;
-        private const int MinCallCountForUpdate = 1000;
+        //Maximum size of the cache, in bytes, measured in ARM code size.
+        private const int MaxTotalSize = 4 * 1024 * 256;
+
+        //Minimum time required in milliseconds for a method to be eligible for deletion.
+        private const int MinTimeDelta = 2 * 60000;
+
+        //Minimum number of calls required to update the timestamp.
+        private const int MinCallCountForUpdate = 250;
 
         private class CacheBucket
         {
@@ -134,7 +139,7 @@ namespace ChocolArm64
 
                     int TimeDelta = RingDelta(Bucket.Timestamp, Timestamp);
 
-                    if ((uint)TimeDelta <= (uint)MaxTimeDelta)
+                    if ((uint)TimeDelta <= (uint)MinTimeDelta)
                     {
                         break;
                     }
