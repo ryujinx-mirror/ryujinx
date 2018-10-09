@@ -49,21 +49,49 @@ namespace Ryujinx.HLE.Loaders
             long DataPosition = ImageBase + (uint)Exe.DataOffset;
 
             long TextSize = (uint)IntUtils.AlignUp(Exe.Text.Length, KMemoryManager.PageSize);
-            long ROSize   = (uint)IntUtils.AlignUp(Exe.RO.Length,   KMemoryManager.PageSize);
+            long ROSize   = (uint)IntUtils.AlignUp(Exe.RO.Length, KMemoryManager.PageSize);
             long DataSize = (uint)IntUtils.AlignUp(Exe.Data.Length, KMemoryManager.PageSize);
+            long BssSize  = (uint)IntUtils.AlignUp(Exe.BssSize, KMemoryManager.PageSize);
 
-            long DataAndBssSize = (uint)IntUtils.AlignUp(Exe.BssSize, KMemoryManager.PageSize) + DataSize;
+            long DataAndBssSize = BssSize + DataSize;
 
             ImageEnd = DataPosition + DataAndBssSize;
 
-            MemoryManager.HleMapProcessCode(TextPosition, TextSize + ROSize + DataAndBssSize);
+            if (Exe.SourceAddress == 0)
+            {
+                MemoryManager.HleMapProcessCode(TextPosition, TextSize + ROSize + DataAndBssSize);
 
-            MemoryManager.SetProcessMemoryPermission(ROPosition,   ROSize,         MemoryPermission.Read);
-            MemoryManager.SetProcessMemoryPermission(DataPosition, DataAndBssSize, MemoryPermission.ReadAndWrite);
+                MemoryManager.SetProcessMemoryPermission(ROPosition, ROSize, MemoryPermission.Read);
+                MemoryManager.SetProcessMemoryPermission(DataPosition, DataAndBssSize, MemoryPermission.ReadAndWrite);
 
-            Memory.WriteBytes(TextPosition, Exe.Text);
-            Memory.WriteBytes(ROPosition,   Exe.RO);
-            Memory.WriteBytes(DataPosition, Exe.Data);
+                Memory.WriteBytes(TextPosition, Exe.Text);
+                Memory.WriteBytes(ROPosition, Exe.RO);
+                Memory.WriteBytes(DataPosition, Exe.Data);
+            }
+            else
+            {
+                long Result = MemoryManager.MapProcessCodeMemory(TextPosition, Exe.SourceAddress, TextSize + ROSize + DataSize);
+
+                if (Result != 0)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                MemoryManager.SetProcessMemoryPermission(ROPosition, ROSize, MemoryPermission.Read);
+                MemoryManager.SetProcessMemoryPermission(DataPosition, DataSize, MemoryPermission.ReadAndWrite);
+
+                if (Exe.BssAddress != 0 && Exe.BssSize != 0)
+                {
+                    Result = MemoryManager.MapProcessCodeMemory(DataPosition + DataSize, Exe.BssAddress, BssSize);
+
+                    if (Result != 0)
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    MemoryManager.SetProcessMemoryPermission(DataPosition + DataSize, BssSize, MemoryPermission.ReadAndWrite);
+                }
+            }
 
             if (Exe.Mod0Offset == 0)
             {

@@ -16,9 +16,14 @@ namespace Ryujinx.HLE.Loaders.Executables
         public int DataOffset { get; private set; }
         public int BssSize    { get; private set; }
 
-        public Nro(Stream Input, string FilePath)
+        public long SourceAddress { get; private set; }
+        public long BssAddress    { get; private set; }
+
+        public Nro(Stream Input, string FilePath, long SourceAddress = 0, long BssAddress = 0)
         {
-            this.FilePath = FilePath;
+            this.FilePath      = FilePath;
+            this.SourceAddress = SourceAddress;
+            this.BssAddress    = BssAddress;
 
             BinaryReader Reader = new BinaryReader(Input);
 

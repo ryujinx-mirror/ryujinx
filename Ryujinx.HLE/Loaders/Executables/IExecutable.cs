@@ -8,6 +8,9 @@ namespace Ryujinx.HLE.Loaders.Executables
         byte[] RO   { get; }
         byte[] Data { get; }
 
+        long SourceAddress { get; }
+        long BssAddress    { get; }
+
         int Mod0Offset { get; }
         int TextOffset { get; }
         int ROOffset   { get; }

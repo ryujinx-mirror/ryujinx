@@ -106,13 +106,37 @@ namespace Ryujinx.HLE.HOS
                 throw new ObjectDisposedException(nameof(Process));
             }
 
-            Device.Log.PrintInfo(LogClass.Loader, $"Image base at 0x{ImageBase:x16}.");
+            long ImageEnd = LoadProgram(Program, ImageBase);
 
-            Executable Executable = new Executable(Program, MemoryManager, Memory, ImageBase);
+            ImageBase = IntUtils.AlignUp(ImageEnd, KMemoryManager.PageSize);
+        }
+
+        public long LoadProgram(IExecutable Program, long ExecutableBase)
+        {
+            if (Disposed)
+            {
+                throw new ObjectDisposedException(nameof(Process));
+            }
+
+            Device.Log.PrintInfo(LogClass.Loader, $"Image base at 0x{ExecutableBase:x16}.");
+
+            Executable Executable = new Executable(Program, MemoryManager, Memory, ExecutableBase);
 
             Executables.Add(Executable);
 
-            ImageBase = IntUtils.AlignUp(Executable.ImageEnd, KMemoryManager.PageSize);
+            return Executable.ImageEnd;
+        }
+
+        public void RemoveProgram(long ExecutableBase)
+        {
+            foreach (Executable Executable in Executables)
+            {
+                if (Executable.ImageBase == ExecutableBase)
+                {
+                    Executables.Remove(Executable);
+                    break;
+                }
+            }
         }
 
         public void SetEmptyArgs()
