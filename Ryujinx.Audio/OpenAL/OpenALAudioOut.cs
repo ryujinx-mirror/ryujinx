@@ -182,7 +182,10 @@ namespace Ryujinx.Audio.OpenAL
             {
                 foreach (Track Td in Tracks.Values)
                 {
-                    Td.CallReleaseCallbackIfNeeded();
+                    lock (Td)
+                    {
+                        Td.CallReleaseCallbackIfNeeded();
+                    }
                 }
 
                 //If it's not slept it will waste cycles.
