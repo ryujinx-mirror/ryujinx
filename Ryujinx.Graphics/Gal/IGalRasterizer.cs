@@ -21,6 +21,7 @@ namespace Ryujinx.Graphics.Gal
         void CreateVbo(long Key, int DataSize, IntPtr HostAddress);
 
         void CreateIbo(long Key, int DataSize, IntPtr HostAddress);
+        void CreateIbo(long Key, int DataSize, byte[] Buffer);
 
         void SetIndexArray(int Size, GalIndexFormat Format);
 

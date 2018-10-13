@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalFrontFace.CCW: return FrontFaceDirection.Ccw;
             }
 
-            throw new ArgumentException(nameof(FrontFace));
+            throw new ArgumentException(nameof(FrontFace) + " \"" + FrontFace + "\" is not valid!");
         }
 
         public static CullFaceMode GetCullFace(GalCullFace CullFace)
@@ -25,7 +25,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalCullFace.FrontAndBack: return CullFaceMode.FrontAndBack;
             }
 
-            throw new ArgumentException(nameof(CullFace));
+            throw new ArgumentException(nameof(CullFace) + " \"" + CullFace + "\" is not valid!");
         }
 
         public static StencilOp GetStencilOp(GalStencilOp Op)
@@ -42,7 +42,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalStencilOp.DecrWrap: return StencilOp.DecrWrap;
             }
 
-            throw new ArgumentException(nameof(Op));
+            throw new ArgumentException(nameof(Op) + " \"" + Op + "\" is not valid!");
         }
 
         public static DepthFunction GetDepthFunc(GalComparisonOp Func)
@@ -66,7 +66,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalComparisonOp.Always:   return DepthFunction.Always;
             }
 
-            throw new ArgumentException(nameof(Func));
+            throw new ArgumentException(nameof(Func) + " \"" + Func + "\" is not valid!");
         }
 
         public static StencilFunction GetStencilFunc(GalComparisonOp Func)
@@ -84,7 +84,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalIndexFormat.Int32: return DrawElementsType.UnsignedInt;
             }
 
-            throw new ArgumentException(nameof(Format));
+            throw new ArgumentException(nameof(Format) + " \"" + Format + "\" is not valid!");
         }
 
         public static PrimitiveType GetPrimitiveType(GalPrimitiveType Type)
@@ -98,8 +98,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalPrimitiveType.Triangles:              return PrimitiveType.Triangles;
                 case GalPrimitiveType.TriangleStrip:          return PrimitiveType.TriangleStrip;
                 case GalPrimitiveType.TriangleFan:            return PrimitiveType.TriangleFan;
-                case GalPrimitiveType.Quads:                  return PrimitiveType.Quads;
-                case GalPrimitiveType.QuadStrip:              return PrimitiveType.QuadStrip;
                 case GalPrimitiveType.Polygon:                return PrimitiveType.Polygon;
                 case GalPrimitiveType.LinesAdjacency:         return PrimitiveType.LinesAdjacency;
                 case GalPrimitiveType.LineStripAdjacency:     return PrimitiveType.LineStripAdjacency;
@@ -108,7 +106,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalPrimitiveType.Patches:                return PrimitiveType.Patches;
             }
 
-            throw new ArgumentException(nameof(Type));
+            throw new ArgumentException(nameof(Type) + " \"" + Type + "\" is not valid!");
         }
 
         public static ShaderType GetShaderType(GalShaderType Type)
@@ -122,7 +120,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalShaderType.Fragment:       return ShaderType.FragmentShader;
             }
 
-            throw new ArgumentException(nameof(Type));
+            throw new ArgumentException(nameof(Type) + " \"" + Type + "\" is not valid!");
         }
 
         public static (PixelInternalFormat, PixelFormat, PixelType) GetImageFormat(GalImageFormat Format)
@@ -211,7 +209,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalTextureSource.OneFloat: return All.One;
             }
 
-            throw new ArgumentException(nameof(Source));
+            throw new ArgumentException(nameof(Source) + " \"" + Source + "\" is not valid!");
         }
 
         public static TextureWrapMode GetTextureWrapMode(GalTextureWrap Wrap)
@@ -245,7 +243,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 }
             }
 
-            throw new ArgumentException(nameof(Wrap));
+            throw new ArgumentException(nameof(Wrap) + " \"" + Wrap + "\" is not valid!");
         }
 
         public static TextureMinFilter GetTextureMinFilter(
@@ -259,7 +257,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalTextureFilter.Linear:  return TextureMinFilter.Linear;
             }
 
-            throw new ArgumentException(nameof(MinFilter));
+            throw new ArgumentException(nameof(MinFilter) + " \"" + MinFilter + "\" is not valid!");
         }
 
         public static TextureMagFilter GetTextureMagFilter(GalTextureFilter Filter)
@@ -270,7 +268,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalTextureFilter.Linear:  return TextureMagFilter.Linear;
             }
 
-            throw new ArgumentException(nameof(Filter));
+            throw new ArgumentException(nameof(Filter) + " \"" + Filter + "\" is not valid!");
         }
 
         public static BlendEquationMode GetBlendEquation(GalBlendEquation BlendEquation)
@@ -284,7 +282,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalBlendEquation.Max:                 return BlendEquationMode.Max;
             }
 
-            throw new ArgumentException(nameof(BlendEquation));
+            throw new ArgumentException(nameof(BlendEquation) + " \"" + BlendEquation + "\" is not valid!");
         }
 
         public static BlendingFactor GetBlendFactor(GalBlendFactor BlendFactor)
@@ -315,7 +313,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     return BlendingFactor.ConstantColor;
             }
 
-            throw new ArgumentException(nameof(BlendFactor));
+            throw new ArgumentException(nameof(BlendFactor) + " \"" + BlendFactor + "\" is not valid!");
         }
     }
 }

@@ -40,7 +40,7 @@ namespace Ryujinx.Graphics.Texture
             int Width  = (Tic[4] & 0xffff) + 1;
             int Height = (Tic[5] & 0xffff) + 1;
 
-            return new GalImage(
+            GalImage Image = new GalImage(
                 Width,
                 Height,
                 TileWidth,
@@ -51,6 +51,13 @@ namespace Ryujinx.Graphics.Texture
                 YSource,
                 ZSource,
                 WSource);
+
+            if (Layout == GalMemoryLayout.Pitch)
+            {
+                Image.Pitch = (Tic[3] & 0xffff) << 5;
+            }
+
+            return Image;
         }
 
         public static GalTextureSampler MakeSampler(NvGpu Gpu, NvGpuVmm Vmm, long TscPosition)

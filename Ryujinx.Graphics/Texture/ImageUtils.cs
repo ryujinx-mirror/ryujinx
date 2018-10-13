@@ -289,7 +289,11 @@ namespace Ryujinx.Graphics.Texture
         {
             ImageDescriptor Desc = GetImageDescriptor(Format);
 
-            return Desc.BytesPerPixel * DivRoundUp(Width, Desc.BlockWidth);
+            int Pitch = Desc.BytesPerPixel * DivRoundUp(Width, Desc.BlockWidth);
+
+            Pitch = (Pitch + 0x1f) & ~0x1f;
+
+            return Pitch;
         }
 
         public static int GetBlockWidth(GalImageFormat Format)

@@ -219,7 +219,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             Attachments.Zeta = Key;
         }
-        
+
         public void UnbindZeta()
         {
             Attachments.Zeta = 0;
