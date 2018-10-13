@@ -1,24 +1,30 @@
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.Logging;
+using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Acc
 {
     class IManagerForApplication : IpcService
     {
+        private UInt128 Uuid;
+
         private Dictionary<int, ServiceProcessRequest> m_Commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public IManagerForApplication()
+        public IManagerForApplication(UInt128 Uuid)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, CheckAvailability },
                 { 1, GetAccountId      }
             };
+
+            this.Uuid = Uuid;
         }
 
+        // CheckAvailability()
         public long CheckAvailability(ServiceCtx Context)
         {
             Context.Device.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
@@ -26,11 +32,14 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        // GetAccountId() -> nn::account::NetworkServiceAccountId
         public long GetAccountId(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
+            long NetworkServiceAccountId = 0xcafe;
 
-            Context.ResponseData.Write(0xcafeL);
+            Context.Device.Log.PrintStub(LogClass.ServiceAcc, $"Stubbed. NetworkServiceAccountId: {NetworkServiceAccountId}");
+
+            Context.ResponseData.Write(NetworkServiceAccountId);
 
             return 0;
         }

@@ -24,11 +24,14 @@ namespace Ryujinx.HLE.HOS.Services.Acc
                 { 3,   ListOpenUsers                       },
                 { 4,   GetLastOpenedUser                   },
                 { 5,   GetProfile                          },
+                { 50,  IsUserRegistrationRequestPermitted  },
+                { 51,  TrySelectUserWithoutInteraction     },
                 { 100, InitializeApplicationInfo           },
                 { 101, GetBaasAccountManagerForApplication }
             };
         }
 
+        // GetUserCount() -> i32
         public long GetUserCount(ServiceCtx Context)
         {
             Context.ResponseData.Write(Context.Device.System.State.GetUserCount());
@@ -36,22 +39,25 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        // GetUserExistence(nn::account::Uid) -> bool
         public long GetUserExistence(ServiceCtx Context)
         {
             UInt128 Uuid = new UInt128(
                 Context.RequestData.ReadInt64(),
                 Context.RequestData.ReadInt64());
 
-            Context.ResponseData.Write(Context.Device.System.State.TryGetUser(Uuid, out _) ? 1 : 0);
+            Context.ResponseData.Write(Context.Device.System.State.TryGetUser(Uuid, out _));
 
             return 0;
         }
 
+        // ListAllUsers() -> array<nn::account::Uid, 0xa>
         public long ListAllUsers(ServiceCtx Context)
         {
             return WriteUserList(Context, Context.Device.System.State.GetAllUsers());
         }
 
+        // ListOpenUsers() -> array<nn::account::Uid, 0xa>
         public long ListOpenUsers(ServiceCtx Context)
         {
             return WriteUserList(Context, Context.Device.System.State.GetOpenUsers());
@@ -78,6 +84,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        // GetLastOpenedUser() -> nn::account::Uid
         public long GetLastOpenedUser(ServiceCtx Context)
         {
             UserProfile LastOpened = Context.Device.System.State.LastOpenUser;
@@ -87,6 +94,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        // GetProfile(nn::account::Uid) -> object<nn::account::profile::IProfile>
         public long GetProfile(ServiceCtx Context)
         {
             UInt128 Uuid = new UInt128(
@@ -105,16 +113,50 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
-        public long InitializeApplicationInfo(ServiceCtx Context)
+        // IsUserRegistrationRequestPermitted(u64, pid) -> bool
+        public long IsUserRegistrationRequestPermitted(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
+            long Unknown = Context.RequestData.ReadInt64();
+
+            Context.Device.Log.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {Unknown}");
+
+            Context.ResponseData.Write(false);
 
             return 0;
         }
 
+        // TrySelectUserWithoutInteraction(bool) -> nn::account::Uid
+        public long TrySelectUserWithoutInteraction(ServiceCtx Context)
+        {
+            bool Unknown = Context.RequestData.ReadBoolean();
+
+            Context.Device.Log.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {Unknown}");
+
+            UserProfile Profile = Context.Device.System.State.LastOpenUser;
+
+            Profile.Uuid.Write(Context.ResponseData);
+
+            return 0;
+        }
+
+        // InitializeApplicationInfo(u64, pid)
+        public long InitializeApplicationInfo(ServiceCtx Context)
+        {
+            long Unknown = Context.RequestData.ReadInt64();
+
+            Context.Device.Log.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {Unknown}");
+
+            return 0;
+        }
+
+        //  GetBaasAccountManagerForApplication(nn::account::Uid) -> object<nn::account::baas::IManagerForApplication>
         public long GetBaasAccountManagerForApplication(ServiceCtx Context)
         {
-            MakeObject(Context, new IManagerForApplication());
+            UInt128 Uuid = new UInt128(
+                Context.RequestData.ReadInt64(),
+                Context.RequestData.ReadInt64());
+
+            MakeObject(Context, new IManagerForApplication(Uuid));
 
             return 0;
         }
