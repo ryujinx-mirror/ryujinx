@@ -44,8 +44,8 @@ namespace Ryujinx.HLE.Utilities
 
         public void Write(BinaryWriter BinaryWriter)
         {
-            BinaryWriter.Write(High);
             BinaryWriter.Write(Low);
+            BinaryWriter.Write(High);
         }
 
         public override string ToString()
