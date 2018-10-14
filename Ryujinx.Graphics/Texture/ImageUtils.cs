@@ -52,7 +52,7 @@ namespace Ryujinx.Graphics.Texture
                 { GalTextureFormat.G8R8,         GalImageFormat.G8R8         | Snorm | Unorm | Sint | Uint          },
                 { GalTextureFormat.R16,          GalImageFormat.R16          | Snorm | Unorm | Sint | Uint | Sfloat },
                 { GalTextureFormat.R8,           GalImageFormat.R8           | Snorm | Unorm | Sint | Uint          },
-                { GalTextureFormat.R16G16,       GalImageFormat.R16G16       | Snorm                       | Sfloat },
+                { GalTextureFormat.R16G16,       GalImageFormat.R16G16       | Snorm | Unorm               | Sfloat },
                 { GalTextureFormat.R32,          GalImageFormat.R32                          | Sint | Uint | Sfloat },
                 { GalTextureFormat.A4B4G4R4,     GalImageFormat.A4B4G4R4             | Unorm                        },
                 { GalTextureFormat.A1B5G5R5,     GalImageFormat.A1R5G5B5             | Unorm                        },
@@ -185,6 +185,7 @@ namespace Ryujinx.Graphics.Texture
                 case GalSurfaceFormat.RGBA8Srgb:      return GalImageFormat.A8B8G8R8_SRGB;
                 case GalSurfaceFormat.RGBA8Snorm:     return GalImageFormat.A8B8G8R8       | Snorm;
                 case GalSurfaceFormat.RG16Snorm:      return GalImageFormat.R16G16         | Snorm;
+                case GalSurfaceFormat.RG16Unorm:      return GalImageFormat.R16G16         | Unorm;
                 case GalSurfaceFormat.RG16Float:      return GalImageFormat.R16G16         | Sfloat;
                 case GalSurfaceFormat.R11G11B10Float: return GalImageFormat.B10G11R11      | Sfloat;
                 case GalSurfaceFormat.R32Float:       return GalImageFormat.R32            | Sfloat;
@@ -192,6 +193,7 @@ namespace Ryujinx.Graphics.Texture
                 case GalSurfaceFormat.RG8Snorm:       return GalImageFormat.R8             | Snorm;
                 case GalSurfaceFormat.R16Float:       return GalImageFormat.R16            | Sfloat;
                 case GalSurfaceFormat.R16Unorm:       return GalImageFormat.R16            | Unorm;
+                case GalSurfaceFormat.R16Uint:        return GalImageFormat.R16            | Uint;
                 case GalSurfaceFormat.R8Unorm:        return GalImageFormat.R8             | Unorm;
                 case GalSurfaceFormat.B5G6R5Unorm:    return GalImageFormat.B5G6R5         | Unorm;
                 case GalSurfaceFormat.BGR5A1Unorm:    return GalImageFormat.A1R5G5B5       | Unorm;
