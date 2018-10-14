@@ -195,6 +195,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 Enable(EnableCap.StencilTest, New.StencilTestEnabled);
             }
 
+            if (New.StencilTwoSideEnabled != Old.StencilTwoSideEnabled)
+            {
+                Enable((EnableCap)All.StencilTestTwoSideExt, New.StencilTwoSideEnabled);
+            }
+
             if (New.StencilTestEnabled)
             {
                 if (New.StencilBackFuncFunc != Old.StencilBackFuncFunc ||
@@ -296,6 +301,18 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                             OGLEnumConverter.GetBlendFactor(New.BlendFuncDstRgb));
                     }
                 }
+            }
+
+            if (New.ColorMaskR != Old.ColorMaskR ||
+                New.ColorMaskG != Old.ColorMaskG ||
+                New.ColorMaskB != Old.ColorMaskB ||
+                New.ColorMaskA != Old.ColorMaskA)
+            {
+                GL.ColorMask(
+                    New.ColorMaskR,
+                    New.ColorMaskG,
+                    New.ColorMaskB,
+                    New.ColorMaskA);
             }
 
             if (New.PrimitiveRestartEnabled != Old.PrimitiveRestartEnabled)

@@ -78,6 +78,7 @@ namespace Ryujinx.Graphics
         CullFaceEnable       = 0x646,
         FrontFace            = 0x647,
         CullFace             = 0x648,
+        ColorMask            = 0x680,
         QueryAddress         = 0x6c0,
         QuerySequence        = 0x6c2,
         QueryControl         = 0x6c3,

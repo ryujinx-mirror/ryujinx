@@ -2,6 +2,9 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     static class ShaderDecodeHelper
     {
+        private static readonly ShaderIrOperImmf ImmfZero = new ShaderIrOperImmf(0);
+        private static readonly ShaderIrOperImmf ImmfOne  = new ShaderIrOperImmf(1);
+
         public static ShaderIrNode GetAluFabsFneg(ShaderIrNode Node, bool Abs, bool Neg)
         {
             return GetAluFneg(GetAluFabs(Node, Abs), Neg);
@@ -15,6 +18,11 @@ namespace Ryujinx.Graphics.Gal.Shader
         public static ShaderIrNode GetAluFneg(ShaderIrNode Node, bool Neg)
         {
             return Neg ? new ShaderIrOp(ShaderIrInst.Fneg, Node) : Node;
+        }
+
+        public static ShaderIrNode GetAluFsat(ShaderIrNode Node, bool Sat)
+        {
+            return Sat ? new ShaderIrOp(ShaderIrInst.Fclamp, Node, ImmfZero, ImmfOne) : Node;
         }
 
         public static ShaderIrNode GetAluIabsIneg(ShaderIrNode Node, bool Abs, bool Neg)

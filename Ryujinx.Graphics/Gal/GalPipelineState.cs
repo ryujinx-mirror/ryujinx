@@ -26,6 +26,7 @@
         public GalComparisonOp DepthFunc;
 
         public bool StencilTestEnabled;
+        public bool StencilTwoSideEnabled;
 
         public GalComparisonOp StencilBackFuncFunc;
         public int StencilBackFuncRef;
@@ -51,6 +52,11 @@
         public GalBlendEquation BlendEquationAlpha;
         public GalBlendFactor BlendFuncSrcAlpha;
         public GalBlendFactor BlendFuncDstAlpha;
+
+        public bool ColorMaskR;
+        public bool ColorMaskG;
+        public bool ColorMaskB;
+        public bool ColorMaskA;
 
         public bool PrimitiveRestartEnabled;
         public uint PrimitiveRestartIndex;

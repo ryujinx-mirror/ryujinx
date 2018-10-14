@@ -97,7 +97,8 @@ namespace Ryujinx.Graphics
             SetCullFace(State);
             SetDepth(State);
             SetStencil(State);
-            SetAlphaBlending(State);
+            SetBlending(State);
+            SetColorMask(State);
             SetPrimitiveRestart(State);
 
             for (int FbIndex = 0; FbIndex < 8; FbIndex++)
@@ -403,7 +404,7 @@ namespace Ryujinx.Graphics
             }
         }
 
-        private void SetAlphaBlending(GalPipelineState State)
+        private void SetBlending(GalPipelineState State)
         {
             //TODO: Support independent blend properly.
             State.BlendEnabled = ReadRegisterBool(NvGpuEngine3dReg.IBlendNEnable);
@@ -419,6 +420,16 @@ namespace Ryujinx.Graphics
                 State.BlendFuncSrcAlpha  =   (GalBlendFactor)ReadRegister(NvGpuEngine3dReg.IBlendNFuncSrcAlpha);
                 State.BlendFuncDstAlpha  =   (GalBlendFactor)ReadRegister(NvGpuEngine3dReg.IBlendNFuncDstAlpha);
             }
+        }
+
+        private void SetColorMask(GalPipelineState State)
+        {
+            int ColorMask = ReadRegister(NvGpuEngine3dReg.ColorMask);
+
+            State.ColorMaskR = ((ColorMask >> 0)  & 0xf) != 0;
+            State.ColorMaskG = ((ColorMask >> 4)  & 0xf) != 0;
+            State.ColorMaskB = ((ColorMask >> 8)  & 0xf) != 0;
+            State.ColorMaskA = ((ColorMask >> 12) & 0xf) != 0;
         }
 
         private void SetPrimitiveRestart(GalPipelineState State)

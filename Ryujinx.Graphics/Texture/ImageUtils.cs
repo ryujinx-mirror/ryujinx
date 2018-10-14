@@ -235,18 +235,23 @@ namespace Ryujinx.Graphics.Texture
 
             int BytesPerPixel = Desc.BytesPerPixel;
 
-            int OutOffs = 0;
+            //Note: Each row of the texture needs to be aligned to 4 bytes.
+            int Pitch = (Width * BytesPerPixel + 3) & ~3;
 
-            byte[] Data = new byte[Width * Height * BytesPerPixel];
+            byte[] Data = new byte[Height * Pitch];
 
             for (int Y = 0; Y < Height; Y++)
-            for (int X = 0; X < Width;  X++)
             {
-                long Offset = (uint)Swizzle.GetSwizzleOffset(X, Y);
+                int OutOffs = Y * Pitch;
 
-                CpuMemory.ReadBytes(Position + Offset, Data, OutOffs, BytesPerPixel);
+                for (int X = 0; X < Width;  X++)
+                {
+                    long Offset = (uint)Swizzle.GetSwizzleOffset(X, Y);
 
-                OutOffs += BytesPerPixel;
+                    CpuMemory.ReadBytes(Position + Offset, Data, OutOffs, BytesPerPixel);
+
+                    OutOffs += BytesPerPixel;
+                }
             }
 
             return Data;

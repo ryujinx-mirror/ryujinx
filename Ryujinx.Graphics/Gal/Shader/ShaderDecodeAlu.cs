@@ -585,6 +585,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             bool AbsA = OpCode.Read(46);
             bool NegA = OpCode.Read(48);
             bool AbsB = OpCode.Read(49);
+            bool Sat  = OpCode.Read(50);
 
             ShaderIrNode OperA = OpCode.Gpr8(), OperB;
 
@@ -603,12 +604,13 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             ShaderIrNode Op = new ShaderIrOp(ShaderIrInst.Fadd, OperA, OperB);
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Op)));
+            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), GetAluFsat(Op, Sat))));
         }
 
         private static void EmitFmul(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
         {
             bool NegB = OpCode.Read(48);
+            bool Sat  = OpCode.Read(50);
 
             ShaderIrNode OperA = OpCode.Gpr8(), OperB;
 
@@ -625,13 +627,14 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             ShaderIrNode Op = new ShaderIrOp(ShaderIrInst.Fmul, OperA, OperB);
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Op)));
+            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), GetAluFsat(Op, Sat))));
         }
 
         private static void EmitFfma(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
         {
             bool NegB = OpCode.Read(48);
             bool NegC = OpCode.Read(49);
+            bool Sat  = OpCode.Read(50);
 
             ShaderIrNode OperA = OpCode.Gpr8(), OperB, OperC;
 
@@ -658,7 +661,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             ShaderIrOp Op = new ShaderIrOp(ShaderIrInst.Ffma, OperA, OperB, OperC);
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Op)));
+            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), GetAluFsat(Op, Sat))));
         }
 
         private static void EmitIadd(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
