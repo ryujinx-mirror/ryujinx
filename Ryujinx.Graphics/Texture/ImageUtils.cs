@@ -58,7 +58,7 @@ namespace Ryujinx.Graphics.Texture
                 { GalTextureFormat.A1B5G5R5,     GalImageFormat.A1R5G5B5             | Unorm                        },
                 { GalTextureFormat.B5G6R5,       GalImageFormat.B5G6R5               | Unorm                        },
                 { GalTextureFormat.BF10GF11RF11, GalImageFormat.B10G11R11                                  | Sfloat },
-                { GalTextureFormat.Z24S8,        GalImageFormat.D24_S8               | Unorm                        },
+                { GalTextureFormat.Z24S8,        GalImageFormat.D24_S8               | Unorm        | Uint          },
                 { GalTextureFormat.ZF32,         GalImageFormat.D32                                        | Sfloat },
                 { GalTextureFormat.ZF32_X24S8,   GalImageFormat.D32_S8               | Unorm                        },
                 { GalTextureFormat.Z16,          GalImageFormat.D16                  | Unorm                        },
@@ -94,6 +94,7 @@ namespace Ryujinx.Graphics.Texture
             { GalImageFormat.R32G32B32A32,  new ImageDescriptor(16, 1,  1,  TargetBuffer.Color) },
             { GalImageFormat.R16G16B16A16,  new ImageDescriptor(8,  1,  1,  TargetBuffer.Color) },
             { GalImageFormat.R32G32,        new ImageDescriptor(8,  1,  1,  TargetBuffer.Color) },
+            { GalImageFormat.B8G8R8A8,      new ImageDescriptor(4,  1,  1,  TargetBuffer.Color) },
             { GalImageFormat.A8B8G8R8,      new ImageDescriptor(4,  1,  1,  TargetBuffer.Color) },
             { GalImageFormat.A2B10G10R10,   new ImageDescriptor(4,  1,  1,  TargetBuffer.Color) },
             { GalImageFormat.R32,           new ImageDescriptor(4,  1,  1,  TargetBuffer.Color) },
@@ -178,7 +179,7 @@ namespace Ryujinx.Graphics.Texture
                 case GalSurfaceFormat.RG32Float:      return GalImageFormat.R32G32         | Sfloat;
                 case GalSurfaceFormat.RG32Sint:       return GalImageFormat.R32G32         | Sint;
                 case GalSurfaceFormat.RG32Uint:       return GalImageFormat.R32G32         | Uint;
-                case GalSurfaceFormat.BGRA8Unorm:     return GalImageFormat.R8G8B8A8       | Unorm; //Is this right?
+                case GalSurfaceFormat.BGRA8Unorm:     return GalImageFormat.B8G8R8A8       | Unorm;
                 case GalSurfaceFormat.BGRA8Srgb:      return GalImageFormat.A8B8G8R8_SRGB;          //This one might be wrong
                 case GalSurfaceFormat.RGB10A2Unorm:   return GalImageFormat.A2B10G10R10    | Unorm;
                 case GalSurfaceFormat.RGBA8Unorm:     return GalImageFormat.A8B8G8R8       | Unorm;
@@ -189,12 +190,14 @@ namespace Ryujinx.Graphics.Texture
                 case GalSurfaceFormat.RG16Float:      return GalImageFormat.R16G16         | Sfloat;
                 case GalSurfaceFormat.R11G11B10Float: return GalImageFormat.B10G11R11      | Sfloat;
                 case GalSurfaceFormat.R32Float:       return GalImageFormat.R32            | Sfloat;
+                case GalSurfaceFormat.R32Uint:        return GalImageFormat.R32            | Uint;
                 case GalSurfaceFormat.RG8Unorm:       return GalImageFormat.R8G8           | Unorm;
-                case GalSurfaceFormat.RG8Snorm:       return GalImageFormat.R8             | Snorm;
+                case GalSurfaceFormat.RG8Snorm:       return GalImageFormat.R8G8           | Snorm;
                 case GalSurfaceFormat.R16Float:       return GalImageFormat.R16            | Sfloat;
                 case GalSurfaceFormat.R16Unorm:       return GalImageFormat.R16            | Unorm;
                 case GalSurfaceFormat.R16Uint:        return GalImageFormat.R16            | Uint;
                 case GalSurfaceFormat.R8Unorm:        return GalImageFormat.R8             | Unorm;
+                case GalSurfaceFormat.R8Uint:         return GalImageFormat.R8             | Uint;
                 case GalSurfaceFormat.B5G6R5Unorm:    return GalImageFormat.B5G6R5         | Unorm;
                 case GalSurfaceFormat.BGR5A1Unorm:    return GalImageFormat.A1R5G5B5       | Unorm;
             }
