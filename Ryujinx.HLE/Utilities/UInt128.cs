@@ -14,21 +14,6 @@ namespace Ryujinx.HLE.Utilities
         {
             this.Low  = Low;
             this.High = High;
-
-            byte[] Bytes = new byte[16];
-
-            int Index = Bytes.Length;
-
-            void WriteBytes(long Value)
-            {
-                for (int Byte = 0; Byte < 8; Byte++)
-                {
-                    Bytes[--Index] = (byte)(Value >> Byte * 8);
-                }
-            }
-
-            WriteBytes(Low);
-            WriteBytes(High);
         }
 
         public UInt128(string UInt128Hex)
@@ -38,7 +23,7 @@ namespace Ryujinx.HLE.Utilities
                 throw new ArgumentException("Invalid Hex value!", nameof(UInt128Hex));
             }
 
-            Low  = Convert.ToInt64(UInt128Hex.Substring(16),16);
+            Low  = Convert.ToInt64(UInt128Hex.Substring(16), 16);
             High = Convert.ToInt64(UInt128Hex.Substring(0, 16), 16);
         }
 
