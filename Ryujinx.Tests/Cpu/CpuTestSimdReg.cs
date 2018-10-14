@@ -204,7 +204,7 @@ namespace Ryujinx.Tests.Cpu
 #endregion
 
 #region "ValueSource (Opcodes)"
-        private static uint[] _F_Add_Div_Mul_MulX_Sub_S_S_()
+        private static uint[] _F_Add_Div_Mul_Mulx_Sub_S_S_()
         {
             return new uint[]
             {
@@ -216,7 +216,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Add_Div_Mul_MulX_Sub_S_D_()
+        private static uint[] _F_Add_Div_Mul_Mulx_Sub_S_D_()
         {
             return new uint[]
             {
@@ -228,7 +228,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Add_Div_Mul_MulX_Sub_V_2S_4S_()
+        private static uint[] _F_Add_Div_Mul_Mulx_Sub_V_2S_4S_()
         {
             return new uint[]
             {
@@ -240,7 +240,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Add_Div_Mul_MulX_Sub_V_2D_()
+        private static uint[] _F_Add_Div_Mul_Mulx_Sub_V_2D_()
         {
             return new uint[]
             {
@@ -252,7 +252,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _Fmadd_Fmsub_S_S_()
+        private static uint[] _F_Madd_Msub_S_S_()
         {
             return new uint[]
             {
@@ -261,7 +261,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _Fmadd_Fmsub_S_D_()
+        private static uint[] _F_Madd_Msub_S_D_()
         {
             return new uint[]
             {
@@ -318,7 +318,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _Frecps_Frsqrts_S_S_()
+        private static uint[] _F_Recps_Rsqrts_S_S_()
         {
             return new uint[]
             {
@@ -327,7 +327,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _Frecps_Frsqrts_S_D_()
+        private static uint[] _F_Recps_Rsqrts_S_D_()
         {
             return new uint[]
             {
@@ -336,7 +336,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _Frecps_Frsqrts_V_2S_4S_()
+        private static uint[] _F_Recps_Rsqrts_V_2S_4S_()
         {
             return new uint[]
             {
@@ -345,7 +345,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _Frecps_Frsqrts_V_2D_()
+        private static uint[] _F_Recps_Rsqrts_V_2D_()
         {
             return new uint[]
             {
@@ -1137,8 +1137,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise]
-        public void F_Add_Div_Mul_MulX_Sub_S_S([ValueSource("_F_Add_Div_Mul_MulX_Sub_S_S_")] uint Opcodes,
+        [Test, Pairwise] [Explicit]
+        public void F_Add_Div_Mul_Mulx_Sub_S_S([ValueSource("_F_Add_Div_Mul_Mulx_Sub_S_S_")] uint Opcodes,
                                                [ValueSource("_1S_F_")] ulong A,
                                                [ValueSource("_1S_F_")] ulong B)
         {
@@ -1154,8 +1154,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FpsrMask: FPSR.IOC | FPSR.DZC);
         }
 
-        [Test, Pairwise]
-        public void F_Add_Div_Mul_MulX_Sub_S_D([ValueSource("_F_Add_Div_Mul_MulX_Sub_S_D_")] uint Opcodes,
+        [Test, Pairwise] [Explicit]
+        public void F_Add_Div_Mul_Mulx_Sub_S_D([ValueSource("_F_Add_Div_Mul_Mulx_Sub_S_D_")] uint Opcodes,
                                                [ValueSource("_1D_F_")] ulong A,
                                                [ValueSource("_1D_F_")] ulong B)
         {
@@ -1171,8 +1171,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FpsrMask: FPSR.IOC | FPSR.DZC);
         }
 
-        [Test, Pairwise]
-        public void F_Add_Div_Mul_MulX_Sub_V_2S_4S([ValueSource("_F_Add_Div_Mul_MulX_Sub_V_2S_4S_")] uint Opcodes,
+        [Test, Pairwise] [Explicit]
+        public void F_Add_Div_Mul_Mulx_Sub_V_2S_4S([ValueSource("_F_Add_Div_Mul_Mulx_Sub_V_2S_4S_")] uint Opcodes,
                                                    [Values(0u)]     uint Rd,
                                                    [Values(1u, 0u)] uint Rn,
                                                    [Values(2u, 0u)] uint Rm,
@@ -1195,8 +1195,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FpsrMask: FPSR.IOC | FPSR.DZC);
         }
 
-        [Test, Pairwise]
-        public void F_Add_Div_Mul_MulX_Sub_V_2D([ValueSource("_F_Add_Div_Mul_MulX_Sub_V_2D_")] uint Opcodes,
+        [Test, Pairwise] [Explicit]
+        public void F_Add_Div_Mul_Mulx_Sub_V_2D([ValueSource("_F_Add_Div_Mul_Mulx_Sub_V_2D_")] uint Opcodes,
                                                 [Values(0u)]     uint Rd,
                                                 [Values(1u, 0u)] uint Rn,
                                                 [Values(2u, 0u)] uint Rm,
@@ -1217,8 +1217,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FpsrMask: FPSR.IOC | FPSR.DZC);
         }
 
-        [Test, Pairwise] // Fused.
-        public void Fmadd_Fmsub_S_S([ValueSource("_Fmadd_Fmsub_S_S_")] uint Opcodes,
+        [Test, Pairwise] [Explicit] // Fused.
+        public void F_Madd_Msub_S_S([ValueSource("_F_Madd_Msub_S_S_")] uint Opcodes,
                                     [ValueSource("_1S_F_")] ulong A,
                                     [ValueSource("_1S_F_")] ulong B,
                                     [ValueSource("_1S_F_")] ulong C)
@@ -1236,8 +1236,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_S);
         }
 
-        [Test, Pairwise] // Fused.
-        public void Fmadd_Fmsub_S_D([ValueSource("_Fmadd_Fmsub_S_D_")] uint Opcodes,
+        [Test, Pairwise] [Explicit] // Fused.
+        public void F_Madd_Msub_S_D([ValueSource("_F_Madd_Msub_S_D_")] uint Opcodes,
                                     [ValueSource("_1D_F_")] ulong A,
                                     [ValueSource("_1D_F_")] ulong B,
                                     [ValueSource("_1D_F_")] ulong C)
@@ -1255,7 +1255,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_D);
         }
 
-        [Test, Pairwise]
+        [Test, Pairwise] [Explicit]
         public void F_Max_Min_Nm_S_S([ValueSource("_F_Max_Min_Nm_S_S_")] uint Opcodes,
                                      [ValueSource("_1S_F_")] ulong A,
                                      [ValueSource("_1S_F_")] ulong B)
@@ -1272,7 +1272,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
         }
 
-        [Test, Pairwise]
+        [Test, Pairwise] [Explicit]
         public void F_Max_Min_Nm_S_D([ValueSource("_F_Max_Min_Nm_S_D_")] uint Opcodes,
                                      [ValueSource("_1D_F_")] ulong A,
                                      [ValueSource("_1D_F_")] ulong B)
@@ -1289,7 +1289,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
         }
 
-        [Test, Pairwise]
+        [Test, Pairwise] [Explicit]
         public void F_Max_Min_Nm_P_V_2S_4S([ValueSource("_F_Max_Min_Nm_P_V_2S_4S_")] uint Opcodes,
                                            [Values(0u)]     uint Rd,
                                            [Values(1u, 0u)] uint Rn,
@@ -1313,7 +1313,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
         }
 
-        [Test, Pairwise]
+        [Test, Pairwise] [Explicit]
         public void F_Max_Min_Nm_P_V_2D([ValueSource("_F_Max_Min_Nm_P_V_2D_")] uint Opcodes,
                                         [Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
@@ -1335,8 +1335,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
         }
 
-        [Test, Pairwise] // Fused.
-        public void Frecps_Frsqrts_S_S([ValueSource("_Frecps_Frsqrts_S_S_")] uint Opcodes,
+        [Test, Pairwise] [Explicit] // Fused.
+        public void F_Recps_Rsqrts_S_S([ValueSource("_F_Recps_Rsqrts_S_S_")] uint Opcodes,
                                        [ValueSource("_1S_F_")] ulong A,
                                        [ValueSource("_1S_F_")] ulong B)
         {
@@ -1352,8 +1352,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_S);
         }
 
-        [Test, Pairwise] // Fused.
-        public void Frecps_Frsqrts_S_D([ValueSource("_Frecps_Frsqrts_S_D_")] uint Opcodes,
+        [Test, Pairwise] [Explicit] // Fused.
+        public void F_Recps_Rsqrts_S_D([ValueSource("_F_Recps_Rsqrts_S_D_")] uint Opcodes,
                                        [ValueSource("_1D_F_")] ulong A,
                                        [ValueSource("_1D_F_")] ulong B)
         {
@@ -1369,8 +1369,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_D);
         }
 
-        [Test, Pairwise] // Fused.
-        public void Frecps_Frsqrts_V_2S_4S([ValueSource("_Frecps_Frsqrts_V_2S_4S_")] uint Opcodes,
+        [Test, Pairwise] [Explicit] // Fused.
+        public void F_Recps_Rsqrts_V_2S_4S([ValueSource("_F_Recps_Rsqrts_V_2S_4S_")] uint Opcodes,
                                            [Values(0u)]     uint Rd,
                                            [Values(1u, 0u)] uint Rn,
                                            [Values(2u, 0u)] uint Rm,
@@ -1393,8 +1393,8 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_S);
         }
 
-        [Test, Pairwise] // Fused.
-        public void Frecps_Frsqrts_V_2D([ValueSource("_Frecps_Frsqrts_V_2D_")] uint Opcodes,
+        [Test, Pairwise] [Explicit] // Fused.
+        public void F_Recps_Rsqrts_V_2D([ValueSource("_F_Recps_Rsqrts_V_2D_")] uint Opcodes,
                                         [Values(0u)]     uint Rd,
                                         [Values(1u, 0u)] uint Rn,
                                         [Values(2u, 0u)] uint Rm,

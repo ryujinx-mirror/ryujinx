@@ -9,18 +9,6 @@ namespace Ryujinx.Tests.Cpu
 {
     public class CpuTestSimdArithmetic : CpuTest
     {
-        [Test, Description("FMUL S6, S1, V0.S[2]")]
-        public void Fmul_Se([Random(10)] float A, [Random(10)] float B)
-        {
-            AThreadState ThreadState = SingleOpcode(0x5F809826,
-                V1: Sse.SetVector128(0, 0, 0, A),
-                V0: Sse.SetVector128(0, B, 0, 0));
-
-            Assert.That(Sse41.Extract(ThreadState.V6, (byte)0), Is.EqualTo(A * B));
-
-            CompareAgainstUnicorn();
-        }
-
         [TestCase(0x00000000u, 0x7F800000u)]
         [TestCase(0x80000000u, 0xFF800000u)]
         [TestCase(0x00FFF000u, 0x7E000000u)]
@@ -86,7 +74,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0(A);
 
             int FpcrTemp = 0x0;
-            if(DefaultNaN)
+            if (DefaultNaN)
             {
                 FpcrTemp = 0x2000000;
             }
@@ -115,7 +103,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0E1(A, B);
 
             int FpcrTemp = 0x0;
-            if(DefaultNaN)
+            if (DefaultNaN)
             {
                 FpcrTemp = 0x2000000;
             }
@@ -185,7 +173,7 @@ namespace Ryujinx.Tests.Cpu
                 case 'M': FpcrTemp = 0x800000; break;
                 case 'Z': FpcrTemp = 0xC00000; break;
             }
-            if(DefaultNaN)
+            if (DefaultNaN)
             {
                 FpcrTemp |= 1 << 25;
             }
@@ -241,7 +229,7 @@ namespace Ryujinx.Tests.Cpu
                 case 'M': FpcrTemp = 0x800000; break;
                 case 'Z': FpcrTemp = 0xC00000; break;
             }
-            if(DefaultNaN)
+            if (DefaultNaN)
             {
                 FpcrTemp |= 1 << 25;
             }
@@ -302,7 +290,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0(A);
 
             int FpcrTemp = 0x0;
-            if(DefaultNaN)
+            if (DefaultNaN)
             {
                 FpcrTemp = 0x2000000;
             }
@@ -327,7 +315,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0E1(A, B);
 
             int FpcrTemp = 0x0;
-            if(DefaultNaN)
+            if (DefaultNaN)
             {
                 FpcrTemp = 0x2000000;
             }
@@ -389,7 +377,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0(A);
 
             int FpcrTemp = 0x0;
-            if(DefaultNaN)
+            if (DefaultNaN)
             {
                 FpcrTemp = 0x2000000;
             }
@@ -417,7 +405,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0E1(A, B);
 
             int FpcrTemp = 0x0;
-            if(DefaultNaN)
+            if (DefaultNaN)
             {
                 FpcrTemp = 0x2000000;
             }
@@ -478,7 +466,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0(A);
 
             int FpcrTemp = 0x0;
-            if(DefaultNaN)
+            if (DefaultNaN)
             {
                 FpcrTemp = 0x2000000;
             }
@@ -503,7 +491,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0E1(A, B);
 
             int FpcrTemp = 0x0;
-            if(DefaultNaN)
+            if (DefaultNaN)
             {
                 FpcrTemp = 0x2000000;
             }
@@ -573,7 +561,7 @@ namespace Ryujinx.Tests.Cpu
         		case 'M': FpcrTemp = 0x800000; break;
         		case 'Z': FpcrTemp = 0xC00000; break;
         	}
-        	if(DefaultNaN)
+        	if (DefaultNaN)
         	{
         		FpcrTemp |= 1 << 25;
         	}
@@ -629,7 +617,7 @@ namespace Ryujinx.Tests.Cpu
                 case 'M': FpcrTemp = 0x800000; break;
                 case 'Z': FpcrTemp = 0xC00000; break;
             }
-            if(DefaultNaN)
+            if (DefaultNaN)
             {
                 FpcrTemp |= 1 << 25;
             }

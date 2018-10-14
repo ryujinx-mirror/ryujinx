@@ -386,7 +386,7 @@ namespace ChocolArm64.Instruction
 #endregion
 
 #region "Count"
-        public static ulong CountLeadingSigns(ulong Value, int Size)
+        public static ulong CountLeadingSigns(ulong Value, int Size) // Size is 8, 16, 32 or 64 (SIMD&FP or Base Inst.).
         {
             Value ^= Value >> 1;
 
@@ -405,9 +405,9 @@ namespace ChocolArm64.Instruction
 
         private static readonly byte[] ClzNibbleTbl = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-        public static ulong CountLeadingZeros(ulong Value, int Size)
+        public static ulong CountLeadingZeros(ulong Value, int Size) // Size is 8, 16, 32 or 64 (SIMD&FP or Base Inst.).
         {
-            if (Value == 0)
+            if (Value == 0ul)
             {
                 return (ulong)Size;
             }
@@ -426,12 +426,17 @@ namespace ChocolArm64.Instruction
             return (ulong)Count;
         }
 
-        public static uint CountSetBits8(uint Value)
+        public static ulong CountSetBits8(ulong Value) // "Size" is 8 (SIMD&FP Inst.).
         {
-            Value = ((Value >> 1) & 0x55) + (Value & 0x55);
-            Value = ((Value >> 2) & 0x33) + (Value & 0x33);
+            if (Value == 0xfful)
+            {
+                return 8ul;
+            }
 
-            return (Value >> 4) + (Value & 0x0f);
+            Value = ((Value >> 1) & 0x55ul) + (Value & 0x55ul);
+            Value = ((Value >> 2) & 0x33ul) + (Value & 0x33ul);
+
+            return (Value >> 4) + (Value & 0x0ful);
         }
 #endregion
 

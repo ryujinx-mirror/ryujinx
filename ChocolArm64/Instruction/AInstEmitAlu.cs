@@ -4,6 +4,7 @@ using ChocolArm64.Translation;
 using System;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.Intrinsics.X86;
 
 using static ChocolArm64.Instruction.AInstEmitAluHelper;
 
@@ -117,9 +118,18 @@ namespace ChocolArm64.Instruction
 
             Context.EmitLdintzr(Op.Rn);
 
-            Context.EmitLdc_I4(Op.RegisterSize == ARegisterSize.Int32 ? 32 : 64);
+            if (Lzcnt.IsSupported)
+            {
+                Type TValue = Op.RegisterSize == ARegisterSize.Int32 ? typeof(uint) : typeof(ulong);
 
-            ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountLeadingZeros));
+                Context.EmitCall(typeof(Lzcnt).GetMethod(nameof(Lzcnt.LeadingZeroCount), new Type[] { TValue }));
+            }
+            else
+            {
+                Context.EmitLdc_I4(Op.RegisterSize == ARegisterSize.Int32 ? 32 : 64);
+
+                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountLeadingZeros));
+            }
 
             Context.EmitStintzr(Op.Rd);
         }

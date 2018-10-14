@@ -83,20 +83,6 @@ namespace ChocolArm64.Instruction
 
         public static void Cls_V(AILEmitterCtx Context)
         {
-            MethodInfo MthdInfo = typeof(ASoftFallback).GetMethod(nameof(ASoftFallback.CountLeadingSigns));
-
-            EmitCountLeadingBits(Context, () => Context.EmitCall(MthdInfo));
-        }
-
-        public static void Clz_V(AILEmitterCtx Context)
-        {
-            MethodInfo MthdInfo = typeof(ASoftFallback).GetMethod(nameof(ASoftFallback.CountLeadingZeros));
-
-            EmitCountLeadingBits(Context, () => Context.EmitCall(MthdInfo));
-        }
-
-        private static void EmitCountLeadingBits(AILEmitterCtx Context, Action Emit)
-        {
             AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
 
             int Bytes = Op.GetBitsCount() >> 3;
@@ -110,7 +96,44 @@ namespace ChocolArm64.Instruction
 
                 Context.EmitLdc_I4(ESize);
 
-                Emit();
+                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountLeadingSigns));
+
+                EmitVectorInsert(Context, Op.Rd, Index, Op.Size);
+            }
+
+            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            {
+                EmitVectorZeroUpper(Context, Op.Rd);
+            }
+        }
+
+        public static void Clz_V(AILEmitterCtx Context)
+        {
+            AOpCodeSimd Op = (AOpCodeSimd)Context.CurrOp;
+
+            int Bytes = Op.GetBitsCount() >> 3;
+            int Elems = Bytes >> Op.Size;
+
+            int ESize = 8 << Op.Size;
+
+            for (int Index = 0; Index < Elems; Index++)
+            {
+                EmitVectorExtractZx(Context, Op.Rn, Index, Op.Size);
+
+                if (Lzcnt.IsSupported && ESize == 32)
+                {
+                    Context.Emit(OpCodes.Conv_U4);
+
+                    Context.EmitCall(typeof(Lzcnt).GetMethod(nameof(Lzcnt.LeadingZeroCount), new Type[] { typeof(uint) }));
+
+                    Context.Emit(OpCodes.Conv_U8);
+                }
+                else
+                {
+                    Context.EmitLdc_I4(ESize);
+
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountLeadingZeros));
+                }
 
                 EmitVectorInsert(Context, Op.Rd, Index, Op.Size);
             }
@@ -131,11 +154,14 @@ namespace ChocolArm64.Instruction
             {
                 EmitVectorExtractZx(Context, Op.Rn, Index, 0);
 
-                Context.Emit(OpCodes.Conv_U4);
-
-                ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountSetBits8));
-
-                Context.Emit(OpCodes.Conv_U8);
+                if (Popcnt.IsSupported)
+                {
+                    Context.EmitCall(typeof(Popcnt).GetMethod(nameof(Popcnt.PopCount), new Type[] { typeof(ulong) }));
+                }
+                else
+                {
+                    ASoftFallback.EmitCall(Context, nameof(ASoftFallback.CountSetBits8));
+                }
 
                 EmitVectorInsert(Context, Op.Rd, Index, 0);
             }
@@ -440,6 +466,15 @@ namespace ChocolArm64.Instruction
             });
         }
 
+        public static void Fmls_Se(AILEmitterCtx Context)
+        {
+            EmitScalarTernaryOpByElemF(Context, () =>
+            {
+                Context.Emit(OpCodes.Mul);
+                Context.Emit(OpCodes.Sub);
+            });
+        }
+
         public static void Fmls_V(AILEmitterCtx Context)
         {
             EmitVectorTernaryOpF(Context, () =>
@@ -554,9 +589,25 @@ namespace ChocolArm64.Instruction
             });
         }
 
+        public static void Fmulx_Se(AILEmitterCtx Context)
+        {
+            EmitScalarBinaryOpByElemF(Context, () =>
+            {
+                EmitSoftFloatCall(Context, nameof(ASoftFloat_32.FPMulX));
+            });
+        }
+
         public static void Fmulx_V(AILEmitterCtx Context)
         {
             EmitVectorBinaryOpF(Context, () =>
+            {
+                EmitSoftFloatCall(Context, nameof(ASoftFloat_32.FPMulX));
+            });
+        }
+
+        public static void Fmulx_Ve(AILEmitterCtx Context)
+        {
+            EmitVectorBinaryOpByElemF(Context, () =>
             {
                 EmitSoftFloatCall(Context, nameof(ASoftFloat_32.FPMulX));
             });

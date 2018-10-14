@@ -249,6 +249,17 @@ namespace ChocolArm64.Instruction
             EmitVectorImmUnaryOp(Context, () => Context.Emit(OpCodes.Not));
         }
 
+        public static void Smov_S(AILEmitterCtx Context)
+        {
+            AOpCodeSimdIns Op = (AOpCodeSimdIns)Context.CurrOp;
+
+            EmitVectorExtractSx(Context, Op.Rn, Op.DstIndex, Op.Size);
+
+            EmitIntZeroUpperIfNeeded(Context);
+
+            Context.EmitStintzr(Op.Rd);
+        }
+
         public static void Tbl_V(AILEmitterCtx Context)
         {
             AOpCodeSimdTbl Op = (AOpCodeSimdTbl)Context.CurrOp;
@@ -421,7 +432,8 @@ namespace ChocolArm64.Instruction
 
         private static void EmitIntZeroUpperIfNeeded(AILEmitterCtx Context)
         {
-            if (Context.CurrOp.RegisterSize == ARegisterSize.Int32)
+            if (Context.CurrOp.RegisterSize == ARegisterSize.Int32 ||
+                Context.CurrOp.RegisterSize == ARegisterSize.SIMD64)
             {
                 Context.Emit(OpCodes.Conv_U4);
                 Context.Emit(OpCodes.Conv_U8);
