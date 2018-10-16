@@ -281,11 +281,6 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (IsPathAlreadyInUse(DirName))
-            {
-                return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
-            }
-
             IDirectory DirInterface = new IDirectory(DirName, FilterFlags);
 
             DirInterface.Disposed += RemoveDirectoryInUse;
