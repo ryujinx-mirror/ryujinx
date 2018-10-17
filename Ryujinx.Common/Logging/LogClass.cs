@@ -1,4 +1,4 @@
-namespace Ryujinx.HLE.Logging
+namespace Ryujinx.Common.Logging
 {
     public enum LogClass
     {

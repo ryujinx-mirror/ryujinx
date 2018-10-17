@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Pctl
@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl
             }
             else
             {
-                Context.Device.Log.PrintWarning(LogClass.ServicePctl, "Service is already initialized!");
+                Logger.PrintWarning(LogClass.ServicePctl, "Service is already initialized!");
             }
 
             return 0;

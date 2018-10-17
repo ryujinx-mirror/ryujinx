@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Ssl
@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
             int  SslVersion = Context.RequestData.ReadInt32();
             long Unknown    = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceSsl, $"Stubbed. SslVersion: {SslVersion} - Unknown: {Unknown}");
+            Logger.PrintStub(LogClass.ServiceSsl, $"Stubbed. SslVersion: {SslVersion} - Unknown: {Unknown}");
 
             MakeObject(Context, new ISslContext());
 
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
         {
             int Version = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceSsl, $"Stubbed. Version: {Version}");
+            Logger.PrintStub(LogClass.ServiceSsl, $"Stubbed. Version: {Version}");
 
             return 0;
         }

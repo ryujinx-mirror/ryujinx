@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE;
-using Ryujinx.HLE.Logging;
 using Ryujinx.UI.Input;
 using System;
 using System.Globalization;
@@ -25,11 +25,11 @@ namespace Ryujinx
 
             GraphicsConfig.ShadersDumpPath = Parser.Value("Graphics_Shaders_Dump_Path");
 
-            Device.Log.SetEnable(LogLevel.Debug,   Convert.ToBoolean(Parser.Value("Logging_Enable_Debug")));
-            Device.Log.SetEnable(LogLevel.Stub,    Convert.ToBoolean(Parser.Value("Logging_Enable_Stub")));
-            Device.Log.SetEnable(LogLevel.Info,    Convert.ToBoolean(Parser.Value("Logging_Enable_Info")));
-            Device.Log.SetEnable(LogLevel.Warning, Convert.ToBoolean(Parser.Value("Logging_Enable_Warn")));
-            Device.Log.SetEnable(LogLevel.Error,   Convert.ToBoolean(Parser.Value("Logging_Enable_Error")));
+            Logger.SetEnable(LogLevel.Debug,   Convert.ToBoolean(Parser.Value("Logging_Enable_Debug")));
+            Logger.SetEnable(LogLevel.Stub,    Convert.ToBoolean(Parser.Value("Logging_Enable_Stub")));
+            Logger.SetEnable(LogLevel.Info,    Convert.ToBoolean(Parser.Value("Logging_Enable_Info")));
+            Logger.SetEnable(LogLevel.Warning, Convert.ToBoolean(Parser.Value("Logging_Enable_Warn")));
+            Logger.SetEnable(LogLevel.Error,   Convert.ToBoolean(Parser.Value("Logging_Enable_Error")));
 
             string[] FilteredLogClasses = Parser.Value("Logging_Filtered_Classes").Split(',', StringSplitOptions.RemoveEmptyEntries);
 
@@ -41,7 +41,7 @@ namespace Ryujinx
             {
                 foreach (LogClass Class in Enum.GetValues(typeof(LogClass)))
                 {
-                    Device.Log.SetEnable(Class, false);
+                    Logger.SetEnable(Class, false);
                 }
             }
 
@@ -53,7 +53,7 @@ namespace Ryujinx
                     {
                         if (Class.ToString().ToLower().Contains(LogClass.Trim().ToLower()))
                         {
-                            Device.Log.SetEnable(Class, true);
+                            Logger.SetEnable(Class, true);
                         }
                     }
                 }

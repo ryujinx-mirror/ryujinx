@@ -1,9 +1,9 @@
 using ChocolArm64.Memory;
 using Ryujinx.Audio;
 using Ryujinx.Audio.Adpcm;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
-using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
@@ -107,7 +107,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
         {
             Context.ResponseData.Write((int)PlayState);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAudio, $"Stubbed. Renderer State: {Enum.GetName(typeof(PlayState), PlayState)}");
+            Logger.PrintStub(LogClass.ServiceAudio, $"Stubbed. Renderer State: {Enum.GetName(typeof(PlayState), PlayState)}");
 
             return 0;
         }
@@ -246,7 +246,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         public long StartAudioRenderer(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             PlayState = PlayState.Playing;
 
@@ -255,7 +255,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         public long StopAudioRenderer(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             PlayState = PlayState.Stopped;
 

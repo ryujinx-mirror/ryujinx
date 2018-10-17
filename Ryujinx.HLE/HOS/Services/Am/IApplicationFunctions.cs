@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Am
@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
             long UIdLow  = Context.RequestData.ReadInt64();
             long UIdHigh = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             Context.ResponseData.Write(0L);
 
@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             string Result = GetFormattedErrorCode(ErrorCode);
 
-            Context.Device.Log.PrintInfo(LogClass.ServiceAm, $"Result = 0x{ErrorCode:x8} ({Result}).");
+            Logger.PrintInfo(LogClass.ServiceAm, $"Result = 0x{ErrorCode:x8} ({Result}).");
 
             return 0;
         }
@@ -90,7 +90,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long GetPseudoDeviceId(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             Context.ResponseData.Write(0L);
             Context.ResponseData.Write(0L);
@@ -100,7 +100,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long InitializeGamePlayRecording(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -109,7 +109,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             int State = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }

@@ -1,3 +1,4 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.SystemState;
 using System;
@@ -115,7 +116,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
                 {
                     if (StringValue.Length + 1 > ReplySize)
                     {
-                        Context.Device.Log.PrintError(Logging.LogClass.ServiceSet, $"{AskedSetting} String value size is too big!");
+                        Logger.PrintError(LogClass.ServiceSet, $"{AskedSetting} String value size is too big!");
                     }
                     else
                     {
@@ -138,11 +139,11 @@ namespace Ryujinx.HLE.HOS.Services.Set
 
                 Context.Memory.WriteBytes(ReplyPos, SettingBuffer);
 
-                Context.Device.Log.PrintDebug(Logging.LogClass.ServiceSet, $"{AskedSetting} set value: {NxSetting} as {NxSetting.GetType()}");
+                Logger.PrintDebug(LogClass.ServiceSet, $"{AskedSetting} set value: {NxSetting} as {NxSetting.GetType()}");
             }
             else
             {
-                Context.Device.Log.PrintError(Logging.LogClass.ServiceSet, $"{AskedSetting} not found!");
+                Logger.PrintError(LogClass.ServiceSet, $"{AskedSetting} not found!");
             }
 
             return 0;

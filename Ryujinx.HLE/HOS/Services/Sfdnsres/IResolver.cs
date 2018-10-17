@@ -1,3 +1,4 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using System;
 using System.Collections.Generic;
@@ -165,7 +166,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             long BufferSize     = Context.Request.SendBuff[0].Size;
 
             // TODO: This is stubbed in 2.0.0+, reverse 1.0.0 version for the sake completeness.
-            Context.Device.Log.PrintStub(Logging.LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0}");
 
             return MakeError(ErrorModule.Os, 1023);
         }
@@ -176,7 +177,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             uint Unknown0 = Context.RequestData.ReadUInt32();
 
             // TODO: This is stubbed in 2.0.0+, reverse 1.0.0 version for the sake completeness.
-            Context.Device.Log.PrintStub(Logging.LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0}");
 
             return MakeError(ErrorModule.Os, 1023);
         }
@@ -368,7 +369,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
 
             Context.ResponseData.Write(0);
 
-            Context.Device.Log.PrintStub(Logging.LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0}");
 
             return 0;
         }
@@ -379,8 +380,8 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             uint  Unknown0 = Context.RequestData.ReadUInt32();
             ulong Unknown1 = Context.RequestData.ReadUInt64();
 
-            Context.Device.Log.PrintStub(Logging.LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0} - " +
-                                                                           $"Unknown1: {Unknown1}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0} - " +
+                                                       $"Unknown1: {Unknown1}");
 
             return 0;
         }
@@ -390,7 +391,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
         {
             uint Unknown0 = Context.RequestData.ReadUInt32();
 
-            Context.Device.Log.PrintStub(Logging.LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0}");
 
             return 0;
         }

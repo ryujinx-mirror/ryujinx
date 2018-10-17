@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 
@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
         // CheckAvailability()
         public long CheckAvailability(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceAcc, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAcc, "Stubbed.");
 
             return 0;
         }
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
         {
             long NetworkServiceAccountId = 0xcafe;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAcc, $"Stubbed. NetworkServiceAccountId: {NetworkServiceAccountId}");
+            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. NetworkServiceAccountId: {NetworkServiceAccountId}");
 
             Context.ResponseData.Write(NetworkServiceAccountId);
 

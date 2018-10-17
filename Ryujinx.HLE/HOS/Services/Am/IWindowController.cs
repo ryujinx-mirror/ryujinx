@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Am
@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long GetAppletResourceUserId(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             Context.ResponseData.Write(0L);
 
@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long AcquireForegroundRights(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }

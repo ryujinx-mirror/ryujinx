@@ -1,8 +1,8 @@
 using ChocolArm64.Events;
 using ChocolArm64.Memory;
 using ChocolArm64.State;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -109,11 +109,11 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             if (SvcFuncs.TryGetValue(e.Id, out SvcFunc Func))
             {
-                Device.Log.PrintDebug(LogClass.KernelSvc, $"{Func.Method.Name} called.");
+                Logger.PrintDebug(LogClass.KernelSvc, $"{Func.Method.Name} called.");
 
                 Func(ThreadState);
 
-                Device.Log.PrintDebug(LogClass.KernelSvc, $"{Func.Method.Name} ended.");
+                Logger.PrintDebug(LogClass.KernelSvc, $"{Func.Method.Name} ended.");
             }
             else
             {

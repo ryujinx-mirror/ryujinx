@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -110,7 +110,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
             if (BufferSize != 0x4000)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{BufferSize:x} (expected 0x4000)");
+                Logger.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{BufferSize:x} (expected 0x4000)");
             }
 
             long ResultCode = 0;
@@ -132,7 +132,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             }
             catch (TimeZoneNotFoundException)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {TzID} (len: {TzID.Length})");
+                Logger.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {TzID} (len: {TzID.Length})");
 
                 ResultCode = MakeError(ErrorModule.Time, 0x3dd);
             }
@@ -170,7 +170,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
             if (BufferSize != 0x4000)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{BufferSize:x} (expected 0x4000)");
+                Logger.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{BufferSize:x} (expected 0x4000)");
             }
 
             // TODO: Reverse the TZif2 conversion in PCV to make this match with real hardware.
@@ -189,7 +189,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             }
             catch (TimeZoneNotFoundException)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {TzID} (len: {TzID.Length})");
+                Logger.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {TzID} (len: {TzID.Length})");
 
                 ResultCode = MakeError(ErrorModule.Time, 0x3dd);
             }
@@ -220,7 +220,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
             if (BufferSize != 0x4000)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{BufferSize:x} (expected 0x4000)");
+                Logger.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{BufferSize:x} (expected 0x4000)");
             }
 
             // TODO: Reverse the TZif2 conversion in PCV to make this match with real hardware.
@@ -239,7 +239,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             }
             catch (TimeZoneNotFoundException)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {TzID} (len: {TzID.Length})");
+                Logger.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {TzID} (len: {TzID.Length})");
 
                 ResultCode = MakeError(ErrorModule.Time, 0x3dd);
             }

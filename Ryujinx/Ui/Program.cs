@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Audio;
 using Ryujinx.Audio.OpenAL;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Gal.OpenGL;
 using Ryujinx.HLE;
@@ -22,7 +23,7 @@ namespace Ryujinx
 
             Config.Read(Device);
 
-            Device.Log.Updated += ConsoleLog.Log;
+            Logger.Updated += ConsoleLog.Log;
 
             if (args.Length == 1)
             {

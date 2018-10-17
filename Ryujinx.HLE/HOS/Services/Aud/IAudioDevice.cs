@@ -1,7 +1,7 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.SystemState;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -56,7 +56,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
                 if ((Position - BasePosition) + Buffer.Length > Size)
                 {
-                    Context.Device.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
+                    Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
 
                     break;
                 }
@@ -80,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             string DeviceName = Encoding.ASCII.GetString(DeviceNameBuffer);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
@@ -100,7 +100,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             }
             else
             {
-                Context.Device.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
+                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
             }
 
             return 0;
@@ -115,7 +115,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
@@ -124,7 +124,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
         {
             Context.ResponseData.Write(2);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
@@ -145,7 +145,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
                 if ((Position - BasePosition) + Buffer.Length > Size)
                 {
-                    Context.Device.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
+                    Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
 
                     break;
                 }
@@ -168,7 +168,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             string DeviceName = Encoding.UTF8.GetString(DeviceNameBuffer);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
@@ -177,7 +177,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
         {
             Context.ResponseData.Write(1f);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
@@ -196,7 +196,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             }
             else
             {
-                Context.Device.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
+                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
             }
 
             return 0;
@@ -211,7 +211,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
@@ -225,7 +225,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }

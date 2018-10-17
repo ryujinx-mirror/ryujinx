@@ -1,6 +1,6 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.SystemState;
-using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 
@@ -103,7 +103,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
             if (!Context.Device.System.State.TryGetUser(Uuid, out UserProfile Profile))
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceAcc, $"User 0x{Uuid} not found!");
+                Logger.PrintWarning(LogClass.ServiceAcc, $"User 0x{Uuid} not found!");
 
                 return MakeError(ErrorModule.Account, AccErr.UserNotFound);
             }
@@ -118,7 +118,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
         {
             long Unknown = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {Unknown}");
+            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {Unknown}");
 
             Context.ResponseData.Write(false);
 
@@ -130,7 +130,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
         {
             bool Unknown = Context.RequestData.ReadBoolean();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {Unknown}");
+            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {Unknown}");
 
             UserProfile Profile = Context.Device.System.State.LastOpenUser;
 
@@ -144,7 +144,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
         {
             long Unknown = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {Unknown}");
+            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {Unknown}");
 
             return 0;
         }

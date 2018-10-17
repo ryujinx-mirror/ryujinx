@@ -3,6 +3,7 @@ using ChocolArm64.Events;
 using ChocolArm64.Memory;
 using ChocolArm64.State;
 using LibHac;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Diagnostics.Demangler;
 using Ryujinx.HLE.HOS.Kernel;
@@ -11,7 +12,6 @@ using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Npdm;
-using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Concurrent;
@@ -118,7 +118,7 @@ namespace Ryujinx.HLE.HOS
                 throw new ObjectDisposedException(nameof(Process));
             }
 
-            Device.Log.PrintInfo(LogClass.Loader, $"Image base at 0x{ExecutableBase:x16}.");
+            Logger.PrintInfo(LogClass.Loader, $"Image base at 0x{ExecutableBase:x16}.");
 
             Executable Executable = new Executable(Program, MemoryManager, Memory, ExecutableBase);
 
@@ -319,7 +319,7 @@ namespace Ryujinx.HLE.HOS
 
             string ExeNameWithAddr = $"{Exe.Name}:0x{Offset:x8}";
 
-            Device.Log.PrintDebug(LogClass.Cpu, ExeNameWithAddr + " " + SubName);
+            Logger.PrintDebug(LogClass.Cpu, ExeNameWithAddr + " " + SubName);
         }
 
         private ATranslator GetTranslator()
@@ -374,7 +374,7 @@ namespace Ryujinx.HLE.HOS
                 FramePointer = Memory.ReadInt64(FramePointer);
             }
 
-            Device.Log.PrintInfo(LogClass.Cpu, Trace.ToString());
+            Logger.PrintInfo(LogClass.Cpu, Trace.ToString());
         }
 
         private bool TryGetSubName(Executable Exe, long Position, out string Name)
@@ -475,7 +475,7 @@ namespace Ryujinx.HLE.HOS
                 File.Delete(Executables[0].FilePath);
             }
 
-            Device.Log.PrintInfo(LogClass.Loader, $"Process {ProcessId} exiting...");
+            Logger.PrintInfo(LogClass.Loader, $"Process {ProcessId} exiting...");
         }
 
         public void Dispose()

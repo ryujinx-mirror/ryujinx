@@ -1,9 +1,9 @@
 using ChocolArm64.Memory;
 using Ryujinx.Audio;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Services.Aud.AudioOut;
-using Ryujinx.HLE.Logging;
 using System.Collections.Generic;
 using System.Text;
 
@@ -86,7 +86,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             }
             else
             {
-                Context.Device.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
+                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
             }
 
             Context.ResponseData.Write(NameCount);
@@ -108,7 +108,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             if (DeviceName != DefaultAudioOutput)
             {
-                Context.Device.Log.PrintWarning(LogClass.Audio, "Invalid device name!");
+                Logger.PrintWarning(LogClass.Audio, "Invalid device name!");
 
                 return MakeError(ErrorModule.Audio, AudErr.DeviceNotFound);
             }
@@ -121,7 +121,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             }
             else
             {
-                Context.Device.Log.PrintError(LogClass.ServiceAudio, $"Output buffer size {ReceiveSize} too small!");
+                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {ReceiveSize} too small!");
             }
 
             int SampleRate = Context.RequestData.ReadInt32();
@@ -134,7 +134,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             if (SampleRate != DefaultSampleRate)
             {
-                Context.Device.Log.PrintWarning(LogClass.Audio, "Invalid sample rate!");
+                Logger.PrintWarning(LogClass.Audio, "Invalid sample rate!");
 
                 return MakeError(ErrorModule.Audio, AudErr.UnsupportedSampleRate);
             }

@@ -4,7 +4,6 @@ using Ryujinx.Graphics.Gal;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.Input;
-using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.Memory;
 using System;
 using System.Threading;
@@ -14,8 +13,6 @@ namespace Ryujinx.HLE
     public class Switch : IDisposable
     {
         internal IAalOutput AudioOut { get; private set; }
-
-        public Logger Log { get; private set; }
 
         internal DeviceMemory Memory { get; private set; }
 
@@ -48,8 +45,6 @@ namespace Ryujinx.HLE
             }
 
             this.AudioOut = AudioOut;
-
-            Log = new Logger();
 
             Memory = new DeviceMemory();
 

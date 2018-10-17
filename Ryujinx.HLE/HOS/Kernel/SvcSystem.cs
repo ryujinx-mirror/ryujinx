@@ -1,9 +1,9 @@
 using ChocolArm64.Memory;
 using ChocolArm64.State;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Services;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Threading;
 
@@ -46,7 +46,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             if (Result != KernelResult.Success)
             {
-                Device.Log.PrintWarning(LogClass.KernelSvc, "Operation failed with error: " + Result + "!");
+                Logger.PrintWarning(LogClass.KernelSvc, "Operation failed with error: " + Result + "!");
             }
 
             return Result;
@@ -76,7 +76,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             if (Result != KernelResult.Success)
             {
-                Device.Log.PrintWarning(LogClass.KernelSvc, "Operation failed with error: " + Result + "!");
+                Logger.PrintWarning(LogClass.KernelSvc, "Operation failed with error: " + Result + "!");
             }
 
             return Result;
@@ -92,7 +92,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             if (Obj == null)
             {
-                Device.Log.PrintWarning(LogClass.KernelSvc, $"Invalid handle 0x{Handle:x8}!");
+                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
@@ -136,11 +136,11 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             if (Result == KernelResult.InvalidState)
             {
-                Device.Log.PrintDebug(LogClass.KernelSvc, "Operation failed with error: " + Result + "!");
+                Logger.PrintDebug(LogClass.KernelSvc, "Operation failed with error: " + Result + "!");
             }
             else if (Result != KernelResult.Success)
             {
-                Device.Log.PrintWarning(LogClass.KernelSvc, "Operation failed with error: " + Result + "!");
+                Logger.PrintWarning(LogClass.KernelSvc, "Operation failed with error: " + Result + "!");
             }
 
             return Result;
@@ -220,7 +220,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
             else
             {
-                Device.Log.PrintWarning(LogClass.KernelSvc, $"Invalid session handle 0x{Handle:x8}!");
+                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid session handle 0x{Handle:x8}!");
 
                 ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
@@ -255,7 +255,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
             else
             {
-                Device.Log.PrintInfo(LogClass.KernelSvc, "Debugger triggered");
+                Logger.PrintInfo(LogClass.KernelSvc, "Debugger triggered");
                 Process.PrintStackTrace(ThreadState);
             }
         }
@@ -267,7 +267,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             string Str = AMemoryHelper.ReadAsciiString(Memory, Position, Size);
 
-            Device.Log.PrintWarning(LogClass.KernelSvc, Str);
+            Logger.PrintWarning(LogClass.KernelSvc, Str);
 
             ThreadState.X0 = 0;
         }

@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 
             MakeObject(Context, new IRequest(Context.Device.System));
 
-            Context.Device.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
@@ -50,7 +50,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 
             Context.ResponseData.Write(BitConverter.ToUInt32(Address.GetAddressBytes()));
 
-            Context.Device.Log.PrintInfo(LogClass.ServiceNifm, $"Console's local IP is \"{Address}\".");
+            Logger.PrintInfo(LogClass.ServiceNifm, $"Console's local IP is \"{Address}\".");
 
             return 0;
         }

@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -29,21 +29,21 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             int Unknown1 = Context.RequestData.ReadInt32();
             int Unknown2 = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceMm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
 
             return 0;
         }
 
         public long Initialize(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceMm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
 
             return 0;
         }
 
         public long SetAndWait(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceMm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
 
             return 0;
         }
@@ -52,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         {
             Context.ResponseData.Write(0);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceMm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
 
             return 0;
         }

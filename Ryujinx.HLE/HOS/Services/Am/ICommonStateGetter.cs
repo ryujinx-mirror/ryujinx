@@ -1,6 +1,6 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -85,7 +85,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             Context.ResponseData.Write((byte)0); //Unknown value.
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -114,7 +114,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }

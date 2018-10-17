@@ -1,7 +1,7 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.Input;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -178,7 +178,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -188,7 +188,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -198,7 +198,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -208,7 +208,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -225,7 +225,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(XpadIdEventHandle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. XpadId: {XpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. XpadId: {XpadId}");
 
             return 0;
         }
@@ -237,7 +237,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.Process.HandleTable.CloseHandle(XpadIdEventHandle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. XpadId: {XpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. XpadId: {XpadId}");
 
             return 0;
         }
@@ -248,8 +248,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  BasicXpadId          = Context.RequestData.ReadInt32();
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"BasicXpadId: {BasicXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"BasicXpadId: {BasicXpadId}");
 
             return 0;
         }
@@ -260,7 +260,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             // There is any Xpad, so we return 0 and write nothing inside the type-0xa buffer.
             Context.ResponseData.Write(0L);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed.");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed.");
 
             return 0;
         }
@@ -270,7 +270,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int JoyXpadId = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
 
             return 0;
         }
@@ -284,7 +284,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
 
             return 0;
         }
@@ -295,7 +295,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             // There is any JoyXpad, so we return 0 and write nothing inside the type-0xa buffer.
             Context.ResponseData.Write(0L);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed.");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed.");
 
             return 0;
         }
@@ -305,7 +305,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int BasicXpadId = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. BasicXpadId: {BasicXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. BasicXpadId: {BasicXpadId}");
 
             return 0;
         }
@@ -315,7 +315,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int BasicXpadId = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. BasicXpadId: {BasicXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. BasicXpadId: {BasicXpadId}");
 
             return 0;
         }
@@ -329,7 +329,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. BasicXpadId: {BasicXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. BasicXpadId: {BasicXpadId}");
 
             return 0;
         }
@@ -339,7 +339,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int JoyXpadId = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
 
             return 0;
         }
@@ -349,7 +349,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int JoyXpadId = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
 
             return 0;
         }
@@ -363,7 +363,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
 
             return 0;
         }
@@ -374,8 +374,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle}");
 
             return 0;
         }
@@ -386,8 +386,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle}");
 
             return 0;
         }
@@ -400,9 +400,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write(SixAxisSensorFusionEnabled);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"SixAxisSensorFusionEnabled: {SixAxisSensorFusionEnabled}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"SixAxisSensorFusionEnabled: {SixAxisSensorFusionEnabled}");
 
             return 0;
         }
@@ -414,9 +414,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  SixAxisSensorHandle   = Context.RequestData.ReadInt32();
             long AppletResourceUserId  = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"SixAxisSensorFusionEnabled: {SixAxisSensorFusionEnabled}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"SixAxisSensorFusionEnabled: {SixAxisSensorFusionEnabled}");
 
             return 0;
         }
@@ -434,10 +434,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"RevisePower: {SensorFusionParams.RevisePower} - " +
-                                                              $"ReviseRange: {SensorFusionParams.ReviseRange}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"RevisePower: {SensorFusionParams.RevisePower} - " +
+                                                  $"ReviseRange: {SensorFusionParams.ReviseRange}");
 
             return 0;
         }
@@ -451,10 +451,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Context.ResponseData.Write(SensorFusionParams.RevisePower);
             Context.ResponseData.Write(SensorFusionParams.ReviseRange);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"RevisePower: {SensorFusionParams.RevisePower} - " +
-                                                              $"ReviseRange: {SensorFusionParams.ReviseRange}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"RevisePower: {SensorFusionParams.RevisePower} - " +
+                                                  $"ReviseRange: {SensorFusionParams.ReviseRange}");
 
             return 0;
         }
@@ -468,10 +468,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             SensorFusionParams.RevisePower = 0;
             SensorFusionParams.ReviseRange = 0;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"RevisePower: {SensorFusionParams.RevisePower} - " +
-                                                              $"ReviseRange: {SensorFusionParams.ReviseRange}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"RevisePower: {SensorFusionParams.RevisePower} - " +
+                                                  $"ReviseRange: {SensorFusionParams.ReviseRange}");
 
             return 0;
         }
@@ -489,10 +489,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"X: {AccelerometerParams.X} - " +
-                                                              $"Y: {AccelerometerParams.Y}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"X: {AccelerometerParams.X} - " +
+                                                  $"Y: {AccelerometerParams.Y}");
 
             return 0;
         }
@@ -506,10 +506,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Context.ResponseData.Write(AccelerometerParams.X);
             Context.ResponseData.Write(AccelerometerParams.Y);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"X: {AccelerometerParams.X} - " +
-                                                              $"Y: {AccelerometerParams.Y}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"X: {AccelerometerParams.X} - " +
+                                                  $"Y: {AccelerometerParams.Y}");
 
             return 0;
         }
@@ -523,10 +523,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             AccelerometerParams.X = 0;
             AccelerometerParams.Y = 0;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"X: {AccelerometerParams.X} - " +
-                                                              $"Y: {AccelerometerParams.Y}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"X: {AccelerometerParams.X} - " +
+                                                  $"Y: {AccelerometerParams.Y}");
 
             return 0;
         }
@@ -538,9 +538,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                  AccelerometerPlayMode = Context.RequestData.ReadUInt32();
             long AppletResourceUserId  = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"PlayMode: {AccelerometerPlayMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"PlayMode: {AccelerometerPlayMode}");
 
             return 0;
         }
@@ -553,9 +553,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write(AccelerometerPlayMode);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"PlayMode: {AccelerometerPlayMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"PlayMode: {AccelerometerPlayMode}");
 
             return 0;
         }
@@ -568,9 +568,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             AccelerometerPlayMode = 0;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"PlayMode: {AccelerometerPlayMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"PlayMode: {AccelerometerPlayMode}");
 
             return 0;
         }
@@ -582,9 +582,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                  GyroscopeZeroDriftMode = (HidGyroscopeZeroDriftMode)Context.RequestData.ReadInt32();
             long AppletResourceUserId   = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"GyroscopeZeroDriftMode: {GyroscopeZeroDriftMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"GyroscopeZeroDriftMode: {GyroscopeZeroDriftMode}");
 
             return 0;
         }
@@ -597,9 +597,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write((int)GyroscopeZeroDriftMode);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"GyroscopeZeroDriftMode: {GyroscopeZeroDriftMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"GyroscopeZeroDriftMode: {GyroscopeZeroDriftMode}");
 
             return 0;
         }
@@ -612,9 +612,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             GyroscopeZeroDriftMode = HidGyroscopeZeroDriftMode.Standard;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"GyroscopeZeroDriftMode: {GyroscopeZeroDriftMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"GyroscopeZeroDriftMode: {GyroscopeZeroDriftMode}");
 
             return 0;
         }
@@ -629,9 +629,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write(IsAtRest);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
-                                                              $"IsAtRest: {IsAtRest}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"IsAtRest: {IsAtRest}");
 
             return 0;
         }
@@ -642,8 +642,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long AppletResourceUserId = Context.RequestData.ReadInt64();
             int  Unknown0             = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"Unknown0: {Unknown0}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"Unknown0: {Unknown0}");
 
             return 0;
         }
@@ -656,8 +656,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"NpadStyleTag: {NpadStyleTag}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadStyleTag: {NpadStyleTag}");
 
             return 0;
         }
@@ -669,8 +669,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write((int)NpadStyleTag);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"NpadStyleTag: {NpadStyleTag}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadStyleTag: {NpadStyleTag}");
 
             return 0;
         }
@@ -681,8 +681,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long AppletResourceUserId  = Context.RequestData.ReadInt64();
             HidControllerId NpadIdType = (HidControllerId)Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"NpadIdType: {NpadIdType}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadIdType: {NpadIdType}");
 
             return 0;
         }
@@ -692,7 +692,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -702,7 +702,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -721,9 +721,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"NpadId: {NpadId} - " +
-                                                              $"NpadStyleSet: {NpadStyleSet}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadId: {NpadId} - " +
+                                                  $"NpadStyleSet: {NpadStyleSet}");
 
             return 0;
         }
@@ -734,8 +734,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long AppletResourceUserId = Context.RequestData.ReadInt64();
             int  NpadIdType           = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"NpadIdType: {NpadIdType}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadIdType: {NpadIdType}");
 
             return 0;
         }
@@ -749,7 +749,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write(LedPattern);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - Pattern: {LedPattern}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - Pattern: {LedPattern}");
 
             return 0;
         }
@@ -760,7 +760,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long AppletResourceUserId = Context.RequestData.ReadInt64();
             int  Unknown              = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - Unknown: {Unknown}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - Unknown: {Unknown}");
 
             return 0;
         }
@@ -771,8 +771,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long AppletResourceUserId = Context.RequestData.ReadInt64();
             NpadJoyHoldType           = (HidNpadJoyHoldType)Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"NpadJoyHoldType: {NpadJoyHoldType}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadJoyHoldType: {NpadJoyHoldType}");
 
             return 0;
         }
@@ -784,8 +784,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write((long)NpadJoyHoldType);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"NpadJoyHoldTypeValue: {NpadJoyHoldType}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadJoyHoldTypeValue: {NpadJoyHoldType}");
 
             return 0;
         }
@@ -798,9 +798,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             NpadJoyAssignmentMode = HidNpadJoyAssignmentMode.Single;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"HidControllerId: {HidControllerId} - " +
-                                                              $"NpadJoyAssignmentModeValue: {NpadJoyAssignmentMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"HidControllerId: {HidControllerId} - " +
+                                                  $"NpadJoyAssignmentModeValue: {NpadJoyAssignmentMode}");
 
             return 0;
         }
@@ -814,10 +814,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             NpadJoyAssignmentMode = HidNpadJoyAssignmentMode.Single;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"HidControllerId: {HidControllerId} - " +
-                                                              $"HidNpadJoyDeviceType: {HidNpadJoyDeviceType} - " +
-                                                              $"NpadJoyAssignmentModeValue: {NpadJoyAssignmentMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"HidControllerId: {HidControllerId} - " +
+                                                  $"HidNpadJoyDeviceType: {HidNpadJoyDeviceType} - " +
+                                                  $"NpadJoyAssignmentModeValue: {NpadJoyAssignmentMode}");
 
             return 0;
         }
@@ -830,9 +830,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             NpadJoyAssignmentMode = HidNpadJoyAssignmentMode.Dual;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"HidControllerId: {HidControllerId} - " +
-                                                              $"NpadJoyAssignmentModeValue: {NpadJoyAssignmentMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"HidControllerId: {HidControllerId} - " +
+                                                  $"NpadJoyAssignmentModeValue: {NpadJoyAssignmentMode}");
 
             return 0;
         }
@@ -844,9 +844,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long SingleJoyId1         = Context.RequestData.ReadInt32();
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SingleJoyId0: {SingleJoyId0} - " +
-                                                              $"SingleJoyId1: {SingleJoyId1}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SingleJoyId0: {SingleJoyId0} - " +
+                                                  $"SingleJoyId1: {SingleJoyId1}");
 
             return 0;
         }
@@ -856,7 +856,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -866,7 +866,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -877,8 +877,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long AppletResourceUserId  = Context.RequestData.ReadInt64();
             NpadHandheldActivationMode = (HidNpadHandheldActivationMode)Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"NpadHandheldActivationMode: {NpadHandheldActivationMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadHandheldActivationMode: {NpadHandheldActivationMode}");
 
             return 0;
         }
@@ -890,8 +890,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write((long)NpadHandheldActivationMode);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"NpadHandheldActivationMode: {NpadHandheldActivationMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadHandheldActivationMode: {NpadHandheldActivationMode}");
 
             return 0;
         }
@@ -903,9 +903,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  NewNpadAssignment    = Context.RequestData.ReadInt32();
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"OldNpadAssignment: {OldNpadAssignment} - " +
-                                                              $"NewNpadAssignment: {NewNpadAssignment}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"OldNpadAssignment: {OldNpadAssignment} - " +
+                                                  $"NewNpadAssignment: {NewNpadAssignment}");
 
             return 0;
         }
@@ -918,9 +918,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write(UnintendedHomeButtonInputProtectionEnabled);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"Unknown0: {Unknown0} - " +
-                                                              $"UnintendedHomeButtonInputProtectionEnabled: {UnintendedHomeButtonInputProtectionEnabled}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"Unknown0: {Unknown0} - " +
+                                                  $"UnintendedHomeButtonInputProtectionEnabled: {UnintendedHomeButtonInputProtectionEnabled}");
 
             return 0;
         }
@@ -932,9 +932,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             uint  Unknown0                             = Context.RequestData.ReadUInt32();
             long AppletResourceUserId                  = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"Unknown0: {Unknown0} - " +
-                                                              $"UnintendedHomeButtonInputProtectionEnable: {UnintendedHomeButtonInputProtectionEnabled}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"Unknown0: {Unknown0} - " +
+                                                  $"UnintendedHomeButtonInputProtectionEnable: {UnintendedHomeButtonInputProtectionEnabled}");
 
             return 0;
         }
@@ -951,12 +951,12 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Context.ResponseData.Write(0); //Unknown0
             Context.ResponseData.Write(0); //Unknown1
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"HidControllerId: {HidControllerId} - " +
-                                                              $"HidNpadJoyDeviceType: {HidNpadJoyDeviceType} - " +
-                                                              $"NpadJoyAssignmentModeValue: {NpadJoyAssignmentMode} - " +
-                                                              $"Unknown0: 0 - " +
-                                                              $"Unknown1: 0");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"HidControllerId: {HidControllerId} - " +
+                                                  $"HidNpadJoyDeviceType: {HidNpadJoyDeviceType} - " +
+                                                  $"NpadJoyAssignmentModeValue: {NpadJoyAssignmentMode} - " +
+                                                  $"Unknown0: 0 - " +
+                                                  $"Unknown1: 0");
 
             return 0;
         }
@@ -975,9 +975,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Context.ResponseData.Write((int)DeviceInfo.DeviceType);
             Context.ResponseData.Write((int)DeviceInfo.Position);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. VibrationDeviceHandle: {VibrationDeviceHandle} - " +
-                                                              $"DeviceType: {DeviceInfo.DeviceType} - " +
-                                                              $"Position: {DeviceInfo.Position}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. VibrationDeviceHandle: {VibrationDeviceHandle} - " +
+                                                  $"DeviceType: {DeviceInfo.DeviceType} - " +
+                                                  $"Position: {DeviceInfo.Position}");
 
             return 0;
         }
@@ -997,12 +997,12 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"VibrationDeviceHandle: {VibrationDeviceHandle} - " +
-                                                              $"AmplitudeLow: {VibrationValue.AmplitudeLow} - " +
-                                                              $"FrequencyLow: {VibrationValue.FrequencyLow} - " +
-                                                              $"AmplitudeHigh: {VibrationValue.AmplitudeHigh} - " +
-                                                              $"FrequencyHigh: {VibrationValue.FrequencyHigh}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"VibrationDeviceHandle: {VibrationDeviceHandle} - " +
+                                                  $"AmplitudeLow: {VibrationValue.AmplitudeLow} - " +
+                                                  $"FrequencyLow: {VibrationValue.FrequencyLow} - " +
+                                                  $"AmplitudeHigh: {VibrationValue.AmplitudeHigh} - " +
+                                                  $"FrequencyHigh: {VibrationValue.FrequencyHigh}");
 
             return 0;
         }
@@ -1018,12 +1018,12 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Context.ResponseData.Write(VibrationValue.AmplitudeHigh);
             Context.ResponseData.Write(VibrationValue.FrequencyHigh);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"VibrationDeviceHandle: {VibrationDeviceHandle} - " +
-                                                              $"AmplitudeLow: {VibrationValue.AmplitudeLow} - " +
-                                                              $"FrequencyLow: {VibrationValue.FrequencyLow} - " +
-                                                              $"AmplitudeHigh: {VibrationValue.AmplitudeHigh} - " +
-                                                              $"FrequencyHigh: {VibrationValue.FrequencyHigh}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"VibrationDeviceHandle: {VibrationDeviceHandle} - " +
+                                                  $"AmplitudeLow: {VibrationValue.AmplitudeLow} - " +
+                                                  $"FrequencyLow: {VibrationValue.FrequencyLow} - " +
+                                                  $"AmplitudeHigh: {VibrationValue.AmplitudeHigh} - " +
+                                                  $"FrequencyHigh: {VibrationValue.FrequencyHigh}");
 
             return 0;
         }
@@ -1041,7 +1041,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             VibrationPermitted = Context.RequestData.ReadBoolean();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. VibrationPermitted: {VibrationPermitted}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. VibrationPermitted: {VibrationPermitted}");
 
             return 0;
         }
@@ -1051,7 +1051,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             Context.ResponseData.Write(VibrationPermitted);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. VibrationPermitted: {VibrationPermitted}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. VibrationPermitted: {VibrationPermitted}");
 
             return 0;
         }
@@ -1071,9 +1071,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             //Todo: Read all handles and values from buffer.
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"VibrationDeviceHandleBufferLength: {VibrationDeviceHandleBuffer.Length} - " +
-                                                              $"VibrationValueBufferLength: {VibrationValueBuffer.Length}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"VibrationDeviceHandleBufferLength: {VibrationDeviceHandleBuffer.Length} - " +
+                                                  $"VibrationValueBufferLength: {VibrationValueBuffer.Length}");
 
             return 0;
         }
@@ -1085,9 +1085,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long VibrationGcErmCommand = Context.RequestData.ReadInt64();
             long AppletResourceUserId  = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"VibrationDeviceHandle: {VibrationDeviceHandle} - " +
-                                                              $"VibrationGcErmCommand: {VibrationGcErmCommand}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"VibrationDeviceHandle: {VibrationDeviceHandle} - " +
+                                                  $"VibrationGcErmCommand: {VibrationGcErmCommand}");
 
             return 0;
         }
@@ -1100,9 +1100,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write(VibrationGcErmCommand);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"VibrationDeviceHandle: {VibrationDeviceHandle} - " +
-                                                              $"VibrationGcErmCommand: {VibrationGcErmCommand}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"VibrationDeviceHandle: {VibrationDeviceHandle} - " +
+                                                  $"VibrationGcErmCommand: {VibrationGcErmCommand}");
 
             return 0;
         }
@@ -1112,7 +1112,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -1120,7 +1120,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // EndPermitVibrationSession()
         public long EndPermitVibrationSession(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed.");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed.");
 
             return 0;
         }
@@ -1130,7 +1130,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -1141,8 +1141,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  ConsoleSixAxisSensorHandle = Context.RequestData.ReadInt32();
             long AppletResourceUserId       = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"ConsoleSixAxisSensorHandle: {ConsoleSixAxisSensorHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"ConsoleSixAxisSensorHandle: {ConsoleSixAxisSensorHandle}");
 
             return 0;
         }
@@ -1153,8 +1153,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  ConsoleSixAxisSensorHandle = Context.RequestData.ReadInt32();
             long AppletResourceUserId       = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"ConsoleSixAxisSensorHandle: {ConsoleSixAxisSensorHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"ConsoleSixAxisSensorHandle: {ConsoleSixAxisSensorHandle}");
 
             return 0;
         }
@@ -1164,7 +1164,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -1174,7 +1174,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -1184,7 +1184,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -1198,9 +1198,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             // Todo: Determine if array<nn::sf::NativeHandle> is a buffer or not...
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"Counter0: {Counter0} - " +
-                                                              $"Counter1: {Counter1}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"Counter0: {Counter0} - " +
+                                                  $"Counter1: {Counter1}");
 
             return 0;
         }
@@ -1210,7 +1210,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -1221,8 +1221,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                  SevenSixAxisSensorFusionStrength = Context.RequestData.ReadSingle();
             long AppletResourceUserId             = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SevenSixAxisSensorFusionStrength: {SevenSixAxisSensorFusionStrength}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SevenSixAxisSensorFusionStrength: {SevenSixAxisSensorFusionStrength}");
 
             return 0;
         }
@@ -1234,8 +1234,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write(SevenSixAxisSensorFusionStrength);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"SevenSixAxisSensorFusionStrength: {SevenSixAxisSensorFusionStrength}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SevenSixAxisSensorFusionStrength: {SevenSixAxisSensorFusionStrength}");
 
             return 0;
         }
@@ -1245,7 +1245,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             Context.ResponseData.Write(UsbFullKeyControllerEnabled);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. UsbFullKeyControllerEnabled: {UsbFullKeyControllerEnabled}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. UsbFullKeyControllerEnabled: {UsbFullKeyControllerEnabled}");
 
             return 0;
         }
@@ -1255,7 +1255,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             UsbFullKeyControllerEnabled = Context.RequestData.ReadBoolean();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. UsbFullKeyControllerEnabled: {UsbFullKeyControllerEnabled}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. UsbFullKeyControllerEnabled: {UsbFullKeyControllerEnabled}");
 
             return 0;
         }
@@ -1267,7 +1267,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write(true); //FullKeyController is always connected ?
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. Unknown0: {Unknown0} - Connected: true");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. Unknown0: {Unknown0} - Connected: true");
 
             return 0;
         }
@@ -1279,7 +1279,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write(true); //Npad always got a battery ?
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - HasBattery: true");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - HasBattery: true");
 
             return 0;
         }
@@ -1292,7 +1292,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Context.ResponseData.Write(true); //Npad always got a left battery ?
             Context.ResponseData.Write(true); //Npad always got a right battery ?
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - HasLeftBattery: true - HasRightBattery: true");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - HasLeftBattery: true - HasRightBattery: true");
 
             return 0;
         }
@@ -1304,7 +1304,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write((byte)0);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - NpadInterfaceType: 0");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - NpadInterfaceType: 0");
 
             return 0;
         }
@@ -1317,9 +1317,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Context.ResponseData.Write((byte)0);
             Context.ResponseData.Write((byte)0);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - " +
-                                                              $"LeftInterfaceType: 0 - " +
-                                                              $"RightInterfaceType: 0");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - " +
+                                                  $"LeftInterfaceType: 0 - " +
+                                                  $"RightInterfaceType: 0");
 
             return 0;
         }
@@ -1334,9 +1334,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write(PalmaConnectionHandle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"Unknown0: {Unknown0} - " +
-                                                              $"PalmaConnectionHandle: {PalmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"Unknown0: {Unknown0} - " +
+                                                  $"PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
@@ -1346,7 +1346,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
@@ -1363,7 +1363,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
@@ -1377,8 +1377,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Context.ResponseData.Write(Unknown0);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
-                                                              $"Unknown0: {Unknown0}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
+                                                  $"Unknown0: {Unknown0}");
 
             return 0;
         }
@@ -1389,8 +1389,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  PalmaConnectionHandle = Context.RequestData.ReadInt32();
             long Unknown0              = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
-                                                              $"Unknown0: {Unknown0}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
+                                                  $"Unknown0: {Unknown0}");
 
             return 0;
         }
@@ -1401,8 +1401,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  PalmaConnectionHandle = Context.RequestData.ReadInt32();
             long FrModeType            = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
-                                                              $"FrModeType: {FrModeType}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
+                                                  $"FrModeType: {FrModeType}");
 
             return 0;
         }
@@ -1412,7 +1412,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
@@ -1423,8 +1423,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  PalmaConnectionHandle = Context.RequestData.ReadInt32();
             bool EnabledPalmaStep      = Context.RequestData.ReadBoolean();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
-                                                              $"EnabledPalmaStep: {EnabledPalmaStep}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
+                                                  $"EnabledPalmaStep: {EnabledPalmaStep}");
 
             return 0;
         }
@@ -1434,7 +1434,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
@@ -1444,7 +1444,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
@@ -1456,9 +1456,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long Unknown0              = Context.RequestData.ReadInt64();
             long Unknown1              = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
-                                                              $"Unknown0: {Unknown0} - " +
-                                                              $"Unknown1: {Unknown1}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
+                                                  $"Unknown0: {Unknown0} - " +
+                                                  $"Unknown1: {Unknown1}");
 
             return 0;
         }
@@ -1471,9 +1471,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long Unknown1              = Context.RequestData.ReadInt64();
             // nn::hid::PalmaApplicationSectionAccessBuffer cast is unknown
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
-                                                              $"Unknown0: {Unknown0} - " +
-                                                              $"Unknown1: {Unknown1}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
+                                                  $"Unknown0: {Unknown0} - " +
+                                                  $"Unknown1: {Unknown1}");
 
             return 0;
         }
@@ -1483,7 +1483,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
@@ -1493,7 +1493,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
@@ -1504,8 +1504,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                  NpadCommunicationMode = Context.RequestData.ReadInt64();
             long AppletResourceUserId  = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                              $"NpadCommunicationMode: {NpadCommunicationMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadCommunicationMode: {NpadCommunicationMode}");
 
             return 0;
         }
@@ -1515,7 +1515,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             Context.ResponseData.Write(NpadCommunicationMode);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceHid, $"Stubbed. CommunicationMode: {NpadCommunicationMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. CommunicationMode: {NpadCommunicationMode}");
 
             return 0;
         }

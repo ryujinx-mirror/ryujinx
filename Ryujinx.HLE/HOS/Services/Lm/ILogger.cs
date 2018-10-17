@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -88,11 +88,11 @@ namespace Ryujinx.HLE.HOS.Services.Lm
 
                 switch((LmLogLevel)Level)
                 {
-                    case LmLogLevel.Trace:    Context.Device.Log.PrintDebug  (LogClass.ServiceLm, Text); break;
-                    case LmLogLevel.Info:     Context.Device.Log.PrintInfo   (LogClass.ServiceLm, Text); break;
-                    case LmLogLevel.Warning:  Context.Device.Log.PrintWarning(LogClass.ServiceLm, Text); break;
-                    case LmLogLevel.Error:    Context.Device.Log.PrintError  (LogClass.ServiceLm, Text); break;
-                    case LmLogLevel.Critical: Context.Device.Log.PrintError  (LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Trace:    Logger.PrintDebug  (LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Info:     Logger.PrintInfo   (LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Warning:  Logger.PrintWarning(LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Error:    Logger.PrintError  (LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Critical: Logger.PrintError  (LogClass.ServiceLm, Text); break;
                 }
             }
 

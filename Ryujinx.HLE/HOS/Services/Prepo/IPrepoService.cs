@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Prepo
@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
 
         public static long SaveReportWithUser(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServicePrepo, "Stubbed.");
+            Logger.PrintStub(LogClass.ServicePrepo, "Stubbed.");
 
             return 0;
         }

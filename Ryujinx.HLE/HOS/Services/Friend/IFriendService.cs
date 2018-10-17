@@ -1,6 +1,6 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.SystemState;
-using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 
@@ -46,15 +46,15 @@ namespace Ryujinx.HLE.HOS.Services.Friend
             // There are no friends online, so we return 0 because the nn::account::NetworkServiceAccountId array is empty.
             Context.ResponseData.Write(0);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceFriend, $"Stubbed. UserId: {Uuid.ToString()} - " +
-                                                                 $"Unknown0: {Unknown0} - " +
-                                                                 $"PresenceStatus: {Filter.PresenceStatus} - " +
-                                                                 $"IsFavoriteOnly: {Filter.IsFavoriteOnly} - " +
-                                                                 $"IsSameAppPresenceOnly: {Filter.IsSameAppPresenceOnly} - " +
-                                                                 $"IsSameAppPlayedOnly: {Filter.IsSameAppPlayedOnly} - " +
-                                                                 $"IsArbitraryAppPlayedOnly: {Filter.IsArbitraryAppPlayedOnly} - " +
-                                                                 $"PresenceGroupId: {Filter.PresenceGroupId} - " +
-                                                                 $"Unknown1: {Unknown1}");
+            Logger.PrintStub(LogClass.ServiceFriend, $"Stubbed. UserId: {Uuid.ToString()} - " +
+                                                     $"Unknown0: {Unknown0} - " +
+                                                     $"PresenceStatus: {Filter.PresenceStatus} - " +
+                                                     $"IsFavoriteOnly: {Filter.IsFavoriteOnly} - " +
+                                                     $"IsSameAppPresenceOnly: {Filter.IsSameAppPresenceOnly} - " +
+                                                     $"IsSameAppPlayedOnly: {Filter.IsSameAppPlayedOnly} - " +
+                                                     $"IsArbitraryAppPlayedOnly: {Filter.IsArbitraryAppPlayedOnly} - " +
+                                                     $"PresenceGroupId: {Filter.PresenceGroupId} - " +
+                                                     $"Unknown1: {Unknown1}");
 
             return 0;
         }
@@ -71,8 +71,8 @@ namespace Ryujinx.HLE.HOS.Services.Friend
                 Profile.OnlinePlayState = OpenCloseState.Closed;
             }
 
-            Context.Device.Log.PrintStub(LogClass.ServiceFriend, $"Stubbed. Uuid: {Uuid.ToString()} - " +
-                                                                 $"OnlinePlayState: {Profile.OnlinePlayState}");
+            Logger.PrintStub(LogClass.ServiceFriend, $"Stubbed. Uuid: {Uuid.ToString()} - " +
+                                                     $"OnlinePlayState: {Profile.OnlinePlayState}");
 
             return 0;
         }
@@ -91,8 +91,8 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 
             //Todo: Write the buffer content.
 
-            Context.Device.Log.PrintStub(LogClass.ServiceFriend, $"Stubbed. Uuid: {Uuid.ToString()} - " +
-                                                                 $"Unknown0: {Unknown0}");
+            Logger.PrintStub(LogClass.ServiceFriend, $"Stubbed. Uuid: {Uuid.ToString()} - " +
+                                                     $"Unknown0: {Unknown0}");
 
             return 0;
         }

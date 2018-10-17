@@ -1,6 +1,6 @@
-﻿using Ryujinx.HLE.HOS.Ipc;
+﻿using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Irs
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceIrs, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceIrs, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Irs
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceIrs, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceIrs, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }

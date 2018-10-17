@@ -1,4 +1,5 @@
 using ChocolArm64.Memory;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Services.Nv.NvGpuAS;
@@ -6,7 +7,6 @@ using Ryujinx.HLE.HOS.Services.Nv.NvGpuGpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvHostChannel;
 using Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl;
 using Ryujinx.HLE.HOS.Services.Nv.NvMap;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -146,7 +146,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
         public long FinishInitialize(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceNv, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return 0;
         }
@@ -180,14 +180,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         {
             if (CmdIn(Cmd) && Context.Request.GetBufferType0x21().Position == 0)
             {
-                Context.Device.Log.PrintError(LogClass.ServiceNv, "Input buffer is null!");
+                Logger.PrintError(LogClass.ServiceNv, "Input buffer is null!");
 
                 return NvResult.InvalidInput;
             }
 
             if (CmdOut(Cmd) && Context.Request.GetBufferType0x22().Position == 0)
             {
-                Context.Device.Log.PrintError(LogClass.ServiceNv, "Output buffer is null!");
+                Logger.PrintError(LogClass.ServiceNv, "Output buffer is null!");
 
                 return NvResult.InvalidInput;
             }

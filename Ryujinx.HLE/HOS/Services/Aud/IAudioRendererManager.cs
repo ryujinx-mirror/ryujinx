@@ -1,7 +1,7 @@
 using Ryujinx.Audio;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Services.Aud.AudioRenderer;
-using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
@@ -104,7 +104,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
                 Context.ResponseData.Write(Size);
 
-                Context.Device.Log.PrintDebug(LogClass.ServiceAudio, $"WorkBufferSize is 0x{Size:x16}.");
+                Logger.PrintDebug(LogClass.ServiceAudio, $"WorkBufferSize is 0x{Size:x16}.");
 
                 return 0;
             }
@@ -112,7 +112,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             {
                 Context.ResponseData.Write(0L);
 
-                Context.Device.Log.PrintWarning(LogClass.ServiceAudio, $"Library Revision 0x{Params.Revision:x8} is not supported!");
+                Logger.PrintWarning(LogClass.ServiceAudio, $"Library Revision 0x{Params.Revision:x8} is not supported!");
 
                 return MakeError(ErrorModule.Audio, AudErr.UnsupportedRevision);
             }
@@ -179,7 +179,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             long AppletResourceUserId = Context.RequestData.ReadInt64();
             int  RevisionInfo         = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAudio, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+            Logger.PrintStub(LogClass.ServiceAudio, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
                                                                 $"RevisionInfo: {RevisionInfo}");
 
             return GetAudioDeviceService(Context);

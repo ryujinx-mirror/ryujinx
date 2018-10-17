@@ -1,6 +1,6 @@
 using System;
 
-namespace Ryujinx.HLE.Logging
+namespace Ryujinx.Common.Logging
 {
     public class LogEventArgs : EventArgs
     {

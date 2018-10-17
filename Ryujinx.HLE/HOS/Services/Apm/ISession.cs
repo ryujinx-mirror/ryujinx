@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Apm
@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
 
             Context.ResponseData.Write((uint)PerformanceConfiguration.PerformanceConfiguration1);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceApm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceApm, "Stubbed.");
 
             return 0;
         }

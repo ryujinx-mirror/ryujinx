@@ -1,6 +1,6 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -35,14 +35,14 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
         {
             Context.ResponseData.Write(1);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
 
         public long GetResult(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
@@ -66,21 +66,21 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 
         public long Cancel(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
 
         public long Submit(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
 
         public long SetConnectionConfirmationOption(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceNifm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }

@@ -2,18 +2,18 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace Ryujinx.HLE.Logging
+namespace Ryujinx.Common.Logging
 {
-    public class Logger
+    public static class Logger
     {
-        private bool[] EnabledLevels;
-        private bool[] EnabledClasses;
+        private static bool[] EnabledLevels;
+        private static bool[] EnabledClasses;
 
-        public event EventHandler<LogEventArgs> Updated;
+        public static event EventHandler<LogEventArgs> Updated;
 
-        private Stopwatch Time;
+        private static Stopwatch Time;
 
-        public Logger()
+        static Logger()
         {
             EnabledLevels  = new bool[Enum.GetNames(typeof(LogLevel)).Length];
             EnabledClasses = new bool[Enum.GetNames(typeof(LogClass)).Length];
@@ -33,50 +33,50 @@ namespace Ryujinx.HLE.Logging
             Time.Start();
         }
 
-        public void SetEnable(LogLevel Level, bool Enabled)
+        public static void SetEnable(LogLevel Level, bool Enabled)
         {
             EnabledLevels[(int)Level] = Enabled;
         }
 
-        public void SetEnable(LogClass Class, bool Enabled)
+        public static void SetEnable(LogClass Class, bool Enabled)
         {
             EnabledClasses[(int)Class] = Enabled;
         }
 
-        internal void PrintDebug(LogClass Class, string Message, [CallerMemberName] string Caller = "")
+        public static void PrintDebug(LogClass Class, string Message, [CallerMemberName] string Caller = "")
         {
             Print(LogLevel.Debug, Class, GetFormattedMessage(Class, Message, Caller));
         }
 
-        internal void PrintStub(LogClass Class, string Message, [CallerMemberName] string Caller = "")
+        public static void PrintStub(LogClass Class, string Message, [CallerMemberName] string Caller = "")
         {
             Print(LogLevel.Stub, Class, GetFormattedMessage(Class, Message, Caller));
         }
 
-        internal void PrintInfo(LogClass Class, string Message, [CallerMemberName] string Caller = "")
+        public static void PrintInfo(LogClass Class, string Message, [CallerMemberName] string Caller = "")
         {
             Print(LogLevel.Info, Class, GetFormattedMessage(Class, Message, Caller));
         }
 
-        internal void PrintWarning(LogClass Class, string Message, [CallerMemberName] string Caller = "")
+        public static void PrintWarning(LogClass Class, string Message, [CallerMemberName] string Caller = "")
         {
             Print(LogLevel.Warning, Class, GetFormattedMessage(Class, Message, Caller));
         }
 
-        internal void PrintError(LogClass Class, string Message, [CallerMemberName] string Caller = "")
+        public static void PrintError(LogClass Class, string Message, [CallerMemberName] string Caller = "")
         {
             Print(LogLevel.Error, Class, GetFormattedMessage(Class, Message, Caller));
         }
 
-        private void Print(LogLevel Level, LogClass Class, string Message)
+        private static void Print(LogLevel Level, LogClass Class, string Message)
         {
             if (EnabledLevels[(int)Level] && EnabledClasses[(int)Class])
             {
-                Updated?.Invoke(this, new LogEventArgs(Level, Time.Elapsed, Message));
+                Updated?.Invoke(null, new LogEventArgs(Level, Time.Elapsed, Message));
             }
         }
 
-        private string GetFormattedMessage(LogClass Class, string Message, string Caller)
+        private static string GetFormattedMessage(LogClass Class, string Message, string Caller)
         {
             return $"{Class} {Caller}: {Message}";
         }

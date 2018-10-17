@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.Logging;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Ns
@@ -23,14 +23,14 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         {
             Context.ResponseData.Write(0);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceNs, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNs, "Stubbed.");
 
             return 0;
         }
 
         public static long ListAddOnContent(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceNs, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNs, "Stubbed.");
 
             //TODO: This is supposed to write a u32 array aswell.
             //It's unknown what it contains.

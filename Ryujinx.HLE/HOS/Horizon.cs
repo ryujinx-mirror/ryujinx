@@ -1,10 +1,10 @@
 using LibHac;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Font;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Npdm;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -104,7 +104,7 @@ namespace Ryujinx.HLE.HOS
 
             if (File.Exists(NpdmFileName))
             {
-                Device.Log.PrintInfo(LogClass.Loader, $"Loading main.npdm...");
+                Logger.PrintInfo(LogClass.Loader, $"Loading main.npdm...");
 
                 using (FileStream Input = new FileStream(NpdmFileName, FileMode.Open))
                 {
@@ -113,7 +113,7 @@ namespace Ryujinx.HLE.HOS
             }
             else
             {
-                Device.Log.PrintWarning(LogClass.Loader, $"NPDM file not found, using default values!");
+                Logger.PrintWarning(LogClass.Loader, $"NPDM file not found, using default values!");
             }
 
             Process MainProcess = MakeProcess(MetaData);
@@ -127,7 +127,7 @@ namespace Ryujinx.HLE.HOS
                         continue;
                     }
 
-                    Device.Log.PrintInfo(LogClass.Loader, $"Loading {Path.GetFileNameWithoutExtension(File)}...");
+                    Logger.PrintInfo(LogClass.Loader, $"Loading {Path.GetFileNameWithoutExtension(File)}...");
 
                     using (FileStream Input = new FileStream(File, FileMode.Open))
                     {
@@ -168,7 +168,7 @@ namespace Ryujinx.HLE.HOS
 
             if (MainNca == null)
             {
-                Device.Log.PrintError(LogClass.Loader, "Unable to load XCI");
+                Logger.PrintError(LogClass.Loader, "Unable to load XCI");
 
                 return;
             }
@@ -212,7 +212,7 @@ namespace Ryujinx.HLE.HOS
 
             if (MainNca == null)
             {
-                Device.Log.PrintError(LogClass.Loader, "Could not find an Application NCA in the provided XCI file");
+                Logger.PrintError(LogClass.Loader, "Could not find an Application NCA in the provided XCI file");
             }
 
             MainNca.SetBaseNca(PatchNca);
@@ -292,7 +292,7 @@ namespace Ryujinx.HLE.HOS
                 return;
             }
 
-            Device.Log.PrintError(LogClass.Loader, "Could not find an Application NCA in the provided NSP file");
+            Logger.PrintError(LogClass.Loader, "Could not find an Application NCA in the provided NSP file");
         }
 
         public void LoadNca(Nca MainNca, Nca ControlNca)
@@ -302,14 +302,14 @@ namespace Ryujinx.HLE.HOS
 
             if (ExefsSection == null)
             {
-                Device.Log.PrintError(LogClass.Loader, "No ExeFS found in NCA");
+                Logger.PrintError(LogClass.Loader, "No ExeFS found in NCA");
 
                 return;
             }
 
             if (RomfsSection == null)
             {
-                Device.Log.PrintWarning(LogClass.Loader, "No RomFS found in NCA");
+                Logger.PrintWarning(LogClass.Loader, "No RomFS found in NCA");
             }
             else
             {
@@ -326,13 +326,13 @@ namespace Ryujinx.HLE.HOS
 
             if (Exefs.FileExists("main.npdm"))
             {
-                Device.Log.PrintInfo(LogClass.Loader, "Loading main.npdm...");
+                Logger.PrintInfo(LogClass.Loader, "Loading main.npdm...");
 
                 MetaData = new Npdm(Exefs.OpenFile("main.npdm"));
             }
             else
             {
-                Device.Log.PrintWarning(LogClass.Loader, $"NPDM file not found, using default values!");
+                Logger.PrintWarning(LogClass.Loader, $"NPDM file not found, using default values!");
             }
 
             Process MainProcess = MakeProcess(MetaData);
@@ -346,7 +346,7 @@ namespace Ryujinx.HLE.HOS
                         continue;
                     }
 
-                    Device.Log.PrintInfo(LogClass.Loader, $"Loading {Filename}...");
+                    Logger.PrintInfo(LogClass.Loader, $"Loading {Filename}...");
 
                     string Name = Path.GetFileNameWithoutExtension(File.Name);
 

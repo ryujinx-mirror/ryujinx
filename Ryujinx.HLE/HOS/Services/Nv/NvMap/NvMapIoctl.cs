@@ -1,6 +1,6 @@
 using ChocolArm64.Memory;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Memory;
-using Ryujinx.HLE.Logging;
 using Ryujinx.HLE.Utilities;
 using System.Collections.Concurrent;
 
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
                 case 0x010e: return GetId (Context);
             }
 
-            Context.Device.Log.PrintWarning(LogClass.ServiceNv, $"Unsupported Ioctl command 0x{Cmd:x8}!");
+            Logger.PrintWarning(LogClass.ServiceNv, $"Unsupported Ioctl command 0x{Cmd:x8}!");
 
             return NvResult.NotSupported;
         }
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
 
             if (Args.Size == 0)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceNv, $"Invalid size 0x{Args.Size:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid size 0x{Args.Size:x8}!");
 
                 return NvResult.InvalidInput;
             }
@@ -52,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
 
             Args.Handle = AddNvMap(Context, new NvMapHandle(Size));
 
-            Context.Device.Log.PrintInfo(LogClass.ServiceNv, $"Created map {Args.Handle} with size 0x{Size:x8}!");
+            Logger.PrintInfo(LogClass.ServiceNv, $"Created map {Args.Handle} with size 0x{Size:x8}!");
 
             AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
@@ -70,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
 
             if (Map == null)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
 
                 return NvResult.InvalidInput;
             }
@@ -95,14 +95,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
 
             if (Map == null)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
 
                 return NvResult.InvalidInput;
             }
 
             if ((Args.Align & (Args.Align - 1)) != 0)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceNv, $"Invalid alignment 0x{Args.Align:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid alignment 0x{Args.Align:x8}!");
 
                 return NvResult.InvalidInput;
             }
@@ -159,7 +159,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
 
             if (Map == null)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
 
                 return NvResult.InvalidInput;
             }
@@ -168,7 +168,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
             {
                 DeleteNvMap(Context, Args.Handle);
 
-                Context.Device.Log.PrintInfo(LogClass.ServiceNv, $"Deleted map {Args.Handle}!");
+                Logger.PrintInfo(LogClass.ServiceNv, $"Deleted map {Args.Handle}!");
 
                 Args.Address = Map.Address;
                 Args.Flags   = 0;
@@ -197,7 +197,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
 
             if (Map == null)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
 
                 return NvResult.InvalidInput;
             }
@@ -231,7 +231,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
 
             if (Map == null)
             {
-                Context.Device.Log.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
 
                 return NvResult.InvalidInput;
             }

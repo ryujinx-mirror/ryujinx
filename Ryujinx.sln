@@ -17,9 +17,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics", "Ryujinx
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Audio", "Ryujinx.Audio\Ryujinx.Audio.csproj", "{5C1D818E-682A-46A5-9D54-30006E26C270}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ryujinx.ShaderTools", "Ryujinx.ShaderTools\Ryujinx.ShaderTools.csproj", "{3AB294D0-2230-468F-9EB3-BDFCAEAE99A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.ShaderTools", "Ryujinx.ShaderTools\Ryujinx.ShaderTools.csproj", "{3AB294D0-2230-468F-9EB3-BDFCAEAE99A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luea", "Ryujinx.LLE\Luea.csproj", "{8E7D36DD-9626-47E2-8EF5-8F2F66751C9C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Luea", "Ryujinx.LLE\Luea.csproj", "{8E7D36DD-9626-47E2-8EF5-8F2F66751C9C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Common", "Ryujinx.Common\Ryujinx.Common.csproj", "{5FD4E4F6-8928-4B3C-BE07-28A675C17226}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{8E7D36DD-9626-47E2-8EF5-8F2F66751C9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E7D36DD-9626-47E2-8EF5-8F2F66751C9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E7D36DD-9626-47E2-8EF5-8F2F66751C9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FD4E4F6-8928-4B3C-BE07-28A675C17226}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FD4E4F6-8928-4B3C-BE07-28A675C17226}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FD4E4F6-8928-4B3C-BE07-28A675C17226}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FD4E4F6-8928-4B3C-BE07-28A675C17226}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

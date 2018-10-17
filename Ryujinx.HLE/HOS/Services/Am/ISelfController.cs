@@ -1,6 +1,6 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
-using Ryujinx.HLE.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -41,21 +41,21 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long Exit(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
         public long LockExit(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
         public long UnlockExit(ServiceCtx Context)
         {
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -71,7 +71,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -80,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -89,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -98,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -109,7 +109,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
             bool Flag2 = Context.RequestData.ReadByte() != 0 ? true : false;
             bool Flag3 = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -118,7 +118,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -127,7 +127,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -136,7 +136,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             int Orientation = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -145,7 +145,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
@@ -155,7 +155,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             IdleTimeDetectionExtension = Context.RequestData.ReadInt32();
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, $"Stubbed. IdleTimeDetectionExtension: {IdleTimeDetectionExtension}");
+            Logger.PrintStub(LogClass.ServiceAm, $"Stubbed. IdleTimeDetectionExtension: {IdleTimeDetectionExtension}");
 
             return 0;
         }
@@ -165,7 +165,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             Context.ResponseData.Write(IdleTimeDetectionExtension);
 
-            Context.Device.Log.PrintStub(LogClass.ServiceAm, $"Stubbed. IdleTimeDetectionExtension: {IdleTimeDetectionExtension}");
+            Logger.PrintStub(LogClass.ServiceAm, $"Stubbed. IdleTimeDetectionExtension: {IdleTimeDetectionExtension}");
 
             return 0;
         }
