@@ -1,5 +1,3 @@
-using System;
-
 namespace Ryujinx.Tests.Unicorn.Native
 {
     public enum UnicornMode

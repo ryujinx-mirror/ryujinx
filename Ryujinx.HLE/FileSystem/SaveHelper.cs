@@ -1,6 +1,5 @@
 ﻿using Ryujinx.HLE.HOS;
 using System.IO;
-using System.Linq;
 
 using static Ryujinx.HLE.FileSystem.VirtualFileSystem;
 

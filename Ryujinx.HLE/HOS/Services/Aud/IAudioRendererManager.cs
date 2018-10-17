@@ -3,7 +3,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Services.Aud.AudioRenderer;
 using Ryujinx.HLE.Utilities;
-using System;
 using System.Collections.Generic;
 
 using static Ryujinx.HLE.HOS.ErrorCode;

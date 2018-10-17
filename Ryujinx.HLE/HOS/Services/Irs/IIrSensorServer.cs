@@ -1,7 +1,5 @@
 ﻿using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel;
-using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Irs

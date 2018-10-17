@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using Ryujinx.Tests.Unicorn;
 
 namespace Ryujinx.Tests.Unicorn.Native
 {
