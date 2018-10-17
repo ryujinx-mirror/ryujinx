@@ -59,9 +59,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         private const int NativeWidth  = 1280;
         private const int NativeHeight = 720;
 
-        private const int RenderTargetsCount = 8;
-
-        private const GalImageFormat RawFormat = GalImageFormat.A8B8G8R8 | GalImageFormat.Unorm;
+        private const int RenderTargetsCount = GalPipelineState.RenderTargetsCount;
 
         private OGLTexture Texture;
 
@@ -115,15 +113,16 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             for (int Attachment = 0; Attachment < RenderTargetsCount; Attachment++)
             {
-                if (Attachments.Colors[Attachment] == OldAttachments.Colors[Attachment])
+                long Key = Attachments.Colors[Attachment];
+
+                if (Key == OldAttachments.Colors[Attachment])
                 {
                     continue;
                 }
 
                 int Handle = 0;
 
-                if (Attachments.Colors[Attachment] != 0 &&
-                    Texture.TryGetImageHandler(Attachments.Colors[Attachment], out CachedImage))
+                if (Key != 0 && Texture.TryGetImageHandler(Key, out CachedImage))
                 {
                     Handle = CachedImage.Handle;
                 }
@@ -178,7 +177,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             if (OGLExtension.ViewportArray)
             {
-                GL.ViewportArray(0, 8, Viewports);
+                GL.ViewportArray(0, RenderTargetsCount, Viewports);
             }
             else
             {

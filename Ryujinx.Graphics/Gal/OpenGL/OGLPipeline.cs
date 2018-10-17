@@ -129,9 +129,16 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 BlendFuncSrcAlpha = GalBlendFactor.One,
                 BlendFuncDstAlpha = GalBlendFactor.Zero,
 
+                ColorMask = ColorMaskRgba.Default,
+
                 PrimitiveRestartEnabled = false,
                 PrimitiveRestartIndex = 0
             };
+
+            for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
+            {
+                Old.ColorMasks[Index] = ColorMaskRgba.Default;
+            }
         }
 
         public void Bind(GalPipelineState New)
@@ -177,8 +184,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             if (New.DepthWriteEnabled != Old.DepthWriteEnabled)
             {
-                Rasterizer.DepthWriteEnabled = New.DepthWriteEnabled;
-
                 GL.DepthMask(New.DepthWriteEnabled);
             }
 
@@ -303,16 +308,17 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 }
             }
 
-            if (New.ColorMaskR != Old.ColorMaskR ||
-                New.ColorMaskG != Old.ColorMaskG ||
-                New.ColorMaskB != Old.ColorMaskB ||
-                New.ColorMaskA != Old.ColorMaskA)
+            for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
             {
-                GL.ColorMask(
-                    New.ColorMaskR,
-                    New.ColorMaskG,
-                    New.ColorMaskB,
-                    New.ColorMaskA);
+                if (!New.ColorMasks[Index].Equals(Old.ColorMasks[Index]))
+                {
+                    GL.ColorMask(
+                        Index,
+                        New.ColorMasks[Index].Red,
+                        New.ColorMasks[Index].Green,
+                        New.ColorMasks[Index].Blue,
+                        New.ColorMasks[Index].Alpha);
+                }
             }
 
             if (New.PrimitiveRestartEnabled != Old.PrimitiveRestartEnabled)
@@ -612,6 +618,16 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 GL.Disable(Cap);
             }
+        }
+
+        public void ResetDepthMask()
+        {
+            Old.DepthWriteEnabled = true;
+        }
+
+        public void ResetColorMask(int Index)
+        {
+            Old.ColorMasks[Index] = ColorMaskRgba.Default;
         }
     }
 }

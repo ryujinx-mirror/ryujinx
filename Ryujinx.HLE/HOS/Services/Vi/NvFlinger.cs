@@ -321,7 +321,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
                         FbWidth,
                         FbHeight, 1, 16,
                         GalMemoryLayout.BlockLinear,
-                        GalImageFormat.A8B8G8R8 | GalImageFormat.Unorm);
+                        GalImageFormat.RGBA8 | GalImageFormat.Unorm);
                 }
 
                 Context.Device.Gpu.ResourceManager.ClearPbCache();

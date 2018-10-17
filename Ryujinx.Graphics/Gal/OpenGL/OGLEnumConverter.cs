@@ -127,55 +127,54 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             switch (Format)
             {
-                case GalImageFormat.R32G32B32A32 | GalImageFormat.Sfloat: return (PixelInternalFormat.Rgba32f,      PixelFormat.Rgba,        PixelType.Float);
-                case GalImageFormat.R32G32B32A32 | GalImageFormat.Sint:   return (PixelInternalFormat.Rgba32i,      PixelFormat.RgbaInteger, PixelType.Int);
-                case GalImageFormat.R32G32B32A32 | GalImageFormat.Uint:   return (PixelInternalFormat.Rgba32ui,     PixelFormat.RgbaInteger, PixelType.UnsignedInt);
-                case GalImageFormat.R16G16B16A16 | GalImageFormat.Sfloat: return (PixelInternalFormat.Rgba16f,      PixelFormat.Rgba,        PixelType.HalfFloat);
-                case GalImageFormat.R16G16B16A16 | GalImageFormat.Sint:   return (PixelInternalFormat.Rgba16i,      PixelFormat.RgbaInteger, PixelType.Short);
-                case GalImageFormat.R16G16B16A16 | GalImageFormat.Uint:   return (PixelInternalFormat.Rgba16ui,     PixelFormat.RgbaInteger, PixelType.UnsignedShort);
-                case GalImageFormat.R32G32       | GalImageFormat.Sfloat: return (PixelInternalFormat.Rg32f,        PixelFormat.Rg,          PixelType.Float);
-                case GalImageFormat.R32G32       | GalImageFormat.Sint:   return (PixelInternalFormat.Rg32i,        PixelFormat.RgInteger,   PixelType.Int);
-                case GalImageFormat.R32G32       | GalImageFormat.Uint:   return (PixelInternalFormat.Rg32ui,       PixelFormat.RgInteger,   PixelType.UnsignedInt);
-                case GalImageFormat.A8B8G8R8     | GalImageFormat.Snorm:  return (PixelInternalFormat.Rgba8Snorm,   PixelFormat.Rgba,        PixelType.Byte);
-                case GalImageFormat.A8B8G8R8     | GalImageFormat.Unorm:  return (PixelInternalFormat.Rgba8,        PixelFormat.Rgba,        PixelType.UnsignedByte);
-                case GalImageFormat.A8B8G8R8     | GalImageFormat.Sint:   return (PixelInternalFormat.Rgba8i,       PixelFormat.RgbaInteger, PixelType.Byte);
-                case GalImageFormat.A8B8G8R8     | GalImageFormat.Uint:   return (PixelInternalFormat.Rgba8ui,      PixelFormat.RgbaInteger, PixelType.UnsignedByte);
-                case GalImageFormat.A8B8G8R8_SRGB:                        return (PixelInternalFormat.Srgb8Alpha8,  PixelFormat.Rgba,        PixelType.UnsignedByte);
-                case GalImageFormat.B8G8R8A8     | GalImageFormat.Unorm:  return (PixelInternalFormat.Rgba8,        PixelFormat.Bgra,        PixelType.UnsignedByte);
-                case GalImageFormat.A4B4G4R4     | GalImageFormat.Unorm:  return (PixelInternalFormat.Rgba4,        PixelFormat.Rgba,        PixelType.UnsignedShort4444Reversed);
-                case GalImageFormat.A2B10G10R10  | GalImageFormat.Uint:   return (PixelInternalFormat.Rgb10A2ui,    PixelFormat.RgbaInteger, PixelType.UnsignedInt2101010Reversed);
-                case GalImageFormat.A2B10G10R10  | GalImageFormat.Unorm:  return (PixelInternalFormat.Rgb10A2,      PixelFormat.Rgba,        PixelType.UnsignedInt2101010Reversed);
-                case GalImageFormat.R32          | GalImageFormat.Sfloat: return (PixelInternalFormat.R32f,         PixelFormat.Red,         PixelType.Float);
-                case GalImageFormat.R32          | GalImageFormat.Sint:   return (PixelInternalFormat.R32i,         PixelFormat.Red,         PixelType.Int);
-                case GalImageFormat.R32          | GalImageFormat.Uint:   return (PixelInternalFormat.R32ui,        PixelFormat.Red,         PixelType.UnsignedInt);
-                case GalImageFormat.A1R5G5B5     | GalImageFormat.Unorm:  return (PixelInternalFormat.Rgb5A1,       PixelFormat.Rgba,        PixelType.UnsignedShort1555Reversed);
-                case GalImageFormat.B5G6R5       | GalImageFormat.Unorm:  return (PixelInternalFormat.Rgba,         PixelFormat.Rgb,         PixelType.UnsignedShort565Reversed);
-                case GalImageFormat.R16G16       | GalImageFormat.Sfloat: return (PixelInternalFormat.Rg16f,        PixelFormat.Rg,          PixelType.HalfFloat);
-                case GalImageFormat.R16G16       | GalImageFormat.Sint:   return (PixelInternalFormat.Rg16i,        PixelFormat.RgInteger,   PixelType.Short);
-                case GalImageFormat.R16G16       | GalImageFormat.Snorm:  return (PixelInternalFormat.Rg16Snorm,    PixelFormat.Rg,          PixelType.Byte);
-                case GalImageFormat.R16G16       | GalImageFormat.Unorm:  return (PixelInternalFormat.Rg16,         PixelFormat.Rg,          PixelType.UnsignedShort);
-                case GalImageFormat.R8G8         | GalImageFormat.Sint:   return (PixelInternalFormat.Rg8i,         PixelFormat.RgInteger,   PixelType.Byte);
-                case GalImageFormat.R8G8         | GalImageFormat.Snorm:  return (PixelInternalFormat.Rg8Snorm,     PixelFormat.Rg,          PixelType.Byte);
-                case GalImageFormat.R8G8         | GalImageFormat.Uint:   return (PixelInternalFormat.Rg8ui,        PixelFormat.RgInteger,   PixelType.UnsignedByte);
-                case GalImageFormat.R8G8         | GalImageFormat.Unorm:  return (PixelInternalFormat.Rg8,          PixelFormat.Rg,          PixelType.UnsignedByte);
-                case GalImageFormat.G8R8         | GalImageFormat.Snorm:  return (PixelInternalFormat.Rg8Snorm,     PixelFormat.Rg,          PixelType.Byte);
-                case GalImageFormat.G8R8         | GalImageFormat.Unorm:  return (PixelInternalFormat.Rg8,          PixelFormat.Rg,          PixelType.UnsignedByte);
-                case GalImageFormat.R16          | GalImageFormat.Sfloat: return (PixelInternalFormat.R16f,         PixelFormat.Red,         PixelType.HalfFloat);
-                case GalImageFormat.R16          | GalImageFormat.Sint:   return (PixelInternalFormat.R16i,         PixelFormat.RedInteger,  PixelType.Short);
-                case GalImageFormat.R16          | GalImageFormat.Snorm:  return (PixelInternalFormat.R16Snorm,     PixelFormat.Red,         PixelType.Byte);
-                case GalImageFormat.R16          | GalImageFormat.Uint:   return (PixelInternalFormat.R16ui,        PixelFormat.RedInteger,  PixelType.UnsignedShort);
-                case GalImageFormat.R16          | GalImageFormat.Unorm:  return (PixelInternalFormat.R16,          PixelFormat.Red,         PixelType.UnsignedShort);
-                case GalImageFormat.R8           | GalImageFormat.Sint:   return (PixelInternalFormat.R8i,          PixelFormat.RedInteger,  PixelType.Byte);
-                case GalImageFormat.R8           | GalImageFormat.Snorm:  return (PixelInternalFormat.R8Snorm,      PixelFormat.Red,         PixelType.Byte);
-                case GalImageFormat.R8           | GalImageFormat.Uint:   return (PixelInternalFormat.R8ui,         PixelFormat.RedInteger,  PixelType.UnsignedByte);
-                case GalImageFormat.R8           | GalImageFormat.Unorm:  return (PixelInternalFormat.R8,           PixelFormat.Red,         PixelType.UnsignedByte);
-                case GalImageFormat.B10G11R11    | GalImageFormat.Sfloat: return (PixelInternalFormat.R11fG11fB10f, PixelFormat.Rgb,         PixelType.UnsignedInt10F11F11FRev);
+                case GalImageFormat.RGBA32    | GalImageFormat.Float: return (PixelInternalFormat.Rgba32f,      PixelFormat.Rgba,        PixelType.Float);
+                case GalImageFormat.RGBA32    | GalImageFormat.Sint:  return (PixelInternalFormat.Rgba32i,      PixelFormat.RgbaInteger, PixelType.Int);
+                case GalImageFormat.RGBA32    | GalImageFormat.Uint:  return (PixelInternalFormat.Rgba32ui,     PixelFormat.RgbaInteger, PixelType.UnsignedInt);
+                case GalImageFormat.RGBA16    | GalImageFormat.Float: return (PixelInternalFormat.Rgba16f,      PixelFormat.Rgba,        PixelType.HalfFloat);
+                case GalImageFormat.RGBA16    | GalImageFormat.Sint:  return (PixelInternalFormat.Rgba16i,      PixelFormat.RgbaInteger, PixelType.Short);
+                case GalImageFormat.RGBA16    | GalImageFormat.Uint:  return (PixelInternalFormat.Rgba16ui,     PixelFormat.RgbaInteger, PixelType.UnsignedShort);
+                case GalImageFormat.RG32      | GalImageFormat.Float: return (PixelInternalFormat.Rg32f,        PixelFormat.Rg,          PixelType.Float);
+                case GalImageFormat.RG32      | GalImageFormat.Sint:  return (PixelInternalFormat.Rg32i,        PixelFormat.RgInteger,   PixelType.Int);
+                case GalImageFormat.RG32      | GalImageFormat.Uint:  return (PixelInternalFormat.Rg32ui,       PixelFormat.RgInteger,   PixelType.UnsignedInt);
+                case GalImageFormat.RGBA8     | GalImageFormat.Snorm: return (PixelInternalFormat.Rgba8Snorm,   PixelFormat.Rgba,        PixelType.Byte);
+                case GalImageFormat.RGBA8     | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba8,        PixelFormat.Rgba,        PixelType.UnsignedByte);
+                case GalImageFormat.RGBA8     | GalImageFormat.Sint:  return (PixelInternalFormat.Rgba8i,       PixelFormat.RgbaInteger, PixelType.Byte);
+                case GalImageFormat.RGBA8     | GalImageFormat.Uint:  return (PixelInternalFormat.Rgba8ui,      PixelFormat.RgbaInteger, PixelType.UnsignedByte);
+                case GalImageFormat.RGBA8     | GalImageFormat.Srgb:  return (PixelInternalFormat.Srgb8Alpha8,  PixelFormat.Rgba,        PixelType.UnsignedByte);
+                case GalImageFormat.BGRA8     | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba8,        PixelFormat.Bgra,        PixelType.UnsignedByte);
+                case GalImageFormat.RGBA4     | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba4,        PixelFormat.Rgba,        PixelType.UnsignedShort4444Reversed);
+                case GalImageFormat.RGB10A2   | GalImageFormat.Uint:  return (PixelInternalFormat.Rgb10A2ui,    PixelFormat.RgbaInteger, PixelType.UnsignedInt2101010Reversed);
+                case GalImageFormat.RGB10A2   | GalImageFormat.Unorm: return (PixelInternalFormat.Rgb10A2,      PixelFormat.Rgba,        PixelType.UnsignedInt2101010Reversed);
+                case GalImageFormat.R32       | GalImageFormat.Float: return (PixelInternalFormat.R32f,         PixelFormat.Red,         PixelType.Float);
+                case GalImageFormat.R32       | GalImageFormat.Sint:  return (PixelInternalFormat.R32i,         PixelFormat.Red,         PixelType.Int);
+                case GalImageFormat.R32       | GalImageFormat.Uint:  return (PixelInternalFormat.R32ui,        PixelFormat.Red,         PixelType.UnsignedInt);
+                case GalImageFormat.RGB5A1    | GalImageFormat.Unorm: return (PixelInternalFormat.Rgb5A1,       PixelFormat.Rgba,        PixelType.UnsignedShort1555Reversed);
+                case GalImageFormat.RGB565    | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba,         PixelFormat.Rgb,         PixelType.UnsignedShort565Reversed);
+                case GalImageFormat.RG16      | GalImageFormat.Float: return (PixelInternalFormat.Rg16f,        PixelFormat.Rg,          PixelType.HalfFloat);
+                case GalImageFormat.RG16      | GalImageFormat.Sint:  return (PixelInternalFormat.Rg16i,        PixelFormat.RgInteger,   PixelType.Short);
+                case GalImageFormat.RG16      | GalImageFormat.Snorm: return (PixelInternalFormat.Rg16Snorm,    PixelFormat.Rg,          PixelType.Short);
+                case GalImageFormat.RG16      | GalImageFormat.Uint:  return (PixelInternalFormat.Rg16ui,       PixelFormat.RgInteger,   PixelType.UnsignedShort);
+                case GalImageFormat.RG16      | GalImageFormat.Unorm: return (PixelInternalFormat.Rg16,         PixelFormat.Rg,          PixelType.UnsignedShort);
+                case GalImageFormat.RG8       | GalImageFormat.Sint:  return (PixelInternalFormat.Rg8i,         PixelFormat.RgInteger,   PixelType.Byte);
+                case GalImageFormat.RG8       | GalImageFormat.Snorm: return (PixelInternalFormat.Rg8Snorm,     PixelFormat.Rg,          PixelType.Byte);
+                case GalImageFormat.RG8       | GalImageFormat.Uint:  return (PixelInternalFormat.Rg8ui,        PixelFormat.RgInteger,   PixelType.UnsignedByte);
+                case GalImageFormat.RG8       | GalImageFormat.Unorm: return (PixelInternalFormat.Rg8,          PixelFormat.Rg,          PixelType.UnsignedByte);
+                case GalImageFormat.R16       | GalImageFormat.Float: return (PixelInternalFormat.R16f,         PixelFormat.Red,         PixelType.HalfFloat);
+                case GalImageFormat.R16       | GalImageFormat.Sint:  return (PixelInternalFormat.R16i,         PixelFormat.RedInteger,  PixelType.Short);
+                case GalImageFormat.R16       | GalImageFormat.Snorm: return (PixelInternalFormat.R16Snorm,     PixelFormat.Red,         PixelType.Short);
+                case GalImageFormat.R16       | GalImageFormat.Uint:  return (PixelInternalFormat.R16ui,        PixelFormat.RedInteger,  PixelType.UnsignedShort);
+                case GalImageFormat.R16       | GalImageFormat.Unorm: return (PixelInternalFormat.R16,          PixelFormat.Red,         PixelType.UnsignedShort);
+                case GalImageFormat.R8        | GalImageFormat.Sint:  return (PixelInternalFormat.R8i,          PixelFormat.RedInteger,  PixelType.Byte);
+                case GalImageFormat.R8        | GalImageFormat.Snorm: return (PixelInternalFormat.R8Snorm,      PixelFormat.Red,         PixelType.Byte);
+                case GalImageFormat.R8        | GalImageFormat.Uint:  return (PixelInternalFormat.R8ui,         PixelFormat.RedInteger,  PixelType.UnsignedByte);
+                case GalImageFormat.R8        | GalImageFormat.Unorm: return (PixelInternalFormat.R8,           PixelFormat.Red,         PixelType.UnsignedByte);
+                case GalImageFormat.R11G11B10 | GalImageFormat.Float: return (PixelInternalFormat.R11fG11fB10f, PixelFormat.Rgb,         PixelType.UnsignedInt10F11F11FRev);
 
-                case GalImageFormat.D24_S8 | GalImageFormat.Uint:   return (PixelInternalFormat.Depth24Stencil8,   PixelFormat.DepthStencil,   PixelType.UnsignedInt248);
-                case GalImageFormat.D24_S8 | GalImageFormat.Unorm:  return (PixelInternalFormat.Depth24Stencil8,   PixelFormat.DepthStencil,   PixelType.UnsignedInt248);
-                case GalImageFormat.D32    | GalImageFormat.Sfloat: return (PixelInternalFormat.DepthComponent32f, PixelFormat.DepthComponent, PixelType.Float);
-                case GalImageFormat.D16    | GalImageFormat.Unorm:  return (PixelInternalFormat.DepthComponent16,  PixelFormat.DepthComponent, PixelType.UnsignedShort);
-                case GalImageFormat.D32_S8 | GalImageFormat.Sfloat: return (PixelInternalFormat.Depth32fStencil8,  PixelFormat.DepthStencil,   PixelType.Float32UnsignedInt248Rev);
+                case GalImageFormat.D24S8 | GalImageFormat.Uint:  return (PixelInternalFormat.Depth24Stencil8,   PixelFormat.DepthStencil,   PixelType.UnsignedInt248);
+                case GalImageFormat.D24S8 | GalImageFormat.Unorm: return (PixelInternalFormat.Depth24Stencil8,   PixelFormat.DepthStencil,   PixelType.UnsignedInt248);
+                case GalImageFormat.D32   | GalImageFormat.Float: return (PixelInternalFormat.DepthComponent32f, PixelFormat.DepthComponent, PixelType.Float);
+                case GalImageFormat.D16   | GalImageFormat.Unorm: return (PixelInternalFormat.DepthComponent16,  PixelFormat.DepthComponent, PixelType.UnsignedShort);
+                case GalImageFormat.D32S8 | GalImageFormat.Float: return (PixelInternalFormat.Depth32fStencil8,  PixelFormat.DepthStencil,   PixelType.Float32UnsignedInt248Rev);
             }
 
             throw new NotImplementedException($"{Format & GalImageFormat.FormatMask} {Format & GalImageFormat.TypeMask}");
@@ -185,16 +184,20 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             switch (Format)
             {
-                case GalImageFormat.BC6H_UF16 | GalImageFormat.Sfloat: return InternalFormat.CompressedRgbBptcUnsignedFloat;
-                case GalImageFormat.BC6H_SF16 | GalImageFormat.Unorm:  return InternalFormat.CompressedRgbBptcSignedFloat;
-                case GalImageFormat.BC7       | GalImageFormat.Unorm:  return InternalFormat.CompressedRgbaBptcUnorm;
-                case GalImageFormat.BC1_RGBA  | GalImageFormat.Unorm:  return InternalFormat.CompressedRgbaS3tcDxt1Ext;
-                case GalImageFormat.BC2       | GalImageFormat.Unorm:  return InternalFormat.CompressedRgbaS3tcDxt3Ext;
-                case GalImageFormat.BC3       | GalImageFormat.Unorm:  return InternalFormat.CompressedRgbaS3tcDxt5Ext;
-                case GalImageFormat.BC4       | GalImageFormat.Snorm:  return InternalFormat.CompressedSignedRedRgtc1;
-                case GalImageFormat.BC4       | GalImageFormat.Unorm:  return InternalFormat.CompressedRedRgtc1;
-                case GalImageFormat.BC5       | GalImageFormat.Snorm:  return InternalFormat.CompressedSignedRgRgtc2;
-                case GalImageFormat.BC5       | GalImageFormat.Unorm:  return InternalFormat.CompressedRgRgtc2;
+                case GalImageFormat.BptcSfloat | GalImageFormat.Float: return InternalFormat.CompressedRgbBptcSignedFloat;
+                case GalImageFormat.BptcUfloat | GalImageFormat.Float: return InternalFormat.CompressedRgbBptcUnsignedFloat;
+                case GalImageFormat.BptcUnorm  | GalImageFormat.Unorm: return InternalFormat.CompressedRgbaBptcUnorm;
+                case GalImageFormat.BptcUnorm  | GalImageFormat.Srgb:  return InternalFormat.CompressedSrgbAlphaBptcUnorm;
+                case GalImageFormat.BC1        | GalImageFormat.Unorm: return InternalFormat.CompressedRgbaS3tcDxt1Ext;
+                case GalImageFormat.BC1        | GalImageFormat.Srgb:  return InternalFormat.CompressedSrgbAlphaS3tcDxt1Ext;
+                case GalImageFormat.BC2        | GalImageFormat.Unorm: return InternalFormat.CompressedRgbaS3tcDxt3Ext;
+                case GalImageFormat.BC2        | GalImageFormat.Srgb:  return InternalFormat.CompressedSrgbAlphaS3tcDxt3Ext;
+                case GalImageFormat.BC3        | GalImageFormat.Unorm: return InternalFormat.CompressedRgbaS3tcDxt5Ext;
+                case GalImageFormat.BC3        | GalImageFormat.Srgb:  return InternalFormat.CompressedSrgbAlphaS3tcDxt5Ext;
+                case GalImageFormat.BC4        | GalImageFormat.Snorm: return InternalFormat.CompressedSignedRedRgtc1;
+                case GalImageFormat.BC4        | GalImageFormat.Unorm: return InternalFormat.CompressedRedRgtc1;
+                case GalImageFormat.BC5        | GalImageFormat.Snorm: return InternalFormat.CompressedSignedRgRgtc2;
+                case GalImageFormat.BC5        | GalImageFormat.Unorm: return InternalFormat.CompressedRgRgtc2;
             }
 
             throw new NotImplementedException($"{Format & GalImageFormat.FormatMask} {Format & GalImageFormat.TypeMask}");

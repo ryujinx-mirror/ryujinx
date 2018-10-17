@@ -39,41 +39,25 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             TextureCache.AddOrUpdate(Key, new ImageHandler(Handle, Image), (uint)Size);
 
-            GalImageFormat TypeLess = Image.Format & GalImageFormat.FormatMask;
-
-            bool IsASTC = TypeLess >= GalImageFormat.ASTC_BEGIN && TypeLess <= GalImageFormat.ASTC_END;
-
-            if (ImageUtils.IsCompressed(Image.Format) && !IsASTC)
+            if (ImageUtils.IsCompressed(Image.Format))
             {
-                InternalFormat InternalFmt = OGLEnumConverter.GetCompressedImageFormat(Image.Format);
-
-                GL.CompressedTexImage2D(
-                    TextureTarget.Texture2D,
-                    Level,
-                    InternalFmt,
-                    Image.Width,
-                    Image.Height,
-                    Border,
-                    Size,
-                    IntPtr.Zero);
+                throw new InvalidOperationException("Surfaces with compressed formats are not supported!");
             }
-            else
-            {
-                (PixelInternalFormat InternalFmt,
-                 PixelFormat         Format,
-                 PixelType           Type) = OGLEnumConverter.GetImageFormat(Image.Format);
 
-                GL.TexImage2D(
-                    TextureTarget.Texture2D,
-                    Level,
-                    InternalFmt,
-                    Image.Width,
-                    Image.Height,
-                    Border,
-                    Format,
-                    Type,
-                    IntPtr.Zero);
-            }
+            (PixelInternalFormat InternalFmt,
+             PixelFormat         Format,
+             PixelType           Type) = OGLEnumConverter.GetImageFormat(Image.Format);
+
+            GL.TexImage2D(
+                TextureTarget.Texture2D,
+                Level,
+                InternalFmt,
+                Image.Width,
+                Image.Height,
+                Border,
+                Format,
+                Type,
+                IntPtr.Zero);
         }
 
         public void Create(long Key, byte[] Data, GalImage Image)
@@ -87,11 +71,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             TextureCache.AddOrUpdate(Key, new ImageHandler(Handle, Image), (uint)Data.Length);
 
-            GalImageFormat TypeLess = Image.Format & GalImageFormat.FormatMask;
-
-            bool IsASTC = TypeLess >= GalImageFormat.ASTC_BEGIN && TypeLess <= GalImageFormat.ASTC_END;
-
-            if (ImageUtils.IsCompressed(Image.Format) && !IsASTC)
+            if (ImageUtils.IsCompressed(Image.Format) && !IsAstc(Image.Format))
             {
                 InternalFormat InternalFmt = OGLEnumConverter.GetCompressedImageFormat(Image.Format);
 
@@ -108,7 +88,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             else
             {
                 //TODO: Use KHR_texture_compression_astc_hdr when available
-                if (IsASTC)
+                if (IsAstc(Image.Format))
                 {
                     int TextureBlockWidth  = ImageUtils.GetBlockWidth(Image.Format);
                     int TextureBlockHeight = ImageUtils.GetBlockHeight(Image.Format);
@@ -120,17 +100,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                         Image.Width,
                         Image.Height, 1);
 
-                    Image.Format = GalImageFormat.A8B8G8R8 | GalImageFormat.Unorm;
-                }
-                else if (TypeLess == GalImageFormat.G8R8)
-                {
-                    Data = ImageConverter.G8R8ToR8G8(
-                        Data,
-                        Image.Width,
-                        Image.Height,
-                        1);
-
-                    Image.Format = GalImageFormat.R8G8 | (Image.Format & GalImageFormat.TypeMask);
+                    Image.Format = GalImageFormat.RGBA8 | GalImageFormat.Unorm;
                 }
 
                 (PixelInternalFormat InternalFmt,
@@ -148,6 +118,13 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     Type,
                     Data);
             }
+        }
+
+        private static bool IsAstc(GalImageFormat Format)
+        {
+            Format &= GalImageFormat.FormatMask;
+
+            return Format > GalImageFormat.Astc2DStart && Format < GalImageFormat.Astc2DEnd;
         }
 
         public bool TryGetImage(long Key, out GalImage Image)

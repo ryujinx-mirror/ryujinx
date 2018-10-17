@@ -141,7 +141,7 @@ namespace Ryujinx.Graphics
         {
             int Arg0 = PBEntry.Arguments[0];
 
-            int FbIndex = (Arg0 >> 6) & 0xf;
+            int Attachment = (Arg0 >> 6) & 0xf;
 
             GalClearBufferFlags Flags = (GalClearBufferFlags)(Arg0 & 0x3f);
 
@@ -154,7 +154,7 @@ namespace Ryujinx.Graphics
 
             int Stencil = ReadRegister(NvGpuEngine3dReg.ClearStencil);
 
-            SetFrameBuffer(Vmm, FbIndex);
+            SetFrameBuffer(Vmm, Attachment);
 
             SetZeta(Vmm);
 
@@ -162,12 +162,10 @@ namespace Ryujinx.Graphics
 
             Gpu.Renderer.RenderTarget.Bind();
 
-            Gpu.Renderer.Rasterizer.ClearBuffers(
-                Flags,
-                FbIndex,
-                Red, Green, Blue, Alpha,
-                Depth,
-                Stencil);
+            Gpu.Renderer.Rasterizer.ClearBuffers(Flags, Attachment, Red, Green, Blue, Alpha, Depth, Stencil);
+
+            Gpu.Renderer.Pipeline.ResetDepthMask();
+            Gpu.Renderer.Pipeline.ResetColorMask(Attachment);
         }
 
         private void SetFrameBuffer(NvGpuVmm Vmm, int FbIndex)
@@ -345,13 +343,8 @@ namespace Ryujinx.Graphics
             {
                 switch (FrontFace)
                 {
-                    case GalFrontFace.CW:
-                        FrontFace = GalFrontFace.CCW;
-                        break;
-
-                    case GalFrontFace.CCW:
-                        FrontFace = GalFrontFace.CW;
-                        break;
+                    case GalFrontFace.CW:  FrontFace = GalFrontFace.CCW; break;
+                    case GalFrontFace.CCW: FrontFace = GalFrontFace.CW;  break;
                 }
             }
 
@@ -426,10 +419,20 @@ namespace Ryujinx.Graphics
         {
             int ColorMask = ReadRegister(NvGpuEngine3dReg.ColorMask);
 
-            State.ColorMaskR = ((ColorMask >> 0)  & 0xf) != 0;
-            State.ColorMaskG = ((ColorMask >> 4)  & 0xf) != 0;
-            State.ColorMaskB = ((ColorMask >> 8)  & 0xf) != 0;
-            State.ColorMaskA = ((ColorMask >> 12) & 0xf) != 0;
+            State.ColorMask.Red   = ((ColorMask >> 0)  & 0xf) != 0;
+            State.ColorMask.Green = ((ColorMask >> 4)  & 0xf) != 0;
+            State.ColorMask.Blue  = ((ColorMask >> 8)  & 0xf) != 0;
+            State.ColorMask.Alpha = ((ColorMask >> 12) & 0xf) != 0;
+
+            for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
+            {
+                ColorMask = ReadRegister(NvGpuEngine3dReg.ColorMaskN + Index);
+
+                State.ColorMasks[Index].Red   = ((ColorMask >> 0)  & 0xf) != 0;
+                State.ColorMasks[Index].Green = ((ColorMask >> 4)  & 0xf) != 0;
+                State.ColorMasks[Index].Blue  = ((ColorMask >> 8)  & 0xf) != 0;
+                State.ColorMasks[Index].Alpha = ((ColorMask >> 12) & 0xf) != 0;
+            }
         }
 
         private void SetPrimitiveRestart(GalPipelineState State)
@@ -455,11 +458,11 @@ namespace Ryujinx.Graphics
             {
                 int[] Map = new int[Count];
 
-                for (int i = 0; i < Count; i++)
+                for (int Index = 0; Index < Count; Index++)
                 {
-                    int Shift = 4 + i * 3;
+                    int Shift = 4 + Index * 3;
 
-                    Map[i] = (int)((Control >> Shift) & 7);
+                    Map[Index] = (int)((Control >> Shift) & 7);
                 }
 
                 Gpu.Renderer.RenderTarget.SetMap(Map);

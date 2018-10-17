@@ -1,9 +1,28 @@
 ﻿namespace Ryujinx.Graphics.Gal
 {
+    public struct ColorMaskRgba
+    {
+        private static readonly ColorMaskRgba _Default = new ColorMaskRgba()
+        {
+            Red   = true,
+            Green = true,
+            Blue  = true,
+            Alpha = true
+        };
+
+        public static ColorMaskRgba Default => _Default;
+
+        public bool Red;
+        public bool Green;
+        public bool Blue;
+        public bool Alpha;
+    }
+
     public class GalPipelineState
     {
-        public const int Stages = 5;
+        public const int Stages               = 5;
         public const int ConstBuffersPerStage = 18;
+        public const int RenderTargetsCount   = 8;
 
         public long[][] ConstBufferKeys;
 
@@ -53,10 +72,8 @@
         public GalBlendFactor BlendFuncSrcAlpha;
         public GalBlendFactor BlendFuncDstAlpha;
 
-        public bool ColorMaskR;
-        public bool ColorMaskG;
-        public bool ColorMaskB;
-        public bool ColorMaskA;
+        public ColorMaskRgba ColorMask;
+        public ColorMaskRgba[] ColorMasks;
 
         public bool PrimitiveRestartEnabled;
         public uint PrimitiveRestartIndex;
@@ -69,6 +86,8 @@
             {
                 ConstBufferKeys[Stage] = new long[ConstBuffersPerStage];
             }
+
+            ColorMasks = new ColorMaskRgba[RenderTargetsCount];
         }
     }
 }

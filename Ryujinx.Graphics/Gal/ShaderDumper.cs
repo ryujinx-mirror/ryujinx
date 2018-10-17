@@ -7,11 +7,11 @@ namespace Ryujinx.Graphics.Gal
     {
         private static string RuntimeDir;
 
-        private static int DumpIndex = 1;
+        public static int DumpIndex { get; private set; } = 1;
 
         public static void Dump(IGalMemory Memory, long Position, GalShaderType Type, string ExtSuffix = "")
         {
-            if (string.IsNullOrWhiteSpace(GraphicsConfig.ShadersDumpPath))
+            if (!IsDumpEnabled())
             {
                 return;
             }
@@ -25,9 +25,10 @@ namespace Ryujinx.Graphics.Gal
 
             using (FileStream FullFile = File.Create(FullPath))
             using (FileStream CodeFile = File.Create(CodePath))
-            using (BinaryWriter FullWriter = new BinaryWriter(FullFile))
-            using (BinaryWriter CodeWriter = new BinaryWriter(CodeFile))
             {
+                BinaryWriter FullWriter = new BinaryWriter(FullFile);
+                BinaryWriter CodeWriter = new BinaryWriter(CodeFile);
+
                 for (long i = 0; i < 0x50; i += 4)
                 {
                     FullWriter.Write(Memory.ReadInt32(Position + i));
@@ -67,6 +68,11 @@ namespace Ryujinx.Graphics.Gal
                     Offset += 4;
                 }
             }
+        }
+
+        public static bool IsDumpEnabled()
+        {
+            return !string.IsNullOrWhiteSpace(GraphicsConfig.ShadersDumpPath);
         }
 
         private static string FullDir()

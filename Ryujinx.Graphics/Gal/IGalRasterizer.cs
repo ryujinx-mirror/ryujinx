@@ -10,7 +10,10 @@ namespace Ryujinx.Graphics.Gal
         void ClearBuffers(
             GalClearBufferFlags Flags,
             int Attachment,
-            float Red, float Green, float Blue, float Alpha,
+            float Red,
+            float Green,
+            float Blue,
+            float Alpha,
             float Depth,
             int Stencil);
 
