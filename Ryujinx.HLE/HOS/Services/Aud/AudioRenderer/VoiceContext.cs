@@ -125,6 +125,13 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             //As of now, it assumes that HostChannelsCount == 2.
             WaveBuffer Wb = WaveBuffers[BufferIndex];
 
+            if (Wb.Position == 0)
+            {
+                Samples = new int[0];
+
+                return;
+            }
+
             if (SampleFormat == SampleFormat.PcmInt16)
             {
                 int SamplesCount = (int)(Wb.Size / (sizeof(short) * ChannelsCount));

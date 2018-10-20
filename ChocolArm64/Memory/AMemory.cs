@@ -1,3 +1,4 @@
+using ChocolArm64.Events;
 using ChocolArm64.Exceptions;
 using ChocolArm64.State;
 using System;
@@ -50,6 +51,8 @@ namespace ChocolArm64.Memory
         private byte* RamPtr;
 
         private byte*** PageTable;
+
+        public event EventHandler<AInvalidAccessEventArgs> InvalidAccess;
 
         public AMemory(IntPtr Ram)
         {
@@ -512,6 +515,8 @@ Unmapped:
                 return (byte*)Ptr + (Position & PageMask);
             }
 
+            InvalidAccess?.Invoke(this, new AInvalidAccessEventArgs(Position));
+
             throw new VmmPageFaultException(Position);
         }
 
@@ -559,6 +564,8 @@ Unmapped:
 
                 return (byte*)Ptr + (Position & PageMask);
             }
+
+            InvalidAccess?.Invoke(this, new AInvalidAccessEventArgs(Position));
 
             throw new VmmPageFaultException(Position);
         }

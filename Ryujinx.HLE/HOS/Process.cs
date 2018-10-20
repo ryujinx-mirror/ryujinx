@@ -67,6 +67,8 @@ namespace Ryujinx.HLE.HOS
 
             Memory = new AMemory(Device.Memory.RamPointer);
 
+            Memory.InvalidAccess += CpuInvalidAccessHandler;
+
             MemoryManager = new KMemoryManager(this);
 
             TlsPages = new List<KTlsPageManager>();
@@ -283,11 +285,15 @@ namespace Ryujinx.HLE.HOS
 
         private void BreakHandler(object sender, AInstExceptionEventArgs e)
         {
+            PrintStackTraceForCurrentThread();
+
             throw new GuestBrokeExecutionException();
         }
 
         private void UndefinedHandler(object sender, AInstUndefinedEventArgs e)
         {
+            PrintStackTraceForCurrentThread();
+
             throw new UndefinedInstructionException(e.Position, e.RawOpCode);
         }
 
@@ -332,6 +338,24 @@ namespace Ryujinx.HLE.HOS
             }
 
             return Translator;
+        }
+
+        private void CpuInvalidAccessHandler(object sender, AInvalidAccessEventArgs e)
+        {
+            PrintStackTraceForCurrentThread();
+        }
+
+        private void PrintStackTraceForCurrentThread()
+        {
+            foreach (KThread Thread in Threads.Values)
+            {
+                if (Thread.Context.IsCurrentThread())
+                {
+                    PrintStackTrace(Thread.Context.ThreadState);
+
+                    break;
+                }
+            }
         }
 
         public void PrintStackTrace(AThreadState ThreadState)

@@ -91,7 +91,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                     break;
 
                 case AddressSpaceType.Addr39Bits:
-                    CodeRegionStart  = 0;
+                    CodeRegionStart  = 0x8000000;
                     CodeRegionSize   = 0x80000000;
                     MapRegionSize    = 0x1000000000;
                     HeapRegionSize   = 0x180000000;
