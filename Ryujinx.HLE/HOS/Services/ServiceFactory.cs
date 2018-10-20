@@ -72,10 +72,10 @@ namespace Ryujinx.HLE.HOS.Services
                     return new Bcat.IServiceCreator();
 
                 case "bsd:s":
-                    return new IClient();
+                    return new IClient(true);
 
                 case "bsd:u":
-                    return new IClient();
+                    return new IClient(false);
 
                 case "caps:a":
                     return new IAlbumAccessorService();
