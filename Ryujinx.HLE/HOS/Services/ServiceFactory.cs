@@ -16,6 +16,7 @@ using Ryujinx.HLE.HOS.Services.Nv;
 using Ryujinx.HLE.HOS.Services.Pctl;
 using Ryujinx.HLE.HOS.Services.Pl;
 using Ryujinx.HLE.HOS.Services.Prepo;
+using Ryujinx.HLE.HOS.Services.Psm;
 using Ryujinx.HLE.HOS.Services.Set;
 using Ryujinx.HLE.HOS.Services.Sfdnsres;
 using Ryujinx.HLE.HOS.Services.Sm;
@@ -151,6 +152,9 @@ namespace Ryujinx.HLE.HOS.Services
 
                 case "prepo:u":
                     return new IPrepoService();
+
+                case "psm":
+                    return new IPsmServer();
 
                 case "set":
                     return new ISettingsServer();
