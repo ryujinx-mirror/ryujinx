@@ -730,7 +730,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
 
             ShaderIrNode Src1 = GetAluIneg(ApplyHeight(OpCode.Gpr8(),  Height1), Neg1);
-            ShaderIrNode Src2 = GetAluIneg(ApplyHeight(OperB,                Height2), Neg2);
+            ShaderIrNode Src2 = GetAluIneg(ApplyHeight(OperB,          Height2), Neg2);
             ShaderIrNode Src3 = GetAluIneg(ApplyHeight(OpCode.Gpr39(), Height3), Neg3);
 
             ShaderIrOp Sum = new ShaderIrOp(ShaderIrInst.Add, Src1, Src2);

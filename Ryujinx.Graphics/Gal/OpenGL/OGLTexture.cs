@@ -8,6 +8,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
     {
         private OGLCachedResource<ImageHandler> TextureCache;
 
+        public EventHandler<int> TextureDeleted { get; set; }
+
         public OGLTexture()
         {
             TextureCache = new OGLCachedResource<ImageHandler>(DeleteTexture);
@@ -23,8 +25,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             TextureCache.Unlock();
         }
 
-        private static void DeleteTexture(ImageHandler CachedImage)
+        private void DeleteTexture(ImageHandler CachedImage)
         {
+            TextureDeleted?.Invoke(this, CachedImage.Handle);
+
             GL.DeleteTexture(CachedImage.Handle);
         }
 

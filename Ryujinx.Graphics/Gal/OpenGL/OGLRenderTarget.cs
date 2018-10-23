@@ -6,6 +6,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 {
     class OGLRenderTarget : IGalRenderTarget
     {
+        private const int NativeWidth  = 1280;
+        private const int NativeHeight = 720;
+
+        private const int RenderTargetsCount = GalPipelineState.RenderTargetsCount;
+
         private struct Rect
         {
             public int X      { get; private set; }
@@ -24,11 +29,13 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private class FrameBufferAttachments
         {
-            public long[] Colors;
-            public long Zeta;
+            public int MapCount { get; set; }
 
-            public int MapCount;
-            public DrawBuffersEnum[] Map;
+            public DrawBuffersEnum[] Map { get; private set; }
+
+            public long[] Colors { get; private set; }
+
+            public long Zeta { get; set; }
 
             public FrameBufferAttachments()
             {
@@ -37,36 +44,30 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 Map = new DrawBuffersEnum[RenderTargetsCount];
             }
 
-            public void SetAndClear(FrameBufferAttachments Source)
+            public void Update(FrameBufferAttachments Source)
             {
-                Zeta     = Source.Zeta;
-                MapCount = Source.MapCount;
-
-                Source.Zeta     = 0;
-                Source.MapCount = 0;
-
-                for (int i = 0; i < RenderTargetsCount; i++)
+                for (int Index = 0; Index < RenderTargetsCount; Index++)
                 {
-                    Colors[i] = Source.Colors[i];
-                    Map[i]    = Source.Map[i];
+                    Map[Index] = Source.Map[Index];
 
-                    Source.Colors[i] = 0;
-                    Source.Map[i]    = 0;
+                    Colors[Index] = Source.Colors[Index];
                 }
+
+                MapCount = Source.MapCount;
+                Zeta     = Source.Zeta;
             }
         }
 
-        private const int NativeWidth  = 1280;
-        private const int NativeHeight = 720;
-
-        private const int RenderTargetsCount = GalPipelineState.RenderTargetsCount;
+        private int[] ColorHandles;
+        private int   ZetaHandle;
 
         private OGLTexture Texture;
 
         private ImageHandler ReadTex;
 
-        private float[] Viewports;
         private Rect Window;
+
+        private float[] Viewports;
 
         private bool FlipX;
         private bool FlipY;
@@ -95,9 +96,31 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             OldAttachments = new FrameBufferAttachments();
 
+            ColorHandles = new int[RenderTargetsCount];
+
             Viewports = new float[RenderTargetsCount * 4];
 
             this.Texture = Texture;
+
+            Texture.TextureDeleted += TextureDeletionHandler;
+        }
+
+        private void TextureDeletionHandler(object Sender, int Handle)
+        {
+            //Texture was deleted, the handle is no longer valid, so
+            //reset all uses of this handle on a render target.
+            for (int Attachment = 0; Attachment < RenderTargetsCount; Attachment++)
+            {
+                if (ColorHandles[Attachment] == Handle)
+                {
+                    ColorHandles[Attachment] = 0;
+                }
+            }
+
+            if (ZetaHandle == Handle)
+            {
+                ZetaHandle = 0;
+            }
         }
 
         public void Bind()
@@ -115,11 +138,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 long Key = Attachments.Colors[Attachment];
 
-                if (Key == OldAttachments.Colors[Attachment])
-                {
-                    continue;
-                }
-
                 int Handle = 0;
 
                 if (Key != 0 && Texture.TryGetImageHandler(Key, out CachedImage))
@@ -127,16 +145,23 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     Handle = CachedImage.Handle;
                 }
 
+                if (Handle == ColorHandles[Attachment])
+                {
+                    continue;
+                }
+
                 GL.FramebufferTexture(
                     FramebufferTarget.DrawFramebuffer,
                     FramebufferAttachment.ColorAttachment0 + Attachment,
                     Handle,
                     0);
+
+                ColorHandles[Attachment] = Handle;
             }
 
-            if (Attachments.Zeta != OldAttachments.Zeta)
+            if (Attachments.Zeta != 0 && Texture.TryGetImageHandler(Attachments.Zeta, out CachedImage))
             {
-                if (Attachments.Zeta != 0 && Texture.TryGetImageHandler(Attachments.Zeta, out CachedImage))
+                if (CachedImage.Handle != ZetaHandle)
                 {
                     if (CachedImage.HasDepth && CachedImage.HasStencil)
                     {
@@ -162,17 +187,21 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     }
                     else
                     {
-                        throw new NotImplementedException();
+                        throw new InvalidOperationException("Invalid image format \"" + CachedImage.Format + "\" used as Zeta!");
                     }
+
+                    ZetaHandle = CachedImage.Handle;
                 }
-                else
-                {
-                    GL.FramebufferTexture(
-                        FramebufferTarget.DrawFramebuffer,
-                        FramebufferAttachment.DepthStencilAttachment,
-                        0,
-                        0);
-                }
+            }
+            else if (ZetaHandle != 0)
+            {
+                GL.FramebufferTexture(
+                    FramebufferTarget.DrawFramebuffer,
+                    FramebufferAttachment.DepthStencilAttachment,
+                    0,
+                    0);
+
+                ZetaHandle = 0;
             }
 
             if (OGLExtension.ViewportArray)
@@ -201,7 +230,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 GL.DrawBuffer(DrawBufferMode.None);
             }
 
-            OldAttachments.SetAndClear(Attachments);
+            OldAttachments.Update(Attachments);
         }
 
         public void BindColor(long Key, int Attachment)
@@ -431,7 +460,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.GetTexImage(TextureTarget.Texture2D, 0, Format, Type, IntPtr.Zero);
 
             GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
-
             GL.BindBuffer(BufferTarget.PixelUnpackBuffer, CopyPBO);
 
             Texture.Create(Key, ImageUtils.GetSize(NewImage), NewImage);

@@ -252,9 +252,8 @@ namespace Ryujinx.Graphics.Gal.Shader
                 SB.AppendLine(IdentationStr + "int " + GlslDecl.InstanceUniformName + ";");
 
                 SB.AppendLine("};");
+                SB.AppendLine();
             }
-
-            SB.AppendLine();
 
             foreach (ShaderDeclInfo DeclInfo in Decl.Uniforms.Values.OrderBy(DeclKeySelector))
             {
@@ -312,17 +311,27 @@ namespace Ryujinx.Graphics.Gal.Shader
         {
             if (Decl.ShaderType == GalShaderType.Fragment)
             {
+                int Count = 0;
+
                 for (int Attachment = 0; Attachment < 8; Attachment++)
                 {
                     if (Header.OmapTargets[Attachment].Enabled)
                     {
                         SB.AppendLine("layout (location = " + Attachment + ") out vec4 " + GlslDecl.FragmentOutputName + Attachment + ";");
+
+                        Count++;
                     }
+                }
+
+                if (Count > 0)
+                {
+                    SB.AppendLine();
                 }
             }
             else
             {
                 SB.AppendLine("layout (location = " + GlslDecl.PositionOutAttrLocation + ") out vec4 " + GlslDecl.PositionOutAttrName + ";");
+                SB.AppendLine();
             }
 
             PrintDeclAttributes(Decl.OutAttributes.Values, "out");
@@ -558,6 +567,49 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
         }
 
+        private void PrintNodes(ShaderIrBlock Block, ShaderIrNode[] Nodes)
+        {
+            foreach (ShaderIrNode Node in Nodes)
+            {
+                PrintNode(Block, Node, IdentationStr);
+            }
+
+            if (Nodes.Length == 0)
+            {
+                SB.AppendLine(IdentationStr + "return 0u;");
+
+                return;
+            }
+
+            ShaderIrNode Last = Nodes[Nodes.Length - 1];
+
+            bool UnconditionalFlowChange = false;
+
+            if (Last is ShaderIrOp Op)
+            {
+                switch (Op.Inst)
+                {
+                    case ShaderIrInst.Bra:
+                    case ShaderIrInst.Exit:
+                    case ShaderIrInst.Sync:
+                        UnconditionalFlowChange = true;
+                        break;
+                }
+            }
+
+            if (!UnconditionalFlowChange)
+            {
+                if (Block.Next != null)
+                {
+                    SB.AppendLine(IdentationStr + "return " + GetBlockPosition(Block.Next) + ";");
+                }
+                else
+                {
+                    SB.AppendLine(IdentationStr + "return 0u;");
+                }
+            }
+        }
+
         private void PrintNode(ShaderIrBlock Block, ShaderIrNode Node, string Identation)
         {
             if (Node is ShaderIrCond Cond)
@@ -571,14 +623,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                 SB.AppendLine(Identation + "if (" + IfExpr + ") {");
 
-                if (Cond.Child is ShaderIrOp Op && Op.Inst == ShaderIrInst.Bra)
-                {
-                    SB.AppendLine(Identation + IdentationStr + "return " + GetBlockPosition(Block.Branch) + ";");
-                }
-                else
-                {
-                    PrintNode(Block, Cond.Child, Identation + IdentationStr);
-                }
+                PrintNode(Block, Cond.Child, Identation + IdentationStr);
 
                 SB.AppendLine(Identation + "}");
             }
@@ -652,39 +697,6 @@ namespace Ryujinx.Graphics.Gal.Shader
             else
             {
                 throw new InvalidOperationException();
-            }
-        }
-
-        private void PrintNodes(ShaderIrBlock Block, ShaderIrNode[] Nodes)
-        {
-            foreach (ShaderIrNode Node in Nodes)
-            {
-                PrintNode(Block, Node, IdentationStr);
-            }
-
-            if (Nodes.Length > 0)
-            {
-                ShaderIrNode Last = Nodes[Nodes.Length - 1];
-
-                bool UnconditionalFlowChange = false;
-
-                if (Last is ShaderIrOp Op)
-                {
-                    switch (Op.Inst)
-                    {
-                        case ShaderIrInst.Bra:
-                        case ShaderIrInst.Exit:
-                        case ShaderIrInst.Kil:
-                        case ShaderIrInst.Sync:
-                            UnconditionalFlowChange = true;
-                            break;
-                    }
-                }
-
-                if (!UnconditionalFlowChange)
-                {
-                    SB.AppendLine(IdentationStr + "return " + GetBlockPosition(Block.Next) + ";");
-                }
             }
         }
 
