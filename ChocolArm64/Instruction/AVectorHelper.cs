@@ -105,9 +105,9 @@ namespace ChocolArm64.Instruction
                    Value < ulong.MinValue ? ulong.MinValue : (ulong)Value;
         }
 
-        public static double Round(double Value, int Fpcr)
+        public static double Round(double Value, AThreadState State)
         {
-            switch ((ARoundMode)((Fpcr >> 22) & 3))
+            switch (State.FPRoundingMode())
             {
                 case ARoundMode.ToNearest:            return Math.Round   (Value);
                 case ARoundMode.TowardsPlusInfinity:  return Math.Ceiling (Value);
@@ -118,9 +118,9 @@ namespace ChocolArm64.Instruction
             throw new InvalidOperationException();
         }
 
-        public static float RoundF(float Value, int Fpcr)
+        public static float RoundF(float Value, AThreadState State)
         {
-            switch ((ARoundMode)((Fpcr >> 22) & 3))
+            switch (State.FPRoundingMode())
             {
                 case ARoundMode.ToNearest:            return MathF.Round   (Value);
                 case ARoundMode.TowardsPlusInfinity:  return MathF.Ceiling (Value);

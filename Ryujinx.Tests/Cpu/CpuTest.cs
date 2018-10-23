@@ -178,11 +178,30 @@ namespace Ryujinx.Tests.Cpu
             return GetThreadState();
         }
 
+        /// <summary>Rounding Mode control field.</summary>
+        public enum RMode
+        {
+            /// <summary>Round to Nearest (RN) mode.</summary>
+            RN,
+            /// <summary>Round towards Plus Infinity (RP) mode.</summary>
+            RP,
+            /// <summary>Round towards Minus Infinity (RM) mode.</summary>
+            RM,
+            /// <summary>Round towards Zero (RZ) mode.</summary>
+            RZ
+        };
+
         /// <summary>Floating-point Control Register.</summary>
         protected enum FPCR
         {
+            /// <summary>Rounding Mode control field.</summary>
+            RMode = 22,
+            /// <summary>Flush-to-zero mode control bit.</summary>
+            FZ    = 24,
             /// <summary>Default NaN mode control bit.</summary>
-            DN = 25
+            DN    = 25,
+            /// <summary>Alternative half-precision control bit.</summary>
+            AHP   = 26
         }
 
         /// <summary>Floating-point Status Register.</summary>
@@ -512,6 +531,27 @@ namespace Ryujinx.Tests.Cpu
             }
 
             return Sse41.Extract(Sse.StaticCast<float, ulong>(Vector), (byte)1);
+        }
+
+        protected static ushort GenNormal_H()
+        {
+            uint Rnd;
+
+            do       Rnd = TestContext.CurrentContext.Random.NextUShort();
+            while (( Rnd & 0x7C00u) == 0u ||
+                   (~Rnd & 0x7C00u) == 0u);
+
+            return (ushort)Rnd;
+        }
+
+        protected static ushort GenSubnormal_H()
+        {
+            uint Rnd;
+
+            do      Rnd = TestContext.CurrentContext.Random.NextUShort();
+            while ((Rnd & 0x03FFu) == 0u);
+
+            return (ushort)(Rnd & 0x83FFu);
         }
 
         protected static uint GenNormal_S()

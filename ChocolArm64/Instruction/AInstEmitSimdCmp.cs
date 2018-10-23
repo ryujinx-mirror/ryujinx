@@ -284,11 +284,11 @@ namespace ChocolArm64.Instruction
                 {
                     if (Op.Size == 0)
                     {
-                        Context.EmitLdc_R4(0);
+                        Context.EmitLdc_R4(0f);
                     }
-                    else /* if (SizeF == 1) */
+                    else /* if (Op.Size == 1) */
                     {
-                        Context.EmitLdc_R8(0);
+                        Context.EmitLdc_R8(0d);
                     }
                 }
                 else
@@ -378,7 +378,7 @@ namespace ChocolArm64.Instruction
                 }
                 else
                 {
-                    Context.EmitLdc_I8(0);
+                    Context.EmitLdc_I8(0L);
                 }
 
                 AILLabel LblTrue = new AILLabel();
@@ -422,7 +422,7 @@ namespace ChocolArm64.Instruction
 
                 Context.Emit(OpCodes.And);
 
-                Context.EmitLdc_I8(0);
+                Context.EmitLdc_I8(0L);
 
                 Context.Emit(OpCodes.Bne_Un_S, LblTrue);
 
@@ -455,8 +455,9 @@ namespace ChocolArm64.Instruction
             int SizeF = Op.Size & 1;
 
             int Bytes = Op.GetBitsCount() >> 3;
+            int Elems = Bytes >> SizeF + 2;
 
-            for (int Index = 0; Index < Bytes >> SizeF + 2; Index++)
+            for (int Index = 0; Index < Elems; Index++)
             {
                 EmitFcmp(Context, ILOp, Index, Scalar: false);
             }
@@ -483,11 +484,11 @@ namespace ChocolArm64.Instruction
             }
             else if (SizeF == 0)
             {
-                Context.EmitLdc_R4(0);
+                Context.EmitLdc_R4(0f);
             }
             else /* if (SizeF == 1) */
             {
-                Context.EmitLdc_R8(0);
+                Context.EmitLdc_R8(0d);
             }
 
             AILLabel LblTrue = new AILLabel();

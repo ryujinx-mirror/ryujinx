@@ -1274,8 +1274,6 @@ namespace ChocolArm64.Instruction
         {
             ThrowIfInvalid(Index, Size);
 
-            IAOpCodeSimd Op = (IAOpCodeSimd)Context.CurrOp;
-
             Context.EmitLdvec(Reg);
             Context.EmitLdc_I4(Index);
             Context.EmitLdc_I4(Size);
@@ -1470,12 +1468,12 @@ namespace ChocolArm64.Instruction
 
         private static void ThrowIfInvalid(int Index, int Size)
         {
-            if ((uint)Size > 3)
+            if ((uint)Size > 3u)
             {
                 throw new ArgumentOutOfRangeException(nameof(Size));
             }
 
-            if ((uint)Index >= 16 >> Size)
+            if ((uint)Index >= 16u >> Size)
             {
                 throw new ArgumentOutOfRangeException(nameof(Index));
             }
@@ -1483,12 +1481,12 @@ namespace ChocolArm64.Instruction
 
         private static void ThrowIfInvalidF(int Index, int Size)
         {
-            if ((uint)Size > 1)
+            if ((uint)Size > 1u)
             {
                 throw new ArgumentOutOfRangeException(nameof(Size));
             }
 
-            if ((uint)Index >= 4 >> Size)
+            if ((uint)Index >= 4u >> Size)
             {
                 throw new ArgumentOutOfRangeException(nameof(Index));
             }

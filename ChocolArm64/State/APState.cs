@@ -3,7 +3,7 @@ using System;
 namespace ChocolArm64.State
 {
     [Flags]
-    public enum APState
+    enum APState
     {
         VBit = 28,
         CBit = 29,

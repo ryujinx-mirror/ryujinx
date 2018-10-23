@@ -835,8 +835,6 @@ namespace ChocolArm64.Instruction
             {
                 Context.EmitLdarg(ATranslatedSub.StateArgIdx);
 
-                Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
-
                 if (Op.Size == 0)
                 {
                     AVectorHelper.EmitCall(Context, nameof(AVectorHelper.RoundF));
@@ -861,8 +859,6 @@ namespace ChocolArm64.Instruction
             EmitVectorUnaryOpF(Context, () =>
             {
                 Context.EmitLdarg(ATranslatedSub.StateArgIdx);
-
-                Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
 
                 if (SizeF == 0)
                 {
@@ -938,8 +934,6 @@ namespace ChocolArm64.Instruction
             {
                 Context.EmitLdarg(ATranslatedSub.StateArgIdx);
 
-                Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
-
                 if (Op.Size == 0)
                 {
                     AVectorHelper.EmitCall(Context, nameof(AVectorHelper.RoundF));
@@ -962,8 +956,6 @@ namespace ChocolArm64.Instruction
             EmitVectorUnaryOpF(Context, () =>
             {
                 Context.EmitLdarg(ATranslatedSub.StateArgIdx);
-
-                Context.EmitCallPropGet(typeof(AThreadState), nameof(AThreadState.Fpcr));
 
                 if (Op.Size == 0)
                 {

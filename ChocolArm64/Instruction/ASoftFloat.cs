@@ -195,41 +195,535 @@ namespace ChocolArm64.Instruction
             ulong result = x_sign | (result_exp << 52) | fraction;
             return BitConverter.Int64BitsToDouble((long)result);
         }
+    }
 
-        public static float ConvertHalfToSingle(ushort x)
+    static class ASoftFloat16_32
+    {
+        public static float FPConvert(ushort ValueBits, AThreadState State)
         {
-            uint x_sign = (uint)(x >> 15) & 0x0001;
-            uint x_exp = (uint)(x >> 10) & 0x001F;
-            uint x_mantissa = (uint)x & 0x03FF;
+            Debug.WriteLineIf(State.Fpcr != 0, $"ASoftFloat16_32.FPConvert: State.Fpcr = 0x{State.Fpcr:X8}");
 
-            if (x_exp == 0 && x_mantissa == 0)
+            double Real = ValueBits.FPUnpackCV(out FPType Type, out bool Sign, State);
+
+            float Result;
+
+            if (Type == FPType.SNaN || Type == FPType.QNaN)
             {
-                // Zero
-                return BitConverter.Int32BitsToSingle((int)(x_sign << 31));
-            }
-
-            if (x_exp == 0x1F)
-            {
-                // NaN or Infinity
-                return BitConverter.Int32BitsToSingle((int)((x_sign << 31) | 0x7F800000 | (x_mantissa << 13)));
-            }
-
-            int exponent = (int)x_exp - 15;
-
-            if (x_exp == 0)
-            {
-                // Denormal
-                x_mantissa <<= 1;
-                while ((x_mantissa & 0x0400) == 0)
+                if (State.GetFpcrFlag(FPCR.DN))
                 {
-                    x_mantissa <<= 1;
-                    exponent--;
+                    Result = FPDefaultNaN();
                 }
-                x_mantissa &= 0x03FF;
+                else
+                {
+                    Result = FPConvertNaN(ValueBits);
+                }
+
+                if (Type == FPType.SNaN)
+                {
+                    FPProcessException(FPExc.InvalidOp, State);
+                }
+            }
+            else if (Type == FPType.Infinity)
+            {
+                Result = FPInfinity(Sign);
+            }
+            else if (Type == FPType.Zero)
+            {
+                Result = FPZero(Sign);
+            }
+            else
+            {
+                Result = FPRoundCV(Real, State);
             }
 
-            uint new_exp = (uint)((exponent + 127) & 0xFF) << 23;
-            return BitConverter.Int32BitsToSingle((int)((x_sign << 31) | new_exp | (x_mantissa << 13)));
+            return Result;
+        }
+
+        private static float FPDefaultNaN()
+        {
+            return -float.NaN;
+        }
+
+        private static float FPInfinity(bool Sign)
+        {
+            return Sign ? float.NegativeInfinity : float.PositiveInfinity;
+        }
+
+        private static float FPZero(bool Sign)
+        {
+            return Sign ? -0f : +0f;
+        }
+
+        private static float FPMaxNormal(bool Sign)
+        {
+            return Sign ? float.MinValue : float.MaxValue;
+        }
+
+        private static double FPUnpackCV(this ushort ValueBits, out FPType Type, out bool Sign, AThreadState State)
+        {
+            Sign = (~(uint)ValueBits & 0x8000u) == 0u;
+
+            uint Exp16  = ((uint)ValueBits & 0x7C00u) >> 10;
+            uint Frac16 =  (uint)ValueBits & 0x03FFu;
+
+            double Real;
+
+            if (Exp16 == 0u)
+            {
+                if (Frac16 == 0u)
+                {
+                    Type = FPType.Zero;
+                    Real = 0d;
+                }
+                else
+                {
+                    Type = FPType.Nonzero; // Subnormal.
+                    Real = Math.Pow(2d, -14) * ((double)Frac16 * Math.Pow(2d, -10));
+                }
+            }
+            else if (Exp16 == 0x1Fu && !State.GetFpcrFlag(FPCR.AHP))
+            {
+                if (Frac16 == 0u)
+                {
+                    Type = FPType.Infinity;
+                    Real = Math.Pow(2d, 1000);
+                }
+                else
+                {
+                    Type = (~Frac16 & 0x0200u) == 0u ? FPType.QNaN : FPType.SNaN;
+                    Real = 0d;
+                }
+            }
+            else
+            {
+                Type = FPType.Nonzero; // Normal.
+                Real = Math.Pow(2d, (int)Exp16 - 15) * (1d + (double)Frac16 * Math.Pow(2d, -10));
+            }
+
+            return Sign ? -Real : Real;
+        }
+
+        private static float FPRoundCV(double Real, AThreadState State)
+        {
+            const int MinimumExp = -126;
+
+            const int E = 8;
+            const int F = 23;
+
+            bool   Sign;
+            double Mantissa;
+
+            if (Real < 0d)
+            {
+                Sign     = true;
+                Mantissa = -Real;
+            }
+            else
+            {
+                Sign     = false;
+                Mantissa = Real;
+            }
+
+            int Exponent = 0;
+
+            while (Mantissa < 1d)
+            {
+                Mantissa *= 2d;
+                Exponent--;
+            }
+
+            while (Mantissa >= 2d)
+            {
+                Mantissa /= 2d;
+                Exponent++;
+            }
+
+            if (State.GetFpcrFlag(FPCR.FZ) && Exponent < MinimumExp)
+            {
+                State.SetFpsrFlag(FPSR.UFC);
+
+                return FPZero(Sign);
+            }
+
+            uint BiasedExp = (uint)Math.Max(Exponent - MinimumExp + 1, 0);
+
+            if (BiasedExp == 0u)
+            {
+                Mantissa /= Math.Pow(2d, MinimumExp - Exponent);
+            }
+
+            uint IntMant = (uint)Math.Floor(Mantissa * Math.Pow(2d, F));
+            double Error = Mantissa * Math.Pow(2d, F) - (double)IntMant;
+
+            if (BiasedExp == 0u && (Error != 0d || State.GetFpcrFlag(FPCR.UFE)))
+            {
+                FPProcessException(FPExc.Underflow, State);
+            }
+
+            bool OverflowToInf;
+            bool RoundUp;
+
+            switch (State.FPRoundingMode())
+            {
+                default:
+                case ARoundMode.ToNearest:
+                    RoundUp       = (Error > 0.5d || (Error == 0.5d && (IntMant & 1u) == 1u));
+                    OverflowToInf = true;
+                    break;
+
+                case ARoundMode.TowardsPlusInfinity:
+                    RoundUp       = (Error != 0d && !Sign);
+                    OverflowToInf = !Sign;
+                    break;
+
+                case ARoundMode.TowardsMinusInfinity:
+                    RoundUp       = (Error != 0d && Sign);
+                    OverflowToInf = Sign;
+                    break;
+
+                case ARoundMode.TowardsZero:
+                    RoundUp       = false;
+                    OverflowToInf = false;
+                    break;
+            }
+
+            if (RoundUp)
+            {
+                IntMant++;
+
+                if (IntMant == (uint)Math.Pow(2d, F))
+                {
+                    BiasedExp = 1u;
+                }
+
+                if (IntMant == (uint)Math.Pow(2d, F + 1))
+                {
+                    BiasedExp++;
+                    IntMant >>= 1;
+                }
+            }
+
+            float Result;
+
+            if (BiasedExp >= (uint)Math.Pow(2d, E) - 1u)
+            {
+                Result = OverflowToInf ? FPInfinity(Sign) : FPMaxNormal(Sign);
+
+                FPProcessException(FPExc.Overflow, State);
+
+                Error = 1d;
+            }
+            else
+            {
+                Result = BitConverter.Int32BitsToSingle(
+                    (int)((Sign ? 1u : 0u) << 31 | (BiasedExp & 0xFFu) << 23 | (IntMant & 0x007FFFFFu)));
+            }
+
+            if (Error != 0d)
+            {
+                FPProcessException(FPExc.Inexact, State);
+            }
+
+            return Result;
+        }
+
+        private static float FPConvertNaN(ushort ValueBits)
+        {
+            return BitConverter.Int32BitsToSingle(
+                (int)(((uint)ValueBits & 0x8000u) << 16 | 0x7FC00000u | ((uint)ValueBits & 0x01FFu) << 13));
+        }
+
+        private static void FPProcessException(FPExc Exc, AThreadState State)
+        {
+            int Enable = (int)Exc + 8;
+
+            if ((State.Fpcr & (1 << Enable)) != 0)
+            {
+                throw new NotImplementedException("floating-point trap handling");
+            }
+            else
+            {
+                State.Fpsr |= 1 << (int)Exc;
+            }
+        }
+    }
+
+    static class ASoftFloat32_16
+    {
+        public static ushort FPConvert(float Value, AThreadState State)
+        {
+            Debug.WriteLineIf(State.Fpcr != 0, $"ASoftFloat32_16.FPConvert: State.Fpcr = 0x{State.Fpcr:X8}");
+
+            double Real = Value.FPUnpackCV(out FPType Type, out bool Sign, State, out uint ValueBits);
+
+            bool AltHp = State.GetFpcrFlag(FPCR.AHP);
+
+            ushort ResultBits;
+
+            if (Type == FPType.SNaN || Type == FPType.QNaN)
+            {
+                if (AltHp)
+                {
+                    ResultBits = FPZero(Sign);
+                }
+                else if (State.GetFpcrFlag(FPCR.DN))
+                {
+                    ResultBits = FPDefaultNaN();
+                }
+                else
+                {
+                    ResultBits = FPConvertNaN(ValueBits);
+                }
+
+                if (Type == FPType.SNaN || AltHp)
+                {
+                    FPProcessException(FPExc.InvalidOp, State);
+                }
+            }
+            else if (Type == FPType.Infinity)
+            {
+                if (AltHp)
+                {
+                    ResultBits = (ushort)((Sign ? 1u : 0u) << 15 | 0x7FFFu);
+
+                    FPProcessException(FPExc.InvalidOp, State);
+                }
+                else
+                {
+                    ResultBits = FPInfinity(Sign);
+                }
+            }
+            else if (Type == FPType.Zero)
+            {
+                ResultBits = FPZero(Sign);
+            }
+            else
+            {
+                ResultBits = FPRoundCV(Real, State);
+            }
+
+            return ResultBits;
+        }
+
+        private static ushort FPDefaultNaN()
+        {
+            return (ushort)0x7E00u;
+        }
+
+        private static ushort FPInfinity(bool Sign)
+        {
+            return Sign ? (ushort)0xFC00u : (ushort)0x7C00u;
+        }
+
+        private static ushort FPZero(bool Sign)
+        {
+            return Sign ? (ushort)0x8000u : (ushort)0x0000u;
+        }
+
+        private static ushort FPMaxNormal(bool Sign)
+        {
+            return Sign ? (ushort)0xFBFFu : (ushort)0x7BFFu;
+        }
+
+        private static double FPUnpackCV(this float Value, out FPType Type, out bool Sign, AThreadState State, out uint ValueBits)
+        {
+            ValueBits = (uint)BitConverter.SingleToInt32Bits(Value);
+
+            Sign = (~ValueBits & 0x80000000u) == 0u;
+
+            uint Exp32  = (ValueBits & 0x7F800000u) >> 23;
+            uint Frac32 =  ValueBits & 0x007FFFFFu;
+
+            double Real;
+
+            if (Exp32 == 0u)
+            {
+                if (Frac32 == 0u || State.GetFpcrFlag(FPCR.FZ))
+                {
+                    Type = FPType.Zero;
+                    Real = 0d;
+
+                    if (Frac32 != 0u) FPProcessException(FPExc.InputDenorm, State);
+                }
+                else
+                {
+                    Type = FPType.Nonzero; // Subnormal.
+                    Real = Math.Pow(2d, -126) * ((double)Frac32 * Math.Pow(2d, -23));
+                }
+            }
+            else if (Exp32 == 0xFFu)
+            {
+                if (Frac32 == 0u)
+                {
+                    Type = FPType.Infinity;
+                    Real = Math.Pow(2d, 1000);
+                }
+                else
+                {
+                    Type = (~Frac32 & 0x00400000u) == 0u ? FPType.QNaN : FPType.SNaN;
+                    Real = 0d;
+                }
+            }
+            else
+            {
+                Type = FPType.Nonzero; // Normal.
+                Real = Math.Pow(2d, (int)Exp32 - 127) * (1d + (double)Frac32 * Math.Pow(2d, -23));
+            }
+
+            return Sign ? -Real : Real;
+        }
+
+        private static ushort FPRoundCV(double Real, AThreadState State)
+        {
+            const int MinimumExp = -14;
+
+            const int E = 5;
+            const int F = 10;
+
+            bool   Sign;
+            double Mantissa;
+
+            if (Real < 0d)
+            {
+                Sign     = true;
+                Mantissa = -Real;
+            }
+            else
+            {
+                Sign     = false;
+                Mantissa = Real;
+            }
+
+            int Exponent = 0;
+
+            while (Mantissa < 1d)
+            {
+                Mantissa *= 2d;
+                Exponent--;
+            }
+
+            while (Mantissa >= 2d)
+            {
+                Mantissa /= 2d;
+                Exponent++;
+            }
+
+            uint BiasedExp = (uint)Math.Max(Exponent - MinimumExp + 1, 0);
+
+            if (BiasedExp == 0u)
+            {
+                Mantissa /= Math.Pow(2d, MinimumExp - Exponent);
+            }
+
+            uint IntMant = (uint)Math.Floor(Mantissa * Math.Pow(2d, F));
+            double Error = Mantissa * Math.Pow(2d, F) - (double)IntMant;
+
+            if (BiasedExp == 0u && (Error != 0d || State.GetFpcrFlag(FPCR.UFE)))
+            {
+                FPProcessException(FPExc.Underflow, State);
+            }
+
+            bool OverflowToInf;
+            bool RoundUp;
+
+            switch (State.FPRoundingMode())
+            {
+                default:
+                case ARoundMode.ToNearest:
+                    RoundUp       = (Error > 0.5d || (Error == 0.5d && (IntMant & 1u) == 1u));
+                    OverflowToInf = true;
+                    break;
+
+                case ARoundMode.TowardsPlusInfinity:
+                    RoundUp       = (Error != 0d && !Sign);
+                    OverflowToInf = !Sign;
+                    break;
+
+                case ARoundMode.TowardsMinusInfinity:
+                    RoundUp       = (Error != 0d && Sign);
+                    OverflowToInf = Sign;
+                    break;
+
+                case ARoundMode.TowardsZero:
+                    RoundUp       = false;
+                    OverflowToInf = false;
+                    break;
+            }
+
+            if (RoundUp)
+            {
+                IntMant++;
+
+                if (IntMant == (uint)Math.Pow(2d, F))
+                {
+                    BiasedExp = 1u;
+                }
+
+                if (IntMant == (uint)Math.Pow(2d, F + 1))
+                {
+                    BiasedExp++;
+                    IntMant >>= 1;
+                }
+            }
+
+            ushort ResultBits;
+
+            if (!State.GetFpcrFlag(FPCR.AHP))
+            {
+                if (BiasedExp >= (uint)Math.Pow(2d, E) - 1u)
+                {
+                    ResultBits = OverflowToInf ? FPInfinity(Sign) : FPMaxNormal(Sign);
+
+                    FPProcessException(FPExc.Overflow, State);
+
+                    Error = 1d;
+                }
+                else
+                {
+                    ResultBits = (ushort)((Sign ? 1u : 0u) << 15 | (BiasedExp & 0x1Fu) << 10 | (IntMant & 0x03FFu));
+                }
+            }
+            else
+            {
+                if (BiasedExp >= (uint)Math.Pow(2d, E))
+                {
+                    ResultBits = (ushort)((Sign ? 1u : 0u) << 15 | 0x7FFFu);
+
+                    FPProcessException(FPExc.InvalidOp, State);
+
+                    Error = 0d;
+                }
+                else
+                {
+                    ResultBits = (ushort)((Sign ? 1u : 0u) << 15 | (BiasedExp & 0x1Fu) << 10 | (IntMant & 0x03FFu));
+                }
+            }
+
+            if (Error != 0d)
+            {
+                FPProcessException(FPExc.Inexact, State);
+            }
+
+            return ResultBits;
+        }
+
+        private static ushort FPConvertNaN(uint ValueBits)
+        {
+            return (ushort)((ValueBits & 0x80000000u) >> 16 | 0x7E00u | (ValueBits & 0x003FE000u) >> 13);
+        }
+
+        private static void FPProcessException(FPExc Exc, AThreadState State)
+        {
+            int Enable = (int)Exc + 8;
+
+            if ((State.Fpcr & (1 << Enable)) != 0)
+            {
+                throw new NotImplementedException("floating-point trap handling");
+            }
+            else
+            {
+                State.Fpsr |= 1 << (int)Exc;
+            }
         }
     }
 
@@ -756,56 +1250,31 @@ namespace ChocolArm64.Instruction
             return Result;
         }
 
-        private enum FPType
-        {
-            Nonzero,
-            Zero,
-            Infinity,
-            QNaN,
-            SNaN
-        }
-
-        private enum FPExc
-        {
-            InvalidOp,
-            DivideByZero,
-            Overflow,
-            Underflow,
-            Inexact,
-            InputDenorm = 7
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float FPDefaultNaN()
         {
             return -float.NaN;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float FPInfinity(bool Sign)
         {
             return Sign ? float.NegativeInfinity : float.PositiveInfinity;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float FPZero(bool Sign)
         {
             return Sign ? -0f : +0f;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float FPTwo(bool Sign)
         {
             return Sign ? -2f : +2f;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float FPOnePointFive(bool Sign)
         {
             return Sign ? -1.5f : +1.5f;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float FPNeg(this float Value)
         {
             return -Value;
@@ -927,8 +1396,6 @@ namespace ChocolArm64.Instruction
 
         private static float FPProcessNaN(FPType Type, uint Op, AThreadState State)
         {
-            const int DNBit = 25; // Default NaN mode control bit.
-
             if (Type == FPType.SNaN)
             {
                 Op |= 1u << 22;
@@ -936,7 +1403,7 @@ namespace ChocolArm64.Instruction
                 FPProcessException(FPExc.InvalidOp, State);
             }
 
-            if ((State.Fpcr & (1 << DNBit)) != 0)
+            if (State.GetFpcrFlag(FPCR.DN))
             {
                 return FPDefaultNaN();
             }
@@ -1482,56 +1949,31 @@ namespace ChocolArm64.Instruction
             return Result;
         }
 
-        private enum FPType
-        {
-            Nonzero,
-            Zero,
-            Infinity,
-            QNaN,
-            SNaN
-        }
-
-        private enum FPExc
-        {
-            InvalidOp,
-            DivideByZero,
-            Overflow,
-            Underflow,
-            Inexact,
-            InputDenorm = 7
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double FPDefaultNaN()
         {
             return -double.NaN;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double FPInfinity(bool Sign)
         {
             return Sign ? double.NegativeInfinity : double.PositiveInfinity;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double FPZero(bool Sign)
         {
             return Sign ? -0d : +0d;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double FPTwo(bool Sign)
         {
             return Sign ? -2d : +2d;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double FPOnePointFive(bool Sign)
         {
             return Sign ? -1.5d : +1.5d;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double FPNeg(this double Value)
         {
             return -Value;
@@ -1653,8 +2095,6 @@ namespace ChocolArm64.Instruction
 
         private static double FPProcessNaN(FPType Type, ulong Op, AThreadState State)
         {
-            const int DNBit = 25; // Default NaN mode control bit.
-
             if (Type == FPType.SNaN)
             {
                 Op |= 1ul << 51;
@@ -1662,7 +2102,7 @@ namespace ChocolArm64.Instruction
                 FPProcessException(FPExc.InvalidOp, State);
             }
 
-            if ((State.Fpcr & (1 << DNBit)) != 0)
+            if (State.GetFpcrFlag(FPCR.DN))
             {
                 return FPDefaultNaN();
             }

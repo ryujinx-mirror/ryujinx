@@ -145,5 +145,20 @@ namespace ChocolArm64.State
         {
             Undefined?.Invoke(this, new AInstUndefinedEventArgs(Position, RawOpCode));
         }
+
+        internal bool GetFpcrFlag(FPCR Flag)
+        {
+            return (Fpcr & (1 << (int)Flag)) != 0;
+        }
+
+        internal void SetFpsrFlag(FPSR Flag)
+        {
+            Fpsr |= 1 << (int)Flag;
+        }
+
+        internal ARoundMode FPRoundingMode()
+        {
+            return (ARoundMode)((Fpcr >> (int)FPCR.RMode) & 3);
+        }
     }
 }

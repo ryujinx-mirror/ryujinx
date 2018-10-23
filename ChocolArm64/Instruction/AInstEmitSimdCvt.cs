@@ -78,7 +78,7 @@ namespace ChocolArm64.Instruction
 
             int Elems = 4 >> SizeF;
 
-            int Part = Context.CurrOp.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
+            int Part = Op.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
 
             for (int Index = 0; Index < Elems; Index++)
             {
@@ -87,7 +87,9 @@ namespace ChocolArm64.Instruction
                     EmitVectorExtractZx(Context, Op.Rn, Part + Index, 1);
                     Context.Emit(OpCodes.Conv_U2);
 
-                    Context.EmitCall(typeof(ASoftFloat), nameof(ASoftFloat.ConvertHalfToSingle));
+                    Context.EmitLdarg(ATranslatedSub.StateArgIdx);
+
+                    Context.EmitCall(typeof(ASoftFloat16_32), nameof(ASoftFloat16_32.FPConvert));
                 }
                 else /* if (SizeF == 1) */
                 {
@@ -96,8 +98,11 @@ namespace ChocolArm64.Instruction
                     Context.Emit(OpCodes.Conv_R8);
                 }
 
-                EmitVectorInsertF(Context, Op.Rd, Index, SizeF);
+                EmitVectorInsertTmpF(Context, Index, SizeF);
             }
+
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
         }
 
         public static void Fcvtms_Gp(AILEmitterCtx Context)
@@ -118,28 +123,39 @@ namespace ChocolArm64.Instruction
 
             int Elems = 4 >> SizeF;
 
-            int Part = Context.CurrOp.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
+            int Part = Op.RegisterSize == ARegisterSize.SIMD128 ? Elems : 0;
+
+            if (Part != 0)
+            {
+                Context.EmitLdvec(Op.Rd);
+                Context.EmitStvectmp();
+            }
 
             for (int Index = 0; Index < Elems; Index++)
             {
-                EmitVectorExtractF(Context, Op.Rd, Index, SizeF);
+                EmitVectorExtractF(Context, Op.Rn, Index, SizeF);
 
                 if (SizeF == 0)
                 {
-                    //TODO: This need the half precision floating point type,
-                    //that is not yet supported on .NET. We should probably
-                    //do our own implementation on the meantime.
-                    throw new NotImplementedException();
+                    Context.EmitLdarg(ATranslatedSub.StateArgIdx);
+
+                    Context.EmitCall(typeof(ASoftFloat32_16), nameof(ASoftFloat32_16.FPConvert));
+
+                    Context.Emit(OpCodes.Conv_U8);
+                    EmitVectorInsertTmp(Context, Part + Index, 1);
                 }
                 else /* if (SizeF == 1) */
                 {
                     Context.Emit(OpCodes.Conv_R4);
 
-                    EmitVectorInsertF(Context, Op.Rd, Part + Index, 0);
+                    EmitVectorInsertTmpF(Context, Part + Index, 0);
                 }
             }
 
-            if (Op.RegisterSize == ARegisterSize.SIMD64)
+            Context.EmitLdvectmp();
+            Context.EmitStvec(Op.Rd);
+
+            if (Part == 0)
             {
                 EmitVectorZeroUpper(Context, Op.Rd);
             }
@@ -445,8 +461,9 @@ namespace ChocolArm64.Instruction
             int FBits = GetFBits(Context);
 
             int Bytes = Op.GetBitsCount() >> 3;
+            int Elems = Bytes >> SizeI;
 
-            for (int Index = 0; Index < (Bytes >> SizeI); Index++)
+            for (int Index = 0; Index < Elems; Index++)
             {
                 EmitVectorExtract(Context, Op.Rn, Index, SizeI, Signed);
 
@@ -534,8 +551,9 @@ namespace ChocolArm64.Instruction
             int FBits = GetFBits(Context);
 
             int Bytes = Op.GetBitsCount() >> 3;
+            int Elems = Bytes >> SizeI;
 
-            for (int Index = 0; Index < (Bytes >> SizeI); Index++)
+            for (int Index = 0; Index < Elems; Index++)
             {
                 EmitVectorExtractF(Context, Op.Rn, Index, SizeF);
 
@@ -640,11 +658,11 @@ namespace ChocolArm64.Instruction
             {
                 if (Size == 0)
                 {
-                    Context.EmitLdc_R4(MathF.Pow(2, FBits));
+                    Context.EmitLdc_R4(MathF.Pow(2f, FBits));
                 }
                 else if (Size == 1)
                 {
-                    Context.EmitLdc_R8(Math.Pow(2, FBits));
+                    Context.EmitLdc_R8(Math.Pow(2d, FBits));
                 }
                 else
                 {
@@ -661,11 +679,11 @@ namespace ChocolArm64.Instruction
             {
                 if (Size == 0)
                 {
-                    Context.EmitLdc_R4(1f / MathF.Pow(2, FBits));
+                    Context.EmitLdc_R4(1f / MathF.Pow(2f, FBits));
                 }
                 else if (Size == 1)
                 {
-                    Context.EmitLdc_R8(1 / Math.Pow(2, FBits));
+                    Context.EmitLdc_R8(1d / Math.Pow(2d, FBits));
                 }
                 else
                 {

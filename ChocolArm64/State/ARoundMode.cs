@@ -1,6 +1,6 @@
 namespace ChocolArm64.State
 {
-    public enum ARoundMode
+    enum ARoundMode
     {
         ToNearest            = 0,
         TowardsPlusInfinity  = 1,
