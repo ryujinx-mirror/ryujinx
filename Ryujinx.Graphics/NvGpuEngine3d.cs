@@ -371,6 +371,9 @@ namespace Ryujinx.Graphics
             {
                 State.DepthFunc = (GalComparisonOp)ReadRegister(NvGpuEngine3dReg.DepthTestFunction);
             }
+
+            State.DepthRangeNear = ReadRegisterFloat(NvGpuEngine3dReg.DepthRangeNNear);
+            State.DepthRangeFar  = ReadRegisterFloat(NvGpuEngine3dReg.DepthRangeNFar);
         }
 
         private void SetStencil(GalPipelineState State)

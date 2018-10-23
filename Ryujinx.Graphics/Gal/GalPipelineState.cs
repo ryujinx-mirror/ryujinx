@@ -43,6 +43,8 @@
         public bool DepthTestEnabled;
         public bool DepthWriteEnabled;
         public GalComparisonOp DepthFunc;
+        public float DepthRangeNear;
+        public float DepthRangeFar;
 
         public bool StencilTestEnabled;
         public bool StencilTwoSideEnabled;

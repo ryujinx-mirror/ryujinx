@@ -15,6 +15,8 @@ namespace Ryujinx.Graphics
         ViewportNTranslateZ  = 0x285,
         ViewportNHoriz       = 0x300,
         ViewportNVert        = 0x301,
+        DepthRangeNNear      = 0x302,
+        DepthRangeNFar       = 0x303,
         VertexArrayFirst     = 0x35d,
         VertexArrayCount     = 0x35e,
         ClearNColor          = 0x360,
