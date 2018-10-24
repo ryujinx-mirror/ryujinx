@@ -226,10 +226,10 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public void YieldWithLoadBalancing()
         {
+            System.CriticalSectionLock.Lock();
+
             int Prio = DynamicPriority;
             int Core = CurrentCore;
-
-            System.CriticalSectionLock.Lock();
 
             if (SchedFlags != ThreadSchedState.Running)
             {
