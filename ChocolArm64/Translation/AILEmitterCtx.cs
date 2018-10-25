@@ -38,6 +38,7 @@ namespace ChocolArm64.Translation
         private const int Tmp3Index = -3;
         private const int Tmp4Index = -4;
         private const int Tmp5Index = -5;
+        private const int Tmp6Index = -6;
 
         public AILEmitterCtx(
             ATranslatorCache Cache,
@@ -394,6 +395,9 @@ namespace ChocolArm64.Translation
 
         public void EmitLdvectmp() => EmitLdvec(Tmp5Index);
         public void EmitStvectmp() => EmitStvec(Tmp5Index);
+
+        public void EmitLdvectmp2() => EmitLdvec(Tmp6Index);
+        public void EmitStvectmp2() => EmitStvec(Tmp6Index);
 
         public void EmitLdint(int Index) => Ldloc(Index, AIoType.Int);
         public void EmitStint(int Index) => Stloc(Index, AIoType.Int);
