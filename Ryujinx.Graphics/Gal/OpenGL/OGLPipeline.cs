@@ -131,8 +131,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 BlendFuncSrcAlpha  = GalBlendFactor.One,
                 BlendFuncDstAlpha  = GalBlendFactor.Zero,
 
-                ColorMask = ColorMaskRgba.Default,
-
                 PrimitiveRestartEnabled = false,
                 PrimitiveRestartIndex   = 0
             };
@@ -316,16 +314,30 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 }
             }
 
-            for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
+            if (New.ColorMaskCommon)
             {
-                if (!New.ColorMasks[Index].Equals(Old.ColorMasks[Index]))
+                if (New.ColorMaskCommon != Old.ColorMaskCommon || !New.ColorMasks[0].Equals(Old.ColorMasks[0]))
                 {
                     GL.ColorMask(
-                        Index,
-                        New.ColorMasks[Index].Red,
-                        New.ColorMasks[Index].Green,
-                        New.ColorMasks[Index].Blue,
-                        New.ColorMasks[Index].Alpha);
+                        New.ColorMasks[0].Red,
+                        New.ColorMasks[0].Green,
+                        New.ColorMasks[0].Blue,
+                        New.ColorMasks[0].Alpha);
+                }
+            }
+            else
+            {
+                for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
+                {
+                    if (!New.ColorMasks[Index].Equals(Old.ColorMasks[Index]))
+                    {
+                        GL.ColorMask(
+                            Index,
+                            New.ColorMasks[Index].Red,
+                            New.ColorMasks[Index].Green,
+                            New.ColorMasks[Index].Blue,
+                            New.ColorMasks[Index].Alpha);
+                    }
                 }
             }
 
@@ -477,7 +489,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             if (!Dict.TryGetValue(Attrib.Size, out VertexAttribPointerType Type))
             {
-                throw new NotImplementedException("Unsupported size \"" + Attrib.Size + "\" on type \"" + Attrib.Type + "\"!");
+                ThrowUnsupportedAttrib(Attrib);
             }
 
             return Type;
@@ -485,15 +497,10 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private unsafe static void SetConstAttrib(GalVertexAttrib Attrib)
         {
-            void Unsupported()
-            {
-                throw new NotImplementedException("Constant attribute " + Attrib.Size + " not implemented!");
-            }
-
             if (Attrib.Size == GalVertexAttribSize._10_10_10_2 ||
                 Attrib.Size == GalVertexAttribSize._11_11_10)
             {
-                Unsupported();
+                ThrowUnsupportedAttrib(Attrib);
             }
 
             if (Attrib.Type == GalVertexAttribType.Unorm)
@@ -611,9 +618,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                         GL.VertexAttrib4(Attrib.Index, (float*)Attrib.Pointer);
                         break;
 
-                    default: Unsupported(); break;
+                    default: ThrowUnsupportedAttrib(Attrib); break;
                 }
             }
+        }
+
+        private static void ThrowUnsupportedAttrib(GalVertexAttrib Attrib)
+        {
+            throw new NotImplementedException("Unsupported size \"" + Attrib.Size + "\" on type \"" + Attrib.Type + "\"!");
         }
 
         private void Enable(EnableCap Cap, bool Enabled)

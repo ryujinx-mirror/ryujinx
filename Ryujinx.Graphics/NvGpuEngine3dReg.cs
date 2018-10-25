@@ -25,7 +25,7 @@ namespace Ryujinx.Graphics
         StencilBackFuncRef   = 0x3d5,
         StencilBackMask      = 0x3d6,
         StencilBackFuncMask  = 0x3d7,
-        ColorMask            = 0x3e4,
+        ColorMaskCommon      = 0x3e4,
         RTSeparateFragData   = 0x3eb,
         ZetaAddress          = 0x3f8,
         ZetaFormat           = 0x3fa,

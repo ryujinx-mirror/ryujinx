@@ -64,6 +64,10 @@ namespace Ryujinx.Graphics
             {
                 UploadedKeys[i] = new List<long>();
             }
+
+            //Ensure that all components are enabled by default.
+            //FIXME: Is this correct?
+            WriteRegister(NvGpuEngine3dReg.ColorMaskN, 0x1111);
         }
 
         public void CallMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
@@ -420,16 +424,13 @@ namespace Ryujinx.Graphics
 
         private void SetColorMask(GalPipelineState State)
         {
-            int ColorMask = ReadRegister(NvGpuEngine3dReg.ColorMask);
+            bool ColorMaskCommon = ReadRegisterBool(NvGpuEngine3dReg.ColorMaskCommon);
 
-            State.ColorMask.Red   = ((ColorMask >> 0)  & 0xf) != 0;
-            State.ColorMask.Green = ((ColorMask >> 4)  & 0xf) != 0;
-            State.ColorMask.Blue  = ((ColorMask >> 8)  & 0xf) != 0;
-            State.ColorMask.Alpha = ((ColorMask >> 12) & 0xf) != 0;
+            State.ColorMaskCommon = ColorMaskCommon;
 
             for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
             {
-                ColorMask = ReadRegister(NvGpuEngine3dReg.ColorMaskN + Index);
+                int ColorMask = ReadRegister(NvGpuEngine3dReg.ColorMaskN + (ColorMaskCommon ? 0 : Index));
 
                 State.ColorMasks[Index].Red   = ((ColorMask >> 0)  & 0xf) != 0;
                 State.ColorMasks[Index].Green = ((ColorMask >> 4)  & 0xf) != 0;

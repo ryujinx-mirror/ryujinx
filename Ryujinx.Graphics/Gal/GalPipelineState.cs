@@ -37,11 +37,11 @@
 
         public GalFrontFace FrontFace;
 
-        public bool CullFaceEnabled;
+        public bool        CullFaceEnabled;
         public GalCullFace CullFace;
 
-        public bool DepthTestEnabled;
-        public bool DepthWriteEnabled;
+        public bool            DepthTestEnabled;
+        public bool            DepthWriteEnabled;
         public GalComparisonOp DepthFunc;
         public float DepthRangeNear;
         public float DepthRangeFar;
@@ -50,31 +50,31 @@
         public bool StencilTwoSideEnabled;
 
         public GalComparisonOp StencilBackFuncFunc;
-        public int StencilBackFuncRef;
-        public uint StencilBackFuncMask;
-        public GalStencilOp StencilBackOpFail;
-        public GalStencilOp StencilBackOpZFail;
-        public GalStencilOp StencilBackOpZPass;
-        public uint StencilBackMask;
+        public int             StencilBackFuncRef;
+        public uint            StencilBackFuncMask;
+        public GalStencilOp    StencilBackOpFail;
+        public GalStencilOp    StencilBackOpZFail;
+        public GalStencilOp    StencilBackOpZPass;
+        public uint            StencilBackMask;
 
         public GalComparisonOp StencilFrontFuncFunc;
-        public int StencilFrontFuncRef;
-        public uint StencilFrontFuncMask;
-        public GalStencilOp StencilFrontOpFail;
-        public GalStencilOp StencilFrontOpZFail;
-        public GalStencilOp StencilFrontOpZPass;
-        public uint StencilFrontMask;
+        public int             StencilFrontFuncRef;
+        public uint            StencilFrontFuncMask;
+        public GalStencilOp    StencilFrontOpFail;
+        public GalStencilOp    StencilFrontOpZFail;
+        public GalStencilOp    StencilFrontOpZPass;
+        public uint            StencilFrontMask;
 
-        public bool BlendEnabled;
-        public bool BlendSeparateAlpha;
+        public bool             BlendEnabled;
+        public bool             BlendSeparateAlpha;
         public GalBlendEquation BlendEquationRgb;
-        public GalBlendFactor BlendFuncSrcRgb;
-        public GalBlendFactor BlendFuncDstRgb;
+        public GalBlendFactor   BlendFuncSrcRgb;
+        public GalBlendFactor   BlendFuncDstRgb;
         public GalBlendEquation BlendEquationAlpha;
-        public GalBlendFactor BlendFuncSrcAlpha;
-        public GalBlendFactor BlendFuncDstAlpha;
+        public GalBlendFactor   BlendFuncSrcAlpha;
+        public GalBlendFactor   BlendFuncDstAlpha;
 
-        public ColorMaskRgba ColorMask;
+        public bool            ColorMaskCommon;
         public ColorMaskRgba[] ColorMasks;
 
         public bool PrimitiveRestartEnabled;
