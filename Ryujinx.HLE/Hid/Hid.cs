@@ -114,6 +114,55 @@ namespace Ryujinx.HLE.Input
             Device.Memory.WriteInt32(BaseControllerOffset + 0x24, (int)RightColorButtons);
         }
 
+        private HidControllerButtons UpdateStickButtons(
+            HidJoystickPosition LeftStick,
+            HidJoystickPosition RightStick)
+        {
+            HidControllerButtons Result = 0;
+
+            if (RightStick.DX < 0)
+            {
+                Result |= HidControllerButtons.KEY_RSTICK_LEFT;
+            }
+
+            if (RightStick.DX > 0)
+            {
+                Result |= HidControllerButtons.KEY_RSTICK_RIGHT;
+            }
+
+            if (RightStick.DY < 0)
+            {
+                Result |= HidControllerButtons.KEY_RSTICK_DOWN;
+            }
+
+            if (RightStick.DY > 0)
+            {
+                Result |= HidControllerButtons.KEY_RSTICK_UP;
+            }
+
+            if (LeftStick.DX < 0)
+            {
+                Result |= HidControllerButtons.KEY_LSTICK_LEFT;
+            }
+
+            if (LeftStick.DX > 0)
+            {
+                Result |= HidControllerButtons.KEY_LSTICK_RIGHT;
+            }
+
+            if (LeftStick.DY < 0)
+            {
+                Result |= HidControllerButtons.KEY_LSTICK_DOWN;
+            }
+
+            if (LeftStick.DY > 0)
+            {
+                Result |= HidControllerButtons.KEY_LSTICK_UP;
+            }
+
+            return Result;
+        }
+
         public void SetJoyconButton(
             HidControllerId      ControllerId,
             HidControllerLayouts ControllerLayout,
@@ -121,6 +170,8 @@ namespace Ryujinx.HLE.Input
             HidJoystickPosition  LeftStick,
             HidJoystickPosition  RightStick)
         {
+            Buttons |= UpdateStickButtons(LeftStick, RightStick);
+
             long ControllerOffset = HidPosition + HidControllersOffset;
 
             ControllerOffset += (int)ControllerId * HidControllerSize;
