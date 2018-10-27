@@ -1,7 +1,7 @@
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
 using Ryujinx.Graphics.Texture;
-using System.Collections.Generic;
+using System;
 
 namespace Ryujinx.Graphics
 {
@@ -22,42 +22,24 @@ namespace Ryujinx.Graphics
 
         private NvGpu Gpu;
 
-        private Dictionary<int, NvGpuMethod> Methods;
-
         public NvGpuEngine2d(NvGpu Gpu)
         {
             this.Gpu = Gpu;
 
-            Registers = new int[0xe00];
-
-            Methods = new Dictionary<int, NvGpuMethod>();
-
-            void AddMethod(int Meth, int Count, int Stride, NvGpuMethod Method)
-            {
-                while (Count-- > 0)
-                {
-                    Methods.Add(Meth, Method);
-
-                    Meth += Stride;
-                }
-            }
-
-            AddMethod(0xb5, 1, 1, TextureCopy);
+            Registers = new int[0x238];
         }
 
         public void CallMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
         {
-            if (Methods.TryGetValue(PBEntry.Method, out NvGpuMethod Method))
+            WriteRegister(PBEntry);
+
+            if ((NvGpuEngine2dReg)PBEntry.Method == NvGpuEngine2dReg.BlitSrcYInt)
             {
-                Method(Vmm, PBEntry);
-            }
-            else
-            {
-                WriteRegister(PBEntry);
+                TextureCopy(Vmm);
             }
         }
 
-        private void TextureCopy(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        private void TextureCopy(NvGpuVmm Vmm)
         {
             CopyOperation Operation = (CopyOperation)ReadRegister(NvGpuEngine2dReg.CopyOperation);
 
@@ -107,17 +89,20 @@ namespace Ryujinx.Graphics
             Gpu.ResourceManager.SendTexture(Vmm, SrcKey, SrcTexture);
             Gpu.ResourceManager.SendTexture(Vmm, DstKey, DstTexture);
 
+            int Width  = Math.Min(SrcWidth,  DstWidth);
+            int Height = Math.Min(SrcHeight, DstHeight);
+
             Gpu.Renderer.RenderTarget.Copy(
                 SrcKey,
                 DstKey,
                 0,
                 0,
-                SrcWidth,
-                SrcHeight,
+                Width,
+                Height,
                 0,
                 0,
-                DstWidth,
-                DstHeight);
+                Width,
+                Height);
         }
 
         private static GalMemoryLayout GetLayout(bool Linear)
@@ -147,11 +132,6 @@ namespace Ryujinx.Graphics
         private int ReadRegister(NvGpuEngine2dReg Reg)
         {
             return Registers[(int)Reg];
-        }
-
-        private void WriteRegister(NvGpuEngine2dReg Reg, int Value)
-        {
-            Registers[(int)Reg] = Value;
         }
     }
 }

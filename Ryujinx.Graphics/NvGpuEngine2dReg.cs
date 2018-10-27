@@ -20,6 +20,20 @@ namespace Ryujinx.Graphics
         SrcWidth           = 0x92,
         SrcHeight          = 0x93,
         SrcAddress         = 0x94,
-        CopyOperation      = 0xab
+        ClipEnable         = 0xa4,
+        CopyOperation      = 0xab,
+        BlitControl        = 0x223,
+        BlitDstX           = 0x22c,
+        BlitDstY           = 0x22d,
+        BlitDstW           = 0x22e,
+        BlitDstH           = 0x22f,
+        BlitDuDxFract      = 0x230,
+        BlitDuDxInt        = 0x231,
+        BlitDvDyFract      = 0x232,
+        BlitDvDyInt        = 0x233,
+        BlitSrcXFract      = 0x234,
+        BlitSrcXInt        = 0x235,
+        BlitSrcYFract      = 0x236,
+        BlitSrcYInt        = 0x237
     }
 }
