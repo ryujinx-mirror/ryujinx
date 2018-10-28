@@ -14,6 +14,11 @@ namespace ChocolArm64.Instruction
             //Execute as no-op.
         }
 
+        public static void Isb(AILEmitterCtx Context)
+        {
+            //Execute as no-op.
+        }
+
         public static void Mrs(AILEmitterCtx Context)
         {
             AOpCodeSystem Op = (AOpCodeSystem)Context.CurrOp;

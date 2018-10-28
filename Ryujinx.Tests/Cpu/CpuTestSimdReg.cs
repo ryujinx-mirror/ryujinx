@@ -353,6 +353,27 @@ namespace Ryujinx.Tests.Cpu
                 0x4EE0FC00u  // FRSQRTS V0.2D, V0.2D, V0.2D
             };
         }
+
+        private static uint[] _Sha1c_Sha1m_Sha1p_Sha1su0_V_()
+        {
+            return new uint[]
+            {
+                0x5E000000u, // SHA1C   Q0,    S0,    V0.4S
+                0x5E002000u, // SHA1M   Q0,    S0,    V0.4S
+                0x5E001000u, // SHA1P   Q0,    S0,    V0.4S
+                0x5E003000u  // SHA1SU0 V0.4S, V0.4S, V0.4S
+            };
+        }
+
+        private static uint[] _Sha256h_Sha256h2_Sha256su1_V_()
+        {
+            return new uint[]
+            {
+                0x5E004000u, // SHA256H   Q0,    Q0,    V0.4S
+                0x5E005000u, // SHA256H2  Q0,    Q0,    V0.4S
+                0x5E006000u  // SHA256SU1 V0.4S, V0.4S, V0.4S
+            };
+        }
 #endregion
 
         private const int RndCnt = 2;
@@ -1847,62 +1868,42 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("SHA256H <Qd>, <Qn>, <Vm>.4S")]
-        public void Sha256h_V([Values(0u)]     uint Rd,
-                              [Values(1u, 0u)] uint Rn,
-                              [Values(2u, 0u)] uint Rm,
-                              [Random(RndCnt / 2)] ulong Z0, [Random(RndCnt / 2)] ulong Z1,
-                              [Random(RndCnt / 2)] ulong A0, [Random(RndCnt / 2)] ulong A1,
-                              [Random(RndCnt / 2)] ulong B0, [Random(RndCnt / 2)] ulong B1)
+        [Test, Pairwise]
+        public void Sha1c_Sha1m_Sha1p_Sha1su0_V([ValueSource("_Sha1c_Sha1m_Sha1p_Sha1su0_V_")] uint Opcodes,
+                                                [Values(0u)]     uint Rd,
+                                                [Values(1u, 0u)] uint Rn,
+                                                [Values(2u, 0u)] uint Rm,
+                                                [Random(RndCnt / 2)] ulong Z0, [Random(RndCnt / 2)] ulong Z1,
+                                                [Random(RndCnt / 2)] ulong A0, [Random(RndCnt / 2)] ulong A1,
+                                                [Random(RndCnt / 2)] ulong B0, [Random(RndCnt / 2)] ulong B1)
         {
-            uint Opcode = 0x5E004000; // SHA256H Q0, Q0, V0.4S
-            Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcodes |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
 
             Vector128<float> V0 = MakeVectorE0E1(Z0, Z1);
             Vector128<float> V1 = MakeVectorE0E1(A0, A1);
             Vector128<float> V2 = MakeVectorE0E1(B0, B1);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2);
 
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("SHA256H2 <Qd>, <Qn>, <Vm>.4S")]
-        public void Sha256h2_V([Values(0u)]     uint Rd,
-                               [Values(1u, 0u)] uint Rn,
-                               [Values(2u, 0u)] uint Rm,
-                               [Random(RndCnt / 2)] ulong Z0, [Random(RndCnt / 2)] ulong Z1,
-                               [Random(RndCnt / 2)] ulong A0, [Random(RndCnt / 2)] ulong A1,
-                               [Random(RndCnt / 2)] ulong B0, [Random(RndCnt / 2)] ulong B1)
+        [Test, Pairwise]
+        public void Sha256h_Sha256h2_Sha256su1_V([ValueSource("_Sha256h_Sha256h2_Sha256su1_V_")] uint Opcodes,
+                                                 [Values(0u)]     uint Rd,
+                                                 [Values(1u, 0u)] uint Rn,
+                                                 [Values(2u, 0u)] uint Rm,
+                                                 [Random(RndCnt / 2)] ulong Z0, [Random(RndCnt / 2)] ulong Z1,
+                                                 [Random(RndCnt / 2)] ulong A0, [Random(RndCnt / 2)] ulong A1,
+                                                 [Random(RndCnt / 2)] ulong B0, [Random(RndCnt / 2)] ulong B1)
         {
-            uint Opcode = 0x5E005000; // SHA256H2 Q0, Q0, V0.4S
-            Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            Opcodes |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
 
             Vector128<float> V0 = MakeVectorE0E1(Z0, Z1);
             Vector128<float> V1 = MakeVectorE0E1(A0, A1);
             Vector128<float> V2 = MakeVectorE0E1(B0, B1);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("SHA256SU1 <Vd>.4S, <Vn>.4S, <Vm>.4S")]
-        public void Sha256su1_V([Values(0u)]     uint Rd,
-                                [Values(1u, 0u)] uint Rn,
-                                [Values(2u, 0u)] uint Rm,
-                                [Random(RndCnt / 2)] ulong Z0, [Random(RndCnt / 2)] ulong Z1,
-                                [Random(RndCnt / 2)] ulong A0, [Random(RndCnt / 2)] ulong A1,
-                                [Random(RndCnt / 2)] ulong B0, [Random(RndCnt / 2)] ulong B1)
-        {
-            uint Opcode = 0x5E006000; // SHA256SU1 V0.4S, V0.4S, V0.4S
-            Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
-
-            Vector128<float> V0 = MakeVectorE0E1(Z0, Z1);
-            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
-            Vector128<float> V2 = MakeVectorE0E1(B0, B1);
-
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1, V2: V2);
+            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2);
 
             CompareAgainstUnicorn();
         }

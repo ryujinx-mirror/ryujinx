@@ -88,6 +88,7 @@ namespace ChocolArm64
             SetA64("00010011100xxxxx0xxxxxxxxxxxxxxx", AInstEmit.Extr,          typeof(AOpCodeAluRs));
             SetA64("10010011110xxxxxxxxxxxxxxxxxxxxx", AInstEmit.Extr,          typeof(AOpCodeAluRs));
             SetA64("11010101000000110010xxxxxxx11111", AInstEmit.Hint,          typeof(AOpCodeSystem));
+            SetA64("11010101000000110011xxxx11011111", AInstEmit.Isb,           typeof(AOpCodeSystem));
             SetA64("xx001000110xxxxx1xxxxxxxxxxxxxxx", AInstEmit.Ldar,          typeof(AOpCodeMemEx));
             SetA64("1x001000011xxxxx1xxxxxxxxxxxxxxx", AInstEmit.Ldaxp,         typeof(AOpCodeMemEx));
             SetA64("xx001000010xxxxx1xxxxxxxxxxxxxxx", AInstEmit.Ldaxr,         typeof(AOpCodeMemEx));
@@ -386,6 +387,12 @@ namespace ChocolArm64
             SetA64("x0011110xx100010000000xxxxxxxxxx", AInstEmit.Scvtf_Gp,      typeof(AOpCodeSimdCvt));
             SetA64("010111100x100001110110xxxxxxxxxx", AInstEmit.Scvtf_S,       typeof(AOpCodeSimd));
             SetA64("0x0011100x100001110110xxxxxxxxxx", AInstEmit.Scvtf_V,       typeof(AOpCodeSimd));
+            SetA64("01011110000xxxxx000000xxxxxxxxxx", AInstEmit.Sha1c_V,       typeof(AOpCodeSimdReg));
+            SetA64("0101111000101000000010xxxxxxxxxx", AInstEmit.Sha1h_V,       typeof(AOpCodeSimd));
+            SetA64("01011110000xxxxx001000xxxxxxxxxx", AInstEmit.Sha1m_V,       typeof(AOpCodeSimdReg));
+            SetA64("01011110000xxxxx000100xxxxxxxxxx", AInstEmit.Sha1p_V,       typeof(AOpCodeSimdReg));
+            SetA64("01011110000xxxxx001100xxxxxxxxxx", AInstEmit.Sha1su0_V,     typeof(AOpCodeSimdReg));
+            SetA64("0101111000101000000110xxxxxxxxxx", AInstEmit.Sha1su1_V,     typeof(AOpCodeSimd));
             SetA64("01011110000xxxxx010000xxxxxxxxxx", AInstEmit.Sha256h_V,     typeof(AOpCodeSimdReg));
             SetA64("01011110000xxxxx010100xxxxxxxxxx", AInstEmit.Sha256h2_V,    typeof(AOpCodeSimdReg));
             SetA64("0101111000101000001010xxxxxxxxxx", AInstEmit.Sha256su0_V,   typeof(AOpCodeSimd));
