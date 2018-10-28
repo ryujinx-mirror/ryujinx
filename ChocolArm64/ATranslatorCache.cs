@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -27,7 +28,7 @@ namespace ChocolArm64
 
             public int Size { get; private set; }
 
-            public int Timestamp { get; private set; }
+            public long Timestamp { get; private set; }
 
             public CacheBucket(ATranslatedSub Subroutine, LinkedListNode<long> Node, int Size)
             {
@@ -41,7 +42,7 @@ namespace ChocolArm64
             {
                 this.Node = Node;
 
-                Timestamp = Environment.TickCount;
+                Timestamp = GetTimestamp();
             }
         }
 
@@ -122,7 +123,7 @@ namespace ChocolArm64
 
         private void ClearCacheIfNeeded()
         {
-            int Timestamp = Environment.TickCount;
+            long Timestamp = GetTimestamp();
 
             while (TotalSize > MaxTotalSize)
             {
@@ -137,9 +138,9 @@ namespace ChocolArm64
 
                     CacheBucket Bucket = Cache[Node.Value];
 
-                    int TimeDelta = RingDelta(Bucket.Timestamp, Timestamp);
+                    long TimeDelta = Bucket.Timestamp - Timestamp;
 
-                    if ((uint)TimeDelta <= (uint)MinTimeDelta)
+                    if (TimeDelta <= MinTimeDelta)
                     {
                         break;
                     }
@@ -154,16 +155,11 @@ namespace ChocolArm64
             }
         }
 
-        private static int RingDelta(int Old, int New)
+        private static long GetTimestamp()
         {
-            if ((uint)New < (uint)Old)
-            {
-                return New + (~Old + 1);
-            }
-            else
-            {
-                return New - Old;
-            }
+            long timestamp = Stopwatch.GetTimestamp();
+
+            return timestamp / (Stopwatch.Frequency / 1000);
         }
     }
 }

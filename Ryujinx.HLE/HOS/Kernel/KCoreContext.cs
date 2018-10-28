@@ -1,3 +1,4 @@
+using Ryujinx.Common;
 using System;
 
 namespace Ryujinx.HLE.HOS.Kernel
@@ -25,7 +26,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             if (Thread != null)
             {
-                Thread.LastScheduledTicks = (uint)Environment.TickCount;
+                Thread.LastScheduledTicks = PerformanceCounter.ElapsedMilliseconds;
             }
 
             if (SelectedThread != CurrentThread)
