@@ -2,18 +2,6 @@ namespace ChocolArm64
 {
     static class ABitUtils
     {
-        public static int CountBitsSet(long Value)
-        {
-            int Count = 0;
-
-            for (int Bit = 0; Bit < 64; Bit++)
-            {
-                Count += (int)(Value >> Bit) & 1;
-            }
-
-            return Count;
-        }
-
         public static int HighestBitSet32(int Value)
         {
             for (int Bit = 31; Bit >= 0; Bit--)
@@ -50,12 +38,12 @@ namespace ChocolArm64
 
         public static long RotateRight(long Bits, int Shift, int Size)
         {
-            return (Bits >> Shift) | (Bits << (Size - Shift));
+            return (long)RotateRight((ulong)Bits, Shift, Size);
         }
 
-        public static bool IsPow2(int Value)
+        public static ulong RotateRight(ulong Bits, int Shift, int Size)
         {
-            return Value != 0 && (Value & (Value - 1)) == 0;
+            return (Bits >> Shift) | (Bits << (Size - Shift));
         }
     }
 }
