@@ -157,7 +157,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
                 CacheBucket Bucket = Cache[Node.Value];
 
-                long TimeDelta = Bucket.Timestamp - Timestamp;
+                long TimeDelta = Timestamp - Bucket.Timestamp;
 
                 if ((uint)TimeDelta <= (uint)MaxTimeDelta)
                 {
