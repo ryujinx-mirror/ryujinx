@@ -8,12 +8,12 @@ namespace Ryujinx.HLE.HOS.Ipc
     static class IpcHandler
     {
         public static long IpcCall(
-            Switch     Ns,
-            Process    Process,
-            AMemory    Memory,
-            KSession   Session,
-            IpcMessage Request,
-            long       CmdPtr)
+            Switch        Ns,
+            Process       Process,
+            MemoryManager Memory,
+            KSession      Session,
+            IpcMessage    Request,
+            long          CmdPtr)
         {
             IpcMessage Response = new IpcMessage();
 

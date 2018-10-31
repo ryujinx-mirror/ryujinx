@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     partial class SvcHandler
     {
-        private void SvcCreateThread(AThreadState ThreadState)
+        private void SvcCreateThread(CpuThreadState ThreadState)
         {
             long EntryPoint  = (long)ThreadState.X1;
             long ArgsPtr     = (long)ThreadState.X2;
@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X1 = (ulong)Handle;
         }
 
-        private void SvcStartThread(AThreadState ThreadState)
+        private void SvcStartThread(CpuThreadState ThreadState)
         {
             int Handle = (int)ThreadState.X0;
 
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private void SvcExitThread(AThreadState ThreadState)
+        private void SvcExitThread(CpuThreadState ThreadState)
         {
             KThread CurrentThread = System.Scheduler.GetCurrentThread();
 
@@ -83,7 +83,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             System.Scheduler.StopThread(CurrentThread);
         }
 
-        private void SvcSleepThread(AThreadState ThreadState)
+        private void SvcSleepThread(CpuThreadState ThreadState)
         {
             long Timeout = (long)ThreadState.X0;
 
@@ -108,7 +108,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private void SvcGetThreadPriority(AThreadState ThreadState)
+        private void SvcGetThreadPriority(CpuThreadState ThreadState)
         {
             int Handle = (int)ThreadState.X1;
 
@@ -127,7 +127,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private void SvcSetThreadPriority(AThreadState ThreadState)
+        private void SvcSetThreadPriority(CpuThreadState ThreadState)
         {
             int Handle   = (int)ThreadState.X0;
             int Priority = (int)ThreadState.X1;
@@ -154,7 +154,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = 0;
         }
 
-        private void SvcGetThreadCoreMask(AThreadState ThreadState)
+        private void SvcGetThreadCoreMask(CpuThreadState ThreadState)
         {
             int Handle = (int)ThreadState.X2;
 
@@ -176,7 +176,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private void SvcSetThreadCoreMask(AThreadState ThreadState)
+        private void SvcSetThreadCoreMask(CpuThreadState ThreadState)
         {
             int  Handle        =  (int)ThreadState.X0;
             int  PrefferedCore =  (int)ThreadState.X1;
@@ -240,12 +240,12 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcGetCurrentProcessorNumber(AThreadState ThreadState)
+        private void SvcGetCurrentProcessorNumber(CpuThreadState ThreadState)
         {
             ThreadState.X0 = (ulong)Process.GetThread(ThreadState.Tpidr).CurrentCore;
         }
 
-        private void SvcGetThreadId(AThreadState ThreadState)
+        private void SvcGetThreadId(CpuThreadState ThreadState)
         {
             int Handle = (int)ThreadState.X1;
 
@@ -264,7 +264,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private void SvcSetThreadActivity(AThreadState ThreadState)
+        private void SvcSetThreadActivity(CpuThreadState ThreadState)
         {
             int  Handle = (int)ThreadState.X0;
             bool Pause  = (int)ThreadState.X1 == 1;
@@ -299,7 +299,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcGetThreadContext3(AThreadState ThreadState)
+        private void SvcGetThreadContext3(CpuThreadState ThreadState)
         {
             long Position = (long)ThreadState.X0;
             int  Handle   =  (int)ThreadState.X1;

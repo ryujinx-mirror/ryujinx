@@ -74,7 +74,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
             Vector128<float> V2 = MakeVectorE0E1(B, B * H);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2);
 
             CompareAgainstUnicorn();
         }
@@ -101,7 +101,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
             Vector128<float> V2 = MakeVectorE0E1(B, B * H);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2);
 
             CompareAgainstUnicorn();
         }

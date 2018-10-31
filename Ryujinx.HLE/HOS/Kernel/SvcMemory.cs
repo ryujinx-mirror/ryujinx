@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     partial class SvcHandler
     {
-        private void SvcSetHeapSize(AThreadState ThreadState)
+        private void SvcSetHeapSize(CpuThreadState ThreadState)
         {
             ulong Size = ThreadState.X1;
 
@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private void SvcSetMemoryAttribute(AThreadState ThreadState)
+        private void SvcSetMemoryAttribute(CpuThreadState ThreadState)
         {
             long Position = (long)ThreadState.X0;
             long Size     = (long)ThreadState.X1;
@@ -90,7 +90,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcMapMemory(AThreadState ThreadState)
+        private void SvcMapMemory(CpuThreadState ThreadState)
         {
             long Dst  = (long)ThreadState.X0;
             long Src  = (long)ThreadState.X1;
@@ -151,7 +151,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcUnmapMemory(AThreadState ThreadState)
+        private void SvcUnmapMemory(CpuThreadState ThreadState)
         {
             long Dst  = (long)ThreadState.X0;
             long Src  = (long)ThreadState.X1;
@@ -212,7 +212,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcQueryMemory(AThreadState ThreadState)
+        private void SvcQueryMemory(CpuThreadState ThreadState)
         {
             long InfoPtr  = (long)ThreadState.X0;
             long Position = (long)ThreadState.X2;
@@ -232,7 +232,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X1 = 0;
         }
 
-        private void SvcMapSharedMemory(AThreadState ThreadState)
+        private void SvcMapSharedMemory(CpuThreadState ThreadState)
         {
             int  Handle   =  (int)ThreadState.X0;
             long Position = (long)ThreadState.X1;
@@ -315,7 +315,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcUnmapSharedMemory(AThreadState ThreadState)
+        private void SvcUnmapSharedMemory(CpuThreadState ThreadState)
         {
             int  Handle   =  (int)ThreadState.X0;
             long Position = (long)ThreadState.X1;
@@ -378,7 +378,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcCreateTransferMemory(AThreadState ThreadState)
+        private void SvcCreateTransferMemory(CpuThreadState ThreadState)
         {
             long Position = (long)ThreadState.X1;
             long Size     = (long)ThreadState.X2;
@@ -431,7 +431,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X1 = (ulong)Handle;
         }
 
-        private void SvcMapPhysicalMemory(AThreadState ThreadState)
+        private void SvcMapPhysicalMemory(CpuThreadState ThreadState)
         {
             long Position = (long)ThreadState.X0;
             long Size     = (long)ThreadState.X1;
@@ -482,7 +482,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcUnmapPhysicalMemory(AThreadState ThreadState)
+        private void SvcUnmapPhysicalMemory(CpuThreadState ThreadState)
         {
             long Position = (long)ThreadState.X0;
             long Size     = (long)ThreadState.X1;

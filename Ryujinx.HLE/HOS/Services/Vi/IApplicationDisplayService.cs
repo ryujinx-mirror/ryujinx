@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
         {
             long RecBuffPtr = Context.Request.ReceiveBuff[0].Position;
 
-            AMemoryHelper.FillWithZeros(Context.Memory, RecBuffPtr, 0x60);
+            MemoryHelper.FillWithZeros(Context.Memory, RecBuffPtr, 0x60);
 
             //Add only the default display to buffer
             Context.Memory.WriteBytes(RecBuffPtr, Encoding.ASCII.GetBytes("Default"));

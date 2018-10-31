@@ -251,7 +251,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -274,7 +274,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -297,7 +297,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -320,7 +320,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -341,7 +341,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -362,7 +362,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -385,7 +385,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -408,7 +408,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -431,7 +431,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -452,7 +452,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -475,7 +475,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -498,7 +498,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -521,7 +521,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0E1(A, A);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -542,7 +542,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn(FpsrMask: FPSR.QC);
         }
@@ -563,7 +563,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn(FpsrMask: FPSR.QC);
         }
@@ -584,7 +584,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn(FpsrMask: FPSR.QC);
         }
@@ -607,7 +607,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn(FpsrMask: FPSR.QC);
         }
@@ -630,7 +630,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn(FpsrMask: FPSR.QC);
         }
@@ -653,7 +653,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
 
             CompareAgainstUnicorn(FpsrMask: FPSR.QC);
         }

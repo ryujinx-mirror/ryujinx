@@ -16,7 +16,7 @@ namespace Ryujinx.UI.Input
         public int DPadRight;
         public int ButtonMinus;
         public int ButtonL;
-        public int ButtonZL;
+        public int ButtonZl;
     }
 
     public struct JoyConKeyboardRight
@@ -32,7 +32,7 @@ namespace Ryujinx.UI.Input
         public int ButtonY;
         public int ButtonPlus;
         public int ButtonR;
-        public int ButtonZR;
+        public int ButtonZr;
     }
 
     public class JoyConKeyboard
@@ -41,62 +41,62 @@ namespace Ryujinx.UI.Input
         public JoyConKeyboardRight Right;
 
         public JoyConKeyboard(
-            JoyConKeyboardLeft  Left,
-            JoyConKeyboardRight Right)
+            JoyConKeyboardLeft  left,
+            JoyConKeyboardRight right)
         {
-            this.Left  = Left;
-            this.Right = Right;
+            Left  = left;
+            Right = right;
         }
 
-        public HidControllerButtons GetButtons(KeyboardState Keyboard)
+        public HidControllerButtons GetButtons(KeyboardState keyboard)
         {
-            HidControllerButtons Buttons = 0;
+            HidControllerButtons buttons = 0;
 
-            if (Keyboard[(Key)Left.StickButton]) Buttons |= HidControllerButtons.KEY_LSTICK;
-            if (Keyboard[(Key)Left.DPadUp])      Buttons |= HidControllerButtons.KEY_DUP;
-            if (Keyboard[(Key)Left.DPadDown])    Buttons |= HidControllerButtons.KEY_DDOWN;
-            if (Keyboard[(Key)Left.DPadLeft])    Buttons |= HidControllerButtons.KEY_DLEFT;
-            if (Keyboard[(Key)Left.DPadRight])   Buttons |= HidControllerButtons.KEY_DRIGHT;
-            if (Keyboard[(Key)Left.ButtonMinus]) Buttons |= HidControllerButtons.KEY_MINUS;
-            if (Keyboard[(Key)Left.ButtonL])     Buttons |= HidControllerButtons.KEY_L;
-            if (Keyboard[(Key)Left.ButtonZL])    Buttons |= HidControllerButtons.KEY_ZL;
+            if (keyboard[(Key)Left.StickButton]) buttons |= HidControllerButtons.KEY_LSTICK;
+            if (keyboard[(Key)Left.DPadUp])      buttons |= HidControllerButtons.KEY_DUP;
+            if (keyboard[(Key)Left.DPadDown])    buttons |= HidControllerButtons.KEY_DDOWN;
+            if (keyboard[(Key)Left.DPadLeft])    buttons |= HidControllerButtons.KEY_DLEFT;
+            if (keyboard[(Key)Left.DPadRight])   buttons |= HidControllerButtons.KEY_DRIGHT;
+            if (keyboard[(Key)Left.ButtonMinus]) buttons |= HidControllerButtons.KEY_MINUS;
+            if (keyboard[(Key)Left.ButtonL])     buttons |= HidControllerButtons.KEY_L;
+            if (keyboard[(Key)Left.ButtonZl])    buttons |= HidControllerButtons.KEY_ZL;
             
-            if (Keyboard[(Key)Right.StickButton]) Buttons |= HidControllerButtons.KEY_RSTICK;
-            if (Keyboard[(Key)Right.ButtonA])     Buttons |= HidControllerButtons.KEY_A;
-            if (Keyboard[(Key)Right.ButtonB])     Buttons |= HidControllerButtons.KEY_B;
-            if (Keyboard[(Key)Right.ButtonX])     Buttons |= HidControllerButtons.KEY_X;
-            if (Keyboard[(Key)Right.ButtonY])     Buttons |= HidControllerButtons.KEY_Y;
-            if (Keyboard[(Key)Right.ButtonPlus])  Buttons |= HidControllerButtons.KEY_PLUS;
-            if (Keyboard[(Key)Right.ButtonR])     Buttons |= HidControllerButtons.KEY_R;
-            if (Keyboard[(Key)Right.ButtonZR])    Buttons |= HidControllerButtons.KEY_ZR;
+            if (keyboard[(Key)Right.StickButton]) buttons |= HidControllerButtons.KEY_RSTICK;
+            if (keyboard[(Key)Right.ButtonA])     buttons |= HidControllerButtons.KEY_A;
+            if (keyboard[(Key)Right.ButtonB])     buttons |= HidControllerButtons.KEY_B;
+            if (keyboard[(Key)Right.ButtonX])     buttons |= HidControllerButtons.KEY_X;
+            if (keyboard[(Key)Right.ButtonY])     buttons |= HidControllerButtons.KEY_Y;
+            if (keyboard[(Key)Right.ButtonPlus])  buttons |= HidControllerButtons.KEY_PLUS;
+            if (keyboard[(Key)Right.ButtonR])     buttons |= HidControllerButtons.KEY_R;
+            if (keyboard[(Key)Right.ButtonZr])    buttons |= HidControllerButtons.KEY_ZR;
 
-            return Buttons;
+            return buttons;
         }
 
-        public (short, short) GetLeftStick(KeyboardState Keyboard)
+        public (short, short) GetLeftStick(KeyboardState keyboard)
         {
-            short DX = 0;
-            short DY = 0;
+            short dx = 0;
+            short dy = 0;
             
-            if (Keyboard[(Key)Left.StickUp])    DY =  short.MaxValue;
-            if (Keyboard[(Key)Left.StickDown])  DY = -short.MaxValue;
-            if (Keyboard[(Key)Left.StickLeft])  DX = -short.MaxValue;
-            if (Keyboard[(Key)Left.StickRight]) DX =  short.MaxValue;
+            if (keyboard[(Key)Left.StickUp])    dy =  short.MaxValue;
+            if (keyboard[(Key)Left.StickDown])  dy = -short.MaxValue;
+            if (keyboard[(Key)Left.StickLeft])  dx = -short.MaxValue;
+            if (keyboard[(Key)Left.StickRight]) dx =  short.MaxValue;
 
-            return (DX, DY);
+            return (dx, dy);
         }
 
-        public (short, short) GetRightStick(KeyboardState Keyboard)
+        public (short, short) GetRightStick(KeyboardState keyboard)
         {
-            short DX = 0;
-            short DY = 0;
+            short dx = 0;
+            short dy = 0;
 
-            if (Keyboard[(Key)Right.StickUp])    DY =  short.MaxValue;
-            if (Keyboard[(Key)Right.StickDown])  DY = -short.MaxValue;
-            if (Keyboard[(Key)Right.StickLeft])  DX = -short.MaxValue;
-            if (Keyboard[(Key)Right.StickRight]) DX =  short.MaxValue;
+            if (keyboard[(Key)Right.StickUp])    dy =  short.MaxValue;
+            if (keyboard[(Key)Right.StickDown])  dy = -short.MaxValue;
+            if (keyboard[(Key)Right.StickLeft])  dx = -short.MaxValue;
+            if (keyboard[(Key)Right.StickRight]) dx =  short.MaxValue;
 
-            return (DX, DY);
+            return (dx, dy);
         }
     }
 }

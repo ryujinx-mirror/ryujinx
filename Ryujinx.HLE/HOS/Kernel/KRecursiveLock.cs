@@ -53,7 +53,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
                             if (CoreContext.ContextSwitchNeeded)
                             {
-                                AThread CurrentHleThread = CoreContext.CurrentThread?.Context;
+                                CpuThread CurrentHleThread = CoreContext.CurrentThread?.Context;
 
                                 if (CurrentHleThread == null)
                                 {

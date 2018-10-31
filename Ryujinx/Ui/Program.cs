@@ -15,13 +15,13 @@ namespace Ryujinx
         {
             Console.Title = "Ryujinx Console";
 
-            IGalRenderer Renderer = new OGLRenderer();
+            IGalRenderer renderer = new OGLRenderer();
 
-            IAalOutput AudioOut = new OpenALAudioOut();
+            IAalOutput audioOut = new OpenALAudioOut();
 
-            Switch Device = new Switch(Renderer, AudioOut);
+            Switch device = new Switch(renderer, audioOut);
 
-            Config.Read(Device);
+            Config.Read(device);
 
             Logger.Updated += ConsoleLog.Log;
 
@@ -29,24 +29,24 @@ namespace Ryujinx
             {
                 if (Directory.Exists(args[0]))
                 {
-                    string[] RomFsFiles = Directory.GetFiles(args[0], "*.istorage");
+                    string[] romFsFiles = Directory.GetFiles(args[0], "*.istorage");
 
-                    if (RomFsFiles.Length == 0)
+                    if (romFsFiles.Length == 0)
                     {
-                        RomFsFiles = Directory.GetFiles(args[0], "*.romfs");
+                        romFsFiles = Directory.GetFiles(args[0], "*.romfs");
                     }
 
-                    if (RomFsFiles.Length > 0)
+                    if (romFsFiles.Length > 0)
                     {
                         Console.WriteLine("Loading as cart with RomFS.");
 
-                        Device.LoadCart(args[0], RomFsFiles[0]);
+                        device.LoadCart(args[0], romFsFiles[0]);
                     }
                     else
                     {
                         Console.WriteLine("Loading as cart WITHOUT RomFS.");
 
-                        Device.LoadCart(args[0]);
+                        device.LoadCart(args[0]);
                     }
                 }
                 else if (File.Exists(args[0]))
@@ -55,19 +55,19 @@ namespace Ryujinx
                     {
                         case ".xci":
                             Console.WriteLine("Loading as XCI.");
-                            Device.LoadXci(args[0]);
+                            device.LoadXci(args[0]);
                             break;
                         case ".nca":
                             Console.WriteLine("Loading as NCA.");
-                            Device.LoadNca(args[0]);
+                            device.LoadNca(args[0]);
                             break;
                         case ".nsp":
                             Console.WriteLine("Loading as NSP.");
-                            Device.LoadNsp(args[0]);
+                            device.LoadNsp(args[0]);
                             break;
                         default:
                             Console.WriteLine("Loading as homebrew.");
-                            Device.LoadProgram(args[0]);
+                            device.LoadProgram(args[0]);
                             break;
                     }
                 }
@@ -77,14 +77,14 @@ namespace Ryujinx
                 Console.WriteLine("Please specify the folder with the NSOs/IStorage or a NSO/NRO.");
             }
 
-            using (GLScreen Screen = new GLScreen(Device, Renderer))
+            using (GlScreen screen = new GlScreen(device, renderer))
             {
-                Screen.MainLoop();
+                screen.MainLoop();
 
-                Device.Dispose();
+                device.Dispose();
             }
 
-            AudioOut.Dispose();
+            audioOut.Dispose();
         }
     }
 }

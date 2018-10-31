@@ -4,7 +4,7 @@ using System;
 
 namespace Ryujinx.Graphics.Memory
 {
-    public class NvGpuVmm : IAMemory, IGalMemory
+    public class NvGpuVmm : IMemory, IGalMemory
     {
         public const long AddrSize = 1L << 40;
 
@@ -23,7 +23,7 @@ namespace Ryujinx.Graphics.Memory
         private const int PTLvl0Bit = PTPageBits + PTLvl1Bits;
         private const int PTLvl1Bit = PTPageBits;
 
-        public AMemory Memory { get; private set; }
+        public MemoryManager Memory { get; private set; }
 
         private NvGpuVmmCache Cache;
 
@@ -32,7 +32,7 @@ namespace Ryujinx.Graphics.Memory
 
         private long[][] PageTable;
 
-        public NvGpuVmm(AMemory Memory)
+        public NvGpuVmm(MemoryManager Memory)
         {
             this.Memory = Memory;
 

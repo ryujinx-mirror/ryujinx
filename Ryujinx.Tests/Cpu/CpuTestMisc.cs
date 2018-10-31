@@ -262,7 +262,7 @@ namespace Ryujinx.Tests.Cpu
         public void SanityCheck(ulong A)
         {
             uint Opcode = 0xD503201F; // NOP
-            AThreadState ThreadState = SingleOpcode(Opcode, X0: A);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X0: A);
 
             Assert.That(ThreadState.X0, Is.EqualTo(A));
         }

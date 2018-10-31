@@ -8,17 +8,17 @@ namespace Ryujinx
 {
     static class ConsoleLog
     {
-        private static Thread MessageThread;
+        private static Thread _messageThread;
 
-        private static BlockingCollection<LogEventArgs> MessageQueue;
+        private static BlockingCollection<LogEventArgs> _messageQueue;
 
-        private static Dictionary<LogLevel, ConsoleColor> LogColors;
+        private static Dictionary<LogLevel, ConsoleColor> _logColors;
 
-        private static object ConsoleLock;
+        private static object _consoleLock;
 
         static ConsoleLog()
         {
-            LogColors = new Dictionary<LogLevel, ConsoleColor>()
+            _logColors = new Dictionary<LogLevel, ConsoleColor>()
             {
                 { LogLevel.Stub,    ConsoleColor.DarkGray },
                 { LogLevel.Info,    ConsoleColor.White    },
@@ -26,17 +26,17 @@ namespace Ryujinx
                 { LogLevel.Error,   ConsoleColor.Red      }
             };
 
-            MessageQueue = new BlockingCollection<LogEventArgs>();
+            _messageQueue = new BlockingCollection<LogEventArgs>();
 
-            ConsoleLock = new object();
+            _consoleLock = new object();
 
-            MessageThread = new Thread(() =>
+            _messageThread = new Thread(() =>
             {
-                while (!MessageQueue.IsCompleted)
+                while (!_messageQueue.IsCompleted)
                 {
                     try
                     {
-                        PrintLog(MessageQueue.Take());
+                        PrintLog(_messageQueue.Take());
                     }
                     catch (InvalidOperationException)
                     {
@@ -49,39 +49,39 @@ namespace Ryujinx
                 }
             });
 
-            MessageThread.IsBackground = true;
-            MessageThread.Start();
+            _messageThread.IsBackground = true;
+            _messageThread.Start();
         }
 
         private static void PrintLog(LogEventArgs e)
         {
-            string FormattedTime = e.Time.ToString(@"hh\:mm\:ss\.fff");
+            string formattedTime = e.Time.ToString(@"hh\:mm\:ss\.fff");
 
-            string CurrentThread = Thread.CurrentThread.ManagedThreadId.ToString("d4");
+            string currentThread = Thread.CurrentThread.ManagedThreadId.ToString("d4");
             
-            string Message = FormattedTime + " | " + CurrentThread + " " + e.Message;
+            string message = formattedTime + " | " + currentThread + " " + e.Message;
 
-            if (LogColors.TryGetValue(e.Level, out ConsoleColor Color))
+            if (_logColors.TryGetValue(e.Level, out ConsoleColor color))
             {
-                lock (ConsoleLock)
+                lock (_consoleLock)
                 {
-                    Console.ForegroundColor = Color;
+                    Console.ForegroundColor = color;
 
-                    Console.WriteLine(Message);
+                    Console.WriteLine(message);
                     Console.ResetColor();
                 }
             }
             else
             {
-                Console.WriteLine(Message);
+                Console.WriteLine(message);
             }
         }
 
         public static void Log(object sender, LogEventArgs e)
         {
-            if (!MessageQueue.IsAddingCompleted)
+            if (!_messageQueue.IsAddingCompleted)
             {
-                MessageQueue.Add(e);
+                _messageQueue.Add(e);
             }
         }
     }

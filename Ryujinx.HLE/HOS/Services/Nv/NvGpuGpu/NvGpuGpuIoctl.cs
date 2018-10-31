@@ -44,7 +44,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuGpu
 
             Args.Size = 1;
 
-            AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
@@ -68,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuGpu
             Args.SubregionHeightAlignPixels = 0x40;
             Args.SubregionCount             = 0x10;
 
-            AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
@@ -90,7 +90,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuGpu
             long InputPosition  = Context.Request.GetBufferType0x21().Position;
             long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvGpuGpuGetCharacteristics Args = AMemoryHelper.Read<NvGpuGpuGetCharacteristics>(Context.Memory, InputPosition);
+            NvGpuGpuGetCharacteristics Args = MemoryHelper.Read<NvGpuGpuGetCharacteristics>(Context.Memory, InputPosition);
 
             Args.BufferSize = 0xa0;
 
@@ -130,7 +130,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuGpu
             Args.ChipName               = 0x6230326d67;
             Args.GrCompbitStoreBaseHw   = 0x0;
 
-            AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             return NvResult.Success;
         }
@@ -140,14 +140,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuGpu
             long InputPosition  = Context.Request.GetBufferType0x21().Position;
             long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvGpuGpuGetTpcMasks Args = AMemoryHelper.Read<NvGpuGpuGetTpcMasks>(Context.Memory, InputPosition);
+            NvGpuGpuGetTpcMasks Args = MemoryHelper.Read<NvGpuGpuGetTpcMasks>(Context.Memory, InputPosition);
 
             if (Args.MaskBufferSize != 0)
             {
                 Args.TpcMask = 3;
             }
 
-            AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             return NvResult.Success;
         }
@@ -161,7 +161,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuGpu
             Args.Slot = 0x07;
             Args.Mask = 0x01;
 
-            AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 

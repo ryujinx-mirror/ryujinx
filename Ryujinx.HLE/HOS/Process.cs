@@ -33,9 +33,9 @@ namespace Ryujinx.HLE.HOS
 
         public int ProcessId { get; private set; }
 
-        private ATranslator Translator;
+        private Translator Translator;
 
-        public AMemory Memory { get; private set; }
+        public MemoryManager Memory { get; private set; }
 
         public KMemoryManager MemoryManager { get; private set; }
 
@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS
             this.MetaData  = MetaData;
             this.ProcessId = ProcessId;
 
-            Memory = new AMemory(Device.Memory.RamPointer);
+            Memory = new MemoryManager(Device.Memory.RamPointer);
 
             Memory.InvalidAccess += CpuInvalidAccessHandler;
 
@@ -221,7 +221,7 @@ namespace Ryujinx.HLE.HOS
                 throw new ObjectDisposedException(nameof(Process));
             }
 
-            AThread CpuThread = new AThread(GetTranslator(), Memory, EntryPoint);
+            CpuThread CpuThread = new CpuThread(GetTranslator(), Memory, EntryPoint);
 
             long Tpidr = GetFreeTls();
 
@@ -283,14 +283,14 @@ namespace Ryujinx.HLE.HOS
             Device.System.Scheduler.ContextSwitch();
         }
 
-        private void BreakHandler(object sender, AInstExceptionEventArgs e)
+        private void BreakHandler(object sender, InstExceptionEventArgs e)
         {
             PrintStackTraceForCurrentThread();
 
             throw new GuestBrokeExecutionException();
         }
 
-        private void UndefinedHandler(object sender, AInstUndefinedEventArgs e)
+        private void UndefinedHandler(object sender, InstUndefinedEventArgs e)
         {
             PrintStackTraceForCurrentThread();
 
@@ -307,7 +307,7 @@ namespace Ryujinx.HLE.HOS
             Translator.EnableCpuTrace = false;
         }
 
-        private void CpuTraceHandler(object sender, ACpuTraceEventArgs e)
+        private void CpuTraceHandler(object sender, CpuTraceEventArgs e)
         {
             Executable Exe = GetExecutable(e.Position);
 
@@ -328,11 +328,11 @@ namespace Ryujinx.HLE.HOS
             Logger.PrintDebug(LogClass.Cpu, ExeNameWithAddr + " " + SubName);
         }
 
-        private ATranslator GetTranslator()
+        private Translator GetTranslator()
         {
             if (Translator == null)
             {
-                Translator = new ATranslator();
+                Translator = new Translator();
 
                 Translator.CpuTrace += CpuTraceHandler;
             }
@@ -340,7 +340,7 @@ namespace Ryujinx.HLE.HOS
             return Translator;
         }
 
-        private void CpuInvalidAccessHandler(object sender, AInvalidAccessEventArgs e)
+        private void CpuInvalidAccessHandler(object sender, InvalidAccessEventArgs e)
         {
             PrintStackTraceForCurrentThread();
         }
@@ -358,7 +358,7 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
-        public void PrintStackTrace(AThreadState ThreadState)
+        public void PrintStackTrace(CpuThreadState ThreadState)
         {
             StringBuilder Trace = new StringBuilder();
 
@@ -457,7 +457,7 @@ namespace Ryujinx.HLE.HOS
 
         private void ThreadFinished(object sender, EventArgs e)
         {
-            if (sender is AThread Thread)
+            if (sender is CpuThread Thread)
             {
                 if (Threads.TryRemove(Thread.ThreadState.Tpidr, out KThread KernelThread))
                 {

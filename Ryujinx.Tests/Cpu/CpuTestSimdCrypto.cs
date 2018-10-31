@@ -26,7 +26,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(RoundKeyL ^ ValueL, RoundKeyH ^ ValueH);
             Vector128<float> V1 = MakeVectorE0E1(RoundKeyL,          RoundKeyH);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             Assert.Multiple(() =>
             {
@@ -58,7 +58,7 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> V0 = MakeVectorE0E1(RoundKeyL ^ ValueL, RoundKeyH ^ ValueH);
             Vector128<float> V1 = MakeVectorE0E1(RoundKeyL,          RoundKeyH);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
 
             Assert.Multiple(() =>
             {
@@ -87,7 +87,7 @@ namespace Ryujinx.Tests.Cpu
 
             Vector128<float> V = MakeVectorE0E1(ValueL, ValueH);
 
-            AThreadState ThreadState = SingleOpcode(
+            CpuThreadState ThreadState = SingleOpcode(
                 Opcode,
                 V0: Rn == 0u ? V : default(Vector128<float>),
                 V1: Rn == 1u ? V : default(Vector128<float>));
@@ -122,7 +122,7 @@ namespace Ryujinx.Tests.Cpu
 
             Vector128<float> V = MakeVectorE0E1(ValueL, ValueH);
 
-            AThreadState ThreadState = SingleOpcode(
+            CpuThreadState ThreadState = SingleOpcode(
                 Opcode,
                 V0: Rn == 0u ? V : default(Vector128<float>),
                 V1: Rn == 1u ? V : default(Vector128<float>));

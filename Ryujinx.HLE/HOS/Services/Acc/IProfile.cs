@@ -41,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
             long Position = Context.Request.ReceiveBuff[0].Position;
 
-            AMemoryHelper.FillWithZeros(Context.Memory, Position, 0x80);
+            MemoryHelper.FillWithZeros(Context.Memory, Position, 0x80);
 
             Context.Memory.WriteInt32(Position, 0);
             Context.Memory.WriteInt32(Position + 4, 1);

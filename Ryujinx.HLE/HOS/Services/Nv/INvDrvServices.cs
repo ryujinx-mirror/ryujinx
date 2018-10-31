@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
         {
             long NamePtr = Context.Request.SendBuff[0].Position;
 
-            string Name = AMemoryHelper.ReadAsciiString(Context.Memory, NamePtr);
+            string Name = MemoryHelper.ReadAsciiString(Context.Memory, NamePtr);
 
             int Fd = Fds.Add(Context.Process, new NvFd(Name));
 

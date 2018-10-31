@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Memory
             CachedRanges = new ValueRangeSet<int>();
         }
 
-        public bool IsRegionModified(AMemory Memory, NvGpuBufferType BufferType, long PA, long Size)
+        public bool IsRegionModified(MemoryManager Memory, NvGpuBufferType BufferType, long PA, long Size)
         {
             (bool[] Modified, long ModifiedCount) = Memory.IsRegionModified(PA, Size);
 

@@ -24,8 +24,8 @@ namespace Ryujinx.Tests.Cpu
 
         private IntPtr RamPointer;
 
-        private AMemory Memory;
-        private AThread Thread;
+        private MemoryManager Memory;
+        private CpuThread     Thread;
 
         private static bool UnicornAvailable;
         private UnicornAArch64 UnicornEmu;
@@ -48,11 +48,11 @@ namespace Ryujinx.Tests.Cpu
 
             EntryPoint = Position;
 
-            ATranslator Translator = new ATranslator();
+            Translator Translator = new Translator();
             RamPointer = Marshal.AllocHGlobal(new IntPtr(Size));
-            Memory = new AMemory(RamPointer);
+            Memory = new MemoryManager(RamPointer);
             Memory.Map(Position, 0, Size);
-            Thread = new AThread(Translator, Memory, EntryPoint);
+            Thread = new CpuThread(Translator, Memory, EntryPoint);
 
             if (UnicornAvailable)
             {
@@ -158,9 +158,9 @@ namespace Ryujinx.Tests.Cpu
             }
         }
 
-        protected AThreadState GetThreadState() => Thread.ThreadState;
+        protected CpuThreadState GetThreadState() => Thread.ThreadState;
 
-        protected AThreadState SingleOpcode(uint Opcode,
+        protected CpuThreadState SingleOpcode(uint Opcode,
                                             ulong X0 = 0, ulong X1 = 0, ulong X2 = 0, ulong X3 = 0, ulong X31 = 0,
                                             Vector128<float> V0 = default(Vector128<float>),
                                             Vector128<float> V1 = default(Vector128<float>),

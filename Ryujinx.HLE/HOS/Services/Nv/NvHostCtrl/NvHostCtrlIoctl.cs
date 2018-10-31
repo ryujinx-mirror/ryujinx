@@ -84,8 +84,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
                 long InputPosition  = Context.Request.GetBufferType0x21().Position;
                 long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-                string Domain = AMemoryHelper.ReadAsciiString(Context.Memory, InputPosition + 0, 0x41);
-                string Name   = AMemoryHelper.ReadAsciiString(Context.Memory, InputPosition + 0x41, 0x41);
+                string Domain = MemoryHelper.ReadAsciiString(Context.Memory, InputPosition + 0, 0x41);
+                string Name   = MemoryHelper.ReadAsciiString(Context.Memory, InputPosition + 0x41, 0x41);
 
                 if (Set.NxSettings.Settings.TryGetValue($"{Domain}!{Name}", out object NvSetting))
                 {
@@ -154,7 +154,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
             long InputPosition  = Context.Request.GetBufferType0x21().Position;
             long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvHostCtrlSyncptRead Args = AMemoryHelper.Read<NvHostCtrlSyncptRead>(Context.Memory, InputPosition);
+            NvHostCtrlSyncptRead Args = MemoryHelper.Read<NvHostCtrlSyncptRead>(Context.Memory, InputPosition);
 
             if ((uint)Args.Id >= NvHostSyncpt.SyncptsCount)
             {
@@ -170,7 +170,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
                 Args.Value = GetUserCtx(Context).Syncpt.GetMin(Args.Id);
             }
 
-            AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             return NvResult.Success;
         }
@@ -180,7 +180,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
             long InputPosition  = Context.Request.GetBufferType0x21().Position;
             long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvHostCtrlSyncptWait Args = AMemoryHelper.Read<NvHostCtrlSyncptWait>(Context.Memory, InputPosition);
+            NvHostCtrlSyncptWait Args = MemoryHelper.Read<NvHostCtrlSyncptWait>(Context.Memory, InputPosition);
 
             NvHostSyncpt Syncpt = GetUserCtx(Context).Syncpt;
 
@@ -248,7 +248,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
             long InputPosition  = Context.Request.GetBufferType0x21().Position;
             long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvHostCtrlSyncptWaitEx Args = AMemoryHelper.Read<NvHostCtrlSyncptWaitEx>(Context.Memory, InputPosition);
+            NvHostCtrlSyncptWaitEx Args = MemoryHelper.Read<NvHostCtrlSyncptWaitEx>(Context.Memory, InputPosition);
 
             if ((uint)Args.Id >= NvHostSyncpt.SyncptsCount)
             {
@@ -257,7 +257,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
 
             void WriteArgs()
             {
-                AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
+                MemoryHelper.Write(Context.Memory, OutputPosition, Args);
             }
 
             NvHostSyncpt Syncpt = GetUserCtx(Context).Syncpt;

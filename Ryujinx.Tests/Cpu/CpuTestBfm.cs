@@ -29,7 +29,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X0: _Xd, X1: Xn, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X0: _Xd, X1: Xn, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -49,7 +49,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X0: _Wd, X1: Wn, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X0: _Wd, X1: Wn, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -68,7 +68,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -87,7 +87,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -106,7 +106,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -125,7 +125,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X31: _W31);
 
             CompareAgainstUnicorn();
         }

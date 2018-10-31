@@ -26,7 +26,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         private KEvent UpdateEvent;
 
-        private AMemory Memory;
+        private MemoryManager Memory;
 
         private IAalOutput AudioOut;
 
@@ -42,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         public IAudioRenderer(
             Horizon                System,
-            AMemory                Memory,
+            MemoryManager          Memory,
             IAalOutput             AudioOut,
             AudioRendererParameter Params)
         {
@@ -143,7 +143,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             long OutputPosition = Context.Request.ReceiveBuff[0].Position;
             long OutputSize     = Context.Request.ReceiveBuff[0].Size;
 
-            AMemoryHelper.FillWithZeros(Context.Memory, OutputPosition, (int)OutputSize);
+            MemoryHelper.FillWithZeros(Context.Memory, OutputPosition, (int)OutputSize);
 
             long InputPosition = Context.Request.SendBuff[0].Position;
 

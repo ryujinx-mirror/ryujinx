@@ -29,7 +29,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31, Carry: CarryIn);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31, Carry: CarryIn);
 
             CompareAgainstUnicorn();
         }
@@ -49,7 +49,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31, Carry: CarryIn);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31, Carry: CarryIn);
 
             CompareAgainstUnicorn();
         }
@@ -69,7 +69,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31, Carry: CarryIn);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31, Carry: CarryIn);
 
             CompareAgainstUnicorn();
         }
@@ -89,7 +89,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31, Carry: CarryIn);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31, Carry: CarryIn);
 
             CompareAgainstUnicorn();
         }
@@ -111,7 +111,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -133,7 +133,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -155,7 +155,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -177,7 +177,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -199,7 +199,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -221,7 +221,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -243,7 +243,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -265,7 +265,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -284,7 +284,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -303,7 +303,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -325,7 +325,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -347,7 +347,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -369,7 +369,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -391,7 +391,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -411,7 +411,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Xm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Xm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -429,7 +429,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -447,7 +447,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -465,7 +465,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -485,7 +485,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Xm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Xm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -503,7 +503,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -521,7 +521,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -539,7 +539,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -561,7 +561,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -583,7 +583,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -605,7 +605,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -627,7 +627,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -648,7 +648,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -669,7 +669,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -688,7 +688,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -707,7 +707,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -726,7 +726,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -745,7 +745,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -767,7 +767,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -789,7 +789,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -811,7 +811,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -833,7 +833,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -852,7 +852,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -871,7 +871,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -891,7 +891,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31, Carry: CarryIn);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31, Carry: CarryIn);
 
             CompareAgainstUnicorn();
         }
@@ -911,7 +911,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31, Carry: CarryIn);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31, Carry: CarryIn);
 
             CompareAgainstUnicorn();
         }
@@ -931,7 +931,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31, Carry: CarryIn);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31, Carry: CarryIn);
 
             CompareAgainstUnicorn();
         }
@@ -951,7 +951,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31, Carry: CarryIn);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31, Carry: CarryIn);
 
             CompareAgainstUnicorn();
         }
@@ -970,7 +970,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -989,7 +989,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -1011,7 +1011,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -1033,7 +1033,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -1055,7 +1055,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -1077,7 +1077,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }
@@ -1096,7 +1096,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, X2: Xm, X31: _X31);
 
             CompareAgainstUnicorn();
         }
@@ -1115,7 +1115,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, X2: Wm, X31: _W31);
 
             CompareAgainstUnicorn();
         }

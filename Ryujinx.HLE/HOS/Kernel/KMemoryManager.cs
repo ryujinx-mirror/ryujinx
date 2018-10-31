@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         private LinkedList<KMemoryBlock> Blocks;
 
-        private AMemory CpuMemory;
+        private MemoryManager CpuMemory;
 
         private ArenaAllocator Allocator;
 

@@ -8,6 +8,6 @@ namespace ChocolArm64.Exceptions
 
         public VmmPageFaultException() { }
 
-        public VmmPageFaultException(long Position) : base(string.Format(ExMsg, Position)) { }
+        public VmmPageFaultException(long position) : base(string.Format(ExMsg, position)) { }
     }
 }

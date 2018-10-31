@@ -70,7 +70,7 @@ namespace Ryujinx.Tests.Cpu
             ulong Z = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, V0: V0);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, V0: V0);
 
             CompareAgainstUnicorn();
         }
@@ -86,7 +86,7 @@ namespace Ryujinx.Tests.Cpu
             ulong Z = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> V0 = MakeVectorE0E1(Z, Z);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, V0: V0);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, V0: V0);
 
             CompareAgainstUnicorn();
         }
@@ -108,7 +108,7 @@ namespace Ryujinx.Tests.Cpu
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X0: _X0, X31: _W31, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X0: _X0, X31: _W31, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -129,7 +129,7 @@ namespace Ryujinx.Tests.Cpu
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X31: _X31, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X31: _X31, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -151,7 +151,7 @@ namespace Ryujinx.Tests.Cpu
             uint _W31 = TestContext.CurrentContext.Random.NextUInt();
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X0: _X0, X31: _W31, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X0: _X0, X31: _W31, V1: V1);
 
             CompareAgainstUnicorn();
         }
@@ -172,7 +172,7 @@ namespace Ryujinx.Tests.Cpu
             ulong _X31 = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X31: _X31, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X31: _X31, V1: V1);
 
             CompareAgainstUnicorn();
         }

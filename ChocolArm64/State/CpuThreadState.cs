@@ -1,0 +1,164 @@
+using ChocolArm64.Events;
+using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+
+namespace ChocolArm64.State
+{
+    public class CpuThreadState
+    {
+        internal const int LrIndex = 30;
+        internal const int ZrIndex = 31;
+
+        internal const int ErgSizeLog2 = 4;
+        internal const int DczSizeLog2 = 4;
+
+        private const int MinInstForCheck = 4000000;
+
+        internal ExecutionMode ExecutionMode;
+
+        //AArch32 state.
+        public uint R0,  R1,  R2,  R3,
+                    R4,  R5,  R6,  R7,
+                    R8,  R9,  R10, R11,
+                    R12, R13, R14, R15;
+
+        public bool Thumb;
+
+        //AArch64 state.
+        public ulong X0,  X1,  X2,  X3,  X4,  X5,  X6,  X7,
+                     X8,  X9,  X10, X11, X12, X13, X14, X15,
+                     X16, X17, X18, X19, X20, X21, X22, X23,
+                     X24, X25, X26, X27, X28, X29, X30, X31;
+
+        public Vector128<float> V0,  V1,  V2,  V3,  V4,  V5,  V6,  V7,
+                                V8,  V9,  V10, V11, V12, V13, V14, V15,
+                                V16, V17, V18, V19, V20, V21, V22, V23,
+                                V24, V25, V26, V27, V28, V29, V30, V31;
+
+        public bool Overflow;
+        public bool Carry;
+        public bool Zero;
+        public bool Negative;
+
+        public bool Running { get; set; }
+        public int  Core    { get; set; }
+
+        private bool _interrupted;
+
+        private int _syncCount;
+
+        public long TpidrEl0 { get; set; }
+        public long Tpidr    { get; set; }
+
+        public int Fpcr { get; set; }
+        public int Fpsr { get; set; }
+
+        public int Psr
+        {
+            get
+            {
+                return (Negative ? (int)PState.N : 0) |
+                       (Zero     ? (int)PState.Z : 0) |
+                       (Carry    ? (int)PState.C : 0) |
+                       (Overflow ? (int)PState.V : 0);
+            }
+        }
+
+        public uint CtrEl0   => 0x8444c004;
+        public uint DczidEl0 => 0x00000004;
+
+        public ulong CntfrqEl0 { get; set; }
+        public ulong CntpctEl0
+        {
+            get
+            {
+                double ticks = _tickCounter.ElapsedTicks * _hostTickFreq;
+
+                return (ulong)(ticks * CntfrqEl0);
+            }
+        }
+
+        public event EventHandler<EventArgs>               Interrupt;
+        public event EventHandler<InstExceptionEventArgs> Break;
+        public event EventHandler<InstExceptionEventArgs> SvcCall;
+        public event EventHandler<InstUndefinedEventArgs> Undefined;
+
+        private static Stopwatch _tickCounter;
+
+        private static double _hostTickFreq;
+
+        static CpuThreadState()
+        {
+            _hostTickFreq = 1.0 / Stopwatch.Frequency;
+
+            _tickCounter = new Stopwatch();
+
+            _tickCounter.Start();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal bool Synchronize(int bbWeight)
+        {
+            //Firing a interrupt frequently is expensive, so we only
+            //do it after a given number of instructions has executed.
+            _syncCount += bbWeight;
+
+            if (_syncCount >= MinInstForCheck)
+            {
+                CheckInterrupt();
+            }
+
+            return Running;
+        }
+
+        internal void RequestInterrupt()
+        {
+            _interrupted = true;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void CheckInterrupt()
+        {
+            _syncCount = 0;
+
+            if (_interrupted)
+            {
+                _interrupted = false;
+
+                Interrupt?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        internal void OnBreak(long position, int imm)
+        {
+            Break?.Invoke(this, new InstExceptionEventArgs(position, imm));
+        }
+
+        internal void OnSvcCall(long position, int imm)
+        {
+            SvcCall?.Invoke(this, new InstExceptionEventArgs(position, imm));
+        }
+
+        internal void OnUndefined(long position, int rawOpCode)
+        {
+            Undefined?.Invoke(this, new InstUndefinedEventArgs(position, rawOpCode));
+        }
+
+        internal bool GetFpcrFlag(Fpcr flag)
+        {
+            return (Fpcr & (1 << (int)flag)) != 0;
+        }
+
+        internal void SetFpsrFlag(Fpsr flag)
+        {
+            Fpsr |= 1 << (int)flag;
+        }
+
+        internal RoundMode FPRoundingMode()
+        {
+            return (RoundMode)((Fpcr >> (int)State.Fpcr.RMode) & 3);
+        }
+    }
+}

@@ -24,11 +24,11 @@ namespace Ryujinx.HLE.HOS.Kernel
         }
 
         public long ArbitrateLock(
-            Process Process,
-            AMemory Memory,
-            int     OwnerHandle,
-            long    MutexAddress,
-            int     RequesterHandle)
+            Process       Process,
+            MemoryManager Memory,
+            int           OwnerHandle,
+            long          MutexAddress,
+            int           RequesterHandle)
         {
             System.CriticalSectionLock.Lock();
 
@@ -80,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             return (uint)CurrentThread.ObjSyncResult;
         }
 
-        public long ArbitrateUnlock(AMemory Memory, long MutexAddress)
+        public long ArbitrateUnlock(MemoryManager Memory, long MutexAddress)
         {
             System.CriticalSectionLock.Lock();
 
@@ -100,11 +100,11 @@ namespace Ryujinx.HLE.HOS.Kernel
         }
 
         public long WaitProcessWideKeyAtomic(
-            AMemory Memory,
-            long    MutexAddress,
-            long    CondVarAddress,
-            int     ThreadHandle,
-            long    Timeout)
+            MemoryManager Memory,
+            long          MutexAddress,
+            long          CondVarAddress,
+            int           ThreadHandle,
+            long          Timeout)
         {
             System.CriticalSectionLock.Lock();
 
@@ -167,7 +167,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             return (uint)CurrentThread.ObjSyncResult;
         }
 
-        private (long, KThread) MutexUnlock(AMemory Memory, KThread CurrentThread, long MutexAddress)
+        private (long, KThread) MutexUnlock(MemoryManager Memory, KThread CurrentThread, long MutexAddress)
         {
             KThread NewOwnerThread = CurrentThread.RelinquishMutex(MutexAddress, out int Count);
 
@@ -198,7 +198,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             return (Result, NewOwnerThread);
         }
 
-        public void SignalProcessWideKey(Process Process, AMemory Memory, long Address, int Count)
+        public void SignalProcessWideKey(Process Process, MemoryManager Memory, long Address, int Count)
         {
             Queue<KThread> SignaledThreads = new Queue<KThread>();
 
@@ -227,7 +227,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             System.CriticalSectionLock.Unlock();
         }
 
-        private KThread TryAcquireMutex(Process Process, AMemory Memory, KThread Requester)
+        private KThread TryAcquireMutex(Process Process, MemoryManager Memory, KThread Requester)
         {
             long Address = Requester.MutexAddress;
 
@@ -301,7 +301,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             return MutexOwner;
         }
 
-        public long WaitForAddressIfEqual(AMemory Memory, long Address, int Value, long Timeout)
+        public long WaitForAddressIfEqual(MemoryManager Memory, long Address, int Value, long Timeout)
         {
             KThread CurrentThread = System.Scheduler.GetCurrentThread();
 
@@ -373,11 +373,11 @@ namespace Ryujinx.HLE.HOS.Kernel
         }
 
         public long WaitForAddressIfLessThan(
-            AMemory Memory,
-            long    Address,
-            int     Value,
-            bool    ShouldDecrement,
-            long    Timeout)
+            MemoryManager Memory,
+            long          Address,
+            int           Value,
+            bool          ShouldDecrement,
+            long          Timeout)
         {
             KThread CurrentThread = System.Scheduler.GetCurrentThread();
 
@@ -507,7 +507,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             return 0;
         }
 
-        public long SignalAndIncrementIfEqual(AMemory Memory, long Address, int Value, int Count)
+        public long SignalAndIncrementIfEqual(MemoryManager Memory, long Address, int Value, int Count)
         {
             System.CriticalSectionLock.Lock();
 
@@ -552,7 +552,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             return 0;
         }
 
-        public long SignalAndModifyIfEqual(AMemory Memory, long Address, int Value, int Count)
+        public long SignalAndModifyIfEqual(MemoryManager Memory, long Address, int Value, int Count)
         {
             System.CriticalSectionLock.Lock();
 
@@ -649,7 +649,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private bool UserToKernelInt32(AMemory Memory, long Address, out int Value)
+        private bool UserToKernelInt32(MemoryManager Memory, long Address, out int Value)
         {
             if (Memory.IsMapped(Address))
             {
@@ -663,7 +663,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             return false;
         }
 
-        private bool KernelToUserInt32(AMemory Memory, long Address, int Value)
+        private bool KernelToUserInt32(MemoryManager Memory, long Address, int Value)
         {
             if (Memory.IsMapped(Address))
             {

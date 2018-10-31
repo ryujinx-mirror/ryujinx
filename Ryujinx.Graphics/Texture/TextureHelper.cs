@@ -27,16 +27,16 @@ namespace Ryujinx.Graphics.Texture
             }
         }
 
-        public static (AMemory Memory, long Position) GetMemoryAndPosition(
-            IAMemory Memory,
-            long     Position)
+        public static (MemoryManager Memory, long Position) GetMemoryAndPosition(
+            IMemory Memory,
+            long    Position)
         {
             if (Memory is NvGpuVmm Vmm)
             {
                 return (Vmm.Memory, Vmm.GetPhysicalAddress(Position));
             }
 
-            return ((AMemory)Memory, Position);
+            return ((MemoryManager)Memory, Position);
         }
     }
 }

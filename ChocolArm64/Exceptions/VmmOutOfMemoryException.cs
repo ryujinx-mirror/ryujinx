@@ -8,6 +8,6 @@ namespace ChocolArm64.Exceptions
 
         public VmmAccessException() { }
 
-        public VmmAccessException(long Position, long Size) : base(string.Format(ExMsg, Position, Size)) { }
+        public VmmAccessException(long position, long size) : base(string.Format(ExMsg, position, size)) { }
     }
 }

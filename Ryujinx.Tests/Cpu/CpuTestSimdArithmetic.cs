@@ -21,7 +21,7 @@ namespace Ryujinx.Tests.Cpu
 
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1);
 
             Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
 
@@ -78,7 +78,7 @@ namespace Ryujinx.Tests.Cpu
                 FpcrTemp = 0x2000000;
             }
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
 
             Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
 
@@ -107,7 +107,7 @@ namespace Ryujinx.Tests.Cpu
                 FpcrTemp = 0x2000000;
             }
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
 
             Assert.Multiple(() =>
             {
@@ -177,7 +177,7 @@ namespace Ryujinx.Tests.Cpu
                 FpcrTemp |= 1 << 25;
             }
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
 
             Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
 
@@ -233,7 +233,7 @@ namespace Ryujinx.Tests.Cpu
                 FpcrTemp |= 1 << 25;
             }
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
 
             Assert.Multiple(() =>
             {
@@ -294,7 +294,7 @@ namespace Ryujinx.Tests.Cpu
                 FpcrTemp = 0x2000000;
             }
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
 
             Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
 
@@ -319,7 +319,7 @@ namespace Ryujinx.Tests.Cpu
                 FpcrTemp = 0x2000000;
             }
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
 
             Assert.Multiple(() =>
             {
@@ -381,7 +381,7 @@ namespace Ryujinx.Tests.Cpu
                 FpcrTemp = 0x2000000;
             }
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
 
             Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
 
@@ -409,7 +409,7 @@ namespace Ryujinx.Tests.Cpu
                 FpcrTemp = 0x2000000;
             }
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
 
             Assert.Multiple(() =>
             {
@@ -470,7 +470,7 @@ namespace Ryujinx.Tests.Cpu
                 FpcrTemp = 0x2000000;
             }
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
 
             Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
 
@@ -495,7 +495,7 @@ namespace Ryujinx.Tests.Cpu
                 FpcrTemp = 0x2000000;
             }
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
 
             Assert.Multiple(() =>
             {
@@ -565,7 +565,7 @@ namespace Ryujinx.Tests.Cpu
         		FpcrTemp |= 1 << 25;
         	}
 
-        	AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+        	CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
 
         	Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
 
@@ -621,7 +621,7 @@ namespace Ryujinx.Tests.Cpu
                 FpcrTemp |= 1 << 25;
             }
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
 
             Assert.Multiple(() =>
             {
@@ -639,7 +639,7 @@ namespace Ryujinx.Tests.Cpu
 
             Vector128<float> V1 = MakeVectorE0(A);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, V1: V1);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1);
 
             Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
 

@@ -52,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
             long InputPosition  = Context.Request.GetBufferType0x21().Position;
             long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvGpuASAllocSpace Args = AMemoryHelper.Read<NvGpuASAllocSpace>(Context.Memory, InputPosition);
+            NvGpuASAllocSpace Args = MemoryHelper.Read<NvGpuASAllocSpace>(Context.Memory, InputPosition);
 
             NvGpuASCtx ASCtx = GetASCtx(Context);
 
@@ -88,7 +88,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
                 }
             }
 
-            AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             return Result;
         }
@@ -98,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
             long InputPosition  = Context.Request.GetBufferType0x21().Position;
             long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvGpuASAllocSpace Args = AMemoryHelper.Read<NvGpuASAllocSpace>(Context.Memory, InputPosition);
+            NvGpuASAllocSpace Args = MemoryHelper.Read<NvGpuASAllocSpace>(Context.Memory, InputPosition);
 
             NvGpuASCtx ASCtx = GetASCtx(Context);
 
@@ -130,7 +130,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
             long InputPosition  = Context.Request.GetBufferType0x21().Position;
             long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvGpuASUnmapBuffer Args = AMemoryHelper.Read<NvGpuASUnmapBuffer>(Context.Memory, InputPosition);
+            NvGpuASUnmapBuffer Args = MemoryHelper.Read<NvGpuASUnmapBuffer>(Context.Memory, InputPosition);
 
             NvGpuASCtx ASCtx = GetASCtx(Context);
 
@@ -159,7 +159,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
             long InputPosition  = Context.Request.GetBufferType0x21().Position;
             long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvGpuASMapBufferEx Args = AMemoryHelper.Read<NvGpuASMapBufferEx>(Context.Memory, InputPosition);
+            NvGpuASMapBufferEx Args = MemoryHelper.Read<NvGpuASMapBufferEx>(Context.Memory, InputPosition);
 
             NvGpuASCtx ASCtx = GetASCtx(Context);
 
@@ -255,7 +255,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
                 }
             }
 
-            AMemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             return Result;
         }
@@ -288,7 +288,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
 
             for (int Index = 0; Index < Count; Index++, InputPosition += 0x14)
             {
-                NvGpuASRemap Args = AMemoryHelper.Read<NvGpuASRemap>(Context.Memory, InputPosition);
+                NvGpuASRemap Args = MemoryHelper.Read<NvGpuASRemap>(Context.Memory, InputPosition);
 
                 NvGpuVmm Vmm = GetASCtx(Context).Vmm;
 

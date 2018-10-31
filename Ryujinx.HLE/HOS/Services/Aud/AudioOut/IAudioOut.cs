@@ -105,7 +105,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioOut
         {
             long Tag = Context.RequestData.ReadInt64();
 
-            AudioOutData Data = AMemoryHelper.Read<AudioOutData>(
+            AudioOutData Data = MemoryHelper.Read<AudioOutData>(
                 Context.Memory,
                 Position);
 

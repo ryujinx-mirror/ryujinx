@@ -216,9 +216,9 @@ namespace Ryujinx.Graphics.Texture
             throw new NotImplementedException(Format.ToString());
         }
 
-        public static byte[] ReadTexture(IAMemory Memory, GalImage Image, long Position)
+        public static byte[] ReadTexture(IMemory Memory, GalImage Image, long Position)
         {
-            AMemory CpuMemory;
+            MemoryManager CpuMemory;
 
             if (Memory is NvGpuVmm Vmm)
             {
@@ -226,7 +226,7 @@ namespace Ryujinx.Graphics.Texture
             }
             else
             {
-                CpuMemory = (AMemory)Memory;
+                CpuMemory = (MemoryManager)Memory;
             }
 
             ISwizzle Swizzle = TextureHelper.GetSwizzle(Image);

@@ -17,12 +17,12 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         private const bool EnableProcessDebugging = false;
 
-        private void SvcExitProcess(AThreadState ThreadState)
+        private void SvcExitProcess(CpuThreadState ThreadState)
         {
             Device.System.ExitProcess(Process.ProcessId);
         }
 
-        private void SignalEvent64(AThreadState ThreadState)
+        private void SignalEvent64(CpuThreadState ThreadState)
         {
             ThreadState.X0 = (ulong)SignalEvent((int)ThreadState.X0);
         }
@@ -52,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             return Result;
         }
 
-        private void ClearEvent64(AThreadState ThreadState)
+        private void ClearEvent64(CpuThreadState ThreadState)
         {
             ThreadState.X0 = (ulong)ClearEvent((int)ThreadState.X0);
         }
@@ -82,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             return Result;
         }
 
-        private void SvcCloseHandle(AThreadState ThreadState)
+        private void SvcCloseHandle(CpuThreadState ThreadState)
         {
             int Handle = (int)ThreadState.X0;
 
@@ -113,7 +113,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = 0;
         }
 
-        private void ResetSignal64(AThreadState ThreadState)
+        private void ResetSignal64(CpuThreadState ThreadState)
         {
             ThreadState.X0 = (ulong)ResetSignal((int)ThreadState.X0);
         }
@@ -146,17 +146,17 @@ namespace Ryujinx.HLE.HOS.Kernel
             return Result;
         }
 
-        private void SvcGetSystemTick(AThreadState ThreadState)
+        private void SvcGetSystemTick(CpuThreadState ThreadState)
         {
             ThreadState.X0 = ThreadState.CntpctEl0;
         }
 
-        private void SvcConnectToNamedPort(AThreadState ThreadState)
+        private void SvcConnectToNamedPort(CpuThreadState ThreadState)
         {
             long StackPtr = (long)ThreadState.X0;
             long NamePtr  = (long)ThreadState.X1;
 
-            string Name = AMemoryHelper.ReadAsciiString(Memory, NamePtr, 8);
+            string Name = MemoryHelper.ReadAsciiString(Memory, NamePtr, 8);
 
             //TODO: Validate that app has perms to access the service, and that the service
             //actually exists, return error codes otherwise.
@@ -171,12 +171,12 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X1 = (uint)Handle;
         }
 
-        private void SvcSendSyncRequest(AThreadState ThreadState)
+        private void SvcSendSyncRequest(CpuThreadState ThreadState)
         {
             SendSyncRequest(ThreadState, ThreadState.Tpidr, 0x100, (int)ThreadState.X0);
         }
 
-        private void SvcSendSyncRequestWithUserBuffer(AThreadState ThreadState)
+        private void SvcSendSyncRequestWithUserBuffer(CpuThreadState ThreadState)
         {
             SendSyncRequest(
                       ThreadState,
@@ -185,7 +185,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                  (int)ThreadState.X2);
         }
 
-        private void SendSyncRequest(AThreadState ThreadState, long MessagePtr, long Size, int Handle)
+        private void SendSyncRequest(CpuThreadState ThreadState, long MessagePtr, long Size, int Handle)
         {
             KThread CurrThread = Process.GetThread(ThreadState.Tpidr);
 
@@ -241,7 +241,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             IpcMessage.Thread.Reschedule(ThreadSchedState.Running);
         }
 
-        private void SvcBreak(AThreadState ThreadState)
+        private void SvcBreak(CpuThreadState ThreadState)
         {
             long Reason  = (long)ThreadState.X0;
             long Unknown = (long)ThreadState.X1;
@@ -260,19 +260,19 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private void SvcOutputDebugString(AThreadState ThreadState)
+        private void SvcOutputDebugString(CpuThreadState ThreadState)
         {
             long Position = (long)ThreadState.X0;
             long Size     = (long)ThreadState.X1;
 
-            string Str = AMemoryHelper.ReadAsciiString(Memory, Position, Size);
+            string Str = MemoryHelper.ReadAsciiString(Memory, Position, Size);
 
             Logger.PrintWarning(LogClass.KernelSvc, Str);
 
             ThreadState.X0 = 0;
         }
 
-        private void SvcGetInfo(AThreadState ThreadState)
+        private void SvcGetInfo(CpuThreadState ThreadState)
         {
             long StackPtr = (long)ThreadState.X0;
             int  InfoType =  (int)ThreadState.X1;
@@ -366,7 +366,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = 0;
         }
 
-        private void CreateEvent64(AThreadState State)
+        private void CreateEvent64(CpuThreadState State)
         {
             KernelResult Result = CreateEvent(out int WEventHandle, out int REventHandle);
 

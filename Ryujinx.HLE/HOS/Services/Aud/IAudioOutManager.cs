@@ -96,7 +96,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         private long OpenAudioOutImpl(ServiceCtx Context, long SendPosition, long SendSize, long ReceivePosition, long ReceiveSize)
         {
-            string DeviceName = AMemoryHelper.ReadAsciiString(
+            string DeviceName = MemoryHelper.ReadAsciiString(
                 Context.Memory,
                 SendPosition,
                 SendSize);

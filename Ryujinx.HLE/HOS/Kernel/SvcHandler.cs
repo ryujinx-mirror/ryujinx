@@ -10,14 +10,14 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     partial class SvcHandler
     {
-        private delegate void SvcFunc(AThreadState ThreadState);
+        private delegate void SvcFunc(CpuThreadState ThreadState);
 
         private Dictionary<int, SvcFunc> SvcFuncs;
 
-        private Switch  Device;
-        private Process Process;
-        private Horizon System;
-        private AMemory Memory;
+        private Switch        Device;
+        private Process       Process;
+        private Horizon       System;
+        private MemoryManager Memory;
 
         private struct HleIpcMessage
         {
@@ -101,9 +101,9 @@ namespace Ryujinx.HLE.HOS.Kernel
             Rng = new Random();
         }
 
-        public void SvcCall(object sender, AInstExceptionEventArgs e)
+        public void SvcCall(object sender, InstExceptionEventArgs e)
         {
-            AThreadState ThreadState = (AThreadState)sender;
+            CpuThreadState ThreadState = (CpuThreadState)sender;
 
             Process.GetThread(ThreadState.Tpidr).LastPc = e.Position;
 

@@ -27,7 +27,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -59,7 +59,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -91,7 +91,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -123,7 +123,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -155,7 +155,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -187,7 +187,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -219,7 +219,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -250,7 +250,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Xm, X31: Xn_SP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Xm, X31: Xn_SP);
 
             CompareAgainstUnicorn();
         }
@@ -271,7 +271,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Wm, X31: Xn_SP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Wm, X31: Xn_SP);
 
             CompareAgainstUnicorn();
         }
@@ -292,7 +292,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Wm, X31: Xn_SP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Wm, X31: Xn_SP);
 
             CompareAgainstUnicorn();
         }
@@ -313,7 +313,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Wm, X31: Xn_SP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Wm, X31: Xn_SP);
 
             CompareAgainstUnicorn();
         }
@@ -334,7 +334,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn_WSP, X2: Wm, X31: Wn_WSP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn_WSP, X2: Wm, X31: Wn_WSP);
 
             CompareAgainstUnicorn();
         }
@@ -355,7 +355,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn_WSP, X2: Wm, X31: Wn_WSP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn_WSP, X2: Wm, X31: Wn_WSP);
 
             CompareAgainstUnicorn();
         }
@@ -376,7 +376,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn_WSP, X2: Wm, X31: Wn_WSP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn_WSP, X2: Wm, X31: Wn_WSP);
 
             CompareAgainstUnicorn();
         }
@@ -396,7 +396,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -428,7 +428,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -460,7 +460,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -492,7 +492,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -524,7 +524,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -556,7 +556,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -588,7 +588,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState;
+            CpuThreadState ThreadState;
 
             if (Rn != 31)
             {
@@ -619,7 +619,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Xm, X31: Xn_SP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Xm, X31: Xn_SP);
 
             CompareAgainstUnicorn();
         }
@@ -640,7 +640,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Wm, X31: Xn_SP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Wm, X31: Xn_SP);
 
             CompareAgainstUnicorn();
         }
@@ -661,7 +661,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Wm, X31: Xn_SP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Wm, X31: Xn_SP);
 
             CompareAgainstUnicorn();
         }
@@ -682,7 +682,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Wm, X31: Xn_SP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn_SP, X2: Wm, X31: Xn_SP);
 
             CompareAgainstUnicorn();
         }
@@ -703,7 +703,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn_WSP, X2: Wm, X31: Wn_WSP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn_WSP, X2: Wm, X31: Wn_WSP);
 
             CompareAgainstUnicorn();
         }
@@ -724,7 +724,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn_WSP, X2: Wm, X31: Wn_WSP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn_WSP, X2: Wm, X31: Wn_WSP);
 
             CompareAgainstUnicorn();
         }
@@ -745,7 +745,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
             Opcode |= ((extend & 7) << 13) | ((amount & 7) << 10);
 
-            AThreadState ThreadState = SingleOpcode(Opcode, X1: Wn_WSP, X2: Wm, X31: Wn_WSP);
+            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn_WSP, X2: Wm, X31: Wn_WSP);
 
             CompareAgainstUnicorn();
         }

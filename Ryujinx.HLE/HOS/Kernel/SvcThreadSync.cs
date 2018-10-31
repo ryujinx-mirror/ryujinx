@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     partial class SvcHandler
     {
-        private void SvcWaitSynchronization(AThreadState ThreadState)
+        private void SvcWaitSynchronization(CpuThreadState ThreadState)
         {
             long HandlesPtr   = (long)ThreadState.X1;
             int  HandlesCount =  (int)ThreadState.X2;
@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X1 = (uint)HndIndex | High;
         }
 
-        private void SvcCancelSynchronization(AThreadState ThreadState)
+        private void SvcCancelSynchronization(CpuThreadState ThreadState)
         {
             int ThreadHandle = (int)ThreadState.X0;
 
@@ -87,7 +87,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = 0;
         }
 
-        private void SvcArbitrateLock(AThreadState ThreadState)
+        private void SvcArbitrateLock(CpuThreadState ThreadState)
         {
             int  OwnerHandle     =  (int)ThreadState.X0;
             long MutexAddress    = (long)ThreadState.X1;
@@ -131,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcArbitrateUnlock(AThreadState ThreadState)
+        private void SvcArbitrateUnlock(CpuThreadState ThreadState)
         {
             long MutexAddress = (long)ThreadState.X0;
 
@@ -165,7 +165,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcWaitProcessWideKeyAtomic(AThreadState ThreadState)
+        private void SvcWaitProcessWideKeyAtomic(CpuThreadState ThreadState)
         {
             long  MutexAddress   = (long)ThreadState.X0;
             long  CondVarAddress = (long)ThreadState.X1;
@@ -218,7 +218,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcSignalProcessWideKey(AThreadState ThreadState)
+        private void SvcSignalProcessWideKey(CpuThreadState ThreadState)
         {
             long Address = (long)ThreadState.X0;
             int  Count   =  (int)ThreadState.X1;
@@ -232,7 +232,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = 0;
         }
 
-        private void SvcWaitForAddress(AThreadState ThreadState)
+        private void SvcWaitForAddress(CpuThreadState ThreadState)
         {
             long            Address =            (long)ThreadState.X0;
             ArbitrationType Type    = (ArbitrationType)ThreadState.X1;
@@ -292,7 +292,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcSignalToAddress(AThreadState ThreadState)
+        private void SvcSignalToAddress(CpuThreadState ThreadState)
         {
             long       Address =       (long)ThreadState.X0;
             SignalType Type    = (SignalType)ThreadState.X1;

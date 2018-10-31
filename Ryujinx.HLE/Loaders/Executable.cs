@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.Loaders
 {
     class Executable
     {
-        private AMemory Memory;
+        private MemoryManager Memory;
 
         private List<ElfDyn> Dynamic;
 
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.Loaders
 
         private KMemoryManager MemoryManager;
 
-        public Executable(IExecutable Exe, KMemoryManager MemoryManager, AMemory Memory, long ImageBase)
+        public Executable(IExecutable Exe, KMemoryManager MemoryManager, MemoryManager Memory, long ImageBase)
         {
             Dynamic = new List<ElfDyn>();
 
