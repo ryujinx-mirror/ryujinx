@@ -10,6 +10,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Nso = Ryujinx.HLE.Loaders.Executables.Nso;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -51,7 +52,7 @@ namespace Ryujinx.HLE.HOS
 
         public string CurrentTitle { get; private set; }
 
-        public bool EnableFsIntegrityChecks { get; set; }
+        public IntegrityCheckLevel FsIntegrityCheckLevel { get; set; }
 
         public Horizon(Switch Device)
         {
@@ -187,6 +188,16 @@ namespace Ryujinx.HLE.HOS
             Nca PatchNca   = null;
             Nca ControlNca = null;
 
+            foreach (PfsFileEntry TicketEntry in Xci.SecurePartition.Files.Where(x => x.Name.EndsWith(".tik")))
+            {
+                Ticket ticket = new Ticket(Xci.SecurePartition.OpenFile(TicketEntry));
+
+                if (!KeySet.TitleKeys.ContainsKey(ticket.RightsId))
+                {
+                    KeySet.TitleKeys.Add(ticket.RightsId, ticket.GetTitleKey(KeySet));
+                }
+            }
+
             foreach (PfsFileEntry FileEntry in Xci.SecurePartition.Files.Where(x => x.Name.EndsWith(".nca")))
             {
                 Stream NcaStream = Xci.SecurePartition.OpenFile(FileEntry);
@@ -234,7 +245,7 @@ namespace Ryujinx.HLE.HOS
 
         public void ReadControlData(Nca ControlNca)
         {
-            Romfs ControlRomfs = new Romfs(ControlNca.OpenSection(0, false, EnableFsIntegrityChecks));
+            Romfs ControlRomfs = new Romfs(ControlNca.OpenSection(0, false, FsIntegrityCheckLevel));
 
             byte[] ControlFile = ControlRomfs.GetFile("/control.nacp");
 
@@ -297,29 +308,32 @@ namespace Ryujinx.HLE.HOS
 
         public void LoadNca(Nca MainNca, Nca ControlNca)
         {
-            NcaSection RomfsSection = MainNca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs || x?.Type == SectionType.Bktr);
-            NcaSection ExefsSection = MainNca.Sections.FirstOrDefault(x => x?.IsExefs == true);
+            if (MainNca.Header.ContentType != ContentType.Program)
+            {
+                Logger.PrintError(LogClass.Loader, "Selected NCA is not a \"Program\" NCA");
 
-            if (ExefsSection == null)
+                return;
+            }
+
+            Stream RomfsStream = MainNca.OpenSection(ProgramPartitionType.Data, false, FsIntegrityCheckLevel);
+            Stream ExefsStream = MainNca.OpenSection(ProgramPartitionType.Code, false, FsIntegrityCheckLevel);
+
+            if (ExefsStream == null)
             {
                 Logger.PrintError(LogClass.Loader, "No ExeFS found in NCA");
 
                 return;
             }
 
-            if (RomfsSection == null)
+            if (RomfsStream == null)
             {
                 Logger.PrintWarning(LogClass.Loader, "No RomFS found in NCA");
             }
             else
             {
-                Stream RomfsStream = MainNca.OpenSection(RomfsSection.SectionNum, false, EnableFsIntegrityChecks);
-
                 Device.FileSystem.SetRomFs(RomfsStream);
             }
-
-            Stream ExefsStream = MainNca.OpenSection(ExefsSection.SectionNum, false, EnableFsIntegrityChecks);
-
+            
             Pfs Exefs = new Pfs(ExefsStream);
 
             Npdm MetaData = null;
@@ -358,7 +372,7 @@ namespace Ryujinx.HLE.HOS
 
             Nacp ReadControlData()
             {
-                Romfs ControlRomfs = new Romfs(ControlNca.OpenSection(0, false, EnableFsIntegrityChecks));
+                Romfs ControlRomfs = new Romfs(ControlNca.OpenSection(0, false, FsIntegrityCheckLevel));
 
                 byte[] ControlFile = ControlRomfs.GetFile("/control.nacp");
 

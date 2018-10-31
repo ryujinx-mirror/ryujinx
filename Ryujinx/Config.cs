@@ -1,3 +1,4 @@
+using LibHac;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE;
 using Ryujinx.UI.Input;
@@ -68,7 +69,9 @@ namespace Ryujinx
                 device.System.EnableMultiCoreScheduling();
             }
 
-            device.System.EnableFsIntegrityChecks = Convert.ToBoolean(parser.Value("Enable_FS_Integrity_Checks"));
+            device.System.FsIntegrityCheckLevel = Convert.ToBoolean(parser.Value("Enable_FS_Integrity_Checks"))
+                ? IntegrityCheckLevel.ErrorOnInvalid
+                : IntegrityCheckLevel.None;
 
             JoyConKeyboard = new JoyConKeyboard(
 
