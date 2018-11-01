@@ -1,8 +1,8 @@
 ﻿namespace Ryujinx.Graphics.Gal
 {
-    public struct ColorMaskRgba
+    public struct ColorMaskState
     {
-        private static readonly ColorMaskRgba _Default = new ColorMaskRgba()
+        private static readonly ColorMaskState _Default = new ColorMaskState()
         {
             Red   = true,
             Green = true,
@@ -10,12 +10,38 @@
             Alpha = true
         };
 
-        public static ColorMaskRgba Default => _Default;
+        public static ColorMaskState Default => _Default;
 
         public bool Red;
         public bool Green;
         public bool Blue;
         public bool Alpha;
+    }
+
+    public struct BlendState
+    {
+        private static readonly BlendState _Default = new BlendState()
+        {
+            Enabled       = false,
+            SeparateAlpha = false,
+            EquationRgb   = 0,
+            FuncSrcRgb    = GalBlendFactor.One,
+            FuncDstRgb    = GalBlendFactor.Zero,
+            EquationAlpha = 0,
+            FuncSrcAlpha  = GalBlendFactor.One,
+            FuncDstAlpha  = GalBlendFactor.Zero
+        };
+
+        public static BlendState Default => _Default;
+
+        public bool             Enabled;
+        public bool             SeparateAlpha;
+        public GalBlendEquation EquationRgb;
+        public GalBlendFactor   FuncSrcRgb;
+        public GalBlendFactor   FuncDstRgb;
+        public GalBlendEquation EquationAlpha;
+        public GalBlendFactor   FuncSrcAlpha;
+        public GalBlendFactor   FuncDstAlpha;
     }
 
     public class GalPipelineState
@@ -65,17 +91,11 @@
         public GalStencilOp    StencilFrontOpZPass;
         public uint            StencilFrontMask;
 
-        public bool             BlendEnabled;
-        public bool             BlendSeparateAlpha;
-        public GalBlendEquation BlendEquationRgb;
-        public GalBlendFactor   BlendFuncSrcRgb;
-        public GalBlendFactor   BlendFuncDstRgb;
-        public GalBlendEquation BlendEquationAlpha;
-        public GalBlendFactor   BlendFuncSrcAlpha;
-        public GalBlendFactor   BlendFuncDstAlpha;
+        public bool         BlendIndependent;
+        public BlendState[] Blends;
 
-        public bool            ColorMaskCommon;
-        public ColorMaskRgba[] ColorMasks;
+        public bool             ColorMaskCommon;
+        public ColorMaskState[] ColorMasks;
 
         public bool PrimitiveRestartEnabled;
         public uint PrimitiveRestartIndex;
@@ -89,7 +109,9 @@
                 ConstBufferKeys[Stage] = new long[ConstBuffersPerStage];
             }
 
-            ColorMasks = new ColorMaskRgba[RenderTargetsCount];
+            Blends = new BlendState[RenderTargetsCount];
+
+            ColorMasks = new ColorMaskState[RenderTargetsCount];
         }
     }
 }

@@ -47,32 +47,35 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public static DepthFunction GetDepthFunc(GalComparisonOp Func)
         {
-            //Looks like the GPU can take it's own values (described in GalComparisonOp) and OpenGL values alike
-            if ((int)Func >= (int)DepthFunction.Never &&
-                (int)Func <= (int)DepthFunction.Always)
-            {
-                return (DepthFunction)Func;
-            }
-
-            switch (Func)
-            {
-                case GalComparisonOp.Never:    return DepthFunction.Never;
-                case GalComparisonOp.Less:     return DepthFunction.Less;
-                case GalComparisonOp.Equal:    return DepthFunction.Equal;
-                case GalComparisonOp.Lequal:   return DepthFunction.Lequal;
-                case GalComparisonOp.Greater:  return DepthFunction.Greater;
-                case GalComparisonOp.NotEqual: return DepthFunction.Notequal;
-                case GalComparisonOp.Gequal:   return DepthFunction.Gequal;
-                case GalComparisonOp.Always:   return DepthFunction.Always;
-            }
-
-            throw new ArgumentException(nameof(Func) + " \"" + Func + "\" is not valid!");
+            return (DepthFunction)GetFunc(Func);
         }
 
         public static StencilFunction GetStencilFunc(GalComparisonOp Func)
         {
-            //OGL comparison values match, it's just an enum cast
-            return (StencilFunction)GetDepthFunc(Func);
+            return (StencilFunction)GetFunc(Func);
+        }
+
+        private static All GetFunc(GalComparisonOp Func)
+        {
+            if ((int)Func >= (int)All.Never &&
+                (int)Func <= (int)All.Always)
+            {
+                return (All)Func;
+            }
+
+            switch (Func)
+            {
+                case GalComparisonOp.Never:    return All.Never;
+                case GalComparisonOp.Less:     return All.Less;
+                case GalComparisonOp.Equal:    return All.Equal;
+                case GalComparisonOp.Lequal:   return All.Lequal;
+                case GalComparisonOp.Greater:  return All.Greater;
+                case GalComparisonOp.NotEqual: return All.Notequal;
+                case GalComparisonOp.Gequal:   return All.Gequal;
+                case GalComparisonOp.Always:   return All.Always;
+            }
+
+            throw new ArgumentException(nameof(Func) + " \"" + Func + "\" is not valid!");
         }
 
         public static DrawElementsType GetDrawElementsType(GalIndexFormat Format)
@@ -282,11 +285,25 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             switch (BlendEquation)
             {
-                case GalBlendEquation.FuncAdd:             return BlendEquationMode.FuncAdd;
-                case GalBlendEquation.FuncSubtract:        return BlendEquationMode.FuncSubtract;
-                case GalBlendEquation.FuncReverseSubtract: return BlendEquationMode.FuncReverseSubtract;
-                case GalBlendEquation.Min:                 return BlendEquationMode.Min;
-                case GalBlendEquation.Max:                 return BlendEquationMode.Max;
+                case GalBlendEquation.FuncAdd:
+                case GalBlendEquation.FuncAddGl:
+                    return BlendEquationMode.FuncAdd;
+
+                case GalBlendEquation.FuncSubtract:
+                case GalBlendEquation.FuncSubtractGl:
+                    return BlendEquationMode.FuncSubtract;
+
+                case GalBlendEquation.FuncReverseSubtract:
+                case GalBlendEquation.FuncReverseSubtractGl:
+                    return BlendEquationMode.FuncReverseSubtract;
+
+                case GalBlendEquation.Min:
+                case GalBlendEquation.MinGl:
+                    return BlendEquationMode.Min;
+
+                case GalBlendEquation.Max:
+                case GalBlendEquation.MaxGl:
+                    return BlendEquationMode.Max;
             }
 
             throw new ArgumentException(nameof(BlendEquation) + " \"" + BlendEquation + "\" is not valid!");
@@ -296,27 +313,80 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             switch (BlendFactor)
             {
-                case GalBlendFactor.Zero:                  return BlendingFactor.Zero;
-                case GalBlendFactor.One:                   return BlendingFactor.One;
-                case GalBlendFactor.SrcColor:              return BlendingFactor.SrcColor;
-                case GalBlendFactor.OneMinusSrcColor:      return BlendingFactor.OneMinusSrcColor;
-                case GalBlendFactor.DstColor:              return BlendingFactor.DstColor;
-                case GalBlendFactor.OneMinusDstColor:      return BlendingFactor.OneMinusDstColor;
-                case GalBlendFactor.SrcAlpha:              return BlendingFactor.SrcAlpha;
-                case GalBlendFactor.OneMinusSrcAlpha:      return BlendingFactor.OneMinusSrcAlpha;
-                case GalBlendFactor.DstAlpha:              return BlendingFactor.DstAlpha;
-                case GalBlendFactor.OneMinusDstAlpha:      return BlendingFactor.OneMinusDstAlpha;
-                case GalBlendFactor.OneMinusConstantColor: return BlendingFactor.OneMinusConstantColor;
-                case GalBlendFactor.ConstantAlpha:         return BlendingFactor.ConstantAlpha;
-                case GalBlendFactor.OneMinusConstantAlpha: return BlendingFactor.OneMinusConstantAlpha;
-                case GalBlendFactor.SrcAlphaSaturate:      return BlendingFactor.SrcAlphaSaturate;
-                case GalBlendFactor.Src1Color:             return BlendingFactor.Src1Color;
-                case GalBlendFactor.OneMinusSrc1Color:     return (BlendingFactor)BlendingFactorSrc.OneMinusSrc1Color;
-                case GalBlendFactor.Src1Alpha:             return BlendingFactor.Src1Alpha;
-                case GalBlendFactor.OneMinusSrc1Alpha:     return (BlendingFactor)BlendingFactorSrc.OneMinusSrc1Alpha;
+                case GalBlendFactor.Zero:
+                case GalBlendFactor.ZeroGl:
+                    return BlendingFactor.Zero;
+
+                case GalBlendFactor.One:
+                case GalBlendFactor.OneGl:
+                    return BlendingFactor.One;
+
+                case GalBlendFactor.SrcColor:
+                case GalBlendFactor.SrcColorGl:
+                    return BlendingFactor.SrcColor;
+
+                case GalBlendFactor.OneMinusSrcColor:
+                case GalBlendFactor.OneMinusSrcColorGl:
+                    return BlendingFactor.OneMinusSrcColor;
+
+                case GalBlendFactor.DstColor:
+                case GalBlendFactor.DstColorGl:
+                    return BlendingFactor.DstColor;
+
+                case GalBlendFactor.OneMinusDstColor:
+                case GalBlendFactor.OneMinusDstColorGl:
+                    return BlendingFactor.OneMinusDstColor;
+
+                case GalBlendFactor.SrcAlpha:
+                case GalBlendFactor.SrcAlphaGl:
+                    return BlendingFactor.SrcAlpha;
+
+                case GalBlendFactor.OneMinusSrcAlpha:
+                case GalBlendFactor.OneMinusSrcAlphaGl:
+                    return BlendingFactor.OneMinusSrcAlpha;
+
+                case GalBlendFactor.DstAlpha:
+                case GalBlendFactor.DstAlphaGl:
+                    return BlendingFactor.DstAlpha;
+
+                case GalBlendFactor.OneMinusDstAlpha:
+                case GalBlendFactor.OneMinusDstAlphaGl:
+                    return BlendingFactor.OneMinusDstAlpha;
+
+                case GalBlendFactor.OneMinusConstantColor:
+                case GalBlendFactor.OneMinusConstantColorGl:
+                    return BlendingFactor.OneMinusConstantColor;
+
+                case GalBlendFactor.ConstantAlpha:
+                case GalBlendFactor.ConstantAlphaGl:
+                    return BlendingFactor.ConstantAlpha;
+
+                case GalBlendFactor.OneMinusConstantAlpha:
+                case GalBlendFactor.OneMinusConstantAlphaGl:
+                    return BlendingFactor.OneMinusConstantAlpha;
+
+                case GalBlendFactor.SrcAlphaSaturate:
+                case GalBlendFactor.SrcAlphaSaturateGl:
+                    return BlendingFactor.SrcAlphaSaturate;
+
+                case GalBlendFactor.Src1Color:
+                case GalBlendFactor.Src1ColorGl:
+                    return BlendingFactor.Src1Color;
+
+                case GalBlendFactor.OneMinusSrc1Color:
+                case GalBlendFactor.OneMinusSrc1ColorGl:
+                    return (BlendingFactor)BlendingFactorSrc.OneMinusSrc1Color;
+
+                case GalBlendFactor.Src1Alpha:
+                case GalBlendFactor.Src1AlphaGl:
+                    return BlendingFactor.Src1Alpha;
+
+                case GalBlendFactor.OneMinusSrc1Alpha:
+                case GalBlendFactor.OneMinusSrc1AlphaGl:
+                    return (BlendingFactor)BlendingFactorSrc.OneMinusSrc1Alpha;
 
                 case GalBlendFactor.ConstantColor:
-                case GalBlendFactor.ConstantColorG80:
+                case GalBlendFactor.ConstantColorGl:
                     return BlendingFactor.ConstantColor;
             }
 

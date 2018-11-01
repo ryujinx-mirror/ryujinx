@@ -121,15 +121,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 StencilFrontOpZPass  = GalStencilOp.Keep,
                 StencilFrontMask     = UInt32.MaxValue,
 
-                BlendEnabled       = false,
-                BlendSeparateAlpha = false,
-
-                BlendEquationRgb   = 0,
-                BlendFuncSrcRgb    = GalBlendFactor.One,
-                BlendFuncDstRgb    = GalBlendFactor.Zero,
-                BlendEquationAlpha = 0,
-                BlendFuncSrcAlpha  = GalBlendFactor.One,
-                BlendFuncDstAlpha  = GalBlendFactor.Zero,
+                BlendIndependent = false,
 
                 PrimitiveRestartEnabled = false,
                 PrimitiveRestartIndex   = 0
@@ -137,7 +129,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
             {
-                Old.ColorMasks[Index] = ColorMaskRgba.Default;
+                Old.Blends[Index] = BlendState.Default;
+
+                Old.ColorMasks[Index] = ColorMaskState.Default;
             }
         }
 
@@ -268,49 +262,22 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 }
             }
 
-            if (New.BlendEnabled != Old.BlendEnabled)
+            if (New.BlendIndependent)
             {
-                Enable(EnableCap.Blend, New.BlendEnabled);
-            }
-
-            if (New.BlendEnabled)
-            {
-                if (New.BlendSeparateAlpha)
+                for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
                 {
-                    if (New.BlendEquationRgb   != Old.BlendEquationRgb ||
-                        New.BlendEquationAlpha != Old.BlendEquationAlpha)
-                    {
-                        GL.BlendEquationSeparate(
-                            OGLEnumConverter.GetBlendEquation(New.BlendEquationRgb),
-                            OGLEnumConverter.GetBlendEquation(New.BlendEquationAlpha));
-                    }
-
-                    if (New.BlendFuncSrcRgb   != Old.BlendFuncSrcRgb   ||
-                        New.BlendFuncDstRgb   != Old.BlendFuncDstRgb   ||
-                        New.BlendFuncSrcAlpha != Old.BlendFuncSrcAlpha ||
-                        New.BlendFuncDstAlpha != Old.BlendFuncDstAlpha)
-                    {
-                        GL.BlendFuncSeparate(
-                            (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.BlendFuncSrcRgb),
-                            (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.BlendFuncDstRgb),
-                            (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.BlendFuncSrcAlpha),
-                            (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.BlendFuncDstAlpha));
-                    }
+                    SetBlendState(Index, New.Blends[Index], Old.Blends[Index]);
+                }
+            }
+            else
+            {
+                if (New.BlendIndependent != Old.BlendIndependent)
+                {
+                    SetAllBlendState(New.Blends[0]);
                 }
                 else
                 {
-                    if (New.BlendEquationRgb != Old.BlendEquationRgb)
-                    {
-                        GL.BlendEquation(OGLEnumConverter.GetBlendEquation(New.BlendEquationRgb));
-                    }
-
-                    if (New.BlendFuncSrcRgb != Old.BlendFuncSrcRgb ||
-                        New.BlendFuncDstRgb != Old.BlendFuncDstRgb)
-                    {
-                        GL.BlendFunc(
-                            OGLEnumConverter.GetBlendFactor(New.BlendFuncSrcRgb),
-                            OGLEnumConverter.GetBlendFactor(New.BlendFuncDstRgb));
-                    }
+                    SetBlendState(New.Blends[0], Old.Blends[0]);
                 }
             }
 
@@ -355,6 +322,136 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
 
             Old = New;
+        }
+
+        private void SetAllBlendState(BlendState New)
+        {
+            Enable(EnableCap.Blend, New.Enabled);
+
+            if (New.Enabled)
+            {
+                if (New.SeparateAlpha)
+                {
+                    GL.BlendEquationSeparate(
+                        OGLEnumConverter.GetBlendEquation(New.EquationRgb),
+                        OGLEnumConverter.GetBlendEquation(New.EquationAlpha));
+
+                    GL.BlendFuncSeparate(
+                        (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcRgb),
+                        (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstRgb),
+                        (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcAlpha),
+                        (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstAlpha));
+                }
+                else
+                {
+                    GL.BlendEquation(OGLEnumConverter.GetBlendEquation(New.EquationRgb));
+
+                    GL.BlendFunc(
+                        OGLEnumConverter.GetBlendFactor(New.FuncSrcRgb),
+                        OGLEnumConverter.GetBlendFactor(New.FuncDstRgb));
+                }
+            }
+        }
+
+        private void SetBlendState(BlendState New, BlendState Old)
+        {
+            if (New.Enabled != Old.Enabled)
+            {
+                Enable(EnableCap.Blend, New.Enabled);
+            }
+
+            if (New.Enabled)
+            {
+                if (New.SeparateAlpha)
+                {
+                    if (New.EquationRgb   != Old.EquationRgb ||
+                        New.EquationAlpha != Old.EquationAlpha)
+                    {
+                        GL.BlendEquationSeparate(
+                            OGLEnumConverter.GetBlendEquation(New.EquationRgb),
+                            OGLEnumConverter.GetBlendEquation(New.EquationAlpha));
+                    }
+
+                    if (New.FuncSrcRgb   != Old.FuncSrcRgb   ||
+                        New.FuncDstRgb   != Old.FuncDstRgb   ||
+                        New.FuncSrcAlpha != Old.FuncSrcAlpha ||
+                        New.FuncDstAlpha != Old.FuncDstAlpha)
+                    {
+                        GL.BlendFuncSeparate(
+                            (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcRgb),
+                            (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstRgb),
+                            (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcAlpha),
+                            (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstAlpha));
+                    }
+                }
+                else
+                {
+                    if (New.EquationRgb != Old.EquationRgb)
+                    {
+                        GL.BlendEquation(OGLEnumConverter.GetBlendEquation(New.EquationRgb));
+                    }
+
+                    if (New.FuncSrcRgb != Old.FuncSrcRgb ||
+                        New.FuncDstRgb != Old.FuncDstRgb)
+                    {
+                        GL.BlendFunc(
+                            OGLEnumConverter.GetBlendFactor(New.FuncSrcRgb),
+                            OGLEnumConverter.GetBlendFactor(New.FuncDstRgb));
+                    }
+                }
+            }
+        }
+
+        private void SetBlendState(int Index, BlendState New, BlendState Old)
+        {
+            if (New.Enabled != Old.Enabled)
+            {
+                Enable(IndexedEnableCap.Blend, Index, New.Enabled);
+            }
+
+            if (New.Enabled)
+            {
+                if (New.SeparateAlpha)
+                {
+                    if (New.EquationRgb   != Old.EquationRgb ||
+                        New.EquationAlpha != Old.EquationAlpha)
+                    {
+                        GL.BlendEquationSeparate(
+                            Index,
+                            OGLEnumConverter.GetBlendEquation(New.EquationRgb),
+                            OGLEnumConverter.GetBlendEquation(New.EquationAlpha));
+                    }
+
+                    if (New.FuncSrcRgb   != Old.FuncSrcRgb   ||
+                        New.FuncDstRgb   != Old.FuncDstRgb   ||
+                        New.FuncSrcAlpha != Old.FuncSrcAlpha ||
+                        New.FuncDstAlpha != Old.FuncDstAlpha)
+                    {
+                        GL.BlendFuncSeparate(
+                            Index,
+                            (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcRgb),
+                            (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstRgb),
+                            (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcAlpha),
+                            (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstAlpha));
+                    }
+                }
+                else
+                {
+                    if (New.EquationRgb != Old.EquationRgb)
+                    {
+                        GL.BlendEquation(Index, OGLEnumConverter.GetBlendEquation(New.EquationRgb));
+                    }
+
+                    if (New.FuncSrcRgb != Old.FuncSrcRgb ||
+                        New.FuncDstRgb != Old.FuncDstRgb)
+                    {
+                        GL.BlendFunc(
+                            Index,
+                            (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcRgb),
+                            (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstRgb));
+                    }
+                }
+            }
         }
 
         private void BindConstBuffers(GalPipelineState New)
@@ -640,6 +737,18 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
         }
 
+        private void Enable(IndexedEnableCap Cap, int Index, bool Enabled)
+        {
+            if (Enabled)
+            {
+                GL.Enable(Cap, Index);
+            }
+            else
+            {
+                GL.Disable(Cap, Index);
+            }
+        }
+
         public void ResetDepthMask()
         {
             Old.DepthWriteEnabled = true;
@@ -647,7 +756,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public void ResetColorMask(int Index)
         {
-            Old.ColorMasks[Index] = ColorMaskRgba.Default;
+            Old.ColorMasks[Index] = ColorMaskState.Default;
         }
     }
 }

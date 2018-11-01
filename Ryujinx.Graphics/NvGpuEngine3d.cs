@@ -407,20 +407,57 @@ namespace Ryujinx.Graphics
 
         private void SetBlending(GalPipelineState State)
         {
-            //TODO: Support independent blend properly.
-            State.BlendEnabled = ReadRegisterBool(NvGpuEngine3dReg.IBlendNEnable);
+            bool BlendIndependent = ReadRegisterBool(NvGpuEngine3dReg.BlendIndependent);
 
-            if (State.BlendEnabled)
+            State.BlendIndependent = BlendIndependent;
+
+            for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
             {
-                State.BlendSeparateAlpha = ReadRegisterBool(NvGpuEngine3dReg.IBlendNSeparateAlpha);
+                if (BlendIndependent)
+                {
+                    State.Blends[Index].Enabled = ReadRegisterBool(NvGpuEngine3dReg.IBlendNEnable + Index);
 
-                State.BlendEquationRgb   = (GalBlendEquation)ReadRegister(NvGpuEngine3dReg.IBlendNEquationRgb);
-                State.BlendFuncSrcRgb    =   (GalBlendFactor)ReadRegister(NvGpuEngine3dReg.IBlendNFuncSrcRgb);
-                State.BlendFuncDstRgb    =   (GalBlendFactor)ReadRegister(NvGpuEngine3dReg.IBlendNFuncDstRgb);
-                State.BlendEquationAlpha = (GalBlendEquation)ReadRegister(NvGpuEngine3dReg.IBlendNEquationAlpha);
-                State.BlendFuncSrcAlpha  =   (GalBlendFactor)ReadRegister(NvGpuEngine3dReg.IBlendNFuncSrcAlpha);
-                State.BlendFuncDstAlpha  =   (GalBlendFactor)ReadRegister(NvGpuEngine3dReg.IBlendNFuncDstAlpha);
+                    if (State.Blends[Index].Enabled)
+                    {
+                        State.Blends[Index].SeparateAlpha = ReadRegisterBool(NvGpuEngine3dReg.IBlendNSeparateAlpha + Index * 8);
+
+                        State.Blends[Index].EquationRgb   = ReadBlendEquation(NvGpuEngine3dReg.IBlendNEquationRgb   + Index * 8);
+                        State.Blends[Index].FuncSrcRgb    = ReadBlendFactor  (NvGpuEngine3dReg.IBlendNFuncSrcRgb    + Index * 8);
+                        State.Blends[Index].FuncDstRgb    = ReadBlendFactor  (NvGpuEngine3dReg.IBlendNFuncDstRgb    + Index * 8);
+                        State.Blends[Index].EquationAlpha = ReadBlendEquation(NvGpuEngine3dReg.IBlendNEquationAlpha + Index * 8);
+                        State.Blends[Index].FuncSrcAlpha  = ReadBlendFactor  (NvGpuEngine3dReg.IBlendNFuncSrcAlpha  + Index * 8);
+                        State.Blends[Index].FuncDstAlpha  = ReadBlendFactor  (NvGpuEngine3dReg.IBlendNFuncDstAlpha  + Index * 8);
+                    }
+                }
+                else
+                {
+                    //It seems that even when independent blend is disabled, the first IBlend enable
+                    //register is still set to indicate whenever blend is enabled or not (?).
+                    State.Blends[Index].Enabled = ReadRegisterBool(NvGpuEngine3dReg.IBlendNEnable);
+
+                    if (State.Blends[Index].Enabled)
+                    {
+                        State.Blends[Index].SeparateAlpha = ReadRegisterBool(NvGpuEngine3dReg.BlendSeparateAlpha);
+
+                        State.Blends[Index].EquationRgb   = ReadBlendEquation(NvGpuEngine3dReg.BlendEquationRgb);
+                        State.Blends[Index].FuncSrcRgb    = ReadBlendFactor  (NvGpuEngine3dReg.BlendFuncSrcRgb);
+                        State.Blends[Index].FuncDstRgb    = ReadBlendFactor  (NvGpuEngine3dReg.BlendFuncDstRgb);
+                        State.Blends[Index].EquationAlpha = ReadBlendEquation(NvGpuEngine3dReg.BlendEquationAlpha);
+                        State.Blends[Index].FuncSrcAlpha  = ReadBlendFactor  (NvGpuEngine3dReg.BlendFuncSrcAlpha);
+                        State.Blends[Index].FuncDstAlpha  = ReadBlendFactor  (NvGpuEngine3dReg.BlendFuncDstAlpha);
+                    }
+                }
             }
+        }
+
+        private GalBlendEquation ReadBlendEquation(NvGpuEngine3dReg Register)
+        {
+            return (GalBlendEquation)ReadRegister(Register);
+        }
+
+        private GalBlendFactor ReadBlendFactor(NvGpuEngine3dReg Register)
+        {
+            return (GalBlendFactor)ReadRegister(Register);
         }
 
         private void SetColorMask(GalPipelineState State)
@@ -514,10 +551,8 @@ namespace Ryujinx.Graphics
         {
             if (TextureHandle == 0)
             {
-                //TODO: Is this correct?
-                //Some games like puyo puyo will have 0 handles.
-                //It may be just normal behaviour or a bug caused by sync issues.
-                //The game does initialize the value properly after through.
+                //FIXME: Some games like puyo puyo will use handles with the value 0.
+                //This is a bug, most likely caused by sync issues.
                 return;
             }
 
@@ -603,7 +638,7 @@ namespace Ryujinx.Graphics
 
             if (IndexEntrySize > 4)
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("Invalid index entry size \"" + IndexEntrySize + "\"!");
             }
 
             if (IndexCount != 0)
