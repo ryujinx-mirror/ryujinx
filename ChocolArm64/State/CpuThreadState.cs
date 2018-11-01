@@ -80,7 +80,7 @@ namespace ChocolArm64.State
             }
         }
 
-        public event EventHandler<EventArgs>               Interrupt;
+        public event EventHandler<EventArgs>              Interrupt;
         public event EventHandler<InstExceptionEventArgs> Break;
         public event EventHandler<InstExceptionEventArgs> SvcCall;
         public event EventHandler<InstUndefinedEventArgs> Undefined;

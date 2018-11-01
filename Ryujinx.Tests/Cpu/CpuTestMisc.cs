@@ -11,9 +11,9 @@ namespace Ryujinx.Tests.Cpu
     {
         [TestCase(0xFFFFFFFDu)] // Roots.
         [TestCase(0x00000005u)]
-        public void Misc1(uint A)
+        public void Misc1(uint a)
         {
-            // ((A + 3) * (A - 5)) / ((A + 5) * (A - 3)) = 0
+            // ((a + 3) * (a - 5)) / ((a + 5) * (a - 3)) = 0
 
             /*
             ADD W2, W0, 3
@@ -27,7 +27,7 @@ namespace Ryujinx.Tests.Cpu
             RET
             */
 
-            SetThreadState(X0: A);
+            SetThreadState(x0: a);
             Opcode(0x11000C02);
             Opcode(0x51001401);
             Opcode(0x1B017C42);
@@ -60,9 +60,9 @@ namespace Ryujinx.Tests.Cpu
         [TestCase( 12f,  -3f)]
         [TestCase( 12f,   6f)]
         [TestCase( 20f,   5f)]
-        public void Misc2(float A, float B)
+        public void Misc2(float a, float b)
         {
-            // 1 / ((1 / A + 1 / B) ^ 2) = 16
+            // 1 / ((1 / a + 1 / b) ^ 2) = 16
 
             /*
             FMOV S2, 1.0e+0
@@ -76,8 +76,8 @@ namespace Ryujinx.Tests.Cpu
             */
 
             SetThreadState(
-                V0: Sse.SetScalarVector128(A),
-                V1: Sse.SetScalarVector128(B));
+                v0: Sse.SetScalarVector128(a),
+                v1: Sse.SetScalarVector128(b));
             Opcode(0x1E2E1002);
             Opcode(0x1E201840);
             Opcode(0x1E211841);
@@ -109,9 +109,9 @@ namespace Ryujinx.Tests.Cpu
         [TestCase( 12d,  -3d)]
         [TestCase( 12d,   6d)]
         [TestCase( 20d,   5d)]
-        public void Misc3(double A, double B)
+        public void Misc3(double a, double b)
         {
-            // 1 / ((1 / A + 1 / B) ^ 2) = 16
+            // 1 / ((1 / a + 1 / b) ^ 2) = 16
 
             /*
             FMOV D2, 1.0e+0
@@ -125,8 +125,8 @@ namespace Ryujinx.Tests.Cpu
             */
 
             SetThreadState(
-                V0: Sse.StaticCast<double, float>(Sse2.SetScalarVector128(A)),
-                V1: Sse.StaticCast<double, float>(Sse2.SetScalarVector128(B)));
+                v0: Sse.StaticCast<double, float>(Sse2.SetScalarVector128(a)),
+                v1: Sse.StaticCast<double, float>(Sse2.SetScalarVector128(b)));
             Opcode(0x1E6E1002);
             Opcode(0x1E601840);
             Opcode(0x1E611841);
@@ -141,25 +141,25 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test]
-        public void MiscF([Range(0u, 92u, 1u)] uint A)
+        public void MiscF([Range(0u, 92u, 1u)] uint a)
         {
-            ulong F_n(uint n)
+            ulong Fn(uint n)
             {
-                ulong a = 0, b = 1, c;
+                ulong x = 0, y = 1, z;
 
                 if (n == 0)
                 {
-                    return a;
+                    return x;
                 }
 
                 for (uint i = 2; i <= n; i++)
                 {
-                    c = a + b;
-                    a = b;
-                    b = c;
+                    z = x + y;
+                    x = y;
+                    y = z;
                 }
 
-                return b;
+                return y;
             }
 
             /*
@@ -186,7 +186,7 @@ namespace Ryujinx.Tests.Cpu
             0x0000000000001050: RET
             */
 
-            SetThreadState(X0: A);
+            SetThreadState(x0: a);
             Opcode(0x2A0003E4);
             Opcode(0x340001C0);
             Opcode(0x7100041F);
@@ -210,13 +210,13 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
 
-            Assert.That(GetThreadState().X0, Is.EqualTo(F_n(A)));
+            Assert.That(GetThreadState().X0, Is.EqualTo(Fn(a)));
         }
 
         [Test]
         public void MiscR()
         {
-            const ulong Result = 5;
+            const ulong result = 5;
 
             /*
             0x0000000000001000: MOV X0, #2
@@ -233,7 +233,7 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
 
-            Assert.That(GetThreadState().X0, Is.EqualTo(Result));
+            Assert.That(GetThreadState().X0, Is.EqualTo(result));
 
             Reset();
 
@@ -252,19 +252,19 @@ namespace Ryujinx.Tests.Cpu
             Opcode(0xD65F03C0);
             ExecuteOpcodes();
 
-            Assert.That(GetThreadState().X0, Is.EqualTo(Result));
+            Assert.That(GetThreadState().X0, Is.EqualTo(result));
         }
 
         [TestCase( 0ul)]
         [TestCase( 1ul)]
         [TestCase( 2ul)]
         [TestCase(42ul)]
-        public void SanityCheck(ulong A)
+        public void SanityCheck(ulong a)
         {
-            uint Opcode = 0xD503201F; // NOP
-            CpuThreadState ThreadState = SingleOpcode(Opcode, X0: A);
+            uint opcode = 0xD503201F; // NOP
+            CpuThreadState threadState = SingleOpcode(opcode, x0: a);
 
-            Assert.That(ThreadState.X0, Is.EqualTo(A));
+            Assert.That(threadState.X0, Is.EqualTo(a));
         }
     }
 }

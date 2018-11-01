@@ -160,7 +160,7 @@ namespace ChocolArm64.Instructions
             OpCodeSimdShImm64 op = (OpCodeSimdShImm64)context.CurrOp;
 
             if (Optimizations.UseSse2 && op.Size > 0
-                                       && op.Size < 3)
+                                      && op.Size < 3)
             {
                 Type[] typesShs = new Type[] { VectorIntTypesPerSizeLog2[op.Size], typeof(byte) };
                 Type[] typesAdd = new Type[] { VectorIntTypesPerSizeLog2[op.Size], VectorIntTypesPerSizeLog2[op.Size] };
@@ -209,7 +209,7 @@ namespace ChocolArm64.Instructions
             OpCodeSimdShImm64 op = (OpCodeSimdShImm64)context.CurrOp;
 
             if (Optimizations.UseSse2 && op.Size > 0
-                                       && op.Size < 3)
+                                      && op.Size < 3)
             {
                 Type[] typesShs = new Type[] { VectorIntTypesPerSizeLog2[op.Size], typeof(byte) };
                 Type[] typesAdd = new Type[] { VectorIntTypesPerSizeLog2[op.Size], VectorIntTypesPerSizeLog2[op.Size] };
@@ -272,7 +272,7 @@ namespace ChocolArm64.Instructions
             OpCodeSimdShImm64 op = (OpCodeSimdShImm64)context.CurrOp;
 
             if (Optimizations.UseSse2 && op.Size > 0
-                                       && op.Size < 3)
+                                      && op.Size < 3)
             {
                 Type[] typesSra = new Type[] { VectorIntTypesPerSizeLog2[op.Size], typeof(byte) };
 
@@ -304,7 +304,7 @@ namespace ChocolArm64.Instructions
             OpCodeSimdShImm64 op = (OpCodeSimdShImm64)context.CurrOp;
 
             if (Optimizations.UseSse2 && op.Size > 0
-                                       && op.Size < 3)
+                                      && op.Size < 3)
             {
                 Type[] typesSra = new Type[] { VectorIntTypesPerSizeLog2[op.Size], typeof(byte) };
                 Type[] typesAdd = new Type[] { VectorIntTypesPerSizeLog2[op.Size], VectorIntTypesPerSizeLog2[op.Size] };
@@ -658,9 +658,9 @@ namespace ChocolArm64.Instructions
 
                     context.Emit(signed ? OpCodes.Shr : OpCodes.Shr_Un);
                 }
-                else /* if (Op.Size == 3) */
+                else /* if (op.Size == 3) */
                 {
-                    EmitShrImm_64(context, signed, round ? roundConst : 0L, shift);
+                    EmitShrImm64(context, signed, round ? roundConst : 0L, shift);
                 }
 
                 if (accumulate)
@@ -795,9 +795,9 @@ namespace ChocolArm64.Instructions
 
                     context.Emit(signedSrc ? OpCodes.Shr : OpCodes.Shr_Un);
                 }
-                else /* if (Op.Size == 2 && Round) */
+                else /* if (op.Size == 2 && round) */
                 {
-                    EmitShrImm_64(context, signedSrc, roundConst, shift); // Shift <= 32
+                    EmitShrImm64(context, signedSrc, roundConst, shift); // shift <= 32
                 }
 
                 EmitSatQ(context, op.Size, signedSrc, signedDst);
@@ -814,8 +814,8 @@ namespace ChocolArm64.Instructions
             }
         }
 
-        // Dst_64 = (Int(Src_64, Signed) + RoundConst) >> Shift;
-        private static void EmitShrImm_64(
+        // dst64 = (Int(src64, signed) + roundConst) >> shift;
+        private static void EmitShrImm64(
             ILEmitterCtx context,
             bool signed,
             long roundConst,
@@ -825,8 +825,8 @@ namespace ChocolArm64.Instructions
             context.EmitLdc_I4(shift);
 
             SoftFallback.EmitCall(context, signed
-                ? nameof(SoftFallback.SignedShrImm_64)
-                : nameof(SoftFallback.UnsignedShrImm_64));
+                ? nameof(SoftFallback.SignedShrImm64)
+                : nameof(SoftFallback.UnsignedShrImm64));
         }
 
         private static void EmitVectorShImmWidenBinarySx(ILEmitterCtx context, Action emit, int imm)

@@ -18,23 +18,23 @@ namespace Ryujinx.Tests.Cpu
     public class CpuTest
     {
         protected long Position { get; private set; }
-        private long Size;
+        private long _size;
 
-        private long EntryPoint;
+        private long _entryPoint;
 
-        private IntPtr RamPointer;
+        private IntPtr _ramPointer;
 
-        private MemoryManager Memory;
-        private CpuThread     Thread;
+        private MemoryManager _memory;
+        private CpuThread     _thread;
 
-        private static bool UnicornAvailable;
-        private UnicornAArch64 UnicornEmu;
+        private static bool _unicornAvailable;
+        private UnicornAArch64 _unicornEmu;
 
         static CpuTest()
         {
-            UnicornAvailable = UnicornAArch64.IsAvailable();
+            _unicornAvailable = UnicornAArch64.IsAvailable();
 
-            if (!UnicornAvailable)
+            if (!_unicornAvailable)
             {
                 Console.WriteLine("WARNING: Could not find Unicorn.");
             }
@@ -44,31 +44,31 @@ namespace Ryujinx.Tests.Cpu
         public void Setup()
         {
             Position = 0x1000;
-            Size     = 0x1000;
+            _size    = 0x1000;
 
-            EntryPoint = Position;
+            _entryPoint = Position;
 
-            Translator Translator = new Translator();
-            RamPointer = Marshal.AllocHGlobal(new IntPtr(Size));
-            Memory = new MemoryManager(RamPointer);
-            Memory.Map(Position, 0, Size);
-            Thread = new CpuThread(Translator, Memory, EntryPoint);
+            Translator translator = new Translator();
+            _ramPointer = Marshal.AllocHGlobal(new IntPtr(_size));
+            _memory = new MemoryManager(_ramPointer);
+            _memory.Map(Position, 0, _size);
+            _thread = new CpuThread(translator, _memory, _entryPoint);
 
-            if (UnicornAvailable)
+            if (_unicornAvailable)
             {
-                UnicornEmu = new UnicornAArch64();
-                UnicornEmu.MemoryMap((ulong)Position, (ulong)Size, MemoryPermission.READ | MemoryPermission.EXEC);
-                UnicornEmu.PC = (ulong)EntryPoint;
+                _unicornEmu = new UnicornAArch64();
+                _unicornEmu.MemoryMap((ulong)Position, (ulong)_size, MemoryPermission.READ | MemoryPermission.EXEC);
+                _unicornEmu.PC = (ulong)_entryPoint;
             }
         }
 
         [TearDown]
         public void Teardown()
         {
-            Marshal.FreeHGlobal(RamPointer);
-            Memory = null;
-            Thread = null;
-            UnicornEmu = null;
+            Marshal.FreeHGlobal(_ramPointer);
+            _memory     = null;
+            _thread     = null;
+            _unicornEmu = null;
         }
 
         protected void Reset()
@@ -77,102 +77,102 @@ namespace Ryujinx.Tests.Cpu
             Setup();
         }
 
-        protected void Opcode(uint Opcode)
+        protected void Opcode(uint opcode)
         {
-            Thread.Memory.WriteUInt32(Position, Opcode);
+            _thread.Memory.WriteUInt32(Position, opcode);
 
-            if (UnicornAvailable)
+            if (_unicornAvailable)
             {
-                UnicornEmu.MemoryWrite32((ulong)Position, Opcode);
+                _unicornEmu.MemoryWrite32((ulong)Position, opcode);
             }
 
             Position += 4;
         }
 
-        protected void SetThreadState(ulong X0 = 0, ulong X1 = 0, ulong X2 = 0, ulong X3 = 0, ulong X31 = 0,
-                                      Vector128<float> V0 = default(Vector128<float>),
-                                      Vector128<float> V1 = default(Vector128<float>),
-                                      Vector128<float> V2 = default(Vector128<float>),
-                                      Vector128<float> V3 = default(Vector128<float>),
-                                      bool Overflow = false, bool Carry = false, bool Zero = false, bool Negative = false,
-                                      int Fpcr = 0x0, int Fpsr = 0x0)
+        protected void SetThreadState(ulong x0 = 0, ulong x1 = 0, ulong x2 = 0, ulong x3 = 0, ulong x31 = 0,
+                                      Vector128<float> v0 = default(Vector128<float>),
+                                      Vector128<float> v1 = default(Vector128<float>),
+                                      Vector128<float> v2 = default(Vector128<float>),
+                                      Vector128<float> v3 = default(Vector128<float>),
+                                      bool overflow = false, bool carry = false, bool zero = false, bool negative = false,
+                                      int fpcr = 0x0, int fpsr = 0x0)
         {
-            Thread.ThreadState.X0 = X0;
-            Thread.ThreadState.X1 = X1;
-            Thread.ThreadState.X2 = X2;
-            Thread.ThreadState.X3 = X3;
+            _thread.ThreadState.X0 = x0;
+            _thread.ThreadState.X1 = x1;
+            _thread.ThreadState.X2 = x2;
+            _thread.ThreadState.X3 = x3;
 
-            Thread.ThreadState.X31 = X31;
+            _thread.ThreadState.X31 = x31;
 
-            Thread.ThreadState.V0 = V0;
-            Thread.ThreadState.V1 = V1;
-            Thread.ThreadState.V2 = V2;
-            Thread.ThreadState.V3 = V3;
+            _thread.ThreadState.V0 = v0;
+            _thread.ThreadState.V1 = v1;
+            _thread.ThreadState.V2 = v2;
+            _thread.ThreadState.V3 = v3;
 
-            Thread.ThreadState.Overflow = Overflow;
-            Thread.ThreadState.Carry    = Carry;
-            Thread.ThreadState.Zero     = Zero;
-            Thread.ThreadState.Negative = Negative;
+            _thread.ThreadState.Overflow = overflow;
+            _thread.ThreadState.Carry    = carry;
+            _thread.ThreadState.Zero     = zero;
+            _thread.ThreadState.Negative = negative;
 
-            Thread.ThreadState.Fpcr = Fpcr;
-            Thread.ThreadState.Fpsr = Fpsr;
+            _thread.ThreadState.Fpcr = fpcr;
+            _thread.ThreadState.Fpsr = fpsr;
 
-            if (UnicornAvailable)
+            if (_unicornAvailable)
             {
-                UnicornEmu.X[0] = X0;
-                UnicornEmu.X[1] = X1;
-                UnicornEmu.X[2] = X2;
-                UnicornEmu.X[3] = X3;
+                _unicornEmu.X[0] = x0;
+                _unicornEmu.X[1] = x1;
+                _unicornEmu.X[2] = x2;
+                _unicornEmu.X[3] = x3;
 
-                UnicornEmu.SP = X31;
+                _unicornEmu.SP = x31;
 
-                UnicornEmu.Q[0] = V0;
-                UnicornEmu.Q[1] = V1;
-                UnicornEmu.Q[2] = V2;
-                UnicornEmu.Q[3] = V3;
+                _unicornEmu.Q[0] = v0;
+                _unicornEmu.Q[1] = v1;
+                _unicornEmu.Q[2] = v2;
+                _unicornEmu.Q[3] = v3;
 
-                UnicornEmu.OverflowFlag = Overflow;
-                UnicornEmu.CarryFlag    = Carry;
-                UnicornEmu.ZeroFlag     = Zero;
-                UnicornEmu.NegativeFlag = Negative;
+                _unicornEmu.OverflowFlag = overflow;
+                _unicornEmu.CarryFlag    = carry;
+                _unicornEmu.ZeroFlag     = zero;
+                _unicornEmu.NegativeFlag = negative;
 
-                UnicornEmu.Fpcr = Fpcr;
-                UnicornEmu.Fpsr = Fpsr;
+                _unicornEmu.Fpcr = fpcr;
+                _unicornEmu.Fpsr = fpsr;
             }
         }
 
         protected void ExecuteOpcodes()
         {
-            using (ManualResetEvent Wait = new ManualResetEvent(false))
+            using (ManualResetEvent wait = new ManualResetEvent(false))
             {
-                Thread.ThreadState.Break += (sender, e) => Thread.StopExecution();
-                Thread.WorkFinished += (sender, e) => Wait.Set();
+                _thread.ThreadState.Break += (sender, e) => _thread.StopExecution();
+                _thread.WorkFinished += (sender, e) => wait.Set();
 
-                Thread.Execute();
-                Wait.WaitOne();
+                _thread.Execute();
+                wait.WaitOne();
             }
 
-            if (UnicornAvailable)
+            if (_unicornAvailable)
             {
-                UnicornEmu.RunForCount((ulong)(Position - EntryPoint - 8) / 4);
+                _unicornEmu.RunForCount((ulong)(Position - _entryPoint - 8) / 4);
             }
         }
 
-        protected CpuThreadState GetThreadState() => Thread.ThreadState;
+        protected CpuThreadState GetThreadState() => _thread.ThreadState;
 
-        protected CpuThreadState SingleOpcode(uint Opcode,
-                                            ulong X0 = 0, ulong X1 = 0, ulong X2 = 0, ulong X3 = 0, ulong X31 = 0,
-                                            Vector128<float> V0 = default(Vector128<float>),
-                                            Vector128<float> V1 = default(Vector128<float>),
-                                            Vector128<float> V2 = default(Vector128<float>),
-                                            Vector128<float> V3 = default(Vector128<float>),
-                                            bool Overflow = false, bool Carry = false, bool Zero = false, bool Negative = false,
-                                            int Fpcr = 0x0, int Fpsr = 0x0)
+        protected CpuThreadState SingleOpcode(uint opcode,
+                                              ulong x0 = 0, ulong x1 = 0, ulong x2 = 0, ulong x3 = 0, ulong x31 = 0,
+                                              Vector128<float> v0 = default(Vector128<float>),
+                                              Vector128<float> v1 = default(Vector128<float>),
+                                              Vector128<float> v2 = default(Vector128<float>),
+                                              Vector128<float> v3 = default(Vector128<float>),
+                                              bool overflow = false, bool carry = false, bool zero = false, bool negative = false,
+                                              int fpcr = 0x0, int fpsr = 0x0)
         {
-            this.Opcode(Opcode);
-            this.Opcode(0xD4200000); // BRK #0
-            this.Opcode(0xD65F03C0); // RET
-            SetThreadState(X0, X1, X2, X3, X31, V0, V1, V2, V3, Overflow, Carry, Zero, Negative, Fpcr, Fpsr);
+            Opcode(opcode);
+            Opcode(0xD4200000); // BRK #0
+            Opcode(0xD65F03C0); // RET
+            SetThreadState(x0, x1, x2, x3, x31, v0, v1, v2, v3, overflow, carry, zero, negative, fpcr, fpsr);
             ExecuteOpcodes();
 
             return GetThreadState();
@@ -181,57 +181,57 @@ namespace Ryujinx.Tests.Cpu
         /// <summary>Rounding Mode control field.</summary>
         public enum RMode
         {
-            /// <summary>Round to Nearest (RN) mode.</summary>
-            RN,
-            /// <summary>Round towards Plus Infinity (RP) mode.</summary>
-            RP,
-            /// <summary>Round towards Minus Infinity (RM) mode.</summary>
-            RM,
-            /// <summary>Round towards Zero (RZ) mode.</summary>
-            RZ
+            /// <summary>Round to Nearest mode.</summary>
+            Rn,
+            /// <summary>Round towards Plus Infinity mode.</summary>
+            Rp,
+            /// <summary>Round towards Minus Infinity mode.</summary>
+            Rm,
+            /// <summary>Round towards Zero mode.</summary>
+            Rz
         };
 
         /// <summary>Floating-point Control Register.</summary>
-        protected enum FPCR
+        protected enum Fpcr
         {
             /// <summary>Rounding Mode control field.</summary>
             RMode = 22,
             /// <summary>Flush-to-zero mode control bit.</summary>
-            FZ    = 24,
+            Fz    = 24,
             /// <summary>Default NaN mode control bit.</summary>
-            DN    = 25,
+            Dn    = 25,
             /// <summary>Alternative half-precision control bit.</summary>
-            AHP   = 26
+            Ahp   = 26
         }
 
         /// <summary>Floating-point Status Register.</summary>
-        [Flags] protected enum FPSR
+        [Flags] protected enum Fpsr
         {
             None = 0,
 
             /// <summary>Invalid Operation cumulative floating-point exception bit.</summary>
-            IOC = 1 << 0,
+            Ioc = 1 << 0,
             /// <summary>Divide by Zero cumulative floating-point exception bit.</summary>
-            DZC = 1 << 1,
+            Dzc = 1 << 1,
             /// <summary>Overflow cumulative floating-point exception bit.</summary>
-            OFC = 1 << 2,
+            Ofc = 1 << 2,
             /// <summary>Underflow cumulative floating-point exception bit.</summary>
-            UFC = 1 << 3,
+            Ufc = 1 << 3,
             /// <summary>Inexact cumulative floating-point exception bit.</summary>
-            IXC = 1 << 4,
+            Ixc = 1 << 4,
             /// <summary>Input Denormal cumulative floating-point exception bit.</summary>
-            IDC = 1 << 7,
+            Idc = 1 << 7,
 
             /// <summary>Cumulative saturation bit.</summary>
-            QC = 1 << 27
+            Qc = 1 << 27
         }
 
         [Flags] protected enum FpSkips
         {
             None = 0,
 
-            IfNaN_S = 1,
-            IfNaN_D = 2,
+            IfNaNS = 1,
+            IfNaND = 2,
 
             IfUnderflow = 4,
             IfOverflow  = 8
@@ -241,204 +241,204 @@ namespace Ryujinx.Tests.Cpu
         {
             None,
 
-            UpToOneUlps_S,
-            UpToOneUlps_D
+            UpToOneUlpsS,
+            UpToOneUlpsD
         }
 
         protected void CompareAgainstUnicorn(
-            FPSR         FpsrMask     = FPSR.None,
-            FpSkips      FpSkips      = FpSkips.None,
-            FpTolerances FpTolerances = FpTolerances.None)
+            Fpsr         fpsrMask     = Fpsr.None,
+            FpSkips      fpSkips      = FpSkips.None,
+            FpTolerances fpTolerances = FpTolerances.None)
         {
-            if (!UnicornAvailable)
+            if (!_unicornAvailable)
             {
                 return;
             }
 
-            if (FpSkips != FpSkips.None)
+            if (fpSkips != FpSkips.None)
             {
-                ManageFpSkips(FpSkips);
+                ManageFpSkips(fpSkips);
             }
 
-            Assert.That(Thread.ThreadState.X0,  Is.EqualTo(UnicornEmu.X[0]));
-            Assert.That(Thread.ThreadState.X1,  Is.EqualTo(UnicornEmu.X[1]));
-            Assert.That(Thread.ThreadState.X2,  Is.EqualTo(UnicornEmu.X[2]));
-            Assert.That(Thread.ThreadState.X3,  Is.EqualTo(UnicornEmu.X[3]));
-            Assert.That(Thread.ThreadState.X4,  Is.EqualTo(UnicornEmu.X[4]));
-            Assert.That(Thread.ThreadState.X5,  Is.EqualTo(UnicornEmu.X[5]));
-            Assert.That(Thread.ThreadState.X6,  Is.EqualTo(UnicornEmu.X[6]));
-            Assert.That(Thread.ThreadState.X7,  Is.EqualTo(UnicornEmu.X[7]));
-            Assert.That(Thread.ThreadState.X8,  Is.EqualTo(UnicornEmu.X[8]));
-            Assert.That(Thread.ThreadState.X9,  Is.EqualTo(UnicornEmu.X[9]));
-            Assert.That(Thread.ThreadState.X10, Is.EqualTo(UnicornEmu.X[10]));
-            Assert.That(Thread.ThreadState.X11, Is.EqualTo(UnicornEmu.X[11]));
-            Assert.That(Thread.ThreadState.X12, Is.EqualTo(UnicornEmu.X[12]));
-            Assert.That(Thread.ThreadState.X13, Is.EqualTo(UnicornEmu.X[13]));
-            Assert.That(Thread.ThreadState.X14, Is.EqualTo(UnicornEmu.X[14]));
-            Assert.That(Thread.ThreadState.X15, Is.EqualTo(UnicornEmu.X[15]));
-            Assert.That(Thread.ThreadState.X16, Is.EqualTo(UnicornEmu.X[16]));
-            Assert.That(Thread.ThreadState.X17, Is.EqualTo(UnicornEmu.X[17]));
-            Assert.That(Thread.ThreadState.X18, Is.EqualTo(UnicornEmu.X[18]));
-            Assert.That(Thread.ThreadState.X19, Is.EqualTo(UnicornEmu.X[19]));
-            Assert.That(Thread.ThreadState.X20, Is.EqualTo(UnicornEmu.X[20]));
-            Assert.That(Thread.ThreadState.X21, Is.EqualTo(UnicornEmu.X[21]));
-            Assert.That(Thread.ThreadState.X22, Is.EqualTo(UnicornEmu.X[22]));
-            Assert.That(Thread.ThreadState.X23, Is.EqualTo(UnicornEmu.X[23]));
-            Assert.That(Thread.ThreadState.X24, Is.EqualTo(UnicornEmu.X[24]));
-            Assert.That(Thread.ThreadState.X25, Is.EqualTo(UnicornEmu.X[25]));
-            Assert.That(Thread.ThreadState.X26, Is.EqualTo(UnicornEmu.X[26]));
-            Assert.That(Thread.ThreadState.X27, Is.EqualTo(UnicornEmu.X[27]));
-            Assert.That(Thread.ThreadState.X28, Is.EqualTo(UnicornEmu.X[28]));
-            Assert.That(Thread.ThreadState.X29, Is.EqualTo(UnicornEmu.X[29]));
-            Assert.That(Thread.ThreadState.X30, Is.EqualTo(UnicornEmu.X[30]));
+            Assert.That(_thread.ThreadState.X0,  Is.EqualTo(_unicornEmu.X[0]));
+            Assert.That(_thread.ThreadState.X1,  Is.EqualTo(_unicornEmu.X[1]));
+            Assert.That(_thread.ThreadState.X2,  Is.EqualTo(_unicornEmu.X[2]));
+            Assert.That(_thread.ThreadState.X3,  Is.EqualTo(_unicornEmu.X[3]));
+            Assert.That(_thread.ThreadState.X4,  Is.EqualTo(_unicornEmu.X[4]));
+            Assert.That(_thread.ThreadState.X5,  Is.EqualTo(_unicornEmu.X[5]));
+            Assert.That(_thread.ThreadState.X6,  Is.EqualTo(_unicornEmu.X[6]));
+            Assert.That(_thread.ThreadState.X7,  Is.EqualTo(_unicornEmu.X[7]));
+            Assert.That(_thread.ThreadState.X8,  Is.EqualTo(_unicornEmu.X[8]));
+            Assert.That(_thread.ThreadState.X9,  Is.EqualTo(_unicornEmu.X[9]));
+            Assert.That(_thread.ThreadState.X10, Is.EqualTo(_unicornEmu.X[10]));
+            Assert.That(_thread.ThreadState.X11, Is.EqualTo(_unicornEmu.X[11]));
+            Assert.That(_thread.ThreadState.X12, Is.EqualTo(_unicornEmu.X[12]));
+            Assert.That(_thread.ThreadState.X13, Is.EqualTo(_unicornEmu.X[13]));
+            Assert.That(_thread.ThreadState.X14, Is.EqualTo(_unicornEmu.X[14]));
+            Assert.That(_thread.ThreadState.X15, Is.EqualTo(_unicornEmu.X[15]));
+            Assert.That(_thread.ThreadState.X16, Is.EqualTo(_unicornEmu.X[16]));
+            Assert.That(_thread.ThreadState.X17, Is.EqualTo(_unicornEmu.X[17]));
+            Assert.That(_thread.ThreadState.X18, Is.EqualTo(_unicornEmu.X[18]));
+            Assert.That(_thread.ThreadState.X19, Is.EqualTo(_unicornEmu.X[19]));
+            Assert.That(_thread.ThreadState.X20, Is.EqualTo(_unicornEmu.X[20]));
+            Assert.That(_thread.ThreadState.X21, Is.EqualTo(_unicornEmu.X[21]));
+            Assert.That(_thread.ThreadState.X22, Is.EqualTo(_unicornEmu.X[22]));
+            Assert.That(_thread.ThreadState.X23, Is.EqualTo(_unicornEmu.X[23]));
+            Assert.That(_thread.ThreadState.X24, Is.EqualTo(_unicornEmu.X[24]));
+            Assert.That(_thread.ThreadState.X25, Is.EqualTo(_unicornEmu.X[25]));
+            Assert.That(_thread.ThreadState.X26, Is.EqualTo(_unicornEmu.X[26]));
+            Assert.That(_thread.ThreadState.X27, Is.EqualTo(_unicornEmu.X[27]));
+            Assert.That(_thread.ThreadState.X28, Is.EqualTo(_unicornEmu.X[28]));
+            Assert.That(_thread.ThreadState.X29, Is.EqualTo(_unicornEmu.X[29]));
+            Assert.That(_thread.ThreadState.X30, Is.EqualTo(_unicornEmu.X[30]));
 
-            Assert.That(Thread.ThreadState.X31, Is.EqualTo(UnicornEmu.SP));
+            Assert.That(_thread.ThreadState.X31, Is.EqualTo(_unicornEmu.SP));
 
-            if (FpTolerances == FpTolerances.None)
+            if (fpTolerances == FpTolerances.None)
             {
-                Assert.That(Thread.ThreadState.V0, Is.EqualTo(UnicornEmu.Q[0]));
+                Assert.That(_thread.ThreadState.V0, Is.EqualTo(_unicornEmu.Q[0]));
             }
             else
             {
-                ManageFpTolerances(FpTolerances);
+                ManageFpTolerances(fpTolerances);
             }
-            Assert.That(Thread.ThreadState.V1,  Is.EqualTo(UnicornEmu.Q[1]));
-            Assert.That(Thread.ThreadState.V2,  Is.EqualTo(UnicornEmu.Q[2]));
-            Assert.That(Thread.ThreadState.V3,  Is.EqualTo(UnicornEmu.Q[3]));
-            Assert.That(Thread.ThreadState.V4,  Is.EqualTo(UnicornEmu.Q[4]));
-            Assert.That(Thread.ThreadState.V5,  Is.EqualTo(UnicornEmu.Q[5]));
-            Assert.That(Thread.ThreadState.V6,  Is.EqualTo(UnicornEmu.Q[6]));
-            Assert.That(Thread.ThreadState.V7,  Is.EqualTo(UnicornEmu.Q[7]));
-            Assert.That(Thread.ThreadState.V8,  Is.EqualTo(UnicornEmu.Q[8]));
-            Assert.That(Thread.ThreadState.V9,  Is.EqualTo(UnicornEmu.Q[9]));
-            Assert.That(Thread.ThreadState.V10, Is.EqualTo(UnicornEmu.Q[10]));
-            Assert.That(Thread.ThreadState.V11, Is.EqualTo(UnicornEmu.Q[11]));
-            Assert.That(Thread.ThreadState.V12, Is.EqualTo(UnicornEmu.Q[12]));
-            Assert.That(Thread.ThreadState.V13, Is.EqualTo(UnicornEmu.Q[13]));
-            Assert.That(Thread.ThreadState.V14, Is.EqualTo(UnicornEmu.Q[14]));
-            Assert.That(Thread.ThreadState.V15, Is.EqualTo(UnicornEmu.Q[15]));
-            Assert.That(Thread.ThreadState.V16, Is.EqualTo(UnicornEmu.Q[16]));
-            Assert.That(Thread.ThreadState.V17, Is.EqualTo(UnicornEmu.Q[17]));
-            Assert.That(Thread.ThreadState.V18, Is.EqualTo(UnicornEmu.Q[18]));
-            Assert.That(Thread.ThreadState.V19, Is.EqualTo(UnicornEmu.Q[19]));
-            Assert.That(Thread.ThreadState.V20, Is.EqualTo(UnicornEmu.Q[20]));
-            Assert.That(Thread.ThreadState.V21, Is.EqualTo(UnicornEmu.Q[21]));
-            Assert.That(Thread.ThreadState.V22, Is.EqualTo(UnicornEmu.Q[22]));
-            Assert.That(Thread.ThreadState.V23, Is.EqualTo(UnicornEmu.Q[23]));
-            Assert.That(Thread.ThreadState.V24, Is.EqualTo(UnicornEmu.Q[24]));
-            Assert.That(Thread.ThreadState.V25, Is.EqualTo(UnicornEmu.Q[25]));
-            Assert.That(Thread.ThreadState.V26, Is.EqualTo(UnicornEmu.Q[26]));
-            Assert.That(Thread.ThreadState.V27, Is.EqualTo(UnicornEmu.Q[27]));
-            Assert.That(Thread.ThreadState.V28, Is.EqualTo(UnicornEmu.Q[28]));
-            Assert.That(Thread.ThreadState.V29, Is.EqualTo(UnicornEmu.Q[29]));
-            Assert.That(Thread.ThreadState.V30, Is.EqualTo(UnicornEmu.Q[30]));
-            Assert.That(Thread.ThreadState.V31, Is.EqualTo(UnicornEmu.Q[31]));
-            Assert.That(Thread.ThreadState.V31, Is.EqualTo(UnicornEmu.Q[31]));
+            Assert.That(_thread.ThreadState.V1,  Is.EqualTo(_unicornEmu.Q[1]));
+            Assert.That(_thread.ThreadState.V2,  Is.EqualTo(_unicornEmu.Q[2]));
+            Assert.That(_thread.ThreadState.V3,  Is.EqualTo(_unicornEmu.Q[3]));
+            Assert.That(_thread.ThreadState.V4,  Is.EqualTo(_unicornEmu.Q[4]));
+            Assert.That(_thread.ThreadState.V5,  Is.EqualTo(_unicornEmu.Q[5]));
+            Assert.That(_thread.ThreadState.V6,  Is.EqualTo(_unicornEmu.Q[6]));
+            Assert.That(_thread.ThreadState.V7,  Is.EqualTo(_unicornEmu.Q[7]));
+            Assert.That(_thread.ThreadState.V8,  Is.EqualTo(_unicornEmu.Q[8]));
+            Assert.That(_thread.ThreadState.V9,  Is.EqualTo(_unicornEmu.Q[9]));
+            Assert.That(_thread.ThreadState.V10, Is.EqualTo(_unicornEmu.Q[10]));
+            Assert.That(_thread.ThreadState.V11, Is.EqualTo(_unicornEmu.Q[11]));
+            Assert.That(_thread.ThreadState.V12, Is.EqualTo(_unicornEmu.Q[12]));
+            Assert.That(_thread.ThreadState.V13, Is.EqualTo(_unicornEmu.Q[13]));
+            Assert.That(_thread.ThreadState.V14, Is.EqualTo(_unicornEmu.Q[14]));
+            Assert.That(_thread.ThreadState.V15, Is.EqualTo(_unicornEmu.Q[15]));
+            Assert.That(_thread.ThreadState.V16, Is.EqualTo(_unicornEmu.Q[16]));
+            Assert.That(_thread.ThreadState.V17, Is.EqualTo(_unicornEmu.Q[17]));
+            Assert.That(_thread.ThreadState.V18, Is.EqualTo(_unicornEmu.Q[18]));
+            Assert.That(_thread.ThreadState.V19, Is.EqualTo(_unicornEmu.Q[19]));
+            Assert.That(_thread.ThreadState.V20, Is.EqualTo(_unicornEmu.Q[20]));
+            Assert.That(_thread.ThreadState.V21, Is.EqualTo(_unicornEmu.Q[21]));
+            Assert.That(_thread.ThreadState.V22, Is.EqualTo(_unicornEmu.Q[22]));
+            Assert.That(_thread.ThreadState.V23, Is.EqualTo(_unicornEmu.Q[23]));
+            Assert.That(_thread.ThreadState.V24, Is.EqualTo(_unicornEmu.Q[24]));
+            Assert.That(_thread.ThreadState.V25, Is.EqualTo(_unicornEmu.Q[25]));
+            Assert.That(_thread.ThreadState.V26, Is.EqualTo(_unicornEmu.Q[26]));
+            Assert.That(_thread.ThreadState.V27, Is.EqualTo(_unicornEmu.Q[27]));
+            Assert.That(_thread.ThreadState.V28, Is.EqualTo(_unicornEmu.Q[28]));
+            Assert.That(_thread.ThreadState.V29, Is.EqualTo(_unicornEmu.Q[29]));
+            Assert.That(_thread.ThreadState.V30, Is.EqualTo(_unicornEmu.Q[30]));
+            Assert.That(_thread.ThreadState.V31, Is.EqualTo(_unicornEmu.Q[31]));
+            Assert.That(_thread.ThreadState.V31, Is.EqualTo(_unicornEmu.Q[31]));
 
-            Assert.That(Thread.ThreadState.Fpcr,                 Is.EqualTo(UnicornEmu.Fpcr));
-            Assert.That(Thread.ThreadState.Fpsr & (int)FpsrMask, Is.EqualTo(UnicornEmu.Fpsr & (int)FpsrMask));
+            Assert.That(_thread.ThreadState.Fpcr,                 Is.EqualTo(_unicornEmu.Fpcr));
+            Assert.That(_thread.ThreadState.Fpsr & (int)fpsrMask, Is.EqualTo(_unicornEmu.Fpsr & (int)fpsrMask));
 
-            Assert.That(Thread.ThreadState.Overflow, Is.EqualTo(UnicornEmu.OverflowFlag));
-            Assert.That(Thread.ThreadState.Carry,    Is.EqualTo(UnicornEmu.CarryFlag));
-            Assert.That(Thread.ThreadState.Zero,     Is.EqualTo(UnicornEmu.ZeroFlag));
-            Assert.That(Thread.ThreadState.Negative, Is.EqualTo(UnicornEmu.NegativeFlag));
+            Assert.That(_thread.ThreadState.Overflow, Is.EqualTo(_unicornEmu.OverflowFlag));
+            Assert.That(_thread.ThreadState.Carry,    Is.EqualTo(_unicornEmu.CarryFlag));
+            Assert.That(_thread.ThreadState.Zero,     Is.EqualTo(_unicornEmu.ZeroFlag));
+            Assert.That(_thread.ThreadState.Negative, Is.EqualTo(_unicornEmu.NegativeFlag));
         }
 
-        private void ManageFpSkips(FpSkips FpSkips)
+        private void ManageFpSkips(FpSkips fpSkips)
         {
-            if (FpSkips.HasFlag(FpSkips.IfNaN_S))
+            if (fpSkips.HasFlag(FpSkips.IfNaNS))
             {
-                if (float.IsNaN(VectorExtractSingle(UnicornEmu.Q[0], (byte)0)))
+                if (float.IsNaN(VectorExtractSingle(_unicornEmu.Q[0], (byte)0)))
                 {
                     Assert.Ignore("NaN test.");
                 }
             }
-            else if (FpSkips.HasFlag(FpSkips.IfNaN_D))
+            else if (fpSkips.HasFlag(FpSkips.IfNaND))
             {
-                if (double.IsNaN(VectorExtractDouble(UnicornEmu.Q[0], (byte)0)))
+                if (double.IsNaN(VectorExtractDouble(_unicornEmu.Q[0], (byte)0)))
                 {
                     Assert.Ignore("NaN test.");
                 }
             }
 
-            if (FpSkips.HasFlag(FpSkips.IfUnderflow))
+            if (fpSkips.HasFlag(FpSkips.IfUnderflow))
             {
-                if ((UnicornEmu.Fpsr & (int)FPSR.UFC) != 0)
+                if ((_unicornEmu.Fpsr & (int)Fpsr.Ufc) != 0)
                 {
                     Assert.Ignore("Underflow test.");
                 }
             }
 
-            if (FpSkips.HasFlag(FpSkips.IfOverflow))
+            if (fpSkips.HasFlag(FpSkips.IfOverflow))
             {
-                if ((UnicornEmu.Fpsr & (int)FPSR.OFC) != 0)
+                if ((_unicornEmu.Fpsr & (int)Fpsr.Ofc) != 0)
                 {
                     Assert.Ignore("Overflow test.");
                 }
             }
         }
 
-        private void ManageFpTolerances(FpTolerances FpTolerances)
+        private void ManageFpTolerances(FpTolerances fpTolerances)
         {
-            if (!Is.EqualTo(UnicornEmu.Q[0]).ApplyTo(Thread.ThreadState.V0).IsSuccess)
+            if (!Is.EqualTo(_unicornEmu.Q[0]).ApplyTo(_thread.ThreadState.V0).IsSuccess)
             {
-                if (FpTolerances == FpTolerances.UpToOneUlps_S)
+                if (fpTolerances == FpTolerances.UpToOneUlpsS)
                 {
-                    if (IsNormalOrSubnormal_S(VectorExtractSingle(UnicornEmu.Q[0],       (byte)0)) &&
-                        IsNormalOrSubnormal_S(VectorExtractSingle(Thread.ThreadState.V0, (byte)0)))
+                    if (IsNormalOrSubnormalS(VectorExtractSingle(_unicornEmu.Q[0],       (byte)0)) &&
+                        IsNormalOrSubnormalS(VectorExtractSingle(_thread.ThreadState.V0, (byte)0)))
                     {
-                        Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)0),
-                            Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)0)).Within(1).Ulps);
-                        Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)1),
-                            Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)1)).Within(1).Ulps);
-                        Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)2),
-                            Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)2)).Within(1).Ulps);
-                        Assert.That   (VectorExtractSingle(Thread.ThreadState.V0, (byte)3),
-                            Is.EqualTo(VectorExtractSingle(UnicornEmu.Q[0],       (byte)3)).Within(1).Ulps);
+                        Assert.That   (VectorExtractSingle(_thread.ThreadState.V0, (byte)0),
+                            Is.EqualTo(VectorExtractSingle(_unicornEmu.Q[0],       (byte)0)).Within(1).Ulps);
+                        Assert.That   (VectorExtractSingle(_thread.ThreadState.V0, (byte)1),
+                            Is.EqualTo(VectorExtractSingle(_unicornEmu.Q[0],       (byte)1)).Within(1).Ulps);
+                        Assert.That   (VectorExtractSingle(_thread.ThreadState.V0, (byte)2),
+                            Is.EqualTo(VectorExtractSingle(_unicornEmu.Q[0],       (byte)2)).Within(1).Ulps);
+                        Assert.That   (VectorExtractSingle(_thread.ThreadState.V0, (byte)3),
+                            Is.EqualTo(VectorExtractSingle(_unicornEmu.Q[0],       (byte)3)).Within(1).Ulps);
 
-                        Console.WriteLine(FpTolerances);
+                        Console.WriteLine(fpTolerances);
                     }
                     else
                     {
-                        Assert.That(Thread.ThreadState.V0, Is.EqualTo(UnicornEmu.Q[0]));
+                        Assert.That(_thread.ThreadState.V0, Is.EqualTo(_unicornEmu.Q[0]));
                     }
                 }
 
-                if (FpTolerances == FpTolerances.UpToOneUlps_D)
+                if (fpTolerances == FpTolerances.UpToOneUlpsD)
                 {
-                    if (IsNormalOrSubnormal_D(VectorExtractDouble(UnicornEmu.Q[0],       (byte)0)) &&
-                        IsNormalOrSubnormal_D(VectorExtractDouble(Thread.ThreadState.V0, (byte)0)))
+                    if (IsNormalOrSubnormalD(VectorExtractDouble(_unicornEmu.Q[0],       (byte)0)) &&
+                        IsNormalOrSubnormalD(VectorExtractDouble(_thread.ThreadState.V0, (byte)0)))
                     {
-                        Assert.That   (VectorExtractDouble(Thread.ThreadState.V0, (byte)0),
-                            Is.EqualTo(VectorExtractDouble(UnicornEmu.Q[0],       (byte)0)).Within(1).Ulps);
-                        Assert.That   (VectorExtractDouble(Thread.ThreadState.V0, (byte)1),
-                            Is.EqualTo(VectorExtractDouble(UnicornEmu.Q[0],       (byte)1)).Within(1).Ulps);
+                        Assert.That   (VectorExtractDouble(_thread.ThreadState.V0, (byte)0),
+                            Is.EqualTo(VectorExtractDouble(_unicornEmu.Q[0],       (byte)0)).Within(1).Ulps);
+                        Assert.That   (VectorExtractDouble(_thread.ThreadState.V0, (byte)1),
+                            Is.EqualTo(VectorExtractDouble(_unicornEmu.Q[0],       (byte)1)).Within(1).Ulps);
 
-                        Console.WriteLine(FpTolerances);
+                        Console.WriteLine(fpTolerances);
                     }
                     else
                     {
-                        Assert.That(Thread.ThreadState.V0, Is.EqualTo(UnicornEmu.Q[0]));
+                        Assert.That(_thread.ThreadState.V0, Is.EqualTo(_unicornEmu.Q[0]));
                     }
                 }
             }
 
-            bool IsNormalOrSubnormal_S(float f)  => float.IsNormal(f)  || float.IsSubnormal(f);
+            bool IsNormalOrSubnormalS(float f)  => float.IsNormal(f)  || float.IsSubnormal(f);
 
-            bool IsNormalOrSubnormal_D(double d) => double.IsNormal(d) || double.IsSubnormal(d);
+            bool IsNormalOrSubnormalD(double d) => double.IsNormal(d) || double.IsSubnormal(d);
         }
 
-        protected static Vector128<float> MakeVectorE0(double E0)
+        protected static Vector128<float> MakeVectorE0(double e0)
         {
             if (!Sse2.IsSupported)
             {
                 throw new PlatformNotSupportedException();
             }
 
-            return Sse.StaticCast<long, float>(Sse2.SetVector128(0, BitConverter.DoubleToInt64Bits(E0)));
+            return Sse.StaticCast<long, float>(Sse2.SetVector128(0, BitConverter.DoubleToInt64Bits(e0)));
         }
 
-        protected static Vector128<float> MakeVectorE0E1(double E0, double E1)
+        protected static Vector128<float> MakeVectorE0E1(double e0, double e1)
         {
             if (!Sse2.IsSupported)
             {
@@ -446,154 +446,154 @@ namespace Ryujinx.Tests.Cpu
             }
 
             return Sse.StaticCast<long, float>(
-                Sse2.SetVector128(BitConverter.DoubleToInt64Bits(E1), BitConverter.DoubleToInt64Bits(E0)));
+                Sse2.SetVector128(BitConverter.DoubleToInt64Bits(e1), BitConverter.DoubleToInt64Bits(e0)));
         }
 
-        protected static Vector128<float> MakeVectorE1(double E1)
+        protected static Vector128<float> MakeVectorE1(double e1)
         {
             if (!Sse2.IsSupported)
             {
                 throw new PlatformNotSupportedException();
             }
 
-            return Sse.StaticCast<long, float>(Sse2.SetVector128(BitConverter.DoubleToInt64Bits(E1), 0));
+            return Sse.StaticCast<long, float>(Sse2.SetVector128(BitConverter.DoubleToInt64Bits(e1), 0));
         }
 
-        protected static float VectorExtractSingle(Vector128<float> Vector, byte Index)
+        protected static float VectorExtractSingle(Vector128<float> vector, byte index)
         {
             if (!Sse41.IsSupported)
             {
                 throw new PlatformNotSupportedException();
             }
 
-            int Value = Sse41.Extract(Sse.StaticCast<float, int>(Vector), Index);
+            int value = Sse41.Extract(Sse.StaticCast<float, int>(vector), index);
 
-            return BitConverter.Int32BitsToSingle(Value);
+            return BitConverter.Int32BitsToSingle(value);
         }
 
-        protected static double VectorExtractDouble(Vector128<float> Vector, byte Index)
+        protected static double VectorExtractDouble(Vector128<float> vector, byte index)
         {
             if (!Sse41.IsSupported)
             {
                 throw new PlatformNotSupportedException();
             }
 
-            long Value = Sse41.Extract(Sse.StaticCast<float, long>(Vector), Index);
+            long value = Sse41.Extract(Sse.StaticCast<float, long>(vector), index);
 
-            return BitConverter.Int64BitsToDouble(Value);
+            return BitConverter.Int64BitsToDouble(value);
         }
 
-        protected static Vector128<float> MakeVectorE0(ulong E0)
+        protected static Vector128<float> MakeVectorE0(ulong e0)
         {
             if (!Sse2.IsSupported)
             {
                 throw new PlatformNotSupportedException();
             }
 
-            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, E0));
+            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(0, e0));
         }
 
-        protected static Vector128<float> MakeVectorE0E1(ulong E0, ulong E1)
+        protected static Vector128<float> MakeVectorE0E1(ulong e0, ulong e1)
         {
             if (!Sse2.IsSupported)
             {
                 throw new PlatformNotSupportedException();
             }
 
-            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(E1, E0));
+            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(e1, e0));
         }
 
-        protected static Vector128<float> MakeVectorE1(ulong E1)
+        protected static Vector128<float> MakeVectorE1(ulong e1)
         {
             if (!Sse2.IsSupported)
             {
                 throw new PlatformNotSupportedException();
             }
 
-            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(E1, 0));
+            return Sse.StaticCast<ulong, float>(Sse2.SetVector128(e1, 0));
         }
 
-        protected static ulong GetVectorE0(Vector128<float> Vector)
+        protected static ulong GetVectorE0(Vector128<float> vector)
         {
             if (!Sse41.IsSupported)
             {
                 throw new PlatformNotSupportedException();
             }
 
-            return Sse41.Extract(Sse.StaticCast<float, ulong>(Vector), (byte)0);
+            return Sse41.Extract(Sse.StaticCast<float, ulong>(vector), (byte)0);
         }
 
-        protected static ulong GetVectorE1(Vector128<float> Vector)
+        protected static ulong GetVectorE1(Vector128<float> vector)
         {
             if (!Sse41.IsSupported)
             {
                 throw new PlatformNotSupportedException();
             }
 
-            return Sse41.Extract(Sse.StaticCast<float, ulong>(Vector), (byte)1);
+            return Sse41.Extract(Sse.StaticCast<float, ulong>(vector), (byte)1);
         }
 
-        protected static ushort GenNormal_H()
+        protected static ushort GenNormalH()
         {
-            uint Rnd;
+            uint rnd;
 
-            do       Rnd = TestContext.CurrentContext.Random.NextUShort();
-            while (( Rnd & 0x7C00u) == 0u ||
-                   (~Rnd & 0x7C00u) == 0u);
+            do       rnd = TestContext.CurrentContext.Random.NextUShort();
+            while (( rnd & 0x7C00u) == 0u ||
+                   (~rnd & 0x7C00u) == 0u);
 
-            return (ushort)Rnd;
+            return (ushort)rnd;
         }
 
-        protected static ushort GenSubnormal_H()
+        protected static ushort GenSubnormalH()
         {
-            uint Rnd;
+            uint rnd;
 
-            do      Rnd = TestContext.CurrentContext.Random.NextUShort();
-            while ((Rnd & 0x03FFu) == 0u);
+            do      rnd = TestContext.CurrentContext.Random.NextUShort();
+            while ((rnd & 0x03FFu) == 0u);
 
-            return (ushort)(Rnd & 0x83FFu);
+            return (ushort)(rnd & 0x83FFu);
         }
 
-        protected static uint GenNormal_S()
+        protected static uint GenNormalS()
         {
-            uint Rnd;
+            uint rnd;
 
-            do       Rnd = TestContext.CurrentContext.Random.NextUInt();
-            while (( Rnd & 0x7F800000u) == 0u ||
-                   (~Rnd & 0x7F800000u) == 0u);
+            do       rnd = TestContext.CurrentContext.Random.NextUInt();
+            while (( rnd & 0x7F800000u) == 0u ||
+                   (~rnd & 0x7F800000u) == 0u);
 
-            return Rnd;
+            return rnd;
         }
 
-        protected static uint GenSubnormal_S()
+        protected static uint GenSubnormalS()
         {
-            uint Rnd;
+            uint rnd;
 
-            do      Rnd = TestContext.CurrentContext.Random.NextUInt();
-            while ((Rnd & 0x007FFFFFu) == 0u);
+            do      rnd = TestContext.CurrentContext.Random.NextUInt();
+            while ((rnd & 0x007FFFFFu) == 0u);
 
-            return Rnd & 0x807FFFFFu;
+            return rnd & 0x807FFFFFu;
         }
 
-        protected static ulong GenNormal_D()
+        protected static ulong GenNormalD()
         {
-            ulong Rnd;
+            ulong rnd;
 
-            do       Rnd = TestContext.CurrentContext.Random.NextULong();
-            while (( Rnd & 0x7FF0000000000000ul) == 0ul ||
-                   (~Rnd & 0x7FF0000000000000ul) == 0ul);
+            do       rnd = TestContext.CurrentContext.Random.NextULong();
+            while (( rnd & 0x7FF0000000000000ul) == 0ul ||
+                   (~rnd & 0x7FF0000000000000ul) == 0ul);
 
-            return Rnd;
+            return rnd;
         }
 
-        protected static ulong GenSubnormal_D()
+        protected static ulong GenSubnormalD()
         {
-            ulong Rnd;
+            ulong rnd;
 
-            do      Rnd = TestContext.CurrentContext.Random.NextULong();
-            while ((Rnd & 0x000FFFFFFFFFFFFFul) == 0ul);
+            do      rnd = TestContext.CurrentContext.Random.NextULong();
+            while ((rnd & 0x000FFFFFFFFFFFFFul) == 0ul);
 
-            return Rnd & 0x800FFFFFFFFFFFFFul;
+            return rnd & 0x800FFFFFFFFFFFFFul;
         }
     }
 }

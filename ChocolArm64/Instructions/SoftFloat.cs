@@ -67,9 +67,9 @@ namespace ChocolArm64.Instructions
 
         public static double RecipEstimate(double x)
         {
-            ulong xBits = (ulong)BitConverter.DoubleToInt64Bits(x);
-            ulong xSign = xBits & 0x8000000000000000;
-            ulong xExp = (xBits >> 52) & 0x7FF;
+            ulong xBits  = (ulong)BitConverter.DoubleToInt64Bits(x);
+            ulong xSign  = xBits & 0x8000000000000000;
+            ulong xExp   = (xBits >> 52) & 0x7FF;
             ulong scaled = xBits & ((1ul << 52) - 1);
 
             if (xExp >= 2045)
@@ -108,8 +108,8 @@ namespace ChocolArm64.Instructions
             scaled &= 0xFF;
 
             ulong resultExp = (2045 - xExp) & 0x7FF;
-            ulong estimate = (ulong)RecipEstimateTable[scaled];
-            ulong fraction = estimate << 44;
+            ulong estimate  = (ulong)RecipEstimateTable[scaled];
+            ulong fraction  = estimate << 44;
 
             if (resultExp == 0)
             {
@@ -135,9 +135,9 @@ namespace ChocolArm64.Instructions
 
         public static double InvSqrtEstimate(double x)
         {
-            ulong xBits = (ulong)BitConverter.DoubleToInt64Bits(x);
-            ulong xSign = xBits & 0x8000000000000000;
-            long xExp = (long)((xBits >> 52) & 0x7FF);
+            ulong xBits  = (ulong)BitConverter.DoubleToInt64Bits(x);
+            ulong xSign  = xBits & 0x8000000000000000;
+            long  xExp   = (long)((xBits >> 52) & 0x7FF);
             ulong scaled = xBits & ((1ul << 52) - 1);
 
             if (xExp == 0x7FF && scaled != 0)
@@ -189,19 +189,19 @@ namespace ChocolArm64.Instructions
             }
 
             ulong resultExp = ((ulong)(3068 - xExp) / 2) & 0x7FF;
-            ulong estimate = (ulong)InvSqrtEstimateTable[scaled];
-            ulong fraction = estimate << 44;
+            ulong estimate  = (ulong)InvSqrtEstimateTable[scaled];
+            ulong fraction  = estimate << 44;
 
             ulong result = xSign | (resultExp << 52) | fraction;
             return BitConverter.Int64BitsToDouble((long)result);
         }
     }
 
-    static class SoftFloat1632
+    static class SoftFloat16_32
     {
         public static float FPConvert(ushort valueBits, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat16_32.FPConvert: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat16_32.FPConvert: state.Fpcr = 0x{state.Fpcr:X8}");
 
             double real = valueBits.FPUnpackCv(out FpType type, out bool sign, state);
 
@@ -259,7 +259,11 @@ namespace ChocolArm64.Instructions
             return sign ? float.MinValue : float.MaxValue;
         }
 
-        private static double FPUnpackCv(this ushort valueBits, out FpType type, out bool sign, CpuThreadState state)
+        private static double FPUnpackCv(
+            this ushort valueBits,
+            out FpType type,
+            out bool sign,
+            CpuThreadState state)
         {
             sign = (~(uint)valueBits & 0x8000u) == 0u;
 
@@ -439,7 +443,7 @@ namespace ChocolArm64.Instructions
 
             if ((state.Fpcr & (1 << enable)) != 0)
             {
-                throw new NotImplementedException("floating-point trap handling");
+                throw new NotImplementedException("Floating-point trap handling.");
             }
             else
             {
@@ -448,13 +452,13 @@ namespace ChocolArm64.Instructions
         }
     }
 
-    static class SoftFloat3216
+    static class SoftFloat32_16
     {
         public static ushort FPConvert(float value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat32_16.FPConvert: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32_16.FPConvert: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            double real = value.FPUnpackCv(out FpType type, out bool sign, state, out uint valueBits);
+            double real = value.FPUnpackCv(out FpType type, out bool sign, out uint valueBits, state);
 
             bool altHp = state.GetFpcrFlag(Fpcr.Ahp);
 
@@ -525,7 +529,12 @@ namespace ChocolArm64.Instructions
             return sign ? (ushort)0xFBFFu : (ushort)0x7BFFu;
         }
 
-        private static double FPUnpackCv(this float value, out FpType type, out bool sign, CpuThreadState state, out uint valueBits)
+        private static double FPUnpackCv(
+            this float value,
+            out FpType type,
+            out bool sign,
+            out uint valueBits,
+            CpuThreadState state)
         {
             valueBits = (uint)BitConverter.SingleToInt32Bits(value);
 
@@ -543,7 +552,10 @@ namespace ChocolArm64.Instructions
                     type = FpType.Zero;
                     real = 0d;
 
-                    if (frac32 != 0u) FPProcessException(FpExc.InputDenorm, state);
+                    if (frac32 != 0u)
+                    {
+                        FPProcessException(FpExc.InputDenorm, state);
+                    }
                 }
                 else
                 {
@@ -718,7 +730,7 @@ namespace ChocolArm64.Instructions
 
             if ((state.Fpcr & (1 << enable)) != 0)
             {
-                throw new NotImplementedException("floating-point trap handling");
+                throw new NotImplementedException("Floating-point trap handling.");
             }
             else
             {
@@ -731,12 +743,12 @@ namespace ChocolArm64.Instructions
     {
         public static float FPAdd(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_32.FPAdd: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPAdd: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
 
-            float result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            float result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -764,6 +776,13 @@ namespace ChocolArm64.Instructions
                 else
                 {
                     result = value1 + value2;
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && float.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0f);
+                    }
                 }
             }
 
@@ -772,12 +791,12 @@ namespace ChocolArm64.Instructions
 
         public static float FPDiv(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_32.FPDiv: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPDiv: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
 
-            float result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            float result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -794,7 +813,10 @@ namespace ChocolArm64.Instructions
                 {
                     result = FPInfinity(sign1 ^ sign2);
 
-                    if (!inf1) FPProcessException(FpExc.DivideByZero, state);
+                    if (!inf1)
+                    {
+                        FPProcessException(FpExc.DivideByZero, state);
+                    }
                 }
                 else if (zero1 || inf2)
                 {
@@ -803,6 +825,13 @@ namespace ChocolArm64.Instructions
                 else
                 {
                     result = value1 / value2;
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && float.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0f);
+                    }
                 }
             }
 
@@ -811,12 +840,12 @@ namespace ChocolArm64.Instructions
 
         public static float FPMax(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_32.FPMax: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMax: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
 
-            float result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            float result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -848,6 +877,13 @@ namespace ChocolArm64.Instructions
                     else
                     {
                         result = value2;
+
+                        if (state.GetFpcrFlag(Fpcr.Fz) && float.IsSubnormal(result))
+                        {
+                            state.SetFpsrFlag(Fpsr.Ufc);
+
+                            result = FPZero(result < 0f);
+                        }
                     }
                 }
             }
@@ -857,10 +893,10 @@ namespace ChocolArm64.Instructions
 
         public static float FPMaxNum(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteIf(state.Fpcr != 0, "ASoftFloat_32.FPMaxNum: ");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMaxNum: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1.FPUnpack(out FpType type1, out _, out _);
-            value2.FPUnpack(out FpType type2, out _, out _);
+            value1.FPUnpack(out FpType type1, out _, out _, state);
+            value2.FPUnpack(out FpType type2, out _, out _, state);
 
             if (type1 == FpType.QNaN && type2 != FpType.QNaN)
             {
@@ -876,12 +912,12 @@ namespace ChocolArm64.Instructions
 
         public static float FPMin(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_32.FPMin: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMin: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
 
-            float result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            float result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -913,6 +949,13 @@ namespace ChocolArm64.Instructions
                     else
                     {
                         result = value2;
+
+                        if (state.GetFpcrFlag(Fpcr.Fz) && float.IsSubnormal(result))
+                        {
+                            state.SetFpsrFlag(Fpsr.Ufc);
+
+                            result = FPZero(result < 0f);
+                        }
                     }
                 }
             }
@@ -922,10 +965,10 @@ namespace ChocolArm64.Instructions
 
         public static float FPMinNum(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteIf(state.Fpcr != 0, "ASoftFloat_32.FPMinNum: ");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMinNum: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1.FPUnpack(out FpType type1, out _, out _);
-            value2.FPUnpack(out FpType type2, out _, out _);
+            value1.FPUnpack(out FpType type1, out _, out _, state);
+            value2.FPUnpack(out FpType type2, out _, out _, state);
 
             if (type1 == FpType.QNaN && type2 != FpType.QNaN)
             {
@@ -941,12 +984,12 @@ namespace ChocolArm64.Instructions
 
         public static float FPMul(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_32.FPMul: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMul: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
 
-            float result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            float result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -970,24 +1013,35 @@ namespace ChocolArm64.Instructions
                 else
                 {
                     result = value1 * value2;
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && float.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0f);
+                    }
                 }
             }
 
             return result;
         }
 
-        public static float FPMulAdd(float valueA, float value1, float value2, CpuThreadState state)
+        public static float FPMulAdd(
+            float valueA,
+            float value1,
+            float value2,
+            CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_32.FPMulAdd: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMulAdd: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            valueA = valueA.FPUnpack(out FpType typeA, out bool signA, out uint addend);
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2);
+            valueA = valueA.FPUnpack(out FpType typeA, out bool signA, out uint addend, state);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1,    state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2,    state);
 
             bool inf1 = type1 == FpType.Infinity; bool zero1 = type1 == FpType.Zero;
             bool inf2 = type2 == FpType.Infinity; bool zero2 = type2 == FpType.Zero;
 
-            float result = FPProcessNaNs3(typeA, type1, type2, addend, op1, op2, state, out bool done);
+            float result = FPProcessNaNs3(typeA, type1, type2, addend, op1, op2, out bool done, state);
 
             if (typeA == FpType.QNaN && ((inf1 && zero2) || (zero1 && inf2)))
             {
@@ -1028,6 +1082,13 @@ namespace ChocolArm64.Instructions
                     // https://github.com/dotnet/corefx/issues/31903
 
                     result = valueA + (value1 * value2);
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && float.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0f);
+                    }
                 }
             }
 
@@ -1035,9 +1096,13 @@ namespace ChocolArm64.Instructions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float FPMulSub(float valueA, float value1, float value2, CpuThreadState state)
+        public static float FPMulSub(
+            float valueA,
+            float value1,
+            float value2,
+            CpuThreadState state)
         {
-            Debug.WriteIf(state.Fpcr != 0, "ASoftFloat_32.FPMulSub: ");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMulSub: state.Fpcr = 0x{state.Fpcr:X8}");
 
             value1 = value1.FPNeg();
 
@@ -1046,12 +1111,12 @@ namespace ChocolArm64.Instructions
 
         public static float FPMulX(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_32.FPMulX: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMulX: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
 
-            float result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            float result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1073,6 +1138,13 @@ namespace ChocolArm64.Instructions
                 else
                 {
                     result = value1 * value2;
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && float.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0f);
+                    }
                 }
             }
 
@@ -1081,14 +1153,14 @@ namespace ChocolArm64.Instructions
 
         public static float FPRecipStepFused(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_32.FPRecipStepFused: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPRecipStepFused: state.Fpcr = 0x{state.Fpcr:X8}");
 
             value1 = value1.FPNeg();
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
 
-            float result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            float result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1109,6 +1181,13 @@ namespace ChocolArm64.Instructions
                     // https://github.com/dotnet/corefx/issues/31903
 
                     result = 2f + (value1 * value2);
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && float.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0f);
+                    }
                 }
             }
 
@@ -1117,9 +1196,9 @@ namespace ChocolArm64.Instructions
 
         public static float FPRecpX(float value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_32.FPRecpX: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPRecpX: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value.FPUnpack(out FpType type, out bool sign, out uint op);
+            value.FPUnpack(out FpType type, out bool sign, out uint op, state);
 
             float result;
 
@@ -1139,16 +1218,16 @@ namespace ChocolArm64.Instructions
             return result;
         }
 
-        public static float FprSqrtStepFused(float value1, float value2, CpuThreadState state)
+        public static float FPRSqrtStepFused(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_32.FPRSqrtStepFused: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPRSqrtStepFused: state.Fpcr = 0x{state.Fpcr:X8}");
 
             value1 = value1.FPNeg();
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
 
-            float result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            float result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1169,6 +1248,13 @@ namespace ChocolArm64.Instructions
                     // https://github.com/dotnet/corefx/issues/31903
 
                     result = (3f + (value1 * value2)) / 2f;
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && float.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0f);
+                    }
                 }
             }
 
@@ -1177,9 +1263,9 @@ namespace ChocolArm64.Instructions
 
         public static float FPSqrt(float value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_32.FPSqrt: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPSqrt: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value = value.FPUnpack(out FpType type, out bool sign, out uint op);
+            value = value.FPUnpack(out FpType type, out bool sign, out uint op, state);
 
             float result;
 
@@ -1204,6 +1290,13 @@ namespace ChocolArm64.Instructions
             else
             {
                 result = MathF.Sqrt(value);
+
+                if (state.GetFpcrFlag(Fpcr.Fz) && float.IsSubnormal(result))
+                {
+                    state.SetFpsrFlag(Fpsr.Ufc);
+
+                    result = FPZero(result < 0f);
+                }
             }
 
             return result;
@@ -1211,12 +1304,12 @@ namespace ChocolArm64.Instructions
 
         public static float FPSub(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_32.FPSub: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPSub: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
 
-            float result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            float result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1244,6 +1337,13 @@ namespace ChocolArm64.Instructions
                 else
                 {
                     result = value1 - value2;
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && float.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0f);
+                    }
                 }
             }
 
@@ -1280,7 +1380,12 @@ namespace ChocolArm64.Instructions
             return -value;
         }
 
-        private static float FPUnpack(this float value, out FpType type, out bool sign, out uint valueBits)
+        private static float FPUnpack(
+            this float value,
+            out FpType type,
+            out bool sign,
+            out uint valueBits,
+            CpuThreadState state)
         {
             valueBits = (uint)BitConverter.SingleToInt32Bits(value);
 
@@ -1288,9 +1393,15 @@ namespace ChocolArm64.Instructions
 
             if ((valueBits & 0x7F800000u) == 0u)
             {
-                if ((valueBits & 0x007FFFFFu) == 0u)
+                if ((valueBits & 0x007FFFFFu) == 0u || state.GetFpcrFlag(Fpcr.Fz))
                 {
-                    type = FpType.Zero;
+                    type  = FpType.Zero;
+                    value = FPZero(sign);
+
+                    if ((valueBits & 0x007FFFFFu) != 0u)
+                    {
+                        FPProcessException(FpExc.InputDenorm, state);
+                    }
                 }
                 else
                 {
@@ -1305,11 +1416,8 @@ namespace ChocolArm64.Instructions
                 }
                 else
                 {
-                    type = (~valueBits & 0x00400000u) == 0u
-                        ? FpType.QNaN
-                        : FpType.SNaN;
-
-                    return FPZero(sign);
+                    type  = (~valueBits & 0x00400000u) == 0u ? FpType.QNaN : FpType.SNaN;
+                    value = FPZero(sign);
                 }
             }
             else
@@ -1325,8 +1433,8 @@ namespace ChocolArm64.Instructions
             FpType type2,
             uint op1,
             uint op2,
-            CpuThreadState state,
-            out bool done)
+            out bool done,
+            CpuThreadState state)
         {
             done = true;
 
@@ -1359,8 +1467,8 @@ namespace ChocolArm64.Instructions
             uint op1,
             uint op2,
             uint op3,
-            CpuThreadState state,
-            out bool done)
+            out bool done,
+            CpuThreadState state)
         {
             done = true;
 
@@ -1417,7 +1525,7 @@ namespace ChocolArm64.Instructions
 
             if ((state.Fpcr & (1 << enable)) != 0)
             {
-                throw new NotImplementedException("floating-point trap handling");
+                throw new NotImplementedException("Floating-point trap handling.");
             }
             else
             {
@@ -1430,12 +1538,12 @@ namespace ChocolArm64.Instructions
     {
         public static double FPAdd(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_64.FPAdd: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPAdd: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
 
-            double result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            double result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1463,6 +1571,13 @@ namespace ChocolArm64.Instructions
                 else
                 {
                     result = value1 + value2;
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && double.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0d);
+                    }
                 }
             }
 
@@ -1471,12 +1586,12 @@ namespace ChocolArm64.Instructions
 
         public static double FPDiv(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_64.FPDiv: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPDiv: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
 
-            double result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            double result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1493,7 +1608,10 @@ namespace ChocolArm64.Instructions
                 {
                     result = FPInfinity(sign1 ^ sign2);
 
-                    if (!inf1) FPProcessException(FpExc.DivideByZero, state);
+                    if (!inf1)
+                    {
+                        FPProcessException(FpExc.DivideByZero, state);
+                    }
                 }
                 else if (zero1 || inf2)
                 {
@@ -1502,6 +1620,13 @@ namespace ChocolArm64.Instructions
                 else
                 {
                     result = value1 / value2;
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && double.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0d);
+                    }
                 }
             }
 
@@ -1510,12 +1635,12 @@ namespace ChocolArm64.Instructions
 
         public static double FPMax(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_64.FPMax: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMax: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
 
-            double result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            double result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1547,6 +1672,13 @@ namespace ChocolArm64.Instructions
                     else
                     {
                         result = value2;
+
+                        if (state.GetFpcrFlag(Fpcr.Fz) && double.IsSubnormal(result))
+                        {
+                            state.SetFpsrFlag(Fpsr.Ufc);
+
+                            result = FPZero(result < 0d);
+                        }
                     }
                 }
             }
@@ -1556,10 +1688,10 @@ namespace ChocolArm64.Instructions
 
         public static double FPMaxNum(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteIf(state.Fpcr != 0, "ASoftFloat_64.FPMaxNum: ");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMaxNum: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1.FPUnpack(out FpType type1, out _, out _);
-            value2.FPUnpack(out FpType type2, out _, out _);
+            value1.FPUnpack(out FpType type1, out _, out _, state);
+            value2.FPUnpack(out FpType type2, out _, out _, state);
 
             if (type1 == FpType.QNaN && type2 != FpType.QNaN)
             {
@@ -1575,12 +1707,12 @@ namespace ChocolArm64.Instructions
 
         public static double FPMin(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_64.FPMin: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMin: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
 
-            double result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            double result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1612,6 +1744,13 @@ namespace ChocolArm64.Instructions
                     else
                     {
                         result = value2;
+
+                        if (state.GetFpcrFlag(Fpcr.Fz) && double.IsSubnormal(result))
+                        {
+                            state.SetFpsrFlag(Fpsr.Ufc);
+
+                            result = FPZero(result < 0d);
+                        }
                     }
                 }
             }
@@ -1621,10 +1760,10 @@ namespace ChocolArm64.Instructions
 
         public static double FPMinNum(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteIf(state.Fpcr != 0, "ASoftFloat_64.FPMinNum: ");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMinNum: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1.FPUnpack(out FpType type1, out _, out _);
-            value2.FPUnpack(out FpType type2, out _, out _);
+            value1.FPUnpack(out FpType type1, out _, out _, state);
+            value2.FPUnpack(out FpType type2, out _, out _, state);
 
             if (type1 == FpType.QNaN && type2 != FpType.QNaN)
             {
@@ -1640,12 +1779,12 @@ namespace ChocolArm64.Instructions
 
         public static double FPMul(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_64.FPMul: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMul: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
 
-            double result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            double result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1669,24 +1808,35 @@ namespace ChocolArm64.Instructions
                 else
                 {
                     result = value1 * value2;
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && double.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0d);
+                    }
                 }
             }
 
             return result;
         }
 
-        public static double FPMulAdd(double valueA, double value1, double value2, CpuThreadState state)
+        public static double FPMulAdd(
+            double valueA,
+            double value1,
+            double value2,
+            CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_64.FPMulAdd: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMulAdd: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            valueA = valueA.FPUnpack(out FpType typeA, out bool signA, out ulong addend);
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2);
+            valueA = valueA.FPUnpack(out FpType typeA, out bool signA, out ulong addend, state);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1,    state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2,    state);
 
             bool inf1 = type1 == FpType.Infinity; bool zero1 = type1 == FpType.Zero;
             bool inf2 = type2 == FpType.Infinity; bool zero2 = type2 == FpType.Zero;
 
-            double result = FPProcessNaNs3(typeA, type1, type2, addend, op1, op2, state, out bool done);
+            double result = FPProcessNaNs3(typeA, type1, type2, addend, op1, op2, out bool done, state);
 
             if (typeA == FpType.QNaN && ((inf1 && zero2) || (zero1 && inf2)))
             {
@@ -1727,6 +1877,13 @@ namespace ChocolArm64.Instructions
                     // https://github.com/dotnet/corefx/issues/31903
 
                     result = valueA + (value1 * value2);
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && double.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0d);
+                    }
                 }
             }
 
@@ -1734,9 +1891,13 @@ namespace ChocolArm64.Instructions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double FPMulSub(double valueA, double value1, double value2, CpuThreadState state)
+        public static double FPMulSub(
+            double valueA,
+            double value1,
+            double value2,
+            CpuThreadState state)
         {
-            Debug.WriteIf(state.Fpcr != 0, "ASoftFloat_64.FPMulSub: ");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMulSub: state.Fpcr = 0x{state.Fpcr:X8}");
 
             value1 = value1.FPNeg();
 
@@ -1745,12 +1906,12 @@ namespace ChocolArm64.Instructions
 
         public static double FPMulX(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_64.FPMulX: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMulX: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
 
-            double result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            double result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1772,6 +1933,13 @@ namespace ChocolArm64.Instructions
                 else
                 {
                     result = value1 * value2;
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && double.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0d);
+                    }
                 }
             }
 
@@ -1780,14 +1948,14 @@ namespace ChocolArm64.Instructions
 
         public static double FPRecipStepFused(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_64.FPRecipStepFused: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPRecipStepFused: state.Fpcr = 0x{state.Fpcr:X8}");
 
             value1 = value1.FPNeg();
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
 
-            double result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            double result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1808,6 +1976,13 @@ namespace ChocolArm64.Instructions
                     // https://github.com/dotnet/corefx/issues/31903
 
                     result = 2d + (value1 * value2);
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && double.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0d);
+                    }
                 }
             }
 
@@ -1816,9 +1991,9 @@ namespace ChocolArm64.Instructions
 
         public static double FPRecpX(double value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_64.FPRecpX: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPRecpX: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value.FPUnpack(out FpType type, out bool sign, out ulong op);
+            value.FPUnpack(out FpType type, out bool sign, out ulong op, state);
 
             double result;
 
@@ -1838,16 +2013,16 @@ namespace ChocolArm64.Instructions
             return result;
         }
 
-        public static double FprSqrtStepFused(double value1, double value2, CpuThreadState state)
+        public static double FPRSqrtStepFused(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_64.FPRSqrtStepFused: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPRSqrtStepFused: state.Fpcr = 0x{state.Fpcr:X8}");
 
             value1 = value1.FPNeg();
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
 
-            double result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            double result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1868,6 +2043,13 @@ namespace ChocolArm64.Instructions
                     // https://github.com/dotnet/corefx/issues/31903
 
                     result = (3d + (value1 * value2)) / 2d;
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && double.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0d);
+                    }
                 }
             }
 
@@ -1876,9 +2058,9 @@ namespace ChocolArm64.Instructions
 
         public static double FPSqrt(double value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_64.FPSqrt: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPSqrt: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value = value.FPUnpack(out FpType type, out bool sign, out ulong op);
+            value = value.FPUnpack(out FpType type, out bool sign, out ulong op, state);
 
             double result;
 
@@ -1903,6 +2085,13 @@ namespace ChocolArm64.Instructions
             else
             {
                 result = Math.Sqrt(value);
+
+                if (state.GetFpcrFlag(Fpcr.Fz) && double.IsSubnormal(result))
+                {
+                    state.SetFpsrFlag(Fpsr.Ufc);
+
+                    result = FPZero(result < 0d);
+                }
             }
 
             return result;
@@ -1910,12 +2099,12 @@ namespace ChocolArm64.Instructions
 
         public static double FPSub(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"ASoftFloat_64.FPSub: State.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPSub: state.Fpcr = 0x{state.Fpcr:X8}");
 
-            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1);
-            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2);
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
 
-            double result = FPProcessNaNs(type1, type2, op1, op2, state, out bool done);
+            double result = FPProcessNaNs(type1, type2, op1, op2, out bool done, state);
 
             if (!done)
             {
@@ -1943,6 +2132,13 @@ namespace ChocolArm64.Instructions
                 else
                 {
                     result = value1 - value2;
+
+                    if (state.GetFpcrFlag(Fpcr.Fz) && double.IsSubnormal(result))
+                    {
+                        state.SetFpsrFlag(Fpsr.Ufc);
+
+                        result = FPZero(result < 0d);
+                    }
                 }
             }
 
@@ -1979,7 +2175,12 @@ namespace ChocolArm64.Instructions
             return -value;
         }
 
-        private static double FPUnpack(this double value, out FpType type, out bool sign, out ulong valueBits)
+        private static double FPUnpack(
+            this double value,
+            out FpType type,
+            out bool sign,
+            out ulong valueBits,
+            CpuThreadState state)
         {
             valueBits = (ulong)BitConverter.DoubleToInt64Bits(value);
 
@@ -1987,9 +2188,15 @@ namespace ChocolArm64.Instructions
 
             if ((valueBits & 0x7FF0000000000000ul) == 0ul)
             {
-                if ((valueBits & 0x000FFFFFFFFFFFFFul) == 0ul)
+                if ((valueBits & 0x000FFFFFFFFFFFFFul) == 0ul || state.GetFpcrFlag(Fpcr.Fz))
                 {
-                    type = FpType.Zero;
+                    type  = FpType.Zero;
+                    value = FPZero(sign);
+
+                    if ((valueBits & 0x000FFFFFFFFFFFFFul) != 0ul)
+                    {
+                        FPProcessException(FpExc.InputDenorm, state);
+                    }
                 }
                 else
                 {
@@ -2004,11 +2211,8 @@ namespace ChocolArm64.Instructions
                 }
                 else
                 {
-                    type = (~valueBits & 0x0008000000000000ul) == 0ul
-                        ? FpType.QNaN
-                        : FpType.SNaN;
-
-                    return FPZero(sign);
+                    type  = (~valueBits & 0x0008000000000000ul) == 0ul ? FpType.QNaN : FpType.SNaN;
+                    value = FPZero(sign);
                 }
             }
             else
@@ -2024,8 +2228,8 @@ namespace ChocolArm64.Instructions
             FpType type2,
             ulong op1,
             ulong op2,
-            CpuThreadState state,
-            out bool done)
+            out bool done,
+            CpuThreadState state)
         {
             done = true;
 
@@ -2058,8 +2262,8 @@ namespace ChocolArm64.Instructions
             ulong op1,
             ulong op2,
             ulong op3,
-            CpuThreadState state,
-            out bool done)
+            out bool done,
+            CpuThreadState state)
         {
             done = true;
 
@@ -2116,7 +2320,7 @@ namespace ChocolArm64.Instructions
 
             if ((state.Fpcr & (1 << enable)) != 0)
             {
-                throw new NotImplementedException("floating-point trap handling");
+                throw new NotImplementedException("Floating-point trap handling.");
             }
             else
             {

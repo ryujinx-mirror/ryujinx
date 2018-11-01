@@ -1,14 +1,12 @@
 #define SimdRegElem
 
-using ChocolArm64.State;
-
 using NUnit.Framework;
 
 using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Tests.Cpu
 {
-    [Category("SimdRegElem")] // Tested: second half of 2018.
+    [Category("SimdRegElem")]
     public sealed class CpuTestSimdRegElem : CpuTest
     {
 #if SimdRegElem
@@ -52,56 +50,56 @@ namespace Ryujinx.Tests.Cpu
         private const int RndCnt = 2;
 
         [Test, Pairwise]
-        public void Mla_Mls_Mul_Ve_4H_8H([ValueSource("_Mla_Mls_Mul_Ve_4H_8H_")] uint Opcodes,
-                                         [Values(0u)]     uint Rd,
-                                         [Values(1u, 0u)] uint Rn,
-                                         [Values(2u, 0u)] uint Rm,
-                                         [ValueSource("_4H_")] [Random(RndCnt)] ulong Z,
-                                         [ValueSource("_4H_")] [Random(RndCnt)] ulong A,
-                                         [ValueSource("_4H_")] [Random(RndCnt)] ulong B,
-                                         [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint Index,
-                                         [Values(0b0u, 0b1u)] uint Q) // <4H, 8H>
+        public void Mla_Mls_Mul_Ve_4H_8H([ValueSource("_Mla_Mls_Mul_Ve_4H_8H_")] uint opcodes,
+                                         [Values(0u)]     uint rd,
+                                         [Values(1u, 0u)] uint rn,
+                                         [Values(2u, 0u)] uint rm,
+                                         [ValueSource("_4H_")] [Random(RndCnt)] ulong z,
+                                         [ValueSource("_4H_")] [Random(RndCnt)] ulong a,
+                                         [ValueSource("_4H_")] [Random(RndCnt)] ulong b,
+                                         [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint index,
+                                         [Values(0b0u, 0b1u)] uint q) // <4H, 8H>
         {
-            uint H = (Index >> 2) & 1;
-            uint L = (Index >> 1) & 1;
-            uint M = Index & 1;
+            uint h = (index >> 2) & 1;
+            uint l = (index >> 1) & 1;
+            uint m = index & 1;
 
-            Opcodes |= ((Rm & 15) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcodes |= (L << 21) | (M << 20) | (H << 11);
-            Opcodes |= ((Q & 1) << 30);
+            opcodes |= ((rm & 15) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (l << 21) | (m << 20) | (h << 11);
+            opcodes |= ((q & 1) << 30);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
-            Vector128<float> V2 = MakeVectorE0E1(B, B * H);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2);
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise]
-        public void Mla_Mls_Mul_Ve_2S_4S([ValueSource("_Mla_Mls_Mul_Ve_2S_4S_")] uint Opcodes,
-                                         [Values(0u)]     uint Rd,
-                                         [Values(1u, 0u)] uint Rn,
-                                         [Values(2u, 0u)] uint Rm,
-                                         [ValueSource("_2S_")] [Random(RndCnt)] ulong Z,
-                                         [ValueSource("_2S_")] [Random(RndCnt)] ulong A,
-                                         [ValueSource("_2S_")] [Random(RndCnt)] ulong B,
-                                         [Values(0u, 1u, 2u, 3u)] uint Index,
-                                         [Values(0b0u, 0b1u)] uint Q) // <2S, 4S>
+        public void Mla_Mls_Mul_Ve_2S_4S([ValueSource("_Mla_Mls_Mul_Ve_2S_4S_")] uint opcodes,
+                                         [Values(0u)]     uint rd,
+                                         [Values(1u, 0u)] uint rn,
+                                         [Values(2u, 0u)] uint rm,
+                                         [ValueSource("_2S_")] [Random(RndCnt)] ulong z,
+                                         [ValueSource("_2S_")] [Random(RndCnt)] ulong a,
+                                         [ValueSource("_2S_")] [Random(RndCnt)] ulong b,
+                                         [Values(0u, 1u, 2u, 3u)] uint index,
+                                         [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
-            uint H = (Index >> 1) & 1;
-            uint L = Index & 1;
+            uint h = (index >> 1) & 1;
+            uint l = index & 1;
 
-            Opcodes |= ((Rm & 15) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcodes |= (L << 21) | (H << 11);
-            Opcodes |= ((Q & 1) << 30);
+            opcodes |= ((rm & 15) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (l << 21) | (h << 11);
+            opcodes |= ((q & 1) << 30);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
-            Vector128<float> V2 = MakeVectorE0E1(B, B * H);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2);
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
 
             CompareAgainstUnicorn();
         }

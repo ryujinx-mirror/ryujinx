@@ -185,10 +185,10 @@ namespace ChocolArm64.Instructions
             {
                 int idx = columns << 2;
 
-                byte row0 = inState[idx + 0]; // A, E, I, M: [Row0, Col0-Col3]
-                byte row1 = inState[idx + 1]; // B, F, J, N: [Row1, Col0-Col3]
-                byte row2 = inState[idx + 2]; // C, G, K, O: [Row2, Col0-Col3]
-                byte row3 = inState[idx + 3]; // D, H, L, P: [Row3, Col0-Col3]
+                byte row0 = inState[idx + 0]; // A, E, I, M: [row0, col0-col3]
+                byte row1 = inState[idx + 1]; // B, F, J, N: [row1, col0-col3]
+                byte row2 = inState[idx + 2]; // C, G, K, O: [row2, col0-col3]
+                byte row3 = inState[idx + 3]; // D, H, L, P: [row3, col0-col3]
 
                 outState[idx + 0] = (byte)((uint)_gfMul0E[row0] ^ _gfMul0B[row1] ^ _gfMul0D[row2] ^ _gfMul09[row3]);
                 outState[idx + 1] = (byte)((uint)_gfMul09[row0] ^ _gfMul0E[row1] ^ _gfMul0B[row2] ^ _gfMul0D[row3]);
@@ -246,10 +246,10 @@ namespace ChocolArm64.Instructions
             {
                 int idx = columns << 2;
 
-                byte row0 = inState[idx + 0]; // A, E, I, M: [Row0, Col0-Col3]
-                byte row1 = inState[idx + 1]; // B, F, J, N: [Row1, Col0-Col3]
-                byte row2 = inState[idx + 2]; // C, G, K, O: [Row2, Col0-Col3]
-                byte row3 = inState[idx + 3]; // D, H, L, P: [Row3, Col0-Col3]
+                byte row0 = inState[idx + 0]; // A, E, I, M: [row0, col0-col3]
+                byte row1 = inState[idx + 1]; // B, F, J, N: [row1, col0-col3]
+                byte row2 = inState[idx + 2]; // C, G, K, O: [row2, col0-col3]
+                byte row3 = inState[idx + 3]; // D, H, L, P: [row3, col0-col3]
 
                 outState[idx + 0] = (byte)((uint)_gfMul02[row0] ^ _gfMul03[row1] ^ row2 ^ row3);
                 outState[idx + 1] = (byte)((uint)row0 ^ _gfMul02[row1] ^ _gfMul03[row2] ^ row3);

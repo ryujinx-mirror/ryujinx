@@ -1,14 +1,12 @@
 #define SimdIns
 
-using ChocolArm64.State;
-
 using NUnit.Framework;
 
 using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Tests.Cpu
 {
-    [Category("SimdIns")] // Tested: second half of 2018.
+    [Category("SimdIns")]
     public sealed class CpuTestSimdIns : CpuTest
     {
 #if SimdIns
@@ -54,125 +52,125 @@ namespace Ryujinx.Tests.Cpu
         private const int RndCnt = 2;
 
         [Test, Pairwise, Description("DUP <Vd>.<T>, <R><n>")]
-        public void Dup_Gp_W([Values(0u)]      uint Rd,
-                             [Values(1u, 31u)] uint Rn,
-                             [ValueSource("_W_")] [Random(RndCnt)] uint Wn,
-                             [Values(0, 1, 2)] int Size,  // Q0: <8B,  4H, 2S>
-                             [Values(0b0u, 0b1u)] uint Q) // Q1: <16B, 8H, 4S>
+        public void Dup_Gp_W([Values(0u)]      uint rd,
+                             [Values(1u, 31u)] uint rn,
+                             [ValueSource("_W_")] [Random(RndCnt)] uint wn,
+                             [Values(0, 1, 2)] int size,  // Q0: <8B,  4H, 2S>
+                             [Values(0b0u, 0b1u)] uint q) // Q1: <16B, 8H, 4S>
         {
-            uint Imm5 = (1u << Size) & 0x1Fu;
+            uint imm5 = (1u << size) & 0x1Fu;
 
-            uint Opcode = 0x0E000C00; // RESERVED
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= (Imm5 << 16);
-            Opcode |= ((Q & 1) << 30);
+            uint opcode = 0x0E000C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+            opcode |= ((q & 1) << 30);
 
-            ulong Z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Wn, V0: V0);
+            SingleOpcode(opcode, x1: wn, v0: v0);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("DUP <Vd>.<T>, <R><n>")]
-        public void Dup_Gp_X([Values(0u)]      uint Rd,
-                             [Values(1u, 31u)] uint Rn,
-                             [ValueSource("_X_")] [Random(RndCnt)] ulong Xn)
+        public void Dup_Gp_X([Values(0u)]      uint rd,
+                             [Values(1u, 31u)] uint rn,
+                             [ValueSource("_X_")] [Random(RndCnt)] ulong xn)
         {
-            uint Opcode = 0x4E080C00; // DUP V0.2D, X0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x4E080C00; // DUP V0.2D, X0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            ulong Z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, X1: Xn, V0: V0);
+            SingleOpcode(opcode, x1: xn, v0: v0);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("SMOV <Wd>, <Vn>.<Ts>[<index>]")]
-        public void Smov_S_W([Values(0u, 31u)] uint Rd,
-                             [Values(1u)]      uint Rn,
-                             [ValueSource("_8B4H_")] [Random(RndCnt)] ulong A,
-                             [Values(0, 1)] int Size, // <B, H>
-                             [Values(0u, 1u, 2u, 3u)] uint Index)
+        public void Smov_S_W([Values(0u, 31u)] uint rd,
+                             [Values(1u)]      uint rn,
+                             [ValueSource("_8B4H_")] [Random(RndCnt)] ulong a,
+                             [Values(0, 1)] int size, // <B, H>
+                             [Values(0u, 1u, 2u, 3u)] uint index)
         {
-            uint Imm5 = (Index << (Size + 1) | 1u << Size) & 0x1Fu;
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
 
-            uint Opcode = 0x0E002C00; // RESERVED
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= (Imm5 << 16);
+            uint opcode = 0x0E002C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
 
-            ulong _X0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
-            uint _W31 = TestContext.CurrentContext.Random.NextUInt();
-            Vector128<float> V1 = MakeVectorE0(A);
+            ulong x0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
+            uint w31 = TestContext.CurrentContext.Random.NextUInt();
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, X0: _X0, X31: _W31, V1: V1);
+            SingleOpcode(opcode, x0: x0, x31: w31, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("SMOV <Xd>, <Vn>.<Ts>[<index>]")]
-        public void Smov_S_X([Values(0u, 31u)] uint Rd,
-                             [Values(1u)]      uint Rn,
-                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
-                             [Values(0, 1, 2)] int Size, // <B, H, S>
-                             [Values(0u, 1u)] uint Index)
+        public void Smov_S_X([Values(0u, 31u)] uint rd,
+                             [Values(1u)]      uint rn,
+                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                             [Values(0, 1, 2)] int size, // <B, H, S>
+                             [Values(0u, 1u)] uint index)
         {
-            uint Imm5 = (Index << (Size + 1) | 1u << Size) & 0x1Fu;
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
 
-            uint Opcode = 0x4E002C00; // RESERVED
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= (Imm5 << 16);
+            uint opcode = 0x4E002C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
 
-            ulong _X31 = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> V1 = MakeVectorE0(A);
+            ulong x31 = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, X31: _X31, V1: V1);
+            SingleOpcode(opcode, x31: x31, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("UMOV <Wd>, <Vn>.<Ts>[<index>]")]
-        public void Umov_S_W([Values(0u, 31u)] uint Rd,
-                             [Values(1u)]      uint Rn,
-                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
-                             [Values(0, 1, 2)] int Size, // <B, H, S>
-                             [Values(0u, 1u)] uint Index)
+        public void Umov_S_W([Values(0u, 31u)] uint rd,
+                             [Values(1u)]      uint rn,
+                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                             [Values(0, 1, 2)] int size, // <B, H, S>
+                             [Values(0u, 1u)] uint index)
         {
-            uint Imm5 = (Index << (Size + 1) | 1u << Size) & 0x1Fu;
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
 
-            uint Opcode = 0x0E003C00; // RESERVED
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= (Imm5 << 16);
+            uint opcode = 0x0E003C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
 
-            ulong _X0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
-            uint _W31 = TestContext.CurrentContext.Random.NextUInt();
-            Vector128<float> V1 = MakeVectorE0(A);
+            ulong x0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
+            uint w31 = TestContext.CurrentContext.Random.NextUInt();
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, X0: _X0, X31: _W31, V1: V1);
+            SingleOpcode(opcode, x0: x0, x31: w31, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("UMOV <Xd>, <Vn>.<Ts>[<index>]")]
-        public void Umov_S_X([Values(0u, 31u)] uint Rd,
-                             [Values(1u)]      uint Rn,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong A,
-                             [Values(3)] int Size, // <D>
-                             [Values(0u)] uint Index)
+        public void Umov_S_X([Values(0u, 31u)] uint rd,
+                             [Values(1u)]      uint rn,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong a,
+                             [Values(3)] int size, // <D>
+                             [Values(0u)] uint index)
         {
-            uint Imm5 = (Index << (Size + 1) | 1u << Size) & 0x1Fu;
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
 
-            uint Opcode = 0x4E003C00; // RESERVED
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= (Imm5 << 16);
+            uint opcode = 0x4E003C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
 
-            ulong _X31 = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> V1 = MakeVectorE0(A);
+            ulong x31 = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, X31: _X31, V1: V1);
+            SingleOpcode(opcode, x31: x31, v1: v1);
 
             CompareAgainstUnicorn();
         }

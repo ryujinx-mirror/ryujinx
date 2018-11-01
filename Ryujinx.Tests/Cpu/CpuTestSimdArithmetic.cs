@@ -15,15 +15,15 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0xC1200000u, 0xBDCC8000u)]
         [TestCase(0x001FFFFFu, 0x7F800000u)]
         [TestCase(0x007FF000u, 0x7E800000u)]
-        public void Frecpe_S(uint A, uint Result)
+        public void Frecpe_S(uint a, uint result)
         {
-            uint Opcode = 0x5EA1D820; // FRECPE S0, S1
+            uint opcode = 0x5EA1D820; // FRECPE S0, S1
 
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1);
 
-            Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
+            Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result));
 
             CompareAgainstUnicorn();
         }
@@ -66,21 +66,21 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0x7FC00002u, true,  0x7FC00000u, Ignore = "NaN test.")]
         [TestCase(0x7FC00002u, true,  0x7FC00000u, Ignore = "NaN test.")]
         [TestCase(0x7FC00002u, true,  0x7FC00000u, Ignore = "NaN test.")]
-        public void Frinta_S(uint A, bool DefaultNaN, uint Result)
+        public void Frinta_S(uint a, bool defaultNaN, uint result)
         {
-            uint Opcode = 0x1E264020; // FRINTA S0, S1
+            uint opcode = 0x1E264020; // FRINTA S0, S1
 
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            int FpcrTemp = 0x0;
-            if (DefaultNaN)
+            int fpcrTemp = 0x0;
+            if (defaultNaN)
             {
-                FpcrTemp = 0x2000000;
+                fpcrTemp = 0x2000000;
             }
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1, fpcr: fpcrTemp);
 
-            Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
+            Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result));
 
             CompareAgainstUnicorn();
         }
@@ -97,22 +97,22 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0x2E218820u, 0x7F800000FF800000ul, 0x0000000000000000ul, false, 0x7F800000FF800000ul, 0x0000000000000000ul)]
         [TestCase(0x2E218820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, false, 0xFFC000017FC00002ul, 0x0000000000000000ul, Ignore = "NaN test.")]
         [TestCase(0x2E218820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, true,  0x7FC000007FC00000ul, 0x0000000000000000ul, Ignore = "NaN test.")]
-        public void Frinta_V(uint Opcode, ulong A, ulong B, bool DefaultNaN, ulong Result0, ulong Result1)
+        public void Frinta_V(uint opcode, ulong a, ulong b, bool defaultNaN, ulong result0, ulong result1)
         {
-            Vector128<float> V1 = MakeVectorE0E1(A, B);
+            Vector128<float> v1 = MakeVectorE0E1(a, b);
 
-            int FpcrTemp = 0x0;
-            if (DefaultNaN)
+            int fpcrTemp = 0x0;
+            if (defaultNaN)
             {
-                FpcrTemp = 0x2000000;
+                fpcrTemp = 0x2000000;
             }
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1, fpcr: fpcrTemp);
 
             Assert.Multiple(() =>
             {
-                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result0));
-                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(Result1));
+                Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result0));
+                Assert.That(GetVectorE1(threadState.V0), Is.EqualTo(result1));
             });
 
             CompareAgainstUnicorn();
@@ -158,28 +158,28 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0x7FC00002u, 'P', true,  0x7FC00000u, Ignore = "NaN test.")]
         [TestCase(0x7FC00002u, 'M', true,  0x7FC00000u, Ignore = "NaN test.")]
         [TestCase(0x7FC00002u, 'Z', true,  0x7FC00000u, Ignore = "NaN test.")]
-        public void Frinti_S(uint A, char RoundType, bool DefaultNaN, uint Result)
+        public void Frinti_S(uint a, char roundMode, bool defaultNaN, uint result)
         {
-            uint Opcode = 0x1E27C020; // FRINTI S0, S1
+            uint opcode = 0x1E27C020; // FRINTI S0, S1
 
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            int FpcrTemp = 0x0;
-            switch(RoundType)
+            int fpcrTemp = 0x0;
+            switch(roundMode)
             {
-                case 'N': FpcrTemp = 0x0;      break;
-                case 'P': FpcrTemp = 0x400000; break;
-                case 'M': FpcrTemp = 0x800000; break;
-                case 'Z': FpcrTemp = 0xC00000; break;
+                case 'N': fpcrTemp = 0x0;      break;
+                case 'P': fpcrTemp = 0x400000; break;
+                case 'M': fpcrTemp = 0x800000; break;
+                case 'Z': fpcrTemp = 0xC00000; break;
             }
-            if (DefaultNaN)
+            if (defaultNaN)
             {
-                FpcrTemp |= 1 << 25;
+                fpcrTemp |= 1 << 25;
             }
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1, fpcr: fpcrTemp);
 
-            Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
+            Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result));
 
             CompareAgainstUnicorn();
         }
@@ -216,29 +216,29 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0x2EA19820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, 'P', true,  0x7FC000007FC00000ul, 0x0000000000000000ul, Ignore = "NaN test.")]
         [TestCase(0x2EA19820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, 'M', true,  0x7FC000007FC00000ul, 0x0000000000000000ul, Ignore = "NaN test.")]
         [TestCase(0x2EA19820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, 'Z', true,  0x7FC000007FC00000ul, 0x0000000000000000ul, Ignore = "NaN test.")]
-        public void Frinti_V(uint Opcode, ulong A, ulong B, char RoundType, bool DefaultNaN, ulong Result0, ulong Result1)
+        public void Frinti_V(uint opcode, ulong a, ulong b, char roundMode, bool defaultNaN, ulong result0, ulong result1)
         {
-            Vector128<float> V1 = MakeVectorE0E1(A, B);
+            Vector128<float> v1 = MakeVectorE0E1(a, b);
 
-            int FpcrTemp = 0x0;
-            switch(RoundType)
+            int fpcrTemp = 0x0;
+            switch(roundMode)
             {
-                case 'N': FpcrTemp = 0x0;      break;
-                case 'P': FpcrTemp = 0x400000; break;
-                case 'M': FpcrTemp = 0x800000; break;
-                case 'Z': FpcrTemp = 0xC00000; break;
+                case 'N': fpcrTemp = 0x0;      break;
+                case 'P': fpcrTemp = 0x400000; break;
+                case 'M': fpcrTemp = 0x800000; break;
+                case 'Z': fpcrTemp = 0xC00000; break;
             }
-            if (DefaultNaN)
+            if (defaultNaN)
             {
-                FpcrTemp |= 1 << 25;
+                fpcrTemp |= 1 << 25;
             }
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1, fpcr: fpcrTemp);
 
             Assert.Multiple(() =>
             {
-                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result0));
-                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(Result1));
+                Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result0));
+                Assert.That(GetVectorE1(threadState.V0), Is.EqualTo(result1));
             });
 
             CompareAgainstUnicorn();
@@ -282,21 +282,21 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0x7FC00002u, true,  0x7FC00000u, Ignore = "NaN test.")]
         [TestCase(0x7FC00002u, true,  0x7FC00000u, Ignore = "NaN test.")]
         [TestCase(0x7FC00002u, true,  0x7FC00000u, Ignore = "NaN test.")]
-        public void Frintm_S(uint A, bool DefaultNaN, uint Result)
+        public void Frintm_S(uint a, bool defaultNaN, uint result)
         {
-            uint Opcode = 0x1E254020; // FRINTM S0, S1
+            uint opcode = 0x1E254020; // FRINTM S0, S1
 
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            int FpcrTemp = 0x0;
-            if (DefaultNaN)
+            int fpcrTemp = 0x0;
+            if (defaultNaN)
             {
-                FpcrTemp = 0x2000000;
+                fpcrTemp = 0x2000000;
             }
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1, fpcr: fpcrTemp);
 
-            Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
+            Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result));
 
             CompareAgainstUnicorn();
         }
@@ -309,22 +309,22 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0x0E219820u, 0x7F800000FF800000ul, 0x0000000000000000ul, false, 0x7F800000FF800000ul, 0x0000000000000000ul)]
         [TestCase(0x0E219820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, false, 0xFFC000017FC00002ul, 0x0000000000000000ul, Ignore = "NaN test.")]
         [TestCase(0x0E219820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, true,  0x7FC000007FC00000ul, 0x0000000000000000ul, Ignore = "NaN test.")]
-        public void Frintm_V(uint Opcode, ulong A, ulong B, bool DefaultNaN, ulong Result0, ulong Result1)
+        public void Frintm_V(uint opcode, ulong a, ulong b, bool defaultNaN, ulong result0, ulong result1)
         {
-            Vector128<float> V1 = MakeVectorE0E1(A, B);
+            Vector128<float> v1 = MakeVectorE0E1(a, b);
 
-            int FpcrTemp = 0x0;
-            if (DefaultNaN)
+            int fpcrTemp = 0x0;
+            if (defaultNaN)
             {
-                FpcrTemp = 0x2000000;
+                fpcrTemp = 0x2000000;
             }
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1, fpcr: fpcrTemp);
 
             Assert.Multiple(() =>
             {
-                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result0));
-                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(Result1));
+                Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result0));
+                Assert.That(GetVectorE1(threadState.V0), Is.EqualTo(result1));
             });
 
             CompareAgainstUnicorn();
@@ -369,21 +369,21 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0x7FC00002u, true,  0x7FC00000u, Ignore = "NaN test.")]
         [TestCase(0x7FC00002u, true,  0x7FC00000u, Ignore = "NaN test.")]
         [TestCase(0x7FC00002u, true,  0x7FC00000u, Ignore = "NaN test.")]
-        public void Frintn_S(uint A, bool DefaultNaN, uint Result)
+        public void Frintn_S(uint a, bool defaultNaN, uint result)
         {
-            uint Opcode = 0x1E264020; // FRINTA S0, S1
+            uint opcode = 0x1E264020; // FRINTA S0, S1
 
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            int FpcrTemp = 0x0;
-            if (DefaultNaN)
+            int fpcrTemp = 0x0;
+            if (defaultNaN)
             {
-                FpcrTemp = 0x2000000;
+                fpcrTemp = 0x2000000;
             }
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1, fpcr: fpcrTemp);
 
-            Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
+            Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result));
 
             CompareAgainstUnicorn();
         }
@@ -399,22 +399,22 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0x0E218820u, 0x7F800000FF800000ul, 0x0000000000000000ul, false, 0x7F800000FF800000ul, 0x0000000000000000ul)]
         [TestCase(0x0E218820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, false, 0xFFC000017FC00002ul, 0x0000000000000000ul, Ignore = "NaN test.")]
         [TestCase(0x0E218820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, true,  0x7FC000007FC00000ul, 0x0000000000000000ul, Ignore = "NaN test.")]
-        public void Frintn_V(uint Opcode, ulong A, ulong B, bool DefaultNaN, ulong Result0, ulong Result1)
+        public void Frintn_V(uint opcode, ulong a, ulong b, bool defaultNaN, ulong result0, ulong result1)
         {
-            Vector128<float> V1 = MakeVectorE0E1(A, B);
+            Vector128<float> v1 = MakeVectorE0E1(a, b);
 
-            int FpcrTemp = 0x0;
-            if (DefaultNaN)
+            int fpcrTemp = 0x0;
+            if (defaultNaN)
             {
-                FpcrTemp = 0x2000000;
+                fpcrTemp = 0x2000000;
             }
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1, fpcr: fpcrTemp);
 
             Assert.Multiple(() =>
             {
-                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result0));
-                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(Result1));
+                Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result0));
+                Assert.That(GetVectorE1(threadState.V0), Is.EqualTo(result1));
             });
 
             CompareAgainstUnicorn();
@@ -458,21 +458,21 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0x7FC00002u, true,  0x7FC00000u, Ignore = "NaN test.")]
         [TestCase(0x7FC00002u, true,  0x7FC00000u, Ignore = "NaN test.")]
         [TestCase(0x7FC00002u, true,  0x7FC00000u, Ignore = "NaN test.")]
-        public void Frintp_S(uint A, bool DefaultNaN, uint Result)
+        public void Frintp_S(uint a, bool defaultNaN, uint result)
         {
-            uint Opcode = 0x1E24C020; // FRINTP S0, S1
+            uint opcode = 0x1E24C020; // FRINTP S0, S1
 
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            int FpcrTemp = 0x0;
-            if (DefaultNaN)
+            int fpcrTemp = 0x0;
+            if (defaultNaN)
             {
-                FpcrTemp = 0x2000000;
+                fpcrTemp = 0x2000000;
             }
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1, fpcr: fpcrTemp);
 
-            Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
+            Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result));
 
             CompareAgainstUnicorn();
         }
@@ -485,22 +485,22 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0x0EA18820u, 0x7F800000FF800000ul, 0x0000000000000000ul, false, 0x7F800000FF800000ul, 0x0000000000000000ul)]
         [TestCase(0x0EA18820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, false, 0xFFC000017FC00002ul, 0x0000000000000000ul, Ignore = "NaN test.")]
         [TestCase(0x0EA18820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, true,  0x7FC000007FC00000ul, 0x0000000000000000ul, Ignore = "NaN test.")]
-        public void Frintp_V(uint Opcode, ulong A, ulong B, bool DefaultNaN, ulong Result0, ulong Result1)
+        public void Frintp_V(uint opcode, ulong a, ulong b, bool defaultNaN, ulong result0, ulong result1)
         {
-            Vector128<float> V1 = MakeVectorE0E1(A, B);
+            Vector128<float> v1 = MakeVectorE0E1(a, b);
 
-            int FpcrTemp = 0x0;
-            if (DefaultNaN)
+            int fpcrTemp = 0x0;
+            if (defaultNaN)
             {
-                FpcrTemp = 0x2000000;
+                fpcrTemp = 0x2000000;
             }
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1, fpcr: fpcrTemp);
 
             Assert.Multiple(() =>
             {
-                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result0));
-                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(Result1));
+                Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result0));
+                Assert.That(GetVectorE1(threadState.V0), Is.EqualTo(result1));
             });
 
             CompareAgainstUnicorn();
@@ -546,28 +546,28 @@ namespace Ryujinx.Tests.Cpu
     	[TestCase(0x7FC00002u, 'P', true,  0x7FC00000u, Ignore = "NaN test.")]
     	[TestCase(0x7FC00002u, 'M', true,  0x7FC00000u, Ignore = "NaN test.")]
     	[TestCase(0x7FC00002u, 'Z', true,  0x7FC00000u, Ignore = "NaN test.")]
-    	public void Frintx_S(uint A, char RoundType, bool DefaultNaN, uint Result)
+    	public void Frintx_S(uint a, char roundMode, bool defaultNaN, uint result)
     	{
-            uint Opcode = 0x1E274020; // FRINTX S0, S1
+            uint opcode = 0x1E274020; // FRINTX S0, S1
 
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-        	int FpcrTemp = 0x0;
-        	switch(RoundType)
+        	int fpcrTemp = 0x0;
+        	switch(roundMode)
         	{
-        		case 'N': FpcrTemp = 0x0;      break;
-        		case 'P': FpcrTemp = 0x400000; break;
-        		case 'M': FpcrTemp = 0x800000; break;
-        		case 'Z': FpcrTemp = 0xC00000; break;
+        		case 'N': fpcrTemp = 0x0;      break;
+        		case 'P': fpcrTemp = 0x400000; break;
+        		case 'M': fpcrTemp = 0x800000; break;
+        		case 'Z': fpcrTemp = 0xC00000; break;
         	}
-        	if (DefaultNaN)
+        	if (defaultNaN)
         	{
-        		FpcrTemp |= 1 << 25;
+        		fpcrTemp |= 1 << 25;
         	}
 
-        	CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+        	CpuThreadState threadState = SingleOpcode(opcode, v1: v1, fpcr: fpcrTemp);
 
-        	Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
+        	Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result));
 
             CompareAgainstUnicorn();
         }
@@ -604,44 +604,44 @@ namespace Ryujinx.Tests.Cpu
         [TestCase(0x2E219820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, 'P', true,  0x7FC000007FC00000ul, 0x0000000000000000ul, Ignore = "NaN test.")]
         [TestCase(0x2E219820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, 'M', true,  0x7FC000007FC00000ul, 0x0000000000000000ul, Ignore = "NaN test.")]
         [TestCase(0x2E219820u, 0xFF8000017FC00002ul, 0x0000000000000000ul, 'Z', true,  0x7FC000007FC00000ul, 0x0000000000000000ul, Ignore = "NaN test.")]
-        public void Frintx_V(uint Opcode, ulong A, ulong B, char RoundType, bool DefaultNaN, ulong Result0, ulong Result1)
+        public void Frintx_V(uint opcode, ulong a, ulong b, char roundMode, bool defaultNaN, ulong result0, ulong result1)
         {
-            Vector128<float> V1 = MakeVectorE0E1(A, B);
+            Vector128<float> v1 = MakeVectorE0E1(a, b);
 
-            int FpcrTemp = 0x0;
-            switch(RoundType)
+            int fpcrTemp = 0x0;
+            switch(roundMode)
             {
-                case 'N': FpcrTemp = 0x0;      break;
-                case 'P': FpcrTemp = 0x400000; break;
-                case 'M': FpcrTemp = 0x800000; break;
-                case 'Z': FpcrTemp = 0xC00000; break;
+                case 'N': fpcrTemp = 0x0;      break;
+                case 'P': fpcrTemp = 0x400000; break;
+                case 'M': fpcrTemp = 0x800000; break;
+                case 'Z': fpcrTemp = 0xC00000; break;
             }
-            if (DefaultNaN)
+            if (defaultNaN)
             {
-                FpcrTemp |= 1 << 25;
+                fpcrTemp |= 1 << 25;
             }
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1, Fpcr: FpcrTemp);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1, fpcr: fpcrTemp);
 
             Assert.Multiple(() =>
             {
-                Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result0));
-                Assert.That(GetVectorE1(ThreadState.V0), Is.EqualTo(Result1));
+                Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result0));
+                Assert.That(GetVectorE1(threadState.V0), Is.EqualTo(result1));
             });
 
             CompareAgainstUnicorn();
         }
 
         [TestCase(0x41200000u, 0x3EA18000u)]
-        public void Frsqrte_S(uint A, uint Result)
+        public void Frsqrte_S(uint a, uint result)
         {
-            uint Opcode = 0x7EA1D820; // FRSQRTE S0, S1
+            uint opcode = 0x7EA1D820; // FRSQRTE S0, S1
 
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V1: V1);
+            CpuThreadState threadState = SingleOpcode(opcode, v1: v1);
 
-            Assert.That(GetVectorE0(ThreadState.V0), Is.EqualTo(Result));
+            Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result));
 
             CompareAgainstUnicorn();
         }

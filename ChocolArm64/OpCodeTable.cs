@@ -544,7 +544,7 @@ namespace ChocolArm64
 
             foreach (var inst in _allInstA64)
             {
-                int mask = ToFastLookupIndex(inst.Mask);
+                int mask  = ToFastLookupIndex(inst.Mask);
                 int value = ToFastLookupIndex(inst.Value);
 
                 for (int i = 0; i < _fastLookupSize; i++)
@@ -665,8 +665,8 @@ namespace ChocolArm64
         }
 
         private static void InsertInst(
-            int            xMask,
-            int            value,
+            int           xMask,
+            int           value,
             Inst          inst,
             ExecutionMode mode)
         {

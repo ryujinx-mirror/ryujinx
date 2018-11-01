@@ -1,7 +1,5 @@
 #define Simd
 
-using ChocolArm64.State;
-
 using NUnit.Framework;
 
 using System.Collections.Generic;
@@ -9,7 +7,7 @@ using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Tests.Cpu
 {
-    [Category("Simd")] // Tested: second half of 2018.
+    [Category("Simd")]
     public sealed class CpuTestSimd : CpuTest
     {
 #if Simd
@@ -110,13 +108,13 @@ namespace Ryujinx.Tests.Cpu
                 yield return 0x7DFF7DFF7DFF7DFFul; // +SNaN (all ones  payload)
             }
 
-            for (int Cnt = 1; Cnt <= RndCnt; Cnt++)
+            for (int cnt = 1; cnt <= RndCnt; cnt++)
             {
-                uint Rnd1 = (uint)GenNormal_H();
-                uint Rnd2 = (uint)GenSubnormal_H();
+                uint rnd1 = (uint)GenNormalH();
+                uint rnd2 = (uint)GenSubnormalH();
 
-                yield return (Rnd1 << 48) | (Rnd1 << 32) | (Rnd1 << 16) | Rnd1;
-                yield return (Rnd2 << 48) | (Rnd2 << 32) | (Rnd2 << 16) | Rnd2;
+                yield return (rnd1 << 48) | (rnd1 << 32) | (rnd1 << 16) | rnd1;
+                yield return (rnd2 << 48) | (rnd2 << 32) | (rnd2 << 16) | rnd2;
             }
         }
 
@@ -151,14 +149,14 @@ namespace Ryujinx.Tests.Cpu
                 yield return 0x000000007FBFFFFFul; // +SNaN (all ones  payload)
             }
 
-            for (int Cnt = 1; Cnt <= RndCnt; Cnt++)
+            for (int cnt = 1; cnt <= RndCnt; cnt++)
             {
-                ulong Grbg = TestContext.CurrentContext.Random.NextUInt();
-                ulong Rnd1 = GenNormal_S();
-                ulong Rnd2 = GenSubnormal_S();
+                ulong grbg = TestContext.CurrentContext.Random.NextUInt();
+                ulong rnd1 = GenNormalS();
+                ulong rnd2 = GenSubnormalS();
 
-                yield return (Grbg << 32) | Rnd1;
-                yield return (Grbg << 32) | Rnd2;
+                yield return (grbg << 32) | rnd1;
+                yield return (grbg << 32) | rnd2;
             }
         }
 
@@ -193,13 +191,13 @@ namespace Ryujinx.Tests.Cpu
                 yield return 0x7FBFFFFF7FBFFFFFul; // +SNaN (all ones  payload)
             }
 
-            for (int Cnt = 1; Cnt <= RndCnt; Cnt++)
+            for (int cnt = 1; cnt <= RndCnt; cnt++)
             {
-                ulong Rnd1 = GenNormal_S();
-                ulong Rnd2 = GenSubnormal_S();
+                ulong rnd1 = GenNormalS();
+                ulong rnd2 = GenSubnormalS();
 
-                yield return (Rnd1 << 32) | Rnd1;
-                yield return (Rnd2 << 32) | Rnd2;
+                yield return (rnd1 << 32) | rnd1;
+                yield return (rnd2 << 32) | rnd2;
             }
         }
 
@@ -234,13 +232,13 @@ namespace Ryujinx.Tests.Cpu
                 yield return 0x7FF7FFFFFFFFFFFFul; // +SNaN (all ones  payload)
             }
 
-            for (int Cnt = 1; Cnt <= RndCnt; Cnt++)
+            for (int cnt = 1; cnt <= RndCnt; cnt++)
             {
-                ulong Rnd1 = GenNormal_D();
-                ulong Rnd2 = GenSubnormal_D();
+                ulong rnd1 = GenNormalD();
+                ulong rnd2 = GenSubnormalD();
 
-                yield return Rnd1;
-                yield return Rnd2;
+                yield return rnd1;
+                yield return rnd2;
             }
         }
 #endregion
@@ -397,1604 +395,1614 @@ namespace Ryujinx.Tests.Cpu
         private static readonly bool NoNaNs  = false;
 
         [Test, Pairwise, Description("ABS <V><d>, <V><n>")]
-        public void Abs_S_D([Values(0u)]     uint Rd,
-                            [Values(1u, 0u)] uint Rn,
-                            [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
-                            [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
+        public void Abs_S_D([Values(0u)]     uint rd,
+                            [Values(1u, 0u)] uint rn,
+                            [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                            [ValueSource("_1D_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x5EE0B800; // ABS D0, D0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x5EE0B800; // ABS D0, D0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("ABS <Vd>.<T>, <Vn>.<T>")]
-        public void Abs_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                   [Values(1u, 0u)] uint Rn,
-                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Abs_V_8B_4H_2S([Values(0u)]     uint rd,
+                                   [Values(1u, 0u)] uint rn,
+                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                    [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x0E20B800; // ABS V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x0E20B800; // ABS V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("ABS <Vd>.<T>, <Vn>.<T>")]
-        public void Abs_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
-                                       [Values(1u, 0u)] uint Rn,
-                                       [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                       [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Abs_V_16B_8H_4S_2D([Values(0u)]     uint rd,
+                                       [Values(1u, 0u)] uint rn,
+                                       [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                       [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
                                        [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
-            uint Opcode = 0x4E20B800; // ABS V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x4E20B800; // ABS V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("ADDP <V><d>, <Vn>.<T>")]
-        public void Addp_S_2DD([Values(0u)]     uint Rd,
-                               [Values(1u, 0u)] uint Rn,
-                               [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
-                               [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
+        public void Addp_S_2DD([Values(0u)]     uint rd,
+                               [Values(1u, 0u)] uint rn,
+                               [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                               [ValueSource("_1D_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x5EF1B800; // ADDP D0, V0.2D
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x5EF1B800; // ADDP D0, V0.2D
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("ADDV <V><d>, <Vn>.<T>")]
-        public void Addv_V_8BB_4HH([Values(0u)]     uint Rd,
-                                   [Values(1u, 0u)] uint Rn,
-                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong Z,
-                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong A,
+        public void Addv_V_8BB_4HH([Values(0u)]     uint rd,
+                                   [Values(1u, 0u)] uint rn,
+                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong z,
+                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong a,
                                    [Values(0b00u, 0b01u)] uint size) // <8BB, 4HH>
         {
-            uint Opcode = 0x0E31B800; // ADDV B0, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x0E31B800; // ADDV B0, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("ADDV <V><d>, <Vn>.<T>")]
-        public void Addv_V_16BB_8HH_4SS([Values(0u)]     uint Rd,
-                                        [Values(1u, 0u)] uint Rn,
-                                        [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                        [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Addv_V_16BB_8HH_4SS([Values(0u)]     uint rd,
+                                        [Values(1u, 0u)] uint rn,
+                                        [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                        [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                         [Values(0b00u, 0b01u, 0b10u)] uint size) // <16BB, 8HH, 4SS>
         {
-            uint Opcode = 0x4E31B800; // ADDV B0, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x4E31B800; // ADDV B0, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("CLS <Vd>.<T>, <Vn>.<T>")]
-        public void Cls_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                   [Values(1u, 0u)] uint Rn,
-                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
-                                   [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
-        {
-            uint Opcode = 0x0E204800; // CLS V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
-
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
-
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CLS <Vd>.<T>, <Vn>.<T>")]
-        public void Cls_V_16B_8H_4S([Values(0u)]     uint Rd,
-                                    [Values(1u, 0u)] uint Rn,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
-                                    [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B, 8H, 4S>
-        {
-            uint Opcode = 0x4E204800; // CLS V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
-
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
-
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
-        public void Clz_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                   [Values(1u, 0u)] uint Rn,
-                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Cls_V_8B_4H_2S([Values(0u)]     uint rd,
+                                   [Values(1u, 0u)] uint rn,
+                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                    [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x2E204800; // CLZ V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x0E204800; // CLS V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("CLS <Vd>.<T>, <Vn>.<T>")]
+        public void Cls_V_16B_8H_4S([Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                                    [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B, 8H, 4S>
+        {
+            uint opcode = 0x4E204800; // CLS V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
-        public void Clz_V_16B_8H_4S([Values(0u)]     uint Rd,
-                                    [Values(1u, 0u)] uint Rn,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Clz_V_8B_4H_2S([Values(0u)]     uint rd,
+                                   [Values(1u, 0u)] uint rn,
+                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                                   [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
+        {
+            uint opcode = 0x2E204800; // CLZ V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
+        public void Clz_V_16B_8H_4S([Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                     [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B, 8H, 4S>
         {
-            uint Opcode = 0x6E204800; // CLZ V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x6E204800; // CLZ V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMEQ <V><d>, <V><n>, #0")]
-        public void Cmeq_S_D([Values(0u)]     uint Rd,
-                             [Values(1u, 0u)] uint Rn,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
+        public void Cmeq_S_D([Values(0u)]     uint rd,
+                             [Values(1u, 0u)] uint rn,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x5EE09800; // CMEQ D0, D0, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x5EE09800; // CMEQ D0, D0, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMEQ <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmeq_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                    [Values(1u, 0u)] uint Rn,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Cmeq_V_8B_4H_2S([Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                     [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x0E209800; // CMEQ V0.8B, V0.8B, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x0E209800; // CMEQ V0.8B, V0.8B, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMEQ <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmeq_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
-                                        [Values(1u, 0u)] uint Rn,
-                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Cmeq_V_16B_8H_4S_2D([Values(0u)]     uint rd,
+                                        [Values(1u, 0u)] uint rn,
+                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
                                         [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
-            uint Opcode = 0x4E209800; // CMEQ V0.16B, V0.16B, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x4E209800; // CMEQ V0.16B, V0.16B, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMGE <V><d>, <V><n>, #0")]
-        public void Cmge_S_D([Values(0u)]     uint Rd,
-                             [Values(1u, 0u)] uint Rn,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
+        public void Cmge_S_D([Values(0u)]     uint rd,
+                             [Values(1u, 0u)] uint rn,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x7EE08800; // CMGE D0, D0, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x7EE08800; // CMGE D0, D0, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMGE <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmge_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                    [Values(1u, 0u)] uint Rn,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Cmge_V_8B_4H_2S([Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                     [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x2E208800; // CMGE V0.8B, V0.8B, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x2E208800; // CMGE V0.8B, V0.8B, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMGE <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmge_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
-                                        [Values(1u, 0u)] uint Rn,
-                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Cmge_V_16B_8H_4S_2D([Values(0u)]     uint rd,
+                                        [Values(1u, 0u)] uint rn,
+                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
                                         [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
-            uint Opcode = 0x6E208800; // CMGE V0.16B, V0.16B, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x6E208800; // CMGE V0.16B, V0.16B, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMGT <V><d>, <V><n>, #0")]
-        public void Cmgt_S_D([Values(0u)]     uint Rd,
-                             [Values(1u, 0u)] uint Rn,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
+        public void Cmgt_S_D([Values(0u)]     uint rd,
+                             [Values(1u, 0u)] uint rn,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x5EE08800; // CMGT D0, D0, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x5EE08800; // CMGT D0, D0, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMGT <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmgt_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                    [Values(1u, 0u)] uint Rn,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Cmgt_V_8B_4H_2S([Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                     [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x0E208800; // CMGT V0.8B, V0.8B, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x0E208800; // CMGT V0.8B, V0.8B, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMGT <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmgt_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
-                                        [Values(1u, 0u)] uint Rn,
-                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Cmgt_V_16B_8H_4S_2D([Values(0u)]     uint rd,
+                                        [Values(1u, 0u)] uint rn,
+                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
                                         [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
-            uint Opcode = 0x4E208800; // CMGT V0.16B, V0.16B, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x4E208800; // CMGT V0.16B, V0.16B, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMLE <V><d>, <V><n>, #0")]
-        public void Cmle_S_D([Values(0u)]     uint Rd,
-                             [Values(1u, 0u)] uint Rn,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
+        public void Cmle_S_D([Values(0u)]     uint rd,
+                             [Values(1u, 0u)] uint rn,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x7EE09800; // CMLE D0, D0, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x7EE09800; // CMLE D0, D0, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMLE <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmle_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                    [Values(1u, 0u)] uint Rn,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Cmle_V_8B_4H_2S([Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                     [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x2E209800; // CMLE V0.8B, V0.8B, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x2E209800; // CMLE V0.8B, V0.8B, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMLE <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmle_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
-                                        [Values(1u, 0u)] uint Rn,
-                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Cmle_V_16B_8H_4S_2D([Values(0u)]     uint rd,
+                                        [Values(1u, 0u)] uint rn,
+                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
                                         [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
-            uint Opcode = 0x6E209800; // CMLE V0.16B, V0.16B, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x6E209800; // CMLE V0.16B, V0.16B, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMLT <V><d>, <V><n>, #0")]
-        public void Cmlt_S_D([Values(0u)]     uint Rd,
-                             [Values(1u, 0u)] uint Rn,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
+        public void Cmlt_S_D([Values(0u)]     uint rd,
+                             [Values(1u, 0u)] uint rn,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x5EE0A800; // CMLT D0, D0, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x5EE0A800; // CMLT D0, D0, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMLT <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmlt_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                    [Values(1u, 0u)] uint Rn,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Cmlt_V_8B_4H_2S([Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                     [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x0E20A800; // CMLT V0.8B, V0.8B, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x0E20A800; // CMLT V0.8B, V0.8B, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CMLT <Vd>.<T>, <Vn>.<T>, #0")]
-        public void Cmlt_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
-                                        [Values(1u, 0u)] uint Rn,
-                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Cmlt_V_16B_8H_4S_2D([Values(0u)]     uint rd,
+                                        [Values(1u, 0u)] uint rn,
+                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                        [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
                                         [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
-            uint Opcode = 0x4E20A800; // CMLT V0.16B, V0.16B, #0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x4E20A800; // CMLT V0.16B, V0.16B, #0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("CNT <Vd>.<T>, <Vn>.<T>")]
-        public void Cnt_V_8B([Values(0u)]     uint Rd,
-                             [Values(1u, 0u)] uint Rn,
-                             [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
-                             [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
-        {
-            uint Opcode = 0x0E205800; // CNT V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
-
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("CNT <Vd>.<T>, <Vn>.<T>")]
-        public void Cnt_V_16B([Values(0u)]     uint Rd,
-                              [Values(1u, 0u)] uint Rn,
-                              [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
-                              [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
+        public void Cnt_V_8B([Values(0u)]     uint rd,
+                             [Values(1u, 0u)] uint rn,
+                             [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
+                             [ValueSource("_8B_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x4E205800; // CNT V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x0E205800; // CNT V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("CNT <Vd>.<T>, <Vn>.<T>")]
+        public void Cnt_V_16B([Values(0u)]     uint rd,
+                              [Values(1u, 0u)] uint rn,
+                              [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
+                              [ValueSource("_8B_")] [Random(RndCnt)] ulong a)
+        {
+            uint opcode = 0x4E205800; // CNT V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_S_SD([ValueSource("_F_Cvt_S_SD_")] uint Opcodes,
-                               [ValueSource("_1S_F_")] ulong A)
+        public void F_Cvt_S_SD([ValueSource("_F_Cvt_S_SD_")] uint opcodes,
+                               [ValueSource("_1S_F_")] ulong a)
         {
-            ulong Z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> V0 = MakeVectorE1(Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE1(z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_S_DS([ValueSource("_F_Cvt_S_DS_")] uint Opcodes,
-                               [ValueSource("_1D_F_")] ulong A)
+        public void F_Cvt_S_DS([ValueSource("_F_Cvt_S_DS_")] uint opcodes,
+                               [ValueSource("_1D_F_")] ulong a)
         {
-            ulong Z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_NZ_SU_S_S([ValueSource("_F_Cvt_NZ_SU_S_S_")] uint Opcodes,
-                                    [ValueSource("_1S_F_")] ulong A)
+        public void F_Cvt_NZ_SU_S_S([ValueSource("_F_Cvt_NZ_SU_S_S_")] uint opcodes,
+                                    [ValueSource("_1S_F_")] ulong a)
         {
-            ulong Z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_NZ_SU_S_D([ValueSource("_F_Cvt_NZ_SU_S_D_")] uint Opcodes,
-                                    [ValueSource("_1D_F_")] ulong A)
+        public void F_Cvt_NZ_SU_S_D([ValueSource("_F_Cvt_NZ_SU_S_D_")] uint opcodes,
+                                    [ValueSource("_1D_F_")] ulong a)
         {
-            ulong Z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> V0 = MakeVectorE1(Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE1(z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_NZ_SU_V_2S_4S([ValueSource("_F_Cvt_NZ_SU_V_2S_4S_")] uint Opcodes,
-                                        [Values(0u)]     uint Rd,
-                                        [Values(1u, 0u)] uint Rn,
-                                        [ValueSource("_2S_F_")] ulong Z,
-                                        [ValueSource("_2S_F_")] ulong A,
-                                        [Values(0b0u, 0b1u)] uint Q) // <2S, 4S>
+        public void F_Cvt_NZ_SU_V_2S_4S([ValueSource("_F_Cvt_NZ_SU_V_2S_4S_")] uint opcodes,
+                                        [Values(0u)]     uint rd,
+                                        [Values(1u, 0u)] uint rn,
+                                        [ValueSource("_2S_F_")] ulong z,
+                                        [ValueSource("_2S_F_")] ulong a,
+                                        [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
-            Opcodes |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcodes |= ((Q & 1) << 30);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((q & 1) << 30);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_NZ_SU_V_2D([ValueSource("_F_Cvt_NZ_SU_V_2D_")] uint Opcodes,
-                                     [Values(0u)]     uint Rd,
-                                     [Values(1u, 0u)] uint Rn,
-                                     [ValueSource("_1D_F_")] ulong Z,
-                                     [ValueSource("_1D_F_")] ulong A)
+        public void F_Cvt_NZ_SU_V_2D([ValueSource("_F_Cvt_NZ_SU_V_2D_")] uint opcodes,
+                                     [Values(0u)]     uint rd,
+                                     [Values(1u, 0u)] uint rn,
+                                     [ValueSource("_1D_F_")] ulong z,
+                                     [ValueSource("_1D_F_")] ulong a)
         {
-            Opcodes |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvtl_V_4H4S_8H4S([ValueSource("_F_Cvtl_V_4H4S_8H4S_")] uint Opcodes,
-                                       [Values(0u)]     uint Rd,
-                                       [Values(1u, 0u)] uint Rn,
-                                       [ValueSource("_4H_F_")] ulong Z,
-                                       [ValueSource("_4H_F_")] ulong A,
-                                       [Values(0b0u, 0b1u)] uint Q, // <4H, 8H>
-                                       [Values(RMode.RN)] RMode RMode)
+        public void F_Cvtl_V_4H4S_8H4S([ValueSource("_F_Cvtl_V_4H4S_8H4S_")] uint opcodes,
+                                       [Values(0u)]     uint rd,
+                                       [Values(1u, 0u)] uint rn,
+                                       [ValueSource("_4H_F_")] ulong z,
+                                       [ValueSource("_4H_F_")] ulong a,
+                                       [Values(0b0u, 0b1u)] uint q, // <4H, 8H>
+                                       [Values(RMode.Rn)] RMode rMode)
         {
-            Opcodes |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcodes |= ((Q & 1) << 30);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((q & 1) << 30);
 
-            Vector128<float> V0 = MakeVectorE0E1(Q == 0u ? Z : 0ul, Q == 1u ? Z : 0ul);
-            Vector128<float> V1 = MakeVectorE0E1(Q == 0u ? A : 0ul, Q == 1u ? A : 0ul);
+            Vector128<float> v0 = MakeVectorE0E1(q == 0u ? z : 0ul, q == 1u ? z : 0ul);
+            Vector128<float> v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
 
-            int Rnd = (int)TestContext.CurrentContext.Random.NextUInt();
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            int Fpcr = (int)RMode << (int)FPCR.RMode;
-            Fpcr |= Rnd & (1 << (int)FPCR.FZ);
-            Fpcr |= Rnd & (1 << (int)FPCR.DN);
-            Fpcr |= Rnd & (1 << (int)FPCR.AHP);
+            int fpcr = (int)rMode << (int)Fpcr.RMode;
+            fpcr |= rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
+            fpcr |= rnd & (1 << (int)Fpcr.Ahp);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, Fpcr: Fpcr);
+            SingleOpcode(opcodes, v0: v0, v1: v1, fpcr: fpcr);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.IOC | FPSR.OFC | FPSR.UFC | FPSR.IXC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc | Fpsr.Ofc | Fpsr.Ufc | Fpsr.Ixc);
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvtl_V_2S2D_4S2D([ValueSource("_F_Cvtl_V_2S2D_4S2D_")] uint Opcodes,
-                                       [Values(0u)]     uint Rd,
-                                       [Values(1u, 0u)] uint Rn,
-                                       [ValueSource("_2S_F_")] ulong Z,
-                                       [ValueSource("_2S_F_")] ulong A,
-                                       [Values(0b0u, 0b1u)] uint Q, // <2S, 4S>
-                                       [Values(RMode.RN)] RMode RMode)
+        public void F_Cvtl_V_2S2D_4S2D([ValueSource("_F_Cvtl_V_2S2D_4S2D_")] uint opcodes,
+                                       [Values(0u)]     uint rd,
+                                       [Values(1u, 0u)] uint rn,
+                                       [ValueSource("_2S_F_")] ulong z,
+                                       [ValueSource("_2S_F_")] ulong a,
+                                       [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
-            Opcodes |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcodes |= ((Q & 1) << 30);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((q & 1) << 30);
 
-            Vector128<float> V0 = MakeVectorE0E1(Q == 0u ? Z : 0ul, Q == 1u ? Z : 0ul);
-            Vector128<float> V1 = MakeVectorE0E1(Q == 0u ? A : 0ul, Q == 1u ? A : 0ul);
+            Vector128<float> v0 = MakeVectorE0E1(q == 0u ? z : 0ul, q == 1u ? z : 0ul);
+            Vector128<float> v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit] // Unicorn seems to default all rounding modes to RMode.Rn.
+        public void F_Cvtn_V_4S4H_4S8H([ValueSource("_F_Cvtn_V_4S4H_4S8H_")] uint opcodes,
+                                       [Values(0u)]     uint rd,
+                                       [Values(1u, 0u)] uint rn,
+                                       [ValueSource("_2S_F_")] ulong z,
+                                       [ValueSource("_2S_F_")] ulong a,
+                                       [Values(0b0u, 0b1u)] uint q, // <4H, 8H>
+                                       [Values(RMode.Rn)] RMode rMode)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((q & 1) << 30);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
+
+            int fpcr = (int)rMode << (int)Fpcr.RMode;
+            fpcr |= rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
+            fpcr |= rnd & (1 << (int)Fpcr.Ahp);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, fpcr: fpcr);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc | Fpsr.Ofc | Fpsr.Ufc | Fpsr.Ixc | Fpsr.Idc);
+        }
+
+        [Test, Pairwise] [Explicit] // Unicorn seems to default all rounding modes to RMode.Rn.
+        public void F_Cvtn_V_2D2S_2D4S([ValueSource("_F_Cvtn_V_2D2S_2D4S_")] uint opcodes,
+                                       [Values(0u)]     uint rd,
+                                       [Values(1u, 0u)] uint rn,
+                                       [ValueSource("_1D_F_")] ulong z,
+                                       [ValueSource("_1D_F_")] ulong a,
+                                       [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((q & 1) << 30);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvtn_V_4S4H_4S8H([ValueSource("_F_Cvtn_V_4S4H_4S8H_")] uint Opcodes,
-                                       [Values(0u)]     uint Rd,
-                                       [Values(1u, 0u)] uint Rn,
-                                       [ValueSource("_2S_F_")] ulong Z,
-                                       [ValueSource("_2S_F_")] ulong A,
-                                       [Values(0b0u, 0b1u)] uint Q, // <4H, 8H>
-                                       [Values(RMode.RN)] RMode RMode) // Unicorn seems to default all rounding modes to RMode.RN.
+        public void F_Recpx_Sqrt_S_S([ValueSource("_F_Recpx_Sqrt_S_S_")] uint opcodes,
+                                     [ValueSource("_1S_F_")] ulong a)
         {
-            Opcodes |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcodes |= ((Q & 1) << 30);
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            int Rnd = (int)TestContext.CurrentContext.Random.NextUInt();
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
 
-            int Fpcr = (int)RMode << (int)FPCR.RMode;
-            Fpcr |= Rnd & (1 << (int)FPCR.FZ);
-            Fpcr |= Rnd & (1 << (int)FPCR.DN);
-            Fpcr |= Rnd & (1 << (int)FPCR.AHP);
+            SingleOpcode(opcodes, v0: v0, v1: v1, fpcr: fpcr);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, Fpcr: Fpcr);
-
-            CompareAgainstUnicorn(FpsrMask: FPSR.IOC | FPSR.OFC | FPSR.UFC | FPSR.IXC | FPSR.IDC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc | Fpsr.Idc);
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvtn_V_2D2S_2D4S([ValueSource("_F_Cvtn_V_2D2S_2D4S_")] uint Opcodes,
-                                       [Values(0u)]     uint Rd,
-                                       [Values(1u, 0u)] uint Rn,
-                                       [ValueSource("_1D_F_")] ulong Z,
-                                       [ValueSource("_1D_F_")] ulong A,
-                                       [Values(0b0u, 0b1u)] uint Q, // <2S, 4S>
-                                       [Values(RMode.RN)] RMode RMode) // Unicorn seems to default all rounding modes to RMode.RN.
+        public void F_Recpx_Sqrt_S_D([ValueSource("_F_Recpx_Sqrt_S_D_")] uint opcodes,
+                                     [ValueSource("_1D_F_")] ulong a)
         {
-            Opcodes |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcodes |= ((Q & 1) << 30);
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE1(z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
 
-            CompareAgainstUnicorn();
+            SingleOpcode(opcodes, v0: v0, v1: v1, fpcr: fpcr);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc | Fpsr.Idc);
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Recpx_Sqrt_S_S([ValueSource("_F_Recpx_Sqrt_S_S_")] uint Opcodes,
-                                     [ValueSource("_1S_F_")] ulong A)
+        public void F_Sqrt_V_2S_4S([ValueSource("_F_Sqrt_V_2S_4S_")] uint opcodes,
+                                   [Values(0u)]     uint rd,
+                                   [Values(1u, 0u)] uint rn,
+                                   [ValueSource("_2S_F_")] ulong z,
+                                   [ValueSource("_2S_F_")] ulong a,
+                                   [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
-            ulong Z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((q & 1) << 30);
 
-            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, Fpcr: Fpcr);
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, fpcr: fpcr);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc | Fpsr.Idc);
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Recpx_Sqrt_S_D([ValueSource("_F_Recpx_Sqrt_S_D_")] uint Opcodes,
-                                     [ValueSource("_1D_F_")] ulong A)
+        public void F_Sqrt_V_2D([ValueSource("_F_Sqrt_V_2D_")] uint opcodes,
+                                [Values(0u)]     uint rd,
+                                [Values(1u, 0u)] uint rn,
+                                [ValueSource("_1D_F_")] ulong z,
+                                [ValueSource("_1D_F_")] ulong a)
         {
-            ulong Z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> V0 = MakeVectorE1(Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, Fpcr: Fpcr);
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
-        }
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
 
-        [Test, Pairwise] [Explicit]
-        public void F_Sqrt_V_2S_4S([ValueSource("_F_Sqrt_V_2S_4S_")] uint Opcodes,
-                                   [Values(0u)]     uint Rd,
-                                   [Values(1u, 0u)] uint Rn,
-                                   [ValueSource("_2S_F_")] ulong Z,
-                                   [ValueSource("_2S_F_")] ulong A,
-                                   [Values(0b0u, 0b1u)] uint Q) // <2S, 4S>
-        {
-            Opcodes |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcodes |= ((Q & 1) << 30);
+            SingleOpcode(opcodes, v0: v0, v1: v1, fpcr: fpcr);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
-
-            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
-
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, Fpcr: Fpcr);
-
-            CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
-        }
-
-        [Test, Pairwise] [Explicit]
-        public void F_Sqrt_V_2D([ValueSource("_F_Sqrt_V_2D_")] uint Opcodes,
-                                [Values(0u)]     uint Rd,
-                                [Values(1u, 0u)] uint Rn,
-                                [ValueSource("_1D_F_")] ulong Z,
-                                [ValueSource("_1D_F_")] ulong A)
-        {
-            Opcodes |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
-
-            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
-
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, Fpcr: Fpcr);
-
-            CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc | Fpsr.Idc);
         }
 
         [Test, Pairwise, Description("NEG <V><d>, <V><n>")]
-        public void Neg_S_D([Values(0u)]     uint Rd,
-                            [Values(1u, 0u)] uint Rn,
-                            [ValueSource("_1D_")] [Random(RndCnt)] ulong Z,
-                            [ValueSource("_1D_")] [Random(RndCnt)] ulong A)
+        public void Neg_S_D([Values(0u)]     uint rd,
+                            [Values(1u, 0u)] uint rn,
+                            [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                            [ValueSource("_1D_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x7EE0B800; // NEG D0, D0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x7EE0B800; // NEG D0, D0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("NEG <Vd>.<T>, <Vn>.<T>")]
-        public void Neg_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                   [Values(1u, 0u)] uint Rn,
-                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Neg_V_8B_4H_2S([Values(0u)]     uint rd,
+                                   [Values(1u, 0u)] uint rn,
+                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                    [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x2E20B800; // NEG V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x2E20B800; // NEG V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("NEG <Vd>.<T>, <Vn>.<T>")]
-        public void Neg_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
-                                       [Values(1u, 0u)] uint Rn,
-                                       [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                       [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Neg_V_16B_8H_4S_2D([Values(0u)]     uint rd,
+                                       [Values(1u, 0u)] uint rn,
+                                       [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                       [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
                                        [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
-            uint Opcode = 0x6E20B800; // NEG V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x6E20B800; // NEG V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("NOT <Vd>.<T>, <Vn>.<T>")]
-        public void Not_V_8B([Values(0u)]     uint Rd,
-                             [Values(1u, 0u)] uint Rn,
-                             [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
-                             [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
-        {
-            uint Opcode = 0x2E205800; // NOT V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
-
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("NOT <Vd>.<T>, <Vn>.<T>")]
-        public void Not_V_16B([Values(0u)]     uint Rd,
-                              [Values(1u, 0u)] uint Rn,
-                              [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
-                              [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
+        public void Not_V_8B([Values(0u)]     uint rd,
+                             [Values(1u, 0u)] uint rn,
+                             [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
+                             [ValueSource("_8B_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x6E205800; // NOT V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x2E205800; // NOT V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("NOT <Vd>.<T>, <Vn>.<T>")]
+        public void Not_V_16B([Values(0u)]     uint rd,
+                              [Values(1u, 0u)] uint rn,
+                              [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
+                              [ValueSource("_8B_")] [Random(RndCnt)] ulong a)
+        {
+            uint opcode = 0x6E205800; // NOT V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("RBIT <Vd>.<T>, <Vn>.<T>")]
-        public void Rbit_V_8B([Values(0u)]     uint Rd,
-                              [Values(1u, 0u)] uint Rn,
-                              [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
-                              [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
+        public void Rbit_V_8B([Values(0u)]     uint rd,
+                              [Values(1u, 0u)] uint rn,
+                              [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
+                              [ValueSource("_8B_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x2E605800; // RBIT V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x2E605800; // RBIT V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("RBIT <Vd>.<T>, <Vn>.<T>")]
-        public void Rbit_V_16B([Values(0u)]     uint Rd,
-                               [Values(1u, 0u)] uint Rn,
-                               [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
-                               [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
+        public void Rbit_V_16B([Values(0u)]     uint rd,
+                               [Values(1u, 0u)] uint rn,
+                               [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
+                               [ValueSource("_8B_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x6E605800; // RBIT V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x6E605800; // RBIT V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("REV16 <Vd>.<T>, <Vn>.<T>")]
-        public void Rev16_V_8B([Values(0u)]     uint Rd,
-                               [Values(1u, 0u)] uint Rn,
-                               [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
-                               [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
+        public void Rev16_V_8B([Values(0u)]     uint rd,
+                               [Values(1u, 0u)] uint rn,
+                               [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
+                               [ValueSource("_8B_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x0E201800; // REV16 V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x0E201800; // REV16 V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("REV16 <Vd>.<T>, <Vn>.<T>")]
-        public void Rev16_V_16B([Values(0u)]     uint Rd,
-                                [Values(1u, 0u)] uint Rn,
-                                [ValueSource("_8B_")] [Random(RndCnt)] ulong Z,
-                                [ValueSource("_8B_")] [Random(RndCnt)] ulong A)
+        public void Rev16_V_16B([Values(0u)]     uint rd,
+                                [Values(1u, 0u)] uint rn,
+                                [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
+                                [ValueSource("_8B_")] [Random(RndCnt)] ulong a)
         {
-            uint Opcode = 0x4E201800; // REV16 V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            uint opcode = 0x4E201800; // REV16 V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("REV32 <Vd>.<T>, <Vn>.<T>")]
-        public void Rev32_V_8B_4H([Values(0u)]     uint Rd,
-                                  [Values(1u, 0u)] uint Rn,
-                                  [ValueSource("_8B4H_")] [Random(RndCnt)] ulong Z,
-                                  [ValueSource("_8B4H_")] [Random(RndCnt)] ulong A,
+        public void Rev32_V_8B_4H([Values(0u)]     uint rd,
+                                  [Values(1u, 0u)] uint rn,
+                                  [ValueSource("_8B4H_")] [Random(RndCnt)] ulong z,
+                                  [ValueSource("_8B4H_")] [Random(RndCnt)] ulong a,
                                   [Values(0b00u, 0b01u)] uint size) // <8B, 4H>
         {
-            uint Opcode = 0x2E200800; // REV32 V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x2E200800; // REV32 V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("REV32 <Vd>.<T>, <Vn>.<T>")]
-        public void Rev32_V_16B_8H([Values(0u)]     uint Rd,
-                                   [Values(1u, 0u)] uint Rn,
-                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong Z,
-                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong A,
+        public void Rev32_V_16B_8H([Values(0u)]     uint rd,
+                                   [Values(1u, 0u)] uint rn,
+                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong z,
+                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong a,
                                    [Values(0b00u, 0b01u)] uint size) // <16B, 8H>
         {
-            uint Opcode = 0x6E200800; // REV32 V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x6E200800; // REV32 V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("REV64 <Vd>.<T>, <Vn>.<T>")]
-        public void Rev64_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                     [Values(1u, 0u)] uint Rn,
-                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Rev64_V_8B_4H_2S([Values(0u)]     uint rd,
+                                     [Values(1u, 0u)] uint rn,
+                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                      [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x0E200800; // REV64 V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x0E200800; // REV64 V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("REV64 <Vd>.<T>, <Vn>.<T>")]
-        public void Rev64_V_16B_8H_4S([Values(0u)]     uint Rd,
-                                      [Values(1u, 0u)] uint Rn,
-                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Rev64_V_16B_8H_4S([Values(0u)]     uint rd,
+                                      [Values(1u, 0u)] uint rn,
+                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                       [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B, 8H, 4S>
         {
-            uint Opcode = 0x4E200800; // REV64 V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x4E200800; // REV64 V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("SADALP <Vd>.<Ta>, <Vn>.<Tb>")]
-        public void Sadalp_V_8B4H_4H2S_2S1D([Values(0u)]     uint Rd,
-                                            [Values(1u, 0u)] uint Rn,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
-                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B4H, 4H2S, 2S1D>
-        {
-            uint Opcode = 0x0E206800; // SADALP V0.4H, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
-
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
-
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("SADALP <Vd>.<Ta>, <Vn>.<Tb>")]
-        public void Sadalp_V_16B8H_8H4S_4S2D([Values(0u)]     uint Rd,
-                                             [Values(1u, 0u)] uint Rn,
-                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
-                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
-        {
-            uint Opcode = 0x4E206800; // SADALP V0.8H, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
-
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
-
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("SADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
-        public void Saddlp_V_8B4H_4H2S_2S1D([Values(0u)]     uint Rd,
-                                            [Values(1u, 0u)] uint Rn,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Sadalp_V_8B4H_4H2S_2S1D([Values(0u)]     uint rd,
+                                            [Values(1u, 0u)] uint rn,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B4H, 4H2S, 2S1D>
         {
-            uint Opcode = 0x0E202800; // SADDLP V0.4H, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x0E206800; // SADALP V0.4H, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("SADALP <Vd>.<Ta>, <Vn>.<Tb>")]
+        public void Sadalp_V_16B8H_8H4S_4S2D([Values(0u)]     uint rd,
+                                             [Values(1u, 0u)] uint rn,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
+        {
+            uint opcode = 0x4E206800; // SADALP V0.8H, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("SADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
-        public void Saddlp_V_16B8H_8H4S_4S2D([Values(0u)]     uint Rd,
-                                             [Values(1u, 0u)] uint Rn,
-                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Saddlp_V_8B4H_4H2S_2S1D([Values(0u)]     uint rd,
+                                            [Values(1u, 0u)] uint rn,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B4H, 4H2S, 2S1D>
+        {
+            uint opcode = 0x0E202800; // SADDLP V0.4H, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("SADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
+        public void Saddlp_V_16B8H_8H4S_4S2D([Values(0u)]     uint rd,
+                                             [Values(1u, 0u)] uint rn,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                              [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
         {
-            uint Opcode = 0x4E202800; // SADDLP V0.8H, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x4E202800; // SADDLP V0.8H, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise]
-        public void Sha1h_Sha1su1_V([ValueSource("_Sha1h_Sha1su1_V_")] uint Opcodes,
-                                    [Values(0u)]     uint Rd,
-                                    [Values(1u, 0u)] uint Rn,
-                                    [Random(RndCnt / 2)] ulong Z0, [Random(RndCnt / 2)] ulong Z1,
-                                    [Random(RndCnt / 2)] ulong A0, [Random(RndCnt / 2)] ulong A1)
-        {
-            Opcodes |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-
-            Vector128<float> V0 = MakeVectorE0E1(Z0, Z1);
-            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
-
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise]
-        public void Sha256su0_V([ValueSource("_Sha256su0_V_")] uint Opcodes,
-                                [Values(0u)]     uint Rd,
-                                [Values(1u, 0u)] uint Rn,
-                                [Random(RndCnt / 2)] ulong Z0, [Random(RndCnt / 2)] ulong Z1,
-                                [Random(RndCnt / 2)] ulong A0, [Random(RndCnt / 2)] ulong A1)
+        public void Sha1h_Sha1su1_V([ValueSource("_Sha1h_Sha1su1_V_")] uint opcodes,
+                                    [Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [Random(RndCnt / 2)] ulong z0, [Random(RndCnt / 2)] ulong z1,
+                                    [Random(RndCnt / 2)] ulong a0, [Random(RndCnt / 2)] ulong a1)
         {
-            Opcodes |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z0, Z1);
-            Vector128<float> V1 = MakeVectorE0E1(A0, A1);
+            Vector128<float> v0 = MakeVectorE0E1(z0, z1);
+            Vector128<float> v1 = MakeVectorE0E1(a0, a1);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void Sha256su0_V([ValueSource("_Sha256su0_V_")] uint opcodes,
+                                [Values(0u)]     uint rd,
+                                [Values(1u, 0u)] uint rn,
+                                [Random(RndCnt / 2)] ulong z0, [Random(RndCnt / 2)] ulong z1,
+                                [Random(RndCnt / 2)] ulong a0, [Random(RndCnt / 2)] ulong a1)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            Vector128<float> v0 = MakeVectorE0E1(z0, z1);
+            Vector128<float> v1 = MakeVectorE0E1(a0, a1);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("SQABS <V><d>, <V><n>")]
-        public void Sqabs_S_B_H_S_D([Values(0u)]     uint Rd,
-                                    [Values(1u, 0u)] uint Rn,
-                                    [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong Z,
-                                    [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong A,
+        public void Sqabs_S_B_H_S_D([Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong z,
+                                    [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong a,
                                     [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <B, H, S, D>
         {
-            uint Opcode = 0x5E207800; // SQABS B0, B0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x5E207800; // SQABS B0, B0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SQABS <Vd>.<T>, <Vn>.<T>")]
-        public void Sqabs_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                     [Values(1u, 0u)] uint Rn,
-                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Sqabs_V_8B_4H_2S([Values(0u)]     uint rd,
+                                     [Values(1u, 0u)] uint rn,
+                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                      [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x0E207800; // SQABS V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x0E207800; // SQABS V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SQABS <Vd>.<T>, <Vn>.<T>")]
-        public void Sqabs_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
-                                         [Values(1u, 0u)] uint Rn,
-                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Sqabs_V_16B_8H_4S_2D([Values(0u)]     uint rd,
+                                         [Values(1u, 0u)] uint rn,
+                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
                                          [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
-            uint Opcode = 0x4E207800; // SQABS V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x4E207800; // SQABS V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SQNEG <V><d>, <V><n>")]
-        public void Sqneg_S_B_H_S_D([Values(0u)]     uint Rd,
-                                    [Values(1u, 0u)] uint Rn,
-                                    [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong Z,
-                                    [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong A,
+        public void Sqneg_S_B_H_S_D([Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong z,
+                                    [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong a,
                                     [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <B, H, S, D>
         {
-            uint Opcode = 0x7E207800; // SQNEG B0, B0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x7E207800; // SQNEG B0, B0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SQNEG <Vd>.<T>, <Vn>.<T>")]
-        public void Sqneg_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                     [Values(1u, 0u)] uint Rn,
-                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Sqneg_V_8B_4H_2S([Values(0u)]     uint rd,
+                                     [Values(1u, 0u)] uint rn,
+                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                     [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                      [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x2E207800; // SQNEG V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x2E207800; // SQNEG V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SQNEG <Vd>.<T>, <Vn>.<T>")]
-        public void Sqneg_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
-                                         [Values(1u, 0u)] uint Rn,
-                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Sqneg_V_16B_8H_4S_2D([Values(0u)]     uint rd,
+                                         [Values(1u, 0u)] uint rn,
+                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                         [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
                                          [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
-            uint Opcode = 0x6E207800; // SQNEG V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x6E207800; // SQNEG V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SQXTN <Vb><d>, <Va><n>")]
-        public void Sqxtn_S_HB_SH_DS([Values(0u)]     uint Rd,
-                                     [Values(1u, 0u)] uint Rn,
-                                     [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong Z,
-                                     [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong A,
+        public void Sqxtn_S_HB_SH_DS([Values(0u)]     uint rd,
+                                     [Values(1u, 0u)] uint rn,
+                                     [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong z,
+                                     [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong a,
                                      [Values(0b00u, 0b01u, 0b10u)] uint size) // <HB, SH, DS>
         {
-            uint Opcode = 0x5E214800; // SQXTN B0, H0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x5E214800; // SQXTN B0, H0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Sqxtn_V_8H8B_4S4H_2D2S([Values(0u)]     uint Rd,
-                                           [Values(1u, 0u)] uint Rn,
-                                           [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                           [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Sqxtn_V_8H8B_4S4H_2D2S([Values(0u)]     uint rd,
+                                           [Values(1u, 0u)] uint rn,
+                                           [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong z,
+                                           [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong a,
                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H8B, 4S4H, 2D2S>
         {
-            uint Opcode = 0x0E214800; // SQXTN V0.8B, V0.8H
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x0E214800; // SQXTN V0.8B, V0.8H
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Sqxtn_V_8H16B_4S8H_2D4S([Values(0u)]     uint Rd,
-                                            [Values(1u, 0u)] uint Rn,
-                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Sqxtn_V_8H16B_4S8H_2D4S([Values(0u)]     uint rd,
+                                            [Values(1u, 0u)] uint rn,
+                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong z,
+                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong a,
                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H16B, 4S8H, 2D4S>
         {
-            uint Opcode = 0x4E214800; // SQXTN2 V0.16B, V0.8H
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x4E214800; // SQXTN2 V0.16B, V0.8H
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SQXTUN <Vb><d>, <Va><n>")]
-        public void Sqxtun_S_HB_SH_DS([Values(0u)]     uint Rd,
-                                      [Values(1u, 0u)] uint Rn,
-                                      [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong Z,
-                                      [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong A,
+        public void Sqxtun_S_HB_SH_DS([Values(0u)]     uint rd,
+                                      [Values(1u, 0u)] uint rn,
+                                      [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong z,
+                                      [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong a,
                                       [Values(0b00u, 0b01u, 0b10u)] uint size) // <HB, SH, DS>
         {
-            uint Opcode = 0x7E212800; // SQXTUN B0, H0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x7E212800; // SQXTUN B0, H0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SQXTUN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Sqxtun_V_8H8B_4S4H_2D2S([Values(0u)]     uint Rd,
-                                            [Values(1u, 0u)] uint Rn,
-                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Sqxtun_V_8H8B_4S4H_2D2S([Values(0u)]     uint rd,
+                                            [Values(1u, 0u)] uint rn,
+                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong z,
+                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong a,
                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H8B, 4S4H, 2D2S>
         {
-            uint Opcode = 0x2E212800; // SQXTUN V0.8B, V0.8H
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x2E212800; // SQXTUN V0.8B, V0.8H
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SQXTUN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Sqxtun_V_8H16B_4S8H_2D4S([Values(0u)]     uint Rd,
-                                             [Values(1u, 0u)] uint Rn,
-                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Sqxtun_V_8H16B_4S8H_2D4S([Values(0u)]     uint rd,
+                                             [Values(1u, 0u)] uint rn,
+                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong z,
+                                             [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong a,
                                              [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H16B, 4S8H, 2D4S>
         {
-            uint Opcode = 0x6E212800; // SQXTUN2 V0.16B, V0.8H
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x6E212800; // SQXTUN2 V0.16B, V0.8H
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SUQADD <V><d>, <V><n>")]
-        public void Suqadd_S_B_H_S_D([Values(0u)]     uint Rd,
-                                     [Values(1u, 0u)] uint Rn,
-                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong Z,
-                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong A,
+        public void Suqadd_S_B_H_S_D([Values(0u)]     uint rd,
+                                     [Values(1u, 0u)] uint rn,
+                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong z,
+                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong a,
                                      [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <B, H, S, D>
         {
-            uint Opcode = 0x5E203800; // SUQADD B0, B0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x5E203800; // SUQADD B0, B0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SUQADD <Vd>.<T>, <Vn>.<T>")]
-        public void Suqadd_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                      [Values(1u, 0u)] uint Rn,
-                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Suqadd_V_8B_4H_2S([Values(0u)]     uint rd,
+                                      [Values(1u, 0u)] uint rn,
+                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                       [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x0E203800; // SUQADD V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x0E203800; // SUQADD V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SUQADD <Vd>.<T>, <Vn>.<T>")]
-        public void Suqadd_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
-                                          [Values(1u, 0u)] uint Rn,
-                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Suqadd_V_16B_8H_4S_2D([Values(0u)]     uint rd,
+                                          [Values(1u, 0u)] uint rn,
+                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
                                           [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
-            uint Opcode = 0x4E203800; // SUQADD V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x4E203800; // SUQADD V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("UADALP <Vd>.<Ta>, <Vn>.<Tb>")]
-        public void Uadalp_V_8B4H_4H2S_2S1D([Values(0u)]     uint Rd,
-                                            [Values(1u, 0u)] uint Rn,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Uadalp_V_8B4H_4H2S_2S1D([Values(0u)]     uint rd,
+                                            [Values(1u, 0u)] uint rn,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B4H, 4H2S, 2S1D>
         {
-            uint Opcode = 0x2E206800; // UADALP V0.4H, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x2E206800; // UADALP V0.4H, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("UADALP <Vd>.<Ta>, <Vn>.<Tb>")]
-        public void Uadalp_V_16B8H_8H4S_4S2D([Values(0u)]     uint Rd,
-                                             [Values(1u, 0u)] uint Rn,
-                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Uadalp_V_16B8H_8H4S_4S2D([Values(0u)]     uint rd,
+                                             [Values(1u, 0u)] uint rn,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                              [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
         {
-            uint Opcode = 0x6E206800; // UADALP V0.8H, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x6E206800; // UADALP V0.8H, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("UADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
-        public void Uaddlp_V_8B4H_4H2S_2S1D([Values(0u)]     uint Rd,
-                                            [Values(1u, 0u)] uint Rn,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Uaddlp_V_8B4H_4H2S_2S1D([Values(0u)]     uint rd,
+                                            [Values(1u, 0u)] uint rn,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B4H, 4H2S, 2S1D>
         {
-            uint Opcode = 0x2E202800; // UADDLP V0.4H, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x2E202800; // UADDLP V0.4H, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("UADDLP <Vd>.<Ta>, <Vn>.<Tb>")]
-        public void Uaddlp_V_16B8H_8H4S_4S2D([Values(0u)]     uint Rd,
-                                             [Values(1u, 0u)] uint Rn,
-                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Uaddlp_V_16B8H_8H4S_4S2D([Values(0u)]     uint rd,
+                                             [Values(1u, 0u)] uint rn,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                              [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
         {
-            uint Opcode = 0x6E202800; // UADDLP V0.8H, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x6E202800; // UADDLP V0.8H, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("UQXTN <Vb><d>, <Va><n>")]
-        public void Uqxtn_S_HB_SH_DS([Values(0u)]     uint Rd,
-                                     [Values(1u, 0u)] uint Rn,
-                                     [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong Z,
-                                     [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong A,
+        public void Uqxtn_S_HB_SH_DS([Values(0u)]     uint rd,
+                                     [Values(1u, 0u)] uint rn,
+                                     [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong z,
+                                     [ValueSource("_1H1S1D_")] [Random(RndCnt)] ulong a,
                                      [Values(0b00u, 0b01u, 0b10u)] uint size) // <HB, SH, DS>
         {
-            uint Opcode = 0x7E214800; // UQXTN B0, H0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x7E214800; // UQXTN B0, H0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("UQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Uqxtn_V_8H8B_4S4H_2D2S([Values(0u)]     uint Rd,
-                                           [Values(1u, 0u)] uint Rn,
-                                           [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                           [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Uqxtn_V_8H8B_4S4H_2D2S([Values(0u)]     uint rd,
+                                           [Values(1u, 0u)] uint rn,
+                                           [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong z,
+                                           [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong a,
                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H8B, 4S4H, 2D2S>
         {
-            uint Opcode = 0x2E214800; // UQXTN V0.8B, V0.8H
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x2E214800; // UQXTN V0.8B, V0.8H
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("UQXTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Uqxtn_V_8H16B_4S8H_2D4S([Values(0u)]     uint Rd,
-                                            [Values(1u, 0u)] uint Rn,
-                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Uqxtn_V_8H16B_4S8H_2D4S([Values(0u)]     uint rd,
+                                            [Values(1u, 0u)] uint rn,
+                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong z,
+                                            [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong a,
                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H16B, 4S8H, 2D4S>
         {
-            uint Opcode = 0x6E214800; // UQXTN2 V0.16B, V0.8H
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x6E214800; // UQXTN2 V0.16B, V0.8H
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("USQADD <V><d>, <V><n>")]
-        public void Usqadd_S_B_H_S_D([Values(0u)]     uint Rd,
-                                     [Values(1u, 0u)] uint Rn,
-                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong Z,
-                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong A,
+        public void Usqadd_S_B_H_S_D([Values(0u)]     uint rd,
+                                     [Values(1u, 0u)] uint rn,
+                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong z,
+                                     [ValueSource("_1B1H1S1D_")] [Random(RndCnt)] ulong a,
                                      [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <B, H, S, D>
         {
-            uint Opcode = 0x7E203800; // USQADD B0, B0
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x7E203800; // USQADD B0, B0
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("USQADD <Vd>.<T>, <Vn>.<T>")]
-        public void Usqadd_V_8B_4H_2S([Values(0u)]     uint Rd,
-                                      [Values(1u, 0u)] uint Rn,
-                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong Z,
-                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong A,
+        public void Usqadd_V_8B_4H_2S([Values(0u)]     uint rd,
+                                      [Values(1u, 0u)] uint rn,
+                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
                                       [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
         {
-            uint Opcode = 0x2E203800; // USQADD V0.8B, V0.8B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x2E203800; // USQADD V0.8B, V0.8B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("USQADD <Vd>.<T>, <Vn>.<T>")]
-        public void Usqadd_V_16B_8H_4S_2D([Values(0u)]     uint Rd,
-                                          [Values(1u, 0u)] uint Rn,
-                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Usqadd_V_16B_8H_4S_2D([Values(0u)]     uint rd,
+                                          [Values(1u, 0u)] uint rn,
+                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
                                           [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
         {
-            uint Opcode = 0x6E203800; // USQADD V0.16B, V0.16B
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x6E203800; // USQADD V0.16B, V0.16B
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.QC);
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("XTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Xtn_V_8H8B_4S4H_2D2S([Values(0u)]     uint Rd,
-                                         [Values(1u, 0u)] uint Rn,
-                                         [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                         [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Xtn_V_8H8B_4S4H_2D2S([Values(0u)]     uint rd,
+                                         [Values(1u, 0u)] uint rn,
+                                         [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong z,
+                                         [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong a,
                                          [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H8B, 4S4H, 2D2S>
         {
-            uint Opcode = 0x0E212800; // XTN V0.8B, V0.8H
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x0E212800; // XTN V0.8B, V0.8H
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("XTN{2} <Vd>.<Tb>, <Vn>.<Ta>")]
-        public void Xtn_V_8H16B_4S8H_2D4S([Values(0u)]     uint Rd,
-                                          [Values(1u, 0u)] uint Rn,
-                                          [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong Z,
-                                          [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong A,
+        public void Xtn_V_8H16B_4S8H_2D4S([Values(0u)]     uint rd,
+                                          [Values(1u, 0u)] uint rn,
+                                          [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong z,
+                                          [ValueSource("_4H2S1D_")] [Random(RndCnt)] ulong a,
                                           [Values(0b00u, 0b01u, 0b10u)] uint size) // <8H16B, 4S8H, 2D4S>
         {
-            uint Opcode = 0x4E212800; // XTN2 V0.16B, V0.8H
-            Opcode |= ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcode |= ((size & 3) << 22);
+            uint opcode = 0x4E212800; // XTN2 V0.16B, V0.8H
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((size & 3) << 22);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            CpuThreadState ThreadState = SingleOpcode(Opcode, V0: V0, V1: V1);
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }

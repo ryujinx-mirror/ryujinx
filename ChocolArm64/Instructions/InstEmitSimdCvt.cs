@@ -89,9 +89,9 @@ namespace ChocolArm64.Instructions
 
                     context.EmitLdarg(TranslatedSub.StateArgIdx);
 
-                    context.EmitCall(typeof(SoftFloat1632), nameof(SoftFloat1632.FPConvert));
+                    context.EmitCall(typeof(SoftFloat16_32), nameof(SoftFloat16_32.FPConvert));
                 }
-                else /* if (SizeF == 1) */
+                else /* if (sizeF == 1) */
                 {
                     EmitVectorExtractF(context, op.Rn, part + index, 0);
 
@@ -139,12 +139,12 @@ namespace ChocolArm64.Instructions
                 {
                     context.EmitLdarg(TranslatedSub.StateArgIdx);
 
-                    context.EmitCall(typeof(SoftFloat3216), nameof(SoftFloat3216.FPConvert));
+                    context.EmitCall(typeof(SoftFloat32_16), nameof(SoftFloat32_16.FPConvert));
 
                     context.Emit(OpCodes.Conv_U8);
                     EmitVectorInsertTmp(context, part + index, 1);
                 }
-                else /* if (SizeF == 1) */
+                else /* if (sizeF == 1) */
                 {
                     context.Emit(OpCodes.Conv_R4);
 
@@ -354,7 +354,7 @@ namespace ChocolArm64.Instructions
 
                     context.Emit(OpCodes.Conv_U8);
                 }
-                else /* if (SizeF == 1) */
+                else /* if (sizeF == 1) */
                 {
                     VectorHelper.EmitCall(context, signed
                         ? nameof(VectorHelper.SatF64ToS64)
@@ -516,7 +516,7 @@ namespace ChocolArm64.Instructions
                     ? nameof(VectorHelper.SatF32ToS32)
                     : nameof(VectorHelper.SatF32ToU32));
             }
-            else /* if (SizeF == 1) */
+            else /* if (sizeF == 1) */
             {
                 VectorHelper.EmitCall(context, signed
                     ? nameof(VectorHelper.SatF64ToS64)
@@ -565,7 +565,7 @@ namespace ChocolArm64.Instructions
                         ? nameof(VectorHelper.SatF32ToS32)
                         : nameof(VectorHelper.SatF32ToU32));
                 }
-                else /* if (SizeF == 1) */
+                else /* if (sizeF == 1) */
                 {
                     VectorHelper.EmitCall(context, signed
                         ? nameof(VectorHelper.SatF64ToS64)
@@ -601,7 +601,7 @@ namespace ChocolArm64.Instructions
                 {
                     VectorHelper.EmitCall(context, nameof(VectorHelper.SatF32ToS32));
                 }
-                else /* if (Size == 1) */
+                else /* if (size == 1) */
                 {
                     VectorHelper.EmitCall(context, nameof(VectorHelper.SatF64ToS32));
                 }
@@ -612,7 +612,7 @@ namespace ChocolArm64.Instructions
                 {
                     VectorHelper.EmitCall(context, nameof(VectorHelper.SatF32ToS64));
                 }
-                else /* if (Size == 1) */
+                else /* if (size == 1) */
                 {
                     VectorHelper.EmitCall(context, nameof(VectorHelper.SatF64ToS64));
                 }
@@ -634,7 +634,7 @@ namespace ChocolArm64.Instructions
                 {
                     VectorHelper.EmitCall(context, nameof(VectorHelper.SatF32ToU32));
                 }
-                else /* if (Size == 1) */
+                else /* if (size == 1) */
                 {
                     VectorHelper.EmitCall(context, nameof(VectorHelper.SatF64ToU32));
                 }
@@ -645,7 +645,7 @@ namespace ChocolArm64.Instructions
                 {
                     VectorHelper.EmitCall(context, nameof(VectorHelper.SatF32ToU64));
                 }
-                else /* if (Size == 1) */
+                else /* if (size == 1) */
                 {
                     VectorHelper.EmitCall(context, nameof(VectorHelper.SatF64ToU64));
                 }

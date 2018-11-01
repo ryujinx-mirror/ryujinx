@@ -1,7 +1,5 @@
 #define SimdRegElemF
 
-using ChocolArm64.State;
-
 using NUnit.Framework;
 
 using System.Collections.Generic;
@@ -9,7 +7,7 @@ using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Tests.Cpu
 {
-    [Category("SimdRegElemF")] // Tested: second half of 2018.
+    [Category("SimdRegElemF")]
     public sealed class CpuTestSimdRegElemF : CpuTest
     {
 #if SimdRegElemF
@@ -46,14 +44,14 @@ namespace Ryujinx.Tests.Cpu
                 yield return 0x000000007FBFFFFFul; // +SNaN (all ones  payload)
             }
 
-            for (int Cnt = 1; Cnt <= RndCnt; Cnt++)
+            for (int cnt = 1; cnt <= RndCnt; cnt++)
             {
-                ulong Grbg = TestContext.CurrentContext.Random.NextUInt();
-                ulong Rnd1 = GenNormal_S();
-                ulong Rnd2 = GenSubnormal_S();
+                ulong grbg = TestContext.CurrentContext.Random.NextUInt();
+                ulong rnd1 = GenNormalS();
+                ulong rnd2 = GenSubnormalS();
 
-                yield return (Grbg << 32) | Rnd1;
-                yield return (Grbg << 32) | Rnd2;
+                yield return (grbg << 32) | rnd1;
+                yield return (grbg << 32) | rnd2;
             }
         }
 
@@ -88,13 +86,13 @@ namespace Ryujinx.Tests.Cpu
                 yield return 0x7FBFFFFF7FBFFFFFul; // +SNaN (all ones  payload)
             }
 
-            for (int Cnt = 1; Cnt <= RndCnt; Cnt++)
+            for (int cnt = 1; cnt <= RndCnt; cnt++)
             {
-                ulong Rnd1 = GenNormal_S();
-                ulong Rnd2 = GenSubnormal_S();
+                ulong rnd1 = GenNormalS();
+                ulong rnd2 = GenSubnormalS();
 
-                yield return (Rnd1 << 32) | Rnd1;
-                yield return (Rnd2 << 32) | Rnd2;
+                yield return (rnd1 << 32) | rnd1;
+                yield return (rnd2 << 32) | rnd2;
             }
         }
 
@@ -129,13 +127,13 @@ namespace Ryujinx.Tests.Cpu
                 yield return 0x7FF7FFFFFFFFFFFFul; // +SNaN (all ones  payload)
             }
 
-            for (int Cnt = 1; Cnt <= RndCnt; Cnt++)
+            for (int cnt = 1; cnt <= RndCnt; cnt++)
             {
-                ulong Rnd1 = GenNormal_D();
-                ulong Rnd2 = GenSubnormal_D();
+                ulong rnd1 = GenNormalD();
+                ulong rnd2 = GenSubnormalD();
 
-                yield return Rnd1;
-                yield return Rnd2;
+                yield return rnd1;
+                yield return rnd2;
             }
         }
 #endregion
@@ -221,203 +219,227 @@ namespace Ryujinx.Tests.Cpu
         private static readonly bool NoNaNs  = false;
 
         [Test, Pairwise] [Explicit] // Fused.
-        public void F_Mla_Mls_Se_S([ValueSource("_F_Mla_Mls_Se_S_")] uint Opcodes,
-                                   [ValueSource("_1S_F_")] ulong Z,
-                                   [ValueSource("_1S_F_")] ulong A,
-                                   [ValueSource("_2S_F_")] ulong B,
-                                   [Values(0u, 1u, 2u, 3u)] uint Index)
+        public void F_Mla_Mls_Se_S([ValueSource("_F_Mla_Mls_Se_S_")] uint opcodes,
+                                   [ValueSource("_1S_F_")] ulong z,
+                                   [ValueSource("_1S_F_")] ulong a,
+                                   [ValueSource("_2S_F_")] ulong b,
+                                   [Values(0u, 1u, 2u, 3u)] uint index)
         {
-            uint H = (Index >> 1) & 1;
-            uint L = Index & 1;
+            uint h = (index >> 1) & 1;
+            uint l = index & 1;
 
-            Opcodes |= (L << 21) | (H << 11);
+            opcodes |= (l << 21) | (h << 11);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
-            Vector128<float> V2 = MakeVectorE0E1(B, B * H);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
 
-            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
 
-            CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_S);
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, fpcr: fpcr);
+
+            CompareAgainstUnicorn(Fpsr.Ioc | Fpsr.Idc, FpSkips.IfUnderflow, FpTolerances.UpToOneUlpsS);
         }
 
         [Test, Pairwise] [Explicit] // Fused.
-        public void F_Mla_Mls_Se_D([ValueSource("_F_Mla_Mls_Se_D_")] uint Opcodes,
-                                   [ValueSource("_1D_F_")] ulong Z,
-                                   [ValueSource("_1D_F_")] ulong A,
-                                   [ValueSource("_1D_F_")] ulong B,
-                                   [Values(0u, 1u)] uint Index)
+        public void F_Mla_Mls_Se_D([ValueSource("_F_Mla_Mls_Se_D_")] uint opcodes,
+                                   [ValueSource("_1D_F_")] ulong z,
+                                   [ValueSource("_1D_F_")] ulong a,
+                                   [ValueSource("_1D_F_")] ulong b,
+                                   [Values(0u, 1u)] uint index)
         {
-            uint H = Index & 1;
+            uint h = index & 1;
 
-            Opcodes |= H << 11;
+            opcodes |= h << 11;
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
-            Vector128<float> V2 = MakeVectorE0E1(B, B * H);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
 
-            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
 
-            CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_D);
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, fpcr: fpcr);
+
+            CompareAgainstUnicorn(Fpsr.Ioc | Fpsr.Idc, FpSkips.IfUnderflow, FpTolerances.UpToOneUlpsD);
         }
 
         [Test, Pairwise] [Explicit] // Fused.
-        public void F_Mla_Mls_Ve_2S_4S([ValueSource("_F_Mla_Mls_Ve_2S_4S_")] uint Opcodes,
-                                       [Values(0u)]     uint Rd,
-                                       [Values(1u, 0u)] uint Rn,
-                                       [Values(2u, 0u)] uint Rm,
-                                       [ValueSource("_2S_F_")] ulong Z,
-                                       [ValueSource("_2S_F_")] ulong A,
-                                       [ValueSource("_2S_F_")] ulong B,
-                                       [Values(0u, 1u, 2u, 3u)] uint Index,
-                                       [Values(0b0u, 0b1u)] uint Q) // <2S, 4S>
+        public void F_Mla_Mls_Ve_2S_4S([ValueSource("_F_Mla_Mls_Ve_2S_4S_")] uint opcodes,
+                                       [Values(0u)]     uint rd,
+                                       [Values(1u, 0u)] uint rn,
+                                       [Values(2u, 0u)] uint rm,
+                                       [ValueSource("_2S_F_")] ulong z,
+                                       [ValueSource("_2S_F_")] ulong a,
+                                       [ValueSource("_2S_F_")] ulong b,
+                                       [Values(0u, 1u, 2u, 3u)] uint index,
+                                       [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
-            uint H = (Index >> 1) & 1;
-            uint L = Index & 1;
+            uint h = (index >> 1) & 1;
+            uint l = index & 1;
 
-            Opcodes |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcodes |= (L << 21) | (H << 11);
-            Opcodes |= ((Q & 1) << 30);
+            opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (l << 21) | (h << 11);
+            opcodes |= ((q & 1) << 30);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
-            Vector128<float> V2 = MakeVectorE0E1(B, B * H);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
 
-            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
 
-            CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_S);
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, fpcr: fpcr);
+
+            CompareAgainstUnicorn(Fpsr.Ioc | Fpsr.Idc, FpSkips.IfUnderflow, FpTolerances.UpToOneUlpsS);
         }
 
         [Test, Pairwise] [Explicit] // Fused.
-        public void F_Mla_Mls_Ve_2D([ValueSource("_F_Mla_Mls_Ve_2D_")] uint Opcodes,
-                                    [Values(0u)]     uint Rd,
-                                    [Values(1u, 0u)] uint Rn,
-                                    [Values(2u, 0u)] uint Rm,
-                                    [ValueSource("_1D_F_")] ulong Z,
-                                    [ValueSource("_1D_F_")] ulong A,
-                                    [ValueSource("_1D_F_")] ulong B,
-                                    [Values(0u, 1u)] uint Index)
+        public void F_Mla_Mls_Ve_2D([ValueSource("_F_Mla_Mls_Ve_2D_")] uint opcodes,
+                                    [Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [Values(2u, 0u)] uint rm,
+                                    [ValueSource("_1D_F_")] ulong z,
+                                    [ValueSource("_1D_F_")] ulong a,
+                                    [ValueSource("_1D_F_")] ulong b,
+                                    [Values(0u, 1u)] uint index)
         {
-            uint H = Index & 1;
+            uint h = index & 1;
 
-            Opcodes |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcodes |= H << 11;
+            opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= h << 11;
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
-            Vector128<float> V2 = MakeVectorE0E1(B, B * H);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
 
-            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
 
-            CompareAgainstUnicorn(FPSR.IOC, FpSkips.IfUnderflow, FpTolerances.UpToOneUlps_D);
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, fpcr: fpcr);
+
+            CompareAgainstUnicorn(Fpsr.Ioc | Fpsr.Idc, FpSkips.IfUnderflow, FpTolerances.UpToOneUlpsD);
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Mul_Mulx_Se_S([ValueSource("_F_Mul_Mulx_Se_S_")] uint Opcodes,
-                                    [ValueSource("_1S_F_")] ulong A,
-                                    [ValueSource("_2S_F_")] ulong B,
-                                    [Values(0u, 1u, 2u, 3u)] uint Index)
+        public void F_Mul_Mulx_Se_S([ValueSource("_F_Mul_Mulx_Se_S_")] uint opcodes,
+                                    [ValueSource("_1S_F_")] ulong a,
+                                    [ValueSource("_2S_F_")] ulong b,
+                                    [Values(0u, 1u, 2u, 3u)] uint index)
         {
-            uint H = (Index >> 1) & 1;
-            uint L = Index & 1;
+            uint h = (index >> 1) & 1;
+            uint l = index & 1;
 
-            Opcodes |= (L << 21) | (H << 11);
+            opcodes |= (l << 21) | (h << 11);
 
-            ulong Z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0(A);
-            Vector128<float> V2 = MakeVectorE0E1(B, B * H);
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
 
-            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, fpcr: fpcr);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc | Fpsr.Idc);
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Mul_Mulx_Se_D([ValueSource("_F_Mul_Mulx_Se_D_")] uint Opcodes,
-                                    [ValueSource("_1D_F_")] ulong A,
-                                    [ValueSource("_1D_F_")] ulong B,
-                                    [Values(0u, 1u)] uint Index)
+        public void F_Mul_Mulx_Se_D([ValueSource("_F_Mul_Mulx_Se_D_")] uint opcodes,
+                                    [ValueSource("_1D_F_")] ulong a,
+                                    [ValueSource("_1D_F_")] ulong b,
+                                    [Values(0u, 1u)] uint index)
         {
-            uint H = Index & 1;
+            uint h = index & 1;
 
-            Opcodes |= H << 11;
+            opcodes |= h << 11;
 
-            ulong Z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> V0 = MakeVectorE1(Z);
-            Vector128<float> V1 = MakeVectorE0(A);
-            Vector128<float> V2 = MakeVectorE0E1(B, B * H);
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE1(z);
+            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
 
-            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, fpcr: fpcr);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc | Fpsr.Idc);
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Mul_Mulx_Ve_2S_4S([ValueSource("_F_Mul_Mulx_Ve_2S_4S_")] uint Opcodes,
-                                        [Values(0u)]     uint Rd,
-                                        [Values(1u, 0u)] uint Rn,
-                                        [Values(2u, 0u)] uint Rm,
-                                        [ValueSource("_2S_F_")] ulong Z,
-                                        [ValueSource("_2S_F_")] ulong A,
-                                        [ValueSource("_2S_F_")] ulong B,
-                                        [Values(0u, 1u, 2u, 3u)] uint Index,
-                                        [Values(0b0u, 0b1u)] uint Q) // <2S, 4S>
+        public void F_Mul_Mulx_Ve_2S_4S([ValueSource("_F_Mul_Mulx_Ve_2S_4S_")] uint opcodes,
+                                        [Values(0u)]     uint rd,
+                                        [Values(1u, 0u)] uint rn,
+                                        [Values(2u, 0u)] uint rm,
+                                        [ValueSource("_2S_F_")] ulong z,
+                                        [ValueSource("_2S_F_")] ulong a,
+                                        [ValueSource("_2S_F_")] ulong b,
+                                        [Values(0u, 1u, 2u, 3u)] uint index,
+                                        [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
-            uint H = (Index >> 1) & 1;
-            uint L = Index & 1;
+            uint h = (index >> 1) & 1;
+            uint l = index & 1;
 
-            Opcodes |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcodes |= (L << 21) | (H << 11);
-            Opcodes |= ((Q & 1) << 30);
+            opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (l << 21) | (h << 11);
+            opcodes |= ((q & 1) << 30);
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A * Q);
-            Vector128<float> V2 = MakeVectorE0E1(B, B * H);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
 
-            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, fpcr: fpcr);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc | Fpsr.Idc);
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Mul_Mulx_Ve_2D([ValueSource("_F_Mul_Mulx_Ve_2D_")] uint Opcodes,
-                                     [Values(0u)]     uint Rd,
-                                     [Values(1u, 0u)] uint Rn,
-                                     [Values(2u, 0u)] uint Rm,
-                                     [ValueSource("_1D_F_")] ulong Z,
-                                     [ValueSource("_1D_F_")] ulong A,
-                                     [ValueSource("_1D_F_")] ulong B,
-                                     [Values(0u, 1u)] uint Index)
+        public void F_Mul_Mulx_Ve_2D([ValueSource("_F_Mul_Mulx_Ve_2D_")] uint opcodes,
+                                     [Values(0u)]     uint rd,
+                                     [Values(1u, 0u)] uint rn,
+                                     [Values(2u, 0u)] uint rm,
+                                     [ValueSource("_1D_F_")] ulong z,
+                                     [ValueSource("_1D_F_")] ulong a,
+                                     [ValueSource("_1D_F_")] ulong b,
+                                     [Values(0u, 1u)] uint index)
         {
-            uint H = Index & 1;
+            uint h = index & 1;
 
-            Opcodes |= ((Rm & 31) << 16) | ((Rn & 31) << 5) | ((Rd & 31) << 0);
-            Opcodes |= H << 11;
+            opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= h << 11;
 
-            Vector128<float> V0 = MakeVectorE0E1(Z, Z);
-            Vector128<float> V1 = MakeVectorE0E1(A, A);
-            Vector128<float> V2 = MakeVectorE0E1(B, B * H);
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
 
-            int Fpcr = (int)TestContext.CurrentContext.Random.NextUInt() & (1 << (int)FPCR.DN);
+            int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
-            CpuThreadState ThreadState = SingleOpcode(Opcodes, V0: V0, V1: V1, V2: V2, Fpcr: Fpcr);
+            int fpcr = rnd & (1 << (int)Fpcr.Fz);
+            fpcr |= rnd & (1 << (int)Fpcr.Dn);
 
-            CompareAgainstUnicorn(FpsrMask: FPSR.IOC);
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, fpcr: fpcr);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc | Fpsr.Idc);
         }
 #endif
     }
