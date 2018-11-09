@@ -72,11 +72,14 @@ namespace ChocolArm64.Instructions
         {
             OpCodeBReg64 op = (OpCodeBReg64)context.CurrOp;
 
+            context.EmitLdintzr(op.Rn);
+            context.EmitSttmp();
+
             context.EmitLdc_I(op.Position + 4);
             context.EmitStint(CpuThreadState.LrIndex);
             context.EmitStoreState();
-            context.EmitLdintzr(op.Rn);
 
+            context.EmitLdtmp();
             context.Emit(OpCodes.Ret);
         }
 
