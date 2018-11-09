@@ -61,7 +61,7 @@ namespace Ryujinx.Graphics.Texture
             { GalTextureFormat.R11G11B10F, GalImageFormat.R11G11B10                               | Float        },
             { GalTextureFormat.D24S8,      GalImageFormat.D24S8             | Unorm        | Uint                },
             { GalTextureFormat.D32F,       GalImageFormat.D32                                     | Float        },
-            { GalTextureFormat.D32FX24S8,  GalImageFormat.D32S8             | Unorm                              },
+            { GalTextureFormat.D32FX24S8,  GalImageFormat.D32S8                                   | Float        },
             { GalTextureFormat.D16,        GalImageFormat.D16               | Unorm                              },
 
             //Compressed formats
