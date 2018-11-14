@@ -69,6 +69,16 @@ namespace Ryujinx.Graphics
             //Ensure that all components are enabled by default.
             //FIXME: Is this correct?
             WriteRegister(NvGpuEngine3dReg.ColorMaskN, 0x1111);
+
+            for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
+            {
+                WriteRegister(NvGpuEngine3dReg.IBlendNEquationRgb   + Index * 8, (int)GalBlendEquation.FuncAdd);
+                WriteRegister(NvGpuEngine3dReg.IBlendNFuncSrcRgb    + Index * 8, (int)GalBlendFactor.One);
+                WriteRegister(NvGpuEngine3dReg.IBlendNFuncDstRgb    + Index * 8, (int)GalBlendFactor.Zero);
+                WriteRegister(NvGpuEngine3dReg.IBlendNEquationAlpha + Index * 8, (int)GalBlendEquation.FuncAdd);
+                WriteRegister(NvGpuEngine3dReg.IBlendNFuncSrcAlpha  + Index * 8, (int)GalBlendFactor.One);
+                WriteRegister(NvGpuEngine3dReg.IBlendNFuncDstAlpha  + Index * 8, (int)GalBlendFactor.Zero);
+            }
         }
 
         public void CallMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)

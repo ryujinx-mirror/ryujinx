@@ -24,10 +24,10 @@
         {
             Enabled       = false,
             SeparateAlpha = false,
-            EquationRgb   = 0,
+            EquationRgb   = GalBlendEquation.FuncAdd,
             FuncSrcRgb    = GalBlendFactor.One,
             FuncDstRgb    = GalBlendFactor.Zero,
-            EquationAlpha = 0,
+            EquationAlpha = GalBlendEquation.FuncAdd,
             FuncSrcAlpha  = GalBlendFactor.One,
             FuncDstAlpha  = GalBlendFactor.Zero
         };
