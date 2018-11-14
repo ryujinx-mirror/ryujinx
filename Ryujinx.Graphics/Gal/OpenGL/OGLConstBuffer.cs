@@ -5,11 +5,13 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 {
     class OGLConstBuffer : IGalConstBuffer
     {
+        private const long MaxConstBufferCacheSize = 64 * 1024 * 1024;
+
         private OGLCachedResource<OGLStreamBuffer> Cache;
 
         public OGLConstBuffer()
         {
-            Cache = new OGLCachedResource<OGLStreamBuffer>(DeleteBuffer);
+            Cache = new OGLCachedResource<OGLStreamBuffer>(DeleteBuffer, MaxConstBufferCacheSize);
         }
 
         public void LockCache()

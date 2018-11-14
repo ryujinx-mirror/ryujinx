@@ -6,13 +6,15 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 {
     class OGLTexture : IGalTexture
     {
+        private const long MaxTextureCacheSize = 768 * 1024 * 1024;
+
         private OGLCachedResource<ImageHandler> TextureCache;
 
         public EventHandler<int> TextureDeleted { get; set; }
 
         public OGLTexture()
         {
-            TextureCache = new OGLCachedResource<ImageHandler>(DeleteTexture);
+            TextureCache = new OGLCachedResource<ImageHandler>(DeleteTexture, MaxTextureCacheSize);
         }
 
         public void LockCache()

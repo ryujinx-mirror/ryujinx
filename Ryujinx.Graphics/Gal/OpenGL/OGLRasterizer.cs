@@ -5,6 +5,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 {
     class OGLRasterizer : IGalRasterizer
     {
+        private const long MaxVertexBufferCacheSize = 128 * 1024 * 1024;
+        private const long MaxIndexBufferCacheSize  = 64  * 1024 * 1024;
+
         private int[] VertexBuffers;
 
         private OGLCachedResource<int> VboCache;
@@ -24,8 +27,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             VertexBuffers = new int[32];
 
-            VboCache = new OGLCachedResource<int>(GL.DeleteBuffer);
-            IboCache = new OGLCachedResource<int>(GL.DeleteBuffer);
+            VboCache = new OGLCachedResource<int>(GL.DeleteBuffer, MaxVertexBufferCacheSize);
+            IboCache = new OGLCachedResource<int>(GL.DeleteBuffer, MaxIndexBufferCacheSize);
 
             IndexBuffer = new IbInfo();
         }
