@@ -8,6 +8,8 @@ using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 {
@@ -303,7 +305,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             }
         }
 
-        private void AppendMixedBuffer(long Tag)
+        private unsafe void AppendMixedBuffer(long Tag)
         {
             int[] MixBuffer = new int[MixBufferSamplesCount * AudioConsts.HostChannelsCount];
 
@@ -314,9 +316,9 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
                     continue;
                 }
 
-                int OutOffset = 0;
-
-                int PendingSamples = MixBufferSamplesCount;
+                int   OutOffset      = 0;
+                int   PendingSamples = MixBufferSamplesCount;
+                float Volume         = Voice.Volume;
 
                 while (PendingSamples > 0)
                 {
@@ -331,9 +333,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
                     for (int Offset = 0; Offset < Samples.Length; Offset++)
                     {
-                        int Sample = (int)(Samples[Offset] * Voice.Volume);
-
-                        MixBuffer[OutOffset++] += Sample;
+                        MixBuffer[OutOffset++] += (int)(Samples[Offset] * Voice.Volume);
                     }
                 }
             }
@@ -341,11 +341,49 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             AudioOut.AppendBuffer(Track, Tag, GetFinalBuffer(MixBuffer));
         }
 
-        private static short[] GetFinalBuffer(int[] Buffer)
+        private unsafe static short[] GetFinalBuffer(int[] Buffer)
         {
             short[] Output = new short[Buffer.Length];
 
-            for (int Offset = 0; Offset < Buffer.Length; Offset++)
+            int Offset = 0;
+
+            // Perform Saturation using SSE2 if supported
+            if (Sse2.IsSupported)
+            {
+                fixed (int*   inptr  = Buffer)
+                fixed (short* outptr = Output)
+                {
+                    for (; Offset + 32 <= Buffer.Length; Offset += 32)
+                    {
+                        // Unroll the loop a little to ensure the CPU pipeline
+                        // is always full.
+                        Vector128<int> block1A = Sse2.LoadVector128(inptr + Offset + 0);
+                        Vector128<int> block1B = Sse2.LoadVector128(inptr + Offset + 4);
+
+                        Vector128<int> block2A = Sse2.LoadVector128(inptr + Offset +  8);
+                        Vector128<int> block2B = Sse2.LoadVector128(inptr + Offset + 12);
+
+                        Vector128<int> block3A = Sse2.LoadVector128(inptr + Offset + 16);
+                        Vector128<int> block3B = Sse2.LoadVector128(inptr + Offset + 20);
+
+                        Vector128<int> block4A = Sse2.LoadVector128(inptr + Offset + 24);
+                        Vector128<int> block4B = Sse2.LoadVector128(inptr + Offset + 28);
+
+                        Vector128<short> output1 = Sse2.PackSignedSaturate(block1A, block1B);
+                        Vector128<short> output2 = Sse2.PackSignedSaturate(block2A, block2B);
+                        Vector128<short> output3 = Sse2.PackSignedSaturate(block3A, block3B);
+                        Vector128<short> output4 = Sse2.PackSignedSaturate(block4A, block4B);
+
+                        Sse2.Store(outptr + Offset +  0, output1);
+                        Sse2.Store(outptr + Offset +  8, output2);
+                        Sse2.Store(outptr + Offset + 16, output3);
+                        Sse2.Store(outptr + Offset + 24, output4);
+                    }
+                }
+            }
+
+            // Process left overs
+            for (; Offset < Buffer.Length; Offset++)
             {
                 Output[Offset] = DspUtils.Saturate(Buffer[Offset]);
             }

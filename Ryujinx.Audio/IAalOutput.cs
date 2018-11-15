@@ -4,19 +4,19 @@ namespace Ryujinx.Audio
 {
     public interface IAalOutput : IDisposable
     {
-        int OpenTrack(int SampleRate, int Channels, ReleaseCallback Callback);
+        int OpenTrack(int sampleRate, int channels, ReleaseCallback callback);
 
-        void CloseTrack(int Track);
+        void CloseTrack(int trackId);
 
-        bool ContainsBuffer(int Track, long Tag);
+        bool ContainsBuffer(int trackId, long bufferTag);
 
-        long[] GetReleasedBuffers(int Track, int MaxCount);
+        long[] GetReleasedBuffers(int trackId, int maxCount);
 
-        void AppendBuffer<T>(int Track, long Tag, T[] Buffer)  where T : struct;
+        void AppendBuffer<T>(int trackId, long bufferTag, T[] buffer)  where T : struct;
 
-        void Start(int Track);
-        void Stop(int Track);
+        void Start(int trackId);
+        void Stop(int trackId);
 
-        PlaybackState GetState(int Track);
+        PlaybackState GetState(int trackId);
     }
 }

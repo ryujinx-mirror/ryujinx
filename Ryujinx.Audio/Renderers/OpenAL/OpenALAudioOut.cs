@@ -6,8 +6,11 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Ryujinx.Audio.OpenAL
+namespace Ryujinx.Audio
 {
+    /// <summary>
+    /// An audio renderer that uses OpenAL as the audio backend
+    /// </summary>
     public class OpenALAudioOut : IAalOutput, IDisposable
     {
         private const int MaxTracks = 256;
@@ -174,6 +177,24 @@ namespace Ryujinx.Audio.OpenAL
             AudioPollerThread = new Thread(AudioPollerWork);
 
             AudioPollerThread.Start();
+        }
+
+        /// <summary>
+        /// True if OpenAL is supported on the device.
+        /// </summary>
+        public static bool IsSupported
+        {
+            get
+            {
+                try
+                {
+                    return AudioContext.AvailableDevices.Count > 0;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
         }
 
         private void AudioPollerWork()

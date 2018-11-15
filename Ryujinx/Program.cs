@@ -1,5 +1,4 @@
 ﻿using Ryujinx.Audio;
-using Ryujinx.Audio.OpenAL;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Gal.OpenGL;
@@ -17,7 +16,7 @@ namespace Ryujinx
 
             IGalRenderer renderer = new OGLRenderer();
 
-            IAalOutput audioOut = new OpenALAudioOut();
+            IAalOutput audioOut = InitializeAudioEngine();
 
             Switch device = new Switch(renderer, audioOut);
 
@@ -85,6 +84,26 @@ namespace Ryujinx
             }
 
             audioOut.Dispose();
+        }
+
+        /// <summary>
+        /// Picks an <see cref="IAalOutput"/> audio output renderer supported on this machine
+        /// </summary>
+        /// <returns>An <see cref="IAalOutput"/> supported by this machine</returns>
+        private static IAalOutput InitializeAudioEngine()
+        {
+            if (SoundIoAudioOut.IsSupported)
+            {
+                return new SoundIoAudioOut();
+            }
+            else if (OpenALAudioOut.IsSupported)
+            {
+                return new OpenALAudioOut();
+            }
+            else
+            {
+                return new DummyAudioOut();
+            }
         }
     }
 }
