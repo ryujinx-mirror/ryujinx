@@ -105,6 +105,9 @@ namespace Ryujinx.HLE.HOS.Services
                 case "ldr:ro":
                     return new IRoInterface();
 
+                case "hwopus":
+                    return new IHardwareOpusDecoderManager();
+
                 case "lm":
                     return new ILogService();
 
