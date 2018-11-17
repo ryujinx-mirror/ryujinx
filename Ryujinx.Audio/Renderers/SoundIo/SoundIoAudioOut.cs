@@ -32,7 +32,66 @@ namespace Ryujinx.Audio
         /// <summary>
         /// True if SoundIO is supported on the device.
         /// </summary>
-        public static bool IsSupported => true;
+        public static bool IsSupported
+        {
+            get
+            {
+                SoundIO          context = null;
+                SoundIODevice    device  = null;
+                SoundIOOutStream stream  = null;
+
+                bool backendDisconnected = false;
+
+                try
+                {
+                    context = new SoundIO();
+
+                    context.OnBackendDisconnect = (i) => {
+                        backendDisconnected = true;
+                    };
+
+                    context.Connect();
+                    context.FlushEvents();
+
+                    if(backendDisconnected)
+                    {
+                        return false;
+                    }
+
+                    device = context.GetOutputDevice(context.DefaultOutputDeviceIndex);
+
+                    if(device == null || backendDisconnected)
+                    {
+                        return false;
+                    }
+
+                    stream = device.CreateOutStream();
+
+                    if(stream == null || backendDisconnected)
+                    {
+                        return false;
+                    }
+
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+                finally
+                {
+                    if(stream != null)
+                    {
+                        stream.Dispose();
+                    }
+
+                    if(context != null)
+                    {
+                        context.Dispose();
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Constructs a new instance of a <see cref="SoundIoAudioOut"/>
