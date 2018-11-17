@@ -106,7 +106,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                         Image.Width,
                         Image.Height, 1);
 
-                    Image.Format = GalImageFormat.RGBA8 | GalImageFormat.Unorm;
+                    Image.Format = GalImageFormat.RGBA8 | (Image.Format & GalImageFormat.TypeMask);
                 }
 
                 (PixelInternalFormat InternalFmt,

@@ -61,6 +61,8 @@ namespace Ryujinx.Graphics
             //FIXME: Is this correct?
             WriteRegister(NvGpuEngine3dReg.ColorMaskN, 0x1111);
 
+            WriteRegister(NvGpuEngine3dReg.FrameBufferSrgb, 1);
+
             for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
             {
                 WriteRegister(NvGpuEngine3dReg.IBlendNEquationRgb   + Index * 8, (int)GalBlendEquation.FuncAdd);
