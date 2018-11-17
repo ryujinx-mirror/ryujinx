@@ -95,6 +95,7 @@ namespace Ryujinx.Graphics.Texture
             { GalImageFormat.RGBA32,      new ImageDescriptor(16, 1,  1,  TargetBuffer.Color) },
             { GalImageFormat.RGBA16,      new ImageDescriptor(8,  1,  1,  TargetBuffer.Color) },
             { GalImageFormat.RG32,        new ImageDescriptor(8,  1,  1,  TargetBuffer.Color) },
+            { GalImageFormat.RGBX8,       new ImageDescriptor(4,  1,  1,  TargetBuffer.Color) },
             { GalImageFormat.RGBA8,       new ImageDescriptor(4,  1,  1,  TargetBuffer.Color) },
             { GalImageFormat.BGRA8,       new ImageDescriptor(4,  1,  1,  TargetBuffer.Color) },
             { GalImageFormat.RGB10A2,     new ImageDescriptor(4,  1,  1,  TargetBuffer.Color) },
@@ -131,9 +132,10 @@ namespace Ryujinx.Graphics.Texture
             { GalImageFormat.Astc2D10x5,  new ImageDescriptor(16, 10, 5,  TargetBuffer.Color) },
             { GalImageFormat.Astc2D10x6,  new ImageDescriptor(16, 10, 6,  TargetBuffer.Color) },
 
+            { GalImageFormat.D16,   new ImageDescriptor(2, 1, 1, TargetBuffer.Depth)        },
+            { GalImageFormat.D24,   new ImageDescriptor(4, 1, 1, TargetBuffer.Depth)        },
             { GalImageFormat.D24S8, new ImageDescriptor(4, 1, 1, TargetBuffer.DepthStencil) },
             { GalImageFormat.D32,   new ImageDescriptor(4, 1, 1, TargetBuffer.Depth)        },
-            { GalImageFormat.D16,   new ImageDescriptor(2, 1, 1, TargetBuffer.Depth)        },
             { GalImageFormat.D32S8, new ImageDescriptor(8, 1, 1, TargetBuffer.DepthStencil) }
         };
 
@@ -198,6 +200,7 @@ namespace Ryujinx.Graphics.Texture
                 case GalSurfaceFormat.R8Uint:         return GalImageFormat.R8        | Uint;
                 case GalSurfaceFormat.B5G6R5Unorm:    return GalImageFormat.RGB565    | Unorm;
                 case GalSurfaceFormat.BGR5A1Unorm:    return GalImageFormat.BGR5A1    | Unorm;
+                case GalSurfaceFormat.RGBX8Unorm:     return GalImageFormat.RGBX8     | Unorm;
             }
 
             throw new NotImplementedException(Format.ToString());
@@ -210,6 +213,7 @@ namespace Ryujinx.Graphics.Texture
                 case GalZetaFormat.D32Float:      return GalImageFormat.D32   | Float;
                 case GalZetaFormat.S8D24Unorm:    return GalImageFormat.D24S8 | Unorm;
                 case GalZetaFormat.D16Unorm:      return GalImageFormat.D16   | Unorm;
+                case GalZetaFormat.D24X8Unorm:    return GalImageFormat.D24   | Unorm;
                 case GalZetaFormat.D24S8Unorm:    return GalImageFormat.D24S8 | Unorm;
                 case GalZetaFormat.D32S8X24Float: return GalImageFormat.D32S8 | Float;
             }
@@ -247,7 +251,7 @@ namespace Ryujinx.Graphics.Texture
             {
                 int OutOffs = Y * Pitch;
 
-                for (int X = 0; X < Width;  X++)
+                for (int X = 0; X < Width; X++)
                 {
                     long Offset = (uint)Swizzle.GetSwizzleOffset(X, Y);
 
@@ -281,6 +285,45 @@ namespace Ryujinx.Graphics.Texture
 
                 InOffs += BytesPerPixel;
             }
+        }
+
+        public static bool CopyTexture(
+            NvGpuVmm Vmm,
+            GalImage SrcImage,
+            GalImage DstImage,
+            long     SrcAddress,
+            long     DstAddress,
+            int      SrcX,
+            int      SrcY,
+            int      DstX,
+            int      DstY,
+            int      Width,
+            int      Height)
+        {
+            ISwizzle SrcSwizzle = TextureHelper.GetSwizzle(SrcImage);
+            ISwizzle DstSwizzle = TextureHelper.GetSwizzle(DstImage);
+
+            ImageDescriptor Desc = GetImageDescriptor(SrcImage.Format);
+
+            if (GetImageDescriptor(DstImage.Format).BytesPerPixel != Desc.BytesPerPixel)
+            {
+                return false;
+            }
+
+            int BytesPerPixel = Desc.BytesPerPixel;
+
+            for (int Y = 0; Y < Height; Y++)
+            for (int X = 0; X < Width;  X++)
+            {
+                long SrcOffset = (uint)SrcSwizzle.GetSwizzleOffset(SrcX + X, SrcY + Y);
+                long DstOffset = (uint)DstSwizzle.GetSwizzleOffset(DstX + X, DstY + Y);
+
+                byte[] Texel = Vmm.ReadBytes(SrcAddress + SrcOffset, BytesPerPixel);
+
+                Vmm.WriteBytes(DstAddress + DstOffset, Texel);
+            }
+
+            return true;
         }
 
         public static int GetSize(GalImage Image)

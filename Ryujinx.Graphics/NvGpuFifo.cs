@@ -1,10 +1,8 @@
 using Ryujinx.Graphics.Memory;
-using System.Collections.Concurrent;
-using System.Threading;
 
 namespace Ryujinx.Graphics
 {
-    public class NvGpuFifo
+    class NvGpuFifo
     {
         private const int MacrosCount    = 0x80;
         private const int MacroIndexMask = MacrosCount - 1;
@@ -15,15 +13,14 @@ namespace Ryujinx.Graphics
 
         private NvGpu Gpu;
 
-        private ConcurrentQueue<(NvGpuVmm, NvGpuPBEntry[])> BufferQueue;
-
         private NvGpuEngine[] SubChannels;
-
-        public AutoResetEvent Event { get; private set; }
 
         private struct CachedMacro
         {
             public int Position { get; private set; }
+
+            private bool ExecutionPending;
+            private int  Argument;
 
             private MacroInterpreter Interpreter;
 
@@ -31,17 +28,32 @@ namespace Ryujinx.Graphics
             {
                 this.Position = Position;
 
+                ExecutionPending = false;
+                Argument         = 0;
+
                 Interpreter = new MacroInterpreter(PFifo, Engine);
             }
 
-            public void PushParam(int Param)
+            public void StartExecution(int Argument)
             {
-                Interpreter?.Fifo.Enqueue(Param);
+                this.Argument = Argument;
+
+                ExecutionPending = true;
             }
 
-            public void Execute(NvGpuVmm Vmm, int[] Mme, int Param)
+            public void Execute(NvGpuVmm Vmm, int[] Mme)
             {
-                Interpreter?.Execute(Vmm, Mme, Position, Param);
+                if (ExecutionPending)
+                {
+                    ExecutionPending = false;
+
+                    Interpreter?.Execute(Vmm, Mme, Position, Argument);
+                }
+            }
+
+            public void PushArgument(int Argument)
+            {
+                Interpreter?.Fifo.Enqueue(Argument);
             }
         }
 
@@ -56,148 +68,109 @@ namespace Ryujinx.Graphics
         {
             this.Gpu = Gpu;
 
-            BufferQueue = new ConcurrentQueue<(NvGpuVmm, NvGpuPBEntry[])>();
-
             SubChannels = new NvGpuEngine[8];
 
             Macros = new CachedMacro[MacrosCount];
 
             Mme = new int[MmeWords];
-
-            Event = new AutoResetEvent(false);
         }
 
-        public void PushBuffer(NvGpuVmm Vmm, NvGpuPBEntry[] Buffer)
+        public void CallMethod(NvGpuVmm Vmm, GpuMethodCall MethCall)
         {
-            BufferQueue.Enqueue((Vmm, Buffer));
-
-            Event.Set();
-        }
-
-        public void DispatchCalls()
-        {
-            while (Step());
-        }
-
-        private (NvGpuVmm Vmm, NvGpuPBEntry[] Pb) Curr;
-
-        private int CurrPbEntryIndex;
-
-        public bool Step()
-        {
-            while (Curr.Pb == null || Curr.Pb.Length <= CurrPbEntryIndex)
+            if ((NvGpuFifoMeth)MethCall.Method == NvGpuFifoMeth.BindChannel)
             {
-                if (!BufferQueue.TryDequeue(out Curr))
-                {
-                    return false;
-                }
+                NvGpuEngine Engine = (NvGpuEngine)MethCall.Argument;
 
-                Gpu.Engine3d.ResetCache();
-
-                Gpu.ResourceManager.ClearPbCache();
-
-                CurrPbEntryIndex = 0;
-            }
-
-            CallMethod(Curr.Vmm, Curr.Pb[CurrPbEntryIndex++]);
-
-            return true;
-        }
-
-        private void CallMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
-        {
-            if ((NvGpuFifoMeth)PBEntry.Method == NvGpuFifoMeth.BindChannel)
-            {
-                NvGpuEngine Engine = (NvGpuEngine)PBEntry.Arguments[0];
-
-                SubChannels[PBEntry.SubChannel] = Engine;
+                SubChannels[MethCall.SubChannel] = Engine;
             }
             else
             {
-                switch (SubChannels[PBEntry.SubChannel])
+                switch (SubChannels[MethCall.SubChannel])
                 {
-                    case NvGpuEngine._2d:  Call2dMethod  (Vmm, PBEntry); break;
-                    case NvGpuEngine._3d:  Call3dMethod  (Vmm, PBEntry); break;
-                    case NvGpuEngine.P2mf: CallP2mfMethod(Vmm, PBEntry); break;
-                    case NvGpuEngine.M2mf: CallM2mfMethod(Vmm, PBEntry); break;
+                    case NvGpuEngine._2d:  Call2dMethod  (Vmm, MethCall); break;
+                    case NvGpuEngine._3d:  Call3dMethod  (Vmm, MethCall); break;
+                    case NvGpuEngine.P2mf: CallP2mfMethod(Vmm, MethCall); break;
+                    case NvGpuEngine.M2mf: CallM2mfMethod(Vmm, MethCall); break;
                 }
             }
         }
 
-        private void Call2dMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        private void Call2dMethod(NvGpuVmm Vmm, GpuMethodCall MethCall)
         {
-            Gpu.Engine2d.CallMethod(Vmm, PBEntry);
+            Gpu.Engine2d.CallMethod(Vmm, MethCall);
         }
 
-        private void Call3dMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        private void Call3dMethod(NvGpuVmm Vmm, GpuMethodCall MethCall)
         {
-            if (PBEntry.Method < 0x80)
+            if (MethCall.Method < 0x80)
             {
-                switch ((NvGpuFifoMeth)PBEntry.Method)
+                switch ((NvGpuFifoMeth)MethCall.Method)
                 {
                     case NvGpuFifoMeth.SetMacroUploadAddress:
                     {
-                        CurrMacroPosition = PBEntry.Arguments[0];
+                        CurrMacroPosition = MethCall.Argument;
 
                         break;
                     }
 
                     case NvGpuFifoMeth.SendMacroCodeData:
                     {
-                        foreach (int Arg in PBEntry.Arguments)
-                        {
-                            Mme[CurrMacroPosition++] = Arg;
-                        }
+                        Mme[CurrMacroPosition++] = MethCall.Argument;
+
                         break;
                     }
 
                     case NvGpuFifoMeth.SetMacroBindingIndex:
                     {
-                        CurrMacroBindIndex = PBEntry.Arguments[0];
+                        CurrMacroBindIndex = MethCall.Argument;
 
                         break;
                     }
 
                     case NvGpuFifoMeth.BindMacro:
                     {
-                        int Position = PBEntry.Arguments[0];
+                        int Position = MethCall.Argument;
 
                         Macros[CurrMacroBindIndex] = new CachedMacro(this, Gpu.Engine3d, Position);
 
                         break;
                     }
+
+                    default: CallP2mfMethod(Vmm, MethCall); break;
                 }
             }
-            else if (PBEntry.Method < 0xe00)
+            else if (MethCall.Method < 0xe00)
             {
-                Gpu.Engine3d.CallMethod(Vmm, PBEntry);
+                Gpu.Engine3d.CallMethod(Vmm, MethCall);
             }
             else
             {
-                int MacroIndex = (PBEntry.Method >> 1) & MacroIndexMask;
+                int MacroIndex = (MethCall.Method >> 1) & MacroIndexMask;
 
-                if ((PBEntry.Method & 1) != 0)
+                if ((MethCall.Method & 1) != 0)
                 {
-                    foreach (int Arg in PBEntry.Arguments)
-                    {
-                        Macros[MacroIndex].PushParam(Arg);
-                    }
+                    Macros[MacroIndex].PushArgument(MethCall.Argument);
                 }
                 else
                 {
-                    Macros[MacroIndex].Execute(Vmm, Mme, PBEntry.Arguments[0]);
+                    Macros[MacroIndex].StartExecution(MethCall.Argument);
+                }
+
+                if (MethCall.IsLastCall)
+                {
+                    Macros[MacroIndex].Execute(Vmm, Mme);
                 }
             }
         }
 
-        private void CallP2mfMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        private void CallP2mfMethod(NvGpuVmm Vmm, GpuMethodCall MethCall)
         {
-            Gpu.EngineP2mf.CallMethod(Vmm, PBEntry);
+            Gpu.EngineP2mf.CallMethod(Vmm, MethCall);
         }
 
-        private void CallM2mfMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        private void CallM2mfMethod(NvGpuVmm Vmm, GpuMethodCall MethCall)
         {
-            Gpu.EngineM2mf.CallMethod(Vmm, PBEntry);
+            Gpu.EngineM2mf.CallMethod(Vmm, MethCall);
         }
     }
 }

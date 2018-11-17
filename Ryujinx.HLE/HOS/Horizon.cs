@@ -333,7 +333,7 @@ namespace Ryujinx.HLE.HOS
             {
                 Device.FileSystem.SetRomFs(RomfsStream);
             }
-            
+
             Pfs Exefs = new Pfs(ExefsStream);
 
             Npdm MetaData = null;

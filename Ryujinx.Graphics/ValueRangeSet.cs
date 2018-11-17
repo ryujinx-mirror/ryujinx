@@ -76,7 +76,7 @@ namespace Ryujinx.Graphics
                 {
                     Ranges.RemoveAt(NewIndex + 1);
 
-                    Ranges[NewIndex] = new ValueRange<T>(Range.Start, Next.End, Range.Value);
+                    Ranges[NewIndex] = new ValueRange<T>(Ranges[NewIndex].Start, Next.End, Range.Value);
                 }
             }
         }

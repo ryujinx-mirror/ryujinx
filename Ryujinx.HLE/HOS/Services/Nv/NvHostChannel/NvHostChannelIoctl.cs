@@ -181,15 +181,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
 
         private static void PushGpfifo(ServiceCtx Context, NvGpuVmm Vmm, long Gpfifo)
         {
-            long VA = Gpfifo & 0xff_ffff_ffff;
-
-            int Size = (int)(Gpfifo >> 40) & 0x7ffffc;
-
-            byte[] Data = Vmm.ReadBytes(VA, Size);
-
-            NvGpuPBEntry[] PushBuffer = NvGpuPushBuffer.Decode(Data);
-
-            Context.Device.Gpu.Fifo.PushBuffer(Vmm, PushBuffer);
+            Context.Device.Gpu.Pusher.Push(Vmm, Gpfifo);
         }
 
         public static NvChannel GetChannel(ServiceCtx Context, NvChannelName Channel)

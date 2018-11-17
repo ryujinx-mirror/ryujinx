@@ -1,3 +1,4 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Memory;
 using System;
 using System.Collections.Generic;
@@ -388,14 +389,11 @@ namespace Ryujinx.Graphics
         {
             int Value;
 
-            //If we don't have any parameters in the FIFO,
-            //keep running the PFIFO engine until it writes the parameters.
-            while (!Fifo.TryDequeue(out Value))
+            if (!Fifo.TryDequeue(out Value))
             {
-                if (!PFifo.Step())
-                {
-                    return 0;
-                }
+                Logger.PrintWarning(LogClass.Gpu, "Macro attempted to fetch an inexistent argument.");
+
+                return 0;
             }
 
             return Value;
@@ -408,9 +406,9 @@ namespace Ryujinx.Graphics
 
         private void Send(NvGpuVmm Vmm, int Value)
         {
-            NvGpuPBEntry PBEntry = new NvGpuPBEntry(MethAddr, 0, Value);
+            GpuMethodCall MethCall = new GpuMethodCall(MethAddr, Value);
 
-            Engine.CallMethod(Vmm, PBEntry);
+            Engine.CallMethod(Vmm, MethCall);
 
             MethAddr += MethIncr;
         }

@@ -421,8 +421,6 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
                 ClearBufferMask Mask = GetClearMask(SrcTex);
 
-                GL.Clear(Mask);
-
                 GL.BlitFramebuffer(SrcX0, SrcY0, SrcX1, SrcY1, DstX0, DstY0, DstX1, DstY1, Mask, Filter);
             }
         }

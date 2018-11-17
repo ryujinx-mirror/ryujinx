@@ -117,7 +117,7 @@ namespace Ryujinx.Graphics
             return false;
         }
 
-        private bool MemoryRegionModified(NvGpuVmm Vmm, long Position, long Size, NvGpuBufferType Type)
+        public bool MemoryRegionModified(NvGpuVmm Vmm, long Position, long Size, NvGpuBufferType Type)
         {
             HashSet<long> Uploaded = UploadedKeys[(int)Type];
 
@@ -135,6 +135,11 @@ namespace Ryujinx.Graphics
             {
                 UploadedKeys[Index].Clear();
             }
+        }
+
+        public void ClearPbCache(NvGpuBufferType Type)
+        {
+            UploadedKeys[(int)Type].Clear();
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Graphics
 {
-    public class NvGpuEngineM2mf : INvGpuEngine
+    class NvGpuEngineM2mf : INvGpuEngine
     {
         public int[] Registers { get; private set; }
 
@@ -33,22 +33,22 @@ namespace Ryujinx.Graphics
             AddMethod(0xc0, 1, 1, Execute);
         }
 
-        public void CallMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        public void CallMethod(NvGpuVmm Vmm, GpuMethodCall MethCall)
         {
-            if (Methods.TryGetValue(PBEntry.Method, out NvGpuMethod Method))
+            if (Methods.TryGetValue(MethCall.Method, out NvGpuMethod Method))
             {
-                Method(Vmm, PBEntry);
+                Method(Vmm, MethCall);
             }
             else
             {
-                WriteRegister(PBEntry);
+                WriteRegister(MethCall);
             }
         }
 
-        private void Execute(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        private void Execute(NvGpuVmm Vmm, GpuMethodCall MethCall)
         {
             //TODO: Some registers and copy modes are still not implemented.
-            int Control = PBEntry.Arguments[0];
+            int Control = MethCall.Argument;
 
             bool SrcLinear = ((Control >> 7) & 1) != 0;
             bool DstLinear = ((Control >> 8) & 1) != 0;
@@ -169,14 +169,9 @@ namespace Ryujinx.Graphics
                 (uint)Registers[(int)Reg + 1];
         }
 
-        private void WriteRegister(NvGpuPBEntry PBEntry)
+        private void WriteRegister(GpuMethodCall MethCall)
         {
-            int ArgsCount = PBEntry.Arguments.Count;
-
-            if (ArgsCount > 0)
-            {
-                Registers[PBEntry.Method] = PBEntry.Arguments[ArgsCount - 1];
-            }
+            Registers[MethCall.Method] = MethCall.Argument;
         }
 
         private int ReadRegister(NvGpuEngineM2mfReg Reg)

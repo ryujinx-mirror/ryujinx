@@ -1,10 +1,10 @@
 using Ryujinx.Graphics.Memory;
+using Ryujinx.Graphics.Texture;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace Ryujinx.Graphics
 {
-    public class NvGpuEngineP2mf : INvGpuEngine
+    class NvGpuEngineP2mf : INvGpuEngine
     {
         public int[] Registers { get; private set; }
 
@@ -12,7 +12,21 @@ namespace Ryujinx.Graphics
 
         private Dictionary<int, NvGpuMethod> Methods;
 
-        private ReadOnlyCollection<int> DataBuffer;
+        private int CopyStartX;
+        private int CopyStartY;
+
+        private int CopyWidth;
+        private int CopyHeight;
+        private int CopyGobBlockHeight;
+
+        private long CopyAddress;
+
+        private int CopyOffset;
+        private int CopySize;
+
+        private bool CopyLinear;
+
+        private byte[] Buffer;
 
         public NvGpuEngineP2mf(NvGpu Gpu)
         {
@@ -36,40 +50,90 @@ namespace Ryujinx.Graphics
             AddMethod(0x6d, 1, 1, PushData);
         }
 
-        public void CallMethod(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        public void CallMethod(NvGpuVmm Vmm, GpuMethodCall MethCall)
         {
-            if (Methods.TryGetValue(PBEntry.Method, out NvGpuMethod Method))
+            if (Methods.TryGetValue(MethCall.Method, out NvGpuMethod Method))
             {
-                Method(Vmm, PBEntry);
+                Method(Vmm, MethCall);
             }
             else
             {
-                WriteRegister(PBEntry);
+                WriteRegister(MethCall);
             }
         }
 
-        private void Execute(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        private void Execute(NvGpuVmm Vmm, GpuMethodCall MethCall)
         {
             //TODO: Some registers and copy modes are still not implemented.
-            int Control = PBEntry.Arguments[0];
+            int Control = MethCall.Argument;
 
             long DstAddress = MakeInt64From2xInt32(NvGpuEngineP2mfReg.DstAddress);
 
+            int DstPitch  = ReadRegister(NvGpuEngineP2mfReg.DstPitch);
+            int DstBlkDim = ReadRegister(NvGpuEngineP2mfReg.DstBlockDim);
+
+            int DstX = ReadRegister(NvGpuEngineP2mfReg.DstX);
+            int DstY = ReadRegister(NvGpuEngineP2mfReg.DstY);
+
+            int DstWidth  = ReadRegister(NvGpuEngineP2mfReg.DstWidth);
+            int DstHeight = ReadRegister(NvGpuEngineP2mfReg.DstHeight);
+
             int LineLengthIn = ReadRegister(NvGpuEngineP2mfReg.LineLengthIn);
+            int LineCount    = ReadRegister(NvGpuEngineP2mfReg.LineCount);
 
-            DataBuffer = null;
+            CopyLinear = (Control & 1) != 0;
 
-            Gpu.Fifo.Step();
+            CopyGobBlockHeight = 1 << ((DstBlkDim >> 4) & 0xf);
 
-            for (int Offset = 0; Offset < LineLengthIn; Offset += 4)
-            {
-                Vmm.WriteInt32(DstAddress + Offset, DataBuffer[Offset >> 2]);
-            }
+            CopyStartX = DstX;
+            CopyStartY = DstY;
+
+            CopyWidth  = DstWidth;
+            CopyHeight = DstHeight;
+
+            CopyAddress = DstAddress;
+
+            CopyOffset = 0;
+            CopySize   = LineLengthIn * LineCount;
+
+            Buffer = new byte[CopySize];
         }
 
-        private void PushData(NvGpuVmm Vmm, NvGpuPBEntry PBEntry)
+        private void PushData(NvGpuVmm Vmm, GpuMethodCall MethCall)
         {
-            DataBuffer = PBEntry.Arguments;
+            if (Buffer == null)
+            {
+                return;
+            }
+
+            for (int Shift = 0; Shift < 32 && CopyOffset < CopySize; Shift += 8, CopyOffset++)
+            {
+                Buffer[CopyOffset] = (byte)(MethCall.Argument >> Shift);
+            }
+
+            if (MethCall.IsLastCall)
+            {
+                if (CopyLinear)
+                {
+                    Vmm.WriteBytes(CopyAddress, Buffer);
+                }
+                else
+                {
+                    BlockLinearSwizzle Swizzle = new BlockLinearSwizzle(CopyWidth, 1, CopyGobBlockHeight);
+
+                    int SrcOffset = 0;
+
+                    for (int Y = CopyStartY; Y < CopyHeight && SrcOffset < CopySize; Y++)
+                    for (int X = CopyStartX; X < CopyWidth  && SrcOffset < CopySize; X++)
+                    {
+                        int DstOffset = Swizzle.GetSwizzleOffset(X, Y);
+
+                        Vmm.WriteByte(CopyAddress + DstOffset, Buffer[SrcOffset++]);
+                    }
+                }
+
+                Buffer = null;
+            }
         }
 
         private long MakeInt64From2xInt32(NvGpuEngineP2mfReg Reg)
@@ -79,14 +143,9 @@ namespace Ryujinx.Graphics
                 (uint)Registers[(int)Reg + 1];
         }
 
-        private void WriteRegister(NvGpuPBEntry PBEntry)
+        private void WriteRegister(GpuMethodCall MethCall)
         {
-            int ArgsCount = PBEntry.Arguments.Count;
-
-            if (ArgsCount > 0)
-            {
-                Registers[PBEntry.Method] = PBEntry.Arguments[ArgsCount - 1];
-            }
+            Registers[MethCall.Method] = MethCall.Argument;
         }
 
         private int ReadRegister(NvGpuEngineP2mfReg Reg)

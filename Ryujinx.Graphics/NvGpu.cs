@@ -8,8 +8,9 @@ namespace Ryujinx.Graphics
 
         public GpuResourceManager ResourceManager { get; private set; }
 
-        public NvGpuFifo Fifo { get; private set; }
+        public DmaPusher Pusher { get; private set; }
 
+        internal NvGpuFifo       Fifo       { get; private set; }
         internal NvGpuEngine2d   Engine2d   { get; private set; }
         internal NvGpuEngine3d   Engine3d   { get; private set; }
         internal NvGpuEngineM2mf EngineM2mf { get; private set; }
@@ -21,8 +22,9 @@ namespace Ryujinx.Graphics
 
             ResourceManager = new GpuResourceManager(this);
 
-            Fifo = new NvGpuFifo(this);
+            Pusher = new DmaPusher(this);
 
+            Fifo       = new NvGpuFifo(this);
             Engine2d   = new NvGpuEngine2d(this);
             Engine3d   = new NvGpuEngine3d(this);
             EngineM2mf = new NvGpuEngineM2mf(this);
