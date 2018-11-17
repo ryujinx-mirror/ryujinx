@@ -73,9 +73,6 @@ https://openal.org/downloads/OpenAL11CoreSDK.zip
  - Config File: `Ryujinx.conf` should be present in executable folder.
    For more information [you can go here](CONFIG.md).
 
- - If you are a Windows user, you can configure your keys, the logs, install OpenAL, etc... with Ryujinx-Setting.
- [Download it, right here](https://github.com/AcK77/Ryujinx-Settings)
-
 **Help**
 
 If you have some homebrew that currently doesn't work within the emulator, you can contact us through our Discord with the compiled NRO/NSO (and source code if possible) and then we'll make changes in order to make the requested app / game work.
