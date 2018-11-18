@@ -9,18 +9,6 @@ namespace ChocolArm64.Instructions
 {
     static class VectorHelper
     {
-        private static readonly Vector128<float> Zero32128Mask;
-
-        static VectorHelper()
-        {
-            if (!Sse2.IsSupported)
-            {
-                throw new PlatformNotSupportedException();
-            }
-
-            Zero32128Mask = Sse.StaticCast<uint, float>(Sse2.SetVector128(0, 0, 0, 0xffffffff));
-        }
-
         public static void EmitCall(ILEmitterCtx context, string name64, string name128)
         {
             bool isSimd64 = context.CurrOp.RegisterSize == RegisterSize.Simd64;
@@ -491,7 +479,7 @@ namespace ChocolArm64.Instructions
             {
                 int intValue = BitConverter.SingleToInt32Bits(value);
 
-                ushort low  = (ushort)(intValue >> 0);
+                ushort low  = (ushort)(intValue >>  0);
                 ushort high = (ushort)(intValue >> 16);
 
                 Vector128<ushort> shortVector = Sse.StaticCast<float, ushort>(vector);
@@ -573,17 +561,6 @@ namespace ChocolArm64.Instructions
             if (Sse2.IsSupported)
             {
                 return Sse2.SetZeroVector128<double>();
-            }
-
-            throw new PlatformNotSupportedException();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector128<float> VectorZero32_128(Vector128<float> vector)
-        {
-            if (Sse.IsSupported)
-            {
-                return Sse.And(vector, Zero32128Mask);
             }
 
             throw new PlatformNotSupportedException();

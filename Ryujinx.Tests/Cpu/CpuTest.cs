@@ -333,7 +333,6 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(_thread.ThreadState.V29, Is.EqualTo(_unicornEmu.Q[29]));
             Assert.That(_thread.ThreadState.V30, Is.EqualTo(_unicornEmu.Q[30]));
             Assert.That(_thread.ThreadState.V31, Is.EqualTo(_unicornEmu.Q[31]));
-            Assert.That(_thread.ThreadState.V31, Is.EqualTo(_unicornEmu.Q[31]));
 
             Assert.That(_thread.ThreadState.Fpcr,                 Is.EqualTo(_unicornEmu.Fpcr));
             Assert.That(_thread.ThreadState.Fpsr & (int)fpsrMask, Is.EqualTo(_unicornEmu.Fpsr & (int)fpsrMask));

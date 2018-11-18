@@ -789,6 +789,43 @@ namespace ChocolArm64.Instructions
             return result;
         }
 
+        public static int FPCompare(float value1, float value2, bool signalNaNs, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPCompare: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out _, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out _, state);
+
+            int result;
+
+            if (type1 == FpType.SNaN || type1 == FpType.QNaN || type2 == FpType.SNaN || type2 == FpType.QNaN)
+            {
+                result = 0b0011;
+
+                if (type1 == FpType.SNaN || type2 == FpType.SNaN || signalNaNs)
+                {
+                    FPProcessException(FpExc.InvalidOp, state);
+                }
+            }
+            else
+            {
+                if (value1 == value2)
+                {
+                    result = 0b0110;
+                }
+                else if (value1 < value2)
+                {
+                    result = 0b1000;
+                }
+                else
+                {
+                    result = 0b0010;
+                }
+            }
+
+            return result;
+        }
+
         public static float FPDiv(float value1, float value2, CpuThreadState state)
         {
             Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPDiv: state.Fpcr = 0x{state.Fpcr:X8}");
@@ -1578,6 +1615,43 @@ namespace ChocolArm64.Instructions
 
                         result = FPZero(result < 0d);
                     }
+                }
+            }
+
+            return result;
+        }
+
+        public static int FPCompare(double value1, double value2, bool signalNaNs, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPCompare: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            value1 = value1.FPUnpack(out FpType type1, out bool sign1, out _, state);
+            value2 = value2.FPUnpack(out FpType type2, out bool sign2, out _, state);
+
+            int result;
+
+            if (type1 == FpType.SNaN || type1 == FpType.QNaN || type2 == FpType.SNaN || type2 == FpType.QNaN)
+            {
+                result = 0b0011;
+
+                if (type1 == FpType.SNaN || type2 == FpType.SNaN || signalNaNs)
+                {
+                    FPProcessException(FpExc.InvalidOp, state);
+                }
+            }
+            else
+            {
+                if (value1 == value2)
+                {
+                    result = 0b0110;
+                }
+                else if (value1 < value2)
+                {
+                    result = 0b1000;
+                }
+                else
+                {
+                    result = 0b0010;
                 }
             }
 

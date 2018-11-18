@@ -3,6 +3,7 @@ using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
 using System.Reflection.Emit;
+using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
 using static ChocolArm64.Instructions.InstEmitSimdHelper;
@@ -17,6 +18,8 @@ namespace ChocolArm64.Instructions
 
             if (Optimizations.UseSse2)
             {
+                Type[] typesSav = new Type[] { UIntTypesPerSizeLog2[op.Size] };
+
                 context.EmitLdintzr(op.Rn);
 
                 switch (op.Size)
@@ -26,16 +29,9 @@ namespace ChocolArm64.Instructions
                     case 2: context.Emit(OpCodes.Conv_U4); break;
                 }
 
-                Type[] types = new Type[] { UIntTypesPerSizeLog2[op.Size] };
-
-                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), types));
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
 
                 EmitStvecWithUnsignedCast(context, op.Rd, op.Size);
-
-                if (op.RegisterSize == RegisterSize.Simd64)
-                {
-                    EmitVectorZeroUpper(context, op.Rd);
-                }
             }
             else
             {
@@ -48,11 +44,11 @@ namespace ChocolArm64.Instructions
 
                     EmitVectorInsert(context, op.Rd, index, op.Size);
                 }
+            }
 
-                if (op.RegisterSize == RegisterSize.Simd64)
-                {
-                    EmitVectorZeroUpper(context, op.Rd);
-                }
+            if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                EmitVectorZeroUpper(context, op.Rd);
             }
         }
 
@@ -69,14 +65,34 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimdIns64 op = (OpCodeSimdIns64)context.CurrOp;
 
-            int bytes = op.GetBitsCount() >> 3;
-            int elems = bytes >> op.Size;
-
-            for (int index = 0; index < elems; index++)
+            if (Optimizations.UseSse2)
             {
+                Type[] typesSav = new Type[] { UIntTypesPerSizeLog2[op.Size] };
+
                 EmitVectorExtractZx(context, op.Rn, op.DstIndex, op.Size);
 
-                EmitVectorInsert(context, op.Rd, index, op.Size);
+                switch (op.Size)
+                {
+                    case 0: context.Emit(OpCodes.Conv_U1); break;
+                    case 1: context.Emit(OpCodes.Conv_U2); break;
+                    case 2: context.Emit(OpCodes.Conv_U4); break;
+                }
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
+
+                EmitStvecWithUnsignedCast(context, op.Rd, op.Size);
+            }
+            else
+            {
+                int bytes = op.GetBitsCount() >> 3;
+                int elems = bytes >> op.Size;
+
+                for (int index = 0; index < elems; index++)
+                {
+                    EmitVectorExtractZx(context, op.Rn, op.DstIndex, op.Size);
+
+                    EmitVectorInsert(context, op.Rd, index, op.Size);
+                }
             }
 
             if (op.RegisterSize == RegisterSize.Simd64)
@@ -89,32 +105,65 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimdExt64 op = (OpCodeSimdExt64)context.CurrOp;
 
-            context.EmitLdvec(op.Rd);
-            context.EmitStvectmp();
-
-            int bytes = op.GetBitsCount() >> 3;
-
-            int position = op.Imm4;
-
-            for (int index = 0; index < bytes; index++)
+            if (Optimizations.UseSse2)
             {
-                int reg = op.Imm4 + index < bytes ? op.Rn : op.Rm;
+                Type[] typesShs = new Type[] { typeof(Vector128<byte>), typeof(byte) };
+                Type[] typesOr  = new Type[] { typeof(Vector128<byte>), typeof(Vector128<byte>) };
 
-                if (position == bytes)
+                EmitLdvecWithUnsignedCast(context, op.Rn, 0);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
                 {
-                    position = 0;
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveLowToHigh)));
                 }
 
-                EmitVectorExtractZx(context, reg, position++, 0);
-                EmitVectorInsertTmp(context, index, 0);
+                context.EmitLdc_I4(op.Imm4);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), typesShs));
+
+                EmitLdvecWithUnsignedCast(context, op.Rm, 0);
+
+                context.EmitLdc_I4((op.RegisterSize == RegisterSize.Simd64 ? 8 : 16) - op.Imm4);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftLeftLogical128BitLane), typesShs));
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveLowToHigh)));
+                }
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Or), typesOr));
+
+                EmitStvecWithUnsignedCast(context, op.Rd, 0);
             }
-
-            context.EmitLdvectmp();
-            context.EmitStvec(op.Rd);
-
-            if (op.RegisterSize == RegisterSize.Simd64)
+            else
             {
-                EmitVectorZeroUpper(context, op.Rd);
+                int bytes = op.GetBitsCount() >> 3;
+
+                int position = op.Imm4;
+
+                for (int index = 0; index < bytes; index++)
+                {
+                    int reg = op.Imm4 + index < bytes ? op.Rn : op.Rm;
+
+                    if (position == bytes)
+                    {
+                        position = 0;
+                    }
+
+                    EmitVectorExtractZx(context, reg, position++, 0);
+                    EmitVectorInsertTmp(context, index, 0);
+                }
+
+                context.EmitLdvectmp();
+                context.EmitStvec(op.Rd);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
             }
         }
 

@@ -18,6 +18,24 @@ namespace Ryujinx.Tests.Cpu
                                  0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul };
         }
 
+        private static ulong[] _2S_()
+        {
+            return new ulong[] { 0x0000000000000000ul, 0x7FFFFFFF7FFFFFFFul,
+                                 0x8000000080000000ul, 0xFFFFFFFFFFFFFFFFul };
+        }
+
+        private static ulong[] _4H_()
+        {
+            return new ulong[] { 0x0000000000000000ul, 0x7FFF7FFF7FFF7FFFul,
+                                 0x8000800080008000ul, 0xFFFFFFFFFFFFFFFFul };
+        }
+
+        private static ulong[] _8B_()
+        {
+            return new ulong[] { 0x0000000000000000ul, 0x7F7F7F7F7F7F7F7Ful,
+                                 0x8080808080808080ul, 0xFFFFFFFFFFFFFFFFul };
+        }
+
         private static ulong[] _8B4H_()
         {
             return new ulong[] { 0x0000000000000000ul, 0x7F7F7F7F7F7F7F7Ful,
@@ -85,6 +103,186 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> v0 = MakeVectorE0E1(z, z);
 
             SingleOpcode(opcode, x1: xn, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("DUP B0, V1.B[<index>]")]
+        public void Dup_S_B([ValueSource("_8B_")] [Random(RndCnt)] ulong a,
+                            [Range(0u, 15u)] uint index)
+        {
+            const int size = 0;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x5E000420; // RESERVED
+            opcode |= (imm5 << 16);
+
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("DUP H0, V1.H[<index>]")]
+        public void Dup_S_H([ValueSource("_4H_")] [Random(RndCnt)] ulong a,
+                            [Range(0u, 7u)] uint index)
+        {
+            const int size = 1;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x5E000420; // RESERVED
+            opcode |= (imm5 << 16);
+
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("DUP S0, V1.S[<index>]")]
+        public void Dup_S_S([ValueSource("_2S_")] [Random(RndCnt)] ulong a,
+                            [Range(0u, 3u)] uint index)
+        {
+            const int size = 2;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x5E000420; // RESERVED
+            opcode |= (imm5 << 16);
+
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("DUP D0, V1.D[<index>]")]
+        public void Dup_S_D([ValueSource("_1D_")] [Random(RndCnt)] ulong a,
+                            [Range(0u, 1u)] uint index)
+        {
+            const int size = 3;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x5E000420; // RESERVED
+            opcode |= (imm5 << 16);
+
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("DUP <Vd>.<T>, <Vn>.B[<index>]")]
+        public void Dup_V_8B_16B([Values(0u)]     uint rd,
+                                 [Values(1u, 0u)] uint rn,
+                                 [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
+                                 [ValueSource("_8B_")] [Random(RndCnt)] ulong a,
+                                 [Range(0u, 15u)] uint index,
+                                 [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
+        {
+            const int size = 0;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x0E000400; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+            opcode |= ((q & 1) << 30);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("DUP <Vd>.<T>, <Vn>.H[<index>]")]
+        public void Dup_V_4H_8H([Values(0u)]     uint rd,
+                                [Values(1u, 0u)] uint rn,
+                                [ValueSource("_4H_")] [Random(RndCnt)] ulong z,
+                                [ValueSource("_4H_")] [Random(RndCnt)] ulong a,
+                                [Range(0u, 7u)] uint index,
+                                [Values(0b0u, 0b1u)] uint q) // <4H, 8H>
+        {
+            const int size = 1;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x0E000400; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+            opcode |= ((q & 1) << 30);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("DUP <Vd>.<T>, <Vn>.S[<index>]")]
+        public void Dup_V_2S_4S([Values(0u)]     uint rd,
+                                [Values(1u, 0u)] uint rn,
+                                [ValueSource("_2S_")] [Random(RndCnt)] ulong z,
+                                [ValueSource("_2S_")] [Random(RndCnt)] ulong a,
+                                [Range(0u, 3u)] uint index,
+                                [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
+        {
+            const int size = 2;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x0E000400; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+            opcode |= ((q & 1) << 30);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("DUP <Vd>.<T>, <Vn>.D[<index>]")]
+        public void Dup_V_2D([Values(0u)]     uint rd,
+                             [Values(1u, 0u)] uint rn,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong a,
+                             [Range(0u, 1u)] uint index,
+                             [Values(0b1u)] uint q) // <2D>
+        {
+            const int size = 3;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x0E000400; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+            opcode |= ((q & 1) << 30);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }

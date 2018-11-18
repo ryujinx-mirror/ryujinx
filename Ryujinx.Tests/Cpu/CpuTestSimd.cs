@@ -39,6 +39,18 @@ namespace Ryujinx.Tests.Cpu
                                  0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul };
         }
 
+        private static ulong[] _1S_()
+        {
+            return new ulong[] { 0x0000000000000000ul, 0x000000007FFFFFFFul,
+                                 0x0000000080000000ul, 0x00000000FFFFFFFFul };
+        }
+
+        private static ulong[] _2S_()
+        {
+            return new ulong[] { 0x0000000000000000ul, 0x7FFFFFFF7FFFFFFFul,
+                                 0x8000000080000000ul, 0xFFFFFFFFFFFFFFFFul };
+        }
+
         private static ulong[] _4H2S1D_()
         {
             return new ulong[] { 0x0000000000000000ul, 0x7FFF7FFF7FFF7FFFul,
@@ -244,6 +256,24 @@ namespace Ryujinx.Tests.Cpu
 #endregion
 
 #region "ValueSource (Opcodes)"
+        private static uint[] _F_Cmp_Cmpe_S_S_()
+        {
+            return new uint[]
+            {
+                0x1E202028u, // FCMP  S1, #0.0
+                0x1E202038u  // FCMPE S1, #0.0
+            };
+        }
+
+        private static uint[] _F_Cmp_Cmpe_S_D_()
+        {
+            return new uint[]
+            {
+                0x1E602028u, // FCMP  D1, #0.0
+                0x1E602038u  // FCMPE D1, #0.0
+            };
+        }
+
         private static uint[] _F_Cvt_S_SD_()
         {
             return new uint[]
@@ -336,37 +366,81 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Recpx_Sqrt_S_S_()
+        private static uint[] _F_Abs_Neg_Recpx_Sqrt_S_S_()
         {
             return new uint[]
             {
+                0x1E20C020u, // FABS   S0, S1
+                0x1E214020u, // FNEG   S0, S1
                 0x5EA1F820u, // FRECPX S0, S1
                 0x1E21C020u  // FSQRT  S0, S1
             };
         }
 
-        private static uint[] _F_Recpx_Sqrt_S_D_()
+        private static uint[] _F_Abs_Neg_Recpx_Sqrt_S_D_()
         {
             return new uint[]
             {
+                0x1E60C020u, // FABS   D0, D1
+                0x1E614020u, // FNEG   D0, D1
                 0x5EE1F820u, // FRECPX D0, D1
                 0x1E61C020u  // FSQRT  D0, D1
             };
         }
 
-        private static uint[] _F_Sqrt_V_2S_4S_()
+        private static uint[] _F_Abs_Neg_Sqrt_V_2S_4S_()
         {
             return new uint[]
             {
-                0x2EA1F800u // FSQRT V0.2S, V0.2S
+                0x0EA0F800u, // FABS  V0.2S, V0.2S
+                0x2EA0F800u, // FNEG  V0.2S, V0.2S
+                0x2EA1F800u  // FSQRT V0.2S, V0.2S
             };
         }
 
-        private static uint[] _F_Sqrt_V_2D_()
+        private static uint[] _F_Abs_Neg_Sqrt_V_2D_()
         {
             return new uint[]
             {
-                0x6EE1F800u // FSQRT V0.2D, V0.2D
+                0x4EE0F800u, // FABS  V0.2D, V0.2D
+                0x6EE0F800u, // FNEG  V0.2D, V0.2D
+                0x6EE1F800u  // FSQRT V0.2D, V0.2D
+            };
+        }
+
+        private static uint[] _SU_Cvt_F_S_S_()
+        {
+            return new uint[]
+            {
+                0x5E21D820u, // SCVTF S0, S1
+                0x7E21D820u  // UCVTF S0, S1
+            };
+        }
+
+        private static uint[] _SU_Cvt_F_S_D_()
+        {
+            return new uint[]
+            {
+                0x5E61D820u, // SCVTF D0, D1
+                0x7E61D820u  // UCVTF D0, D1
+            };
+        }
+
+        private static uint[] _SU_Cvt_F_V_2S_4S_()
+        {
+            return new uint[]
+            {
+                0x0E21D800u, // SCVTF V0.2S, V0.2S
+                0x2E21D800u  // UCVTF V0.2S, V0.2S
+            };
+        }
+
+        private static uint[] _SU_Cvt_F_V_2D_()
+        {
+            return new uint[]
+            {
+                0x4E61D800u, // SCVTF V0.2D, V0.2D
+                0x6E61D800u  // UCVTF V0.2D, V0.2D
             };
         }
 
@@ -890,6 +964,38 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
+        public void F_Cmp_Cmpe_S_S([ValueSource("_F_Cmp_Cmpe_S_S_")] uint opcodes,
+                                   [ValueSource("_1S_F_")] ulong a)
+        {
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            bool v = TestContext.CurrentContext.Random.NextBool();
+            bool c = TestContext.CurrentContext.Random.NextBool();
+            bool z = TestContext.CurrentContext.Random.NextBool();
+            bool n = TestContext.CurrentContext.Random.NextBool();
+
+            SingleOpcode(opcodes, v1: v1, overflow: v, carry: c, zero: z, negative: n);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc);
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Cmp_Cmpe_S_D([ValueSource("_F_Cmp_Cmpe_S_D_")] uint opcodes,
+                                   [ValueSource("_1D_F_")] ulong a)
+        {
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            bool v = TestContext.CurrentContext.Random.NextBool();
+            bool c = TestContext.CurrentContext.Random.NextBool();
+            bool z = TestContext.CurrentContext.Random.NextBool();
+            bool n = TestContext.CurrentContext.Random.NextBool();
+
+            SingleOpcode(opcodes, v1: v1, overflow: v, carry: c, zero: z, negative: n);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc);
+        }
+
+        [Test, Pairwise] [Explicit]
         public void F_Cvt_S_SD([ValueSource("_F_Cvt_S_SD_")] uint opcodes,
                                [ValueSource("_1S_F_")] ulong a)
         {
@@ -1070,12 +1176,12 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Recpx_Sqrt_S_S([ValueSource("_F_Recpx_Sqrt_S_S_")] uint opcodes,
-                                     [ValueSource("_1S_F_")] ulong a)
+        public void F_Abs_Neg_Recpx_Sqrt_S_S([ValueSource("_F_Abs_Neg_Recpx_Sqrt_S_S_")] uint opcodes,
+                                             [ValueSource("_1S_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v1 = MakeVectorE0E1(a, z);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -1088,12 +1194,12 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Recpx_Sqrt_S_D([ValueSource("_F_Recpx_Sqrt_S_D_")] uint opcodes,
-                                     [ValueSource("_1D_F_")] ulong a)
+        public void F_Abs_Neg_Recpx_Sqrt_S_D([ValueSource("_F_Abs_Neg_Recpx_Sqrt_S_D_")] uint opcodes,
+                                             [ValueSource("_1D_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> v0 = MakeVectorE1(z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v1 = MakeVectorE0E1(a, z);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -1106,12 +1212,12 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Sqrt_V_2S_4S([ValueSource("_F_Sqrt_V_2S_4S_")] uint opcodes,
-                                   [Values(0u)]     uint rd,
-                                   [Values(1u, 0u)] uint rn,
-                                   [ValueSource("_2S_F_")] ulong z,
-                                   [ValueSource("_2S_F_")] ulong a,
-                                   [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
+        public void F_Abs_Neg_Sqrt_V_2S_4S([ValueSource("_F_Abs_Neg_Sqrt_V_2S_4S_")] uint opcodes,
+                                           [Values(0u)]     uint rd,
+                                           [Values(1u, 0u)] uint rn,
+                                           [ValueSource("_2S_F_")] ulong z,
+                                           [ValueSource("_2S_F_")] ulong a,
+                                           [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
@@ -1130,11 +1236,11 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Sqrt_V_2D([ValueSource("_F_Sqrt_V_2D_")] uint opcodes,
-                                [Values(0u)]     uint rd,
-                                [Values(1u, 0u)] uint rn,
-                                [ValueSource("_1D_F_")] ulong z,
-                                [ValueSource("_1D_F_")] ulong a)
+        public void F_Abs_Neg_Sqrt_V_2D([ValueSource("_F_Abs_Neg_Sqrt_V_2D_")] uint opcodes,
+                                        [Values(0u)]     uint rd,
+                                        [Values(1u, 0u)] uint rn,
+                                        [ValueSource("_1D_F_")] ulong z,
+                                        [ValueSource("_1D_F_")] ulong a)
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
@@ -1456,6 +1562,68 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void SU_Cvt_F_S_S([ValueSource("_SU_Cvt_F_S_S_")] uint opcodes,
+                                 [ValueSource("_1S_")] [Random(RndCnt)] ulong a)
+        {
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void SU_Cvt_F_S_D([ValueSource("_SU_Cvt_F_S_D_")] uint opcodes,
+                                 [ValueSource("_1D_")] [Random(RndCnt)] ulong a)
+        {
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE1(z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void SU_Cvt_F_V_2S_4S([ValueSource("_SU_Cvt_F_V_2S_4S_")] uint opcodes,
+                                     [Values(0u)]     uint rd,
+                                     [Values(1u, 0u)] uint rn,
+                                     [ValueSource("_2S_")] [Random(RndCnt)] ulong z,
+                                     [ValueSource("_2S_")] [Random(RndCnt)] ulong a,
+                                     [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((q & 1) << 30);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void SU_Cvt_F_V_2D([ValueSource("_SU_Cvt_F_V_2D_")] uint opcodes,
+                                  [Values(0u)]     uint rd,
+                                  [Values(1u, 0u)] uint rn,
+                                  [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                                  [ValueSource("_1D_")] [Random(RndCnt)] ulong a)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }

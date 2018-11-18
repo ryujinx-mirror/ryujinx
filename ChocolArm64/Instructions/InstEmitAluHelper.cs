@@ -190,22 +190,31 @@ namespace ChocolArm64.Instructions
             }
         }
 
-        public static void EmitSetNzcv(ILEmitterCtx context, int nzcv)
+        public static void EmitSetNzcv(ILEmitterCtx context)
         {
-            context.EmitLdc_I4((nzcv >> 0) & 1);
-
+            context.Emit(OpCodes.Dup);
+            context.Emit(OpCodes.Ldc_I4_1);
+            context.Emit(OpCodes.And);
             context.EmitStflg((int)PState.VBit);
 
-            context.EmitLdc_I4((nzcv >> 1) & 1);
-
+            context.Emit(OpCodes.Ldc_I4_1);
+            context.Emit(OpCodes.Shr);
+            context.Emit(OpCodes.Dup);
+            context.Emit(OpCodes.Ldc_I4_1);
+            context.Emit(OpCodes.And);
             context.EmitStflg((int)PState.CBit);
 
-            context.EmitLdc_I4((nzcv >> 2) & 1);
-
+            context.Emit(OpCodes.Ldc_I4_1);
+            context.Emit(OpCodes.Shr);
+            context.Emit(OpCodes.Dup);
+            context.Emit(OpCodes.Ldc_I4_1);
+            context.Emit(OpCodes.And);
             context.EmitStflg((int)PState.ZBit);
 
-            context.EmitLdc_I4((nzcv >> 3) & 1);
-
+            context.Emit(OpCodes.Ldc_I4_1);
+            context.Emit(OpCodes.Shr);
+            context.Emit(OpCodes.Ldc_I4_1);
+            context.Emit(OpCodes.And);
             context.EmitStflg((int)PState.NBit);
         }
     }

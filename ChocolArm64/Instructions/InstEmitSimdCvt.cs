@@ -76,33 +76,54 @@ namespace ChocolArm64.Instructions
 
             int sizeF = op.Size & 1;
 
-            int elems = 4 >> sizeF;
-
-            int part = op.RegisterSize == RegisterSize.Simd128 ? elems : 0;
-
-            for (int index = 0; index < elems; index++)
+            if (Optimizations.UseSse2 && sizeF == 1)
             {
-                if (sizeF == 0)
-                {
-                    EmitVectorExtractZx(context, op.Rn, part + index, 1);
-                    context.Emit(OpCodes.Conv_U2);
+                Type[] typesMov = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>) };
+                Type[] typesCvt = new Type[] { typeof(Vector128<float>) };
 
-                    context.EmitLdarg(TranslatedSub.StateArgIdx);
+                string nameMov = op.RegisterSize == RegisterSize.Simd128
+                    ? nameof(Sse.MoveHighToLow)
+                    : nameof(Sse.MoveLowToHigh);
 
-                    context.EmitCall(typeof(SoftFloat16_32), nameof(SoftFloat16_32.FPConvert));
-                }
-                else /* if (sizeF == 1) */
-                {
-                    EmitVectorExtractF(context, op.Rn, part + index, 0);
+                context.EmitLdvec(op.Rn);
+                context.Emit(OpCodes.Dup);
 
-                    context.Emit(OpCodes.Conv_R8);
-                }
+                context.EmitCall(typeof(Sse).GetMethod(nameMov, typesMov));
 
-                EmitVectorInsertTmpF(context, index, sizeF);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertToVector128Double), typesCvt));
+
+                EmitStvecWithCastFromDouble(context, op.Rd);
             }
+            else
+            {
+                int elems = 4 >> sizeF;
 
-            context.EmitLdvectmp();
-            context.EmitStvec(op.Rd);
+                int part = op.RegisterSize == RegisterSize.Simd128 ? elems : 0;
+
+                for (int index = 0; index < elems; index++)
+                {
+                    if (sizeF == 0)
+                    {
+                        EmitVectorExtractZx(context, op.Rn, part + index, 1);
+                        context.Emit(OpCodes.Conv_U2);
+
+                        context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                        context.EmitCall(typeof(SoftFloat16_32), nameof(SoftFloat16_32.FPConvert));
+                    }
+                    else /* if (sizeF == 1) */
+                    {
+                        EmitVectorExtractF(context, op.Rn, part + index, 0);
+
+                        context.Emit(OpCodes.Conv_R8);
+                    }
+
+                    EmitVectorInsertTmpF(context, index, sizeF);
+                }
+
+                context.EmitLdvectmp();
+                context.EmitStvec(op.Rd);
+            }
         }
 
         public static void Fcvtms_Gp(ILEmitterCtx context)
@@ -121,43 +142,70 @@ namespace ChocolArm64.Instructions
 
             int sizeF = op.Size & 1;
 
-            int elems = 4 >> sizeF;
-
-            int part = op.RegisterSize == RegisterSize.Simd128 ? elems : 0;
-
-            if (part != 0)
+            if (Optimizations.UseSse2 && sizeF == 1)
             {
+                Type[] typesMov = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>) };
+                Type[] typesCvt = new Type[] { typeof(Vector128<double>) };
+
+                string nameMov = op.RegisterSize == RegisterSize.Simd128
+                    ? nameof(Sse.MoveLowToHigh)
+                    : nameof(Sse.MoveHighToLow);
+
                 context.EmitLdvec(op.Rd);
-                context.EmitStvectmp();
+                VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+
+                context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveLowToHigh), typesMov));
+
+                EmitLdvecWithCastToDouble(context, op.Rn);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertToVector128Single), typesCvt));
+                context.Emit(OpCodes.Dup);
+
+                context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveLowToHigh), typesMov));
+
+                context.EmitCall(typeof(Sse).GetMethod(nameMov, typesMov));
+
+                context.EmitStvec(op.Rd);
             }
-
-            for (int index = 0; index < elems; index++)
+            else
             {
-                EmitVectorExtractF(context, op.Rn, index, sizeF);
+                int elems = 4 >> sizeF;
 
-                if (sizeF == 0)
+                int part = op.RegisterSize == RegisterSize.Simd128 ? elems : 0;
+
+                if (part != 0)
                 {
-                    context.EmitLdarg(TranslatedSub.StateArgIdx);
-
-                    context.EmitCall(typeof(SoftFloat32_16), nameof(SoftFloat32_16.FPConvert));
-
-                    context.Emit(OpCodes.Conv_U8);
-                    EmitVectorInsertTmp(context, part + index, 1);
+                    context.EmitLdvec(op.Rd);
+                    context.EmitStvectmp();
                 }
-                else /* if (sizeF == 1) */
+
+                for (int index = 0; index < elems; index++)
                 {
-                    context.Emit(OpCodes.Conv_R4);
+                    EmitVectorExtractF(context, op.Rn, index, sizeF);
 
-                    EmitVectorInsertTmpF(context, part + index, 0);
+                    if (sizeF == 0)
+                    {
+                        context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                        context.EmitCall(typeof(SoftFloat32_16), nameof(SoftFloat32_16.FPConvert));
+
+                        context.Emit(OpCodes.Conv_U8);
+                        EmitVectorInsertTmp(context, part + index, 1);
+                    }
+                    else /* if (sizeF == 1) */
+                    {
+                        context.Emit(OpCodes.Conv_R4);
+
+                        EmitVectorInsertTmpF(context, part + index, 0);
+                    }
                 }
-            }
 
-            context.EmitLdvectmp();
-            context.EmitStvec(op.Rd);
+                context.EmitLdvectmp();
+                context.EmitStvec(op.Rd);
 
-            if (part == 0)
-            {
-                EmitVectorZeroUpper(context, op.Rd);
+                if (part == 0)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
             }
         }
 
@@ -260,7 +308,29 @@ namespace ChocolArm64.Instructions
 
         public static void Scvtf_V(ILEmitterCtx context)
         {
-            EmitVectorCvtf(context, signed: true);
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+            int sizeF = op.Size & 1;
+
+            if (Optimizations.UseSse2 && sizeF == 0)
+            {
+                Type[] typesCvt = new Type[] { typeof(Vector128<int>) };
+
+                EmitLdvecWithSignedCast(context, op.Rn, 2);
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertToVector128Single), typesCvt));
+
+                context.EmitStvec(op.Rd);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
+            }
+            else
+            {
+                EmitVectorCvtf(context, signed: true);
+            }
         }
 
         public static void Ucvtf_Gp(ILEmitterCtx context)
@@ -439,16 +509,6 @@ namespace ChocolArm64.Instructions
             }
 
             context.EmitStintzr(op.Rd);
-        }
-
-        private static void EmitVectorScvtf(ILEmitterCtx context)
-        {
-            EmitVectorCvtf(context, true);
-        }
-
-        private static void EmitVectorUcvtf(ILEmitterCtx context)
-        {
-            EmitVectorCvtf(context, false);
         }
 
         private static void EmitVectorCvtf(ILEmitterCtx context, bool signed)

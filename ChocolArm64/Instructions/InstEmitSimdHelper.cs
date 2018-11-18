@@ -219,7 +219,7 @@ namespace ChocolArm64.Instructions
                 type     = typeof(Sse);
                 baseType = typeof(Vector128<float>);
             }
-            else /* if (SizeF == 1) */
+            else /* if (sizeF == 1) */
             {
                 type     = typeof(Sse2);
                 baseType = typeof(Vector128<double>);
@@ -249,7 +249,7 @@ namespace ChocolArm64.Instructions
                 {
                     EmitVectorZero32_128(context, op.Rd);
                 }
-                else /* if (SizeF == 1) */
+                else /* if (sizeF == 1) */
                 {
                     EmitVectorZeroUpper(context, op.Rd);
                 }
@@ -272,7 +272,7 @@ namespace ChocolArm64.Instructions
             {
                 mthdInfo = typeof(MathF).GetMethod(name, new Type[] { typeof(float) });
             }
-            else /* if (SizeF == 1) */
+            else /* if (sizeF == 1) */
             {
                 mthdInfo = typeof(Math).GetMethod(name, new Type[] { typeof(double) });
             }
@@ -292,7 +292,7 @@ namespace ChocolArm64.Instructions
             {
                 mthdInfo = typeof(MathF).GetMethod(name, new Type[] { typeof(float), typeof(float) });
             }
-            else /* if (SizeF == 1) */
+            else /* if (sizeF == 1) */
             {
                 mthdInfo = typeof(Math).GetMethod(name, new Type[] { typeof(double), typeof(double) });
             }
@@ -312,7 +312,7 @@ namespace ChocolArm64.Instructions
             {
                 mthdInfo = typeof(MathF).GetMethod(nameof(MathF.Round), new Type[] { typeof(float), typeof(MidpointRounding) });
             }
-            else /* if (SizeF == 1) */
+            else /* if (sizeF == 1) */
             {
                 mthdInfo = typeof(Math).GetMethod(nameof(Math.Round), new Type[] { typeof(double), typeof(MidpointRounding) });
             }
@@ -334,7 +334,7 @@ namespace ChocolArm64.Instructions
             {
                 mthdInfo = typeof(SoftFloat).GetMethod(name, new Type[] { typeof(float) });
             }
-            else /* if (SizeF == 1) */
+            else /* if (sizeF == 1) */
             {
                 mthdInfo = typeof(SoftFloat).GetMethod(name, new Type[] { typeof(double) });
             }
@@ -961,7 +961,7 @@ namespace ChocolArm64.Instructions
                 {
                     EmitSatQ(context, op.Size, true, true);
                 }
-                else /* if (Op.Size == 3) */
+                else /* if (op.Size == 3) */
                 {
                     EmitUnarySignedSatQAbsOrNeg(context);
                 }
@@ -1022,7 +1022,7 @@ namespace ChocolArm64.Instructions
             {
                 for (int index = 0; index < elems; index++)
                 {
-                    EmitVectorExtract(context,                   op.Rn, index, op.Size, signed);
+                    EmitVectorExtract(context,                   op.Rn,  index, op.Size, signed);
                     EmitVectorExtract(context, ((OpCodeSimdReg64)op).Rm, index, op.Size, signed);
 
                     if (op.Size <= 2)
@@ -1031,13 +1031,13 @@ namespace ChocolArm64.Instructions
 
                         EmitSatQ(context, op.Size, true, signed);
                     }
-                    else /* if (Op.Size == 3) */
+                    else /* if (op.Size == 3) */
                     {
                         if (add)
                         {
                             EmitBinarySatQAdd(context, signed);
                         }
-                        else /* if (Sub) */
+                        else /* if (sub) */
                         {
                             EmitBinarySatQSub(context, signed);
                         }
@@ -1059,7 +1059,7 @@ namespace ChocolArm64.Instructions
 
                         EmitSatQ(context, op.Size, true, signed);
                     }
-                    else /* if (Op.Size == 3) */
+                    else /* if (op.Size == 3) */
                     {
                         EmitBinarySatQAccumulate(context, signed);
                     }
@@ -1071,7 +1071,7 @@ namespace ChocolArm64.Instructions
             {
                 for (int index = 0; index < elems; index++)
                 {
-                    EmitVectorExtract(context,                   op.Rn, index, op.Size, signed);
+                    EmitVectorExtract(context,                   op.Rn,  index, op.Size, signed);
                     EmitVectorExtract(context, ((OpCodeSimdReg64)op).Rm, index, op.Size, signed);
 
                     emit();
@@ -1304,52 +1304,64 @@ namespace ChocolArm64.Instructions
             }
         }
 
-        public static void EmitVectorZeroAll(ILEmitterCtx context, int rd)
+        public static void EmitVectorZeroAll(ILEmitterCtx context, int reg)
         {
-            if (Optimizations.UseSse2)
+            if (Optimizations.UseSse)
             {
                 VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
 
-                context.EmitStvec(rd);
+                context.EmitStvec(reg);
             }
             else
             {
-                EmitVectorZeroLower(context, rd);
-                EmitVectorZeroUpper(context, rd);
+                EmitVectorZeroLower(context, reg);
+                EmitVectorZeroUpper(context, reg);
             }
         }
 
-        public static void EmitVectorZeroLower(ILEmitterCtx context, int rd)
+        public static void EmitVectorZeroLower(ILEmitterCtx context, int reg)
         {
-            EmitVectorInsert(context, rd, 0, 3, 0);
+            EmitVectorInsert(context, reg, 0, 3, 0);
         }
 
         public static void EmitVectorZeroLowerTmp(ILEmitterCtx context)
         {
-            EmitVectorInsertTmp(context, 0, 3, 0);
+            if (Optimizations.UseSse)
+            {
+                context.EmitLdvectmp();
+                VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+
+                context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveHighToLow)));
+
+                context.EmitStvectmp();
+            }
+            else
+            {
+                EmitVectorInsertTmp(context, 0, 3, 0);
+            }
         }
 
         public static void EmitVectorZeroUpper(ILEmitterCtx context, int reg)
         {
-            if (Optimizations.UseSse2)
+            if (Optimizations.UseSse)
             {
-                //TODO: Use MoveScalar once it is fixed, as of the
-                //time of writing it just crashes the JIT.
+                //TODO: Use Sse2.MoveScalar once it is fixed,
+                //as of the time of writing it just crashes the JIT (SDK 2.1.500).
+
+                /*Type[] typesMov = new Type[] { typeof(Vector128<ulong>) };
+
                 EmitLdvecWithUnsignedCast(context, reg, 3);
 
-                Type[] types = new Type[] { typeof(Vector128<ulong>), typeof(byte) };
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.MoveScalar), typesMov));
 
-                //Context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.MoveScalar), Types));
+                EmitStvecWithUnsignedCast(context, reg, 3);*/
 
-                context.EmitLdc_I4(8);
+                context.EmitLdvec(reg);
+                VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
 
-                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftLeftLogical128BitLane), types));
+                context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveLowToHigh)));
 
-                context.EmitLdc_I4(8);
-
-                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), types));
-
-                EmitStvecWithUnsignedCast(context, reg, 3);
+                context.EmitStvec(reg);
             }
             else
             {
@@ -1359,9 +1371,15 @@ namespace ChocolArm64.Instructions
 
         public static void EmitVectorZero32_128(ILEmitterCtx context, int reg)
         {
+            if (!Sse.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
+            VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
             context.EmitLdvec(reg);
 
-            VectorHelper.EmitCall(context, nameof(VectorHelper.VectorZero32_128));
+            context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveScalar)));
 
             context.EmitStvec(reg);
         }
