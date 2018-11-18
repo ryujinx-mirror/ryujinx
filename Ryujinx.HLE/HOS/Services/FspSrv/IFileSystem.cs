@@ -1,10 +1,11 @@
+using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Ipc;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
+using static Ryujinx.HLE.Utilities.StringUtils;
 
 namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
@@ -18,7 +19,9 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         private string Path;
 
-        public IFileSystem(string Path)
+        private IFileSystemProvider Provider;
+
+        public IFileSystem(string Path, IFileSystemProvider Provider)
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -41,9 +44,11 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             OpenPaths = new HashSet<string>();
 
-            this.Path = Path;
+            this.Path     = Path;
+            this.Provider = Provider;
         }
 
+        // CreateFile(u32 mode, u64 size, buffer<bytes<0x301>, 0x19, 0x301> path)
         public long CreateFile(ServiceCtx Context)
         {
             string Name = ReadUtf8String(Context);
@@ -51,14 +56,14 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             long Mode = Context.RequestData.ReadInt64();
             int  Size = Context.RequestData.ReadInt32();
 
-            string FileName = Context.Device.FileSystem.GetFullPath(Path, Name);
+            string FileName = Provider.GetFullPath(Name);
 
             if (FileName == null)
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (File.Exists(FileName))
+            if (Provider.FileExists(FileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
@@ -68,21 +73,17 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            using (FileStream NewFile = File.Create(FileName))
-            {
-                NewFile.SetLength(Size);
-            }
-
-            return 0;
+            return Provider.CreateFile(FileName, Size);
         }
 
+        // DeleteFile(buffer<bytes<0x301>, 0x19, 0x301> path)
         public long DeleteFile(ServiceCtx Context)
         {
             string Name = ReadUtf8String(Context);
 
-            string FileName = Context.Device.FileSystem.GetFullPath(Path, Name);
+            string FileName = Provider.GetFullPath(Name);
 
-            if (!File.Exists(FileName))
+            if (!Provider.FileExists(FileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
@@ -92,23 +93,22 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            File.Delete(FileName);
-
-            return 0;
+            return Provider.DeleteFile(FileName);
         }
 
+        // CreateDirectory(buffer<bytes<0x301>, 0x19, 0x301> path)
         public long CreateDirectory(ServiceCtx Context)
         {
             string Name = ReadUtf8String(Context);
 
-            string DirName = Context.Device.FileSystem.GetFullPath(Path, Name);
+            string DirName = Provider.GetFullPath(Name);
 
             if (DirName == null)
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (Directory.Exists(DirName))
+            if (Provider.DirectoryExists(DirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
@@ -118,26 +118,28 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            Directory.CreateDirectory(DirName);
+            Provider.CreateDirectory(DirName);
 
             return 0;
         }
 
+        // DeleteDirectory(buffer<bytes<0x301>, 0x19, 0x301> path)
         public long DeleteDirectory(ServiceCtx Context)
         {
             return DeleteDirectory(Context, false);
         }
 
+        // DeleteDirectoryRecursively(buffer<bytes<0x301>, 0x19, 0x301> path)
         public long DeleteDirectoryRecursively(ServiceCtx Context)
         {
             return DeleteDirectory(Context, true);
         }
-
+        
         private long DeleteDirectory(ServiceCtx Context, bool Recursive)
         {
             string Name = ReadUtf8String(Context);
 
-            string DirName = Context.Device.FileSystem.GetFullPath(Path, Name);
+            string DirName = Provider.GetFullPath(Name);
 
             if (!Directory.Exists(DirName))
             {
@@ -149,25 +151,26 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            Directory.Delete(DirName, Recursive);
+            Provider.DeleteDirectory(DirName, Recursive);
 
             return 0;
         }
 
+        // RenameFile(buffer<bytes<0x301>, 0x19, 0x301> oldPath, buffer<bytes<0x301>, 0x19, 0x301> newPath)
         public long RenameFile(ServiceCtx Context)
         {
             string OldName = ReadUtf8String(Context, 0);
             string NewName = ReadUtf8String(Context, 1);
 
-            string OldFileName = Context.Device.FileSystem.GetFullPath(Path, OldName);
-            string NewFileName = Context.Device.FileSystem.GetFullPath(Path, NewName);
+            string OldFileName = Provider.GetFullPath(OldName);
+            string NewFileName = Provider.GetFullPath(NewName);
 
-            if (!File.Exists(OldFileName))
+            if (Provider.FileExists(OldFileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (File.Exists(NewFileName))
+            if (Provider.FileExists(NewFileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
@@ -177,25 +180,24 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            File.Move(OldFileName, NewFileName);
-
-            return 0;
+            return Provider.RenameFile(OldFileName, NewFileName);
         }
 
+        // RenameDirectory(buffer<bytes<0x301>, 0x19, 0x301> oldPath, buffer<bytes<0x301>, 0x19, 0x301> newPath)
         public long RenameDirectory(ServiceCtx Context)
         {
             string OldName = ReadUtf8String(Context, 0);
             string NewName = ReadUtf8String(Context, 1);
 
-            string OldDirName = Context.Device.FileSystem.GetFullPath(Path, OldName);
-            string NewDirName = Context.Device.FileSystem.GetFullPath(Path, NewName);
+            string OldDirName = Provider.GetFullPath(OldName);
+            string NewDirName = Provider.GetFullPath(NewName);
 
-            if (!Directory.Exists(OldDirName))
+            if (!Provider.DirectoryExists(OldDirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (Directory.Exists(NewDirName))
+            if (!Provider.DirectoryExists(NewDirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
@@ -205,22 +207,21 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            Directory.Move(OldDirName, NewDirName);
-
-            return 0;
+            return Provider.RenameDirectory(OldDirName, NewDirName);
         }
 
+        // GetEntryType(buffer<bytes<0x301>, 0x19, 0x301> path) -> nn::fssrv::sf::DirectoryEntryType
         public long GetEntryType(ServiceCtx Context)
         {
             string Name = ReadUtf8String(Context);
 
-            string FileName = Context.Device.FileSystem.GetFullPath(Path, Name);
+            string FileName = Provider.GetFullPath(Name);
 
-            if (File.Exists(FileName))
+            if (Provider.FileExists(FileName))
             {
                 Context.ResponseData.Write(1);
             }
-            else if (Directory.Exists(FileName))
+            else if (Provider.DirectoryExists(FileName))
             {
                 Context.ResponseData.Write(0);
             }
@@ -234,15 +235,16 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        // OpenFile(u32 mode, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IFile> file
         public long OpenFile(ServiceCtx Context)
         {
             int FilterFlags = Context.RequestData.ReadInt32();
 
             string Name = ReadUtf8String(Context);
 
-            string FileName = Context.Device.FileSystem.GetFullPath(Path, Name);
+            string FileName = Provider.GetFullPath(Name);
 
-            if (!File.Exists(FileName))
+            if (!Provider.FileExists(FileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
@@ -252,79 +254,36 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            FileStream Stream = new FileStream(FileName, FileMode.Open);
 
-            IFile FileInterface = new IFile(Stream, FileName);
+            long Error = Provider.OpenFile(FileName, out IFile FileInterface);
 
-            FileInterface.Disposed += RemoveFileInUse;
-
-            lock (OpenPaths)
+            if (Error == 0)
             {
-                OpenPaths.Add(FileName);
+                FileInterface.Disposed += RemoveFileInUse;
+
+                lock (OpenPaths)
+                {
+                    OpenPaths.Add(FileName);
+                }
+
+                MakeObject(Context, FileInterface);
+
+                return 0;
             }
 
-            MakeObject(Context, FileInterface);
-
-            return 0;
+            return Error;
         }
 
+        // OpenDirectory(u32 filter_flags, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IDirectory> directory
         public long OpenDirectory(ServiceCtx Context)
         {
             int FilterFlags = Context.RequestData.ReadInt32();
 
             string Name = ReadUtf8String(Context);
 
-            string DirName = Context.Device.FileSystem.GetFullPath(Path, Name);
+            string DirName = Provider.GetFullPath(Name);
 
-            if (!Directory.Exists(DirName))
-            {
-                return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
-            }
-
-            IDirectory DirInterface = new IDirectory(DirName, FilterFlags);
-
-            DirInterface.Disposed += RemoveDirectoryInUse;
-
-            lock (OpenPaths)
-            {
-                OpenPaths.Add(DirName);
-            }
-
-            MakeObject(Context, DirInterface);
-
-            return 0;
-        }
-
-        public long Commit(ServiceCtx Context)
-        {
-            return 0;
-        }
-
-        public long GetFreeSpaceSize(ServiceCtx Context)
-        {
-            string Name = ReadUtf8String(Context);
-
-            Context.ResponseData.Write(Context.Device.FileSystem.GetDrive().AvailableFreeSpace);
-
-            return 0;
-        }
-
-        public long GetTotalSpaceSize(ServiceCtx Context)
-        {
-            string Name = ReadUtf8String(Context);
-
-            Context.ResponseData.Write(Context.Device.FileSystem.GetDrive().TotalSize);
-
-            return 0;
-        }
-
-        public long CleanDirectoryRecursively(ServiceCtx Context)
-        {
-            string Name = ReadUtf8String(Context);
-
-            string DirName = Context.Device.FileSystem.GetFullPath(Path, Name);
-
-            if (!Directory.Exists(DirName))
+            if (!Provider.DirectoryExists(DirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
@@ -334,15 +293,75 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            foreach (string Entry in Directory.EnumerateFileSystemEntries(DirName))
+            long Error = Provider.OpenDirectory(DirName, FilterFlags, out IDirectory DirInterface);
+
+            if (Error == 0)
             {
-                if (Directory.Exists(Entry))
+                DirInterface.Disposed += RemoveDirectoryInUse;
+
+                lock (OpenPaths)
                 {
-                    Directory.Delete(Entry, true);
+                    OpenPaths.Add(DirName);
                 }
-                else if (File.Exists(Entry))
+
+                MakeObject(Context, DirInterface);
+            }
+
+            return Error;
+        }
+
+        // Commit()
+        public long Commit(ServiceCtx Context)
+        {
+            return 0;
+        }
+
+        // GetFreeSpaceSize(buffer<bytes<0x301>, 0x19, 0x301> path) -> u64 totalFreeSpace
+        public long GetFreeSpaceSize(ServiceCtx Context)
+        {
+            string Name = ReadUtf8String(Context);
+
+            Context.ResponseData.Write(Provider.GetFreeSpace(Context));
+
+            return 0;
+        }
+
+        // GetTotalSpaceSize(buffer<bytes<0x301>, 0x19, 0x301> path) -> u64 totalSize
+        public long GetTotalSpaceSize(ServiceCtx Context)
+        {
+            string Name = ReadUtf8String(Context);
+
+            Context.ResponseData.Write(Provider.GetFreeSpace(Context));
+
+            return 0;
+        }
+
+        // CleanDirectoryRecursively(buffer<bytes<0x301>, 0x19, 0x301> path)
+        public long CleanDirectoryRecursively(ServiceCtx Context)
+        {
+            string Name = ReadUtf8String(Context);
+
+            string DirName = Provider.GetFullPath(Name);
+
+            if (!Provider.DirectoryExists(DirName))
+            {
+                return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
+            }
+
+            if (IsPathAlreadyInUse(DirName))
+            {
+                return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
+            }
+
+            foreach (DirectoryEntry Entry in Provider.GetEntries(DirName))
+            {
+                if (Provider.DirectoryExists(Entry.Path))
                 {
-                    File.Delete(Entry);
+                    Provider.DeleteDirectory(Entry.Path, true);
+                }
+                else if (Provider.FileExists(Entry.Path))
+                {
+                   Provider.DeleteFile(Entry.Path);
                 }
             }
 
@@ -377,30 +396,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             {
                 DirInterface.Disposed -= RemoveDirectoryInUse;
 
-                OpenPaths.Remove(DirInterface.HostPath);
-            }
-        }
-
-        private string ReadUtf8String(ServiceCtx Context, int Index = 0)
-        {
-            long Position = Context.Request.PtrBuff[Index].Position;
-            long Size     = Context.Request.PtrBuff[Index].Size;
-
-            using (MemoryStream MS = new MemoryStream())
-            {
-                while (Size-- > 0)
-                {
-                    byte Value = Context.Memory.ReadByte(Position++);
-
-                    if (Value == 0)
-                    {
-                        break;
-                    }
-
-                    MS.WriteByte(Value);
-                }
-
-                return Encoding.UTF8.GetString(MS.ToArray());
+                OpenPaths.Remove(DirInterface.DirectoryPath);
             }
         }
     }

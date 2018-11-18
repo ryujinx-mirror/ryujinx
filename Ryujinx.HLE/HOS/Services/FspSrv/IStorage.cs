@@ -22,6 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             this.BaseStream = BaseStream;
         }
 
+        // Read(u64 offset, u64 length) -> buffer<u8, 0x46, 0> buffer
         public long Read(ServiceCtx Context)
         {
             long Offset = Context.RequestData.ReadInt64();

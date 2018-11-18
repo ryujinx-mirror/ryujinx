@@ -46,6 +46,8 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         public ColorSet ThemeColor { get; set; }
 
+        public bool InstallContents { get; set; }
+
         private ConcurrentDictionary<string, UserProfile> Profiles;
 
         internal UserProfile LastOpenUser { get; private set; }

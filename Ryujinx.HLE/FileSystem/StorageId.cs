@@ -1,10 +1,12 @@
 ﻿namespace Ryujinx.HLE.FileSystem
 {
-    enum SaveSpaceId
+    internal enum StorageId
     {
+        None,
+        Host,
+        GameCard,
         NandSystem,
         NandUser,
-        SdCard,
-        TemporaryStorage
+        SdCard
     }
 }

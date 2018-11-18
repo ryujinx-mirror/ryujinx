@@ -1,5 +1,6 @@
 using LibHac;
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS.Font;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.SystemState;
@@ -41,6 +42,8 @@ namespace Ryujinx.HLE.HOS
         internal KSharedMemory FontSharedMem { get; private set; }
 
         internal SharedFontManager Font { get; private set; }
+
+        internal ContentManager ContentManager { get; private set; }
 
         internal KEvent VsyncEvent { get; private set; }
 
@@ -90,6 +93,8 @@ namespace Ryujinx.HLE.HOS
             VsyncEvent = new KEvent(this);
 
             LoadKeySet();
+
+            ContentManager = new ContentManager(Device);
         }
 
         public void LoadCart(string ExeFsDir, string RomFsFile = null)
@@ -156,6 +161,8 @@ namespace Ryujinx.HLE.HOS
             LoadNso("subsdk*");
             LoadNso("sdk");
 
+            ContentManager.LoadEntries();
+
             MainProcess.Run();
         }
 
@@ -173,6 +180,8 @@ namespace Ryujinx.HLE.HOS
 
                 return;
             }
+
+            ContentManager.LoadEntries();
 
             LoadNca(MainNca, ControlNca);
         }
@@ -412,6 +421,8 @@ namespace Ryujinx.HLE.HOS
             LoadNso("subsdk");
             LoadNso("sdk");
 
+            ContentManager.LoadEntries();
+
             MainProcess.Run();
         }
 
@@ -419,13 +430,13 @@ namespace Ryujinx.HLE.HOS
         {
             bool IsNro = Path.GetExtension(FilePath).ToLower() == ".nro";
 
-            string Name = Path.GetFileNameWithoutExtension(FilePath);
+            string Name           = Path.GetFileNameWithoutExtension(FilePath);
             string SwitchFilePath = Device.FileSystem.SystemPathToSwitchPath(FilePath);
 
             if (IsNro && (SwitchFilePath == null || !SwitchFilePath.StartsWith("sdmc:/")))
             {
                 string SwitchPath = $"sdmc:/switch/{Name}{Homebrew.TemporaryNroSuffix}";
-                string TempPath = Device.FileSystem.SwitchPathToSystemPath(SwitchPath);
+                string TempPath   = Device.FileSystem.SwitchPathToSystemPath(SwitchPath);
 
                 string SwitchDir = Path.GetDirectoryName(TempPath);
 
@@ -449,6 +460,9 @@ namespace Ryujinx.HLE.HOS
             }
 
             MainProcess.SetEmptyArgs();
+
+            ContentManager.LoadEntries();
+
             MainProcess.Run(IsNro);
         }
 

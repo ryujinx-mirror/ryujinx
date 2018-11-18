@@ -4,12 +4,14 @@ using Ryujinx.HLE.HOS.Services.Apm;
 using Ryujinx.HLE.HOS.Services.Aud;
 using Ryujinx.HLE.HOS.Services.Bsd;
 using Ryujinx.HLE.HOS.Services.Caps;
+using Ryujinx.HLE.HOS.Services.Es;
 using Ryujinx.HLE.HOS.Services.FspSrv;
 using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.HLE.HOS.Services.Irs;
 using Ryujinx.HLE.HOS.Services.Ldr;
 using Ryujinx.HLE.HOS.Services.Lm;
 using Ryujinx.HLE.HOS.Services.Mm;
+using Ryujinx.HLE.HOS.Services.Ncm;
 using Ryujinx.HLE.HOS.Services.Nfp;
 using Ryujinx.HLE.HOS.Services.Ns;
 using Ryujinx.HLE.HOS.Services.Nv;
@@ -87,6 +89,9 @@ namespace Ryujinx.HLE.HOS.Services
                 case "csrng":
                     return new IRandomInterface();
 
+                case "es":
+                    return new IETicketService();
+
                 case "friend:a":
                     return new Friend.IServiceCreator();
 
@@ -114,11 +119,17 @@ namespace Ryujinx.HLE.HOS.Services
                 case "mm:u":
                     return new IRequest();
 
+                case "ncm":
+                    return new IContentManager();
+
                 case "nfp:user":
                     return new IUserManager();
 
                 case "nifm:u":
                     return new Nifm.IStaticService();
+
+                case "ns:am":
+                    return new IApplicationManagerInterface();
 
                 case "ns:ec":
                     return new IServiceGetterInterface();

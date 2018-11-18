@@ -1,3 +1,4 @@
+using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
 using System;
 using System.IO;
@@ -11,6 +12,7 @@ namespace Ryujinx.HLE.FileSystem
         public const string SdCardPath = "sdmc";
         public const string SystemPath = "system";
 
+        public static string SafeNandPath   = Path.Combine(NandPath, "safe");
         public static string SystemNandPath = Path.Combine(NandPath, "system");
         public static string UserNandPath   = Path.Combine(NandPath, "user");
 
@@ -63,9 +65,15 @@ namespace Ryujinx.HLE.FileSystem
             return MakeDirAndGetFullPath(SaveHelper.GetSavePath(Save, Context));
         }
 
+        public string GetFullPartitionPath(string PartitionPath)
+        {
+            return MakeDirAndGetFullPath(PartitionPath);
+        }
+
         public string SwitchPathToSystemPath(string SwitchPath)
         {
             string[] Parts = SwitchPath.Split(":");
+
             if (Parts.Length != 2)
             {
                 return null;
@@ -76,10 +84,12 @@ namespace Ryujinx.HLE.FileSystem
         public string SystemPathToSwitchPath(string SystemPath)
         {
             string BaseSystemPath = GetBasePath() + Path.DirectorySeparatorChar;
+
             if (SystemPath.StartsWith(BaseSystemPath))
             {
-                string RawPath = SystemPath.Replace(BaseSystemPath, "");
-                int FirstSeparatorOffset = RawPath.IndexOf(Path.DirectorySeparatorChar);
+                string RawPath              = SystemPath.Replace(BaseSystemPath, "");
+                int    FirstSeparatorOffset = RawPath.IndexOf(Path.DirectorySeparatorChar);
+
                 if (FirstSeparatorOffset == -1)
                 {
                     return $"{RawPath}:/";
@@ -87,6 +97,7 @@ namespace Ryujinx.HLE.FileSystem
 
                 string BasePath = RawPath.Substring(0, FirstSeparatorOffset);
                 string FileName = RawPath.Substring(FirstSeparatorOffset + 1);
+
                 return $"{BasePath}:/{FileName}";
             }
             return null;
@@ -94,6 +105,30 @@ namespace Ryujinx.HLE.FileSystem
 
         private string MakeDirAndGetFullPath(string Dir)
         {
+            // Handles Common Switch Content Paths
+            switch (Dir)
+            {
+                case ContentPath.SdCard:
+                case "@Sdcard":
+                    Dir = SdCardPath;
+                    break;
+                case ContentPath.User:
+                    Dir = UserNandPath;
+                    break;
+                case ContentPath.System:
+                    Dir = SystemNandPath;
+                    break;
+                case ContentPath.SdCardContent:
+                    Dir = Path.Combine(SdCardPath, "Nintendo", "Contents");
+                    break;
+                case ContentPath.UserContent:
+                    Dir = Path.Combine(UserNandPath, "Contents");
+                    break;
+                case ContentPath.SystemContent:
+                    Dir = Path.Combine(SystemNandPath, "Contents");
+                    break;
+            }
+
             string FullPath = Path.Combine(GetBasePath(), Dir);
 
             if (!Directory.Exists(FullPath))

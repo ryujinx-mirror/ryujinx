@@ -32,6 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             this.HostPath   = HostPath;
         }
 
+        // Read(u32, u64 offset, u64 size) -> (u64 out_size, buffer<u8, 0x46, 0> out_buf)
         public long Read(ServiceCtx Context)
         {
             long Position = Context.Request.ReceiveBuff[0].Position;
@@ -53,6 +54,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        // Write(u32, u64 offset, u64 size, buffer<u8, 0x45, 0>)
         public long Write(ServiceCtx Context)
         {
             long Position = Context.Request.SendBuff[0].Position;
@@ -69,6 +71,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        // Flush()
         public long Flush(ServiceCtx Context)
         {
             BaseStream.Flush();
@@ -76,6 +79,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        // SetSize(u64 size)
         public long SetSize(ServiceCtx Context)
         {
             long Size = Context.RequestData.ReadInt64();
@@ -85,6 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        // GetSize() -> u64 fileSize
         public long GetSize(ServiceCtx Context)
         {
             Context.ResponseData.Write(BaseStream.Length);

@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using LibHac;
+using Ryujinx.HLE.FileSystem;
 
 namespace Ryujinx.HLE.HOS.Services.Set
 {
@@ -18,6 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
         {
             m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
+                { 3,  GetFirmwareVersion  },
                 { 4,  GetFirmwareVersion2  },
                 { 23, GetColorSetId        },
                 { 24, SetColorSetId        },
@@ -25,10 +28,26 @@ namespace Ryujinx.HLE.HOS.Services.Set
             };
         }
 
+        // GetFirmwareVersion() -> buffer<nn::settings::system::FirmwareVersion, 0x1a, 0x100>
+        public static long GetFirmwareVersion(ServiceCtx Context)
+        {
+            return GetFirmwareVersion2(Context);
+        }
+
+        // GetFirmwareVersion2() -> buffer<nn::settings::system::FirmwareVersion, 0x1a, 0x100>
         public static long GetFirmwareVersion2(ServiceCtx Context)
         {
             long ReplyPos  = Context.Request.RecvListBuff[0].Position;
             long ReplySize = Context.Request.RecvListBuff[0].Size;
+
+            byte[] FirmwareData = GetFirmwareData(Context.Device);
+
+            if (FirmwareData != null)
+            {
+                Context.Memory.WriteBytes(ReplyPos, FirmwareData);
+
+                return 0;
+            }
 
             const byte MajorFWVersion = 0x03;
             const byte MinorFWVersion = 0x00;
@@ -74,6 +93,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
             return 0;
         }
 
+        // GetColorSetId() -> i32
         public static long GetColorSetId(ServiceCtx Context)
         {
             Context.ResponseData.Write((int)Context.Device.System.State.ThemeColor);
@@ -81,6 +101,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
             return 0;
         }
 
+        // GetColorSetId() -> i32
         public static long SetColorSetId(ServiceCtx Context)
         {
             int ColorSetId = Context.RequestData.ReadInt32();
@@ -90,6 +111,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
             return 0;
         }
 
+        // GetSettingsItemValue(buffer<nn::settings::SettingsName, 0x19, 0x48>, buffer<nn::settings::SettingsItemKey, 0x19, 0x48>) -> (u64, buffer<unknown, 6, 0>)
         public static long GetSettingsItemValue(ServiceCtx Context)
         {
             long ClassPos  = Context.Request.PtrBuff[0].Position;
@@ -147,6 +169,45 @@ namespace Ryujinx.HLE.HOS.Services.Set
             }
 
             return 0;
+        }
+
+        public static byte[] GetFirmwareData(Switch Device)
+        {
+            byte[] Data        = null;
+            long   TitleId     = 0x0100000000000809;
+            string ContentPath = Device.System.ContentManager.GetInstalledContentPath(TitleId, StorageId.NandSystem, ContentType.Data);
+
+            if(string.IsNullOrWhiteSpace(ContentPath))
+            {
+                return null;
+            }
+
+            string     FirmwareTitlePath = Device.FileSystem.SwitchPathToSystemPath(ContentPath);
+            FileStream FirmwareStream    = File.Open(FirmwareTitlePath, FileMode.Open, FileAccess.Read);
+            Nca        FirmwareContent   = new Nca(Device.System.KeySet, FirmwareStream, false);
+            Stream     RomFsStream       = FirmwareContent.OpenSection(0, false, Device.System.FsIntegrityCheckLevel);
+
+            if(RomFsStream == null)
+            {
+                return null;
+            }
+
+            Romfs FirmwareRomFs = new Romfs(RomFsStream);
+
+            using(MemoryStream MemoryStream = new MemoryStream())
+            {
+                using (Stream FirmwareFile = FirmwareRomFs.OpenFile("/file"))
+                {
+                    FirmwareFile.CopyTo(MemoryStream);
+                }
+
+                Data = MemoryStream.ToArray();
+            }
+
+            FirmwareContent.Dispose();
+            FirmwareStream.Dispose();
+
+            return Data;
         }
     }
 }

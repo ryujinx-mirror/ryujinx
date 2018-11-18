@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS.Services.Pl
 
         public long GetSharedMemoryNativeHandle(ServiceCtx Context)
         {
-            Context.Device.System.Font.EnsureInitialized();
+            Context.Device.System.Font.EnsureInitialized(Context.Device.System.ContentManager);
 
             if (Context.Process.HandleTable.GenerateHandle(Context.Device.System.FontSharedMem, out int Handle) != KernelResult.Success)
             {

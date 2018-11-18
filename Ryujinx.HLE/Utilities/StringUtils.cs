@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Ryujinx.HLE.HOS;
+using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -46,6 +48,29 @@ namespace Ryujinx.HLE.Utilities
             }
 
             return Output;
+        }
+
+        public static string ReadUtf8String(ServiceCtx Context, int Index = 0)
+        {
+            long Position = Context.Request.PtrBuff[Index].Position;
+            long Size     = Context.Request.PtrBuff[Index].Size;
+
+            using (MemoryStream MS = new MemoryStream())
+            {
+                while (Size-- > 0)
+                {
+                    byte Value = Context.Memory.ReadByte(Position++);
+
+                    if (Value == 0)
+                    {
+                        break;
+                    }
+
+                    MS.WriteByte(Value);
+                }
+
+                return Encoding.UTF8.GetString(MS.ToArray());
+            }
         }
     }
 }
