@@ -223,6 +223,11 @@ namespace Ryujinx.HLE.FileSystem.Content
 
         private bool VerifyContentType(LocationEntry LocationEntry, ContentType ContentType)
         {
+            if (LocationEntry.ContentPath == null)
+            {
+                return false;
+            }
+
             StorageId StorageId     = LocationHelper.GetStorageId(LocationEntry.ContentPath);
             string    InstalledPath = Device.FileSystem.SwitchPathToSystemPath(LocationEntry.ContentPath);
 

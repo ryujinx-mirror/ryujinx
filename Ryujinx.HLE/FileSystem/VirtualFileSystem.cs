@@ -78,6 +78,7 @@ namespace Ryujinx.HLE.FileSystem
             {
                 return null;
             }
+
             return GetFullPath(MakeDirAndGetFullPath(Parts[0]), Parts[1]);
         }
 
