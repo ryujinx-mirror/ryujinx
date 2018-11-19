@@ -8,11 +8,17 @@ namespace Ryujinx.Audio
     /// </summary>
     public class DummyAudioOut : IAalOutput
     {
+        private int lastTrackId = 1;
+
+        private ConcurrentQueue<int> m_TrackIds;
         private ConcurrentQueue<long> m_Buffers;
+        private ConcurrentDictionary<int, ReleaseCallback> m_ReleaseCallbacks;
 
         public DummyAudioOut()
         {
-            m_Buffers = new ConcurrentQueue<long>();
+            m_Buffers          = new ConcurrentQueue<long>();
+            m_TrackIds         = new ConcurrentQueue<int>();
+            m_ReleaseCallbacks = new ConcurrentDictionary<int, ReleaseCallback>();
         }
 
         /// <summary>
@@ -22,9 +28,25 @@ namespace Ryujinx.Audio
 
         public PlaybackState GetState(int trackId) => PlaybackState.Stopped;
 
-        public int OpenTrack(int sampleRate, int channels, ReleaseCallback callback) => 1;
+        public int OpenTrack(int sampleRate, int channels, ReleaseCallback callback)
+        {
+            int trackId;
 
-        public void CloseTrack(int trackId) { }
+            if(!m_TrackIds.TryDequeue(out trackId))
+            {
+                trackId = ++lastTrackId;
+            }
+
+            m_ReleaseCallbacks[trackId] = callback;
+
+            return trackId;
+        }
+
+        public void CloseTrack(int trackId)
+        {
+            m_TrackIds.Enqueue(trackId);
+            m_ReleaseCallbacks.Remove(trackId, out _);
+        }
 
         public void Start(int trackId) { }
 
@@ -34,6 +56,11 @@ namespace Ryujinx.Audio
             where T : struct
         {
             m_Buffers.Enqueue(bufferTag);
+
+            if(m_ReleaseCallbacks.TryGetValue(trackID, out var callback))
+            {
+                callback?.Invoke();
+            }
         }
 
         public long[] GetReleasedBuffers(int trackId, int maxCount)
