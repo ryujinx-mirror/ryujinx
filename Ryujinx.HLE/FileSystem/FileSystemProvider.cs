@@ -18,12 +18,12 @@ namespace Ryujinx.HLE.FileSystem
             this.BasePath = BasePath;
             this.RootPath = RootPath;
 
-            CheckIfDecendentOfRootPath(BasePath);
+            CheckIfDescendentOfRootPath(BasePath);
         }
 
         public long CreateDirectory(string Name)
         {
-            CheckIfDecendentOfRootPath(Name);
+            CheckIfDescendentOfRootPath(Name);
 
             if (Directory.Exists(Name))
             {
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.FileSystem
 
         public long CreateFile(string Name, long Size)
         {
-            CheckIfDecendentOfRootPath(Name);
+            CheckIfDescendentOfRootPath(Name);
 
             if (File.Exists(Name))
             {
@@ -54,7 +54,7 @@ namespace Ryujinx.HLE.FileSystem
 
         public long DeleteDirectory(string Name, bool Recursive)
         {
-            CheckIfDecendentOfRootPath(Name);
+            CheckIfDescendentOfRootPath(Name);
 
             string DirName = Name;
 
@@ -70,7 +70,7 @@ namespace Ryujinx.HLE.FileSystem
 
         public long DeleteFile(string Name)
         {
-            CheckIfDecendentOfRootPath(Name);
+            CheckIfDescendentOfRootPath(Name);
 
             if (!File.Exists(Name))
             {
@@ -86,7 +86,7 @@ namespace Ryujinx.HLE.FileSystem
 
         public DirectoryEntry[] GetDirectories(string Path)
         {
-            CheckIfDecendentOfRootPath(Path);
+            CheckIfDescendentOfRootPath(Path);
 
             List<DirectoryEntry> Entries = new List<DirectoryEntry>();
 
@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.FileSystem
 
         public DirectoryEntry[] GetEntries(string Path)
         {
-            CheckIfDecendentOfRootPath(Path);
+            CheckIfDescendentOfRootPath(Path);
 
             if (Directory.Exists(Path))
             {
@@ -129,7 +129,7 @@ namespace Ryujinx.HLE.FileSystem
 
         public DirectoryEntry[] GetFiles(string Path)
         {
-            CheckIfDecendentOfRootPath(Path);
+            CheckIfDescendentOfRootPath(Path);
 
             List<DirectoryEntry> Entries = new List<DirectoryEntry>();
 
@@ -166,7 +166,7 @@ namespace Ryujinx.HLE.FileSystem
 
             string FullPath = Path.Combine(BasePath, Name);
 
-            CheckIfDecendentOfRootPath(FullPath);
+            CheckIfDescendentOfRootPath(FullPath);
 
             return FullPath;
         }
@@ -178,21 +178,21 @@ namespace Ryujinx.HLE.FileSystem
 
         public bool DirectoryExists(string Name)
         {
-            CheckIfDecendentOfRootPath(Name);
+            CheckIfDescendentOfRootPath(Name);
 
             return Directory.Exists(Name);
         }
 
         public bool FileExists(string Name)
         {
-            CheckIfDecendentOfRootPath(Name);
+            CheckIfDescendentOfRootPath(Name);
 
             return File.Exists(Name);
         }
 
         public long OpenDirectory(string Name, int FilterFlags, out IDirectory DirectoryInterface)
         {
-            CheckIfDecendentOfRootPath(Name);
+            CheckIfDescendentOfRootPath(Name);
 
             if (Directory.Exists(Name))
             {
@@ -208,7 +208,7 @@ namespace Ryujinx.HLE.FileSystem
 
         public long OpenFile(string Name, out IFile FileInterface)
         {
-            CheckIfDecendentOfRootPath(Name);
+            CheckIfDescendentOfRootPath(Name);
 
             if (File.Exists(Name))
             {
@@ -226,8 +226,8 @@ namespace Ryujinx.HLE.FileSystem
 
         public long RenameDirectory(string OldName, string NewName)
         {
-            CheckIfDecendentOfRootPath(OldName);
-            CheckIfDecendentOfRootPath(NewName);
+            CheckIfDescendentOfRootPath(OldName);
+            CheckIfDescendentOfRootPath(NewName);
 
             if (Directory.Exists(OldName))
             {
@@ -243,8 +243,8 @@ namespace Ryujinx.HLE.FileSystem
 
         public long RenameFile(string OldName, string NewName)
         {
-            CheckIfDecendentOfRootPath(OldName);
-            CheckIfDecendentOfRootPath(NewName);
+            CheckIfDescendentOfRootPath(OldName);
+            CheckIfDescendentOfRootPath(NewName);
 
             if (File.Exists(OldName))
             {
@@ -258,7 +258,7 @@ namespace Ryujinx.HLE.FileSystem
             return 0;
         }
 
-        public void CheckIfDecendentOfRootPath(string Path)
+        public void CheckIfDescendentOfRootPath(string Path)
         {
             DirectoryInfo PathInfo = new DirectoryInfo(Path);
             DirectoryInfo RootInfo = new DirectoryInfo(RootPath);
