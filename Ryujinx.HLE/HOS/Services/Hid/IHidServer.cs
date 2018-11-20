@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         private bool UsbFullKeyControllerEnabled;
 
         private HidNpadJoyHoldType            NpadJoyHoldType;
-        private HidNpadStyle                  NpadStyleTag;
+        private HidNpadStyle                  NpadStyleSet;
         private HidNpadJoyAssignmentMode      NpadJoyAssignmentMode;
         private HidNpadHandheldActivationMode NpadHandheldActivationMode;
         private HidGyroscopeZeroDriftMode     GyroscopeZeroDriftMode;
@@ -153,7 +153,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             PalmaOperationCompleteEvent = new KEvent(System);
 
             NpadJoyHoldType            = HidNpadJoyHoldType.Vertical;
-            NpadStyleTag               = HidNpadStyle.FullKey | HidNpadStyle.Dual | HidNpadStyle.Left | HidNpadStyle.Right;
+            NpadStyleSet               = HidNpadStyle.FullKey | HidNpadStyle.Dual | HidNpadStyle.Left | HidNpadStyle.Right | HidNpadStyle.Handheld;
             NpadJoyAssignmentMode      = HidNpadJoyAssignmentMode.Dual;
             NpadHandheldActivationMode = HidNpadHandheldActivationMode.Dual;
             GyroscopeZeroDriftMode     = HidGyroscopeZeroDriftMode.Standard;
@@ -161,6 +161,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             SensorFusionParams  = new HidSensorFusionParameters();
             AccelerometerParams = new HidAccelerometerParameters();
             VibrationValue      = new HidVibrationValue();
+
+            // TODO: signal event at right place
+            XpadIdEvent.ReadableEvent.Signal();
         }
 
         // CreateAppletResource(nn::applet::AppletResourceUserId) -> object<nn::hid::IAppletResource>
@@ -218,7 +221,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long XpadId = Context.RequestData.ReadInt64();
 
-            if (Context.Process.HandleTable.GenerateHandle(XpadIdEvent, out XpadIdEventHandle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(XpadIdEvent.ReadableEvent, out XpadIdEventHandle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
@@ -652,12 +655,14 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // SetSupportedNpadStyleSet(nn::applet::AppletResourceUserId, nn::hid::NpadStyleTag)
         public long SetSupportedNpadStyleSet(ServiceCtx Context)
         {
-            NpadStyleTag = (HidNpadStyle)Context.RequestData.ReadInt32();
+            NpadStyleSet = (HidNpadStyle)Context.RequestData.ReadInt32();
 
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
             Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                  $"NpadStyleTag: {NpadStyleTag}");
+                                                  $"NpadStyleSet: {NpadStyleSet}");
+
+            NpadStyleSetUpdateEvent.ReadableEvent.Signal();
 
             return 0;
         }
@@ -667,10 +672,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Context.ResponseData.Write((int)NpadStyleTag);
+            Context.ResponseData.Write((int)NpadStyleSet);
 
             Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
-                                                  $"NpadStyleTag: {NpadStyleTag}");
+                                                  $"NpadStyleSet: {NpadStyleSet}");
 
             return 0;
         }
@@ -714,7 +719,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int  NpadId               = Context.RequestData.ReadInt32();
             long NpadStyleSet         = Context.RequestData.ReadInt64();
 
-            if (Context.Process.HandleTable.GenerateHandle(NpadStyleSetUpdateEvent, out int Handle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(NpadStyleSetUpdateEvent.ReadableEvent, out int Handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
@@ -1348,6 +1353,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
+
             return 0;
         }
 
@@ -1356,7 +1363,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            if (Context.Process.HandleTable.GenerateHandle(PalmaOperationCompleteEvent, out int Handle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(PalmaOperationCompleteEvent.ReadableEvent, out int Handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
@@ -1392,6 +1399,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
                                                   $"Unknown0: {Unknown0}");
 
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
+
             return 0;
         }
 
@@ -1403,6 +1412,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
                                                   $"FrModeType: {FrModeType}");
+
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
 
             return 0;
         }
@@ -1426,6 +1437,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
                                                   $"EnabledPalmaStep: {EnabledPalmaStep}");
 
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
+
             return 0;
         }
 
@@ -1436,6 +1449,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
+
             return 0;
         }
 
@@ -1445,6 +1460,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
             Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
+
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
 
             return 0;
         }
@@ -1474,6 +1491,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
                                                   $"Unknown0: {Unknown0} - " +
                                                   $"Unknown1: {Unknown1}");
+
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
 
             return 0;
         }

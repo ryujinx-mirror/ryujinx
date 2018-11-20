@@ -1,10 +1,11 @@
 using LibHac;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE;
+using Ryujinx.HLE.Input;
 using Ryujinx.UI.Input;
 using System;
-using System.Globalization;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,8 +14,8 @@ namespace Ryujinx
 {
     public static class Config
     {
-        public static JoyConKeyboard   JoyConKeyboard   { get; private set; }
-        public static JoyConController JoyConController { get; private set; }
+        public static NpadKeyboard   NpadKeyboard   { get; private set; }
+        public static NpadController NpadController { get; private set; }
 
         public static void Read(Switch device)
         {
@@ -73,9 +74,13 @@ namespace Ryujinx
                 ? IntegrityCheckLevel.ErrorOnInvalid
                 : IntegrityCheckLevel.None;
 
-            JoyConKeyboard = new JoyConKeyboard(
+            HidControllerType ControllerType = Enum.Parse<HidControllerType>(parser.Value("Controller_Type"));
 
-                new JoyConKeyboardLeft
+            device.Hid.InitilizePrimaryController(ControllerType);
+
+            NpadKeyboard = new NpadKeyboard(
+
+                new NpadKeyboardLeft
                 {
                     StickUp     = Convert.ToInt16(parser.Value("Controls_Left_JoyConKeyboard_Stick_Up")),
                     StickDown   = Convert.ToInt16(parser.Value("Controls_Left_JoyConKeyboard_Stick_Down")),
@@ -91,7 +96,7 @@ namespace Ryujinx
                     ButtonZl    = Convert.ToInt16(parser.Value("Controls_Left_JoyConKeyboard_Button_ZL"))
                 },
 
-                new JoyConKeyboardRight
+                new NpadKeyboardRight
                 {
                     StickUp     = Convert.ToInt16(parser.Value("Controls_Right_JoyConKeyboard_Stick_Up")),
                     StickDown   = Convert.ToInt16(parser.Value("Controls_Right_JoyConKeyboard_Stick_Down")),
@@ -107,14 +112,14 @@ namespace Ryujinx
                     ButtonZr    = Convert.ToInt16(parser.Value("Controls_Right_JoyConKeyboard_Button_ZR"))
                 });
 
-            JoyConController = new JoyConController(
+            NpadController = new NpadController(
 
                        Convert.ToBoolean(parser.Value("GamePad_Enable")),
                        Convert.ToInt32  (parser.Value("GamePad_Index")),
                 (float)Convert.ToDouble (parser.Value("GamePad_Deadzone"),          CultureInfo.InvariantCulture),
                 (float)Convert.ToDouble (parser.Value("GamePad_Trigger_Threshold"), CultureInfo.InvariantCulture),
 
-                new JoyConControllerLeft
+                new NpadControllerLeft
                 {
                     Stick       = ToId(parser.Value("Controls_Left_JoyConController_Stick")),
                     StickButton = ToId(parser.Value("Controls_Left_JoyConController_Stick_Button")),
@@ -127,7 +132,7 @@ namespace Ryujinx
                     ButtonZl    = ToId(parser.Value("Controls_Left_JoyConController_Button_ZL"))
                 },
 
-                new JoyConControllerRight
+                new NpadControllerRight
                 {
                     Stick       = ToId(parser.Value("Controls_Right_JoyConController_Stick")),
                     StickButton = ToId(parser.Value("Controls_Right_JoyConController_Stick_Button")),

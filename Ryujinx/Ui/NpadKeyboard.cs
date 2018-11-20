@@ -3,7 +3,7 @@ using Ryujinx.HLE.Input;
 
 namespace Ryujinx.UI.Input
 {
-    public struct JoyConKeyboardLeft
+    public struct NpadKeyboardLeft
     {
         public int StickUp;
         public int StickDown;
@@ -19,7 +19,7 @@ namespace Ryujinx.UI.Input
         public int ButtonZl;
     }
 
-    public struct JoyConKeyboardRight
+    public struct NpadKeyboardRight
     {
         public int StickUp;
         public int StickDown;
@@ -35,14 +35,14 @@ namespace Ryujinx.UI.Input
         public int ButtonZr;
     }
 
-    public class JoyConKeyboard
+    public class NpadKeyboard
     {
-        public JoyConKeyboardLeft  Left;
-        public JoyConKeyboardRight Right;
+        public NpadKeyboardLeft  Left;
+        public NpadKeyboardRight Right;
 
-        public JoyConKeyboard(
-            JoyConKeyboardLeft  left,
-            JoyConKeyboardRight right)
+        public NpadKeyboard(
+            NpadKeyboardLeft  left,
+            NpadKeyboardRight right)
         {
             Left  = left;
             Right = right;
@@ -52,23 +52,23 @@ namespace Ryujinx.UI.Input
         {
             HidControllerButtons buttons = 0;
 
-            if (keyboard[(Key)Left.StickButton]) buttons |= HidControllerButtons.KEY_LSTICK;
-            if (keyboard[(Key)Left.DPadUp])      buttons |= HidControllerButtons.KEY_DUP;
-            if (keyboard[(Key)Left.DPadDown])    buttons |= HidControllerButtons.KEY_DDOWN;
-            if (keyboard[(Key)Left.DPadLeft])    buttons |= HidControllerButtons.KEY_DLEFT;
-            if (keyboard[(Key)Left.DPadRight])   buttons |= HidControllerButtons.KEY_DRIGHT;
-            if (keyboard[(Key)Left.ButtonMinus]) buttons |= HidControllerButtons.KEY_MINUS;
-            if (keyboard[(Key)Left.ButtonL])     buttons |= HidControllerButtons.KEY_L;
-            if (keyboard[(Key)Left.ButtonZl])    buttons |= HidControllerButtons.KEY_ZL;
+            if (keyboard[(Key)Left.StickButton]) buttons |= HidControllerButtons.StickLeft;
+            if (keyboard[(Key)Left.DPadUp])      buttons |= HidControllerButtons.DpadUp;
+            if (keyboard[(Key)Left.DPadDown])    buttons |= HidControllerButtons.DpadDown;
+            if (keyboard[(Key)Left.DPadLeft])    buttons |= HidControllerButtons.DpadLeft;
+            if (keyboard[(Key)Left.DPadRight])   buttons |= HidControllerButtons.DPadRight;
+            if (keyboard[(Key)Left.ButtonMinus]) buttons |= HidControllerButtons.Minus;
+            if (keyboard[(Key)Left.ButtonL])     buttons |= HidControllerButtons.L;
+            if (keyboard[(Key)Left.ButtonZl])    buttons |= HidControllerButtons.Zl;
             
-            if (keyboard[(Key)Right.StickButton]) buttons |= HidControllerButtons.KEY_RSTICK;
-            if (keyboard[(Key)Right.ButtonA])     buttons |= HidControllerButtons.KEY_A;
-            if (keyboard[(Key)Right.ButtonB])     buttons |= HidControllerButtons.KEY_B;
-            if (keyboard[(Key)Right.ButtonX])     buttons |= HidControllerButtons.KEY_X;
-            if (keyboard[(Key)Right.ButtonY])     buttons |= HidControllerButtons.KEY_Y;
-            if (keyboard[(Key)Right.ButtonPlus])  buttons |= HidControllerButtons.KEY_PLUS;
-            if (keyboard[(Key)Right.ButtonR])     buttons |= HidControllerButtons.KEY_R;
-            if (keyboard[(Key)Right.ButtonZr])    buttons |= HidControllerButtons.KEY_ZR;
+            if (keyboard[(Key)Right.StickButton]) buttons |= HidControllerButtons.StickRight;
+            if (keyboard[(Key)Right.ButtonA])     buttons |= HidControllerButtons.A;
+            if (keyboard[(Key)Right.ButtonB])     buttons |= HidControllerButtons.B;
+            if (keyboard[(Key)Right.ButtonX])     buttons |= HidControllerButtons.X;
+            if (keyboard[(Key)Right.ButtonY])     buttons |= HidControllerButtons.Y;
+            if (keyboard[(Key)Right.ButtonPlus])  buttons |= HidControllerButtons.Plus;
+            if (keyboard[(Key)Right.ButtonR])     buttons |= HidControllerButtons.R;
+            if (keyboard[(Key)Right.ButtonZr])    buttons |= HidControllerButtons.Zr;
 
             return buttons;
         }

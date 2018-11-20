@@ -32,7 +32,7 @@ namespace Ryujinx.UI.Input
         RJoystick
     }
 
-    public struct JoyConControllerLeft
+    public struct NpadControllerLeft
     {
         public ControllerInputId Stick;
         public ControllerInputId StickButton;
@@ -45,7 +45,7 @@ namespace Ryujinx.UI.Input
         public ControllerInputId ButtonZl;
     }
 
-    public struct JoyConControllerRight
+    public struct NpadControllerRight
     {
         public ControllerInputId Stick;
         public ControllerInputId StickButton;
@@ -58,23 +58,23 @@ namespace Ryujinx.UI.Input
         public ControllerInputId ButtonZr;
     }
 
-    public class JoyConController
+    public class NpadController
     {
         public bool  Enabled          { private set; get; }
         public int   Index            { private set; get; }
         public float Deadzone         { private set; get; }
         public float TriggerThreshold { private set; get; }
 
-        public JoyConControllerLeft  Left  { private set; get; }
-        public JoyConControllerRight Right { private set; get; }
+        public NpadControllerLeft  Left  { private set; get; }
+        public NpadControllerRight Right { private set; get; }
 
-        public JoyConController(
+        public NpadController(
             bool                  enabled,
             int                   index,
             float                 deadzone,
             float                 triggerThreshold,
-            JoyConControllerLeft  left,
-            JoyConControllerRight right)
+            NpadControllerLeft    left,
+            NpadControllerRight   right)
         {
             Enabled          = enabled;
             Index            = index;
@@ -101,23 +101,23 @@ namespace Ryujinx.UI.Input
 
             HidControllerButtons buttons = 0;
 
-            if (IsPressed(gpState, Left.DPadUp))       buttons |= HidControllerButtons.KEY_DUP;
-            if (IsPressed(gpState, Left.DPadDown))     buttons |= HidControllerButtons.KEY_DDOWN;
-            if (IsPressed(gpState, Left.DPadLeft))     buttons |= HidControllerButtons.KEY_DLEFT;
-            if (IsPressed(gpState, Left.DPadRight))    buttons |= HidControllerButtons.KEY_DRIGHT;
-            if (IsPressed(gpState, Left.StickButton))  buttons |= HidControllerButtons.KEY_LSTICK;
-            if (IsPressed(gpState, Left.ButtonMinus))  buttons |= HidControllerButtons.KEY_MINUS;
-            if (IsPressed(gpState, Left.ButtonL))      buttons |= HidControllerButtons.KEY_L;
-            if (IsPressed(gpState, Left.ButtonZl))     buttons |= HidControllerButtons.KEY_ZL;
+            if (IsPressed(gpState, Left.DPadUp))       buttons |= HidControllerButtons.DpadUp;
+            if (IsPressed(gpState, Left.DPadDown))     buttons |= HidControllerButtons.DpadDown;
+            if (IsPressed(gpState, Left.DPadLeft))     buttons |= HidControllerButtons.DpadLeft;
+            if (IsPressed(gpState, Left.DPadRight))    buttons |= HidControllerButtons.DPadRight;
+            if (IsPressed(gpState, Left.StickButton))  buttons |= HidControllerButtons.StickLeft;
+            if (IsPressed(gpState, Left.ButtonMinus))  buttons |= HidControllerButtons.Minus;
+            if (IsPressed(gpState, Left.ButtonL))      buttons |= HidControllerButtons.L;
+            if (IsPressed(gpState, Left.ButtonZl))     buttons |= HidControllerButtons.Zl;
 
-            if (IsPressed(gpState, Right.ButtonA))     buttons |= HidControllerButtons.KEY_A;
-            if (IsPressed(gpState, Right.ButtonB))     buttons |= HidControllerButtons.KEY_B;
-            if (IsPressed(gpState, Right.ButtonX))     buttons |= HidControllerButtons.KEY_X;
-            if (IsPressed(gpState, Right.ButtonY))     buttons |= HidControllerButtons.KEY_Y;
-            if (IsPressed(gpState, Right.StickButton)) buttons |= HidControllerButtons.KEY_RSTICK;
-            if (IsPressed(gpState, Right.ButtonPlus))  buttons |= HidControllerButtons.KEY_PLUS;
-            if (IsPressed(gpState, Right.ButtonR))     buttons |= HidControllerButtons.KEY_R;
-            if (IsPressed(gpState, Right.ButtonZr))    buttons |= HidControllerButtons.KEY_ZR;
+            if (IsPressed(gpState, Right.ButtonA))     buttons |= HidControllerButtons.A;
+            if (IsPressed(gpState, Right.ButtonB))     buttons |= HidControllerButtons.B;
+            if (IsPressed(gpState, Right.ButtonX))     buttons |= HidControllerButtons.X;
+            if (IsPressed(gpState, Right.ButtonY))     buttons |= HidControllerButtons.Y;
+            if (IsPressed(gpState, Right.StickButton)) buttons |= HidControllerButtons.StickRight;
+            if (IsPressed(gpState, Right.ButtonPlus))  buttons |= HidControllerButtons.Plus;
+            if (IsPressed(gpState, Right.ButtonR))     buttons |= HidControllerButtons.R;
+            if (IsPressed(gpState, Right.ButtonZr))    buttons |= HidControllerButtons.Zr;
 
             return buttons;
         }

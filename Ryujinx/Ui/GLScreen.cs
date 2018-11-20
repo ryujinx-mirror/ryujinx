@@ -142,25 +142,24 @@ namespace Ryujinx
             {
                 KeyboardState keyboard = _keyboard.Value;
 
-                currentButton = Config.JoyConKeyboard.GetButtons(keyboard);
+                currentButton = Config.NpadKeyboard.GetButtons(keyboard);
 
-                (leftJoystickDx, leftJoystickDy) = Config.JoyConKeyboard.GetLeftStick(keyboard);
+                (leftJoystickDx, leftJoystickDy) = Config.NpadKeyboard.GetLeftStick(keyboard);
 
-                (rightJoystickDx, rightJoystickDy) = Config.JoyConKeyboard.GetRightStick(keyboard);
+                (rightJoystickDx, rightJoystickDy) = Config.NpadKeyboard.GetRightStick(keyboard);
             }
-
-            //Controller Input
-            currentButton |= Config.JoyConController.GetButtons();
+            
+            currentButton |= Config.NpadController.GetButtons();
 
             //Keyboard has priority stick-wise
             if (leftJoystickDx == 0 && leftJoystickDy == 0)
             {
-                (leftJoystickDx, leftJoystickDy) = Config.JoyConController.GetLeftStick();
+                (leftJoystickDx, leftJoystickDy) = Config.NpadController.GetLeftStick();
             }
 
             if (rightJoystickDx == 0 && rightJoystickDy == 0)
             {
-                (rightJoystickDx, rightJoystickDy) = Config.JoyConController.GetRightStick();
+                (rightJoystickDx, rightJoystickDy) = Config.NpadController.GetRightStick();
             }
 
             leftJoystick = new HidJoystickPosition
@@ -234,19 +233,9 @@ namespace Ryujinx
                 _device.Hid.SetTouchPoints();
             }
 
-            _device.Hid.SetJoyconButton(
-                HidControllerId.CONTROLLER_HANDHELD,
-                HidControllerLayouts.Handheld_Joined,
-                currentButton,
-                leftJoystick,
-                rightJoystick);
+            HidControllerBase controller = _device.Hid.PrimaryController;
 
-            _device.Hid.SetJoyconButton(
-                HidControllerId.CONTROLLER_HANDHELD,
-                HidControllerLayouts.Main,
-                currentButton,
-                leftJoystick,
-                rightJoystick);
+            controller.SendInput(currentButton, leftJoystick, rightJoystick);
         }
 
         private new void RenderFrame()
