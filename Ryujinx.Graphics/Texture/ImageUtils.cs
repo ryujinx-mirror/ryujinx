@@ -147,14 +147,14 @@ namespace Ryujinx.Graphics.Texture
             GalTextureType   AType,
             bool             ConvSrgb)
         {
-            if (RType != GType || RType != BType || RType != AType)
-            {
-                throw new NotImplementedException("Per component types are not implemented!");
-            }
-
             if (!s_TextureTable.TryGetValue(Format, out GalImageFormat ImageFormat))
             {
                 throw new NotImplementedException($"Format 0x{((int)Format):x} not implemented!");
+            }
+
+            if (!HasDepth(ImageFormat) && (RType != GType || RType != BType || RType != AType))
+            {
+                throw new NotImplementedException($"Per component types are not implemented!");
             }
 
             GalImageFormat FormatType = ConvSrgb ? Srgb : GetFormatType(RType);
