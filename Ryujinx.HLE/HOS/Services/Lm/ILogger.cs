@@ -62,23 +62,23 @@ namespace Ryujinx.HLE.HOS.Services.Lm
                     }
                     else if (Field == LmLogField.Line)
                     {
-                        FieldStr = Field + ": " + Reader.ReadInt32();
+                        FieldStr = $"{Field}: {Reader.ReadInt32()}";
                     }
                     else if (Field == LmLogField.DropCount)
                     {
-                        FieldStr = Field + ": " + Reader.ReadInt64();
+                        FieldStr = $"{Field}: {Reader.ReadInt64()}";
                     }
                     else if (Field == LmLogField.Time)
                     {
-                        FieldStr = Field + ": " + Reader.ReadInt64() + "s";
+                        FieldStr = $"{Field}: {Reader.ReadInt64()}s";
                     }
                     else if (Field < LmLogField.Count)
                     {
-                        FieldStr = Field + ": \"" + Encoding.UTF8.GetString(Reader.ReadBytes(Size)) + "\"";
+                        FieldStr = $"{Field}: '{Encoding.UTF8.GetString(Reader.ReadBytes(Size)).TrimEnd()}'";
                     }
                     else
                     {
-                        FieldStr = "Field" + Field + ": \"" + Encoding.UTF8.GetString(Reader.ReadBytes(Size)) + "\"";
+                        FieldStr = $"Field{Field}: '{Encoding.UTF8.GetString(Reader.ReadBytes(Size)).TrimEnd()}'";
                     }
 
                     SB.AppendLine(" " + FieldStr);
