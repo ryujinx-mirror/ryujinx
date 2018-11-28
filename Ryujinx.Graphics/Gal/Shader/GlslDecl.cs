@@ -1,3 +1,4 @@
+using Ryujinx.Graphics.Gal.OpenGL;
 using System;
 using System.Collections.Generic;
 
@@ -15,8 +16,6 @@ namespace Ryujinx.Graphics.Gal.Shader
         public const int InstanceIdAttr  = 0x2f8;
         public const int VertexIdAttr    = 0x2fc;
         public const int FaceAttr        = 0x3fc;
-
-        public const int MaxUboSize = 1024;
 
         public const int GlPositionVec4Index = 7;
 
@@ -50,6 +49,8 @@ namespace Ryujinx.Graphics.Gal.Shader
         public const int SsyStackSize = 16;
         public const string SsyStackName = "ssy_stack";
         public const string SsyCursorName = "ssy_cursor";
+
+        public static int MaxUboSize => OGLLimit.MaxUboSize / 16;
 
         private string[] StagePrefixes = new string[] { "vp", "tcp", "tep", "gp", "fp" };
 
@@ -98,8 +99,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             m_Preds = new Dictionary<int, ShaderDeclInfo>();
         }
 
-        public GlslDecl(ShaderIrBlock[] Blocks, GalShaderType ShaderType, ShaderHeader Header)
-            : this(ShaderType)
+        public GlslDecl(ShaderIrBlock[] Blocks, GalShaderType ShaderType, ShaderHeader Header) : this(ShaderType)
         {
             StagePrefix = StagePrefixes[(int)ShaderType] + "_";
 

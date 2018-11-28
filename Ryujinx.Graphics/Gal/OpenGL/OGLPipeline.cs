@@ -77,17 +77,23 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private GalPipelineState Old;
 
-        private OGLConstBuffer Buffer;
-        private OGLRasterizer Rasterizer;
-        private OGLShader Shader;
+        private OGLConstBuffer  Buffer;
+        private OGLRenderTarget RenderTarget;
+        private OGLRasterizer   Rasterizer;
+        private OGLShader       Shader;
 
         private int VaoHandle;
 
-        public OGLPipeline(OGLConstBuffer Buffer, OGLRasterizer Rasterizer, OGLShader Shader)
+        public OGLPipeline(
+            OGLConstBuffer  Buffer,
+            OGLRenderTarget RenderTarget,
+            OGLRasterizer   Rasterizer,
+            OGLShader       Shader)
         {
-            this.Buffer     = Buffer;
-            this.Rasterizer = Rasterizer;
-            this.Shader     = Shader;
+            this.Buffer       = Buffer;
+            this.RenderTarget = RenderTarget;
+            this.Rasterizer   = Rasterizer;
+            this.Shader       = Shader;
 
             //These values match OpenGL's defaults
             Old = new GalPipelineState
@@ -144,6 +150,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             if (New.FramebufferSrgb != Old.FramebufferSrgb)
             {
                 Enable(EnableCap.FramebufferSrgb, New.FramebufferSrgb);
+
+                RenderTarget.FramebufferSrgb = New.FramebufferSrgb;
             }
 
             if (New.FlipX != Old.FlipX || New.FlipY != Old.FlipY || New.Instance != Old.Instance)

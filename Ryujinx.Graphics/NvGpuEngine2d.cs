@@ -61,8 +61,11 @@ namespace Ryujinx.Graphics
             int DstBlitW = ReadRegister(NvGpuEngine2dReg.BlitDstW);
             int DstBlitH = ReadRegister(NvGpuEngine2dReg.BlitDstH);
 
-            int SrcBlitX = ReadRegister(NvGpuEngine2dReg.BlitSrcXInt);
-            int SrcBlitY = ReadRegister(NvGpuEngine2dReg.BlitSrcYInt);
+            long BlitDuDx = ReadRegisterFixed1_31_32(NvGpuEngine2dReg.BlitDuDxFract);
+            long BlitDvDy = ReadRegisterFixed1_31_32(NvGpuEngine2dReg.BlitDvDyFract);
+
+            long SrcBlitX = ReadRegisterFixed1_31_32(NvGpuEngine2dReg.BlitSrcXFract);
+            long SrcBlitY = ReadRegisterFixed1_31_32(NvGpuEngine2dReg.BlitSrcYFract);
 
             GalImageFormat SrcImgFormat = ImageUtils.ConvertSurface((GalSurfaceFormat)SrcFormat);
             GalImageFormat DstImgFormat = ImageUtils.ConvertSurface((GalSurfaceFormat)DstFormat);
@@ -99,13 +102,19 @@ namespace Ryujinx.Graphics
             Gpu.ResourceManager.SendTexture(Vmm, SrcKey, SrcTexture);
             Gpu.ResourceManager.SendTexture(Vmm, DstKey, DstTexture);
 
+            int SrcBlitX1 = (int)(SrcBlitX >> 32);
+            int SrcBlitY1 = (int)(SrcBlitY >> 32);
+
+            int SrcBlitX2 = (int)(SrcBlitX + DstBlitW * BlitDuDx >> 32);
+            int SrcBlitY2 = (int)(SrcBlitY + DstBlitH * BlitDvDy >> 32);
+
             Gpu.Renderer.RenderTarget.Copy(
                 SrcKey,
                 DstKey,
-                SrcBlitX,
-                SrcBlitY,
-                SrcBlitX + DstBlitW,
-                SrcBlitY + DstBlitH,
+                SrcBlitX1,
+                SrcBlitY1,
+                SrcBlitX2,
+                SrcBlitY2,
                 DstBlitX,
                 DstBlitY,
                 DstBlitX + DstBlitW,
@@ -121,8 +130,8 @@ namespace Ryujinx.Graphics
                 DstTexture,
                 SrcAddress,
                 DstAddress,
-                SrcBlitX,
-                SrcBlitY,
+                SrcBlitX1,
+                SrcBlitY1,
                 DstBlitX,
                 DstBlitY,
                 DstBlitW,
@@ -148,6 +157,14 @@ namespace Ryujinx.Graphics
         private void WriteRegister(GpuMethodCall MethCall)
         {
             Registers[MethCall.Method] = MethCall.Argument;
+        }
+
+        private long ReadRegisterFixed1_31_32(NvGpuEngine2dReg Reg)
+        {
+            long Low  = (uint)ReadRegister(Reg + 0);
+            long High = (uint)ReadRegister(Reg + 1);
+
+            return Low | (High << 32);
         }
 
         private int ReadRegister(NvGpuEngine2dReg Reg)
