@@ -11,32 +11,68 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Nso = Ryujinx.HLE.Loaders.Executables.Nso;
+using System.Reflection;
+using System.Threading;
+
+using NxStaticObject = Ryujinx.HLE.Loaders.Executables.NxStaticObject;
 
 namespace Ryujinx.HLE.HOS
 {
     public class Horizon : IDisposable
     {
+        internal const int InitialKipId     = 1;
+        internal const int InitialProcessId = 0x51;
+
         internal const int HidSize  = 0x40000;
         internal const int FontSize = 0x1100000;
 
-        private Switch Device;
+        private const int MemoryBlockAllocatorSize = 0x2710;
 
-        private ConcurrentDictionary<int, Process> Processes;
+        private const ulong UserSlabHeapBase     = DramMemoryMap.SlabHeapBase;
+        private const ulong UserSlabHeapItemSize = KMemoryManager.PageSize;
+        private const ulong UserSlabHeapSize     = 0x3de000;
+
+        internal long PrivilegedProcessLowestId  { get; set; } = 1;
+        internal long PrivilegedProcessHighestId { get; set; } = 8;
+
+        internal Switch Device { get; private set; }
 
         public SystemStateMgr State { get; private set; }
 
-        internal KRecursiveLock CriticalSectionLock { get; private set; }
+        internal bool KernelInitialized { get; private set; }
+
+        internal KResourceLimit ResourceLimit { get; private set; }
+
+        internal KMemoryRegionManager[] MemoryRegions { get; private set; }
+
+        internal KMemoryBlockAllocator LargeMemoryBlockAllocator { get; private set; }
+        internal KMemoryBlockAllocator SmallMemoryBlockAllocator { get; private set; }
+
+        internal KSlabHeap UserSlabHeapPages { get; private set; }
+
+        internal KCriticalSection CriticalSection { get; private set; }
 
         internal KScheduler Scheduler { get; private set; }
 
         internal KTimeManager TimeManager { get; private set; }
 
-        internal KAddressArbiter AddressArbiter { get; private set; }
-
         internal KSynchronization Synchronization { get; private set; }
 
-        internal LinkedList<KThread> Withholders { get; private set; }
+        internal KContextIdManager ContextIdManager { get; private set; }
+
+        private long KipId;
+        private long ProcessId;
+        private long ThreadUid;
+
+        internal CountdownEvent ThreadCounter;
+
+        internal SortedDictionary<long, KProcess> Processes;
+
+        internal ConcurrentDictionary<string, KAutoObject> AutoObjectNames;
+
+        internal bool EnableVersionChecks { get; private set; }
+
+        internal AppletStateMgr AppletState { get; private set; }
 
         internal KSharedMemory HidSharedMem  { get; private set; }
         internal KSharedMemory FontSharedMem { get; private set; }
@@ -57,38 +93,74 @@ namespace Ryujinx.HLE.HOS
 
         public IntegrityCheckLevel FsIntegrityCheckLevel { get; set; }
 
+        internal long HidBaseAddress { get; private set; }
+
         public Horizon(Switch Device)
         {
             this.Device = Device;
 
-            Processes = new ConcurrentDictionary<int, Process>();
-
             State = new SystemStateMgr();
 
-            CriticalSectionLock = new KRecursiveLock(this);
+            ResourceLimit = new KResourceLimit(this);
+
+            KernelInit.InitializeResourceLimit(ResourceLimit);
+
+            MemoryRegions = KernelInit.GetMemoryRegions();
+
+            LargeMemoryBlockAllocator = new KMemoryBlockAllocator(MemoryBlockAllocatorSize * 2);
+            SmallMemoryBlockAllocator = new KMemoryBlockAllocator(MemoryBlockAllocatorSize);
+
+            UserSlabHeapPages = new KSlabHeap(
+                UserSlabHeapBase,
+                UserSlabHeapItemSize,
+                UserSlabHeapSize);
+
+            CriticalSection = new KCriticalSection(this);
 
             Scheduler = new KScheduler(this);
 
             TimeManager = new KTimeManager();
 
-            AddressArbiter = new KAddressArbiter(this);
-
             Synchronization = new KSynchronization(this);
 
-            Withholders = new LinkedList<KThread>();
+            ContextIdManager = new KContextIdManager();
+
+            KipId     = InitialKipId;
+            ProcessId = InitialProcessId;
 
             Scheduler.StartAutoPreemptionThread();
 
-            if (!Device.Memory.Allocator.TryAllocate(HidSize,  out long HidPA) ||
-                !Device.Memory.Allocator.TryAllocate(FontSize, out long FontPA))
-            {
-                throw new InvalidOperationException();
-            }
+            KernelInitialized = true;
 
-            HidSharedMem  = new KSharedMemory(HidPA, HidSize);
-            FontSharedMem = new KSharedMemory(FontPA, FontSize);
+            ThreadCounter = new CountdownEvent(1);
 
-            Font = new SharedFontManager(Device, FontSharedMem.PA);
+            Processes = new SortedDictionary<long, KProcess>();
+
+            AutoObjectNames = new ConcurrentDictionary<string, KAutoObject>();
+
+            //Note: This is not really correct, but with HLE of services, the only memory
+            //region used that is used is Application, so we can use the other ones for anything.
+            KMemoryRegionManager Region = MemoryRegions[(int)MemoryRegion.NvServices];
+
+            ulong HidPa  = Region.Address;
+            ulong FontPa = Region.Address + HidSize;
+
+            HidBaseAddress = (long)(HidPa - DramMemoryMap.DramBase);
+
+            KPageList HidPageList  = new KPageList();
+            KPageList FontPageList = new KPageList();
+
+            HidPageList .AddRange(HidPa,  HidSize  / KMemoryManager.PageSize);
+            FontPageList.AddRange(FontPa, FontSize / KMemoryManager.PageSize);
+
+            HidSharedMem  = new KSharedMemory(HidPageList,  0, 0, MemoryPermission.Read);
+            FontSharedMem = new KSharedMemory(FontPageList, 0, 0, MemoryPermission.Read);
+
+            AppletState = new AppletStateMgr(this);
+
+            AppletState.SetFocus(true);
+
+            Font = new SharedFontManager(Device, (long)(FontPa - DramMemoryMap.DramBase));
 
             VsyncEvent = new KEvent(this);
 
@@ -120,13 +192,15 @@ namespace Ryujinx.HLE.HOS
             else
             {
                 Logger.PrintWarning(LogClass.Loader, $"NPDM file not found, using default values!");
+
+                MetaData = GetDefaultNpdm();
             }
 
-            Process MainProcess = MakeProcess(MetaData);
+            List<IExecutable> StaticObjects = new List<IExecutable>();
 
-            void LoadNso(string FileName)
+            void LoadNso(string SearchPattern)
             {
-                foreach (string File in Directory.GetFiles(ExeFsDir, FileName))
+                foreach (string File in Directory.GetFiles(ExeFsDir, SearchPattern))
                 {
                     if (Path.GetExtension(File) != string.Empty)
                     {
@@ -137,33 +211,28 @@ namespace Ryujinx.HLE.HOS
 
                     using (FileStream Input = new FileStream(File, FileMode.Open))
                     {
-                        string Name = Path.GetFileNameWithoutExtension(File);
+                        NxStaticObject StaticObject = new NxStaticObject(Input);
 
-                        Nso Program = new Nso(Input, Name);
-
-                        MainProcess.LoadProgram(Program);
+                        StaticObjects.Add(StaticObject);
                     }
                 }
             }
 
-            if (!(MainProcess.MetaData?.Is64Bits ?? true))
+            if (!MetaData.Is64Bits)
             {
                 throw new NotImplementedException("32-bit titles are unsupported!");
             }
 
-            CurrentTitle = MainProcess.MetaData.ACI0.TitleId.ToString("x16");
+            CurrentTitle = MetaData.ACI0.TitleId.ToString("x16");
 
             LoadNso("rtld");
-
-            MainProcess.SetEmptyArgs();
-
             LoadNso("main");
             LoadNso("subsdk*");
             LoadNso("sdk");
 
             ContentManager.LoadEntries();
 
-            MainProcess.Run();
+            ProgramLoader.LoadStaticObjects(this, MetaData, StaticObjects.ToArray());
         }
 
         public void LoadXci(string XciFile)
@@ -356,9 +425,11 @@ namespace Ryujinx.HLE.HOS
             else
             {
                 Logger.PrintWarning(LogClass.Loader, $"NPDM file not found, using default values!");
+
+                MetaData = GetDefaultNpdm();
             }
 
-            Process MainProcess = MakeProcess(MetaData);
+            List<IExecutable> StaticObjects = new List<IExecutable>();
 
             void LoadNso(string Filename)
             {
@@ -371,11 +442,9 @@ namespace Ryujinx.HLE.HOS
 
                     Logger.PrintInfo(LogClass.Loader, $"Loading {Filename}...");
 
-                    string Name = Path.GetFileNameWithoutExtension(File.Name);
+                    NxStaticObject StaticObject = new NxStaticObject(Exefs.OpenFile(File));
 
-                    Nso Program = new Nso(Exefs.OpenFile(File), Name);
-
-                    MainProcess.LoadProgram(Program);
+                    StaticObjects.Add(StaticObject);
                 }
             }
 
@@ -401,69 +470,52 @@ namespace Ryujinx.HLE.HOS
 
             if (ControlNca != null)
             {
-                MainProcess.ControlData = ReadControlData();
+                ReadControlData();
             }
             else
             {
-                CurrentTitle = MainProcess.MetaData.ACI0.TitleId.ToString("x16");
+                CurrentTitle = MetaData.ACI0.TitleId.ToString("x16");
             }
 
-            if (!MainProcess.MetaData.Is64Bits)
+            if (!MetaData.Is64Bits)
             {
-                throw new NotImplementedException("32-bit titles are unsupported!");
+                throw new NotImplementedException("32-bit titles are not supported!");
             }
 
             LoadNso("rtld");
-
-            MainProcess.SetEmptyArgs();
-
             LoadNso("main");
             LoadNso("subsdk");
             LoadNso("sdk");
 
             ContentManager.LoadEntries();
 
-            MainProcess.Run();
+            ProgramLoader.LoadStaticObjects(this, MetaData, StaticObjects.ToArray());
         }
 
         public void LoadProgram(string FilePath)
         {
+            Npdm MetaData = GetDefaultNpdm();
+
             bool IsNro = Path.GetExtension(FilePath).ToLower() == ".nro";
-
-            string Name           = Path.GetFileNameWithoutExtension(FilePath);
-            string SwitchFilePath = Device.FileSystem.SystemPathToSwitchPath(FilePath);
-
-            if (IsNro && (SwitchFilePath == null || !SwitchFilePath.StartsWith("sdmc:/")))
-            {
-                string SwitchPath = $"sdmc:/switch/{Name}{Homebrew.TemporaryNroSuffix}";
-                string TempPath   = Device.FileSystem.SwitchPathToSystemPath(SwitchPath);
-
-                string SwitchDir = Path.GetDirectoryName(TempPath);
-
-                if (!Directory.Exists(SwitchDir))
-                {
-                    Directory.CreateDirectory(SwitchDir);
-                }
-
-                File.Copy(FilePath, TempPath, true);
-
-                FilePath = TempPath;
-            }
-
-            Process MainProcess = MakeProcess();
 
             using (FileStream Input = new FileStream(FilePath, FileMode.Open))
             {
-                MainProcess.LoadProgram(IsNro
-                    ? (IExecutable)new Nro(Input, FilePath)
-                    : (IExecutable)new Nso(Input, FilePath));
+                IExecutable StaticObject = IsNro
+                    ? (IExecutable)new NxRelocatableObject(Input)
+                    : (IExecutable)new NxStaticObject(Input);
+
+                ProgramLoader.LoadStaticObjects(this, MetaData, new IExecutable[] { StaticObject });
             }
+        }
 
-            MainProcess.SetEmptyArgs();
+        private Npdm GetDefaultNpdm()
+        {
+            Assembly Asm = Assembly.GetCallingAssembly();
 
-            ContentManager.LoadEntries();
-
-            MainProcess.Run(IsNro);
+            using (Stream NpdmStream = Asm.GetManifestResourceStream("Ryujinx.HLE.Homebrew.npdm"))
+            {
+                return new Npdm(NpdmStream);
+            }
         }
 
         public void LoadKeySet()
@@ -507,51 +559,19 @@ namespace Ryujinx.HLE.HOS
             VsyncEvent.ReadableEvent.Signal();
         }
 
-        private Process MakeProcess(Npdm MetaData = null)
+        internal long GetThreadUid()
         {
-            HasStarted = true;
-
-            Process Process;
-
-            lock (Processes)
-            {
-                int ProcessId = 0;
-
-                while (Processes.ContainsKey(ProcessId))
-                {
-                    ProcessId++;
-                }
-
-                Process = new Process(Device, ProcessId, MetaData);
-
-                Processes.TryAdd(ProcessId, Process);
-            }
-
-            InitializeProcess(Process);
-
-            return Process;
+            return Interlocked.Increment(ref ThreadUid) - 1;
         }
 
-        private void InitializeProcess(Process Process)
+        internal long GetKipId()
         {
-            Process.AppletState.SetFocus(true);
+            return Interlocked.Increment(ref KipId) - 1;
         }
 
-        internal void ExitProcess(int ProcessId)
+        internal long GetProcessId()
         {
-            if (Processes.TryRemove(ProcessId, out Process Process))
-            {
-                Process.Dispose();
-
-                if (Processes.Count == 0)
-                {
-                    Scheduler.Dispose();
-
-                    TimeManager.Dispose();
-
-                    Device.Unload();
-                }
-            }
+            return Interlocked.Increment(ref ProcessId) - 1;
         }
 
         public void EnableMultiCoreScheduling()
@@ -579,10 +599,25 @@ namespace Ryujinx.HLE.HOS
         {
             if (Disposing)
             {
-                foreach (Process Process in Processes.Values)
+                //Force all threads to exit.
+                lock (Processes)
                 {
-                    Process.Dispose();
+                    foreach (KProcess Process in Processes.Values)
+                    {
+                        Process.StopAllThreads();
+                    }
                 }
+
+                //It's only safe to release resources once all threads
+                //have exited.
+                ThreadCounter.Signal();
+                ThreadCounter.Wait();
+
+                Scheduler.Dispose();
+
+                TimeManager.Dispose();
+
+                Device.Unload();
             }
         }
     }

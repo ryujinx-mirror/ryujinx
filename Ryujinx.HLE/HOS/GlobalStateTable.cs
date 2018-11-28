@@ -1,3 +1,4 @@
+using Ryujinx.HLE.HOS.Kernel;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
@@ -5,28 +6,28 @@ namespace Ryujinx.HLE.HOS
 {
     class GlobalStateTable
     {
-        private ConcurrentDictionary<Process, IdDictionary> DictByProcess;
+        private ConcurrentDictionary<KProcess, IdDictionary> DictByProcess;
 
         public GlobalStateTable()
         {
-            DictByProcess = new ConcurrentDictionary<Process, IdDictionary>();
+            DictByProcess = new ConcurrentDictionary<KProcess, IdDictionary>();
         }
 
-        public bool Add(Process Process, int Id, object Data)
+        public bool Add(KProcess Process, int Id, object Data)
         {
             IdDictionary Dict = DictByProcess.GetOrAdd(Process, (Key) => new IdDictionary());
 
             return Dict.Add(Id, Data);
         }
 
-        public int Add(Process Process, object Data)
+        public int Add(KProcess Process, object Data)
         {
             IdDictionary Dict = DictByProcess.GetOrAdd(Process, (Key) => new IdDictionary());
 
             return Dict.Add(Data);
         }
 
-        public object GetData(Process Process, int Id)
+        public object GetData(KProcess Process, int Id)
         {
             if (DictByProcess.TryGetValue(Process, out IdDictionary Dict))
             {
@@ -36,7 +37,7 @@ namespace Ryujinx.HLE.HOS
             return null;
         }
 
-        public T GetData<T>(Process Process, int Id)
+        public T GetData<T>(KProcess Process, int Id)
         {
             if (DictByProcess.TryGetValue(Process, out IdDictionary Dict))
             {
@@ -46,7 +47,7 @@ namespace Ryujinx.HLE.HOS
             return default(T);
         }
 
-        public object Delete(Process Process, int Id)
+        public object Delete(KProcess Process, int Id)
         {
             if (DictByProcess.TryGetValue(Process, out IdDictionary Dict))
             {
@@ -56,7 +57,7 @@ namespace Ryujinx.HLE.HOS
             return null;
         }
 
-        public ICollection<object> DeleteProcess(Process Process)
+        public ICollection<object> DeleteProcess(KProcess Process)
         {
             if (DictByProcess.TryRemove(Process, out IdDictionary Dict))
             {

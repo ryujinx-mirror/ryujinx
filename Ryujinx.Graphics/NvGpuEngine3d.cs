@@ -615,9 +615,14 @@ namespace Ryujinx.Graphics
 
                     if (Gpu.ResourceManager.MemoryRegionModified(Vmm, Key, Cb.Size, NvGpuBufferType.ConstBuffer))
                     {
-                        IntPtr Source = Vmm.GetHostAddress(Cb.Position, Cb.Size);
-
-                        Gpu.Renderer.Buffer.SetData(Key, Cb.Size, Source);
+                        if (Vmm.TryGetHostAddress(Cb.Position, Cb.Size, out IntPtr CbPtr))
+                        {
+                            Gpu.Renderer.Buffer.SetData(Key, Cb.Size, CbPtr);
+                        }
+                        else
+                        {
+                            Gpu.Renderer.Buffer.SetData(Key, Vmm.ReadBytes(Cb.Position, Cb.Size));
+                        }
                     }
 
                     State.ConstBufferKeys[Stage][DeclInfo.Cbuf] = Key;
@@ -660,9 +665,14 @@ namespace Ryujinx.Graphics
                 {
                     if (!UsesLegacyQuads)
                     {
-                        IntPtr DataAddress = Vmm.GetHostAddress(IbPosition, IbSize);
-
-                        Gpu.Renderer.Rasterizer.CreateIbo(IboKey, IbSize, DataAddress);
+                        if (Vmm.TryGetHostAddress(IbPosition, IbSize, out IntPtr IbPtr))
+                        {
+                            Gpu.Renderer.Rasterizer.CreateIbo(IboKey, IbSize, IbPtr);
+                        }
+                        else
+                        {
+                            Gpu.Renderer.Rasterizer.CreateIbo(IboKey, IbSize, Vmm.ReadBytes(IbPosition, IbSize));
+                        }
                     }
                     else
                     {
@@ -711,22 +721,22 @@ namespace Ryujinx.Graphics
                     Attribs[ArrayIndex] = new List<GalVertexAttrib>();
                 }
 
-                long VertexPosition = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNAddress + ArrayIndex * 4);
+                long VbPosition = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNAddress + ArrayIndex * 4);
+
+                bool IsConst = ((Packed >> 6) & 1) != 0;
 
                 int Offset = (Packed >> 7) & 0x3fff;
 
+                GalVertexAttribSize Size = (GalVertexAttribSize)((Packed >> 21) & 0x3f);
+                GalVertexAttribType Type = (GalVertexAttribType)((Packed >> 27) & 0x7);
+
+                bool IsRgba = ((Packed >> 31) & 1) != 0;
+
                 //Note: 16 is the maximum size of an attribute,
                 //having a component size of 32-bits with 4 elements (a vec4).
-                IntPtr Pointer = Vmm.GetHostAddress(VertexPosition + Offset, 16);
+                byte[] Data = Vmm.ReadBytes(VbPosition + Offset, 16);
 
-                Attribs[ArrayIndex].Add(new GalVertexAttrib(
-                                           Attr,
-                                         ((Packed >>  6) & 0x1) != 0,
-                                           Offset,
-                                           Pointer,
-                    (GalVertexAttribSize)((Packed >> 21) & 0x3f),
-                    (GalVertexAttribType)((Packed >> 27) & 0x7),
-                                         ((Packed >> 31) & 0x1) != 0));
+                Attribs[ArrayIndex].Add(new GalVertexAttrib(Attr, IsConst, Offset, Data, Size, Type, IsRgba));
             }
 
             State.VertexBindings = new GalVertexBinding[32];
@@ -747,8 +757,8 @@ namespace Ryujinx.Graphics
                     continue;
                 }
 
-                long VertexPosition = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNAddress + Index * 4);
-                long VertexEndPos   = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNEndAddr + Index * 2);
+                long VbPosition = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNAddress + Index * 4);
+                long VbEndPos   = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNEndAddr + Index * 2);
 
                 int VertexDivisor = ReadRegister(NvGpuEngine3dReg.VertexArrayNDivisor + Index * 4);
 
@@ -758,26 +768,31 @@ namespace Ryujinx.Graphics
 
                 if (Instanced && VertexDivisor != 0)
                 {
-                    VertexPosition += Stride * (CurrentInstance / VertexDivisor);
+                    VbPosition += Stride * (CurrentInstance / VertexDivisor);
                 }
 
-                if (VertexPosition > VertexEndPos)
+                if (VbPosition > VbEndPos)
                 {
                     //Instance is invalid, ignore the draw call
                     continue;
                 }
 
-                long VboKey = Vmm.GetPhysicalAddress(VertexPosition);
+                long VboKey = Vmm.GetPhysicalAddress(VbPosition);
 
-                long VbSize = (VertexEndPos - VertexPosition) + 1;
+                long VbSize = (VbEndPos - VbPosition) + 1;
 
                 bool VboCached = Gpu.Renderer.Rasterizer.IsVboCached(VboKey, VbSize);
 
                 if (!VboCached || Gpu.ResourceManager.MemoryRegionModified(Vmm, VboKey, VbSize, NvGpuBufferType.Vertex))
                 {
-                    IntPtr DataAddress = Vmm.GetHostAddress(VertexPosition, VbSize);
-
-                    Gpu.Renderer.Rasterizer.CreateVbo(VboKey, (int)VbSize, DataAddress);
+                    if (Vmm.TryGetHostAddress(VbPosition, VbSize, out IntPtr VbPtr))
+                    {
+                        Gpu.Renderer.Rasterizer.CreateVbo(VboKey, (int)VbSize, VbPtr);
+                    }
+                    else
+                    {
+                        Gpu.Renderer.Rasterizer.CreateVbo(VboKey, Vmm.ReadBytes(VbPosition, VbSize));
+                    }
                 }
 
                 State.VertexBindings[Index].Enabled   = true;

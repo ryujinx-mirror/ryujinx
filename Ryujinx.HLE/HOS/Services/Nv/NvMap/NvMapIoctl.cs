@@ -1,6 +1,7 @@
 using ChocolArm64.Memory;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Memory;
+using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.Utilities;
 using System.Collections.Concurrent;
 
@@ -10,11 +11,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
     {
         private const int FlagNotFreedYet = 1;
 
-        private static ConcurrentDictionary<Process, IdDictionary> Maps;
+        private static ConcurrentDictionary<KProcess, IdDictionary> Maps;
 
         static NvMapIoctl()
         {
-            Maps = new ConcurrentDictionary<Process, IdDictionary>();
+            Maps = new ConcurrentDictionary<KProcess, IdDictionary>();
         }
 
         public static int ProcessIoctl(ServiceCtx Context, int Cmd)
@@ -130,10 +131,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
                     //When the address is zero, we need to allocate
                     //our own backing memory for the NvMap.
                     //TODO: Is this allocation inside the transfer memory?
-                    if (!Context.Device.Memory.Allocator.TryAllocate((uint)Size, out Address))
-                    {
-                        Result = NvResult.OutOfMemory;
-                    }
+                    Result = NvResult.OutOfMemory;
                 }
 
                 if (Result == NvResult.Success)
@@ -294,7 +292,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
             return null;
         }
 
-        public static void UnloadProcess(Process Process)
+        public static void UnloadProcess(KProcess Process)
         {
             Maps.TryRemove(Process, out _);
         }

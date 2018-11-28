@@ -5,24 +5,61 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class HleCoreManager
     {
-        private ConcurrentDictionary<Thread, ManualResetEvent> Threads;
+        private class PausableThread
+        {
+            public ManualResetEvent Event { get; private set; }
+
+            public bool IsExiting { get; set; }
+
+            public PausableThread()
+            {
+                Event = new ManualResetEvent(false);
+            }
+        }
+
+        private ConcurrentDictionary<Thread, PausableThread> Threads;
 
         public HleCoreManager()
         {
-            Threads = new ConcurrentDictionary<Thread, ManualResetEvent>();
+            Threads = new ConcurrentDictionary<Thread, PausableThread>();
         }
 
-        public ManualResetEvent GetThread(Thread Thread)
+        public void Set(Thread Thread)
         {
-            return Threads.GetOrAdd(Thread, (Key) => new ManualResetEvent(false));
+            GetThread(Thread).Event.Set();
+        }
+
+        public void Reset(Thread Thread)
+        {
+            GetThread(Thread).Event.Reset();
+        }
+
+        public void Wait(Thread Thread)
+        {
+            PausableThread PausableThread = GetThread(Thread);
+
+            if (!PausableThread.IsExiting)
+            {
+                PausableThread.Event.WaitOne();
+            }
+        }
+
+        public void Exit(Thread Thread)
+        {
+            GetThread(Thread).IsExiting = true;
+        }
+
+        private PausableThread GetThread(Thread Thread)
+        {
+            return Threads.GetOrAdd(Thread, (Key) => new PausableThread());
         }
 
         public void RemoveThread(Thread Thread)
         {
-            if (Threads.TryRemove(Thread, out ManualResetEvent Event))
+            if (Threads.TryRemove(Thread, out PausableThread PausableThread))
             {
-                Event.Set();
-                Event.Dispose();
+                PausableThread.Event.Set();
+                PausableThread.Event.Dispose();
             }
         }
     }

@@ -30,6 +30,13 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GL.BufferSubData(Target, IntPtr.Zero, (IntPtr)Size, HostAddress);
         }
 
+        public void SetData(byte[] Data)
+        {
+            GL.BindBuffer(Target, Handle);
+
+            GL.BufferSubData(Target, IntPtr.Zero, (IntPtr)Data.Length, Data);
+        }
+
         public void Dispose()
         {
             Dispose(true);

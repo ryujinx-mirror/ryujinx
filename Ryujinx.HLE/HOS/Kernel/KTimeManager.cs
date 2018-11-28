@@ -1,6 +1,6 @@
+using Ryujinx.Common;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
@@ -25,17 +25,11 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         private AutoResetEvent WaitEvent;
 
-        private Stopwatch Counter;
-
         private bool KeepRunning;
 
         public KTimeManager()
         {
             WaitingObjects = new List<WaitingObject>();
-
-            Counter = new Stopwatch();
-
-            Counter.Start();
 
             KeepRunning = true;
 
@@ -46,26 +40,36 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public void ScheduleFutureInvocation(IKFutureSchedulerObject Object, long Timeout)
         {
+            long TimePoint = PerformanceCounter.ElapsedMilliseconds + ConvertNanosecondsToMilliseconds(Timeout);
+
             lock (WaitingObjects)
             {
-                long TimePoint = Counter.ElapsedMilliseconds + ConvertNanosecondsToMilliseconds(Timeout);
-
                 WaitingObjects.Add(new WaitingObject(Object, TimePoint));
             }
 
             WaitEvent.Set();
         }
 
-        private long ConvertNanosecondsToMilliseconds(long Timeout)
+        public static long ConvertNanosecondsToMilliseconds(long Time)
         {
-            Timeout /= 1000000;
+            Time /= 1000000;
 
-            if ((ulong)Timeout > int.MaxValue)
+            if ((ulong)Time > int.MaxValue)
             {
                 return int.MaxValue;
             }
 
-            return Timeout;
+            return Time;
+        }
+
+        public static long ConvertMillisecondsToNanoseconds(long Time)
+        {
+            return Time * 1000000;
+        }
+
+        public static long ConvertMillisecondsToTicks(long Time)
+        {
+            return Time * 19200;
         }
 
         public void UnscheduleFutureInvocation(IKFutureSchedulerObject Object)
@@ -82,26 +86,31 @@ namespace Ryujinx.HLE.HOS.Kernel
             {
                 while (KeepRunning)
                 {
-                    Monitor.Enter(WaitingObjects);
+                    WaitingObject Next;
 
-                    WaitingObject Next = WaitingObjects.OrderBy(x => x.TimePoint).FirstOrDefault();
-
-                    Monitor.Exit(WaitingObjects);
+                    lock (WaitingObjects)
+                    {
+                        Next = WaitingObjects.OrderBy(x => x.TimePoint).FirstOrDefault();
+                    }
 
                     if (Next != null)
                     {
-                        long TimePoint = Counter.ElapsedMilliseconds;
+                        long TimePoint = PerformanceCounter.ElapsedMilliseconds;
 
                         if (Next.TimePoint > TimePoint)
                         {
                             WaitEvent.WaitOne((int)(Next.TimePoint - TimePoint));
                         }
 
-                        Monitor.Enter(WaitingObjects);
+                        bool TimeUp = PerformanceCounter.ElapsedMilliseconds >= Next.TimePoint;
 
-                        bool TimeUp = Counter.ElapsedMilliseconds >= Next.TimePoint && WaitingObjects.Remove(Next);
-
-                        Monitor.Exit(WaitingObjects);
+                        if (TimeUp)
+                        {
+                            lock (WaitingObjects)
+                            {
+                                TimeUp = WaitingObjects.Remove(Next);
+                            }
+                        }
 
                         if (TimeUp)
                         {

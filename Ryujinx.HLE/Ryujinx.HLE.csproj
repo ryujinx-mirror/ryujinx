@@ -14,10 +14,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Homebrew.npdm" />
     <None Remove="RyujinxProfileImage.jpg" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Homebrew.npdm" />
     <EmbeddedResource Include="RyujinxProfileImage.jpg" />
   </ItemGroup>
 

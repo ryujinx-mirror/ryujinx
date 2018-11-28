@@ -26,7 +26,7 @@ namespace Ryujinx
                 { LogLevel.Error,   ConsoleColor.Red      }
             };
 
-            _messageQueue = new BlockingCollection<LogEventArgs>();
+            _messageQueue = new BlockingCollection<LogEventArgs>(10);
 
             _consoleLock = new object();
 
@@ -58,7 +58,7 @@ namespace Ryujinx
             string formattedTime = e.Time.ToString(@"hh\:mm\:ss\.fff");
 
             string currentThread = Thread.CurrentThread.ManagedThreadId.ToString("d4");
-            
+
             string message = formattedTime + " | " + currentThread + " " + e.Message;
 
             if (_logColors.TryGetValue(e.Level, out ConsoleColor color))

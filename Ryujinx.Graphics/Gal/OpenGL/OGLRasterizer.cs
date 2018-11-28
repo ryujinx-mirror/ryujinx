@@ -92,12 +92,24 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             int Handle = GL.GenBuffer();
 
-            VboCache.AddOrUpdate(Key, Handle, (uint)DataSize);
+            VboCache.AddOrUpdate(Key, Handle, DataSize);
 
             IntPtr Length = new IntPtr(DataSize);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, Handle);
             GL.BufferData(BufferTarget.ArrayBuffer, Length, HostAddress, BufferUsageHint.StreamDraw);
+        }
+
+        public void CreateVbo(long Key, byte[] Data)
+        {
+            int Handle = GL.GenBuffer();
+
+            VboCache.AddOrUpdate(Key, Handle, Data.Length);
+
+            IntPtr Length = new IntPtr(Data.Length);
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, Handle);
+            GL.BufferData(BufferTarget.ArrayBuffer, Length, Data, BufferUsageHint.StreamDraw);
         }
 
         public void CreateIbo(long Key, int DataSize, IntPtr HostAddress)
@@ -116,7 +128,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         {
             int Handle = GL.GenBuffer();
 
-            IboCache.AddOrUpdate(Key, Handle, (uint)DataSize);
+            IboCache.AddOrUpdate(Key, Handle, DataSize);
 
             IntPtr Length = new IntPtr(Buffer.Length);
 

@@ -2,16 +2,12 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Kernel
 {
-    class KSynchronizationObject
+    class KSynchronizationObject : KAutoObject
     {
         public LinkedList<KThread> WaitingThreads;
 
-        protected Horizon System;
-
-        public KSynchronizationObject(Horizon System)
+        public KSynchronizationObject(Horizon System) : base(System)
         {
-            this.System = System;
-
             WaitingThreads = new LinkedList<KThread>();
         }
 

@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         {
             long Result = MakeError(ErrorModule.Kernel, KernelErr.Timeout);
 
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
             //Check if objects are already signaled before waiting.
             for (int Index = 0; Index < SyncObjs.Length; Index++)
@@ -29,14 +29,14 @@ namespace Ryujinx.HLE.HOS.Kernel
 
                 HndIndex = Index;
 
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return 0;
             }
 
             if (Timeout == 0)
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return Result;
             }
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                     System.TimeManager.ScheduleFutureInvocation(CurrentThread, Timeout);
                 }
 
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 CurrentThread.WaitingSync = false;
 
@@ -83,7 +83,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                     System.TimeManager.UnscheduleFutureInvocation(CurrentThread);
                 }
 
-                System.CriticalSectionLock.Lock();
+                System.CriticalSection.Enter();
 
                 Result = (uint)CurrentThread.ObjSyncResult;
 
@@ -100,14 +100,14 @@ namespace Ryujinx.HLE.HOS.Kernel
                 }
             }
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
 
             return Result;
         }
 
         public void SignalObject(KSynchronizationObject SyncObj)
         {
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
             if (SyncObj.IsSignaled())
             {
@@ -117,7 +117,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                 {
                     KThread Thread = Node.Value;
 
-                    if ((Thread.SchedFlags & ThreadSchedState.LowNibbleMask) == ThreadSchedState.Paused)
+                    if ((Thread.SchedFlags & ThreadSchedState.LowMask) == ThreadSchedState.Paused)
                     {
                         Thread.SignaledObj   = SyncObj;
                         Thread.ObjSyncResult = 0;
@@ -129,7 +129,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                 }
             }
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
         }
     }
 }

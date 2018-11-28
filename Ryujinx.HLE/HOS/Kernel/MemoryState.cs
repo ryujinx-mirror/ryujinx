@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         ModCodeStatic          = 0x00DD7E08,
         ModCodeMutable         = 0x03FFBD09,
         IpcBuffer0             = 0x005C3C0A,
-        MappedMemory           = 0x005C3C0B,
+        Stack                  = 0x005C3C0B,
         ThreadLocal            = 0x0040200C,
         TransferMemoryIsolated = 0x015C3C0D,
         TransferMemory         = 0x005C380E,

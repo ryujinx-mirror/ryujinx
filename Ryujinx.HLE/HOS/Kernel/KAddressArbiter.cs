@@ -1,4 +1,3 @@
-using ChocolArm64.Memory;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -23,39 +22,36 @@ namespace Ryujinx.HLE.HOS.Kernel
             ArbiterThreads = new List<KThread>();
         }
 
-        public long ArbitrateLock(
-            Process       Process,
-            MemoryManager Memory,
-            int           OwnerHandle,
-            long          MutexAddress,
-            int           RequesterHandle)
+        public long ArbitrateLock(int OwnerHandle, long MutexAddress, int RequesterHandle)
         {
-            System.CriticalSectionLock.Lock();
-
             KThread CurrentThread = System.Scheduler.GetCurrentThread();
+
+            System.CriticalSection.Enter();
 
             CurrentThread.SignaledObj   = null;
             CurrentThread.ObjSyncResult = 0;
 
-            if (!UserToKernelInt32(Memory, MutexAddress, out int MutexValue))
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
+
+            if (!KernelTransfer.UserToKernelInt32(System, MutexAddress, out int MutexValue))
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return MakeError(ErrorModule.Kernel, KernelErr.NoAccessPerm);;
             }
 
             if (MutexValue != (OwnerHandle | HasListenersMask))
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return 0;
             }
 
-            KThread MutexOwner = Process.HandleTable.GetObject<KThread>(OwnerHandle);
+            KThread MutexOwner = CurrentProcess.HandleTable.GetObject<KThread>(OwnerHandle);
 
             if (MutexOwner == null)
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
@@ -67,26 +63,26 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             CurrentThread.Reschedule(ThreadSchedState.Paused);
 
-            System.CriticalSectionLock.Unlock();
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Leave();
+            System.CriticalSection.Enter();
 
             if (CurrentThread.MutexOwner != null)
             {
                 CurrentThread.MutexOwner.RemoveMutexWaiter(CurrentThread);
             }
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
 
             return (uint)CurrentThread.ObjSyncResult;
         }
 
-        public long ArbitrateUnlock(MemoryManager Memory, long MutexAddress)
+        public long ArbitrateUnlock(long MutexAddress)
         {
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
             KThread CurrentThread = System.Scheduler.GetCurrentThread();
 
-            (long Result, KThread NewOwnerThread) = MutexUnlock(Memory, CurrentThread, MutexAddress);
+            (long Result, KThread NewOwnerThread) = MutexUnlock(CurrentThread, MutexAddress);
 
             if (Result != 0 && NewOwnerThread != null)
             {
@@ -94,19 +90,18 @@ namespace Ryujinx.HLE.HOS.Kernel
                 NewOwnerThread.ObjSyncResult = (int)Result;
             }
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
 
             return Result;
         }
 
         public long WaitProcessWideKeyAtomic(
-            MemoryManager Memory,
-            long          MutexAddress,
-            long          CondVarAddress,
-            int           ThreadHandle,
-            long          Timeout)
+            long MutexAddress,
+            long CondVarAddress,
+            int  ThreadHandle,
+            long Timeout)
         {
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
             KThread CurrentThread = System.Scheduler.GetCurrentThread();
 
@@ -116,16 +111,16 @@ namespace Ryujinx.HLE.HOS.Kernel
             if (CurrentThread.ShallBeTerminated ||
                 CurrentThread.SchedFlags == ThreadSchedState.TerminationPending)
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return MakeError(ErrorModule.Kernel, KernelErr.ThreadTerminating);
             }
 
-            (long Result, _) = MutexUnlock(Memory, CurrentThread, MutexAddress);
+            (long Result, _) = MutexUnlock(CurrentThread, MutexAddress);
 
             if (Result != 0)
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return Result;
             }
@@ -146,14 +141,14 @@ namespace Ryujinx.HLE.HOS.Kernel
                 }
             }
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
 
             if (Timeout > 0)
             {
                 System.TimeManager.UnscheduleFutureInvocation(CurrentThread);
             }
 
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
             if (CurrentThread.MutexOwner != null)
             {
@@ -162,12 +157,12 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             CondVarThreads.Remove(CurrentThread);
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
 
             return (uint)CurrentThread.ObjSyncResult;
         }
 
-        private (long, KThread) MutexUnlock(MemoryManager Memory, KThread CurrentThread, long MutexAddress)
+        private (long, KThread) MutexUnlock(KThread CurrentThread, long MutexAddress)
         {
             KThread NewOwnerThread = CurrentThread.RelinquishMutex(MutexAddress, out int Count);
 
@@ -190,7 +185,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             long Result = 0;
 
-            if (!KernelToUserInt32(Memory, MutexAddress, MutexValue))
+            if (!KernelTransfer.KernelToUserInt32(System, MutexAddress, MutexValue))
             {
                 Result = MakeError(ErrorModule.Kernel, KernelErr.NoAccessPerm);
             }
@@ -198,17 +193,17 @@ namespace Ryujinx.HLE.HOS.Kernel
             return (Result, NewOwnerThread);
         }
 
-        public void SignalProcessWideKey(Process Process, MemoryManager Memory, long Address, int Count)
+        public void SignalProcessWideKey(long Address, int Count)
         {
             Queue<KThread> SignaledThreads = new Queue<KThread>();
 
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
             IOrderedEnumerable<KThread> SortedThreads = CondVarThreads.OrderBy(x => x.DynamicPriority);
 
             foreach (KThread Thread in SortedThreads.Where(x => x.CondVarAddress == Address))
             {
-                TryAcquireMutex(Process, Memory, Thread);
+                TryAcquireMutex(Thread);
 
                 SignaledThreads.Enqueue(Thread);
 
@@ -224,19 +219,21 @@ namespace Ryujinx.HLE.HOS.Kernel
                 CondVarThreads.Remove(Thread);
             }
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
         }
 
-        private KThread TryAcquireMutex(Process Process, MemoryManager Memory, KThread Requester)
+        private KThread TryAcquireMutex(KThread Requester)
         {
             long Address = Requester.MutexAddress;
 
-            Memory.SetExclusive(0, Address);
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
 
-            if (!UserToKernelInt32(Memory, Address, out int MutexValue))
+            CurrentProcess.CpuMemory.SetExclusive(0, Address);
+
+            if (!KernelTransfer.UserToKernelInt32(System, Address, out int MutexValue))
             {
                 //Invalid address.
-                Memory.ClearExclusive(0);
+                CurrentProcess.CpuMemory.ClearExclusive(0);
 
                 Requester.SignaledObj   = null;
                 Requester.ObjSyncResult = (int)MakeError(ErrorModule.Kernel, KernelErr.NoAccessPerm);
@@ -246,27 +243,27 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             while (true)
             {
-                if (Memory.TestExclusive(0, Address))
+                if (CurrentProcess.CpuMemory.TestExclusive(0, Address))
                 {
                     if (MutexValue != 0)
                     {
                         //Update value to indicate there is a mutex waiter now.
-                        Memory.WriteInt32(Address, MutexValue | HasListenersMask);
+                        CurrentProcess.CpuMemory.WriteInt32(Address, MutexValue | HasListenersMask);
                     }
                     else
                     {
                         //No thread owning the mutex, assign to requesting thread.
-                        Memory.WriteInt32(Address, Requester.ThreadHandleForUserMutex);
+                        CurrentProcess.CpuMemory.WriteInt32(Address, Requester.ThreadHandleForUserMutex);
                     }
 
-                    Memory.ClearExclusiveForStore(0);
+                    CurrentProcess.CpuMemory.ClearExclusiveForStore(0);
 
                     break;
                 }
 
-                Memory.SetExclusive(0, Address);
+                CurrentProcess.CpuMemory.SetExclusive(0, Address);
 
-                MutexValue = Memory.ReadInt32(Address);
+                MutexValue = CurrentProcess.CpuMemory.ReadInt32(Address);
             }
 
             if (MutexValue == 0)
@@ -282,7 +279,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             MutexValue &= ~HasListenersMask;
 
-            KThread MutexOwner = Process.HandleTable.GetObject<KThread>(MutexValue);
+            KThread MutexOwner = CurrentProcess.HandleTable.GetObject<KThread>(MutexValue);
 
             if (MutexOwner != null)
             {
@@ -301,16 +298,16 @@ namespace Ryujinx.HLE.HOS.Kernel
             return MutexOwner;
         }
 
-        public long WaitForAddressIfEqual(MemoryManager Memory, long Address, int Value, long Timeout)
+        public long WaitForAddressIfEqual(long Address, int Value, long Timeout)
         {
             KThread CurrentThread = System.Scheduler.GetCurrentThread();
 
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
             if (CurrentThread.ShallBeTerminated ||
                 CurrentThread.SchedFlags == ThreadSchedState.TerminationPending)
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return MakeError(ErrorModule.Kernel, KernelErr.ThreadTerminating);
             }
@@ -318,9 +315,9 @@ namespace Ryujinx.HLE.HOS.Kernel
             CurrentThread.SignaledObj   = null;
             CurrentThread.ObjSyncResult = (int)MakeError(ErrorModule.Kernel, KernelErr.Timeout);
 
-            if (!UserToKernelInt32(Memory, Address, out int CurrentValue))
+            if (!KernelTransfer.UserToKernelInt32(System, Address, out int CurrentValue))
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return MakeError(ErrorModule.Kernel, KernelErr.NoAccessPerm);
             }
@@ -329,7 +326,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             {
                 if (Timeout == 0)
                 {
-                    System.CriticalSectionLock.Unlock();
+                    System.CriticalSection.Leave();
 
                     return MakeError(ErrorModule.Kernel, KernelErr.Timeout);
                 }
@@ -346,14 +343,14 @@ namespace Ryujinx.HLE.HOS.Kernel
                     System.TimeManager.ScheduleFutureInvocation(CurrentThread, Timeout);
                 }
 
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 if (Timeout > 0)
                 {
                     System.TimeManager.UnscheduleFutureInvocation(CurrentThread);
                 }
 
-                System.CriticalSectionLock.Lock();
+                System.CriticalSection.Enter();
 
                 if (CurrentThread.WaitingInArbitration)
                 {
@@ -362,31 +359,26 @@ namespace Ryujinx.HLE.HOS.Kernel
                     CurrentThread.WaitingInArbitration = false;
                 }
 
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return CurrentThread.ObjSyncResult;
             }
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
 
             return MakeError(ErrorModule.Kernel, KernelErr.InvalidState);
         }
 
-        public long WaitForAddressIfLessThan(
-            MemoryManager Memory,
-            long          Address,
-            int           Value,
-            bool          ShouldDecrement,
-            long          Timeout)
+        public long WaitForAddressIfLessThan(long Address, int Value, bool ShouldDecrement, long Timeout)
         {
             KThread CurrentThread = System.Scheduler.GetCurrentThread();
 
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
             if (CurrentThread.ShallBeTerminated ||
                 CurrentThread.SchedFlags == ThreadSchedState.TerminationPending)
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return MakeError(ErrorModule.Kernel, KernelErr.ThreadTerminating);
             }
@@ -394,12 +386,14 @@ namespace Ryujinx.HLE.HOS.Kernel
             CurrentThread.SignaledObj   = null;
             CurrentThread.ObjSyncResult = (int)MakeError(ErrorModule.Kernel, KernelErr.Timeout);
 
-            //If ShouldDecrement is true, do atomic decrement of the value at Address.
-            Memory.SetExclusive(0, Address);
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
 
-            if (!UserToKernelInt32(Memory, Address, out int CurrentValue))
+            //If ShouldDecrement is true, do atomic decrement of the value at Address.
+            CurrentProcess.CpuMemory.SetExclusive(0, Address);
+
+            if (!KernelTransfer.UserToKernelInt32(System, Address, out int CurrentValue))
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return MakeError(ErrorModule.Kernel, KernelErr.NoAccessPerm);
             }
@@ -408,28 +402,28 @@ namespace Ryujinx.HLE.HOS.Kernel
             {
                 while (CurrentValue < Value)
                 {
-                    if (Memory.TestExclusive(0, Address))
+                    if (CurrentProcess.CpuMemory.TestExclusive(0, Address))
                     {
-                        Memory.WriteInt32(Address, CurrentValue - 1);
+                        CurrentProcess.CpuMemory.WriteInt32(Address, CurrentValue - 1);
 
-                        Memory.ClearExclusiveForStore(0);
+                        CurrentProcess.CpuMemory.ClearExclusiveForStore(0);
 
                         break;
                     }
 
-                    Memory.SetExclusive(0, Address);
+                    CurrentProcess.CpuMemory.SetExclusive(0, Address);
 
-                    CurrentValue = Memory.ReadInt32(Address);
+                    CurrentValue = CurrentProcess.CpuMemory.ReadInt32(Address);
                 }
             }
 
-            Memory.ClearExclusive(0);
+            CurrentProcess.CpuMemory.ClearExclusive(0);
 
             if (CurrentValue < Value)
             {
                 if (Timeout == 0)
                 {
-                    System.CriticalSectionLock.Unlock();
+                    System.CriticalSection.Leave();
 
                     return MakeError(ErrorModule.Kernel, KernelErr.Timeout);
                 }
@@ -446,14 +440,14 @@ namespace Ryujinx.HLE.HOS.Kernel
                     System.TimeManager.ScheduleFutureInvocation(CurrentThread, Timeout);
                 }
 
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 if (Timeout > 0)
                 {
                     System.TimeManager.UnscheduleFutureInvocation(CurrentThread);
                 }
 
-                System.CriticalSectionLock.Lock();
+                System.CriticalSection.Enter();
 
                 if (CurrentThread.WaitingInArbitration)
                 {
@@ -462,12 +456,12 @@ namespace Ryujinx.HLE.HOS.Kernel
                     CurrentThread.WaitingInArbitration = false;
                 }
 
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return CurrentThread.ObjSyncResult;
             }
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
 
             return MakeError(ErrorModule.Kernel, KernelErr.InvalidState);
         }
@@ -498,63 +492,65 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public long Signal(long Address, int Count)
         {
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
             WakeArbiterThreads(Address, Count);
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
 
             return 0;
         }
 
-        public long SignalAndIncrementIfEqual(MemoryManager Memory, long Address, int Value, int Count)
+        public long SignalAndIncrementIfEqual(long Address, int Value, int Count)
         {
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
-            Memory.SetExclusive(0, Address);
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
 
-            if (!UserToKernelInt32(Memory, Address, out int CurrentValue))
+            CurrentProcess.CpuMemory.SetExclusive(0, Address);
+
+            if (!KernelTransfer.UserToKernelInt32(System, Address, out int CurrentValue))
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return MakeError(ErrorModule.Kernel, KernelErr.NoAccessPerm);
             }
 
             while (CurrentValue == Value)
             {
-                if (Memory.TestExclusive(0, Address))
+                if (CurrentProcess.CpuMemory.TestExclusive(0, Address))
                 {
-                    Memory.WriteInt32(Address, CurrentValue + 1);
+                    CurrentProcess.CpuMemory.WriteInt32(Address, CurrentValue + 1);
 
-                    Memory.ClearExclusiveForStore(0);
+                    CurrentProcess.CpuMemory.ClearExclusiveForStore(0);
 
                     break;
                 }
 
-                Memory.SetExclusive(0, Address);
+                CurrentProcess.CpuMemory.SetExclusive(0, Address);
 
-                CurrentValue = Memory.ReadInt32(Address);
+                CurrentValue = CurrentProcess.CpuMemory.ReadInt32(Address);
             }
 
-            Memory.ClearExclusive(0);
+            CurrentProcess.CpuMemory.ClearExclusive(0);
 
             if (CurrentValue != Value)
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return MakeError(ErrorModule.Kernel, KernelErr.InvalidState);
             }
 
             WakeArbiterThreads(Address, Count);
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
 
             return 0;
         }
 
-        public long SignalAndModifyIfEqual(MemoryManager Memory, long Address, int Value, int Count)
+        public long SignalAndModifyIfEqual(long Address, int Value, int Count)
         {
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
             int Offset;
 
@@ -580,43 +576,45 @@ namespace Ryujinx.HLE.HOS.Kernel
                 Offset = 1;
             }
 
-            Memory.SetExclusive(0, Address);
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
 
-            if (!UserToKernelInt32(Memory, Address, out int CurrentValue))
+            CurrentProcess.CpuMemory.SetExclusive(0, Address);
+
+            if (!KernelTransfer.UserToKernelInt32(System, Address, out int CurrentValue))
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return MakeError(ErrorModule.Kernel, KernelErr.NoAccessPerm);
             }
 
             while (CurrentValue == Value)
             {
-                if (Memory.TestExclusive(0, Address))
+                if (CurrentProcess.CpuMemory.TestExclusive(0, Address))
                 {
-                    Memory.WriteInt32(Address, CurrentValue + Offset);
+                    CurrentProcess.CpuMemory.WriteInt32(Address, CurrentValue + Offset);
 
-                    Memory.ClearExclusiveForStore(0);
+                    CurrentProcess.CpuMemory.ClearExclusiveForStore(0);
 
                     break;
                 }
 
-                Memory.SetExclusive(0, Address);
+                CurrentProcess.CpuMemory.SetExclusive(0, Address);
 
-                CurrentValue = Memory.ReadInt32(Address);
+                CurrentValue = CurrentProcess.CpuMemory.ReadInt32(Address);
             }
 
-            Memory.ClearExclusive(0);
+            CurrentProcess.CpuMemory.ClearExclusive(0);
 
             if (CurrentValue != Value)
             {
-                System.CriticalSectionLock.Unlock();
+                System.CriticalSection.Leave();
 
                 return MakeError(ErrorModule.Kernel, KernelErr.InvalidState);
             }
 
             WakeArbiterThreads(Address, Count);
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
 
             return 0;
         }
@@ -647,32 +645,6 @@ namespace Ryujinx.HLE.HOS.Kernel
 
                 ArbiterThreads.Remove(Thread);
             }
-        }
-
-        private bool UserToKernelInt32(MemoryManager Memory, long Address, out int Value)
-        {
-            if (Memory.IsMapped(Address))
-            {
-                Value = Memory.ReadInt32(Address);
-
-                return true;
-            }
-
-            Value = 0;
-
-            return false;
-        }
-
-        private bool KernelToUserInt32(MemoryManager Memory, long Address, int Value)
-        {
-            if (Memory.IsMapped(Address))
-            {
-                Memory.WriteInt32ToSharedAddr(Address, Value);
-
-                return true;
-            }
-
-            return false;
         }
     }
 }

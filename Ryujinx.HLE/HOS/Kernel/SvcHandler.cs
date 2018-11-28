@@ -1,8 +1,8 @@
 using ChocolArm64.Events;
 using ChocolArm64.Memory;
 using ChocolArm64.State;
-using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.Common.Logging;
 using System;
 using System.Collections.Generic;
 
@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         private Dictionary<int, SvcFunc> SvcFuncs;
 
         private Switch        Device;
-        private Process       Process;
+        private KProcess      Process;
         private Horizon       System;
         private MemoryManager Memory;
 
@@ -39,9 +39,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private static Random Rng;
-
-        public SvcHandler(Switch Device, Process Process)
+        public SvcHandler(Switch Device, KProcess Process)
         {
             SvcFuncs = new Dictionary<int, SvcFunc>()
             {
@@ -51,14 +49,14 @@ namespace Ryujinx.HLE.HOS.Kernel
                 { 0x05, SvcUnmapMemory                   },
                 { 0x06, SvcQueryMemory                   },
                 { 0x07, SvcExitProcess                   },
-                { 0x08, SvcCreateThread                  },
+                { 0x08, CreateThread64                   },
                 { 0x09, SvcStartThread                   },
                 { 0x0a, SvcExitThread                    },
                 { 0x0b, SvcSleepThread                   },
                 { 0x0c, SvcGetThreadPriority             },
                 { 0x0d, SvcSetThreadPriority             },
                 { 0x0e, SvcGetThreadCoreMask             },
-                { 0x0f, SvcSetThreadCoreMask             },
+                { 0x0f, SetThreadCoreMask64              },
                 { 0x10, SvcGetCurrentProcessorNumber     },
                 { 0x11, SignalEvent64                    },
                 { 0x12, ClearEvent64                     },
@@ -77,35 +75,33 @@ namespace Ryujinx.HLE.HOS.Kernel
                 { 0x1f, SvcConnectToNamedPort            },
                 { 0x21, SvcSendSyncRequest               },
                 { 0x22, SvcSendSyncRequestWithUserBuffer },
+                { 0x24, GetProcessId64                   },
                 { 0x25, SvcGetThreadId                   },
                 { 0x26, SvcBreak                         },
                 { 0x27, SvcOutputDebugString             },
-                { 0x29, SvcGetInfo                       },
+                { 0x29, GetInfo64                        },
                 { 0x2c, SvcMapPhysicalMemory             },
                 { 0x2d, SvcUnmapPhysicalMemory           },
                 { 0x32, SvcSetThreadActivity             },
                 { 0x33, SvcGetThreadContext3             },
                 { 0x34, SvcWaitForAddress                },
                 { 0x35, SvcSignalToAddress               },
-                { 0x45, CreateEvent64                    }
+                { 0x45, CreateEvent64                    },
+                { 0x65, GetProcessList64                 },
+                { 0x6f, GetSystemInfo64                  },
+                { 0x70, CreatePort64                     },
+                { 0x71, ManageNamedPort64                }
             };
 
             this.Device  = Device;
             this.Process = Process;
-            this.System  = Process.Device.System;
-            this.Memory  = Process.Memory;
-        }
-
-        static SvcHandler()
-        {
-            Rng = new Random();
+            this.System  = Device.System;
+            this.Memory  = Process.CpuMemory;
         }
 
         public void SvcCall(object sender, InstExceptionEventArgs e)
         {
             CpuThreadState ThreadState = (CpuThreadState)sender;
-
-            Process.GetThread(ThreadState.Tpidr).LastPc = e.Position;
 
             if (SvcFuncs.TryGetValue(e.Id, out SvcFunc Func))
             {
@@ -117,7 +113,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
             else
             {
-                Process.PrintStackTrace(ThreadState);
+                //Process.PrintStackTrace(ThreadState);
 
                 throw new NotImplementedException($"0x{e.Id:x4}");
             }

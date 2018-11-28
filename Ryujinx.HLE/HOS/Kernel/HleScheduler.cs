@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public bool MultiCoreScheduling { get; set; }
 
-        private HleCoreManager CoreManager;
+        public HleCoreManager CoreManager { get; private set; }
 
         private bool KeepPreempting;
 
@@ -49,11 +49,11 @@ namespace Ryujinx.HLE.HOS.Kernel
 
                     if (SelectedCount == 0)
                     {
-                        CoreManager.GetThread(Thread.CurrentThread).Reset();
+                        CoreManager.Reset(Thread.CurrentThread);
                     }
                     else if (SelectedCount == 1)
                     {
-                        CoreManager.GetThread(Thread.CurrentThread).Set();
+                        CoreManager.Set(Thread.CurrentThread);
                     }
                     else
                     {
@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                             return;
                         }
 
-                        CoreManager.GetThread(CurrentThread.Context.Work).Reset();
+                        CoreManager.Reset(CurrentThread.Context.Work);
                     }
 
                     //Advance current core and try picking a thread,
@@ -94,7 +94,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                         {
                             CoreContext.CurrentThread.ClearExclusive();
 
-                            CoreManager.GetThread(CoreContext.CurrentThread.Context.Work).Set();
+                            CoreManager.Set(CoreContext.CurrentThread.Context.Work);
 
                             CoreContext.CurrentThread.Context.Execute();
 
@@ -111,7 +111,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                 }
             }
 
-            CoreManager.GetThread(Thread.CurrentThread).WaitOne();
+            CoreManager.Wait(Thread.CurrentThread);
         }
 
         private void PreemptCurrentThread()
@@ -134,11 +134,11 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        public void StopThread(KThread Thread)
+        public void ExitThread(KThread Thread)
         {
             Thread.Context.StopExecution();
 
-            CoreManager.GetThread(Thread.Context.Work).Set();
+            CoreManager.Exit(Thread.Context.Work);
         }
 
         public void RemoveThread(KThread Thread)

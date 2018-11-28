@@ -12,5 +12,6 @@ namespace Ryujinx.Graphics.Gal
         bool IsCached(long Key, long Size);
 
         void SetData(long Key, long Size, IntPtr HostAddress);
+        void SetData(long Key, byte[] Data);
     }
 }

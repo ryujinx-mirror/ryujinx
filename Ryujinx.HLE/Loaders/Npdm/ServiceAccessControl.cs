@@ -28,8 +28,8 @@ namespace Ryujinx.HLE.Loaders.Npdm
                     break;
                 }
 
-                int  Length          = ((ControlByte & 0x07)) + 1;
-                bool RegisterAllowed = ((ControlByte & 0x80) != 0);
+                int  Length          = (ControlByte & 0x07) + 1;
+                bool RegisterAllowed = (ControlByte & 0x80) != 0;
 
                 Services.Add(Encoding.ASCII.GetString(Reader.ReadBytes(Length), 0, Length), RegisterAllowed);
 

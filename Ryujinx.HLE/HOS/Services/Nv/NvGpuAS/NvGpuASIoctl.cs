@@ -1,6 +1,7 @@
 using ChocolArm64.Memory;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Memory;
+using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Services.Nv.NvMap;
 using System;
 using System.Collections.Concurrent;
@@ -13,11 +14,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
 
         private const int FlagRemapSubRange = 0x100;
 
-        private static ConcurrentDictionary<Process, NvGpuASCtx> ASCtxs;
+        private static ConcurrentDictionary<KProcess, NvGpuASCtx> ASCtxs;
 
         static NvGpuASIoctl()
         {
-            ASCtxs = new ConcurrentDictionary<Process, NvGpuASCtx>();
+            ASCtxs = new ConcurrentDictionary<KProcess, NvGpuASCtx>();
         }
 
         public static int ProcessIoctl(ServiceCtx Context, int Cmd)
@@ -321,7 +322,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
             return ASCtxs.GetOrAdd(Context.Process, (Key) => new NvGpuASCtx(Context));
         }
 
-        public static void UnloadProcess(Process Process)
+        public static void UnloadProcess(KProcess Process)
         {
             ASCtxs.TryRemove(Process, out _);
         }

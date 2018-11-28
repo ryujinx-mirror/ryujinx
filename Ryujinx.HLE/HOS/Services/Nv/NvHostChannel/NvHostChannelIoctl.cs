@@ -1,6 +1,7 @@
 using ChocolArm64.Memory;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Memory;
+using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Services.Nv.NvGpuAS;
 using System;
 using System.Collections.Concurrent;
@@ -21,11 +22,11 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
             }
         }
 
-        private static ConcurrentDictionary<Process, ChannelsPerProcess> Channels;
+        private static ConcurrentDictionary<KProcess, ChannelsPerProcess> Channels;
 
         static NvHostChannelIoctl()
         {
-            Channels = new ConcurrentDictionary<Process, ChannelsPerProcess>();
+            Channels = new ConcurrentDictionary<KProcess, ChannelsPerProcess>();
         }
 
         public static int ProcessIoctlGpu(ServiceCtx Context, int Cmd)
@@ -194,7 +195,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
             return Cpp.Channels[Channel];
         }
 
-        public static void UnloadProcess(Process Process)
+        public static void UnloadProcess(KProcess Process)
         {
             Channels.TryRemove(Process, out _);
         }

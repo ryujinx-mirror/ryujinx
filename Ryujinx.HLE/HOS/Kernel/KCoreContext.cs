@@ -1,5 +1,4 @@
 using Ryujinx.Common;
-using System;
 
 namespace Ryujinx.HLE.HOS.Kernel
 {
@@ -10,6 +9,10 @@ namespace Ryujinx.HLE.HOS.Kernel
         private HleCoreManager CoreManager;
 
         public bool ContextSwitchNeeded { get; private set; }
+
+        public long LastContextSwitchTime { get; private set; }
+
+        public long TotalIdleTimeTicks { get; private set; } //TODO
 
         public KThread CurrentThread  { get; private set; }
         public KThread SelectedThread { get; private set; }
@@ -24,11 +27,6 @@ namespace Ryujinx.HLE.HOS.Kernel
         {
             SelectedThread = Thread;
 
-            if (Thread != null)
-            {
-                Thread.LastScheduledTicks = PerformanceCounter.ElapsedMilliseconds;
-            }
-
             if (SelectedThread != CurrentThread)
             {
                 ContextSwitchNeeded = true;
@@ -39,25 +37,42 @@ namespace Ryujinx.HLE.HOS.Kernel
         {
             ContextSwitchNeeded = false;
 
+            LastContextSwitchTime = PerformanceCounter.ElapsedMilliseconds;
+
             CurrentThread = SelectedThread;
+
+            if (CurrentThread != null)
+            {
+                long CurrentTime = PerformanceCounter.ElapsedMilliseconds;
+
+                CurrentThread.TotalTimeRunning += CurrentTime - CurrentThread.LastScheduledTime;
+                CurrentThread.LastScheduledTime = CurrentTime;
+            }
         }
 
         public void ContextSwitch()
         {
             ContextSwitchNeeded = false;
 
+            LastContextSwitchTime = PerformanceCounter.ElapsedMilliseconds;
+
             if (CurrentThread != null)
             {
-                CoreManager.GetThread(CurrentThread.Context.Work).Reset();
+                CoreManager.Reset(CurrentThread.Context.Work);
             }
 
             CurrentThread = SelectedThread;
 
             if (CurrentThread != null)
             {
+                long CurrentTime = PerformanceCounter.ElapsedMilliseconds;
+
+                CurrentThread.TotalTimeRunning += CurrentTime - CurrentThread.LastScheduledTime;
+                CurrentThread.LastScheduledTime = CurrentTime;
+
                 CurrentThread.ClearExclusive();
 
-                CoreManager.GetThread(CurrentThread.Context.Work).Set();
+                CoreManager.Set(CurrentThread.Context.Work);
 
                 CurrentThread.Context.Execute();
             }

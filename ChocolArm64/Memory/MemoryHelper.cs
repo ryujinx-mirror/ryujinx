@@ -26,22 +26,26 @@ namespace ChocolArm64.Memory
         {
             long size = Marshal.SizeOf<T>();
 
-            memory.EnsureRangeIsValid(position, size);
+            byte[] data = memory.ReadBytes(position, size);
 
-            IntPtr ptr = (IntPtr)memory.Translate(position);
-
-            return Marshal.PtrToStructure<T>(ptr);
+            fixed (byte* ptr = data)
+            {
+                return Marshal.PtrToStructure<T>((IntPtr)ptr);
+            }
         }
 
         public unsafe static void Write<T>(MemoryManager memory, long position, T value) where T : struct
         {
             long size = Marshal.SizeOf<T>();
 
-            memory.EnsureRangeIsValid(position, size);
+            byte[] data = new byte[size];
 
-            IntPtr ptr = (IntPtr)memory.TranslateWrite(position);
+            fixed (byte* ptr = data)
+            {
+                Marshal.StructureToPtr<T>(value, (IntPtr)ptr, false);
+            }
 
-            Marshal.StructureToPtr<T>(value, ptr, false);
+            memory.WriteBytes(position, data);
         }
 
         public static string ReadAsciiString(MemoryManager memory, long position, long maxSize = -1)

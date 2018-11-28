@@ -18,7 +18,7 @@ namespace ChocolArm64
 
         private int _isExecuting;
 
-        public CpuThread(Translator translator, MemoryManager memory, long entryPoint)
+        public CpuThread(Translator translator, MemoryManager memory, long entrypoint)
         {
             _translator = translator;
             Memory      = memory;
@@ -31,7 +31,7 @@ namespace ChocolArm64
 
             Work = new Thread(delegate()
             {
-                translator.ExecuteSubroutine(this, entryPoint);
+                translator.ExecuteSubroutine(this, entrypoint);
 
                 memory.RemoveMonitor(ThreadState.Core);
 

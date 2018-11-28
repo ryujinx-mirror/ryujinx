@@ -29,10 +29,7 @@ namespace Ryujinx.HLE.FileSystem
 
             if (SaveMetaData.TitleId == 0 && SaveMetaData.SaveDataType == SaveDataType.SaveData)
             {
-                if (Context.Process.MetaData != null)
-                {
-                    CurrentTitleId = Context.Process.MetaData.ACI0.TitleId;
-                }
+                CurrentTitleId = Context.Process.TitleId;
             }
 
             string SaveAccount = SaveMetaData.UserId.IsZero() ? "savecommon" : SaveMetaData.UserId.ToString();

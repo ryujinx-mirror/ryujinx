@@ -1,11 +1,15 @@
 namespace Ryujinx.HLE.HOS.Kernel
 {
-    enum ThreadSchedState : byte
+    enum ThreadSchedState : ushort
     {
-        LowNibbleMask   = 0xf,
-        HighNibbleMask  = 0xf0,
-        ExceptionalMask = 0x70,
-        ForcePauseFlag  = 0x20,
+        LowMask        = 0xf,
+        HighMask       = 0xfff0,
+        ForcePauseMask = 0x70,
+
+        ProcessPauseFlag      = 1 << 4,
+        ThreadPauseFlag       = 1 << 5,
+        ProcessDebugPauseFlag = 1 << 6,
+        KernelInitPauseFlag   = 1 << 8,
 
         None               = 0,
         Paused             = 1,

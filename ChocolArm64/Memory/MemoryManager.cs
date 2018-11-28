@@ -1,5 +1,6 @@
 using ChocolArm64.Events;
 using ChocolArm64.Exceptions;
+using ChocolArm64.Instructions;
 using ChocolArm64.State;
 using System;
 using System.Collections.Concurrent;
@@ -197,17 +198,41 @@ namespace ChocolArm64.Memory
 
         public ushort ReadUInt16(long position)
         {
-            return *((ushort*)Translate(position));
+            if ((position & 1) == 0)
+            {
+                return *((ushort*)Translate(position));
+            }
+            else
+            {
+                return (ushort)(ReadByte(position + 0) << 0 |
+                                ReadByte(position + 1) << 8);
+            }
         }
 
         public uint ReadUInt32(long position)
         {
-            return *((uint*)Translate(position));
+            if ((position & 3) == 0)
+            {
+                return *((uint*)Translate(position));
+            }
+            else
+            {
+                return (uint)(ReadUInt16(position + 0) << 0 |
+                              ReadUInt16(position + 2) << 16);
+            }
         }
 
         public ulong ReadUInt64(long position)
         {
-            return *((ulong*)Translate(position));
+            if ((position & 7) == 0)
+            {
+                return *((ulong*)Translate(position));
+            }
+            else
+            {
+                return (ulong)ReadUInt32(position + 0) << 0 |
+                       (ulong)ReadUInt32(position + 4) << 32;
+            }
         }
 
         public Vector128<float> ReadVector8(long position)
@@ -218,74 +243,117 @@ namespace ChocolArm64.Memory
             }
             else
             {
-                throw new PlatformNotSupportedException();
+                Vector128<float> value = VectorHelper.VectorSingleZero();
+
+                value = VectorHelper.VectorInsertInt(ReadByte(position), value, 0, 0);
+
+                return value;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector128<float> ReadVector16(long position)
         {
-            if (Sse2.IsSupported)
+            if (Sse2.IsSupported && (position & 1) == 0)
             {
                 return Sse.StaticCast<ushort, float>(Sse2.Insert(Sse2.SetZeroVector128<ushort>(), ReadUInt16(position), 0));
             }
             else
             {
-                throw new PlatformNotSupportedException();
+                Vector128<float> value = VectorHelper.VectorSingleZero();
+
+                value = VectorHelper.VectorInsertInt(ReadUInt16(position), value, 0, 1);
+
+                return value;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector128<float> ReadVector32(long position)
         {
-            if (Sse.IsSupported)
+            if (Sse.IsSupported && (position & 3) == 0)
             {
                 return Sse.LoadScalarVector128((float*)Translate(position));
             }
             else
             {
-                throw new PlatformNotSupportedException();
+                Vector128<float> value = VectorHelper.VectorSingleZero();
+
+                value = VectorHelper.VectorInsertInt(ReadUInt32(position), value, 0, 2);
+
+                return value;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector128<float> ReadVector64(long position)
         {
-            if (Sse2.IsSupported)
+            if (Sse2.IsSupported && (position & 7) == 0)
             {
                 return Sse.StaticCast<double, float>(Sse2.LoadScalarVector128((double*)Translate(position)));
             }
             else
             {
-                throw new PlatformNotSupportedException();
+                Vector128<float> value = VectorHelper.VectorSingleZero();
+
+                value = VectorHelper.VectorInsertInt(ReadUInt64(position), value, 0, 3);
+
+                return value;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector128<float> ReadVector128(long position)
         {
-            if (Sse.IsSupported)
+            if (Sse.IsSupported && (position & 15) == 0)
             {
                 return Sse.LoadVector128((float*)Translate(position));
             }
             else
             {
-                throw new PlatformNotSupportedException();
+                Vector128<float> value = VectorHelper.VectorSingleZero();
+
+                value = VectorHelper.VectorInsertInt(ReadUInt64(position + 0), value, 0, 3);
+                value = VectorHelper.VectorInsertInt(ReadUInt64(position + 8), value, 1, 3);
+
+                return value;
             }
         }
 
         public byte[] ReadBytes(long position, long size)
         {
-            if ((uint)size > int.MaxValue)
+            long endAddr = position + size;
+
+            if ((ulong)size > int.MaxValue)
             {
                 throw new ArgumentOutOfRangeException(nameof(size));
             }
 
-            EnsureRangeIsValid(position, size);
+            if ((ulong)endAddr < (ulong)position)
+            {
+                throw new ArgumentOutOfRangeException(nameof(position));
+            }
 
             byte[] data = new byte[size];
 
-            Marshal.Copy((IntPtr)Translate(position), data, 0, (int)size);
+            int offset = 0;
+
+            while ((ulong)position < (ulong)endAddr)
+            {
+                long pageLimit = (position + PageSize) & ~(long)PageMask;
+
+                if ((ulong)pageLimit > (ulong)endAddr)
+                {
+                    pageLimit = endAddr;
+                }
+
+                int copySize = (int)(pageLimit - position);
+
+                Marshal.Copy((IntPtr)Translate(position), data, offset, copySize);
+
+                position += copySize;
+                offset   += copySize;
+            }
 
             return data;
         }
@@ -293,9 +361,36 @@ namespace ChocolArm64.Memory
         public void ReadBytes(long position, byte[] data, int startIndex, int size)
         {
             //Note: This will be moved later.
-            EnsureRangeIsValid(position, (uint)size);
+            long endAddr = position + size;
 
-            Marshal.Copy((IntPtr)Translate(position), data, startIndex, size);
+            if ((ulong)size > int.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(size));
+            }
+
+            if ((ulong)endAddr < (ulong)position)
+            {
+                throw new ArgumentOutOfRangeException(nameof(position));
+            }
+
+            int offset = startIndex;
+
+            while ((ulong)position < (ulong)endAddr)
+            {
+                long pageLimit = (position + PageSize) & ~(long)PageMask;
+
+                if ((ulong)pageLimit > (ulong)endAddr)
+                {
+                    pageLimit = endAddr;
+                }
+
+                int copySize = (int)(pageLimit - position);
+
+                Marshal.Copy((IntPtr)Translate(position), data, offset, copySize);
+
+                position += copySize;
+                offset   += copySize;
+            }
         }
 
         public void WriteSByte(long position, sbyte value)
@@ -325,17 +420,41 @@ namespace ChocolArm64.Memory
 
         public void WriteUInt16(long position, ushort value)
         {
-            *((ushort*)TranslateWrite(position)) = value;
+            if ((position & 1) == 0)
+            {
+                *((ushort*)TranslateWrite(position)) = value;
+            }
+            else
+            {
+                WriteByte(position + 0, (byte)(value >> 0));
+                WriteByte(position + 1, (byte)(value >> 8));
+            }
         }
 
         public void WriteUInt32(long position, uint value)
         {
-            *((uint*)TranslateWrite(position)) = value;
+            if ((position & 3) == 0)
+            {
+                *((uint*)TranslateWrite(position)) = value;
+            }
+            else
+            {
+                WriteUInt16(position + 0, (ushort)(value >> 0));
+                WriteUInt16(position + 2, (ushort)(value >> 16));
+            }
         }
 
         public void WriteUInt64(long position, ulong value)
         {
-            *((ulong*)TranslateWrite(position)) = value;
+            if ((position & 7) == 0)
+            {
+                *((ulong*)TranslateWrite(position)) = value;
+            }
+            else
+            {
+                WriteUInt32(position + 0, (uint)(value >> 0));
+                WriteUInt32(position + 4, (uint)(value >> 32));
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -351,7 +470,7 @@ namespace ChocolArm64.Memory
             }
             else
             {
-                throw new PlatformNotSupportedException();
+                WriteByte(position, (byte)VectorHelper.VectorExtractIntZx(value, 0, 0));
             }
         }
 
@@ -364,46 +483,47 @@ namespace ChocolArm64.Memory
             }
             else
             {
-                throw new PlatformNotSupportedException();
+                WriteUInt16(position, (ushort)VectorHelper.VectorExtractIntZx(value, 0, 1));
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteVector32(long position, Vector128<float> value)
         {
-            if (Sse.IsSupported)
+            if (Sse.IsSupported && (position & 3) == 0)
             {
                 Sse.StoreScalar((float*)TranslateWrite(position), value);
             }
             else
             {
-                throw new PlatformNotSupportedException();
+                WriteUInt32(position, (uint)VectorHelper.VectorExtractIntZx(value, 0, 2));
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteVector64(long position, Vector128<float> value)
         {
-            if (Sse2.IsSupported)
+            if (Sse2.IsSupported && (position & 7) == 0)
             {
                 Sse2.StoreScalar((double*)TranslateWrite(position), Sse.StaticCast<float, double>(value));
             }
             else
             {
-                throw new PlatformNotSupportedException();
+                WriteUInt64(position, VectorHelper.VectorExtractIntZx(value, 0, 3));
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteVector128(long position, Vector128<float> value)
         {
-            if (Sse.IsSupported)
+            if (Sse.IsSupported && (position & 15) == 0)
             {
                 Sse.Store((float*)TranslateWrite(position), value);
             }
             else
             {
-                throw new PlatformNotSupportedException();
+                WriteUInt64(position + 0, VectorHelper.VectorExtractIntZx(value, 0, 3));
+                WriteUInt64(position + 8, VectorHelper.VectorExtractIntZx(value, 1, 3));
             }
         }
 
@@ -439,22 +559,48 @@ namespace ChocolArm64.Memory
         public void WriteBytes(long position, byte[] data, int startIndex, int size)
         {
             //Note: This will be moved later.
-            //Using Translate instead of TranslateWrite is on purpose.
-            EnsureRangeIsValid(position, (uint)size);
+            long endAddr = position + size;
 
-            Marshal.Copy(data, startIndex, (IntPtr)Translate(position), size);
+            if ((ulong)endAddr < (ulong)position)
+            {
+                throw new ArgumentOutOfRangeException(nameof(position));
+            }
+
+            int offset = startIndex;
+
+            while ((ulong)position < (ulong)endAddr)
+            {
+                long pageLimit = (position + PageSize) & ~(long)PageMask;
+
+                if ((ulong)pageLimit > (ulong)endAddr)
+                {
+                    pageLimit = endAddr;
+                }
+
+                int copySize = (int)(pageLimit - position);
+
+                Marshal.Copy(data, offset, (IntPtr)TranslateWrite(position), copySize);
+
+                position += copySize;
+                offset   += copySize;
+            }
         }
 
         public void CopyBytes(long src, long dst, long size)
         {
             //Note: This will be moved later.
-            EnsureRangeIsValid(src, size);
-            EnsureRangeIsValid(dst, size);
+            if (IsContiguous(src, size) &&
+                IsContiguous(dst, size))
+            {
+                byte* srcPtr = Translate(src);
+                byte* dstPtr = TranslateWrite(dst);
 
-            byte* srcPtr = Translate(src);
-            byte* dstPtr = TranslateWrite(dst);
-
-            Buffer.MemoryCopy(srcPtr, dstPtr, size, size);
+                Buffer.MemoryCopy(srcPtr, dstPtr, size, size);
+            }
+            else
+            {
+                WriteBytes(dst, ReadBytes(src, size));
+            }
         }
 
         public void Map(long va, long pa, long size)
@@ -703,14 +849,21 @@ Unmapped:
             }
         }
 
-        public IntPtr GetHostAddress(long position, long size)
+        public bool TryGetHostAddress(long position, long size, out IntPtr ptr)
         {
-            EnsureRangeIsValid(position, size);
+            if (IsContiguous(position, size))
+            {
+                ptr = (IntPtr)Translate(position);
 
-            return (IntPtr)Translate(position);
+                return true;
+            }
+
+            ptr = IntPtr.Zero;
+
+            return false;
         }
 
-        internal void EnsureRangeIsValid(long position, long size)
+        private bool IsContiguous(long position, long size)
         {
             long endPos = position + size;
 
@@ -724,12 +877,14 @@ Unmapped:
 
                 if (pa != expectedPa)
                 {
-                    throw new VmmAccessException(position, size);
+                    return false;
                 }
 
                 position   += PageSize;
                 expectedPa += PageSize;
             }
+
+            return true;
         }
 
         public bool IsValidPosition(long position)

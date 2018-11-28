@@ -1,5 +1,4 @@
 using Ryujinx.HLE.Exceptions;
-using Ryujinx.HLE.Utilities;
 using System.IO;
 using System.Text;
 
@@ -12,15 +11,15 @@ namespace Ryujinx.HLE.Loaders.Npdm
     {
         private const int MetaMagic = 'M' << 0 | 'E' << 8 | 'T' << 16 | 'A' << 24;
 
-        public bool   Is64Bits                { get; private set; }
-        public int    AddressSpaceWidth       { get; private set; }
-        public byte   MainThreadPriority      { get; private set; }
-        public byte   DefaultCpuId            { get; private set; }
-        public int    SystemResourceSize      { get; private set; }
-        public int    ProcessCategory         { get; private set; }
-        public int    MainEntrypointStackSize { get; private set; }
-        public string TitleName               { get; private set; }
-        public byte[] ProductCode             { get; private set; }
+        public byte   MmuFlags            { get; private set; }
+        public bool   Is64Bits            { get; private set; }
+        public byte   MainThreadPriority  { get; private set; }
+        public byte   DefaultCpuId        { get; private set; }
+        public int    PersonalMmHeapSize  { get; private set; }
+        public int    ProcessCategory     { get; private set; }
+        public int    MainThreadStackSize { get; private set; }
+        public string TitleName           { get; private set; }
+        public byte[] ProductCode         { get; private set; }
 
         public ACI0 ACI0 { get; private set; }
         public ACID ACID { get; private set; }
@@ -36,27 +35,22 @@ namespace Ryujinx.HLE.Loaders.Npdm
 
             Reader.ReadInt64();
 
-            //MmuFlags, bit0: 64-bit instructions, bits1-3: address space width (1=64-bit, 2=32-bit). Needs to be <= 0xF.
-            byte MmuFlags = Reader.ReadByte();
+            MmuFlags = Reader.ReadByte();
 
-            Is64Bits          = (MmuFlags & 1) != 0;
-            AddressSpaceWidth = (MmuFlags >> 1) & 7;
+            Is64Bits = (MmuFlags & 1) != 0;
 
             Reader.ReadByte();
 
-            MainThreadPriority = Reader.ReadByte(); //(0-63).
+            MainThreadPriority = Reader.ReadByte();
             DefaultCpuId       = Reader.ReadByte();
 
             Reader.ReadInt32();
 
-            //System resource size (max size as of 5.x: 534773760).
-            SystemResourceSize = EndianSwap.Swap32(Reader.ReadInt32());
+            PersonalMmHeapSize = Reader.ReadInt32();
 
-            //ProcessCategory (0: regular title, 1: kernel built-in). Should be 0 here.
-            ProcessCategory = EndianSwap.Swap32(Reader.ReadInt32());
+            ProcessCategory = Reader.ReadInt32();
 
-            //Main entrypoint stack size.
-            MainEntrypointStackSize = Reader.ReadInt32();
+            MainThreadStackSize = Reader.ReadInt32();
 
             byte[] TempTitleName = Reader.ReadBytes(0x10);
 

@@ -1,5 +1,6 @@
 using ChocolArm64.Memory;
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Kernel;
 using System;
 using System.Collections.Concurrent;
 using System.Text;
@@ -9,13 +10,13 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
 {
     class NvHostCtrlIoctl
     {
-        private static ConcurrentDictionary<Process, NvHostCtrlUserCtx> UserCtxs;
+        private static ConcurrentDictionary<KProcess, NvHostCtrlUserCtx> UserCtxs;
 
         private static bool IsProductionMode = true;
 
         static NvHostCtrlIoctl()
         {
-            UserCtxs = new ConcurrentDictionary<Process, NvHostCtrlUserCtx>();
+            UserCtxs = new ConcurrentDictionary<KProcess, NvHostCtrlUserCtx>();
 
             if (Set.NxSettings.Settings.TryGetValue("nv!rmos_set_production_mode", out object ProductionModeSetting))
             {
@@ -390,7 +391,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
             return UserCtxs.GetOrAdd(Context.Process, (Key) => new NvHostCtrlUserCtx());
         }
 
-        public static void UnloadProcess(Process Process)
+        public static void UnloadProcess(KProcess Process)
         {
             UserCtxs.TryRemove(Process, out _);
         }

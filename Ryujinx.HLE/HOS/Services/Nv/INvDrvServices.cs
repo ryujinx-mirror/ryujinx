@@ -205,7 +205,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ((Cmd >> 31) & 1) != 0;
         }
 
-        public static void UnloadProcess(Process Process)
+        public static void UnloadProcess(KProcess Process)
         {
             Fds.DeleteProcess(Process);
 

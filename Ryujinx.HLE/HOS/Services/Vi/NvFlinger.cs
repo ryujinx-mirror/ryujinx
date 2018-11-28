@@ -275,8 +275,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
 
         private long MakeReplyParcel(ServiceCtx Context, byte[] Data)
         {
-            long ReplyPos  = Context.Request.ReceiveBuff[0].Position;
-            long ReplySize = Context.Request.ReceiveBuff[0].Size;
+            (long ReplyPos, long ReplySize) = Context.Request.GetBufferType0x22();
 
             byte[] Reply = MakeParcel(Data, new byte[0]);
 

@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public override void Signal()
         {
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
             if (!Signaled)
             {
@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                 base.Signal();
             }
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
         }
 
         public KernelResult Clear()
@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         {
             KernelResult Result;
 
-            System.CriticalSectionLock.Lock();
+            System.CriticalSection.Enter();
 
             if (Signaled)
             {
@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                 Result = KernelResult.InvalidState;
             }
 
-            System.CriticalSectionLock.Unlock();
+            System.CriticalSection.Leave();
 
             return Result;
         }

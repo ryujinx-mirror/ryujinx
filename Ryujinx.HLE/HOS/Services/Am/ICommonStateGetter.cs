@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long GetEventHandle(ServiceCtx Context)
         {
-            KEvent Event = Context.Process.AppletState.MessageEvent;
+            KEvent Event = Context.Device.System.AppletState.MessageEvent;
 
             if (Context.Process.HandleTable.GenerateHandle(Event.ReadableEvent, out int Handle) != KernelResult.Success)
             {
@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long ReceiveMessage(ServiceCtx Context)
         {
-            if (!Context.Process.AppletState.TryDequeueMessage(out MessageInfo Message))
+            if (!Context.Device.System.AppletState.TryDequeueMessage(out MessageInfo Message))
             {
                 return MakeError(ErrorModule.Am, AmErr.NoMessages);
             }
@@ -92,7 +92,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long GetCurrentFocusState(ServiceCtx Context)
         {
-            Context.ResponseData.Write((byte)Context.Process.AppletState.FocusState);
+            Context.ResponseData.Write((byte)Context.Device.System.AppletState.FocusState);
 
             return 0;
         }

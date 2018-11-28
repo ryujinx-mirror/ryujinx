@@ -22,6 +22,7 @@ namespace Ryujinx.Graphics.Gal
         bool IsIboCached(long Key, long DataSize);
 
         void CreateVbo(long Key, int DataSize, IntPtr HostAddress);
+        void CreateVbo(long Key, byte[] Data);
 
         void CreateIbo(long Key, int DataSize, IntPtr HostAddress);
         void CreateIbo(long Key, int DataSize, byte[] Buffer);

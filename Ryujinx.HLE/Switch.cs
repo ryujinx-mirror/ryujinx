@@ -4,7 +4,6 @@ using Ryujinx.Graphics.Gal;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.Input;
-using Ryujinx.HLE.Memory;
 using System;
 using System.Threading;
 
@@ -56,7 +55,7 @@ namespace Ryujinx.HLE
 
             Statistics = new PerformanceStatistics();
 
-            Hid = new Hid(this, System.HidSharedMem.PA);
+            Hid = new Hid(this, System.HidBaseAddress);
 
             VsyncEvent = new AutoResetEvent(true);
         }

@@ -32,6 +32,8 @@ namespace Ryujinx.HLE.HOS.Kernel
             {
                 int Handle = Memory.ReadInt32(HandlesPtr + Index * 4);
 
+                Logger.PrintDebug(LogClass.KernelSvc, $"Sync handle 0x{Handle:x8}");
+
                 KSynchronizationObject SyncObj = Process.HandleTable.GetObject<KSynchronizationObject>(Handle);
 
                 if (SyncObj == null)
@@ -116,12 +118,9 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
-            long Result = System.AddressArbiter.ArbitrateLock(
-                Process,
-                Memory,
-                OwnerHandle,
-                MutexAddress,
-                RequesterHandle);
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
+
+            long Result = CurrentProcess.AddressArbiter.ArbitrateLock(OwnerHandle, MutexAddress, RequesterHandle);
 
             if (Result != 0)
             {
@@ -155,7 +154,9 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
-            long Result = System.AddressArbiter.ArbitrateUnlock(Memory, MutexAddress);
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
+
+            long Result = CurrentProcess.AddressArbiter.ArbitrateUnlock(MutexAddress);
 
             if (Result != 0)
             {
@@ -196,8 +197,9 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
-            long Result = System.AddressArbiter.WaitProcessWideKeyAtomic(
-                Memory,
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
+
+            long Result = CurrentProcess.AddressArbiter.WaitProcessWideKeyAtomic(
                 MutexAddress,
                 CondVarAddress,
                 ThreadHandle,
@@ -227,7 +229,9 @@ namespace Ryujinx.HLE.HOS.Kernel
                 "Address = 0x" + Address.ToString("x16") + ", " +
                 "Count = 0x"   + Count  .ToString("x8"));
 
-            System.AddressArbiter.SignalProcessWideKey(Process, Memory, Address, Count);
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
+
+            CurrentProcess.AddressArbiter.SignalProcessWideKey(Address, Count);
 
             ThreadState.X0 = 0;
         }
@@ -263,20 +267,22 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
+
             long Result;
 
             switch (Type)
             {
                 case ArbitrationType.WaitIfLessThan:
-                    Result = System.AddressArbiter.WaitForAddressIfLessThan(Memory, Address, Value, false, Timeout);
+                    Result = CurrentProcess.AddressArbiter.WaitForAddressIfLessThan(Address, Value, false, Timeout);
                     break;
 
                 case ArbitrationType.DecrementAndWaitIfLessThan:
-                    Result = System.AddressArbiter.WaitForAddressIfLessThan(Memory, Address, Value, true, Timeout);
+                    Result = CurrentProcess.AddressArbiter.WaitForAddressIfLessThan(Address, Value, true, Timeout);
                     break;
 
                 case ArbitrationType.WaitIfEqual:
-                    Result = System.AddressArbiter.WaitForAddressIfEqual(Memory, Address, Value, Timeout);
+                    Result = CurrentProcess.AddressArbiter.WaitForAddressIfEqual(Address, Value, Timeout);
                     break;
 
                 default:
@@ -323,20 +329,22 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
+
             long Result;
 
             switch (Type)
             {
                 case SignalType.Signal:
-                    Result = System.AddressArbiter.Signal(Address, Count);
+                    Result = CurrentProcess.AddressArbiter.Signal(Address, Count);
                     break;
 
                 case SignalType.SignalAndIncrementIfEqual:
-                    Result = System.AddressArbiter.SignalAndIncrementIfEqual(Memory, Address, Value, Count);
+                    Result = CurrentProcess.AddressArbiter.SignalAndIncrementIfEqual(Address, Value, Count);
                     break;
 
                 case SignalType.SignalAndModifyIfEqual:
-                    Result = System.AddressArbiter.SignalAndModifyIfEqual(Memory, Address, Value, Count);
+                    Result = CurrentProcess.AddressArbiter.SignalAndModifyIfEqual(Address, Value, Count);
                     break;
 
                 default:

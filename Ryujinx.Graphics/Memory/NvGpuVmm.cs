@@ -243,9 +243,9 @@ namespace Ryujinx.Graphics.Memory
             return Cache.IsRegionModified(Memory, BufferType, PA, Size);
         }
 
-        public IntPtr GetHostAddress(long Position, long Size)
+        public bool TryGetHostAddress(long Position, long Size, out IntPtr Ptr)
         {
-            return Memory.GetHostAddress(GetPhysicalAddress(Position), Size);
+            return Memory.TryGetHostAddress(GetPhysicalAddress(Position), Size, out Ptr);
         }
 
         public byte ReadByte(long Position)

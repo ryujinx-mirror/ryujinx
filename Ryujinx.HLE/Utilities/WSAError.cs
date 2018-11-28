@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Ryujinx.HLE.Utilities
+﻿namespace Ryujinx.HLE.Utilities
 {
-    public enum WSAError
+    enum WSAError
     {
         /*
         * All Windows Sockets error constants are biased by WSABASEERR from
         * the "normal"
         */
         WSABASEERR                 = 10000,
-    
+
         /*
         * Windows Sockets definitions of regular Microsoft C error constants
         */

@@ -8,8 +8,8 @@ namespace Ryujinx.HLE.HOS.Ipc
     static class IpcHandler
     {
         public static long IpcCall(
-            Switch        Ns,
-            Process       Process,
+            Switch        Device,
+            KProcess      Process,
             MemoryManager Memory,
             KSession      Session,
             IpcMessage    Request,
@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Ipc
                         BinaryWriter ResWriter = new BinaryWriter(ResMS);
 
                         ServiceCtx Context = new ServiceCtx(
-                            Ns,
+                            Device,
                             Process,
                             Memory,
                             Session,
