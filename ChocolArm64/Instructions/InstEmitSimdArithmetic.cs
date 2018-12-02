@@ -1638,7 +1638,34 @@ namespace ChocolArm64.Instructions
 
         public static void Neg_V(ILEmitterCtx context)
         {
-            EmitVectorUnaryOpSx(context, () => context.Emit(OpCodes.Neg));
+            if (Optimizations.UseSse2)
+            {
+                OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+                Type[] typesSub = new Type[] { VectorIntTypesPerSizeLog2[op.Size], VectorIntTypesPerSizeLog2[op.Size] };
+
+                string[] namesSzv = new string[] { nameof(VectorHelper.VectorSByteZero),
+                                                   nameof(VectorHelper.VectorInt16Zero),
+                                                   nameof(VectorHelper.VectorInt32Zero),
+                                                   nameof(VectorHelper.VectorInt64Zero) };
+
+                VectorHelper.EmitCall(context, namesSzv[op.Size]);
+
+                EmitLdvecWithSignedCast(context, op.Rn, op.Size);
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Subtract), typesSub));
+
+                EmitStvecWithSignedCast(context, op.Rd, op.Size);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
+            }
+            else
+            {
+                EmitVectorUnaryOpSx(context, () => context.Emit(OpCodes.Neg));
+            }
         }
 
         public static void Raddhn_V(ILEmitterCtx context)

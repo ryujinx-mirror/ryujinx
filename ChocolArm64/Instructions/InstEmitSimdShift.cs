@@ -110,6 +110,34 @@ namespace ChocolArm64.Instructions
             }
         }
 
+        public static void Sqrshl_V(ILEmitterCtx context)
+        {
+            OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+            int bytes = op.GetBitsCount() >> 3;
+            int elems = bytes >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                EmitVectorExtractSx(context, op.Rn, index, op.Size);
+                EmitVectorExtractSx(context, op.Rm, index, op.Size);
+
+                context.Emit(OpCodes.Ldc_I4_1);
+                context.EmitLdc_I4(op.Size);
+
+                context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                SoftFallback.EmitCall(context, nameof(SoftFallback.SignedShlRegSatQ));
+
+                EmitVectorInsert(context, op.Rd, index, op.Size);
+            }
+
+            if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                EmitVectorZeroUpper(context, op.Rd);
+            }
+        }
+
         public static void Sqrshrn_S(ILEmitterCtx context)
         {
             EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarSxSx);
@@ -130,6 +158,34 @@ namespace ChocolArm64.Instructions
             EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxZx);
         }
 
+        public static void Sqshl_V(ILEmitterCtx context)
+        {
+            OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+            int bytes = op.GetBitsCount() >> 3;
+            int elems = bytes >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                EmitVectorExtractSx(context, op.Rn, index, op.Size);
+                EmitVectorExtractSx(context, op.Rm, index, op.Size);
+
+                context.Emit(OpCodes.Ldc_I4_0);
+                context.EmitLdc_I4(op.Size);
+
+                context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                SoftFallback.EmitCall(context, nameof(SoftFallback.SignedShlRegSatQ));
+
+                EmitVectorInsert(context, op.Rd, index, op.Size);
+            }
+
+            if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                EmitVectorZeroUpper(context, op.Rd);
+            }
+        }
+
         public static void Sqshrn_S(ILEmitterCtx context)
         {
             EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarSxSx);
@@ -148,6 +204,32 @@ namespace ChocolArm64.Instructions
         public static void Sqshrun_V(ILEmitterCtx context)
         {
             EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxZx);
+        }
+
+        public static void Srshl_V(ILEmitterCtx context)
+        {
+            OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+            int bytes = op.GetBitsCount() >> 3;
+            int elems = bytes >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                EmitVectorExtractSx(context, op.Rn, index, op.Size);
+                EmitVectorExtractSx(context, op.Rm, index, op.Size);
+
+                context.Emit(OpCodes.Ldc_I4_1);
+                context.EmitLdc_I4(op.Size);
+
+                SoftFallback.EmitCall(context, nameof(SoftFallback.SignedShlReg));
+
+                EmitVectorInsert(context, op.Rd, index, op.Size);
+            }
+
+            if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                EmitVectorZeroUpper(context, op.Rd);
+            }
         }
 
         public static void Srshr_S(ILEmitterCtx context)
@@ -252,7 +334,28 @@ namespace ChocolArm64.Instructions
 
         public static void Sshl_V(ILEmitterCtx context)
         {
-            EmitVectorShl(context, signed: true);
+            OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+            int bytes = op.GetBitsCount() >> 3;
+            int elems = bytes >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                EmitVectorExtractSx(context, op.Rn, index, op.Size);
+                EmitVectorExtractSx(context, op.Rm, index, op.Size);
+
+                context.Emit(OpCodes.Ldc_I4_0);
+                context.EmitLdc_I4(op.Size);
+
+                SoftFallback.EmitCall(context, nameof(SoftFallback.SignedShlReg));
+
+                EmitVectorInsert(context, op.Rd, index, op.Size);
+            }
+
+            if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                EmitVectorZeroUpper(context, op.Rd);
+            }
         }
 
         public static void Sshll_V(ILEmitterCtx context)
@@ -330,6 +433,34 @@ namespace ChocolArm64.Instructions
             }
         }
 
+        public static void Uqrshl_V(ILEmitterCtx context)
+        {
+            OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+            int bytes = op.GetBitsCount() >> 3;
+            int elems = bytes >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                EmitVectorExtractZx(context, op.Rn, index, op.Size);
+                EmitVectorExtractZx(context, op.Rm, index, op.Size);
+
+                context.Emit(OpCodes.Ldc_I4_1);
+                context.EmitLdc_I4(op.Size);
+
+                context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                SoftFallback.EmitCall(context, nameof(SoftFallback.UnsignedShlRegSatQ));
+
+                EmitVectorInsert(context, op.Rd, index, op.Size);
+            }
+
+            if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                EmitVectorZeroUpper(context, op.Rd);
+            }
+        }
+
         public static void Uqrshrn_S(ILEmitterCtx context)
         {
             EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarZxZx);
@@ -340,6 +471,34 @@ namespace ChocolArm64.Instructions
             EmitRoundShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorZxZx);
         }
 
+        public static void Uqshl_V(ILEmitterCtx context)
+        {
+            OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+            int bytes = op.GetBitsCount() >> 3;
+            int elems = bytes >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                EmitVectorExtractZx(context, op.Rn, index, op.Size);
+                EmitVectorExtractZx(context, op.Rm, index, op.Size);
+
+                context.Emit(OpCodes.Ldc_I4_0);
+                context.EmitLdc_I4(op.Size);
+
+                context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                SoftFallback.EmitCall(context, nameof(SoftFallback.UnsignedShlRegSatQ));
+
+                EmitVectorInsert(context, op.Rd, index, op.Size);
+            }
+
+            if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                EmitVectorZeroUpper(context, op.Rd);
+            }
+        }
+
         public static void Uqshrn_S(ILEmitterCtx context)
         {
             EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.ScalarZxZx);
@@ -348,6 +507,32 @@ namespace ChocolArm64.Instructions
         public static void Uqshrn_V(ILEmitterCtx context)
         {
             EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorZxZx);
+        }
+
+        public static void Urshl_V(ILEmitterCtx context)
+        {
+            OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+            int bytes = op.GetBitsCount() >> 3;
+            int elems = bytes >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                EmitVectorExtractZx(context, op.Rn, index, op.Size);
+                EmitVectorExtractZx(context, op.Rm, index, op.Size);
+
+                context.Emit(OpCodes.Ldc_I4_1);
+                context.EmitLdc_I4(op.Size);
+
+                SoftFallback.EmitCall(context, nameof(SoftFallback.UnsignedShlReg));
+
+                EmitVectorInsert(context, op.Rd, index, op.Size);
+            }
+
+            if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                EmitVectorZeroUpper(context, op.Rd);
+            }
         }
 
         public static void Urshr_S(ILEmitterCtx context)
@@ -450,7 +635,28 @@ namespace ChocolArm64.Instructions
 
         public static void Ushl_V(ILEmitterCtx context)
         {
-            EmitVectorShl(context, signed: false);
+            OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+            int bytes = op.GetBitsCount() >> 3;
+            int elems = bytes >> op.Size;
+
+            for (int index = 0; index < elems; index++)
+            {
+                EmitVectorExtractZx(context, op.Rn, index, op.Size);
+                EmitVectorExtractZx(context, op.Rm, index, op.Size);
+
+                context.Emit(OpCodes.Ldc_I4_0);
+                context.EmitLdc_I4(op.Size);
+
+                SoftFallback.EmitCall(context, nameof(SoftFallback.UnsignedShlReg));
+
+                EmitVectorInsert(context, op.Rd, index, op.Size);
+            }
+
+            if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                EmitVectorZeroUpper(context, op.Rd);
+            }
         }
 
         public static void Ushll_V(ILEmitterCtx context)
@@ -523,69 +729,6 @@ namespace ChocolArm64.Instructions
             else
             {
                 EmitVectorShrImmOpZx(context, ShrImmFlags.Accumulate);
-            }
-        }
-
-        private static void EmitVectorShl(ILEmitterCtx context, bool signed)
-        {
-            //This instruction shifts the value on vector A by the number of bits
-            //specified on the signed, lower 8 bits of vector B. If the shift value
-            //is greater or equal to the data size of each lane, then the result is zero.
-            //Additionally, negative shifts produces right shifts by the negated shift value.
-            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
-
-            int maxShift = 8 << op.Size;
-
-            Action emit = () =>
-            {
-                ILLabel lblShl  = new ILLabel();
-                ILLabel lblZero = new ILLabel();
-                ILLabel lblEnd  = new ILLabel();
-
-                void EmitShift(OpCode ilOp)
-                {
-                    context.Emit(OpCodes.Dup);
-
-                    context.EmitLdc_I4(maxShift);
-
-                    context.Emit(OpCodes.Bge_S, lblZero);
-                    context.Emit(ilOp);
-                    context.Emit(OpCodes.Br_S, lblEnd);
-                }
-
-                context.Emit(OpCodes.Conv_I1);
-                context.Emit(OpCodes.Dup);
-
-                context.EmitLdc_I4(0);
-
-                context.Emit(OpCodes.Bge_S, lblShl);
-                context.Emit(OpCodes.Neg);
-
-                EmitShift(signed
-                    ? OpCodes.Shr
-                    : OpCodes.Shr_Un);
-
-                context.MarkLabel(lblShl);
-
-                EmitShift(OpCodes.Shl);
-
-                context.MarkLabel(lblZero);
-
-                context.Emit(OpCodes.Pop);
-                context.Emit(OpCodes.Pop);
-
-                context.EmitLdc_I8(0);
-
-                context.MarkLabel(lblEnd);
-            };
-
-            if (signed)
-            {
-                EmitVectorBinaryOpSx(context, emit);
-            }
-            else
-            {
-                EmitVectorBinaryOpZx(context, emit);
             }
         }
 

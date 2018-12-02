@@ -420,6 +420,36 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
+        private static uint[] _ShlReg_V_8B_4H_2S_()
+        {
+            return new uint[]
+            {
+                0x0E205C00u, // SQRSHL V0.8B, V0.8B, V0.8B
+                0x0E204C00u, // SQSHL  V0.8B, V0.8B, V0.8B
+                0x0E205400u, // SRSHL  V0.8B, V0.8B, V0.8B
+                0x0E204400u, // SSHL   V0.8B, V0.8B, V0.8B
+                0x2E205C00u, // UQRSHL V0.8B, V0.8B, V0.8B
+                0x2E204C00u, // UQSHL  V0.8B, V0.8B, V0.8B
+                0x2E205400u, // URSHL  V0.8B, V0.8B, V0.8B
+                0x2E204400u  // USHL   V0.8B, V0.8B, V0.8B
+            };
+        }
+
+        private static uint[] _ShlReg_V_16B_8H_4S_2D_()
+        {
+            return new uint[]
+            {
+                0x4E205C00u, // SQRSHL V0.16B, V0.16B, V0.16B
+                0x4E204C00u, // SQSHL  V0.16B, V0.16B, V0.16B
+                0x4E205400u, // SRSHL  V0.16B, V0.16B, V0.16B
+                0x4E204400u, // SSHL   V0.16B, V0.16B, V0.16B
+                0x6E205C00u, // UQRSHL V0.16B, V0.16B, V0.16B
+                0x6E204C00u, // UQSHL  V0.16B, V0.16B, V0.16B
+                0x6E205400u, // URSHL  V0.16B, V0.16B, V0.16B
+                0x6E204400u  // USHL   V0.16B, V0.16B, V0.16B
+            };
+        }
+
         private static uint[] _U_Max_Min_P_V_()
         {
             return new uint[]
@@ -2600,6 +2630,50 @@ namespace Ryujinx.Tests.Cpu
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 
             CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void ShlReg_V_8B_4H_2S([ValueSource("_ShlReg_V_8B_4H_2S_")] uint opcodes,
+                                      [Values(0u)]     uint rd,
+                                      [Values(1u, 0u)] uint rn,
+                                      [Values(2u, 0u)] uint rm,
+                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                      [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                                      [ValueSource("_8B4H2S_")] [Random(0ul, 255ul, RndCnt)] ulong b,
+                                      [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
+        {
+            opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((size & 3) << 22);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v2 = MakeVectorE0(b);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
+        }
+
+        [Test, Pairwise]
+        public void ShlReg_V_16B_8H_4S_2D([ValueSource("_ShlReg_V_16B_8H_4S_2D_")] uint opcodes,
+                                          [Values(0u)]     uint rd,
+                                          [Values(1u, 0u)] uint rn,
+                                          [Values(2u, 0u)] uint rm,
+                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong z,
+                                          [ValueSource("_8B4H2S1D_")] [Random(RndCnt)] ulong a,
+                                          [ValueSource("_8B4H2S1D_")] [Random(0ul, 255ul, RndCnt)] ulong b,
+                                          [Values(0b00u, 0b01u, 0b10u, 0b11u)] uint size) // <16B, 8H, 4S, 2D>
+        {
+            opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((size & 3) << 22);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            Vector128<float> v2 = MakeVectorE0E1(b, b);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn(fpsrMask: Fpsr.Qc);
         }
 
         [Test, Pairwise, Description("SSUBL{2} <Vd>.<Ta>, <Vn>.<Tb>, <Vm>.<Tb>")]

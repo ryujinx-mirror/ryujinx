@@ -10,7 +10,7 @@ namespace ChocolArm64.Decoders
 
         public OpCodeSimdFcond64(Inst inst, long position, int opCode) : base(inst, position, opCode)
         {
-            Nzcv =         (opCode >>  0) & 0xf;
+            Nzcv =        (opCode >>  0) & 0xf;
             Cond = (Cond)((opCode >> 12) & 0xf);
         }
     }
