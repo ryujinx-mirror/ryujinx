@@ -2,7 +2,7 @@ using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
 using Ryujinx.Graphics.Texture;
 
-namespace Ryujinx.Graphics
+namespace Ryujinx.Graphics.Graphics3d
 {
     class NvGpuEngine2d : INvGpuEngine
     {

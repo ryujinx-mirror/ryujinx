@@ -1,4 +1,4 @@
-namespace Ryujinx.Graphics
+namespace Ryujinx.Graphics.Graphics3d
 {
     enum NvGpuEngineP2mfReg
     {

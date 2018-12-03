@@ -16,6 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             {
                 { 1, InitializeOld },
                 { 4, Initialize    },
+                { 5, Finalize      },
                 { 6, SetAndWait    },
                 { 7, Get           }
             };
@@ -35,6 +36,15 @@ namespace Ryujinx.HLE.HOS.Services.Mm
 
         public long Initialize(ServiceCtx Context)
         {
+            Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
+
+            return 0;
+        }
+
+        public long Finalize(ServiceCtx Context)
+        {
+            Context.Device.Gpu.UninitializeVideoDecoder();
+
             Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
 
             return 0;

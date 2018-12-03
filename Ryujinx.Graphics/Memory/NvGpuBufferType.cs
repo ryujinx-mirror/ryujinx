@@ -1,4 +1,4 @@
-namespace Ryujinx.Graphics
+namespace Ryujinx.Graphics.Memory
 {
     public enum NvGpuBufferType
     {

@@ -11,6 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
         public int  Kind;
         public long Address;
         public bool Allocated;
+        public long DmaMapAddress;
 
         private long Dupes;
 

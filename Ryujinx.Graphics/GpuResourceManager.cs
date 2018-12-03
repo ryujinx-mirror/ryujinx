@@ -63,14 +63,9 @@ namespace Ryujinx.Graphics
             Gpu.Renderer.RenderTarget.BindZeta(Position);
         }
 
-        public void SendTexture(NvGpuVmm Vmm, long Position, GalImage NewImage, int TexIndex = -1)
+        public void SendTexture(NvGpuVmm Vmm, long Position, GalImage NewImage)
         {
             PrepareSendTexture(Vmm, Position, NewImage);
-
-            if (TexIndex >= 0)
-            {
-                Gpu.Renderer.Texture.Bind(Position, TexIndex, NewImage);
-            }
 
             ImageTypes[Position] = ImageType.Texture;
         }

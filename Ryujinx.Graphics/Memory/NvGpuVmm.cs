@@ -72,6 +72,28 @@ namespace Ryujinx.Graphics.Memory
             }
         }
 
+        public long MapLow(long PA, long Size)
+        {
+            lock (PageTable)
+            {
+                long VA = GetFreePosition(Size, 1, PageSize);
+
+                if (VA != -1 && (ulong)VA <= uint.MaxValue && (ulong)(VA + Size) <= uint.MaxValue)
+                {
+                    for (long Offset = 0; Offset < Size; Offset += PageSize)
+                    {
+                        SetPte(VA + Offset, PA + Offset);
+                    }
+                }
+                else
+                {
+                    VA = -1;
+                }
+
+                return VA;
+            }
+        }
+
         public long ReserveFixed(long VA, long Size)
         {
             lock (PageTable)
@@ -122,11 +144,11 @@ namespace Ryujinx.Graphics.Memory
             }
         }
 
-        private long GetFreePosition(long Size, long Align = 1)
+        private long GetFreePosition(long Size, long Align = 1, long Start = 1L << 32)
         {
             //Note: Address 0 is not considered valid by the driver,
             //when 0 is returned it's considered a mapping error.
-            long Position = PageSize;
+            long Position = Start;
             long FreeSize = 0;
 
             if (Align < 1)
