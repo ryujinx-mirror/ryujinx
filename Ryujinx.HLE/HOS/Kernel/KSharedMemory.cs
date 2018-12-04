@@ -4,65 +4,65 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class KSharedMemory
     {
-        private KPageList PageList;
+        private KPageList _pageList;
 
-        private long OwnerPid;
+        private long _ownerPid;
 
-        private MemoryPermission OwnerPermission;
-        private MemoryPermission UserPermission;
+        private MemoryPermission _ownerPermission;
+        private MemoryPermission _userPermission;
 
         public KSharedMemory(
-            KPageList        PageList,
-            long             OwnerPid,
-            MemoryPermission OwnerPermission,
-            MemoryPermission UserPermission)
+            KPageList        pageList,
+            long             ownerPid,
+            MemoryPermission ownerPermission,
+            MemoryPermission userPermission)
         {
-            this.PageList        = PageList;
-            this.OwnerPid        = OwnerPid;
-            this.OwnerPermission = OwnerPermission;
-            this.UserPermission  = UserPermission;
+            _pageList        = pageList;
+            _ownerPid        = ownerPid;
+            _ownerPermission = ownerPermission;
+            _userPermission  = userPermission;
         }
 
         public KernelResult MapIntoProcess(
-            KMemoryManager   MemoryManager,
-            ulong            Address,
-            ulong            Size,
-            KProcess         Process,
-            MemoryPermission Permission)
+            KMemoryManager   memoryManager,
+            ulong            address,
+            ulong            size,
+            KProcess         process,
+            MemoryPermission permission)
         {
-            ulong PagesCountRounded = BitUtils.DivRoundUp(Size, KMemoryManager.PageSize);
+            ulong pagesCountRounded = BitUtils.DivRoundUp(size, KMemoryManager.PageSize);
 
-            if (PageList.GetPagesCount() != PagesCountRounded)
+            if (_pageList.GetPagesCount() != pagesCountRounded)
             {
                 return KernelResult.InvalidSize;
             }
 
-            MemoryPermission ExpectedPermission = Process.Pid == OwnerPid
-                ? OwnerPermission
-                : UserPermission;
+            MemoryPermission expectedPermission = process.Pid == _ownerPid
+                ? _ownerPermission
+                : _userPermission;
 
-            if (Permission != ExpectedPermission)
+            if (permission != expectedPermission)
             {
                 return KernelResult.InvalidPermission;
             }
 
-            return MemoryManager.MapPages(Address, PageList, MemoryState.SharedMemory, Permission);
+            return memoryManager.MapPages(address, _pageList, MemoryState.SharedMemory, permission);
         }
 
         public KernelResult UnmapFromProcess(
-            KMemoryManager   MemoryManager,
-            ulong            Address,
-            ulong            Size,
-            KProcess         Process)
+            KMemoryManager   memoryManager,
+            ulong            address,
+            ulong            size,
+            KProcess         process)
         {
-            ulong PagesCountRounded = BitUtils.DivRoundUp(Size, KMemoryManager.PageSize);
+            ulong pagesCountRounded = BitUtils.DivRoundUp(size, KMemoryManager.PageSize);
 
-            if (PageList.GetPagesCount() != PagesCountRounded)
+            if (_pageList.GetPagesCount() != pagesCountRounded)
             {
                 return KernelResult.InvalidSize;
             }
 
-            return MemoryManager.UnmapPages(Address, PageList, MemoryState.SharedMemory);
+            return memoryManager.UnmapPages(address, _pageList, MemoryState.SharedMemory);
         }
     }
 }

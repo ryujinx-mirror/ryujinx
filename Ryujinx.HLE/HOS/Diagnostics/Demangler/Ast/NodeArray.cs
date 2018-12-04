@@ -7,14 +7,14 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
     {
         public List<BaseNode> Nodes { get; protected set; }
 
-        public NodeArray(List<BaseNode> Nodes) : base(NodeType.NodeArray)
+        public NodeArray(List<BaseNode> nodes) : base(NodeType.NodeArray)
         {
-            this.Nodes = Nodes;
+            Nodes = nodes;
         }
 
-        public NodeArray(List<BaseNode> Nodes, NodeType Type) : base(Type)
+        public NodeArray(List<BaseNode> nodes, NodeType type) : base(type)
         {
-            this.Nodes = Nodes;
+            Nodes = nodes;
         }
 
         public override bool IsArray()
@@ -22,9 +22,9 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
             return true;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write(string.Join<BaseNode>(", ", Nodes.ToArray()));
+            writer.Write(string.Join<BaseNode>(", ", Nodes.ToArray()));
         }
     }
 }

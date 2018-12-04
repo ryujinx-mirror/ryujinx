@@ -4,26 +4,26 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class ConditionalExpression : BaseNode
     {
-        private BaseNode ThenNode;
-        private BaseNode ElseNode;
-        private BaseNode ConditionNode;
+        private BaseNode _thenNode;
+        private BaseNode _elseNode;
+        private BaseNode _conditionNode;
 
-        public ConditionalExpression(BaseNode ConditionNode, BaseNode ThenNode, BaseNode ElseNode) : base(NodeType.ConditionalExpression)
+        public ConditionalExpression(BaseNode conditionNode, BaseNode thenNode, BaseNode elseNode) : base(NodeType.ConditionalExpression)
         {
-            this.ThenNode      = ThenNode;
-            this.ConditionNode = ConditionNode;
-            this.ElseNode      = ElseNode;
+            _thenNode      = thenNode;
+            _conditionNode = conditionNode;
+            _elseNode      = elseNode;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write("(");
-            ConditionNode.Print(Writer);
-            Writer.Write(") ? (");
-            ThenNode.Print(Writer);
-            Writer.Write(") : (");
-            ElseNode.Print(Writer);
-            Writer.Write(")");
+            writer.Write("(");
+            _conditionNode.Print(writer);
+            writer.Write(") ? (");
+            _thenNode.Print(writer);
+            writer.Write(") : (");
+            _elseNode.Print(writer);
+            writer.Write(")");
         }
     }
 }

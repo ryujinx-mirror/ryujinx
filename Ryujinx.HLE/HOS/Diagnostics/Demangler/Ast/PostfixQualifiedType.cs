@@ -4,17 +4,17 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class PostfixQualifiedType : ParentNode
     {
-        private string PostfixQualifier;
+        private string _postfixQualifier;
 
-        public PostfixQualifiedType(string PostfixQualifier, BaseNode Type) : base(NodeType.PostfixQualifiedType, Type)
+        public PostfixQualifiedType(string postfixQualifier, BaseNode type) : base(NodeType.PostfixQualifiedType, type)
         {
-            this.PostfixQualifier = PostfixQualifier;
+            _postfixQualifier = postfixQualifier;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Child.Print(Writer);
-            Writer.Write(PostfixQualifier);
+            Child.Print(writer);
+            writer.Write(_postfixQualifier);
         }
     }
 }

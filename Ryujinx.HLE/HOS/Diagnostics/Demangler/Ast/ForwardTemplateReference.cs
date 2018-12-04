@@ -6,11 +6,11 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
     {
         // TODO: Compute inside the Demangler
         public BaseNode Reference;
-        private int     Index;
+        private int     _index;
 
-        public ForwardTemplateReference(int Index) : base(NodeType.ForwardTemplateReference)
+        public ForwardTemplateReference(int index) : base(NodeType.ForwardTemplateReference)
         {
-            this.Index = Index;
+            _index = index;
         }
 
         public override string GetName()
@@ -18,14 +18,14 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
             return Reference.GetName();
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Reference.PrintLeft(Writer);
+            Reference.PrintLeft(writer);
         }
 
-        public override void PrintRight(TextWriter Writer)
+        public override void PrintRight(TextWriter writer)
         {
-            Reference.PrintRight(Writer);
+            Reference.PrintRight(writer);
         }
 
         public override bool HasRightPart()

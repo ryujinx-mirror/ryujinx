@@ -14,138 +14,138 @@ namespace Ryujinx.HLE.HOS.Kernel
     {
         private const int Mod0 = 'M' << 0 | 'O' << 8 | 'D' << 16 | '0' << 24;
 
-        private KProcess Owner;
+        private KProcess _owner;
 
         private class Image
         {
-            public long BaseAddress { get; private set; }
+            public long BaseAddress { get; }
 
-            public ElfSymbol[] Symbols { get; private set; }
+            public ElfSymbol[] Symbols { get; }
 
-            public Image(long BaseAddress, ElfSymbol[] Symbols)
+            public Image(long baseAddress, ElfSymbol[] symbols)
             {
-                this.BaseAddress = BaseAddress;
-                this.Symbols     = Symbols;
+                BaseAddress = baseAddress;
+                Symbols     = symbols;
             }
         }
 
-        private List<Image> Images;
+        private List<Image> _images;
 
-        private int Loaded;
+        private int _loaded;
 
-        public HleProcessDebugger(KProcess Owner)
+        public HleProcessDebugger(KProcess owner)
         {
-            this.Owner = Owner;
+            _owner = owner;
 
-            Images = new List<Image>();
+            _images = new List<Image>();
         }
 
-        public void PrintGuestStackTrace(CpuThreadState ThreadState)
+        public void PrintGuestStackTrace(CpuThreadState threadState)
         {
             EnsureLoaded();
 
-            StringBuilder Trace = new StringBuilder();
+            StringBuilder trace = new StringBuilder();
 
-            Trace.AppendLine("Guest stack trace:");
+            trace.AppendLine("Guest stack trace:");
 
-            void AppendTrace(long Address)
+            void AppendTrace(long address)
             {
-                Image Image = GetImage(Address, out int ImageIndex);
+                Image image = GetImage(address, out int imageIndex);
 
-                if (Image == null || !TryGetSubName(Image, Address, out string SubName))
+                if (image == null || !TryGetSubName(image, address, out string subName))
                 {
-                    SubName = $"Sub{Address:x16}";
+                    subName = $"Sub{address:x16}";
                 }
-                else if (SubName.StartsWith("_Z"))
+                else if (subName.StartsWith("_Z"))
                 {
-                    SubName = Demangler.Parse(SubName);
+                    subName = Demangler.Parse(subName);
                 }
 
-                if (Image != null)
+                if (image != null)
                 {
-                    long Offset = Address - Image.BaseAddress;
+                    long offset = address - image.BaseAddress;
 
-                    string ImageName = GetGuessedNsoNameFromIndex(ImageIndex);
+                    string imageName = GetGuessedNsoNameFromIndex(imageIndex);
 
-                    string ImageNameAndOffset = $"[{Owner.Name}] {ImageName}:0x{Offset:x8}";
+                    string imageNameAndOffset = $"[{_owner.Name}] {imageName}:0x{offset:x8}";
 
-                    Trace.AppendLine($" {ImageNameAndOffset} {SubName}");
+                    trace.AppendLine($" {imageNameAndOffset} {subName}");
                 }
                 else
                 {
-                    Trace.AppendLine($" [{Owner.Name}] ??? {SubName}");
+                    trace.AppendLine($" [{_owner.Name}] ??? {subName}");
                 }
             }
 
-            long FramePointer = (long)ThreadState.X29;
+            long framePointer = (long)threadState.X29;
 
-            while (FramePointer != 0)
+            while (framePointer != 0)
             {
-                if ((FramePointer & 7) != 0                 ||
-                    !Owner.CpuMemory.IsMapped(FramePointer) ||
-                    !Owner.CpuMemory.IsMapped(FramePointer + 8))
+                if ((framePointer & 7) != 0                  ||
+                    !_owner.CpuMemory.IsMapped(framePointer) ||
+                    !_owner.CpuMemory.IsMapped(framePointer + 8))
                 {
                     break;
                 }
 
                 //Note: This is the return address, we need to subtract one instruction
                 //worth of bytes to get the branch instruction address.
-                AppendTrace(Owner.CpuMemory.ReadInt64(FramePointer + 8) - 4);
+                AppendTrace(_owner.CpuMemory.ReadInt64(framePointer + 8) - 4);
 
-                FramePointer = Owner.CpuMemory.ReadInt64(FramePointer);
+                framePointer = _owner.CpuMemory.ReadInt64(framePointer);
             }
 
-            Logger.PrintInfo(LogClass.Cpu, Trace.ToString());
+            Logger.PrintInfo(LogClass.Cpu, trace.ToString());
         }
 
-        private bool TryGetSubName(Image Image, long Address, out string Name)
+        private bool TryGetSubName(Image image, long address, out string name)
         {
-            Address -= Image.BaseAddress;
+            address -= image.BaseAddress;
 
-            int Left  = 0;
-            int Right = Image.Symbols.Length - 1;
+            int left  = 0;
+            int right = image.Symbols.Length - 1;
 
-            while (Left <= Right)
+            while (left <= right)
             {
-                int Size = Right - Left;
+                int size = right - left;
 
-                int Middle = Left + (Size >> 1);
+                int middle = left + (size >> 1);
 
-                ElfSymbol Symbol = Image.Symbols[Middle];
+                ElfSymbol symbol = image.Symbols[middle];
 
-                long EndAddr = Symbol.Value + Symbol.Size;
+                long endAddr = symbol.Value + symbol.Size;
 
-                if ((ulong)Address >= (ulong)Symbol.Value && (ulong)Address < (ulong)EndAddr)
+                if ((ulong)address >= (ulong)symbol.Value && (ulong)address < (ulong)endAddr)
                 {
-                    Name = Symbol.Name;
+                    name = symbol.Name;
 
                     return true;
                 }
 
-                if ((ulong)Address < (ulong)Symbol.Value)
+                if ((ulong)address < (ulong)symbol.Value)
                 {
-                    Right = Middle - 1;
+                    right = middle - 1;
                 }
                 else
                 {
-                    Left = Middle + 1;
+                    left = middle + 1;
                 }
             }
 
-            Name = null;
+            name = null;
 
             return false;
         }
 
-        private Image GetImage(long Address, out int Index)
+        private Image GetImage(long address, out int index)
         {
-            lock (Images)
+            lock (_images)
             {
-                for (Index = Images.Count - 1; Index >= 0; Index--)
+                for (index = _images.Count - 1; index >= 0; index--)
                 {
-                    if ((ulong)Address >= (ulong)Images[Index].BaseAddress)
+                    if ((ulong)address >= (ulong)_images[index].BaseAddress)
                     {
-                        return Images[Index];
+                        return _images[index];
                     }
                 }
             }
@@ -153,42 +153,42 @@ namespace Ryujinx.HLE.HOS.Kernel
             return null;
         }
 
-        private string GetGuessedNsoNameFromIndex(int Index)
+        private string GetGuessedNsoNameFromIndex(int index)
         {
-            if ((uint)Index > 11)
+            if ((uint)index > 11)
             {
                 return "???";
             }
 
-            if (Index == 0)
+            if (index == 0)
             {
                 return "rtld";
             }
-            else if (Index == 1)
+            else if (index == 1)
             {
                 return "main";
             }
-            else if (Index == GetImagesCount() - 1)
+            else if (index == GetImagesCount() - 1)
             {
                 return "sdk";
             }
             else
             {
-                return "subsdk" + (Index - 2);
+                return "subsdk" + (index - 2);
             }
         }
 
         private int GetImagesCount()
         {
-            lock (Images)
+            lock (_images)
             {
-                return Images.Count;
+                return _images.Count;
             }
         }
 
         private void EnsureLoaded()
         {
-            if (Interlocked.CompareExchange(ref Loaded, 1, 0) == 0)
+            if (Interlocked.CompareExchange(ref _loaded, 1, 0) == 0)
             {
                 ScanMemoryForTextSegments();
             }
@@ -196,115 +196,115 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         private void ScanMemoryForTextSegments()
         {
-            ulong OldAddress = 0;
-            ulong Address    = 0;
+            ulong oldAddress = 0;
+            ulong address    = 0;
 
-            while (Address >= OldAddress)
+            while (address >= oldAddress)
             {
-                KMemoryInfo Info = Owner.MemoryManager.QueryMemory(Address);
+                KMemoryInfo info = _owner.MemoryManager.QueryMemory(address);
 
-                if (Info.State == MemoryState.Reserved)
+                if (info.State == MemoryState.Reserved)
                 {
                     break;
                 }
 
-                if (Info.State == MemoryState.CodeStatic && Info.Permission == MemoryPermission.ReadAndExecute)
+                if (info.State == MemoryState.CodeStatic && info.Permission == MemoryPermission.ReadAndExecute)
                 {
-                    LoadMod0Symbols(Owner.CpuMemory, (long)Info.Address);
+                    LoadMod0Symbols(_owner.CpuMemory, (long)info.Address);
                 }
 
-                OldAddress = Address;
+                oldAddress = address;
 
-                Address = Info.Address + Info.Size;
+                address = info.Address + info.Size;
             }
         }
 
-        private void LoadMod0Symbols(MemoryManager Memory, long TextOffset)
+        private void LoadMod0Symbols(MemoryManager memory, long textOffset)
         {
-            long Mod0Offset = TextOffset + Memory.ReadUInt32(TextOffset + 4);
+            long mod0Offset = textOffset + memory.ReadUInt32(textOffset + 4);
 
-            if (Mod0Offset < TextOffset || !Memory.IsMapped(Mod0Offset) || (Mod0Offset & 3) != 0)
+            if (mod0Offset < textOffset || !memory.IsMapped(mod0Offset) || (mod0Offset & 3) != 0)
             {
                 return;
             }
 
-            Dictionary<ElfDynamicTag, long> Dynamic = new Dictionary<ElfDynamicTag, long>();
+            Dictionary<ElfDynamicTag, long> dynamic = new Dictionary<ElfDynamicTag, long>();
 
-            int Mod0Magic = Memory.ReadInt32(Mod0Offset + 0x0);
+            int mod0Magic = memory.ReadInt32(mod0Offset + 0x0);
 
-            if (Mod0Magic != Mod0)
+            if (mod0Magic != Mod0)
             {
                 return;
             }
 
-            long DynamicOffset    = Memory.ReadInt32(Mod0Offset + 0x4)  + Mod0Offset;
-            long BssStartOffset   = Memory.ReadInt32(Mod0Offset + 0x8)  + Mod0Offset;
-            long BssEndOffset     = Memory.ReadInt32(Mod0Offset + 0xc)  + Mod0Offset;
-            long EhHdrStartOffset = Memory.ReadInt32(Mod0Offset + 0x10) + Mod0Offset;
-            long EhHdrEndOffset   = Memory.ReadInt32(Mod0Offset + 0x14) + Mod0Offset;
-            long ModObjOffset     = Memory.ReadInt32(Mod0Offset + 0x18) + Mod0Offset;
+            long dynamicOffset    = memory.ReadInt32(mod0Offset + 0x4)  + mod0Offset;
+            long bssStartOffset   = memory.ReadInt32(mod0Offset + 0x8)  + mod0Offset;
+            long bssEndOffset     = memory.ReadInt32(mod0Offset + 0xc)  + mod0Offset;
+            long ehHdrStartOffset = memory.ReadInt32(mod0Offset + 0x10) + mod0Offset;
+            long ehHdrEndOffset   = memory.ReadInt32(mod0Offset + 0x14) + mod0Offset;
+            long modObjOffset     = memory.ReadInt32(mod0Offset + 0x18) + mod0Offset;
 
             while (true)
             {
-                long TagVal = Memory.ReadInt64(DynamicOffset + 0);
-                long Value  = Memory.ReadInt64(DynamicOffset + 8);
+                long tagVal = memory.ReadInt64(dynamicOffset + 0);
+                long value  = memory.ReadInt64(dynamicOffset + 8);
 
-                DynamicOffset += 0x10;
+                dynamicOffset += 0x10;
 
-                ElfDynamicTag Tag = (ElfDynamicTag)TagVal;
+                ElfDynamicTag tag = (ElfDynamicTag)tagVal;
 
-                if (Tag == ElfDynamicTag.DT_NULL)
+                if (tag == ElfDynamicTag.DT_NULL)
                 {
                     break;
                 }
 
-                Dynamic[Tag] = Value;
+                dynamic[tag] = value;
             }
 
-            if (!Dynamic.TryGetValue(ElfDynamicTag.DT_STRTAB, out long StrTab) ||
-                !Dynamic.TryGetValue(ElfDynamicTag.DT_SYMTAB, out long SymTab) ||
-                !Dynamic.TryGetValue(ElfDynamicTag.DT_SYMENT, out long SymEntSize))
+            if (!dynamic.TryGetValue(ElfDynamicTag.DT_STRTAB, out long strTab) ||
+                !dynamic.TryGetValue(ElfDynamicTag.DT_SYMTAB, out long symTab) ||
+                !dynamic.TryGetValue(ElfDynamicTag.DT_SYMENT, out long symEntSize))
             {
                 return;
             }
 
-            long StrTblAddr = TextOffset + StrTab;
-            long SymTblAddr = TextOffset + SymTab;
+            long strTblAddr = textOffset + strTab;
+            long symTblAddr = textOffset + symTab;
 
-            List<ElfSymbol> Symbols = new List<ElfSymbol>();
+            List<ElfSymbol> symbols = new List<ElfSymbol>();
 
-            while ((ulong)SymTblAddr < (ulong)StrTblAddr)
+            while ((ulong)symTblAddr < (ulong)strTblAddr)
             {
-                ElfSymbol Sym = GetSymbol(Memory, SymTblAddr, StrTblAddr);
+                ElfSymbol sym = GetSymbol(memory, symTblAddr, strTblAddr);
 
-                Symbols.Add(Sym);
+                symbols.Add(sym);
 
-                SymTblAddr += SymEntSize;
+                symTblAddr += symEntSize;
             }
 
-            lock (Images)
+            lock (_images)
             {
-                Images.Add(new Image(TextOffset, Symbols.OrderBy(x => x.Value).ToArray()));
+                _images.Add(new Image(textOffset, symbols.OrderBy(x => x.Value).ToArray()));
             }
         }
 
-        private ElfSymbol GetSymbol(MemoryManager Memory, long Address, long StrTblAddr)
+        private ElfSymbol GetSymbol(MemoryManager memory, long address, long strTblAddr)
         {
-            int  NameIndex = Memory.ReadInt32(Address + 0);
-            int  Info      = Memory.ReadByte (Address + 4);
-            int  Other     = Memory.ReadByte (Address + 5);
-            int  SHIdx     = Memory.ReadInt16(Address + 6);
-            long Value     = Memory.ReadInt64(Address + 8);
-            long Size      = Memory.ReadInt64(Address + 16);
+            int  nameIndex = memory.ReadInt32(address + 0);
+            int  info      = memory.ReadByte (address + 4);
+            int  other     = memory.ReadByte (address + 5);
+            int  shIdx     = memory.ReadInt16(address + 6);
+            long value     = memory.ReadInt64(address + 8);
+            long size      = memory.ReadInt64(address + 16);
 
-            string Name = string.Empty;
+            string name = string.Empty;
 
-            for (int Chr; (Chr = Memory.ReadByte(StrTblAddr + NameIndex++)) != 0;)
+            for (int chr; (chr = memory.ReadByte(strTblAddr + nameIndex++)) != 0;)
             {
-                Name += (char)Chr;
+                name += (char)chr;
             }
 
-            return new ElfSymbol(Name, Info, Other, SHIdx, Value, Size);
+            return new ElfSymbol(name, info, other, shIdx, value, size);
         }
     }
 }

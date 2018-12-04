@@ -5,14 +5,14 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class KSession : IDisposable
     {
-        public IpcService Service { get; private set; }
+        public IpcService Service { get; }
 
-        public string ServiceName { get; private set; }
+        public string ServiceName { get; }
 
-        public KSession(IpcService Service, string ServiceName)
+        public KSession(IpcService service, string serviceName)
         {
-            this.Service     = Service;
-            this.ServiceName = ServiceName;
+            Service     = service;
+            ServiceName = serviceName;
         }
 
         public void Dispose()
@@ -20,11 +20,11 @@ namespace Ryujinx.HLE.HOS.Kernel
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool Disposing)
+        protected virtual void Dispose(bool disposing)
         {
-            if (Disposing && Service is IDisposable DisposableService)
+            if (disposing && Service is IDisposable disposableService)
             {
-                DisposableService.Dispose();
+                disposableService.Dispose();
             }
         }
     }

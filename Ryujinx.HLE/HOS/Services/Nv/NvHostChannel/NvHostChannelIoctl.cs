@@ -11,62 +11,57 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
 {
     class NvHostChannelIoctl
     {
-        private static ConcurrentDictionary<KProcess, NvChannel> Channels;
+        private static ConcurrentDictionary<KProcess, NvChannel> _channels;
 
         static NvHostChannelIoctl()
         {
-            Channels = new ConcurrentDictionary<KProcess, NvChannel>();
+            _channels = new ConcurrentDictionary<KProcess, NvChannel>();
         }
 
-        public static int ProcessIoctl(ServiceCtx Context, int Cmd)
+        public static int ProcessIoctl(ServiceCtx context, int cmd)
         {
-            switch (Cmd & 0xffff)
+            switch (cmd & 0xffff)
             {
-                case 0x0001: return Submit           (Context);
-                case 0x0002: return GetSyncpoint     (Context);
-                case 0x0003: return GetWaitBase      (Context);
-                case 0x0009: return MapBuffer        (Context);
-                case 0x000a: return UnmapBuffer      (Context);
-                case 0x4714: return SetUserData      (Context);
-                case 0x4801: return SetNvMap         (Context);
-                case 0x4803: return SetTimeout       (Context);
-                case 0x4808: return SubmitGpfifo     (Context);
-                case 0x4809: return AllocObjCtx      (Context);
-                case 0x480b: return ZcullBind        (Context);
-                case 0x480c: return SetErrorNotifier (Context);
-                case 0x480d: return SetPriority      (Context);
-                case 0x481a: return AllocGpfifoEx2   (Context);
-                case 0x481b: return KickoffPbWithAttr(Context);
+                case 0x0001: return Submit           (context);
+                case 0x0002: return GetSyncpoint     (context);
+                case 0x0003: return GetWaitBase      (context);
+                case 0x0009: return MapBuffer        (context);
+                case 0x000a: return UnmapBuffer      (context);
+                case 0x480b: return ZcullBind        (context);
+                case 0x480c: return SetErrorNotifier (context);
+                case 0x4803: return SetTimeout       (context);
+                case 0x481a: return AllocGpfifoEx2   (context);
+                case 0x481b: return KickoffPbWithAttr(context);
             }
 
-            throw new NotImplementedException(Cmd.ToString("x8"));
+            throw new NotImplementedException(cmd.ToString("x8"));
         }
 
-        private static int Submit(ServiceCtx Context)
+        private static int Submit(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
-            NvHostChannelSubmit Args = MemoryHelper.Read<NvHostChannelSubmit>(Context.Memory, InputPosition);
+            NvHostChannelSubmit args = MemoryHelper.Read<NvHostChannelSubmit>(context.Memory, inputPosition);
 
-            NvGpuVmm Vmm = NvGpuASIoctl.GetASCtx(Context).Vmm;
+            NvGpuVmm vmm = NvGpuASIoctl.GetASCtx(context).Vmm;
 
-            for (int Index = 0; Index < Args.CmdBufsCount; Index++)
+            for (int index = 0; index < args.CmdBufsCount; index++)
             {
-                long CmdBufOffset = InputPosition + 0x10 + Index * 0xc;
+                long cmdBufOffset = inputPosition + 0x10 + index * 0xc;
 
-                NvHostChannelCmdBuf CmdBuf = MemoryHelper.Read<NvHostChannelCmdBuf>(Context.Memory, CmdBufOffset);
+                NvHostChannelCmdBuf cmdBuf = MemoryHelper.Read<NvHostChannelCmdBuf>(context.Memory, cmdBufOffset);
 
-                NvMapHandle Map = NvMapIoctl.GetNvMap(Context, CmdBuf.MemoryId);
+                NvMapHandle map = NvMapIoctl.GetNvMap(context, cmdBuf.MemoryId);
 
-                int[] CmdBufData = new int[CmdBuf.WordsCount];
+                int[] cmdBufData = new int[cmdBuf.WordsCount];
 
-                for (int Offset = 0; Offset < CmdBufData.Length; Offset++)
+                for (int offset = 0; offset < cmdBufData.Length; offset++)
                 {
-                    CmdBufData[Offset] = Context.Memory.ReadInt32(Map.Address + CmdBuf.Offset + Offset * 4);
+                    cmdBufData[offset] = context.Memory.ReadInt32(map.Address + cmdBuf.Offset + offset * 4);
                 }
 
-                Context.Device.Gpu.PushCommandBuffer(Vmm, CmdBufData);
+                context.Device.Gpu.PushCommandBuffer(vmm, cmdBufData);
             }
 
             //TODO: Relocation, waitchecks, etc.
@@ -74,99 +69,99 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
             return NvResult.Success;
         }
 
-        private static int GetSyncpoint(ServiceCtx Context)
+        private static int GetSyncpoint(ServiceCtx context)
         {
             //TODO
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
-            NvHostChannelGetParamArg Args = MemoryHelper.Read<NvHostChannelGetParamArg>(Context.Memory, InputPosition);
+            NvHostChannelGetParamArg args = MemoryHelper.Read<NvHostChannelGetParamArg>(context.Memory, inputPosition);
 
-            Args.Value = 0;
+            args.Value = 0;
 
-            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
-
-            return NvResult.Success;
-        }
-
-        private static int GetWaitBase(ServiceCtx Context)
-        {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
-
-            NvHostChannelGetParamArg Args = MemoryHelper.Read<NvHostChannelGetParamArg>(Context.Memory, InputPosition);
-
-            Args.Value = 0;
-
-            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(context.Memory, outputPosition, args);
 
             return NvResult.Success;
         }
 
-        private static int MapBuffer(ServiceCtx Context)
+        private static int GetWaitBase(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
-            NvHostChannelMapBuffer Args = MemoryHelper.Read<NvHostChannelMapBuffer>(Context.Memory, InputPosition);
+            NvHostChannelGetParamArg args = MemoryHelper.Read<NvHostChannelGetParamArg>(context.Memory, inputPosition);
 
-            NvGpuVmm Vmm = NvGpuASIoctl.GetASCtx(Context).Vmm;
+            args.Value = 0;
 
-            for (int Index = 0; Index < Args.NumEntries; Index++)
+            MemoryHelper.Write(context.Memory, outputPosition, args);
+
+            return NvResult.Success;
+        }
+
+        private static int MapBuffer(ServiceCtx context)
+        {
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
+
+            NvHostChannelMapBuffer args = MemoryHelper.Read<NvHostChannelMapBuffer>(context.Memory, inputPosition);
+
+            NvGpuVmm vmm = NvGpuASIoctl.GetASCtx(context).Vmm;
+
+            for (int index = 0; index < args.NumEntries; index++)
             {
-                int Handle = Context.Memory.ReadInt32(InputPosition + 0xc + Index * 8);
+                int handle = context.Memory.ReadInt32(inputPosition + 0xc + index * 8);
 
-                NvMapHandle Map = NvMapIoctl.GetNvMap(Context, Handle);
+                NvMapHandle map = NvMapIoctl.GetNvMap(context, handle);
 
-                if (Map == null)
+                if (map == null)
                 {
-                    Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Handle:x8}!");
+                    Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{handle:x8}!");
 
                     return NvResult.InvalidInput;
                 }
 
-                lock (Map)
+                lock (map)
                 {
-                    if (Map.DmaMapAddress == 0)
+                    if (map.DmaMapAddress == 0)
                     {
-                        Map.DmaMapAddress = Vmm.MapLow(Map.Address, Map.Size);
+                        map.DmaMapAddress = vmm.MapLow(map.Address, map.Size);
                     }
 
-                    Context.Memory.WriteInt32(OutputPosition + 0xc + 4 + Index * 8, (int)Map.DmaMapAddress);
+                    context.Memory.WriteInt32(outputPosition + 0xc + 4 + index * 8, (int)map.DmaMapAddress);
                 }
             }
 
             return NvResult.Success;
         }
 
-        private static int UnmapBuffer(ServiceCtx Context)
+        private static int UnmapBuffer(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
 
-            NvHostChannelMapBuffer Args = MemoryHelper.Read<NvHostChannelMapBuffer>(Context.Memory, InputPosition);
+            NvHostChannelMapBuffer args = MemoryHelper.Read<NvHostChannelMapBuffer>(context.Memory, inputPosition);
 
-            NvGpuVmm Vmm = NvGpuASIoctl.GetASCtx(Context).Vmm;
+            NvGpuVmm vmm = NvGpuASIoctl.GetASCtx(context).Vmm;
 
-            for (int Index = 0; Index < Args.NumEntries; Index++)
+            for (int index = 0; index < args.NumEntries; index++)
             {
-                int Handle = Context.Memory.ReadInt32(InputPosition + 0xc + Index * 8);
+                int handle = context.Memory.ReadInt32(inputPosition + 0xc + index * 8);
 
-                NvMapHandle Map = NvMapIoctl.GetNvMap(Context, Handle);
+                NvMapHandle map = NvMapIoctl.GetNvMap(context, handle);
 
-                if (Map == null)
+                if (map == null)
                 {
-                    Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Handle:x8}!");
+                    Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{handle:x8}!");
 
                     return NvResult.InvalidInput;
                 }
 
-                lock (Map)
+                lock (map)
                 {
-                    if (Map.DmaMapAddress != 0)
+                    if (map.DmaMapAddress != 0)
                     {
-                        Vmm.Free(Map.DmaMapAddress, Map.Size);
+                        vmm.Free(map.DmaMapAddress, map.Size);
 
-                        Map.DmaMapAddress = 0;
+                        map.DmaMapAddress = 0;
                     }
                 }
             }
@@ -174,146 +169,146 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
             return NvResult.Success;
         }
 
-        private static int SetUserData(ServiceCtx Context)
+        private static int SetUserData(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int SetNvMap(ServiceCtx Context)
+        private static int SetNvMap(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int SetTimeout(ServiceCtx Context)
+        private static int SetTimeout(ServiceCtx context)
         {
-            long InputPosition = Context.Request.GetBufferType0x21().Position;
+            long inputPosition = context.Request.GetBufferType0x21().Position;
 
-            GetChannel(Context).Timeout = Context.Memory.ReadInt32(InputPosition);
+            GetChannel(context).Timeout = context.Memory.ReadInt32(inputPosition);
 
             return NvResult.Success;
         }
 
-        private static int SubmitGpfifo(ServiceCtx Context)
+        private static int SubmitGpfifo(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
-            NvHostChannelSubmitGpfifo Args = MemoryHelper.Read<NvHostChannelSubmitGpfifo>(Context.Memory, InputPosition);
+            NvHostChannelSubmitGpfifo args = MemoryHelper.Read<NvHostChannelSubmitGpfifo>(context.Memory, inputPosition);
 
-            NvGpuVmm Vmm = NvGpuASIoctl.GetASCtx(Context).Vmm;;
+            NvGpuVmm vmm = NvGpuASIoctl.GetASCtx(context).Vmm;
 
-            for (int Index = 0; Index < Args.NumEntries; Index++)
+            for (int index = 0; index < args.NumEntries; index++)
             {
-                long Gpfifo = Context.Memory.ReadInt64(InputPosition + 0x18 + Index * 8);
+                long gpfifo = context.Memory.ReadInt64(inputPosition + 0x18 + index * 8);
 
-                PushGpfifo(Context, Vmm, Gpfifo);
+                PushGpfifo(context, vmm, gpfifo);
             }
 
-            Args.SyncptId    = 0;
-            Args.SyncptValue = 0;
+            args.SyncptId    = 0;
+            args.SyncptValue = 0;
 
-            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(context.Memory, outputPosition, args);
 
             return NvResult.Success;
         }
 
-        private static int AllocObjCtx(ServiceCtx Context)
+        private static int AllocObjCtx(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int ZcullBind(ServiceCtx Context)
+        private static int ZcullBind(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int SetErrorNotifier(ServiceCtx Context)
+        private static int SetErrorNotifier(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int SetPriority(ServiceCtx Context)
+        private static int SetPriority(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int AllocGpfifoEx2(ServiceCtx Context)
+        private static int AllocGpfifoEx2(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int KickoffPbWithAttr(ServiceCtx Context)
+        private static int KickoffPbWithAttr(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
-            NvHostChannelSubmitGpfifo Args = MemoryHelper.Read<NvHostChannelSubmitGpfifo>(Context.Memory, InputPosition);
+            NvHostChannelSubmitGpfifo args = MemoryHelper.Read<NvHostChannelSubmitGpfifo>(context.Memory, inputPosition);
 
-            NvGpuVmm Vmm = NvGpuASIoctl.GetASCtx(Context).Vmm;;
+            NvGpuVmm vmm = NvGpuASIoctl.GetASCtx(context).Vmm;
 
-            for (int Index = 0; Index < Args.NumEntries; Index++)
+            for (int index = 0; index < args.NumEntries; index++)
             {
-                long Gpfifo = Context.Memory.ReadInt64(Args.Address + Index * 8);
+                long gpfifo = context.Memory.ReadInt64(args.Address + index * 8);
 
-                PushGpfifo(Context, Vmm, Gpfifo);
+                PushGpfifo(context, vmm, gpfifo);
             }
 
-            Args.SyncptId    = 0;
-            Args.SyncptValue = 0;
+            args.SyncptId    = 0;
+            args.SyncptValue = 0;
 
-            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(context.Memory, outputPosition, args);
 
             return NvResult.Success;
         }
 
-        private static void PushGpfifo(ServiceCtx Context, NvGpuVmm Vmm, long Gpfifo)
+        private static void PushGpfifo(ServiceCtx context, NvGpuVmm vmm, long gpfifo)
         {
-            Context.Device.Gpu.Pusher.Push(Vmm, Gpfifo);
+            context.Device.Gpu.Pusher.Push(vmm, gpfifo);
         }
 
-        public static NvChannel GetChannel(ServiceCtx Context)
+        public static NvChannel GetChannel(ServiceCtx context)
         {
-            return Channels.GetOrAdd(Context.Process, (Key) => new NvChannel());
+            return _channels.GetOrAdd(context.Process, (key) => new NvChannel());
         }
 
-        public static void UnloadProcess(KProcess Process)
+        public static void UnloadProcess(KProcess process)
         {
-            Channels.TryRemove(Process, out _);
+            _channels.TryRemove(process, out _);
         }
     }
 }

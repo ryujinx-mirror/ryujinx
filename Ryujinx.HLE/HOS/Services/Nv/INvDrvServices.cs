@@ -14,15 +14,15 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 {
     class INvDrvServices : IpcService
     {
-        private delegate int IoctlProcessor(ServiceCtx Context, int Cmd);
+        private delegate int IoctlProcessor(ServiceCtx context, int cmd);
 
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private static Dictionary<string, IoctlProcessor> IoctlProcessors =
-                   new Dictionary<string, IoctlProcessor>()
-        {
+        private static Dictionary<string, IoctlProcessor> _ioctlProcessors =
+                   new Dictionary<string, IoctlProcessor>
+                   {
             { "/dev/nvhost-as-gpu",   ProcessIoctlNvGpuAS       },
             { "/dev/nvhost-ctrl",     ProcessIoctlNvHostCtrl    },
             { "/dev/nvhost-ctrl-gpu", ProcessIoctlNvGpuGpu      },
@@ -32,13 +32,13 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             { "/dev/nvmap",           ProcessIoctlNvMap         }
         };
 
-        public static GlobalStateTable Fds { get; private set; }
+        public static GlobalStateTable Fds { get; }
 
-        private KEvent Event;
+        private KEvent _event;
 
-        public INvDrvServices(Horizon System)
+        public INvDrvServices(Horizon system)
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0,  Open             },
                 { 1,  Ioctl            },
@@ -50,7 +50,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
                 { 13, FinishInitialize }
             };
 
-            Event = new KEvent(System);
+            _event = new KEvent(system);
         }
 
         static INvDrvServices()
@@ -58,166 +58,166 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             Fds = new GlobalStateTable();
         }
 
-        public long Open(ServiceCtx Context)
+        public long Open(ServiceCtx context)
         {
-            long NamePtr = Context.Request.SendBuff[0].Position;
+            long namePtr = context.Request.SendBuff[0].Position;
 
-            string Name = MemoryHelper.ReadAsciiString(Context.Memory, NamePtr);
+            string name = MemoryHelper.ReadAsciiString(context.Memory, namePtr);
 
-            int Fd = Fds.Add(Context.Process, new NvFd(Name));
+            int fd = Fds.Add(context.Process, new NvFd(name));
 
-            Context.ResponseData.Write(Fd);
-            Context.ResponseData.Write(0);
+            context.ResponseData.Write(fd);
+            context.ResponseData.Write(0);
 
             return 0;
         }
 
-        public long Ioctl(ServiceCtx Context)
+        public long Ioctl(ServiceCtx context)
         {
-            int Fd  = Context.RequestData.ReadInt32();
-            int Cmd = Context.RequestData.ReadInt32();
+            int fd  = context.RequestData.ReadInt32();
+            int cmd = context.RequestData.ReadInt32();
 
-            NvFd FdData = Fds.GetData<NvFd>(Context.Process, Fd);
+            NvFd fdData = Fds.GetData<NvFd>(context.Process, fd);
 
-            int Result;
+            int result;
 
-            if (IoctlProcessors.TryGetValue(FdData.Name, out IoctlProcessor Process))
+            if (_ioctlProcessors.TryGetValue(fdData.Name, out IoctlProcessor process))
             {
-                Result = Process(Context, Cmd);
+                result = process(context, cmd);
             }
             else
             {
-                throw new NotImplementedException($"{FdData.Name} {Cmd:x4}");
+                throw new NotImplementedException($"{fdData.Name} {cmd:x4}");
             }
 
             //TODO: Verify if the error codes needs to be translated.
-            Context.ResponseData.Write(Result);
+            context.ResponseData.Write(result);
 
             return 0;
         }
 
-        public long Close(ServiceCtx Context)
+        public long Close(ServiceCtx context)
         {
-            int Fd = Context.RequestData.ReadInt32();
+            int fd = context.RequestData.ReadInt32();
 
-            Fds.Delete(Context.Process, Fd);
+            Fds.Delete(context.Process, fd);
 
-            Context.ResponseData.Write(0);
+            context.ResponseData.Write(0);
 
             return 0;
         }
 
-        public long Initialize(ServiceCtx Context)
+        public long Initialize(ServiceCtx context)
         {
-            long TransferMemSize   = Context.RequestData.ReadInt64();
-            int  TransferMemHandle = Context.Request.HandleDesc.ToCopy[0];
+            long transferMemSize   = context.RequestData.ReadInt64();
+            int  transferMemHandle = context.Request.HandleDesc.ToCopy[0];
 
-            NvMapIoctl.InitializeNvMap(Context);
+            NvMapIoctl.InitializeNvMap(context);
 
-            Context.ResponseData.Write(0);
+            context.ResponseData.Write(0);
 
             return 0;
         }
 
-        public long QueryEvent(ServiceCtx Context)
+        public long QueryEvent(ServiceCtx context)
         {
-            int Fd      = Context.RequestData.ReadInt32();
-            int EventId = Context.RequestData.ReadInt32();
+            int fd      = context.RequestData.ReadInt32();
+            int eventId = context.RequestData.ReadInt32();
 
             //TODO: Use Fd/EventId, different channels have different events.
-            if (Context.Process.HandleTable.GenerateHandle(Event.ReadableEvent, out int Handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_event.ReadableEvent, out int handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            Context.ResponseData.Write(0);
+            context.ResponseData.Write(0);
 
             return 0;
         }
 
-        public long SetClientPid(ServiceCtx Context)
+        public long SetClientPid(ServiceCtx context)
         {
-            long Pid = Context.RequestData.ReadInt64();
+            long pid = context.RequestData.ReadInt64();
 
-            Context.ResponseData.Write(0);
+            context.ResponseData.Write(0);
 
             return 0;
         }
 
-        public long FinishInitialize(ServiceCtx Context)
+        public long FinishInitialize(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return 0;
         }
 
-        private static int ProcessIoctlNvGpuAS(ServiceCtx Context, int Cmd)
+        private static int ProcessIoctlNvGpuAS(ServiceCtx context, int cmd)
         {
-            return ProcessIoctl(Context, Cmd, NvGpuASIoctl.ProcessIoctl);
+            return ProcessIoctl(context, cmd, NvGpuASIoctl.ProcessIoctl);
         }
 
-        private static int ProcessIoctlNvHostCtrl(ServiceCtx Context, int Cmd)
+        private static int ProcessIoctlNvHostCtrl(ServiceCtx context, int cmd)
         {
-            return ProcessIoctl(Context, Cmd, NvHostCtrlIoctl.ProcessIoctl);
+            return ProcessIoctl(context, cmd, NvHostCtrlIoctl.ProcessIoctl);
         }
 
-        private static int ProcessIoctlNvGpuGpu(ServiceCtx Context, int Cmd)
+        private static int ProcessIoctlNvGpuGpu(ServiceCtx context, int cmd)
         {
-            return ProcessIoctl(Context, Cmd, NvGpuGpuIoctl.ProcessIoctl);
+            return ProcessIoctl(context, cmd, NvGpuGpuIoctl.ProcessIoctl);
         }
 
-        private static int ProcessIoctlNvHostChannel(ServiceCtx Context, int Cmd)
+        private static int ProcessIoctlNvHostChannel(ServiceCtx context, int cmd)
         {
-            return ProcessIoctl(Context, Cmd, NvHostChannelIoctl.ProcessIoctl);
+            return ProcessIoctl(context, cmd, NvHostChannelIoctl.ProcessIoctl);
         }
 
-        private static int ProcessIoctlNvMap(ServiceCtx Context, int Cmd)
+        private static int ProcessIoctlNvMap(ServiceCtx context, int cmd)
         {
-            return ProcessIoctl(Context, Cmd, NvMapIoctl.ProcessIoctl);
+            return ProcessIoctl(context, cmd, NvMapIoctl.ProcessIoctl);
         }
 
-        private static int ProcessIoctl(ServiceCtx Context, int Cmd, IoctlProcessor Processor)
+        private static int ProcessIoctl(ServiceCtx context, int cmd, IoctlProcessor processor)
         {
-            if (CmdIn(Cmd) && Context.Request.GetBufferType0x21().Position == 0)
+            if (CmdIn(cmd) && context.Request.GetBufferType0x21().Position == 0)
             {
                 Logger.PrintError(LogClass.ServiceNv, "Input buffer is null!");
 
                 return NvResult.InvalidInput;
             }
 
-            if (CmdOut(Cmd) && Context.Request.GetBufferType0x22().Position == 0)
+            if (CmdOut(cmd) && context.Request.GetBufferType0x22().Position == 0)
             {
                 Logger.PrintError(LogClass.ServiceNv, "Output buffer is null!");
 
                 return NvResult.InvalidInput;
             }
 
-            return Processor(Context, Cmd);
+            return processor(context, cmd);
         }
 
-        private static bool CmdIn(int Cmd)
+        private static bool CmdIn(int cmd)
         {
-            return ((Cmd >> 30) & 1) != 0;
+            return ((cmd >> 30) & 1) != 0;
         }
 
-        private static bool CmdOut(int Cmd)
+        private static bool CmdOut(int cmd)
         {
-            return ((Cmd >> 31) & 1) != 0;
+            return ((cmd >> 31) & 1) != 0;
         }
 
-        public static void UnloadProcess(KProcess Process)
+        public static void UnloadProcess(KProcess process)
         {
-            Fds.DeleteProcess(Process);
+            Fds.DeleteProcess(process);
 
-            NvGpuASIoctl.UnloadProcess(Process);
+            NvGpuASIoctl.UnloadProcess(process);
 
-            NvHostChannelIoctl.UnloadProcess(Process);
+            NvHostChannelIoctl.UnloadProcess(process);
 
-            NvHostCtrlIoctl.UnloadProcess(Process);
+            NvHostCtrlIoctl.UnloadProcess(process);
 
-            NvMapIoctl.UnloadProcess(Process);
+            NvMapIoctl.UnloadProcess(process);
         }
     }
 }

@@ -22,33 +22,33 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
         //high latency).
         private const int MixBufferSamplesCount = 960;
 
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private KEvent UpdateEvent;
+        private KEvent _updateEvent;
 
-        private MemoryManager Memory;
+        private MemoryManager _memory;
 
-        private IAalOutput AudioOut;
+        private IAalOutput _audioOut;
 
-        private AudioRendererParameter Params;
+        private AudioRendererParameter _params;
 
-        private MemoryPoolContext[] MemoryPools;
+        private MemoryPoolContext[] _memoryPools;
 
-        private VoiceContext[] Voices;
+        private VoiceContext[] _voices;
 
-        private int Track;
+        private int _track;
 
-        private PlayState PlayState;
+        private PlayState _playState;
 
         public IAudioRenderer(
-            Horizon                System,
-            MemoryManager          Memory,
-            IAalOutput             AudioOut,
+            Horizon                system,
+            MemoryManager          memory,
+            IAalOutput             audioOut,
             AudioRendererParameter Params)
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0, GetSampleRate              },
                 { 1, GetSampleCount             },
@@ -60,75 +60,75 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
                 { 7, QuerySystemEvent           }
             };
 
-            UpdateEvent = new KEvent(System);
+            _updateEvent = new KEvent(system);
 
-            this.Memory   = Memory;
-            this.AudioOut = AudioOut;
-            this.Params   = Params;
+            _memory   = memory;
+            _audioOut = audioOut;
+            _params   = Params;
 
-            Track = AudioOut.OpenTrack(
+            _track = audioOut.OpenTrack(
                 AudioConsts.HostSampleRate,
                 AudioConsts.HostChannelsCount,
                 AudioCallback);
 
-            MemoryPools = CreateArray<MemoryPoolContext>(Params.EffectCount + Params.VoiceCount * 4);
+            _memoryPools = CreateArray<MemoryPoolContext>(Params.EffectCount + Params.VoiceCount * 4);
 
-            Voices = CreateArray<VoiceContext>(Params.VoiceCount);
+            _voices = CreateArray<VoiceContext>(Params.VoiceCount);
 
             InitializeAudioOut();
 
-            PlayState = PlayState.Stopped;
+            _playState = PlayState.Stopped;
         }
 
         //  GetSampleRate() -> u32
-        public long GetSampleRate(ServiceCtx Context)
+        public long GetSampleRate(ServiceCtx context)
         {
-            Context.ResponseData.Write(Params.SampleRate);
+            context.ResponseData.Write(_params.SampleRate);
 
             return 0;
         }
 
         //  GetSampleCount() -> u32
-        public long GetSampleCount(ServiceCtx Context)
+        public long GetSampleCount(ServiceCtx context)
         {
-            Context.ResponseData.Write(Params.SampleCount);
+            context.ResponseData.Write(_params.SampleCount);
 
             return 0;
         }
 
         // GetMixBufferCount() -> u32
-        public long GetMixBufferCount(ServiceCtx Context)
+        public long GetMixBufferCount(ServiceCtx context)
         {
-            Context.ResponseData.Write(Params.MixCount);
+            context.ResponseData.Write(_params.MixCount);
 
             return 0;
         }
 
         // GetState() -> u32
-        private long GetState(ServiceCtx Context)
+        private long GetState(ServiceCtx context)
         {
-            Context.ResponseData.Write((int)PlayState);
+            context.ResponseData.Write((int)_playState);
 
-            Logger.PrintStub(LogClass.ServiceAudio, $"Stubbed. Renderer State: {Enum.GetName(typeof(PlayState), PlayState)}");
+            Logger.PrintStub(LogClass.ServiceAudio, $"Stubbed. Renderer State: {Enum.GetName(typeof(PlayState), _playState)}");
 
             return 0;
         }
 
         private void AudioCallback()
         {
-            UpdateEvent.ReadableEvent.Signal();
+            _updateEvent.ReadableEvent.Signal();
         }
 
-        private static T[] CreateArray<T>(int Size) where T : new()
+        private static T[] CreateArray<T>(int size) where T : new()
         {
-            T[] Output = new T[Size];
+            T[] output = new T[size];
 
-            for (int Index = 0; Index < Size; Index++)
+            for (int index = 0; index < size; index++)
             {
-                Output[Index] = new T();
+                output[index] = new T();
             }
 
-            return Output;
+            return output;
         }
 
         private void InitializeAudioOut()
@@ -137,258 +137,258 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             AppendMixedBuffer(1);
             AppendMixedBuffer(2);
 
-            AudioOut.Start(Track);
+            _audioOut.Start(_track);
         }
 
-        public long RequestUpdateAudioRenderer(ServiceCtx Context)
+        public long RequestUpdateAudioRenderer(ServiceCtx context)
         {
-            long OutputPosition = Context.Request.ReceiveBuff[0].Position;
-            long OutputSize     = Context.Request.ReceiveBuff[0].Size;
+            long outputPosition = context.Request.ReceiveBuff[0].Position;
+            long outputSize     = context.Request.ReceiveBuff[0].Size;
 
-            MemoryHelper.FillWithZeros(Context.Memory, OutputPosition, (int)OutputSize);
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 
-            long InputPosition = Context.Request.SendBuff[0].Position;
+            long inputPosition = context.Request.SendBuff[0].Position;
 
-            StructReader Reader = new StructReader(Context.Memory, InputPosition);
-            StructWriter Writer = new StructWriter(Context.Memory, OutputPosition);
+            StructReader reader = new StructReader(context.Memory, inputPosition);
+            StructWriter writer = new StructWriter(context.Memory, outputPosition);
 
-            UpdateDataHeader InputHeader = Reader.Read<UpdateDataHeader>();
+            UpdateDataHeader inputHeader = reader.Read<UpdateDataHeader>();
 
-            Reader.Read<BehaviorIn>(InputHeader.BehaviorSize);
+            reader.Read<BehaviorIn>(inputHeader.BehaviorSize);
 
-            MemoryPoolIn[] MemoryPoolsIn = Reader.Read<MemoryPoolIn>(InputHeader.MemoryPoolSize);
+            MemoryPoolIn[] memoryPoolsIn = reader.Read<MemoryPoolIn>(inputHeader.MemoryPoolSize);
 
-            for (int Index = 0; Index < MemoryPoolsIn.Length; Index++)
+            for (int index = 0; index < memoryPoolsIn.Length; index++)
             {
-                MemoryPoolIn MemoryPool = MemoryPoolsIn[Index];
+                MemoryPoolIn memoryPool = memoryPoolsIn[index];
 
-                if (MemoryPool.State == MemoryPoolState.RequestAttach)
+                if (memoryPool.State == MemoryPoolState.RequestAttach)
                 {
-                    MemoryPools[Index].OutStatus.State = MemoryPoolState.Attached;
+                    _memoryPools[index].OutStatus.State = MemoryPoolState.Attached;
                 }
-                else if (MemoryPool.State == MemoryPoolState.RequestDetach)
+                else if (memoryPool.State == MemoryPoolState.RequestDetach)
                 {
-                    MemoryPools[Index].OutStatus.State = MemoryPoolState.Detached;
+                    _memoryPools[index].OutStatus.State = MemoryPoolState.Detached;
                 }
             }
 
-            Reader.Read<VoiceChannelResourceIn>(InputHeader.VoiceResourceSize);
+            reader.Read<VoiceChannelResourceIn>(inputHeader.VoiceResourceSize);
 
-            VoiceIn[] VoicesIn = Reader.Read<VoiceIn>(InputHeader.VoiceSize);
+            VoiceIn[] voicesIn = reader.Read<VoiceIn>(inputHeader.VoiceSize);
 
-            for (int Index = 0; Index < VoicesIn.Length; Index++)
+            for (int index = 0; index < voicesIn.Length; index++)
             {
-                VoiceIn Voice = VoicesIn[Index];
+                VoiceIn voice = voicesIn[index];
 
-                VoiceContext VoiceCtx = Voices[Index];
+                VoiceContext voiceCtx = _voices[index];
 
-                VoiceCtx.SetAcquireState(Voice.Acquired != 0);
+                voiceCtx.SetAcquireState(voice.Acquired != 0);
 
-                if (Voice.Acquired == 0)
+                if (voice.Acquired == 0)
                 {
                     continue;
                 }
 
-                if (Voice.FirstUpdate != 0)
+                if (voice.FirstUpdate != 0)
                 {
-                    VoiceCtx.AdpcmCtx = GetAdpcmDecoderContext(
-                        Voice.AdpcmCoeffsPosition,
-                        Voice.AdpcmCoeffsSize);
+                    voiceCtx.AdpcmCtx = GetAdpcmDecoderContext(
+                        voice.AdpcmCoeffsPosition,
+                        voice.AdpcmCoeffsSize);
 
-                    VoiceCtx.SampleFormat  = Voice.SampleFormat;
-                    VoiceCtx.SampleRate    = Voice.SampleRate;
-                    VoiceCtx.ChannelsCount = Voice.ChannelsCount;
+                    voiceCtx.SampleFormat  = voice.SampleFormat;
+                    voiceCtx.SampleRate    = voice.SampleRate;
+                    voiceCtx.ChannelsCount = voice.ChannelsCount;
 
-                    VoiceCtx.SetBufferIndex(Voice.BaseWaveBufferIndex);
+                    voiceCtx.SetBufferIndex(voice.BaseWaveBufferIndex);
                 }
 
-                VoiceCtx.WaveBuffers[0] = Voice.WaveBuffer0;
-                VoiceCtx.WaveBuffers[1] = Voice.WaveBuffer1;
-                VoiceCtx.WaveBuffers[2] = Voice.WaveBuffer2;
-                VoiceCtx.WaveBuffers[3] = Voice.WaveBuffer3;
-                VoiceCtx.Volume         = Voice.Volume;
-                VoiceCtx.PlayState      = Voice.PlayState;
+                voiceCtx.WaveBuffers[0] = voice.WaveBuffer0;
+                voiceCtx.WaveBuffers[1] = voice.WaveBuffer1;
+                voiceCtx.WaveBuffers[2] = voice.WaveBuffer2;
+                voiceCtx.WaveBuffers[3] = voice.WaveBuffer3;
+                voiceCtx.Volume         = voice.Volume;
+                voiceCtx.PlayState      = voice.PlayState;
             }
 
             UpdateAudio();
 
-            UpdateDataHeader OutputHeader = new UpdateDataHeader();
+            UpdateDataHeader outputHeader = new UpdateDataHeader();
 
-            int UpdateHeaderSize = Marshal.SizeOf<UpdateDataHeader>();
+            int updateHeaderSize = Marshal.SizeOf<UpdateDataHeader>();
 
-            OutputHeader.Revision               = IAudioRendererManager.RevMagic;
-            OutputHeader.BehaviorSize           = 0xb0;
-            OutputHeader.MemoryPoolSize         = (Params.EffectCount + Params.VoiceCount * 4) * 0x10;
-            OutputHeader.VoiceSize              = Params.VoiceCount  * 0x10;
-            OutputHeader.EffectSize             = Params.EffectCount * 0x10;
-            OutputHeader.SinkSize               = Params.SinkCount   * 0x20;
-            OutputHeader.PerformanceManagerSize = 0x10;
-            OutputHeader.TotalSize              = UpdateHeaderSize             +
-                                                  OutputHeader.BehaviorSize    +
-                                                  OutputHeader.MemoryPoolSize +
-                                                  OutputHeader.VoiceSize      +
-                                                  OutputHeader.EffectSize     +
-                                                  OutputHeader.SinkSize       +
-                                                  OutputHeader.PerformanceManagerSize;
+            outputHeader.Revision               = IAudioRendererManager.RevMagic;
+            outputHeader.BehaviorSize           = 0xb0;
+            outputHeader.MemoryPoolSize         = (_params.EffectCount + _params.VoiceCount * 4) * 0x10;
+            outputHeader.VoiceSize              = _params.VoiceCount  * 0x10;
+            outputHeader.EffectSize             = _params.EffectCount * 0x10;
+            outputHeader.SinkSize               = _params.SinkCount   * 0x20;
+            outputHeader.PerformanceManagerSize = 0x10;
+            outputHeader.TotalSize              = updateHeaderSize             +
+                                                  outputHeader.BehaviorSize    +
+                                                  outputHeader.MemoryPoolSize +
+                                                  outputHeader.VoiceSize      +
+                                                  outputHeader.EffectSize     +
+                                                  outputHeader.SinkSize       +
+                                                  outputHeader.PerformanceManagerSize;
 
-            Writer.Write(OutputHeader);
+            writer.Write(outputHeader);
 
-            foreach (MemoryPoolContext MemoryPool in MemoryPools)
+            foreach (MemoryPoolContext memoryPool in _memoryPools)
             {
-                Writer.Write(MemoryPool.OutStatus);
+                writer.Write(memoryPool.OutStatus);
             }
 
-            foreach (VoiceContext Voice in Voices)
+            foreach (VoiceContext voice in _voices)
             {
-                Writer.Write(Voice.OutStatus);
+                writer.Write(voice.OutStatus);
             }
 
             return 0;
         }
 
-        public long StartAudioRenderer(ServiceCtx Context)
+        public long StartAudioRenderer(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
-            PlayState = PlayState.Playing;
+            _playState = PlayState.Playing;
 
             return 0;
         }
 
-        public long StopAudioRenderer(ServiceCtx Context)
+        public long StopAudioRenderer(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
-            PlayState = PlayState.Stopped;
+            _playState = PlayState.Stopped;
 
             return 0;
         }
 
-        public long QuerySystemEvent(ServiceCtx Context)
+        public long QuerySystemEvent(ServiceCtx context)
         {
-            if (Context.Process.HandleTable.GenerateHandle(UpdateEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_updateEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
             return 0;
         }
 
-        private AdpcmDecoderContext GetAdpcmDecoderContext(long Position, long Size)
+        private AdpcmDecoderContext GetAdpcmDecoderContext(long position, long size)
         {
-            if (Size == 0)
+            if (size == 0)
             {
                 return null;
             }
 
-            AdpcmDecoderContext Context = new AdpcmDecoderContext();
+            AdpcmDecoderContext context = new AdpcmDecoderContext();
 
-            Context.Coefficients = new short[Size >> 1];
+            context.Coefficients = new short[size >> 1];
 
-            for (int Offset = 0; Offset < Size; Offset += 2)
+            for (int offset = 0; offset < size; offset += 2)
             {
-                Context.Coefficients[Offset >> 1] = Memory.ReadInt16(Position + Offset);
+                context.Coefficients[offset >> 1] = _memory.ReadInt16(position + offset);
             }
 
-            return Context;
+            return context;
         }
 
         private void UpdateAudio()
         {
-            long[] Released = AudioOut.GetReleasedBuffers(Track, 2);
+            long[] released = _audioOut.GetReleasedBuffers(_track, 2);
 
-            for (int Index = 0; Index < Released.Length; Index++)
+            for (int index = 0; index < released.Length; index++)
             {
-                AppendMixedBuffer(Released[Index]);
+                AppendMixedBuffer(released[index]);
             }
         }
 
-        private unsafe void AppendMixedBuffer(long Tag)
+        private void AppendMixedBuffer(long tag)
         {
-            int[] MixBuffer = new int[MixBufferSamplesCount * AudioConsts.HostChannelsCount];
+            int[] mixBuffer = new int[MixBufferSamplesCount * AudioConsts.HostChannelsCount];
 
-            foreach (VoiceContext Voice in Voices)
+            foreach (VoiceContext voice in _voices)
             {
-                if (!Voice.Playing)
+                if (!voice.Playing)
                 {
                     continue;
                 }
 
-                int   OutOffset      = 0;
-                int   PendingSamples = MixBufferSamplesCount;
-                float Volume         = Voice.Volume;
+                int   outOffset      = 0;
+                int   pendingSamples = MixBufferSamplesCount;
+                float volume         = voice.Volume;
 
-                while (PendingSamples > 0)
+                while (pendingSamples > 0)
                 {
-                    int[] Samples = Voice.GetBufferData(Memory, PendingSamples, out int ReturnedSamples);
+                    int[] samples = voice.GetBufferData(_memory, pendingSamples, out int returnedSamples);
 
-                    if (ReturnedSamples == 0)
+                    if (returnedSamples == 0)
                     {
                         break;
                     }
 
-                    PendingSamples -= ReturnedSamples;
+                    pendingSamples -= returnedSamples;
 
-                    for (int Offset = 0; Offset < Samples.Length; Offset++)
+                    for (int offset = 0; offset < samples.Length; offset++)
                     {
-                        MixBuffer[OutOffset++] += (int)(Samples[Offset] * Voice.Volume);
+                        mixBuffer[outOffset++] += (int)(samples[offset] * voice.Volume);
                     }
                 }
             }
 
-            AudioOut.AppendBuffer(Track, Tag, GetFinalBuffer(MixBuffer));
+            _audioOut.AppendBuffer(_track, tag, GetFinalBuffer(mixBuffer));
         }
 
-        private unsafe static short[] GetFinalBuffer(int[] Buffer)
+        private static unsafe short[] GetFinalBuffer(int[] buffer)
         {
-            short[] Output = new short[Buffer.Length];
+            short[] output = new short[buffer.Length];
 
-            int Offset = 0;
+            int offset = 0;
 
             // Perform Saturation using SSE2 if supported
             if (Sse2.IsSupported)
             {
-                fixed (int*   inptr  = Buffer)
-                fixed (short* outptr = Output)
+                fixed (int*   inptr  = buffer)
+                fixed (short* outptr = output)
                 {
-                    for (; Offset + 32 <= Buffer.Length; Offset += 32)
+                    for (; offset + 32 <= buffer.Length; offset += 32)
                     {
                         // Unroll the loop a little to ensure the CPU pipeline
                         // is always full.
-                        Vector128<int> block1A = Sse2.LoadVector128(inptr + Offset + 0);
-                        Vector128<int> block1B = Sse2.LoadVector128(inptr + Offset + 4);
+                        Vector128<int> block1A = Sse2.LoadVector128(inptr + offset + 0);
+                        Vector128<int> block1B = Sse2.LoadVector128(inptr + offset + 4);
 
-                        Vector128<int> block2A = Sse2.LoadVector128(inptr + Offset +  8);
-                        Vector128<int> block2B = Sse2.LoadVector128(inptr + Offset + 12);
+                        Vector128<int> block2A = Sse2.LoadVector128(inptr + offset +  8);
+                        Vector128<int> block2B = Sse2.LoadVector128(inptr + offset + 12);
 
-                        Vector128<int> block3A = Sse2.LoadVector128(inptr + Offset + 16);
-                        Vector128<int> block3B = Sse2.LoadVector128(inptr + Offset + 20);
+                        Vector128<int> block3A = Sse2.LoadVector128(inptr + offset + 16);
+                        Vector128<int> block3B = Sse2.LoadVector128(inptr + offset + 20);
 
-                        Vector128<int> block4A = Sse2.LoadVector128(inptr + Offset + 24);
-                        Vector128<int> block4B = Sse2.LoadVector128(inptr + Offset + 28);
+                        Vector128<int> block4A = Sse2.LoadVector128(inptr + offset + 24);
+                        Vector128<int> block4B = Sse2.LoadVector128(inptr + offset + 28);
 
                         Vector128<short> output1 = Sse2.PackSignedSaturate(block1A, block1B);
                         Vector128<short> output2 = Sse2.PackSignedSaturate(block2A, block2B);
                         Vector128<short> output3 = Sse2.PackSignedSaturate(block3A, block3B);
                         Vector128<short> output4 = Sse2.PackSignedSaturate(block4A, block4B);
 
-                        Sse2.Store(outptr + Offset +  0, output1);
-                        Sse2.Store(outptr + Offset +  8, output2);
-                        Sse2.Store(outptr + Offset + 16, output3);
-                        Sse2.Store(outptr + Offset + 24, output4);
+                        Sse2.Store(outptr + offset +  0, output1);
+                        Sse2.Store(outptr + offset +  8, output2);
+                        Sse2.Store(outptr + offset + 16, output3);
+                        Sse2.Store(outptr + offset + 24, output4);
                     }
                 }
             }
 
             // Process left overs
-            for (; Offset < Buffer.Length; Offset++)
+            for (; offset < buffer.Length; offset++)
             {
-                Output[Offset] = DspUtils.Saturate(Buffer[Offset]);
+                output[offset] = DspUtils.Saturate(buffer[offset]);
             }
 
-            return Output;
+            return output;
         }
 
         public void Dispose()
@@ -396,11 +396,11 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool Disposing)
+        protected virtual void Dispose(bool disposing)
         {
-            if (Disposing)
+            if (disposing)
             {
-                AudioOut.CloseTrack(Track);
+                _audioOut.CloseTrack(_track);
             }
         }
     }

@@ -7,181 +7,181 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuGpu
 {
     class NvGpuGpuIoctl
     {
-        private static Stopwatch PTimer;
+        private static Stopwatch _pTimer;
 
-        private static double TicksToNs;
+        private static double _ticksToNs;
 
         static NvGpuGpuIoctl()
         {
-            PTimer = new Stopwatch();
+            _pTimer = new Stopwatch();
 
-            PTimer.Start();
+            _pTimer.Start();
 
-            TicksToNs = (1.0 / Stopwatch.Frequency) * 1_000_000_000;
+            _ticksToNs = (1.0 / Stopwatch.Frequency) * 1_000_000_000;
         }
 
-        public static int ProcessIoctl(ServiceCtx Context, int Cmd)
+        public static int ProcessIoctl(ServiceCtx context, int cmd)
         {
-            switch (Cmd & 0xffff)
+            switch (cmd & 0xffff)
             {
-                case 0x4701: return ZcullGetCtxSize   (Context);
-                case 0x4702: return ZcullGetInfo      (Context);
-                case 0x4703: return ZbcSetTable       (Context);
-                case 0x4705: return GetCharacteristics(Context);
-                case 0x4706: return GetTpcMasks       (Context);
-                case 0x4714: return GetActiveSlotMask (Context);
-                case 0x471c: return GetGpuTime        (Context);
+                case 0x4701: return ZcullGetCtxSize   (context);
+                case 0x4702: return ZcullGetInfo      (context);
+                case 0x4703: return ZbcSetTable       (context);
+                case 0x4705: return GetCharacteristics(context);
+                case 0x4706: return GetTpcMasks       (context);
+                case 0x4714: return GetActiveSlotMask (context);
+                case 0x471c: return GetGpuTime        (context);
             }
 
-            throw new NotImplementedException(Cmd.ToString("x8"));
+            throw new NotImplementedException(cmd.ToString("x8"));
         }
 
-        private static int ZcullGetCtxSize(ServiceCtx Context)
+        private static int ZcullGetCtxSize(ServiceCtx context)
         {
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
-            NvGpuGpuZcullGetCtxSize Args = new NvGpuGpuZcullGetCtxSize();
+            NvGpuGpuZcullGetCtxSize args = new NvGpuGpuZcullGetCtxSize();
 
-            Args.Size = 1;
+            args.Size = 1;
 
-            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(context.Memory, outputPosition, args);
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int ZcullGetInfo(ServiceCtx Context)
+        private static int ZcullGetInfo(ServiceCtx context)
         {
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
-            NvGpuGpuZcullGetInfo Args = new NvGpuGpuZcullGetInfo();
+            NvGpuGpuZcullGetInfo args = new NvGpuGpuZcullGetInfo();
 
-            Args.WidthAlignPixels           = 0x20;
-            Args.HeightAlignPixels          = 0x20;
-            Args.PixelSquaresByAliquots     = 0x400;
-            Args.AliquotTotal               = 0x800;
-            Args.RegionByteMultiplier       = 0x20;
-            Args.RegionHeaderSize           = 0x20;
-            Args.SubregionHeaderSize        = 0xc0;
-            Args.SubregionWidthAlignPixels  = 0x20;
-            Args.SubregionHeightAlignPixels = 0x40;
-            Args.SubregionCount             = 0x10;
+            args.WidthAlignPixels           = 0x20;
+            args.HeightAlignPixels          = 0x20;
+            args.PixelSquaresByAliquots     = 0x400;
+            args.AliquotTotal               = 0x800;
+            args.RegionByteMultiplier       = 0x20;
+            args.RegionHeaderSize           = 0x20;
+            args.SubregionHeaderSize        = 0xc0;
+            args.SubregionWidthAlignPixels  = 0x20;
+            args.SubregionHeightAlignPixels = 0x40;
+            args.SubregionCount             = 0x10;
 
-            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(context.Memory, outputPosition, args);
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int ZbcSetTable(ServiceCtx Context)
+        private static int ZbcSetTable(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int GetCharacteristics(ServiceCtx Context)
+        private static int GetCharacteristics(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
-            NvGpuGpuGetCharacteristics Args = MemoryHelper.Read<NvGpuGpuGetCharacteristics>(Context.Memory, InputPosition);
+            NvGpuGpuGetCharacteristics args = MemoryHelper.Read<NvGpuGpuGetCharacteristics>(context.Memory, inputPosition);
 
-            Args.BufferSize = 0xa0;
+            args.BufferSize = 0xa0;
 
-            Args.Arch                   = 0x120;
-            Args.Impl                   = 0xb;
-            Args.Rev                    = 0xa1;
-            Args.NumGpc                 = 0x1;
-            Args.L2CacheSize            = 0x40000;
-            Args.OnBoardVideoMemorySize = 0x0;
-            Args.NumTpcPerGpc           = 0x2;
-            Args.BusType                = 0x20;
-            Args.BigPageSize            = 0x20000;
-            Args.CompressionPageSize    = 0x20000;
-            Args.PdeCoverageBitCount    = 0x1b;
-            Args.AvailableBigPageSizes  = 0x30000;
-            Args.GpcMask                = 0x1;
-            Args.SmArchSmVersion        = 0x503;
-            Args.SmArchSpaVersion       = 0x503;
-            Args.SmArchWarpCount        = 0x80;
-            Args.GpuVaBitCount          = 0x28;
-            Args.Reserved               = 0x0;
-            Args.Flags                  = 0x55;
-            Args.TwodClass              = 0x902d;
-            Args.ThreedClass            = 0xb197;
-            Args.ComputeClass           = 0xb1c0;
-            Args.GpfifoClass            = 0xb06f;
-            Args.InlineToMemoryClass    = 0xa140;
-            Args.DmaCopyClass           = 0xb0b5;
-            Args.MaxFbpsCount           = 0x1;
-            Args.FbpEnMask              = 0x0;
-            Args.MaxLtcPerFbp           = 0x2;
-            Args.MaxLtsPerLtc           = 0x1;
-            Args.MaxTexPerTpc           = 0x0;
-            Args.MaxGpcCount            = 0x1;
-            Args.RopL2EnMask0           = 0x21d70;
-            Args.RopL2EnMask1           = 0x0;
-            Args.ChipName               = 0x6230326d67;
-            Args.GrCompbitStoreBaseHw   = 0x0;
+            args.Arch                   = 0x120;
+            args.Impl                   = 0xb;
+            args.Rev                    = 0xa1;
+            args.NumGpc                 = 0x1;
+            args.L2CacheSize            = 0x40000;
+            args.OnBoardVideoMemorySize = 0x0;
+            args.NumTpcPerGpc           = 0x2;
+            args.BusType                = 0x20;
+            args.BigPageSize            = 0x20000;
+            args.CompressionPageSize    = 0x20000;
+            args.PdeCoverageBitCount    = 0x1b;
+            args.AvailableBigPageSizes  = 0x30000;
+            args.GpcMask                = 0x1;
+            args.SmArchSmVersion        = 0x503;
+            args.SmArchSpaVersion       = 0x503;
+            args.SmArchWarpCount        = 0x80;
+            args.GpuVaBitCount          = 0x28;
+            args.Reserved               = 0x0;
+            args.Flags                  = 0x55;
+            args.TwodClass              = 0x902d;
+            args.ThreedClass            = 0xb197;
+            args.ComputeClass           = 0xb1c0;
+            args.GpfifoClass            = 0xb06f;
+            args.InlineToMemoryClass    = 0xa140;
+            args.DmaCopyClass           = 0xb0b5;
+            args.MaxFbpsCount           = 0x1;
+            args.FbpEnMask              = 0x0;
+            args.MaxLtcPerFbp           = 0x2;
+            args.MaxLtsPerLtc           = 0x1;
+            args.MaxTexPerTpc           = 0x0;
+            args.MaxGpcCount            = 0x1;
+            args.RopL2EnMask0           = 0x21d70;
+            args.RopL2EnMask1           = 0x0;
+            args.ChipName               = 0x6230326d67;
+            args.GrCompbitStoreBaseHw   = 0x0;
 
-            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(context.Memory, outputPosition, args);
 
             return NvResult.Success;
         }
 
-        private static int GetTpcMasks(ServiceCtx Context)
+        private static int GetTpcMasks(ServiceCtx context)
         {
-            long InputPosition  = Context.Request.GetBufferType0x21().Position;
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
-            NvGpuGpuGetTpcMasks Args = MemoryHelper.Read<NvGpuGpuGetTpcMasks>(Context.Memory, InputPosition);
+            NvGpuGpuGetTpcMasks args = MemoryHelper.Read<NvGpuGpuGetTpcMasks>(context.Memory, inputPosition);
 
-            if (Args.MaskBufferSize != 0)
+            if (args.MaskBufferSize != 0)
             {
-                Args.TpcMask = 3;
+                args.TpcMask = 3;
             }
 
-            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(context.Memory, outputPosition, args);
 
             return NvResult.Success;
         }
 
-        private static int GetActiveSlotMask(ServiceCtx Context)
+        private static int GetActiveSlotMask(ServiceCtx context)
         {
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
-            NvGpuGpuGetActiveSlotMask Args = new NvGpuGpuGetActiveSlotMask();
+            NvGpuGpuGetActiveSlotMask args = new NvGpuGpuGetActiveSlotMask();
 
-            Args.Slot = 0x07;
-            Args.Mask = 0x01;
+            args.Slot = 0x07;
+            args.Mask = 0x01;
 
-            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
+            MemoryHelper.Write(context.Memory, outputPosition, args);
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int GetGpuTime(ServiceCtx Context)
+        private static int GetGpuTime(ServiceCtx context)
         {
-            long OutputPosition = Context.Request.GetBufferType0x22().Position;
+            long outputPosition = context.Request.GetBufferType0x22().Position;
 
-            Context.Memory.WriteInt64(OutputPosition, GetPTimerNanoSeconds());
+            context.Memory.WriteInt64(outputPosition, GetPTimerNanoSeconds());
 
             return NvResult.Success;
         }
 
         private static long GetPTimerNanoSeconds()
         {
-            double Ticks = PTimer.ElapsedTicks;
+            double ticks = _pTimer.ElapsedTicks;
 
-            return (long)(Ticks * TicksToNs) & 0xff_ffff_ffff_ffff;
+            return (long)(ticks * _ticksToNs) & 0xff_ffff_ffff_ffff;
         }
     }
 }

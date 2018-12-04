@@ -22,31 +22,31 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public long CondVarAddress { get; set; }
 
-        private ulong Entrypoint;
+        private ulong _entrypoint;
 
         public long MutexAddress { get; set; }
 
         public KProcess Owner { get; private set; }
 
-        private ulong TlsAddress;
+        private ulong _tlsAddress;
 
         public long LastScheduledTime { get; set; }
 
-        public LinkedListNode<KThread>[] SiblingsPerCore { get; private set; }
+        public LinkedListNode<KThread>[] SiblingsPerCore { get; }
 
         public LinkedList<KThread>     Withholder     { get; set; }
         public LinkedListNode<KThread> WithholderNode { get; set; }
 
         public LinkedListNode<KThread> ProcessListNode { get; set; }
 
-        private LinkedList<KThread>     MutexWaiters;
-        private LinkedListNode<KThread> MutexWaiterNode;
+        private LinkedList<KThread>     _mutexWaiters;
+        private LinkedListNode<KThread> _mutexWaiterNode;
 
         public KThread MutexOwner { get; private set; }
 
         public int ThreadHandleForUserMutex { get; set; }
 
-        private ThreadSchedState ForcePauseFlags;
+        private ThreadSchedState _forcePauseFlags;
 
         public int ObjSyncResult { get; set; }
 
@@ -55,9 +55,9 @@ namespace Ryujinx.HLE.HOS.Kernel
         public int BasePriority    { get; set; }
         public int PreferredCore   { get; set; }
 
-        private long AffinityMaskOverride;
-        private int  PreferredCoreOverride;
-        private int  AffinityOverrideCount;
+        private long _affinityMaskOverride;
+        private int  _preferredCoreOverride;
+        private int  _affinityOverrideCount;
 
         public ThreadSchedState SchedFlags { get; private set; }
 
@@ -66,101 +66,101 @@ namespace Ryujinx.HLE.HOS.Kernel
         public bool SyncCancelled { get; set; }
         public bool WaitingSync   { get; set; }
 
-        private bool HasExited;
+        private bool _hasExited;
 
         public bool WaitingInArbitration { get; set; }
 
-        private KScheduler Scheduler;
+        private KScheduler _scheduler;
 
-        private KSchedulingData SchedulingData;
+        private KSchedulingData _schedulingData;
 
         public long LastPc { get; set; }
 
-        public KThread(Horizon System) : base(System)
+        public KThread(Horizon system) : base(system)
         {
-            Scheduler      = System.Scheduler;
-            SchedulingData = System.Scheduler.SchedulingData;
+            _scheduler      = system.Scheduler;
+            _schedulingData = system.Scheduler.SchedulingData;
 
             SiblingsPerCore = new LinkedListNode<KThread>[KScheduler.CpuCoresCount];
 
-            MutexWaiters = new LinkedList<KThread>();
+            _mutexWaiters = new LinkedList<KThread>();
         }
 
         public KernelResult Initialize(
-            ulong      Entrypoint,
-            ulong      ArgsPtr,
-            ulong      StackTop,
-            int        Priority,
-            int        DefaultCpuCore,
-            KProcess   Owner,
-            ThreadType Type = ThreadType.User)
+            ulong      entrypoint,
+            ulong      argsPtr,
+            ulong      stackTop,
+            int        priority,
+            int        defaultCpuCore,
+            KProcess   owner,
+            ThreadType type = ThreadType.User)
         {
-            if ((uint)Type > 3)
+            if ((uint)type > 3)
             {
-                throw new ArgumentException($"Invalid thread type \"{Type}\".");
+                throw new ArgumentException($"Invalid thread type \"{type}\".");
             }
 
-            PreferredCore = DefaultCpuCore;
+            PreferredCore = defaultCpuCore;
 
-            AffinityMask |= 1L << DefaultCpuCore;
+            AffinityMask |= 1L << defaultCpuCore;
 
-            SchedFlags = Type == ThreadType.Dummy
+            SchedFlags = type == ThreadType.Dummy
                 ? ThreadSchedState.Running
                 : ThreadSchedState.None;
 
             CurrentCore = PreferredCore;
 
-            DynamicPriority = Priority;
-            BasePriority    = Priority;
+            DynamicPriority = priority;
+            BasePriority    = priority;
 
             ObjSyncResult = 0x7201;
 
-            this.Entrypoint = Entrypoint;
+            _entrypoint = entrypoint;
 
-            if (Type == ThreadType.User)
+            if (type == ThreadType.User)
             {
-                if (Owner.AllocateThreadLocalStorage(out TlsAddress) != KernelResult.Success)
+                if (owner.AllocateThreadLocalStorage(out _tlsAddress) != KernelResult.Success)
                 {
                     return KernelResult.OutOfMemory;
                 }
 
-                MemoryHelper.FillWithZeros(Owner.CpuMemory, (long)TlsAddress, KTlsPageInfo.TlsEntrySize);
+                MemoryHelper.FillWithZeros(owner.CpuMemory, (long)_tlsAddress, KTlsPageInfo.TlsEntrySize);
             }
 
-            bool Is64Bits;
+            bool is64Bits;
 
-            if (Owner != null)
+            if (owner != null)
             {
-                this.Owner = Owner;
+                Owner = owner;
 
-                Owner.IncrementThreadCount();
+                owner.IncrementThreadCount();
 
-                Is64Bits = (Owner.MmuFlags & 1) != 0;
+                is64Bits = (owner.MmuFlags & 1) != 0;
             }
             else
             {
-                Is64Bits = true;
+                is64Bits = true;
             }
 
-            Context = new CpuThread(Owner.Translator, Owner.CpuMemory, (long)Entrypoint);
+            Context = new CpuThread(owner.Translator, owner.CpuMemory, (long)entrypoint);
 
-            Context.ThreadState.X0  = ArgsPtr;
-            Context.ThreadState.X31 = StackTop;
+            Context.ThreadState.X0  = argsPtr;
+            Context.ThreadState.X31 = stackTop;
 
             Context.ThreadState.CntfrqEl0 = 19200000;
-            Context.ThreadState.Tpidr     = (long)TlsAddress;
+            Context.ThreadState.Tpidr     = (long)_tlsAddress;
 
-            Owner.SubscribeThreadEventHandlers(Context);
+            owner.SubscribeThreadEventHandlers(Context);
 
             Context.WorkFinished += ThreadFinishedHandler;
 
             ThreadUid = System.GetThreadUid();
 
-            if (Owner != null)
+            if (owner != null)
             {
-                Owner.AddThread(this);
+                owner.AddThread(this);
 
-                if (Owner.IsPaused)
+                if (owner.IsPaused)
                 {
                     System.CriticalSection.Enter();
 
@@ -171,7 +171,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                         return KernelResult.Success;
                     }
 
-                    ForcePauseFlags |= ThreadSchedState.ProcessPauseFlag;
+                    _forcePauseFlags |= ThreadSchedState.ProcessPauseFlag;
 
                     CombineForcePauseFlags();
 
@@ -190,7 +190,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
                 if (!ShallBeTerminated && SchedFlags != ThreadSchedState.TerminationPending)
                 {
-                    ForcePauseFlags |= ThreadSchedState.KernelInitPauseFlag;
+                    _forcePauseFlags |= ThreadSchedState.KernelInitPauseFlag;
 
                     CombineForcePauseFlags();
                 }
@@ -198,46 +198,46 @@ namespace Ryujinx.HLE.HOS.Kernel
                 System.CriticalSection.Leave();
             }
 
-            KernelResult Result = KernelResult.ThreadTerminating;
+            KernelResult result = KernelResult.ThreadTerminating;
 
             System.CriticalSection.Enter();
 
             if (!ShallBeTerminated)
             {
-                KThread CurrentThread = System.Scheduler.GetCurrentThread();
+                KThread currentThread = System.Scheduler.GetCurrentThread();
 
                 while (SchedFlags               != ThreadSchedState.TerminationPending &&
-                       CurrentThread.SchedFlags != ThreadSchedState.TerminationPending &&
-                       !CurrentThread.ShallBeTerminated)
+                       currentThread.SchedFlags != ThreadSchedState.TerminationPending &&
+                       !currentThread.ShallBeTerminated)
                 {
                     if ((SchedFlags & ThreadSchedState.LowMask) != ThreadSchedState.None)
                     {
-                        Result = KernelResult.InvalidState;
+                        result = KernelResult.InvalidState;
 
                         break;
                     }
 
-                    if (CurrentThread.ForcePauseFlags == ThreadSchedState.None)
+                    if (currentThread._forcePauseFlags == ThreadSchedState.None)
                     {
-                        if (Owner != null && ForcePauseFlags != ThreadSchedState.None)
+                        if (Owner != null && _forcePauseFlags != ThreadSchedState.None)
                         {
                             CombineForcePauseFlags();
                         }
 
                         SetNewSchedFlags(ThreadSchedState.Running);
 
-                        Result = KernelResult.Success;
+                        result = KernelResult.Success;
 
                         break;
                     }
                     else
                     {
-                        CurrentThread.CombineForcePauseFlags();
+                        currentThread.CombineForcePauseFlags();
 
                         System.CriticalSection.Leave();
                         System.CriticalSection.Enter();
 
-                        if (CurrentThread.ShallBeTerminated)
+                        if (currentThread.ShallBeTerminated)
                         {
                             break;
                         }
@@ -247,14 +247,14 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             System.CriticalSection.Leave();
 
-            return Result;
+            return result;
         }
 
         public void Exit()
         {
             System.CriticalSection.Enter();
 
-            ForcePauseFlags &= ~ThreadSchedState.ForcePauseMask;
+            _forcePauseFlags &= ~ThreadSchedState.ForcePauseMask;
 
             ExitImpl();
 
@@ -267,14 +267,14 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             SetNewSchedFlags(ThreadSchedState.TerminationPending);
 
-            HasExited = true;
+            _hasExited = true;
 
             Signal();
 
             System.CriticalSection.Leave();
         }
 
-        public long Sleep(long Timeout)
+        public long Sleep(long timeout)
         {
             System.CriticalSection.Enter();
 
@@ -287,14 +287,14 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             SetNewSchedFlags(ThreadSchedState.Paused);
 
-            if (Timeout > 0)
+            if (timeout > 0)
             {
-                System.TimeManager.ScheduleFutureInvocation(this, Timeout);
+                System.TimeManager.ScheduleFutureInvocation(this, timeout);
             }
 
             System.CriticalSection.Leave();
 
-            if (Timeout > 0)
+            if (timeout > 0)
             {
                 System.TimeManager.UnscheduleFutureInvocation(this);
             }
@@ -318,10 +318,10 @@ namespace Ryujinx.HLE.HOS.Kernel
             if (DynamicPriority < KScheduler.PrioritiesCount)
             {
                 //Move current thread to the end of the queue.
-                SchedulingData.Reschedule(DynamicPriority, CurrentCore, this);
+                _schedulingData.Reschedule(DynamicPriority, CurrentCore, this);
             }
 
-            Scheduler.ThreadReselectionRequested = true;
+            _scheduler.ThreadReselectionRequested = true;
 
             System.CriticalSection.Leave();
 
@@ -341,32 +341,32 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
-            int Prio = DynamicPriority;
-            int Core = CurrentCore;
+            int prio = DynamicPriority;
+            int core = CurrentCore;
 
-            KThread NextThreadOnCurrentQueue = null;
+            KThread nextThreadOnCurrentQueue = null;
 
             if (DynamicPriority < KScheduler.PrioritiesCount)
             {
                 //Move current thread to the end of the queue.
-                SchedulingData.Reschedule(Prio, Core, this);
+                _schedulingData.Reschedule(prio, core, this);
 
-                Func<KThread, bool> Predicate = x => x.DynamicPriority == Prio;
+                Func<KThread, bool> predicate = x => x.DynamicPriority == prio;
 
-                NextThreadOnCurrentQueue = SchedulingData.ScheduledThreads(Core).FirstOrDefault(Predicate);
+                nextThreadOnCurrentQueue = _schedulingData.ScheduledThreads(core).FirstOrDefault(predicate);
             }
 
             IEnumerable<KThread> SuitableCandidates()
             {
-                foreach (KThread Thread in SchedulingData.SuggestedThreads(Core))
+                foreach (KThread thread in _schedulingData.SuggestedThreads(core))
                 {
-                    int SrcCore = Thread.CurrentCore;
+                    int srcCore = thread.CurrentCore;
 
-                    if (SrcCore >= 0)
+                    if (srcCore >= 0)
                     {
-                        KThread SelectedSrcCore = Scheduler.CoreContexts[SrcCore].SelectedThread;
+                        KThread selectedSrcCore = _scheduler.CoreContexts[srcCore].SelectedThread;
 
-                        if (SelectedSrcCore == Thread || ((SelectedSrcCore?.DynamicPriority ?? 2) < 2))
+                        if (selectedSrcCore == thread || ((selectedSrcCore?.DynamicPriority ?? 2) < 2))
                         {
                             continue;
                         }
@@ -374,26 +374,26 @@ namespace Ryujinx.HLE.HOS.Kernel
 
                     //If the candidate was scheduled after the current thread, then it's not worth it,
                     //unless the priority is higher than the current one.
-                    if (NextThreadOnCurrentQueue.LastScheduledTime >= Thread.LastScheduledTime ||
-                        NextThreadOnCurrentQueue.DynamicPriority    <  Thread.DynamicPriority)
+                    if (nextThreadOnCurrentQueue.LastScheduledTime >= thread.LastScheduledTime ||
+                        nextThreadOnCurrentQueue.DynamicPriority    <  thread.DynamicPriority)
                     {
-                        yield return Thread;
+                        yield return thread;
                     }
                 }
             }
 
-            KThread Dst = SuitableCandidates().FirstOrDefault(x => x.DynamicPriority <= Prio);
+            KThread dst = SuitableCandidates().FirstOrDefault(x => x.DynamicPriority <= prio);
 
-            if (Dst != null)
+            if (dst != null)
             {
-                SchedulingData.TransferToCore(Dst.DynamicPriority, Core, Dst);
+                _schedulingData.TransferToCore(dst.DynamicPriority, core, dst);
 
-                Scheduler.ThreadReselectionRequested = true;
+                _scheduler.ThreadReselectionRequested = true;
             }
 
-            if (this != NextThreadOnCurrentQueue)
+            if (this != nextThreadOnCurrentQueue)
             {
-                Scheduler.ThreadReselectionRequested = true;
+                _scheduler.ThreadReselectionRequested = true;
             }
 
             System.CriticalSection.Leave();
@@ -414,42 +414,42 @@ namespace Ryujinx.HLE.HOS.Kernel
                 return;
             }
 
-            int Core = CurrentCore;
+            int core = CurrentCore;
 
-            SchedulingData.TransferToCore(DynamicPriority, -1, this);
+            _schedulingData.TransferToCore(DynamicPriority, -1, this);
 
-            KThread SelectedThread = null;
+            KThread selectedThread = null;
 
-            if (!SchedulingData.ScheduledThreads(Core).Any())
+            if (!_schedulingData.ScheduledThreads(core).Any())
             {
-                foreach (KThread Thread in SchedulingData.SuggestedThreads(Core))
+                foreach (KThread thread in _schedulingData.SuggestedThreads(core))
                 {
-                    if (Thread.CurrentCore < 0)
+                    if (thread.CurrentCore < 0)
                     {
                         continue;
                     }
 
-                    KThread FirstCandidate = SchedulingData.ScheduledThreads(Thread.CurrentCore).FirstOrDefault();
+                    KThread firstCandidate = _schedulingData.ScheduledThreads(thread.CurrentCore).FirstOrDefault();
 
-                    if (FirstCandidate == Thread)
+                    if (firstCandidate == thread)
                     {
                         continue;
                     }
 
-                    if (FirstCandidate == null || FirstCandidate.DynamicPriority >= 2)
+                    if (firstCandidate == null || firstCandidate.DynamicPriority >= 2)
                     {
-                        SchedulingData.TransferToCore(Thread.DynamicPriority, Core, Thread);
+                        _schedulingData.TransferToCore(thread.DynamicPriority, core, thread);
 
-                        SelectedThread = Thread;
+                        selectedThread = thread;
                     }
 
                     break;
                 }
             }
 
-            if (SelectedThread != this)
+            if (selectedThread != this)
             {
-                Scheduler.ThreadReselectionRequested = true;
+                _scheduler.ThreadReselectionRequested = true;
             }
 
             System.CriticalSection.Leave();
@@ -457,26 +457,26 @@ namespace Ryujinx.HLE.HOS.Kernel
             System.Scheduler.ContextSwitch();
         }
 
-        public void SetPriority(int Priority)
+        public void SetPriority(int priority)
         {
             System.CriticalSection.Enter();
 
-            BasePriority = Priority;
+            BasePriority = priority;
 
             UpdatePriorityInheritance();
 
             System.CriticalSection.Leave();
         }
 
-        public long SetActivity(bool Pause)
+        public long SetActivity(bool pause)
         {
-            long Result = 0;
+            long result = 0;
 
             System.CriticalSection.Enter();
 
-            ThreadSchedState LowNibble = SchedFlags & ThreadSchedState.LowMask;
+            ThreadSchedState lowNibble = SchedFlags & ThreadSchedState.LowMask;
 
-            if (LowNibble != ThreadSchedState.Paused && LowNibble != ThreadSchedState.Running)
+            if (lowNibble != ThreadSchedState.Paused && lowNibble != ThreadSchedState.Running)
             {
                 System.CriticalSection.Leave();
 
@@ -487,41 +487,41 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             if (!ShallBeTerminated && SchedFlags != ThreadSchedState.TerminationPending)
             {
-                if (Pause)
+                if (pause)
                 {
                     //Pause, the force pause flag should be clear (thread is NOT paused).
-                    if ((ForcePauseFlags & ThreadSchedState.ThreadPauseFlag) == 0)
+                    if ((_forcePauseFlags & ThreadSchedState.ThreadPauseFlag) == 0)
                     {
-                        ForcePauseFlags |= ThreadSchedState.ThreadPauseFlag;
+                        _forcePauseFlags |= ThreadSchedState.ThreadPauseFlag;
 
                         CombineForcePauseFlags();
                     }
                     else
                     {
-                        Result = MakeError(ErrorModule.Kernel, KernelErr.InvalidState);
+                        result = MakeError(ErrorModule.Kernel, KernelErr.InvalidState);
                     }
                 }
                 else
                 {
                     //Unpause, the force pause flag should be set (thread is paused).
-                    if ((ForcePauseFlags & ThreadSchedState.ThreadPauseFlag) != 0)
+                    if ((_forcePauseFlags & ThreadSchedState.ThreadPauseFlag) != 0)
                     {
-                        ThreadSchedState OldForcePauseFlags = ForcePauseFlags;
+                        ThreadSchedState oldForcePauseFlags = _forcePauseFlags;
 
-                        ForcePauseFlags &= ~ThreadSchedState.ThreadPauseFlag;
+                        _forcePauseFlags &= ~ThreadSchedState.ThreadPauseFlag;
 
-                        if ((OldForcePauseFlags & ~ThreadSchedState.ThreadPauseFlag) == ThreadSchedState.None)
+                        if ((oldForcePauseFlags & ~ThreadSchedState.ThreadPauseFlag) == ThreadSchedState.None)
                         {
-                            ThreadSchedState OldSchedFlags = SchedFlags;
+                            ThreadSchedState oldSchedFlags = SchedFlags;
 
                             SchedFlags &= ThreadSchedState.LowMask;
 
-                            AdjustScheduling(OldSchedFlags);
+                            AdjustScheduling(oldSchedFlags);
                         }
                     }
                     else
                     {
-                        Result = MakeError(ErrorModule.Kernel, KernelErr.InvalidState);
+                        result = MakeError(ErrorModule.Kernel, KernelErr.InvalidState);
                     }
                 }
             }
@@ -529,7 +529,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             System.CriticalSection.Leave();
             System.CriticalSection.Leave();
 
-            return Result;
+            return result;
         }
 
         public void CancelSynchronization()
@@ -563,18 +563,18 @@ namespace Ryujinx.HLE.HOS.Kernel
             System.CriticalSection.Leave();
         }
 
-        public KernelResult SetCoreAndAffinityMask(int NewCore, long NewAffinityMask)
+        public KernelResult SetCoreAndAffinityMask(int newCore, long newAffinityMask)
         {
             System.CriticalSection.Enter();
 
-            bool UseOverride = AffinityOverrideCount != 0;
+            bool useOverride = _affinityOverrideCount != 0;
 
             //The value -3 is "do not change the preferred core".
-            if (NewCore == -3)
+            if (newCore == -3)
             {
-                NewCore = UseOverride ? PreferredCoreOverride : PreferredCore;
+                newCore = useOverride ? _preferredCoreOverride : PreferredCore;
 
-                if ((NewAffinityMask & (1 << NewCore)) == 0)
+                if ((newAffinityMask & (1 << newCore)) == 0)
                 {
                     System.CriticalSection.Leave();
 
@@ -582,21 +582,21 @@ namespace Ryujinx.HLE.HOS.Kernel
                 }
             }
 
-            if (UseOverride)
+            if (useOverride)
             {
-                PreferredCoreOverride = NewCore;
-                AffinityMaskOverride  = NewAffinityMask;
+                _preferredCoreOverride = newCore;
+                _affinityMaskOverride  = newAffinityMask;
             }
             else
             {
-                long OldAffinityMask = AffinityMask;
+                long oldAffinityMask = AffinityMask;
 
-                PreferredCore = NewCore;
-                AffinityMask  = NewAffinityMask;
+                PreferredCore = newCore;
+                AffinityMask  = newAffinityMask;
 
-                if (OldAffinityMask != NewAffinityMask)
+                if (oldAffinityMask != newAffinityMask)
                 {
-                    int OldCore = CurrentCore;
+                    int oldCore = CurrentCore;
 
                     if (CurrentCore >= 0 && ((AffinityMask >> CurrentCore) & 1) == 0)
                     {
@@ -610,7 +610,7 @@ namespace Ryujinx.HLE.HOS.Kernel
                         }
                     }
 
-                    AdjustSchedulingForNewAffinity(OldAffinityMask, OldCore);
+                    AdjustSchedulingForNewAffinity(oldAffinityMask, oldCore);
                 }
             }
 
@@ -619,13 +619,13 @@ namespace Ryujinx.HLE.HOS.Kernel
             return KernelResult.Success;
         }
 
-        private static int HighestSetCore(long Mask)
+        private static int HighestSetCore(long mask)
         {
-            for (int Core = KScheduler.CpuCoresCount - 1; Core >= 0; Core--)
+            for (int core = KScheduler.CpuCoresCount - 1; core >= 0; core--)
             {
-                if (((Mask >> Core) & 1) != 0)
+                if (((mask >> core) & 1) != 0)
                 {
-                    return Core;
+                    return core;
                 }
             }
 
@@ -634,25 +634,25 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         private void CombineForcePauseFlags()
         {
-            ThreadSchedState OldFlags  = SchedFlags;
-            ThreadSchedState LowNibble = SchedFlags & ThreadSchedState.LowMask;
+            ThreadSchedState oldFlags  = SchedFlags;
+            ThreadSchedState lowNibble = SchedFlags & ThreadSchedState.LowMask;
 
-            SchedFlags = LowNibble | ForcePauseFlags;
+            SchedFlags = lowNibble | _forcePauseFlags;
 
-            AdjustScheduling(OldFlags);
+            AdjustScheduling(oldFlags);
         }
 
-        private void SetNewSchedFlags(ThreadSchedState NewFlags)
+        private void SetNewSchedFlags(ThreadSchedState newFlags)
         {
             System.CriticalSection.Enter();
 
-            ThreadSchedState OldFlags = SchedFlags;
+            ThreadSchedState oldFlags = SchedFlags;
 
-            SchedFlags = (OldFlags & ThreadSchedState.HighMask) | NewFlags;
+            SchedFlags = (oldFlags & ThreadSchedState.HighMask) | newFlags;
 
-            if ((OldFlags & ThreadSchedState.LowMask) != NewFlags)
+            if ((oldFlags & ThreadSchedState.LowMask) != newFlags)
             {
-                AdjustScheduling(OldFlags);
+                AdjustScheduling(oldFlags);
             }
 
             System.CriticalSection.Leave();
@@ -681,98 +681,98 @@ namespace Ryujinx.HLE.HOS.Kernel
             System.CriticalSection.Leave();
         }
 
-        public void Reschedule(ThreadSchedState NewFlags)
+        public void Reschedule(ThreadSchedState newFlags)
         {
             System.CriticalSection.Enter();
 
-            ThreadSchedState OldFlags = SchedFlags;
+            ThreadSchedState oldFlags = SchedFlags;
 
-            SchedFlags = (OldFlags & ThreadSchedState.HighMask) |
-                         (NewFlags & ThreadSchedState.LowMask);
+            SchedFlags = (oldFlags & ThreadSchedState.HighMask) |
+                         (newFlags & ThreadSchedState.LowMask);
 
-            AdjustScheduling(OldFlags);
+            AdjustScheduling(oldFlags);
 
             System.CriticalSection.Leave();
         }
 
-        public void AddMutexWaiter(KThread Requester)
+        public void AddMutexWaiter(KThread requester)
         {
-            AddToMutexWaitersList(Requester);
+            AddToMutexWaitersList(requester);
 
-            Requester.MutexOwner = this;
+            requester.MutexOwner = this;
 
             UpdatePriorityInheritance();
         }
 
-        public void RemoveMutexWaiter(KThread Thread)
+        public void RemoveMutexWaiter(KThread thread)
         {
-            if (Thread.MutexWaiterNode?.List != null)
+            if (thread._mutexWaiterNode?.List != null)
             {
-                MutexWaiters.Remove(Thread.MutexWaiterNode);
+                _mutexWaiters.Remove(thread._mutexWaiterNode);
             }
 
-            Thread.MutexOwner = null;
+            thread.MutexOwner = null;
 
             UpdatePriorityInheritance();
         }
 
-        public KThread RelinquishMutex(long MutexAddress, out int Count)
+        public KThread RelinquishMutex(long mutexAddress, out int count)
         {
-            Count = 0;
+            count = 0;
 
-            if (MutexWaiters.First == null)
+            if (_mutexWaiters.First == null)
             {
                 return null;
             }
 
-            KThread NewMutexOwner = null;
+            KThread newMutexOwner = null;
 
-            LinkedListNode<KThread> CurrentNode = MutexWaiters.First;
+            LinkedListNode<KThread> currentNode = _mutexWaiters.First;
 
             do
             {
                 //Skip all threads that are not waiting for this mutex.
-                while (CurrentNode != null && CurrentNode.Value.MutexAddress != MutexAddress)
+                while (currentNode != null && currentNode.Value.MutexAddress != mutexAddress)
                 {
-                    CurrentNode = CurrentNode.Next;
+                    currentNode = currentNode.Next;
                 }
 
-                if (CurrentNode == null)
+                if (currentNode == null)
                 {
                     break;
                 }
 
-                LinkedListNode<KThread> NextNode = CurrentNode.Next;
+                LinkedListNode<KThread> nextNode = currentNode.Next;
 
-                MutexWaiters.Remove(CurrentNode);
+                _mutexWaiters.Remove(currentNode);
 
-                CurrentNode.Value.MutexOwner = NewMutexOwner;
+                currentNode.Value.MutexOwner = newMutexOwner;
 
-                if (NewMutexOwner != null)
+                if (newMutexOwner != null)
                 {
                     //New owner was already selected, re-insert on new owner list.
-                    NewMutexOwner.AddToMutexWaitersList(CurrentNode.Value);
+                    newMutexOwner.AddToMutexWaitersList(currentNode.Value);
                 }
                 else
                 {
                     //New owner not selected yet, use current thread.
-                    NewMutexOwner = CurrentNode.Value;
+                    newMutexOwner = currentNode.Value;
                 }
 
-                Count++;
+                count++;
 
-                CurrentNode = NextNode;
+                currentNode = nextNode;
             }
-            while (CurrentNode != null);
+            while (currentNode != null);
 
-            if (NewMutexOwner != null)
+            if (newMutexOwner != null)
             {
                 UpdatePriorityInheritance();
 
-                NewMutexOwner.UpdatePriorityInheritance();
+                newMutexOwner.UpdatePriorityInheritance();
             }
 
-            return NewMutexOwner;
+            return newMutexOwner;
         }
 
         private void UpdatePriorityInheritance()
@@ -780,30 +780,30 @@ namespace Ryujinx.HLE.HOS.Kernel
             //If any of the threads waiting for the mutex has
             //higher priority than the current thread, then
             //the current thread inherits that priority.
-            int HighestPriority = BasePriority;
+            int highestPriority = BasePriority;
 
-            if (MutexWaiters.First != null)
+            if (_mutexWaiters.First != null)
             {
-                int WaitingDynamicPriority = MutexWaiters.First.Value.DynamicPriority;
+                int waitingDynamicPriority = _mutexWaiters.First.Value.DynamicPriority;
 
-                if (WaitingDynamicPriority < HighestPriority)
+                if (waitingDynamicPriority < highestPriority)
                 {
-                    HighestPriority = WaitingDynamicPriority;
+                    highestPriority = waitingDynamicPriority;
                 }
             }
 
-            if (HighestPriority != DynamicPriority)
+            if (highestPriority != DynamicPriority)
             {
-                int OldPriority = DynamicPriority;
+                int oldPriority = DynamicPriority;
 
-                DynamicPriority = HighestPriority;
+                DynamicPriority = highestPriority;
 
-                AdjustSchedulingForNewPriority(OldPriority);
+                AdjustSchedulingForNewPriority(oldPriority);
 
                 if (MutexOwner != null)
                 {
                     //Remove and re-insert to ensure proper sorting based on new priority.
-                    MutexOwner.MutexWaiters.Remove(MutexWaiterNode);
+                    MutexOwner._mutexWaiters.Remove(_mutexWaiterNode);
 
                     MutexOwner.AddToMutexWaitersList(this);
 
@@ -812,47 +812,47 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private void AddToMutexWaitersList(KThread Thread)
+        private void AddToMutexWaitersList(KThread thread)
         {
-            LinkedListNode<KThread> NextPrio = MutexWaiters.First;
+            LinkedListNode<KThread> nextPrio = _mutexWaiters.First;
 
-            int CurrentPriority = Thread.DynamicPriority;
+            int currentPriority = thread.DynamicPriority;
 
-            while (NextPrio != null && NextPrio.Value.DynamicPriority <= CurrentPriority)
+            while (nextPrio != null && nextPrio.Value.DynamicPriority <= currentPriority)
             {
-                NextPrio = NextPrio.Next;
+                nextPrio = nextPrio.Next;
             }
 
-            if (NextPrio != null)
+            if (nextPrio != null)
             {
-                Thread.MutexWaiterNode = MutexWaiters.AddBefore(NextPrio, Thread);
+                thread._mutexWaiterNode = _mutexWaiters.AddBefore(nextPrio, thread);
             }
             else
             {
-                Thread.MutexWaiterNode = MutexWaiters.AddLast(Thread);
+                thread._mutexWaiterNode = _mutexWaiters.AddLast(thread);
             }
         }
 
-        private void AdjustScheduling(ThreadSchedState OldFlags)
+        private void AdjustScheduling(ThreadSchedState oldFlags)
         {
-            if (OldFlags == SchedFlags)
+            if (oldFlags == SchedFlags)
             {
                 return;
             }
 
-            if (OldFlags == ThreadSchedState.Running)
+            if (oldFlags == ThreadSchedState.Running)
             {
                 //Was running, now it's stopped.
                 if (CurrentCore >= 0)
                 {
-                    SchedulingData.Unschedule(DynamicPriority, CurrentCore, this);
+                    _schedulingData.Unschedule(DynamicPriority, CurrentCore, this);
                 }
 
-                for (int Core = 0; Core < KScheduler.CpuCoresCount; Core++)
+                for (int core = 0; core < KScheduler.CpuCoresCount; core++)
                 {
-                    if (Core != CurrentCore && ((AffinityMask >> Core) & 1) != 0)
+                    if (core != CurrentCore && ((AffinityMask >> core) & 1) != 0)
                     {
-                        SchedulingData.Unsuggest(DynamicPriority, Core, this);
+                        _schedulingData.Unsuggest(DynamicPriority, core, this);
                     }
                 }
             }
@@ -861,22 +861,22 @@ namespace Ryujinx.HLE.HOS.Kernel
                 //Was stopped, now it's running.
                 if (CurrentCore >= 0)
                 {
-                    SchedulingData.Schedule(DynamicPriority, CurrentCore, this);
+                    _schedulingData.Schedule(DynamicPriority, CurrentCore, this);
                 }
 
-                for (int Core = 0; Core < KScheduler.CpuCoresCount; Core++)
+                for (int core = 0; core < KScheduler.CpuCoresCount; core++)
                 {
-                    if (Core != CurrentCore && ((AffinityMask >> Core) & 1) != 0)
+                    if (core != CurrentCore && ((AffinityMask >> core) & 1) != 0)
                     {
-                        SchedulingData.Suggest(DynamicPriority, Core, this);
+                        _schedulingData.Suggest(DynamicPriority, core, this);
                     }
                 }
             }
 
-            Scheduler.ThreadReselectionRequested = true;
+            _scheduler.ThreadReselectionRequested = true;
         }
 
-        private void AdjustSchedulingForNewPriority(int OldPriority)
+        private void AdjustSchedulingForNewPriority(int oldPriority)
         {
             if (SchedFlags != ThreadSchedState.Running)
             {
@@ -886,44 +886,44 @@ namespace Ryujinx.HLE.HOS.Kernel
             //Remove thread from the old priority queues.
             if (CurrentCore >= 0)
             {
-                SchedulingData.Unschedule(OldPriority, CurrentCore, this);
+                _schedulingData.Unschedule(oldPriority, CurrentCore, this);
             }
 
-            for (int Core = 0; Core < KScheduler.CpuCoresCount; Core++)
+            for (int core = 0; core < KScheduler.CpuCoresCount; core++)
             {
-                if (Core != CurrentCore && ((AffinityMask >> Core) & 1) != 0)
+                if (core != CurrentCore && ((AffinityMask >> core) & 1) != 0)
                 {
-                    SchedulingData.Unsuggest(OldPriority, Core, this);
+                    _schedulingData.Unsuggest(oldPriority, core, this);
                 }
             }
 
             //Add thread to the new priority queues.
-            KThread CurrentThread = Scheduler.GetCurrentThread();
+            KThread currentThread = _scheduler.GetCurrentThread();
 
             if (CurrentCore >= 0)
             {
-                if (CurrentThread == this)
+                if (currentThread == this)
                 {
-                    SchedulingData.SchedulePrepend(DynamicPriority, CurrentCore, this);
+                    _schedulingData.SchedulePrepend(DynamicPriority, CurrentCore, this);
                 }
                 else
                 {
-                    SchedulingData.Schedule(DynamicPriority, CurrentCore, this);
+                    _schedulingData.Schedule(DynamicPriority, CurrentCore, this);
                 }
             }
 
-            for (int Core = 0; Core < KScheduler.CpuCoresCount; Core++)
+            for (int core = 0; core < KScheduler.CpuCoresCount; core++)
             {
-                if (Core != CurrentCore && ((AffinityMask >> Core) & 1) != 0)
+                if (core != CurrentCore && ((AffinityMask >> core) & 1) != 0)
                 {
-                    SchedulingData.Suggest(DynamicPriority, Core, this);
+                    _schedulingData.Suggest(DynamicPriority, core, this);
                 }
             }
 
-            Scheduler.ThreadReselectionRequested = true;
+            _scheduler.ThreadReselectionRequested = true;
         }
 
-        private void AdjustSchedulingForNewAffinity(long OldAffinityMask, int OldCore)
+        private void AdjustSchedulingForNewAffinity(long oldAffinityMask, int oldCore)
         {
             if (SchedFlags != ThreadSchedState.Running || DynamicPriority >= KScheduler.PrioritiesCount)
             {
@@ -931,49 +931,49 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
 
             //Remove from old queues.
-            for (int Core = 0; Core < KScheduler.CpuCoresCount; Core++)
+            for (int core = 0; core < KScheduler.CpuCoresCount; core++)
             {
-                if (((OldAffinityMask >> Core) & 1) != 0)
+                if (((oldAffinityMask >> core) & 1) != 0)
                 {
-                    if (Core == OldCore)
+                    if (core == oldCore)
                     {
-                        SchedulingData.Unschedule(DynamicPriority, Core, this);
+                        _schedulingData.Unschedule(DynamicPriority, core, this);
                     }
                     else
                     {
-                        SchedulingData.Unsuggest(DynamicPriority, Core, this);
+                        _schedulingData.Unsuggest(DynamicPriority, core, this);
                     }
                 }
             }
 
             //Insert on new queues.
-            for (int Core = 0; Core < KScheduler.CpuCoresCount; Core++)
+            for (int core = 0; core < KScheduler.CpuCoresCount; core++)
             {
-                if (((AffinityMask >> Core) & 1) != 0)
+                if (((AffinityMask >> core) & 1) != 0)
                 {
-                    if (Core == CurrentCore)
+                    if (core == CurrentCore)
                     {
-                        SchedulingData.Schedule(DynamicPriority, Core, this);
+                        _schedulingData.Schedule(DynamicPriority, core, this);
                     }
                     else
                     {
-                        SchedulingData.Suggest(DynamicPriority, Core, this);
+                        _schedulingData.Suggest(DynamicPriority, core, this);
                     }
                 }
             }
 
-            Scheduler.ThreadReselectionRequested = true;
+            _scheduler.ThreadReselectionRequested = true;
         }
 
         public override bool IsSignaled()
         {
-            return HasExited;
+            return _hasExited;
         }
 
-        public void SetEntryArguments(long ArgsPtr, int ThreadHandle)
+        public void SetEntryArguments(long argsPtr, int threadHandle)
         {
-            Context.ThreadState.X0 = (ulong)ArgsPtr;
-            Context.ThreadState.X1 = (ulong)ThreadHandle;
+            Context.ThreadState.X0 = (ulong)argsPtr;
+            Context.ThreadState.X1 = (ulong)threadHandle;
         }
 
         public void ClearExclusive()
@@ -1004,7 +1004,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         {
             Owner?.RemoveThread(this);
 
-            if (TlsAddress != 0 && Owner.FreeThreadLocalStorage(TlsAddress) != KernelResult.Success)
+            if (_tlsAddress != 0 && Owner.FreeThreadLocalStorage(_tlsAddress) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Unexpected failure freeing thread local storage.");
             }
@@ -1013,13 +1013,13 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             //Wake up all threads that may be waiting for a mutex being held
             //by this thread.
-            foreach (KThread Thread in MutexWaiters)
+            foreach (KThread thread in _mutexWaiters)
             {
-                Thread.MutexOwner            = null;
-                Thread.PreferredCoreOverride = 0;
-                Thread.ObjSyncResult         = 0xfa01;
+                thread.MutexOwner             = null;
+                thread._preferredCoreOverride = 0;
+                thread.ObjSyncResult          = 0xfa01;
 
-                Thread.ReleaseAndResume();
+                thread.ReleaseAndResume();
             }
 
             System.CriticalSection.Leave();

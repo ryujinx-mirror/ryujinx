@@ -4,13 +4,13 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class DynamicExceptionSpec : ParentNode
     {
-        public DynamicExceptionSpec(BaseNode Child) : base(NodeType.DynamicExceptionSpec, Child) { }
+        public DynamicExceptionSpec(BaseNode child) : base(NodeType.DynamicExceptionSpec, child) { }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write("throw(");
-            Child.Print(Writer);
-            Writer.Write(")");
+            writer.Write("throw(");
+            Child.Print(writer);
+            writer.Write(")");
         }
     }
 }

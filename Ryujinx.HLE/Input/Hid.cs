@@ -5,130 +5,130 @@ namespace Ryujinx.HLE.Input
 {
     public partial class Hid
     {
-        private Switch Device;
+        private Switch _device;
 
         public HidControllerBase PrimaryController { get; private set; }
 
         internal long HidPosition;
 
-        public Hid(Switch Device, long HidPosition)
+        public Hid(Switch device, long hidPosition)
         {
-            this.Device      = Device;
-            this.HidPosition = HidPosition;
+            _device     = device;
+            HidPosition = hidPosition;
 
-            Device.Memory.FillWithZeros(HidPosition, Horizon.HidSize);
+            device.Memory.FillWithZeros(hidPosition, Horizon.HidSize);
         }
 
-        public void InitilizePrimaryController(HidControllerType ControllerType)
+        public void InitilizePrimaryController(HidControllerType controllerType)
         {
-            HidControllerId ControllerId = ControllerType == HidControllerType.Handheld ?
-                HidControllerId.CONTROLLER_HANDHELD : HidControllerId.CONTROLLER_PLAYER_1;
+            HidControllerId controllerId = controllerType == HidControllerType.Handheld ?
+                HidControllerId.ControllerHandheld : HidControllerId.ControllerPlayer1;
 
-            if (ControllerType == HidControllerType.ProController)
+            if (controllerType == HidControllerType.ProController)
             {
-                PrimaryController = new HidProController(Device);
+                PrimaryController = new HidProController(_device);
             }
             else
             {
-                PrimaryController = new HidNpadController(ControllerType,
-                     Device,
-                     (NpadColor.Body_Neon_Red, NpadColor.Body_Neon_Red),
-                     (NpadColor.Buttons_Neon_Blue, NpadColor.Buttons_Neon_Blue));
+                PrimaryController = new HidNpadController(controllerType,
+                     _device,
+                     (NpadColor.BodyNeonRed, NpadColor.BodyNeonRed),
+                     (NpadColor.ButtonsNeonBlue, NpadColor.ButtonsNeonBlue));
             }
 
-            PrimaryController.Connect(ControllerId);
+            PrimaryController.Connect(controllerId);
         }
 
         private HidControllerButtons UpdateStickButtons(
-            HidJoystickPosition LeftStick,
-            HidJoystickPosition RightStick)
+            HidJoystickPosition leftStick,
+            HidJoystickPosition rightStick)
         {
-            HidControllerButtons Result = 0;
+            HidControllerButtons result = 0;
 
-            if (RightStick.DX < 0)
+            if (rightStick.Dx < 0)
             {
-                Result |= HidControllerButtons.RStickLeft;
+                result |= HidControllerButtons.RStickLeft;
             }
 
-            if (RightStick.DX > 0)
+            if (rightStick.Dx > 0)
             {
-                Result |= HidControllerButtons.RStickRight;
+                result |= HidControllerButtons.RStickRight;
             }
 
-            if (RightStick.DY < 0)
+            if (rightStick.Dy < 0)
             {
-                Result |= HidControllerButtons.RStickDown;
+                result |= HidControllerButtons.RStickDown;
             }
 
-            if (RightStick.DY > 0)
+            if (rightStick.Dy > 0)
             {
-                Result |= HidControllerButtons.RStickUp;
+                result |= HidControllerButtons.RStickUp;
             }
 
-            if (LeftStick.DX < 0)
+            if (leftStick.Dx < 0)
             {
-                Result |= HidControllerButtons.LStickLeft;
+                result |= HidControllerButtons.LStickLeft;
             }
 
-            if (LeftStick.DX > 0)
+            if (leftStick.Dx > 0)
             {
-                Result |= HidControllerButtons.LStickRight;
+                result |= HidControllerButtons.LStickRight;
             }
 
-            if (LeftStick.DY < 0)
+            if (leftStick.Dy < 0)
             {
-                Result |= HidControllerButtons.LStickDown;
+                result |= HidControllerButtons.LStickDown;
             }
 
-            if (LeftStick.DY > 0)
+            if (leftStick.Dy > 0)
             {
-                Result |= HidControllerButtons.LStickUp;
+                result |= HidControllerButtons.LStickUp;
             }
 
-            return Result;
+            return result;
         }
 
-        public void SetTouchPoints(params HidTouchPoint[] Points)
+        public void SetTouchPoints(params HidTouchPoint[] points)
         {
-            long TouchScreenOffset = HidPosition + HidTouchScreenOffset;
-            long LastEntry         = Device.Memory.ReadInt64(TouchScreenOffset + 0x10);
-            long CurrEntry         = (LastEntry + 1) % HidEntryCount;
-            long Timestamp         = GetTimestamp();
+            long touchScreenOffset = HidPosition + HidTouchScreenOffset;
+            long lastEntry         = _device.Memory.ReadInt64(touchScreenOffset + 0x10);
+            long currEntry         = (lastEntry + 1) % HidEntryCount;
+            long timestamp         = GetTimestamp();
 
-            Device.Memory.WriteInt64(TouchScreenOffset + 0x00, Timestamp);
-            Device.Memory.WriteInt64(TouchScreenOffset + 0x08, HidEntryCount);
-            Device.Memory.WriteInt64(TouchScreenOffset + 0x10, CurrEntry);
-            Device.Memory.WriteInt64(TouchScreenOffset + 0x18, HidEntryCount - 1);
-            Device.Memory.WriteInt64(TouchScreenOffset + 0x20, Timestamp);
+            _device.Memory.WriteInt64(touchScreenOffset + 0x00, timestamp);
+            _device.Memory.WriteInt64(touchScreenOffset + 0x08, HidEntryCount);
+            _device.Memory.WriteInt64(touchScreenOffset + 0x10, currEntry);
+            _device.Memory.WriteInt64(touchScreenOffset + 0x18, HidEntryCount - 1);
+            _device.Memory.WriteInt64(touchScreenOffset + 0x20, timestamp);
 
-            long TouchEntryOffset = TouchScreenOffset + HidTouchHeaderSize;
-            long LastEntryOffset  = TouchEntryOffset + LastEntry * HidTouchEntrySize;
-            long SampleCounter    = Device.Memory.ReadInt64(LastEntryOffset) + 1;
+            long touchEntryOffset = touchScreenOffset + HidTouchHeaderSize;
+            long lastEntryOffset  = touchEntryOffset + lastEntry * HidTouchEntrySize;
+            long sampleCounter    = _device.Memory.ReadInt64(lastEntryOffset) + 1;
 
-            TouchEntryOffset += CurrEntry * HidTouchEntrySize;
+            touchEntryOffset += currEntry * HidTouchEntrySize;
 
-            Device.Memory.WriteInt64(TouchEntryOffset + 0x00, SampleCounter);
-            Device.Memory.WriteInt64(TouchEntryOffset + 0x08, Points.Length);
+            _device.Memory.WriteInt64(touchEntryOffset + 0x00, sampleCounter);
+            _device.Memory.WriteInt64(touchEntryOffset + 0x08, points.Length);
 
-            TouchEntryOffset += HidTouchEntryHeaderSize;
+            touchEntryOffset += HidTouchEntryHeaderSize;
 
-            const int Padding = 0;
+            const int padding = 0;
 
-            int Index = 0;
+            int index = 0;
 
-            foreach (HidTouchPoint Point in Points)
+            foreach (HidTouchPoint point in points)
             {
-                Device.Memory.WriteInt64(TouchEntryOffset + 0x00, SampleCounter);
-                Device.Memory.WriteInt32(TouchEntryOffset + 0x08, Padding);
-                Device.Memory.WriteInt32(TouchEntryOffset + 0x0c, Index++);
-                Device.Memory.WriteInt32(TouchEntryOffset + 0x10, Point.X);
-                Device.Memory.WriteInt32(TouchEntryOffset + 0x14, Point.Y);
-                Device.Memory.WriteInt32(TouchEntryOffset + 0x18, Point.DiameterX);
-                Device.Memory.WriteInt32(TouchEntryOffset + 0x1c, Point.DiameterY);
-                Device.Memory.WriteInt32(TouchEntryOffset + 0x20, Point.Angle);
-                Device.Memory.WriteInt32(TouchEntryOffset + 0x24, Padding);
+                _device.Memory.WriteInt64(touchEntryOffset + 0x00, sampleCounter);
+                _device.Memory.WriteInt32(touchEntryOffset + 0x08, padding);
+                _device.Memory.WriteInt32(touchEntryOffset + 0x0c, index++);
+                _device.Memory.WriteInt32(touchEntryOffset + 0x10, point.X);
+                _device.Memory.WriteInt32(touchEntryOffset + 0x14, point.Y);
+                _device.Memory.WriteInt32(touchEntryOffset + 0x18, point.DiameterX);
+                _device.Memory.WriteInt32(touchEntryOffset + 0x1c, point.DiameterY);
+                _device.Memory.WriteInt32(touchEntryOffset + 0x20, point.Angle);
+                _device.Memory.WriteInt32(touchEntryOffset + 0x24, padding);
 
-                TouchEntryOffset += HidTouchEntryTouchSize;
+                touchEntryOffset += HidTouchEntryTouchSize;
             }
         }
 

@@ -8,13 +8,13 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 {
     class IFriendService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
         public IFriendService()
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 10101, GetFriendList                 },
                 { 10601, DeclareCloseOnlinePlaySession },
@@ -23,76 +23,76 @@ namespace Ryujinx.HLE.HOS.Services.Friend
         }
 
         // nn::friends::GetFriendListGetFriendListIds(nn::account::Uid, int Unknown0, nn::friends::detail::ipc::SizedFriendFilter, ulong Unknown1) -> int CounterIds,  array<nn::account::NetworkServiceAccountId>
-        public long GetFriendList(ServiceCtx Context)
+        public long GetFriendList(ServiceCtx context)
         {
-            UInt128 Uuid = new UInt128(
-                Context.RequestData.ReadInt64(),
-                Context.RequestData.ReadInt64());
+            UInt128 uuid = new UInt128(
+                context.RequestData.ReadInt64(),
+                context.RequestData.ReadInt64());
 
-            int Unknown0 = Context.RequestData.ReadInt32();
+            int unknown0 = context.RequestData.ReadInt32();
 
-            FriendFilter Filter = new FriendFilter()
+            FriendFilter filter = new FriendFilter
             {
-                PresenceStatus           = (PresenceStatusFilter)Context.RequestData.ReadInt32(),
-                IsFavoriteOnly           = Context.RequestData.ReadBoolean(),
-                IsSameAppPresenceOnly    = Context.RequestData.ReadBoolean(),
-                IsSameAppPlayedOnly      = Context.RequestData.ReadBoolean(),
-                IsArbitraryAppPlayedOnly = Context.RequestData.ReadBoolean(),
-                PresenceGroupId          = Context.RequestData.ReadInt64()
+                PresenceStatus           = (PresenceStatusFilter)context.RequestData.ReadInt32(),
+                IsFavoriteOnly           = context.RequestData.ReadBoolean(),
+                IsSameAppPresenceOnly    = context.RequestData.ReadBoolean(),
+                IsSameAppPlayedOnly      = context.RequestData.ReadBoolean(),
+                IsArbitraryAppPlayedOnly = context.RequestData.ReadBoolean(),
+                PresenceGroupId          = context.RequestData.ReadInt64()
             };
 
-            long Unknown1 = Context.RequestData.ReadInt64();
+            long unknown1 = context.RequestData.ReadInt64();
 
             // There are no friends online, so we return 0 because the nn::account::NetworkServiceAccountId array is empty.
-            Context.ResponseData.Write(0);
+            context.ResponseData.Write(0);
 
-            Logger.PrintStub(LogClass.ServiceFriend, $"Stubbed. UserId: {Uuid.ToString()} - " +
-                                                     $"Unknown0: {Unknown0} - " +
-                                                     $"PresenceStatus: {Filter.PresenceStatus} - " +
-                                                     $"IsFavoriteOnly: {Filter.IsFavoriteOnly} - " +
-                                                     $"IsSameAppPresenceOnly: {Filter.IsSameAppPresenceOnly} - " +
-                                                     $"IsSameAppPlayedOnly: {Filter.IsSameAppPlayedOnly} - " +
-                                                     $"IsArbitraryAppPlayedOnly: {Filter.IsArbitraryAppPlayedOnly} - " +
-                                                     $"PresenceGroupId: {Filter.PresenceGroupId} - " +
-                                                     $"Unknown1: {Unknown1}");
+            Logger.PrintStub(LogClass.ServiceFriend, $"Stubbed. UserId: {uuid.ToString()} - " +
+                                                     $"Unknown0: {unknown0} - " +
+                                                     $"PresenceStatus: {filter.PresenceStatus} - " +
+                                                     $"IsFavoriteOnly: {filter.IsFavoriteOnly} - " +
+                                                     $"IsSameAppPresenceOnly: {filter.IsSameAppPresenceOnly} - " +
+                                                     $"IsSameAppPlayedOnly: {filter.IsSameAppPlayedOnly} - " +
+                                                     $"IsArbitraryAppPlayedOnly: {filter.IsArbitraryAppPlayedOnly} - " +
+                                                     $"PresenceGroupId: {filter.PresenceGroupId} - " +
+                                                     $"Unknown1: {unknown1}");
 
             return 0;
         }
 
         // DeclareCloseOnlinePlaySession(nn::account::Uid)
-        public long DeclareCloseOnlinePlaySession(ServiceCtx Context)
+        public long DeclareCloseOnlinePlaySession(ServiceCtx context)
         {
-            UInt128 Uuid = new UInt128(
-                Context.RequestData.ReadInt64(),
-                Context.RequestData.ReadInt64());
+            UInt128 uuid = new UInt128(
+                context.RequestData.ReadInt64(),
+                context.RequestData.ReadInt64());
 
-            if (Context.Device.System.State.TryGetUser(Uuid, out UserProfile Profile))
+            if (context.Device.System.State.TryGetUser(uuid, out UserProfile profile))
             {
-                Profile.OnlinePlayState = OpenCloseState.Closed;
+                profile.OnlinePlayState = OpenCloseState.Closed;
             }
 
-            Logger.PrintStub(LogClass.ServiceFriend, $"Stubbed. Uuid: {Uuid.ToString()} - " +
-                                                     $"OnlinePlayState: {Profile.OnlinePlayState}");
+            Logger.PrintStub(LogClass.ServiceFriend, $"Stubbed. Uuid: {uuid.ToString()} - " +
+                                                     $"OnlinePlayState: {profile.OnlinePlayState}");
 
             return 0;
         }
 
         // UpdateUserPresence(nn::account::Uid, ulong Unknown0) -> buffer<Unknown1, type: 0x19, size: 0xe0>
-        public long UpdateUserPresence(ServiceCtx Context)
+        public long UpdateUserPresence(ServiceCtx context)
         {
-            UInt128 Uuid = new UInt128(
-                Context.RequestData.ReadInt64(),
-                Context.RequestData.ReadInt64());
+            UInt128 uuid = new UInt128(
+                context.RequestData.ReadInt64(),
+                context.RequestData.ReadInt64());
 
-            long Unknown0 = Context.RequestData.ReadInt64();
+            long unknown0 = context.RequestData.ReadInt64();
 
-            long Position = Context.Request.PtrBuff[0].Position;
-            long Size     = Context.Request.PtrBuff[0].Size;
+            long position = context.Request.PtrBuff[0].Position;
+            long size     = context.Request.PtrBuff[0].Size;
 
             //Todo: Write the buffer content.
 
-            Logger.PrintStub(LogClass.ServiceFriend, $"Stubbed. Uuid: {Uuid.ToString()} - " +
-                                                     $"Unknown0: {Unknown0}");
+            Logger.PrintStub(LogClass.ServiceFriend, $"Stubbed. Uuid: {uuid.ToString()} - " +
+                                                     $"Unknown0: {unknown0}");
 
             return 0;
         }

@@ -4,12 +4,12 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class DtorName : ParentNode
     {
-        public DtorName(BaseNode Name) : base(NodeType.DtOrName, Name) { }
+        public DtorName(BaseNode name) : base(NodeType.DtOrName, name) { }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write("~");
-            Child.PrintLeft(Writer);
+            writer.Write("~");
+            Child.PrintLeft(writer);
         }
     }
 }

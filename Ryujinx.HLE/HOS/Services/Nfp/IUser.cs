@@ -9,25 +9,25 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
 {
     class IUser : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private const HidControllerId NpadId = HidControllerId.CONTROLLER_PLAYER_1;
+        private const HidControllerId NpadId = HidControllerId.ControllerPlayer1;
 
-        private State State = State.NonInitialized;
+        private State _state = State.NonInitialized;
 
-        private DeviceState DeviceState = DeviceState.Initialized;
+        private DeviceState _deviceState = DeviceState.Initialized;
 
-        private KEvent ActivateEvent;
+        private KEvent _activateEvent;
 
-        private KEvent DeactivateEvent;
+        private KEvent _deactivateEvent;
 
-        private KEvent AvailabilityChangeEvent;
+        private KEvent _availabilityChangeEvent;
 
-        public IUser(Horizon System)
+        public IUser(Horizon system)
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0,  Initialize                    },
                 { 17, AttachActivateEvent           },
@@ -38,85 +38,85 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
                 { 23, AttachAvailabilityChangeEvent }
             };
 
-            ActivateEvent           = new KEvent(System);
-            DeactivateEvent         = new KEvent(System);
-            AvailabilityChangeEvent = new KEvent(System);
+            _activateEvent           = new KEvent(system);
+            _deactivateEvent         = new KEvent(system);
+            _availabilityChangeEvent = new KEvent(system);
         }
 
-        public long Initialize(ServiceCtx Context)
+        public long Initialize(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
 
-            State = State.Initialized;
+            _state = State.Initialized;
 
             return 0;
         }
 
-        public long AttachActivateEvent(ServiceCtx Context)
+        public long AttachActivateEvent(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
 
-            if (Context.Process.HandleTable.GenerateHandle(ActivateEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_activateEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);;
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
             return 0;
         }
 
-        public long AttachDeactivateEvent(ServiceCtx Context)
+        public long AttachDeactivateEvent(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
 
-            if (Context.Process.HandleTable.GenerateHandle(DeactivateEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_deactivateEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
             return 0;
         }
 
-        public long GetState(ServiceCtx Context)
+        public long GetState(ServiceCtx context)
         {
-            Context.ResponseData.Write((int)State);
+            context.ResponseData.Write((int)_state);
 
             Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
 
             return 0;
         }
 
-        public long GetDeviceState(ServiceCtx Context)
+        public long GetDeviceState(ServiceCtx context)
         {
-            Context.ResponseData.Write((int)DeviceState);
+            context.ResponseData.Write((int)_deviceState);
 
             Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
 
             return 0;
         }
 
-        public long GetNpadId(ServiceCtx Context)
+        public long GetNpadId(ServiceCtx context)
         {
-            Context.ResponseData.Write((int)NpadId);
+            context.ResponseData.Write((int)NpadId);
 
             Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
 
             return 0;
         }
 
-        public long AttachAvailabilityChangeEvent(ServiceCtx Context)
+        public long AttachAvailabilityChangeEvent(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
 
-            if (Context.Process.HandleTable.GenerateHandle(AvailabilityChangeEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_availabilityChangeEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
             return 0;
         }

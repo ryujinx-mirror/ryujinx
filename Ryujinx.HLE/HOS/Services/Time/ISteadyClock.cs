@@ -6,46 +6,46 @@ namespace Ryujinx.HLE.HOS.Services.Time
 {
     class ISteadyClock : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private ulong TestOffset;
+        private ulong _testOffset;
 
         public ISteadyClock()
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0, GetCurrentTimePoint },
                 { 1, GetTestOffset       },
                 { 2, SetTestOffset       }
             };
 
-            TestOffset = 0;
+            _testOffset = 0;
         }
 
-        public long GetCurrentTimePoint(ServiceCtx Context)
+        public long GetCurrentTimePoint(ServiceCtx context)
         {
-            Context.ResponseData.Write((long)(System.Diagnostics.Process.GetCurrentProcess().StartTime - DateTime.Now).TotalSeconds);
+            context.ResponseData.Write((long)(System.Diagnostics.Process.GetCurrentProcess().StartTime - DateTime.Now).TotalSeconds);
 
             for (int i = 0; i < 0x10; i++)
             {
-                Context.ResponseData.Write((byte)0);
+                context.ResponseData.Write((byte)0);
             }
 
             return 0;
         }
 
-        public long GetTestOffset(ServiceCtx Context)
+        public long GetTestOffset(ServiceCtx context)
         {
-            Context.ResponseData.Write(TestOffset);
+            context.ResponseData.Write(_testOffset);
 
             return 0;
         }
 
-        public long SetTestOffset(ServiceCtx Context)
+        public long SetTestOffset(ServiceCtx context)
         {
-            TestOffset = Context.RequestData.ReadUInt64();
+            _testOffset = context.RequestData.ReadUInt64();
 
             return 0;
         }

@@ -8,15 +8,15 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class ILibraryAppletAccessor : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private KEvent StateChangedEvent;
+        private KEvent _stateChangedEvent;
 
-        public ILibraryAppletAccessor(Horizon System)
+        public ILibraryAppletAccessor(Horizon system)
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0,   GetAppletStateChangedEvent },
                 { 10,  Start                      },
@@ -25,49 +25,49 @@ namespace Ryujinx.HLE.HOS.Services.Am
                 { 101, PopOutData                 }
             };
 
-            StateChangedEvent = new KEvent(System);
+            _stateChangedEvent = new KEvent(system);
         }
 
-        public long GetAppletStateChangedEvent(ServiceCtx Context)
+        public long GetAppletStateChangedEvent(ServiceCtx context)
         {
-            StateChangedEvent.ReadableEvent.Signal();
+            _stateChangedEvent.ReadableEvent.Signal();
 
-            if (Context.Process.HandleTable.GenerateHandle(StateChangedEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_stateChangedEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long Start(ServiceCtx Context)
+        public long Start(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long GetResult(ServiceCtx Context)
+        public long GetResult(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long PushInData(ServiceCtx Context)
+        public long PushInData(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long PopOutData(ServiceCtx Context)
+        public long PopOutData(ServiceCtx context)
         {
-            MakeObject(Context, new IStorage(StorageHelper.MakeLaunchParams()));
+            MakeObject(context, new IStorage(StorageHelper.MakeLaunchParams()));
 
             return 0;
         }

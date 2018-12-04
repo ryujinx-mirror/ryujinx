@@ -4,20 +4,20 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class LocalName : BaseNode
     {
-        private BaseNode Encoding;
-        private BaseNode Entity;
+        private BaseNode _encoding;
+        private BaseNode _entity;
 
-        public LocalName(BaseNode Encoding, BaseNode Entity) : base(NodeType.LocalName)
+        public LocalName(BaseNode encoding, BaseNode entity) : base(NodeType.LocalName)
         {
-            this.Encoding = Encoding;
-            this.Entity   = Entity;
+            _encoding = encoding;
+            _entity   = entity;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Encoding.Print(Writer);
-            Writer.Write("::");
-            Entity.Print(Writer);
+            _encoding.Print(writer);
+            writer.Write("::");
+            _entity.Print(writer);
         }
     }
 }

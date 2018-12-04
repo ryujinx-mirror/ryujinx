@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
-    enum FileSystemType : int
+    enum FileSystemType
     {
         Logo               = 2,
         ContentControl     = 3,

@@ -5,9 +5,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
         public const int LocksCount  = 16;
         public const int EventsCount = 64;
 
-        public NvHostSyncpt Syncpt { get; private set; }
+        public NvHostSyncpt Syncpt { get; }
 
-        public NvHostEvent[] Events { get; private set; }
+        public NvHostEvent[] Events { get; }
 
         public NvHostCtrlUserCtx()
         {

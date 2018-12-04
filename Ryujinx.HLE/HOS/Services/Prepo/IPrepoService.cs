@@ -6,19 +6,19 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
 {
     class IPrepoService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
         public IPrepoService()
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 10101, SaveReportWithUser }
             };
         }
 
-        public static long SaveReportWithUser(ServiceCtx Context)
+        public static long SaveReportWithUser(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServicePrepo, "Stubbed.");
 

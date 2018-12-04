@@ -7,19 +7,19 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Vi
 {
-    class IHOSBinderDriver : IpcService, IDisposable
+    class IhosBinderDriver : IpcService, IDisposable
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private KEvent BinderEvent;
+        private KEvent _binderEvent;
 
-        private NvFlinger Flinger;
+        private NvFlinger _flinger;
 
-        public IHOSBinderDriver(Horizon System, IGalRenderer Renderer)
+        public IhosBinderDriver(Horizon system, IGalRenderer renderer)
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0, TransactParcel     },
                 { 1, AdjustRefcount     },
@@ -27,62 +27,62 @@ namespace Ryujinx.HLE.HOS.Services.Vi
                 { 3, TransactParcelAuto }
             };
 
-            BinderEvent = new KEvent(System);
+            _binderEvent = new KEvent(system);
 
-            BinderEvent.ReadableEvent.Signal();
+            _binderEvent.ReadableEvent.Signal();
 
-            Flinger = new NvFlinger(Renderer, BinderEvent);
+            _flinger = new NvFlinger(renderer, _binderEvent);
         }
 
-        public long TransactParcel(ServiceCtx Context)
+        public long TransactParcel(ServiceCtx context)
         {
-            int Id   = Context.RequestData.ReadInt32();
-            int Code = Context.RequestData.ReadInt32();
+            int id   = context.RequestData.ReadInt32();
+            int code = context.RequestData.ReadInt32();
 
-            long DataPos  = Context.Request.SendBuff[0].Position;
-            long DataSize = Context.Request.SendBuff[0].Size;
+            long dataPos  = context.Request.SendBuff[0].Position;
+            long dataSize = context.Request.SendBuff[0].Size;
 
-            byte[] Data = Context.Memory.ReadBytes(DataPos, DataSize);
+            byte[] data = context.Memory.ReadBytes(dataPos, dataSize);
 
-            Data = Parcel.GetParcelData(Data);
+            data = Parcel.GetParcelData(data);
 
-            return Flinger.ProcessParcelRequest(Context, Data, Code);
+            return _flinger.ProcessParcelRequest(context, data, code);
         }
 
-        public long TransactParcelAuto(ServiceCtx Context)
+        public long TransactParcelAuto(ServiceCtx context)
         {
-            int Id   = Context.RequestData.ReadInt32();
-            int Code = Context.RequestData.ReadInt32();
+            int id   = context.RequestData.ReadInt32();
+            int code = context.RequestData.ReadInt32();
 
-            (long DataPos, long DataSize) = Context.Request.GetBufferType0x21();
+            (long dataPos, long dataSize) = context.Request.GetBufferType0x21();
 
-            byte[] Data = Context.Memory.ReadBytes(DataPos, DataSize);
+            byte[] data = context.Memory.ReadBytes(dataPos, dataSize);
 
-            Data = Parcel.GetParcelData(Data);
+            data = Parcel.GetParcelData(data);
 
-            return Flinger.ProcessParcelRequest(Context, Data, Code);
+            return _flinger.ProcessParcelRequest(context, data, code);
         }
 
-        public long AdjustRefcount(ServiceCtx Context)
+        public long AdjustRefcount(ServiceCtx context)
         {
-            int Id     = Context.RequestData.ReadInt32();
-            int AddVal = Context.RequestData.ReadInt32();
-            int Type   = Context.RequestData.ReadInt32();
+            int id     = context.RequestData.ReadInt32();
+            int addVal = context.RequestData.ReadInt32();
+            int type   = context.RequestData.ReadInt32();
 
             return 0;
         }
 
-        public long GetNativeHandle(ServiceCtx Context)
+        public long GetNativeHandle(ServiceCtx context)
         {
-            int  Id  = Context.RequestData.ReadInt32();
-            uint Unk = Context.RequestData.ReadUInt32();
+            int  id  = context.RequestData.ReadInt32();
+            uint unk = context.RequestData.ReadUInt32();
 
-            if (Context.Process.HandleTable.GenerateHandle(BinderEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_binderEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            Context.Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
 
             return 0;
         }
@@ -92,11 +92,11 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool Disposing)
+        protected virtual void Dispose(bool disposing)
         {
-            if (Disposing)
+            if (disposing)
             {
-                Flinger.Dispose();
+                _flinger.Dispose();
             }
         }
     }

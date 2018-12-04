@@ -2,32 +2,32 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class KMemoryInfo
     {
-        public ulong Address { get; private set; }
-        public ulong Size    { get; private set; }
+        public ulong Address { get; }
+        public ulong Size    { get; }
 
-        public MemoryState      State      { get; private set; }
-        public MemoryPermission Permission { get; private set; }
-        public MemoryAttribute  Attribute  { get; private set; }
+        public MemoryState      State      { get; }
+        public MemoryPermission Permission { get; }
+        public MemoryAttribute  Attribute  { get; }
 
-        public int IpcRefCount    { get; private set; }
-        public int DeviceRefCount { get; private set; }
+        public int IpcRefCount    { get; }
+        public int DeviceRefCount { get; }
 
         public KMemoryInfo(
-            ulong            Address,
-            ulong            Size,
-            MemoryState      State,
-            MemoryPermission Permission,
-            MemoryAttribute  Attribute,
-            int              IpcRefCount,
-            int              DeviceRefCount)
+            ulong            address,
+            ulong            size,
+            MemoryState      state,
+            MemoryPermission permission,
+            MemoryAttribute  attribute,
+            int              ipcRefCount,
+            int              deviceRefCount)
         {
-            this.Address        = Address;
-            this.Size           = Size;
-            this.State          = State;
-            this.Attribute      = Attribute;
-            this.Permission     = Permission;
-            this.IpcRefCount    = IpcRefCount;
-            this.DeviceRefCount = DeviceRefCount;
+            Address        = address;
+            Size           = size;
+            State          = state;
+            Attribute      = attribute;
+            Permission     = permission;
+            IpcRefCount    = ipcRefCount;
+            DeviceRefCount = deviceRefCount;
         }
     }
 }

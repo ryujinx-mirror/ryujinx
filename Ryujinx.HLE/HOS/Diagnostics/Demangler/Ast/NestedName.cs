@@ -4,23 +4,23 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class NestedName : ParentNode
     {
-        private BaseNode Name;
+        private BaseNode _name;
 
-        public NestedName(BaseNode Name, BaseNode Type) : base(NodeType.NestedName, Type)
+        public NestedName(BaseNode name, BaseNode type) : base(NodeType.NestedName, type)
         {
-            this.Name = Name;
+            _name = name;
         }
 
         public override string GetName()
         {
-            return Name.GetName();
+            return _name.GetName();
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Child.Print(Writer);
-            Writer.Write("::");
-            Name.Print(Writer);
+            Child.Print(writer);
+            writer.Write("::");
+            _name.Print(writer);
         }
     }
 }

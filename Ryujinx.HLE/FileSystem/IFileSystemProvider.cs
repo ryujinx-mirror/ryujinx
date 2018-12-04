@@ -1,41 +1,40 @@
 ﻿using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.FspSrv;
-using System;
 
 namespace Ryujinx.HLE.FileSystem
 {
     interface IFileSystemProvider
     {
-        long CreateFile(string Name, long Size);
+        long CreateFile(string name, long size);
 
-        long CreateDirectory(string Name);
+        long CreateDirectory(string name);
 
-        long RenameFile(string OldName, string NewName);
+        long RenameFile(string oldName, string newName);
 
-        long RenameDirectory(string OldName, string NewName);
+        long RenameDirectory(string oldName, string newName);
 
-        DirectoryEntry[] GetEntries(string Path);
+        DirectoryEntry[] GetEntries(string path);
 
-        DirectoryEntry[] GetDirectories(string Path);
+        DirectoryEntry[] GetDirectories(string path);
 
-        DirectoryEntry[] GetFiles(string Path);
+        DirectoryEntry[] GetFiles(string path);
 
-        long DeleteFile(string Name);
+        long DeleteFile(string name);
 
-        long DeleteDirectory(string Name, bool Recursive);
+        long DeleteDirectory(string name, bool recursive);
 
-        bool FileExists(string Name);
+        bool FileExists(string name);
 
-        bool DirectoryExists(string Name);
+        bool DirectoryExists(string name);
 
-        long OpenFile(string Name, out IFile FileInterface);
+        long OpenFile(string name, out IFile fileInterface);
 
-        long OpenDirectory(string Name, int FilterFlags, out IDirectory DirectoryInterface);
+        long OpenDirectory(string name, int filterFlags, out IDirectory directoryInterface);
 
-        string GetFullPath(string Name);
+        string GetFullPath(string name);
 
-        long GetFreeSpace(ServiceCtx Context);
+        long GetFreeSpace(ServiceCtx context);
 
-        long GetTotalSpace(ServiceCtx Context);
+        long GetTotalSpace(ServiceCtx context);
     }
 }

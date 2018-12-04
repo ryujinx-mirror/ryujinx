@@ -8,6 +8,6 @@ namespace Ryujinx.HLE.Exceptions
 
         public UndefinedInstructionException() : base() { }
 
-        public UndefinedInstructionException(long Position, int OpCode) : base(string.Format(ExMsg, Position, OpCode)) { }
+        public UndefinedInstructionException(long position, int opCode) : base(string.Format(ExMsg, position, opCode)) { }
     }
 }

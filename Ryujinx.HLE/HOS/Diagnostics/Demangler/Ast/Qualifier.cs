@@ -2,7 +2,7 @@ using System.IO;
 
 namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
-    public enum CV
+    public enum Cv
     {
         None,
         Const,
@@ -17,41 +17,41 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
         LValue
     }
 
-    public class CVType : ParentNode
+    public class CvType : ParentNode
     {
-        public CV Qualifier;
+        public Cv Qualifier;
 
-        public CVType(CV Qualifier, BaseNode Child) : base(NodeType.CVQualifierType, Child)
+        public CvType(Cv qualifier, BaseNode child) : base(NodeType.CvQualifierType, child)
         {
-            this.Qualifier = Qualifier;
+            Qualifier = qualifier;
         }
 
-        public void PrintQualifier(TextWriter Writer)
+        public void PrintQualifier(TextWriter writer)
         {
-            if ((Qualifier & CV.Const) != 0)
+            if ((Qualifier & Cv.Const) != 0)
             {
-                Writer.Write(" const");
+                writer.Write(" const");
             }
 
-            if ((Qualifier & CV.Volatile) != 0)
+            if ((Qualifier & Cv.Volatile) != 0)
             {
-                Writer.Write(" volatile");
+                writer.Write(" volatile");
             }
 
-            if ((Qualifier & CV.Restricted) != 0)
+            if ((Qualifier & Cv.Restricted) != 0)
             {
-                Writer.Write(" restrict");
+                writer.Write(" restrict");
             }
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
             if (Child != null)
             {
-                Child.PrintLeft(Writer);
+                Child.PrintLeft(writer);
             }
 
-            PrintQualifier(Writer);
+            PrintQualifier(writer);
         }
 
         public override bool HasRightPart()
@@ -59,11 +59,11 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
             return Child != null && Child.HasRightPart();
         }
 
-        public override void PrintRight(TextWriter Writer)
+        public override void PrintRight(TextWriter writer)
         {
             if (Child != null)
             {
-                Child.PrintRight(Writer);
+                Child.PrintRight(writer);
             }
         }
     }
@@ -72,36 +72,36 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
     {
         public Reference Qualifier;
 
-        public SimpleReferenceType(Reference Qualifier, BaseNode Child) : base(NodeType.SimpleReferenceType, Child)
+        public SimpleReferenceType(Reference qualifier, BaseNode child) : base(NodeType.SimpleReferenceType, child)
         {
-            this.Qualifier = Qualifier;
+            Qualifier = qualifier;
         }
 
-        public void PrintQualifier(TextWriter Writer)
+        public void PrintQualifier(TextWriter writer)
         {
             if ((Qualifier & Reference.LValue) != 0)
             {
-                Writer.Write("&");
+                writer.Write("&");
             }
 
             if ((Qualifier & Reference.RValue) != 0)
             {
-                Writer.Write("&&");
+                writer.Write("&&");
             }
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
             if (Child != null)
             {
-                Child.PrintLeft(Writer);
+                Child.PrintLeft(writer);
             }
             else if (Qualifier != Reference.None)
             {
-                Writer.Write(" ");
+                writer.Write(" ");
             }
 
-            PrintQualifier(Writer);
+            PrintQualifier(writer);
         }
 
         public override bool HasRightPart()
@@ -109,11 +109,11 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
             return Child != null && Child.HasRightPart();
         }
 
-        public override void PrintRight(TextWriter Writer)
+        public override void PrintRight(TextWriter writer)
         {
             if (Child != null)
             {
-                Child.PrintRight(Writer);
+                Child.PrintRight(writer);
             }
         }
     }

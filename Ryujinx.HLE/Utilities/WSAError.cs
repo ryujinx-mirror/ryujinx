@@ -1,6 +1,9 @@
-﻿namespace Ryujinx.HLE.Utilities
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Ryujinx.HLE.Utilities
 {
-    enum WSAError
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    enum WsaError
     {
         /*
         * All Windows Sockets error constants are biased by WSABASEERR from
@@ -21,43 +24,43 @@
         /*
          * Windows Sockets definitions of regular Berkeley error constants
          */
-        WSAEWOULDBLOCK              = (WSABASEERR + 35),
-        WSAEINPROGRESS              = (WSABASEERR + 36),
-        WSAEALREADY                 = (WSABASEERR + 37),
-        WSAENOTSOCK                 = (WSABASEERR + 38),
-        WSAEDESTADDRREQ             = (WSABASEERR + 39),
-        WSAEMSGSIZE                 = (WSABASEERR + 40),
-        WSAEPROTOTYPE               = (WSABASEERR + 41),
-        WSAENOPROTOOPT              = (WSABASEERR + 42),
-        WSAEPROTONOSUPPORT          = (WSABASEERR + 43),
-        WSAESOCKTNOSUPPORT          = (WSABASEERR + 44),
-        WSAEOPNOTSUPP               = (WSABASEERR + 45),
-        WSAEPFNOSUPPORT             = (WSABASEERR + 46),
-        WSAEAFNOSUPPORT             = (WSABASEERR + 47),
-        WSAEADDRINUSE               = (WSABASEERR + 48),
-        WSAEADDRNOTAVAIL            = (WSABASEERR + 49),
-        WSAENETDOWN                 = (WSABASEERR + 50),
-        WSAENETUNREACH              = (WSABASEERR + 51),
-        WSAENETRESET                = (WSABASEERR + 52),
-        WSAECONNABORTED             = (WSABASEERR + 53),
-        WSAECONNRESET               = (WSABASEERR + 54),
-        WSAENOBUFS                  = (WSABASEERR + 55),
-        WSAEISCONN                  = (WSABASEERR + 56),
-        WSAENOTCONN                 = (WSABASEERR + 57),
-        WSAESHUTDOWN                = (WSABASEERR + 58),
-        WSAETOOMANYREFS             = (WSABASEERR + 59),
-        WSAETIMEDOUT                = (WSABASEERR + 60),
-        WSAECONNREFUSED             = (WSABASEERR + 61),
-        WSAELOOP                    = (WSABASEERR + 62),
-        WSAENAMETOOLONG             = (WSABASEERR + 63),
-        WSAEHOSTDOWN                = (WSABASEERR + 64),
-        WSAEHOSTUNREACH             = (WSABASEERR + 65),
-        WSAENOTEMPTY                = (WSABASEERR + 66),
-        WSAEPROCLIM                 = (WSABASEERR + 67),
-        WSAEUSERS                   = (WSABASEERR + 68),
-        WSAEDQUOT                   = (WSABASEERR + 69),
-        WSAESTALE                   = (WSABASEERR + 70),
-        WSAEREMOTE                  = (WSABASEERR + 71),
+        WSAEWOULDBLOCK             = (WSABASEERR + 35),
+        WSAEINPROGRESS             = (WSABASEERR + 36),
+        WSAEALREADY                = (WSABASEERR + 37),
+        WSAENOTSOCK                = (WSABASEERR + 38),
+        WSAEDESTADDRREQ            = (WSABASEERR + 39),
+        WSAEMSGSIZE                = (WSABASEERR + 40),
+        WSAEPROTOTYPE              = (WSABASEERR + 41),
+        WSAENOPROTOOPT             = (WSABASEERR + 42),
+        WSAEPROTONOSUPPORT         = (WSABASEERR + 43),
+        WSAESOCKTNOSUPPORT         = (WSABASEERR + 44),
+        WSAEOPNOTSUPP              = (WSABASEERR + 45),
+        WSAEPFNOSUPPORT            = (WSABASEERR + 46),
+        WSAEAFNOSUPPORT            = (WSABASEERR + 47),
+        WSAEADDRINUSE              = (WSABASEERR + 48),
+        WSAEADDRNOTAVAIL           = (WSABASEERR + 49),
+        WSAENETDOWN                = (WSABASEERR + 50),
+        WSAENETUNREACH             = (WSABASEERR + 51),
+        WSAENETRESET               = (WSABASEERR + 52),
+        WSAECONNABORTED            = (WSABASEERR + 53),
+        WSAECONNRESET              = (WSABASEERR + 54),
+        WSAENOBUFS                 = (WSABASEERR + 55),
+        WSAEISCONN                 = (WSABASEERR + 56),
+        WSAENOTCONN                = (WSABASEERR + 57),
+        WSAESHUTDOWN               = (WSABASEERR + 58),
+        WSAETOOMANYREFS            = (WSABASEERR + 59),
+        WSAETIMEDOUT               = (WSABASEERR + 60),
+        WSAECONNREFUSED            = (WSABASEERR + 61),
+        WSAELOOP                   = (WSABASEERR + 62),
+        WSAENAMETOOLONG            = (WSABASEERR + 63),
+        WSAEHOSTDOWN               = (WSABASEERR + 64),
+        WSAEHOSTUNREACH            = (WSABASEERR + 65),
+        WSAENOTEMPTY               = (WSABASEERR + 66),
+        WSAEPROCLIM                = (WSABASEERR + 67),
+        WSAEUSERS                  = (WSABASEERR + 68),
+        WSAEDQUOT                  = (WSABASEERR + 69),
+        WSAESTALE                  = (WSABASEERR + 70),
+        WSAEREMOTE                 = (WSABASEERR + 71),
 
         /*
          * Extended Windows Sockets error constant definitions
@@ -126,6 +129,6 @@
          * buffer in general */
         WSA_QOS_TRAFFIC_CTRL_ERROR = (WSABASEERR + 1014),
         /* problem with some part of the flowspec */
-        WSA_QOS_GENERIC_ERROR      = (WSABASEERR + 1015),
+        WSA_QOS_GENERIC_ERROR      = (WSABASEERR + 1015)
     }
 }

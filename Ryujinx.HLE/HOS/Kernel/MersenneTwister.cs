@@ -4,125 +4,125 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class MersenneTwister
     {
-        private int Index;
-        private uint[] Mt;
+        private int _index;
+        private uint[] _mt;
 
-        public MersenneTwister(uint Seed)
+        public MersenneTwister(uint seed)
         {
-            Mt = new uint[624];
+            _mt = new uint[624];
 
-            Mt[0] = Seed;
+            _mt[0] = seed;
 
-            for (int MtIdx = 1; MtIdx < Mt.Length; MtIdx++)
+            for (int mtIdx = 1; mtIdx < _mt.Length; mtIdx++)
             {
-                uint Prev = Mt[MtIdx - 1];
+                uint prev = _mt[mtIdx - 1];
 
-                Mt[MtIdx] = (uint)(0x6c078965 * (Prev ^ (Prev >> 30)) + MtIdx);
+                _mt[mtIdx] = (uint)(0x6c078965 * (prev ^ (prev >> 30)) + mtIdx);
             }
 
-            Index = Mt.Length;
+            _index = _mt.Length;
         }
 
-        public long GenRandomNumber(long Min, long Max)
+        public long GenRandomNumber(long min, long max)
         {
-            long Range = Max - Min;
+            long range = max - min;
 
-            if (Min == Max)
+            if (min == max)
             {
-                return Min;
+                return min;
             }
 
-            if (Range == -1)
+            if (range == -1)
             {
                 //Increment would cause a overflow, special case.
                 return GenRandomNumber(2, 2, 32, 0xffffffffu, 0xffffffffu);
             }
 
-            Range++;
+            range++;
 
             //This is log2(Range) plus one.
-            int NextRangeLog2 = 64 - BitUtils.CountLeadingZeros64(Range);
+            int nextRangeLog2 = 64 - BitUtils.CountLeadingZeros64(range);
 
             //If Range is already power of 2, subtract one to use log2(Range) directly.
-            int RangeLog2 = NextRangeLog2 - (BitUtils.IsPowerOfTwo64(Range) ? 1 : 0);
+            int rangeLog2 = nextRangeLog2 - (BitUtils.IsPowerOfTwo64(range) ? 1 : 0);
 
-            int Parts       = RangeLog2 > 32 ? 2 : 1;
-            int BitsPerPart = RangeLog2 / Parts;
+            int parts       = rangeLog2 > 32 ? 2 : 1;
+            int bitsPerPart = rangeLog2 / parts;
 
-            int FullParts = Parts - (RangeLog2 - Parts * BitsPerPart);
+            int fullParts = parts - (rangeLog2 - parts * bitsPerPart);
 
-            uint Mask      = 0xffffffffu >> (32 - BitsPerPart);
-            uint MaskPlus1 = 0xffffffffu >> (31 - BitsPerPart);
+            uint mask      = 0xffffffffu >> (32 - bitsPerPart);
+            uint maskPlus1 = 0xffffffffu >> (31 - bitsPerPart);
 
-            long RandomNumber;
+            long randomNumber;
 
             do
             {
-                RandomNumber = GenRandomNumber(Parts, FullParts, BitsPerPart, Mask, MaskPlus1);
+                randomNumber = GenRandomNumber(parts, fullParts, bitsPerPart, mask, maskPlus1);
             }
-            while ((ulong)RandomNumber >= (ulong)Range);
+            while ((ulong)randomNumber >= (ulong)range);
 
-            return Min + RandomNumber;
+            return min + randomNumber;
         }
 
         private long GenRandomNumber(
-            int  Parts,
-            int  FullParts,
-            int  BitsPerPart,
-            uint Mask,
-            uint MaskPlus1)
+            int  parts,
+            int  fullParts,
+            int  bitsPerPart,
+            uint mask,
+            uint maskPlus1)
         {
-            long RandomNumber = 0;
+            long randomNumber = 0;
 
-            int Part = 0;
+            int part = 0;
 
-            for (; Part < FullParts; Part++)
+            for (; part < fullParts; part++)
             {
-                RandomNumber <<= BitsPerPart;
-                RandomNumber  |= GenRandomNumber() & Mask;
+                randomNumber <<= bitsPerPart;
+                randomNumber  |= GenRandomNumber() & mask;
             }
 
-            for (; Part < Parts; Part++)
+            for (; part < parts; part++)
             {
-                RandomNumber <<= BitsPerPart + 1;
-                RandomNumber  |= GenRandomNumber() & MaskPlus1;
+                randomNumber <<= bitsPerPart + 1;
+                randomNumber  |= GenRandomNumber() & maskPlus1;
             }
 
-            return RandomNumber;
+            return randomNumber;
         }
 
         private uint GenRandomNumber()
         {
-            if (Index >= Mt.Length)
+            if (_index >= _mt.Length)
             {
                 Twist();
             }
 
-            uint Value = Mt[Index++];
+            uint value = _mt[_index++];
 
-            Value ^= Value >> 11;
-            Value ^= (Value << 7) & 0x9d2c5680;
-            Value ^= (Value << 15) & 0xefc60000;
-            Value ^= Value >> 18;
+            value ^= value >> 11;
+            value ^= (value << 7) & 0x9d2c5680;
+            value ^= (value << 15) & 0xefc60000;
+            value ^= value >> 18;
 
-            return Value;
+            return value;
         }
 
         private void Twist()
         {
-            for (int MtIdx = 0; MtIdx < Mt.Length; MtIdx++)
+            for (int mtIdx = 0; mtIdx < _mt.Length; mtIdx++)
             {
-                uint Value = (Mt[MtIdx] & 0x80000000) + (Mt[(MtIdx + 1) % Mt.Length] & 0x7fffffff);
+                uint value = (_mt[mtIdx] & 0x80000000) + (_mt[(mtIdx + 1) % _mt.Length] & 0x7fffffff);
 
-                Mt[MtIdx] = Mt[(MtIdx + 397) % Mt.Length] ^ (Value >> 1);
+                _mt[mtIdx] = _mt[(mtIdx + 397) % _mt.Length] ^ (value >> 1);
 
-                if ((Value & 1) != 0)
+                if ((value & 1) != 0)
                 {
-                    Mt[MtIdx] ^= 0x9908b0df;
+                    _mt[mtIdx] ^= 0x9908b0df;
                 }
             }
 
-            Index = 0;
+            _index = 0;
         }
     }
 }

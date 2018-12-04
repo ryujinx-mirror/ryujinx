@@ -7,148 +7,148 @@ namespace Ryujinx.HLE.HOS.Kernel
         private const int SelfThreadHandle  = (0x1ffff << 15) | 0;
         private const int SelfProcessHandle = (0x1ffff << 15) | 1;
 
-        private Horizon System;
+        private Horizon _system;
 
-        private KHandleEntry[] Table;
+        private KHandleEntry[] _table;
 
-        private KHandleEntry TableHead;
-        private KHandleEntry NextFreeEntry;
+        private KHandleEntry _tableHead;
+        private KHandleEntry _nextFreeEntry;
 
-        private int ActiveSlotsCount;
+        private int _activeSlotsCount;
 
-        private int Size;
+        private int _size;
 
-        private ushort IdCounter;
+        private ushort _idCounter;
 
-        public KHandleTable(Horizon System)
+        public KHandleTable(Horizon system)
         {
-            this.System = System;
+            _system = system;
         }
 
-        public KernelResult Initialize(int Size)
+        public KernelResult Initialize(int size)
         {
-            if ((uint)Size > 1024)
+            if ((uint)size > 1024)
             {
                 return KernelResult.OutOfMemory;
             }
 
-            if (Size < 1)
+            if (size < 1)
             {
-                Size = 1024;
+                size = 1024;
             }
 
-            this.Size = Size;
+            _size = size;
 
-            IdCounter = 1;
+            _idCounter = 1;
 
-            Table = new KHandleEntry[Size];
+            _table = new KHandleEntry[size];
 
-            TableHead = new KHandleEntry(0);
+            _tableHead = new KHandleEntry(0);
 
-            KHandleEntry Entry = TableHead;
+            KHandleEntry entry = _tableHead;
 
-            for (int Index = 0; Index < Size; Index++)
+            for (int index = 0; index < size; index++)
             {
-                Table[Index] = Entry;
+                _table[index] = entry;
 
-                Entry.Next = new KHandleEntry(Index + 1);
+                entry.Next = new KHandleEntry(index + 1);
 
-                Entry = Entry.Next;
+                entry = entry.Next;
             }
 
-            Table[Size - 1].Next = null;
+            _table[size - 1].Next = null;
 
-            NextFreeEntry = TableHead;
+            _nextFreeEntry = _tableHead;
 
             return KernelResult.Success;
         }
 
-        public KernelResult GenerateHandle(object Obj, out int Handle)
+        public KernelResult GenerateHandle(object obj, out int handle)
         {
-            Handle = 0;
+            handle = 0;
 
-            lock (Table)
+            lock (_table)
             {
-                if (ActiveSlotsCount >= Size)
+                if (_activeSlotsCount >= _size)
                 {
                     return KernelResult.HandleTableFull;
                 }
 
-                KHandleEntry Entry = NextFreeEntry;
+                KHandleEntry entry = _nextFreeEntry;
 
-                NextFreeEntry = Entry.Next;
+                _nextFreeEntry = entry.Next;
 
-                Entry.Obj      = Obj;
-                Entry.HandleId = IdCounter;
+                entry.Obj      = obj;
+                entry.HandleId = _idCounter;
 
-                ActiveSlotsCount++;
+                _activeSlotsCount++;
 
-                Handle = (int)((IdCounter << 15) & (uint)0xffff8000) | Entry.Index;
+                handle = (int)((_idCounter << 15) & 0xffff8000) | entry.Index;
 
-                if ((short)(IdCounter + 1) >= 0)
+                if ((short)(_idCounter + 1) >= 0)
                 {
-                    IdCounter++;
+                    _idCounter++;
                 }
                 else
                 {
-                    IdCounter = 1;
+                    _idCounter = 1;
                 }
             }
 
             return KernelResult.Success;
         }
 
-        public bool CloseHandle(int Handle)
+        public bool CloseHandle(int handle)
         {
-            if ((Handle >> 30) != 0 ||
-                Handle == SelfThreadHandle ||
-                Handle == SelfProcessHandle)
+            if ((handle >> 30) != 0 ||
+                handle == SelfThreadHandle ||
+                handle == SelfProcessHandle)
             {
                 return false;
             }
 
-            int Index    = (Handle >> 0) & 0x7fff;
-            int HandleId = (Handle >> 15);
+            int index    = (handle >> 0) & 0x7fff;
+            int handleId = (handle >> 15);
 
-            bool Result = false;
+            bool result = false;
 
-            lock (Table)
+            lock (_table)
             {
-                if (HandleId != 0 && Index < Size)
+                if (handleId != 0 && index < _size)
                 {
-                    KHandleEntry Entry = Table[Index];
+                    KHandleEntry entry = _table[index];
 
-                    if (Entry.Obj != null && Entry.HandleId == HandleId)
+                    if (entry.Obj != null && entry.HandleId == handleId)
                     {
-                        Entry.Obj  = null;
-                        Entry.Next = NextFreeEntry;
+                        entry.Obj  = null;
+                        entry.Next = _nextFreeEntry;
 
-                        NextFreeEntry = Entry;
+                        _nextFreeEntry = entry;
 
-                        ActiveSlotsCount--;
+                        _activeSlotsCount--;
 
-                        Result = true;
+                        result = true;
                     }
                 }
             }
 
-            return Result;
+            return result;
         }
 
-        public T GetObject<T>(int Handle)
+        public T GetObject<T>(int handle)
         {
-            int Index    = (Handle >> 0) & 0x7fff;
-            int HandleId = (Handle >> 15);
+            int index    = (handle >> 0) & 0x7fff;
+            int handleId = (handle >> 15);
 
-            lock (Table)
+            lock (_table)
             {
-                if ((Handle >> 30) == 0 && HandleId != 0)
+                if ((handle >> 30) == 0 && handleId != 0)
                 {
-                    KHandleEntry Entry = Table[Index];
+                    KHandleEntry entry = _table[index];
 
-                    if (Entry.HandleId == HandleId && Entry.Obj is T Obj)
+                    if (entry.HandleId == handleId && entry.Obj is T obj)
                     {
-                        return Obj;
+                        return obj;
                     }
                 }
             }
@@ -156,49 +156,49 @@ namespace Ryujinx.HLE.HOS.Kernel
             return default(T);
         }
 
-        public KThread GetKThread(int Handle)
+        public KThread GetKThread(int handle)
         {
-            if (Handle == SelfThreadHandle)
+            if (handle == SelfThreadHandle)
             {
-                return System.Scheduler.GetCurrentThread();
+                return _system.Scheduler.GetCurrentThread();
             }
             else
             {
-                return GetObject<KThread>(Handle);
+                return GetObject<KThread>(handle);
             }
         }
 
-        public KProcess GetKProcess(int Handle)
+        public KProcess GetKProcess(int handle)
         {
-            if (Handle == SelfProcessHandle)
+            if (handle == SelfProcessHandle)
             {
-                return System.Scheduler.GetCurrentProcess();
+                return _system.Scheduler.GetCurrentProcess();
             }
             else
             {
-                return GetObject<KProcess>(Handle);
+                return GetObject<KProcess>(handle);
             }
         }
 
         public void Destroy()
         {
-            lock (Table)
+            lock (_table)
             {
-                for (int Index = 0; Index < Size; Index++)
+                for (int index = 0; index < _size; index++)
                 {
-                    KHandleEntry Entry = Table[Index];
+                    KHandleEntry entry = _table[index];
 
-                    if (Entry.Obj != null)
+                    if (entry.Obj != null)
                     {
-                        if (Entry.Obj is IDisposable DisposableObj)
+                        if (entry.Obj is IDisposable disposableObj)
                         {
-                            DisposableObj.Dispose();
+                            disposableObj.Dispose();
                         }
 
-                        Entry.Obj  = null;
-                        Entry.Next = NextFreeEntry;
+                        entry.Obj  = null;
+                        entry.Next = _nextFreeEntry;
 
-                        NextFreeEntry = Entry;
+                        _nextFreeEntry = entry;
                     }
                 }
             }

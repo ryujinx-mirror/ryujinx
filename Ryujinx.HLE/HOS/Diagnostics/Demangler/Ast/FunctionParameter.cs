@@ -4,20 +4,20 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class FunctionParameter : BaseNode
     {
-        private string Number;
+        private string _number;
 
-        public FunctionParameter(string Number) : base(NodeType.FunctionParameter)
+        public FunctionParameter(string number) : base(NodeType.FunctionParameter)
         {
-            this.Number = Number;
+            _number = number;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write("fp ");
+            writer.Write("fp ");
 
-            if (Number != null)
+            if (_number != null)
             {
-                Writer.Write(Number);
+                writer.Write(_number);
             }
         }
     }

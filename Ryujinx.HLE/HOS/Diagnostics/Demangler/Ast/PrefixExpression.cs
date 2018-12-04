@@ -4,19 +4,19 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class PrefixExpression : ParentNode
     {
-        private string Prefix;
+        private string _prefix;
 
-        public PrefixExpression(string Prefix, BaseNode Child) : base(NodeType.PrefixExpression, Child)
+        public PrefixExpression(string prefix, BaseNode child) : base(NodeType.PrefixExpression, child)
         {
-            this.Prefix = Prefix;
+            _prefix = prefix;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write(Prefix);
-            Writer.Write("(");
-            Child.Print(Writer);
-            Writer.Write(")");
+            writer.Write(_prefix);
+            writer.Write("(");
+            Child.Print(writer);
+            writer.Write(")");
         }
     }
 }

@@ -2,11 +2,11 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 {
     class Display
     {
-        public string Name { get; private set; }
+        public string Name { get; }
 
-        public Display(string Name)
+        public Display(string name)
         {
-            this.Name = Name;
+            Name = name;
         }
     }
 }

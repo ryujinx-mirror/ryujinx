@@ -12,150 +12,150 @@ namespace Ryujinx.HLE.FileSystem
 {
     class RomFsProvider : IFileSystemProvider
     {
-        private Romfs RomFs;
+        private Romfs _romFs;
 
-        public RomFsProvider(Stream StorageStream)
+        public RomFsProvider(Stream storageStream)
         {
-            RomFs = new Romfs(StorageStream);
+            _romFs = new Romfs(storageStream);
         }
 
-        public long CreateDirectory(string Name)
-        {
-            throw new NotSupportedException();
-        }
-
-        public long CreateFile(string Name, long Size)
+        public long CreateDirectory(string name)
         {
             throw new NotSupportedException();
         }
 
-        public long DeleteDirectory(string Name, bool Recursive)
+        public long CreateFile(string name, long size)
         {
             throw new NotSupportedException();
         }
 
-        public long DeleteFile(string Name)
+        public long DeleteDirectory(string name, bool recursive)
         {
             throw new NotSupportedException();
         }
 
-        public DirectoryEntry[] GetDirectories(string Path)
+        public long DeleteFile(string name)
         {
-            List<DirectoryEntry> Directories = new List<DirectoryEntry>();
-
-            foreach(RomfsDir Directory in RomFs.Directories)
-            {
-                DirectoryEntry DirectoryEntry = new DirectoryEntry(Directory.Name, DirectoryEntryType.Directory);
-
-                Directories.Add(DirectoryEntry);
-            }
-
-            return Directories.ToArray();
+            throw new NotSupportedException();
         }
 
-        public DirectoryEntry[] GetEntries(string Path)
+        public DirectoryEntry[] GetDirectories(string path)
         {
-            List<DirectoryEntry> Entries = new List<DirectoryEntry>();
+            List<DirectoryEntry> directories = new List<DirectoryEntry>();
 
-            foreach (RomfsDir Directory in RomFs.Directories)
+            foreach(RomfsDir directory in _romFs.Directories)
             {
-                DirectoryEntry DirectoryEntry = new DirectoryEntry(Directory.Name, DirectoryEntryType.Directory);
+                DirectoryEntry directoryEntry = new DirectoryEntry(directory.Name, DirectoryEntryType.Directory);
 
-                Entries.Add(DirectoryEntry);
+                directories.Add(directoryEntry);
             }
 
-            foreach (RomfsFile File in RomFs.Files)
-            {
-                DirectoryEntry DirectoryEntry = new DirectoryEntry(File.Name, DirectoryEntryType.File, File.DataLength);
-
-                Entries.Add(DirectoryEntry);
-            }
-
-            return Entries.ToArray();
+            return directories.ToArray();
         }
 
-        public DirectoryEntry[] GetFiles(string Path)
+        public DirectoryEntry[] GetEntries(string path)
         {
-            List<DirectoryEntry> Files = new List<DirectoryEntry>();
+            List<DirectoryEntry> entries = new List<DirectoryEntry>();
 
-            foreach (RomfsFile File in RomFs.Files)
+            foreach (RomfsDir directory in _romFs.Directories)
             {
-                DirectoryEntry DirectoryEntry = new DirectoryEntry(File.Name, DirectoryEntryType.File, File.DataLength);
+                DirectoryEntry directoryEntry = new DirectoryEntry(directory.Name, DirectoryEntryType.Directory);
 
-                Files.Add(DirectoryEntry);
+                entries.Add(directoryEntry);
             }
 
-            return Files.ToArray();
+            foreach (RomfsFile file in _romFs.Files)
+            {
+                DirectoryEntry directoryEntry = new DirectoryEntry(file.Name, DirectoryEntryType.File, file.DataLength);
+
+                entries.Add(directoryEntry);
+            }
+
+            return entries.ToArray();
         }
 
-        public long GetFreeSpace(ServiceCtx Context)
+        public DirectoryEntry[] GetFiles(string path)
+        {
+            List<DirectoryEntry> files = new List<DirectoryEntry>();
+
+            foreach (RomfsFile file in _romFs.Files)
+            {
+                DirectoryEntry directoryEntry = new DirectoryEntry(file.Name, DirectoryEntryType.File, file.DataLength);
+
+                files.Add(directoryEntry);
+            }
+
+            return files.ToArray();
+        }
+
+        public long GetFreeSpace(ServiceCtx context)
         {
             return 0;
         }
 
-        public string GetFullPath(string Name)
+        public string GetFullPath(string name)
         {
-            return Name;
+            return name;
         }
 
-        public long GetTotalSpace(ServiceCtx Context)
+        public long GetTotalSpace(ServiceCtx context)
         {
-            return RomFs.Files.Sum(x => x.DataLength);
+            return _romFs.Files.Sum(x => x.DataLength);
         }
 
-        public bool DirectoryExists(string Name)
+        public bool DirectoryExists(string name)
         {
-            return RomFs.Directories.Exists(x=>x.Name == Name);
+            return _romFs.Directories.Exists(x=>x.Name == name);
         }
 
-        public bool FileExists(string Name)
+        public bool FileExists(string name)
         {
-            return RomFs.FileExists(Name);
+            return _romFs.FileExists(name);
         }
 
-        public long OpenDirectory(string Name, int FilterFlags, out IDirectory DirectoryInterface)
+        public long OpenDirectory(string name, int filterFlags, out IDirectory directoryInterface)
         {
-            RomfsDir Directory = RomFs.Directories.Find(x => x.Name == Name);
+            RomfsDir directory = _romFs.Directories.Find(x => x.Name == name);
 
-            if (Directory != null)
+            if (directory != null)
             {
-                DirectoryInterface = new IDirectory(Name, FilterFlags, this);
+                directoryInterface = new IDirectory(name, filterFlags, this);
 
                 return 0;
             }
 
-            DirectoryInterface = null;
+            directoryInterface = null;
 
             return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
         }
 
-        public long OpenFile(string Name, out IFile FileInterface)
+        public long OpenFile(string name, out IFile fileInterface)
         {
-            if (RomFs.FileExists(Name))
+            if (_romFs.FileExists(name))
             {
-                Stream Stream = RomFs.OpenFile(Name);
+                Stream stream = _romFs.OpenFile(name);
 
-                FileInterface = new IFile(Stream, Name);
+                fileInterface = new IFile(stream, name);
 
                 return 0;
             }
 
-            FileInterface = null;
+            fileInterface = null;
 
             return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
         }
 
-        public long RenameDirectory(string OldName, string NewName)
+        public long RenameDirectory(string oldName, string newName)
         {
             throw new NotSupportedException();
         }
 
-        public long RenameFile(string OldName, string NewName)
+        public long RenameFile(string oldName, string newName)
         {
             throw new NotSupportedException();
         }
 
-        public void CheckIfOutsideBasePath(string Path)
+        public void CheckIfOutsideBasePath(string path)
         {
             throw new NotSupportedException();
         }

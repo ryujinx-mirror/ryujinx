@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Ryujinx.HLE.HOS.Services.FspSrv
+﻿namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
     public struct DirectoryEntry
     {
-        public string Path { get; private set; }
-        public long   Size { get; private set; }
+        public string Path { get; }
+        public long   Size { get; }
 
         public DirectoryEntryType EntryType { get; set; }
 
-        public DirectoryEntry(string Path, DirectoryEntryType DirectoryEntryType, long Size = 0)
+        public DirectoryEntry(string path, DirectoryEntryType directoryEntryType, long size = 0)
         {
-            this.Path = Path;
-            EntryType = DirectoryEntryType;
-            this.Size = Size;
+            Path = path;
+            EntryType = directoryEntryType;
+            Size = size;
         }
     }
 }

@@ -4,6 +4,6 @@ namespace Ryujinx.HLE.Exceptions
 {
     public class InvalidNpdmException : Exception
     {
-        public InvalidNpdmException(string ExMsg) : base(ExMsg) { }
+        public InvalidNpdmException(string message) : base(message) { }
     }
 }

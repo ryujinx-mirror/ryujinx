@@ -7,127 +7,127 @@ namespace Ryujinx.HLE.HOS.Kernel
     {
         private const int Time10SecondsMs = 10000;
 
-        private long[] Current;
-        private long[] Limit;
-        private long[] Available;
+        private long[] _current;
+        private long[] _limit;
+        private long[] _available;
 
-        private object LockObj;
+        private object _lockObj;
 
-        private LinkedList<KThread> WaitingThreads;
+        private LinkedList<KThread> _waitingThreads;
 
-        private int WaitingThreadsCount;
+        private int _waitingThreadsCount;
 
-        private Horizon System;
+        private Horizon _system;
 
-        public KResourceLimit(Horizon System)
+        public KResourceLimit(Horizon system)
         {
-            Current   = new long[(int)LimitableResource.Count];
-            Limit     = new long[(int)LimitableResource.Count];
-            Available = new long[(int)LimitableResource.Count];
+            _current   = new long[(int)LimitableResource.Count];
+            _limit     = new long[(int)LimitableResource.Count];
+            _available = new long[(int)LimitableResource.Count];
 
-            LockObj = new object();
+            _lockObj = new object();
 
-            WaitingThreads = new LinkedList<KThread>();
+            _waitingThreads = new LinkedList<KThread>();
 
-            this.System = System;
+            _system = system;
         }
 
-        public bool Reserve(LimitableResource Resource, ulong Amount)
+        public bool Reserve(LimitableResource resource, ulong amount)
         {
-            return Reserve(Resource, (long)Amount);
+            return Reserve(resource, (long)amount);
         }
 
-        public bool Reserve(LimitableResource Resource, long Amount)
+        public bool Reserve(LimitableResource resource, long amount)
         {
-            return Reserve(Resource, Amount, KTimeManager.ConvertMillisecondsToNanoseconds(Time10SecondsMs));
+            return Reserve(resource, amount, KTimeManager.ConvertMillisecondsToNanoseconds(Time10SecondsMs));
         }
 
-        public bool Reserve(LimitableResource Resource, long Amount, long Timeout)
+        public bool Reserve(LimitableResource resource, long amount, long timeout)
         {
-            long EndTimePoint = KTimeManager.ConvertNanosecondsToMilliseconds(Timeout);
+            long endTimePoint = KTimeManager.ConvertNanosecondsToMilliseconds(timeout);
 
-            EndTimePoint += PerformanceCounter.ElapsedMilliseconds;
+            endTimePoint += PerformanceCounter.ElapsedMilliseconds;
 
-            bool Success = false;
+            bool success = false;
 
-            int Index = GetIndex(Resource);
+            int index = GetIndex(resource);
 
-            lock (LockObj)
+            lock (_lockObj)
             {
-                long NewCurrent = Current[Index] + Amount;
+                long newCurrent = _current[index] + amount;
 
-                while (NewCurrent > Limit[Index] && Available[Index] + Amount <= Limit[Index])
+                while (newCurrent > _limit[index] && _available[index] + amount <= _limit[index])
                 {
-                    WaitingThreadsCount++;
+                    _waitingThreadsCount++;
 
-                    KConditionVariable.Wait(System, WaitingThreads, LockObj, Timeout);
+                    KConditionVariable.Wait(_system, _waitingThreads, _lockObj, timeout);
 
-                    WaitingThreadsCount--;
+                    _waitingThreadsCount--;
 
-                    NewCurrent = Current[Index] + Amount;
+                    newCurrent = _current[index] + amount;
 
-                    if (Timeout >= 0 && PerformanceCounter.ElapsedMilliseconds > EndTimePoint)
+                    if (timeout >= 0 && PerformanceCounter.ElapsedMilliseconds > endTimePoint)
                     {
                         break;
                     }
                 }
 
-                if (NewCurrent <= Limit[Index])
+                if (newCurrent <= _limit[index])
                 {
-                    Current[Index] = NewCurrent;
+                    _current[index] = newCurrent;
 
-                    Success = true;
+                    success = true;
                 }
             }
 
-            return Success;
+            return success;
         }
 
-        public void Release(LimitableResource Resource, ulong Amount)
+        public void Release(LimitableResource resource, ulong amount)
         {
-            Release(Resource, (long)Amount);
+            Release(resource, (long)amount);
         }
 
-        public void Release(LimitableResource Resource, long Amount)
+        public void Release(LimitableResource resource, long amount)
         {
-            Release(Resource, Amount, Amount);
+            Release(resource, amount, amount);
         }
 
-        private void Release(LimitableResource Resource, long UsedAmount, long AvailableAmount)
+        private void Release(LimitableResource resource, long usedAmount, long availableAmount)
         {
-            int Index = GetIndex(Resource);
+            int index = GetIndex(resource);
 
-            lock (LockObj)
+            lock (_lockObj)
             {
-                Current  [Index] -= UsedAmount;
-                Available[Index] -= AvailableAmount;
+                _current  [index] -= usedAmount;
+                _available[index] -= availableAmount;
 
-                if (WaitingThreadsCount > 0)
+                if (_waitingThreadsCount > 0)
                 {
-                    KConditionVariable.NotifyAll(System, WaitingThreads);
+                    KConditionVariable.NotifyAll(_system, _waitingThreads);
                 }
             }
         }
 
-        public long GetRemainingValue(LimitableResource Resource)
+        public long GetRemainingValue(LimitableResource resource)
         {
-            int Index = GetIndex(Resource);
+            int index = GetIndex(resource);
 
-            lock (LockObj)
+            lock (_lockObj)
             {
-                return Limit[Index] - Current[Index];
+                return _limit[index] - _current[index];
             }
         }
 
-        public KernelResult SetLimitValue(LimitableResource Resource, long Limit)
+        public KernelResult SetLimitValue(LimitableResource resource, long limit)
         {
-            int Index = GetIndex(Resource);
+            int index = GetIndex(resource);
 
-            lock (LockObj)
+            lock (_lockObj)
             {
-                if (Current[Index] <= Limit)
+                if (_current[index] <= limit)
                 {
-                    this.Limit[Index] = Limit;
+                    _limit[index] = limit;
 
                     return KernelResult.Success;
                 }
@@ -138,9 +138,9 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private static int GetIndex(LimitableResource Resource)
+        private static int GetIndex(LimitableResource resource)
         {
-            return (int)Resource;
+            return (int)resource;
         }
     }
 }

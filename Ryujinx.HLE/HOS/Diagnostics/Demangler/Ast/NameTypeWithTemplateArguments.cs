@@ -4,24 +4,24 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class NameTypeWithTemplateArguments : BaseNode
     {
-        private BaseNode Prev;
-        private BaseNode TemplateArgument;
+        private BaseNode _prev;
+        private BaseNode _templateArgument;
 
-        public NameTypeWithTemplateArguments(BaseNode Prev, BaseNode TemplateArgument) : base(NodeType.NameTypeWithTemplateArguments)
+        public NameTypeWithTemplateArguments(BaseNode prev, BaseNode templateArgument) : base(NodeType.NameTypeWithTemplateArguments)
         {
-            this.Prev             = Prev;
-            this.TemplateArgument = TemplateArgument;
+            _prev             = prev;
+            _templateArgument = templateArgument;
         }
 
         public override string GetName()
         {
-            return Prev.GetName();
+            return _prev.GetName();
         }
         
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Prev.Print(Writer);
-            TemplateArgument.Print(Writer);
+            _prev.Print(writer);
+            _templateArgument.Print(writer);
         }
     }
 }

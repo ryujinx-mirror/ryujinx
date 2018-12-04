@@ -19,13 +19,13 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         private const int DefaultChannelsCount = 2;
 
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
         public IAudioOutManager()
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0, ListAudioOuts     },
                 { 1, OpenAudioOut      },
@@ -34,135 +34,135 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             };
         }
 
-        public long ListAudioOuts(ServiceCtx Context)
+        public long ListAudioOuts(ServiceCtx context)
         {
             return ListAudioOutsImpl(
-                Context,
-                Context.Request.ReceiveBuff[0].Position,
-                Context.Request.ReceiveBuff[0].Size);
+                context,
+                context.Request.ReceiveBuff[0].Position,
+                context.Request.ReceiveBuff[0].Size);
         }
 
-        public long OpenAudioOut(ServiceCtx Context)
+        public long OpenAudioOut(ServiceCtx context)
         {
             return OpenAudioOutImpl(
-                Context,
-                Context.Request.SendBuff[0].Position,
-                Context.Request.SendBuff[0].Size,
-                Context.Request.ReceiveBuff[0].Position,
-                Context.Request.ReceiveBuff[0].Size);
+                context,
+                context.Request.SendBuff[0].Position,
+                context.Request.SendBuff[0].Size,
+                context.Request.ReceiveBuff[0].Position,
+                context.Request.ReceiveBuff[0].Size);
         }
 
-        public long ListAudioOutsAuto(ServiceCtx Context)
+        public long ListAudioOutsAuto(ServiceCtx context)
         {
-            (long RecvPosition, long RecvSize) = Context.Request.GetBufferType0x22();
+            (long recvPosition, long recvSize) = context.Request.GetBufferType0x22();
 
-            return ListAudioOutsImpl(Context, RecvPosition, RecvSize);
+            return ListAudioOutsImpl(context, recvPosition, recvSize);
         }
 
-        public long OpenAudioOutAuto(ServiceCtx Context)
+        public long OpenAudioOutAuto(ServiceCtx context)
         {
-            (long SendPosition, long SendSize) = Context.Request.GetBufferType0x21();
-            (long RecvPosition, long RecvSize) = Context.Request.GetBufferType0x22();
+            (long sendPosition, long sendSize) = context.Request.GetBufferType0x21();
+            (long recvPosition, long recvSize) = context.Request.GetBufferType0x22();
 
             return OpenAudioOutImpl(
-                Context,
-                SendPosition,
-                SendSize,
-                RecvPosition,
-                RecvSize);
+                context,
+                sendPosition,
+                sendSize,
+                recvPosition,
+                recvSize);
         }
 
-        private long ListAudioOutsImpl(ServiceCtx Context, long Position, long Size)
+        private long ListAudioOutsImpl(ServiceCtx context, long position, long size)
         {
-            int NameCount = 0;
+            int nameCount = 0;
 
-            byte[] DeviceNameBuffer = Encoding.ASCII.GetBytes(DefaultAudioOutput + "\0");
+            byte[] deviceNameBuffer = Encoding.ASCII.GetBytes(DefaultAudioOutput + "\0");
 
-            if ((ulong)DeviceNameBuffer.Length <= (ulong)Size)
+            if ((ulong)deviceNameBuffer.Length <= (ulong)size)
             {
-                Context.Memory.WriteBytes(Position, DeviceNameBuffer);
+                context.Memory.WriteBytes(position, deviceNameBuffer);
 
-                NameCount++;
+                nameCount++;
             }
             else
             {
-                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
+                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
             }
 
-            Context.ResponseData.Write(NameCount);
+            context.ResponseData.Write(nameCount);
 
             return 0;
         }
 
-        private long OpenAudioOutImpl(ServiceCtx Context, long SendPosition, long SendSize, long ReceivePosition, long ReceiveSize)
+        private long OpenAudioOutImpl(ServiceCtx context, long sendPosition, long sendSize, long receivePosition, long receiveSize)
         {
-            string DeviceName = MemoryHelper.ReadAsciiString(
-                Context.Memory,
-                SendPosition,
-                SendSize);
+            string deviceName = MemoryHelper.ReadAsciiString(
+                context.Memory,
+                sendPosition,
+                sendSize);
 
-            if (DeviceName == string.Empty)
+            if (deviceName == string.Empty)
             {
-                DeviceName = DefaultAudioOutput;
+                deviceName = DefaultAudioOutput;
             }
 
-            if (DeviceName != DefaultAudioOutput)
+            if (deviceName != DefaultAudioOutput)
             {
                 Logger.PrintWarning(LogClass.Audio, "Invalid device name!");
 
                 return MakeError(ErrorModule.Audio, AudErr.DeviceNotFound);
             }
 
-            byte[] DeviceNameBuffer = Encoding.ASCII.GetBytes(DeviceName + "\0");
+            byte[] deviceNameBuffer = Encoding.ASCII.GetBytes(deviceName + "\0");
 
-            if ((ulong)DeviceNameBuffer.Length <= (ulong)ReceiveSize)
+            if ((ulong)deviceNameBuffer.Length <= (ulong)receiveSize)
             {
-                Context.Memory.WriteBytes(ReceivePosition, DeviceNameBuffer);
+                context.Memory.WriteBytes(receivePosition, deviceNameBuffer);
             }
             else
             {
-                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {ReceiveSize} too small!");
+                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {receiveSize} too small!");
             }
 
-            int SampleRate = Context.RequestData.ReadInt32();
-            int Channels   = Context.RequestData.ReadInt32();
+            int sampleRate = context.RequestData.ReadInt32();
+            int channels   = context.RequestData.ReadInt32();
 
-            if (SampleRate == 0)
+            if (sampleRate == 0)
             {
-                SampleRate = DefaultSampleRate;
+                sampleRate = DefaultSampleRate;
             }
 
-            if (SampleRate != DefaultSampleRate)
+            if (sampleRate != DefaultSampleRate)
             {
                 Logger.PrintWarning(LogClass.Audio, "Invalid sample rate!");
 
                 return MakeError(ErrorModule.Audio, AudErr.UnsupportedSampleRate);
             }
 
-            Channels = (ushort)Channels;
+            channels = (ushort)channels;
 
-            if (Channels == 0)
+            if (channels == 0)
             {
-                Channels = DefaultChannelsCount;
+                channels = DefaultChannelsCount;
             }
 
-            KEvent ReleaseEvent = new KEvent(Context.Device.System);
+            KEvent releaseEvent = new KEvent(context.Device.System);
 
-            ReleaseCallback Callback = () =>
+            ReleaseCallback callback = () =>
             {
-                ReleaseEvent.ReadableEvent.Signal();
+                releaseEvent.ReadableEvent.Signal();
             };
 
-            IAalOutput AudioOut = Context.Device.AudioOut;
+            IAalOutput audioOut = context.Device.AudioOut;
 
-            int Track = AudioOut.OpenTrack(SampleRate, Channels, Callback);
+            int track = audioOut.OpenTrack(sampleRate, channels, callback);
 
-            MakeObject(Context, new IAudioOut(AudioOut, ReleaseEvent, Track));
+            MakeObject(context, new IAudioOut(audioOut, releaseEvent, track));
 
-            Context.ResponseData.Write(SampleRate);
-            Context.ResponseData.Write(Channels);
-            Context.ResponseData.Write((int)SampleFormat.PcmInt16);
-            Context.ResponseData.Write((int)PlaybackState.Stopped);
+            context.ResponseData.Write(sampleRate);
+            context.ResponseData.Write(channels);
+            context.ResponseData.Write((int)SampleFormat.PcmInt16);
+            context.ResponseData.Write((int)PlaybackState.Stopped);
 
             return 0;
         }

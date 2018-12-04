@@ -16,13 +16,13 @@ namespace Ryujinx.HLE.HOS.Services.Android
 {
     class NvFlinger : IDisposable
     {
-        private delegate long ServiceProcessParcel(ServiceCtx Context, BinaryReader ParcelReader);
+        private delegate long ServiceProcessParcel(ServiceCtx context, BinaryReader parcelReader);
 
-        private Dictionary<(string, int), ServiceProcessParcel> Commands;
+        private Dictionary<(string, int), ServiceProcessParcel> _commands;
 
-        private KEvent BinderEvent;
+        private KEvent _binderEvent;
 
-        private IGalRenderer Renderer;
+        private IGalRenderer _renderer;
 
         private const int BufferQueueCount = 0x40;
         private const int BufferQueueMask  = BufferQueueCount - 1;
@@ -62,15 +62,15 @@ namespace Ryujinx.HLE.HOS.Services.Android
             public GbpBuffer Data;
         }
 
-        private BufferEntry[] BufferQueue;
+        private BufferEntry[] _bufferQueue;
 
-        private AutoResetEvent WaitBufferFree;
+        private AutoResetEvent _waitBufferFree;
 
-        private bool Disposed;
+        private bool _disposed;
 
-        public NvFlinger(IGalRenderer Renderer, KEvent BinderEvent)
+        public NvFlinger(IGalRenderer renderer, KEvent binderEvent)
         {
-            Commands = new Dictionary<(string, int), ServiceProcessParcel>()
+            _commands = new Dictionary<(string, int), ServiceProcessParcel>
             {
                 { ("android.gui.IGraphicBufferProducer", 0x1), GbpRequestBuffer  },
                 { ("android.gui.IGraphicBufferProducer", 0x3), GbpDequeueBuffer  },
@@ -83,307 +83,307 @@ namespace Ryujinx.HLE.HOS.Services.Android
                 { ("android.gui.IGraphicBufferProducer", 0xe), GbpPreallocBuffer }
             };
 
-            this.Renderer    = Renderer;
-            this.BinderEvent = BinderEvent;
+            _renderer    = renderer;
+            _binderEvent = binderEvent;
 
-            BufferQueue = new BufferEntry[0x40];
+            _bufferQueue = new BufferEntry[0x40];
 
-            WaitBufferFree = new AutoResetEvent(false);
+            _waitBufferFree = new AutoResetEvent(false);
         }
 
-        public long ProcessParcelRequest(ServiceCtx Context, byte[] ParcelData, int Code)
+        public long ProcessParcelRequest(ServiceCtx context, byte[] parcelData, int code)
         {
-            using (MemoryStream MS = new MemoryStream(ParcelData))
+            using (MemoryStream ms = new MemoryStream(parcelData))
             {
-                BinaryReader Reader = new BinaryReader(MS);
+                BinaryReader reader = new BinaryReader(ms);
 
-                MS.Seek(4, SeekOrigin.Current);
+                ms.Seek(4, SeekOrigin.Current);
 
-                int StrSize = Reader.ReadInt32();
+                int strSize = reader.ReadInt32();
 
-                string InterfaceName = Encoding.Unicode.GetString(Reader.ReadBytes(StrSize * 2));
+                string interfaceName = Encoding.Unicode.GetString(reader.ReadBytes(strSize * 2));
 
-                long Remainder = MS.Position & 0xf;
+                long remainder = ms.Position & 0xf;
 
-                if (Remainder != 0)
+                if (remainder != 0)
                 {
-                    MS.Seek(0x10 - Remainder, SeekOrigin.Current);
+                    ms.Seek(0x10 - remainder, SeekOrigin.Current);
                 }
 
-                MS.Seek(0x50, SeekOrigin.Begin);
+                ms.Seek(0x50, SeekOrigin.Begin);
 
-                if (Commands.TryGetValue((InterfaceName, Code), out ServiceProcessParcel ProcReq))
+                if (_commands.TryGetValue((interfaceName, code), out ServiceProcessParcel procReq))
                 {
-                    Logger.PrintDebug(LogClass.ServiceVi, $"{InterfaceName} {ProcReq.Method.Name}");
+                    Logger.PrintDebug(LogClass.ServiceVi, $"{interfaceName} {procReq.Method.Name}");
 
-                    return ProcReq(Context, Reader);
+                    return procReq(context, reader);
                 }
                 else
                 {
-                    throw new NotImplementedException($"{InterfaceName} {Code}");
+                    throw new NotImplementedException($"{interfaceName} {code}");
                 }
             }
         }
 
-        private long GbpRequestBuffer(ServiceCtx Context, BinaryReader ParcelReader)
+        private long GbpRequestBuffer(ServiceCtx context, BinaryReader parcelReader)
         {
-            int Slot = ParcelReader.ReadInt32();
+            int slot = parcelReader.ReadInt32();
 
-            using (MemoryStream MS = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream())
             {
-                BinaryWriter Writer = new BinaryWriter(MS);
+                BinaryWriter writer = new BinaryWriter(ms);
 
-                BufferEntry Entry = BufferQueue[Slot];
+                BufferEntry entry = _bufferQueue[slot];
 
-                int  BufferCount = 1; //?
-                long BufferSize  = Entry.Data.Size;
+                int  bufferCount = 1; //?
+                long bufferSize  = entry.Data.Size;
 
-                Writer.Write(BufferCount);
-                Writer.Write(BufferSize);
+                writer.Write(bufferCount);
+                writer.Write(bufferSize);
 
-                Entry.Data.Write(Writer);
+                entry.Data.Write(writer);
 
-                Writer.Write(0);
+                writer.Write(0);
 
-                return MakeReplyParcel(Context, MS.ToArray());
+                return MakeReplyParcel(context, ms.ToArray());
             }
         }
 
-        private long GbpDequeueBuffer(ServiceCtx Context, BinaryReader ParcelReader)
+        private long GbpDequeueBuffer(ServiceCtx context, BinaryReader parcelReader)
         {
             //TODO: Errors.
-            int Format        = ParcelReader.ReadInt32();
-            int Width         = ParcelReader.ReadInt32();
-            int Height        = ParcelReader.ReadInt32();
-            int GetTimestamps = ParcelReader.ReadInt32();
-            int Usage         = ParcelReader.ReadInt32();
+            int format        = parcelReader.ReadInt32();
+            int width         = parcelReader.ReadInt32();
+            int height        = parcelReader.ReadInt32();
+            int getTimestamps = parcelReader.ReadInt32();
+            int usage         = parcelReader.ReadInt32();
 
-            int Slot = GetFreeSlotBlocking(Width, Height);
+            int slot = GetFreeSlotBlocking(width, height);
 
-            return MakeReplyParcel(Context, Slot, 1, 0x24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            return MakeReplyParcel(context, slot, 1, 0x24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         }
 
-        private long GbpQueueBuffer(ServiceCtx Context, BinaryReader ParcelReader)
+        private long GbpQueueBuffer(ServiceCtx context, BinaryReader parcelReader)
         {
-            Context.Device.Statistics.RecordGameFrameTime();
+            context.Device.Statistics.RecordGameFrameTime();
 
             //TODO: Errors.
-            int Slot            = ParcelReader.ReadInt32();
-            int Unknown4        = ParcelReader.ReadInt32();
-            int Unknown8        = ParcelReader.ReadInt32();
-            int Unknownc        = ParcelReader.ReadInt32();
-            int Timestamp       = ParcelReader.ReadInt32();
-            int IsAutoTimestamp = ParcelReader.ReadInt32();
-            int CropTop         = ParcelReader.ReadInt32();
-            int CropLeft        = ParcelReader.ReadInt32();
-            int CropRight       = ParcelReader.ReadInt32();
-            int CropBottom      = ParcelReader.ReadInt32();
-            int ScalingMode     = ParcelReader.ReadInt32();
-            int Transform       = ParcelReader.ReadInt32();
-            int StickyTransform = ParcelReader.ReadInt32();
-            int Unknown34       = ParcelReader.ReadInt32();
-            int Unknown38       = ParcelReader.ReadInt32();
-            int IsFenceValid    = ParcelReader.ReadInt32();
-            int Fence0Id        = ParcelReader.ReadInt32();
-            int Fence0Value     = ParcelReader.ReadInt32();
-            int Fence1Id        = ParcelReader.ReadInt32();
-            int Fence1Value     = ParcelReader.ReadInt32();
+            int slot            = parcelReader.ReadInt32();
+            int unknown4        = parcelReader.ReadInt32();
+            int unknown8        = parcelReader.ReadInt32();
+            int unknownC        = parcelReader.ReadInt32();
+            int timestamp       = parcelReader.ReadInt32();
+            int isAutoTimestamp = parcelReader.ReadInt32();
+            int cropTop         = parcelReader.ReadInt32();
+            int cropLeft        = parcelReader.ReadInt32();
+            int cropRight       = parcelReader.ReadInt32();
+            int cropBottom      = parcelReader.ReadInt32();
+            int scalingMode     = parcelReader.ReadInt32();
+            int transform       = parcelReader.ReadInt32();
+            int stickyTransform = parcelReader.ReadInt32();
+            int unknown34       = parcelReader.ReadInt32();
+            int unknown38       = parcelReader.ReadInt32();
+            int isFenceValid    = parcelReader.ReadInt32();
+            int fence0Id        = parcelReader.ReadInt32();
+            int fence0Value     = parcelReader.ReadInt32();
+            int fence1Id        = parcelReader.ReadInt32();
+            int fence1Value     = parcelReader.ReadInt32();
 
-            BufferQueue[Slot].Transform = (HalTransform)Transform;
+            _bufferQueue[slot].Transform = (HalTransform)transform;
 
-            BufferQueue[Slot].Crop.Top    = CropTop;
-            BufferQueue[Slot].Crop.Left   = CropLeft;
-            BufferQueue[Slot].Crop.Right  = CropRight;
-            BufferQueue[Slot].Crop.Bottom = CropBottom;
+            _bufferQueue[slot].Crop.Top    = cropTop;
+            _bufferQueue[slot].Crop.Left   = cropLeft;
+            _bufferQueue[slot].Crop.Right  = cropRight;
+            _bufferQueue[slot].Crop.Bottom = cropBottom;
 
-            BufferQueue[Slot].State = BufferState.Queued;
+            _bufferQueue[slot].State = BufferState.Queued;
 
-            SendFrameBuffer(Context, Slot);
+            SendFrameBuffer(context, slot);
 
-            if (Context.Device.EnableDeviceVsync)
+            if (context.Device.EnableDeviceVsync)
             {
-                Context.Device.VsyncEvent.WaitOne();
+                context.Device.VsyncEvent.WaitOne();
             }
 
-            return MakeReplyParcel(Context, 1280, 720, 0, 0, 0);
+            return MakeReplyParcel(context, 1280, 720, 0, 0, 0);
         }
 
-        private long GbpDetachBuffer(ServiceCtx Context, BinaryReader ParcelReader)
+        private long GbpDetachBuffer(ServiceCtx context, BinaryReader parcelReader)
         {
-            return MakeReplyParcel(Context, 0);
+            return MakeReplyParcel(context, 0);
         }
 
-        private long GbpCancelBuffer(ServiceCtx Context, BinaryReader ParcelReader)
+        private long GbpCancelBuffer(ServiceCtx context, BinaryReader parcelReader)
         {
             //TODO: Errors.
-            int Slot = ParcelReader.ReadInt32();
+            int slot = parcelReader.ReadInt32();
 
-            BufferQueue[Slot].State = BufferState.Free;
+            _bufferQueue[slot].State = BufferState.Free;
 
-            WaitBufferFree.Set();
+            _waitBufferFree.Set();
 
-            return MakeReplyParcel(Context, 0);
+            return MakeReplyParcel(context, 0);
         }
 
-        private long GbpQuery(ServiceCtx Context, BinaryReader ParcelReader)
+        private long GbpQuery(ServiceCtx context, BinaryReader parcelReader)
         {
-            return MakeReplyParcel(Context, 0, 0);
+            return MakeReplyParcel(context, 0, 0);
         }
 
-        private long GbpConnect(ServiceCtx Context, BinaryReader ParcelReader)
+        private long GbpConnect(ServiceCtx context, BinaryReader parcelReader)
         {
-            return MakeReplyParcel(Context, 1280, 720, 0, 0, 0);
+            return MakeReplyParcel(context, 1280, 720, 0, 0, 0);
         }
 
-        private long GbpDisconnect(ServiceCtx Context, BinaryReader ParcelReader)
+        private long GbpDisconnect(ServiceCtx context, BinaryReader parcelReader)
         {
-            return MakeReplyParcel(Context, 0);
+            return MakeReplyParcel(context, 0);
         }
 
-        private long GbpPreallocBuffer(ServiceCtx Context, BinaryReader ParcelReader)
+        private long GbpPreallocBuffer(ServiceCtx context, BinaryReader parcelReader)
         {
-            int Slot = ParcelReader.ReadInt32();
+            int slot = parcelReader.ReadInt32();
 
-            int BufferCount = ParcelReader.ReadInt32();
+            int bufferCount = parcelReader.ReadInt32();
 
-            if (BufferCount > 0)
+            if (bufferCount > 0)
             {
-                long BufferSize = ParcelReader.ReadInt64();
+                long bufferSize = parcelReader.ReadInt64();
 
-                BufferQueue[Slot].State = BufferState.Free;
+                _bufferQueue[slot].State = BufferState.Free;
 
-                BufferQueue[Slot].Data = new GbpBuffer(ParcelReader);
+                _bufferQueue[slot].Data = new GbpBuffer(parcelReader);
             }
 
-            return MakeReplyParcel(Context, 0);
+            return MakeReplyParcel(context, 0);
         }
 
-        private long MakeReplyParcel(ServiceCtx Context, params int[] Ints)
+        private long MakeReplyParcel(ServiceCtx context, params int[] ints)
         {
-            using (MemoryStream MS = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream())
             {
-                BinaryWriter Writer = new BinaryWriter(MS);
+                BinaryWriter writer = new BinaryWriter(ms);
 
-                foreach (int Int in Ints)
+                foreach (int Int in ints)
                 {
-                    Writer.Write(Int);
+                    writer.Write(Int);
                 }
 
-                return MakeReplyParcel(Context, MS.ToArray());
+                return MakeReplyParcel(context, ms.ToArray());
             }
         }
 
-        private long MakeReplyParcel(ServiceCtx Context, byte[] Data)
+        private long MakeReplyParcel(ServiceCtx context, byte[] data)
         {
-            (long ReplyPos, long ReplySize) = Context.Request.GetBufferType0x22();
+            (long replyPos, long replySize) = context.Request.GetBufferType0x22();
 
-            byte[] Reply = MakeParcel(Data, new byte[0]);
+            byte[] reply = MakeParcel(data, new byte[0]);
 
-            Context.Memory.WriteBytes(ReplyPos, Reply);
+            context.Memory.WriteBytes(replyPos, reply);
 
             return 0;
         }
 
-        private void SendFrameBuffer(ServiceCtx Context, int Slot)
+        private void SendFrameBuffer(ServiceCtx context, int slot)
         {
-            int FbWidth  = BufferQueue[Slot].Data.Width;
-            int FbHeight = BufferQueue[Slot].Data.Height;
+            int fbWidth  = _bufferQueue[slot].Data.Width;
+            int fbHeight = _bufferQueue[slot].Data.Height;
 
-            int NvMapHandle  = BitConverter.ToInt32(BufferQueue[Slot].Data.RawData, 0x4c);
-            int BufferOffset = BitConverter.ToInt32(BufferQueue[Slot].Data.RawData, 0x50);
+            int nvMapHandle  = BitConverter.ToInt32(_bufferQueue[slot].Data.RawData, 0x4c);
+            int bufferOffset = BitConverter.ToInt32(_bufferQueue[slot].Data.RawData, 0x50);
 
-            NvMapHandle Map = NvMapIoctl.GetNvMap(Context, NvMapHandle);;
+            NvMapHandle map = NvMapIoctl.GetNvMap(context, nvMapHandle);
 
-            long FbAddr = Map.Address + BufferOffset;
+            long fbAddr = map.Address + bufferOffset;
 
-            BufferQueue[Slot].State = BufferState.Acquired;
+            _bufferQueue[slot].State = BufferState.Acquired;
 
-            Rect Crop = BufferQueue[Slot].Crop;
+            Rect crop = _bufferQueue[slot].Crop;
 
-            bool FlipX = BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipX);
-            bool FlipY = BufferQueue[Slot].Transform.HasFlag(HalTransform.FlipY);
+            bool flipX = _bufferQueue[slot].Transform.HasFlag(HalTransform.FlipX);
+            bool flipY = _bufferQueue[slot].Transform.HasFlag(HalTransform.FlipY);
 
             //Note: Rotation is being ignored.
 
-            int Top    = Crop.Top;
-            int Left   = Crop.Left;
-            int Right  = Crop.Right;
-            int Bottom = Crop.Bottom;
+            int top    = crop.Top;
+            int left   = crop.Left;
+            int right  = crop.Right;
+            int bottom = crop.Bottom;
 
-            NvGpuVmm Vmm = NvGpuASIoctl.GetASCtx(Context).Vmm;
+            NvGpuVmm vmm = NvGpuASIoctl.GetASCtx(context).Vmm;
 
-            Renderer.QueueAction(() =>
+            _renderer.QueueAction(() =>
             {
-                if (!Renderer.Texture.TryGetImage(FbAddr, out GalImage Image))
+                if (!_renderer.Texture.TryGetImage(fbAddr, out GalImage image))
                 {
-                    Image = new GalImage(
-                        FbWidth,
-                        FbHeight, 1, 16,
+                    image = new GalImage(
+                        fbWidth,
+                        fbHeight, 1, 16,
                         GalMemoryLayout.BlockLinear,
                         GalImageFormat.RGBA8 | GalImageFormat.Unorm);
                 }
 
-                Context.Device.Gpu.ResourceManager.ClearPbCache();
-                Context.Device.Gpu.ResourceManager.SendTexture(Vmm, FbAddr, Image);
+                context.Device.Gpu.ResourceManager.ClearPbCache();
+                context.Device.Gpu.ResourceManager.SendTexture(vmm, fbAddr, image);
 
-                Renderer.RenderTarget.SetTransform(FlipX, FlipY, Top, Left, Right, Bottom);
-                Renderer.RenderTarget.Present(FbAddr);
+                _renderer.RenderTarget.SetTransform(flipX, flipY, top, left, right, bottom);
+                _renderer.RenderTarget.Present(fbAddr);
 
-                ReleaseBuffer(Slot);
+                ReleaseBuffer(slot);
             });
         }
 
-        private void ReleaseBuffer(int Slot)
+        private void ReleaseBuffer(int slot)
         {
-            BufferQueue[Slot].State = BufferState.Free;
+            _bufferQueue[slot].State = BufferState.Free;
 
-            BinderEvent.ReadableEvent.Signal();
+            _binderEvent.ReadableEvent.Signal();
 
-            WaitBufferFree.Set();
+            _waitBufferFree.Set();
         }
 
-        private int GetFreeSlotBlocking(int Width, int Height)
+        private int GetFreeSlotBlocking(int width, int height)
         {
-            int Slot;
+            int slot;
 
             do
             {
-                if ((Slot = GetFreeSlot(Width, Height)) != -1)
+                if ((slot = GetFreeSlot(width, height)) != -1)
                 {
                     break;
                 }
 
-                if (Disposed)
+                if (_disposed)
                 {
                     break;
                 }
 
-                WaitBufferFree.WaitOne();
+                _waitBufferFree.WaitOne();
             }
-            while (!Disposed);
+            while (!_disposed);
 
-            return Slot;
+            return slot;
         }
 
-        private int GetFreeSlot(int Width, int Height)
+        private int GetFreeSlot(int width, int height)
         {
-            lock (BufferQueue)
+            lock (_bufferQueue)
             {
-                for (int Slot = 0; Slot < BufferQueue.Length; Slot++)
+                for (int slot = 0; slot < _bufferQueue.Length; slot++)
                 {
-                    if (BufferQueue[Slot].State != BufferState.Free)
+                    if (_bufferQueue[slot].State != BufferState.Free)
                     {
                         continue;
                     }
 
-                    GbpBuffer Data = BufferQueue[Slot].Data;
+                    GbpBuffer data = _bufferQueue[slot].Data;
 
-                    if (Data.Width  == Width &&
-                        Data.Height == Height)
+                    if (data.Width  == width &&
+                        data.Height == height)
                     {
-                        BufferQueue[Slot].State = BufferState.Dequeued;
+                        _bufferQueue[slot].State = BufferState.Dequeued;
 
-                        return Slot;
+                        return slot;
                     }
                 }
             }
@@ -396,14 +396,14 @@ namespace Ryujinx.HLE.HOS.Services.Android
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool Disposing)
+        protected virtual void Dispose(bool disposing)
         {
-            if (Disposing && !Disposed)
+            if (disposing && !_disposed)
             {
-                Disposed = true;
+                _disposed = true;
 
-                WaitBufferFree.Set();
-                WaitBufferFree.Dispose();
+                _waitBufferFree.Set();
+                _waitBufferFree.Dispose();
             }
         }
     }

@@ -8,61 +8,61 @@ namespace Ryujinx.HLE.HOS.Ipc
     static class IpcHandler
     {
         public static long IpcCall(
-            Switch        Device,
-            KProcess      Process,
-            MemoryManager Memory,
-            KSession      Session,
-            IpcMessage    Request,
-            long          CmdPtr)
+            Switch        device,
+            KProcess      process,
+            MemoryManager memory,
+            KSession      session,
+            IpcMessage    request,
+            long          cmdPtr)
         {
-            IpcMessage Response = new IpcMessage();
+            IpcMessage response = new IpcMessage();
 
-            using (MemoryStream Raw = new MemoryStream(Request.RawData))
+            using (MemoryStream raw = new MemoryStream(request.RawData))
             {
-                BinaryReader ReqReader = new BinaryReader(Raw);
+                BinaryReader reqReader = new BinaryReader(raw);
 
-                if (Request.Type == IpcMessageType.Request ||
-                    Request.Type == IpcMessageType.RequestWithContext)
+                if (request.Type == IpcMessageType.Request ||
+                    request.Type == IpcMessageType.RequestWithContext)
                 {
-                    Response.Type = IpcMessageType.Response;
+                    response.Type = IpcMessageType.Response;
 
-                    using (MemoryStream ResMS = new MemoryStream())
+                    using (MemoryStream resMs = new MemoryStream())
                     {
-                        BinaryWriter ResWriter = new BinaryWriter(ResMS);
+                        BinaryWriter resWriter = new BinaryWriter(resMs);
 
-                        ServiceCtx Context = new ServiceCtx(
-                            Device,
-                            Process,
-                            Memory,
-                            Session,
-                            Request,
-                            Response,
-                            ReqReader,
-                            ResWriter);
+                        ServiceCtx context = new ServiceCtx(
+                            device,
+                            process,
+                            memory,
+                            session,
+                            request,
+                            response,
+                            reqReader,
+                            resWriter);
 
-                        Session.Service.CallMethod(Context);
+                        session.Service.CallMethod(context);
 
-                        Response.RawData = ResMS.ToArray();
+                        response.RawData = resMs.ToArray();
                     }
                 }
-                else if (Request.Type == IpcMessageType.Control ||
-                         Request.Type == IpcMessageType.ControlWithContext)
+                else if (request.Type == IpcMessageType.Control ||
+                         request.Type == IpcMessageType.ControlWithContext)
                 {
-                    long Magic = ReqReader.ReadInt64();
-                    long CmdId = ReqReader.ReadInt64();
+                    long magic = reqReader.ReadInt64();
+                    long cmdId = reqReader.ReadInt64();
 
-                    switch (CmdId)
+                    switch (cmdId)
                     {
                         case 0:
                         {
-                            Request = FillResponse(Response, 0, Session.Service.ConvertToDomain());
+                            request = FillResponse(response, 0, session.Service.ConvertToDomain());
 
                             break;
                         }
 
                         case 3:
                         {
-                            Request = FillResponse(Response, 0, 0x500);
+                            request = FillResponse(response, 0, 0x500);
 
                             break;
                         }
@@ -71,73 +71,73 @@ namespace Ryujinx.HLE.HOS.Ipc
                         case 2:
                         case 4:
                         {
-                            int Unknown = ReqReader.ReadInt32();
+                            int unknown = reqReader.ReadInt32();
 
-                            if (Process.HandleTable.GenerateHandle(Session, out int Handle) != KernelResult.Success)
+                            if (process.HandleTable.GenerateHandle(session, out int handle) != KernelResult.Success)
                             {
                                 throw new InvalidOperationException("Out of handles!");
                             }
 
-                            Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
+                            response.HandleDesc = IpcHandleDesc.MakeMove(handle);
 
-                            Request = FillResponse(Response, 0);
+                            request = FillResponse(response, 0);
 
                             break;
                         }
 
-                        default: throw new NotImplementedException(CmdId.ToString());
+                        default: throw new NotImplementedException(cmdId.ToString());
                     }
                 }
-                else if (Request.Type == IpcMessageType.CloseSession)
+                else if (request.Type == IpcMessageType.CloseSession)
                 {
                     //TODO
                 }
                 else
                 {
-                    throw new NotImplementedException(Request.Type.ToString());
+                    throw new NotImplementedException(request.Type.ToString());
                 }
 
-                Memory.WriteBytes(CmdPtr, Response.GetBytes(CmdPtr));
+                memory.WriteBytes(cmdPtr, response.GetBytes(cmdPtr));
             }
 
             return 0;
         }
 
-        private static IpcMessage FillResponse(IpcMessage Response, long Result, params int[] Values)
+        private static IpcMessage FillResponse(IpcMessage response, long result, params int[] values)
         {
-            using (MemoryStream MS = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream())
             {
-                BinaryWriter Writer = new BinaryWriter(MS);
+                BinaryWriter writer = new BinaryWriter(ms);
 
-                foreach (int Value in Values)
+                foreach (int value in values)
                 {
-                    Writer.Write(Value);
+                    writer.Write(value);
                 }
 
-                return FillResponse(Response, Result, MS.ToArray());
+                return FillResponse(response, result, ms.ToArray());
             }
         }
 
-        private static IpcMessage FillResponse(IpcMessage Response, long Result, byte[] Data = null)
+        private static IpcMessage FillResponse(IpcMessage response, long result, byte[] data = null)
         {
-            Response.Type = IpcMessageType.Response;
+            response.Type = IpcMessageType.Response;
 
-            using (MemoryStream MS = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream())
             {
-                BinaryWriter Writer = new BinaryWriter(MS);
+                BinaryWriter writer = new BinaryWriter(ms);
 
-                Writer.Write(IpcMagic.Sfco);
-                Writer.Write(Result);
+                writer.Write(IpcMagic.Sfco);
+                writer.Write(result);
 
-                if (Data != null)
+                if (data != null)
                 {
-                    Writer.Write(Data);
+                    writer.Write(data);
                 }
 
-                Response.RawData = MS.ToArray();
+                response.RawData = ms.ToArray();
             }
 
-            return Response;
+            return response;
         }
     }
 }

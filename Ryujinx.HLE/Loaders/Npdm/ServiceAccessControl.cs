@@ -7,36 +7,36 @@ namespace Ryujinx.HLE.Loaders.Npdm
 {
     class ServiceAccessControl
     {
-        public IReadOnlyDictionary<string, bool> Services { get; private set; }
+        public IReadOnlyDictionary<string, bool> Services { get; }
 
-        public ServiceAccessControl(Stream Stream, int Offset, int Size)
+        public ServiceAccessControl(Stream stream, int offset, int size)
         {
-            Stream.Seek(Offset, SeekOrigin.Begin);
+            stream.Seek(offset, SeekOrigin.Begin);
 
-            BinaryReader Reader = new BinaryReader(Stream);
+            BinaryReader reader = new BinaryReader(stream);
 
-            int ByteReaded = 0;
+            int byteReaded = 0;
 
-            Dictionary<string, bool> Services = new Dictionary<string, bool>();
+            Dictionary<string, bool> services = new Dictionary<string, bool>();
 
-            while (ByteReaded != Size)
+            while (byteReaded != size)
             {
-                byte ControlByte = Reader.ReadByte();
+                byte controlByte = reader.ReadByte();
 
-                if (ControlByte == 0)
+                if (controlByte == 0)
                 {
                     break;
                 }
 
-                int  Length          = (ControlByte & 0x07) + 1;
-                bool RegisterAllowed = (ControlByte & 0x80) != 0;
+                int  length          = (controlByte & 0x07) + 1;
+                bool registerAllowed = (controlByte & 0x80) != 0;
 
-                Services.Add(Encoding.ASCII.GetString(Reader.ReadBytes(Length), 0, Length), RegisterAllowed);
+                services.Add(Encoding.ASCII.GetString(reader.ReadBytes(length), 0, length), registerAllowed);
 
-                ByteReaded += Length + 1;
+                byteReaded += length + 1;
             }
 
-            this.Services = new ReadOnlyDictionary<string, bool>(Services);
+            Services = new ReadOnlyDictionary<string, bool>(services);
         }
     }
 }

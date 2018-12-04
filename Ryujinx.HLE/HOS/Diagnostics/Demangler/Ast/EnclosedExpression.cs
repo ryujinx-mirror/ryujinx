@@ -4,22 +4,22 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class EnclosedExpression : BaseNode
     {
-        private string   Prefix;
-        private BaseNode Expression;
-        private string   Postfix;
+        private string   _prefix;
+        private BaseNode _expression;
+        private string   _postfix;
 
-        public EnclosedExpression(string Prefix, BaseNode Expression, string Postfix) : base(NodeType.EnclosedExpression)
+        public EnclosedExpression(string prefix, BaseNode expression, string postfix) : base(NodeType.EnclosedExpression)
         {
-            this.Prefix     = Prefix;
-            this.Expression = Expression;
-            this.Postfix    = Postfix;
+            _prefix     = prefix;
+            _expression = expression;
+            _postfix    = postfix;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write(Prefix);
-            Expression.Print(Writer);
-            Writer.Write(Postfix);
+            writer.Write(_prefix);
+            _expression.Print(writer);
+            writer.Write(_postfix);
         }
     }
 }

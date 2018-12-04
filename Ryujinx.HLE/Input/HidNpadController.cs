@@ -2,85 +2,85 @@
 {
     public class HidNpadController : HidControllerBase
     {
-        private (NpadColor Left, NpadColor Right) NpadBodyColors;
-        private (NpadColor Left, NpadColor Right) NpadButtonColors;
+        private (NpadColor Left, NpadColor Right) _npadBodyColors;
+        private (NpadColor Left, NpadColor Right) _npadButtonColors;
 
-        private HidControllerLayouts CurrentLayout;
+        private HidControllerLayouts _currentLayout;
 
-        private bool IsHalf;
+        private bool _isHalf;
 
         public HidNpadController(
-            HidControllerType      ControllerType,
-            Switch                 Device,
-            (NpadColor, NpadColor) NpadBodyColors,
-            (NpadColor, NpadColor) NpadButtonColors) : base(ControllerType, Device)
+            HidControllerType      controllerType,
+            Switch                 device,
+            (NpadColor, NpadColor) npadBodyColors,
+            (NpadColor, NpadColor) npadButtonColors) : base(controllerType, device)
         {
-            this.NpadBodyColors   = NpadBodyColors;
-            this.NpadButtonColors = NpadButtonColors;
+            _npadBodyColors   = npadBodyColors;
+            _npadButtonColors = npadButtonColors;
 
-            CurrentLayout = HidControllerLayouts.Handheld_Joined;
+            _currentLayout = HidControllerLayouts.HandheldJoined;
 
-            switch (ControllerType)
+            switch (controllerType)
             {
                 case HidControllerType.NpadLeft:
-                    CurrentLayout = HidControllerLayouts.Left;
+                    _currentLayout = HidControllerLayouts.Left;
                     break;
                 case HidControllerType.NpadRight:
-                    CurrentLayout = HidControllerLayouts.Right;
+                    _currentLayout = HidControllerLayouts.Right;
                     break;
                 case HidControllerType.NpadPair:
-                    CurrentLayout = HidControllerLayouts.Joined;
+                    _currentLayout = HidControllerLayouts.Joined;
                     break;
             }
         }
 
-        public override void Connect(HidControllerId ControllerId)
+        public override void Connect(HidControllerId controllerId)
         {
             if(HidControllerType != HidControllerType.NpadLeft && HidControllerType != HidControllerType.NpadRight)
             {
-                IsHalf = false;
+                _isHalf = false;
             }
 
-            base.Connect(CurrentLayout == HidControllerLayouts.Handheld_Joined ? HidControllerId.CONTROLLER_HANDHELD : ControllerId);
+            base.Connect(_currentLayout == HidControllerLayouts.HandheldJoined ? HidControllerId.ControllerHandheld : controllerId);
 
-            HidControllerColorDesc SingleColorDesc =
-                HidControllerColorDesc.ColorDesc_ColorsNonexistent;
+            HidControllerColorDesc singleColorDesc =
+                HidControllerColorDesc.ColorDescColorsNonexistent;
 
-            HidControllerColorDesc SplitColorDesc = 0;
+            HidControllerColorDesc splitColorDesc = 0;
 
-            NpadColor SingleColorBody    = NpadColor.Black;
-            NpadColor SingleColorButtons = NpadColor.Black;
+            NpadColor singleColorBody    = NpadColor.Black;
+            NpadColor singleColorButtons = NpadColor.Black;
 
-            Device.Memory.WriteInt32(Offset + 0x04, IsHalf ? 1 : 0);
+            Device.Memory.WriteInt32(Offset + 0x04, _isHalf ? 1 : 0);
 
-            if (IsHalf)
+            if (_isHalf)
             {
-                Device.Memory.WriteInt32(Offset + 0x08, (int)SingleColorDesc);
-                Device.Memory.WriteInt32(Offset + 0x0c, (int)SingleColorBody);
-                Device.Memory.WriteInt32(Offset + 0x10, (int)SingleColorButtons);
-                Device.Memory.WriteInt32(Offset + 0x14, (int)SplitColorDesc);
+                Device.Memory.WriteInt32(Offset + 0x08, (int)singleColorDesc);
+                Device.Memory.WriteInt32(Offset + 0x0c, (int)singleColorBody);
+                Device.Memory.WriteInt32(Offset + 0x10, (int)singleColorButtons);
+                Device.Memory.WriteInt32(Offset + 0x14, (int)splitColorDesc);
             }
             else
             {
-                Device.Memory.WriteInt32(Offset + 0x18, (int)NpadBodyColors.Left);
-                Device.Memory.WriteInt32(Offset + 0x1c, (int)NpadButtonColors.Left);
-                Device.Memory.WriteInt32(Offset + 0x20, (int)NpadBodyColors.Right);
-                Device.Memory.WriteInt32(Offset + 0x24, (int)NpadButtonColors.Right);
+                Device.Memory.WriteInt32(Offset + 0x18, (int)_npadBodyColors.Left);
+                Device.Memory.WriteInt32(Offset + 0x1c, (int)_npadButtonColors.Left);
+                Device.Memory.WriteInt32(Offset + 0x20, (int)_npadBodyColors.Right);
+                Device.Memory.WriteInt32(Offset + 0x24, (int)_npadButtonColors.Right);
             }
 
             Connected = true;
         }
 
         public override void SendInput
-            (HidControllerButtons Buttons,
-            HidJoystickPosition   LeftStick,
-            HidJoystickPosition   RightStick)
+            (HidControllerButtons buttons,
+            HidJoystickPosition   leftStick,
+            HidJoystickPosition   rightStick)
         {
-            long ControllerOffset = WriteInput(Buttons, LeftStick, RightStick, CurrentLayout);
+            long controllerOffset = WriteInput(buttons, leftStick, rightStick, _currentLayout);
 
-            Device.Memory.WriteInt64(ControllerOffset + 0x28,
-              (Connected ? (uint)HidControllerConnState.Controller_State_Connected : 0) |
-              (CurrentLayout == HidControllerLayouts.Handheld_Joined ? (uint)HidControllerConnState.Controller_State_Wired : 0));
+            Device.Memory.WriteInt64(controllerOffset + 0x28,
+              (Connected ? (uint)HidControllerConnState.ControllerStateConnected : 0) |
+              (_currentLayout == HidControllerLayouts.HandheldJoined ? (uint)HidControllerConnState.ControllerStateWired : 0));
         }
     }
 }

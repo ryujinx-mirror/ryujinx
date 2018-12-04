@@ -4,16 +4,16 @@ namespace Ryujinx.HLE.HOS.Ipc
 {
     struct IpcRecvListBuffDesc
     {
-        public long Position { get; private set; }
-        public long Size     { get; private set; }
+        public long Position { get; }
+        public long Size     { get; }
 
-        public IpcRecvListBuffDesc(BinaryReader Reader)
+        public IpcRecvListBuffDesc(BinaryReader reader)
         {
-            long Value = Reader.ReadInt64();
+            long value = reader.ReadInt64();
 
-            Position = Value & 0xffffffffffff;
+            Position = value & 0xffffffffffff;
 
-            Size = (ushort)(Value >> 48);
+            Size = (ushort)(value >> 48);
         }
     }
 }

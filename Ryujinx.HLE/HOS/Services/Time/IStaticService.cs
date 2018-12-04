@@ -6,15 +6,15 @@ namespace Ryujinx.HLE.HOS.Services.Time
 {
     class IStaticService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
         private static readonly DateTime StartupDate = DateTime.UtcNow;
 
         public IStaticService()
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0,   GetStandardUserSystemClock                 },
                 { 1,   GetStandardNetworkSystemClock              },
@@ -25,47 +25,47 @@ namespace Ryujinx.HLE.HOS.Services.Time
             };
         }
 
-        public long GetStandardUserSystemClock(ServiceCtx Context)
+        public long GetStandardUserSystemClock(ServiceCtx context)
         {
-            MakeObject(Context, new ISystemClock(SystemClockType.User));
+            MakeObject(context, new ISystemClock(SystemClockType.User));
 
             return 0;
         }
 
-        public long GetStandardNetworkSystemClock(ServiceCtx Context)
+        public long GetStandardNetworkSystemClock(ServiceCtx context)
         {
-            MakeObject(Context, new ISystemClock(SystemClockType.Network));
+            MakeObject(context, new ISystemClock(SystemClockType.Network));
 
             return 0;
         }
 
-        public long GetStandardSteadyClock(ServiceCtx Context)
+        public long GetStandardSteadyClock(ServiceCtx context)
         {
-            MakeObject(Context, new ISteadyClock());
+            MakeObject(context, new ISteadyClock());
 
             return 0;
         }
 
-        public long GetTimeZoneService(ServiceCtx Context)
+        public long GetTimeZoneService(ServiceCtx context)
         {
-            MakeObject(Context, new ITimeZoneService());
+            MakeObject(context, new ITimeZoneService());
 
             return 0;
         }
 
-        public long GetStandardLocalSystemClock(ServiceCtx Context)
+        public long GetStandardLocalSystemClock(ServiceCtx context)
         {
-            MakeObject(Context, new ISystemClock(SystemClockType.Local));
+            MakeObject(context, new ISystemClock(SystemClockType.Local));
 
             return 0;
         }
 
-        public long CalculateMonotonicSystemClockBaseTimePoint(ServiceCtx Context)
+        public long CalculateMonotonicSystemClockBaseTimePoint(ServiceCtx context)
         {
-            long TimeOffset              = (long)(DateTime.UtcNow - StartupDate).TotalSeconds;
-            long SystemClockContextEpoch = Context.RequestData.ReadInt64();
+            long timeOffset              = (long)(DateTime.UtcNow - StartupDate).TotalSeconds;
+            long systemClockContextEpoch = context.RequestData.ReadInt64();
 
-            Context.ResponseData.Write(TimeOffset + SystemClockContextEpoch);
+            context.ResponseData.Write(timeOffset + systemClockContextEpoch);
 
             return 0;
         }

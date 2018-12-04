@@ -5,67 +5,67 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     static class KConditionVariable
     {
-        public static void Wait(Horizon System, LinkedList<KThread> ThreadList, object Mutex, long Timeout)
+        public static void Wait(Horizon system, LinkedList<KThread> threadList, object mutex, long timeout)
         {
-            KThread CurrentThread = System.Scheduler.GetCurrentThread();
+            KThread currentThread = system.Scheduler.GetCurrentThread();
 
-            System.CriticalSection.Enter();
+            system.CriticalSection.Enter();
 
-            Monitor.Exit(Mutex);
+            Monitor.Exit(mutex);
 
-            CurrentThread.Withholder = ThreadList;
+            currentThread.Withholder = threadList;
 
-            CurrentThread.Reschedule(ThreadSchedState.Paused);
+            currentThread.Reschedule(ThreadSchedState.Paused);
 
-            CurrentThread.WithholderNode = ThreadList.AddLast(CurrentThread);
+            currentThread.WithholderNode = threadList.AddLast(currentThread);
 
-            if (CurrentThread.ShallBeTerminated ||
-                CurrentThread.SchedFlags == ThreadSchedState.TerminationPending)
+            if (currentThread.ShallBeTerminated ||
+                currentThread.SchedFlags == ThreadSchedState.TerminationPending)
             {
-                ThreadList.Remove(CurrentThread.WithholderNode);
+                threadList.Remove(currentThread.WithholderNode);
 
-                CurrentThread.Reschedule(ThreadSchedState.Running);
+                currentThread.Reschedule(ThreadSchedState.Running);
 
-                CurrentThread.Withholder = null;
+                currentThread.Withholder = null;
 
-                System.CriticalSection.Leave();
+                system.CriticalSection.Leave();
             }
             else
             {
-                if (Timeout > 0)
+                if (timeout > 0)
                 {
-                    System.TimeManager.ScheduleFutureInvocation(CurrentThread, Timeout);
+                    system.TimeManager.ScheduleFutureInvocation(currentThread, timeout);
                 }
 
-                System.CriticalSection.Leave();
+                system.CriticalSection.Leave();
 
-                if (Timeout > 0)
+                if (timeout > 0)
                 {
-                    System.TimeManager.UnscheduleFutureInvocation(CurrentThread);
+                    system.TimeManager.UnscheduleFutureInvocation(currentThread);
                 }
             }
 
-            Monitor.Enter(Mutex);
+            Monitor.Enter(mutex);
         }
 
-        public static void NotifyAll(Horizon System, LinkedList<KThread> ThreadList)
+        public static void NotifyAll(Horizon system, LinkedList<KThread> threadList)
         {
-            System.CriticalSection.Enter();
+            system.CriticalSection.Enter();
 
-            LinkedListNode<KThread> Node = ThreadList.First;
+            LinkedListNode<KThread> node = threadList.First;
 
-            for (; Node != null; Node = ThreadList.First)
+            for (; node != null; node = threadList.First)
             {
-                KThread Thread = Node.Value;
+                KThread thread = node.Value;
 
-                ThreadList.Remove(Thread.WithholderNode);
+                threadList.Remove(thread.WithholderNode);
 
-                Thread.Withholder = null;
+                thread.Withholder = null;
 
-                Thread.Reschedule(ThreadSchedState.Running);
+                thread.Reschedule(ThreadSchedState.Running);
             }
 
-            System.CriticalSection.Leave();
+            system.CriticalSection.Leave();
         }
     }
 }
