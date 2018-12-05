@@ -9,67 +9,67 @@ namespace Ryujinx.HLE.Utilities
 {
     static class StringUtils
     {
-        public static byte[] GetFixedLengthBytes(string inputString, int size, Encoding encoding)
+        public static byte[] GetFixedLengthBytes(string InputString, int Size, Encoding Encoding)
         {
-            inputString = inputString + "\0";
+            InputString = InputString + "\0";
 
-            int bytesCount = encoding.GetByteCount(inputString);
+            int BytesCount = Encoding.GetByteCount(InputString);
 
-            byte[] output = new byte[size];
+            byte[] Output = new byte[Size];
 
-            if (bytesCount < size)
+            if (BytesCount < Size)
             {
-                encoding.GetBytes(inputString, 0, inputString.Length, output, 0);
+                Encoding.GetBytes(InputString, 0, InputString.Length, Output, 0);
             }
             else
             {
-                int nullSize = encoding.GetByteCount("\0");
+                int NullSize = Encoding.GetByteCount("\0");
 
-                output = encoding.GetBytes(inputString);
+                Output = Encoding.GetBytes(InputString);
 
-                Array.Resize(ref output, size - nullSize);
+                Array.Resize(ref Output, Size - NullSize);
 
-                output = output.Concat(encoding.GetBytes("\0")).ToArray();
+                Output = Output.Concat(Encoding.GetBytes("\0")).ToArray();
             }
 
-            return output;
+            return Output;
         }
 
-        public static byte[] HexToBytes(string hexString)
+        public static byte[] HexToBytes(string HexString)
         {
             //Ignore last charactor if HexLength % 2 != 0.
-            int bytesInHex = hexString.Length / 2;
+            int BytesInHex = HexString.Length / 2;
 
-            byte[] output = new byte[bytesInHex];
+            byte[] Output = new byte[BytesInHex];
 
-            for (int index = 0; index < bytesInHex; index++)
+            for (int Index = 0; Index < BytesInHex; Index++)
             {
-                output[index] = byte.Parse(hexString.Substring(index * 2, 2), NumberStyles.HexNumber);
+                Output[Index] = byte.Parse(HexString.Substring(Index * 2, 2), NumberStyles.HexNumber);
             }
 
-            return output;
+            return Output;
         }
 
-        public static string ReadUtf8String(ServiceCtx context, int index = 0)
+        public static string ReadUtf8String(ServiceCtx Context, int Index = 0)
         {
-            long position = context.Request.PtrBuff[index].Position;
-            long size     = context.Request.PtrBuff[index].Size;
+            long Position = Context.Request.PtrBuff[Index].Position;
+            long Size     = Context.Request.PtrBuff[Index].Size;
 
-            using (MemoryStream ms = new MemoryStream())
+            using (MemoryStream MS = new MemoryStream())
             {
-                while (size-- > 0)
+                while (Size-- > 0)
                 {
-                    byte value = context.Memory.ReadByte(position++);
+                    byte Value = Context.Memory.ReadByte(Position++);
 
-                    if (value == 0)
+                    if (Value == 0)
                     {
                         break;
                     }
 
-                    ms.WriteByte(value);
+                    MS.WriteByte(Value);
                 }
 
-                return Encoding.UTF8.GetString(ms.ToArray());
+                return Encoding.UTF8.GetString(MS.ToArray());
             }
         }
     }

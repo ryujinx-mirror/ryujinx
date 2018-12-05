@@ -8,35 +8,35 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 {
     class Demangler
     {
-        private static readonly string Base36     = "0123456789abcdefghijklmnopqrstuvwxyz";
-        private List<BaseNode> _substitutionList  = new List<BaseNode>();
-        private List<BaseNode> _templateParamList = new List<BaseNode>();
+        private static readonly string BASE_36   = "0123456789abcdefghijklmnopqrstuvwxyz";
+        private List<BaseNode> SubstitutionList  = new List<BaseNode>();
+        private List<BaseNode> TemplateParamList = new List<BaseNode>();
 
-        private List<ForwardTemplateReference> _forwardTemplateReferenceList = new List<ForwardTemplateReference>();
+        private List<ForwardTemplateReference> ForwardTemplateReferenceList = new List<ForwardTemplateReference>();
 
-        public string Mangled { get; }
+        public string Mangled { get; private set; }
 
-        private int _position;
-        private int _length;
+        private int Position;
+        private int Length;
 
-        private bool _canForwardTemplateReference;
-        private bool _canParseTemplateArgs;
+        private bool CanForwardTemplateReference;
+        private bool CanParseTemplateArgs;
 
-        public Demangler(string mangled)
+        public Demangler(string Mangled)
         {
-            Mangled               = mangled;
-            _position             = 0;
-            _length               = mangled.Length;
-            _canParseTemplateArgs = true;
+            this.Mangled         = Mangled;
+            Position             = 0;
+            Length               = Mangled.Length;
+            CanParseTemplateArgs = true;
         }
 
-        private bool ConsumeIf(string toConsume)
+        private bool ConsumeIf(string ToConsume)
         {
-            string mangledPart = Mangled.Substring(_position);
+            string MangledPart = Mangled.Substring(Position);
 
-            if (mangledPart.StartsWith(toConsume))
+            if (MangledPart.StartsWith(ToConsume))
             {
-                _position += toConsume.Length;
+                Position += ToConsume.Length;
 
                 return true;
             }
@@ -44,31 +44,31 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             return false;
         }
 
-        private string PeekString(int offset = 0, int length = 1)
+        private string PeekString(int Offset = 0, int Length = 1)
         {
-            if (_position + offset >= length)
+            if (Position + Offset >= Length)
             {
                 return null;
             }
 
-            return Mangled.Substring(_position + offset, length);
+            return Mangled.Substring(Position + Offset, Length);
         }
 
-        private char Peek(int offset = 0)
+        private char Peek(int Offset = 0)
         {
-            if (_position + offset >= _length)
+            if (Position + Offset >= Length)
             {
                 return '\0';
             }
 
-            return Mangled[_position + offset];
+            return Mangled[Position + Offset];
         }
 
         private char Consume()
         {
-            if (_position < _length)
+            if (Position < Length)
             {
-                return Mangled[_position++];
+                return Mangled[Position++];
             }
 
             return '\0';
@@ -76,45 +76,45 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
         private int Count()
         {
-            return _length - _position;
+            return Length - Position;
         }
 
-        private static int FromBase36(string encoded)
+        private static int FromBase36(string Encoded)
         {
-            char[] reversedEncoded = encoded.ToLower().ToCharArray().Reverse().ToArray();
+            char[] ReversedEncoded = Encoded.ToLower().ToCharArray().Reverse().ToArray();
 
-            int result = 0;
+            int Result = 0;
 
-            for (int i = 0; i < reversedEncoded.Length; i++)
+            for (int i = 0; i < ReversedEncoded.Length; i++)
             {
-                int value = Base36.IndexOf(reversedEncoded[i]);
-                if (value == -1)
+                int Value = BASE_36.IndexOf(ReversedEncoded[i]);
+                if (Value == -1)
                 {
                     return -1;
                 }
 
-                result += value * (int)Math.Pow(36, i);
+                Result += Value * (int)Math.Pow(36, i);
             }
 
-            return result;
+            return Result;
         }
 
         private int ParseSeqId()
         {
-            string part     = Mangled.Substring(_position);
-            int    seqIdLen = 0;
+            string Part     = Mangled.Substring(Position);
+            int    SeqIdLen = 0;
 
-            for (; seqIdLen < part.Length; seqIdLen++)
+            for (; SeqIdLen < Part.Length; SeqIdLen++)
             {
-                if (!char.IsLetterOrDigit(part[seqIdLen]))
+                if (!char.IsLetterOrDigit(Part[SeqIdLen]))
                 {
                     break;
                 }
             }
 
-            _position += seqIdLen;
+            Position += SeqIdLen;
 
-            return FromBase36(part.Substring(0, seqIdLen));
+            return FromBase36(Part.Substring(0, SeqIdLen));
         }
 
         //   <substitution> ::= S <seq-id> _
@@ -133,28 +133,28 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return null;
             }
 
-            char substitutionSecondChar = Peek();
-            if (char.IsLower(substitutionSecondChar))
+            char SubstitutionSecondChar = Peek();
+            if (char.IsLower(SubstitutionSecondChar))
             {
-                switch (substitutionSecondChar)
+                switch (SubstitutionSecondChar)
                 {
                     case 'a':
-                        _position++;
+                        Position++;
                         return new SpecialSubstitution(SpecialSubstitution.SpecialType.Allocator);
                     case 'b':
-                        _position++;
+                        Position++;
                         return new SpecialSubstitution(SpecialSubstitution.SpecialType.BasicString);
                     case 's':
-                        _position++;
+                        Position++;
                         return new SpecialSubstitution(SpecialSubstitution.SpecialType.String);
                     case 'i':
-                        _position++;
+                        Position++;
                         return new SpecialSubstitution(SpecialSubstitution.SpecialType.IStream);
                     case 'o':
-                        _position++;
+                        Position++;
                         return new SpecialSubstitution(SpecialSubstitution.SpecialType.OStream);
                     case 'd':
-                        _position++;
+                        Position++;
                         return new SpecialSubstitution(SpecialSubstitution.SpecialType.IOStream);
                     default:
                         return null;
@@ -164,29 +164,29 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             // ::= S_
             if (ConsumeIf("_"))
             {
-                if (_substitutionList.Count != 0)
+                if (SubstitutionList.Count != 0)
                 {
-                    return _substitutionList[0];
+                    return SubstitutionList[0];
                 }
 
                 return null;
             }
 
             //                ::= S <seq-id> _
-            int seqId = ParseSeqId();
-            if (seqId < 0)
+            int SeqId = ParseSeqId();
+            if (SeqId < 0)
             {
                 return null;
             }
 
-            seqId++;
+            SeqId++;
 
-            if (!ConsumeIf("_") || seqId >= _substitutionList.Count)
+            if (!ConsumeIf("_") || SeqId >= SubstitutionList.Count)
             {
                 return null;
             }
 
-            return _substitutionList[seqId];
+            return SubstitutionList[SeqId];
         }
 
         // NOTE: thoses data aren't used in the output
@@ -217,33 +217,33 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //                     ::= Te <name>  # dependent elaborated type specifier using 'enum'
         private BaseNode ParseClassEnumType()
         {
-            string elaboratedType = null;
+            string ElaboratedType = null;
 
             if (ConsumeIf("Ts"))
             {
-                elaboratedType = "struct";
+                ElaboratedType = "struct";
             }
             else if (ConsumeIf("Tu"))
             {
-                elaboratedType = "union";
+                ElaboratedType = "union";
             }
             else if (ConsumeIf("Te"))
             {
-                elaboratedType = "enum";
+                ElaboratedType = "enum";
             }
 
-            BaseNode name = ParseName();
-            if (name == null)
+            BaseNode Name = ParseName();
+            if (Name == null)
             {
                 return null;
             }
 
-            if (elaboratedType == null)
+            if (ElaboratedType == null)
             {
-                return name;
+                return Name;
             }
 
-            return new ElaboratedType(elaboratedType, name);
+            return new ElaboratedType(ElaboratedType, Name);
         }
 
         //  <function-type>         ::= [<CV-qualifiers>] [<exception-spec>] [Dx] F [Y] <bare-function-type> [<ref-qualifier>] E
@@ -254,40 +254,40 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //                          ::= Dw <type>+ E      # dynamic exception specification with instantiation-dependent types
         private BaseNode ParseFunctionType()
         {
-            Cv cvQualifiers = ParseCvQualifiers();
+            CV CVQualifiers = ParseCVQualifiers();
 
-            BaseNode exceptionSpec = null;
+            BaseNode ExceptionSpec = null;
 
             if (ConsumeIf("Do"))
             {
-                exceptionSpec = new NameType("noexcept");
+                ExceptionSpec = new NameType("noexcept");
             }
             else if (ConsumeIf("DO"))
             {
-                BaseNode expression = ParseExpression();
-                if (expression == null || !ConsumeIf("E"))
+                BaseNode Expression = ParseExpression();
+                if (Expression == null || !ConsumeIf("E"))
                 {
                     return null;
                 }
 
-                exceptionSpec = new NoexceptSpec(expression);
+                ExceptionSpec = new NoexceptSpec(Expression);
             }
             else if (ConsumeIf("Dw"))
             {
-                List<BaseNode> types = new List<BaseNode>();
+                List<BaseNode> Types = new List<BaseNode>();
 
                 while (!ConsumeIf("E"))
                 {
-                    BaseNode type = ParseType();
-                    if (type == null)
+                    BaseNode Type = ParseType();
+                    if (Type == null)
                     {
                         return null;
                     }
 
-                    types.Add(type);
+                    Types.Add(Type);
                 }
 
-                exceptionSpec = new DynamicExceptionSpec(new NodeArray(types));
+                ExceptionSpec = new DynamicExceptionSpec(new NodeArray(Types));
             }
 
             // We don't need the transaction
@@ -301,13 +301,13 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             // extern "C"
             ConsumeIf("Y");
 
-            BaseNode returnType = ParseType();
-            if (returnType == null)
+            BaseNode ReturnType = ParseType();
+            if (ReturnType == null)
             {
                 return null;
             }
 
-            Reference referenceQualifier = Reference.None;
+            Reference ReferenceQualifier = Reference.None;
             List<BaseNode> Params = new List<BaseNode>();
 
             while (true)
@@ -324,25 +324,25 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
                 if (ConsumeIf("RE"))
                 {
-                    referenceQualifier = Reference.LValue;
+                    ReferenceQualifier = Reference.LValue;
                     break;
                 }
                 else if (ConsumeIf("OE"))
                 {
-                    referenceQualifier = Reference.RValue;
+                    ReferenceQualifier = Reference.RValue;
                     break;
                 }
 
-                BaseNode type = ParseType();
-                if (type == null)
+                BaseNode Type = ParseType();
+                if (Type == null)
                 {
                     return null;
                 }
 
-                Params.Add(type);
+                Params.Add(Type);
             }
 
-            return new FunctionType(returnType, new NodeArray(Params), new CvType(cvQualifiers, null), new SimpleReferenceType(referenceQualifier, null), exceptionSpec);
+            return new FunctionType(ReturnType, new NodeArray(Params), new CVType(CVQualifiers, null), new SimpleReferenceType(ReferenceQualifier, null), ExceptionSpec);
         }
 
         //   <array-type> ::= A <positive dimension number> _ <element type>
@@ -354,48 +354,48 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return null;
             }
 
-            BaseNode elementType;
+            BaseNode ElementType;
             if (char.IsDigit(Peek()))
             {
-                string dimension = ParseNumber();
-                if (dimension.Length == 0 || !ConsumeIf("_"))
+                string Dimension = ParseNumber();
+                if (Dimension.Length == 0 || !ConsumeIf("_"))
                 {
                     return null;
                 }
 
-                elementType = ParseType();
-                if (elementType == null)
+                ElementType = ParseType();
+                if (ElementType == null)
                 {
                     return null;
                 }
 
-                return new ArrayType(elementType, dimension);
+                return new ArrayType(ElementType, Dimension);
             }
 
             if (!ConsumeIf("_"))
             {
-                BaseNode dimensionExpression = ParseExpression();
-                if (dimensionExpression == null || !ConsumeIf("_"))
+                BaseNode DimensionExpression = ParseExpression();
+                if (DimensionExpression == null || !ConsumeIf("_"))
                 {
                     return null;
                 }
 
-                elementType = ParseType();
-                if (elementType == null)
+                ElementType = ParseType();
+                if (ElementType == null)
                 {
                     return null;
                 }
 
-                return new ArrayType(elementType, dimensionExpression);
+                return new ArrayType(ElementType, DimensionExpression);
             }
 
-            elementType = ParseType();
-            if (elementType == null)
+            ElementType = ParseType();
+            if (ElementType == null)
             {
                 return null;
             }
 
-            return new ArrayType(elementType);
+            return new ArrayType(ElementType);
         }
 
         // <type>  ::= <builtin-type>
@@ -413,295 +413,295 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //         ::= C <type>        # complex pair (C99)
         //         ::= G <type>        # imaginary (C99)
         //         ::= <substitution>  # See Compression below
-        private BaseNode ParseType(NameParserContext context = null)
+        private BaseNode ParseType(NameParserContext Context = null)
         {
             // Temporary context
-            if (context == null)
+            if (Context == null)
             {
-                context = new NameParserContext();
+                Context = new NameParserContext();
             }
 
-            BaseNode result = null;
+            BaseNode Result = null;
             switch (Peek())
             {
                 case 'r':
                 case 'V':
                 case 'K':
-                    int typePos = 0;
+                    int TypePos = 0;
 
-                    if (Peek(typePos) == 'r')
+                    if (Peek(TypePos) == 'r')
                     {
-                        typePos++;
+                        TypePos++;
                     }
 
-                    if (Peek(typePos) == 'V')
+                    if (Peek(TypePos) == 'V')
                     {
-                        typePos++;
+                        TypePos++;
                     }
 
-                    if (Peek(typePos) == 'K')
+                    if (Peek(TypePos) == 'K')
                     {
-                        typePos++;
+                        TypePos++;
                     }
 
-                    if (Peek(typePos) == 'F' || (Peek(typePos) == 'D' && (Peek(typePos + 1) == 'o' || Peek(typePos + 1) == 'O' || Peek(typePos + 1) == 'w' || Peek(typePos + 1) == 'x')))
+                    if (Peek(TypePos) == 'F' || (Peek(TypePos) == 'D' && (Peek(TypePos + 1) == 'o' || Peek(TypePos + 1) == 'O' || Peek(TypePos + 1) == 'w' || Peek(TypePos + 1) == 'x')))
                     {
-                        result = ParseFunctionType();
+                        Result = ParseFunctionType();
                         break;
                     }
 
-                    Cv cv = ParseCvQualifiers();
+                    CV CV = ParseCVQualifiers();
 
-                    result = ParseType(context);
+                    Result = ParseType(Context);
 
-                    if (result == null)
+                    if (Result == null)
                     {
                         return null;
                     }
 
-                    result = new CvType(cv, result);
+                    Result = new CVType(CV, Result);
                     break;
                 case 'U':
                     // TODO: <extended-qualifier>
                     return null;
                 case 'v':
-                    _position++;
+                    Position++;
                     return new NameType("void");
                 case 'w':
-                    _position++;
+                    Position++;
                     return new NameType("wchar_t");
                 case 'b':
-                    _position++;
+                    Position++;
                     return new NameType("bool");
                 case 'c':
-                    _position++;
+                    Position++;
                     return new NameType("char");
                 case 'a':
-                    _position++;
+                    Position++;
                     return new NameType("signed char");
                 case 'h':
-                    _position++;
+                    Position++;
                     return new NameType("unsigned char");
                 case 's':
-                    _position++;
+                    Position++;
                     return new NameType("short");
                 case 't':
-                    _position++;
+                    Position++;
                     return new NameType("unsigned short");
                 case 'i':
-                    _position++;
+                    Position++;
                     return new NameType("int");
                 case 'j':
-                    _position++;
+                    Position++;
                     return new NameType("unsigned int");
                 case 'l':
-                    _position++;
+                    Position++;
                     return new NameType("long");
                 case 'm':
-                    _position++;
+                    Position++;
                     return new NameType("unsigned long");
                 case 'x':
-                    _position++;
+                    Position++;
                     return new NameType("long long");
                 case 'y':
-                    _position++;
+                    Position++;
                     return new NameType("unsigned long long");
                 case 'n':
-                    _position++;
+                    Position++;
                     return new NameType("__int128");
                 case 'o':
-                    _position++;
+                    Position++;
                     return new NameType("unsigned __int128");
                 case 'f':
-                    _position++;
+                    Position++;
                     return new NameType("float");
                 case 'd':
-                    _position++;
+                    Position++;
                     return new NameType("double");
                 case 'e':
-                    _position++;
+                    Position++;
                     return new NameType("long double");
                 case 'g':
-                    _position++;
+                    Position++;
                     return new NameType("__float128");
                 case 'z':
-                    _position++;
+                    Position++;
                     return new NameType("...");
                 case 'u':
-                    _position++;
+                    Position++;
                     return ParseSourceName();
                 case 'D':
                     switch (Peek(1))
                     {
                         case 'd':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("decimal64");
                         case 'e':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("decimal128");
                         case 'f':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("decimal32");
                         case 'h':
-                            _position += 2;
+                            Position += 2;
                             // FIXME: GNU c++flit returns this but that is not what is supposed to be returned.
                             return new NameType("half");
                             //return new NameType("decimal16");
                         case 'i':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("char32_t");
                         case 's':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("char16_t");
                         case 'a':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("decltype(auto)");
                         case 'n':
-                            _position += 2;
+                            Position += 2;
                             // FIXME: GNU c++flit returns this but that is not what is supposed to be returned.
                             return new NameType("decltype(nullptr)");
                             //return new NameType("std::nullptr_t");
                         case 't':
                         case 'T':
-                            _position += 2;
-                            result = ParseDecltype();
+                            Position += 2;
+                            Result = ParseDecltype();
                             break;
                         case 'o':
                         case 'O':
                         case 'w':
                         case 'x':
-                            result = ParseFunctionType();
+                            Result = ParseFunctionType();
                             break;
                         default:
                             return null;
                     }
                     break;
                 case 'F':
-                    result = ParseFunctionType();
+                    Result = ParseFunctionType();
                     break;
                 case 'A':
                     return ParseArrayType();
                 case 'M':
                     // TODO: <pointer-to-member-type>
-                    _position++;
+                    Position++;
                     return null;
                 case 'T':
                     // might just be a class enum type
                     if (Peek(1) == 's' || Peek(1) == 'u' || Peek(1) == 'e')
                     {
-                        result = ParseClassEnumType();
+                        Result = ParseClassEnumType();
                         break;
                     }
 
-                    result = ParseTemplateParam();
-                    if (result == null)
+                    Result = ParseTemplateParam();
+                    if (Result == null)
                     {
                         return null;
                     }
 
-                    if (_canParseTemplateArgs && Peek() == 'I')
+                    if (CanParseTemplateArgs && Peek() == 'I')
                     {
-                        BaseNode templateArguments = ParseTemplateArguments();
-                        if (templateArguments == null)
+                        BaseNode TemplateArguments = ParseTemplateArguments();
+                        if (TemplateArguments == null)
                         {
                             return null;
                         }
 
-                        result = new NameTypeWithTemplateArguments(result, templateArguments);
+                        Result = new NameTypeWithTemplateArguments(Result, TemplateArguments);
                     }
                     break;
                 case 'P':
-                    _position++;
-                    result = ParseType(context);
+                    Position++;
+                    Result = ParseType(Context);
 
-                    if (result == null)
+                    if (Result == null)
                     {
                         return null;
                     }
 
-                    result = new PointerType(result);
+                    Result = new PointerType(Result);
                     break;
                 case 'R':
-                    _position++;
-                    result = ParseType(context);
+                    Position++;
+                    Result = ParseType(Context);
 
-                    if (result == null)
+                    if (Result == null)
                     {
                         return null;
                     }
 
-                    result = new ReferenceType("&", result);
+                    Result = new ReferenceType("&", Result);
                     break;
                 case 'O':
-                    _position++;
-                    result = ParseType(context);
+                    Position++;
+                    Result = ParseType(Context);
 
-                    if (result == null)
+                    if (Result == null)
                     {
                         return null;
                     }
 
-                    result = new ReferenceType("&&", result);
+                    Result = new ReferenceType("&&", Result);
                     break;
                 case 'C':
-                    _position++;
-                    result = ParseType(context);
+                    Position++;
+                    Result = ParseType(Context);
 
-                    if (result == null)
+                    if (Result == null)
                     {
                         return null;
                     }
 
-                    result = new PostfixQualifiedType(" complex", result);
+                    Result = new PostfixQualifiedType(" complex", Result);
                     break;
                 case 'G':
-                    _position++;
-                    result = ParseType(context);
+                    Position++;
+                    Result = ParseType(Context);
 
-                    if (result == null)
+                    if (Result == null)
                     {
                         return null;
                     }
 
-                    result = new PostfixQualifiedType(" imaginary", result);
+                    Result = new PostfixQualifiedType(" imaginary", Result);
                     break;
                 case 'S':
                     if (Peek(1) != 't')
                     {
-                        BaseNode substitution = ParseSubstitution();
-                        if (substitution == null)
+                        BaseNode Substitution = ParseSubstitution();
+                        if (Substitution == null)
                         {
                             return null;
                         }
 
-                        if (_canParseTemplateArgs && Peek() == 'I')
+                        if (CanParseTemplateArgs && Peek() == 'I')
                         {
-                            BaseNode templateArgument = ParseTemplateArgument();
-                            if (templateArgument == null)
+                            BaseNode TemplateArgument = ParseTemplateArgument();
+                            if (TemplateArgument == null)
                             {
                                 return null;
                             }
 
-                            result = new NameTypeWithTemplateArguments(substitution, templateArgument);
+                            Result = new NameTypeWithTemplateArguments(Substitution, TemplateArgument);
                             break;
                         }
-                        return substitution;
+                        return Substitution;
                     }
                     else
                     {
-                        result = ParseClassEnumType();
+                        Result = ParseClassEnumType();
                         break;
                     }
                 default:
-                    result = ParseClassEnumType();
+                    Result = ParseClassEnumType();
                     break;
             }
-            if (result != null)
+            if (Result != null)
             {
-                _substitutionList.Add(result);
+                SubstitutionList.Add(Result);
             }
 
-            return result;
+            return Result;
         }
 
         // <special-name> ::= TV <type> # virtual table
@@ -714,155 +714,155 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //                ::= T <call-offset> <base encoding>
         //                              # base is the nominal target function of thunk
         //                ::= GV <object name>	# Guard variable for one-time initialization
-        private BaseNode ParseSpecialName(NameParserContext context = null)
+        private BaseNode ParseSpecialName(NameParserContext Context = null)
         {
             if (Peek() != 'T')
             {
                 if (ConsumeIf("GV"))
                 {
-                    BaseNode name = ParseName();
-                    if (name == null)
+                    BaseNode Name = ParseName();
+                    if (Name == null)
                     {
                         return null;
                     }
 
-                    return new SpecialName("guard variable for ", name);
+                    return new SpecialName("guard variable for ", Name);
                 }
                 return null;
             }
 
-            BaseNode node;
+            BaseNode Node;
             switch (Peek(1))
             {
                 // ::= TV <type>    # virtual table
                 case 'V':
-                    _position += 2;
-                    node = ParseType(context);
-                    if (node == null)
+                    Position += 2;
+                    Node = ParseType(Context);
+                    if (Node == null)
                     {
                         return null;
                     }
 
-                    return new SpecialName("vtable for ", node);
+                    return new SpecialName("vtable for ", Node);
                 // ::= TT <type>    # VTT structure (construction vtable index)
                 case 'T':
-                    _position += 2;
-                    node = ParseType(context);
-                    if (node == null)
+                    Position += 2;
+                    Node = ParseType(Context);
+                    if (Node == null)
                     {
                         return null;
                     }
 
-                    return new SpecialName("VTT for ", node);
+                    return new SpecialName("VTT for ", Node);
                 // ::= TI <type>    # typeinfo structure
                 case 'I':
-                    _position += 2;
-                    node = ParseType(context);
-                    if (node == null)
+                    Position += 2;
+                    Node = ParseType(Context);
+                    if (Node == null)
                     {
                         return null;
                     }
 
-                    return new SpecialName("typeinfo for ", node);
+                    return new SpecialName("typeinfo for ", Node);
                 // ::= TS <type> # typeinfo name (null-terminated byte string)
                 case 'S':
-                    _position += 2;
-                    node = ParseType(context);
-                    if (node == null)
+                    Position += 2;
+                    Node = ParseType(Context);
+                    if (Node == null)
                     {
                         return null;
                     }
 
-                    return new SpecialName("typeinfo name for ", node);
+                    return new SpecialName("typeinfo name for ", Node);
                 // ::= Tc <call-offset> <call-offset> <base encoding>
                 case 'c':
-                    _position += 2;
+                    Position += 2;
                     if (ParseCallOffset() || ParseCallOffset())
                     {
                         return null;
                     }
 
-                    node = ParseEncoding();
-                    if (node == null)
+                    Node = ParseEncoding();
+                    if (Node == null)
                     {
                         return null;
                     }
 
-                    return new SpecialName("covariant return thunk to ", node);
+                    return new SpecialName("covariant return thunk to ", Node);
                 // extension ::= TC <first type> <number> _ <second type>
                 case 'C':
-                    _position += 2;
-                    BaseNode firstType = ParseType();
-                    if (firstType == null || ParseNumber(true).Length == 0 || !ConsumeIf("_"))
+                    Position += 2;
+                    BaseNode FirstType = ParseType();
+                    if (FirstType == null || ParseNumber(true).Length == 0 || !ConsumeIf("_"))
                     {
                         return null;
                     }
 
-                    BaseNode secondType = ParseType();
+                    BaseNode SecondType = ParseType();
 
-                    return new CtorVtableSpecialName(secondType, firstType);
+                    return new CtorVtableSpecialName(SecondType, FirstType);
                 // ::= TH <object name> # Thread-local initialization
                 case 'H':
-                    _position += 2;
-                    node = ParseName();
-                    if (node == null)
+                    Position += 2;
+                    Node = ParseName();
+                    if (Node == null)
                     {
                         return null;
                     }
 
-                    return new SpecialName("thread-local initialization routine for ", node);
+                    return new SpecialName("thread-local initialization routine for ", Node);
                 // ::= TW <object name> # Thread-local wrapper
                 case 'W':
-                    _position += 2;
-                    node = ParseName();
-                    if (node == null)
+                    Position += 2;
+                    Node = ParseName();
+                    if (Node == null)
                     {
                         return null;
                     }
 
-                    return new SpecialName("thread-local wrapper routine for ", node);
+                    return new SpecialName("thread-local wrapper routine for ", Node);
                 default:
-                    _position++;
-                    bool isVirtual = Peek() == 'v';
+                    Position++;
+                    bool IsVirtual = Peek() == 'v';
                     if (ParseCallOffset())
                     {
                         return null;
                     }
 
-                    node = ParseEncoding();
-                    if (node == null)
+                    Node = ParseEncoding();
+                    if (Node == null)
                     {
                         return null;
                     }
 
-                    if (isVirtual)
+                    if (IsVirtual)
                     {
-                        return new SpecialName("virtual thunk to ", node);
+                        return new SpecialName("virtual thunk to ", Node);
                     }
 
-                    return new SpecialName("non-virtual thunk to ", node);
+                    return new SpecialName("non-virtual thunk to ", Node);
             }
         }
 
         // <CV-qualifiers>      ::= [r] [V] [K] # restrict (C99), volatile, const
-        private Cv ParseCvQualifiers()
+        private CV ParseCVQualifiers()
         {
-            Cv qualifiers = Cv.None;
+            CV Qualifiers = CV.None;
 
             if (ConsumeIf("r"))
             {
-                qualifiers |= Cv.Restricted;
+                Qualifiers |= CV.Restricted;
             }
             if (ConsumeIf("V"))
             {
-                qualifiers |= Cv.Volatile;
+                Qualifiers |= CV.Volatile;
             }
             if (ConsumeIf("K"))
             {
-                qualifiers |= Cv.Const;
+                Qualifiers |= CV.Const;
             }
 
-            return qualifiers;
+            return Qualifiers;
         }
 
 
@@ -870,102 +870,102 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         // <ref-qualifier>      ::= O              # && ref-qualifier
         private SimpleReferenceType ParseRefQualifiers()
         {
-            Reference result = Reference.None;
+            Reference Result = Reference.None;
             if (ConsumeIf("O"))
             {
-                result = Reference.RValue;
+                Result = Reference.RValue;
             }
             else if (ConsumeIf("R"))
             {
-                result = Reference.LValue;
+                Result = Reference.LValue;
             }
-            return new SimpleReferenceType(result, null);
+            return new SimpleReferenceType(Result, null);
         }
 
-        private BaseNode CreateNameNode(BaseNode prev, BaseNode name, NameParserContext context)
+        private BaseNode CreateNameNode(BaseNode Prev, BaseNode Name, NameParserContext Context)
         {
-            BaseNode result = name;
-            if (prev != null)
+            BaseNode Result = Name;
+            if (Prev != null)
             {
-                result = new NestedName(name, prev);
+                Result = new NestedName(Name, Prev);
             }
 
-            if (context != null)
+            if (Context != null)
             {
-                context.FinishWithTemplateArguments = false;
+                Context.FinishWithTemplateArguments = false;
             }
 
-            return result;
+            return Result;
         }
 
         private int ParsePositiveNumber()
         {
-            string part         = Mangled.Substring(_position);
-            int    numberLength = 0;
+            string Part         = Mangled.Substring(Position);
+            int    NumberLength = 0;
 
-            for (; numberLength < part.Length; numberLength++)
+            for (; NumberLength < Part.Length; NumberLength++)
             {
-                if (!char.IsDigit(part[numberLength]))
+                if (!char.IsDigit(Part[NumberLength]))
                 {
                     break;
                 }
             }
 
-            _position += numberLength;
+            Position += NumberLength;
 
-            if (numberLength == 0)
+            if (NumberLength == 0)
             {
                 return -1;
             }
 
-            return int.Parse(part.Substring(0, numberLength));
+            return int.Parse(Part.Substring(0, NumberLength));
         }
 
-        private string ParseNumber(bool isSigned = false)
+        private string ParseNumber(bool IsSigned = false)
         {
-            if (isSigned)
+            if (IsSigned)
             {
                 ConsumeIf("n");
             }
 
-            if (Count() == 0 || !char.IsDigit(Mangled[_position]))
+            if (Count() == 0 || !char.IsDigit(Mangled[Position]))
             {
                 return null;
             }
 
-            string part         = Mangled.Substring(_position);
-            int    numberLength = 0;
+            string Part         = Mangled.Substring(Position);
+            int    NumberLength = 0;
 
-            for (; numberLength < part.Length; numberLength++)
+            for (; NumberLength < Part.Length; NumberLength++)
             {
-                if (!char.IsDigit(part[numberLength]))
+                if (!char.IsDigit(Part[NumberLength]))
                 {
                     break;
                 }
             }
 
-            _position += numberLength;
+            Position += NumberLength;
 
-            return part.Substring(0, numberLength);
+            return Part.Substring(0, NumberLength);
         }
 
         // <source-name> ::= <positive length number> <identifier>
         private BaseNode ParseSourceName()
         {
-            int length = ParsePositiveNumber();
-            if (Count() < length || length <= 0)
+            int Length = ParsePositiveNumber();
+            if (Count() < Length || Length <= 0)
             {
                 return null;
             }
 
-            string name = Mangled.Substring(_position, length);
-            _position += length;
-            if (name.StartsWith("_GLOBAL__N"))
+            string Name = Mangled.Substring(Position, Length);
+            Position += Length;
+            if (Name.StartsWith("_GLOBAL__N"))
             {
                 return new NameType("(anonymous namespace)");
             }
 
-            return new NameType(name);
+            return new NameType(Name);
         }
 
         // <operator-name> ::= nw    # new
@@ -1019,7 +1019,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //                 ::= cv <type>    # (cast) (TODO)
         //                 ::= li <source-name>          # operator ""
         //                 ::= v <digit> <source-name>    # vendor extended operator (TODO)
-        private BaseNode ParseOperatorName(NameParserContext context)
+        private BaseNode ParseOperatorName(NameParserContext Context)
         {
             switch (Peek())
             {
@@ -1027,17 +1027,17 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'a':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator&&");
                         case 'd':
                         case 'n':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator&");
                         case 'N':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator&=");
                         case 'S':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator=");
                         default:
                             return null;
@@ -1046,39 +1046,39 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'l':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator()");
                         case 'm':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator,");
                         case 'o':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator~");
                         case 'v':
-                            _position += 2;
+                            Position += 2;
 
-                            bool canParseTemplateArgsBackup        = _canParseTemplateArgs;
-                            bool canForwardTemplateReferenceBackup = _canForwardTemplateReference;
+                            bool CanParseTemplateArgsBackup        = CanParseTemplateArgs;
+                            bool CanForwardTemplateReferenceBackup = CanForwardTemplateReference;
 
-                            _canParseTemplateArgs        = false;
-                            _canForwardTemplateReference = canForwardTemplateReferenceBackup || context != null;
+                            CanParseTemplateArgs        = false;
+                            CanForwardTemplateReference = CanForwardTemplateReferenceBackup || Context != null;
 
-                            BaseNode type = ParseType();
+                            BaseNode Type = ParseType();
 
-                            _canParseTemplateArgs        = canParseTemplateArgsBackup;
-                            _canForwardTemplateReference = canForwardTemplateReferenceBackup;
+                            CanParseTemplateArgs        = CanParseTemplateArgsBackup;
+                            CanForwardTemplateReference = CanForwardTemplateReferenceBackup;
 
-                            if (type == null)
+                            if (Type == null)
                             {
                                 return null;
                             }
 
-                            if (context != null)
+                            if (Context != null)
                             {
-                                context.CtorDtorConversion = true;
+                                Context.CtorDtorConversion = true;
                             }
 
-                            return new ConversionOperatorType(type);
+                            return new ConversionOperatorType(Type);
                         default:
                             return null;
                     }
@@ -1086,19 +1086,19 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'a':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator delete[]");
                         case 'e':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator*");
                         case 'l':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator delete");
                         case 'v':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator/");
                         case 'V':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator/=");
                         default:
                             return null;
@@ -1107,13 +1107,13 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'o':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator^");
                         case 'O':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator^=");
                         case 'q':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator==");
                         default:
                             return null;
@@ -1122,10 +1122,10 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'e':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator>=");
                         case 't':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator>");
                         default:
                             return null;
@@ -1133,7 +1133,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 case 'i':
                     if (Peek(1) == 'x')
                     {
-                        _position += 2;
+                        Position += 2;
                         return new NameType("operator[]");
                     }
                     return null;
@@ -1141,25 +1141,25 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'e':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator<=");
                         case 'i':
-                            _position += 2;
-                            BaseNode sourceName = ParseSourceName();
-                            if (sourceName == null)
+                            Position += 2;
+                            BaseNode SourceName = ParseSourceName();
+                            if (SourceName == null)
                             {
                                 return null;
                             }
 
-                            return new LiteralOperator(sourceName);
+                            return new LiteralOperator(SourceName);
                         case 's':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator<<");
                         case 'S':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator<<=");
                         case 't':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator<");
                         default:
                             return null;
@@ -1168,19 +1168,19 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'i':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator-");
                         case 'I':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator-=");
                         case 'l':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator*");
                         case 'L':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator*=");
                         case 'm':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator--");
                         default:
                             return null;
@@ -1189,19 +1189,19 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'a':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator new[]");
                         case 'e':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator!=");
                         case 'g':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator-");
                         case 't':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator!");
                         case 'w':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator new");
                         default:
                             return null;
@@ -1210,13 +1210,13 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'o':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator||");
                         case 'r':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator|");
                         case 'R':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator|=");
                         default:
                             return null;
@@ -1225,20 +1225,20 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'm':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator->*");
                         case 's':
                         case 'l':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator+");
                         case 'L':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator+=");
                         case 'p':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator++");
                         case 't':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator->");
                         default:
                             return null;
@@ -1246,7 +1246,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 case 'q':
                     if (Peek(1) == 'u')
                     {
-                        _position += 2;
+                        Position += 2;
                         return new NameType("operator?");
                     }
                     return null;
@@ -1254,16 +1254,16 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'm':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator%");
                         case 'M':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator%=");
                         case 's':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator>>");
                         case 'S':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("operator>>=");
                         default:
                             return null;
@@ -1271,7 +1271,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 case 's':
                     if (Peek(1) == 's')
                     {
-                        _position += 2;
+                        Position += 2;
                         return new NameType("operator<=>");
                     }
                     return null;
@@ -1288,18 +1288,18 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //                    ::= <source-name>
         //                    ::= <unnamed-type-name> (TODO)
         //                    ::= DC <source-name>+ E      # structured binding declaration (TODO)
-        private BaseNode ParseUnqualifiedName(NameParserContext context)
+        private BaseNode ParseUnqualifiedName(NameParserContext Context)
         {
-            BaseNode result = null;
-            char c = Peek();
-            if (c == 'U')
+            BaseNode Result = null;
+            char C = Peek();
+            if (C == 'U')
             {
                 // TODO: Unnamed Type Name
                 // throw new Exception("Unnamed Type Name not implemented");
             }
-            else if (char.IsDigit(c))
+            else if (char.IsDigit(C))
             {
-                result = ParseSourceName();
+                Result = ParseSourceName();
             }
             else if (ConsumeIf("DC"))
             {
@@ -1308,15 +1308,15 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             }
             else
             {
-                result = ParseOperatorName(context);
+                Result = ParseOperatorName(Context);
             }
 
-            if (result != null)
+            if (Result != null)
             {
                 // TODO: ABI Tags
                 //throw new Exception("ABI Tags not implemented");
             }
-            return result;
+            return Result;
         }
 
         // <ctor-dtor-name> ::= C1  # complete object constructor
@@ -1325,54 +1325,54 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //                  ::= D0  # deleting destructor
         //                  ::= D1  # complete object destructor
         //                  ::= D2  # base object destructor 
-        private BaseNode ParseCtorDtorName(NameParserContext context, BaseNode prev)
+        private BaseNode ParseCtorDtorName(NameParserContext Context, BaseNode Prev)
         {
-            if (prev.Type == NodeType.SpecialSubstitution && prev is SpecialSubstitution)
+            if (Prev.Type == NodeType.SpecialSubstitution && Prev is SpecialSubstitution)
             {
-                ((SpecialSubstitution)prev).SetExtended();
+                ((SpecialSubstitution)Prev).SetExtended();
             }
 
             if (ConsumeIf("C"))
             {
-                bool isInherited  = ConsumeIf("I");
+                bool IsInherited  = ConsumeIf("I");
 
-                char ctorDtorType = Peek();
-                if (ctorDtorType != '1' && ctorDtorType != '2' && ctorDtorType != '3')
+                char CtorDtorType = Peek();
+                if (CtorDtorType != '1' && CtorDtorType != '2' && CtorDtorType != '3')
                 {
                     return null;
                 }
 
-                _position++;
+                Position++;
 
-                if (context != null)
+                if (Context != null)
                 {
-                    context.CtorDtorConversion = true;
+                    Context.CtorDtorConversion = true;
                 }
 
-                if (isInherited && ParseName(context) == null)
+                if (IsInherited && ParseName(Context) == null)
                 {
                     return null;
                 }
 
-                return new CtorDtorNameType(prev, false);
+                return new CtorDtorNameType(Prev, false);
             }
 
             if (ConsumeIf("D"))
             {
-                char c = Peek();
-                if (c != '0' && c != '1' && c != '2')
+                char C = Peek();
+                if (C != '0' && C != '1' && C != '2')
                 {
                     return null;
                 }
 
-                _position++;
+                Position++;
 
-                if (context != null)
+                if (Context != null)
                 {
-                    context.CtorDtorConversion = true;
+                    Context.CtorDtorConversion = true;
                 }
 
-                return new CtorDtorNameType(prev, true);
+                return new CtorDtorNameType(Prev, true);
             }
 
             return null;
@@ -1387,7 +1387,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             if (ConsumeIf("fp"))
             {
                 // ignored
-                ParseCvQualifiers();
+                ParseCVQualifiers();
 
                 if (!ConsumeIf("_"))
                 {
@@ -1398,8 +1398,8 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             }
             else if (ConsumeIf("fL"))
             {
-                string l1Number = ParseNumber();
-                if (l1Number == null || l1Number.Length == 0)
+                string L1Number = ParseNumber();
+                if (L1Number == null || L1Number.Length == 0)
                 {
                     return null;
                 }
@@ -1410,7 +1410,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 }
 
                 // ignored
-                ParseCvQualifiers();
+                ParseCVQualifiers();
 
                 if (!ConsumeIf("_"))
                 {
@@ -1434,145 +1434,145 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return null;
             }
 
-            char foldKind       = Peek();
-            bool hasInitializer = foldKind == 'L' || foldKind == 'R';
-            bool isLeftFold     = foldKind == 'l' || foldKind == 'L';
+            char FoldKind       = Peek();
+            bool HasInitializer = FoldKind == 'L' || FoldKind == 'R';
+            bool IsLeftFold     = FoldKind == 'l' || FoldKind == 'L';
 
-            if (!isLeftFold && !(foldKind == 'r' || foldKind == 'R'))
+            if (!IsLeftFold && !(FoldKind == 'r' || FoldKind == 'R'))
             {
                 return null;
             }
 
-            _position++;
+            Position++;
 
-            string operatorName = null;
+            string OperatorName = null;
 
             switch (PeekString(0, 2))
             {
                 case "aa":
-                    operatorName = "&&";
+                    OperatorName = "&&";
                     break;
                 case "an":
-                    operatorName = "&";
+                    OperatorName = "&";
                     break;
                 case "aN":
-                    operatorName = "&=";
+                    OperatorName = "&=";
                     break;
                 case "aS":
-                    operatorName = "=";
+                    OperatorName = "=";
                     break;
                 case "cm":
-                    operatorName = ",";
+                    OperatorName = ",";
                     break;
                 case "ds":
-                    operatorName = ".*";
+                    OperatorName = ".*";
                     break;
                 case "dv":
-                    operatorName = "/";
+                    OperatorName = "/";
                     break;
                 case "dV":
-                    operatorName = "/=";
+                    OperatorName = "/=";
                     break;
                 case "eo":
-                    operatorName = "^";
+                    OperatorName = "^";
                     break;
                 case "eO":
-                    operatorName = "^=";
+                    OperatorName = "^=";
                     break;
                 case "eq":
-                    operatorName = "==";
+                    OperatorName = "==";
                     break;
                 case "ge":
-                    operatorName = ">=";
+                    OperatorName = ">=";
                     break;
                 case "gt":
-                    operatorName = ">";
+                    OperatorName = ">";
                     break;
                 case "le":
-                    operatorName = "<=";
+                    OperatorName = "<=";
                     break;
                 case "ls":
-                    operatorName = "<<";
+                    OperatorName = "<<";
                     break;
                 case "lS":
-                    operatorName = "<<=";
+                    OperatorName = "<<=";
                     break;
                 case "lt":
-                    operatorName = "<";
+                    OperatorName = "<";
                     break;
                 case "mi":
-                    operatorName = "-";
+                    OperatorName = "-";
                     break;
                 case "mI":
-                    operatorName = "-=";
+                    OperatorName = "-=";
                     break;
                 case "ml":
-                    operatorName = "*";
+                    OperatorName = "*";
                     break;
                 case "mL":
-                    operatorName = "*=";
+                    OperatorName = "*=";
                     break;
                 case "ne":
-                    operatorName = "!=";
+                    OperatorName = "!=";
                     break;
                 case "oo":
-                    operatorName = "||";
+                    OperatorName = "||";
                     break;
                 case "or":
-                    operatorName = "|";
+                    OperatorName = "|";
                     break;
                 case "oR":
-                    operatorName = "|=";
+                    OperatorName = "|=";
                     break;
                 case "pl":
-                    operatorName = "+";
+                    OperatorName = "+";
                     break;
                 case "pL":
-                    operatorName = "+=";
+                    OperatorName = "+=";
                     break;
                 case "rm":
-                    operatorName = "%";
+                    OperatorName = "%";
                     break;
                 case "rM":
-                    operatorName = "%=";
+                    OperatorName = "%=";
                     break;
                 case "rs":
-                    operatorName = ">>";
+                    OperatorName = ">>";
                     break;
                 case "rS":
-                    operatorName = ">>=";
+                    OperatorName = ">>=";
                     break;
                 default:
                     return null;
             }
 
-            _position += 2;
+            Position += 2;
 
-            BaseNode expression = ParseExpression();
-            if (expression == null)
+            BaseNode Expression = ParseExpression();
+            if (Expression == null)
             {
                 return null;
             }
 
-            BaseNode initializer = null;
+            BaseNode Initializer = null;
 
-            if (hasInitializer)
+            if (HasInitializer)
             {
-                initializer = ParseExpression();
-                if (initializer == null)
+                Initializer = ParseExpression();
+                if (Initializer == null)
                 {
                     return null;
                 }
             }
 
-            if (isLeftFold && initializer != null)
+            if (IsLeftFold && Initializer != null)
             {
-                BaseNode temp = expression;
-                expression    = initializer;
-                initializer   = temp;
+                BaseNode Temp = Expression;
+                Expression    = Initializer;
+                Initializer   = Temp;
             }
 
-            return new FoldExpression(isLeftFold, operatorName, new PackedTemplateParameterExpansion(expression), initializer);
+            return new FoldExpression(IsLeftFold, OperatorName, new PackedTemplateParameterExpansion(Expression), Initializer);
         }
 
 
@@ -1585,70 +1585,70 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return null;
             }
 
-            bool canParseTemplateArgsBackup = _canParseTemplateArgs;
-            _canParseTemplateArgs           = false;
-            BaseNode type                   = ParseType();
-            _canParseTemplateArgs           = canParseTemplateArgsBackup;
+            bool CanParseTemplateArgsBackup = CanParseTemplateArgs;
+            CanParseTemplateArgs            = false;
+            BaseNode Type                   = ParseType();
+            CanParseTemplateArgs            = CanParseTemplateArgsBackup;
 
-            if (type == null)
+            if (Type == null)
             {
                 return null;
             }
 
-            List<BaseNode> expressions = new List<BaseNode>();
+            List<BaseNode> Expressions = new List<BaseNode>();
             if (ConsumeIf("_"))
             {
                 while (!ConsumeIf("E"))
                 {
-                    BaseNode expression = ParseExpression();
-                    if (expression == null)
+                    BaseNode Expression = ParseExpression();
+                    if (Expression == null)
                     {
                         return null;
                     }
 
-                    expressions.Add(expression);
+                    Expressions.Add(Expression);
                 }
             }
             else
             {
-                BaseNode expression = ParseExpression();
-                if (expression == null)
+                BaseNode Expression = ParseExpression();
+                if (Expression == null)
                 {
                     return null;
                 }
 
-                expressions.Add(expression);
+                Expressions.Add(Expression);
             }
 
-            return new ConversionExpression(type, new NodeArray(expressions));
+            return new ConversionExpression(Type, new NodeArray(Expressions));
         }
 
-        private BaseNode ParseBinaryExpression(string name)
+        private BaseNode ParseBinaryExpression(string Name)
         {
-            BaseNode leftPart = ParseExpression();
-            if (leftPart == null)
+            BaseNode LeftPart = ParseExpression();
+            if (LeftPart == null)
             {
                 return null;
             }
 
-            BaseNode rightPart = ParseExpression();
-            if (rightPart == null)
+            BaseNode RightPart = ParseExpression();
+            if (RightPart == null)
             {
                 return null;
             }
 
-            return new BinaryExpression(leftPart, name, rightPart);
+            return new BinaryExpression(LeftPart, Name, RightPart);
         }
 
-        private BaseNode ParsePrefixExpression(string name)
+        private BaseNode ParsePrefixExpression(string Name)
         {
-            BaseNode expression = ParseExpression();
-            if (expression == null)
+            BaseNode Expression = ParseExpression();
+            if (Expression == null)
             {
                 return null;
             }
 
-            return new PrefixExpression(name, expression);
+            return new PrefixExpression(Name, Expression);
         }
 
 
@@ -1661,60 +1661,60 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         {
             if (Peek() == 'd')
             {
-                BaseNode bracedExpressionNode;
+                BaseNode BracedExpressionNode;
                 switch (Peek(1))
                 {
                     case 'i':
-                        _position += 2;
-                        BaseNode field = ParseSourceName();
-                        if (field == null)
+                        Position += 2;
+                        BaseNode Field = ParseSourceName();
+                        if (Field == null)
                         {
                             return null;
                         }
 
-                        bracedExpressionNode = ParseBracedExpression();
-                        if (bracedExpressionNode == null)
+                        BracedExpressionNode = ParseBracedExpression();
+                        if (BracedExpressionNode == null)
                         {
                             return null;
                         }
 
-                        return new BracedExpression(field, bracedExpressionNode, false);
+                        return new BracedExpression(Field, BracedExpressionNode, false);
                     case 'x':
-                        _position += 2;
-                        BaseNode index = ParseExpression();
-                        if (index == null)
+                        Position += 2;
+                        BaseNode Index = ParseExpression();
+                        if (Index == null)
                         {
                             return null;
                         }
 
-                        bracedExpressionNode = ParseBracedExpression();
-                        if (bracedExpressionNode == null)
+                        BracedExpressionNode = ParseBracedExpression();
+                        if (BracedExpressionNode == null)
                         {
                             return null;
                         }
 
-                        return new BracedExpression(index, bracedExpressionNode, true);
+                        return new BracedExpression(Index, BracedExpressionNode, true);
                     case 'X':
-                        _position += 2;
-                        BaseNode rangeBeginExpression = ParseExpression();
-                        if (rangeBeginExpression == null)
+                        Position += 2;
+                        BaseNode RangeBeginExpression = ParseExpression();
+                        if (RangeBeginExpression == null)
                         {
                             return null;
                         }
 
-                        BaseNode rangeEndExpression = ParseExpression();
-                        if (rangeEndExpression == null)
+                        BaseNode RangeEndExpression = ParseExpression();
+                        if (RangeEndExpression == null)
                         {
                             return null;
                         }
 
-                        bracedExpressionNode = ParseBracedExpression();
-                        if (bracedExpressionNode == null)
+                        BracedExpressionNode = ParseBracedExpression();
+                        if (BracedExpressionNode == null)
                         {
                             return null;
                         }
 
-                        return new BracedRangeExpression(rangeBeginExpression, rangeEndExpression, bracedExpressionNode);
+                        return new BracedRangeExpression(RangeBeginExpression, RangeEndExpression, BracedExpressionNode);
                 }
             }
 
@@ -1729,30 +1729,30 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         // <initializer> ::= pi <expression>* E                                  # parenthesized initialization
         private BaseNode ParseNewExpression()
         {
-            bool isGlobal = ConsumeIf("gs");
-            bool isArray  = Peek(1) == 'a';
+            bool IsGlobal = ConsumeIf("gs");
+            bool IsArray  = Peek(1) == 'a';
 
             if (!ConsumeIf("nw") || !ConsumeIf("na"))
             {
                 return null;
             }
 
-            List<BaseNode> expressions  = new List<BaseNode>();
-            List<BaseNode> initializers = new List<BaseNode>();
+            List<BaseNode> Expressions  = new List<BaseNode>();
+            List<BaseNode> Initializers = new List<BaseNode>();
 
             while (!ConsumeIf("_"))
             {
-                BaseNode expression = ParseExpression();
-                if (expression == null)
+                BaseNode Expression = ParseExpression();
+                if (Expression == null)
                 {
                     return null;
                 }
 
-                expressions.Add(expression);
+                Expressions.Add(Expression);
             }
 
-            BaseNode typeNode = ParseType();
-            if (typeNode == null)
+            BaseNode TypeNode = ParseType();
+            if (TypeNode == null)
             {
                 return null;
             }
@@ -1761,13 +1761,13 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             {
                 while (!ConsumeIf("E"))
                 {
-                    BaseNode initializer = ParseExpression();
-                    if (initializer == null)
+                    BaseNode Initializer = ParseExpression();
+                    if (Initializer == null)
                     {
                         return null;
                     }
 
-                    initializers.Add(initializer);
+                    Initializers.Add(Initializer);
                 }
             }
             else if (!ConsumeIf("E"))
@@ -1775,7 +1775,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return null;
             }
 
-            return new NewExpression(new NodeArray(expressions), typeNode, new NodeArray(initializers), isGlobal, isArray);
+            return new NewExpression(new NodeArray(Expressions), TypeNode, new NodeArray(Initializers), IsGlobal, IsArray);
         }
 
 
@@ -1823,8 +1823,8 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //              ::= <expr-primary>
         private BaseNode ParseExpression()
         {
-            bool isGlobal = ConsumeIf("gs");
-            BaseNode expression = null;
+            bool IsGlobal = ConsumeIf("gs");
+            BaseNode Expression = null;
             if (Count() < 2)
             {
                 return null;
@@ -1837,8 +1837,8 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 case 'T':
                     return ParseTemplateParam();
                 case 'f':
-                    char c = Peek(1);
-                    if (c == 'p' || (c == 'L' && char.IsDigit(Peek(2))))
+                    char C = Peek(1);
+                    if (C == 'p' || (C == 'L' && char.IsDigit(Peek(2))))
                     {
                         return ParseFunctionParameter();
                     }
@@ -1848,164 +1848,164 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'a':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("&&");
                         case 'd':
                         case 'n':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("&");
                         case 'N':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("&=");
                         case 'S':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("=");
                         case 't':
-                            _position += 2;
-                            BaseNode type = ParseType();
-                            if (type == null)
+                            Position += 2;
+                            BaseNode Type = ParseType();
+                            if (Type == null)
                             {
                                 return null;
                             }
 
-                            return new EnclosedExpression("alignof (", type, ")");
+                            return new EnclosedExpression("alignof (", Type, ")");
                         case 'z':
-                            _position += 2;
-                            expression = ParseExpression();
-                            if (expression == null)
+                            Position += 2;
+                            Expression = ParseExpression();
+                            if (Expression == null)
                             {
                                 return null;
                             }
 
-                            return new EnclosedExpression("alignof (", expression, ")");
+                            return new EnclosedExpression("alignof (", Expression, ")");
                     }
                     return null;
                 case 'c':
                     switch (Peek(1))
                     {
                         case 'c':
-                            _position += 2;
-                            BaseNode to = ParseType();
-                            if (to == null)
+                            Position += 2;
+                            BaseNode To = ParseType();
+                            if (To == null)
                             {
                                 return null;
                             }
 
-                            BaseNode from = ParseExpression();
-                            if (from == null)
+                            BaseNode From = ParseExpression();
+                            if (From == null)
                             {
                                 return null;
                             }
 
-                            return new CastExpression("const_cast", to, from);
+                            return new CastExpression("const_cast", To, From);
                         case 'l':
-                            _position += 2;
-                            BaseNode callee = ParseExpression();
-                            if (callee == null)
+                            Position += 2;
+                            BaseNode Callee = ParseExpression();
+                            if (Callee == null)
                             {
                                 return null;
                             }
 
-                            List<BaseNode> names = new List<BaseNode>();
+                            List<BaseNode> Names = new List<BaseNode>();
                             while (!ConsumeIf("E"))
                             {
-                                expression = ParseExpression();
-                                if (expression == null)
+                                Expression = ParseExpression();
+                                if (Expression == null)
                                 {
                                     return null;
                                 }
 
-                                names.Add(expression);
+                                Names.Add(Expression);
                             }
-                            return new CallExpression(callee, names);
+                            return new CallExpression(Callee, Names);
                         case 'm':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression(",");
                         case 'o':
-                            _position += 2;
+                            Position += 2;
                             return ParsePrefixExpression("~");
                         case 'v':
                             return ParseConversionExpression();
                     }
                     return null;
                 case 'd':
-                    BaseNode leftNode = null;
-                    BaseNode rightNode = null;
+                    BaseNode LeftNode = null;
+                    BaseNode RightNode = null;
                     switch (Peek(1))
                     {
                         case 'a':
-                            _position += 2;
-                            expression = ParseExpression();
-                            if (expression == null)
+                            Position += 2;
+                            Expression = ParseExpression();
+                            if (Expression == null)
                             {
-                                return expression;
+                                return Expression;
                             }
 
-                            return new DeleteExpression(expression, isGlobal, true);
+                            return new DeleteExpression(Expression, IsGlobal, true);
                         case 'c':
-                            _position += 2;
-                            BaseNode type = ParseType();
-                            if (type == null)
+                            Position += 2;
+                            BaseNode Type = ParseType();
+                            if (Type == null)
                             {
                                 return null;
                             }
 
-                            expression = ParseExpression();
-                            if (expression == null)
+                            Expression = ParseExpression();
+                            if (Expression == null)
                             {
-                                return expression;
+                                return Expression;
                             }
 
-                            return new CastExpression("dynamic_cast", type, expression);
+                            return new CastExpression("dynamic_cast", Type, Expression);
                         case 'e':
-                            _position += 2;
+                            Position += 2;
                             return ParsePrefixExpression("*");
                         case 'l':
-                            _position += 2;
-                            expression = ParseExpression();
-                            if (expression == null)
+                            Position += 2;
+                            Expression = ParseExpression();
+                            if (Expression == null)
                             {
                                 return null;
                             }
 
-                            return new DeleteExpression(expression, isGlobal, false);
+                            return new DeleteExpression(Expression, IsGlobal, false);
                         case 'n':
                             return ParseUnresolvedName();
                         case 's':
-                            _position += 2;
-                            leftNode = ParseExpression();
-                            if (leftNode == null)
+                            Position += 2;
+                            LeftNode = ParseExpression();
+                            if (LeftNode == null)
                             {
                                 return null;
                             }
 
-                            rightNode = ParseExpression();
-                            if (rightNode == null)
+                            RightNode = ParseExpression();
+                            if (RightNode == null)
                             {
                                 return null;
                             }
 
-                            return new MemberExpression(leftNode, ".*", rightNode);
+                            return new MemberExpression(LeftNode, ".*", RightNode);
                         case 't':
-                            _position += 2;
-                            leftNode = ParseExpression();
-                            if (leftNode == null)
+                            Position += 2;
+                            LeftNode = ParseExpression();
+                            if (LeftNode == null)
                             {
                                 return null;
                             }
 
-                            rightNode = ParseExpression();
-                            if (rightNode == null)
+                            RightNode = ParseExpression();
+                            if (RightNode == null)
                             {
                                 return null;
                             }
 
-                            return new MemberExpression(leftNode, ".", rightNode);
+                            return new MemberExpression(LeftNode, ".", RightNode);
                         case 'v':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("/");
                         case 'V':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("/=");
                     }
                     return null;
@@ -2013,13 +2013,13 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'o':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("^");
                         case 'O':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("^=");
                         case 'q':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("==");
                     }
                     return null;
@@ -2027,10 +2027,10 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'e':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression(">=");
                         case 't':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression(">");
                     }
                     return null;
@@ -2038,51 +2038,51 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'x':
-                            _position += 2;
+                            Position += 2;
                             BaseNode Base = ParseExpression();
                             if (Base == null)
                             {
                                 return null;
                             }
 
-                            BaseNode subscript = ParseExpression();
+                            BaseNode Subscript = ParseExpression();
                             if (Base == null)
                             {
                                 return null;
                             }
 
-                            return new ArraySubscriptingExpression(Base, subscript);
+                            return new ArraySubscriptingExpression(Base, Subscript);
                         case 'l':
-                            _position += 2;
+                            Position += 2;
 
-                            List<BaseNode> bracedExpressions = new List<BaseNode>();
+                            List<BaseNode> BracedExpressions = new List<BaseNode>();
                             while (!ConsumeIf("E"))
                             {
-                                expression = ParseBracedExpression();
-                                if (expression == null)
+                                Expression = ParseBracedExpression();
+                                if (Expression == null)
                                 {
                                     return null;
                                 }
 
-                                bracedExpressions.Add(expression);
+                                BracedExpressions.Add(Expression);
                             }
-                            return new InitListExpression(null, bracedExpressions);
+                            return new InitListExpression(null, BracedExpressions);
                     }
                     return null;
                 case 'l':
                     switch (Peek(1))
                     {
                         case 'e':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("<=");
                         case 's':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("<<");
                         case 'S':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("<<=");
                         case 't':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("<");
                     }
                     return null;
@@ -2090,31 +2090,31 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'i':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("-");
                         case 'I':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("-=");
                         case 'l':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("*");
                         case 'L':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("*=");
                         case 'm':
-                            _position += 2;
+                            Position += 2;
                             if (ConsumeIf("_"))
                             {
                                 return ParsePrefixExpression("--");
                             }
 
-                            expression = ParseExpression();
-                            if (expression == null)
+                            Expression = ParseExpression();
+                            if (Expression == null)
                             {
                                 return null;
                             }
 
-                            return new PostfixExpression(expression, "--");
+                            return new PostfixExpression(Expression, "--");
                     }
                     return null;
                 case 'n':
@@ -2122,26 +2122,26 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     {
                         case 'a':
                         case 'w':
-                            _position += 2;
+                            Position += 2;
                             return ParseNewExpression();
                         case 'e':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("!=");
                         case 'g':
-                            _position += 2;
+                            Position += 2;
                             return ParsePrefixExpression("-");
                         case 't':
-                            _position += 2;
+                            Position += 2;
                             return ParsePrefixExpression("!");
                         case 'x':
-                            _position += 2;
-                            expression = ParseExpression();
-                            if (expression == null)
+                            Position += 2;
+                            Expression = ParseExpression();
+                            if (Expression == null)
                             {
                                 return null;
                             }
 
-                            return new EnclosedExpression("noexcept (", expression, ")");
+                            return new EnclosedExpression("noexcept (", Expression, ")");
                     }
                     return null;
                 case 'o':
@@ -2150,13 +2150,13 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                         case 'n':
                             return ParseUnresolvedName();
                         case 'o':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("||");
                         case 'r':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("|");
                         case 'R':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("|=");
                     }
                     return null;
@@ -2164,100 +2164,100 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'm':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("->*");
                         case 'l':
                         case 's':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("+");
                         case 'L':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("+=");
                         case 'p':
-                            _position += 2;
+                            Position += 2;
                             if (ConsumeIf("_"))
                             {
                                 return ParsePrefixExpression("++");
                             }
 
-                            expression = ParseExpression();
-                            if (expression == null)
+                            Expression = ParseExpression();
+                            if (Expression == null)
                             {
                                 return null;
                             }
 
-                            return new PostfixExpression(expression, "++");
+                            return new PostfixExpression(Expression, "++");
                         case 't':
-                            _position += 2;
-                            leftNode = ParseExpression();
-                            if (leftNode == null)
+                            Position += 2;
+                            LeftNode = ParseExpression();
+                            if (LeftNode == null)
                             {
                                 return null;
                             }
 
-                            rightNode = ParseExpression();
-                            if (rightNode == null)
+                            RightNode = ParseExpression();
+                            if (RightNode == null)
                             {
                                 return null;
                             }
 
-                            return new MemberExpression(leftNode, "->", rightNode);
+                            return new MemberExpression(LeftNode, "->", RightNode);
                     }
                     return null;
                 case 'q':
                     if (Peek(1) == 'u')
                     {
-                        _position += 2;
-                        BaseNode condition = ParseExpression();
-                        if (condition == null)
+                        Position += 2;
+                        BaseNode Condition = ParseExpression();
+                        if (Condition == null)
                         {
                             return null;
                         }
 
-                        leftNode = ParseExpression();
-                        if (leftNode == null)
+                        LeftNode = ParseExpression();
+                        if (LeftNode == null)
                         {
                             return null;
                         }
 
-                        rightNode = ParseExpression();
-                        if (rightNode == null)
+                        RightNode = ParseExpression();
+                        if (RightNode == null)
                         {
                             return null;
                         }
 
-                        return new ConditionalExpression(condition, leftNode, rightNode);
+                        return new ConditionalExpression(Condition, LeftNode, RightNode);
                     }
                     return null;
                 case 'r':
                     switch (Peek(1))
                     {
                         case 'c':
-                            _position += 2;
-                            BaseNode to = ParseType();
-                            if (to == null)
+                            Position += 2;
+                            BaseNode To = ParseType();
+                            if (To == null)
                             {
                                 return null;
                             }
 
-                            BaseNode from = ParseExpression();
-                            if (from == null)
+                            BaseNode From = ParseExpression();
+                            if (From == null)
                             {
                                 return null;
                             }
 
-                            return new CastExpression("reinterpret_cast", to, from);
+                            return new CastExpression("reinterpret_cast", To, From);
                         case 'm':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("%");
                         case 'M':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression("%");
                         case 's':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression(">>");
                         case 'S':
-                            _position += 2;
+                            Position += 2;
                             return ParseBinaryExpression(">>=");
                     }
                     return null;
@@ -2265,140 +2265,140 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     switch (Peek(1))
                     {
                         case 'c':
-                            _position += 2;
-                            BaseNode to = ParseType();
-                            if (to == null)
+                            Position += 2;
+                            BaseNode To = ParseType();
+                            if (To == null)
                             {
                                 return null;
                             }
 
-                            BaseNode from = ParseExpression();
-                            if (from == null)
+                            BaseNode From = ParseExpression();
+                            if (From == null)
                             {
                                 return null;
                             }
 
-                            return new CastExpression("static_cast", to, from);
+                            return new CastExpression("static_cast", To, From);
                         case 'p':
-                            _position += 2;
-                            expression = ParseExpression();
-                            if (expression == null)
+                            Position += 2;
+                            Expression = ParseExpression();
+                            if (Expression == null)
                             {
                                 return null;
                             }
 
-                            return new PackedTemplateParameterExpansion(expression);
+                            return new PackedTemplateParameterExpansion(Expression);
                         case 'r':
                             return ParseUnresolvedName();
                         case 't':
-                            _position += 2;
-                            BaseNode enclosedType = ParseType();
-                            if (enclosedType == null)
+                            Position += 2;
+                            BaseNode EnclosedType = ParseType();
+                            if (EnclosedType == null)
                             {
                                 return null;
                             }
 
-                            return new EnclosedExpression("sizeof (", enclosedType, ")");
+                            return new EnclosedExpression("sizeof (", EnclosedType, ")");
                         case 'z':
-                            _position += 2;
-                            expression = ParseExpression();
-                            if (expression == null)
+                            Position += 2;
+                            Expression = ParseExpression();
+                            if (Expression == null)
                             {
                                 return null;
                             }
 
-                            return new EnclosedExpression("sizeof (", expression, ")");
+                            return new EnclosedExpression("sizeof (", Expression, ")");
                         case 'Z':
-                            _position += 2;
-                            BaseNode sizeofParamNode = null;
+                            Position += 2;
+                            BaseNode SizeofParamNode = null;
                             switch (Peek())
                             {
                                 case 'T':
                                     // FIXME: ??? Not entire sure if it's right
-                                    sizeofParamNode = ParseFunctionParameter();
-                                    if (sizeofParamNode == null)
+                                    SizeofParamNode = ParseFunctionParameter();
+                                    if (SizeofParamNode == null)
                                     {
                                         return null;
                                     }
 
-                                    return new EnclosedExpression("sizeof...(", new PackedTemplateParameterExpansion(sizeofParamNode), ")");
+                                    return new EnclosedExpression("sizeof...(", new PackedTemplateParameterExpansion(SizeofParamNode), ")");
                                 case 'f':
-                                    sizeofParamNode = ParseFunctionParameter();
-                                    if (sizeofParamNode == null)
+                                    SizeofParamNode = ParseFunctionParameter();
+                                    if (SizeofParamNode == null)
                                     {
                                         return null;
                                     }
 
-                                    return new EnclosedExpression("sizeof...(", sizeofParamNode, ")");
+                                    return new EnclosedExpression("sizeof...(", SizeofParamNode, ")");
                             }
                             return null;
                         case 'P':
-                            _position += 2;
-                            List<BaseNode> arguments = new List<BaseNode>();
+                            Position += 2;
+                            List<BaseNode> Arguments = new List<BaseNode>();
                             while (!ConsumeIf("E"))
                             {
-                                BaseNode argument = ParseTemplateArgument();
-                                if (argument == null)
+                                BaseNode Argument = ParseTemplateArgument();
+                                if (Argument == null)
                                 {
                                     return null;
                                 }
 
-                                arguments.Add(argument);
+                                Arguments.Add(Argument);
                             }
-                            return new EnclosedExpression("sizeof...(", new NodeArray(arguments), ")");
+                            return new EnclosedExpression("sizeof...(", new NodeArray(Arguments), ")");
                     }
                     return null;
                 case 't':
                     switch (Peek(1))
                     {
                         case 'e':
-                            expression = ParseExpression();
-                            if (expression == null)
+                            Expression = ParseExpression();
+                            if (Expression == null)
                             {
                                 return null;
                             }
 
-                            return new EnclosedExpression("typeid (", expression, ")");
+                            return new EnclosedExpression("typeid (", Expression, ")");
                         case 't':
-                            BaseNode enclosedType = ParseExpression();
-                            if (enclosedType == null)
+                            BaseNode EnclosedType = ParseExpression();
+                            if (EnclosedType == null)
                             {
                                 return null;
                             }
 
-                            return new EnclosedExpression("typeid (", enclosedType, ")");
+                            return new EnclosedExpression("typeid (", EnclosedType, ")");
                         case 'l':
-                            _position += 2;
-                            BaseNode typeNode = ParseType();
-                            if (typeNode == null)
+                            Position += 2;
+                            BaseNode TypeNode = ParseType();
+                            if (TypeNode == null)
                             {
                                 return null;
                             }
 
-                            List<BaseNode> bracedExpressions = new List<BaseNode>();
+                            List<BaseNode> BracedExpressions = new List<BaseNode>();
                             while (!ConsumeIf("E"))
                             {
-                                expression = ParseBracedExpression();
-                                if (expression == null)
+                                Expression = ParseBracedExpression();
+                                if (Expression == null)
                                 {
                                     return null;
                                 }
 
-                                bracedExpressions.Add(expression);
+                                BracedExpressions.Add(Expression);
                             }
-                            return new InitListExpression(typeNode, bracedExpressions);
+                            return new InitListExpression(TypeNode, BracedExpressions);
                         case 'r':
-                            _position += 2;
+                            Position += 2;
                             return new NameType("throw");
                         case 'w':
-                            _position += 2;
-                            expression = ParseExpression();
-                            if (expression == null)
+                            Position += 2;
+                            Expression = ParseExpression();
+                            if (Expression == null)
                             {
                                 return null;
                             }
 
-                            return new ThrowExpression(expression);
+                            return new ThrowExpression(Expression);
                     }
                     return null;
             }
@@ -2411,15 +2411,15 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             return null;
         }
 
-        private BaseNode ParseIntegerLiteral(string literalName)
+        private BaseNode ParseIntegerLiteral(string LiteralName)
         {
-            string number = ParseNumber(true);
-            if (number == null || number.Length == 0 || !ConsumeIf("E"))
+            string Number = ParseNumber(true);
+            if (Number == null || Number.Length == 0 || !ConsumeIf("E"))
             {
                 return null;
             }
 
-            return new IntegerLiteral(literalName, number);
+            return new IntegerLiteral(LiteralName, Number);
         }
 
         // <expr-primary> ::= L <type> <value number> E                          # integer literal
@@ -2439,7 +2439,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             switch (Peek())
             {
                 case 'w':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("wchar_t");
                 case 'b':
                     if (ConsumeIf("b0E"))
@@ -2454,43 +2454,43 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
                     return null;
                 case 'c':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("char");
                 case 'a':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("signed char");
                 case 'h':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("unsigned char");
                 case 's':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("short");
                 case 't':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("unsigned short");
                 case 'i':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("");
                 case 'j':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("u");
                 case 'l':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("l");
                 case 'm':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("ul");
                 case 'x':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("ll");
                 case 'y':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("ull");
                 case 'n':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("__int128");
                 case 'o':
-                    _position++;
+                    Position++;
                     return ParseIntegerLiteral("unsigned __int128");
                 case 'd':
                 case 'e':
@@ -2500,29 +2500,29 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 case '_':
                     if (ConsumeIf("_Z"))
                     {
-                        BaseNode encoding = ParseEncoding();
-                        if (encoding != null && ConsumeIf("E"))
+                        BaseNode Encoding = ParseEncoding();
+                        if (Encoding != null && ConsumeIf("E"))
                         {
-                            return encoding;
+                            return Encoding;
                         }
                     }
                     return null;
                 case 'T':
                     return null;
                 default:
-                    BaseNode type = ParseType();
-                    if (type == null)
+                    BaseNode Type = ParseType();
+                    if (Type == null)
                     {
                         return null;
                     }
 
-                    string number = ParseNumber();
-                    if (number == null || number.Length == 0 || !ConsumeIf("E"))
+                    string Number = ParseNumber();
+                    if (Number == null || Number.Length == 0 || !ConsumeIf("E"))
                     {
                         return null;
                     }
 
-                    return new IntegerCastExpression(type, number);
+                    return new IntegerCastExpression(Type, Number);
             }
         }
 
@@ -2535,8 +2535,8 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return null;
             }
 
-            BaseNode expression = ParseExpression();
-            if (expression == null)
+            BaseNode Expression = ParseExpression();
+            if (Expression == null)
             {
                 return null;
             }
@@ -2546,7 +2546,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return null;
             }
 
-            return new EnclosedExpression("decltype(", expression, ")");
+            return new EnclosedExpression("decltype(", Expression, ")");
         }
 
         // <template-param>          ::= T_ # first template parameter
@@ -2560,16 +2560,16 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return null;
             }
 
-            int index = 0;
+            int Index = 0;
             if (!ConsumeIf("_"))
             {
-                index = ParsePositiveNumber();
-                if (index < 0)
+                Index = ParsePositiveNumber();
+                if (Index < 0)
                 {
                     return null;
                 }
 
-                index++;
+                Index++;
                 if (!ConsumeIf("_"))
                 {
                     return null;
@@ -2580,65 +2580,65 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             // if (IsParsingLambdaParameters)
             //    return new NameType("auto");
 
-            if (_canForwardTemplateReference)
+            if (CanForwardTemplateReference)
             {
-                ForwardTemplateReference forwardTemplateReference = new ForwardTemplateReference(index);
-                _forwardTemplateReferenceList.Add(forwardTemplateReference);
-                return forwardTemplateReference;
+                ForwardTemplateReference ForwardTemplateReference = new ForwardTemplateReference(Index);
+                ForwardTemplateReferenceList.Add(ForwardTemplateReference);
+                return ForwardTemplateReference;
             }
-            if (index >= _templateParamList.Count)
+            if (Index >= TemplateParamList.Count)
             {
                 return null;
             }
 
-            return _templateParamList[index];
+            return TemplateParamList[Index];
         }
 
         // <template-args> ::= I <template-arg>+ E
-        private BaseNode ParseTemplateArguments(bool hasContext = false)
+        private BaseNode ParseTemplateArguments(bool HasContext = false)
         {
             if (!ConsumeIf("I"))
             {
                 return null;
             }
 
-            if (hasContext)
+            if (HasContext)
             {
-                _templateParamList.Clear();
+                TemplateParamList.Clear();
             }
 
-            List<BaseNode> args = new List<BaseNode>();
+            List<BaseNode> Args = new List<BaseNode>();
             while (!ConsumeIf("E"))
             {
-                if (hasContext)
+                if (HasContext)
                 {
-                    List<BaseNode> templateParamListTemp = new List<BaseNode>(_templateParamList);
-                    BaseNode templateArgument = ParseTemplateArgument();
-                    _templateParamList = templateParamListTemp;
-                    if (templateArgument == null)
+                    List<BaseNode> TemplateParamListTemp = new List<BaseNode>(TemplateParamList);
+                    BaseNode TemplateArgument = ParseTemplateArgument();
+                    TemplateParamList = TemplateParamListTemp;
+                    if (TemplateArgument == null)
                     {
                         return null;
                     }
 
-                    args.Add(templateArgument);
-                    if (templateArgument.GetType().Equals(NodeType.PackedTemplateArgument))
+                    Args.Add(TemplateArgument);
+                    if (TemplateArgument.GetType().Equals(NodeType.PackedTemplateArgument))
                     {
-                        templateArgument = new PackedTemplateParameter(((NodeArray)templateArgument).Nodes);
+                        TemplateArgument = new PackedTemplateParameter(((NodeArray)TemplateArgument).Nodes);
                     }
-                    _templateParamList.Add(templateArgument);
+                    TemplateParamList.Add(TemplateArgument);
                 }
                 else
                 {
-                    BaseNode templateArgument = ParseTemplateArgument();
-                    if (templateArgument == null)
+                    BaseNode TemplateArgument = ParseTemplateArgument();
+                    if (TemplateArgument == null)
                     {
                         return null;
                     }
 
-                    args.Add(templateArgument);
+                    Args.Add(TemplateArgument);
                 }
             }
-            return new TemplateArguments(args);
+            return new TemplateArguments(Args);
         }
 
 
@@ -2652,32 +2652,32 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             {
                 // X <expression> E
                 case 'X':
-                    _position++;
-                    BaseNode expression = ParseExpression();
-                    if (expression == null || !ConsumeIf("E"))
+                    Position++;
+                    BaseNode Expression = ParseExpression();
+                    if (Expression == null || !ConsumeIf("E"))
                     {
                         return null;
                     }
 
-                    return expression;
+                    return Expression;
                 // <expr-primary>
                 case 'L':
                     return ParseExpressionPrimary();
                 // J <template-arg>* E
                 case 'J':
-                    _position++;
-                    List<BaseNode> templateArguments = new List<BaseNode>();
+                    Position++;
+                    List<BaseNode> TemplateArguments = new List<BaseNode>();
                     while (!ConsumeIf("E"))
                     {
-                        BaseNode templateArgument = ParseTemplateArgument();
-                        if (templateArgument == null)
+                        BaseNode TemplateArgument = ParseTemplateArgument();
+                        if (TemplateArgument == null)
                         {
                             return null;
                         }
 
-                        templateArguments.Add(templateArgument);
+                        TemplateArguments.Add(TemplateArgument);
                     }
-                    return new NodeArray(templateArguments, NodeType.PackedTemplateArgument);
+                    return new NodeArray(TemplateArguments, NodeType.PackedTemplateArgument);
                 // <type>
                 default:
                     return ParseType();
@@ -2686,7 +2686,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
         class NameParserContext
         {
-            public CvType Cv;
+            public CVType CV;
             public SimpleReferenceType Ref;
             public bool FinishWithTemplateArguments;
             public bool CtorDtorConversion;
@@ -2700,25 +2700,25 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         {
             if (Peek() == 'T')
             {
-                BaseNode templateParam = ParseTemplateParam();
-                if (templateParam == null)
+                BaseNode TemplateParam = ParseTemplateParam();
+                if (TemplateParam == null)
                 {
                     return null;
                 }
 
-                _substitutionList.Add(templateParam);
-                return templateParam;
+                SubstitutionList.Add(TemplateParam);
+                return TemplateParam;
             }
             else if (Peek() == 'D')
             {
-                BaseNode declType = ParseDecltype();
-                if (declType == null)
+                BaseNode DeclType = ParseDecltype();
+                if (DeclType == null)
                 {
                     return null;
                 }
 
-                _substitutionList.Add(declType);
-                return declType;
+                SubstitutionList.Add(DeclType);
+                return DeclType;
             }
             return ParseSubstitution();
         }
@@ -2726,44 +2726,44 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         // <simple-id> ::= <source-name> [ <template-args> ]
         private BaseNode ParseSimpleId()
         {
-            BaseNode sourceName = ParseSourceName();
-            if (sourceName == null)
+            BaseNode SourceName = ParseSourceName();
+            if (SourceName == null)
             {
                 return null;
             }
 
             if (Peek() == 'I')
             {
-                BaseNode templateArguments = ParseTemplateArguments();
-                if (templateArguments == null)
+                BaseNode TemplateArguments = ParseTemplateArguments();
+                if (TemplateArguments == null)
                 {
                     return null;
                 }
 
-                return new NameTypeWithTemplateArguments(sourceName, templateArguments);
+                return new NameTypeWithTemplateArguments(SourceName, TemplateArguments);
             }
-            return sourceName;
+            return SourceName;
         }
 
         //  <destructor-name> ::= <unresolved-type>                               # e.g., ~T or ~decltype(f())
         //                    ::= <simple-id>                                     # e.g., ~A<2*N>
         private BaseNode ParseDestructorName()
         {
-            BaseNode node;
+            BaseNode Node;
             if (char.IsDigit(Peek()))
             {
-                node = ParseSimpleId();
+                Node = ParseSimpleId();
             }
             else
             {
-                node = ParseUnresolvedType();
+                Node = ParseUnresolvedType();
             }
-            if (node == null)
+            if (Node == null)
             {
                 return null;
             }
 
-            return new DtorName(node);
+            return new DtorName(Node);
         }
 
         //  <base-unresolved-name> ::= <simple-id>                                # unresolved name
@@ -2785,23 +2785,23 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             }
 
             ConsumeIf("on");
-            BaseNode operatorName = ParseOperatorName(null);
-            if (operatorName == null)
+            BaseNode OperatorName = ParseOperatorName(null);
+            if (OperatorName == null)
             {
                 return null;
             }
 
             if (Peek() == 'I')
             {
-                BaseNode templateArguments = ParseTemplateArguments();
-                if (templateArguments == null)
+                BaseNode TemplateArguments = ParseTemplateArguments();
+                if (TemplateArguments == null)
                 {
                     return null;
                 }
 
-                return new NameTypeWithTemplateArguments(operatorName, templateArguments);
+                return new NameTypeWithTemplateArguments(OperatorName, TemplateArguments);
             }
-            return operatorName;
+            return OperatorName;
         }
 
         // <unresolved-name> ::= [gs] <base-unresolved-name>                     # x or (with "gs") ::x
@@ -2810,27 +2810,27 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //                                                                       # T::N::x /decltype(p)::N::x
         //                   ::= [gs] sr <unresolved-qualifier-level>+ E <base-unresolved-name>
         //                                                                       # A::x, N::y, A<T>::z; "gs" means leading "::"
-        private BaseNode ParseUnresolvedName(NameParserContext context = null)
+        private BaseNode ParseUnresolvedName(NameParserContext Context = null)
         {
-            BaseNode result = null;
+            BaseNode Result = null;
             if (ConsumeIf("srN"))
             {
-                result = ParseUnresolvedType();
-                if (result == null)
+                Result = ParseUnresolvedType();
+                if (Result == null)
                 {
                     return null;
                 }
 
                 if (Peek() == 'I')
                 {
-                    BaseNode templateArguments = ParseTemplateArguments();
-                    if (templateArguments == null)
+                    BaseNode TemplateArguments = ParseTemplateArguments();
+                    if (TemplateArguments == null)
                     {
                         return null;
                     }
 
-                    result = new NameTypeWithTemplateArguments(result, templateArguments);
-                    if (result == null)
+                    Result = new NameTypeWithTemplateArguments(Result, TemplateArguments);
+                    if (Result == null)
                     {
                         return null;
                     }
@@ -2838,45 +2838,45 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
                 while (!ConsumeIf("E"))
                 {
-                    BaseNode simpleId = ParseSimpleId();
-                    if (simpleId == null)
+                    BaseNode SimpleId = ParseSimpleId();
+                    if (SimpleId == null)
                     {
                         return null;
                     }
 
-                    result = new QualifiedName(result, simpleId);
-                    if (result == null)
+                    Result = new QualifiedName(Result, SimpleId);
+                    if (Result == null)
                     {
                         return null;
                     }
                 }
 
-                BaseNode baseName = ParseBaseUnresolvedName();
-                if (baseName == null)
+                BaseNode BaseName = ParseBaseUnresolvedName();
+                if (BaseName == null)
                 {
                     return null;
                 }
 
-                return new QualifiedName(result, baseName);
+                return new QualifiedName(Result, BaseName);
             }
 
-            bool isGlobal = ConsumeIf("gs");
+            bool IsGlobal = ConsumeIf("gs");
 
             // ::= [gs] <base-unresolved-name>                     # x or (with "gs") ::x
             if (!ConsumeIf("sr"))
             {
-                result = ParseBaseUnresolvedName();
-                if (result == null)
+                Result = ParseBaseUnresolvedName();
+                if (Result == null)
                 {
                     return null;
                 }
 
-                if (isGlobal)
+                if (IsGlobal)
                 {
-                    result = new GlobalQualifiedName(result);
+                    Result = new GlobalQualifiedName(Result);
                 }
 
-                return result;
+                return Result;
             }
 
             // ::= [gs] sr <unresolved-qualifier-level>+ E <base-unresolved-name>
@@ -2884,26 +2884,26 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             {
                 do
                 {
-                    BaseNode qualifier = ParseSimpleId();
-                    if (qualifier == null)
+                    BaseNode Qualifier = ParseSimpleId();
+                    if (Qualifier == null)
                     {
                         return null;
                     }
 
-                    if (result != null)
+                    if (Result != null)
                     {
-                        result = new QualifiedName(result, qualifier);
+                        Result = new QualifiedName(Result, Qualifier);
                     }
-                    else if (isGlobal)
+                    else if (IsGlobal)
                     {
-                        result = new GlobalQualifiedName(qualifier);
+                        Result = new GlobalQualifiedName(Qualifier);
                     }
                     else
                     {
-                        result = qualifier;
+                        Result = Qualifier;
                     }
 
-                    if (result == null)
+                    if (Result == null)
                     {
                         return null;
                     }
@@ -2912,62 +2912,62 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             // ::= sr <unresolved-type> [tempate-args] <base-unresolved-name>     # T::x / decltype(p)::x
             else
             {
-                result = ParseUnresolvedType();
-                if (result == null)
+                Result = ParseUnresolvedType();
+                if (Result == null)
                 {
                     return null;
                 }
 
                 if (Peek() == 'I')
                 {
-                    BaseNode templateArguments = ParseTemplateArguments();
-                    if (templateArguments == null)
+                    BaseNode TemplateArguments = ParseTemplateArguments();
+                    if (TemplateArguments == null)
                     {
                         return null;
                     }
 
-                    result = new NameTypeWithTemplateArguments(result, templateArguments);
-                    if (result == null)
+                    Result = new NameTypeWithTemplateArguments(Result, TemplateArguments);
+                    if (Result == null)
                     {
                         return null;
                     }
                 }
             }
 
-            if (result == null)
+            if (Result == null)
             {
                 return null;
             }
 
-            BaseNode baseUnresolvedName = ParseBaseUnresolvedName();
-            if (baseUnresolvedName == null)
+            BaseNode BaseUnresolvedName = ParseBaseUnresolvedName();
+            if (BaseUnresolvedName == null)
             {
                 return null;
             }
 
-            return new QualifiedName(result, baseUnresolvedName);
+            return new QualifiedName(Result, BaseUnresolvedName);
         }
 
         //    <unscoped-name> ::= <unqualified-name>
         //                    ::= St <unqualified-name>   # ::std::
-        private BaseNode ParseUnscopedName(NameParserContext context)
+        private BaseNode ParseUnscopedName(NameParserContext Context)
         {
             if (ConsumeIf("St"))
             {
-                BaseNode unresolvedName = ParseUnresolvedName(context);
-                if (unresolvedName == null)
+                BaseNode UnresolvedName = ParseUnresolvedName(Context);
+                if (UnresolvedName == null)
                 {
                     return null;
                 }
 
-                return new StdQualifiedName(unresolvedName);
+                return new StdQualifiedName(UnresolvedName);
             }
-            return ParseUnresolvedName(context);
+            return ParseUnresolvedName(Context);
         }
 
         // <nested-name> ::= N [<CV-qualifiers>] [<ref-qualifier>] <prefix (TODO)> <unqualified-name> E
         //               ::= N [<CV-qualifiers>] [<ref-qualifier>] <template-prefix (TODO)> <template-args (TODO)> E
-        private BaseNode ParseNestedName(NameParserContext context)
+        private BaseNode ParseNestedName(NameParserContext Context)
         {
             // Impossible in theory
             if (Consume() != 'N')
@@ -2975,22 +2975,22 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 return null;
             }
 
-            BaseNode result = null;
-            CvType cv = new CvType(ParseCvQualifiers(), null);
-            if (context != null)
+            BaseNode Result = null;
+            CVType CV = new CVType(ParseCVQualifiers(), null);
+            if (Context != null)
             {
-                context.Cv = cv;
+                Context.CV = CV;
             }
 
             SimpleReferenceType Ref = ParseRefQualifiers();
-            if (context != null)
+            if (Context != null)
             {
-                context.Ref = Ref;
+                Context.Ref = Ref;
             }
 
             if (ConsumeIf("St"))
             {
-                result = new NameType("std");
+                Result = new NameType("std");
             }
 
             while (!ConsumeIf("E"))
@@ -2998,124 +2998,124 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                 // <data-member-prefix> end
                 if (ConsumeIf("M"))
                 {
-                    if (result == null)
+                    if (Result == null)
                     {
                         return null;
                     }
 
                     continue;
                 }
-                char c = Peek();
+                char C = Peek();
 
                 // TODO: template args
-                if (c == 'T')
+                if (C == 'T')
                 {
-                    BaseNode templateParam = ParseTemplateParam();
-                    if (templateParam == null)
+                    BaseNode TemplateParam = ParseTemplateParam();
+                    if (TemplateParam == null)
                     {
                         return null;
                     }
 
-                    result = CreateNameNode(result, templateParam, context);
-                    _substitutionList.Add(result);
+                    Result = CreateNameNode(Result, TemplateParam, Context);
+                    SubstitutionList.Add(Result);
                     continue;
                 }
 
                 // <template-prefix> <template-args>
-                if (c == 'I')
+                if (C == 'I')
                 {
-                    BaseNode templateArgument = ParseTemplateArguments(context != null);
-                    if (templateArgument == null || result == null)
+                    BaseNode TemplateArgument = ParseTemplateArguments(Context != null);
+                    if (TemplateArgument == null || Result == null)
                     {
                         return null;
                     }
 
-                    result = new NameTypeWithTemplateArguments(result, templateArgument);
-                    if (context != null)
+                    Result = new NameTypeWithTemplateArguments(Result, TemplateArgument);
+                    if (Context != null)
                     {
-                        context.FinishWithTemplateArguments = true;
+                        Context.FinishWithTemplateArguments = true;
                     }
 
-                    _substitutionList.Add(result);
+                    SubstitutionList.Add(Result);
                     continue;
                 }
 
                 // <decltype>
-                if (c == 'D' && (Peek(1) == 't' || Peek(1) == 'T'))
+                if (C == 'D' && (Peek(1) == 't' || Peek(1) == 'T'))
                 {
-                    BaseNode decltype = ParseDecltype();
-                    if (decltype == null)
+                    BaseNode Decltype = ParseDecltype();
+                    if (Decltype == null)
                     {
                         return null;
                     }
 
-                    result = CreateNameNode(result, decltype, context);
-                    _substitutionList.Add(result);
+                    Result = CreateNameNode(Result, Decltype, Context);
+                    SubstitutionList.Add(Result);
                     continue;
                 }
 
                 // <substitution>
-                if (c == 'S' && Peek(1) != 't')
+                if (C == 'S' && Peek(1) != 't')
                 {
-                    BaseNode substitution = ParseSubstitution();
-                    if (substitution == null)
+                    BaseNode Substitution = ParseSubstitution();
+                    if (Substitution == null)
                     {
                         return null;
                     }
 
-                    result = CreateNameNode(result, substitution, context);
-                    if (result != substitution)
+                    Result = CreateNameNode(Result, Substitution, Context);
+                    if (Result != Substitution)
                     {
-                        _substitutionList.Add(substitution);
+                        SubstitutionList.Add(Substitution);
                     }
 
                     continue;
                 }
 
                 // <ctor-dtor-name> of ParseUnqualifiedName
-                if (c == 'C' || (c == 'D' && Peek(1) != 'C'))
+                if (C == 'C' || (C == 'D' && Peek(1) != 'C'))
                 {
                     // We cannot have nothing before this
-                    if (result == null)
+                    if (Result == null)
                     {
                         return null;
                     }
 
-                    BaseNode ctOrDtorName = ParseCtorDtorName(context, result);
+                    BaseNode CtOrDtorName = ParseCtorDtorName(Context, Result);
 
-                    if (ctOrDtorName == null)
+                    if (CtOrDtorName == null)
                     {
                         return null;
                     }
 
-                    result = CreateNameNode(result, ctOrDtorName, context);
+                    Result = CreateNameNode(Result, CtOrDtorName, Context);
 
                     // TODO: ABI Tags (before)
-                    if (result == null)
+                    if (Result == null)
                     {
                         return null;
                     }
 
-                    _substitutionList.Add(result);
+                    SubstitutionList.Add(Result);
                     continue;
                 }
 
-                BaseNode unqualifiedName = ParseUnqualifiedName(context);
-                if (unqualifiedName == null)
+                BaseNode UnqualifiedName = ParseUnqualifiedName(Context);
+                if (UnqualifiedName == null)
                 {
                     return null;
                 }
-                result = CreateNameNode(result, unqualifiedName, context);
+                Result = CreateNameNode(Result, UnqualifiedName, Context);
 
-                _substitutionList.Add(result);
+                SubstitutionList.Add(Result);
             }
-            if (result == null || _substitutionList.Count == 0)
+            if (Result == null || SubstitutionList.Count == 0)
             {
                 return null;
             }
 
-            _substitutionList.RemoveAt(_substitutionList.Count - 1);
-            return result;
+            SubstitutionList.RemoveAt(SubstitutionList.Count - 1);
+            return Result;
         }
 
         //   <discriminator> ::= _ <non-negative number>      # when number < 10
@@ -3141,24 +3141,24 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //   <local-name> ::= Z <function encoding> E <entity name> [<discriminator>]
         //                ::= Z <function encoding> E s [<discriminator>]
         //                ::= Z <function encoding> Ed [ <parameter number> ] _ <entity name>
-        private BaseNode ParseLocalName(NameParserContext context)
+        private BaseNode ParseLocalName(NameParserContext Context)
         {
             if (!ConsumeIf("Z"))
             {
                 return null;
             }
 
-            BaseNode encoding = ParseEncoding();
-            if (encoding == null || !ConsumeIf("E"))
+            BaseNode Encoding = ParseEncoding();
+            if (Encoding == null || !ConsumeIf("E"))
             {
                 return null;
             }
 
-            BaseNode entityName;
+            BaseNode EntityName;
             if (ConsumeIf("s"))
             {
                 ParseDiscriminator();
-                return new LocalName(encoding, new NameType("string literal"));
+                return new LocalName(Encoding, new NameType("string literal"));
             }
             else if (ConsumeIf("d"))
             {
@@ -3168,47 +3168,47 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     return null;
                 }
 
-                entityName = ParseName(context);
-                if (entityName == null)
+                EntityName = ParseName(Context);
+                if (EntityName == null)
                 {
                     return null;
                 }
 
-                return new LocalName(encoding, entityName);
+                return new LocalName(Encoding, EntityName);
             }
 
-            entityName = ParseName(context);
-            if (entityName == null)
+            EntityName = ParseName(Context);
+            if (EntityName == null)
             {
                 return null;
             }
 
             ParseDiscriminator();
-            return new LocalName(encoding, entityName);
+            return new LocalName(Encoding, EntityName);
         }
 
         // <name> ::= <nested-name>
         //        ::= <unscoped-name>
         //        ::= <unscoped-template-name> <template-args>
         //        ::= <local-name>  # See Scope Encoding below (TODO)
-        private BaseNode ParseName(NameParserContext context = null)
+        private BaseNode ParseName(NameParserContext Context = null)
         {
             ConsumeIf("L");
 
             if (Peek() == 'N')
             {
-                return ParseNestedName(context);
+                return ParseNestedName(Context);
             }
 
             if (Peek() == 'Z')
             {
-                return ParseLocalName(context);
+                return ParseLocalName(Context);
             }
 
             if (Peek() == 'S' && Peek(1) != 't')
             {
-                BaseNode substitution = ParseSubstitution();
-                if (substitution == null)
+                BaseNode Substitution = ParseSubstitution();
+                if (Substitution == null)
                 {
                     return null;
                 }
@@ -3218,50 +3218,50 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     return null;
                 }
 
-                BaseNode templateArguments = ParseTemplateArguments(context != null);
-                if (templateArguments == null)
+                BaseNode TemplateArguments = ParseTemplateArguments(Context != null);
+                if (TemplateArguments == null)
                 {
                     return null;
                 }
 
-                if (context != null)
+                if (Context != null)
                 {
-                    context.FinishWithTemplateArguments = true;
+                    Context.FinishWithTemplateArguments = true;
                 }
 
-                return new NameTypeWithTemplateArguments(substitution, templateArguments);
+                return new NameTypeWithTemplateArguments(Substitution, TemplateArguments);
             }
 
-            BaseNode result = ParseUnscopedName(context);
-            if (result == null)
+            BaseNode Result = ParseUnscopedName(Context);
+            if (Result == null)
             {
                 return null;
             }
 
             if (Peek() == 'I')
             {
-                _substitutionList.Add(result);
-                BaseNode templateArguments = ParseTemplateArguments(context != null);
-                if (templateArguments == null)
+                SubstitutionList.Add(Result);
+                BaseNode TemplateArguments = ParseTemplateArguments(Context != null);
+                if (TemplateArguments == null)
                 {
                     return null;
                 }
 
-                if (context != null)
+                if (Context != null)
                 {
-                    context.FinishWithTemplateArguments = true;
+                    Context.FinishWithTemplateArguments = true;
                 }
 
-                return new NameTypeWithTemplateArguments(result, templateArguments);
+                return new NameTypeWithTemplateArguments(Result, TemplateArguments);
             }
 
-            return result;
+            return Result;
         }
 
         private bool IsEncodingEnd()
         {
-            char c = Peek();
-            return Count() == 0 || c == 'E' || c == '.' || c == '_';
+            char C = Peek();
+            return Count() == 0 || C == 'E' || C == '.' || C == '_';
         }
 
         // <encoding> ::= <function name> <bare-function-type>
@@ -3269,14 +3269,14 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         //            ::= <special-name>
         private BaseNode ParseEncoding()
         {
-            NameParserContext context = new NameParserContext();
+            NameParserContext Context = new NameParserContext();
             if (Peek() == 'T' || (Peek() == 'G' && Peek(1) == 'V'))
             {
-                return ParseSpecialName(context);
+                return ParseSpecialName(Context);
             }
 
-            BaseNode name = ParseName(context);
-            if (name == null)
+            BaseNode Name = ParseName(Context);
+            if (Name == null)
             {
                 return null;
             }
@@ -3285,16 +3285,16 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
             if (IsEncodingEnd())
             {
-                return name;
+                return Name;
             }
 
             // TODO: Ua9enable_ifI
 
-            BaseNode returnType = null;
-            if (!context.CtorDtorConversion && context.FinishWithTemplateArguments)
+            BaseNode ReturnType = null;
+            if (!Context.CtorDtorConversion && Context.FinishWithTemplateArguments)
             {
-                returnType = ParseType();
-                if (returnType == null)
+                ReturnType = ParseType();
+                if (ReturnType == null)
                 {
                     return null;
                 }
@@ -3302,27 +3302,27 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
 
             if (ConsumeIf("v"))
             {
-                return new EncodedFunction(name, null, context.Cv, context.Ref, null, returnType);
+                return new EncodedFunction(Name, null, Context.CV, Context.Ref, null, ReturnType);
             }
 
             List<BaseNode> Params = new List<BaseNode>();
 
             // backup because that can be destroyed by parseType
-            CvType cv = context.Cv;
-            SimpleReferenceType Ref = context.Ref;
+            CVType CV = Context.CV;
+            SimpleReferenceType Ref = Context.Ref;
 
             while (!IsEncodingEnd())
             {
-                BaseNode param = ParseType();
-                if (param == null)
+                BaseNode Param = ParseType();
+                if (Param == null)
                 {
                     return null;
                 }
 
-                Params.Add(param);
+                Params.Add(Param);
             }
 
-            return new EncodedFunction(name, new NodeArray(Params), cv, Ref, null, returnType);
+            return new EncodedFunction(Name, new NodeArray(Params), CV, Ref, null, ReturnType);
         }
 
         // <mangled-name> ::= _Z <encoding>
@@ -3331,37 +3331,37 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
         {
             if (ConsumeIf("_Z"))
             {
-                BaseNode encoding = ParseEncoding();
-                if (encoding != null && Count() == 0)
+                BaseNode Encoding = ParseEncoding();
+                if (Encoding != null && Count() == 0)
                 {
-                    return encoding;
+                    return Encoding;
                 }
                 return null;
             }
             else
             {
-                BaseNode type = ParseType();
-                if (type != null && Count() == 0)
+                BaseNode Type = ParseType();
+                if (Type != null && Count() == 0)
                 {
-                    return type;
+                    return Type;
                 }
                 return null;
             }
         }
 
-        public static string Parse(string originalMangled)
+        public static string Parse(string OriginalMangled)
         {
-            Demangler instance = new Demangler(originalMangled);
-            BaseNode resNode   = instance.Parse();
+            Demangler Instance = new Demangler(OriginalMangled);
+            BaseNode ResNode   = Instance.Parse();
 
-            if (resNode != null)
+            if (ResNode != null)
             {
-                StringWriter writer = new StringWriter();
-                resNode.Print(writer);
-                return writer.ToString();
+                StringWriter Writer = new StringWriter();
+                ResNode.Print(Writer);
+                return Writer.ToString();
             }
 
-            return originalMangled;
+            return OriginalMangled;
         }
     }
 }

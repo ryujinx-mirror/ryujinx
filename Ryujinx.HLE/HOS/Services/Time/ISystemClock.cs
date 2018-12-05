@@ -6,25 +6,25 @@ namespace Ryujinx.HLE.HOS.Services.Time
 {
     class ISystemClock : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        private SystemClockType _clockType;
+        private SystemClockType ClockType;
 
-        private DateTime _systemClockContextEpoch;
+        private DateTime SystemClockContextEpoch;
 
-        private long _systemClockTimePoint;
+        private long SystemClockTimePoint;
 
-        private byte[] _systemClockContextEnding;
+        private byte[] SystemClockContextEnding;
 
-        private long _timeOffset;
+        private long TimeOffset;
 
-        public ISystemClock(SystemClockType clockType)
+        public ISystemClock(SystemClockType ClockType)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, GetCurrentTime        },
                 { 1, SetCurrentTime        },
@@ -32,74 +32,74 @@ namespace Ryujinx.HLE.HOS.Services.Time
                 { 3, SetSystemClockContext }
             };
 
-            _clockType           = clockType;
-            _systemClockContextEpoch  = System.Diagnostics.Process.GetCurrentProcess().StartTime;
-            _systemClockContextEnding = new byte[0x10];
-            _timeOffset               = 0;
+            this.ClockType           = ClockType;
+            SystemClockContextEpoch  = System.Diagnostics.Process.GetCurrentProcess().StartTime;
+            SystemClockContextEnding = new byte[0x10];
+            TimeOffset               = 0;
 
-            if (clockType == SystemClockType.User ||
-                clockType == SystemClockType.Network)
+            if (ClockType == SystemClockType.User ||
+                ClockType == SystemClockType.Network)
             {
-                _systemClockContextEpoch = _systemClockContextEpoch.ToUniversalTime();
+                SystemClockContextEpoch = SystemClockContextEpoch.ToUniversalTime();
             }
 
-            _systemClockTimePoint = (long)(_systemClockContextEpoch - Epoch).TotalSeconds;
+            SystemClockTimePoint = (long)(SystemClockContextEpoch - Epoch).TotalSeconds;
         }
 
-        public long GetCurrentTime(ServiceCtx context)
+        public long GetCurrentTime(ServiceCtx Context)
         {
-            DateTime currentTime = DateTime.Now;
+            DateTime CurrentTime = DateTime.Now;
 
-            if (_clockType == SystemClockType.User ||
-                _clockType == SystemClockType.Network)
+            if (ClockType == SystemClockType.User ||
+                ClockType == SystemClockType.Network)
             {
-                currentTime = currentTime.ToUniversalTime();
+                CurrentTime = CurrentTime.ToUniversalTime();
             }
 
-            context.ResponseData.Write((long)((currentTime - Epoch).TotalSeconds) + _timeOffset);
+            Context.ResponseData.Write((long)((CurrentTime - Epoch).TotalSeconds) + TimeOffset);
 
             return 0;
         }
 
-        public long SetCurrentTime(ServiceCtx context)
+        public long SetCurrentTime(ServiceCtx Context)
         {
-            DateTime currentTime = DateTime.Now;
+            DateTime CurrentTime = DateTime.Now;
 
-            if (_clockType == SystemClockType.User ||
-                _clockType == SystemClockType.Network)
+            if (ClockType == SystemClockType.User ||
+                ClockType == SystemClockType.Network)
             {
-                currentTime = currentTime.ToUniversalTime();
+                CurrentTime = CurrentTime.ToUniversalTime();
             }
 
-            _timeOffset = (context.RequestData.ReadInt64() - (long)(currentTime - Epoch).TotalSeconds);
+            TimeOffset = (Context.RequestData.ReadInt64() - (long)(CurrentTime - Epoch).TotalSeconds);
 
             return 0;
         }
 
-        public long GetSystemClockContext(ServiceCtx context)
+        public long GetSystemClockContext(ServiceCtx Context)
         {
-            context.ResponseData.Write((long)(_systemClockContextEpoch - Epoch).TotalSeconds);
+            Context.ResponseData.Write((long)(SystemClockContextEpoch - Epoch).TotalSeconds);
 
             // The point in time, TODO: is there a link between epoch and this?
-            context.ResponseData.Write(_systemClockTimePoint);
+            Context.ResponseData.Write(SystemClockTimePoint);
 
             // This seems to be some kind of identifier?
             for (int i = 0; i < 0x10; i++)
             {
-                context.ResponseData.Write(_systemClockContextEnding[i]);
+                Context.ResponseData.Write(SystemClockContextEnding[i]);
             }
 
             return 0;
         }
 
-        public long SetSystemClockContext(ServiceCtx context)
+        public long SetSystemClockContext(ServiceCtx Context)
         {
-            long newSystemClockEpoch     = context.RequestData.ReadInt64();
-            long newSystemClockTimePoint = context.RequestData.ReadInt64();
+            long NewSystemClockEpoch     = Context.RequestData.ReadInt64();
+            long NewSystemClockTimePoint = Context.RequestData.ReadInt64();
 
-            _systemClockContextEpoch     = Epoch.Add(TimeSpan.FromSeconds(newSystemClockEpoch));
-            _systemClockTimePoint        = newSystemClockTimePoint;
-            _systemClockContextEnding    = context.RequestData.ReadBytes(0x10);
+            SystemClockContextEpoch      = Epoch.Add(TimeSpan.FromSeconds(NewSystemClockEpoch));
+            SystemClockTimePoint         = NewSystemClockTimePoint;
+            SystemClockContextEnding     = Context.RequestData.ReadBytes(0x10);
 
             return 0;
         }

@@ -1,19 +1,20 @@
 ﻿using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Ns
 {
     class IApplicationManagerInterface : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private bool _isInitialized;
+        private bool IsInitialized;
 
         public IApplicationManagerInterface()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 
             };

@@ -7,77 +7,77 @@ namespace Ryujinx.HLE.HOS.Kernel
     {
         private const int IdMasksCount = 8;
 
-        private int[] _idMasks;
+        private int[] IdMasks;
 
-        private int _nextFreeBitHint;
+        private int NextFreeBitHint;
 
         public KContextIdManager()
         {
-            _idMasks = new int[IdMasksCount];
+            IdMasks = new int[IdMasksCount];
         }
 
         public int GetId()
         {
-            lock (_idMasks)
+            lock (IdMasks)
             {
-                int id = 0;
+                int Id = 0;
 
-                if (!TestBit(_nextFreeBitHint))
+                if (!TestBit(NextFreeBitHint))
                 {
-                    id = _nextFreeBitHint;
+                    Id = NextFreeBitHint;
                 }
                 else
                 {
-                    for (int index = 0; index < IdMasksCount; index++)
+                    for (int Index = 0; Index < IdMasksCount; Index++)
                     {
-                        int mask = _idMasks[index];
+                        int Mask = IdMasks[Index];
 
-                        int firstFreeBit = BitUtils.CountLeadingZeros32((mask + 1) & ~mask);
+                        int FirstFreeBit = BitUtils.CountLeadingZeros32((Mask + 1) & ~Mask);
 
-                        if (firstFreeBit < 32)
+                        if (FirstFreeBit < 32)
                         {
-                            int baseBit = index * 32 + 31;
+                            int BaseBit = Index * 32 + 31;
 
-                            id = baseBit - firstFreeBit;
+                            Id = BaseBit - FirstFreeBit;
 
                             break;
                         }
-                        else if (index == IdMasksCount - 1)
+                        else if (Index == IdMasksCount - 1)
                         {
                             throw new InvalidOperationException("Maximum number of Ids reached!");
                         }
                     }
                 }
 
-                _nextFreeBitHint = id + 1;
+                NextFreeBitHint = Id + 1;
 
-                SetBit(id);
+                SetBit(Id);
 
-                return id;
+                return Id;
             }
         }
 
-        public void PutId(int id)
+        public void PutId(int Id)
         {
-            lock (_idMasks)
+            lock (IdMasks)
             {
-                ClearBit(id);
+                ClearBit(Id);
             }
         }
 
-        private bool TestBit(int bit)
+        private bool TestBit(int Bit)
         {
-            return (_idMasks[_nextFreeBitHint / 32] & (1 << (_nextFreeBitHint & 31))) != 0;
+            return (IdMasks[NextFreeBitHint / 32] & (1 << (NextFreeBitHint & 31))) != 0;
         }
 
-        private void SetBit(int bit)
+        private void SetBit(int Bit)
         {
-            _idMasks[_nextFreeBitHint / 32] |= (1 << (_nextFreeBitHint & 31));
+            IdMasks[NextFreeBitHint / 32] |= (1 << (NextFreeBitHint & 31));
         }
 
-        private void ClearBit(int bit)
+        private void ClearBit(int Bit)
         {
-            _idMasks[_nextFreeBitHint / 32] &= ~(1 << (_nextFreeBitHint & 31));
+            IdMasks[NextFreeBitHint / 32] &= ~(1 << (NextFreeBitHint & 31));
         }
     }
 }

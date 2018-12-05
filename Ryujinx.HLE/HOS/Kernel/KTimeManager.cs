@@ -10,116 +10,116 @@ namespace Ryujinx.HLE.HOS.Kernel
     {
         private class WaitingObject
         {
-            public IKFutureSchedulerObject Object { get; }
+            public IKFutureSchedulerObject Object { get; private set; }
 
-            public long TimePoint { get; }
+            public long TimePoint { get; private set; }
 
-            public WaitingObject(IKFutureSchedulerObject schedulerObj, long timePoint)
+            public WaitingObject(IKFutureSchedulerObject Object, long TimePoint)
             {
-                Object    = schedulerObj;
-                TimePoint = timePoint;
+                this.Object    = Object;
+                this.TimePoint = TimePoint;
             }
         }
 
-        private List<WaitingObject> _waitingObjects;
+        private List<WaitingObject> WaitingObjects;
 
-        private AutoResetEvent _waitEvent;
+        private AutoResetEvent WaitEvent;
 
-        private bool _keepRunning;
+        private bool KeepRunning;
 
         public KTimeManager()
         {
-            _waitingObjects = new List<WaitingObject>();
+            WaitingObjects = new List<WaitingObject>();
 
-            _keepRunning = true;
+            KeepRunning = true;
 
-            Thread work = new Thread(WaitAndCheckScheduledObjects);
+            Thread Work = new Thread(WaitAndCheckScheduledObjects);
 
-            work.Start();
+            Work.Start();
         }
 
-        public void ScheduleFutureInvocation(IKFutureSchedulerObject schedulerObj, long timeout)
+        public void ScheduleFutureInvocation(IKFutureSchedulerObject Object, long Timeout)
         {
-            long timePoint = PerformanceCounter.ElapsedMilliseconds + ConvertNanosecondsToMilliseconds(timeout);
+            long TimePoint = PerformanceCounter.ElapsedMilliseconds + ConvertNanosecondsToMilliseconds(Timeout);
 
-            lock (_waitingObjects)
+            lock (WaitingObjects)
             {
-                _waitingObjects.Add(new WaitingObject(schedulerObj, timePoint));
+                WaitingObjects.Add(new WaitingObject(Object, TimePoint));
             }
 
-            _waitEvent.Set();
+            WaitEvent.Set();
         }
 
-        public static long ConvertNanosecondsToMilliseconds(long time)
+        public static long ConvertNanosecondsToMilliseconds(long Time)
         {
-            time /= 1000000;
+            Time /= 1000000;
 
-            if ((ulong)time > int.MaxValue)
+            if ((ulong)Time > int.MaxValue)
             {
                 return int.MaxValue;
             }
 
-            return time;
+            return Time;
         }
 
-        public static long ConvertMillisecondsToNanoseconds(long time)
+        public static long ConvertMillisecondsToNanoseconds(long Time)
         {
-            return time * 1000000;
+            return Time * 1000000;
         }
 
-        public static long ConvertMillisecondsToTicks(long time)
+        public static long ConvertMillisecondsToTicks(long Time)
         {
-            return time * 19200;
+            return Time * 19200;
         }
 
         public void UnscheduleFutureInvocation(IKFutureSchedulerObject Object)
         {
-            lock (_waitingObjects)
+            lock (WaitingObjects)
             {
-                _waitingObjects.RemoveAll(x => x.Object == Object);
+                WaitingObjects.RemoveAll(x => x.Object == Object);
             }
         }
 
         private void WaitAndCheckScheduledObjects()
         {
-            using (_waitEvent = new AutoResetEvent(false))
+            using (WaitEvent = new AutoResetEvent(false))
             {
-                while (_keepRunning)
+                while (KeepRunning)
                 {
-                    WaitingObject next;
+                    WaitingObject Next;
 
-                    lock (_waitingObjects)
+                    lock (WaitingObjects)
                     {
-                        next = _waitingObjects.OrderBy(x => x.TimePoint).FirstOrDefault();
+                        Next = WaitingObjects.OrderBy(x => x.TimePoint).FirstOrDefault();
                     }
 
-                    if (next != null)
+                    if (Next != null)
                     {
-                        long timePoint = PerformanceCounter.ElapsedMilliseconds;
+                        long TimePoint = PerformanceCounter.ElapsedMilliseconds;
 
-                        if (next.TimePoint > timePoint)
+                        if (Next.TimePoint > TimePoint)
                         {
-                            _waitEvent.WaitOne((int)(next.TimePoint - timePoint));
+                            WaitEvent.WaitOne((int)(Next.TimePoint - TimePoint));
                         }
 
-                        bool timeUp = PerformanceCounter.ElapsedMilliseconds >= next.TimePoint;
+                        bool TimeUp = PerformanceCounter.ElapsedMilliseconds >= Next.TimePoint;
 
-                        if (timeUp)
+                        if (TimeUp)
                         {
-                            lock (_waitingObjects)
+                            lock (WaitingObjects)
                             {
-                                timeUp = _waitingObjects.Remove(next);
+                                TimeUp = WaitingObjects.Remove(Next);
                             }
                         }
 
-                        if (timeUp)
+                        if (TimeUp)
                         {
-                            next.Object.TimeUp();
+                            Next.Object.TimeUp();
                         }
                     }
                     else
                     {
-                        _waitEvent.WaitOne();
+                        WaitEvent.WaitOne();
                     }
                 }
             }
@@ -130,13 +130,13 @@ namespace Ryujinx.HLE.HOS.Kernel
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected virtual void Dispose(bool Disposing)
         {
-            if (disposing)
+            if (Disposing)
             {
-                _keepRunning = false;
+                KeepRunning = false;
 
-                _waitEvent?.Set();
+                WaitEvent?.Set();
             }
         }
     }

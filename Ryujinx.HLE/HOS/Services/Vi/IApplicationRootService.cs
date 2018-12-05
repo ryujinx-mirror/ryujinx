@@ -5,23 +5,23 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 {
     class IApplicationRootService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IApplicationRootService()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, GetDisplayService }
             };
         }
 
-        public long GetDisplayService(ServiceCtx context)
+        public long GetDisplayService(ServiceCtx Context)
         {
-            int serviceType = context.RequestData.ReadInt32();
+            int ServiceType = Context.RequestData.ReadInt32();
 
-            MakeObject(context, new IApplicationDisplayService());
+            MakeObject(Context, new IApplicationDisplayService());
 
             return 0;
         }

@@ -7,458 +7,458 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     partial class SvcHandler
     {
-        private void CreateThread64(CpuThreadState threadState)
+        private void CreateThread64(CpuThreadState ThreadState)
         {
-            ulong entrypoint =      threadState.X1;
-            ulong argsPtr    =      threadState.X2;
-            ulong stackTop   =      threadState.X3;
-            int   priority   = (int)threadState.X4;
-            int   cpuCore    = (int)threadState.X5;
+            ulong Entrypoint =      ThreadState.X1;
+            ulong ArgsPtr    =      ThreadState.X2;
+            ulong StackTop   =      ThreadState.X3;
+            int   Priority   = (int)ThreadState.X4;
+            int   CpuCore    = (int)ThreadState.X5;
 
-            KernelResult result = CreateThread(entrypoint, argsPtr, stackTop, priority, cpuCore, out int handle);
+            KernelResult Result = CreateThread(Entrypoint, ArgsPtr, StackTop, Priority, CpuCore, out int Handle);
 
-            threadState.X0 = (ulong)result;
-            threadState.X1 = (ulong)handle;
+            ThreadState.X0 = (ulong)Result;
+            ThreadState.X1 = (ulong)Handle;
         }
 
         private KernelResult CreateThread(
-            ulong   entrypoint,
-            ulong   argsPtr,
-            ulong   stackTop,
-            int     priority,
-            int     cpuCore,
-            out int handle)
+            ulong   Entrypoint,
+            ulong   ArgsPtr,
+            ulong   StackTop,
+            int     Priority,
+            int     CpuCore,
+            out int Handle)
         {
-            handle = 0;
+            Handle = 0;
 
-            KProcess currentProcess = _system.Scheduler.GetCurrentProcess();
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
 
-            if (cpuCore == -2)
+            if (CpuCore == -2)
             {
-                cpuCore = currentProcess.DefaultCpuCore;
+                CpuCore = CurrentProcess.DefaultCpuCore;
             }
 
-            if ((uint)cpuCore >= KScheduler.CpuCoresCount || !currentProcess.IsCpuCoreAllowed(cpuCore))
+            if ((uint)CpuCore >= KScheduler.CpuCoresCount || !CurrentProcess.IsCpuCoreAllowed(CpuCore))
             {
                 return KernelResult.InvalidCpuCore;
             }
 
-            if ((uint)priority >= KScheduler.PrioritiesCount || !currentProcess.IsPriorityAllowed(priority))
+            if ((uint)Priority >= KScheduler.PrioritiesCount || !CurrentProcess.IsPriorityAllowed(Priority))
             {
                 return KernelResult.InvalidPriority;
             }
 
-            long timeout = KTimeManager.ConvertMillisecondsToNanoseconds(100);
+            long Timeout = KTimeManager.ConvertMillisecondsToNanoseconds(100);
 
-            if (currentProcess.ResourceLimit != null &&
-               !currentProcess.ResourceLimit.Reserve(LimitableResource.Thread, 1, timeout))
+            if (CurrentProcess.ResourceLimit != null &&
+               !CurrentProcess.ResourceLimit.Reserve(LimitableResource.Thread, 1, Timeout))
             {
                 return KernelResult.ResLimitExceeded;
             }
 
-            KThread thread = new KThread(_system);
+            KThread Thread = new KThread(System);
 
-            KernelResult result = currentProcess.InitializeThread(
-                thread,
-                entrypoint,
-                argsPtr,
-                stackTop,
-                priority,
-                cpuCore);
+            KernelResult Result = CurrentProcess.InitializeThread(
+                Thread,
+                Entrypoint,
+                ArgsPtr,
+                StackTop,
+                Priority,
+                CpuCore);
 
-            if (result != KernelResult.Success)
+            if (Result != KernelResult.Success)
             {
-                currentProcess.ResourceLimit?.Release(LimitableResource.Thread, 1);
+                CurrentProcess.ResourceLimit?.Release(LimitableResource.Thread, 1);
 
-                return result;
+                return Result;
             }
 
-            result = _process.HandleTable.GenerateHandle(thread, out handle);
+            Result = Process.HandleTable.GenerateHandle(Thread, out Handle);
 
-            if (result != KernelResult.Success)
+            if (Result != KernelResult.Success)
             {
-                thread.Terminate();
+                Thread.Terminate();
 
-                currentProcess.ResourceLimit?.Release(LimitableResource.Thread, 1);
+                CurrentProcess.ResourceLimit?.Release(LimitableResource.Thread, 1);
             }
 
-            return result;
+            return Result;
         }
 
-        private void SvcStartThread(CpuThreadState threadState)
+        private void SvcStartThread(CpuThreadState ThreadState)
         {
-            int handle = (int)threadState.X0;
+            int Handle = (int)ThreadState.X0;
 
-            KThread thread = _process.HandleTable.GetObject<KThread>(handle);
+            KThread Thread = Process.HandleTable.GetObject<KThread>(Handle);
 
-            if (thread != null)
+            if (Thread != null)
             {
-                KernelResult result = thread.Start();
+                KernelResult Result = Thread.Start();
 
-                if (result != KernelResult.Success)
+                if (Result != KernelResult.Success)
                 {
-                    Logger.PrintWarning(LogClass.KernelSvc, $"Operation failed with error \"{result}\".");
+                    Logger.PrintWarning(LogClass.KernelSvc, $"Operation failed with error \"{Result}\".");
                 }
 
-                threadState.X0 = (ulong)result;
+                ThreadState.X0 = (ulong)Result;
             }
             else
             {
-                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{handle:x8}!");
+                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
-                threadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
         }
 
-        private void SvcExitThread(CpuThreadState threadState)
+        private void SvcExitThread(CpuThreadState ThreadState)
         {
-            KThread currentThread = _system.Scheduler.GetCurrentThread();
+            KThread CurrentThread = System.Scheduler.GetCurrentThread();
 
-            _system.Scheduler.ExitThread(currentThread);
+            System.Scheduler.ExitThread(CurrentThread);
 
-            currentThread.Exit();
+            CurrentThread.Exit();
         }
 
-        private void SvcSleepThread(CpuThreadState threadState)
+        private void SvcSleepThread(CpuThreadState ThreadState)
         {
-            long timeout = (long)threadState.X0;
+            long Timeout = (long)ThreadState.X0;
 
-            Logger.PrintDebug(LogClass.KernelSvc, "Timeout = 0x" + timeout.ToString("x16"));
+            Logger.PrintDebug(LogClass.KernelSvc, "Timeout = 0x" + Timeout.ToString("x16"));
 
-            KThread currentThread = _system.Scheduler.GetCurrentThread();
+            KThread CurrentThread = System.Scheduler.GetCurrentThread();
 
-            if (timeout < 1)
+            if (Timeout < 1)
             {
-                switch (timeout)
+                switch (Timeout)
                 {
-                    case  0: currentThread.Yield();                        break;
-                    case -1: currentThread.YieldWithLoadBalancing();       break;
-                    case -2: currentThread.YieldAndWaitForLoadBalancing(); break;
+                    case  0: CurrentThread.Yield();                        break;
+                    case -1: CurrentThread.YieldWithLoadBalancing();       break;
+                    case -2: CurrentThread.YieldAndWaitForLoadBalancing(); break;
                 }
             }
             else
             {
-                currentThread.Sleep(timeout);
+                CurrentThread.Sleep(Timeout);
 
-                threadState.X0 = 0;
+                ThreadState.X0 = 0;
             }
         }
 
-        private void SvcGetThreadPriority(CpuThreadState threadState)
+        private void SvcGetThreadPriority(CpuThreadState ThreadState)
         {
-            int handle = (int)threadState.X1;
+            int Handle = (int)ThreadState.X1;
 
-            KThread thread = _process.HandleTable.GetKThread(handle);
+            KThread Thread = Process.HandleTable.GetKThread(Handle);
 
-            if (thread != null)
+            if (Thread != null)
             {
-                threadState.X0 = 0;
-                threadState.X1 = (ulong)thread.DynamicPriority;
+                ThreadState.X0 = 0;
+                ThreadState.X1 = (ulong)Thread.DynamicPriority;
             }
             else
             {
-                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{handle:x8}!");
+                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
-                threadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
         }
 
-        private void SvcSetThreadPriority(CpuThreadState threadState)
+        private void SvcSetThreadPriority(CpuThreadState ThreadState)
         {
-            int handle   = (int)threadState.X0;
-            int priority = (int)threadState.X1;
+            int Handle   = (int)ThreadState.X0;
+            int Priority = (int)ThreadState.X1;
 
             Logger.PrintDebug(LogClass.KernelSvc,
-                "Handle = 0x"   + handle  .ToString("x8") + ", " +
-                "Priority = 0x" + priority.ToString("x8"));
+                "Handle = 0x"   + Handle  .ToString("x8") + ", " +
+                "Priority = 0x" + Priority.ToString("x8"));
 
             //TODO: NPDM check.
 
-            KThread thread = _process.HandleTable.GetKThread(handle);
+            KThread Thread = Process.HandleTable.GetKThread(Handle);
 
-            if (thread == null)
+            if (Thread == null)
             {
-                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{handle:x8}!");
+                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
-                threadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
                 return;
             }
 
-            thread.SetPriority(priority);
+            Thread.SetPriority(Priority);
 
-            threadState.X0 = 0;
+            ThreadState.X0 = 0;
         }
 
-        private void SvcGetThreadCoreMask(CpuThreadState threadState)
+        private void SvcGetThreadCoreMask(CpuThreadState ThreadState)
         {
-            int handle = (int)threadState.X2;
+            int Handle = (int)ThreadState.X2;
 
-            Logger.PrintDebug(LogClass.KernelSvc, "Handle = 0x" + handle.ToString("x8"));
+            Logger.PrintDebug(LogClass.KernelSvc, "Handle = 0x" + Handle.ToString("x8"));
 
-            KThread thread = _process.HandleTable.GetKThread(handle);
+            KThread Thread = Process.HandleTable.GetKThread(Handle);
 
-            if (thread != null)
+            if (Thread != null)
             {
-                threadState.X0 = 0;
-                threadState.X1 = (ulong)thread.PreferredCore;
-                threadState.X2 = (ulong)thread.AffinityMask;
+                ThreadState.X0 = 0;
+                ThreadState.X1 = (ulong)Thread.PreferredCore;
+                ThreadState.X2 = (ulong)Thread.AffinityMask;
             }
             else
             {
-                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{handle:x8}!");
+                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
-                threadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
         }
 
-        private void SetThreadCoreMask64(CpuThreadState threadState)
+        private void SetThreadCoreMask64(CpuThreadState ThreadState)
         {
-            int  handle        =  (int)threadState.X0;
-            int  preferredCore =  (int)threadState.X1;
-            long affinityMask  = (long)threadState.X2;
+            int  Handle        =  (int)ThreadState.X0;
+            int  PreferredCore =  (int)ThreadState.X1;
+            long AffinityMask  = (long)ThreadState.X2;
 
             Logger.PrintDebug(LogClass.KernelSvc,
-                "Handle = 0x"        + handle       .ToString("x8") + ", " +
-                "PreferredCore = 0x" + preferredCore.ToString("x8") + ", " +
-                "AffinityMask = 0x"  + affinityMask .ToString("x16"));
+                "Handle = 0x"        + Handle       .ToString("x8") + ", " +
+                "PreferredCore = 0x" + PreferredCore.ToString("x8") + ", " +
+                "AffinityMask = 0x"  + AffinityMask .ToString("x16"));
 
-            KernelResult result = SetThreadCoreMask(handle, preferredCore, affinityMask);
+            KernelResult Result = SetThreadCoreMask(Handle, PreferredCore, AffinityMask);
 
-            if (result != KernelResult.Success)
+            if (Result != KernelResult.Success)
             {
-                Logger.PrintWarning(LogClass.KernelSvc, $"Operation failed with error \"{result}\".");
+                Logger.PrintWarning(LogClass.KernelSvc, $"Operation failed with error \"{Result}\".");
             }
 
-            threadState.X0 = (ulong)result;
+            ThreadState.X0 = (ulong)Result;
         }
 
-        private KernelResult SetThreadCoreMask(int handle, int preferredCore, long affinityMask)
+        private KernelResult SetThreadCoreMask(int Handle, int PreferredCore, long AffinityMask)
         {
-            KProcess currentProcess = _system.Scheduler.GetCurrentProcess();
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
 
-            if (preferredCore == -2)
+            if (PreferredCore == -2)
             {
-                preferredCore = currentProcess.DefaultCpuCore;
+                PreferredCore = CurrentProcess.DefaultCpuCore;
 
-                affinityMask = 1 << preferredCore;
+                AffinityMask = 1 << PreferredCore;
             }
             else
             {
-                if ((currentProcess.Capabilities.AllowedCpuCoresMask | affinityMask) !=
-                     currentProcess.Capabilities.AllowedCpuCoresMask)
+                if ((CurrentProcess.Capabilities.AllowedCpuCoresMask | AffinityMask) !=
+                     CurrentProcess.Capabilities.AllowedCpuCoresMask)
                 {
                     return KernelResult.InvalidCpuCore;
                 }
 
-                if (affinityMask == 0)
+                if (AffinityMask == 0)
                 {
                     return KernelResult.InvalidCombination;
                 }
 
-                if ((uint)preferredCore > 3)
+                if ((uint)PreferredCore > 3)
                 {
-                    if ((preferredCore | 2) != -1)
+                    if ((PreferredCore | 2) != -1)
                     {
                         return KernelResult.InvalidCpuCore;
                     }
                 }
-                else if ((affinityMask & (1 << preferredCore)) == 0)
+                else if ((AffinityMask & (1 << PreferredCore)) == 0)
                 {
                     return KernelResult.InvalidCombination;
                 }
             }
 
-            KThread thread = _process.HandleTable.GetKThread(handle);
+            KThread Thread = Process.HandleTable.GetKThread(Handle);
 
-            if (thread == null)
+            if (Thread == null)
             {
                 return KernelResult.InvalidHandle;
             }
 
-            return thread.SetCoreAndAffinityMask(preferredCore, affinityMask);
+            return Thread.SetCoreAndAffinityMask(PreferredCore, AffinityMask);
         }
 
-        private void SvcGetCurrentProcessorNumber(CpuThreadState threadState)
+        private void SvcGetCurrentProcessorNumber(CpuThreadState ThreadState)
         {
-            threadState.X0 = (ulong)_system.Scheduler.GetCurrentThread().CurrentCore;
+            ThreadState.X0 = (ulong)System.Scheduler.GetCurrentThread().CurrentCore;
         }
 
-        private void SvcGetThreadId(CpuThreadState threadState)
+        private void SvcGetThreadId(CpuThreadState ThreadState)
         {
-            int handle = (int)threadState.X1;
+            int Handle = (int)ThreadState.X1;
 
-            KThread thread = _process.HandleTable.GetKThread(handle);
+            KThread Thread = Process.HandleTable.GetKThread(Handle);
 
-            if (thread != null)
+            if (Thread != null)
             {
-                threadState.X0 = 0;
-                threadState.X1 = (ulong)thread.ThreadUid;
+                ThreadState.X0 = 0;
+                ThreadState.X1 = (ulong)Thread.ThreadUid;
             }
             else
             {
-                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{handle:x8}!");
+                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
-                threadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
             }
         }
 
-        private void SvcSetThreadActivity(CpuThreadState threadState)
+        private void SvcSetThreadActivity(CpuThreadState ThreadState)
         {
-            int  handle = (int)threadState.X0;
-            bool pause  = (int)threadState.X1 == 1;
+            int  Handle = (int)ThreadState.X0;
+            bool Pause  = (int)ThreadState.X1 == 1;
 
-            KThread thread = _process.HandleTable.GetObject<KThread>(handle);
+            KThread Thread = Process.HandleTable.GetObject<KThread>(Handle);
 
-            if (thread == null)
+            if (Thread == null)
             {
-                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{handle:x8}!");
+                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
-                threadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
                 return;
             }
 
-            if (thread.Owner != _system.Scheduler.GetCurrentProcess())
+            if (Thread.Owner != System.Scheduler.GetCurrentProcess())
             {
                 Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread, it belongs to another process.");
 
-                threadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
                 return;
             }
 
-            if (thread == _system.Scheduler.GetCurrentThread())
+            if (Thread == System.Scheduler.GetCurrentThread())
             {
                 Logger.PrintWarning(LogClass.KernelSvc, "Invalid thread, current thread is not accepted.");
 
-                threadState.X0 = (ulong)KernelResult.InvalidThread;
+                ThreadState.X0 = (ulong)KernelResult.InvalidThread;
 
                 return;
             }
 
-            long result = thread.SetActivity(pause);
+            long Result = Thread.SetActivity(Pause);
 
-            if (result != 0)
+            if (Result != 0)
             {
-                Logger.PrintWarning(LogClass.KernelSvc, $"Operation failed with error 0x{result:x}!");
+                Logger.PrintWarning(LogClass.KernelSvc, $"Operation failed with error 0x{Result:x}!");
             }
 
-            threadState.X0 = (ulong)result;
+            ThreadState.X0 = (ulong)Result;
         }
 
-        private void SvcGetThreadContext3(CpuThreadState threadState)
+        private void SvcGetThreadContext3(CpuThreadState ThreadState)
         {
-            long position = (long)threadState.X0;
-            int  handle   =  (int)threadState.X1;
+            long Position = (long)ThreadState.X0;
+            int  Handle   =  (int)ThreadState.X1;
 
-            KProcess currentProcess = _system.Scheduler.GetCurrentProcess();
-            KThread  currentThread  = _system.Scheduler.GetCurrentThread();
+            KProcess CurrentProcess = System.Scheduler.GetCurrentProcess();
+            KThread  CurrentThread  = System.Scheduler.GetCurrentThread();
 
-            KThread thread = _process.HandleTable.GetObject<KThread>(handle);
+            KThread Thread = Process.HandleTable.GetObject<KThread>(Handle);
 
-            if (thread == null)
+            if (Thread == null)
             {
-                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{handle:x8}!");
+                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread handle 0x{Handle:x8}!");
 
-                threadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
                 return;
             }
 
-            if (thread.Owner != currentProcess)
+            if (Thread.Owner != CurrentProcess)
             {
                 Logger.PrintWarning(LogClass.KernelSvc, $"Invalid thread, it belongs to another process.");
 
-                threadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidHandle);
 
                 return;
             }
 
-            if (currentThread == thread)
+            if (CurrentThread == Thread)
             {
                 Logger.PrintWarning(LogClass.KernelSvc, "Invalid thread, current thread is not accepted.");
 
-                threadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidThread);
+                ThreadState.X0 = MakeError(ErrorModule.Kernel, KernelErr.InvalidThread);
 
                 return;
             }
 
-            _memory.WriteUInt64(position + 0x0,  thread.Context.ThreadState.X0);
-            _memory.WriteUInt64(position + 0x8,  thread.Context.ThreadState.X1);
-            _memory.WriteUInt64(position + 0x10, thread.Context.ThreadState.X2);
-            _memory.WriteUInt64(position + 0x18, thread.Context.ThreadState.X3);
-            _memory.WriteUInt64(position + 0x20, thread.Context.ThreadState.X4);
-            _memory.WriteUInt64(position + 0x28, thread.Context.ThreadState.X5);
-            _memory.WriteUInt64(position + 0x30, thread.Context.ThreadState.X6);
-            _memory.WriteUInt64(position + 0x38, thread.Context.ThreadState.X7);
-            _memory.WriteUInt64(position + 0x40, thread.Context.ThreadState.X8);
-            _memory.WriteUInt64(position + 0x48, thread.Context.ThreadState.X9);
-            _memory.WriteUInt64(position + 0x50, thread.Context.ThreadState.X10);
-            _memory.WriteUInt64(position + 0x58, thread.Context.ThreadState.X11);
-            _memory.WriteUInt64(position + 0x60, thread.Context.ThreadState.X12);
-            _memory.WriteUInt64(position + 0x68, thread.Context.ThreadState.X13);
-            _memory.WriteUInt64(position + 0x70, thread.Context.ThreadState.X14);
-            _memory.WriteUInt64(position + 0x78, thread.Context.ThreadState.X15);
-            _memory.WriteUInt64(position + 0x80, thread.Context.ThreadState.X16);
-            _memory.WriteUInt64(position + 0x88, thread.Context.ThreadState.X17);
-            _memory.WriteUInt64(position + 0x90, thread.Context.ThreadState.X18);
-            _memory.WriteUInt64(position + 0x98, thread.Context.ThreadState.X19);
-            _memory.WriteUInt64(position + 0xa0, thread.Context.ThreadState.X20);
-            _memory.WriteUInt64(position + 0xa8, thread.Context.ThreadState.X21);
-            _memory.WriteUInt64(position + 0xb0, thread.Context.ThreadState.X22);
-            _memory.WriteUInt64(position + 0xb8, thread.Context.ThreadState.X23);
-            _memory.WriteUInt64(position + 0xc0, thread.Context.ThreadState.X24);
-            _memory.WriteUInt64(position + 0xc8, thread.Context.ThreadState.X25);
-            _memory.WriteUInt64(position + 0xd0, thread.Context.ThreadState.X26);
-            _memory.WriteUInt64(position + 0xd8, thread.Context.ThreadState.X27);
-            _memory.WriteUInt64(position + 0xe0, thread.Context.ThreadState.X28);
-            _memory.WriteUInt64(position + 0xe8, thread.Context.ThreadState.X29);
-            _memory.WriteUInt64(position + 0xf0, thread.Context.ThreadState.X30);
-            _memory.WriteUInt64(position + 0xf8, thread.Context.ThreadState.X31);
+            Memory.WriteUInt64(Position + 0x0,  Thread.Context.ThreadState.X0);
+            Memory.WriteUInt64(Position + 0x8,  Thread.Context.ThreadState.X1);
+            Memory.WriteUInt64(Position + 0x10, Thread.Context.ThreadState.X2);
+            Memory.WriteUInt64(Position + 0x18, Thread.Context.ThreadState.X3);
+            Memory.WriteUInt64(Position + 0x20, Thread.Context.ThreadState.X4);
+            Memory.WriteUInt64(Position + 0x28, Thread.Context.ThreadState.X5);
+            Memory.WriteUInt64(Position + 0x30, Thread.Context.ThreadState.X6);
+            Memory.WriteUInt64(Position + 0x38, Thread.Context.ThreadState.X7);
+            Memory.WriteUInt64(Position + 0x40, Thread.Context.ThreadState.X8);
+            Memory.WriteUInt64(Position + 0x48, Thread.Context.ThreadState.X9);
+            Memory.WriteUInt64(Position + 0x50, Thread.Context.ThreadState.X10);
+            Memory.WriteUInt64(Position + 0x58, Thread.Context.ThreadState.X11);
+            Memory.WriteUInt64(Position + 0x60, Thread.Context.ThreadState.X12);
+            Memory.WriteUInt64(Position + 0x68, Thread.Context.ThreadState.X13);
+            Memory.WriteUInt64(Position + 0x70, Thread.Context.ThreadState.X14);
+            Memory.WriteUInt64(Position + 0x78, Thread.Context.ThreadState.X15);
+            Memory.WriteUInt64(Position + 0x80, Thread.Context.ThreadState.X16);
+            Memory.WriteUInt64(Position + 0x88, Thread.Context.ThreadState.X17);
+            Memory.WriteUInt64(Position + 0x90, Thread.Context.ThreadState.X18);
+            Memory.WriteUInt64(Position + 0x98, Thread.Context.ThreadState.X19);
+            Memory.WriteUInt64(Position + 0xa0, Thread.Context.ThreadState.X20);
+            Memory.WriteUInt64(Position + 0xa8, Thread.Context.ThreadState.X21);
+            Memory.WriteUInt64(Position + 0xb0, Thread.Context.ThreadState.X22);
+            Memory.WriteUInt64(Position + 0xb8, Thread.Context.ThreadState.X23);
+            Memory.WriteUInt64(Position + 0xc0, Thread.Context.ThreadState.X24);
+            Memory.WriteUInt64(Position + 0xc8, Thread.Context.ThreadState.X25);
+            Memory.WriteUInt64(Position + 0xd0, Thread.Context.ThreadState.X26);
+            Memory.WriteUInt64(Position + 0xd8, Thread.Context.ThreadState.X27);
+            Memory.WriteUInt64(Position + 0xe0, Thread.Context.ThreadState.X28);
+            Memory.WriteUInt64(Position + 0xe8, Thread.Context.ThreadState.X29);
+            Memory.WriteUInt64(Position + 0xf0, Thread.Context.ThreadState.X30);
+            Memory.WriteUInt64(Position + 0xf8, Thread.Context.ThreadState.X31);
 
-            _memory.WriteInt64(position + 0x100, thread.LastPc);
+            Memory.WriteInt64(Position + 0x100, Thread.LastPc);
 
-            _memory.WriteUInt64(position + 0x108, (ulong)thread.Context.ThreadState.Psr);
+            Memory.WriteUInt64(Position + 0x108, (ulong)Thread.Context.ThreadState.Psr);
 
-            _memory.WriteVector128(position + 0x110, thread.Context.ThreadState.V0);
-            _memory.WriteVector128(position + 0x120, thread.Context.ThreadState.V1);
-            _memory.WriteVector128(position + 0x130, thread.Context.ThreadState.V2);
-            _memory.WriteVector128(position + 0x140, thread.Context.ThreadState.V3);
-            _memory.WriteVector128(position + 0x150, thread.Context.ThreadState.V4);
-            _memory.WriteVector128(position + 0x160, thread.Context.ThreadState.V5);
-            _memory.WriteVector128(position + 0x170, thread.Context.ThreadState.V6);
-            _memory.WriteVector128(position + 0x180, thread.Context.ThreadState.V7);
-            _memory.WriteVector128(position + 0x190, thread.Context.ThreadState.V8);
-            _memory.WriteVector128(position + 0x1a0, thread.Context.ThreadState.V9);
-            _memory.WriteVector128(position + 0x1b0, thread.Context.ThreadState.V10);
-            _memory.WriteVector128(position + 0x1c0, thread.Context.ThreadState.V11);
-            _memory.WriteVector128(position + 0x1d0, thread.Context.ThreadState.V12);
-            _memory.WriteVector128(position + 0x1e0, thread.Context.ThreadState.V13);
-            _memory.WriteVector128(position + 0x1f0, thread.Context.ThreadState.V14);
-            _memory.WriteVector128(position + 0x200, thread.Context.ThreadState.V15);
-            _memory.WriteVector128(position + 0x210, thread.Context.ThreadState.V16);
-            _memory.WriteVector128(position + 0x220, thread.Context.ThreadState.V17);
-            _memory.WriteVector128(position + 0x230, thread.Context.ThreadState.V18);
-            _memory.WriteVector128(position + 0x240, thread.Context.ThreadState.V19);
-            _memory.WriteVector128(position + 0x250, thread.Context.ThreadState.V20);
-            _memory.WriteVector128(position + 0x260, thread.Context.ThreadState.V21);
-            _memory.WriteVector128(position + 0x270, thread.Context.ThreadState.V22);
-            _memory.WriteVector128(position + 0x280, thread.Context.ThreadState.V23);
-            _memory.WriteVector128(position + 0x290, thread.Context.ThreadState.V24);
-            _memory.WriteVector128(position + 0x2a0, thread.Context.ThreadState.V25);
-            _memory.WriteVector128(position + 0x2b0, thread.Context.ThreadState.V26);
-            _memory.WriteVector128(position + 0x2c0, thread.Context.ThreadState.V27);
-            _memory.WriteVector128(position + 0x2d0, thread.Context.ThreadState.V28);
-            _memory.WriteVector128(position + 0x2e0, thread.Context.ThreadState.V29);
-            _memory.WriteVector128(position + 0x2f0, thread.Context.ThreadState.V30);
-            _memory.WriteVector128(position + 0x300, thread.Context.ThreadState.V31);
+            Memory.WriteVector128(Position + 0x110, Thread.Context.ThreadState.V0);
+            Memory.WriteVector128(Position + 0x120, Thread.Context.ThreadState.V1);
+            Memory.WriteVector128(Position + 0x130, Thread.Context.ThreadState.V2);
+            Memory.WriteVector128(Position + 0x140, Thread.Context.ThreadState.V3);
+            Memory.WriteVector128(Position + 0x150, Thread.Context.ThreadState.V4);
+            Memory.WriteVector128(Position + 0x160, Thread.Context.ThreadState.V5);
+            Memory.WriteVector128(Position + 0x170, Thread.Context.ThreadState.V6);
+            Memory.WriteVector128(Position + 0x180, Thread.Context.ThreadState.V7);
+            Memory.WriteVector128(Position + 0x190, Thread.Context.ThreadState.V8);
+            Memory.WriteVector128(Position + 0x1a0, Thread.Context.ThreadState.V9);
+            Memory.WriteVector128(Position + 0x1b0, Thread.Context.ThreadState.V10);
+            Memory.WriteVector128(Position + 0x1c0, Thread.Context.ThreadState.V11);
+            Memory.WriteVector128(Position + 0x1d0, Thread.Context.ThreadState.V12);
+            Memory.WriteVector128(Position + 0x1e0, Thread.Context.ThreadState.V13);
+            Memory.WriteVector128(Position + 0x1f0, Thread.Context.ThreadState.V14);
+            Memory.WriteVector128(Position + 0x200, Thread.Context.ThreadState.V15);
+            Memory.WriteVector128(Position + 0x210, Thread.Context.ThreadState.V16);
+            Memory.WriteVector128(Position + 0x220, Thread.Context.ThreadState.V17);
+            Memory.WriteVector128(Position + 0x230, Thread.Context.ThreadState.V18);
+            Memory.WriteVector128(Position + 0x240, Thread.Context.ThreadState.V19);
+            Memory.WriteVector128(Position + 0x250, Thread.Context.ThreadState.V20);
+            Memory.WriteVector128(Position + 0x260, Thread.Context.ThreadState.V21);
+            Memory.WriteVector128(Position + 0x270, Thread.Context.ThreadState.V22);
+            Memory.WriteVector128(Position + 0x280, Thread.Context.ThreadState.V23);
+            Memory.WriteVector128(Position + 0x290, Thread.Context.ThreadState.V24);
+            Memory.WriteVector128(Position + 0x2a0, Thread.Context.ThreadState.V25);
+            Memory.WriteVector128(Position + 0x2b0, Thread.Context.ThreadState.V26);
+            Memory.WriteVector128(Position + 0x2c0, Thread.Context.ThreadState.V27);
+            Memory.WriteVector128(Position + 0x2d0, Thread.Context.ThreadState.V28);
+            Memory.WriteVector128(Position + 0x2e0, Thread.Context.ThreadState.V29);
+            Memory.WriteVector128(Position + 0x2f0, Thread.Context.ThreadState.V30);
+            Memory.WriteVector128(Position + 0x300, Thread.Context.ThreadState.V31);
 
-            _memory.WriteInt32(position + 0x310, thread.Context.ThreadState.Fpcr);
-            _memory.WriteInt32(position + 0x314, thread.Context.ThreadState.Fpsr);
-            _memory.WriteInt64(position + 0x318, thread.Context.ThreadState.Tpidr);
+            Memory.WriteInt32(Position + 0x310, Thread.Context.ThreadState.Fpcr);
+            Memory.WriteInt32(Position + 0x314, Thread.Context.ThreadState.Fpsr);
+            Memory.WriteInt64(Position + 0x318, Thread.Context.ThreadState.Tpidr);
 
-            threadState.X0 = 0;
+            ThreadState.X0 = 0;
         }
     }
 }

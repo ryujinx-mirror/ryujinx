@@ -6,13 +6,13 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 {
     class VoiceContext
     {
-        private bool _acquired;
-        private bool _bufferReload;
+        private bool Acquired;
+        private bool BufferReload;
 
-        private int _resamplerFracPart;
+        private int ResamplerFracPart;
 
-        private int _bufferIndex;
-        private int _offset;
+        private int BufferIndex;
+        private int Offset;
 
         public int SampleRate;
         public int ChannelsCount;
@@ -29,138 +29,138 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         public VoiceOut OutStatus;
 
-        private int[] _samples;
+        private int[] Samples;
 
-        public bool Playing => _acquired && PlayState == PlayState.Playing;
+        public bool Playing => Acquired && PlayState == PlayState.Playing;
 
         public VoiceContext()
         {
             WaveBuffers = new WaveBuffer[4];
         }
 
-        public void SetAcquireState(bool newState)
+        public void SetAcquireState(bool NewState)
         {
-            if (_acquired && !newState)
+            if (Acquired && !NewState)
             {
                 //Release.
                 Reset();
             }
 
-            _acquired = newState;
+            Acquired = NewState;
         }
 
         private void Reset()
         {
-            _bufferReload = true;
+            BufferReload = true;
 
-            _bufferIndex = 0;
-            _offset      = 0;
+            BufferIndex = 0;
+            Offset      = 0;
 
             OutStatus.PlayedSamplesCount     = 0;
             OutStatus.PlayedWaveBuffersCount = 0;
             OutStatus.VoiceDropsCount        = 0;
         }
 
-        public int[] GetBufferData(MemoryManager memory, int maxSamples, out int samplesCount)
+        public int[] GetBufferData(MemoryManager Memory, int MaxSamples, out int SamplesCount)
         {
             if (!Playing)
             {
-                samplesCount = 0;
+                SamplesCount = 0;
 
                 return null;
             }
 
-            if (_bufferReload)
+            if (BufferReload)
             {
-                _bufferReload = false;
+                BufferReload = false;
 
-                UpdateBuffer(memory);
+                UpdateBuffer(Memory);
             }
 
-            WaveBuffer wb = WaveBuffers[_bufferIndex];
+            WaveBuffer Wb = WaveBuffers[BufferIndex];
 
-            int maxSize = _samples.Length - _offset;
+            int MaxSize = Samples.Length - Offset;
 
-            int size = maxSamples * AudioConsts.HostChannelsCount;
+            int Size = MaxSamples * AudioConsts.HostChannelsCount;
 
-            if (size > maxSize)
+            if (Size > MaxSize)
             {
-                size = maxSize;
+                Size = MaxSize;
             }
 
-            int[] output = new int[size];
+            int[] Output = new int[Size];
 
-            Array.Copy(_samples, _offset, output, 0, size);
+            Array.Copy(Samples, Offset, Output, 0, Size);
 
-            samplesCount = size / AudioConsts.HostChannelsCount;
+            SamplesCount = Size / AudioConsts.HostChannelsCount;
 
-            OutStatus.PlayedSamplesCount += samplesCount;
+            OutStatus.PlayedSamplesCount += SamplesCount;
 
-            _offset += size;
+            Offset += Size;
 
-            if (_offset == _samples.Length)
+            if (Offset == Samples.Length)
             {
-                _offset = 0;
+                Offset = 0;
 
-                if (wb.Looping == 0)
+                if (Wb.Looping == 0)
                 {
-                    SetBufferIndex((_bufferIndex + 1) & 3);
+                    SetBufferIndex((BufferIndex + 1) & 3);
                 }
 
                 OutStatus.PlayedWaveBuffersCount++;
 
-                if (wb.LastBuffer != 0)
+                if (Wb.LastBuffer != 0)
                 {
                     PlayState = PlayState.Paused;
                 }
             }
 
-            return output;
+            return Output;
         }
 
-        private void UpdateBuffer(MemoryManager memory)
+        private void UpdateBuffer(MemoryManager Memory)
         {
             //TODO: Implement conversion for formats other
             //than interleaved stereo (2 channels).
             //As of now, it assumes that HostChannelsCount == 2.
-            WaveBuffer wb = WaveBuffers[_bufferIndex];
+            WaveBuffer Wb = WaveBuffers[BufferIndex];
 
-            if (wb.Position == 0)
+            if (Wb.Position == 0)
             {
-                _samples = new int[0];
+                Samples = new int[0];
 
                 return;
             }
 
             if (SampleFormat == SampleFormat.PcmInt16)
             {
-                int samplesCount = (int)(wb.Size / (sizeof(short) * ChannelsCount));
+                int SamplesCount = (int)(Wb.Size / (sizeof(short) * ChannelsCount));
 
-                _samples = new int[samplesCount * AudioConsts.HostChannelsCount];
+                Samples = new int[SamplesCount * AudioConsts.HostChannelsCount];
 
                 if (ChannelsCount == 1)
                 {
-                    for (int index = 0; index < samplesCount; index++)
+                    for (int Index = 0; Index < SamplesCount; Index++)
                     {
-                        short sample = memory.ReadInt16(wb.Position + index * 2);
+                        short Sample = Memory.ReadInt16(Wb.Position + Index * 2);
 
-                        _samples[index * 2 + 0] = sample;
-                        _samples[index * 2 + 1] = sample;
+                        Samples[Index * 2 + 0] = Sample;
+                        Samples[Index * 2 + 1] = Sample;
                     }
                 }
                 else
                 {
-                    for (int index = 0; index < samplesCount * 2; index++)
+                    for (int Index = 0; Index < SamplesCount * 2; Index++)
                     {
-                        _samples[index] = memory.ReadInt16(wb.Position + index * 2);
+                        Samples[Index] = Memory.ReadInt16(Wb.Position + Index * 2);
                     }
                 }
             }
             else if (SampleFormat == SampleFormat.Adpcm)
             {
-                byte[] buffer = memory.ReadBytes(wb.Position, wb.Size);
+                byte[] Buffer = Memory.ReadBytes(Wb.Position, Wb.Size);
 
-                _samples = AdpcmDecoder.Decode(buffer, AdpcmCtx);
+                Samples = AdpcmDecoder.Decode(Buffer, AdpcmCtx);
             }
             else
             {
@@ -172,24 +172,24 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
                 //TODO: We should keep the frames being discarded (see the 4 below)
                 //on a buffer and include it on the next samples buffer, to allow
                 //the resampler to do seamless interpolation between wave buffers.
-                int samplesCount = _samples.Length / AudioConsts.HostChannelsCount;
+                int SamplesCount = Samples.Length / AudioConsts.HostChannelsCount;
 
-                samplesCount = Math.Max(samplesCount - 4, 0);
+                SamplesCount = Math.Max(SamplesCount - 4, 0);
 
-                _samples = Resampler.Resample2Ch(
-                    _samples,
+                Samples = Resampler.Resample2Ch(
+                    Samples,
                     SampleRate,
                     AudioConsts.HostSampleRate,
-                    samplesCount,
-                    ref _resamplerFracPart);
+                    SamplesCount,
+                    ref ResamplerFracPart);
             }
         }
 
-        public void SetBufferIndex(int index)
+        public void SetBufferIndex(int Index)
         {
-            _bufferIndex = index & 3;
+            BufferIndex = Index & 3;
 
-            _bufferReload = true;
+            BufferReload = true;
         }
     }
 }

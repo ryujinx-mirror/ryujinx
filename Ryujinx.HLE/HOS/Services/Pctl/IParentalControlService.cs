@@ -6,29 +6,29 @@ namespace Ryujinx.HLE.HOS.Services.Pctl
 {
     class IParentalControlService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private bool _initialized = false;
+        private bool Initialized = false;
 
-        private bool _needInitialize;
+        private bool NeedInitialize;
 
-        public IParentalControlService(bool needInitialize = true)
+        public IParentalControlService(bool NeedInitialize = true)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 1, Initialize }
             };
 
-            _needInitialize = needInitialize;
+            this.NeedInitialize = NeedInitialize;
         }
 
-        public long Initialize(ServiceCtx context)
+        public long Initialize(ServiceCtx Context)
         {
-            if (_needInitialize && !_initialized)
+            if (NeedInitialize && !Initialized)
             {
-                _initialized = true;
+                Initialized = true;
             }
             else
             {

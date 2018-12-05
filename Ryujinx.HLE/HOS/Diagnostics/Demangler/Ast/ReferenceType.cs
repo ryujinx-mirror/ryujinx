@@ -4,44 +4,44 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class ReferenceType : BaseNode
     {
-        private string   _reference;
-        private BaseNode _child;
+        private string   Reference;
+        private BaseNode Child;
 
-        public ReferenceType(string reference, BaseNode child) : base(NodeType.ReferenceType)
+        public ReferenceType(string Reference, BaseNode Child) : base(NodeType.ReferenceType)
         {
-            _reference = reference;
-            _child     = child;
+            this.Reference = Reference;
+            this.Child     = Child;
         }
 
         public override bool HasRightPart()
         {
-            return _child.HasRightPart();
+            return Child.HasRightPart();
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            _child.PrintLeft(writer);
+            Child.PrintLeft(Writer);
 
-            if (_child.IsArray())
+            if (Child.IsArray())
             {
-                writer.Write(" ");
+                Writer.Write(" ");
             }
 
-            if (_child.IsArray() || _child.HasFunctions())
+            if (Child.IsArray() || Child.HasFunctions())
             {
-                writer.Write("(");
+                Writer.Write("(");
             }
 
-            writer.Write(_reference);
+            Writer.Write(Reference);
         }
-        public override void PrintRight(TextWriter writer)
+        public override void PrintRight(TextWriter Writer)
         {
-            if (_child.IsArray() || _child.HasFunctions())
+            if (Child.IsArray() || Child.HasFunctions())
             {
-                writer.Write(")");
+                Writer.Write(")");
             }
 
-            _child.PrintRight(writer);
+            Child.PrintRight(Writer);
         }
     }
 }

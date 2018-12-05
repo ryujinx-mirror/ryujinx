@@ -13,26 +13,26 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
         public bool Allocated;
         public long DmaMapAddress;
 
-        private long _dupes;
+        private long Dupes;
 
         public NvMapHandle()
         {
-            _dupes = 1;
+            Dupes = 1;
         }
 
-        public NvMapHandle(int size) : this()
+        public NvMapHandle(int Size) : this()
         {
-            Size = size;
+            this.Size = Size;
         }
 
         public void IncrementRefCount()
         {
-            Interlocked.Increment(ref _dupes);
+            Interlocked.Increment(ref Dupes);
         }
 
         public long DecrementRefCount()
         {
-            return Interlocked.Decrement(ref _dupes);
+            return Interlocked.Decrement(ref Dupes);
         }
     }
 }

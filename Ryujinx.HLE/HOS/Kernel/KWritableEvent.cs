@@ -2,21 +2,21 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class KWritableEvent
     {
-        private KEvent _parent;
+        private KEvent Parent;
 
-        public KWritableEvent(KEvent parent)
+        public KWritableEvent(KEvent Parent)
         {
-            _parent = parent;
+            this.Parent = Parent;
         }
 
         public void Signal()
         {
-            _parent.ReadableEvent.Signal();
+            Parent.ReadableEvent.Signal();
         }
 
         public KernelResult Clear()
         {
-            return _parent.ReadableEvent.Clear();
+            return Parent.ReadableEvent.Clear();
         }
     }
 }

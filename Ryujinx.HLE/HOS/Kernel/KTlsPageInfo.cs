@@ -4,70 +4,70 @@ namespace Ryujinx.HLE.HOS.Kernel
     {
         public const int TlsEntrySize = 0x200;
 
-        public ulong PageAddr { get; }
+        public ulong PageAddr { get; private set; }
 
-        private bool[] _isSlotFree;
+        private bool[] IsSlotFree;
 
-        public KTlsPageInfo(ulong pageAddress)
+        public KTlsPageInfo(ulong PageAddress)
         {
-            PageAddr = pageAddress;
+            this.PageAddr = PageAddress;
 
-            _isSlotFree = new bool[KMemoryManager.PageSize / TlsEntrySize];
+            IsSlotFree = new bool[KMemoryManager.PageSize / TlsEntrySize];
 
-            for (int index = 0; index < _isSlotFree.Length; index++)
+            for (int Index = 0; Index < IsSlotFree.Length; Index++)
             {
-                _isSlotFree[index] = true;
+                IsSlotFree[Index] = true;
             }
         }
 
-        public bool TryGetFreePage(out ulong address)
+        public bool TryGetFreePage(out ulong Address)
         {
-            address = PageAddr;
+            Address = PageAddr;
 
-            for (int index = 0; index < _isSlotFree.Length; index++)
+            for (int Index = 0; Index < IsSlotFree.Length; Index++)
             {
-                if (_isSlotFree[index])
+                if (IsSlotFree[Index])
                 {
-                    _isSlotFree[index] = false;
+                    IsSlotFree[Index] = false;
 
                     return true;
                 }
 
-                address += TlsEntrySize;
+                Address += TlsEntrySize;
             }
 
-            address = 0;
+            Address = 0;
 
             return false;
         }
 
         public bool IsFull()
         {
-            bool hasFree = false;
+            bool HasFree = false;
 
-            for (int index = 0; index < _isSlotFree.Length; index++)
+            for (int Index = 0; Index < IsSlotFree.Length; Index++)
             {
-                hasFree |= _isSlotFree[index];
+                HasFree |= IsSlotFree[Index];
             }
 
-            return !hasFree;
+            return !HasFree;
         }
 
         public bool IsEmpty()
         {
-            bool allFree = true;
+            bool AllFree = true;
 
-            for (int index = 0; index < _isSlotFree.Length; index++)
+            for (int Index = 0; Index < IsSlotFree.Length; Index++)
             {
-                allFree &= _isSlotFree[index];
+                AllFree &= IsSlotFree[Index];
             }
 
-            return allFree;
+            return AllFree;
         }
 
-        public void FreeTlsSlot(ulong address)
+        public void FreeTlsSlot(ulong Address)
         {
-            _isSlotFree[(address - PageAddr) / TlsEntrySize] = true;
+            IsSlotFree[(Address - PageAddr) / TlsEntrySize] = true;
         }
     }
 }

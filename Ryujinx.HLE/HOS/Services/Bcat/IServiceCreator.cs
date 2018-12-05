@@ -5,33 +5,33 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
 {
     class IServiceCreator : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IServiceCreator()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, CreateBcatService                 },
                 { 1, CreateDeliveryCacheStorageService }
             };
         }
 
-        public long CreateBcatService(ServiceCtx context)
+        public long CreateBcatService(ServiceCtx Context)
         {
-            long id = context.RequestData.ReadInt64();
+            long Id = Context.RequestData.ReadInt64();
 
-            MakeObject(context, new IBcatService());
+            MakeObject(Context, new IBcatService());
 
             return 0;
         }
 
-        public long CreateDeliveryCacheStorageService(ServiceCtx context)
+        public long CreateDeliveryCacheStorageService(ServiceCtx Context)
         {
-            long id = context.RequestData.ReadInt64();
+            long Id = Context.RequestData.ReadInt64();
 
-            MakeObject(context, new IDeliveryCacheStorageService());
+            MakeObject(Context, new IDeliveryCacheStorageService());
 
             return 0;
         }

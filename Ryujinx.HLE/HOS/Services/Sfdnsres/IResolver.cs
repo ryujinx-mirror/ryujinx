@@ -12,13 +12,13 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
 {
     class IResolver : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IResolver()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,  SetDnsAddressesPrivate },
                 { 1,  GetDnsAddressesPrivate },
@@ -28,65 +28,65 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
                 { 5,  GetGaiStringError      },
                 { 8,  RequestCancelHandle    },
                 { 9,  CancelSocketCall       },
-                { 11, ClearDnsAddresses      }
+                { 11, ClearDnsAddresses      },
             };
         }
 
-        private long SerializeHostEnt(ServiceCtx context, IPHostEntry hostEntry, List<IPAddress> addresses = null)
+        private long SerializeHostEnt(ServiceCtx Context, IPHostEntry HostEntry, List<IPAddress> Addresses = null)
         {
-            long originalBufferPosition = context.Request.ReceiveBuff[0].Position;
-            long bufferPosition         = originalBufferPosition;
-            long bufferSize             = context.Request.ReceiveBuff[0].Size;
+            long OriginalBufferPosition = Context.Request.ReceiveBuff[0].Position;
+            long BufferPosition         = OriginalBufferPosition;
+            long BufferSize             = Context.Request.ReceiveBuff[0].Size;
 
-            string hostName = hostEntry.HostName + '\0';
+            string HostName = HostEntry.HostName + '\0';
 
             // h_name
-            context.Memory.WriteBytes(bufferPosition, Encoding.ASCII.GetBytes(hostName));
-            bufferPosition += hostName.Length;
+            Context.Memory.WriteBytes(BufferPosition, Encoding.ASCII.GetBytes(HostName));
+            BufferPosition += HostName.Length;
 
             // h_aliases list size
-            context.Memory.WriteInt32(bufferPosition, IPAddress.HostToNetworkOrder(hostEntry.Aliases.Length));
-            bufferPosition += 4;
+            Context.Memory.WriteInt32(BufferPosition, IPAddress.HostToNetworkOrder(HostEntry.Aliases.Length));
+            BufferPosition += 4;
 
             // Actual aliases
-            foreach (string alias in hostEntry.Aliases)
+            foreach (string Alias in HostEntry.Aliases)
             {
-                context.Memory.WriteBytes(bufferPosition, Encoding.ASCII.GetBytes(alias + '\0'));
-                bufferPosition += alias.Length + 1;
+                Context.Memory.WriteBytes(BufferPosition, Encoding.ASCII.GetBytes(Alias + '\0'));
+                BufferPosition += Alias.Length + 1;
             }
 
             // h_addrtype but it's a short (also only support IPv4)
-            context.Memory.WriteInt16(bufferPosition, IPAddress.HostToNetworkOrder((short)2));
-            bufferPosition += 2;
+            Context.Memory.WriteInt16(BufferPosition, IPAddress.HostToNetworkOrder((short)2));
+            BufferPosition += 2;
 
             // h_length but it's a short
-            context.Memory.WriteInt16(bufferPosition, IPAddress.HostToNetworkOrder((short)4));
-            bufferPosition += 2;
+            Context.Memory.WriteInt16(BufferPosition, IPAddress.HostToNetworkOrder((short)4));
+            BufferPosition += 2;
 
             // Ip address count, we can only support ipv4 (blame Nintendo)
-            context.Memory.WriteInt32(bufferPosition, addresses != null ? IPAddress.HostToNetworkOrder(addresses.Count) : 0);
-            bufferPosition += 4;
+            Context.Memory.WriteInt32(BufferPosition, Addresses != null ? IPAddress.HostToNetworkOrder(Addresses.Count) : 0);
+            BufferPosition += 4;
 
-            if (addresses != null)
+            if (Addresses != null)
             {
-                foreach (IPAddress ip in addresses)
+                foreach (IPAddress Ip in Addresses)
                 {
-                    context.Memory.WriteInt32(bufferPosition, IPAddress.HostToNetworkOrder(BitConverter.ToInt32(ip.GetAddressBytes(), 0)));
-                    bufferPosition += 4;
+                    Context.Memory.WriteInt32(BufferPosition, IPAddress.HostToNetworkOrder(BitConverter.ToInt32(Ip.GetAddressBytes(), 0)));
+                    BufferPosition += 4;
                 }
             }
 
-            return bufferPosition - originalBufferPosition;
+            return BufferPosition - OriginalBufferPosition;
         }
 
-        private string GetGaiStringErrorFromErrorCode(GaiError errorCode)
+        private string GetGaiStringErrorFromErrorCode(GaiError ErrorCode)
         {
-            if (errorCode > GaiError.Max)
+            if (ErrorCode > GaiError.Max)
             {
-                errorCode = GaiError.Max;
+                ErrorCode = GaiError.Max;
             }
 
-            switch (errorCode)
+            switch (ErrorCode)
             {
                 case GaiError.AddressFamily:
                     return "Address family for hostname not supported";
@@ -123,275 +123,275 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             }
         }
 
-        private string GetHostStringErrorFromErrorCode(NetDbError errorCode)
+        private string GetHostStringErrorFromErrorCode(NetDBError ErrorCode)
         {
-            if (errorCode <= NetDbError.Internal)
+            if (ErrorCode <= NetDBError.Internal)
             {
                 return "Resolver internal error";
             }
 
-            switch (errorCode)
+            switch (ErrorCode)
             {
-                case NetDbError.Success:
+                case NetDBError.Success:
                     return "Resolver Error 0 (no error)";
-                case NetDbError.HostNotFound:
+                case NetDBError.HostNotFound:
                     return "Unknown host";
-                case NetDbError.TryAgain:
+                case NetDBError.TryAgain:
                     return "Host name lookup failure";
-                case NetDbError.NoRecovery:
+                case NetDBError.NoRecovery:
                     return "Unknown server error";
-                case NetDbError.NoData:
+                case NetDBError.NoData:
                     return "No address associated with name";
                 default:
                     return "Unknown resolver error";
             }
         }
 
-        private List<IPAddress> GetIpv4Addresses(IPHostEntry hostEntry)
+        private List<IPAddress> GetIPV4Addresses(IPHostEntry HostEntry)
         {
-            List<IPAddress> result = new List<IPAddress>();
-            foreach (IPAddress ip in hostEntry.AddressList)
+            List<IPAddress> Result = new List<IPAddress>();
+            foreach (IPAddress Ip in HostEntry.AddressList)
             {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                    result.Add(ip);
+                if (Ip.AddressFamily == AddressFamily.InterNetwork)
+                    Result.Add(Ip);
             }
-            return result;
+            return Result;
         }
 
         // SetDnsAddressesPrivate(u32, buffer<unknown, 5, 0>)
-        public long SetDnsAddressesPrivate(ServiceCtx context)
+        public long SetDnsAddressesPrivate(ServiceCtx Context)
         {
-            uint unknown0       = context.RequestData.ReadUInt32();
-            long bufferPosition = context.Request.SendBuff[0].Position;
-            long bufferSize     = context.Request.SendBuff[0].Size;
+            uint Unknown0       = Context.RequestData.ReadUInt32();
+            long BufferPosition = Context.Request.SendBuff[0].Position;
+            long BufferSize     = Context.Request.SendBuff[0].Size;
 
             // TODO: This is stubbed in 2.0.0+, reverse 1.0.0 version for the sake completeness.
-            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0}");
 
             return MakeError(ErrorModule.Os, 1023);
         }
 
         // GetDnsAddressPrivate(u32) -> buffer<unknown, 6, 0>
-        public long GetDnsAddressesPrivate(ServiceCtx context)
+        public long GetDnsAddressesPrivate(ServiceCtx Context)
         {
-            uint unknown0 = context.RequestData.ReadUInt32();
+            uint Unknown0 = Context.RequestData.ReadUInt32();
 
             // TODO: This is stubbed in 2.0.0+, reverse 1.0.0 version for the sake completeness.
-            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0}");
 
             return MakeError(ErrorModule.Os, 1023);
         }
 
         // GetHostByName(u8, u32, u64, pid, buffer<unknown, 5, 0>) -> (u32, u32, u32, buffer<unknown, 6, 0>)
-        public long GetHostByName(ServiceCtx context)
+        public long GetHostByName(ServiceCtx Context)
         {
-            byte[] rawName = context.Memory.ReadBytes(context.Request.SendBuff[0].Position, context.Request.SendBuff[0].Size);
-            string name    = Encoding.ASCII.GetString(rawName).TrimEnd('\0');
+            byte[] RawName = Context.Memory.ReadBytes(Context.Request.SendBuff[0].Position, Context.Request.SendBuff[0].Size);
+            string Name    = Encoding.ASCII.GetString(RawName).TrimEnd('\0');
 
             // TODO: use params
-            bool  enableNsdResolve = context.RequestData.ReadInt32() == 1;
-            int   timeOut          = context.RequestData.ReadInt32();
-            ulong pidPlaceholder   = context.RequestData.ReadUInt64();
+            bool  EnableNsdResolve = Context.RequestData.ReadInt32() == 1;
+            int   TimeOut          = Context.RequestData.ReadInt32();
+            ulong PidPlaceholder   = Context.RequestData.ReadUInt64();
 
-            IPHostEntry hostEntry = null;
+            IPHostEntry HostEntry = null;
 
-            NetDbError netDbErrorCode = NetDbError.Success;
-            GaiError   errno          = GaiError.Overflow;
-            long       serializedSize = 0;
+            NetDBError NetDBErrorCode = NetDBError.Success;
+            GaiError   Errno          = GaiError.Overflow;
+            long       SerializedSize = 0;
 
-            if (name.Length <= 255)
+            if (Name.Length <= 255)
             {
                 try
                 {
-                    hostEntry = Dns.GetHostEntry(name);
+                    HostEntry = Dns.GetHostEntry(Name);
                 }
-                catch (SocketException exception)
+                catch (SocketException Exception)
                 {
-                    netDbErrorCode = NetDbError.Internal;
+                    NetDBErrorCode = NetDBError.Internal;
 
-                    if (exception.ErrorCode == 11001)
+                    if (Exception.ErrorCode == 11001)
                     {
-                        netDbErrorCode = NetDbError.HostNotFound;
-                        errno = GaiError.NoData;
+                        NetDBErrorCode = NetDBError.HostNotFound;
+                        Errno = GaiError.NoData;
                     }
-                    else if (exception.ErrorCode == 11002)
+                    else if (Exception.ErrorCode == 11002)
                     {
-                        netDbErrorCode = NetDbError.TryAgain;
+                        NetDBErrorCode = NetDBError.TryAgain;
                     }
-                    else if (exception.ErrorCode == 11003)
+                    else if (Exception.ErrorCode == 11003)
                     {
-                        netDbErrorCode = NetDbError.NoRecovery;
+                        NetDBErrorCode = NetDBError.NoRecovery;
                     }
-                    else if (exception.ErrorCode == 11004)
+                    else if (Exception.ErrorCode == 11004)
                     {
-                        netDbErrorCode = NetDbError.NoData;
+                        NetDBErrorCode = NetDBError.NoData;
                     }
-                    else if (exception.ErrorCode == 10060)
+                    else if (Exception.ErrorCode == 10060)
                     {
-                        errno = GaiError.Again;
+                        Errno = GaiError.Again;
                     }
                 }
             }
             else
             {
-                netDbErrorCode = NetDbError.HostNotFound;
+                NetDBErrorCode = NetDBError.HostNotFound;
             }
 
-            if (hostEntry != null)
+            if (HostEntry != null)
             {
-                errno = GaiError.Success;
+                Errno = GaiError.Success;
 
-                List<IPAddress> addresses = GetIpv4Addresses(hostEntry);
+                List<IPAddress> Addresses = GetIPV4Addresses(HostEntry);
 
-                if (addresses.Count == 0)
+                if (Addresses.Count == 0)
                 {
-                    errno          = GaiError.NoData;
-                    netDbErrorCode = NetDbError.NoAddress;
+                    Errno          = GaiError.NoData;
+                    NetDBErrorCode = NetDBError.NoAddress;
                 }
                 else
                 {
-                    serializedSize = SerializeHostEnt(context, hostEntry, addresses);
+                    SerializedSize = SerializeHostEnt(Context, HostEntry, Addresses);
                 }
             }
 
-            context.ResponseData.Write((int)netDbErrorCode);
-            context.ResponseData.Write((int)errno);
-            context.ResponseData.Write(serializedSize);
+            Context.ResponseData.Write((int)NetDBErrorCode);
+            Context.ResponseData.Write((int)Errno);
+            Context.ResponseData.Write(SerializedSize);
 
             return 0;
         }
 
         // GetHostByAddr(u32, u32, u32, u64, pid, buffer<unknown, 5, 0>) -> (u32, u32, u32, buffer<unknown, 6, 0>)
-        public long GetHostByAddress(ServiceCtx context)
+        public long GetHostByAddress(ServiceCtx Context)
         {
-            byte[] rawIp = context.Memory.ReadBytes(context.Request.SendBuff[0].Position, context.Request.SendBuff[0].Size);
+            byte[] RawIp = Context.Memory.ReadBytes(Context.Request.SendBuff[0].Position, Context.Request.SendBuff[0].Size);
 
             // TODO: use params
-            uint  socketLength   = context.RequestData.ReadUInt32();
-            uint  type           = context.RequestData.ReadUInt32();
-            int   timeOut        = context.RequestData.ReadInt32();
-            ulong pidPlaceholder = context.RequestData.ReadUInt64();
+            uint  SocketLength   = Context.RequestData.ReadUInt32();
+            uint  Type           = Context.RequestData.ReadUInt32();
+            int   TimeOut        = Context.RequestData.ReadInt32();
+            ulong PidPlaceholder = Context.RequestData.ReadUInt64();
 
-            IPHostEntry hostEntry = null;
+            IPHostEntry HostEntry = null;
 
-            NetDbError netDbErrorCode = NetDbError.Success;
-            GaiError   errno          = GaiError.AddressFamily;
-            long       serializedSize = 0;
+            NetDBError NetDBErrorCode = NetDBError.Success;
+            GaiError   Errno          = GaiError.AddressFamily;
+            long       SerializedSize = 0;
 
-            if (rawIp.Length == 4)
+            if (RawIp.Length == 4)
             {
                 try
                 {
-                    IPAddress address = new IPAddress(rawIp);
+                    IPAddress Address = new IPAddress(RawIp);
 
-                    hostEntry = Dns.GetHostEntry(address);
+                    HostEntry = Dns.GetHostEntry(Address);
                 }
-                catch (SocketException exception)
+                catch (SocketException Exception)
                 {
-                    netDbErrorCode = NetDbError.Internal;
-                    if (exception.ErrorCode == 11001)
+                    NetDBErrorCode = NetDBError.Internal;
+                    if (Exception.ErrorCode == 11001)
                     {
-                        netDbErrorCode = NetDbError.HostNotFound;
-                        errno = GaiError.NoData;
+                        NetDBErrorCode = NetDBError.HostNotFound;
+                        Errno = GaiError.NoData;
                     }
-                    else if (exception.ErrorCode == 11002)
+                    else if (Exception.ErrorCode == 11002)
                     {
-                        netDbErrorCode = NetDbError.TryAgain;
+                        NetDBErrorCode = NetDBError.TryAgain;
                     }
-                    else if (exception.ErrorCode == 11003)
+                    else if (Exception.ErrorCode == 11003)
                     {
-                        netDbErrorCode = NetDbError.NoRecovery;
+                        NetDBErrorCode = NetDBError.NoRecovery;
                     }
-                    else if (exception.ErrorCode == 11004)
+                    else if (Exception.ErrorCode == 11004)
                     {
-                        netDbErrorCode = NetDbError.NoData;
+                        NetDBErrorCode = NetDBError.NoData;
                     }
-                    else if (exception.ErrorCode == 10060)
+                    else if (Exception.ErrorCode == 10060)
                     {
-                        errno = GaiError.Again;
+                        Errno = GaiError.Again;
                     }
                 }
             }
             else
             {
-                netDbErrorCode = NetDbError.NoAddress;
+                NetDBErrorCode = NetDBError.NoAddress;
             }
 
-            if (hostEntry != null)
+            if (HostEntry != null)
             {
-                errno = GaiError.Success;
-                serializedSize = SerializeHostEnt(context, hostEntry, GetIpv4Addresses(hostEntry));
+                Errno = GaiError.Success;
+                SerializedSize = SerializeHostEnt(Context, HostEntry, GetIPV4Addresses(HostEntry));
             }
 
-            context.ResponseData.Write((int)netDbErrorCode);
-            context.ResponseData.Write((int)errno);
-            context.ResponseData.Write(serializedSize);
+            Context.ResponseData.Write((int)NetDBErrorCode);
+            Context.ResponseData.Write((int)Errno);
+            Context.ResponseData.Write(SerializedSize);
 
             return 0;
         }
 
         // GetHostStringError(u32) -> buffer<unknown, 6, 0>
-        public long GetHostStringError(ServiceCtx context)
+        public long GetHostStringError(ServiceCtx Context)
         {
-            long       resultCode  = MakeError(ErrorModule.Os, 1023);
-            NetDbError errorCode   = (NetDbError)context.RequestData.ReadInt32();
-            string     errorString = GetHostStringErrorFromErrorCode(errorCode);
+            long       ResultCode  = MakeError(ErrorModule.Os, 1023);
+            NetDBError ErrorCode   = (NetDBError)Context.RequestData.ReadInt32();
+            string     ErrorString = GetHostStringErrorFromErrorCode(ErrorCode);
 
-            if (errorString.Length + 1 <= context.Request.ReceiveBuff[0].Size)
+            if (ErrorString.Length + 1 <= Context.Request.ReceiveBuff[0].Size)
             {
-                resultCode = 0;
-                context.Memory.WriteBytes(context.Request.ReceiveBuff[0].Position, Encoding.ASCII.GetBytes(errorString + '\0'));
+                ResultCode = 0;
+                Context.Memory.WriteBytes(Context.Request.ReceiveBuff[0].Position, Encoding.ASCII.GetBytes(ErrorString + '\0'));
             }
 
-            return resultCode;
+            return ResultCode;
         }
 
         // GetGaiStringError(u32) -> buffer<unknown, 6, 0>
-        public long GetGaiStringError(ServiceCtx context)
+        public long GetGaiStringError(ServiceCtx Context)
         {
-            long     resultCode  = MakeError(ErrorModule.Os, 1023);
-            GaiError errorCode   = (GaiError)context.RequestData.ReadInt32();
-            string   errorString = GetGaiStringErrorFromErrorCode(errorCode);
+            long     ResultCode  = MakeError(ErrorModule.Os, 1023);
+            GaiError ErrorCode   = (GaiError)Context.RequestData.ReadInt32();
+            string   ErrorString = GetGaiStringErrorFromErrorCode(ErrorCode);
 
-            if (errorString.Length + 1 <= context.Request.ReceiveBuff[0].Size)
+            if (ErrorString.Length + 1 <= Context.Request.ReceiveBuff[0].Size)
             {
-                resultCode = 0;
-                context.Memory.WriteBytes(context.Request.ReceiveBuff[0].Position, Encoding.ASCII.GetBytes(errorString + '\0'));
+                ResultCode = 0;
+                Context.Memory.WriteBytes(Context.Request.ReceiveBuff[0].Position, Encoding.ASCII.GetBytes(ErrorString + '\0'));
             }
 
-            return resultCode;
+            return ResultCode;
         }
 
         // RequestCancelHandle(u64, pid) -> u32
-        public long RequestCancelHandle(ServiceCtx context)
+        public long RequestCancelHandle(ServiceCtx Context)
         {
-            ulong unknown0 = context.RequestData.ReadUInt64();
+            ulong Unknown0 = Context.RequestData.ReadUInt64();
 
-            context.ResponseData.Write(0);
+            Context.ResponseData.Write(0);
 
-            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0}");
 
             return 0;
         }
 
         // CancelSocketCall(u32, u64, pid)
-        public long CancelSocketCall(ServiceCtx context)
+        public long CancelSocketCall(ServiceCtx Context)
         {
-            uint  unknown0 = context.RequestData.ReadUInt32();
-            ulong unknown1 = context.RequestData.ReadUInt64();
+            uint  Unknown0 = Context.RequestData.ReadUInt32();
+            ulong Unknown1 = Context.RequestData.ReadUInt64();
 
-            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {unknown0} - " +
-                                                       $"Unknown1: {unknown1}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0} - " +
+                                                       $"Unknown1: {Unknown1}");
 
             return 0;
         }
 
         // ClearDnsAddresses(u32)
-        public long ClearDnsAddresses(ServiceCtx context)
+        public long ClearDnsAddresses(ServiceCtx Context)
         {
-            uint unknown0 = context.RequestData.ReadUInt32();
+            uint Unknown0 = Context.RequestData.ReadUInt32();
 
-            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {Unknown0}");
 
             return 0;
         }

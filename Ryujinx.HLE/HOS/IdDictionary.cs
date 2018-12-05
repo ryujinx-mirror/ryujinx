@@ -6,56 +6,56 @@ namespace Ryujinx.HLE.HOS
 {
     class IdDictionary
     {
-        private ConcurrentDictionary<int, object> _objs;
+        private ConcurrentDictionary<int, object> Objs;
 
         public IdDictionary()
         {
-            _objs = new ConcurrentDictionary<int, object>();
+            Objs = new ConcurrentDictionary<int, object>();
         }
 
-        public bool Add(int id, object data)
+        public bool Add(int Id, object Data)
         {
-            return _objs.TryAdd(id, data);
+            return Objs.TryAdd(Id, Data);
         }
 
-        public int Add(object data)
+        public int Add(object Data)
         {
-            for (int id = 1; id < int.MaxValue; id++)
+            for (int Id = 1; Id < int.MaxValue; Id++)
             {
-                if (_objs.TryAdd(id, data))
+                if (Objs.TryAdd(Id, Data))
                 {
-                    return id;
+                    return Id;
                 }
             }
 
             throw new InvalidOperationException();
         }
 
-        public object GetData(int id)
+        public object GetData(int Id)
         {
-            if (_objs.TryGetValue(id, out object data))
+            if (Objs.TryGetValue(Id, out object Data))
             {
-                return data;
+                return Data;
             }
 
             return null;
         }
 
-        public T GetData<T>(int id)
+        public T GetData<T>(int Id)
         {
-            if (_objs.TryGetValue(id, out object data) && data is T)
+            if (Objs.TryGetValue(Id, out object Data) && Data is T)
             {
-                return (T)data;
+                return (T)Data;
             }
 
             return default(T);
         }
 
-        public object Delete(int id)
+        public object Delete(int Id)
         {
-            if (_objs.TryRemove(id, out object obj))
+            if (Objs.TryRemove(Id, out object Obj))
             {
-                return obj;
+                return Obj;
             }
 
             return null;
@@ -63,11 +63,11 @@ namespace Ryujinx.HLE.HOS
 
         public ICollection<object> Clear()
         {
-            ICollection<object> values = _objs.Values;
+            ICollection<object> Values = Objs.Values;
 
-            _objs.Clear();
+            Objs.Clear();
 
-            return values;
+            return Values;
         }
     }
 }

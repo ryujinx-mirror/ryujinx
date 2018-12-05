@@ -2,22 +2,22 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class KReadableEvent : KSynchronizationObject
     {
-        private KEvent _parent;
+        private KEvent Parent;
 
-        private bool _signaled;
+        private bool Signaled;
 
-        public KReadableEvent(Horizon system, KEvent parent) : base(system)
+        public KReadableEvent(Horizon System, KEvent Parent) : base(System)
         {
-            _parent = parent;
+            this.Parent = Parent;
         }
 
         public override void Signal()
         {
             System.CriticalSection.Enter();
 
-            if (!_signaled)
+            if (!Signaled)
             {
-                _signaled = true;
+                Signaled = true;
 
                 base.Signal();
             }
@@ -27,36 +27,36 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public KernelResult Clear()
         {
-            _signaled = false;
+            Signaled = false;
 
             return KernelResult.Success;
         }
 
         public KernelResult ClearIfSignaled()
         {
-            KernelResult result;
+            KernelResult Result;
 
             System.CriticalSection.Enter();
 
-            if (_signaled)
+            if (Signaled)
             {
-                _signaled = false;
+                Signaled = false;
 
-                result = KernelResult.Success;
+                Result = KernelResult.Success;
             }
             else
             {
-                result = KernelResult.InvalidState;
+                Result = KernelResult.InvalidState;
             }
 
             System.CriticalSection.Leave();
 
-            return result;
+            return Result;
         }
 
         public override bool IsSignaled()
         {
-            return _signaled;
+            return Signaled;
         }
     }
 }

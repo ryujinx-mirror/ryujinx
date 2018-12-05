@@ -4,13 +4,13 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class NoexceptSpec : ParentNode
     {
-        public NoexceptSpec(BaseNode child) : base(NodeType.NoexceptSpec, child) { }
+        public NoexceptSpec(BaseNode Child) : base(NodeType.NoexceptSpec, Child) { }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            writer.Write("noexcept(");
-            Child.Print(writer);
-            writer.Write(")");
+            Writer.Write("noexcept(");
+            Child.Print(Writer);
+            Writer.Write(")");
         }
     }
 }

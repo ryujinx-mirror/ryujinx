@@ -4,6 +4,7 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Utilities;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -50,54 +51,54 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
 
     class NrrInfo
     {
-        public NrrHeader    Header     { get; }
-        public List<byte[]> Hashes     { get; }
-        public long         NrrAddress { get; }
+        public NrrHeader    Header     { get; private set; }
+        public List<byte[]> Hashes     { get; private set; }
+        public long         NrrAddress { get; private set; }
 
-        public NrrInfo(long nrrAddress, NrrHeader header, List<byte[]> hashes)
+        public NrrInfo(long NrrAddress, NrrHeader Header, List<byte[]> Hashes)
         {
-            NrrAddress = nrrAddress;
-            Header     = header;
-            Hashes     = hashes;
+            this.NrrAddress = NrrAddress;
+            this.Header     = Header;
+            this.Hashes     = Hashes;
         }
     }
 
     class NroInfo
     {
-        public NxRelocatableObject Executable { get; }
+        public NxRelocatableObject Executable { get; private set; }
 
-        public byte[] Hash             { get; }
-        public ulong  NroAddress       { get; }
-        public ulong  NroSize          { get; }
-        public ulong  BssAddress       { get; }
-        public ulong  BssSize          { get; }
-        public ulong  TotalSize        { get; }
+        public byte[] Hash             { get; private set; }
+        public ulong  NroAddress       { get; private set; }
+        public ulong  NroSize          { get; private set; }
+        public ulong  BssAddress       { get; private set; }
+        public ulong  BssSize          { get; private set; }
+        public ulong  TotalSize        { get; private set; }
         public ulong  NroMappedAddress { get; set; }
 
         public NroInfo(
-            NxRelocatableObject executable,
-            byte[]              hash,
-            ulong               nroAddress,
-            ulong               nroSize,
-            ulong               bssAddress,
-            ulong               bssSize,
-            ulong               totalSize)
+            NxRelocatableObject Executable,
+            byte[]              Hash,
+            ulong               NroAddress,
+            ulong               NroSize,
+            ulong               BssAddress,
+            ulong               BssSize,
+            ulong               TotalSize)
         {
-            Executable = executable;
-            Hash       = hash;
-            NroAddress = nroAddress;
-            NroSize    = nroSize;
-            BssAddress = bssAddress;
-            BssSize    = bssSize;
-            TotalSize  = totalSize;
+            this.Executable = Executable;
+            this.Hash       = Hash;
+            this.NroAddress = NroAddress;
+            this.NroSize    = NroSize;
+            this.BssAddress = BssAddress;
+            this.BssSize    = BssSize;
+            this.TotalSize  = TotalSize;
         }
     }
 
     class IRoInterface : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         private const int MaxNrr = 0x40;
         private const int MaxNro = 0x40;
@@ -105,70 +106,70 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
         private const uint NrrMagic = 0x3052524E;
         private const uint NroMagic = 0x304F524E;
 
-        private List<NrrInfo> _nrrInfos;
-        private List<NroInfo> _nroInfos;
+        private List<NrrInfo> NrrInfos;
+        private List<NroInfo> NroInfos;
 
-        private bool _isInitialized;
+        private bool IsInitialized;
 
         public IRoInterface()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, LoadNro    },
                 { 1, UnloadNro  },
                 { 2, LoadNrr    },
                 { 3, UnloadNrr  },
-                { 4, Initialize }
+                { 4, Initialize },
             };
 
-            _nrrInfos = new List<NrrInfo>(MaxNrr);
-            _nroInfos = new List<NroInfo>(MaxNro);
+            NrrInfos = new List<NrrInfo>(MaxNrr);
+            NroInfos = new List<NroInfo>(MaxNro);
         }
 
-        private long ParseNrr(out NrrInfo nrrInfo, ServiceCtx context, long nrrAddress, long nrrSize)
+        private long ParseNrr(out NrrInfo NrrInfo, ServiceCtx Context, long NrrAddress, long NrrSize)
         {
-            nrrInfo = null;
+            NrrInfo = null;
 
-            if (nrrSize == 0 || nrrAddress + nrrSize <= nrrAddress || (nrrSize & 0xFFF) != 0)
+            if (NrrSize == 0 || NrrAddress + NrrSize <= NrrAddress || (NrrSize & 0xFFF) != 0)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.BadSize);
             }
-            else if ((nrrAddress & 0xFFF) != 0)
+            else if ((NrrAddress & 0xFFF) != 0)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.UnalignedAddress);
             }
 
-            StructReader reader = new StructReader(context.Memory, nrrAddress);
-            NrrHeader    header = reader.Read<NrrHeader>();
+            StructReader Reader = new StructReader(Context.Memory, NrrAddress);
+            NrrHeader    Header = Reader.Read<NrrHeader>();
 
-            if (header.Magic != NrrMagic)
+            if (Header.Magic != NrrMagic)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.InvalidNrr);
             }
-            else if (header.NrrSize != nrrSize)
+            else if (Header.NrrSize != NrrSize)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.BadSize);
             }
 
-            List<byte[]> hashes = new List<byte[]>();
+            List<byte[]> Hashes = new List<byte[]>();
 
-            for (int i = 0; i < header.HashCount; i++)
+            for (int i = 0; i < Header.HashCount; i++)
             {
-                hashes.Add(context.Memory.ReadBytes(nrrAddress + header.HashOffset + (i * 0x20), 0x20));
+                Hashes.Add(Context.Memory.ReadBytes(NrrAddress + Header.HashOffset + (i * 0x20), 0x20));
             }
 
-            nrrInfo = new NrrInfo(nrrAddress, header, hashes);
+            NrrInfo = new NrrInfo(NrrAddress, Header, Hashes);
 
             return 0;
         }
 
-        public bool IsNroHashPresent(byte[] nroHash)
+        public bool IsNroHashPresent(byte[] NroHash)
         {
-            foreach (NrrInfo info in _nrrInfos)
+            foreach (NrrInfo Info in NrrInfos)
             {
-                foreach (byte[] hash in info.Hashes)
+                foreach (byte[] Hash in Info.Hashes)
                 {
-                    if (hash.SequenceEqual(nroHash))
+                    if (Hash.SequenceEqual(NroHash))
                     {
                         return true;
                     }
@@ -178,11 +179,11 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             return false;
         }
 
-        public bool IsNroLoaded(byte[] nroHash)
+        public bool IsNroLoaded(byte[] NroHash)
         {
-            foreach (NroInfo info in _nroInfos)
+            foreach (NroInfo Info in NroInfos)
             {
-                if (info.Hash.SequenceEqual(nroHash))
+                if (Info.Hash.SequenceEqual(NroHash))
                 {
                     return true;
                 }
@@ -191,206 +192,206 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             return false;
         }
 
-        public long ParseNro(out NroInfo res, ServiceCtx context, ulong nroAddress, ulong nroSize, ulong bssAddress, ulong bssSize)
+        public long ParseNro(out NroInfo Res, ServiceCtx Context, ulong NroAddress, ulong NroSize, ulong BssAddress, ulong BssSize)
         {
-            res = null;
+            Res = null;
 
-            if (_nroInfos.Count >= MaxNro)
+            if (NroInfos.Count >= MaxNro)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.MaxNro);
             }
-            else if (nroSize == 0 || nroAddress + nroSize <= nroAddress || (nroSize & 0xFFF) != 0)
+            else if (NroSize == 0 || NroAddress + NroSize <= NroAddress || (NroSize & 0xFFF) != 0)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.BadSize);
             }
-            else if (bssSize != 0 && bssAddress + bssSize <= bssAddress)
+            else if (BssSize != 0 && BssAddress + BssSize <= BssAddress)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.BadSize);
             }
-            else if ((nroAddress & 0xFFF) != 0)
+            else if ((NroAddress & 0xFFF) != 0)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.UnalignedAddress);
             }
 
-            uint magic       = context.Memory.ReadUInt32((long)nroAddress + 0x10);
-            uint nroFileSize = context.Memory.ReadUInt32((long)nroAddress + 0x18);
+            uint Magic       = Context.Memory.ReadUInt32((long)NroAddress + 0x10);
+            uint NroFileSize = Context.Memory.ReadUInt32((long)NroAddress + 0x18);
 
-            if (magic != NroMagic || nroSize != nroFileSize)
+            if (Magic != NroMagic || NroSize != NroFileSize)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.InvalidNro);
             }
 
-            byte[] nroData = context.Memory.ReadBytes((long)nroAddress, (long)nroSize);
-            byte[] nroHash = null;
+            byte[] NroData = Context.Memory.ReadBytes((long)NroAddress, (long)NroSize);
+            byte[] NroHash = null;
 
-            MemoryStream stream = new MemoryStream(nroData);
+            MemoryStream Stream = new MemoryStream(NroData);
 
-            using (SHA256 hasher = SHA256.Create())
+            using (SHA256 Hasher = SHA256.Create())
             {
-                nroHash = hasher.ComputeHash(stream);
+                NroHash = Hasher.ComputeHash(Stream);
             }
 
-            if (!IsNroHashPresent(nroHash))
+            if (!IsNroHashPresent(NroHash))
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.NroHashNotPresent);
             }
 
-            if (IsNroLoaded(nroHash))
+            if (IsNroLoaded(NroHash))
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.NroAlreadyLoaded);
             }
 
-            stream.Position = 0;
+            Stream.Position = 0;
 
-            NxRelocatableObject executable = new NxRelocatableObject(stream, nroAddress, bssAddress);
+            NxRelocatableObject Executable = new NxRelocatableObject(Stream, NroAddress, BssAddress);
 
             // check if everything is page align.
-            if ((executable.Text.Length & 0xFFF) != 0 || (executable.Ro.Length & 0xFFF) != 0 ||
-                (executable.Data.Length & 0xFFF) != 0 || (executable.BssSize & 0xFFF)   != 0)
+            if ((Executable.Text.Length & 0xFFF) != 0 || (Executable.RO.Length & 0xFFF) != 0 ||
+                (Executable.Data.Length & 0xFFF) != 0 || (Executable.BssSize & 0xFFF)   != 0)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.InvalidNro);
             }
 
             // check if everything is contiguous.
-            if (executable.RoOffset   != executable.TextOffset + executable.Text.Length ||
-                executable.DataOffset != executable.RoOffset   + executable.Ro.Length   ||
-                nroFileSize           != executable.DataOffset + executable.Data.Length)
+            if (Executable.ROOffset   != Executable.TextOffset + Executable.Text.Length ||
+                Executable.DataOffset != Executable.ROOffset   + Executable.RO.Length   ||
+                NroFileSize           != Executable.DataOffset + Executable.Data.Length)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.InvalidNro);
             }
 
             // finally check the bss size match.
-            if ((ulong)executable.BssSize != bssSize)
+            if ((ulong)Executable.BssSize != BssSize)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.InvalidNro);
             }
 
-            int totalSize = executable.Text.Length + executable.Ro.Length + executable.Data.Length + executable.BssSize;
+            int TotalSize = Executable.Text.Length + Executable.RO.Length + Executable.Data.Length + Executable.BssSize;
 
-            res = new NroInfo(
-                executable,
-                nroHash,
-                nroAddress,
-                nroSize,
-                bssAddress,
-                bssSize,
-                (ulong)totalSize);
+            Res = new NroInfo(
+                Executable,
+                NroHash,
+                NroAddress,
+                NroSize,
+                BssAddress,
+                BssSize,
+                (ulong)TotalSize);
 
             return 0;
         }
 
-        private long MapNro(ServiceCtx context, NroInfo info, out ulong nroMappedAddress)
+        private long MapNro(ServiceCtx Context, NroInfo Info, out ulong NroMappedAddress)
         {
-            nroMappedAddress = 0;
+            NroMappedAddress = 0;
 
-            KMemoryManager memMgr = context.Process.MemoryManager;
+            KMemoryManager MemMgr = Context.Process.MemoryManager;
 
-            ulong targetAddress = memMgr.GetAddrSpaceBaseAddr();
+            ulong TargetAddress = MemMgr.GetAddrSpaceBaseAddr();
 
             while (true)
             {
-                if (targetAddress + info.TotalSize >= memMgr.AddrSpaceEnd)
+                if (TargetAddress + Info.TotalSize >= MemMgr.AddrSpaceEnd)
                 {
                     return MakeError(ErrorModule.Loader, LoaderErr.InvalidMemoryState);
                 }
 
-                KMemoryInfo memInfo = memMgr.QueryMemory(targetAddress);
+                KMemoryInfo MemInfo = MemMgr.QueryMemory(TargetAddress);
 
-                if (memInfo.State == MemoryState.Unmapped && memInfo.Size >= info.TotalSize)
+                if (MemInfo.State == MemoryState.Unmapped && MemInfo.Size >= Info.TotalSize)
                 {
-                    if (!memMgr.InsideHeapRegion (targetAddress, info.TotalSize) &&
-                        !memMgr.InsideAliasRegion(targetAddress, info.TotalSize))
+                    if (!MemMgr.InsideHeapRegion (TargetAddress, Info.TotalSize) &&
+                        !MemMgr.InsideAliasRegion(TargetAddress, Info.TotalSize))
                     {
                         break;
                     }
                 }
 
-                targetAddress += memInfo.Size;
+                TargetAddress += MemInfo.Size;
             }
 
-            KernelResult result = memMgr.MapProcessCodeMemory(targetAddress, info.NroAddress, info.NroSize);
+            KernelResult Result = MemMgr.MapProcessCodeMemory(TargetAddress, Info.NroAddress, Info.NroSize);
 
-            if (result != KernelResult.Success)
+            if (Result != KernelResult.Success)
             {
                 return MakeError(ErrorModule.Loader, LoaderErr.InvalidMemoryState);
             }
 
-            ulong bssTargetAddress = targetAddress + info.NroSize;
+            ulong BssTargetAddress = TargetAddress + Info.NroSize;
 
-            if (info.BssSize != 0)
+            if (Info.BssSize != 0)
             {
-                result = memMgr.MapProcessCodeMemory(bssTargetAddress, info.BssAddress, info.BssSize);
+                Result = MemMgr.MapProcessCodeMemory(BssTargetAddress, Info.BssAddress, Info.BssSize);
 
-                if (result != KernelResult.Success)
+                if (Result != KernelResult.Success)
                 {
-                    memMgr.UnmapProcessCodeMemory(targetAddress, info.NroAddress, info.NroSize);
+                    MemMgr.UnmapProcessCodeMemory(TargetAddress, Info.NroAddress, Info.NroSize);
 
                     return MakeError(ErrorModule.Loader, LoaderErr.InvalidMemoryState);
                 }
             }
 
-            result = LoadNroIntoMemory(context.Process, info.Executable, targetAddress);
+            Result = LoadNroIntoMemory(Context.Process, Info.Executable, TargetAddress);
 
-            if (result != KernelResult.Success)
+            if (Result != KernelResult.Success)
             {
-                memMgr.UnmapProcessCodeMemory(targetAddress, info.NroAddress, info.NroSize);
+                MemMgr.UnmapProcessCodeMemory(TargetAddress, Info.NroAddress, Info.NroSize);
 
-                if (info.BssSize != 0)
+                if (Info.BssSize != 0)
                 {
-                    memMgr.UnmapProcessCodeMemory(bssTargetAddress, info.BssAddress, info.BssSize);
+                    MemMgr.UnmapProcessCodeMemory(BssTargetAddress, Info.BssAddress, Info.BssSize);
                 }
 
                 return 0;
             }
 
-            info.NroMappedAddress = targetAddress;
-            nroMappedAddress      = targetAddress;
+            Info.NroMappedAddress = TargetAddress;
+            NroMappedAddress      = TargetAddress;
 
             return 0;
         }
 
-        private KernelResult LoadNroIntoMemory(KProcess process, IExecutable relocatableObject, ulong baseAddress)
+        private KernelResult LoadNroIntoMemory(KProcess Process, IExecutable RelocatableObject, ulong BaseAddress)
         {
-            ulong textStart = baseAddress + (ulong)relocatableObject.TextOffset;
-            ulong roStart   = baseAddress + (ulong)relocatableObject.RoOffset;
-            ulong dataStart = baseAddress + (ulong)relocatableObject.DataOffset;
+            ulong TextStart = BaseAddress + (ulong)RelocatableObject.TextOffset;
+            ulong ROStart   = BaseAddress + (ulong)RelocatableObject.ROOffset;
+            ulong DataStart = BaseAddress + (ulong)RelocatableObject.DataOffset;
 
-            ulong bssStart = dataStart + (ulong)relocatableObject.Data.Length;
+            ulong BssStart = DataStart + (ulong)RelocatableObject.Data.Length;
 
-            ulong bssEnd = BitUtils.AlignUp(bssStart + (ulong)relocatableObject.BssSize, KMemoryManager.PageSize);
+            ulong BssEnd = BitUtils.AlignUp(BssStart + (ulong)RelocatableObject.BssSize, KMemoryManager.PageSize);
 
-            process.CpuMemory.WriteBytes((long)textStart, relocatableObject.Text);
-            process.CpuMemory.WriteBytes((long)roStart,   relocatableObject.Ro);
-            process.CpuMemory.WriteBytes((long)dataStart, relocatableObject.Data);
+            Process.CpuMemory.WriteBytes((long)TextStart, RelocatableObject.Text);
+            Process.CpuMemory.WriteBytes((long)ROStart,   RelocatableObject.RO);
+            Process.CpuMemory.WriteBytes((long)DataStart, RelocatableObject.Data);
 
-            MemoryHelper.FillWithZeros(process.CpuMemory, (long)bssStart, (int)(bssEnd - bssStart));
+            MemoryHelper.FillWithZeros(Process.CpuMemory, (long)BssStart, (int)(BssEnd - BssStart));
 
-            KernelResult result;
+            KernelResult Result;
 
-            result = process.MemoryManager.SetProcessMemoryPermission(textStart, roStart - textStart, MemoryPermission.ReadAndExecute);
+            Result = Process.MemoryManager.SetProcessMemoryPermission(TextStart, ROStart - TextStart, MemoryPermission.ReadAndExecute);
 
-            if (result != KernelResult.Success)
+            if (Result != KernelResult.Success)
             {
-                return result;
+                return Result;
             }
 
-            result = process.MemoryManager.SetProcessMemoryPermission(roStart, dataStart - roStart, MemoryPermission.Read);
+            Result = Process.MemoryManager.SetProcessMemoryPermission(ROStart, DataStart - ROStart, MemoryPermission.Read);
 
-            if (result != KernelResult.Success)
+            if (Result != KernelResult.Success)
             {
-                return result;
+                return Result;
             }
 
-            return process.MemoryManager.SetProcessMemoryPermission(dataStart, bssEnd - dataStart, MemoryPermission.ReadAndWrite);
+            return Process.MemoryManager.SetProcessMemoryPermission(DataStart, BssEnd - DataStart, MemoryPermission.ReadAndWrite);
         }
 
-        private long RemoveNrrInfo(long nrrAddress)
+        private long RemoveNrrInfo(long NrrAddress)
         {
-            foreach (NrrInfo info in _nrrInfos)
+            foreach (NrrInfo Info in NrrInfos)
             {
-                if (info.NrrAddress == nrrAddress)
+                if (Info.NrrAddress == NrrAddress)
                 {
-                    _nrrInfos.Remove(info);
+                    NrrInfos.Remove(Info);
 
                     return 0;
                 }
@@ -399,46 +400,46 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             return MakeError(ErrorModule.Loader, LoaderErr.BadNrrAddress);
         }
 
-        private long RemoveNroInfo(ServiceCtx context, ulong nroMappedAddress)
+        private long RemoveNroInfo(ServiceCtx Context, ulong NroMappedAddress)
         {
-            foreach (NroInfo info in _nroInfos)
+            foreach (NroInfo Info in NroInfos)
             {
-                if (info.NroMappedAddress == nroMappedAddress)
+                if (Info.NroMappedAddress == NroMappedAddress)
                 {
-                    _nroInfos.Remove(info);
+                    NroInfos.Remove(Info);
 
-                    ulong textSize = (ulong)info.Executable.Text.Length;
-                    ulong roSize   = (ulong)info.Executable.Ro.Length;
-                    ulong dataSize = (ulong)info.Executable.Data.Length;
-                    ulong bssSize  = (ulong)info.Executable.BssSize;
+                    ulong TextSize = (ulong)Info.Executable.Text.Length;
+                    ulong ROSize   = (ulong)Info.Executable.RO.Length;
+                    ulong DataSize = (ulong)Info.Executable.Data.Length;
+                    ulong BssSize  = (ulong)Info.Executable.BssSize;
 
-                    KernelResult result = KernelResult.Success;
+                    KernelResult Result = KernelResult.Success;
 
-                    if (info.Executable.BssSize != 0)
+                    if (Info.Executable.BssSize != 0)
                     {
-                        result = context.Process.MemoryManager.UnmapProcessCodeMemory(
-                            info.NroMappedAddress + textSize + roSize + dataSize,
-                            info.Executable.BssAddress,
-                            bssSize);
+                        Result = Context.Process.MemoryManager.UnmapProcessCodeMemory(
+                            Info.NroMappedAddress + TextSize + ROSize + DataSize,
+                            Info.Executable.BssAddress,
+                            BssSize);
                     }
 
-                    if (result == KernelResult.Success)
+                    if (Result == KernelResult.Success)
                     {
-                        result = context.Process.MemoryManager.UnmapProcessCodeMemory(
-                            info.NroMappedAddress         + textSize + roSize,
-                            info.Executable.SourceAddress + textSize + roSize,
-                            dataSize);
+                        Result = Context.Process.MemoryManager.UnmapProcessCodeMemory(
+                            Info.NroMappedAddress         + TextSize + ROSize,
+                            Info.Executable.SourceAddress + TextSize + ROSize,
+                            DataSize);
 
-                        if (result == KernelResult.Success)
+                        if (Result == KernelResult.Success)
                         {
-                            result = context.Process.MemoryManager.UnmapProcessCodeMemory(
-                                info.NroMappedAddress,
-                                info.Executable.SourceAddress,
-                                textSize + roSize);
+                            Result = Context.Process.MemoryManager.UnmapProcessCodeMemory(
+                                Info.NroMappedAddress,
+                                Info.Executable.SourceAddress,
+                                TextSize + ROSize);
                         }
                     }
 
-                    return (long)result;
+                    return (long)Result;
                 }
             }
 
@@ -446,125 +447,125 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
         }
 
         // LoadNro(u64, u64, u64, u64, u64, pid) -> u64
-        public long LoadNro(ServiceCtx context)
+        public long LoadNro(ServiceCtx Context)
         {
-            long result = MakeError(ErrorModule.Loader, LoaderErr.BadInitialization);
+            long Result = MakeError(ErrorModule.Loader, LoaderErr.BadInitialization);
 
             // Zero
-            context.RequestData.ReadUInt64();
+            Context.RequestData.ReadUInt64();
 
-            ulong nroHeapAddress = context.RequestData.ReadUInt64();
-            ulong nroSize        = context.RequestData.ReadUInt64();
-            ulong bssHeapAddress = context.RequestData.ReadUInt64();
-            ulong bssSize        = context.RequestData.ReadUInt64();
+            ulong NroHeapAddress = Context.RequestData.ReadUInt64();
+            ulong NroSize        = Context.RequestData.ReadUInt64();
+            ulong BssHeapAddress = Context.RequestData.ReadUInt64();
+            ulong BssSize        = Context.RequestData.ReadUInt64();
 
-            ulong nroMappedAddress = 0;
+            ulong NroMappedAddress = 0;
 
-            if (_isInitialized)
+            if (IsInitialized)
             {
-                NroInfo info;
+                NroInfo Info;
 
-                result = ParseNro(out info, context, nroHeapAddress, nroSize, bssHeapAddress, bssSize);
+                Result = ParseNro(out Info, Context, NroHeapAddress, NroSize, BssHeapAddress, BssSize);
 
-                if (result == 0)
+                if (Result == 0)
                 {
-                    result = MapNro(context, info, out nroMappedAddress);
+                    Result = MapNro(Context, Info, out NroMappedAddress);
 
-                    if (result == 0)
+                    if (Result == 0)
                     {
-                        _nroInfos.Add(info);
+                        NroInfos.Add(Info);
                     }
                 }
             }
 
-            context.ResponseData.Write(nroMappedAddress);
+            Context.ResponseData.Write(NroMappedAddress);
 
-            return result;
+            return Result;
         }
 
         // UnloadNro(u64, u64, pid)
-        public long UnloadNro(ServiceCtx context)
+        public long UnloadNro(ServiceCtx Context)
         {
-            long result = MakeError(ErrorModule.Loader, LoaderErr.BadInitialization);
+            long Result = MakeError(ErrorModule.Loader, LoaderErr.BadInitialization);
 
             // Zero
-            context.RequestData.ReadUInt64();
+            Context.RequestData.ReadUInt64();
 
-            ulong nroMappedAddress = context.RequestData.ReadUInt64();
+            ulong NroMappedAddress = Context.RequestData.ReadUInt64();
 
-            if (_isInitialized)
+            if (IsInitialized)
             {
-                if ((nroMappedAddress & 0xFFF) != 0)
+                if ((NroMappedAddress & 0xFFF) != 0)
                 {
                     return MakeError(ErrorModule.Loader, LoaderErr.UnalignedAddress);
                 }
 
-                result = RemoveNroInfo(context, nroMappedAddress);
+                Result = RemoveNroInfo(Context, NroMappedAddress);
             }
 
-            return result;
+            return Result;
         }
 
         // LoadNrr(u64, u64, u64, pid)
-        public long LoadNrr(ServiceCtx context)
+        public long LoadNrr(ServiceCtx Context)
         {
-            long result = MakeError(ErrorModule.Loader, LoaderErr.BadInitialization);
+            long Result = MakeError(ErrorModule.Loader, LoaderErr.BadInitialization);
 
             // Zero
-            context.RequestData.ReadUInt64();
+            Context.RequestData.ReadUInt64();
 
-            long nrrAddress = context.RequestData.ReadInt64();
-            long nrrSize    = context.RequestData.ReadInt64();
+            long NrrAddress = Context.RequestData.ReadInt64();
+            long NrrSize    = Context.RequestData.ReadInt64();
 
-            if (_isInitialized)
+            if (IsInitialized)
             {
-                NrrInfo info;
-                result = ParseNrr(out info, context, nrrAddress, nrrSize);
+                NrrInfo Info;
+                Result = ParseNrr(out Info, Context, NrrAddress, NrrSize);
 
-                if(result == 0)
+                if(Result == 0)
                 {
-                    if (_nrrInfos.Count >= MaxNrr)
+                    if (NrrInfos.Count >= MaxNrr)
                     {
-                        result = MakeError(ErrorModule.Loader, LoaderErr.MaxNrr);
+                        Result = MakeError(ErrorModule.Loader, LoaderErr.MaxNrr);
                     }
                     else
                     {
-                        _nrrInfos.Add(info);
+                        NrrInfos.Add(Info);
                     }
                 }
             }
 
-            return result;
+            return Result;
         }
 
         // UnloadNrr(u64, u64, pid)
-        public long UnloadNrr(ServiceCtx context)
+        public long UnloadNrr(ServiceCtx Context)
         {
-            long result = MakeError(ErrorModule.Loader, LoaderErr.BadInitialization);
+            long Result = MakeError(ErrorModule.Loader, LoaderErr.BadInitialization);
 
             // Zero
-            context.RequestData.ReadUInt64();
+            Context.RequestData.ReadUInt64();
 
-            long nrrHeapAddress = context.RequestData.ReadInt64();
+            long NrrHeapAddress = Context.RequestData.ReadInt64();
 
-            if (_isInitialized)
+            if (IsInitialized)
             {
-                if ((nrrHeapAddress & 0xFFF) != 0)
+                if ((NrrHeapAddress & 0xFFF) != 0)
                 {
                     return MakeError(ErrorModule.Loader, LoaderErr.UnalignedAddress);
                 }
 
-                result = RemoveNrrInfo(nrrHeapAddress);
+                Result = RemoveNrrInfo(NrrHeapAddress);
             }
 
-            return result;
+            return Result;
         }
 
         // Initialize(u64, pid, KObject)
-        public long Initialize(ServiceCtx context)
+        public long Initialize(ServiceCtx Context)
         {
             // TODO: we actually ignore the pid and process handle receive, we will need to use them when we will have multi process support.
-            _isInitialized = true;
+            IsInitialized = true;
 
             return 0;
         }

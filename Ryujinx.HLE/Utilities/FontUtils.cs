@@ -6,29 +6,29 @@ namespace Ryujinx.HLE.Utilities
     {
         private static readonly uint FontKey = 0x06186249;
 
-        public static byte[] DecryptFont(Stream bfttfStream)
+        public static byte[] DecryptFont(Stream BFTTFStream)
         {
             uint KXor(uint In) => In ^ 0x06186249;
 
-            using (BinaryReader reader = new BinaryReader(bfttfStream))
+            using (BinaryReader Reader = new BinaryReader(BFTTFStream))
             {
-                using (MemoryStream ttfStream = new MemoryStream())
+                using (MemoryStream TTFStream = new MemoryStream())
                 {
-                    using (BinaryWriter output = new BinaryWriter(ttfStream))
+                    using (BinaryWriter Output = new BinaryWriter(TTFStream))
                     {
-                        if (KXor(reader.ReadUInt32()) != 0x18029a7f)
+                        if (KXor(Reader.ReadUInt32()) != 0x18029a7f)
                         {
                             throw new InvalidDataException("Error: Input file is not in BFTTF format!");
                         }
 
-                        bfttfStream.Position += 4;
+                        BFTTFStream.Position += 4;
 
-                        for (int i = 0; i < (bfttfStream.Length - 8) / 4; i++)
+                        for (int i = 0; i < (BFTTFStream.Length - 8) / 4; i++)
                         {
-                            output.Write(KXor(reader.ReadUInt32()));
+                            Output.Write(KXor(Reader.ReadUInt32()));
                         }
 
-                        return ttfStream.ToArray();
+                        return TTFStream.ToArray();
                     }
                 }
             }

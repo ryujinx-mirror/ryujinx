@@ -4,20 +4,20 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class ArrayType : BaseNode
     {
-        private BaseNode _base;
-        private BaseNode _dimensionExpression;
-        private string   _dimensionString;
+        private BaseNode Base;
+        private BaseNode DimensionExpression;
+        private string   DimensionString;
 
-        public ArrayType(BaseNode Base, BaseNode dimensionExpression = null) : base(NodeType.ArrayType)
+        public ArrayType(BaseNode Base, BaseNode DimensionExpression = null) : base(NodeType.ArrayType)
         {
-            _base                = Base;
-            _dimensionExpression = dimensionExpression;
+            this.Base                = Base;
+            this.DimensionExpression = DimensionExpression;
         }
 
-        public ArrayType(BaseNode Base, string dimensionString) : base(NodeType.ArrayType)
+        public ArrayType(BaseNode Base, string DimensionString) : base(NodeType.ArrayType)
         {
-            _base            = Base;
-            _dimensionString = dimensionString;
+            this.Base            = Base;
+            this.DimensionString = DimensionString;
         }
 
         public override bool HasRightPart()
@@ -30,30 +30,30 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
             return true;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            _base.PrintLeft(writer);
+            Base.PrintLeft(Writer);
         }
 
-        public override void PrintRight(TextWriter writer)
+        public override void PrintRight(TextWriter Writer)
         {
             // FIXME: detect if previous char was a ].
-            writer.Write(" ");
+            Writer.Write(" ");
 
-            writer.Write("[");
+            Writer.Write("[");
 
-            if (_dimensionString != null)
+            if (DimensionString != null)
             {
-                writer.Write(_dimensionString);
+                Writer.Write(DimensionString);
             }
-            else if (_dimensionExpression != null)
+            else if (DimensionExpression != null)
             {
-                _dimensionExpression.Print(writer);
+                DimensionExpression.Print(Writer);
             }
 
-            writer.Write("]");
+            Writer.Write("]");
 
-            _base.PrintRight(writer);
+            Base.PrintRight(Writer);
         }
     }
 }

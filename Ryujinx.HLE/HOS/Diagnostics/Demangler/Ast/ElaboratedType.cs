@@ -4,18 +4,18 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class ElaboratedType : ParentNode
     {
-        private string _elaborated;
+        private string Elaborated;
 
-        public ElaboratedType(string elaborated, BaseNode type) : base(NodeType.ElaboratedType, type)
+        public ElaboratedType(string Elaborated, BaseNode Type) : base(NodeType.ElaboratedType, Type)
         {
-            _elaborated = elaborated;
+            this.Elaborated = Elaborated;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            writer.Write(_elaborated);
-            writer.Write(" ");
-            Child.Print(writer);
+            Writer.Write(Elaborated);
+            Writer.Write(" ");
+            Child.Print(Writer);
         }
     }
 }

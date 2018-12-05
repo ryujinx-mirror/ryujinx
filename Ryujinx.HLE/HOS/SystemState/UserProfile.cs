@@ -7,19 +7,19 @@ namespace Ryujinx.HLE.HOS.SystemState
     {
         private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        public UInt128 Uuid { get; }
+        public UInt128 Uuid { get; private set; }
 
-        public string Name { get; }
+        public string Name { get; private set; }
 
         public long LastModifiedTimestamp { get; private set; }
 
         public OpenCloseState AccountState    { get; set; }
         public OpenCloseState OnlinePlayState { get; set; }
 
-        public UserProfile(UInt128 uuid, string name)
+        public UserProfile(UInt128 Uuid, string Name)
         {
-            Uuid = uuid;
-            Name = name;
+            this.Uuid = Uuid;
+            this.Name = Name;
 
             LastModifiedTimestamp = 0;
 

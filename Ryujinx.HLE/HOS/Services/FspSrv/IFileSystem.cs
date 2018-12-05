@@ -11,19 +11,19 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
     class IFileSystem : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private HashSet<string> _openPaths;
+        private HashSet<string> OpenPaths;
 
-        private string _path;
+        private string Path;
 
-        private IFileSystemProvider _provider;
+        private IFileSystemProvider Provider;
 
-        public IFileSystem(string path, IFileSystemProvider provider)
+        public IFileSystem(string Path, IFileSystemProvider Provider)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,  CreateFile                 },
                 { 1,  DeleteFile                 },
@@ -38,196 +38,196 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 { 10, Commit                     },
                 { 11, GetFreeSpaceSize           },
                 { 12, GetTotalSpaceSize          },
-                { 13, CleanDirectoryRecursively  }
+                { 13, CleanDirectoryRecursively  },
                 //{ 14, GetFileTimeStampRaw        }
             };
 
-            _openPaths = new HashSet<string>();
+            OpenPaths = new HashSet<string>();
 
-            _path     = path;
-            _provider = provider;
+            this.Path     = Path;
+            this.Provider = Provider;
         }
 
         // CreateFile(u32 mode, u64 size, buffer<bytes<0x301>, 0x19, 0x301> path)
-        public long CreateFile(ServiceCtx context)
+        public long CreateFile(ServiceCtx Context)
         {
-            string name = ReadUtf8String(context);
+            string Name = ReadUtf8String(Context);
 
-            long mode = context.RequestData.ReadInt64();
-            int  size = context.RequestData.ReadInt32();
+            long Mode = Context.RequestData.ReadInt64();
+            int  Size = Context.RequestData.ReadInt32();
 
-            string fileName = _provider.GetFullPath(name);
+            string FileName = Provider.GetFullPath(Name);
 
-            if (fileName == null)
+            if (FileName == null)
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (_provider.FileExists(fileName))
+            if (Provider.FileExists(FileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
 
-            if (IsPathAlreadyInUse(fileName))
+            if (IsPathAlreadyInUse(FileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            return _provider.CreateFile(fileName, size);
+            return Provider.CreateFile(FileName, Size);
         }
 
         // DeleteFile(buffer<bytes<0x301>, 0x19, 0x301> path)
-        public long DeleteFile(ServiceCtx context)
+        public long DeleteFile(ServiceCtx Context)
         {
-            string name = ReadUtf8String(context);
+            string Name = ReadUtf8String(Context);
 
-            string fileName = _provider.GetFullPath(name);
+            string FileName = Provider.GetFullPath(Name);
 
-            if (!_provider.FileExists(fileName))
+            if (!Provider.FileExists(FileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (IsPathAlreadyInUse(fileName))
+            if (IsPathAlreadyInUse(FileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            return _provider.DeleteFile(fileName);
+            return Provider.DeleteFile(FileName);
         }
 
         // CreateDirectory(buffer<bytes<0x301>, 0x19, 0x301> path)
-        public long CreateDirectory(ServiceCtx context)
+        public long CreateDirectory(ServiceCtx Context)
         {
-            string name = ReadUtf8String(context);
+            string Name = ReadUtf8String(Context);
 
-            string dirName = _provider.GetFullPath(name);
+            string DirName = Provider.GetFullPath(Name);
 
-            if (dirName == null)
+            if (DirName == null)
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (_provider.DirectoryExists(dirName))
+            if (Provider.DirectoryExists(DirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
 
-            if (IsPathAlreadyInUse(dirName))
+            if (IsPathAlreadyInUse(DirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            _provider.CreateDirectory(dirName);
+            Provider.CreateDirectory(DirName);
 
             return 0;
         }
 
         // DeleteDirectory(buffer<bytes<0x301>, 0x19, 0x301> path)
-        public long DeleteDirectory(ServiceCtx context)
+        public long DeleteDirectory(ServiceCtx Context)
         {
-            return DeleteDirectory(context, false);
+            return DeleteDirectory(Context, false);
         }
 
         // DeleteDirectoryRecursively(buffer<bytes<0x301>, 0x19, 0x301> path)
-        public long DeleteDirectoryRecursively(ServiceCtx context)
+        public long DeleteDirectoryRecursively(ServiceCtx Context)
         {
-            return DeleteDirectory(context, true);
+            return DeleteDirectory(Context, true);
         }
         
-        private long DeleteDirectory(ServiceCtx context, bool recursive)
+        private long DeleteDirectory(ServiceCtx Context, bool Recursive)
         {
-            string name = ReadUtf8String(context);
+            string Name = ReadUtf8String(Context);
 
-            string dirName = _provider.GetFullPath(name);
+            string DirName = Provider.GetFullPath(Name);
 
-            if (!Directory.Exists(dirName))
+            if (!Directory.Exists(DirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (IsPathAlreadyInUse(dirName))
+            if (IsPathAlreadyInUse(DirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            _provider.DeleteDirectory(dirName, recursive);
+            Provider.DeleteDirectory(DirName, Recursive);
 
             return 0;
         }
 
         // RenameFile(buffer<bytes<0x301>, 0x19, 0x301> oldPath, buffer<bytes<0x301>, 0x19, 0x301> newPath)
-        public long RenameFile(ServiceCtx context)
+        public long RenameFile(ServiceCtx Context)
         {
-            string oldName = ReadUtf8String(context, 0);
-            string newName = ReadUtf8String(context, 1);
+            string OldName = ReadUtf8String(Context, 0);
+            string NewName = ReadUtf8String(Context, 1);
 
-            string oldFileName = _provider.GetFullPath(oldName);
-            string newFileName = _provider.GetFullPath(newName);
+            string OldFileName = Provider.GetFullPath(OldName);
+            string NewFileName = Provider.GetFullPath(NewName);
 
-            if (_provider.FileExists(oldFileName))
+            if (Provider.FileExists(OldFileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (_provider.FileExists(newFileName))
+            if (Provider.FileExists(NewFileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
 
-            if (IsPathAlreadyInUse(oldFileName))
+            if (IsPathAlreadyInUse(OldFileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            return _provider.RenameFile(oldFileName, newFileName);
+            return Provider.RenameFile(OldFileName, NewFileName);
         }
 
         // RenameDirectory(buffer<bytes<0x301>, 0x19, 0x301> oldPath, buffer<bytes<0x301>, 0x19, 0x301> newPath)
-        public long RenameDirectory(ServiceCtx context)
+        public long RenameDirectory(ServiceCtx Context)
         {
-            string oldName = ReadUtf8String(context, 0);
-            string newName = ReadUtf8String(context, 1);
+            string OldName = ReadUtf8String(Context, 0);
+            string NewName = ReadUtf8String(Context, 1);
 
-            string oldDirName = _provider.GetFullPath(oldName);
-            string newDirName = _provider.GetFullPath(newName);
+            string OldDirName = Provider.GetFullPath(OldName);
+            string NewDirName = Provider.GetFullPath(NewName);
 
-            if (!_provider.DirectoryExists(oldDirName))
+            if (!Provider.DirectoryExists(OldDirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (!_provider.DirectoryExists(newDirName))
+            if (!Provider.DirectoryExists(NewDirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
 
-            if (IsPathAlreadyInUse(oldDirName))
+            if (IsPathAlreadyInUse(OldDirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            return _provider.RenameDirectory(oldDirName, newDirName);
+            return Provider.RenameDirectory(OldDirName, NewDirName);
         }
 
         // GetEntryType(buffer<bytes<0x301>, 0x19, 0x301> path) -> nn::fssrv::sf::DirectoryEntryType
-        public long GetEntryType(ServiceCtx context)
+        public long GetEntryType(ServiceCtx Context)
         {
-            string name = ReadUtf8String(context);
+            string Name = ReadUtf8String(Context);
 
-            string fileName = _provider.GetFullPath(name);
+            string FileName = Provider.GetFullPath(Name);
 
-            if (_provider.FileExists(fileName))
+            if (Provider.FileExists(FileName))
             {
-                context.ResponseData.Write(1);
+                Context.ResponseData.Write(1);
             }
-            else if (_provider.DirectoryExists(fileName))
+            else if (Provider.DirectoryExists(FileName))
             {
-                context.ResponseData.Write(0);
+                Context.ResponseData.Write(0);
             }
             else
             {
-                context.ResponseData.Write(0);
+                Context.ResponseData.Write(0);
 
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
@@ -236,167 +236,167 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         }
 
         // OpenFile(u32 mode, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IFile> file
-        public long OpenFile(ServiceCtx context)
+        public long OpenFile(ServiceCtx Context)
         {
-            int filterFlags = context.RequestData.ReadInt32();
+            int FilterFlags = Context.RequestData.ReadInt32();
 
-            string name = ReadUtf8String(context);
+            string Name = ReadUtf8String(Context);
 
-            string fileName = _provider.GetFullPath(name);
+            string FileName = Provider.GetFullPath(Name);
 
-            if (!_provider.FileExists(fileName))
+            if (!Provider.FileExists(FileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (IsPathAlreadyInUse(fileName))
+            if (IsPathAlreadyInUse(FileName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
 
-            long error = _provider.OpenFile(fileName, out IFile fileInterface);
+            long Error = Provider.OpenFile(FileName, out IFile FileInterface);
 
-            if (error == 0)
+            if (Error == 0)
             {
-                fileInterface.Disposed += RemoveFileInUse;
+                FileInterface.Disposed += RemoveFileInUse;
 
-                lock (_openPaths)
+                lock (OpenPaths)
                 {
-                    _openPaths.Add(fileName);
+                    OpenPaths.Add(FileName);
                 }
 
-                MakeObject(context, fileInterface);
+                MakeObject(Context, FileInterface);
 
                 return 0;
             }
 
-            return error;
+            return Error;
         }
 
         // OpenDirectory(u32 filter_flags, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IDirectory> directory
-        public long OpenDirectory(ServiceCtx context)
+        public long OpenDirectory(ServiceCtx Context)
         {
-            int filterFlags = context.RequestData.ReadInt32();
+            int FilterFlags = Context.RequestData.ReadInt32();
 
-            string name = ReadUtf8String(context);
+            string Name = ReadUtf8String(Context);
 
-            string dirName = _provider.GetFullPath(name);
+            string DirName = Provider.GetFullPath(Name);
 
-            if (!_provider.DirectoryExists(dirName))
+            if (!Provider.DirectoryExists(DirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (IsPathAlreadyInUse(dirName))
+            if (IsPathAlreadyInUse(DirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            long error = _provider.OpenDirectory(dirName, filterFlags, out IDirectory dirInterface);
+            long Error = Provider.OpenDirectory(DirName, FilterFlags, out IDirectory DirInterface);
 
-            if (error == 0)
+            if (Error == 0)
             {
-                dirInterface.Disposed += RemoveDirectoryInUse;
+                DirInterface.Disposed += RemoveDirectoryInUse;
 
-                lock (_openPaths)
+                lock (OpenPaths)
                 {
-                    _openPaths.Add(dirName);
+                    OpenPaths.Add(DirName);
                 }
 
-                MakeObject(context, dirInterface);
+                MakeObject(Context, DirInterface);
             }
 
-            return error;
+            return Error;
         }
 
         // Commit()
-        public long Commit(ServiceCtx context)
+        public long Commit(ServiceCtx Context)
         {
             return 0;
         }
 
         // GetFreeSpaceSize(buffer<bytes<0x301>, 0x19, 0x301> path) -> u64 totalFreeSpace
-        public long GetFreeSpaceSize(ServiceCtx context)
+        public long GetFreeSpaceSize(ServiceCtx Context)
         {
-            string name = ReadUtf8String(context);
+            string Name = ReadUtf8String(Context);
 
-            context.ResponseData.Write(_provider.GetFreeSpace(context));
+            Context.ResponseData.Write(Provider.GetFreeSpace(Context));
 
             return 0;
         }
 
         // GetTotalSpaceSize(buffer<bytes<0x301>, 0x19, 0x301> path) -> u64 totalSize
-        public long GetTotalSpaceSize(ServiceCtx context)
+        public long GetTotalSpaceSize(ServiceCtx Context)
         {
-            string name = ReadUtf8String(context);
+            string Name = ReadUtf8String(Context);
 
-            context.ResponseData.Write(_provider.GetFreeSpace(context));
+            Context.ResponseData.Write(Provider.GetFreeSpace(Context));
 
             return 0;
         }
 
         // CleanDirectoryRecursively(buffer<bytes<0x301>, 0x19, 0x301> path)
-        public long CleanDirectoryRecursively(ServiceCtx context)
+        public long CleanDirectoryRecursively(ServiceCtx Context)
         {
-            string name = ReadUtf8String(context);
+            string Name = ReadUtf8String(Context);
 
-            string dirName = _provider.GetFullPath(name);
+            string DirName = Provider.GetFullPath(Name);
 
-            if (!_provider.DirectoryExists(dirName))
+            if (!Provider.DirectoryExists(DirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (IsPathAlreadyInUse(dirName))
+            if (IsPathAlreadyInUse(DirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            foreach (DirectoryEntry entry in _provider.GetEntries(dirName))
+            foreach (DirectoryEntry Entry in Provider.GetEntries(DirName))
             {
-                if (_provider.DirectoryExists(entry.Path))
+                if (Provider.DirectoryExists(Entry.Path))
                 {
-                    _provider.DeleteDirectory(entry.Path, true);
+                    Provider.DeleteDirectory(Entry.Path, true);
                 }
-                else if (_provider.FileExists(entry.Path))
+                else if (Provider.FileExists(Entry.Path))
                 {
-                   _provider.DeleteFile(entry.Path);
+                   Provider.DeleteFile(Entry.Path);
                 }
             }
 
             return 0;
         }
 
-        private bool IsPathAlreadyInUse(string path)
+        private bool IsPathAlreadyInUse(string Path)
         {
-            lock (_openPaths)
+            lock (OpenPaths)
             {
-                return _openPaths.Contains(path);
+                return OpenPaths.Contains(Path);
             }
         }
 
         private void RemoveFileInUse(object sender, EventArgs e)
         {
-            IFile fileInterface = (IFile)sender;
+            IFile FileInterface = (IFile)sender;
 
-            lock (_openPaths)
+            lock (OpenPaths)
             {
-                fileInterface.Disposed -= RemoveFileInUse;
+                FileInterface.Disposed -= RemoveFileInUse;
 
-                _openPaths.Remove(fileInterface.HostPath);
+                OpenPaths.Remove(FileInterface.HostPath);
             }
         }
 
         private void RemoveDirectoryInUse(object sender, EventArgs e)
         {
-            IDirectory dirInterface = (IDirectory)sender;
+            IDirectory DirInterface = (IDirectory)sender;
 
-            lock (_openPaths)
+            lock (OpenPaths)
             {
-                dirInterface.Disposed -= RemoveDirectoryInUse;
+                DirInterface.Disposed -= RemoveDirectoryInUse;
 
-                _openPaths.Remove(dirInterface.DirectoryPath);
+                OpenPaths.Remove(DirInterface.DirectoryPath);
             }
         }
     }

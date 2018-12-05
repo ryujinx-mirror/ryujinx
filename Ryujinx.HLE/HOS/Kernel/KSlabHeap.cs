@@ -4,46 +4,46 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class KSlabHeap
     {
-        private LinkedList<ulong> _items;
+        private LinkedList<ulong> Items;
 
-        public KSlabHeap(ulong pa, ulong itemSize, ulong size)
+        public KSlabHeap(ulong Pa, ulong ItemSize, ulong Size)
         {
-            _items = new LinkedList<ulong>();
+            Items = new LinkedList<ulong>();
 
-            int itemsCount = (int)(size / itemSize);
+            int ItemsCount = (int)(Size / ItemSize);
 
-            for (int index = 0; index < itemsCount; index++)
+            for (int Index = 0; Index < ItemsCount; Index++)
             {
-                _items.AddLast(pa);
+                Items.AddLast(Pa);
 
-                pa += itemSize;
+                Pa += ItemSize;
             }
         }
 
-        public bool TryGetItem(out ulong pa)
+        public bool TryGetItem(out ulong Pa)
         {
-            lock (_items)
+            lock (Items)
             {
-                if (_items.First != null)
+                if (Items.First != null)
                 {
-                    pa = _items.First.Value;
+                    Pa = Items.First.Value;
 
-                    _items.RemoveFirst();
+                    Items.RemoveFirst();
 
                     return true;
                 }
             }
 
-            pa = 0;
+            Pa = 0;
 
             return false;
         }
 
-        public void Free(ulong pa)
+        public void Free(ulong Pa)
         {
-            lock (_items)
+            lock (Items)
             {
-                _items.AddFirst(pa);
+                Items.AddFirst(Pa);
             }
         }
     }

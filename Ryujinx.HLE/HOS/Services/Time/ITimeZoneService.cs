@@ -10,17 +10,17 @@ namespace Ryujinx.HLE.HOS.Services.Time
 {
     class ITimeZoneService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        private TimeZoneInfo _timeZone = TimeZoneInfo.Local;
+        private TimeZoneInfo TimeZone = TimeZoneInfo.Local;
 
         public ITimeZoneService()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,   GetDeviceLocationName     },
                 { 1,   SetDeviceLocationName     },
@@ -34,245 +34,245 @@ namespace Ryujinx.HLE.HOS.Services.Time
             };
         }
 
-        public long GetDeviceLocationName(ServiceCtx context)
+        public long GetDeviceLocationName(ServiceCtx Context)
         {
-            char[] tzName = _timeZone.Id.ToCharArray();
+            char[] TzName = TimeZone.Id.ToCharArray();
 
-            context.ResponseData.Write(tzName);
+            Context.ResponseData.Write(TzName);
 
-            int padding = 0x24 - tzName.Length;
+            int Padding = 0x24 - TzName.Length;
 
-            for (int index = 0; index < padding; index++)
+            for (int Index = 0; Index < Padding; Index++)
             {
-                context.ResponseData.Write((byte)0);
+                Context.ResponseData.Write((byte)0);
             }
 
             return 0;
         }
 
-        public long SetDeviceLocationName(ServiceCtx context)
+        public long SetDeviceLocationName(ServiceCtx Context)
         {
-            byte[] locationName = context.RequestData.ReadBytes(0x24);
+            byte[] LocationName = Context.RequestData.ReadBytes(0x24);
 
-            string tzId = Encoding.ASCII.GetString(locationName).TrimEnd('\0');
+            string TzID = Encoding.ASCII.GetString(LocationName).TrimEnd('\0');
 
-            long resultCode = 0;
+            long ResultCode = 0;
 
             try
             {
-                _timeZone = TimeZoneInfo.FindSystemTimeZoneById(tzId);
+                TimeZone = TimeZoneInfo.FindSystemTimeZoneById(TzID);
             }
             catch (TimeZoneNotFoundException)
             {
-                resultCode = MakeError(ErrorModule.Time, 0x3dd);
+                ResultCode = MakeError(ErrorModule.Time, 0x3dd);
             }
 
-            return resultCode;
+            return ResultCode;
         }
 
-        public long GetTotalLocationNameCount(ServiceCtx context)
+        public long GetTotalLocationNameCount(ServiceCtx Context)
         {
-            context.ResponseData.Write(TimeZoneInfo.GetSystemTimeZones().Count);
+            Context.ResponseData.Write(TimeZoneInfo.GetSystemTimeZones().Count);
 
             return 0;
         }
 
-        public long LoadLocationNameList(ServiceCtx context)
+        public long LoadLocationNameList(ServiceCtx Context)
         {
-            long bufferPosition = context.Response.SendBuff[0].Position;
-            long bufferSize     = context.Response.SendBuff[0].Size;
+            long BufferPosition = Context.Response.SendBuff[0].Position;
+            long BufferSize     = Context.Response.SendBuff[0].Size;
 
-            int offset = 0;
+            int Offset = 0;
 
             foreach (TimeZoneInfo info in TimeZoneInfo.GetSystemTimeZones())
             {
-                byte[] tzData = Encoding.ASCII.GetBytes(info.Id);
+                byte[] TzData = Encoding.ASCII.GetBytes(info.Id);
 
-                context.Memory.WriteBytes(bufferPosition + offset, tzData);
+                Context.Memory.WriteBytes(BufferPosition + Offset, TzData);
 
-                int padding = 0x24 - tzData.Length;
+                int Padding = 0x24 - TzData.Length;
 
-                for (int index = 0; index < padding; index++)
+                for (int Index = 0; Index < Padding; Index++)
                 {
-                    context.ResponseData.Write((byte)0);
+                    Context.ResponseData.Write((byte)0);
                 }
 
-                offset += 0x24;
+                Offset += 0x24;
             }
 
             return 0;
         }
 
-        public long LoadTimeZoneRule(ServiceCtx context)
+        public long LoadTimeZoneRule(ServiceCtx Context)
         {
-            long bufferPosition = context.Request.ReceiveBuff[0].Position;
-            long bufferSize     = context.Request.ReceiveBuff[0].Size;
+            long BufferPosition = Context.Request.ReceiveBuff[0].Position;
+            long BufferSize     = Context.Request.ReceiveBuff[0].Size;
 
-            if (bufferSize != 0x4000)
+            if (BufferSize != 0x4000)
             {
-                Logger.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{bufferSize:x} (expected 0x4000)");
+                Logger.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{BufferSize:x} (expected 0x4000)");
             }
 
-            long resultCode = 0;
+            long ResultCode = 0;
 
-            byte[] locationName = context.RequestData.ReadBytes(0x24);
+            byte[] LocationName = Context.RequestData.ReadBytes(0x24);
 
-            string tzId = Encoding.ASCII.GetString(locationName).TrimEnd('\0');
+            string TzID = Encoding.ASCII.GetString(LocationName).TrimEnd('\0');
 
             // Check if the Time Zone exists, otherwise error out.
             try
             {
-                TimeZoneInfo info = TimeZoneInfo.FindSystemTimeZoneById(tzId);
+                TimeZoneInfo Info = TimeZoneInfo.FindSystemTimeZoneById(TzID);
 
-                byte[] tzData = Encoding.ASCII.GetBytes(info.Id);
+                byte[] TzData = Encoding.ASCII.GetBytes(Info.Id);
 
                 // FIXME: This is not in ANY cases accurate, but the games don't care about the content of the buffer, they only pass it.
                 // TODO: Reverse the TZif2 conversion in PCV to make this match with real hardware.
-                context.Memory.WriteBytes(bufferPosition, tzData);
+                Context.Memory.WriteBytes(BufferPosition, TzData);
             }
             catch (TimeZoneNotFoundException)
             {
-                Logger.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {tzId} (len: {tzId.Length})");
+                Logger.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {TzID} (len: {TzID.Length})");
 
-                resultCode = MakeError(ErrorModule.Time, 0x3dd);
+                ResultCode = MakeError(ErrorModule.Time, 0x3dd);
             }
 
-            return resultCode;
+            return ResultCode;
         }
 
-        private long ToCalendarTimeWithTz(ServiceCtx context, long posixTime, TimeZoneInfo info)
+        private long ToCalendarTimeWithTz(ServiceCtx Context, long PosixTime, TimeZoneInfo Info)
         {
-            DateTime currentTime = Epoch.AddSeconds(posixTime);
+            DateTime CurrentTime = Epoch.AddSeconds(PosixTime);
 
-            currentTime = TimeZoneInfo.ConvertTimeFromUtc(currentTime, info);
+            CurrentTime = TimeZoneInfo.ConvertTimeFromUtc(CurrentTime, Info);
 
-            context.ResponseData.Write((ushort)currentTime.Year);
-            context.ResponseData.Write((byte)currentTime.Month);
-            context.ResponseData.Write((byte)currentTime.Day);
-            context.ResponseData.Write((byte)currentTime.Hour);
-            context.ResponseData.Write((byte)currentTime.Minute);
-            context.ResponseData.Write((byte)currentTime.Second);
-            context.ResponseData.Write((byte)0); //MilliSecond ?
-            context.ResponseData.Write((int)currentTime.DayOfWeek);
-            context.ResponseData.Write(currentTime.DayOfYear - 1);
-            context.ResponseData.Write(new byte[8]); //TODO: Find out the names used.
-            context.ResponseData.Write((byte)(currentTime.IsDaylightSavingTime() ? 1 : 0));
-            context.ResponseData.Write((int)info.GetUtcOffset(currentTime).TotalSeconds);
+            Context.ResponseData.Write((ushort)CurrentTime.Year);
+            Context.ResponseData.Write((byte)CurrentTime.Month);
+            Context.ResponseData.Write((byte)CurrentTime.Day);
+            Context.ResponseData.Write((byte)CurrentTime.Hour);
+            Context.ResponseData.Write((byte)CurrentTime.Minute);
+            Context.ResponseData.Write((byte)CurrentTime.Second);
+            Context.ResponseData.Write((byte)0); //MilliSecond ?
+            Context.ResponseData.Write((int)CurrentTime.DayOfWeek);
+            Context.ResponseData.Write(CurrentTime.DayOfYear - 1);
+            Context.ResponseData.Write(new byte[8]); //TODO: Find out the names used.
+            Context.ResponseData.Write((byte)(CurrentTime.IsDaylightSavingTime() ? 1 : 0));
+            Context.ResponseData.Write((int)Info.GetUtcOffset(CurrentTime).TotalSeconds);
 
             return 0;
         }
 
-        public long ToCalendarTime(ServiceCtx context)
+        public long ToCalendarTime(ServiceCtx Context)
         {
-            long posixTime      = context.RequestData.ReadInt64();
-            long bufferPosition = context.Request.SendBuff[0].Position;
-            long bufferSize     = context.Request.SendBuff[0].Size;
+            long PosixTime      = Context.RequestData.ReadInt64();
+            long BufferPosition = Context.Request.SendBuff[0].Position;
+            long BufferSize     = Context.Request.SendBuff[0].Size;
 
-            if (bufferSize != 0x4000)
+            if (BufferSize != 0x4000)
             {
-                Logger.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{bufferSize:x} (expected 0x4000)");
+                Logger.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{BufferSize:x} (expected 0x4000)");
             }
 
             // TODO: Reverse the TZif2 conversion in PCV to make this match with real hardware.
-            byte[] tzData = context.Memory.ReadBytes(bufferPosition, 0x24);
+            byte[] TzData = Context.Memory.ReadBytes(BufferPosition, 0x24);
 
-            string tzId = Encoding.ASCII.GetString(tzData).TrimEnd('\0');
+            string TzID = Encoding.ASCII.GetString(TzData).TrimEnd('\0');
 
-            long resultCode = 0;
+            long ResultCode = 0;
 
             // Check if the Time Zone exists, otherwise error out.
             try
             {
-                TimeZoneInfo info = TimeZoneInfo.FindSystemTimeZoneById(tzId);
+                TimeZoneInfo Info = TimeZoneInfo.FindSystemTimeZoneById(TzID);
 
-                resultCode = ToCalendarTimeWithTz(context, posixTime, info);
+                ResultCode = ToCalendarTimeWithTz(Context, PosixTime, Info);
             }
             catch (TimeZoneNotFoundException)
             {
-                Logger.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {tzId} (len: {tzId.Length})");
+                Logger.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {TzID} (len: {TzID.Length})");
 
-                resultCode = MakeError(ErrorModule.Time, 0x3dd);
+                ResultCode = MakeError(ErrorModule.Time, 0x3dd);
             }
 
-            return resultCode;
+            return ResultCode;
         }
 
-        public long ToCalendarTimeWithMyRule(ServiceCtx context)
+        public long ToCalendarTimeWithMyRule(ServiceCtx Context)
         {
-            long posixTime = context.RequestData.ReadInt64();
+            long PosixTime = Context.RequestData.ReadInt64();
 
-            return ToCalendarTimeWithTz(context, posixTime, _timeZone);
+            return ToCalendarTimeWithTz(Context, PosixTime, TimeZone);
         }
 
-        public long ToPosixTime(ServiceCtx context)
+        public long ToPosixTime(ServiceCtx Context)
         {
-            long bufferPosition = context.Request.SendBuff[0].Position;
-            long bufferSize     = context.Request.SendBuff[0].Size;
+            long BufferPosition = Context.Request.SendBuff[0].Position;
+            long BufferSize     = Context.Request.SendBuff[0].Size;
 
-            ushort year   = context.RequestData.ReadUInt16();
-            byte   month  = context.RequestData.ReadByte();
-            byte   day    = context.RequestData.ReadByte();
-            byte   hour   = context.RequestData.ReadByte();
-            byte   minute = context.RequestData.ReadByte();
-            byte   second = context.RequestData.ReadByte();
+            ushort Year   = Context.RequestData.ReadUInt16();
+            byte   Month  = Context.RequestData.ReadByte();
+            byte   Day    = Context.RequestData.ReadByte();
+            byte   Hour   = Context.RequestData.ReadByte();
+            byte   Minute = Context.RequestData.ReadByte();
+            byte   Second = Context.RequestData.ReadByte();
 
-            DateTime calendarTime = new DateTime(year, month, day, hour, minute, second);
+            DateTime CalendarTime = new DateTime(Year, Month, Day, Hour, Minute, Second);
 
-            if (bufferSize != 0x4000)
+            if (BufferSize != 0x4000)
             {
-                Logger.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{bufferSize:x} (expected 0x4000)");
+                Logger.PrintWarning(LogClass.ServiceTime, $"TimeZoneRule buffer size is 0x{BufferSize:x} (expected 0x4000)");
             }
 
             // TODO: Reverse the TZif2 conversion in PCV to make this match with real hardware.
-            byte[] tzData = context.Memory.ReadBytes(bufferPosition, 0x24);
+            byte[] TzData = Context.Memory.ReadBytes(BufferPosition, 0x24);
 
-            string tzId = Encoding.ASCII.GetString(tzData).TrimEnd('\0');
+            string TzID = Encoding.ASCII.GetString(TzData).TrimEnd('\0');
 
-            long resultCode = 0;
+            long ResultCode = 0;
 
             // Check if the Time Zone exists, otherwise error out.
             try
             {
-                TimeZoneInfo info = TimeZoneInfo.FindSystemTimeZoneById(tzId);
+                TimeZoneInfo Info = TimeZoneInfo.FindSystemTimeZoneById(TzID);
 
-                return ToPosixTimeWithTz(context, calendarTime, info);
+                return ToPosixTimeWithTz(Context, CalendarTime, Info);
             }
             catch (TimeZoneNotFoundException)
             {
-                Logger.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {tzId} (len: {tzId.Length})");
+                Logger.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {TzID} (len: {TzID.Length})");
 
-                resultCode = MakeError(ErrorModule.Time, 0x3dd);
+                ResultCode = MakeError(ErrorModule.Time, 0x3dd);
             }
 
-            return resultCode;
+            return ResultCode;
         }
 
-        public long ToPosixTimeWithMyRule(ServiceCtx context)
+        public long ToPosixTimeWithMyRule(ServiceCtx Context)
         {
-            ushort year   = context.RequestData.ReadUInt16();
-            byte   month  = context.RequestData.ReadByte();
-            byte   day    = context.RequestData.ReadByte();
-            byte   hour   = context.RequestData.ReadByte();
-            byte   minute = context.RequestData.ReadByte();
-            byte   second = context.RequestData.ReadByte();
+            ushort Year   = Context.RequestData.ReadUInt16();
+            byte   Month  = Context.RequestData.ReadByte();
+            byte   Day    = Context.RequestData.ReadByte();
+            byte   Hour   = Context.RequestData.ReadByte();
+            byte   Minute = Context.RequestData.ReadByte();
+            byte   Second = Context.RequestData.ReadByte();
 
-            DateTime calendarTime = new DateTime(year, month, day, hour, minute, second, DateTimeKind.Local);
+            DateTime CalendarTime = new DateTime(Year, Month, Day, Hour, Minute, Second, DateTimeKind.Local);
 
-            return ToPosixTimeWithTz(context, calendarTime, _timeZone);
+            return ToPosixTimeWithTz(Context, CalendarTime, TimeZone);
         }
 
-        private long ToPosixTimeWithTz(ServiceCtx context, DateTime calendarTime, TimeZoneInfo info)
+        private long ToPosixTimeWithTz(ServiceCtx Context, DateTime CalendarTime, TimeZoneInfo Info)
         {
-            DateTime calenderTimeUtc = TimeZoneInfo.ConvertTimeToUtc(calendarTime, info);
+            DateTime CalenderTimeUTC = TimeZoneInfo.ConvertTimeToUtc(CalendarTime, Info);
 
-            long posixTime = ((DateTimeOffset)calenderTimeUtc).ToUnixTimeSeconds();
+            long PosixTime = ((DateTimeOffset)CalenderTimeUTC).ToUnixTimeSeconds();
 
-            long position = context.Request.RecvListBuff[0].Position;
-            long size     = context.Request.RecvListBuff[0].Size;
+            long Position = Context.Request.RecvListBuff[0].Position;
+            long Size     = Context.Request.RecvListBuff[0].Size;
 
-            context.Memory.WriteInt64(position, posixTime);
+            Context.Memory.WriteInt64(Position, PosixTime);
 
-            context.ResponseData.Write(1);
+            Context.ResponseData.Write(1);
 
             return 0;
         }

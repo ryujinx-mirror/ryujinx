@@ -10,13 +10,13 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 {
     class IAccountService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IAccountService()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,   GetUserCount                        },
                 { 1,   GetUserExistence                    },
@@ -32,131 +32,131 @@ namespace Ryujinx.HLE.HOS.Services.Acc
         }
 
         // GetUserCount() -> i32
-        public long GetUserCount(ServiceCtx context)
+        public long GetUserCount(ServiceCtx Context)
         {
-            context.ResponseData.Write(context.Device.System.State.GetUserCount());
+            Context.ResponseData.Write(Context.Device.System.State.GetUserCount());
 
             return 0;
         }
 
         // GetUserExistence(nn::account::Uid) -> bool
-        public long GetUserExistence(ServiceCtx context)
+        public long GetUserExistence(ServiceCtx Context)
         {
-            UInt128 uuid = new UInt128(
-                context.RequestData.ReadInt64(),
-                context.RequestData.ReadInt64());
+            UInt128 Uuid = new UInt128(
+                Context.RequestData.ReadInt64(),
+                Context.RequestData.ReadInt64());
 
-            context.ResponseData.Write(context.Device.System.State.TryGetUser(uuid, out _));
+            Context.ResponseData.Write(Context.Device.System.State.TryGetUser(Uuid, out _));
 
             return 0;
         }
 
         // ListAllUsers() -> array<nn::account::Uid, 0xa>
-        public long ListAllUsers(ServiceCtx context)
+        public long ListAllUsers(ServiceCtx Context)
         {
-            return WriteUserList(context, context.Device.System.State.GetAllUsers());
+            return WriteUserList(Context, Context.Device.System.State.GetAllUsers());
         }
 
         // ListOpenUsers() -> array<nn::account::Uid, 0xa>
-        public long ListOpenUsers(ServiceCtx context)
+        public long ListOpenUsers(ServiceCtx Context)
         {
-            return WriteUserList(context, context.Device.System.State.GetOpenUsers());
+            return WriteUserList(Context, Context.Device.System.State.GetOpenUsers());
         }
 
-        private long WriteUserList(ServiceCtx context, IEnumerable<UserProfile> profiles)
+        private long WriteUserList(ServiceCtx Context, IEnumerable<UserProfile> Profiles)
         {
-            long outputPosition = context.Request.RecvListBuff[0].Position;
-            long outputSize     = context.Request.RecvListBuff[0].Size;
+            long OutputPosition = Context.Request.RecvListBuff[0].Position;
+            long OutputSize     = Context.Request.RecvListBuff[0].Size;
 
-            long offset = 0;
+            long Offset = 0;
 
-            foreach (UserProfile profile in profiles)
+            foreach (UserProfile Profile in Profiles)
             {
-                if ((ulong)offset + 16 > (ulong)outputSize)
+                if ((ulong)Offset + 16 > (ulong)OutputSize)
                 {
                     break;
                 }
 
-                context.Memory.WriteInt64(outputPosition, profile.Uuid.Low);
-                context.Memory.WriteInt64(outputPosition + 8, profile.Uuid.High);
+                Context.Memory.WriteInt64(OutputPosition, Profile.Uuid.Low);
+                Context.Memory.WriteInt64(OutputPosition + 8, Profile.Uuid.High);
             }
 
             return 0;
         }
 
         // GetLastOpenedUser() -> nn::account::Uid
-        public long GetLastOpenedUser(ServiceCtx context)
+        public long GetLastOpenedUser(ServiceCtx Context)
         {
-            UserProfile lastOpened = context.Device.System.State.LastOpenUser;
+            UserProfile LastOpened = Context.Device.System.State.LastOpenUser;
 
-            lastOpened.Uuid.Write(context.ResponseData);
+            LastOpened.Uuid.Write(Context.ResponseData);
 
             return 0;
         }
 
         // GetProfile(nn::account::Uid) -> object<nn::account::profile::IProfile>
-        public long GetProfile(ServiceCtx context)
+        public long GetProfile(ServiceCtx Context)
         {
-            UInt128 uuid = new UInt128(
-                context.RequestData.ReadInt64(),
-                context.RequestData.ReadInt64());
+            UInt128 Uuid = new UInt128(
+                Context.RequestData.ReadInt64(),
+                Context.RequestData.ReadInt64());
 
-            if (!context.Device.System.State.TryGetUser(uuid, out UserProfile profile))
+            if (!Context.Device.System.State.TryGetUser(Uuid, out UserProfile Profile))
             {
-                Logger.PrintWarning(LogClass.ServiceAcc, $"User 0x{uuid} not found!");
+                Logger.PrintWarning(LogClass.ServiceAcc, $"User 0x{Uuid} not found!");
 
                 return MakeError(ErrorModule.Account, AccErr.UserNotFound);
             }
 
-            MakeObject(context, new IProfile(profile));
+            MakeObject(Context, new IProfile(Profile));
 
             return 0;
         }
 
         // IsUserRegistrationRequestPermitted(u64, pid) -> bool
-        public long IsUserRegistrationRequestPermitted(ServiceCtx context)
+        public long IsUserRegistrationRequestPermitted(ServiceCtx Context)
         {
-            long unknown = context.RequestData.ReadInt64();
+            long Unknown = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {unknown}");
+            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {Unknown}");
 
-            context.ResponseData.Write(false);
+            Context.ResponseData.Write(false);
 
             return 0;
         }
 
         // TrySelectUserWithoutInteraction(bool) -> nn::account::Uid
-        public long TrySelectUserWithoutInteraction(ServiceCtx context)
+        public long TrySelectUserWithoutInteraction(ServiceCtx Context)
         {
-            bool unknown = context.RequestData.ReadBoolean();
+            bool Unknown = Context.RequestData.ReadBoolean();
 
-            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {unknown}");
+            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {Unknown}");
 
-            UserProfile profile = context.Device.System.State.LastOpenUser;
+            UserProfile Profile = Context.Device.System.State.LastOpenUser;
 
-            profile.Uuid.Write(context.ResponseData);
+            Profile.Uuid.Write(Context.ResponseData);
 
             return 0;
         }
 
         // InitializeApplicationInfo(u64, pid)
-        public long InitializeApplicationInfo(ServiceCtx context)
+        public long InitializeApplicationInfo(ServiceCtx Context)
         {
-            long unknown = context.RequestData.ReadInt64();
+            long Unknown = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {unknown}");
+            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {Unknown}");
 
             return 0;
         }
 
         //  GetBaasAccountManagerForApplication(nn::account::Uid) -> object<nn::account::baas::IManagerForApplication>
-        public long GetBaasAccountManagerForApplication(ServiceCtx context)
+        public long GetBaasAccountManagerForApplication(ServiceCtx Context)
         {
-            UInt128 uuid = new UInt128(
-                context.RequestData.ReadInt64(),
-                context.RequestData.ReadInt64());
+            UInt128 Uuid = new UInt128(
+                Context.RequestData.ReadInt64(),
+                Context.RequestData.ReadInt64());
 
-            MakeObject(context, new IManagerForApplication(uuid));
+            MakeObject(Context, new IManagerForApplication(Uuid));
 
             return 0;
         }

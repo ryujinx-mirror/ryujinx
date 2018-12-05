@@ -4,20 +4,20 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class PackedTemplateParameterExpansion : ParentNode
     {
-        public PackedTemplateParameterExpansion(BaseNode child) : base(NodeType.PackedTemplateParameterExpansion, child) {}
+        public PackedTemplateParameterExpansion(BaseNode Child) : base(NodeType.PackedTemplateParameterExpansion, Child) {}
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
             if (Child is PackedTemplateParameter)
             {
                 if (((PackedTemplateParameter)Child).Nodes.Count !=  0)
                 {
-                    Child.Print(writer);
+                    Child.Print(Writer);
                 }
             }
             else
             {
-                writer.Write("...");
+                Writer.Write("...");
             }
         }
     }

@@ -5,31 +5,31 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class ILibraryAppletCreator : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ILibraryAppletCreator()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,  CreateLibraryApplet },
                 { 10, CreateStorage       }
             };
         }
 
-        public long CreateLibraryApplet(ServiceCtx context)
+        public long CreateLibraryApplet(ServiceCtx Context)
         {
-            MakeObject(context, new ILibraryAppletAccessor(context.Device.System));
+            MakeObject(Context, new ILibraryAppletAccessor(Context.Device.System));
 
             return 0;
         }
 
-        public long CreateStorage(ServiceCtx context)
+        public long CreateStorage(ServiceCtx Context)
         {
-            long size = context.RequestData.ReadInt64();
+            long Size = Context.RequestData.ReadInt64();
 
-            MakeObject(context, new IStorage(new byte[size]));
+            MakeObject(Context, new IStorage(new byte[Size]));
 
             return 0;
         }

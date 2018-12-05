@@ -2,39 +2,39 @@ namespace Ryujinx.HLE.Loaders.Elf
 {
     struct ElfSymbol
     {
-        public string Name { get; }
+        public string Name { get; private set; }
 
-        public ElfSymbolType       Type       { get; }
-        public ElfSymbolBinding    Binding    { get; }
-        public ElfSymbolVisibility Visibility { get; }
+        public ElfSymbolType       Type       { get; private set; }
+        public ElfSymbolBinding    Binding    { get; private set; }
+        public ElfSymbolVisibility Visibility { get; private set; }
 
         public bool IsFuncOrObject =>
-            Type == ElfSymbolType.SttFunc ||
-            Type == ElfSymbolType.SttObject;
+            Type == ElfSymbolType.STT_FUNC ||
+            Type == ElfSymbolType.STT_OBJECT;
 
         public bool IsGlobalOrWeak =>
-            Binding == ElfSymbolBinding.StbGlobal ||
-            Binding == ElfSymbolBinding.StbWeak;
+            Binding == ElfSymbolBinding.STB_GLOBAL ||
+            Binding == ElfSymbolBinding.STB_WEAK;
 
-        public int  ShIdx { get; }
-        public long Value { get; }
-        public long Size  { get; }
+        public int  SHIdx { get; private set; }
+        public long Value { get; private set; }
+        public long Size  { get; private set; }
 
         public ElfSymbol(
-            string name,
-            int    info,
-            int    other,
-            int    shIdx,
-            long   value,
-            long   size)
+            string Name,
+            int    Info,
+            int    Other,
+            int    SHIdx,
+            long   Value,
+            long   Size)
         {
-            Name       = name;
-            Type       = (ElfSymbolType)(info & 0xf);
-            Binding    = (ElfSymbolBinding)(info >> 4);
-            Visibility = (ElfSymbolVisibility)other;
-            ShIdx      = shIdx;
-            Value      = value;
-            Size       = size;
+            this.Name       = Name;
+            this.Type       = (ElfSymbolType)(Info & 0xf);
+            this.Binding    = (ElfSymbolBinding)(Info >> 4);
+            this.Visibility = (ElfSymbolVisibility)Other;
+            this.SHIdx      = SHIdx;
+            this.Value      = Value;
+            this.Size       = Size;
         }
     }
 }

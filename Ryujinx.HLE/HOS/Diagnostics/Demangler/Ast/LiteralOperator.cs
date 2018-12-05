@@ -4,13 +4,13 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class LiteralOperator : ParentNode
     {
-        public LiteralOperator(BaseNode child) : base(NodeType.LiteralOperator, child) { }
+        public LiteralOperator(BaseNode Child) : base(NodeType.LiteralOperator, Child) { }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            writer.Write("operator \"");
-            Child.PrintLeft(writer);
-            writer.Write("\"");
+            Writer.Write("operator \"");
+            Child.PrintLeft(Writer);
+            Writer.Write("\"");
         }
     }
 }

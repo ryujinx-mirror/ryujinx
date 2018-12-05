@@ -4,17 +4,17 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class SpecialName : ParentNode
     {
-        private string _specialValue;
+        private string SpecialValue;
 
-        public SpecialName(string specialValue, BaseNode type) : base(NodeType.SpecialName, type)
+        public SpecialName(string SpecialValue, BaseNode Type) : base(NodeType.SpecialName, Type)
         {
-            _specialValue = specialValue;
+            this.SpecialValue = SpecialValue;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            writer.Write(_specialValue);
-            Child.Print(writer);
+            Writer.Write(SpecialValue);
+            Child.Print(Writer);
         }
     }
 }

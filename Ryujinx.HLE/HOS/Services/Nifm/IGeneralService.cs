@@ -13,44 +13,44 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 {
     class IGeneralService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IGeneralService()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 4, CreateRequest        },
                 { 12, GetCurrentIpAddress }
             };
         }
 
-        public long CreateRequest(ServiceCtx context)
+        public long CreateRequest(ServiceCtx Context)
         {
-            int unknown = context.RequestData.ReadInt32();
+            int Unknown = Context.RequestData.ReadInt32();
 
-            MakeObject(context, new IRequest(context.Device.System));
+            MakeObject(Context, new IRequest(Context.Device.System));
 
             Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
 
-        public long GetCurrentIpAddress(ServiceCtx context)
+        public long GetCurrentIpAddress(ServiceCtx Context)
         {
             if (!NetworkInterface.GetIsNetworkAvailable())
             {
                 return MakeError(ErrorModule.Nifm, NifmErr.NoInternetConnection);
             }
 
-            IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
+            IPHostEntry Host = Dns.GetHostEntry(Dns.GetHostName());
 
-            IPAddress address = host.AddressList.FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork);
+            IPAddress Address = Host.AddressList.FirstOrDefault(A => A.AddressFamily == AddressFamily.InterNetwork);
 
-            context.ResponseData.Write(BitConverter.ToUInt32(address.GetAddressBytes()));
+            Context.ResponseData.Write(BitConverter.ToUInt32(Address.GetAddressBytes()));
 
-            Logger.PrintInfo(LogClass.ServiceNifm, $"Console's local IP is \"{address}\".");
+            Logger.PrintInfo(LogClass.ServiceNifm, $"Console's local IP is \"{Address}\".");
 
             return 0;
         }

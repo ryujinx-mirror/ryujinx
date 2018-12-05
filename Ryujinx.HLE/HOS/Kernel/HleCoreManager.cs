@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Kernel
     {
         private class PausableThread
         {
-            public ManualResetEvent Event { get; }
+            public ManualResetEvent Event { get; private set; }
 
             public bool IsExiting { get; set; }
 
@@ -17,49 +17,49 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private ConcurrentDictionary<Thread, PausableThread> _threads;
+        private ConcurrentDictionary<Thread, PausableThread> Threads;
 
         public HleCoreManager()
         {
-            _threads = new ConcurrentDictionary<Thread, PausableThread>();
+            Threads = new ConcurrentDictionary<Thread, PausableThread>();
         }
 
-        public void Set(Thread thread)
+        public void Set(Thread Thread)
         {
-            GetThread(thread).Event.Set();
+            GetThread(Thread).Event.Set();
         }
 
-        public void Reset(Thread thread)
+        public void Reset(Thread Thread)
         {
-            GetThread(thread).Event.Reset();
+            GetThread(Thread).Event.Reset();
         }
 
-        public void Wait(Thread thread)
+        public void Wait(Thread Thread)
         {
-            PausableThread pausableThread = GetThread(thread);
+            PausableThread PausableThread = GetThread(Thread);
 
-            if (!pausableThread.IsExiting)
+            if (!PausableThread.IsExiting)
             {
-                pausableThread.Event.WaitOne();
+                PausableThread.Event.WaitOne();
             }
         }
 
-        public void Exit(Thread thread)
+        public void Exit(Thread Thread)
         {
-            GetThread(thread).IsExiting = true;
+            GetThread(Thread).IsExiting = true;
         }
 
-        private PausableThread GetThread(Thread thread)
+        private PausableThread GetThread(Thread Thread)
         {
-            return _threads.GetOrAdd(thread, (key) => new PausableThread());
+            return Threads.GetOrAdd(Thread, (Key) => new PausableThread());
         }
 
-        public void RemoveThread(Thread thread)
+        public void RemoveThread(Thread Thread)
         {
-            if (_threads.TryRemove(thread, out PausableThread pausableThread))
+            if (Threads.TryRemove(Thread, out PausableThread PausableThread))
             {
-                pausableThread.Event.Set();
-                pausableThread.Event.Dispose();
+                PausableThread.Event.Set();
+                PausableThread.Event.Dispose();
             }
         }
     }

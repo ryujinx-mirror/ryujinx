@@ -8,39 +8,39 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class IHomeMenuFunctions : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private KEvent _channelEvent;
+        private KEvent ChannelEvent;
 
-        public IHomeMenuFunctions(Horizon system)
+        public IHomeMenuFunctions(Horizon System)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 10, RequestToGetForeground        },
                 { 21, GetPopFromGeneralChannelEvent }
             };
 
             //ToDo: Signal this Event somewhere in future.
-            _channelEvent = new KEvent(system);
+            ChannelEvent = new KEvent(System);
         }
 
-        public long RequestToGetForeground(ServiceCtx context)
+        public long RequestToGetForeground(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long GetPopFromGeneralChannelEvent(ServiceCtx context)
+        public long GetPopFromGeneralChannelEvent(ServiceCtx Context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_channelEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(ChannelEvent.ReadableEvent, out int Handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 

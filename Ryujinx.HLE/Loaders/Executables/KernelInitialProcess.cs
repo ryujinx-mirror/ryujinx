@@ -5,145 +5,145 @@ namespace Ryujinx.HLE.Loaders.Executables
 {
     class KernelInitialProcess : IExecutable
     {
-        public string Name { get; }
+        public string Name { get; private set; }
 
-        public long TitleId { get; }
+        public long TitleId { get; private set; }
 
-        public int ProcessCategory { get; }
+        public int ProcessCategory { get; private set; }
 
-        public byte MainThreadPriority { get; }
-        public byte DefaultProcessorId { get; }
+        public byte MainThreadPriority { get; private set; }
+        public byte DefaultProcessorId { get; private set; }
 
-        public bool Is64Bits   { get; }
-        public bool Addr39Bits { get; }
-        public bool IsService  { get; }
+        public bool Is64Bits   { get; private set; }
+        public bool Addr39Bits { get; private set; }
+        public bool IsService  { get; private set; }
 
-        public byte[] Text { get; }
-        public byte[] Ro   { get; }
-        public byte[] Data { get; }
+        public byte[] Text { get; private set; }
+        public byte[] RO   { get; private set; }
+        public byte[] Data { get; private set; }
 
-        public int TextOffset { get; }
-        public int RoOffset   { get; }
-        public int DataOffset { get; }
-        public int BssOffset  { get; }
-        public int BssSize    { get; }
+        public int TextOffset { get; private set; }
+        public int ROOffset   { get; private set; }
+        public int DataOffset { get; private set; }
+        public int BssOffset  { get; private set; }
+        public int BssSize    { get; private set; }
 
-        public int MainThreadStackSize { get; }
+        public int MainThreadStackSize { get; private set; }
 
-        public int[] Capabilities { get; }
+        public int[] Capabilities { get; private set; }
 
         private struct SegmentHeader
         {
-            public int Offset           { get; }
-            public int DecompressedSize { get; }
-            public int CompressedSize   { get; }
-            public int Attribute        { get; }
+            public int Offset           { get; private set; }
+            public int DecompressedSize { get; private set; }
+            public int CompressedSize   { get; private set; }
+            public int Attribute        { get; private set; }
 
             public SegmentHeader(
-                int offset,
-                int decompressedSize,
-                int compressedSize,
-                int attribute)
+                int Offset,
+                int DecompressedSize,
+                int CompressedSize,
+                int Attribute)
             {
-                Offset           = offset;
-                DecompressedSize = decompressedSize;
-                CompressedSize   = compressedSize;
-                Attribute        = attribute;
+                this.Offset           = Offset;
+                this.DecompressedSize = DecompressedSize;
+                this.CompressedSize   = CompressedSize;
+                this.Attribute        = Attribute;
             }
         }
 
-        public KernelInitialProcess(Stream input)
+        public KernelInitialProcess(Stream Input)
         {
-            BinaryReader reader = new BinaryReader(input);
+            BinaryReader Reader = new BinaryReader(Input);
 
-            string magic = ReadString(reader, 4);
+            string Magic = ReadString(Reader, 4);
 
-            if (magic != "KIP1")
+            if (Magic != "KIP1")
             {
 
             }
 
-            Name = ReadString(reader, 12);
+            Name = ReadString(Reader, 12);
 
-            TitleId = reader.ReadInt64();
+            TitleId = Reader.ReadInt64();
 
-            ProcessCategory = reader.ReadInt32();
+            ProcessCategory = Reader.ReadInt32();
 
-            MainThreadPriority = reader.ReadByte();
-            DefaultProcessorId = reader.ReadByte();
+            MainThreadPriority = Reader.ReadByte();
+            DefaultProcessorId = Reader.ReadByte();
 
-            byte reserved = reader.ReadByte();
-            byte flags    = reader.ReadByte();
+            byte Reserved = Reader.ReadByte();
+            byte Flags    = Reader.ReadByte();
 
-            Is64Bits   = (flags & 0x08) != 0;
-            Addr39Bits = (flags & 0x10) != 0;
-            IsService  = (flags & 0x20) != 0;
+            Is64Bits   = (Flags & 0x08) != 0;
+            Addr39Bits = (Flags & 0x10) != 0;
+            IsService  = (Flags & 0x20) != 0;
 
-            SegmentHeader[] segments = new SegmentHeader[6];
+            SegmentHeader[] Segments = new SegmentHeader[6];
 
-            for (int index = 0; index < segments.Length; index++)
+            for (int Index = 0; Index < Segments.Length; Index++)
             {
-                segments[index] = new SegmentHeader(
-                    reader.ReadInt32(),
-                    reader.ReadInt32(),
-                    reader.ReadInt32(),
-                    reader.ReadInt32());
+                Segments[Index] = new SegmentHeader(
+                    Reader.ReadInt32(),
+                    Reader.ReadInt32(),
+                    Reader.ReadInt32(),
+                    Reader.ReadInt32());
             }
 
-            TextOffset = segments[0].Offset;
-            RoOffset   = segments[1].Offset;
-            DataOffset = segments[2].Offset;
-            BssOffset  = segments[3].Offset;
-            BssSize    = segments[3].DecompressedSize;
+            TextOffset = Segments[0].Offset;
+            ROOffset   = Segments[1].Offset;
+            DataOffset = Segments[2].Offset;
+            BssOffset  = Segments[3].Offset;
+            BssSize    = Segments[3].DecompressedSize;
 
-            MainThreadStackSize = segments[1].Attribute;
+            MainThreadStackSize = Segments[1].Attribute;
 
             Capabilities = new int[8];
 
-            for (int index = 0; index < Capabilities.Length; index++)
+            for (int Index = 0; Index < Capabilities.Length; Index++)
             {
-                Capabilities[index] = reader.ReadInt32();
+                Capabilities[Index] = Reader.ReadInt32();
             }
 
-            input.Seek(0x100, SeekOrigin.Begin);
+            Input.Seek(0x100, SeekOrigin.Begin);
 
-            Text = ReadSegment(segments[0], input);
-            Ro   = ReadSegment(segments[1], input);
-            Data = ReadSegment(segments[2], input);
+            Text = ReadSegment(Segments[0], Input);
+            RO   = ReadSegment(Segments[1], Input);
+            Data = ReadSegment(Segments[2], Input);
         }
 
-        private byte[] ReadSegment(SegmentHeader header, Stream input)
+        private byte[] ReadSegment(SegmentHeader Header, Stream Input)
         {
-            long end = input.Position + header.CompressedSize;
+            long End = Input.Position + Header.CompressedSize;
 
-            input.Seek(end, SeekOrigin.Begin);
+            Input.Seek(End, SeekOrigin.Begin);
 
-            byte[] data = BackwardsLz.Decompress(input, header.DecompressedSize);
+            byte[] Data = BackwardsLz.Decompress(Input, Header.DecompressedSize);
 
-            input.Seek(end, SeekOrigin.Begin);
+            Input.Seek(End, SeekOrigin.Begin);
 
-            return data;
+            return Data;
         }
 
-        private static string ReadString(BinaryReader reader, int maxSize)
+        private static string ReadString(BinaryReader Reader, int MaxSize)
         {
-            string value = string.Empty;
+            string Value = string.Empty;
 
-            for (int index = 0; index < maxSize; index++)
+            for (int Index = 0; Index < MaxSize; Index++)
             {
-                char chr = (char)reader.ReadByte();
+                char Chr = (char)Reader.ReadByte();
 
-                if (chr == '\0')
+                if (Chr == '\0')
                 {
-                    reader.BaseStream.Seek(maxSize - index - 1, SeekOrigin.Current);
+                    Reader.BaseStream.Seek(MaxSize - Index - 1, SeekOrigin.Current);
 
                     break;
                 }
 
-                value += chr;
+                Value += Chr;
             }
 
-            return value;
+            return Value;
         }
     }
 }

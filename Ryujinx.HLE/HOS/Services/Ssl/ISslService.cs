@@ -6,13 +6,13 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
 {
     class ISslService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ISslService()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, CreateContext       },
                 { 5, SetInterfaceVersion }
@@ -20,24 +20,24 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
         }
 
         // CreateContext(nn::ssl::sf::SslVersion, u64, pid) -> object<nn::ssl::sf::ISslContext>
-        public long CreateContext(ServiceCtx context)
+        public long CreateContext(ServiceCtx Context)
         {
-            int  sslVersion = context.RequestData.ReadInt32();
-            long unknown    = context.RequestData.ReadInt64();
+            int  SslVersion = Context.RequestData.ReadInt32();
+            long Unknown    = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceSsl, $"Stubbed. SslVersion: {sslVersion} - Unknown: {unknown}");
+            Logger.PrintStub(LogClass.ServiceSsl, $"Stubbed. SslVersion: {SslVersion} - Unknown: {Unknown}");
 
-            MakeObject(context, new ISslContext());
+            MakeObject(Context, new ISslContext());
 
             return 0;
         }
 
         // SetInterfaceVersion(u32)
-        public long SetInterfaceVersion(ServiceCtx context)
+        public long SetInterfaceVersion(ServiceCtx Context)
         {
-            int version = context.RequestData.ReadInt32();
+            int Version = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceSsl, $"Stubbed. Version: {version}");
+            Logger.PrintStub(LogClass.ServiceSsl, $"Stubbed. Version: {Version}");
 
             return 0;
         }

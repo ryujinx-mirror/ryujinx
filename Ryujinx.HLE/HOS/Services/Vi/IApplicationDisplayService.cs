@@ -12,15 +12,15 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 {
     class IApplicationDisplayService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private IdDictionary _displays;
+        private IdDictionary Displays;
 
         public IApplicationDisplayService()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 100,  GetRelayService                      },
                 { 101,  GetSystemDisplayService              },
@@ -38,205 +38,205 @@ namespace Ryujinx.HLE.HOS.Services.Vi
                 { 5202, GetDisplayVSyncEvent                 }
             };
 
-            _displays = new IdDictionary();
+            Displays = new IdDictionary();
         }
 
-        public long GetRelayService(ServiceCtx context)
+        public long GetRelayService(ServiceCtx Context)
         {
-            MakeObject(context, new IhosBinderDriver(
-                context.Device.System,
-                context.Device.Gpu.Renderer));
+            MakeObject(Context, new IHOSBinderDriver(
+                Context.Device.System,
+                Context.Device.Gpu.Renderer));
 
             return 0;
         }
 
-        public long GetSystemDisplayService(ServiceCtx context)
+        public long GetSystemDisplayService(ServiceCtx Context)
         {
-            MakeObject(context, new ISystemDisplayService());
+            MakeObject(Context, new ISystemDisplayService());
 
             return 0;
         }
 
-        public long GetManagerDisplayService(ServiceCtx context)
+        public long GetManagerDisplayService(ServiceCtx Context)
         {
-            MakeObject(context, new IManagerDisplayService());
+            MakeObject(Context, new IManagerDisplayService());
 
             return 0;
         }
 
-        public long GetIndirectDisplayTransactionService(ServiceCtx context)
+        public long GetIndirectDisplayTransactionService(ServiceCtx Context)
         {
-            MakeObject(context, new IhosBinderDriver(
-                context.Device.System,
-                context.Device.Gpu.Renderer));
+            MakeObject(Context, new IHOSBinderDriver(
+                Context.Device.System,
+                Context.Device.Gpu.Renderer));
 
             return 0;
         }
 
-        public long ListDisplays(ServiceCtx context)
+        public long ListDisplays(ServiceCtx Context)
         {
-            long recBuffPtr = context.Request.ReceiveBuff[0].Position;
+            long RecBuffPtr = Context.Request.ReceiveBuff[0].Position;
 
-            MemoryHelper.FillWithZeros(context.Memory, recBuffPtr, 0x60);
+            MemoryHelper.FillWithZeros(Context.Memory, RecBuffPtr, 0x60);
 
             //Add only the default display to buffer
-            context.Memory.WriteBytes(recBuffPtr, Encoding.ASCII.GetBytes("Default"));
-            context.Memory.WriteInt64(recBuffPtr + 0x40, 0x1L);
-            context.Memory.WriteInt64(recBuffPtr + 0x48, 0x1L);
-            context.Memory.WriteInt64(recBuffPtr + 0x50, 1920L);
-            context.Memory.WriteInt64(recBuffPtr + 0x58, 1080L);
+            Context.Memory.WriteBytes(RecBuffPtr, Encoding.ASCII.GetBytes("Default"));
+            Context.Memory.WriteInt64(RecBuffPtr + 0x40, 0x1L);
+            Context.Memory.WriteInt64(RecBuffPtr + 0x48, 0x1L);
+            Context.Memory.WriteInt64(RecBuffPtr + 0x50, 1920L);
+            Context.Memory.WriteInt64(RecBuffPtr + 0x58, 1080L);
 
-            context.ResponseData.Write(1L);
-
-            return 0;
-        }
-
-        public long OpenDisplay(ServiceCtx context)
-        {
-            string name = GetDisplayName(context);
-
-            long displayId = _displays.Add(new Display(name));
-
-            context.ResponseData.Write(displayId);
+            Context.ResponseData.Write(1L);
 
             return 0;
         }
 
-        public long CloseDisplay(ServiceCtx context)
+        public long OpenDisplay(ServiceCtx Context)
         {
-            int displayId = context.RequestData.ReadInt32();
+            string Name = GetDisplayName(Context);
 
-            _displays.Delete(displayId);
+            long DisplayId = Displays.Add(new Display(Name));
+
+            Context.ResponseData.Write(DisplayId);
 
             return 0;
         }
 
-        public long GetDisplayResolution(ServiceCtx context)
+        public long CloseDisplay(ServiceCtx Context)
         {
-            long displayId = context.RequestData.ReadInt32();
+            int DisplayId = Context.RequestData.ReadInt32();
 
-            context.ResponseData.Write(1280);
-            context.ResponseData.Write(720);
+            Displays.Delete(DisplayId);
 
             return 0;
         }
 
-        public long OpenLayer(ServiceCtx context)
+        public long GetDisplayResolution(ServiceCtx Context)
         {
-            long layerId = context.RequestData.ReadInt64();
-            long userId  = context.RequestData.ReadInt64();
+            long DisplayId = Context.RequestData.ReadInt32();
 
-            long parcelPtr = context.Request.ReceiveBuff[0].Position;
-
-            byte[] parcel = MakeIGraphicsBufferProducer(parcelPtr);
-
-            context.Memory.WriteBytes(parcelPtr, parcel);
-
-            context.ResponseData.Write((long)parcel.Length);
+            Context.ResponseData.Write(1280);
+            Context.ResponseData.Write(720);
 
             return 0;
         }
 
-        public long CloseLayer(ServiceCtx context)
+        public long OpenLayer(ServiceCtx Context)
         {
-            long layerId = context.RequestData.ReadInt64();
+            long LayerId = Context.RequestData.ReadInt64();
+            long UserId  = Context.RequestData.ReadInt64();
+
+            long ParcelPtr = Context.Request.ReceiveBuff[0].Position;
+
+            byte[] Parcel = MakeIGraphicsBufferProducer(ParcelPtr);
+
+            Context.Memory.WriteBytes(ParcelPtr, Parcel);
+
+            Context.ResponseData.Write((long)Parcel.Length);
 
             return 0;
         }
 
-        public long CreateStrayLayer(ServiceCtx context)
+        public long CloseLayer(ServiceCtx Context)
         {
-            long layerFlags = context.RequestData.ReadInt64();
-            long displayId  = context.RequestData.ReadInt64();
-
-            long parcelPtr = context.Request.ReceiveBuff[0].Position;
-
-            Display disp = _displays.GetData<Display>((int)displayId);
-
-            byte[] parcel = MakeIGraphicsBufferProducer(parcelPtr);
-
-            context.Memory.WriteBytes(parcelPtr, parcel);
-
-            context.ResponseData.Write(0L);
-            context.ResponseData.Write((long)parcel.Length);
+            long LayerId = Context.RequestData.ReadInt64();
 
             return 0;
         }
 
-        public long DestroyStrayLayer(ServiceCtx context)
+        public long CreateStrayLayer(ServiceCtx Context)
+        {
+            long LayerFlags = Context.RequestData.ReadInt64();
+            long DisplayId  = Context.RequestData.ReadInt64();
+
+            long ParcelPtr = Context.Request.ReceiveBuff[0].Position;
+
+            Display Disp = Displays.GetData<Display>((int)DisplayId);
+
+            byte[] Parcel = MakeIGraphicsBufferProducer(ParcelPtr);
+
+            Context.Memory.WriteBytes(ParcelPtr, Parcel);
+
+            Context.ResponseData.Write(0L);
+            Context.ResponseData.Write((long)Parcel.Length);
+
+            return 0;
+        }
+
+        public long DestroyStrayLayer(ServiceCtx Context)
         {
             return 0;
         }
 
-        public long SetLayerScalingMode(ServiceCtx context)
+        public long SetLayerScalingMode(ServiceCtx Context)
         {
-            int  scalingMode = context.RequestData.ReadInt32();
-            long unknown     = context.RequestData.ReadInt64();
+            int  ScalingMode = Context.RequestData.ReadInt32();
+            long Unknown     = Context.RequestData.ReadInt64();
 
             return 0;
         }
 
-        public long GetDisplayVSyncEvent(ServiceCtx context)
+        public long GetDisplayVSyncEvent(ServiceCtx Context)
         {
-            string name = GetDisplayName(context);
+            string Name = GetDisplayName(Context);
 
-            if (context.Process.HandleTable.GenerateHandle(context.Device.System.VsyncEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(Context.Device.System.VsyncEvent.ReadableEvent, out int Handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
             return 0;
         }
 
-        private byte[] MakeIGraphicsBufferProducer(long basePtr)
+        private byte[] MakeIGraphicsBufferProducer(long BasePtr)
         {
-            long id        = 0x20;
-            long cookiePtr = 0L;
+            long Id        = 0x20;
+            long CookiePtr = 0L;
 
-            using (MemoryStream ms = new MemoryStream())
+            using (MemoryStream MS = new MemoryStream())
             {
-                BinaryWriter writer = new BinaryWriter(ms);
+                BinaryWriter Writer = new BinaryWriter(MS);
 
                 //flat_binder_object (size is 0x28)
-                writer.Write(2); //Type (BINDER_TYPE_WEAK_BINDER)
-                writer.Write(0); //Flags
-                writer.Write((int)(id >> 0));
-                writer.Write((int)(id >> 32));
-                writer.Write((int)(cookiePtr >> 0));
-                writer.Write((int)(cookiePtr >> 32));
-                writer.Write((byte)'d');
-                writer.Write((byte)'i');
-                writer.Write((byte)'s');
-                writer.Write((byte)'p');
-                writer.Write((byte)'d');
-                writer.Write((byte)'r');
-                writer.Write((byte)'v');
-                writer.Write((byte)'\0');
-                writer.Write(0L); //Pad
+                Writer.Write(2); //Type (BINDER_TYPE_WEAK_BINDER)
+                Writer.Write(0); //Flags
+                Writer.Write((int)(Id >> 0));
+                Writer.Write((int)(Id >> 32));
+                Writer.Write((int)(CookiePtr >> 0));
+                Writer.Write((int)(CookiePtr >> 32));
+                Writer.Write((byte)'d');
+                Writer.Write((byte)'i');
+                Writer.Write((byte)'s');
+                Writer.Write((byte)'p');
+                Writer.Write((byte)'d');
+                Writer.Write((byte)'r');
+                Writer.Write((byte)'v');
+                Writer.Write((byte)'\0');
+                Writer.Write(0L); //Pad
 
-                return MakeParcel(ms.ToArray(), new byte[] { 0, 0, 0, 0 });
+                return MakeParcel(MS.ToArray(), new byte[] { 0, 0, 0, 0 });
             }
         }
 
-        private string GetDisplayName(ServiceCtx context)
+        private string GetDisplayName(ServiceCtx Context)
         {
-            string name = string.Empty;
+            string Name = string.Empty;
 
-            for (int index = 0; index < 8 &&
-                context.RequestData.BaseStream.Position <
-                context.RequestData.BaseStream.Length; index++)
+            for (int Index = 0; Index < 8 &&
+                Context.RequestData.BaseStream.Position <
+                Context.RequestData.BaseStream.Length; Index++)
             {
-                byte chr = context.RequestData.ReadByte();
+                byte Chr = Context.RequestData.ReadByte();
 
-                if (chr >= 0x20 && chr < 0x7f)
+                if (Chr >= 0x20 && Chr < 0x7f)
                 {
-                    name += (char)chr;
+                    Name += (char)Chr;
                 }
             }
 
-            return name;
+            return Name;
         }
     }
 }

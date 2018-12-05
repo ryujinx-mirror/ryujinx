@@ -7,25 +7,25 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 {
     class IManagerForApplication : IpcService
     {
-        private UInt128 _uuid;
+        private UInt128 Uuid;
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public IManagerForApplication(UInt128 uuid)
+        public IManagerForApplication(UInt128 Uuid)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, CheckAvailability },
                 { 1, GetAccountId      }
             };
 
-            _uuid = uuid;
+            this.Uuid = Uuid;
         }
 
         // CheckAvailability()
-        public long CheckAvailability(ServiceCtx context)
+        public long CheckAvailability(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceAcc, "Stubbed.");
 
@@ -33,13 +33,13 @@ namespace Ryujinx.HLE.HOS.Services.Acc
         }
 
         // GetAccountId() -> nn::account::NetworkServiceAccountId
-        public long GetAccountId(ServiceCtx context)
+        public long GetAccountId(ServiceCtx Context)
         {
-            long networkServiceAccountId = 0xcafe;
+            long NetworkServiceAccountId = 0xcafe;
 
-            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. NetworkServiceAccountId: {networkServiceAccountId}");
+            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. NetworkServiceAccountId: {NetworkServiceAccountId}");
 
-            context.ResponseData.Write(networkServiceAccountId);
+            Context.ResponseData.Write(NetworkServiceAccountId);
 
             return 0;
         }

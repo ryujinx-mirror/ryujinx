@@ -5,6 +5,6 @@ namespace Ryujinx.HLE.Input
     [Flags]
     public enum HidControllerColorDesc
     {
-        ColorDescColorsNonexistent = (1 << 1)
+        ColorDesc_ColorsNonexistent = (1 << 1)
     }
 }

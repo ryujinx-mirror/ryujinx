@@ -1,4 +1,8 @@
-﻿namespace Ryujinx.HLE.Input
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Ryujinx.HLE.Input
 {
     interface IHidDevice
     {

@@ -5,21 +5,21 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 {
     class IActiveApplicationDeviceList : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IActiveApplicationDeviceList()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, ActivateVibrationDevice }
             };
         }
 
-        public long ActivateVibrationDevice(ServiceCtx context)
+        public long ActivateVibrationDevice(ServiceCtx Context)
         {
-            int vibrationDeviceHandle = context.RequestData.ReadInt32();
+            int VibrationDeviceHandle = Context.RequestData.ReadInt32();
 
             return 0;
         }

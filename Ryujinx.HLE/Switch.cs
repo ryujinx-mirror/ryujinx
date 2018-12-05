@@ -11,43 +11,43 @@ namespace Ryujinx.HLE
 {
     public class Switch : IDisposable
     {
-        internal IAalOutput AudioOut { get; }
+        internal IAalOutput AudioOut { get; private set; }
 
-        internal DeviceMemory Memory { get; }
+        internal DeviceMemory Memory { get; private set; }
 
-        internal NvGpu Gpu { get; }
+        internal NvGpu Gpu { get; private set; }
 
-        internal VirtualFileSystem FileSystem { get; }
+        internal VirtualFileSystem FileSystem { get; private set; }
 
-        public Horizon System { get; }
+        public Horizon System { get; private set; }
 
-        public PerformanceStatistics Statistics { get; }
+        public PerformanceStatistics Statistics { get; private set; }
 
-        public Hid Hid { get; }
+        public Hid Hid { get; private set; }
 
         public bool EnableDeviceVsync { get; set; } = true;
 
-        public AutoResetEvent VsyncEvent { get; }
+        public AutoResetEvent VsyncEvent { get; private set; }
 
         public event EventHandler Finish;
 
-        public Switch(IGalRenderer renderer, IAalOutput audioOut)
+        public Switch(IGalRenderer Renderer, IAalOutput AudioOut)
         {
-            if (renderer == null)
+            if (Renderer == null)
             {
-                throw new ArgumentNullException(nameof(renderer));
+                throw new ArgumentNullException(nameof(Renderer));
             }
 
-            if (audioOut == null)
+            if (AudioOut == null)
             {
-                throw new ArgumentNullException(nameof(audioOut));
+                throw new ArgumentNullException(nameof(AudioOut));
             }
 
-            AudioOut = audioOut;
+            this.AudioOut = AudioOut;
 
             Memory = new DeviceMemory();
 
-            Gpu = new NvGpu(renderer);
+            Gpu = new NvGpu(Renderer);
 
             FileSystem = new VirtualFileSystem();
 
@@ -60,29 +60,29 @@ namespace Ryujinx.HLE
             VsyncEvent = new AutoResetEvent(true);
         }
 
-        public void LoadCart(string exeFsDir, string romFsFile = null)
+        public void LoadCart(string ExeFsDir, string RomFsFile = null)
         {
-            System.LoadCart(exeFsDir, romFsFile);
+            System.LoadCart(ExeFsDir, RomFsFile);
         }
 
-        public void LoadXci(string xciFile)
+        public void LoadXci(string XciFile)
         {
-            System.LoadXci(xciFile);
+            System.LoadXci(XciFile);
         }
 
-        public void LoadNca(string ncaFile)
+        public void LoadNca(string NcaFile)
         {
-            System.LoadNca(ncaFile);
+            System.LoadNca(NcaFile);
         }
 
-        public void LoadNsp(string nspFile)
+        public void LoadNsp(string NspFile)
         {
-            System.LoadNsp(nspFile);
+            System.LoadNsp(NspFile);
         }
 
-        public void LoadProgram(string fileName)
+        public void LoadProgram(string FileName)
         {
-            System.LoadProgram(fileName);
+            System.LoadProgram(FileName);
         }
 
         public bool WaitFifo()
@@ -107,9 +107,9 @@ namespace Ryujinx.HLE
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected virtual void Dispose(bool Disposing)
         {
-            if (disposing)
+            if (Disposing)
             {
                 System.Dispose();
 

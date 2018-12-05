@@ -5,68 +5,68 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 {
     class IHardwareOpusDecoderManager : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IHardwareOpusDecoderManager()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, Initialize        },
                 { 1, GetWorkBufferSize }
             };
         }
 
-        public long Initialize(ServiceCtx context)
+        public long Initialize(ServiceCtx Context)
         {
-            int sampleRate    = context.RequestData.ReadInt32();
-            int channelsCount = context.RequestData.ReadInt32();
+            int SampleRate    = Context.RequestData.ReadInt32();
+            int ChannelsCount = Context.RequestData.ReadInt32();
 
-            MakeObject(context, new IHardwareOpusDecoder(sampleRate, channelsCount));
+            MakeObject(Context, new IHardwareOpusDecoder(SampleRate, ChannelsCount));
 
             return 0;
         }
 
-        public long GetWorkBufferSize(ServiceCtx context)
+        public long GetWorkBufferSize(ServiceCtx Context)
         {
             //Note: The sample rate is ignored because it is fixed to 48KHz.
-            int sampleRate    = context.RequestData.ReadInt32();
-            int channelsCount = context.RequestData.ReadInt32();
+            int SampleRate    = Context.RequestData.ReadInt32();
+            int ChannelsCount = Context.RequestData.ReadInt32();
 
-            context.ResponseData.Write(GetOpusDecoderSize(channelsCount));
+            Context.ResponseData.Write(GetOpusDecoderSize(ChannelsCount));
 
             return 0;
         }
 
-        private static int GetOpusDecoderSize(int channelsCount)
+        private static int GetOpusDecoderSize(int ChannelsCount)
         {
-            const int silkDecoderSize = 0x2198;
+            const int SilkDecoderSize = 0x2198;
 
-            if (channelsCount < 1 || channelsCount > 2)
+            if (ChannelsCount < 1 || ChannelsCount > 2)
             {
                 return 0;
             }
 
-            int celtDecoderSize = GetCeltDecoderSize(channelsCount);
+            int CeltDecoderSize = GetCeltDecoderSize(ChannelsCount);
 
-            int opusDecoderSize = (channelsCount * 0x800 + 0x4807) & -0x800 | 0x50;
+            int OpusDecoderSize = (ChannelsCount * 0x800 + 0x4807) & -0x800 | 0x50;
 
-            return opusDecoderSize + silkDecoderSize + celtDecoderSize;
+            return OpusDecoderSize + SilkDecoderSize + CeltDecoderSize;
         }
 
-        private static int GetCeltDecoderSize(int channelsCount)
+        private static int GetCeltDecoderSize(int ChannelsCount)
         {
-            const int decodeBufferSize = 0x2030;
-            const int celtDecoderSize  = 0x58;
-            const int celtSigSize      = 0x4;
-            const int overlap          = 120;
-            const int eBandsCount      = 21;
+            const int DecodeBufferSize = 0x2030;
+            const int CeltDecoderSize  = 0x58;
+            const int CeltSigSize      = 0x4;
+            const int Overlap          = 120;
+            const int EBandsCount      = 21;
 
-            return (decodeBufferSize + overlap * 4) * channelsCount +
-                    eBandsCount * 16 +
-                    celtDecoderSize +
-                    celtSigSize;
+            return (DecodeBufferSize + Overlap * 4) * ChannelsCount +
+                    EBandsCount * 16 +
+                    CeltDecoderSize +
+                    CeltSigSize;
         }
     }
 }

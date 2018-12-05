@@ -5,73 +5,73 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
 {
     class NvGpuASCtx
     {
-        public NvGpuVmm Vmm { get; }
+        public NvGpuVmm Vmm { get; private set; }
 
         private class Range
         {
-            public ulong Start  { get; }
-            public ulong End    { get; }
+            public ulong Start  { get; private set; }
+            public ulong End    { get; private set; }
 
-            public Range(long position, long size)
+            public Range(long Position, long Size)
             {
-                Start = (ulong)position;
-                End   = (ulong)size + Start;
+                Start = (ulong)Position;
+                End   = (ulong)Size + Start;
             }
         }
 
         private class MappedMemory : Range
         {
-            public long PhysicalAddress { get; }
-            public bool VaAllocated  { get; }
+            public long PhysicalAddress { get; private set; }
+            public bool VaAllocated  { get; private set; }
 
             public MappedMemory(
-                long position,
-                long size,
-                long physicalAddress,
-                bool vaAllocated) : base(position, size)
+                long Position,
+                long Size,
+                long PhysicalAddress,
+                bool VaAllocated) : base(Position, Size)
             {
-                PhysicalAddress = physicalAddress;
-                VaAllocated     = vaAllocated;
+                this.PhysicalAddress = PhysicalAddress;
+                this.VaAllocated     = VaAllocated;
             }
         }
 
-        private SortedList<long, Range> _maps;
-        private SortedList<long, Range> _reservations;
+        private SortedList<long, Range> Maps;
+        private SortedList<long, Range> Reservations;
 
-        public NvGpuASCtx(ServiceCtx context)
+        public NvGpuASCtx(ServiceCtx Context)
         {
-            Vmm = new NvGpuVmm(context.Memory);
+            Vmm = new NvGpuVmm(Context.Memory);
 
-            _maps         = new SortedList<long, Range>();
-            _reservations = new SortedList<long, Range>();
+            Maps         = new SortedList<long, Range>();
+            Reservations = new SortedList<long, Range>();
         }
 
-        public bool ValidateFixedBuffer(long position, long size)
+        public bool ValidateFixedBuffer(long Position, long Size)
         {
-            long mapEnd = position + size;
+            long MapEnd = Position + Size;
 
             //Check if size is valid (0 is also not allowed).
-            if ((ulong)mapEnd <= (ulong)position)
+            if ((ulong)MapEnd <= (ulong)Position)
             {
                 return false;
             }
 
             //Check if address is page aligned.
-            if ((position & NvGpuVmm.PageMask) != 0)
+            if ((Position & NvGpuVmm.PageMask) != 0)
             {
                 return false;
             }
 
             //Check if region is reserved.
-            if (BinarySearch(_reservations, position) == null)
+            if (BinarySearch(Reservations, Position) == null)
             {
                 return false;
             }
 
             //Check for overlap with already mapped buffers.
-            Range map = BinarySearchLt(_maps, mapEnd);
+            Range Map = BinarySearchLt(Maps, MapEnd);
 
-            if (map != null && map.End > (ulong)position)
+            if (Map != null && Map.End > (ulong)Position)
             {
                 return false;
             }
@@ -80,25 +80,25 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
         }
 
         public void AddMap(
-            long position,
-            long size,
-            long physicalAddress,
-            bool vaAllocated)
+            long Position,
+            long Size,
+            long PhysicalAddress,
+            bool VaAllocated)
         {
-            _maps.Add(position, new MappedMemory(position, size, physicalAddress, vaAllocated));
+            Maps.Add(Position, new MappedMemory(Position, Size, PhysicalAddress, VaAllocated));
         }
 
-        public bool RemoveMap(long position, out long size)
+        public bool RemoveMap(long Position, out long Size)
         {
-            size = 0;
+            Size = 0;
 
-            if (_maps.Remove(position, out Range value))
+            if (Maps.Remove(Position, out Range Value))
             {
-                MappedMemory map = (MappedMemory)value;
+                MappedMemory Map = (MappedMemory)Value;
 
-                if (map.VaAllocated)
+                if (Map.VaAllocated)
                 {
-                    size = (long)(map.End - map.Start);
+                    Size = (long)(Map.End - Map.Start);
                 }
 
                 return true;
@@ -107,94 +107,94 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
             return false;
         }
 
-        public bool TryGetMapPhysicalAddress(long position, out long physicalAddress)
+        public bool TryGetMapPhysicalAddress(long Position, out long PhysicalAddress)
         {
-            Range map = BinarySearch(_maps, position);
+            Range Map = BinarySearch(Maps, Position);
 
-            if (map != null)
+            if (Map != null)
             {
-                physicalAddress = ((MappedMemory)map).PhysicalAddress;
+                PhysicalAddress = ((MappedMemory)Map).PhysicalAddress;
 
                 return true;
             }
 
-            physicalAddress = 0;
+            PhysicalAddress = 0;
 
             return false;
         }
 
-        public void AddReservation(long position, long size)
+        public void AddReservation(long Position, long Size)
         {
-            _reservations.Add(position, new Range(position, size));
+            Reservations.Add(Position, new Range(Position, Size));
         }
 
-        public bool RemoveReservation(long position)
+        public bool RemoveReservation(long Position)
         {
-            return _reservations.Remove(position);
+            return Reservations.Remove(Position);
         }
 
-        private Range BinarySearch(SortedList<long, Range> lst, long position)
+        private Range BinarySearch(SortedList<long, Range> Lst, long Position)
         {
-            int left  = 0;
-            int right = lst.Count - 1;
+            int Left  = 0;
+            int Right = Lst.Count - 1;
 
-            while (left <= right)
+            while (Left <= Right)
             {
-                int size = right - left;
+                int Size = Right - Left;
 
-                int middle = left + (size >> 1);
+                int Middle = Left + (Size >> 1);
 
-                Range rg = lst.Values[middle];
+                Range Rg = Lst.Values[Middle];
 
-                if ((ulong)position >= rg.Start && (ulong)position < rg.End)
+                if ((ulong)Position >= Rg.Start && (ulong)Position < Rg.End)
                 {
-                    return rg;
+                    return Rg;
                 }
 
-                if ((ulong)position < rg.Start)
+                if ((ulong)Position < Rg.Start)
                 {
-                    right = middle - 1;
+                    Right = Middle - 1;
                 }
                 else
                 {
-                    left = middle + 1;
+                    Left = Middle + 1;
                 }
             }
 
             return null;
         }
 
-        private Range BinarySearchLt(SortedList<long, Range> lst, long position)
+        private Range BinarySearchLt(SortedList<long, Range> Lst, long Position)
         {
-            Range ltRg = null;
+            Range LtRg = null;
 
-            int left  = 0;
-            int right = lst.Count - 1;
+            int Left  = 0;
+            int Right = Lst.Count - 1;
 
-            while (left <= right)
+            while (Left <= Right)
             {
-                int size = right - left;
+                int Size = Right - Left;
 
-                int middle = left + (size >> 1);
+                int Middle = Left + (Size >> 1);
 
-                Range rg = lst.Values[middle];
+                Range Rg = Lst.Values[Middle];
 
-                if ((ulong)position < rg.Start)
+                if ((ulong)Position < Rg.Start)
                 {
-                    right = middle - 1;
+                    Right = Middle - 1;
                 }
                 else
                 {
-                    left = middle + 1;
+                    Left = Middle + 1;
 
-                    if ((ulong)position > rg.Start)
+                    if ((ulong)Position > Rg.Start)
                     {
-                        ltRg = rg;
+                        LtRg = Rg;
                     }
                 }
             }
 
-            return ltRg;
+            return LtRg;
         }
     }
 }

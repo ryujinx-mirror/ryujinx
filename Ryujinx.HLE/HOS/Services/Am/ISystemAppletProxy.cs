@@ -5,13 +5,13 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class ISystemAppletProxy : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ISystemAppletProxy()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,    GetCommonStateGetter     },
                 { 1,    GetSelfController        },
@@ -26,72 +26,72 @@ namespace Ryujinx.HLE.HOS.Services.Am
             };
         }
 
-        public long GetCommonStateGetter(ServiceCtx context)
+        public long GetCommonStateGetter(ServiceCtx Context)
         {
-            MakeObject(context, new ICommonStateGetter(context.Device.System));
+            MakeObject(Context, new ICommonStateGetter(Context.Device.System));
 
             return 0;
         }
 
-        public long GetSelfController(ServiceCtx context)
+        public long GetSelfController(ServiceCtx Context)
         {
-            MakeObject(context, new ISelfController(context.Device.System));
+            MakeObject(Context, new ISelfController(Context.Device.System));
 
             return 0;
         }
 
-        public long GetWindowController(ServiceCtx context)
+        public long GetWindowController(ServiceCtx Context)
         {
-            MakeObject(context, new IWindowController());
+            MakeObject(Context, new IWindowController());
 
             return 0;
         }
 
-        public long GetAudioController(ServiceCtx context)
+        public long GetAudioController(ServiceCtx Context)
         {
-            MakeObject(context, new IAudioController());
+            MakeObject(Context, new IAudioController());
 
             return 0;
         }
 
-        public long GetDisplayController(ServiceCtx context)
+        public long GetDisplayController(ServiceCtx Context)
         {
-            MakeObject(context, new IDisplayController());
+            MakeObject(Context, new IDisplayController());
 
             return 0;
         }
 
-        public long GetLibraryAppletCreator(ServiceCtx context)
+        public long GetLibraryAppletCreator(ServiceCtx Context)
         {
-            MakeObject(context, new ILibraryAppletCreator());
+            MakeObject(Context, new ILibraryAppletCreator());
 
             return 0;
         }
 
-        public long GetHomeMenuFunctions(ServiceCtx context)
+        public long GetHomeMenuFunctions(ServiceCtx Context)
         {
-            MakeObject(context, new IHomeMenuFunctions(context.Device.System));
+            MakeObject(Context, new IHomeMenuFunctions(Context.Device.System));
 
             return 0;
         }
 
-        public long GetGlobalStateController(ServiceCtx context)
+        public long GetGlobalStateController(ServiceCtx Context)
         {
-            MakeObject(context, new IGlobalStateController());
+            MakeObject(Context, new IGlobalStateController());
 
             return 0;
         }
 
-        public long GetApplicationCreator(ServiceCtx context)
+        public long GetApplicationCreator(ServiceCtx Context)
         {
-            MakeObject(context, new IApplicationCreator());
+            MakeObject(Context, new IApplicationCreator());
 
             return 0;
         }
 
-        public long GetDebugFunctions(ServiceCtx context)
+        public long GetDebugFunctions(ServiceCtx Context)
         {
-            MakeObject(context, new IDebugFunctions());
+            MakeObject(Context, new IDebugFunctions());
 
             return 0;
         }

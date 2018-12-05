@@ -6,32 +6,32 @@ namespace Ryujinx.HLE.HOS.Services.Apm
 {
     class ISession : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ISession()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, SetPerformanceConfiguration },
                 { 1, GetPerformanceConfiguration }
             };
         }
 
-        public long SetPerformanceConfiguration(ServiceCtx context)
+        public long SetPerformanceConfiguration(ServiceCtx Context)
         {
-            PerformanceMode          perfMode   = (PerformanceMode)context.RequestData.ReadInt32();
-            PerformanceConfiguration perfConfig = (PerformanceConfiguration)context.RequestData.ReadInt32();
+            PerformanceMode          PerfMode   = (PerformanceMode)Context.RequestData.ReadInt32();
+            PerformanceConfiguration PerfConfig = (PerformanceConfiguration)Context.RequestData.ReadInt32();
 
             return 0;
         }
 
-        public long GetPerformanceConfiguration(ServiceCtx context)
+        public long GetPerformanceConfiguration(ServiceCtx Context)
         {
-            PerformanceMode perfMode = (PerformanceMode)context.RequestData.ReadInt32();
+            PerformanceMode PerfMode = (PerformanceMode)Context.RequestData.ReadInt32();
 
-            context.ResponseData.Write((uint)PerformanceConfiguration.PerformanceConfiguration1);
+            Context.ResponseData.Write((uint)PerformanceConfiguration.PerformanceConfiguration1);
 
             Logger.PrintStub(LogClass.ServiceApm, "Stubbed.");
 

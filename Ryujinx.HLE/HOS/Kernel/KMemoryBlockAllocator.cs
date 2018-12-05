@@ -2,18 +2,18 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class KMemoryBlockAllocator
     {
-        private ulong _capacityElements;
+        private ulong CapacityElements;
 
         public int Count { get; set; }
 
-        public KMemoryBlockAllocator(ulong capacityElements)
+        public KMemoryBlockAllocator(ulong CapacityElements)
         {
-            _capacityElements = capacityElements;
+            this.CapacityElements = CapacityElements;
         }
 
-        public bool CanAllocate(int count)
+        public bool CanAllocate(int Count)
         {
-            return (ulong)(Count + count) <= _capacityElements;
+            return (ulong)(this.Count + Count) <= CapacityElements;
         }
     }
 }

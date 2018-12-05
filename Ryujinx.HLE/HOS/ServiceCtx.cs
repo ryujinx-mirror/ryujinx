@@ -7,33 +7,33 @@ namespace Ryujinx.HLE.HOS
 {
     class ServiceCtx
     {
-        public Switch        Device       { get; }
-        public KProcess      Process      { get; }
-        public MemoryManager Memory       { get; }
-        public KSession      Session      { get; }
-        public IpcMessage    Request      { get; }
-        public IpcMessage    Response     { get; }
-        public BinaryReader  RequestData  { get; }
-        public BinaryWriter  ResponseData { get; }
+        public Switch        Device       { get; private set; }
+        public KProcess      Process      { get; private set; }
+        public MemoryManager Memory       { get; private set; }
+        public KSession      Session      { get; private set; }
+        public IpcMessage    Request      { get; private set; }
+        public IpcMessage    Response     { get; private set; }
+        public BinaryReader  RequestData  { get; private set; }
+        public BinaryWriter  ResponseData { get; private set; }
 
         public ServiceCtx(
-            Switch        device,
-            KProcess      process,
-            MemoryManager memory,
-            KSession      session,
-            IpcMessage    request,
-            IpcMessage    response,
-            BinaryReader  requestData,
-            BinaryWriter  responseData)
+            Switch        Device,
+            KProcess      Process,
+            MemoryManager Memory,
+            KSession      Session,
+            IpcMessage    Request,
+            IpcMessage    Response,
+            BinaryReader  RequestData,
+            BinaryWriter  ResponseData)
         {
-            Device       = device;
-            Process      = process;
-            Memory       = memory;
-            Session      = session;
-            Request      = request;
-            Response     = response;
-            RequestData  = requestData;
-            ResponseData = responseData;
+            this.Device       = Device;
+            this.Process      = Process;
+            this.Memory       = Memory;
+            this.Session      = Session;
+            this.Request      = Request;
+            this.Response     = Response;
+            this.RequestData  = RequestData;
+            this.ResponseData = ResponseData;
         }
     }
 }

@@ -4,37 +4,37 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class BinaryExpression : BaseNode
     {
-        private BaseNode _leftPart;
-        private string   _name;
-        private BaseNode _rightPart;
+        private BaseNode LeftPart;
+        private string   Name;
+        private BaseNode RightPart;
 
-        public BinaryExpression(BaseNode leftPart, string name, BaseNode rightPart) : base(NodeType.BinaryExpression)
+        public BinaryExpression(BaseNode LeftPart, string Name, BaseNode RightPart) : base(NodeType.BinaryExpression)
         {
-            _leftPart  = leftPart;
-            _name      = name;
-            _rightPart = rightPart;
+            this.LeftPart  = LeftPart;
+            this.Name      = Name;
+            this.RightPart = RightPart;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            if (_name.Equals(">"))
+            if (Name.Equals(">"))
             {
-                writer.Write("(");
+                Writer.Write("(");
             }
 
-            writer.Write("(");
-            _leftPart.Print(writer);
-            writer.Write(") ");
+            Writer.Write("(");
+            LeftPart.Print(Writer);
+            Writer.Write(") ");
 
-            writer.Write(_name);
+            Writer.Write(Name);
 
-            writer.Write(" (");
-            _rightPart.Print(writer);
-            writer.Write(")");
+            Writer.Write(" (");
+            RightPart.Print(Writer);
+            Writer.Write(")");
 
-            if (_name.Equals(">"))
+            if (Name.Equals(">"))
             {
-                writer.Write(")");
+                Writer.Write(")");
             }
         }
     }

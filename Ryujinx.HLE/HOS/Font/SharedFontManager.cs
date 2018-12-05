@@ -13,116 +13,116 @@ namespace Ryujinx.HLE.HOS.Font
 {
     class SharedFontManager
     {
-        private Switch _device;
+        private Switch Device;
 
-        private long _physicalAddress;
+        private long PhysicalAddress;
 
-        private string _fontsPath;
+        private string FontsPath;
 
         private struct FontInfo
         {
             public int Offset;
             public int Size;
 
-            public FontInfo(int offset, int size)
+            public FontInfo(int Offset, int Size)
             {
-                Offset = offset;
-                Size   = size;
+                this.Offset = Offset;
+                this.Size   = Size;
             }
         }
 
-        private Dictionary<SharedFontType, FontInfo> _fontData;
+        private Dictionary<SharedFontType, FontInfo> FontData;
 
-        public SharedFontManager(Switch device, long physicalAddress)
+        public SharedFontManager(Switch Device, long PhysicalAddress)
         {
-            _physicalAddress = physicalAddress;
+            this.PhysicalAddress = PhysicalAddress;
 
-            _device = device;
+            this.Device = Device;
 
-            _fontsPath = Path.Combine(device.FileSystem.GetSystemPath(), "fonts");
+            FontsPath = Path.Combine(Device.FileSystem.GetSystemPath(), "fonts");
         }
 
-        public void EnsureInitialized(ContentManager contentManager)
+        public void EnsureInitialized(ContentManager ContentManager)
         {
-            if (_fontData == null)
+            if (FontData == null)
             {
-                _device.Memory.FillWithZeros(_physicalAddress, Horizon.FontSize);
+                Device.Memory.FillWithZeros(PhysicalAddress, Horizon.FontSize);
 
-                uint fontOffset = 0;
+                uint FontOffset = 0;
 
-                FontInfo CreateFont(string name)
+                FontInfo CreateFont(string Name)
                 {
-                    if (contentManager.TryGetFontTitle(name, out long fontTitle))
+                    if (ContentManager.TryGetFontTitle(Name, out long FontTitle))
                     {
-                        string contentPath = contentManager.GetInstalledContentPath(fontTitle, StorageId.NandSystem, ContentType.Data);
-                        string fontPath    = _device.FileSystem.SwitchPathToSystemPath(contentPath);
+                        string ContentPath = ContentManager.GetInstalledContentPath(FontTitle, StorageId.NandSystem, ContentType.Data);
+                        string FontPath    = Device.FileSystem.SwitchPathToSystemPath(ContentPath);
 
-                        if (!string.IsNullOrWhiteSpace(fontPath))
+                        if (!string.IsNullOrWhiteSpace(FontPath))
                         {
-                            int fileIndex = 0;
+                            int FileIndex = 0;
 
                             //Use second file in Chinese Font title for standard
-                            if(name == "FontChineseSimplified")
+                            if(Name == "FontChineseSimplified")
                             {
-                                fileIndex = 1;
+                                FileIndex = 1;
                             }
 
-                            FileStream ncaFileStream = new FileStream(fontPath, FileMode.Open, FileAccess.Read);
-                            Nca        nca           = new Nca(_device.System.KeySet, ncaFileStream, false);
-                            NcaSection romfsSection  = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
-                            Romfs      romfs         = new Romfs(nca.OpenSection(romfsSection.SectionNum, false, _device.System.FsIntegrityCheckLevel));
-                            Stream     fontFile      = romfs.OpenFile(romfs.Files[fileIndex]);
+                            FileStream NcaFileStream = new FileStream(FontPath, FileMode.Open, FileAccess.Read);
+                            Nca        Nca           = new Nca(Device.System.KeySet, NcaFileStream, false);
+                            NcaSection RomfsSection  = Nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
+                            Romfs      Romfs         = new Romfs(Nca.OpenSection(RomfsSection.SectionNum, false, Device.System.FsIntegrityCheckLevel));
+                            Stream     FontFile      = Romfs.OpenFile(Romfs.Files[FileIndex]);
 
-                            byte[] data = DecryptFont(fontFile);
+                            byte[] Data = DecryptFont(FontFile);
 
-                            FontInfo info = new FontInfo((int)fontOffset, data.Length);
+                            FontInfo Info = new FontInfo((int)FontOffset, Data.Length);
 
-                            WriteMagicAndSize(_physicalAddress + fontOffset, data.Length);
+                            WriteMagicAndSize(PhysicalAddress + FontOffset, Data.Length);
 
-                            fontOffset += 8;
+                            FontOffset += 8;
 
-                            uint start = fontOffset;
+                            uint Start = FontOffset;
 
-                            for (; fontOffset - start < data.Length; fontOffset++)
+                            for (; FontOffset - Start < Data.Length; FontOffset++)
                             {
-                                _device.Memory.WriteByte(_physicalAddress + fontOffset, data[fontOffset - start]);
+                                Device.Memory.WriteByte(PhysicalAddress + FontOffset, Data[FontOffset - Start]);
                             }
 
-                            ncaFileStream.Dispose();
-                            nca.Dispose();
+                            NcaFileStream.Dispose();
+                            Nca.Dispose();
 
-                            return info;
+                            return Info;
                         }
                     }
 
-                    string fontFilePath = Path.Combine(_fontsPath, name + ".ttf");
+                    string FontFilePath = Path.Combine(FontsPath, Name + ".ttf");
 
-                    if (File.Exists(fontFilePath))
+                    if (File.Exists(FontFilePath))
                     {
-                        byte[] data = File.ReadAllBytes(fontFilePath);
+                        byte[] Data = File.ReadAllBytes(FontFilePath);
 
-                        FontInfo info = new FontInfo((int)fontOffset, data.Length);
+                        FontInfo Info = new FontInfo((int)FontOffset, Data.Length);
 
-                        WriteMagicAndSize(_physicalAddress + fontOffset, data.Length);
+                        WriteMagicAndSize(PhysicalAddress + FontOffset, Data.Length);
 
-                        fontOffset += 8;
+                        FontOffset += 8;
 
-                        uint start = fontOffset;
+                        uint Start = FontOffset;
 
-                        for (; fontOffset - start < data.Length; fontOffset++)
+                        for (; FontOffset - Start < Data.Length; FontOffset++)
                         {
-                            _device.Memory.WriteByte(_physicalAddress + fontOffset, data[fontOffset - start]);
+                            Device.Memory.WriteByte(PhysicalAddress + FontOffset, Data[FontOffset - Start]);
                         }
 
-                        return info;
+                        return Info;
                     }
                     else
                     {
-                        throw new InvalidSystemResourceException($"Font \"{name}.ttf\" not found. Please provide it in \"{_fontsPath}\".");
+                        throw new InvalidSystemResourceException($"Font \"{Name}.ttf\" not found. Please provide it in \"{FontsPath}\".");
                     }
                 }
 
-                _fontData = new Dictionary<SharedFontType, FontInfo>
+                FontData = new Dictionary<SharedFontType, FontInfo>()
                 {
                     { SharedFontType.JapanUsEurope,       CreateFont("FontStandard")                  },
                     { SharedFontType.SimplifiedChinese,   CreateFont("FontChineseSimplified")         },
@@ -132,39 +132,39 @@ namespace Ryujinx.HLE.HOS.Font
                     { SharedFontType.NintendoEx,          CreateFont("FontNintendoExtended")          }
                 };
 
-                if (fontOffset > Horizon.FontSize)
+                if (FontOffset > Horizon.FontSize)
                 {
                     throw new InvalidSystemResourceException(
                         $"The sum of all fonts size exceed the shared memory size. " +
                         $"Please make sure that the fonts don't exceed {Horizon.FontSize} bytes in total. " +
-                        $"(actual size: {fontOffset} bytes).");
+                        $"(actual size: {FontOffset} bytes).");
                 }
             }
         }
 
-        private void WriteMagicAndSize(long position, int size)
+        private void WriteMagicAndSize(long Position, int Size)
         {
-            const int decMagic = 0x18029a7f;
-            const int key      = 0x49621806;
+            const int DecMagic = 0x18029a7f;
+            const int Key      = 0x49621806;
 
-            int encryptedSize = EndianSwap.Swap32(size ^ key);
+            int EncryptedSize = EndianSwap.Swap32(Size ^ Key);
 
-            _device.Memory.WriteInt32(position + 0, decMagic);
-            _device.Memory.WriteInt32(position + 4, encryptedSize);
+            Device.Memory.WriteInt32(Position + 0, DecMagic);
+            Device.Memory.WriteInt32(Position + 4, EncryptedSize);
         }
 
-        public int GetFontSize(SharedFontType fontType)
+        public int GetFontSize(SharedFontType FontType)
         {
-            EnsureInitialized(_device.System.ContentManager);
+            EnsureInitialized(Device.System.ContentManager);
 
-            return _fontData[fontType].Size;
+            return FontData[FontType].Size;
         }
 
-        public int GetSharedMemoryAddressOffset(SharedFontType fontType)
+        public int GetSharedMemoryAddressOffset(SharedFontType FontType)
         {
-            EnsureInitialized(_device.System.ContentManager);
+            EnsureInitialized(Device.System.ContentManager);
 
-            return _fontData[fontType].Offset + 8;
+            return FontData[FontType].Offset + 8;
         }
     }
 }

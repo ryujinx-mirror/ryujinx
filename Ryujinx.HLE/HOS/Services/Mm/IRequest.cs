@@ -6,13 +6,13 @@ namespace Ryujinx.HLE.HOS.Services.Mm
 {
     class IRequest : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IRequest()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 1, InitializeOld },
                 { 4, Initialize    },
@@ -23,43 +23,43 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         }
 
         // InitializeOld(u32, u32, u32)
-        public long InitializeOld(ServiceCtx context)
+        public long InitializeOld(ServiceCtx Context)
         {
-            int unknown0 = context.RequestData.ReadInt32();
-            int unknown1 = context.RequestData.ReadInt32();
-            int unknown2 = context.RequestData.ReadInt32();
+            int Unknown0 = Context.RequestData.ReadInt32();
+            int Unknown1 = Context.RequestData.ReadInt32();
+            int Unknown2 = Context.RequestData.ReadInt32();
 
             Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
 
             return 0;
         }
 
-        public long Initialize(ServiceCtx context)
+        public long Initialize(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
 
             return 0;
         }
 
-        public long Finalize(ServiceCtx context)
+        public long Finalize(ServiceCtx Context)
         {
-            context.Device.Gpu.UninitializeVideoDecoder();
+            Context.Device.Gpu.UninitializeVideoDecoder();
 
             Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
 
             return 0;
         }
 
-        public long SetAndWait(ServiceCtx context)
+        public long SetAndWait(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
 
             return 0;
         }
 
-        public long Get(ServiceCtx context)
+        public long Get(ServiceCtx Context)
         {
-            context.ResponseData.Write(0);
+            Context.ResponseData.Write(0);
 
             Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
 

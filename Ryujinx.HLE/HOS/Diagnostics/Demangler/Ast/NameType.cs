@@ -4,26 +4,26 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class NameType : BaseNode
     {
-        private string _nameValue;
+        private string NameValue;
 
-        public NameType(string nameValue, NodeType type) : base(type)
+        public NameType(string NameValue, NodeType Type) : base(Type)
         {
-            _nameValue = nameValue;
+            this.NameValue = NameValue;
         }
 
-        public NameType(string nameValue) : base(NodeType.NameType)
+        public NameType(string NameValue) : base(NodeType.NameType)
         {
-            _nameValue = nameValue;
+            this.NameValue = NameValue;
         }
 
         public override string GetName()
         {
-            return _nameValue;
+            return NameValue;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            writer.Write(_nameValue);
+            Writer.Write(NameValue);
         }
     }
 }

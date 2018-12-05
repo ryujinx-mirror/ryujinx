@@ -14,13 +14,13 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
     class IFileSystemProxy : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IFileSystemProxy()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 1,    Initialize                               },
                 { 8,    OpenFileSystemWithId                     },
@@ -36,246 +36,246 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         }
 
         // Initialize(u64, pid)
-        public long Initialize(ServiceCtx context)
+        public long Initialize(ServiceCtx Context)
         {
             return 0;
         }
 
         // OpenFileSystemWithId(nn::fssrv::sf::FileSystemType filesystem_type, nn::ApplicationId tid, buffer<bytes<0x301>, 0x19, 0x301> path) 
         // -> object<nn::fssrv::sf::IFileSystem> contentFs
-        public long OpenFileSystemWithId(ServiceCtx context)
+        public long OpenFileSystemWithId(ServiceCtx Context)
         {
-            FileSystemType fileSystemType = (FileSystemType)context.RequestData.ReadInt32();
-            long           titleId        = context.RequestData.ReadInt64();
-            string         switchPath     = ReadUtf8String(context);
-            string         fullPath       = context.Device.FileSystem.SwitchPathToSystemPath(switchPath);
+            FileSystemType FileSystemType = (FileSystemType)Context.RequestData.ReadInt32();
+            long           TitleId        = Context.RequestData.ReadInt64();
+            string         SwitchPath     = ReadUtf8String(Context);
+            string         FullPath       = Context.Device.FileSystem.SwitchPathToSystemPath(SwitchPath);
 
-            if (!File.Exists(fullPath))
+            if (!File.Exists(FullPath))
             {
-                if (fullPath.Contains("."))
+                if (FullPath.Contains("."))
                 {
-                    return OpenFileSystemFromInternalFile(context, fullPath);
+                    return OpenFileSystemFromInternalFile(Context, FullPath);
                 }
 
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            FileStream fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
-            string     extension  = Path.GetExtension(fullPath);
+            FileStream FileStream = new FileStream(FullPath, FileMode.Open, FileAccess.Read);
+            string     Extension  = Path.GetExtension(FullPath);
 
-            if (extension == ".nca")
+            if (Extension == ".nca")
             {
-                return OpenNcaFs(context, fullPath, fileStream);
+                return OpenNcaFs(Context, FullPath, FileStream);
             }
-            else if (extension == ".nsp")
+            else if (Extension == ".nsp")
             {
-                return OpenNsp(context, fullPath);
+                return OpenNsp(Context, FullPath);
             }
 
             return MakeError(ErrorModule.Fs, FsErr.InvalidInput);
         }
 
         // OpenBisFileSystem(nn::fssrv::sf::Partition partitionID, buffer<bytes<0x301>, 0x19, 0x301>) -> object<nn::fssrv::sf::IFileSystem> Bis
-        public long OpenBisFileSystem(ServiceCtx context)
+        public long OpenBisFileSystem(ServiceCtx Context)
         {
-            int    bisPartitionId  = context.RequestData.ReadInt32();
-            string partitionString = ReadUtf8String(context);
-            string bisPartitonPath = string.Empty;
+            int    BisPartitionId  = Context.RequestData.ReadInt32();
+            string PartitionString = ReadUtf8String(Context);
+            string BisPartitonPath = string.Empty;
 
-            switch (bisPartitionId)
+            switch (BisPartitionId)
             {
                 case 29:
-                    bisPartitonPath = SafeNandPath;
+                    BisPartitonPath = SafeNandPath;
                     break;
                 case 30:
                 case 31:
-                    bisPartitonPath = SystemNandPath;
+                    BisPartitonPath = SystemNandPath;
                     break;
                 case 32:
-                    bisPartitonPath = UserNandPath;
+                    BisPartitonPath = UserNandPath;
                     break;
                 default:
                     return MakeError(ErrorModule.Fs, FsErr.InvalidInput);
             }
 
-            string fullPath = context.Device.FileSystem.GetFullPartitionPath(bisPartitonPath);
+            string FullPath = Context.Device.FileSystem.GetFullPartitionPath(BisPartitonPath);
 
-            FileSystemProvider fileSystemProvider = new FileSystemProvider(fullPath, context.Device.FileSystem.GetBasePath());
+            FileSystemProvider FileSystemProvider = new FileSystemProvider(FullPath, Context.Device.FileSystem.GetBasePath());
 
-            MakeObject(context, new IFileSystem(fullPath, fileSystemProvider));
+            MakeObject(Context, new IFileSystem(FullPath, FileSystemProvider));
 
             return 0;
         }
 
         // OpenSdCardFileSystem() -> object<nn::fssrv::sf::IFileSystem>
-        public long OpenSdCardFileSystem(ServiceCtx context)
+        public long OpenSdCardFileSystem(ServiceCtx Context)
         {
-            string sdCardPath = context.Device.FileSystem.GetSdCardPath();
+            string SdCardPath = Context.Device.FileSystem.GetSdCardPath();
 
-            FileSystemProvider fileSystemProvider = new FileSystemProvider(sdCardPath, context.Device.FileSystem.GetBasePath());
+            FileSystemProvider FileSystemProvider = new FileSystemProvider(SdCardPath, Context.Device.FileSystem.GetBasePath());
 
-            MakeObject(context, new IFileSystem(sdCardPath, fileSystemProvider));
+            MakeObject(Context, new IFileSystem(SdCardPath, FileSystemProvider));
 
             return 0;
         }
 
         // OpenSaveDataFileSystem(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> saveDataFs
-        public long OpenSaveDataFileSystem(ServiceCtx context)
+        public long OpenSaveDataFileSystem(ServiceCtx Context)
         {
-            LoadSaveDataFileSystem(context);
+            LoadSaveDataFileSystem(Context);
 
             return 0;
         }
 
         // OpenSaveDataFileSystemBySystemSaveDataId(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> systemSaveDataFs
-        public long OpenSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
+        public long OpenSaveDataFileSystemBySystemSaveDataId(ServiceCtx Context)
         {
-            LoadSaveDataFileSystem(context);
+            LoadSaveDataFileSystem(Context);
 
             return 0;
         }
 
         // OpenDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage> dataStorage
-        public long OpenDataStorageByCurrentProcess(ServiceCtx context)
+        public long OpenDataStorageByCurrentProcess(ServiceCtx Context)
         {
-            MakeObject(context, new IStorage(context.Device.FileSystem.RomFs));
+            MakeObject(Context, new IStorage(Context.Device.FileSystem.RomFs));
 
             return 0;
         }
 
         // OpenDataStorageByDataId(u8 storageId, nn::ApplicationId tid) -> object<nn::fssrv::sf::IStorage> dataStorage
-        public long OpenDataStorageByDataId(ServiceCtx context)
+        public long OpenDataStorageByDataId(ServiceCtx Context)
         {
-            StorageId storageId = (StorageId)context.RequestData.ReadByte();
-            byte[]    padding   = context.RequestData.ReadBytes(7);
-            long      titleId   = context.RequestData.ReadInt64();
+            StorageId StorageId = (StorageId)Context.RequestData.ReadByte();
+            byte[]    Padding   = Context.RequestData.ReadBytes(7);
+            long      TitleId   = Context.RequestData.ReadInt64();
 
-            StorageId installedStorage =
-                context.Device.System.ContentManager.GetInstalledStorage(titleId, ContentType.Data, storageId);
+            StorageId InstalledStorage =
+                Context.Device.System.ContentManager.GetInstalledStorage(TitleId, ContentType.Data, StorageId);
 
-            if (installedStorage == StorageId.None)
+            if (InstalledStorage == StorageId.None)
             {
-                installedStorage =
-                    context.Device.System.ContentManager.GetInstalledStorage(titleId, ContentType.AocData, storageId);
+                InstalledStorage =
+                    Context.Device.System.ContentManager.GetInstalledStorage(TitleId, ContentType.AocData, StorageId);
             }
 
-            if (installedStorage != StorageId.None)
+            if (InstalledStorage != StorageId.None)
             {
-                string contentPath = context.Device.System.ContentManager.GetInstalledContentPath(titleId, storageId, ContentType.AocData);
+                string ContentPath = Context.Device.System.ContentManager.GetInstalledContentPath(TitleId, StorageId, ContentType.AocData);
 
-                if (string.IsNullOrWhiteSpace(contentPath))
+                if (string.IsNullOrWhiteSpace(ContentPath))
                 {
-                    contentPath = context.Device.System.ContentManager.GetInstalledContentPath(titleId, storageId, ContentType.AocData);
+                    ContentPath = Context.Device.System.ContentManager.GetInstalledContentPath(TitleId, StorageId, ContentType.AocData);
                 }
 
-                string installPath = context.Device.FileSystem.SwitchPathToSystemPath(contentPath);
+                string InstallPath = Context.Device.FileSystem.SwitchPathToSystemPath(ContentPath);
 
-                if (!string.IsNullOrWhiteSpace(installPath))
+                if (!string.IsNullOrWhiteSpace(InstallPath))
                 {
-                    string ncaPath = installPath;
+                    string NcaPath = InstallPath;
 
-                    if (File.Exists(ncaPath))
+                    if (File.Exists(NcaPath))
                     {
-                        FileStream ncaStream    = new FileStream(ncaPath, FileMode.Open, FileAccess.Read);
-                        Nca        nca          = new Nca(context.Device.System.KeySet, ncaStream, false);
-                        NcaSection romfsSection = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
-                        Stream     romfsStream  = nca.OpenSection(romfsSection.SectionNum, false, context.Device.System.FsIntegrityCheckLevel);
+                        FileStream NcaStream    = new FileStream(NcaPath, FileMode.Open, FileAccess.Read);
+                        Nca        Nca          = new Nca(Context.Device.System.KeySet, NcaStream, false);
+                        NcaSection RomfsSection = Nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
+                        Stream     RomfsStream  = Nca.OpenSection(RomfsSection.SectionNum, false, Context.Device.System.FsIntegrityCheckLevel);
 
-                        MakeObject(context, new IStorage(romfsStream));
+                        MakeObject(Context, new IStorage(RomfsStream));
 
                         return 0;
                     }
                     else
                     { 
-                        throw new FileNotFoundException($"No Nca found in Path `{ncaPath}`.");
+                        throw new FileNotFoundException($"No Nca found in Path `{NcaPath}`.");
                     }
                 }
                 else
                 { 
-                    throw new DirectoryNotFoundException($"Path for title id {titleId:x16} on Storage {storageId} was not found in Path {installPath}.");
+                    throw new DirectoryNotFoundException($"Path for title id {TitleId:x16} on Storage {StorageId} was not found in Path {InstallPath}.");
                 }
             }
 
-            throw new FileNotFoundException($"System archive with titleid {titleId:x16} was not found on Storage {storageId}. Found in {installedStorage}.");
+            throw new FileNotFoundException($"System archive with titleid {TitleId:x16} was not found on Storage {StorageId}. Found in {InstalledStorage}.");
         }
 
         // OpenPatchDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage>
-        public long OpenPatchDataStorageByCurrentProcess(ServiceCtx context)
+        public long OpenPatchDataStorageByCurrentProcess(ServiceCtx Context)
         {
-            MakeObject(context, new IStorage(context.Device.FileSystem.RomFs));
+            MakeObject(Context, new IStorage(Context.Device.FileSystem.RomFs));
 
             return 0;
         }
 
         // GetGlobalAccessLogMode() -> u32 logMode
-        public long GetGlobalAccessLogMode(ServiceCtx context)
+        public long GetGlobalAccessLogMode(ServiceCtx Context)
         {
-            context.ResponseData.Write(0);
+            Context.ResponseData.Write(0);
 
             return 0;
         }
 
-        public void LoadSaveDataFileSystem(ServiceCtx context)
+        public void LoadSaveDataFileSystem(ServiceCtx Context)
         {
-            SaveSpaceId saveSpaceId = (SaveSpaceId)context.RequestData.ReadInt64();
+            SaveSpaceId SaveSpaceId = (SaveSpaceId)Context.RequestData.ReadInt64();
 
-            long titleId = context.RequestData.ReadInt64();
+            long TitleId = Context.RequestData.ReadInt64();
 
-            UInt128 userId = new UInt128(
-                context.RequestData.ReadInt64(), 
-                context.RequestData.ReadInt64());
+            UInt128 UserId = new UInt128(
+                Context.RequestData.ReadInt64(), 
+                Context.RequestData.ReadInt64());
 
-            long               saveId             = context.RequestData.ReadInt64();
-            SaveDataType       saveDataType       = (SaveDataType)context.RequestData.ReadByte();
-            SaveInfo           saveInfo           = new SaveInfo(titleId, saveId, saveDataType, userId, saveSpaceId);
-            string             savePath           = context.Device.FileSystem.GetGameSavePath(saveInfo, context);
-            FileSystemProvider fileSystemProvider = new FileSystemProvider(savePath, context.Device.FileSystem.GetBasePath());
+            long               SaveId             = Context.RequestData.ReadInt64();
+            SaveDataType       SaveDataType       = (SaveDataType)Context.RequestData.ReadByte();
+            SaveInfo           SaveInfo           = new SaveInfo(TitleId, SaveId, SaveDataType, UserId, SaveSpaceId);
+            string             SavePath           = Context.Device.FileSystem.GetGameSavePath(SaveInfo, Context);
+            FileSystemProvider FileSystemProvider = new FileSystemProvider(SavePath, Context.Device.FileSystem.GetBasePath());
 
-            MakeObject(context, new IFileSystem(savePath, fileSystemProvider));
+            MakeObject(Context, new IFileSystem(SavePath, FileSystemProvider));
         }
 
-        private long OpenNsp(ServiceCtx context, string pfsPath)
+        private long OpenNsp(ServiceCtx Context, string PfsPath)
         {
-            FileStream   pfsFile    = new FileStream(pfsPath, FileMode.Open, FileAccess.Read);
-            Pfs          nsp        = new Pfs(pfsFile);
-            PfsFileEntry ticketFile = nsp.Files.FirstOrDefault(x => x.Name.EndsWith(".tik"));
+            FileStream   PfsFile    = new FileStream(PfsPath, FileMode.Open, FileAccess.Read);
+            Pfs          Nsp        = new Pfs(PfsFile);
+            PfsFileEntry TicketFile = Nsp.Files.FirstOrDefault(x => x.Name.EndsWith(".tik"));
 
-            if (ticketFile != null)
+            if (TicketFile != null)
             {
-                Ticket ticket = new Ticket(nsp.OpenFile(ticketFile));
+                Ticket Ticket = new Ticket(Nsp.OpenFile(TicketFile));
 
-                context.Device.System.KeySet.TitleKeys[ticket.RightsId] =
-                    ticket.GetTitleKey(context.Device.System.KeySet);
+                Context.Device.System.KeySet.TitleKeys[Ticket.RightsId] =
+                    Ticket.GetTitleKey(Context.Device.System.KeySet);
             }
 
-            IFileSystem nspFileSystem = new IFileSystem(pfsPath, new PFsProvider(nsp));
+            IFileSystem NspFileSystem = new IFileSystem(PfsPath, new PFsProvider(Nsp));
 
-            MakeObject(context, nspFileSystem);
+            MakeObject(Context, NspFileSystem);
 
             return 0;
         }
 
-        private long OpenNcaFs(ServiceCtx context,string ncaPath, Stream ncaStream)
+        private long OpenNcaFs(ServiceCtx Context,string NcaPath, Stream NcaStream)
         {
-            Nca nca = new Nca(context.Device.System.KeySet, ncaStream, false);
+            Nca Nca = new Nca(Context.Device.System.KeySet, NcaStream, false);
 
-            NcaSection romfsSection = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
-            NcaSection pfsSection   = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Pfs0);
+            NcaSection RomfsSection = Nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
+            NcaSection PfsSection   = Nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Pfs0);
 
-            if (romfsSection != null)
+            if (RomfsSection != null)
             {
-                Stream      romfsStream   = nca.OpenSection(romfsSection.SectionNum, false, context.Device.System.FsIntegrityCheckLevel);
-                IFileSystem ncaFileSystem = new IFileSystem(ncaPath, new RomFsProvider(romfsStream));
+                Stream      RomfsStream   = Nca.OpenSection(RomfsSection.SectionNum, false, Context.Device.System.FsIntegrityCheckLevel);
+                IFileSystem NcaFileSystem = new IFileSystem(NcaPath, new RomFsProvider(RomfsStream));
 
-                MakeObject(context, ncaFileSystem);
+                MakeObject(Context, NcaFileSystem);
             }
-            else if(pfsSection !=null)
+            else if(PfsSection !=null)
             {
-                Stream      pfsStream     = nca.OpenSection(pfsSection.SectionNum, false, context.Device.System.FsIntegrityCheckLevel);
-                Pfs         pfs           = new Pfs(pfsStream);
-                IFileSystem ncaFileSystem = new IFileSystem(ncaPath, new PFsProvider(pfs));
+                Stream      PfsStream     = Nca.OpenSection(PfsSection.SectionNum, false, Context.Device.System.FsIntegrityCheckLevel);
+                Pfs         Pfs           = new Pfs(PfsStream);
+                IFileSystem NcaFileSystem = new IFileSystem(NcaPath, new PFsProvider(Pfs));
 
-                MakeObject(context, ncaFileSystem);
+                MakeObject(Context, NcaFileSystem);
             }
             else
             {
@@ -285,38 +285,38 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
-        private long OpenFileSystemFromInternalFile(ServiceCtx context, string fullPath)
+        private long OpenFileSystemFromInternalFile(ServiceCtx Context, string FullPath)
         {
-            DirectoryInfo archivePath = new DirectoryInfo(fullPath).Parent;
+            DirectoryInfo ArchivePath = new DirectoryInfo(FullPath).Parent;
 
-            while (string.IsNullOrWhiteSpace(archivePath.Extension))
+            while (string.IsNullOrWhiteSpace(ArchivePath.Extension))
             {
-                archivePath = archivePath.Parent;
+                ArchivePath = ArchivePath.Parent;
             }
 
-            if (archivePath.Extension == ".nsp" && File.Exists(archivePath.FullName))
+            if (ArchivePath.Extension == ".nsp" && File.Exists(ArchivePath.FullName))
             {
-                FileStream pfsFile = new FileStream(
-                    archivePath.FullName.TrimEnd(Path.DirectorySeparatorChar),
+                FileStream PfsFile = new FileStream(
+                    ArchivePath.FullName.TrimEnd(Path.DirectorySeparatorChar),
                     FileMode.Open,
                     FileAccess.Read);
 
-                Pfs          nsp        = new Pfs(pfsFile);
-                PfsFileEntry ticketFile = nsp.Files.FirstOrDefault(x => x.Name.EndsWith(".tik"));
+                Pfs          Nsp        = new Pfs(PfsFile);
+                PfsFileEntry TicketFile = Nsp.Files.FirstOrDefault(x => x.Name.EndsWith(".tik"));
 
-                if (ticketFile != null)
+                if (TicketFile != null)
                 {
-                    Ticket ticket = new Ticket(nsp.OpenFile(ticketFile));
+                    Ticket Ticket = new Ticket(Nsp.OpenFile(TicketFile));
 
-                    context.Device.System.KeySet.TitleKeys[ticket.RightsId] =
-                        ticket.GetTitleKey(context.Device.System.KeySet);
+                    Context.Device.System.KeySet.TitleKeys[Ticket.RightsId] =
+                        Ticket.GetTitleKey(Context.Device.System.KeySet);
                 }
 
-                string filename = fullPath.Replace(archivePath.FullName, string.Empty).TrimStart('\\');
+                string Filename = FullPath.Replace(ArchivePath.FullName, string.Empty).TrimStart('\\');
 
-                if (nsp.FileExists(filename))
+                if (Nsp.FileExists(Filename))
                 {
-                    return OpenNcaFs(context, fullPath, nsp.OpenFile(filename));
+                    return OpenNcaFs(Context, FullPath, Nsp.OpenFile(Filename));
                 }
             }
 

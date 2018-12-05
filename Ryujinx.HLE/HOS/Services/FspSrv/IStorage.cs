@@ -6,47 +6,47 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
     class IStorage : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private Stream _baseStream;
+        private Stream BaseStream;
 
-        public IStorage(Stream baseStream)
+        public IStorage(Stream BaseStream)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, Read }
             };
 
-            _baseStream = baseStream;
+            this.BaseStream = BaseStream;
         }
 
         // Read(u64 offset, u64 length) -> buffer<u8, 0x46, 0> buffer
-        public long Read(ServiceCtx context)
+        public long Read(ServiceCtx Context)
         {
-            long offset = context.RequestData.ReadInt64();
-            long size   = context.RequestData.ReadInt64();
+            long Offset = Context.RequestData.ReadInt64();
+            long Size   = Context.RequestData.ReadInt64();
 
-            if (context.Request.ReceiveBuff.Count > 0)
+            if (Context.Request.ReceiveBuff.Count > 0)
             {
-                IpcBuffDesc buffDesc = context.Request.ReceiveBuff[0];
+                IpcBuffDesc BuffDesc = Context.Request.ReceiveBuff[0];
 
                 //Use smaller length to avoid overflows.
-                if (size > buffDesc.Size)
+                if (Size > BuffDesc.Size)
                 {
-                    size = buffDesc.Size;
+                    Size = BuffDesc.Size;
                 }
 
-                byte[] data = new byte[size];
+                byte[] Data = new byte[Size];
 
-                lock (_baseStream)
+                lock (BaseStream)
                 {
-                    _baseStream.Seek(offset, SeekOrigin.Begin);
-                    _baseStream.Read(data, 0, data.Length);
+                    BaseStream.Seek(Offset, SeekOrigin.Begin);
+                    BaseStream.Read(Data, 0, Data.Length);
                 }
 
-                context.Memory.WriteBytes(buffDesc.Position, data);
+                Context.Memory.WriteBytes(BuffDesc.Position, Data);
             }
 
             return 0;

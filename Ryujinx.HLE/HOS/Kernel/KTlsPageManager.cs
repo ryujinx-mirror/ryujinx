@@ -6,55 +6,55 @@ namespace Ryujinx.HLE.HOS.Kernel
     {
         private const int TlsEntrySize = 0x200;
 
-        private long _pagePosition;
+        private long PagePosition;
 
-        private int _usedSlots;
+        private int UsedSlots;
 
-        private bool[] _slots;
+        private bool[] Slots;
 
-        public bool IsEmpty => _usedSlots == 0;
-        public bool IsFull  => _usedSlots == _slots.Length;
+        public bool IsEmpty => UsedSlots == 0;
+        public bool IsFull  => UsedSlots == Slots.Length;
 
-        public KTlsPageManager(long pagePosition)
+        public KTlsPageManager(long PagePosition)
         {
-            _pagePosition = pagePosition;
+            this.PagePosition = PagePosition;
 
-            _slots = new bool[KMemoryManager.PageSize / TlsEntrySize];
+            Slots = new bool[KMemoryManager.PageSize / TlsEntrySize];
         }
 
-        public bool TryGetFreeTlsAddr(out long position)
+        public bool TryGetFreeTlsAddr(out long Position)
         {
-            position = _pagePosition;
+            Position = PagePosition;
 
-            for (int index = 0; index < _slots.Length; index++)
+            for (int Index = 0; Index < Slots.Length; Index++)
             {
-                if (!_slots[index])
+                if (!Slots[Index])
                 {
-                    _slots[index] = true;
+                    Slots[Index] = true;
 
-                    _usedSlots++;
+                    UsedSlots++;
 
                     return true;
                 }
 
-                position += TlsEntrySize;
+                Position += TlsEntrySize;
             }
 
-            position = 0;
+            Position = 0;
 
             return false;
         }
 
-        public void FreeTlsSlot(int slot)
+        public void FreeTlsSlot(int Slot)
         {
-            if ((uint)slot > _slots.Length)
+            if ((uint)Slot > Slots.Length)
             {
-                throw new ArgumentOutOfRangeException(nameof(slot));
+                throw new ArgumentOutOfRangeException(nameof(Slot));
             }
 
-            _slots[slot] = false;
+            Slots[Slot] = false;
 
-            _usedSlots--;
+            UsedSlots--;
         }
     }
 }

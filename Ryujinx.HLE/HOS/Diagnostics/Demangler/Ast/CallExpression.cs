@@ -5,20 +5,20 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class CallExpression : NodeArray
     {
-        private BaseNode _callee;
+        private BaseNode Callee;
 
-        public CallExpression(BaseNode callee, List<BaseNode> nodes) : base(nodes, NodeType.CallExpression)
+        public CallExpression(BaseNode Callee, List<BaseNode> Nodes) : base(Nodes, NodeType.CallExpression)
         {
-            _callee = callee;
+            this.Callee = Callee;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            _callee.Print(writer);
+            Callee.Print(Writer);
 
-            writer.Write("(");
-            writer.Write(string.Join<BaseNode>(", ", Nodes.ToArray()));
-            writer.Write(")");
+            Writer.Write("(");
+            Writer.Write(string.Join<BaseNode>(", ", Nodes.ToArray()));
+            Writer.Write(")");
         }
     }
 }

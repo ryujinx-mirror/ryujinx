@@ -4,14 +4,14 @@ namespace Ryujinx.HLE.HOS.Kernel
     {
         public KHandleEntry Next { get; set; }
 
-        public int Index { get; }
+        public int Index { get; private set; }
 
         public ushort HandleId { get; set; }
         public object Obj      { get; set; }
 
-        public KHandleEntry(int index)
+        public KHandleEntry(int Index)
         {
-            Index = index;
+            this.Index = Index;
         }
     }
 }

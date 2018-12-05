@@ -10,116 +10,116 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
 {
     class NvHostCtrlIoctl
     {
-        private static ConcurrentDictionary<KProcess, NvHostCtrlUserCtx> _userCtxs;
+        private static ConcurrentDictionary<KProcess, NvHostCtrlUserCtx> UserCtxs;
 
-        private static bool _isProductionMode = true;
+        private static bool IsProductionMode = true;
 
         static NvHostCtrlIoctl()
         {
-            _userCtxs = new ConcurrentDictionary<KProcess, NvHostCtrlUserCtx>();
+            UserCtxs = new ConcurrentDictionary<KProcess, NvHostCtrlUserCtx>();
 
-            if (Set.NxSettings.Settings.TryGetValue("nv!rmos_set_production_mode", out object productionModeSetting))
+            if (Set.NxSettings.Settings.TryGetValue("nv!rmos_set_production_mode", out object ProductionModeSetting))
             {
-                _isProductionMode = ((string)productionModeSetting) != "0"; // Default value is ""
+                IsProductionMode = ((string)ProductionModeSetting) != "0"; // Default value is ""
             }
         }
 
-        public static int ProcessIoctl(ServiceCtx context, int cmd)
+        public static int ProcessIoctl(ServiceCtx Context, int Cmd)
         {
-            switch (cmd & 0xffff)
+            switch (Cmd & 0xffff)
             {
-                case 0x0014: return SyncptRead    (context);
-                case 0x0015: return SyncptIncr    (context);
-                case 0x0016: return SyncptWait    (context);
-                case 0x0019: return SyncptWaitEx  (context);
-                case 0x001a: return SyncptReadMax (context);
-                case 0x001b: return GetConfig     (context);
-                case 0x001d: return EventWait     (context);
-                case 0x001e: return EventWaitAsync(context);
-                case 0x001f: return EventRegister (context);
+                case 0x0014: return SyncptRead    (Context);
+                case 0x0015: return SyncptIncr    (Context);
+                case 0x0016: return SyncptWait    (Context);
+                case 0x0019: return SyncptWaitEx  (Context);
+                case 0x001a: return SyncptReadMax (Context);
+                case 0x001b: return GetConfig     (Context);
+                case 0x001d: return EventWait     (Context);
+                case 0x001e: return EventWaitAsync(Context);
+                case 0x001f: return EventRegister (Context);
             }
 
-            throw new NotImplementedException(cmd.ToString("x8"));
+            throw new NotImplementedException(Cmd.ToString("x8"));
         }
 
-        private static int SyncptRead(ServiceCtx context)
+        private static int SyncptRead(ServiceCtx Context)
         {
-            return SyncptReadMinOrMax(context, max: false);
+            return SyncptReadMinOrMax(Context, Max: false);
         }
 
-        private static int SyncptIncr(ServiceCtx context)
+        private static int SyncptIncr(ServiceCtx Context)
         {
-            long inputPosition = context.Request.GetBufferType0x21().Position;
+            long InputPosition = Context.Request.GetBufferType0x21().Position;
 
-            int id = context.Memory.ReadInt32(inputPosition);
+            int Id = Context.Memory.ReadInt32(InputPosition);
 
-            if ((uint)id >= NvHostSyncpt.SyncptsCount)
+            if ((uint)Id >= NvHostSyncpt.SyncptsCount)
             {
                 return NvResult.InvalidInput;
             }
 
-            GetUserCtx(context).Syncpt.Increment(id);
+            GetUserCtx(Context).Syncpt.Increment(Id);
 
             return NvResult.Success;
         }
 
-        private static int SyncptWait(ServiceCtx context)
+        private static int SyncptWait(ServiceCtx Context)
         {
-            return SyncptWait(context, extended: false);
+            return SyncptWait(Context, Extended: false);
         }
 
-        private static int SyncptWaitEx(ServiceCtx context)
+        private static int SyncptWaitEx(ServiceCtx Context)
         {
-            return SyncptWait(context, extended: true);
+            return SyncptWait(Context, Extended: true);
         }
 
-        private static int SyncptReadMax(ServiceCtx context)
+        private static int SyncptReadMax(ServiceCtx Context)
         {
-            return SyncptReadMinOrMax(context, max: true);
+            return SyncptReadMinOrMax(Context, Max: true);
         }
 
-        private static int GetConfig(ServiceCtx context)
+        private static int GetConfig(ServiceCtx Context)
         {
-            if (!_isProductionMode)
+            if (!IsProductionMode)
             {
-                long inputPosition  = context.Request.GetBufferType0x21().Position;
-                long outputPosition = context.Request.GetBufferType0x22().Position;
+                long InputPosition  = Context.Request.GetBufferType0x21().Position;
+                long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-                string domain = MemoryHelper.ReadAsciiString(context.Memory, inputPosition + 0, 0x41);
-                string name   = MemoryHelper.ReadAsciiString(context.Memory, inputPosition + 0x41, 0x41);
+                string Domain = MemoryHelper.ReadAsciiString(Context.Memory, InputPosition + 0, 0x41);
+                string Name   = MemoryHelper.ReadAsciiString(Context.Memory, InputPosition + 0x41, 0x41);
 
-                if (Set.NxSettings.Settings.TryGetValue($"{domain}!{name}", out object nvSetting))
+                if (Set.NxSettings.Settings.TryGetValue($"{Domain}!{Name}", out object NvSetting))
                 {
-                    byte[] settingBuffer = new byte[0x101];
+                    byte[] SettingBuffer = new byte[0x101];
 
-                    if (nvSetting is string stringValue)
+                    if (NvSetting is string StringValue)
                     {
-                        if (stringValue.Length > 0x100)
+                        if (StringValue.Length > 0x100)
                         {
-                            Logger.PrintError(LogClass.ServiceNv, $"{domain}!{name} String value size is too big!");
+                            Logger.PrintError(LogClass.ServiceNv, $"{Domain}!{Name} String value size is too big!");
                         }
                         else
                         {
-                            settingBuffer = Encoding.ASCII.GetBytes(stringValue + "\0");
+                            SettingBuffer = Encoding.ASCII.GetBytes(StringValue + "\0");
                         }
                     }
 
-                    if (nvSetting is int intValue)
+                    if (NvSetting is int IntValue)
                     {
-                        settingBuffer = BitConverter.GetBytes(intValue);
+                        SettingBuffer = BitConverter.GetBytes(IntValue);
                     }
-                    else if (nvSetting is bool boolValue)
+                    else if (NvSetting is bool BoolValue)
                     {
-                        settingBuffer[0] = boolValue ? (byte)1 : (byte)0;
+                        SettingBuffer[0] = BoolValue ? (byte)1 : (byte)0;
                     }
                     else
                     {
-                        throw new NotImplementedException(nvSetting.GetType().Name);
+                        throw new NotImplementedException(NvSetting.GetType().Name);
                     }
 
-                    context.Memory.WriteBytes(outputPosition + 0x82, settingBuffer);
+                    Context.Memory.WriteBytes(OutputPosition + 0x82, SettingBuffer);
 
-                    Logger.PrintDebug(LogClass.ServiceNv, $"Got setting {domain}!{name}");
+                    Logger.PrintDebug(LogClass.ServiceNv, $"Got setting {Domain}!{Name}");
                 }
 
                 return NvResult.Success;
@@ -128,156 +128,156 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
             return NvResult.NotAvailableInProduction;
         }
 
-        private static int EventWait(ServiceCtx context)
+        private static int EventWait(ServiceCtx Context)
         {
-            return EventWait(context, async: false);
+            return EventWait(Context, Async: false);
         }
 
-        private static int EventWaitAsync(ServiceCtx context)
+        private static int EventWaitAsync(ServiceCtx Context)
         {
-            return EventWait(context, async: true);
+            return EventWait(Context, Async: true);
         }
 
-        private static int EventRegister(ServiceCtx context)
+        private static int EventRegister(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            int eventId = context.Memory.ReadInt32(inputPosition);
+            int EventId = Context.Memory.ReadInt32(InputPosition);
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int SyncptReadMinOrMax(ServiceCtx context, bool max)
+        private static int SyncptReadMinOrMax(ServiceCtx Context, bool Max)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvHostCtrlSyncptRead args = MemoryHelper.Read<NvHostCtrlSyncptRead>(context.Memory, inputPosition);
+            NvHostCtrlSyncptRead Args = MemoryHelper.Read<NvHostCtrlSyncptRead>(Context.Memory, InputPosition);
 
-            if ((uint)args.Id >= NvHostSyncpt.SyncptsCount)
+            if ((uint)Args.Id >= NvHostSyncpt.SyncptsCount)
             {
                 return NvResult.InvalidInput;
             }
 
-            if (max)
+            if (Max)
             {
-                args.Value = GetUserCtx(context).Syncpt.GetMax(args.Id);
+                Args.Value = GetUserCtx(Context).Syncpt.GetMax(Args.Id);
             }
             else
             {
-                args.Value = GetUserCtx(context).Syncpt.GetMin(args.Id);
+                Args.Value = GetUserCtx(Context).Syncpt.GetMin(Args.Id);
             }
 
-            MemoryHelper.Write(context.Memory, outputPosition, args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             return NvResult.Success;
         }
 
-        private static int SyncptWait(ServiceCtx context, bool extended)
+        private static int SyncptWait(ServiceCtx Context, bool Extended)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvHostCtrlSyncptWait args = MemoryHelper.Read<NvHostCtrlSyncptWait>(context.Memory, inputPosition);
+            NvHostCtrlSyncptWait Args = MemoryHelper.Read<NvHostCtrlSyncptWait>(Context.Memory, InputPosition);
 
-            NvHostSyncpt syncpt = GetUserCtx(context).Syncpt;
+            NvHostSyncpt Syncpt = GetUserCtx(Context).Syncpt;
 
-            if ((uint)args.Id >= NvHostSyncpt.SyncptsCount)
+            if ((uint)Args.Id >= NvHostSyncpt.SyncptsCount)
             {
                 return NvResult.InvalidInput;
             }
 
-            int result;
+            int Result;
 
-            if (syncpt.MinCompare(args.Id, args.Thresh))
+            if (Syncpt.MinCompare(Args.Id, Args.Thresh))
             {
-                result = NvResult.Success;
+                Result = NvResult.Success;
             }
-            else if (args.Timeout == 0)
+            else if (Args.Timeout == 0)
             {
-                result = NvResult.TryAgain;
+                Result = NvResult.TryAgain;
             }
             else
             {
-                Logger.PrintDebug(LogClass.ServiceNv, "Waiting syncpt with timeout of " + args.Timeout + "ms...");
+                Logger.PrintDebug(LogClass.ServiceNv, "Waiting syncpt with timeout of " + Args.Timeout + "ms...");
 
-                using (ManualResetEvent waitEvent = new ManualResetEvent(false))
+                using (ManualResetEvent WaitEvent = new ManualResetEvent(false))
                 {
-                    syncpt.AddWaiter(args.Thresh, waitEvent);
+                    Syncpt.AddWaiter(Args.Thresh, WaitEvent);
 
                     //Note: Negative (> INT_MAX) timeouts aren't valid on .NET,
                     //in this case we just use the maximum timeout possible.
-                    int timeout = args.Timeout;
+                    int Timeout = Args.Timeout;
 
-                    if (timeout < -1)
+                    if (Timeout < -1)
                     {
-                        timeout = int.MaxValue;
+                        Timeout = int.MaxValue;
                     }
 
-                    if (timeout == -1)
+                    if (Timeout == -1)
                     {
-                        waitEvent.WaitOne();
+                        WaitEvent.WaitOne();
 
-                        result = NvResult.Success;
+                        Result = NvResult.Success;
                     }
-                    else if (waitEvent.WaitOne(timeout))
+                    else if (WaitEvent.WaitOne(Timeout))
                     {
-                        result = NvResult.Success;
+                        Result = NvResult.Success;
                     }
                     else
                     {
-                        result = NvResult.TimedOut;
+                        Result = NvResult.TimedOut;
                     }
                 }
 
                 Logger.PrintDebug(LogClass.ServiceNv, "Resuming...");
             }
 
-            if (extended)
+            if (Extended)
             {
-                context.Memory.WriteInt32(outputPosition + 0xc, syncpt.GetMin(args.Id));
+                Context.Memory.WriteInt32(OutputPosition + 0xc, Syncpt.GetMin(Args.Id));
             }
 
-            return result;
+            return Result;
         }
 
-        private static int EventWait(ServiceCtx context, bool async)
+        private static int EventWait(ServiceCtx Context, bool Async)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvHostCtrlSyncptWaitEx args = MemoryHelper.Read<NvHostCtrlSyncptWaitEx>(context.Memory, inputPosition);
+            NvHostCtrlSyncptWaitEx Args = MemoryHelper.Read<NvHostCtrlSyncptWaitEx>(Context.Memory, InputPosition);
 
-            if ((uint)args.Id >= NvHostSyncpt.SyncptsCount)
+            if ((uint)Args.Id >= NvHostSyncpt.SyncptsCount)
             {
                 return NvResult.InvalidInput;
             }
 
             void WriteArgs()
             {
-                MemoryHelper.Write(context.Memory, outputPosition, args);
+                MemoryHelper.Write(Context.Memory, OutputPosition, Args);
             }
 
-            NvHostSyncpt syncpt = GetUserCtx(context).Syncpt;
+            NvHostSyncpt Syncpt = GetUserCtx(Context).Syncpt;
 
-            if (syncpt.MinCompare(args.Id, args.Thresh))
+            if (Syncpt.MinCompare(Args.Id, Args.Thresh))
             {
-                args.Value = syncpt.GetMin(args.Id);
+                Args.Value = Syncpt.GetMin(Args.Id);
 
                 WriteArgs();
 
                 return NvResult.Success;
             }
 
-            if (!async)
+            if (!Async)
             {
-                args.Value = 0;
+                Args.Value = 0;
             }
 
-            if (args.Timeout == 0)
+            if (Args.Timeout == 0)
             {
                 WriteArgs();
 
@@ -286,114 +286,114 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
 
             NvHostEvent Event;
 
-            int result, eventIndex;
+            int Result, EventIndex;
 
-            if (async)
+            if (Async)
             {
-                eventIndex = args.Value;
+                EventIndex = Args.Value;
 
-                if ((uint)eventIndex >= NvHostCtrlUserCtx.EventsCount)
+                if ((uint)EventIndex >= NvHostCtrlUserCtx.EventsCount)
                 {
                     return NvResult.InvalidInput;
                 }
 
-                Event = GetUserCtx(context).Events[eventIndex];
+                Event = GetUserCtx(Context).Events[EventIndex];
             }
             else
             {
-                Event = GetFreeEvent(context, syncpt, args.Id, out eventIndex);
+                Event = GetFreeEvent(Context, Syncpt, Args.Id, out EventIndex);
             }
 
             if (Event != null &&
                (Event.State == NvHostEventState.Registered ||
                 Event.State == NvHostEventState.Free))
             {
-                Event.Id     = args.Id;
-                Event.Thresh = args.Thresh;
+                Event.Id     = Args.Id;
+                Event.Thresh = Args.Thresh;
 
                 Event.State = NvHostEventState.Waiting;
 
-                if (!async)
+                if (!Async)
                 {
-                    args.Value = ((args.Id & 0xfff) << 16) | 0x10000000;
+                    Args.Value = ((Args.Id & 0xfff) << 16) | 0x10000000;
                 }
                 else
                 {
-                    args.Value = args.Id << 4;
+                    Args.Value = Args.Id << 4;
                 }
 
-                args.Value |= eventIndex;
+                Args.Value |= EventIndex;
 
-                result = NvResult.TryAgain;
+                Result = NvResult.TryAgain;
             }
             else
             {
-                result = NvResult.InvalidInput;
+                Result = NvResult.InvalidInput;
             }
 
             WriteArgs();
 
-            return result;
+            return Result;
         }
 
         private static NvHostEvent GetFreeEvent(
-            ServiceCtx   context,
-            NvHostSyncpt syncpt,
-            int          id,
-            out int      eventIndex)
+            ServiceCtx   Context,
+            NvHostSyncpt Syncpt,
+            int          Id,
+            out int      EventIndex)
         {
-            NvHostEvent[] events = GetUserCtx(context).Events;
+            NvHostEvent[] Events = GetUserCtx(Context).Events;
 
-            eventIndex = NvHostCtrlUserCtx.EventsCount;
+            EventIndex = NvHostCtrlUserCtx.EventsCount;
 
-            int nullIndex = NvHostCtrlUserCtx.EventsCount;
+            int NullIndex = NvHostCtrlUserCtx.EventsCount;
 
-            for (int index = 0; index < NvHostCtrlUserCtx.EventsCount; index++)
+            for (int Index = 0; Index < NvHostCtrlUserCtx.EventsCount; Index++)
             {
-                NvHostEvent Event = events[index];
+                NvHostEvent Event = Events[Index];
 
                 if (Event != null)
                 {
                     if (Event.State == NvHostEventState.Registered ||
                         Event.State == NvHostEventState.Free)
                     {
-                        eventIndex = index;
+                        EventIndex = Index;
 
-                        if (Event.Id == id)
+                        if (Event.Id == Id)
                         {
                             return Event;
                         }
                     }
                 }
-                else if (nullIndex == NvHostCtrlUserCtx.EventsCount)
+                else if (NullIndex == NvHostCtrlUserCtx.EventsCount)
                 {
-                    nullIndex = index;
+                    NullIndex = Index;
                 }
             }
 
-            if (nullIndex < NvHostCtrlUserCtx.EventsCount)
+            if (NullIndex < NvHostCtrlUserCtx.EventsCount)
             {
-                eventIndex = nullIndex;
+                EventIndex = NullIndex;
 
-                return events[nullIndex] = new NvHostEvent();
+                return Events[NullIndex] = new NvHostEvent();
             }
 
-            if (eventIndex < NvHostCtrlUserCtx.EventsCount)
+            if (EventIndex < NvHostCtrlUserCtx.EventsCount)
             {
-                return events[eventIndex];
+                return Events[EventIndex];
             }
 
             return null;
         }
 
-        public static NvHostCtrlUserCtx GetUserCtx(ServiceCtx context)
+        public static NvHostCtrlUserCtx GetUserCtx(ServiceCtx Context)
         {
-            return _userCtxs.GetOrAdd(context.Process, (key) => new NvHostCtrlUserCtx());
+            return UserCtxs.GetOrAdd(Context.Process, (Key) => new NvHostCtrlUserCtx());
         }
 
-        public static void UnloadProcess(KProcess process)
+        public static void UnloadProcess(KProcess Process)
         {
-            _userCtxs.TryRemove(process, out _);
+            UserCtxs.TryRemove(Process, out _);
         }
     }
 }

@@ -5,21 +5,21 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class IAllSystemAppletProxiesService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IAllSystemAppletProxiesService()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 100, OpenSystemAppletProxy }
             };
         }
 
-        public long OpenSystemAppletProxy(ServiceCtx context)
+        public long OpenSystemAppletProxy(ServiceCtx Context)
         {
-            MakeObject(context, new ISystemAppletProxy());
+            MakeObject(Context, new ISystemAppletProxy());
 
             return 0;
         }

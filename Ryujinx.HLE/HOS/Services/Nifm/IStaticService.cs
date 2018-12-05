@@ -5,29 +5,29 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 {
     class IStaticService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IStaticService()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 4, CreateGeneralServiceOld },
                 { 5, CreateGeneralService    }
             };
         }
 
-        public long CreateGeneralServiceOld(ServiceCtx context)
+        public long CreateGeneralServiceOld(ServiceCtx Context)
         {
-            MakeObject(context, new IGeneralService());
+            MakeObject(Context, new IGeneralService());
 
             return 0;
         }
 
-        public long CreateGeneralService(ServiceCtx context)
+        public long CreateGeneralService(ServiceCtx Context)
         {
-            MakeObject(context, new IGeneralService());
+            MakeObject(Context, new IGeneralService());
 
             return 0;
         }

@@ -4,17 +4,17 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class ThrowExpression : BaseNode
     {
-        private BaseNode _expression;
+        private BaseNode Expression;
 
-        public ThrowExpression(BaseNode expression) : base(NodeType.ThrowExpression)
+        public ThrowExpression(BaseNode Expression) : base(NodeType.ThrowExpression)
         {
-            _expression = expression;
+            this.Expression = Expression;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            writer.Write("throw ");
-            _expression.Print(writer);
+            Writer.Write("throw ");
+            Expression.Print(Writer);
         }
     }
 }

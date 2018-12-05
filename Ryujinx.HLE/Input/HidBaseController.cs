@@ -11,18 +11,18 @@ namespace Ryujinx.HLE.Input
         public long Offset    { get; private set; }
         public bool Connected { get; protected set; }
 
-        public HidControllerBase(HidControllerType controllerType, Switch device)
+        public HidControllerBase(HidControllerType ControllerType, Switch Device)
         {
-            Device = device;
+            this.Device = Device;
 
-            HidControllerType = controllerType;
+            HidControllerType = ControllerType;
         }
 
-        public virtual void Connect(HidControllerId controllerId)
+        public virtual void Connect(HidControllerId ControllerId)
         {
-            ControllerId = controllerId;
+            this.ControllerId = ControllerId;
 
-            Offset = Device.Hid.HidPosition + HidControllersOffset + (int)controllerId * HidControllerSize;
+            Offset = Device.Hid.HidPosition + HidControllersOffset + (int)ControllerId * HidControllerSize;
 
             Device.Memory.FillWithZeros(Offset, 0x5000);
 
@@ -30,47 +30,47 @@ namespace Ryujinx.HLE.Input
         }
 
         public abstract void SendInput(
-            HidControllerButtons buttons,
-            HidJoystickPosition  leftStick,
-            HidJoystickPosition  rightStick);
+            HidControllerButtons Buttons,
+            HidJoystickPosition  LeftStick,
+            HidJoystickPosition  RightStick);
 
         protected long WriteInput(
-            HidControllerButtons buttons,
-            HidJoystickPosition  leftStick,
-            HidJoystickPosition  rightStick, 
-            HidControllerLayouts controllerLayout)
+            HidControllerButtons Buttons,
+            HidJoystickPosition  LeftStick,
+            HidJoystickPosition  RightStick, 
+            HidControllerLayouts ControllerLayout)
         {
-            long controllerOffset = Offset + HidControllerHeaderSize;
+            long ControllerOffset = Offset + HidControllerHeaderSize;
 
-            controllerOffset += (int)controllerLayout * HidControllerLayoutsSize;
+            ControllerOffset += (int)ControllerLayout * HidControllerLayoutsSize;
 
-            long lastEntry = Device.Memory.ReadInt64(controllerOffset + 0x10);
-            long currEntry = (lastEntry + 1) % HidEntryCount;
-            long timestamp = GetTimestamp();
+            long LastEntry = Device.Memory.ReadInt64(ControllerOffset + 0x10);
+            long CurrEntry = (LastEntry + 1) % HidEntryCount;
+            long Timestamp = GetTimestamp();
 
-            Device.Memory.WriteInt64(controllerOffset + 0x00, timestamp);
-            Device.Memory.WriteInt64(controllerOffset + 0x08, HidEntryCount);
-            Device.Memory.WriteInt64(controllerOffset + 0x10, currEntry);
-            Device.Memory.WriteInt64(controllerOffset + 0x18, HidEntryCount - 1);
+            Device.Memory.WriteInt64(ControllerOffset + 0x00, Timestamp);
+            Device.Memory.WriteInt64(ControllerOffset + 0x08, HidEntryCount);
+            Device.Memory.WriteInt64(ControllerOffset + 0x10, CurrEntry);
+            Device.Memory.WriteInt64(ControllerOffset + 0x18, HidEntryCount - 1);
 
-            controllerOffset += HidControllersLayoutHeaderSize;
+            ControllerOffset += HidControllersLayoutHeaderSize;
 
-            long lastEntryOffset = controllerOffset + lastEntry * HidControllersInputEntrySize;
+            long LastEntryOffset = ControllerOffset + LastEntry * HidControllersInputEntrySize;
 
-            controllerOffset += currEntry * HidControllersInputEntrySize;
+            ControllerOffset += CurrEntry * HidControllersInputEntrySize;
 
-            long sampleCounter = Device.Memory.ReadInt64(lastEntryOffset) + 1;
+            long SampleCounter = Device.Memory.ReadInt64(LastEntryOffset) + 1;
 
-            Device.Memory.WriteInt64(controllerOffset + 0x00, sampleCounter);
-            Device.Memory.WriteInt64(controllerOffset + 0x08, sampleCounter);
-            Device.Memory.WriteInt64(controllerOffset + 0x10, (uint)buttons);
+            Device.Memory.WriteInt64(ControllerOffset + 0x00, SampleCounter);
+            Device.Memory.WriteInt64(ControllerOffset + 0x08, SampleCounter);
+            Device.Memory.WriteInt64(ControllerOffset + 0x10, (uint)Buttons);
 
-            Device.Memory.WriteInt32(controllerOffset + 0x18, leftStick.Dx);
-            Device.Memory.WriteInt32(controllerOffset + 0x1c, leftStick.Dy);
-            Device.Memory.WriteInt32(controllerOffset + 0x20, rightStick.Dx);
-            Device.Memory.WriteInt32(controllerOffset + 0x24, rightStick.Dy);
+            Device.Memory.WriteInt32(ControllerOffset + 0x18, LeftStick.DX);
+            Device.Memory.WriteInt32(ControllerOffset + 0x1c, LeftStick.DY);
+            Device.Memory.WriteInt32(ControllerOffset + 0x20, RightStick.DX);
+            Device.Memory.WriteInt32(ControllerOffset + 0x24, RightStick.DY);
 
-            return controllerOffset;
+            return ControllerOffset;
         }
     }
 }

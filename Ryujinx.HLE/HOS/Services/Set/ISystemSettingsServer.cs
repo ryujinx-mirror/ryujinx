@@ -12,13 +12,13 @@ namespace Ryujinx.HLE.HOS.Services.Set
 {
     class ISystemSettingsServer : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ISystemSettingsServer()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 3,  GetFirmwareVersion  },
                 { 4,  GetFirmwareVersion2  },
@@ -29,185 +29,185 @@ namespace Ryujinx.HLE.HOS.Services.Set
         }
 
         // GetFirmwareVersion() -> buffer<nn::settings::system::FirmwareVersion, 0x1a, 0x100>
-        public static long GetFirmwareVersion(ServiceCtx context)
+        public static long GetFirmwareVersion(ServiceCtx Context)
         {
-            return GetFirmwareVersion2(context);
+            return GetFirmwareVersion2(Context);
         }
 
         // GetFirmwareVersion2() -> buffer<nn::settings::system::FirmwareVersion, 0x1a, 0x100>
-        public static long GetFirmwareVersion2(ServiceCtx context)
+        public static long GetFirmwareVersion2(ServiceCtx Context)
         {
-            long replyPos  = context.Request.RecvListBuff[0].Position;
-            long replySize = context.Request.RecvListBuff[0].Size;
+            long ReplyPos  = Context.Request.RecvListBuff[0].Position;
+            long ReplySize = Context.Request.RecvListBuff[0].Size;
 
-            byte[] firmwareData = GetFirmwareData(context.Device);
+            byte[] FirmwareData = GetFirmwareData(Context.Device);
 
-            if (firmwareData != null)
+            if (FirmwareData != null)
             {
-                context.Memory.WriteBytes(replyPos, firmwareData);
+                Context.Memory.WriteBytes(ReplyPos, FirmwareData);
 
                 return 0;
             }
 
-            const byte majorFwVersion = 0x03;
-            const byte minorFwVersion = 0x00;
-            const byte microFwVersion = 0x00;
-            const byte unknown        = 0x00; //Build?
+            const byte MajorFWVersion = 0x03;
+            const byte MinorFWVersion = 0x00;
+            const byte MicroFWVersion = 0x00;
+            const byte Unknown        = 0x00; //Build?
 
-            const int revisionNumber = 0x0A;
+            const int RevisionNumber = 0x0A;
 
-            const string platform   = "NX";
-            const string unknownHex = "7fbde2b0bba4d14107bf836e4643043d9f6c8e47";
-            const string version    = "3.0.0";
-            const string build      = "NintendoSDK Firmware for NX 3.0.0-10.0";
+            const string Platform   = "NX";
+            const string UnknownHex = "7fbde2b0bba4d14107bf836e4643043d9f6c8e47";
+            const string Version    = "3.0.0";
+            const string Build      = "NintendoSDK Firmware for NX 3.0.0-10.0";
 
             //http://switchbrew.org/index.php?title=System_Version_Title
-            using (MemoryStream ms = new MemoryStream(0x100))
+            using (MemoryStream MS = new MemoryStream(0x100))
             {
-                BinaryWriter writer = new BinaryWriter(ms);
+                BinaryWriter Writer = new BinaryWriter(MS);
 
-                writer.Write(majorFwVersion);
-                writer.Write(minorFwVersion);
-                writer.Write(microFwVersion);
-                writer.Write(unknown);
+                Writer.Write(MajorFWVersion);
+                Writer.Write(MinorFWVersion);
+                Writer.Write(MicroFWVersion);
+                Writer.Write(Unknown);
 
-                writer.Write(revisionNumber);
+                Writer.Write(RevisionNumber);
 
-                writer.Write(Encoding.ASCII.GetBytes(platform));
+                Writer.Write(Encoding.ASCII.GetBytes(Platform));
 
-                ms.Seek(0x28, SeekOrigin.Begin);
+                MS.Seek(0x28, SeekOrigin.Begin);
 
-                writer.Write(Encoding.ASCII.GetBytes(unknownHex));
+                Writer.Write(Encoding.ASCII.GetBytes(UnknownHex));
 
-                ms.Seek(0x68, SeekOrigin.Begin);
+                MS.Seek(0x68, SeekOrigin.Begin);
 
-                writer.Write(Encoding.ASCII.GetBytes(version));
+                Writer.Write(Encoding.ASCII.GetBytes(Version));
 
-                ms.Seek(0x80, SeekOrigin.Begin);
+                MS.Seek(0x80, SeekOrigin.Begin);
 
-                writer.Write(Encoding.ASCII.GetBytes(build));
+                Writer.Write(Encoding.ASCII.GetBytes(Build));
 
-                context.Memory.WriteBytes(replyPos, ms.ToArray());
+                Context.Memory.WriteBytes(ReplyPos, MS.ToArray());
             }
 
             return 0;
         }
 
         // GetColorSetId() -> i32
-        public static long GetColorSetId(ServiceCtx context)
+        public static long GetColorSetId(ServiceCtx Context)
         {
-            context.ResponseData.Write((int)context.Device.System.State.ThemeColor);
+            Context.ResponseData.Write((int)Context.Device.System.State.ThemeColor);
 
             return 0;
         }
 
         // GetColorSetId() -> i32
-        public static long SetColorSetId(ServiceCtx context)
+        public static long SetColorSetId(ServiceCtx Context)
         {
-            int colorSetId = context.RequestData.ReadInt32();
+            int ColorSetId = Context.RequestData.ReadInt32();
 
-            context.Device.System.State.ThemeColor = (ColorSet)colorSetId;
+            Context.Device.System.State.ThemeColor = (ColorSet)ColorSetId;
 
             return 0;
         }
 
         // GetSettingsItemValue(buffer<nn::settings::SettingsName, 0x19, 0x48>, buffer<nn::settings::SettingsItemKey, 0x19, 0x48>) -> (u64, buffer<unknown, 6, 0>)
-        public static long GetSettingsItemValue(ServiceCtx context)
+        public static long GetSettingsItemValue(ServiceCtx Context)
         {
-            long classPos  = context.Request.PtrBuff[0].Position;
-            long classSize = context.Request.PtrBuff[0].Size;
+            long ClassPos  = Context.Request.PtrBuff[0].Position;
+            long ClassSize = Context.Request.PtrBuff[0].Size;
 
-            long namePos  = context.Request.PtrBuff[1].Position;
-            long nameSize = context.Request.PtrBuff[1].Size;
+            long NamePos  = Context.Request.PtrBuff[1].Position;
+            long NameSize = Context.Request.PtrBuff[1].Size;
 
-            long replyPos  = context.Request.ReceiveBuff[0].Position;
-            long replySize = context.Request.ReceiveBuff[0].Size;
+            long ReplyPos  = Context.Request.ReceiveBuff[0].Position;
+            long ReplySize = Context.Request.ReceiveBuff[0].Size;
 
-            byte[] Class = context.Memory.ReadBytes(classPos, classSize);
-            byte[] name  = context.Memory.ReadBytes(namePos, nameSize);
+            byte[] Class = Context.Memory.ReadBytes(ClassPos, ClassSize);
+            byte[] Name  = Context.Memory.ReadBytes(NamePos, NameSize);
 
-            string askedSetting = Encoding.ASCII.GetString(Class).Trim('\0') + "!" + Encoding.ASCII.GetString(name).Trim('\0');
+            string AskedSetting = Encoding.ASCII.GetString(Class).Trim('\0') + "!" + Encoding.ASCII.GetString(Name).Trim('\0');
 
-            NxSettings.Settings.TryGetValue(askedSetting, out object nxSetting);
+            NxSettings.Settings.TryGetValue(AskedSetting, out object NxSetting);
 
-            if (nxSetting != null)
+            if (NxSetting != null)
             {
-                byte[] settingBuffer = new byte[replySize];
+                byte[] SettingBuffer = new byte[ReplySize];
 
-                if (nxSetting is string stringValue)
+                if (NxSetting is string StringValue)
                 {
-                    if (stringValue.Length + 1 > replySize)
+                    if (StringValue.Length + 1 > ReplySize)
                     {
-                        Logger.PrintError(LogClass.ServiceSet, $"{askedSetting} String value size is too big!");
+                        Logger.PrintError(LogClass.ServiceSet, $"{AskedSetting} String value size is too big!");
                     }
                     else
                     {
-                        settingBuffer = Encoding.ASCII.GetBytes(stringValue + "\0");
+                        SettingBuffer = Encoding.ASCII.GetBytes(StringValue + "\0");
                     }
                 }
 
-                if (nxSetting is int intValue)
+                if (NxSetting is int IntValue)
                 {
-                    settingBuffer = BitConverter.GetBytes(intValue);
+                    SettingBuffer = BitConverter.GetBytes(IntValue);
                 }
-                else if (nxSetting is bool boolValue)
+                else if (NxSetting is bool BoolValue)
                 {
-                    settingBuffer[0] = boolValue ? (byte)1 : (byte)0;
+                    SettingBuffer[0] = BoolValue ? (byte)1 : (byte)0;
                 }
                 else
                 {
-                    throw new NotImplementedException(nxSetting.GetType().Name);
+                    throw new NotImplementedException(NxSetting.GetType().Name);
                 }
 
-                context.Memory.WriteBytes(replyPos, settingBuffer);
+                Context.Memory.WriteBytes(ReplyPos, SettingBuffer);
 
-                Logger.PrintDebug(LogClass.ServiceSet, $"{askedSetting} set value: {nxSetting} as {nxSetting.GetType()}");
+                Logger.PrintDebug(LogClass.ServiceSet, $"{AskedSetting} set value: {NxSetting} as {NxSetting.GetType()}");
             }
             else
             {
-                Logger.PrintError(LogClass.ServiceSet, $"{askedSetting} not found!");
+                Logger.PrintError(LogClass.ServiceSet, $"{AskedSetting} not found!");
             }
 
             return 0;
         }
 
-        public static byte[] GetFirmwareData(Switch device)
+        public static byte[] GetFirmwareData(Switch Device)
         {
-            byte[] data        = null;
-            long   titleId     = 0x0100000000000809;
-            string contentPath = device.System.ContentManager.GetInstalledContentPath(titleId, StorageId.NandSystem, ContentType.Data);
+            byte[] Data        = null;
+            long   TitleId     = 0x0100000000000809;
+            string ContentPath = Device.System.ContentManager.GetInstalledContentPath(TitleId, StorageId.NandSystem, ContentType.Data);
 
-            if(string.IsNullOrWhiteSpace(contentPath))
+            if(string.IsNullOrWhiteSpace(ContentPath))
             {
                 return null;
             }
 
-            string     firmwareTitlePath = device.FileSystem.SwitchPathToSystemPath(contentPath);
-            FileStream firmwareStream    = File.Open(firmwareTitlePath, FileMode.Open, FileAccess.Read);
-            Nca        firmwareContent   = new Nca(device.System.KeySet, firmwareStream, false);
-            Stream     romFsStream       = firmwareContent.OpenSection(0, false, device.System.FsIntegrityCheckLevel);
+            string     FirmwareTitlePath = Device.FileSystem.SwitchPathToSystemPath(ContentPath);
+            FileStream FirmwareStream    = File.Open(FirmwareTitlePath, FileMode.Open, FileAccess.Read);
+            Nca        FirmwareContent   = new Nca(Device.System.KeySet, FirmwareStream, false);
+            Stream     RomFsStream       = FirmwareContent.OpenSection(0, false, Device.System.FsIntegrityCheckLevel);
 
-            if(romFsStream == null)
+            if(RomFsStream == null)
             {
                 return null;
             }
 
-            Romfs firmwareRomFs = new Romfs(romFsStream);
+            Romfs FirmwareRomFs = new Romfs(RomFsStream);
 
-            using(MemoryStream memoryStream = new MemoryStream())
+            using(MemoryStream MemoryStream = new MemoryStream())
             {
-                using (Stream firmwareFile = firmwareRomFs.OpenFile("/file"))
+                using (Stream FirmwareFile = FirmwareRomFs.OpenFile("/file"))
                 {
-                    firmwareFile.CopyTo(memoryStream);
+                    FirmwareFile.CopyTo(MemoryStream);
                 }
 
-                data = memoryStream.ToArray();
+                Data = MemoryStream.ToArray();
             }
 
-            firmwareContent.Dispose();
-            firmwareStream.Dispose();
+            FirmwareContent.Dispose();
+            FirmwareStream.Dispose();
 
-            return data;
+            return Data;
         }
     }
 }

@@ -4,45 +4,45 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class FoldExpression : BaseNode
     {
-        private bool     _isLeftFold;
-        private string   _operatorName;
-        private BaseNode _expression;
-        private BaseNode _initializer;
+        private bool     IsLeftFold;
+        private string   OperatorName;
+        private BaseNode Expression;
+        private BaseNode Initializer;
 
-        public FoldExpression(bool isLeftFold, string operatorName, BaseNode expression, BaseNode initializer) : base(NodeType.FunctionParameter)
+        public FoldExpression(bool IsLeftFold, string OperatorName, BaseNode Expression, BaseNode Initializer) : base(NodeType.FunctionParameter)
         {
-            _isLeftFold   = isLeftFold;
-            _operatorName = operatorName;
-            _expression   = expression;
-            _initializer  = initializer;
+            this.IsLeftFold   = IsLeftFold;
+            this.OperatorName = OperatorName;
+            this.Expression   = Expression;
+            this.Initializer  = Initializer;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            writer.Write("(");
+            Writer.Write("(");
 
-            if (_isLeftFold && _initializer != null)
+            if (IsLeftFold && Initializer != null)
             {
-                _initializer.Print(writer);
-                writer.Write(" ");
-                writer.Write(_operatorName);
-                writer.Write(" ");
+                Initializer.Print(Writer);
+                Writer.Write(" ");
+                Writer.Write(OperatorName);
+                Writer.Write(" ");
             }
 
-            writer.Write(_isLeftFold ? "... " : " ");
-            writer.Write(_operatorName);
-            writer.Write(!_isLeftFold ? " ..." : " ");
-            _expression.Print(writer);
+            Writer.Write(IsLeftFold ? "... " : " ");
+            Writer.Write(OperatorName);
+            Writer.Write(!IsLeftFold ? " ..." : " ");
+            Expression.Print(Writer);
 
-            if (!_isLeftFold && _initializer != null)
+            if (!IsLeftFold && Initializer != null)
             {
-                _initializer.Print(writer);
-                writer.Write(" ");
-                writer.Write(_operatorName);
-                writer.Write(" ");
+                Initializer.Print(Writer);
+                Writer.Write(" ");
+                Writer.Write(OperatorName);
+                Writer.Write(" ");
             }
 
-            writer.Write(")");
+            Writer.Write(")");
         }
     }
 }

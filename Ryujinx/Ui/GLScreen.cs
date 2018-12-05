@@ -164,14 +164,14 @@ namespace Ryujinx
 
             leftJoystick = new HidJoystickPosition
             {
-                Dx = leftJoystickDx,
-                Dy = leftJoystickDy
+                DX = leftJoystickDx,
+                DY = leftJoystickDy
             };
 
             rightJoystick = new HidJoystickPosition
             {
-                Dx = rightJoystickDx,
-                Dy = rightJoystickDy
+                DX = rightJoystickDx,
+                DY = rightJoystickDy
             };
 
             bool hasTouch = false;

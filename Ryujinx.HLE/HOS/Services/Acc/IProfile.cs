@@ -12,76 +12,76 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 {
     class IProfile : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private UserProfile _profile;
+        private UserProfile Profile;
 
-        private Stream _profilePictureStream;
+        private Stream ProfilePictureStream;
 
-        public IProfile(UserProfile profile)
+        public IProfile(UserProfile Profile)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,  Get          },
                 { 1,  GetBase      },
                 { 10, GetImageSize },
-                { 11, LoadImage    }
+                { 11, LoadImage    },
             };
 
-            _profile = profile;
+            this.Profile = Profile;
 
-            _profilePictureStream = Assembly.GetCallingAssembly().GetManifestResourceStream("Ryujinx.HLE.RyujinxProfileImage.jpg");
+            ProfilePictureStream = Assembly.GetCallingAssembly().GetManifestResourceStream("Ryujinx.HLE.RyujinxProfileImage.jpg");
         }
 
-        public long Get(ServiceCtx context)
+        public long Get(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceAcc, "Stubbed.");
 
-            long position = context.Request.ReceiveBuff[0].Position;
+            long Position = Context.Request.ReceiveBuff[0].Position;
 
-            MemoryHelper.FillWithZeros(context.Memory, position, 0x80);
+            MemoryHelper.FillWithZeros(Context.Memory, Position, 0x80);
 
-            context.Memory.WriteInt32(position, 0);
-            context.Memory.WriteInt32(position + 4, 1);
-            context.Memory.WriteInt64(position + 8, 1);
+            Context.Memory.WriteInt32(Position, 0);
+            Context.Memory.WriteInt32(Position + 4, 1);
+            Context.Memory.WriteInt64(Position + 8, 1);
 
-            return GetBase(context);
+            return GetBase(Context);
         }
 
-        public long GetBase(ServiceCtx context)
+        public long GetBase(ServiceCtx Context)
         {
-            _profile.Uuid.Write(context.ResponseData);
+            Profile.Uuid.Write(Context.ResponseData);
 
-            context.ResponseData.Write(_profile.LastModifiedTimestamp);
+            Context.ResponseData.Write(Profile.LastModifiedTimestamp);
 
-            byte[] username = StringUtils.GetFixedLengthBytes(_profile.Name, 0x20, Encoding.UTF8);
+            byte[] Username = StringUtils.GetFixedLengthBytes(Profile.Name, 0x20, Encoding.UTF8);
 
-            context.ResponseData.Write(username);
+            Context.ResponseData.Write(Username);
 
             return 0;
         }
 
-        private long LoadImage(ServiceCtx context)
+        private long LoadImage(ServiceCtx Context)
         {
-            long bufferPosition = context.Request.ReceiveBuff[0].Position;
-            long bufferLen      = context.Request.ReceiveBuff[0].Size;
+            long BufferPosition = Context.Request.ReceiveBuff[0].Position;
+            long BufferLen      = Context.Request.ReceiveBuff[0].Size;
 
-            byte[] profilePictureData = new byte[bufferLen];
+            byte[] ProfilePictureData = new byte[BufferLen];
 
-            _profilePictureStream.Read(profilePictureData, 0, profilePictureData.Length);
+            ProfilePictureStream.Read(ProfilePictureData, 0, ProfilePictureData.Length);
 
-            context.Memory.WriteBytes(bufferPosition, profilePictureData);
+            Context.Memory.WriteBytes(BufferPosition, ProfilePictureData);
 
-            context.ResponseData.Write(_profilePictureStream.Length);
+            Context.ResponseData.Write(ProfilePictureStream.Length);
 
             return 0;
         }
 
-        private long GetImageSize(ServiceCtx context)
+        private long GetImageSize(ServiceCtx Context)
         {
-            context.ResponseData.Write(_profilePictureStream.Length);
+            Context.ResponseData.Write(ProfilePictureStream.Length);
 
             return 0;
         }

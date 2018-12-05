@@ -2,30 +2,30 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class KClientPort : KSynchronizationObject
     {
-        private int _sessionsCount;
-        private int _currentCapacity;
-        private int _maxSessions;
+        private int SessionsCount;
+        private int CurrentCapacity;
+        private int MaxSessions;
 
-        private KPort _parent;
+        private KPort Parent;
 
-        public KClientPort(Horizon system) : base(system) { }
+        public KClientPort(Horizon System) : base(System) { }
 
-        public void Initialize(KPort parent, int maxSessions)
+        public void Initialize(KPort Parent, int MaxSessions)
         {
-            _maxSessions = maxSessions;
-            _parent      = parent;
+            this.MaxSessions = MaxSessions;
+            this.Parent      = Parent;
         }
 
-        public new static KernelResult RemoveName(Horizon system, string name)
+        public new static KernelResult RemoveName(Horizon System, string Name)
         {
-            KAutoObject foundObj = FindNamedObject(system, name);
+            KAutoObject FoundObj = KAutoObject.FindNamedObject(System, Name);
 
-            if (!(foundObj is KClientPort))
+            if (!(FoundObj is KClientPort))
             {
                 return KernelResult.NotFound;
             }
 
-            return KAutoObject.RemoveName(system, name);
+            return KAutoObject.RemoveName(System, Name);
         }
     }
 }

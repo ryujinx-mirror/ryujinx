@@ -6,19 +6,19 @@ namespace Ryujinx.HLE.HOS.Kernel
     {
         public LinkedList<KThread> WaitingThreads;
 
-        public KSynchronizationObject(Horizon system) : base(system)
+        public KSynchronizationObject(Horizon System) : base(System)
         {
             WaitingThreads = new LinkedList<KThread>();
         }
 
-        public LinkedListNode<KThread> AddWaitingThread(KThread thread)
+        public LinkedListNode<KThread> AddWaitingThread(KThread Thread)
         {
-            return WaitingThreads.AddLast(thread);
+            return WaitingThreads.AddLast(Thread);
         }
 
-        public void RemoveWaitingThread(LinkedListNode<KThread> node)
+        public void RemoveWaitingThread(LinkedListNode<KThread> Node)
         {
-            WaitingThreads.Remove(node);
+            WaitingThreads.Remove(Node);
         }
 
         public virtual void Signal()

@@ -5,21 +5,21 @@ namespace Ryujinx.HLE.HOS.Services.Lm
 {
     class ILogService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ILogService()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, Initialize }
             };
         }
 
-        public long Initialize(ServiceCtx context)
+        public long Initialize(ServiceCtx Context)
         {
-            MakeObject(context, new ILogger());
+            MakeObject(Context, new ILogger());
 
             return 0;
         }

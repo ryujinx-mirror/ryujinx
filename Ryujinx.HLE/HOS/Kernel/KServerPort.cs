@@ -2,13 +2,13 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class KServerPort : KSynchronizationObject
     {
-        private KPort _parent;
+        private KPort Parent;
 
-        public KServerPort(Horizon system) : base(system) { }
+        public KServerPort(Horizon System) : base(System) { }
 
-        public void Initialize(KPort parent)
+        public void Initialize(KPort Parent)
         {
-            _parent = parent;
+            this.Parent = Parent;
         }
     }
 }

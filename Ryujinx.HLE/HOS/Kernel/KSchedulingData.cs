@@ -4,204 +4,204 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class KSchedulingData
     {
-        private LinkedList<KThread>[][] _scheduledThreadsPerPrioPerCore;
-        private LinkedList<KThread>[][] _suggestedThreadsPerPrioPerCore;
+        private LinkedList<KThread>[][] ScheduledThreadsPerPrioPerCore;
+        private LinkedList<KThread>[][] SuggestedThreadsPerPrioPerCore;
 
-        private long[] _scheduledPrioritiesPerCore;
-        private long[] _suggestedPrioritiesPerCore;
+        private long[] ScheduledPrioritiesPerCore;
+        private long[] SuggestedPrioritiesPerCore;
 
         public KSchedulingData()
         {
-            _suggestedThreadsPerPrioPerCore = new LinkedList<KThread>[KScheduler.PrioritiesCount][];
-            _scheduledThreadsPerPrioPerCore = new LinkedList<KThread>[KScheduler.PrioritiesCount][];
+            SuggestedThreadsPerPrioPerCore = new LinkedList<KThread>[KScheduler.PrioritiesCount][];
+            ScheduledThreadsPerPrioPerCore = new LinkedList<KThread>[KScheduler.PrioritiesCount][];
 
-            for (int prio = 0; prio < KScheduler.PrioritiesCount; prio++)
+            for (int Prio = 0; Prio < KScheduler.PrioritiesCount; Prio++)
             {
-                _suggestedThreadsPerPrioPerCore[prio] = new LinkedList<KThread>[KScheduler.CpuCoresCount];
-                _scheduledThreadsPerPrioPerCore[prio] = new LinkedList<KThread>[KScheduler.CpuCoresCount];
+                SuggestedThreadsPerPrioPerCore[Prio] = new LinkedList<KThread>[KScheduler.CpuCoresCount];
+                ScheduledThreadsPerPrioPerCore[Prio] = new LinkedList<KThread>[KScheduler.CpuCoresCount];
 
-                for (int core = 0; core < KScheduler.CpuCoresCount; core++)
+                for (int Core = 0; Core < KScheduler.CpuCoresCount; Core++)
                 {
-                    _suggestedThreadsPerPrioPerCore[prio][core] = new LinkedList<KThread>();
-                    _scheduledThreadsPerPrioPerCore[prio][core] = new LinkedList<KThread>();
+                    SuggestedThreadsPerPrioPerCore[Prio][Core] = new LinkedList<KThread>();
+                    ScheduledThreadsPerPrioPerCore[Prio][Core] = new LinkedList<KThread>();
                 }
             }
 
-            _scheduledPrioritiesPerCore = new long[KScheduler.CpuCoresCount];
-            _suggestedPrioritiesPerCore = new long[KScheduler.CpuCoresCount];
+            ScheduledPrioritiesPerCore = new long[KScheduler.CpuCoresCount];
+            SuggestedPrioritiesPerCore = new long[KScheduler.CpuCoresCount];
         }
 
-        public IEnumerable<KThread> SuggestedThreads(int core)
+        public IEnumerable<KThread> SuggestedThreads(int Core)
         {
-            return Iterate(_suggestedThreadsPerPrioPerCore, _suggestedPrioritiesPerCore, core);
+            return Iterate(SuggestedThreadsPerPrioPerCore, SuggestedPrioritiesPerCore, Core);
         }
 
-        public IEnumerable<KThread> ScheduledThreads(int core)
+        public IEnumerable<KThread> ScheduledThreads(int Core)
         {
-            return Iterate(_scheduledThreadsPerPrioPerCore, _scheduledPrioritiesPerCore, core);
+            return Iterate(ScheduledThreadsPerPrioPerCore, ScheduledPrioritiesPerCore, Core);
         }
 
-        private IEnumerable<KThread> Iterate(LinkedList<KThread>[][] listPerPrioPerCore, long[] prios, int core)
+        private IEnumerable<KThread> Iterate(LinkedList<KThread>[][] ListPerPrioPerCore, long[] Prios, int Core)
         {
-            long prioMask = prios[core];
+            long PrioMask = Prios[Core];
 
-            int prio = CountTrailingZeros(prioMask);
+            int Prio = CountTrailingZeros(PrioMask);
 
-            prioMask &= ~(1L << prio);
+            PrioMask &= ~(1L << Prio);
 
-            while (prio < KScheduler.PrioritiesCount)
+            while (Prio < KScheduler.PrioritiesCount)
             {
-                LinkedList<KThread> list = listPerPrioPerCore[prio][core];
+                LinkedList<KThread> List = ListPerPrioPerCore[Prio][Core];
 
-                LinkedListNode<KThread> node = list.First;
+                LinkedListNode<KThread> Node = List.First;
 
-                while (node != null)
+                while (Node != null)
                 {
-                    yield return node.Value;
+                    yield return Node.Value;
 
-                    node = node.Next;
+                    Node = Node.Next;
                 }
 
-                prio = CountTrailingZeros(prioMask);
+                Prio = CountTrailingZeros(PrioMask);
 
-                prioMask &= ~(1L << prio);
+                PrioMask &= ~(1L << Prio);
             }
         }
 
-        private int CountTrailingZeros(long value)
+        private int CountTrailingZeros(long Value)
         {
-            int count = 0;
+            int Count = 0;
 
-            while (((value >> count) & 0xf) == 0 && count < 64)
+            while (((Value >> Count) & 0xf) == 0 && Count < 64)
             {
-                count += 4;
+                Count += 4;
             }
 
-            while (((value >> count) & 1) == 0 && count < 64)
+            while (((Value >> Count) & 1) == 0 && Count < 64)
             {
-                count++;
+                Count++;
             }
 
-            return count;
+            return Count;
         }
 
-        public void TransferToCore(int prio, int dstCore, KThread thread)
+        public void TransferToCore(int Prio, int DstCore, KThread Thread)
         {
-            bool schedulable = thread.DynamicPriority < KScheduler.PrioritiesCount;
+            bool Schedulable = Thread.DynamicPriority < KScheduler.PrioritiesCount;
 
-            int srcCore = thread.CurrentCore;
+            int SrcCore = Thread.CurrentCore;
 
-            thread.CurrentCore = dstCore;
+            Thread.CurrentCore = DstCore;
 
-            if (srcCore == dstCore || !schedulable)
+            if (SrcCore == DstCore || !Schedulable)
             {
                 return;
             }
 
-            if (srcCore >= 0)
+            if (SrcCore >= 0)
             {
-                Unschedule(prio, srcCore, thread);
+                Unschedule(Prio, SrcCore, Thread);
             }
 
-            if (dstCore >= 0)
+            if (DstCore >= 0)
             {
-                Unsuggest(prio, dstCore, thread);
-                Schedule(prio, dstCore, thread);
+                Unsuggest(Prio, DstCore, Thread);
+                Schedule(Prio, DstCore, Thread);
             }
 
-            if (srcCore >= 0)
+            if (SrcCore >= 0)
             {
-                Suggest(prio, srcCore, thread);
+                Suggest(Prio, SrcCore, Thread);
             }
         }
 
-        public void Suggest(int prio, int core, KThread thread)
+        public void Suggest(int Prio, int Core, KThread Thread)
         {
-            if (prio >= KScheduler.PrioritiesCount)
+            if (Prio >= KScheduler.PrioritiesCount)
             {
                 return;
             }
 
-            thread.SiblingsPerCore[core] = SuggestedQueue(prio, core).AddFirst(thread);
+            Thread.SiblingsPerCore[Core] = SuggestedQueue(Prio, Core).AddFirst(Thread);
 
-            _suggestedPrioritiesPerCore[core] |= 1L << prio;
+            SuggestedPrioritiesPerCore[Core] |= 1L << Prio;
         }
 
-        public void Unsuggest(int prio, int core, KThread thread)
+        public void Unsuggest(int Prio, int Core, KThread Thread)
         {
-            if (prio >= KScheduler.PrioritiesCount)
+            if (Prio >= KScheduler.PrioritiesCount)
             {
                 return;
             }
 
-            LinkedList<KThread> queue = SuggestedQueue(prio, core);
+            LinkedList<KThread> Queue = SuggestedQueue(Prio, Core);
 
-            queue.Remove(thread.SiblingsPerCore[core]);
+            Queue.Remove(Thread.SiblingsPerCore[Core]);
 
-            if (queue.First == null)
+            if (Queue.First == null)
             {
-                _suggestedPrioritiesPerCore[core] &= ~(1L << prio);
+                SuggestedPrioritiesPerCore[Core] &= ~(1L << Prio);
             }
         }
 
-        public void Schedule(int prio, int core, KThread thread)
+        public void Schedule(int Prio, int Core, KThread Thread)
         {
-            if (prio >= KScheduler.PrioritiesCount)
-            {
-                return;
-            }
-
-            thread.SiblingsPerCore[core] = ScheduledQueue(prio, core).AddLast(thread);
-
-            _scheduledPrioritiesPerCore[core] |= 1L << prio;
-        }
-
-        public void SchedulePrepend(int prio, int core, KThread thread)
-        {
-            if (prio >= KScheduler.PrioritiesCount)
+            if (Prio >= KScheduler.PrioritiesCount)
             {
                 return;
             }
 
-            thread.SiblingsPerCore[core] = ScheduledQueue(prio, core).AddFirst(thread);
+            Thread.SiblingsPerCore[Core] = ScheduledQueue(Prio, Core).AddLast(Thread);
 
-            _scheduledPrioritiesPerCore[core] |= 1L << prio;
+            ScheduledPrioritiesPerCore[Core] |= 1L << Prio;
         }
 
-        public void Reschedule(int prio, int core, KThread thread)
+        public void SchedulePrepend(int Prio, int Core, KThread Thread)
         {
-            LinkedList<KThread> queue = ScheduledQueue(prio, core);
-
-            queue.Remove(thread.SiblingsPerCore[core]);
-
-            thread.SiblingsPerCore[core] = queue.AddLast(thread);
-        }
-
-        public void Unschedule(int prio, int core, KThread thread)
-        {
-            if (prio >= KScheduler.PrioritiesCount)
+            if (Prio >= KScheduler.PrioritiesCount)
             {
                 return;
             }
 
-            LinkedList<KThread> queue = ScheduledQueue(prio, core);
+            Thread.SiblingsPerCore[Core] = ScheduledQueue(Prio, Core).AddFirst(Thread);
 
-            queue.Remove(thread.SiblingsPerCore[core]);
+            ScheduledPrioritiesPerCore[Core] |= 1L << Prio;
+        }
 
-            if (queue.First == null)
+        public void Reschedule(int Prio, int Core, KThread Thread)
+        {
+            LinkedList<KThread> Queue = ScheduledQueue(Prio, Core);
+
+            Queue.Remove(Thread.SiblingsPerCore[Core]);
+
+            Thread.SiblingsPerCore[Core] = Queue.AddLast(Thread);
+        }
+
+        public void Unschedule(int Prio, int Core, KThread Thread)
+        {
+            if (Prio >= KScheduler.PrioritiesCount)
             {
-                _scheduledPrioritiesPerCore[core] &= ~(1L << prio);
+                return;
+            }
+
+            LinkedList<KThread> Queue = ScheduledQueue(Prio, Core);
+
+            Queue.Remove(Thread.SiblingsPerCore[Core]);
+
+            if (Queue.First == null)
+            {
+                ScheduledPrioritiesPerCore[Core] &= ~(1L << Prio);
             }
         }
 
-        private LinkedList<KThread> SuggestedQueue(int prio, int core)
+        private LinkedList<KThread> SuggestedQueue(int Prio, int Core)
         {
-            return _suggestedThreadsPerPrioPerCore[prio][core];
+            return SuggestedThreadsPerPrioPerCore[Prio][Core];
         }
 
-        private LinkedList<KThread> ScheduledQueue(int prio, int core)
+        private LinkedList<KThread> ScheduledQueue(int Prio, int Core)
         {
-            return _scheduledThreadsPerPrioPerCore[prio][core];
+            return ScheduledThreadsPerPrioPerCore[Prio][Core];
         }
     }
 }

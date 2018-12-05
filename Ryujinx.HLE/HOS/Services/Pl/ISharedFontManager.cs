@@ -8,13 +8,13 @@ namespace Ryujinx.HLE.HOS.Services.Pl
 {
     class ISharedFontManager : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ISharedFontManager()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, RequestLoad                    },
                 { 1, GetLoadState                   },
@@ -25,104 +25,104 @@ namespace Ryujinx.HLE.HOS.Services.Pl
             };
         }
 
-        public long RequestLoad(ServiceCtx context)
+        public long RequestLoad(ServiceCtx Context)
         {
-            SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
+            SharedFontType FontType = (SharedFontType)Context.RequestData.ReadInt32();
 
             //We don't need to do anything here because we do lazy initialization
             //on SharedFontManager (the font is loaded when necessary).
             return 0;
         }
 
-        public long GetLoadState(ServiceCtx context)
+        public long GetLoadState(ServiceCtx Context)
         {
-            SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
+            SharedFontType FontType = (SharedFontType)Context.RequestData.ReadInt32();
 
             //1 (true) indicates that the font is already loaded.
             //All fonts are already loaded.
-            context.ResponseData.Write(1);
+            Context.ResponseData.Write(1);
 
             return 0;
         }
 
-        public long GetFontSize(ServiceCtx context)
+        public long GetFontSize(ServiceCtx Context)
         {
-            SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
+            SharedFontType FontType = (SharedFontType)Context.RequestData.ReadInt32();
 
-            context.ResponseData.Write(context.Device.System.Font.GetFontSize(fontType));
+            Context.ResponseData.Write(Context.Device.System.Font.GetFontSize(FontType));
 
             return 0;
         }
 
-        public long GetSharedMemoryAddressOffset(ServiceCtx context)
+        public long GetSharedMemoryAddressOffset(ServiceCtx Context)
         {
-            SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
+            SharedFontType FontType = (SharedFontType)Context.RequestData.ReadInt32();
 
-            context.ResponseData.Write(context.Device.System.Font.GetSharedMemoryAddressOffset(fontType));
+            Context.ResponseData.Write(Context.Device.System.Font.GetSharedMemoryAddressOffset(FontType));
 
             return 0;
         }
 
-        public long GetSharedMemoryNativeHandle(ServiceCtx context)
+        public long GetSharedMemoryNativeHandle(ServiceCtx Context)
         {
-            context.Device.System.Font.EnsureInitialized(context.Device.System.ContentManager);
+            Context.Device.System.Font.EnsureInitialized(Context.Device.System.ContentManager);
 
-            if (context.Process.HandleTable.GenerateHandle(context.Device.System.FontSharedMem, out int handle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(Context.Device.System.FontSharedMem, out int Handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
             return 0;
         }
 
-        public long GetSharedFontInOrderOfPriority(ServiceCtx context)
+        public long GetSharedFontInOrderOfPriority(ServiceCtx Context)
         {
-            long languageCode = context.RequestData.ReadInt64();
-            int  loadedCount  = 0;
+            long LanguageCode = Context.RequestData.ReadInt64();
+            int  LoadedCount  = 0;
 
-            for (SharedFontType type = 0; type < SharedFontType.Count; type++)
+            for (SharedFontType Type = 0; Type < SharedFontType.Count; Type++)
             {
-                int offset = (int)type * 4;
+                int Offset = (int)Type * 4;
 
-                if (!AddFontToOrderOfPriorityList(context, type, offset))
+                if (!AddFontToOrderOfPriorityList(Context, (SharedFontType)Type, Offset))
                 {
                     break;
                 }
 
-                loadedCount++;
+                LoadedCount++;
             }
 
-            context.ResponseData.Write(loadedCount);
-            context.ResponseData.Write((int)SharedFontType.Count);
+            Context.ResponseData.Write(LoadedCount);
+            Context.ResponseData.Write((int)SharedFontType.Count);
 
             return 0;
         }
 
-        private bool AddFontToOrderOfPriorityList(ServiceCtx context, SharedFontType fontType, int offset)
+        private bool AddFontToOrderOfPriorityList(ServiceCtx Context, SharedFontType FontType, int Offset)
         {
-            long typesPosition = context.Request.ReceiveBuff[0].Position;
-            long typesSize     = context.Request.ReceiveBuff[0].Size;
+            long TypesPosition = Context.Request.ReceiveBuff[0].Position;
+            long TypesSize     = Context.Request.ReceiveBuff[0].Size;
 
-            long offsetsPosition = context.Request.ReceiveBuff[1].Position;
-            long offsetsSize     = context.Request.ReceiveBuff[1].Size;
+            long OffsetsPosition = Context.Request.ReceiveBuff[1].Position;
+            long OffsetsSize     = Context.Request.ReceiveBuff[1].Size;
 
-            long fontSizeBufferPosition = context.Request.ReceiveBuff[2].Position;
-            long fontSizeBufferSize     = context.Request.ReceiveBuff[2].Size;
+            long FontSizeBufferPosition = Context.Request.ReceiveBuff[2].Position;
+            long FontSizeBufferSize     = Context.Request.ReceiveBuff[2].Size;
 
-            if ((uint)offset + 4 > (uint)typesSize   ||
-                (uint)offset + 4 > (uint)offsetsSize ||
-                (uint)offset + 4 > (uint)fontSizeBufferSize)
+            if ((uint)Offset + 4 > (uint)TypesSize   ||
+                (uint)Offset + 4 > (uint)OffsetsSize ||
+                (uint)Offset + 4 > (uint)FontSizeBufferSize)
             {
                 return false;
             }
 
-            context.Memory.WriteInt32(typesPosition + offset, (int)fontType);
+            Context.Memory.WriteInt32(TypesPosition + Offset, (int)FontType);
 
-            context.Memory.WriteInt32(offsetsPosition + offset, context.Device.System.Font.GetSharedMemoryAddressOffset(fontType));
+            Context.Memory.WriteInt32(OffsetsPosition + Offset, Context.Device.System.Font.GetSharedMemoryAddressOffset(FontType));
 
-            context.Memory.WriteInt32(fontSizeBufferPosition + offset, context.Device.System.Font.GetFontSize(fontType));
+            Context.Memory.WriteInt32(FontSizeBufferPosition + Offset, Context.Device.System.Font.GetFontSize(FontType));
 
             return true;
         }

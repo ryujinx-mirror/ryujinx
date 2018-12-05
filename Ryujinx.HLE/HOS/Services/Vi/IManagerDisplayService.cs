@@ -6,13 +6,13 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 {
     class IManagerDisplayService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IManagerDisplayService()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 2010, CreateManagedLayer  },
                 { 2011, DestroyManagedLayer },
@@ -21,30 +21,30 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             };
         }
 
-        public static long CreateManagedLayer(ServiceCtx context)
+        public static long CreateManagedLayer(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceVi, "Stubbed.");
 
-            context.ResponseData.Write(0L); //LayerId
+            Context.ResponseData.Write(0L); //LayerId
 
             return 0;
         }
 
-        public long DestroyManagedLayer(ServiceCtx context)
-        {
-            Logger.PrintStub(LogClass.ServiceVi, "Stubbed.");
-
-            return 0;
-        }
-
-        public static long AddToLayerStack(ServiceCtx context)
+        public long DestroyManagedLayer(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceVi, "Stubbed.");
 
             return 0;
         }
 
-        public static long SetLayerVisibility(ServiceCtx context)
+        public static long AddToLayerStack(ServiceCtx Context)
+        {
+            Logger.PrintStub(LogClass.ServiceVi, "Stubbed.");
+
+            return 0;
+        }
+
+        public static long SetLayerVisibility(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceVi, "Stubbed.");
 

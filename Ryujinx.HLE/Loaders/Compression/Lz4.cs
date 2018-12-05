@@ -4,75 +4,75 @@ namespace Ryujinx.HLE.Loaders.Compression
 {
     static class Lz4
     {
-        public static byte[] Decompress(byte[] cmp, int decLength)
+        public static byte[] Decompress(byte[] Cmp, int DecLength)
         {
-            byte[] dec = new byte[decLength];
+            byte[] Dec = new byte[DecLength];
 
-            int cmpPos = 0;
-            int decPos = 0;
+            int CmpPos = 0;
+            int DecPos = 0;
 
-            int GetLength(int length)
+            int GetLength(int Length)
             {
-                byte sum;
+                byte Sum;
 
-                if (length == 0xf)
+                if (Length == 0xf)
                 {
                     do
                     {
-                        length += (sum = cmp[cmpPos++]);
+                        Length += (Sum = Cmp[CmpPos++]);
                     }
-                    while (sum == 0xff);
+                    while (Sum == 0xff);
                 }
 
-                return length;
+                return Length;
             }
 
             do
             {
-                byte token = cmp[cmpPos++];
+                byte Token = Cmp[CmpPos++];
 
-                int encCount = (token >> 0) & 0xf;
-                int litCount = (token >> 4) & 0xf;
+                int EncCount = (Token >> 0) & 0xf;
+                int LitCount = (Token >> 4) & 0xf;
 
                 //Copy literal chunck
-                litCount = GetLength(litCount);
+                LitCount = GetLength(LitCount);
 
-                Buffer.BlockCopy(cmp, cmpPos, dec, decPos, litCount);
+                Buffer.BlockCopy(Cmp, CmpPos, Dec, DecPos, LitCount);
 
-                cmpPos += litCount;
-                decPos += litCount;
+                CmpPos += LitCount;
+                DecPos += LitCount;
 
-                if (cmpPos >= cmp.Length)
+                if (CmpPos >= Cmp.Length)
                 {
                     break;
                 }
 
                 //Copy compressed chunck
-                int back = cmp[cmpPos++] << 0 |
-                           cmp[cmpPos++] << 8;
+                int Back = Cmp[CmpPos++] << 0 |
+                           Cmp[CmpPos++] << 8;
 
-                encCount = GetLength(encCount) + 4;
+                EncCount = GetLength(EncCount) + 4;
 
-                int encPos = decPos - back;
+                int EncPos = DecPos - Back;
 
-                if (encCount <= back)
+                if (EncCount <= Back)
                 {
-                    Buffer.BlockCopy(dec, encPos, dec, decPos, encCount);
+                    Buffer.BlockCopy(Dec, EncPos, Dec, DecPos, EncCount);
 
-                    decPos += encCount;
+                    DecPos += EncCount;
                 }
                 else
                 {
-                    while (encCount-- > 0)
+                    while (EncCount-- > 0)
                     {
-                        dec[decPos++] = dec[encPos++];
+                        Dec[DecPos++] = Dec[EncPos++];
                     }
                 }
             }
-            while (cmpPos < cmp.Length &&
-                   decPos < dec.Length);
+            while (CmpPos < Cmp.Length &&
+                   DecPos < Dec.Length);
 
-            return dec;
+            return Dec;
         }
     }
 }

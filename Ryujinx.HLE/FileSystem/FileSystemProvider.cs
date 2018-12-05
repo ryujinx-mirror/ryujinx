@@ -10,228 +10,228 @@ namespace Ryujinx.HLE.FileSystem
 {
     class FileSystemProvider : IFileSystemProvider
     {
-        private readonly string _basePath;
-        private readonly string _rootPath;
+        private readonly string BasePath;
+        private readonly string RootPath;
 
-        public FileSystemProvider(string basePath, string rootPath)
+        public FileSystemProvider(string BasePath, string RootPath)
         {
-            _basePath = basePath;
-            _rootPath = rootPath;
+            this.BasePath = BasePath;
+            this.RootPath = RootPath;
 
-            CheckIfDescendentOfRootPath(basePath);
+            CheckIfDescendentOfRootPath(BasePath);
         }
 
-        public long CreateDirectory(string name)
+        public long CreateDirectory(string Name)
         {
-            CheckIfDescendentOfRootPath(name);
+            CheckIfDescendentOfRootPath(Name);
 
-            if (Directory.Exists(name))
+            if (Directory.Exists(Name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
 
-            Directory.CreateDirectory(name);
+            Directory.CreateDirectory(Name);
 
             return 0;
         }
 
-        public long CreateFile(string name, long size)
+        public long CreateFile(string Name, long Size)
         {
-            CheckIfDescendentOfRootPath(name);
+            CheckIfDescendentOfRootPath(Name);
 
-            if (File.Exists(name))
+            if (File.Exists(Name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
 
-            using (FileStream newFile = File.Create(name))
+            using (FileStream NewFile = File.Create(Name))
             {
-                newFile.SetLength(size);
+                NewFile.SetLength(Size);
             }
 
             return 0;
         }
 
-        public long DeleteDirectory(string name, bool recursive)
+        public long DeleteDirectory(string Name, bool Recursive)
         {
-            CheckIfDescendentOfRootPath(name);
+            CheckIfDescendentOfRootPath(Name);
 
-            string dirName = name;
+            string DirName = Name;
 
-            if (!Directory.Exists(dirName))
+            if (!Directory.Exists(DirName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            Directory.Delete(dirName, recursive);
+            Directory.Delete(DirName, Recursive);
 
             return 0;
         }
 
-        public long DeleteFile(string name)
+        public long DeleteFile(string Name)
         {
-            CheckIfDescendentOfRootPath(name);
+            CheckIfDescendentOfRootPath(Name);
 
-            if (!File.Exists(name))
+            if (!File.Exists(Name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
             else
             {
-                File.Delete(name);
+                File.Delete(Name);
             }
 
             return 0;
         }
 
-        public DirectoryEntry[] GetDirectories(string path)
+        public DirectoryEntry[] GetDirectories(string Path)
         {
-            CheckIfDescendentOfRootPath(path);
+            CheckIfDescendentOfRootPath(Path);
 
-            List<DirectoryEntry> entries = new List<DirectoryEntry>();
+            List<DirectoryEntry> Entries = new List<DirectoryEntry>();
 
-            foreach(string directory in Directory.EnumerateDirectories(path))
+            foreach(string Directory in Directory.EnumerateDirectories(Path))
             {
-                DirectoryEntry directoryEntry = new DirectoryEntry(directory, DirectoryEntryType.Directory);
+                DirectoryEntry DirectoryEntry = new DirectoryEntry(Directory, DirectoryEntryType.Directory);
 
-                entries.Add(directoryEntry);
+                Entries.Add(DirectoryEntry);
             }
 
-            return entries.ToArray();
+            return Entries.ToArray();
         }
 
-        public DirectoryEntry[] GetEntries(string path)
+        public DirectoryEntry[] GetEntries(string Path)
         {
-            CheckIfDescendentOfRootPath(path);
+            CheckIfDescendentOfRootPath(Path);
 
-            if (Directory.Exists(path))
+            if (Directory.Exists(Path))
             {
-                List<DirectoryEntry> entries = new List<DirectoryEntry>();
+                List<DirectoryEntry> Entries = new List<DirectoryEntry>();
 
-                foreach (string directory in Directory.EnumerateDirectories(path))
+                foreach (string Directory in Directory.EnumerateDirectories(Path))
                 {
-                    DirectoryEntry directoryEntry = new DirectoryEntry(directory, DirectoryEntryType.Directory);
+                    DirectoryEntry DirectoryEntry = new DirectoryEntry(Directory, DirectoryEntryType.Directory);
 
-                    entries.Add(directoryEntry);
+                    Entries.Add(DirectoryEntry);
                 }
 
-                foreach (string file in Directory.EnumerateFiles(path))
+                foreach (string File in Directory.EnumerateFiles(Path))
                 {
-                    FileInfo       fileInfo       = new FileInfo(file);
-                    DirectoryEntry directoryEntry = new DirectoryEntry(file, DirectoryEntryType.File, fileInfo.Length);
+                    FileInfo       FileInfo       = new FileInfo(File);
+                    DirectoryEntry DirectoryEntry = new DirectoryEntry(File, DirectoryEntryType.File, FileInfo.Length);
 
-                    entries.Add(directoryEntry);
+                    Entries.Add(DirectoryEntry);
                 }
             }
 
             return null;
         }
 
-        public DirectoryEntry[] GetFiles(string path)
+        public DirectoryEntry[] GetFiles(string Path)
         {
-            CheckIfDescendentOfRootPath(path);
+            CheckIfDescendentOfRootPath(Path);
 
-            List<DirectoryEntry> entries = new List<DirectoryEntry>();
+            List<DirectoryEntry> Entries = new List<DirectoryEntry>();
 
-            foreach (string file in Directory.EnumerateFiles(path))
+            foreach (string File in Directory.EnumerateFiles(Path))
             {
-                FileInfo       fileInfo       = new FileInfo(file);
-                DirectoryEntry directoryEntry = new DirectoryEntry(file, DirectoryEntryType.File, fileInfo.Length);
+                FileInfo       FileInfo       = new FileInfo(File);
+                DirectoryEntry DirectoryEntry = new DirectoryEntry(File, DirectoryEntryType.File, FileInfo.Length);
 
-                entries.Add(directoryEntry);
+                Entries.Add(DirectoryEntry);
             }
 
-            return entries.ToArray();
+            return Entries.ToArray();
         }
 
-        public long GetFreeSpace(ServiceCtx context)
+        public long GetFreeSpace(ServiceCtx Context)
         {
-            return context.Device.FileSystem.GetDrive().AvailableFreeSpace;
+            return Context.Device.FileSystem.GetDrive().AvailableFreeSpace;
         }
 
-        public string GetFullPath(string name)
+        public string GetFullPath(string Name)
         {
-            if (name.StartsWith("//"))
+            if (Name.StartsWith("//"))
             {
-                name = name.Substring(2);
+                Name = Name.Substring(2);
             }
-            else if (name.StartsWith('/'))
+            else if (Name.StartsWith('/'))
             {
-                name = name.Substring(1);
+                Name = Name.Substring(1);
             }
             else
             {
                 return null;
             }
 
-            string fullPath = Path.Combine(_basePath, name);
+            string FullPath = Path.Combine(BasePath, Name);
 
-            CheckIfDescendentOfRootPath(fullPath);
+            CheckIfDescendentOfRootPath(FullPath);
 
-            return fullPath;
+            return FullPath;
         }
 
-        public long GetTotalSpace(ServiceCtx context)
+        public long GetTotalSpace(ServiceCtx Context)
         {
-            return context.Device.FileSystem.GetDrive().TotalSize;
+            return Context.Device.FileSystem.GetDrive().TotalSize;
         }
 
-        public bool DirectoryExists(string name)
+        public bool DirectoryExists(string Name)
         {
-            CheckIfDescendentOfRootPath(name);
+            CheckIfDescendentOfRootPath(Name);
 
-            return Directory.Exists(name);
+            return Directory.Exists(Name);
         }
 
-        public bool FileExists(string name)
+        public bool FileExists(string Name)
         {
-            CheckIfDescendentOfRootPath(name);
+            CheckIfDescendentOfRootPath(Name);
 
-            return File.Exists(name);
+            return File.Exists(Name);
         }
 
-        public long OpenDirectory(string name, int filterFlags, out IDirectory directoryInterface)
+        public long OpenDirectory(string Name, int FilterFlags, out IDirectory DirectoryInterface)
         {
-            CheckIfDescendentOfRootPath(name);
+            CheckIfDescendentOfRootPath(Name);
 
-            if (Directory.Exists(name))
+            if (Directory.Exists(Name))
             {
-                directoryInterface = new IDirectory(name, filterFlags, this);
+                DirectoryInterface = new IDirectory(Name, FilterFlags, this);
 
                 return 0;
             }
 
-            directoryInterface = null;
+            DirectoryInterface = null;
 
             return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
         }
 
-        public long OpenFile(string name, out IFile fileInterface)
+        public long OpenFile(string Name, out IFile FileInterface)
         {
-            CheckIfDescendentOfRootPath(name);
+            CheckIfDescendentOfRootPath(Name);
 
-            if (File.Exists(name))
+            if (File.Exists(Name))
             {
-                FileStream stream = new FileStream(name, FileMode.Open);
+                FileStream Stream = new FileStream(Name, FileMode.Open);
 
-                fileInterface = new IFile(stream, name);
+                FileInterface = new IFile(Stream, Name);
 
                 return 0;
             }
 
-            fileInterface = null;
+            FileInterface = null;
 
             return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
         }
 
-        public long RenameDirectory(string oldName, string newName)
+        public long RenameDirectory(string OldName, string NewName)
         {
-            CheckIfDescendentOfRootPath(oldName);
-            CheckIfDescendentOfRootPath(newName);
+            CheckIfDescendentOfRootPath(OldName);
+            CheckIfDescendentOfRootPath(NewName);
 
-            if (Directory.Exists(oldName))
+            if (Directory.Exists(OldName))
             {
-                Directory.Move(oldName, newName);
+                Directory.Move(OldName, NewName);
             }
             else
             {
@@ -241,14 +241,14 @@ namespace Ryujinx.HLE.FileSystem
             return 0;
         }
 
-        public long RenameFile(string oldName, string newName)
+        public long RenameFile(string OldName, string NewName)
         {
-            CheckIfDescendentOfRootPath(oldName);
-            CheckIfDescendentOfRootPath(newName);
+            CheckIfDescendentOfRootPath(OldName);
+            CheckIfDescendentOfRootPath(NewName);
 
-            if (File.Exists(oldName))
+            if (File.Exists(OldName))
             {
-                File.Move(oldName, newName);
+                File.Move(OldName, NewName);
             }
             else
             {
@@ -258,24 +258,24 @@ namespace Ryujinx.HLE.FileSystem
             return 0;
         }
 
-        public void CheckIfDescendentOfRootPath(string path)
+        public void CheckIfDescendentOfRootPath(string Path)
         {
-            DirectoryInfo pathInfo = new DirectoryInfo(path);
-            DirectoryInfo rootInfo = new DirectoryInfo(_rootPath);
+            DirectoryInfo PathInfo = new DirectoryInfo(Path);
+            DirectoryInfo RootInfo = new DirectoryInfo(RootPath);
 
-            while (pathInfo.Parent != null)
+            while (PathInfo.Parent != null)
             {
-                if (pathInfo.Parent.FullName == rootInfo.FullName)
+                if (PathInfo.Parent.FullName == RootInfo.FullName)
                 {
                     return;
                 }
                 else
                 {
-                    pathInfo = pathInfo.Parent;
+                    PathInfo = PathInfo.Parent;
                 }
             }
 
-            throw new InvalidOperationException($"Path {path} is not a child directory of {_rootPath}");
+            throw new InvalidOperationException($"Path {Path} is not a child directory of {RootPath}");
         }
     }
 }

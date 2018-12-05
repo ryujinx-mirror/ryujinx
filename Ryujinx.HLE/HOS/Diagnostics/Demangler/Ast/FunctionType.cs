@@ -4,47 +4,47 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class FunctionType : BaseNode
     {
-        private BaseNode            _returnType;
-        private BaseNode            _params;
-        private BaseNode            _cvQualifier;
-        private SimpleReferenceType _referenceQualifier;
-        private BaseNode            _exceptionSpec;
+        private BaseNode            ReturnType;
+        private BaseNode            Params;
+        private BaseNode            CVQualifier;
+        private SimpleReferenceType ReferenceQualifier;
+        private BaseNode            ExceptionSpec;
 
-        public FunctionType(BaseNode returnType, BaseNode Params, BaseNode cvQualifier, SimpleReferenceType referenceQualifier, BaseNode exceptionSpec) : base(NodeType.FunctionType)
+        public FunctionType(BaseNode ReturnType, BaseNode Params, BaseNode CVQualifier, SimpleReferenceType ReferenceQualifier, BaseNode ExceptionSpec) : base(NodeType.FunctionType)
         {
-            _returnType         = returnType;
-            _params             = Params;
-            _cvQualifier        = cvQualifier;
-            _referenceQualifier = referenceQualifier;
-            _exceptionSpec      = exceptionSpec;
+            this.ReturnType         = ReturnType;
+            this.Params             = Params;
+            this.CVQualifier        = CVQualifier;
+            this.ReferenceQualifier = ReferenceQualifier;
+            this.ExceptionSpec      = ExceptionSpec;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            _returnType.PrintLeft(writer);
-            writer.Write(" ");
+            ReturnType.PrintLeft(Writer);
+            Writer.Write(" ");
         }
 
-        public override void PrintRight(TextWriter writer)
+        public override void PrintRight(TextWriter Writer)
         {
-            writer.Write("(");
-            _params.Print(writer);
-            writer.Write(")");
+            Writer.Write("(");
+            Params.Print(Writer);
+            Writer.Write(")");
 
-            _returnType.PrintRight(writer);
+            ReturnType.PrintRight(Writer);
 
-            _cvQualifier.Print(writer);
+            CVQualifier.Print(Writer);
 
-            if (_referenceQualifier.Qualifier != Reference.None)
+            if (ReferenceQualifier.Qualifier != Reference.None)
             {
-                writer.Write(" ");
-                _referenceQualifier.PrintQualifier(writer);
+                Writer.Write(" ");
+                ReferenceQualifier.PrintQualifier(Writer);
             }
 
-            if (_exceptionSpec != null)
+            if (ExceptionSpec != null)
             {
-                writer.Write(" ");
-                _exceptionSpec.Print(writer);
+                Writer.Write(" ");
+                ExceptionSpec.Print(Writer);
             }
         }
 

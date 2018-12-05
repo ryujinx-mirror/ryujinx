@@ -4,36 +4,36 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class EncodedFunction : BaseNode
     {
-        private BaseNode _name;
-        private BaseNode _params;
-        private BaseNode _cv;
-        private BaseNode _ref;
-        private BaseNode _attrs;
-        private BaseNode _ret;
+        private BaseNode Name;
+        private BaseNode Params;
+        private BaseNode CV;
+        private BaseNode Ref;
+        private BaseNode Attrs;
+        private BaseNode Ret;
 
-        public EncodedFunction(BaseNode name, BaseNode Params, BaseNode cv, BaseNode Ref, BaseNode attrs, BaseNode ret) : base(NodeType.NameType)
+        public EncodedFunction(BaseNode Name, BaseNode Params, BaseNode CV, BaseNode Ref, BaseNode Attrs, BaseNode Ret) : base(NodeType.NameType)
         {
-            _name   = name;
-            _params = Params;
-            _cv     = cv;
-            _ref    = Ref;
-            _attrs  = attrs;
-            _ret    = ret;
+            this.Name   = Name;
+            this.Params = Params;
+            this.CV     = CV;
+            this.Ref    = Ref;
+            this.Attrs  = Attrs;
+            this.Ret    = Ret;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            if (_ret != null)
+            if (Ret != null)
             {
-                _ret.PrintLeft(writer);
+                Ret.PrintLeft(Writer);
 
-                if (!_ret.HasRightPart())
+                if (!Ret.HasRightPart())
                 {
-                    writer.Write(" ");
+                    Writer.Write(" ");
                 }
             }
 
-            _name.Print(writer);
+            Name.Print(Writer);
 
         }
 
@@ -42,35 +42,35 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
             return true;
         }
 
-        public override void PrintRight(TextWriter writer)
+        public override void PrintRight(TextWriter Writer)
         {
-            writer.Write("(");
+            Writer.Write("(");
 
-            if (_params != null)
+            if (Params != null)
             {
-                _params.Print(writer);
+                Params.Print(Writer);
             }
 
-            writer.Write(")");
+            Writer.Write(")");
 
-            if (_ret != null)
+            if (Ret != null)
             {
-                _ret.PrintRight(writer);
+                Ret.PrintRight(Writer);
             }
 
-            if (_cv != null)
+            if (CV != null)
             {
-                _cv.Print(writer);
+                CV.Print(Writer);
             }
 
-            if (_ref != null)
+            if (Ref != null)
             {
-                _ref.Print(writer);
+                Ref.Print(Writer);
             }
 
-            if (_attrs != null)
+            if (Attrs != null)
             {
-                _attrs.Print(writer);
+                Attrs.Print(Writer);
             }
         }
     }

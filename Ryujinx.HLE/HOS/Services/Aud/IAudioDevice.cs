@@ -10,15 +10,15 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 {
     class IAudioDevice : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private KEvent _systemEvent;
+        private KEvent SystemEvent;
 
-        public IAudioDevice(Horizon system)
+        public IAudioDevice(Horizon System)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,  ListAudioDeviceName            },
                 { 1,  SetAudioDeviceOutputVolume     },
@@ -33,197 +33,197 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                 { 12, QueryAudioDeviceOutputEvent    }
             };
 
-            _systemEvent = new KEvent(system);
+            SystemEvent = new KEvent(System);
 
             //TODO: We shouldn't be signaling this here.
-            _systemEvent.ReadableEvent.Signal();
+            SystemEvent.ReadableEvent.Signal();
         }
 
-        public long ListAudioDeviceName(ServiceCtx context)
+        public long ListAudioDeviceName(ServiceCtx Context)
         {
-            string[] deviceNames = SystemStateMgr.AudioOutputs;
+            string[] DeviceNames = SystemStateMgr.AudioOutputs;
 
-            context.ResponseData.Write(deviceNames.Length);
+            Context.ResponseData.Write(DeviceNames.Length);
 
-            long position = context.Request.ReceiveBuff[0].Position;
-            long size     = context.Request.ReceiveBuff[0].Size;
+            long Position = Context.Request.ReceiveBuff[0].Position;
+            long Size     = Context.Request.ReceiveBuff[0].Size;
 
-            long basePosition = position;
+            long BasePosition = Position;
 
-            foreach (string name in deviceNames)
+            foreach (string Name in DeviceNames)
             {
-                byte[] buffer = Encoding.ASCII.GetBytes(name + "\0");
+                byte[] Buffer = Encoding.ASCII.GetBytes(Name + "\0");
 
-                if ((position - basePosition) + buffer.Length > size)
+                if ((Position - BasePosition) + Buffer.Length > Size)
                 {
-                    Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
+                    Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
 
                     break;
                 }
 
-                context.Memory.WriteBytes(position, buffer);
+                Context.Memory.WriteBytes(Position, Buffer);
 
-                position += buffer.Length;
+                Position += Buffer.Length;
             }
 
             return 0;
         }
 
-        public long SetAudioDeviceOutputVolume(ServiceCtx context)
+        public long SetAudioDeviceOutputVolume(ServiceCtx Context)
         {
-            float volume = context.RequestData.ReadSingle();
+            float Volume = Context.RequestData.ReadSingle();
 
-            long position = context.Request.SendBuff[0].Position;
-            long size     = context.Request.SendBuff[0].Size;
+            long Position = Context.Request.SendBuff[0].Position;
+            long Size     = Context.Request.SendBuff[0].Size;
 
-            byte[] deviceNameBuffer = context.Memory.ReadBytes(position, size);
+            byte[] DeviceNameBuffer = Context.Memory.ReadBytes(Position, Size);
 
-            string deviceName = Encoding.ASCII.GetString(deviceNameBuffer);
+            string DeviceName = Encoding.ASCII.GetString(DeviceNameBuffer);
 
             Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
 
-        public long GetActiveAudioDeviceName(ServiceCtx context)
+        public long GetActiveAudioDeviceName(ServiceCtx Context)
         {
-            string name = context.Device.System.State.ActiveAudioOutput;
+            string Name = Context.Device.System.State.ActiveAudioOutput;
 
-            long position = context.Request.ReceiveBuff[0].Position;
-            long size     = context.Request.ReceiveBuff[0].Size;
+            long Position = Context.Request.ReceiveBuff[0].Position;
+            long Size     = Context.Request.ReceiveBuff[0].Size;
 
-            byte[] deviceNameBuffer = Encoding.ASCII.GetBytes(name + "\0");
+            byte[] DeviceNameBuffer = Encoding.ASCII.GetBytes(Name + "\0");
 
-            if ((ulong)deviceNameBuffer.Length <= (ulong)size)
+            if ((ulong)DeviceNameBuffer.Length <= (ulong)Size)
             {
-                context.Memory.WriteBytes(position, deviceNameBuffer);
+                Context.Memory.WriteBytes(Position, DeviceNameBuffer);
             }
             else
             {
-                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
+                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
             }
 
             return 0;
         }
 
-        public long QueryAudioDeviceSystemEvent(ServiceCtx context)
+        public long QueryAudioDeviceSystemEvent(ServiceCtx Context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_systemEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(SystemEvent.ReadableEvent, out int Handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
             Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
 
-        public long GetActiveChannelCount(ServiceCtx context)
+        public long GetActiveChannelCount(ServiceCtx Context)
         {
-            context.ResponseData.Write(2);
+            Context.ResponseData.Write(2);
 
             Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
 
-        public long ListAudioDeviceNameAuto(ServiceCtx context)
+        public long ListAudioDeviceNameAuto(ServiceCtx Context)
         {
-            string[] deviceNames = SystemStateMgr.AudioOutputs;
+            string[] DeviceNames = SystemStateMgr.AudioOutputs;
 
-            context.ResponseData.Write(deviceNames.Length);
+            Context.ResponseData.Write(DeviceNames.Length);
 
-            (long position, long size) = context.Request.GetBufferType0x22();
+            (long Position, long Size) = Context.Request.GetBufferType0x22();
 
-            long basePosition = position;
+            long BasePosition = Position;
 
-            foreach (string name in deviceNames)
+            foreach (string Name in DeviceNames)
             {
-                byte[] buffer = Encoding.UTF8.GetBytes(name + '\0');
+                byte[] Buffer = Encoding.UTF8.GetBytes(Name + '\0');
 
-                if ((position - basePosition) + buffer.Length > size)
+                if ((Position - BasePosition) + Buffer.Length > Size)
                 {
-                    Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
+                    Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
 
                     break;
                 }
 
-                context.Memory.WriteBytes(position, buffer);
+                Context.Memory.WriteBytes(Position, Buffer);
 
-                position += buffer.Length;
+                Position += Buffer.Length;
             }
 
             return 0;
         }
 
-        public long SetAudioDeviceOutputVolumeAuto(ServiceCtx context)
+        public long SetAudioDeviceOutputVolumeAuto(ServiceCtx Context)
         {
-            float volume = context.RequestData.ReadSingle();
+            float Volume = Context.RequestData.ReadSingle();
 
-            (long position, long size) = context.Request.GetBufferType0x21();
+            (long Position, long Size) = Context.Request.GetBufferType0x21();
 
-            byte[] deviceNameBuffer = context.Memory.ReadBytes(position, size);
+            byte[] DeviceNameBuffer = Context.Memory.ReadBytes(Position, Size);
 
-            string deviceName = Encoding.UTF8.GetString(deviceNameBuffer);
+            string DeviceName = Encoding.UTF8.GetString(DeviceNameBuffer);
 
             Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
 
-        public long GetAudioDeviceOutputVolumeAuto(ServiceCtx context)
+        public long GetAudioDeviceOutputVolumeAuto(ServiceCtx Context)
         {
-            context.ResponseData.Write(1f);
+            Context.ResponseData.Write(1f);
 
             Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
 
-        public long GetActiveAudioDeviceNameAuto(ServiceCtx context)
+        public long GetActiveAudioDeviceNameAuto(ServiceCtx Context)
         {
-            string name = context.Device.System.State.ActiveAudioOutput;
+            string Name = Context.Device.System.State.ActiveAudioOutput;
 
-            (long position, long size) = context.Request.GetBufferType0x22();
+            (long Position, long Size) = Context.Request.GetBufferType0x22();
 
-            byte[] deviceNameBuffer = Encoding.UTF8.GetBytes(name + '\0');
+            byte[] DeviceNameBuffer = Encoding.UTF8.GetBytes(Name + '\0');
 
-            if ((ulong)deviceNameBuffer.Length <= (ulong)size)
+            if ((ulong)DeviceNameBuffer.Length <= (ulong)Size)
             {
-                context.Memory.WriteBytes(position, deviceNameBuffer);
+                Context.Memory.WriteBytes(Position, DeviceNameBuffer);
             }
             else
             {
-                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
+                Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {Size} too small!");
             }
 
             return 0;
         }
 
-        public long QueryAudioDeviceInputEvent(ServiceCtx context)
+        public long QueryAudioDeviceInputEvent(ServiceCtx Context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_systemEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(SystemEvent.ReadableEvent, out int Handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
             Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 
             return 0;
         }
 
-        public long QueryAudioDeviceOutputEvent(ServiceCtx context)
+        public long QueryAudioDeviceOutputEvent(ServiceCtx Context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_systemEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(SystemEvent.ReadableEvent, out int Handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
             Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
 

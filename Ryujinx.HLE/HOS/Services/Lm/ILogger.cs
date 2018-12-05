@@ -8,91 +8,91 @@ namespace Ryujinx.HLE.HOS.Services.Lm
 {
     class ILogger : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ILogger()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, Log }
             };
         }
 
-        public long Log(ServiceCtx context)
+        public long Log(ServiceCtx Context)
         {
 
-            (long bufPos, long bufSize) = context.Request.GetBufferType0x21();
-            byte[] logBuffer = context.Memory.ReadBytes(bufPos, bufSize);
+            (long BufPos, long BufSize) = Context.Request.GetBufferType0x21();
+            byte[] LogBuffer = Context.Memory.ReadBytes(BufPos, BufSize);
 
-            using (MemoryStream ms = new MemoryStream(logBuffer))
+            using (MemoryStream MS = new MemoryStream(LogBuffer))
             {
-                BinaryReader reader = new BinaryReader(ms);
+                BinaryReader Reader = new BinaryReader(MS);
 
-                long  pid           = reader.ReadInt64();
-                long  threadContext = reader.ReadInt64();
-                short flags         = reader.ReadInt16();
-                byte  level         = reader.ReadByte();
-                byte  verbosity     = reader.ReadByte();
-                int   payloadLength = reader.ReadInt32();
+                long  Pid           = Reader.ReadInt64();
+                long  ThreadContext = Reader.ReadInt64();
+                short Flags         = Reader.ReadInt16();
+                byte  Level         = Reader.ReadByte();
+                byte  Verbosity     = Reader.ReadByte();
+                int   PayloadLength = Reader.ReadInt32();
 
-                StringBuilder sb = new StringBuilder();
+                StringBuilder SB = new StringBuilder();
 
-                sb.AppendLine("Guest log:");
+                SB.AppendLine("Guest log:");
 
-                while (ms.Position < ms.Length)
+                while (MS.Position < MS.Length)
                 {
-                    byte type = reader.ReadByte();
-                    byte size = reader.ReadByte();
+                    byte Type = Reader.ReadByte();
+                    byte Size = Reader.ReadByte();
 
-                    LmLogField field = (LmLogField)type;
+                    LmLogField Field = (LmLogField)Type;
 
-                    string fieldStr = string.Empty;
+                    string FieldStr = string.Empty;
 
-                    if (field == LmLogField.Start)
+                    if (Field == LmLogField.Start)
                     {
-                        reader.ReadBytes(size);
+                        Reader.ReadBytes(Size);
 
                         continue;
                     }
-                    else if (field == LmLogField.Stop)
+                    else if (Field == LmLogField.Stop)
                     {
                         break;
                     }
-                    else if (field == LmLogField.Line)
+                    else if (Field == LmLogField.Line)
                     {
-                        fieldStr = $"{field}: {reader.ReadInt32()}";
+                        FieldStr = $"{Field}: {Reader.ReadInt32()}";
                     }
-                    else if (field == LmLogField.DropCount)
+                    else if (Field == LmLogField.DropCount)
                     {
-                        fieldStr = $"{field}: {reader.ReadInt64()}";
+                        FieldStr = $"{Field}: {Reader.ReadInt64()}";
                     }
-                    else if (field == LmLogField.Time)
+                    else if (Field == LmLogField.Time)
                     {
-                        fieldStr = $"{field}: {reader.ReadInt64()}s";
+                        FieldStr = $"{Field}: {Reader.ReadInt64()}s";
                     }
-                    else if (field < LmLogField.Count)
+                    else if (Field < LmLogField.Count)
                     {
-                        fieldStr = $"{field}: '{Encoding.UTF8.GetString(reader.ReadBytes(size)).TrimEnd()}'";
+                        FieldStr = $"{Field}: '{Encoding.UTF8.GetString(Reader.ReadBytes(Size)).TrimEnd()}'";
                     }
                     else
                     {
-                        fieldStr = $"Field{field}: '{Encoding.UTF8.GetString(reader.ReadBytes(size)).TrimEnd()}'";
+                        FieldStr = $"Field{Field}: '{Encoding.UTF8.GetString(Reader.ReadBytes(Size)).TrimEnd()}'";
                     }
 
-                    sb.AppendLine(" " + fieldStr);
+                    SB.AppendLine(" " + FieldStr);
                 }
 
-                string text = sb.ToString();
+                string Text = SB.ToString();
 
-                switch((LmLogLevel)level)
+                switch((LmLogLevel)Level)
                 {
-                    case LmLogLevel.Trace:    Logger.PrintDebug  (LogClass.ServiceLm, text); break;
-                    case LmLogLevel.Info:     Logger.PrintInfo   (LogClass.ServiceLm, text); break;
-                    case LmLogLevel.Warning:  Logger.PrintWarning(LogClass.ServiceLm, text); break;
-                    case LmLogLevel.Error:    Logger.PrintError  (LogClass.ServiceLm, text); break;
-                    case LmLogLevel.Critical: Logger.PrintError  (LogClass.ServiceLm, text); break;
+                    case LmLogLevel.Trace:    Logger.PrintDebug  (LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Info:     Logger.PrintInfo   (LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Warning:  Logger.PrintWarning(LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Error:    Logger.PrintError  (LogClass.ServiceLm, Text); break;
+                    case LmLogLevel.Critical: Logger.PrintError  (LogClass.ServiceLm, Text); break;
                 }
             }
 

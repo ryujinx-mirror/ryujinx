@@ -4,20 +4,20 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class QualifiedName : BaseNode
     {
-        private BaseNode _qualifier;
-        private BaseNode _name;
+        private BaseNode Qualifier;
+        private BaseNode Name;
 
-        public QualifiedName(BaseNode qualifier, BaseNode name) : base(NodeType.QualifiedName)
+        public QualifiedName(BaseNode Qualifier, BaseNode Name) : base(NodeType.QualifiedName)
         {
-            _qualifier = qualifier;
-            _name      = name;
+            this.Qualifier = Qualifier;
+            this.Name      = Name;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            _qualifier.Print(writer);
-            writer.Write("::");
-            _name.Print(writer);
+            Qualifier.Print(Writer);
+            Writer.Write("::");
+            Name.Print(Writer);
         }
     }
 }

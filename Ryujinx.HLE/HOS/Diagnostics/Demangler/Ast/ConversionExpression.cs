@@ -4,21 +4,21 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class ConversionExpression : BaseNode
     {
-        private BaseNode _typeNode;
-        private BaseNode _expressions;
+        private BaseNode TypeNode;
+        private BaseNode Expressions;
 
-        public ConversionExpression(BaseNode typeNode, BaseNode expressions) : base(NodeType.ConversionExpression)
+        public ConversionExpression(BaseNode TypeNode, BaseNode Expressions) : base(NodeType.ConversionExpression)
         {
-            _typeNode    = typeNode;
-            _expressions = expressions;
+            this.TypeNode    = TypeNode;
+            this.Expressions = Expressions;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            writer.Write("(");
-            _typeNode.Print(writer);
-            writer.Write(")(");
-            _expressions.Print(writer);
+            Writer.Write("(");
+            TypeNode.Print(Writer);
+            Writer.Write(")(");
+            Expressions.Print(Writer);
         }
     }
 }

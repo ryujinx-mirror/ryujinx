@@ -9,39 +9,39 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 {
     class IHidServer : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        private KEvent _npadStyleSetUpdateEvent;
-        private KEvent _xpadIdEvent;
-        private KEvent _palmaOperationCompleteEvent;
+        private KEvent NpadStyleSetUpdateEvent;
+        private KEvent XpadIdEvent;
+        private KEvent PalmaOperationCompleteEvent;
 
-        private int _xpadIdEventHandle;
+        private int XpadIdEventHandle;
 
-        private bool _sixAxisSensorFusionEnabled;
-        private bool _unintendedHomeButtonInputProtectionEnabled;
-        private bool _vibrationPermitted;
-        private bool _usbFullKeyControllerEnabled;
+        private bool SixAxisSensorFusionEnabled;
+        private bool UnintendedHomeButtonInputProtectionEnabled;
+        private bool VibrationPermitted;
+        private bool UsbFullKeyControllerEnabled;
 
-        private HidNpadJoyHoldType            _npadJoyHoldType;
-        private HidNpadStyle                  _npadStyleSet;
-        private HidNpadJoyAssignmentMode      _npadJoyAssignmentMode;
-        private HidNpadHandheldActivationMode _npadHandheldActivationMode;
-        private HidGyroscopeZeroDriftMode     _gyroscopeZeroDriftMode;
+        private HidNpadJoyHoldType            NpadJoyHoldType;
+        private HidNpadStyle                  NpadStyleSet;
+        private HidNpadJoyAssignmentMode      NpadJoyAssignmentMode;
+        private HidNpadHandheldActivationMode NpadHandheldActivationMode;
+        private HidGyroscopeZeroDriftMode     GyroscopeZeroDriftMode;
 
-        private long  _npadCommunicationMode;
-        private uint  _accelerometerPlayMode;
-        private long  _vibrationGcErmCommand;
-        private float _sevenSixAxisSensorFusionStrength;
+        private long  NpadCommunicationMode;
+        private uint  AccelerometerPlayMode;
+        private long  VibrationGcErmCommand;
+        private float SevenSixAxisSensorFusionStrength;
 
-        private HidSensorFusionParameters  _sensorFusionParams;
-        private HidAccelerometerParameters _accelerometerParams;
-        private HidVibrationValue          _vibrationValue;
+        private HidSensorFusionParameters  SensorFusionParams;
+        private HidAccelerometerParameters AccelerometerParams;
+        private HidVibrationValue          VibrationValue;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        public IHidServer(Horizon system)
+        public IHidServer(Horizon System)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,    CreateAppletResource                          },
                 { 1,    ActivateDebugPad                              },
@@ -145,123 +145,123 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                 { 512,  ReadPalmaUniqueCode                           },
                 { 513,  SetPalmaUniqueCodeInvalid                     },
                 { 1000, SetNpadCommunicationMode                      },
-                { 1001, GetNpadCommunicationMode                      }
+                { 1001, GetNpadCommunicationMode                      },
             };
 
-            _npadStyleSetUpdateEvent     = new KEvent(system);
-            _xpadIdEvent                 = new KEvent(system);
-            _palmaOperationCompleteEvent = new KEvent(system);
+            NpadStyleSetUpdateEvent     = new KEvent(System);
+            XpadIdEvent                 = new KEvent(System);
+            PalmaOperationCompleteEvent = new KEvent(System);
 
-            _npadJoyHoldType            = HidNpadJoyHoldType.Vertical;
-            _npadStyleSet               = HidNpadStyle.FullKey | HidNpadStyle.Dual | HidNpadStyle.Left | HidNpadStyle.Right | HidNpadStyle.Handheld;
-            _npadJoyAssignmentMode      = HidNpadJoyAssignmentMode.Dual;
-            _npadHandheldActivationMode = HidNpadHandheldActivationMode.Dual;
-            _gyroscopeZeroDriftMode     = HidGyroscopeZeroDriftMode.Standard;
+            NpadJoyHoldType            = HidNpadJoyHoldType.Vertical;
+            NpadStyleSet               = HidNpadStyle.FullKey | HidNpadStyle.Dual | HidNpadStyle.Left | HidNpadStyle.Right | HidNpadStyle.Handheld;
+            NpadJoyAssignmentMode      = HidNpadJoyAssignmentMode.Dual;
+            NpadHandheldActivationMode = HidNpadHandheldActivationMode.Dual;
+            GyroscopeZeroDriftMode     = HidGyroscopeZeroDriftMode.Standard;
 
-            _sensorFusionParams  = new HidSensorFusionParameters();
-            _accelerometerParams = new HidAccelerometerParameters();
-            _vibrationValue      = new HidVibrationValue();
+            SensorFusionParams  = new HidSensorFusionParameters();
+            AccelerometerParams = new HidAccelerometerParameters();
+            VibrationValue      = new HidVibrationValue();
 
             // TODO: signal event at right place
-            _xpadIdEvent.ReadableEvent.Signal();
+            XpadIdEvent.ReadableEvent.Signal();
         }
 
         // CreateAppletResource(nn::applet::AppletResourceUserId) -> object<nn::hid::IAppletResource>
-        public long CreateAppletResource(ServiceCtx context)
+        public long CreateAppletResource(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            MakeObject(context, new IAppletResource(context.Device.System.HidSharedMem));
+            MakeObject(Context, new IAppletResource(Context.Device.System.HidSharedMem));
 
             return 0;
         }
 
         // ActivateDebugPad(nn::applet::AppletResourceUserId)
-        public long ActivateDebugPad(ServiceCtx context)
+        public long ActivateDebugPad(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // ActivateTouchScreen(nn::applet::AppletResourceUserId)
-        public long ActivateTouchScreen(ServiceCtx context)
+        public long ActivateTouchScreen(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // ActivateMouse(nn::applet::AppletResourceUserId)
-        public long ActivateMouse(ServiceCtx context)
+        public long ActivateMouse(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // ActivateKeyboard(nn::applet::AppletResourceUserId)
-        public long ActivateKeyboard(ServiceCtx context)
+        public long ActivateKeyboard(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // AcquireXpadIdEventHandle(ulong XpadId) -> nn::sf::NativeHandle
-        public long AcquireXpadIdEventHandle(ServiceCtx context)
+        public long AcquireXpadIdEventHandle(ServiceCtx Context)
         {
-            long xpadId = context.RequestData.ReadInt64();
+            long XpadId = Context.RequestData.ReadInt64();
 
-            if (context.Process.HandleTable.GenerateHandle(_xpadIdEvent.ReadableEvent, out _xpadIdEventHandle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(XpadIdEvent.ReadableEvent, out XpadIdEventHandle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_xpadIdEventHandle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(XpadIdEventHandle);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. XpadId: {xpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. XpadId: {XpadId}");
 
             return 0;
         }
 
         // ReleaseXpadIdEventHandle(ulong XpadId)
-        public long ReleaseXpadIdEventHandle(ServiceCtx context)
+        public long ReleaseXpadIdEventHandle(ServiceCtx Context)
         {
-            long xpadId = context.RequestData.ReadInt64();
+            long XpadId = Context.RequestData.ReadInt64();
 
-            context.Process.HandleTable.CloseHandle(_xpadIdEventHandle);
+            Context.Process.HandleTable.CloseHandle(XpadIdEventHandle);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. XpadId: {xpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. XpadId: {XpadId}");
 
             return 0;
         }
 
         // ActivateXpad(nn::hid::BasicXpadId, nn::applet::AppletResourceUserId)
-        public long ActivateXpad(ServiceCtx context)
+        public long ActivateXpad(ServiceCtx Context)
         {
-            int  basicXpadId          = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  BasicXpadId          = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"BasicXpadId: {basicXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"BasicXpadId: {BasicXpadId}");
 
             return 0;
         }
 
         // GetXpadIds() -> long IdsCount, buffer<array<nn::hid::BasicXpadId>, type: 0xa>
-        public long GetXpadIds(ServiceCtx context)
+        public long GetXpadIds(ServiceCtx Context)
         {
             // There is any Xpad, so we return 0 and write nothing inside the type-0xa buffer.
-            context.ResponseData.Write(0L);
+            Context.ResponseData.Write(0L);
 
             Logger.PrintStub(LogClass.ServiceHid, $"Stubbed.");
 
@@ -269,34 +269,34 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         }
 
         // ActivateJoyXpad(nn::hid::JoyXpadId)
-        public long ActivateJoyXpad(ServiceCtx context)
+        public long ActivateJoyXpad(ServiceCtx Context)
         {
-            int joyXpadId = context.RequestData.ReadInt32();
+            int JoyXpadId = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {joyXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
 
             return 0;
         }
 
         // GetJoyXpadLifoHandle(nn::hid::JoyXpadId) -> nn::sf::NativeHandle
-        public long GetJoyXpadLifoHandle(ServiceCtx context)
+        public long GetJoyXpadLifoHandle(ServiceCtx Context)
         {
-            int joyXpadId = context.RequestData.ReadInt32();
+            int JoyXpadId = Context.RequestData.ReadInt32();
 
-            int handle = 0;
+            int Handle = 0;
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {joyXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
 
             return 0;
         }
 
         // GetJoyXpadIds() -> long IdsCount, buffer<array<nn::hid::JoyXpadId>, type: 0xa>
-        public long GetJoyXpadIds(ServiceCtx context)
+        public long GetJoyXpadIds(ServiceCtx Context)
         {
             // There is any JoyXpad, so we return 0 and write nothing inside the type-0xa buffer.
-            context.ResponseData.Write(0L);
+            Context.ResponseData.Write(0L);
 
             Logger.PrintStub(LogClass.ServiceHid, $"Stubbed.");
 
@@ -304,662 +304,662 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         }
 
         // ActivateSixAxisSensor(nn::hid::BasicXpadId)
-        public long ActivateSixAxisSensor(ServiceCtx context)
+        public long ActivateSixAxisSensor(ServiceCtx Context)
         {
-            int basicXpadId = context.RequestData.ReadInt32();
+            int BasicXpadId = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. BasicXpadId: {basicXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. BasicXpadId: {BasicXpadId}");
 
             return 0;
         }
 
         // DeactivateSixAxisSensor(nn::hid::BasicXpadId)
-        public long DeactivateSixAxisSensor(ServiceCtx context)
+        public long DeactivateSixAxisSensor(ServiceCtx Context)
         {
-            int basicXpadId = context.RequestData.ReadInt32();
+            int BasicXpadId = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. BasicXpadId: {basicXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. BasicXpadId: {BasicXpadId}");
 
             return 0;
         }
 
         // GetSixAxisSensorLifoHandle(nn::hid::BasicXpadId) -> nn::sf::NativeHandle
-        public long GetSixAxisSensorLifoHandle(ServiceCtx context)
+        public long GetSixAxisSensorLifoHandle(ServiceCtx Context)
         {
-            int basicXpadId = context.RequestData.ReadInt32();
+            int BasicXpadId = Context.RequestData.ReadInt32();
 
-            int handle = 0;
+            int Handle = 0;
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. BasicXpadId: {basicXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. BasicXpadId: {BasicXpadId}");
 
             return 0;
         }
 
         // ActivateJoySixAxisSensor(nn::hid::JoyXpadId)
-        public long ActivateJoySixAxisSensor(ServiceCtx context)
+        public long ActivateJoySixAxisSensor(ServiceCtx Context)
         {
-            int joyXpadId = context.RequestData.ReadInt32();
+            int JoyXpadId = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {joyXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
 
             return 0;
         }
 
         // DeactivateJoySixAxisSensor(nn::hid::JoyXpadId)
-        public long DeactivateJoySixAxisSensor(ServiceCtx context)
+        public long DeactivateJoySixAxisSensor(ServiceCtx Context)
         {
-            int joyXpadId = context.RequestData.ReadInt32();
+            int JoyXpadId = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {joyXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
 
             return 0;
         }
 
         // GetJoySixAxisSensorLifoHandle(nn::hid::JoyXpadId) -> nn::sf::NativeHandle
-        public long GetJoySixAxisSensorLifoHandle(ServiceCtx context)
+        public long GetJoySixAxisSensorLifoHandle(ServiceCtx Context)
         {
-            int joyXpadId = context.RequestData.ReadInt32();
+            int JoyXpadId = Context.RequestData.ReadInt32();
 
-            int handle = 0;
+            int Handle = 0;
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {joyXpadId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. JoyXpadId: {JoyXpadId}");
 
             return 0;
         }
 
         // StartSixAxisSensor(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
-        public long StartSixAxisSensor(ServiceCtx context)
+        public long StartSixAxisSensor(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle}");
 
             return 0;
         }
 
         // StopSixAxisSensor(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
-        public long StopSixAxisSensor(ServiceCtx context)
+        public long StopSixAxisSensor(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle}");
 
             return 0;
         }
 
         // IsSixAxisSensorFusionEnabled(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId) -> bool IsEnabled
-        public long IsSixAxisSensorFusionEnabled(ServiceCtx context)
+        public long IsSixAxisSensorFusionEnabled(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int SixAxisSensorHandle = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            context.ResponseData.Write(_sixAxisSensorFusionEnabled);
+            Context.ResponseData.Write(SixAxisSensorFusionEnabled);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"SixAxisSensorFusionEnabled: {_sixAxisSensorFusionEnabled}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"SixAxisSensorFusionEnabled: {SixAxisSensorFusionEnabled}");
 
             return 0;
         }
 
         // EnableSixAxisSensorFusion(bool Enabled, nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
-        public long EnableSixAxisSensorFusion(ServiceCtx context)
+        public long EnableSixAxisSensorFusion(ServiceCtx Context)
         {
-            _sixAxisSensorFusionEnabled = context.RequestData.ReadBoolean();
-            int  sixAxisSensorHandle    = context.RequestData.ReadInt32();
-            long appletResourceUserId   = context.RequestData.ReadInt64();
+            SixAxisSensorFusionEnabled = Context.RequestData.ReadBoolean();
+            int  SixAxisSensorHandle   = Context.RequestData.ReadInt32();
+            long AppletResourceUserId  = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"SixAxisSensorFusionEnabled: {_sixAxisSensorFusionEnabled}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"SixAxisSensorFusionEnabled: {SixAxisSensorFusionEnabled}");
 
             return 0;
         }
 
         // SetSixAxisSensorFusionParameters(nn::hid::SixAxisSensorHandle, float RevisePower, float ReviseRange, nn::applet::AppletResourceUserId)
-        public long SetSixAxisSensorFusionParameters(ServiceCtx context)
+        public long SetSixAxisSensorFusionParameters(ServiceCtx Context)
         {
-            int   sixAxisSensorHandle = context.RequestData.ReadInt32();
+            int   SixAxisSensorHandle = Context.RequestData.ReadInt32();
 
-            _sensorFusionParams = new HidSensorFusionParameters
+            SensorFusionParams = new HidSensorFusionParameters()
             {
-                RevisePower = context.RequestData.ReadInt32(),
-                ReviseRange = context.RequestData.ReadInt32()
+                RevisePower = Context.RequestData.ReadInt32(),
+                ReviseRange = Context.RequestData.ReadInt32(),
             };
 
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"RevisePower: {_sensorFusionParams.RevisePower} - " +
-                                                  $"ReviseRange: {_sensorFusionParams.ReviseRange}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"RevisePower: {SensorFusionParams.RevisePower} - " +
+                                                  $"ReviseRange: {SensorFusionParams.ReviseRange}");
 
             return 0;
         }
 
         // GetSixAxisSensorFusionParameters(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId) -> float RevisePower, float ReviseRange)
-        public long GetSixAxisSensorFusionParameters(ServiceCtx context)
+        public long GetSixAxisSensorFusionParameters(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            context.ResponseData.Write(_sensorFusionParams.RevisePower);
-            context.ResponseData.Write(_sensorFusionParams.ReviseRange);
+            Context.ResponseData.Write(SensorFusionParams.RevisePower);
+            Context.ResponseData.Write(SensorFusionParams.ReviseRange);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"RevisePower: {_sensorFusionParams.RevisePower} - " +
-                                                  $"ReviseRange: {_sensorFusionParams.ReviseRange}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"RevisePower: {SensorFusionParams.RevisePower} - " +
+                                                  $"ReviseRange: {SensorFusionParams.ReviseRange}");
 
             return 0;
         }
 
         // ResetSixAxisSensorFusionParameters(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
-        public long ResetSixAxisSensorFusionParameters(ServiceCtx context)
+        public long ResetSixAxisSensorFusionParameters(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            _sensorFusionParams.RevisePower = 0;
-            _sensorFusionParams.ReviseRange = 0;
+            SensorFusionParams.RevisePower = 0;
+            SensorFusionParams.ReviseRange = 0;
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"RevisePower: {_sensorFusionParams.RevisePower} - " +
-                                                  $"ReviseRange: {_sensorFusionParams.ReviseRange}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"RevisePower: {SensorFusionParams.RevisePower} - " +
+                                                  $"ReviseRange: {SensorFusionParams.ReviseRange}");
 
             return 0;
         }
 
         // SetAccelerometerParameters(nn::hid::SixAxisSensorHandle, float X, float Y, nn::applet::AppletResourceUserId)
-        public long SetAccelerometerParameters(ServiceCtx context)
+        public long SetAccelerometerParameters(ServiceCtx Context)
         {
-            int sixAxisSensorHandle = context.RequestData.ReadInt32();
+            int SixAxisSensorHandle = Context.RequestData.ReadInt32();
 
-            _accelerometerParams = new HidAccelerometerParameters
+            AccelerometerParams = new HidAccelerometerParameters()
             {
-                X = context.RequestData.ReadInt32(),
-                Y = context.RequestData.ReadInt32()
+                X = Context.RequestData.ReadInt32(),
+                Y = Context.RequestData.ReadInt32(),
             };
 
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"X: {_accelerometerParams.X} - " +
-                                                  $"Y: {_accelerometerParams.Y}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"X: {AccelerometerParams.X} - " +
+                                                  $"Y: {AccelerometerParams.Y}");
 
             return 0;
         }
 
         // GetAccelerometerParameters(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId) -> float X, float Y
-        public long GetAccelerometerParameters(ServiceCtx context)
+        public long GetAccelerometerParameters(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            context.ResponseData.Write(_accelerometerParams.X);
-            context.ResponseData.Write(_accelerometerParams.Y);
+            Context.ResponseData.Write(AccelerometerParams.X);
+            Context.ResponseData.Write(AccelerometerParams.Y);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"X: {_accelerometerParams.X} - " +
-                                                  $"Y: {_accelerometerParams.Y}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"X: {AccelerometerParams.X} - " +
+                                                  $"Y: {AccelerometerParams.Y}");
 
             return 0;
         }
 
         // ResetAccelerometerParameters(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
-        public long ResetAccelerometerParameters(ServiceCtx context)
+        public long ResetAccelerometerParameters(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            _accelerometerParams.X = 0;
-            _accelerometerParams.Y = 0;
+            AccelerometerParams.X = 0;
+            AccelerometerParams.Y = 0;
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"X: {_accelerometerParams.X} - " +
-                                                  $"Y: {_accelerometerParams.Y}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"X: {AccelerometerParams.X} - " +
+                                                  $"Y: {AccelerometerParams.Y}");
 
             return 0;
         }
 
         // SetAccelerometerPlayMode(nn::hid::SixAxisSensorHandle, uint PlayMode, nn::applet::AppletResourceUserId)
-        public long SetAccelerometerPlayMode(ServiceCtx context)
+        public long SetAccelerometerPlayMode(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle    = context.RequestData.ReadInt32();
-                 _accelerometerPlayMode = context.RequestData.ReadUInt32();
-            long appletResourceUserId   = context.RequestData.ReadInt64();
+            int  SixAxisSensorHandle   = Context.RequestData.ReadInt32();
+                 AccelerometerPlayMode = Context.RequestData.ReadUInt32();
+            long AppletResourceUserId  = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"PlayMode: {_accelerometerPlayMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"PlayMode: {AccelerometerPlayMode}");
 
             return 0;
         }
 
         // GetAccelerometerPlayMode(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId) -> uint PlayMode
-        public long GetAccelerometerPlayMode(ServiceCtx context)
+        public long GetAccelerometerPlayMode(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int SixAxisSensorHandle = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            context.ResponseData.Write(_accelerometerPlayMode);
+            Context.ResponseData.Write(AccelerometerPlayMode);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"PlayMode: {_accelerometerPlayMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"PlayMode: {AccelerometerPlayMode}");
 
             return 0;
         }
 
         // ResetAccelerometerPlayMode(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
-        public long ResetAccelerometerPlayMode(ServiceCtx context)
+        public long ResetAccelerometerPlayMode(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            _accelerometerPlayMode = 0;
+            AccelerometerPlayMode = 0;
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"PlayMode: {_accelerometerPlayMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"PlayMode: {AccelerometerPlayMode}");
 
             return 0;
         }
 
         // SetGyroscopeZeroDriftMode(nn::hid::SixAxisSensorHandle, uint GyroscopeZeroDriftMode, nn::applet::AppletResourceUserId)
-        public long SetGyroscopeZeroDriftMode(ServiceCtx context)
+        public long SetGyroscopeZeroDriftMode(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle     = context.RequestData.ReadInt32();
-                 _gyroscopeZeroDriftMode = (HidGyroscopeZeroDriftMode)context.RequestData.ReadInt32();
-            long appletResourceUserId    = context.RequestData.ReadInt64();
+            int  SixAxisSensorHandle    = Context.RequestData.ReadInt32();
+                 GyroscopeZeroDriftMode = (HidGyroscopeZeroDriftMode)Context.RequestData.ReadInt32();
+            long AppletResourceUserId   = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"GyroscopeZeroDriftMode: {_gyroscopeZeroDriftMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"GyroscopeZeroDriftMode: {GyroscopeZeroDriftMode}");
 
             return 0;
         }
 
         // GetGyroscopeZeroDriftMode(nn::applet::AppletResourceUserId, nn::hid::SixAxisSensorHandle) -> int GyroscopeZeroDriftMode
-        public long GetGyroscopeZeroDriftMode(ServiceCtx context)
+        public long GetGyroscopeZeroDriftMode(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            context.ResponseData.Write((int)_gyroscopeZeroDriftMode);
+            Context.ResponseData.Write((int)GyroscopeZeroDriftMode);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"GyroscopeZeroDriftMode: {_gyroscopeZeroDriftMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"GyroscopeZeroDriftMode: {GyroscopeZeroDriftMode}");
 
             return 0;
         }
 
         // ResetGyroscopeZeroDriftMode(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
-        public long ResetGyroscopeZeroDriftMode(ServiceCtx context)
+        public long ResetGyroscopeZeroDriftMode(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            _gyroscopeZeroDriftMode = HidGyroscopeZeroDriftMode.Standard;
+            GyroscopeZeroDriftMode = HidGyroscopeZeroDriftMode.Standard;
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"GyroscopeZeroDriftMode: {_gyroscopeZeroDriftMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"GyroscopeZeroDriftMode: {GyroscopeZeroDriftMode}");
 
             return 0;
         }
 
         // IsSixAxisSensorAtRest(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId) -> bool IsAsRest
-        public long IsSixAxisSensorAtRest(ServiceCtx context)
+        public long IsSixAxisSensorAtRest(ServiceCtx Context)
         {
-            int  sixAxisSensorHandle  = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  SixAxisSensorHandle  = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            bool isAtRest = true;
+            bool IsAtRest = true;
 
-            context.ResponseData.Write(isAtRest);
+            Context.ResponseData.Write(IsAtRest);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SixAxisSensorHandle: {sixAxisSensorHandle} - " +
-                                                  $"IsAtRest: {isAtRest}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SixAxisSensorHandle: {SixAxisSensorHandle} - " +
+                                                  $"IsAtRest: {IsAtRest}");
 
             return 0;
         }
 
         // ActivateGesture(nn::applet::AppletResourceUserId, int Unknown0)
-        public long ActivateGesture(ServiceCtx context)
+        public long ActivateGesture(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
-            int  unknown0             = context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
+            int  Unknown0             = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"Unknown0: {Unknown0}");
 
             return 0;
         }
 
 
         // SetSupportedNpadStyleSet(nn::applet::AppletResourceUserId, nn::hid::NpadStyleTag)
-        public long SetSupportedNpadStyleSet(ServiceCtx context)
+        public long SetSupportedNpadStyleSet(ServiceCtx Context)
         {
-            _npadStyleSet = (HidNpadStyle)context.RequestData.ReadInt32();
+            NpadStyleSet = (HidNpadStyle)Context.RequestData.ReadInt32();
 
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"NpadStyleSet: {_npadStyleSet}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadStyleSet: {NpadStyleSet}");
 
-            _npadStyleSetUpdateEvent.ReadableEvent.Signal();
+            NpadStyleSetUpdateEvent.ReadableEvent.Signal();
 
             return 0;
         }
 
         // GetSupportedNpadStyleSet(nn::applet::AppletResourceUserId) -> uint nn::hid::NpadStyleTag
-        public long GetSupportedNpadStyleSet(ServiceCtx context)
+        public long GetSupportedNpadStyleSet(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            context.ResponseData.Write((int)_npadStyleSet);
+            Context.ResponseData.Write((int)NpadStyleSet);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"NpadStyleSet: {_npadStyleSet}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadStyleSet: {NpadStyleSet}");
 
             return 0;
         }
 
         // SetSupportedNpadIdType(nn::applet::AppletResourceUserId, array<NpadIdType, 9>)
-        public long SetSupportedNpadIdType(ServiceCtx context)
+        public long SetSupportedNpadIdType(ServiceCtx Context)
         {
-            long appletResourceUserId  = context.RequestData.ReadInt64();
-            HidControllerId npadIdType = (HidControllerId)context.RequestData.ReadInt64();
+            long AppletResourceUserId  = Context.RequestData.ReadInt64();
+            HidControllerId NpadIdType = (HidControllerId)Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"NpadIdType: {npadIdType}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadIdType: {NpadIdType}");
 
             return 0;
         }
 
         // ActivateNpad(nn::applet::AppletResourceUserId)
-        public long ActivateNpad(ServiceCtx context)
+        public long ActivateNpad(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // DeactivateNpad(nn::applet::AppletResourceUserId)
-        public long DeactivateNpad(ServiceCtx context)
+        public long DeactivateNpad(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // AcquireNpadStyleSetUpdateEventHandle(nn::applet::AppletResourceUserId, uint, ulong) -> nn::sf::NativeHandle
-        public long AcquireNpadStyleSetUpdateEventHandle(ServiceCtx context)
+        public long AcquireNpadStyleSetUpdateEventHandle(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
-            int  npadId               = context.RequestData.ReadInt32();
-            long npadStyleSet         = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
+            int  NpadId               = Context.RequestData.ReadInt32();
+            long NpadStyleSet         = Context.RequestData.ReadInt64();
 
-            if (context.Process.HandleTable.GenerateHandle(_npadStyleSetUpdateEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(NpadStyleSetUpdateEvent.ReadableEvent, out int Handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"NpadId: {npadId} - " +
-                                                  $"NpadStyleSet: {npadStyleSet}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadId: {NpadId} - " +
+                                                  $"NpadStyleSet: {NpadStyleSet}");
 
             return 0;
         }
 
         // DisconnectNpad(nn::applet::AppletResourceUserId, uint NpadIdType)
-        public long DisconnectNpad(ServiceCtx context)
+        public long DisconnectNpad(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
-            int  npadIdType           = context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
+            int  NpadIdType           = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"NpadIdType: {npadIdType}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadIdType: {NpadIdType}");
 
             return 0;
         }
 
         // GetPlayerLedPattern(uint NpadId) -> ulong LedPattern
-        public long GetPlayerLedPattern(ServiceCtx context)
+        public long GetPlayerLedPattern(ServiceCtx Context)
         {
-            int npadId = context.RequestData.ReadInt32();
+            int NpadId = Context.RequestData.ReadInt32();
 
-            long ledPattern = 0;
+            long LedPattern = 0;
 
-            context.ResponseData.Write(ledPattern);
+            Context.ResponseData.Write(LedPattern);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {npadId} - Pattern: {ledPattern}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - Pattern: {LedPattern}");
 
             return 0;
         }
 
         // ActivateNpadWithRevision(nn::applet::AppletResourceUserId, int Unknown)
-        public long ActivateNpadWithRevision(ServiceCtx context)
+        public long ActivateNpadWithRevision(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
-            int  unknown              = context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
+            int  Unknown              = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - Unknown: {unknown}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - Unknown: {Unknown}");
 
             return 0;
         }
 
         // SetNpadJoyHoldType(nn::applet::AppletResourceUserId, long NpadJoyHoldType)
-        public long SetNpadJoyHoldType(ServiceCtx context)
+        public long SetNpadJoyHoldType(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
-            _npadJoyHoldType          = (HidNpadJoyHoldType)context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
+            NpadJoyHoldType           = (HidNpadJoyHoldType)Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"NpadJoyHoldType: {_npadJoyHoldType}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadJoyHoldType: {NpadJoyHoldType}");
 
             return 0;
         }
 
         // GetNpadJoyHoldType(nn::applet::AppletResourceUserId) -> long NpadJoyHoldType
-        public long GetNpadJoyHoldType(ServiceCtx context)
+        public long GetNpadJoyHoldType(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            context.ResponseData.Write((long)_npadJoyHoldType);
+            Context.ResponseData.Write((long)NpadJoyHoldType);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"NpadJoyHoldTypeValue: {_npadJoyHoldType}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadJoyHoldTypeValue: {NpadJoyHoldType}");
 
             return 0;
         }
 
         // SetNpadJoyAssignmentModeSingleByDefault(uint HidControllerId, nn::applet::AppletResourceUserId)
-        public long SetNpadJoyAssignmentModeSingleByDefault(ServiceCtx context)
+        public long SetNpadJoyAssignmentModeSingleByDefault(ServiceCtx Context)
         {
-            HidControllerId hidControllerId      = (HidControllerId)context.RequestData.ReadInt32();
-            long            appletResourceUserId = context.RequestData.ReadInt64();
+            HidControllerId HidControllerId      = (HidControllerId)Context.RequestData.ReadInt32();
+            long            AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            _npadJoyAssignmentMode = HidNpadJoyAssignmentMode.Single;
+            NpadJoyAssignmentMode = HidNpadJoyAssignmentMode.Single;
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"HidControllerId: {hidControllerId} - " +
-                                                  $"NpadJoyAssignmentModeValue: {_npadJoyAssignmentMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"HidControllerId: {HidControllerId} - " +
+                                                  $"NpadJoyAssignmentModeValue: {NpadJoyAssignmentMode}");
 
             return 0;
         }
 
         // SetNpadJoyAssignmentModeSingle(uint HidControllerId, nn::applet::AppletResourceUserId, long HidNpadJoyDeviceType)
-        public long SetNpadJoyAssignmentModeSingle(ServiceCtx context)
+        public long SetNpadJoyAssignmentModeSingle(ServiceCtx Context)
         {
-            HidControllerId      hidControllerId      = (HidControllerId)context.RequestData.ReadInt32();
-            long                 appletResourceUserId = context.RequestData.ReadInt64();
-            HidNpadJoyDeviceType hidNpadJoyDeviceType = (HidNpadJoyDeviceType)context.RequestData.ReadInt64();
+            HidControllerId      HidControllerId      = (HidControllerId)Context.RequestData.ReadInt32();
+            long                 AppletResourceUserId = Context.RequestData.ReadInt64();
+            HidNpadJoyDeviceType HidNpadJoyDeviceType = (HidNpadJoyDeviceType)Context.RequestData.ReadInt64();
 
-            _npadJoyAssignmentMode = HidNpadJoyAssignmentMode.Single;
+            NpadJoyAssignmentMode = HidNpadJoyAssignmentMode.Single;
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"HidControllerId: {hidControllerId} - " +
-                                                  $"HidNpadJoyDeviceType: {hidNpadJoyDeviceType} - " +
-                                                  $"NpadJoyAssignmentModeValue: {_npadJoyAssignmentMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"HidControllerId: {HidControllerId} - " +
+                                                  $"HidNpadJoyDeviceType: {HidNpadJoyDeviceType} - " +
+                                                  $"NpadJoyAssignmentModeValue: {NpadJoyAssignmentMode}");
 
             return 0;
         }
 
         // SetNpadJoyAssignmentModeDual(uint HidControllerId, nn::applet::AppletResourceUserId)
-        public long SetNpadJoyAssignmentModeDual(ServiceCtx context)
+        public long SetNpadJoyAssignmentModeDual(ServiceCtx Context)
         {
-            HidControllerId hidControllerId      = (HidControllerId)context.RequestData.ReadInt32();
-            long            appletResourceUserId = context.RequestData.ReadInt64();
+            HidControllerId HidControllerId      = (HidControllerId)Context.RequestData.ReadInt32();
+            long            AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            _npadJoyAssignmentMode = HidNpadJoyAssignmentMode.Dual;
+            NpadJoyAssignmentMode = HidNpadJoyAssignmentMode.Dual;
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"HidControllerId: {hidControllerId} - " +
-                                                  $"NpadJoyAssignmentModeValue: {_npadJoyAssignmentMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"HidControllerId: {HidControllerId} - " +
+                                                  $"NpadJoyAssignmentModeValue: {NpadJoyAssignmentMode}");
 
             return 0;
         }
 
         // MergeSingleJoyAsDualJoy(uint SingleJoyId0, uint SingleJoyId1, nn::applet::AppletResourceUserId)
-        public long MergeSingleJoyAsDualJoy(ServiceCtx context)
+        public long MergeSingleJoyAsDualJoy(ServiceCtx Context)
         {
-            long singleJoyId0         = context.RequestData.ReadInt32();
-            long singleJoyId1         = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long SingleJoyId0         = Context.RequestData.ReadInt32();
+            long SingleJoyId1         = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SingleJoyId0: {singleJoyId0} - " +
-                                                  $"SingleJoyId1: {singleJoyId1}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SingleJoyId0: {SingleJoyId0} - " +
+                                                  $"SingleJoyId1: {SingleJoyId1}");
 
             return 0;
         }
 
         // StartLrAssignmentMode(nn::applet::AppletResourceUserId)
-        public long StartLrAssignmentMode(ServiceCtx context)
+        public long StartLrAssignmentMode(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // StopLrAssignmentMode(nn::applet::AppletResourceUserId)
-        public long StopLrAssignmentMode(ServiceCtx context)
+        public long StopLrAssignmentMode(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // SetNpadHandheldActivationMode(nn::applet::AppletResourceUserId, long HidNpadHandheldActivationMode)
-        public long SetNpadHandheldActivationMode(ServiceCtx context)
+        public long SetNpadHandheldActivationMode(ServiceCtx Context)
         {
-            long appletResourceUserId   = context.RequestData.ReadInt64();
-            _npadHandheldActivationMode = (HidNpadHandheldActivationMode)context.RequestData.ReadInt64();
+            long AppletResourceUserId  = Context.RequestData.ReadInt64();
+            NpadHandheldActivationMode = (HidNpadHandheldActivationMode)Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"NpadHandheldActivationMode: {_npadHandheldActivationMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadHandheldActivationMode: {NpadHandheldActivationMode}");
 
             return 0;
         }
 
         // GetNpadHandheldActivationMode(nn::applet::AppletResourceUserId) -> long HidNpadHandheldActivationMode
-        public long GetNpadHandheldActivationMode(ServiceCtx context)
+        public long GetNpadHandheldActivationMode(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            context.ResponseData.Write((long)_npadHandheldActivationMode);
+            Context.ResponseData.Write((long)NpadHandheldActivationMode);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"NpadHandheldActivationMode: {_npadHandheldActivationMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadHandheldActivationMode: {NpadHandheldActivationMode}");
 
             return 0;
         }
 
         // SwapNpadAssignment(uint OldNpadAssignment, uint NewNpadAssignment, nn::applet::AppletResourceUserId)
-        public long SwapNpadAssignment(ServiceCtx context)
+        public long SwapNpadAssignment(ServiceCtx Context)
         {
-            int  oldNpadAssignment    = context.RequestData.ReadInt32();
-            int  newNpadAssignment    = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  OldNpadAssignment    = Context.RequestData.ReadInt32();
+            int  NewNpadAssignment    = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"OldNpadAssignment: {oldNpadAssignment} - " +
-                                                  $"NewNpadAssignment: {newNpadAssignment}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"OldNpadAssignment: {OldNpadAssignment} - " +
+                                                  $"NewNpadAssignment: {NewNpadAssignment}");
 
             return 0;
         }
 
         // IsUnintendedHomeButtonInputProtectionEnabled(uint Unknown0, nn::applet::AppletResourceUserId) ->  bool IsEnabled
-        public long IsUnintendedHomeButtonInputProtectionEnabled(ServiceCtx context)
+        public long IsUnintendedHomeButtonInputProtectionEnabled(ServiceCtx Context)
         {
-            uint  unknown0            = context.RequestData.ReadUInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            uint  Unknown0            = Context.RequestData.ReadUInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            context.ResponseData.Write(_unintendedHomeButtonInputProtectionEnabled);
+            Context.ResponseData.Write(UnintendedHomeButtonInputProtectionEnabled);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"Unknown0: {unknown0} - " +
-                                                  $"UnintendedHomeButtonInputProtectionEnabled: {_unintendedHomeButtonInputProtectionEnabled}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"Unknown0: {Unknown0} - " +
+                                                  $"UnintendedHomeButtonInputProtectionEnabled: {UnintendedHomeButtonInputProtectionEnabled}");
 
             return 0;
         }
 
         // EnableUnintendedHomeButtonInputProtection(bool Enable, uint Unknown0, nn::applet::AppletResourceUserId)
-        public long EnableUnintendedHomeButtonInputProtection(ServiceCtx context)
+        public long EnableUnintendedHomeButtonInputProtection(ServiceCtx Context)
         {
-            _unintendedHomeButtonInputProtectionEnabled = context.RequestData.ReadBoolean();
-            uint  unknown0                              = context.RequestData.ReadUInt32();
-            long appletResourceUserId                   = context.RequestData.ReadInt64();
+            UnintendedHomeButtonInputProtectionEnabled = Context.RequestData.ReadBoolean();
+            uint  Unknown0                             = Context.RequestData.ReadUInt32();
+            long AppletResourceUserId                  = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"Unknown0: {unknown0} - " +
-                                                  $"UnintendedHomeButtonInputProtectionEnable: {_unintendedHomeButtonInputProtectionEnabled}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"Unknown0: {Unknown0} - " +
+                                                  $"UnintendedHomeButtonInputProtectionEnable: {UnintendedHomeButtonInputProtectionEnabled}");
 
             return 0;
         }
 
         // SetNpadJoyAssignmentModeSingleWithDestination(uint HidControllerId, long HidNpadJoyDeviceType, nn::applet::AppletResourceUserId) -> bool Unknown0, uint Unknown1
-        public long SetNpadJoyAssignmentModeSingleWithDestination(ServiceCtx context)
+        public long SetNpadJoyAssignmentModeSingleWithDestination(ServiceCtx Context)
         {
-            HidControllerId      hidControllerId      = (HidControllerId)context.RequestData.ReadInt32();
-            HidNpadJoyDeviceType hidNpadJoyDeviceType = (HidNpadJoyDeviceType)context.RequestData.ReadInt64();
-            long                 appletResourceUserId = context.RequestData.ReadInt64();
+            HidControllerId      HidControllerId      = (HidControllerId)Context.RequestData.ReadInt32();
+            HidNpadJoyDeviceType HidNpadJoyDeviceType = (HidNpadJoyDeviceType)Context.RequestData.ReadInt64();
+            long                 AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            _npadJoyAssignmentMode = HidNpadJoyAssignmentMode.Single;
+            NpadJoyAssignmentMode = HidNpadJoyAssignmentMode.Single;
 
-            context.ResponseData.Write(0); //Unknown0
-            context.ResponseData.Write(0); //Unknown1
+            Context.ResponseData.Write(0); //Unknown0
+            Context.ResponseData.Write(0); //Unknown1
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"HidControllerId: {hidControllerId} - " +
-                                                  $"HidNpadJoyDeviceType: {hidNpadJoyDeviceType} - " +
-                                                  $"NpadJoyAssignmentModeValue: {_npadJoyAssignmentMode} - " +
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"HidControllerId: {HidControllerId} - " +
+                                                  $"HidNpadJoyDeviceType: {HidNpadJoyDeviceType} - " +
+                                                  $"NpadJoyAssignmentModeValue: {NpadJoyAssignmentMode} - " +
                                                   $"Unknown0: 0 - " +
                                                   $"Unknown1: 0");
 
@@ -967,163 +967,163 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         }
 
         // GetVibrationDeviceInfo(nn::hid::VibrationDeviceHandle) -> nn::hid::VibrationDeviceInfo
-        public long GetVibrationDeviceInfo(ServiceCtx context)
+        public long GetVibrationDeviceInfo(ServiceCtx Context)
         {
-            int vibrationDeviceHandle = context.RequestData.ReadInt32();
+            int VibrationDeviceHandle = Context.RequestData.ReadInt32();
 
-            HidVibrationDeviceValue deviceInfo = new HidVibrationDeviceValue
+            HidVibrationDeviceValue DeviceInfo = new HidVibrationDeviceValue
             {
                 DeviceType = HidVibrationDeviceType.None,
                 Position   = HidVibrationDevicePosition.None
             };
 
-            context.ResponseData.Write((int)deviceInfo.DeviceType);
-            context.ResponseData.Write((int)deviceInfo.Position);
+            Context.ResponseData.Write((int)DeviceInfo.DeviceType);
+            Context.ResponseData.Write((int)DeviceInfo.Position);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. VibrationDeviceHandle: {vibrationDeviceHandle} - " +
-                                                  $"DeviceType: {deviceInfo.DeviceType} - " +
-                                                  $"Position: {deviceInfo.Position}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. VibrationDeviceHandle: {VibrationDeviceHandle} - " +
+                                                  $"DeviceType: {DeviceInfo.DeviceType} - " +
+                                                  $"Position: {DeviceInfo.Position}");
 
             return 0;
         }
 
         // SendVibrationValue(nn::hid::VibrationDeviceHandle, nn::hid::VibrationValue, nn::applet::AppletResourceUserId)
-        public long SendVibrationValue(ServiceCtx context)
+        public long SendVibrationValue(ServiceCtx Context)
         {
-            int vibrationDeviceHandle = context.RequestData.ReadInt32();
+            int VibrationDeviceHandle = Context.RequestData.ReadInt32();
 
-            _vibrationValue = new HidVibrationValue
+            VibrationValue = new HidVibrationValue
             {
-                AmplitudeLow  = context.RequestData.ReadSingle(),
-                FrequencyLow  = context.RequestData.ReadSingle(),
-                AmplitudeHigh = context.RequestData.ReadSingle(),
-                FrequencyHigh = context.RequestData.ReadSingle()
+                AmplitudeLow  = Context.RequestData.ReadSingle(),
+                FrequencyLow  = Context.RequestData.ReadSingle(),
+                AmplitudeHigh = Context.RequestData.ReadSingle(),
+                FrequencyHigh = Context.RequestData.ReadSingle()
             };
 
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"VibrationDeviceHandle: {vibrationDeviceHandle} - " +
-                                                  $"AmplitudeLow: {_vibrationValue.AmplitudeLow} - " +
-                                                  $"FrequencyLow: {_vibrationValue.FrequencyLow} - " +
-                                                  $"AmplitudeHigh: {_vibrationValue.AmplitudeHigh} - " +
-                                                  $"FrequencyHigh: {_vibrationValue.FrequencyHigh}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"VibrationDeviceHandle: {VibrationDeviceHandle} - " +
+                                                  $"AmplitudeLow: {VibrationValue.AmplitudeLow} - " +
+                                                  $"FrequencyLow: {VibrationValue.FrequencyLow} - " +
+                                                  $"AmplitudeHigh: {VibrationValue.AmplitudeHigh} - " +
+                                                  $"FrequencyHigh: {VibrationValue.FrequencyHigh}");
 
             return 0;
         }
 
         // GetActualVibrationValue(nn::hid::VibrationDeviceHandle, nn::applet::AppletResourceUserId) -> nn::hid::VibrationValue
-        public long GetActualVibrationValue(ServiceCtx context)
+        public long GetActualVibrationValue(ServiceCtx Context)
         {
-            int vibrationDeviceHandle = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int VibrationDeviceHandle = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            context.ResponseData.Write(_vibrationValue.AmplitudeLow);
-            context.ResponseData.Write(_vibrationValue.FrequencyLow);
-            context.ResponseData.Write(_vibrationValue.AmplitudeHigh);
-            context.ResponseData.Write(_vibrationValue.FrequencyHigh);
+            Context.ResponseData.Write(VibrationValue.AmplitudeLow);
+            Context.ResponseData.Write(VibrationValue.FrequencyLow);
+            Context.ResponseData.Write(VibrationValue.AmplitudeHigh);
+            Context.ResponseData.Write(VibrationValue.FrequencyHigh);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"VibrationDeviceHandle: {vibrationDeviceHandle} - " +
-                                                  $"AmplitudeLow: {_vibrationValue.AmplitudeLow} - " +
-                                                  $"FrequencyLow: {_vibrationValue.FrequencyLow} - " +
-                                                  $"AmplitudeHigh: {_vibrationValue.AmplitudeHigh} - " +
-                                                  $"FrequencyHigh: {_vibrationValue.FrequencyHigh}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"VibrationDeviceHandle: {VibrationDeviceHandle} - " +
+                                                  $"AmplitudeLow: {VibrationValue.AmplitudeLow} - " +
+                                                  $"FrequencyLow: {VibrationValue.FrequencyLow} - " +
+                                                  $"AmplitudeHigh: {VibrationValue.AmplitudeHigh} - " +
+                                                  $"FrequencyHigh: {VibrationValue.FrequencyHigh}");
 
             return 0;
         }
 
         // CreateActiveVibrationDeviceList() -> object<nn::hid::IActiveVibrationDeviceList>
-        public long CreateActiveVibrationDeviceList(ServiceCtx context)
+        public long CreateActiveVibrationDeviceList(ServiceCtx Context)
         {
-            MakeObject(context, new IActiveApplicationDeviceList());
+            MakeObject(Context, new IActiveApplicationDeviceList());
 
             return 0;
         }
 
         // PermitVibration(bool Enable)
-        public long PermitVibration(ServiceCtx context)
+        public long PermitVibration(ServiceCtx Context)
         {
-            _vibrationPermitted = context.RequestData.ReadBoolean();
+            VibrationPermitted = Context.RequestData.ReadBoolean();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. VibrationPermitted: {_vibrationPermitted}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. VibrationPermitted: {VibrationPermitted}");
 
             return 0;
         }
 
         // IsVibrationPermitted() -> bool IsEnabled
-        public long IsVibrationPermitted(ServiceCtx context)
+        public long IsVibrationPermitted(ServiceCtx Context)
         {
-            context.ResponseData.Write(_vibrationPermitted);
+            Context.ResponseData.Write(VibrationPermitted);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. VibrationPermitted: {_vibrationPermitted}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. VibrationPermitted: {VibrationPermitted}");
 
             return 0;
         }
 
         // SendVibrationValues(nn::applet::AppletResourceUserId, buffer<array<nn::hid::VibrationDeviceHandle>, type: 9>, buffer<array<nn::hid::VibrationValue>, type: 9>)
-        public long SendVibrationValues(ServiceCtx context)
+        public long SendVibrationValues(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            byte[] vibrationDeviceHandleBuffer = context.Memory.ReadBytes(
-                context.Request.PtrBuff[0].Position,
-                context.Request.PtrBuff[0].Size);
+            byte[] VibrationDeviceHandleBuffer = Context.Memory.ReadBytes(
+                Context.Request.PtrBuff[0].Position,
+                Context.Request.PtrBuff[0].Size);
 
-            byte[] vibrationValueBuffer = context.Memory.ReadBytes(
-                context.Request.PtrBuff[1].Position,
-                context.Request.PtrBuff[1].Size);
+            byte[] VibrationValueBuffer = Context.Memory.ReadBytes(
+                Context.Request.PtrBuff[1].Position,
+                Context.Request.PtrBuff[1].Size);
 
             //Todo: Read all handles and values from buffer.
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"VibrationDeviceHandleBufferLength: {vibrationDeviceHandleBuffer.Length} - " +
-                                                  $"VibrationValueBufferLength: {vibrationValueBuffer.Length}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"VibrationDeviceHandleBufferLength: {VibrationDeviceHandleBuffer.Length} - " +
+                                                  $"VibrationValueBufferLength: {VibrationValueBuffer.Length}");
 
             return 0;
         }
 
         // SendVibrationGcErmCommand(nn::hid::VibrationDeviceHandle, nn::hid::VibrationGcErmCommand, nn::applet::AppletResourceUserId)
-        public long SendVibrationGcErmCommand(ServiceCtx context)
+        public long SendVibrationGcErmCommand(ServiceCtx Context)
         {
-            int  vibrationDeviceHandle = context.RequestData.ReadInt32();
-            long vibrationGcErmCommand = context.RequestData.ReadInt64();
-            long appletResourceUserId  = context.RequestData.ReadInt64();
+            int  VibrationDeviceHandle = Context.RequestData.ReadInt32();
+            long VibrationGcErmCommand = Context.RequestData.ReadInt64();
+            long AppletResourceUserId  = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"VibrationDeviceHandle: {vibrationDeviceHandle} - " +
-                                                  $"VibrationGcErmCommand: {vibrationGcErmCommand}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"VibrationDeviceHandle: {VibrationDeviceHandle} - " +
+                                                  $"VibrationGcErmCommand: {VibrationGcErmCommand}");
 
             return 0;
         }
 
         // GetActualVibrationGcErmCommand(nn::hid::VibrationDeviceHandle, nn::applet::AppletResourceUserId) -> nn::hid::VibrationGcErmCommand
-        public long GetActualVibrationGcErmCommand(ServiceCtx context)
+        public long GetActualVibrationGcErmCommand(ServiceCtx Context)
         {
-            int  vibrationDeviceHandle = context.RequestData.ReadInt32();
-            long appletResourceUserId  = context.RequestData.ReadInt64();
+            int  VibrationDeviceHandle = Context.RequestData.ReadInt32();
+            long AppletResourceUserId  = Context.RequestData.ReadInt64();
 
-            context.ResponseData.Write(_vibrationGcErmCommand);
+            Context.ResponseData.Write(VibrationGcErmCommand);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"VibrationDeviceHandle: {vibrationDeviceHandle} - " +
-                                                  $"VibrationGcErmCommand: {_vibrationGcErmCommand}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"VibrationDeviceHandle: {VibrationDeviceHandle} - " +
+                                                  $"VibrationGcErmCommand: {VibrationGcErmCommand}");
 
             return 0;
         }
 
         // BeginPermitVibrationSession(nn::applet::AppletResourceUserId)
-        public long BeginPermitVibrationSession(ServiceCtx context)
+        public long BeginPermitVibrationSession(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // EndPermitVibrationSession()
-        public long EndPermitVibrationSession(ServiceCtx context)
+        public long EndPermitVibrationSession(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceHid, $"Stubbed.");
 
@@ -1131,198 +1131,198 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         }
 
         // ActivateConsoleSixAxisSensor(nn::applet::AppletResourceUserId)
-        public long ActivateConsoleSixAxisSensor(ServiceCtx context)
+        public long ActivateConsoleSixAxisSensor(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // StartConsoleSixAxisSensor(nn::hid::ConsoleSixAxisSensorHandle, nn::applet::AppletResourceUserId)
-        public long StartConsoleSixAxisSensor(ServiceCtx context)
+        public long StartConsoleSixAxisSensor(ServiceCtx Context)
         {
-            int  consoleSixAxisSensorHandle = context.RequestData.ReadInt32();
-            long appletResourceUserId       = context.RequestData.ReadInt64();
+            int  ConsoleSixAxisSensorHandle = Context.RequestData.ReadInt32();
+            long AppletResourceUserId       = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"ConsoleSixAxisSensorHandle: {consoleSixAxisSensorHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"ConsoleSixAxisSensorHandle: {ConsoleSixAxisSensorHandle}");
 
             return 0;
         }
 
         // StopConsoleSixAxisSensor(nn::hid::ConsoleSixAxisSensorHandle, nn::applet::AppletResourceUserId)
-        public long StopConsoleSixAxisSensor(ServiceCtx context)
+        public long StopConsoleSixAxisSensor(ServiceCtx Context)
         {
-            int  consoleSixAxisSensorHandle = context.RequestData.ReadInt32();
-            long appletResourceUserId       = context.RequestData.ReadInt64();
+            int  ConsoleSixAxisSensorHandle = Context.RequestData.ReadInt32();
+            long AppletResourceUserId       = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"ConsoleSixAxisSensorHandle: {consoleSixAxisSensorHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"ConsoleSixAxisSensorHandle: {ConsoleSixAxisSensorHandle}");
 
             return 0;
         }
 
         // ActivateSevenSixAxisSensor(nn::applet::AppletResourceUserId)
-        public long ActivateSevenSixAxisSensor(ServiceCtx context)
+        public long ActivateSevenSixAxisSensor(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // StartSevenSixAxisSensor(nn::applet::AppletResourceUserId)
-        public long StartSevenSixAxisSensor(ServiceCtx context)
+        public long StartSevenSixAxisSensor(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // StopSevenSixAxisSensor(nn::applet::AppletResourceUserId)
-        public long StopSevenSixAxisSensor(ServiceCtx context)
+        public long StopSevenSixAxisSensor(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
 
             return 0;
         }
 
         // InitializeSevenSixAxisSensor(array<nn::sf::NativeHandle>, ulong Counter0, array<nn::sf::NativeHandle>, ulong Counter1, nn::applet::AppletResourceUserId)
-        public long InitializeSevenSixAxisSensor(ServiceCtx context)
+        public long InitializeSevenSixAxisSensor(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
-            long counter0             = context.RequestData.ReadInt64();
-            long counter1             = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
+            long Counter0             = Context.RequestData.ReadInt64();
+            long Counter1             = Context.RequestData.ReadInt64();
 
             // Todo: Determine if array<nn::sf::NativeHandle> is a buffer or not...
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"Counter0: {counter0} - " +
-                                                  $"Counter1: {counter1}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"Counter0: {Counter0} - " +
+                                                  $"Counter1: {Counter1}");
 
             return 0;
         }
 
         // FinalizeSevenSixAxisSensor(nn::applet::AppletResourceUserId)
-        public long FinalizeSevenSixAxisSensor(ServiceCtx context)
+        public long FinalizeSevenSixAxisSensor(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
-            
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId}");
+
             return 0;
         }
 
         // SetSevenSixAxisSensorFusionStrength(float Strength, nn::applet::AppletResourceUserId)
-        public long SetSevenSixAxisSensorFusionStrength(ServiceCtx context)
+        public long SetSevenSixAxisSensorFusionStrength(ServiceCtx Context)
         {
-                 _sevenSixAxisSensorFusionStrength = context.RequestData.ReadSingle();
-            long appletResourceUserId              = context.RequestData.ReadInt64();
+                 SevenSixAxisSensorFusionStrength = Context.RequestData.ReadSingle();
+            long AppletResourceUserId             = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SevenSixAxisSensorFusionStrength: {_sevenSixAxisSensorFusionStrength}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SevenSixAxisSensorFusionStrength: {SevenSixAxisSensorFusionStrength}");
 
             return 0;
         }
 
         // GetSevenSixAxisSensorFusionStrength(nn::applet::AppletResourceUserId) -> float Strength
-        public long GetSevenSixAxisSensorFusionStrength(ServiceCtx context)
+        public long GetSevenSixAxisSensorFusionStrength(ServiceCtx Context)
         {
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            context.ResponseData.Write(_sevenSixAxisSensorFusionStrength);
+            Context.ResponseData.Write(SevenSixAxisSensorFusionStrength);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"SevenSixAxisSensorFusionStrength: {_sevenSixAxisSensorFusionStrength}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"SevenSixAxisSensorFusionStrength: {SevenSixAxisSensorFusionStrength}");
 
             return 0;
         }
 
         // IsUsbFullKeyControllerEnabled() -> bool IsEnabled
-        public long IsUsbFullKeyControllerEnabled(ServiceCtx context)
+        public long IsUsbFullKeyControllerEnabled(ServiceCtx Context)
         {
-            context.ResponseData.Write(_usbFullKeyControllerEnabled);
+            Context.ResponseData.Write(UsbFullKeyControllerEnabled);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. UsbFullKeyControllerEnabled: {_usbFullKeyControllerEnabled}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. UsbFullKeyControllerEnabled: {UsbFullKeyControllerEnabled}");
 
             return 0;
         }
 
         // EnableUsbFullKeyController(bool Enable)
-        public long EnableUsbFullKeyController(ServiceCtx context)
+        public long EnableUsbFullKeyController(ServiceCtx Context)
         {
-            _usbFullKeyControllerEnabled = context.RequestData.ReadBoolean();
+            UsbFullKeyControllerEnabled = Context.RequestData.ReadBoolean();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. UsbFullKeyControllerEnabled: {_usbFullKeyControllerEnabled}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. UsbFullKeyControllerEnabled: {UsbFullKeyControllerEnabled}");
 
             return 0;
         }
 
         // IsUsbFullKeyControllerConnected(uint Unknown0) -> bool Connected
-        public long IsUsbFullKeyControllerConnected(ServiceCtx context)
+        public long IsUsbFullKeyControllerConnected(ServiceCtx Context)
         {
-            int unknown0 = context.RequestData.ReadInt32();
+            int Unknown0 = Context.RequestData.ReadInt32();
 
-            context.ResponseData.Write(true); //FullKeyController is always connected ?
+            Context.ResponseData.Write(true); //FullKeyController is always connected ?
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. Unknown0: {unknown0} - Connected: true");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. Unknown0: {Unknown0} - Connected: true");
 
             return 0;
         }
 
         // HasBattery(uint NpadId) -> bool HasBattery
-        public long HasBattery(ServiceCtx context)
+        public long HasBattery(ServiceCtx Context)
         {
-            int npadId = context.RequestData.ReadInt32();
+            int NpadId = Context.RequestData.ReadInt32();
 
-            context.ResponseData.Write(true); //Npad always got a battery ?
+            Context.ResponseData.Write(true); //Npad always got a battery ?
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {npadId} - HasBattery: true");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - HasBattery: true");
 
             return 0;
         }
 
         // HasLeftRightBattery(uint NpadId) -> bool HasLeftBattery, bool HasRightBattery
-        public long HasLeftRightBattery(ServiceCtx context)
+        public long HasLeftRightBattery(ServiceCtx Context)
         {
-            int npadId = context.RequestData.ReadInt32();
+            int NpadId = Context.RequestData.ReadInt32();
 
-            context.ResponseData.Write(true); //Npad always got a left battery ?
-            context.ResponseData.Write(true); //Npad always got a right battery ?
+            Context.ResponseData.Write(true); //Npad always got a left battery ?
+            Context.ResponseData.Write(true); //Npad always got a right battery ?
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {npadId} - HasLeftBattery: true - HasRightBattery: true");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - HasLeftBattery: true - HasRightBattery: true");
 
             return 0;
         }
 
         // GetNpadInterfaceType(uint NpadId) -> uchar InterfaceType
-        public long GetNpadInterfaceType(ServiceCtx context)
+        public long GetNpadInterfaceType(ServiceCtx Context)
         {
-            int npadId = context.RequestData.ReadInt32();
+            int NpadId = Context.RequestData.ReadInt32();
 
-            context.ResponseData.Write((byte)0);
+            Context.ResponseData.Write((byte)0);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {npadId} - NpadInterfaceType: 0");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - NpadInterfaceType: 0");
 
             return 0;
         }
 
         // GetNpadLeftRightInterfaceType(uint NpadId) -> uchar LeftInterfaceType, uchar RightInterfaceType
-        public long GetNpadLeftRightInterfaceType(ServiceCtx context)
+        public long GetNpadLeftRightInterfaceType(ServiceCtx Context)
         {
-            int npadId = context.RequestData.ReadInt32();
+            int NpadId = Context.RequestData.ReadInt32();
 
-            context.ResponseData.Write((byte)0);
-            context.ResponseData.Write((byte)0);
+            Context.ResponseData.Write((byte)0);
+            Context.ResponseData.Write((byte)0);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {npadId} - " +
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. NpadId: {NpadId} - " +
                                                   $"LeftInterfaceType: 0 - " +
                                                   $"RightInterfaceType: 0");
 
@@ -1330,211 +1330,211 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         }
 
         // GetPalmaConnectionHandle(uint Unknown0, nn::applet::AppletResourceUserId) -> nn::hid::PalmaConnectionHandle
-        public long GetPalmaConnectionHandle(ServiceCtx context)
+        public long GetPalmaConnectionHandle(ServiceCtx Context)
         {
-            int  unknown0             = context.RequestData.ReadInt32();
-            long appletResourceUserId = context.RequestData.ReadInt64();
+            int  Unknown0             = Context.RequestData.ReadInt32();
+            long AppletResourceUserId = Context.RequestData.ReadInt64();
 
-            int palmaConnectionHandle = 0;
+            int PalmaConnectionHandle = 0;
 
-            context.ResponseData.Write(palmaConnectionHandle);
+            Context.ResponseData.Write(PalmaConnectionHandle);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"Unknown0: {unknown0} - " +
-                                                  $"PalmaConnectionHandle: {palmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"Unknown0: {Unknown0} - " +
+                                                  $"PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
 
         // InitializePalma(nn::hid::PalmaConnectionHandle)
-        public long InitializePalma(ServiceCtx context)
+        public long InitializePalma(ServiceCtx Context)
         {
-            int palmaConnectionHandle = context.RequestData.ReadInt32();
+            int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
-            _palmaOperationCompleteEvent.ReadableEvent.Signal();
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
 
             return 0;
         }
 
         // AcquirePalmaOperationCompleteEvent(nn::hid::PalmaConnectionHandle) -> nn::sf::NativeHandle
-        public long AcquirePalmaOperationCompleteEvent(ServiceCtx context)
+        public long AcquirePalmaOperationCompleteEvent(ServiceCtx Context)
         {
-            int palmaConnectionHandle = context.RequestData.ReadInt32();
+            int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            if (context.Process.HandleTable.GenerateHandle(_palmaOperationCompleteEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(PalmaOperationCompleteEvent.ReadableEvent, out int Handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
 
         // GetPalmaOperationInfo(nn::hid::PalmaConnectionHandle) -> long Unknown0, buffer<Unknown>
-        public long GetPalmaOperationInfo(ServiceCtx context)
+        public long GetPalmaOperationInfo(ServiceCtx Context)
         {
-            int palmaConnectionHandle = context.RequestData.ReadInt32();
+            int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            long unknown0 = 0; //Counter?
+            long Unknown0 = 0; //Counter?
 
-            context.ResponseData.Write(unknown0);
+            Context.ResponseData.Write(Unknown0);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle} - " +
-                                                  $"Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
+                                                  $"Unknown0: {Unknown0}");
 
             return 0;
         }
 
         // PlayPalmaActivity(nn::hid::PalmaConnectionHandle, ulong Unknown0)
-        public long PlayPalmaActivity(ServiceCtx context)
+        public long PlayPalmaActivity(ServiceCtx Context)
         {
-            int  palmaConnectionHandle = context.RequestData.ReadInt32();
-            long unknown0              = context.RequestData.ReadInt64();
+            int  PalmaConnectionHandle = Context.RequestData.ReadInt32();
+            long Unknown0              = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle} - " +
-                                                  $"Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
+                                                  $"Unknown0: {Unknown0}");
 
-            _palmaOperationCompleteEvent.ReadableEvent.Signal();
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
 
             return 0;
         }
 
         // SetPalmaFrModeType(nn::hid::PalmaConnectionHandle, ulong FrModeType)
-        public long SetPalmaFrModeType(ServiceCtx context)
+        public long SetPalmaFrModeType(ServiceCtx Context)
         {
-            int  palmaConnectionHandle = context.RequestData.ReadInt32();
-            long frModeType            = context.RequestData.ReadInt64();
+            int  PalmaConnectionHandle = Context.RequestData.ReadInt32();
+            long FrModeType            = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle} - " +
-                                                  $"FrModeType: {frModeType}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
+                                                  $"FrModeType: {FrModeType}");
 
-            _palmaOperationCompleteEvent.ReadableEvent.Signal();
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
 
             return 0;
         }
 
         // ReadPalmaStep(nn::hid::PalmaConnectionHandle)
-        public long ReadPalmaStep(ServiceCtx context)
+        public long ReadPalmaStep(ServiceCtx Context)
         {
-            int palmaConnectionHandle = context.RequestData.ReadInt32();
+            int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
 
         // EnablePalmaStep(nn::hid::PalmaConnectionHandle, bool Enable)
-        public long EnablePalmaStep(ServiceCtx context)
+        public long EnablePalmaStep(ServiceCtx Context)
         {
-            int  palmaConnectionHandle = context.RequestData.ReadInt32();
-            bool enabledPalmaStep      = context.RequestData.ReadBoolean();
+            int  PalmaConnectionHandle = Context.RequestData.ReadInt32();
+            bool EnabledPalmaStep      = Context.RequestData.ReadBoolean();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle} - " +
-                                                  $"EnabledPalmaStep: {enabledPalmaStep}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
+                                                  $"EnabledPalmaStep: {EnabledPalmaStep}");
 
-            _palmaOperationCompleteEvent.ReadableEvent.Signal();
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
 
             return 0;
         }
 
         // SuspendPalmaStep(nn::hid::PalmaConnectionHandle)
-        public long SuspendPalmaStep(ServiceCtx context)
+        public long SuspendPalmaStep(ServiceCtx Context)
         {
-            int palmaConnectionHandle = context.RequestData.ReadInt32();
+            int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
-            _palmaOperationCompleteEvent.ReadableEvent.Signal();
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
 
             return 0;
         }
 
         // ResetPalmaStep(nn::hid::PalmaConnectionHandle)
-        public long ResetPalmaStep(ServiceCtx context)
+        public long ResetPalmaStep(ServiceCtx Context)
         {
-            int palmaConnectionHandle = context.RequestData.ReadInt32();
+            int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
-            _palmaOperationCompleteEvent.ReadableEvent.Signal();
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
 
             return 0;
         }
 
         // ReadPalmaApplicationSection(nn::hid::PalmaConnectionHandle, ulong Unknown0, ulong Unknown1)
-        public long ReadPalmaApplicationSection(ServiceCtx context)
+        public long ReadPalmaApplicationSection(ServiceCtx Context)
         {
-            int  palmaConnectionHandle = context.RequestData.ReadInt32();
-            long unknown0              = context.RequestData.ReadInt64();
-            long unknown1              = context.RequestData.ReadInt64();
+            int  PalmaConnectionHandle = Context.RequestData.ReadInt32();
+            long Unknown0              = Context.RequestData.ReadInt64();
+            long Unknown1              = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle} - " +
-                                                  $"Unknown0: {unknown0} - " +
-                                                  $"Unknown1: {unknown1}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
+                                                  $"Unknown0: {Unknown0} - " +
+                                                  $"Unknown1: {Unknown1}");
 
             return 0;
         }
 
         // WritePalmaApplicationSection(nn::hid::PalmaConnectionHandle, ulong Unknown0, ulong Unknown1, nn::hid::PalmaApplicationSectionAccessBuffer)
-        public long WritePalmaApplicationSection(ServiceCtx context)
+        public long WritePalmaApplicationSection(ServiceCtx Context)
         {
-            int  palmaConnectionHandle = context.RequestData.ReadInt32();
-            long unknown0              = context.RequestData.ReadInt64();
-            long unknown1              = context.RequestData.ReadInt64();
+            int  PalmaConnectionHandle = Context.RequestData.ReadInt32();
+            long Unknown0              = Context.RequestData.ReadInt64();
+            long Unknown1              = Context.RequestData.ReadInt64();
             // nn::hid::PalmaApplicationSectionAccessBuffer cast is unknown
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle} - " +
-                                                  $"Unknown0: {unknown0} - " +
-                                                  $"Unknown1: {unknown1}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle} - " +
+                                                  $"Unknown0: {Unknown0} - " +
+                                                  $"Unknown1: {Unknown1}");
 
-            _palmaOperationCompleteEvent.ReadableEvent.Signal();
+            PalmaOperationCompleteEvent.ReadableEvent.Signal();
 
             return 0;
         }
 
         // ReadPalmaUniqueCode(nn::hid::PalmaConnectionHandle)
-        public long ReadPalmaUniqueCode(ServiceCtx context)
+        public long ReadPalmaUniqueCode(ServiceCtx Context)
         {
-            int palmaConnectionHandle = context.RequestData.ReadInt32();
+            int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
 
         // SetPalmaUniqueCodeInvalid(nn::hid::PalmaConnectionHandle)
-        public long SetPalmaUniqueCodeInvalid(ServiceCtx context)
+        public long SetPalmaUniqueCodeInvalid(ServiceCtx Context)
         {
-            int palmaConnectionHandle = context.RequestData.ReadInt32();
+            int PalmaConnectionHandle = Context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {palmaConnectionHandle}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. PalmaConnectionHandle: {PalmaConnectionHandle}");
 
             return 0;
         }
 
         // SetNpadCommunicationMode(long CommunicationMode, nn::applet::AppletResourceUserId)
-        public long SetNpadCommunicationMode(ServiceCtx context)
+        public long SetNpadCommunicationMode(ServiceCtx Context)
         {
-                 _npadCommunicationMode = context.RequestData.ReadInt64();
-            long appletResourceUserId   = context.RequestData.ReadInt64();
+                 NpadCommunicationMode = Context.RequestData.ReadInt64();
+            long AppletResourceUserId  = Context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                  $"NpadCommunicationMode: {_npadCommunicationMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. AppletResourceUserId: {AppletResourceUserId} - " +
+                                                  $"NpadCommunicationMode: {NpadCommunicationMode}");
 
             return 0;
         }
 
         // GetNpadCommunicationMode() -> long CommunicationMode
-        public long GetNpadCommunicationMode(ServiceCtx context)
+        public long GetNpadCommunicationMode(ServiceCtx Context)
         {
-            context.ResponseData.Write(_npadCommunicationMode);
+            Context.ResponseData.Write(NpadCommunicationMode);
 
-            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. CommunicationMode: {_npadCommunicationMode}");
+            Logger.PrintStub(LogClass.ServiceHid, $"Stubbed. CommunicationMode: {NpadCommunicationMode}");
 
             return 0;
         }

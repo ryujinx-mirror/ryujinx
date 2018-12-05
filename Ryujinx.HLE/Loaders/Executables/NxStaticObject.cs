@@ -6,14 +6,14 @@ namespace Ryujinx.HLE.Loaders.Executables
 {
     class NxStaticObject : IExecutable
     {
-        public byte[] Text { get; }
-        public byte[] Ro   { get; }
-        public byte[] Data { get; }
+        public byte[] Text { get; private set; }
+        public byte[] RO   { get; private set; }
+        public byte[] Data { get; private set; }
 
-        public int TextOffset { get; }
-        public int RoOffset   { get; }
-        public int DataOffset { get; }
-        public int BssSize    { get; }
+        public int TextOffset { get; private set; }
+        public int ROOffset   { get; private set; }
+        public int DataOffset { get; private set; }
+        public int BssSize    { get; private set; }
 
         public int BssOffset => DataOffset + Data.Length;
 
@@ -21,88 +21,88 @@ namespace Ryujinx.HLE.Loaders.Executables
         private enum NsoFlags
         {
             IsTextCompressed = 1 << 0,
-            IsRoCompressed   = 1 << 1,
+            IsROCompressed   = 1 << 1,
             IsDataCompressed = 1 << 2,
             HasTextHash      = 1 << 3,
-            HasRoHash        = 1 << 4,
+            HasROHash        = 1 << 4,
             HasDataHash      = 1 << 5
         }
 
-        public NxStaticObject(Stream input)
+        public NxStaticObject(Stream Input)
         {
-            BinaryReader reader = new BinaryReader(input);
+            BinaryReader Reader = new BinaryReader(Input);
 
-            input.Seek(0, SeekOrigin.Begin);
+            Input.Seek(0, SeekOrigin.Begin);
 
-            int nsoMagic      = reader.ReadInt32();
-            int version       = reader.ReadInt32();
-            int reserved      = reader.ReadInt32();
-            int flagsMsk      = reader.ReadInt32();
-            int textOffset    = reader.ReadInt32();
-            int textMemOffset = reader.ReadInt32();
-            int textDecSize   = reader.ReadInt32();
-            int modNameOffset = reader.ReadInt32();
-            int roOffset      = reader.ReadInt32();
-            int roMemOffset   = reader.ReadInt32();
-            int roDecSize     = reader.ReadInt32();
-            int modNameSize   = reader.ReadInt32();
-            int dataOffset    = reader.ReadInt32();
-            int dataMemOffset = reader.ReadInt32();
-            int dataDecSize   = reader.ReadInt32();
-            int bssSize       = reader.ReadInt32();
+            int NsoMagic      = Reader.ReadInt32();
+            int Version       = Reader.ReadInt32();
+            int Reserved      = Reader.ReadInt32();
+            int FlagsMsk      = Reader.ReadInt32();
+            int TextOffset    = Reader.ReadInt32();
+            int TextMemOffset = Reader.ReadInt32();
+            int TextDecSize   = Reader.ReadInt32();
+            int ModNameOffset = Reader.ReadInt32();
+            int ROOffset      = Reader.ReadInt32();
+            int ROMemOffset   = Reader.ReadInt32();
+            int RODecSize     = Reader.ReadInt32();
+            int ModNameSize   = Reader.ReadInt32();
+            int DataOffset    = Reader.ReadInt32();
+            int DataMemOffset = Reader.ReadInt32();
+            int DataDecSize   = Reader.ReadInt32();
+            int BssSize       = Reader.ReadInt32();
 
-            byte[] buildId = reader.ReadBytes(0x20);
+            byte[] BuildId = Reader.ReadBytes(0x20);
 
-            int textSize = reader.ReadInt32();
-            int roSize   = reader.ReadInt32();
-            int dataSize = reader.ReadInt32();
+            int TextSize = Reader.ReadInt32();
+            int ROSize   = Reader.ReadInt32();
+            int DataSize = Reader.ReadInt32();
 
-            input.Seek(0x24, SeekOrigin.Current);
+            Input.Seek(0x24, SeekOrigin.Current);
 
-            int dynStrOffset = reader.ReadInt32();
-            int dynStrSize   = reader.ReadInt32();
-            int dynSymOffset = reader.ReadInt32();
-            int dynSymSize   = reader.ReadInt32();
+            int DynStrOffset = Reader.ReadInt32();
+            int DynStrSize   = Reader.ReadInt32();
+            int DynSymOffset = Reader.ReadInt32();
+            int DynSymSize   = Reader.ReadInt32();
 
-            byte[] textHash = reader.ReadBytes(0x20);
-            byte[] roHash   = reader.ReadBytes(0x20);
-            byte[] dataHash = reader.ReadBytes(0x20);
+            byte[] TextHash = Reader.ReadBytes(0x20);
+            byte[] ROHash   = Reader.ReadBytes(0x20);
+            byte[] DataHash = Reader.ReadBytes(0x20);
 
-            NsoFlags flags = (NsoFlags)flagsMsk;
+            NsoFlags Flags = (NsoFlags)FlagsMsk;
 
-            TextOffset = textMemOffset;
-            RoOffset   = roMemOffset;
-            DataOffset = dataMemOffset;
-            BssSize    = bssSize;
+            this.TextOffset = TextMemOffset;
+            this.ROOffset   = ROMemOffset;
+            this.DataOffset = DataMemOffset;
+            this.BssSize    = BssSize;
 
             //Text segment
-            input.Seek(textOffset, SeekOrigin.Begin);
+            Input.Seek(TextOffset, SeekOrigin.Begin);
 
-            Text = reader.ReadBytes(textSize);
+            Text = Reader.ReadBytes(TextSize);
 
-            if (flags.HasFlag(NsoFlags.IsTextCompressed))
+            if (Flags.HasFlag(NsoFlags.IsTextCompressed))
             {
-                Text = Lz4.Decompress(Text, textDecSize);
+                Text = Lz4.Decompress(Text, TextDecSize);
             }
 
             //Read-only data segment
-            input.Seek(roOffset, SeekOrigin.Begin);
+            Input.Seek(ROOffset, SeekOrigin.Begin);
 
-            Ro = reader.ReadBytes(roSize);
+            RO = Reader.ReadBytes(ROSize);
 
-            if (flags.HasFlag(NsoFlags.IsRoCompressed))
+            if (Flags.HasFlag(NsoFlags.IsROCompressed))
             {
-                Ro = Lz4.Decompress(Ro, roDecSize);
+                RO = Lz4.Decompress(RO, RODecSize);
             }
 
             //Data segment
-            input.Seek(dataOffset, SeekOrigin.Begin);
+            Input.Seek(DataOffset, SeekOrigin.Begin);
 
-            Data = reader.ReadBytes(dataSize);
+            Data = Reader.ReadBytes(DataSize);
 
-            if (flags.HasFlag(NsoFlags.IsDataCompressed))
+            if (Flags.HasFlag(NsoFlags.IsDataCompressed))
             {
-                Data = Lz4.Decompress(Data, dataDecSize);
+                Data = Lz4.Decompress(Data, DataDecSize);
             }
         }
     }

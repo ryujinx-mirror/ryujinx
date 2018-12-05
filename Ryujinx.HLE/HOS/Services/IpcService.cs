@@ -11,176 +11,176 @@ namespace Ryujinx.HLE.HOS.Services
     {
         public abstract IReadOnlyDictionary<int, ServiceProcessRequest> Commands { get; }
 
-        private IdDictionary _domainObjects;
+        private IdDictionary DomainObjects;
 
-        private int _selfId;
+        private int SelfId;
 
-        private bool _isDomain;
+        private bool IsDomain;
 
         public IpcService()
         {
-            _domainObjects = new IdDictionary();
+            DomainObjects = new IdDictionary();
 
-            _selfId = -1;
+            SelfId = -1;
         }
 
         public int ConvertToDomain()
         {
-            if (_selfId == -1)
+            if (SelfId == -1)
             {
-                _selfId = _domainObjects.Add(this);
+                SelfId = DomainObjects.Add(this);
             }
 
-            _isDomain = true;
+            IsDomain = true;
 
-            return _selfId;
+            return SelfId;
         }
 
         public void ConvertToSession()
         {
-            _isDomain = false;
+            IsDomain = false;
         }
 
-        public void CallMethod(ServiceCtx context)
+        public void CallMethod(ServiceCtx Context)
         {
-            IIpcService service = this;
+            IIpcService Service = this;
 
-            if (_isDomain)
+            if (IsDomain)
             {
-                int domainWord0 = context.RequestData.ReadInt32();
-                int domainObjId = context.RequestData.ReadInt32();
+                int DomainWord0 = Context.RequestData.ReadInt32();
+                int DomainObjId = Context.RequestData.ReadInt32();
 
-                int domainCmd       = (domainWord0 >> 0)  & 0xff;
-                int inputObjCount   = (domainWord0 >> 8)  & 0xff;
-                int dataPayloadSize = (domainWord0 >> 16) & 0xffff;
+                int DomainCmd       = (DomainWord0 >> 0)  & 0xff;
+                int InputObjCount   = (DomainWord0 >> 8)  & 0xff;
+                int DataPayloadSize = (DomainWord0 >> 16) & 0xffff;
 
-                context.RequestData.BaseStream.Seek(0x10 + dataPayloadSize, SeekOrigin.Begin);
+                Context.RequestData.BaseStream.Seek(0x10 + DataPayloadSize, SeekOrigin.Begin);
 
-                for (int index = 0; index < inputObjCount; index++)
+                for (int Index = 0; Index < InputObjCount; Index++)
                 {
-                    context.Request.ObjectIds.Add(context.RequestData.ReadInt32());
+                    Context.Request.ObjectIds.Add(Context.RequestData.ReadInt32());
                 }
 
-                context.RequestData.BaseStream.Seek(0x10, SeekOrigin.Begin);
+                Context.RequestData.BaseStream.Seek(0x10, SeekOrigin.Begin);
 
-                if (domainCmd == 1)
+                if (DomainCmd == 1)
                 {
-                    service = GetObject(domainObjId);
+                    Service = GetObject(DomainObjId);
 
-                    context.ResponseData.Write(0L);
-                    context.ResponseData.Write(0L);
+                    Context.ResponseData.Write(0L);
+                    Context.ResponseData.Write(0L);
                 }
-                else if (domainCmd == 2)
+                else if (DomainCmd == 2)
                 {
-                    Delete(domainObjId);
+                    Delete(DomainObjId);
 
-                    context.ResponseData.Write(0L);
+                    Context.ResponseData.Write(0L);
 
                     return;
                 }
                 else
                 {
-                    throw new NotImplementedException($"Domain command: {domainCmd}");
+                    throw new NotImplementedException($"Domain command: {DomainCmd}");
                 }
             }
 
-            long sfciMagic =      context.RequestData.ReadInt64();
-            int  commandId = (int)context.RequestData.ReadInt64();
+            long SfciMagic =      Context.RequestData.ReadInt64();
+            int  CommandId = (int)Context.RequestData.ReadInt64();
 
-            if (service.Commands.TryGetValue(commandId, out ServiceProcessRequest processRequest))
+            if (Service.Commands.TryGetValue(CommandId, out ServiceProcessRequest ProcessRequest))
             {
-                context.ResponseData.BaseStream.Seek(_isDomain ? 0x20 : 0x10, SeekOrigin.Begin);
+                Context.ResponseData.BaseStream.Seek(IsDomain ? 0x20 : 0x10, SeekOrigin.Begin);
 
-                Logger.PrintDebug(LogClass.KernelIpc, $"{service.GetType().Name}: {processRequest.Method.Name}");
+                Logger.PrintDebug(LogClass.KernelIpc, $"{Service.GetType().Name}: {ProcessRequest.Method.Name}");
 
-                long result = processRequest(context);
+                long Result = ProcessRequest(Context);
 
-                if (_isDomain)
+                if (IsDomain)
                 {
-                    foreach (int id in context.Response.ObjectIds)
+                    foreach (int Id in Context.Response.ObjectIds)
                     {
-                        context.ResponseData.Write(id);
+                        Context.ResponseData.Write(Id);
                     }
 
-                    context.ResponseData.BaseStream.Seek(0, SeekOrigin.Begin);
+                    Context.ResponseData.BaseStream.Seek(0, SeekOrigin.Begin);
 
-                    context.ResponseData.Write(context.Response.ObjectIds.Count);
+                    Context.ResponseData.Write(Context.Response.ObjectIds.Count);
                 }
 
-                context.ResponseData.BaseStream.Seek(_isDomain ? 0x10 : 0, SeekOrigin.Begin);
+                Context.ResponseData.BaseStream.Seek(IsDomain ? 0x10 : 0, SeekOrigin.Begin);
 
-                context.ResponseData.Write(IpcMagic.Sfco);
-                context.ResponseData.Write(result);
+                Context.ResponseData.Write(IpcMagic.Sfco);
+                Context.ResponseData.Write(Result);
             }
             else
             {
-                string dbgMessage = $"{context.Session.ServiceName} {service.GetType().Name}: {commandId}";
+                string DbgMessage = $"{Context.Session.ServiceName} {Service.GetType().Name}: {CommandId}";
 
-                throw new NotImplementedException(dbgMessage);
+                throw new NotImplementedException(DbgMessage);
             }
         }
 
-        protected static void MakeObject(ServiceCtx context, IpcService obj)
+        protected static void MakeObject(ServiceCtx Context, IpcService Obj)
         {
-            IpcService service = context.Session.Service;
+            IpcService Service = Context.Session.Service;
 
-            if (service._isDomain)
+            if (Service.IsDomain)
             {
-                context.Response.ObjectIds.Add(service.Add(obj));
+                Context.Response.ObjectIds.Add(Service.Add(Obj));
             }
             else
             {
-                KSession session = new KSession(obj, context.Session.ServiceName);
+                KSession Session = new KSession(Obj, Context.Session.ServiceName);
 
-                if (context.Process.HandleTable.GenerateHandle(session, out int handle) != KernelResult.Success)
+                if (Context.Process.HandleTable.GenerateHandle(Session, out int Handle) != KernelResult.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }
 
-                context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
+                Context.Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
             }
         }
 
-        protected static T GetObject<T>(ServiceCtx context, int index) where T : IpcService
+        protected static T GetObject<T>(ServiceCtx Context, int Index) where T : IpcService
         {
-            IpcService service = context.Session.Service;
+            IpcService Service = Context.Session.Service;
 
-            if (!service._isDomain)
+            if (!Service.IsDomain)
             {
-                int handle = context.Request.HandleDesc.ToMove[index];
+                int Handle = Context.Request.HandleDesc.ToMove[Index];
 
-                KSession session = context.Process.HandleTable.GetObject<KSession>(handle);
+                KSession Session = Context.Process.HandleTable.GetObject<KSession>(Handle);
 
-                return session?.Service is T ? (T)session.Service : null;
+                return Session?.Service is T ? (T)Session.Service : null;
             }
 
-            int objId = context.Request.ObjectIds[index];
+            int ObjId = Context.Request.ObjectIds[Index];
 
-            IIpcService obj = service.GetObject(objId);
+            IIpcService Obj = Service.GetObject(ObjId);
 
-            return obj is T ? (T)obj : null;
+            return Obj is T ? (T)Obj : null;
         }
 
-        private int Add(IIpcService obj)
+        private int Add(IIpcService Obj)
         {
-            return _domainObjects.Add(obj);
+            return DomainObjects.Add(Obj);
         }
 
-        private bool Delete(int id)
+        private bool Delete(int Id)
         {
-            object obj = _domainObjects.Delete(id);
+            object Obj = DomainObjects.Delete(Id);
 
-            if (obj is IDisposable disposableObj)
+            if (Obj is IDisposable DisposableObj)
             {
-                disposableObj.Dispose();
+                DisposableObj.Dispose();
             }
 
-            return obj != null;
+            return Obj != null;
         }
 
-        private IIpcService GetObject(int id)
+        private IIpcService GetObject(int Id)
         {
-            return _domainObjects.GetData<IIpcService>(id);
+            return DomainObjects.GetData<IIpcService>(Id);
         }
     }
 }

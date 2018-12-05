@@ -6,35 +6,35 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 {
     class IAddOnContentManager : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IAddOnContentManager()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 2, CountAddOnContent },
                 { 3, ListAddOnContent  }
             };
         }
 
-        public static long CountAddOnContent(ServiceCtx context)
+        public static long CountAddOnContent(ServiceCtx Context)
         {
-            context.ResponseData.Write(0);
+            Context.ResponseData.Write(0);
 
             Logger.PrintStub(LogClass.ServiceNs, "Stubbed.");
 
             return 0;
         }
 
-        public static long ListAddOnContent(ServiceCtx context)
+        public static long ListAddOnContent(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceNs, "Stubbed.");
 
             //TODO: This is supposed to write a u32 array aswell.
             //It's unknown what it contains.
-            context.ResponseData.Write(0);
+            Context.ResponseData.Write(0);
 
             return 0;
         }

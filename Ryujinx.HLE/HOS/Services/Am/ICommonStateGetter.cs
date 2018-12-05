@@ -10,15 +10,15 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class ICommonStateGetter : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private KEvent _displayResolutionChangeEvent;
+        private KEvent DisplayResolutionChangeEvent;
 
-        public ICommonStateGetter(Horizon system)
+        public ICommonStateGetter(Horizon System)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,  GetEventHandle                          },
                 { 1,  ReceiveMessage                          },
@@ -30,89 +30,89 @@ namespace Ryujinx.HLE.HOS.Services.Am
                 { 61, GetDefaultDisplayResolutionChangeEvent  }
             };
 
-            _displayResolutionChangeEvent = new KEvent(system);
+            DisplayResolutionChangeEvent = new KEvent(System);
         }
 
-        public long GetEventHandle(ServiceCtx context)
+        public long GetEventHandle(ServiceCtx Context)
         {
-            KEvent Event = context.Device.System.AppletState.MessageEvent;
+            KEvent Event = Context.Device.System.AppletState.MessageEvent;
 
-            if (context.Process.HandleTable.GenerateHandle(Event.ReadableEvent, out int handle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(Event.ReadableEvent, out int Handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
             return 0;
         }
 
-        public long ReceiveMessage(ServiceCtx context)
+        public long ReceiveMessage(ServiceCtx Context)
         {
-            if (!context.Device.System.AppletState.TryDequeueMessage(out MessageInfo message))
+            if (!Context.Device.System.AppletState.TryDequeueMessage(out MessageInfo Message))
             {
                 return MakeError(ErrorModule.Am, AmErr.NoMessages);
             }
 
-            context.ResponseData.Write((int)message);
+            Context.ResponseData.Write((int)Message);
 
             return 0;
         }
 
-        public long GetOperationMode(ServiceCtx context)
+        public long GetOperationMode(ServiceCtx Context)
         {
-            OperationMode mode = context.Device.System.State.DockedMode
+            OperationMode Mode = Context.Device.System.State.DockedMode
                 ? OperationMode.Docked
                 : OperationMode.Handheld;
 
-            context.ResponseData.Write((byte)mode);
+            Context.ResponseData.Write((byte)Mode);
 
             return 0;
         }
 
-        public long GetPerformanceMode(ServiceCtx context)
+        public long GetPerformanceMode(ServiceCtx Context)
         {
-            Apm.PerformanceMode mode = context.Device.System.State.DockedMode
+            Apm.PerformanceMode Mode = Context.Device.System.State.DockedMode
                 ? Apm.PerformanceMode.Docked
                 : Apm.PerformanceMode.Handheld;
 
-            context.ResponseData.Write((int)mode);
+            Context.ResponseData.Write((int)Mode);
 
             return 0;
         }
 
-        public long GetBootMode(ServiceCtx context)
+        public long GetBootMode(ServiceCtx Context)
         {
-            context.ResponseData.Write((byte)0); //Unknown value.
+            Context.ResponseData.Write((byte)0); //Unknown value.
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long GetCurrentFocusState(ServiceCtx context)
+        public long GetCurrentFocusState(ServiceCtx Context)
         {
-            context.ResponseData.Write((byte)context.Device.System.AppletState.FocusState);
+            Context.ResponseData.Write((byte)Context.Device.System.AppletState.FocusState);
 
             return 0;
         }
 
-        public long GetDefaultDisplayResolution(ServiceCtx context)
+        public long GetDefaultDisplayResolution(ServiceCtx Context)
         {
-            context.ResponseData.Write(1280);
-            context.ResponseData.Write(720);
+            Context.ResponseData.Write(1280);
+            Context.ResponseData.Write(720);
 
             return 0;
         }
 
-        public long GetDefaultDisplayResolutionChangeEvent(ServiceCtx context)
+        public long GetDefaultDisplayResolutionChangeEvent(ServiceCtx Context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_displayResolutionChangeEvent.ReadableEvent, out int handle) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(DisplayResolutionChangeEvent.ReadableEvent, out int Handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 

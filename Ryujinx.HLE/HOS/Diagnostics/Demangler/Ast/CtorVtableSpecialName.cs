@@ -4,21 +4,21 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class CtorVtableSpecialName : BaseNode
     {
-        private BaseNode _firstType;
-        private BaseNode _secondType;
+        private BaseNode FirstType;
+        private BaseNode SecondType;
 
-        public CtorVtableSpecialName(BaseNode firstType, BaseNode secondType) : base(NodeType.CtorVtableSpecialName)
+        public CtorVtableSpecialName(BaseNode FirstType, BaseNode SecondType) : base(NodeType.CtorVtableSpecialName)
         {
-            _firstType  = firstType;
-            _secondType = secondType;
+            this.FirstType  = FirstType;
+            this.SecondType = SecondType;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            writer.Write("construction vtable for ");
-            _firstType.Print(writer);
-            writer.Write("-in-");
-            _secondType.Print(writer);
+            Writer.Write("construction vtable for ");
+            FirstType.Print(Writer);
+            Writer.Write("-in-");
+            SecondType.Print(Writer);
         }
     }
 }

@@ -7,29 +7,29 @@ namespace Ryujinx.HLE.HOS.Services.Spl
 {
     class IRandomInterface : IpcService, IDisposable
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private RNGCryptoServiceProvider _rng;
+        private RNGCryptoServiceProvider Rng;
 
         public IRandomInterface()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, GetRandomBytes }
             };
 
-            _rng = new RNGCryptoServiceProvider();
+            Rng = new RNGCryptoServiceProvider();
         }
 
-        public long GetRandomBytes(ServiceCtx context)
+        public long GetRandomBytes(ServiceCtx Context)
         {
-            byte[] randomBytes = new byte[context.Request.ReceiveBuff[0].Size];
+            byte[] RandomBytes = new byte[Context.Request.ReceiveBuff[0].Size];
 
-            _rng.GetBytes(randomBytes);
+            Rng.GetBytes(RandomBytes);
 
-            context.Memory.WriteBytes(context.Request.ReceiveBuff[0].Position, randomBytes);
+            Context.Memory.WriteBytes(Context.Request.ReceiveBuff[0].Position, RandomBytes);
 
             return 0;
         }
@@ -39,11 +39,11 @@ namespace Ryujinx.HLE.HOS.Services.Spl
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected virtual void Dispose(bool Disposing)
         {
-            if (disposing)
+            if (Disposing)
             {
-                _rng.Dispose();
+                Rng.Dispose();
             }
         }
     }

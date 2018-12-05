@@ -4,25 +4,25 @@ namespace Ryujinx.HLE.Loaders.Npdm
 {
     class FsAccessControl
     {
-        public int   Version            { get; }
-        public ulong PermissionsBitmask { get; }
-        public int   Unknown1           { get; }
-        public int   Unknown2           { get; }
-        public int   Unknown3           { get; }
-        public int   Unknown4           { get; }
+        public int   Version            { get; private set; }
+        public ulong PermissionsBitmask { get; private set; }
+        public int   Unknown1           { get; private set; }
+        public int   Unknown2           { get; private set; }
+        public int   Unknown3           { get; private set; }
+        public int   Unknown4           { get; private set; }
 
-        public FsAccessControl(Stream stream, int offset, int size)
+        public FsAccessControl(Stream Stream, int Offset, int Size)
         {
-            stream.Seek(offset, SeekOrigin.Begin);
+            Stream.Seek(Offset, SeekOrigin.Begin);
 
-            BinaryReader reader = new BinaryReader(stream);
+            BinaryReader Reader = new BinaryReader(Stream);
 
-            Version            = reader.ReadInt32();
-            PermissionsBitmask = reader.ReadUInt64();
-            Unknown1           = reader.ReadInt32();
-            Unknown2           = reader.ReadInt32();
-            Unknown3           = reader.ReadInt32();
-            Unknown4           = reader.ReadInt32();
+            Version            = Reader.ReadInt32();
+            PermissionsBitmask = Reader.ReadUInt64();
+            Unknown1           = Reader.ReadInt32();
+            Unknown2           = Reader.ReadInt32();
+            Unknown3           = Reader.ReadInt32();
+            Unknown4           = Reader.ReadInt32();
         }
     }
 }

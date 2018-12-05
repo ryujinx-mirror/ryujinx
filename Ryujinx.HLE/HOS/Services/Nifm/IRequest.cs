@@ -8,16 +8,16 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 {
     class IRequest : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
-        private KEvent _event0;
-        private KEvent _event1;
+        private KEvent Event0;
+        private KEvent Event1;
 
-        public IRequest(Horizon system)
+        public IRequest(Horizon System)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0,  GetRequestState                 },
                 { 1,  GetResult                       },
@@ -27,58 +27,58 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
                 { 11, SetConnectionConfirmationOption }
             };
 
-            _event0 = new KEvent(system);
-            _event1 = new KEvent(system);
+            Event0 = new KEvent(System);
+            Event1 = new KEvent(System);
         }
 
-        public long GetRequestState(ServiceCtx context)
+        public long GetRequestState(ServiceCtx Context)
         {
-            context.ResponseData.Write(1);
+            Context.ResponseData.Write(1);
 
             Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
 
-        public long GetResult(ServiceCtx context)
+        public long GetResult(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
 
-        public long GetSystemEventReadableHandles(ServiceCtx context)
+        public long GetSystemEventReadableHandles(ServiceCtx Context)
         {
-            if (context.Process.HandleTable.GenerateHandle(_event0.ReadableEvent, out int handle0) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(Event0.ReadableEvent, out int Handle0) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            if (context.Process.HandleTable.GenerateHandle(_event1.ReadableEvent, out int handle1) != KernelResult.Success)
+            if (Context.Process.HandleTable.GenerateHandle(Event1.ReadableEvent, out int Handle1) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle0, handle1);
+            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle0, Handle1);
 
             return 0;
         }
 
-        public long Cancel(ServiceCtx context)
+        public long Cancel(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
 
-        public long Submit(ServiceCtx context)
+        public long Submit(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 
             return 0;
         }
 
-        public long SetConnectionConfirmationOption(ServiceCtx context)
+        public long SetConnectionConfirmationOption(ServiceCtx Context)
         {
             Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
 

@@ -6,20 +6,20 @@ namespace Ryujinx.HLE.HOS.Services.Psm
 {
     class IPsmServer : IpcService
     {
-        enum ChargerType
+        enum ChargerType : int
         {
             None,
             ChargerOrDock,
             UsbC
         }
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IPsmServer()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, GetBatteryChargePercentage },
                 { 1, GetChargerType             },
@@ -28,21 +28,21 @@ namespace Ryujinx.HLE.HOS.Services.Psm
         }
 
         // GetBatteryChargePercentage() -> u32
-        public static long GetBatteryChargePercentage(ServiceCtx context)
+        public static long GetBatteryChargePercentage(ServiceCtx Context)
         {
-            int chargePercentage = 100;
+            int ChargePercentage = 100;
 
-            context.ResponseData.Write(chargePercentage);
+            Context.ResponseData.Write(ChargePercentage);
 
-            Logger.PrintStub(LogClass.ServicePsm, $"Stubbed. ChargePercentage: {chargePercentage}");
+            Logger.PrintStub(LogClass.ServicePsm, $"Stubbed. ChargePercentage: {ChargePercentage}");
 
             return 0;
         }
 
         // GetChargerType() -> u32
-        public static long GetChargerType(ServiceCtx context)
+        public static long GetChargerType(ServiceCtx Context)
         {
-            context.ResponseData.Write((int)ChargerType.ChargerOrDock);
+            Context.ResponseData.Write((int)ChargerType.ChargerOrDock);
 
             Logger.PrintStub(LogClass.ServicePsm, $"Stubbed. ChargerType: {ChargerType.ChargerOrDock}");
 
@@ -50,9 +50,9 @@ namespace Ryujinx.HLE.HOS.Services.Psm
         }
 
         // OpenSession() -> IPsmSession
-        public long OpenSession(ServiceCtx context)
+        public long OpenSession(ServiceCtx Context)
         {
-            MakeObject(context, new IPsmSession(context.Device.System));
+            MakeObject(Context, new IPsmSession(Context.Device.System));
 
             return 0;
         }

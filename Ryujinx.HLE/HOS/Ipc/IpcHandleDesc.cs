@@ -5,87 +5,87 @@ namespace Ryujinx.HLE.HOS.Ipc
 {
     class IpcHandleDesc
     {
-        public bool HasPId { get; }
+        public bool HasPId { get; private set; }
 
-        public long PId { get; }
+        public long PId { get; private set; }
 
-        public int[] ToCopy { get; }
-        public int[] ToMove { get; }
+        public int[] ToCopy { get; private set; }
+        public int[] ToMove { get; private set; }
 
-        public IpcHandleDesc(BinaryReader reader)
+        public IpcHandleDesc(BinaryReader Reader)
         {
-            int word = reader.ReadInt32();
+            int Word = Reader.ReadInt32();
 
-            HasPId = (word & 1) != 0;
+            HasPId = (Word & 1) != 0;
 
-            ToCopy = new int[(word >> 1) & 0xf];
-            ToMove = new int[(word >> 5) & 0xf];
+            ToCopy = new int[(Word >> 1) & 0xf];
+            ToMove = new int[(Word >> 5) & 0xf];
 
-            PId = HasPId ? reader.ReadInt64() : 0;
+            PId = HasPId ? Reader.ReadInt64() : 0;
 
-            for (int index = 0; index < ToCopy.Length; index++)
+            for (int Index = 0; Index < ToCopy.Length; Index++)
             {
-                ToCopy[index] = reader.ReadInt32();
+                ToCopy[Index] = Reader.ReadInt32();
             }
 
-            for (int index = 0; index < ToMove.Length; index++)
+            for (int Index = 0; Index < ToMove.Length; Index++)
             {
-                ToMove[index] = reader.ReadInt32();
+                ToMove[Index] = Reader.ReadInt32();
             }
         }
 
-        public IpcHandleDesc(int[] copy, int[] move)
+        public IpcHandleDesc(int[] Copy, int[] Move)
         {
-            ToCopy = copy ?? throw new ArgumentNullException(nameof(copy));
-            ToMove = move ?? throw new ArgumentNullException(nameof(move));
+            ToCopy = Copy ?? throw new ArgumentNullException(nameof(Copy));
+            ToMove = Move ?? throw new ArgumentNullException(nameof(Move));
         }
 
-        public IpcHandleDesc(int[] copy, int[] move, long pId) : this(copy, move)
+        public IpcHandleDesc(int[] Copy, int[] Move, long PId) : this(Copy, Move)
         {
-            PId = pId;
+            this.PId = PId;
 
             HasPId = true;
         }
 
-        public static IpcHandleDesc MakeCopy(params int[] handles)
+        public static IpcHandleDesc MakeCopy(params int[] Handles)
         {
-            return new IpcHandleDesc(handles, new int[0]);
+            return new IpcHandleDesc(Handles, new int[0]);
         }
 
-        public static IpcHandleDesc MakeMove(params int[] handles)
+        public static IpcHandleDesc MakeMove(params int[] Handles)
         {
-            return new IpcHandleDesc(new int[0], handles);
+            return new IpcHandleDesc(new int[0], Handles);
         }
 
         public byte[] GetBytes()
         {
-            using (MemoryStream ms = new MemoryStream())
+            using (MemoryStream MS = new MemoryStream())
             {
-                BinaryWriter writer = new BinaryWriter(ms);
+                BinaryWriter Writer = new BinaryWriter(MS);
 
-                int word = HasPId ? 1 : 0;
+                int Word = HasPId ? 1 : 0;
 
-                word |= (ToCopy.Length & 0xf) << 1;
-                word |= (ToMove.Length & 0xf) << 5;
+                Word |= (ToCopy.Length & 0xf) << 1;
+                Word |= (ToMove.Length & 0xf) << 5;
 
-                writer.Write(word);
+                Writer.Write(Word);
 
                 if (HasPId)
                 {
-                    writer.Write(PId);
+                    Writer.Write((long)PId);
                 }
 
-                foreach (int handle in ToCopy)
+                foreach (int Handle in ToCopy)
                 {
-                    writer.Write(handle);
+                    Writer.Write(Handle);
                 }
 
-                foreach (int handle in ToMove)
+                foreach (int Handle in ToMove)
                 {
-                    writer.Write(handle);
+                    Writer.Write(Handle);
                 }
 
-                return ms.ToArray();
+                return MS.ToArray();
             }
         }
     }

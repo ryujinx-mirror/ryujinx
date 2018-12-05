@@ -5,29 +5,29 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class PackedTemplateParameter : NodeArray
     {
-        public PackedTemplateParameter(List<BaseNode> nodes) : base(nodes, NodeType.PackedTemplateParameter) { }
+        public PackedTemplateParameter(List<BaseNode> Nodes) : base(Nodes, NodeType.PackedTemplateParameter) { }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            foreach (BaseNode node in Nodes)
+            foreach (BaseNode Node in Nodes)
             {
-                node.PrintLeft(writer);
+                Node.PrintLeft(Writer);
             }
         }
 
-        public override void PrintRight(TextWriter writer)
+        public override void PrintRight(TextWriter Writer)
         {
-            foreach (BaseNode node in Nodes)
+            foreach (BaseNode Node in Nodes)
             {
-                node.PrintLeft(writer);
+                Node.PrintLeft(Writer);
             }
         }
 
         public override bool HasRightPart()
         {
-            foreach (BaseNode node in Nodes)
+            foreach (BaseNode Node in Nodes)
             {
-                if (node.HasRightPart())
+                if (Node.HasRightPart())
                 {
                     return true;
                 }

@@ -9,18 +9,18 @@ namespace Ryujinx.HLE.HOS.Services.Am
         public static byte[] MakeLaunchParams()
         {
             //Size needs to be at least 0x88 bytes otherwise application errors.
-            using (MemoryStream ms = new MemoryStream())
+            using (MemoryStream MS = new MemoryStream())
             {
-                BinaryWriter writer = new BinaryWriter(ms);
+                BinaryWriter Writer = new BinaryWriter(MS);
 
-                ms.SetLength(0x88);
+                MS.SetLength(0x88);
 
-                writer.Write(LaunchParamsMagic);
-                writer.Write(1);  //IsAccountSelected? Only lower 8 bits actually used.
-                writer.Write(1L); //User Id Low (note: User Id needs to be != 0)
-                writer.Write(0L); //User Id High
+                Writer.Write(LaunchParamsMagic);
+                Writer.Write(1);  //IsAccountSelected? Only lower 8 bits actually used.
+                Writer.Write(1L); //User Id Low (note: User Id needs to be != 0)
+                Writer.Write(0L); //User Id High
 
-                return ms.ToArray();
+                return MS.ToArray();
             }
         }
     }

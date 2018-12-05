@@ -2,25 +2,25 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class KPort : KAutoObject
     {
-        public KServerPort ServerPort { get; }
-        public KClientPort ClientPort { get; }
+        public KServerPort ServerPort { get; private set; }
+        public KClientPort ClientPort { get; private set; }
 
-        private long _nameAddress;
-        private bool _isLight;
+        private long NameAddress;
+        private bool IsLight;
 
-        public KPort(Horizon system) : base(system)
+        public KPort(Horizon System) : base(System)
         {
-            ServerPort = new KServerPort(system);
-            ClientPort = new KClientPort(system);
+            ServerPort = new KServerPort(System);
+            ClientPort = new KClientPort(System);
         }
 
-        public void Initialize(int maxSessions, bool isLight, long nameAddress)
+        public void Initialize(int MaxSessions, bool IsLight, long NameAddress)
         {
             ServerPort.Initialize(this);
-            ClientPort.Initialize(this, maxSessions);
+            ClientPort.Initialize(this, MaxSessions);
 
-            _isLight     = isLight;
-            _nameAddress = nameAddress;
+            this.IsLight     = IsLight;
+            this.NameAddress = NameAddress;
         }
     }
 }

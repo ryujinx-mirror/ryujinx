@@ -5,10 +5,10 @@ namespace Ryujinx.HLE.HOS.Kernel
         public ulong Address;
         public ulong PagesCount;
 
-        public KPageNode(ulong address, ulong pagesCount)
+        public KPageNode(ulong Address, ulong PagesCount)
         {
-            Address    = address;
-            PagesCount = pagesCount;
+            this.Address    = Address;
+            this.PagesCount = PagesCount;
         }
     }
 }

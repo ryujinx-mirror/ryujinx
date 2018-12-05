@@ -2,14 +2,14 @@ namespace Ryujinx.HLE.Loaders.Elf
 {
     struct ElfDynamic
     {
-        public ElfDynamicTag Tag { get; }
+        public ElfDynamicTag Tag { get; private set; }
 
-        public long Value { get; }
+        public long Value { get; private set; }
 
-        public ElfDynamic(ElfDynamicTag tag, long value)
+        public ElfDynamic(ElfDynamicTag Tag, long Value)
         {
-            Tag   = tag;
-            Value = value;
+            this.Tag   = Tag;
+            this.Value = Value;
         }
     }
 }

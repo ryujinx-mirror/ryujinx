@@ -4,61 +4,61 @@ namespace Ryujinx.HLE.Loaders.Executables
 {
     class NxRelocatableObject : IExecutable
     {
-        public byte[] Text { get; }
-        public byte[] Ro   { get; }
-        public byte[] Data { get; }
+        public byte[] Text { get; private set; }
+        public byte[] RO   { get; private set; }
+        public byte[] Data { get; private set; }
 
-        public int Mod0Offset { get; }
-        public int TextOffset { get; }
-        public int RoOffset   { get; }
-        public int DataOffset { get; }
-        public int BssSize    { get; }
+        public int Mod0Offset { get; private set; }
+        public int TextOffset { get; private set; }
+        public int ROOffset   { get; private set; }
+        public int DataOffset { get; private set; }
+        public int BssSize    { get; private set; }
 
         public int BssOffset => DataOffset + Data.Length;
 
-        public ulong SourceAddress { get; }
-        public ulong BssAddress    { get; }
+        public ulong SourceAddress { get; private set; }
+        public ulong BssAddress    { get; private set; }
 
-        public NxRelocatableObject(Stream input, ulong sourceAddress = 0, ulong bssAddress = 0)
+        public NxRelocatableObject(Stream Input, ulong SourceAddress = 0, ulong BssAddress = 0)
         {
-            SourceAddress = sourceAddress;
-            BssAddress    = bssAddress;
+            this.SourceAddress = SourceAddress;
+            this.BssAddress    = BssAddress;
 
-            BinaryReader reader = new BinaryReader(input);
+            BinaryReader Reader = new BinaryReader(Input);
 
-            input.Seek(4, SeekOrigin.Begin);
+            Input.Seek(4, SeekOrigin.Begin);
 
-            int mod0Offset = reader.ReadInt32();
-            int padding8   = reader.ReadInt32();
-            int paddingC   = reader.ReadInt32();
-            int nroMagic   = reader.ReadInt32();
-            int unknown14  = reader.ReadInt32();
-            int fileSize   = reader.ReadInt32();
-            int unknown1C  = reader.ReadInt32();
-            int textOffset = reader.ReadInt32();
-            int textSize   = reader.ReadInt32();
-            int roOffset   = reader.ReadInt32();
-            int roSize     = reader.ReadInt32();
-            int dataOffset = reader.ReadInt32();
-            int dataSize   = reader.ReadInt32();
-            int bssSize    = reader.ReadInt32();
+            int Mod0Offset = Reader.ReadInt32();
+            int Padding8   = Reader.ReadInt32();
+            int Paddingc   = Reader.ReadInt32();
+            int NroMagic   = Reader.ReadInt32();
+            int Unknown14  = Reader.ReadInt32();
+            int FileSize   = Reader.ReadInt32();
+            int Unknown1c  = Reader.ReadInt32();
+            int TextOffset = Reader.ReadInt32();
+            int TextSize   = Reader.ReadInt32();
+            int ROOffset   = Reader.ReadInt32();
+            int ROSize     = Reader.ReadInt32();
+            int DataOffset = Reader.ReadInt32();
+            int DataSize   = Reader.ReadInt32();
+            int BssSize    = Reader.ReadInt32();
 
-            Mod0Offset = mod0Offset;
-            TextOffset = textOffset;
-            RoOffset   = roOffset;
-            DataOffset = dataOffset;
-            BssSize    = bssSize;
+            this.Mod0Offset = Mod0Offset;
+            this.TextOffset = TextOffset;
+            this.ROOffset   = ROOffset;
+            this.DataOffset = DataOffset;
+            this.BssSize    = BssSize;
 
-            byte[] Read(long position, int size)
+            byte[] Read(long Position, int Size)
             {
-                input.Seek(position, SeekOrigin.Begin);
+                Input.Seek(Position, SeekOrigin.Begin);
 
-                return reader.ReadBytes(size);
+                return Reader.ReadBytes(Size);
             }
 
-            Text = Read(textOffset, textSize);
-            Ro   = Read(roOffset,   roSize);
-            Data = Read(dataOffset, dataSize);
+            Text = Read(TextOffset, TextSize);
+            RO   = Read(ROOffset,   ROSize);
+            Data = Read(DataOffset, DataSize);
         }
     }
 }

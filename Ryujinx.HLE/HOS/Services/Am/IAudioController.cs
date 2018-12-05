@@ -6,13 +6,13 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class IAudioController : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IAudioController()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, SetExpectedMasterVolume              },
                 { 1, GetMainAppletExpectedMasterVolume    },
@@ -22,47 +22,47 @@ namespace Ryujinx.HLE.HOS.Services.Am
             };
         }
 
-        public long SetExpectedMasterVolume(ServiceCtx context)
+        public long SetExpectedMasterVolume(ServiceCtx Context)
         {
-            float appletVolume        = context.RequestData.ReadSingle();
-            float libraryAppletVolume = context.RequestData.ReadSingle();
+            float AppletVolume        = Context.RequestData.ReadSingle();
+            float LibraryAppletVolume = Context.RequestData.ReadSingle();
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long GetMainAppletExpectedMasterVolume(ServiceCtx context)
+        public long GetMainAppletExpectedMasterVolume(ServiceCtx Context)
         {
-            context.ResponseData.Write(1f);
+            Context.ResponseData.Write(1f);
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long GetLibraryAppletExpectedMasterVolume(ServiceCtx context)
+        public long GetLibraryAppletExpectedMasterVolume(ServiceCtx Context)
         {
-            context.ResponseData.Write(1f);
+            Context.ResponseData.Write(1f);
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long ChangeMainAppletMasterVolume(ServiceCtx context)
+        public long ChangeMainAppletMasterVolume(ServiceCtx Context)
         {
-            float unknown0 = context.RequestData.ReadSingle();
-            long  unknown1 = context.RequestData.ReadInt64();
+            float Unknown0 = Context.RequestData.ReadSingle();
+            long  Unknown1 = Context.RequestData.ReadInt64();
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long SetTransparentVolumeRate(ServiceCtx context)
+        public long SetTransparentVolumeRate(ServiceCtx Context)
         {
-            float unknown0 = context.RequestData.ReadSingle();
+            float Unknown0 = Context.RequestData.ReadSingle();
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 

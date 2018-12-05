@@ -4,37 +4,37 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class BracedExpression : BaseNode
     {
-        private BaseNode _element;
-        private BaseNode _expression;
-        private bool     _isArrayExpression;
+        private BaseNode Element;
+        private BaseNode Expression;
+        private bool     IsArrayExpression;
 
-        public BracedExpression(BaseNode element, BaseNode expression, bool isArrayExpression) : base(NodeType.BracedExpression)
+        public BracedExpression(BaseNode Element, BaseNode Expression, bool IsArrayExpression) : base(NodeType.BracedExpression)
         {
-            _element           = element;
-            _expression        = expression;
-            _isArrayExpression = isArrayExpression;
+            this.Element           = Element;
+            this.Expression        = Expression;
+            this.IsArrayExpression = IsArrayExpression;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            if (_isArrayExpression)
+            if (IsArrayExpression)
             {
-                writer.Write("[");
-                _element.Print(writer);
-                writer.Write("]");
+                Writer.Write("[");
+                Element.Print(Writer);
+                Writer.Write("]");
             }
             else
             {
-                writer.Write(".");
-                _element.Print(writer);
+                Writer.Write(".");
+                Element.Print(Writer);
             }
 
-            if (!_expression.GetType().Equals(NodeType.BracedExpression) || !_expression.GetType().Equals(NodeType.BracedRangeExpression))
+            if (!Expression.GetType().Equals(NodeType.BracedExpression) || !Expression.GetType().Equals(NodeType.BracedRangeExpression))
             {
-                writer.Write(" = ");
+                Writer.Write(" = ");
             }
 
-            _expression.Print(writer);
+            Expression.Print(Writer);
         }
     }
 }

@@ -4,30 +4,30 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class DeleteExpression : ParentNode
     {
-        private bool _isGlobal;
-        private bool _isArrayExpression;
+        private bool IsGlobal;
+        private bool IsArrayExpression;
 
-        public DeleteExpression(BaseNode child, bool isGlobal, bool isArrayExpression) : base(NodeType.DeleteExpression, child)
+        public DeleteExpression(BaseNode Child, bool IsGlobal, bool IsArrayExpression) : base(NodeType.DeleteExpression, Child)
         {
-            _isGlobal          = isGlobal;
-            _isArrayExpression = isArrayExpression;
+            this.IsGlobal          = IsGlobal;
+            this.IsArrayExpression = IsArrayExpression;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            if (_isGlobal)
+            if (IsGlobal)
             {
-                writer.Write("::");
+                Writer.Write("::");
             }
 
-            writer.Write("delete");
+            Writer.Write("delete");
 
-            if (_isArrayExpression)
+            if (IsArrayExpression)
             {
-                writer.Write("[] ");
+                Writer.Write("[] ");
             }
 
-            Child.Print(writer);
+            Child.Print(Writer);
         }
     }
 }

@@ -2,13 +2,13 @@ namespace Ryujinx.HLE.HOS.Kernel
 {
     class KTransferMemory
     {
-        public ulong Address { get; }
-        public ulong Size    { get; }
+        public ulong Address { get; private set; }
+        public ulong Size     { get; private set; }
 
-        public KTransferMemory(ulong address, ulong size)
+        public KTransferMemory(ulong Address, ulong Size)
         {
-            Address = address;
-            Size    = size;
+            this.Address = Address;
+            this.Size    = Size;
         }
     }
 }

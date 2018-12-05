@@ -7,39 +7,39 @@ namespace Ryujinx.HLE.FileSystem
 {
     static class SaveHelper
     {
-        public static string GetSavePath(SaveInfo saveMetaData, ServiceCtx context)
+        public static string GetSavePath(SaveInfo SaveMetaData, ServiceCtx Context)
         {
-            string baseSavePath   = NandPath;
-            long   currentTitleId = saveMetaData.TitleId;
+            string BaseSavePath   = NandPath;
+            long   CurrentTitleId = SaveMetaData.TitleId;
 
-            switch (saveMetaData.SaveSpaceId)
+            switch (SaveMetaData.SaveSpaceId)
             {
                 case SaveSpaceId.NandUser:
-                    baseSavePath = UserNandPath;
+                    BaseSavePath = UserNandPath;
                     break;
                 case SaveSpaceId.NandSystem:
-                    baseSavePath = SystemNandPath;
+                    BaseSavePath = SystemNandPath;
                     break;
                 case SaveSpaceId.SdCard:
-                    baseSavePath = Path.Combine(SdCardPath, "Nintendo");
+                    BaseSavePath = Path.Combine(SdCardPath, "Nintendo");
                     break;
             }
 
-            baseSavePath = Path.Combine(baseSavePath, "save");
+            BaseSavePath = Path.Combine(BaseSavePath, "save");
 
-            if (saveMetaData.TitleId == 0 && saveMetaData.SaveDataType == SaveDataType.SaveData)
+            if (SaveMetaData.TitleId == 0 && SaveMetaData.SaveDataType == SaveDataType.SaveData)
             {
-                currentTitleId = context.Process.TitleId;
+                CurrentTitleId = Context.Process.TitleId;
             }
 
-            string saveAccount = saveMetaData.UserId.IsZero() ? "savecommon" : saveMetaData.UserId.ToString();
+            string SaveAccount = SaveMetaData.UserId.IsZero() ? "savecommon" : SaveMetaData.UserId.ToString();
 
-            string savePath = Path.Combine(baseSavePath,
-                saveMetaData.SaveId.ToString("x16"),
-                saveAccount,
-                saveMetaData.SaveDataType == SaveDataType.SaveData ? currentTitleId.ToString("x16") : string.Empty);
+            string SavePath = Path.Combine(BaseSavePath,
+                SaveMetaData.SaveId.ToString("x16"),
+                SaveAccount,
+                SaveMetaData.SaveDataType == SaveDataType.SaveData ? CurrentTitleId.ToString("x16") : string.Empty);
 
-            return savePath;
+            return SavePath;
         }
     }
 }

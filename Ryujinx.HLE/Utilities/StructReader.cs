@@ -5,41 +5,41 @@ namespace Ryujinx.HLE.Utilities
 {
     class StructReader
     {
-        private MemoryManager _memory;
+        private MemoryManager Memory;
 
         public long Position { get; private set; }
 
-        public StructReader(MemoryManager memory, long position)
+        public StructReader(MemoryManager Memory, long Position)
         {
-            _memory  = memory;
-            Position = position;
+            this.Memory   = Memory;
+            this.Position = Position;
         }
 
         public T Read<T>() where T : struct
         {
-            T value = MemoryHelper.Read<T>(_memory, Position);
+            T Value = MemoryHelper.Read<T>(Memory, Position);
 
             Position += Marshal.SizeOf<T>();
 
-            return value;
+            return Value;
         }
 
-        public T[] Read<T>(int size) where T : struct
+        public T[] Read<T>(int Size) where T : struct
         {
-            int structSize = Marshal.SizeOf<T>();
+            int StructSize = Marshal.SizeOf<T>();
 
-            int count = size / structSize;
+            int Count = Size / StructSize;
 
-            T[] output = new T[count];
+            T[] Output = new T[Count];
 
-            for (int index = 0; index < count; index++)
+            for (int Index = 0; Index < Count; Index++)
             {
-                output[index] = MemoryHelper.Read<T>(_memory, Position);
+                Output[Index] = MemoryHelper.Read<T>(Memory, Position);
 
-                Position += structSize;
+                Position += StructSize;
             }
 
-            return output;
+            return Output;
         }
     }
 }

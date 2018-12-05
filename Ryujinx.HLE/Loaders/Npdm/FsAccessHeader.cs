@@ -6,29 +6,29 @@ namespace Ryujinx.HLE.Loaders.Npdm
 {
     class FsAccessHeader
     {
-        public int   Version            { get; }
-        public ulong PermissionsBitmask { get; }
+        public int   Version            { get; private set; }
+        public ulong PermissionsBitmask { get; private set; }
 
-        public FsAccessHeader(Stream stream, int offset, int size)
+        public FsAccessHeader(Stream Stream, int Offset, int Size)
         {
-            stream.Seek(offset, SeekOrigin.Begin);
+            Stream.Seek(Offset, SeekOrigin.Begin);
 
-            BinaryReader reader = new BinaryReader(stream);
+            BinaryReader Reader = new BinaryReader(Stream);
 
-            Version            = reader.ReadInt32();
-            PermissionsBitmask = reader.ReadUInt64();
+            Version            = Reader.ReadInt32();
+            PermissionsBitmask = Reader.ReadUInt64();
 
-            int dataSize = reader.ReadInt32();
+            int DataSize = Reader.ReadInt32();
 
-            if (dataSize != 0x1c)
+            if (DataSize != 0x1c)
             {
                 throw new InvalidNpdmException("FsAccessHeader is corrupted!");
             }
 
-            int contentOwnerIdSize        = reader.ReadInt32();
-            int dataAndContentOwnerIdSize = reader.ReadInt32();
+            int ContentOwnerIdSize        = Reader.ReadInt32();
+            int DataAndContentOwnerIdSize = Reader.ReadInt32();
 
-            if (dataAndContentOwnerIdSize != 0x1c)
+            if (DataAndContentOwnerIdSize != 0x1c)
             {
                 throw new NotImplementedException("ContentOwnerId section is not implemented!");
             }

@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         public bool InstallContents { get; set; }
 
-        private ConcurrentDictionary<string, UserProfile> _profiles;
+        private ConcurrentDictionary<string, UserProfile> Profiles;
 
         internal UserProfile LastOpenUser { get; private set; }
 
@@ -58,20 +58,20 @@ namespace Ryujinx.HLE.HOS.SystemState
 
             SetAudioOutputAsBuiltInSpeaker();
 
-            _profiles = new ConcurrentDictionary<string, UserProfile>();
+            Profiles = new ConcurrentDictionary<string, UserProfile>();
 
-            UInt128 defaultUuid = new UInt128("00000000000000000000000000000001");
+            UInt128 DefaultUuid = new UInt128("00000000000000000000000000000001");
 
-            AddUser(defaultUuid, "Player");
+            AddUser(DefaultUuid, "Player");
 
-            OpenUser(defaultUuid);
+            OpenUser(DefaultUuid);
         }
 
-        public void SetLanguage(SystemLanguage language)
+        public void SetLanguage(SystemLanguage Language)
         {
-            DesiredLanguageCode = GetLanguageCode((int)language);
+            DesiredLanguageCode = GetLanguageCode((int)Language);
 
-            DesiredTitleLanguage = Enum.Parse<TitleLanguage>(Enum.GetName(typeof(SystemLanguage), language));
+            DesiredTitleLanguage = Enum.Parse<TitleLanguage>(Enum.GetName(typeof(SystemLanguage), Language));
         }
 
         public void SetAudioOutputAsTv()
@@ -89,65 +89,65 @@ namespace Ryujinx.HLE.HOS.SystemState
             ActiveAudioOutput = AudioOutputs[2];
         }
 
-        public void AddUser(UInt128 uuid, string name)
+        public void AddUser(UInt128 Uuid, string Name)
         {
-            UserProfile profile = new UserProfile(uuid, name);
+            UserProfile Profile = new UserProfile(Uuid, Name);
 
-            _profiles.AddOrUpdate(uuid.ToString(), profile, (key, old) => profile);
+            Profiles.AddOrUpdate(Uuid.ToString(), Profile, (Key, Old) => Profile);
         }
 
-        public void OpenUser(UInt128 uuid)
+        public void OpenUser(UInt128 Uuid)
         {
-            if (_profiles.TryGetValue(uuid.ToString(), out UserProfile profile))
+            if (Profiles.TryGetValue(Uuid.ToString(), out UserProfile Profile))
             {
-                (LastOpenUser = profile).AccountState = OpenCloseState.Open;
+                (LastOpenUser = Profile).AccountState = OpenCloseState.Open;
             }
         }
 
-        public void CloseUser(UInt128 uuid)
+        public void CloseUser(UInt128 Uuid)
         {
-            if (_profiles.TryGetValue(uuid.ToString(), out UserProfile profile))
+            if (Profiles.TryGetValue(Uuid.ToString(), out UserProfile Profile))
             {
-                profile.AccountState = OpenCloseState.Closed;
+                Profile.AccountState = OpenCloseState.Closed;
             }
         }
 
         public int GetUserCount()
         {
-            return _profiles.Count;
+            return Profiles.Count;
         }
 
-        internal bool TryGetUser(UInt128 uuid, out UserProfile profile)
+        internal bool TryGetUser(UInt128 Uuid, out UserProfile Profile)
         {
-            return _profiles.TryGetValue(uuid.ToString(), out profile);
+            return Profiles.TryGetValue(Uuid.ToString(), out Profile);
         }
 
         internal IEnumerable<UserProfile> GetAllUsers()
         {
-            return _profiles.Values;
+            return Profiles.Values;
         }
 
         internal IEnumerable<UserProfile> GetOpenUsers()
         {
-            return _profiles.Values.Where(x => x.AccountState == OpenCloseState.Open);
+            return Profiles.Values.Where(x => x.AccountState == OpenCloseState.Open);
         }
 
-        internal static long GetLanguageCode(int index)
+        internal static long GetLanguageCode(int Index)
         {
-            if ((uint)index >= LanguageCodes.Length)
+            if ((uint)Index >= LanguageCodes.Length)
             {
-                throw new ArgumentOutOfRangeException(nameof(index));
+                throw new ArgumentOutOfRangeException(nameof(Index));
             }
 
-            long code  = 0;
-            int  shift = 0;
+            long Code  = 0;
+            int  Shift = 0;
 
-            foreach (char chr in LanguageCodes[index])
+            foreach (char Chr in LanguageCodes[Index])
             {
-                code |= (long)(byte)chr << shift++ * 8;
+                Code |= (long)(byte)Chr << Shift++ * 8;
             }
 
-            return code;
+            return Code;
         }
     }
 }

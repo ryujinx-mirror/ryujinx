@@ -4,22 +4,22 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class MemberExpression : BaseNode
     {
-        private BaseNode _leftNode;
-        private string   _kind;
-        private BaseNode _rightNode;
+        private BaseNode LeftNode;
+        private string   Kind;
+        private BaseNode RightNode;
 
-        public MemberExpression(BaseNode leftNode, string kind, BaseNode rightNode) : base(NodeType.MemberExpression)
+        public MemberExpression(BaseNode LeftNode, string Kind, BaseNode RightNode) : base(NodeType.MemberExpression)
         {
-            _leftNode  = leftNode;
-            _kind      = kind;
-            _rightNode = rightNode;
+            this.LeftNode  = LeftNode;
+            this.Kind      = Kind;
+            this.RightNode = RightNode;
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            _leftNode.Print(writer);
-            writer.Write(_kind);
-            _rightNode.Print(writer);
+            LeftNode.Print(Writer);
+            Writer.Write(Kind);
+            RightNode.Print(Writer);
         }
     }
 }

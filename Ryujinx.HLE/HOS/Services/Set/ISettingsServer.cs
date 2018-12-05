@@ -6,13 +6,13 @@ namespace Ryujinx.HLE.HOS.Services.Set
 {
     class ISettingsServer : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public ISettingsServer()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, GetLanguageCode               },
                 { 1, GetAvailableLanguageCodes     },
@@ -21,57 +21,57 @@ namespace Ryujinx.HLE.HOS.Services.Set
             };
         }
 
-        public static long GetLanguageCode(ServiceCtx context)
+        public static long GetLanguageCode(ServiceCtx Context)
         {
-            context.ResponseData.Write(context.Device.System.State.DesiredLanguageCode);
+            Context.ResponseData.Write(Context.Device.System.State.DesiredLanguageCode);
 
             return 0;
         }
 
-        public static long GetAvailableLanguageCodes(ServiceCtx context)
+        public static long GetAvailableLanguageCodes(ServiceCtx Context)
         {
             GetAvailableLanguagesCodesImpl(
-                context,
-                context.Request.RecvListBuff[0].Position,
-                context.Request.RecvListBuff[0].Size);
+                Context,
+                Context.Request.RecvListBuff[0].Position,
+                Context.Request.RecvListBuff[0].Size);
 
             return 0;
         }
 
-        public static long GetAvailableLanguageCodeCount(ServiceCtx context)
+        public static long GetAvailableLanguageCodeCount(ServiceCtx Context)
         {
-            context.ResponseData.Write(SystemStateMgr.LanguageCodes.Length);
+            Context.ResponseData.Write(SystemStateMgr.LanguageCodes.Length);
 
             return 0;
         }
 
-        public static long GetAvailableLanguageCodes2(ServiceCtx context)
+        public static long GetAvailableLanguageCodes2(ServiceCtx Context)
         {
             GetAvailableLanguagesCodesImpl(
-                context,
-                context.Request.ReceiveBuff[0].Position,
-                context.Request.ReceiveBuff[0].Size);
+                Context,
+                Context.Request.ReceiveBuff[0].Position,
+                Context.Request.ReceiveBuff[0].Size);
 
             return 0;
         }
 
-        public static long GetAvailableLanguagesCodesImpl(ServiceCtx context, long position, long size)
+        public static long GetAvailableLanguagesCodesImpl(ServiceCtx Context, long Position, long Size)
         {
-            int count = (int)(size / 8);
+            int Count = (int)(Size / 8);
 
-            if (count > SystemStateMgr.LanguageCodes.Length)
+            if (Count > SystemStateMgr.LanguageCodes.Length)
             {
-                count = SystemStateMgr.LanguageCodes.Length;
+                Count = SystemStateMgr.LanguageCodes.Length;
             }
 
-            for (int index = 0; index < count; index++)
+            for (int Index = 0; Index < Count; Index++)
             {
-                context.Memory.WriteInt64(position, SystemStateMgr.GetLanguageCode(index));
+                Context.Memory.WriteInt64(Position, SystemStateMgr.GetLanguageCode(Index));
 
-                position += 8;
+                Position += 8;
             }
 
-            context.ResponseData.Write(count);
+            Context.ResponseData.Write(Count);
 
             return 0;
         }

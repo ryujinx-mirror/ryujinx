@@ -5,7 +5,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
     static class Resampler
     {
 #region "LookUp Tables"
-        private static short[] _curveLut0 = new short[]
+        private static short[] CurveLut0 = new short[]
         {
             6600,  19426, 6722,  3,     6479,  19424, 6845,  9,     6359,  19419, 6968,  15,    6239,  19412, 7093,  22,
             6121,  19403, 7219,  28,    6004,  19391, 7345,  34,    5888,  19377, 7472,  41,    5773,  19361, 7600,  48,
@@ -41,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             22,    7093,  19412, 6239,  15,    6968,  19419, 6359,  9,     6845,  19424, 6479,  3,     6722,  19426, 6600
         };
 
-        private static short[] _curveLut1 = new short[]
+        private static short[] CurveLut1 = new short[]
         {
             -68,   32639, 69,    -5,    -200,  32630, 212,   -15,   -328,  32613, 359,   -26,   -450,  32586, 512,   -36,
             -568,  32551, 669,   -47,   -680,  32507, 832,   -58,   -788,  32454, 1000,  -69,   -891,  32393, 1174,  -80,
@@ -77,7 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             -36,   512,   32586, -450,  -26,   359,   32613, -328,  -15,   212,   32630, -200,  -5,    69,    32639, -68
         };
 
-        private static short[] _curveLut2 = new short[]
+        private static short[] CurveLut2 = new short[]
         {
             3195,  26287, 3329,  -32,   3064,  26281, 3467,  -34,   2936,  26270, 3608,  -38,   2811,  26253, 3751,  -42,
             2688,  26230, 3897,  -46,   2568,  26202, 4046,  -50,   2451,  26169, 4199,  -54,   2338,  26130, 4354,  -58,
@@ -115,77 +115,77 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 #endregion
 
         public static int[] Resample2Ch(
-            int[]   buffer,
-            int     srcSampleRate,
-            int     dstSampleRate,
-            int     samplesCount,
-            ref int fracPart)
+            int[]   Buffer,
+            int     SrcSampleRate,
+            int     DstSampleRate,
+            int     SamplesCount,
+            ref int FracPart)
         {
-            if (buffer == null)
+            if (Buffer == null)
             {
-                throw new ArgumentNullException(nameof(buffer));
+                throw new ArgumentNullException(nameof(Buffer));
             }
 
-            if (srcSampleRate <= 0)
+            if (SrcSampleRate <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(srcSampleRate));
+                throw new ArgumentOutOfRangeException(nameof(SrcSampleRate));
             }
 
-            if (dstSampleRate <= 0)
+            if (DstSampleRate <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(dstSampleRate));
+                throw new ArgumentOutOfRangeException(nameof(DstSampleRate));
             }
 
-            double ratio = (double)srcSampleRate / dstSampleRate;
+            double Ratio = (double)SrcSampleRate / DstSampleRate;
 
-            int newSamplesCount = (int)(samplesCount / ratio);
+            int NewSamplesCount = (int)(SamplesCount / Ratio);
 
-            int step = (int)(ratio * 0x8000);
+            int Step = (int)(Ratio * 0x8000);
 
-            int[] output = new int[newSamplesCount * 2];
+            int[] Output = new int[NewSamplesCount * 2];
 
-            short[] lut;
+            short[] Lut;
 
-            if (step > 0xaaaa)
+            if (Step > 0xaaaa)
             {
-                lut = _curveLut0;
+                Lut = CurveLut0;
             }
-            else if (step <= 0x8000)
+            else if (Step <= 0x8000)
             {
-                lut = _curveLut1;
+                Lut = CurveLut1;
             }
             else
             {
-                lut = _curveLut2;
+                Lut = CurveLut2;
             }
 
-            int inOffs = 0;
+            int InOffs = 0;
 
-            for (int outOffs = 0; outOffs < output.Length; outOffs += 2)
+            for (int OutOffs = 0; OutOffs < Output.Length; OutOffs += 2)
             {
-                int lutIndex = (fracPart >> 8) * 4;
+                int LutIndex = (FracPart >> 8) * 4;
 
-                int sample0 = buffer[(inOffs + 0) * 2 + 0] * lut[lutIndex + 0] +
-                              buffer[(inOffs + 1) * 2 + 0] * lut[lutIndex + 1] +
-                              buffer[(inOffs + 2) * 2 + 0] * lut[lutIndex + 2] +
-                              buffer[(inOffs + 3) * 2 + 0] * lut[lutIndex + 3];
+                int Sample0 = Buffer[(InOffs + 0) * 2 + 0] * Lut[LutIndex + 0] +
+                              Buffer[(InOffs + 1) * 2 + 0] * Lut[LutIndex + 1] +
+                              Buffer[(InOffs + 2) * 2 + 0] * Lut[LutIndex + 2] +
+                              Buffer[(InOffs + 3) * 2 + 0] * Lut[LutIndex + 3];
 
-                int sample1 = buffer[(inOffs + 0) * 2 + 1] * lut[lutIndex + 0] +
-                              buffer[(inOffs + 1) * 2 + 1] * lut[lutIndex + 1] +
-                              buffer[(inOffs + 2) * 2 + 1] * lut[lutIndex + 2] +
-                              buffer[(inOffs + 3) * 2 + 1] * lut[lutIndex + 3];
+                int Sample1 = Buffer[(InOffs + 0) * 2 + 1] * Lut[LutIndex + 0] +
+                              Buffer[(InOffs + 1) * 2 + 1] * Lut[LutIndex + 1] +
+                              Buffer[(InOffs + 2) * 2 + 1] * Lut[LutIndex + 2] +
+                              Buffer[(InOffs + 3) * 2 + 1] * Lut[LutIndex + 3];
 
-                int newOffset = fracPart + step;
+                int NewOffset = FracPart + Step;
 
-                inOffs += newOffset >> 15;
+                InOffs += NewOffset >> 15;
 
-                fracPart = newOffset & 0x7fff;
+                FracPart = NewOffset & 0x7fff;
 
-                output[outOffs + 0] = sample0 >> 15;
-                output[outOffs + 1] = sample1 >> 15;
+                Output[OutOffs + 0] = Sample0 >> 15;
+                Output[OutOffs + 1] = Sample1 >> 15;
             }
 
-            return output;
+            return Output;
         }
     }
 }

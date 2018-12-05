@@ -4,19 +4,19 @@ namespace Ryujinx.HLE.Loaders.Npdm
 {
     class KernelAccessControl
     {
-        public int[] Capabilities { get; }
+        public int[] Capabilities { get; private set; }
 
-        public KernelAccessControl(Stream stream, int offset, int size)
+        public KernelAccessControl(Stream Stream, int Offset, int Size)
         {
-            stream.Seek(offset, SeekOrigin.Begin);
+            Stream.Seek(Offset, SeekOrigin.Begin);
 
-            Capabilities = new int[size / 4];
+            Capabilities = new int[Size / 4];
 
-            BinaryReader reader = new BinaryReader(stream);
+            BinaryReader Reader = new BinaryReader(Stream);
 
-            for (int index = 0; index < Capabilities.Length; index++)
+            for (int Index = 0; Index < Capabilities.Length; Index++)
             {
-                Capabilities[index] = reader.ReadInt32();
+                Capabilities[Index] = Reader.ReadInt32();
             }
         }
     }

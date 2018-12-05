@@ -5,7 +5,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
     static class NxSettings
 	{
 		//Generated automatically from a Switch 3.0 config file (Tid: 0100000000000818).
-		public static Dictionary<string, object> Settings = new Dictionary<string, object>
+		public static Dictionary<string, object> Settings = new Dictionary<string, object>()
 		{
 			{ "account!na_required_for_network_service", true },
 			{ "account.daemon!background_awaking_periodicity", 10800 },
@@ -1705,7 +1705,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
 			{ "time!standard_steady_clock_rtc_update_interval_minutes", 5 },
 			{ "time!standard_network_clock_sufficient_accuracy_minutes", 43200 },
 			{ "usb!usb30_force_enabled", false },
-			{ "wlan_debug!skip_wlan_boot", false }
+			{ "wlan_debug!skip_wlan_boot", false },
 		};
 	}
 }

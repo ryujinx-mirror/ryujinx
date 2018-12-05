@@ -1,25 +1,28 @@
-﻿using LibHac;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using LibHac;
 
 namespace Ryujinx.HLE.FileSystem.Content
 {
     public struct LocationEntry
     {
-        public string      ContentPath { get; }
+        public string      ContentPath { get; private set; }
         public int         Flag        { get; private set; }
-        public long        TitleId     { get; }
-        public ContentType ContentType { get; }
+        public long        TitleId     { get; private set; }
+        public ContentType ContentType { get; private set; }
 
-        public LocationEntry(string contentPath, int flag, long titleId, ContentType contentType)
+        public LocationEntry(string ContentPath, int Flag, long TitleId, ContentType ContentType)
         {
-            ContentPath = contentPath;
-            Flag        = flag;
-            TitleId     = titleId;
-            ContentType = contentType;
+            this.ContentPath = ContentPath;
+            this.Flag        = Flag;
+            this.TitleId     = TitleId;
+            this.ContentType = ContentType;
         }
 
-        public void SetFlag(int flag)
+        public void SetFlag(int Flag)
         {
-            Flag = flag;
+            this.Flag = Flag;
         }
     }
 }

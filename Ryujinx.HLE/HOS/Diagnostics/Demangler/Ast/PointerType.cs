@@ -4,42 +4,42 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class PointerType : BaseNode
     {
-        private BaseNode _child;
+        private BaseNode Child;
 
-        public PointerType(BaseNode child) : base(NodeType.PointerType)
+        public PointerType(BaseNode Child) : base(NodeType.PointerType)
         {
-            _child = child;
+            this.Child = Child;
         }
 
         public override bool HasRightPart()
         {
-            return _child.HasRightPart();
+            return Child.HasRightPart();
         }
 
-        public override void PrintLeft(TextWriter writer)
+        public override void PrintLeft(TextWriter Writer)
         {
-            _child.PrintLeft(writer);
-            if (_child.IsArray())
+            Child.PrintLeft(Writer);
+            if (Child.IsArray())
             {
-                writer.Write(" ");
+                Writer.Write(" ");
             }
 
-            if (_child.IsArray() || _child.HasFunctions())
+            if (Child.IsArray() || Child.HasFunctions())
             {
-                writer.Write("(");
+                Writer.Write("(");
             }
 
-            writer.Write("*");
+            Writer.Write("*");
         }
 
-        public override void PrintRight(TextWriter writer)
+        public override void PrintRight(TextWriter Writer)
         {
-            if (_child.IsArray() || _child.HasFunctions())
+            if (Child.IsArray() || Child.HasFunctions())
             {
-                writer.Write(")");
+                Writer.Write(")");
             }
 
-            _child.PrintRight(writer);
+            Child.PrintRight(Writer);
         }
     }
 }

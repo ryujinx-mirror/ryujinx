@@ -7,30 +7,30 @@ namespace Ryujinx.HLE.FileSystem.Content
 {
     internal static class LocationHelper
     {
-        public static string GetRealPath(VirtualFileSystem fileSystem, string switchContentPath)
+        public static string GetRealPath(VirtualFileSystem FileSystem, string SwitchContentPath)
         {
-            string basePath = fileSystem.GetBasePath();
+            string BasePath = FileSystem.GetBasePath();
 
-            switch (switchContentPath)
+            switch (SwitchContentPath)
             {
                 case ContentPath.SystemContent:
-                    return Path.Combine(fileSystem.GetBasePath(), SystemNandPath, "Contents");
+                    return Path.Combine(FileSystem.GetBasePath(), SystemNandPath, "Contents");
                 case ContentPath.UserContent:
-                    return Path.Combine(fileSystem.GetBasePath(), UserNandPath, "Contents");
+                    return Path.Combine(FileSystem.GetBasePath(), UserNandPath, "Contents");
                 case ContentPath.SdCardContent:
-                    return Path.Combine(fileSystem.GetSdCardPath(), "Nintendo", "Contents");
+                    return Path.Combine(FileSystem.GetSdCardPath(), "Nintendo", "Contents");
                 case ContentPath.System:
-                    return Path.Combine(basePath, SystemNandPath);
+                    return Path.Combine(BasePath, SystemNandPath);
                 case ContentPath.User:
-                    return Path.Combine(basePath, UserNandPath);
+                    return Path.Combine(BasePath, UserNandPath);
                 default:
-                    throw new NotSupportedException($"Content Path `{switchContentPath}` is not supported.");
+                    throw new NotSupportedException($"Content Path `{SwitchContentPath}` is not supported.");
             }
         }
 
-        public static string GetContentPath(ContentStorageId contentStorageId)
+        public static string GetContentPath(ContentStorageId ContentStorageId)
         {
-            switch (contentStorageId)
+            switch (ContentStorageId)
             {
                 case ContentStorageId.NandSystem:
                     return ContentPath.SystemContent;
@@ -39,13 +39,13 @@ namespace Ryujinx.HLE.FileSystem.Content
                 case ContentStorageId.SdCard:
                     return ContentPath.SdCardContent;
                 default:
-                    throw new NotSupportedException($"Content Storage `{contentStorageId}` is not supported.");
+                    throw new NotSupportedException($"Content Storage `{ContentStorageId}` is not supported.");
             }
         }
 
-        public static string GetContentRoot(StorageId storageId)
+        public static string GetContentRoot(StorageId StorageId)
         {
-            switch (storageId)
+            switch (StorageId)
             {
                 case StorageId.NandSystem:
                     return ContentPath.SystemContent;
@@ -54,15 +54,15 @@ namespace Ryujinx.HLE.FileSystem.Content
                 case StorageId.SdCard:
                     return ContentPath.SdCardContent;
                 default:
-                    throw new NotSupportedException($"Storage Id `{storageId}` is not supported.");
+                    throw new NotSupportedException($"Storage Id `{StorageId}` is not supported.");
             }
         }
 
-        public static StorageId GetStorageId(string contentPathString)
+        public static StorageId GetStorageId(string ContentPathString)
         {
-            string cleanedPath = contentPathString.Split(':')[0];
+            string CleanedPath = ContentPathString.Split(':')[0];
 
-            switch (cleanedPath)
+            switch (CleanedPath)
             {
                 case ContentPath.SystemContent:
                 case ContentPath.System:

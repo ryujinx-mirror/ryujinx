@@ -5,21 +5,21 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 {
     class IServiceCreator : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        private Dictionary<int, ServiceProcessRequest> m_Commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
 
         public IServiceCreator()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
+            m_Commands = new Dictionary<int, ServiceProcessRequest>()
             {
                 { 0, CreateFriendService }
             };
         }
 
-        public static long CreateFriendService(ServiceCtx context)
+        public static long CreateFriendService(ServiceCtx Context)
         {
-            MakeObject(context, new IFriendService());
+            MakeObject(Context, new IFriendService());
 
             return 0;
         }

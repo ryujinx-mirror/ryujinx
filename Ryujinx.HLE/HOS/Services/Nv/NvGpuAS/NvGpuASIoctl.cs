@@ -14,182 +14,182 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
 
         private const int FlagRemapSubRange = 0x100;
 
-        private static ConcurrentDictionary<KProcess, NvGpuASCtx> _asCtxs;
+        private static ConcurrentDictionary<KProcess, NvGpuASCtx> ASCtxs;
 
         static NvGpuASIoctl()
         {
-            _asCtxs = new ConcurrentDictionary<KProcess, NvGpuASCtx>();
+            ASCtxs = new ConcurrentDictionary<KProcess, NvGpuASCtx>();
         }
 
-        public static int ProcessIoctl(ServiceCtx context, int cmd)
+        public static int ProcessIoctl(ServiceCtx Context, int Cmd)
         {
-            switch (cmd & 0xffff)
+            switch (Cmd & 0xffff)
             {
-                case 0x4101: return BindChannel (context);
-                case 0x4102: return AllocSpace  (context);
-                case 0x4103: return FreeSpace   (context);
-                case 0x4105: return UnmapBuffer (context);
-                case 0x4106: return MapBufferEx (context);
-                case 0x4108: return GetVaRegions(context);
-                case 0x4109: return InitializeEx(context);
-                case 0x4114: return Remap       (context, cmd);
+                case 0x4101: return BindChannel (Context);
+                case 0x4102: return AllocSpace  (Context);
+                case 0x4103: return FreeSpace   (Context);
+                case 0x4105: return UnmapBuffer (Context);
+                case 0x4106: return MapBufferEx (Context);
+                case 0x4108: return GetVaRegions(Context);
+                case 0x4109: return InitializeEx(Context);
+                case 0x4114: return Remap       (Context, Cmd);
             }
 
-            throw new NotImplementedException(cmd.ToString("x8"));
+            throw new NotImplementedException(Cmd.ToString("x8"));
         }
 
-        private static int BindChannel(ServiceCtx context)
+        private static int BindChannel(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int AllocSpace(ServiceCtx context)
+        private static int AllocSpace(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvGpuASAllocSpace args = MemoryHelper.Read<NvGpuASAllocSpace>(context.Memory, inputPosition);
+            NvGpuASAllocSpace Args = MemoryHelper.Read<NvGpuASAllocSpace>(Context.Memory, InputPosition);
 
-            NvGpuASCtx asCtx = GetASCtx(context);
+            NvGpuASCtx ASCtx = GetASCtx(Context);
 
-            ulong size = (ulong)args.Pages *
-                         (ulong)args.PageSize;
+            ulong Size = (ulong)Args.Pages *
+                         (ulong)Args.PageSize;
 
-            int result = NvResult.Success;
+            int Result = NvResult.Success;
 
-            lock (asCtx)
+            lock (ASCtx)
             {
                 //Note: When the fixed offset flag is not set,
                 //the Offset field holds the alignment size instead.
-                if ((args.Flags & FlagFixedOffset) != 0)
+                if ((Args.Flags & FlagFixedOffset) != 0)
                 {
-                    args.Offset = asCtx.Vmm.ReserveFixed(args.Offset, (long)size);
+                    Args.Offset = ASCtx.Vmm.ReserveFixed(Args.Offset, (long)Size);
                 }
                 else
                 {
-                    args.Offset = asCtx.Vmm.Reserve((long)size, args.Offset);
+                    Args.Offset = ASCtx.Vmm.Reserve((long)Size, Args.Offset);
                 }
 
-                if (args.Offset < 0)
+                if (Args.Offset < 0)
                 {
-                    args.Offset = 0;
+                    Args.Offset = 0;
 
-                    Logger.PrintWarning(LogClass.ServiceNv, $"Failed to allocate size {size:x16}!");
+                    Logger.PrintWarning(LogClass.ServiceNv, $"Failed to allocate size {Size:x16}!");
 
-                    result = NvResult.OutOfMemory;
+                    Result = NvResult.OutOfMemory;
                 }
                 else
                 {
-                    asCtx.AddReservation(args.Offset, (long)size);
+                    ASCtx.AddReservation(Args.Offset, (long)Size);
                 }
             }
 
-            MemoryHelper.Write(context.Memory, outputPosition, args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
-            return result;
+            return Result;
         }
 
-        private static int FreeSpace(ServiceCtx context)
+        private static int FreeSpace(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvGpuASAllocSpace args = MemoryHelper.Read<NvGpuASAllocSpace>(context.Memory, inputPosition);
+            NvGpuASAllocSpace Args = MemoryHelper.Read<NvGpuASAllocSpace>(Context.Memory, InputPosition);
 
-            NvGpuASCtx asCtx = GetASCtx(context);
+            NvGpuASCtx ASCtx = GetASCtx(Context);
 
-            int result = NvResult.Success;
+            int Result = NvResult.Success;
 
-            lock (asCtx)
+            lock (ASCtx)
             {
-                ulong size = (ulong)args.Pages *
-                             (ulong)args.PageSize;
+                ulong Size = (ulong)Args.Pages *
+                             (ulong)Args.PageSize;
 
-                if (asCtx.RemoveReservation(args.Offset))
+                if (ASCtx.RemoveReservation(Args.Offset))
                 {
-                    asCtx.Vmm.Free(args.Offset, (long)size);
+                    ASCtx.Vmm.Free(Args.Offset, (long)Size);
                 }
                 else
                 {
                     Logger.PrintWarning(LogClass.ServiceNv,
-                        $"Failed to free offset 0x{args.Offset:x16} size 0x{size:x16}!");
+                        $"Failed to free offset 0x{Args.Offset:x16} size 0x{Size:x16}!");
 
-                    result = NvResult.InvalidInput;
+                    Result = NvResult.InvalidInput;
                 }
             }
 
-            return result;
+            return Result;
         }
 
-        private static int UnmapBuffer(ServiceCtx context)
+        private static int UnmapBuffer(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvGpuASUnmapBuffer args = MemoryHelper.Read<NvGpuASUnmapBuffer>(context.Memory, inputPosition);
+            NvGpuASUnmapBuffer Args = MemoryHelper.Read<NvGpuASUnmapBuffer>(Context.Memory, InputPosition);
 
-            NvGpuASCtx asCtx = GetASCtx(context);
+            NvGpuASCtx ASCtx = GetASCtx(Context);
 
-            lock (asCtx)
+            lock (ASCtx)
             {
-                if (asCtx.RemoveMap(args.Offset, out long size))
+                if (ASCtx.RemoveMap(Args.Offset, out long Size))
                 {
-                    if (size != 0)
+                    if (Size != 0)
                     {
-                        asCtx.Vmm.Free(args.Offset, size);
+                        ASCtx.Vmm.Free(Args.Offset, Size);
                     }
                 }
                 else
                 {
-                    Logger.PrintWarning(LogClass.ServiceNv, $"Invalid buffer offset {args.Offset:x16}!");
+                    Logger.PrintWarning(LogClass.ServiceNv, $"Invalid buffer offset {Args.Offset:x16}!");
                 }
             }
 
             return NvResult.Success;
         }
 
-        private static int MapBufferEx(ServiceCtx context)
+        private static int MapBufferEx(ServiceCtx Context)
         {
-            const string mapErrorMsg = "Failed to map fixed buffer with offset 0x{0:x16} and size 0x{1:x16}!";
+            const string MapErrorMsg = "Failed to map fixed buffer with offset 0x{0:x16} and size 0x{1:x16}!";
 
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvGpuASMapBufferEx args = MemoryHelper.Read<NvGpuASMapBufferEx>(context.Memory, inputPosition);
+            NvGpuASMapBufferEx Args = MemoryHelper.Read<NvGpuASMapBufferEx>(Context.Memory, InputPosition);
 
-            NvGpuASCtx asCtx = GetASCtx(context);
+            NvGpuASCtx ASCtx = GetASCtx(Context);
 
-            NvMapHandle map = NvMapIoctl.GetNvMapWithFb(context, args.NvMapHandle);
+            NvMapHandle Map = NvMapIoctl.GetNvMapWithFb(Context, Args.NvMapHandle);
 
-            if (map == null)
+            if (Map == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid NvMap handle 0x{args.NvMapHandle:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid NvMap handle 0x{Args.NvMapHandle:x8}!");
 
                 return NvResult.InvalidInput;
             }
 
-            long pa;
+            long PA;
 
-            if ((args.Flags & FlagRemapSubRange) != 0)
+            if ((Args.Flags & FlagRemapSubRange) != 0)
             {
-                lock (asCtx)
+                lock (ASCtx)
                 {
-                    if (asCtx.TryGetMapPhysicalAddress(args.Offset, out pa))
+                    if (ASCtx.TryGetMapPhysicalAddress(Args.Offset, out PA))
                     {
-                        long va = args.Offset + args.BufferOffset;
+                        long VA = Args.Offset + Args.BufferOffset;
 
-                        pa += args.BufferOffset;
+                        PA += Args.BufferOffset;
 
-                        if (asCtx.Vmm.Map(pa, va, args.MappingSize) < 0)
+                        if (ASCtx.Vmm.Map(PA, VA, Args.MappingSize) < 0)
                         {
-                            string msg = string.Format(mapErrorMsg, va, args.MappingSize);
+                            string Msg = string.Format(MapErrorMsg, VA, Args.MappingSize);
 
-                            Logger.PrintWarning(LogClass.ServiceNv, msg);
+                            Logger.PrintWarning(LogClass.ServiceNv, Msg);
 
                             return NvResult.InvalidInput;
                         }
@@ -198,117 +198,117 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
                     }
                     else
                     {
-                        Logger.PrintWarning(LogClass.ServiceNv, $"Address 0x{args.Offset:x16} not mapped!");
+                        Logger.PrintWarning(LogClass.ServiceNv, $"Address 0x{Args.Offset:x16} not mapped!");
 
                         return NvResult.InvalidInput;
                     }
                 }
             }
 
-            pa = map.Address + args.BufferOffset;
+            PA = Map.Address + Args.BufferOffset;
 
-            long size = args.MappingSize;
+            long Size = Args.MappingSize;
 
-            if (size == 0)
+            if (Size == 0)
             {
-                size = (uint)map.Size;
+                Size = (uint)Map.Size;
             }
 
-            int result = NvResult.Success;
+            int Result = NvResult.Success;
 
-            lock (asCtx)
+            lock (ASCtx)
             {
                 //Note: When the fixed offset flag is not set,
                 //the Offset field holds the alignment size instead.
-                bool vaAllocated = (args.Flags & FlagFixedOffset) == 0;
+                bool VaAllocated = (Args.Flags & FlagFixedOffset) == 0;
 
-                if (!vaAllocated)
+                if (!VaAllocated)
                 {
-                    if (asCtx.ValidateFixedBuffer(args.Offset, size))
+                    if (ASCtx.ValidateFixedBuffer(Args.Offset, Size))
                     {
-                        args.Offset = asCtx.Vmm.Map(pa, args.Offset, size);
+                        Args.Offset = ASCtx.Vmm.Map(PA, Args.Offset, Size);
                     }
                     else
                     {
-                        string msg = string.Format(mapErrorMsg, args.Offset, size);
+                        string Msg = string.Format(MapErrorMsg, Args.Offset, Size);
 
-                        Logger.PrintWarning(LogClass.ServiceNv, msg);
+                        Logger.PrintWarning(LogClass.ServiceNv, Msg);
 
-                        result = NvResult.InvalidInput;
+                        Result = NvResult.InvalidInput;
                     }
                 }
                 else
                 {
-                    args.Offset = asCtx.Vmm.Map(pa, size);
+                    Args.Offset = ASCtx.Vmm.Map(PA, Size);
                 }
 
-                if (args.Offset < 0)
+                if (Args.Offset < 0)
                 {
-                    args.Offset = 0;
+                    Args.Offset = 0;
 
-                    Logger.PrintWarning(LogClass.ServiceNv, $"Failed to map size 0x{size:x16}!");
+                    Logger.PrintWarning(LogClass.ServiceNv, $"Failed to map size 0x{Size:x16}!");
 
-                    result = NvResult.InvalidInput;
+                    Result = NvResult.InvalidInput;
                 }
                 else
                 {
-                    asCtx.AddMap(args.Offset, size, pa, vaAllocated);
+                    ASCtx.AddMap(Args.Offset, Size, PA, VaAllocated);
                 }
             }
 
-            MemoryHelper.Write(context.Memory, outputPosition, args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
-            return result;
+            return Result;
         }
 
-        private static int GetVaRegions(ServiceCtx context)
+        private static int GetVaRegions(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int InitializeEx(ServiceCtx context)
+        private static int InitializeEx(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
             Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
 
             return NvResult.Success;
         }
 
-        private static int Remap(ServiceCtx context, int cmd)
+        private static int Remap(ServiceCtx Context, int Cmd)
         {
-            int count = ((cmd >> 16) & 0xff) / 0x14;
+            int Count = ((Cmd >> 16) & 0xff) / 0x14;
 
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
 
-            for (int index = 0; index < count; index++, inputPosition += 0x14)
+            for (int Index = 0; Index < Count; Index++, InputPosition += 0x14)
             {
-                NvGpuASRemap args = MemoryHelper.Read<NvGpuASRemap>(context.Memory, inputPosition);
+                NvGpuASRemap Args = MemoryHelper.Read<NvGpuASRemap>(Context.Memory, InputPosition);
 
-                NvGpuVmm vmm = GetASCtx(context).Vmm;
+                NvGpuVmm Vmm = GetASCtx(Context).Vmm;
 
-                NvMapHandle map = NvMapIoctl.GetNvMapWithFb(context, args.NvMapHandle);
+                NvMapHandle Map = NvMapIoctl.GetNvMapWithFb(Context, Args.NvMapHandle);
 
-                if (map == null)
+                if (Map == null)
                 {
-                    Logger.PrintWarning(LogClass.ServiceNv, $"Invalid NvMap handle 0x{args.NvMapHandle:x8}!");
+                    Logger.PrintWarning(LogClass.ServiceNv, $"Invalid NvMap handle 0x{Args.NvMapHandle:x8}!");
 
                     return NvResult.InvalidInput;
                 }
 
-                long result = vmm.Map(map.Address, (long)(uint)args.Offset << 16,
-                                                   (long)(uint)args.Pages  << 16);
+                long Result = Vmm.Map(Map.Address, (long)(uint)Args.Offset << 16,
+                                                   (long)(uint)Args.Pages  << 16);
 
-                if (result < 0)
+                if (Result < 0)
                 {
                     Logger.PrintWarning(LogClass.ServiceNv,
-                        $"Page 0x{args.Offset:x16} size 0x{args.Pages:x16} not allocated!");
+                        $"Page 0x{Args.Offset:x16} size 0x{Args.Pages:x16} not allocated!");
 
                     return NvResult.InvalidInput;
                 }
@@ -317,14 +317,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
             return NvResult.Success;
         }
 
-        public static NvGpuASCtx GetASCtx(ServiceCtx context)
+        public static NvGpuASCtx GetASCtx(ServiceCtx Context)
         {
-            return _asCtxs.GetOrAdd(context.Process, (key) => new NvGpuASCtx(context));
+            return ASCtxs.GetOrAdd(Context.Process, (Key) => new NvGpuASCtx(Context));
         }
 
-        public static void UnloadProcess(KProcess process)
+        public static void UnloadProcess(KProcess Process)
         {
-            _asCtxs.TryRemove(process, out _);
+            ASCtxs.TryRemove(Process, out _);
         }
     }
 }

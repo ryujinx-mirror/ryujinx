@@ -12,30 +12,30 @@ namespace Ryujinx.HLE.HOS.Kernel
         public int   Order;
         public int   NextOrder;
 
-        public bool TryCoalesce(int index, int size)
+        public bool TryCoalesce(int Index, int Size)
         {
-            long mask = ((1L << size) - 1) << (index & 63);
+            long Mask = ((1L << Size) - 1) << (Index & 63);
 
-            index /= 64;
+            Index /= 64;
 
-            if ((mask & ~Masks[MaxLevel - 1][index]) != 0)
+            if ((Mask & ~Masks[MaxLevel - 1][Index]) != 0)
             {
                 return false;
             }
 
-            Masks[MaxLevel - 1][index] &= ~mask;
+            Masks[MaxLevel - 1][Index] &= ~Mask;
 
-            for (int level = MaxLevel - 2; level >= 0; level--, index /= 64)
+            for (int Level = MaxLevel - 2; Level >= 0; Level--, Index /= 64)
             {
-                Masks[level][index / 64] &= ~(1L << (index & 63));
+                Masks[Level][Index / 64] &= ~(1L << (Index & 63));
 
-                if (Masks[level][index / 64] != 0)
+                if (Masks[Level][Index / 64] != 0)
                 {
                     break;
                 }
             }
 
-            FreeCount -= (ulong)size;
+            FreeCount -= (ulong)Size;
 
             return true;
         }

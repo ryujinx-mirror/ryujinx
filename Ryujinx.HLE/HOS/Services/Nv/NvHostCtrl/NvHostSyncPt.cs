@@ -9,98 +9,98 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
     {
         public const int SyncptsCount = 192;
 
-        private int[] _counterMin;
-        private int[] _counterMax;
+        private int[] CounterMin;
+        private int[] CounterMax;
 
-        private long _eventMask;
+        private long EventMask;
 
-        private ConcurrentDictionary<EventWaitHandle, int> _waiters;
+        private ConcurrentDictionary<EventWaitHandle, int> Waiters;
 
         public NvHostSyncpt()
         {
-            _counterMin = new int[SyncptsCount];
-            _counterMax = new int[SyncptsCount];
+            CounterMin = new int[SyncptsCount];
+            CounterMax = new int[SyncptsCount];
 
-            _waiters = new ConcurrentDictionary<EventWaitHandle, int>();
+            Waiters = new ConcurrentDictionary<EventWaitHandle, int>();
         }
 
-        public int GetMin(int id)
+        public int GetMin(int Id)
         {
-            return _counterMin[id];
+            return CounterMin[Id];
         }
 
-        public int GetMax(int id)
+        public int GetMax(int Id)
         {
-            return _counterMax[id];
+            return CounterMax[Id];
         }
 
-        public int Increment(int id)
+        public int Increment(int Id)
         {
-            if (((_eventMask >> id) & 1) != 0)
+            if (((EventMask >> Id) & 1) != 0)
             {
-                Interlocked.Increment(ref _counterMax[id]);
+                Interlocked.Increment(ref CounterMax[Id]);
             }
 
-            return IncrementMin(id);
+            return IncrementMin(Id);
         }
 
-        public int IncrementMin(int id)
+        public int IncrementMin(int Id)
         {
-            int value = Interlocked.Increment(ref _counterMin[id]);
+            int Value = Interlocked.Increment(ref CounterMin[Id]);
 
-            WakeUpWaiters(id, value);
+            WakeUpWaiters(Id, Value);
 
-            return value;
+            return Value;
         }
 
-        public int IncrementMax(int id)
+        public int IncrementMax(int Id)
         {
-            return Interlocked.Increment(ref _counterMax[id]);
+            return Interlocked.Increment(ref CounterMax[Id]);
         }
 
-        public void AddWaiter(int threshold, EventWaitHandle waitEvent)
+        public void AddWaiter(int Threshold, EventWaitHandle WaitEvent)
         {
-            if (!_waiters.TryAdd(waitEvent, threshold))
+            if (!Waiters.TryAdd(WaitEvent, Threshold))
             {
                 throw new InvalidOperationException();
             }
         }
 
-        public bool RemoveWaiter(EventWaitHandle waitEvent)
+        public bool RemoveWaiter(EventWaitHandle WaitEvent)
         {
-            return _waiters.TryRemove(waitEvent, out _);
+            return Waiters.TryRemove(WaitEvent, out _);
         }
 
-        private void WakeUpWaiters(int id, int newValue)
+        private void WakeUpWaiters(int Id, int NewValue)
         {
-            foreach (KeyValuePair<EventWaitHandle, int> kv in _waiters)
+            foreach (KeyValuePair<EventWaitHandle, int> KV in Waiters)
             {
-                if (MinCompare(id, newValue, _counterMax[id], kv.Value))
+                if (MinCompare(Id, NewValue, CounterMax[Id], KV.Value))
                 {
-                    kv.Key.Set();
+                    KV.Key.Set();
 
-                    _waiters.TryRemove(kv.Key, out _);
+                    Waiters.TryRemove(KV.Key, out _);
                 }
             }
         }
 
-        public bool MinCompare(int id, int threshold)
+        public bool MinCompare(int Id, int Threshold)
         {
-            return MinCompare(id, _counterMin[id], _counterMax[id], threshold);
+            return MinCompare(Id, CounterMin[Id], CounterMax[Id], Threshold);
         }
 
-        private bool MinCompare(int id, int min, int max, int threshold)
+        private bool MinCompare(int Id, int Min, int Max, int Threshold)
         {
-            int minDiff = min - threshold;
-            int maxDiff = max - threshold;
+            int MinDiff = Min - Threshold;
+            int MaxDiff = Max - Threshold;
 
-            if (((_eventMask >> id) & 1) != 0)
+            if (((EventMask >> Id) & 1) != 0)
             {
-                return minDiff >= 0;
+                return MinDiff >= 0;
             }
             else
             {
-                return (uint)maxDiff >= (uint)minDiff;
+                return (uint)MaxDiff >= (uint)MinDiff;
             }
         }
     }

@@ -11,290 +11,290 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
     {
         private const int FlagNotFreedYet = 1;
 
-        private static ConcurrentDictionary<KProcess, IdDictionary> _maps;
+        private static ConcurrentDictionary<KProcess, IdDictionary> Maps;
 
         static NvMapIoctl()
         {
-            _maps = new ConcurrentDictionary<KProcess, IdDictionary>();
+            Maps = new ConcurrentDictionary<KProcess, IdDictionary>();
         }
 
-        public static int ProcessIoctl(ServiceCtx context, int cmd)
+        public static int ProcessIoctl(ServiceCtx Context, int Cmd)
         {
-            switch (cmd & 0xffff)
+            switch (Cmd & 0xffff)
             {
-                case 0x0101: return Create(context);
-                case 0x0103: return FromId(context);
-                case 0x0104: return Alloc (context);
-                case 0x0105: return Free  (context);
-                case 0x0109: return Param (context);
-                case 0x010e: return GetId (context);
+                case 0x0101: return Create(Context);
+                case 0x0103: return FromId(Context);
+                case 0x0104: return Alloc (Context);
+                case 0x0105: return Free  (Context);
+                case 0x0109: return Param (Context);
+                case 0x010e: return GetId (Context);
             }
 
-            Logger.PrintWarning(LogClass.ServiceNv, $"Unsupported Ioctl command 0x{cmd:x8}!");
+            Logger.PrintWarning(LogClass.ServiceNv, $"Unsupported Ioctl command 0x{Cmd:x8}!");
 
             return NvResult.NotSupported;
         }
 
-        private static int Create(ServiceCtx context)
+        private static int Create(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvMapCreate args = MemoryHelper.Read<NvMapCreate>(context.Memory, inputPosition);
+            NvMapCreate Args = MemoryHelper.Read<NvMapCreate>(Context.Memory, InputPosition);
 
-            if (args.Size == 0)
+            if (Args.Size == 0)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid size 0x{args.Size:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid size 0x{Args.Size:x8}!");
 
                 return NvResult.InvalidInput;
             }
 
-            int size = IntUtils.AlignUp(args.Size, NvGpuVmm.PageSize);
+            int Size = IntUtils.AlignUp(Args.Size, NvGpuVmm.PageSize);
 
-            args.Handle = AddNvMap(context, new NvMapHandle(size));
+            Args.Handle = AddNvMap(Context, new NvMapHandle(Size));
 
-            Logger.PrintInfo(LogClass.ServiceNv, $"Created map {args.Handle} with size 0x{size:x8}!");
+            Logger.PrintInfo(LogClass.ServiceNv, $"Created map {Args.Handle} with size 0x{Size:x8}!");
 
-            MemoryHelper.Write(context.Memory, outputPosition, args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             return NvResult.Success;
         }
 
-        private static int FromId(ServiceCtx context)
+        private static int FromId(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvMapFromId args = MemoryHelper.Read<NvMapFromId>(context.Memory, inputPosition);
+            NvMapFromId Args = MemoryHelper.Read<NvMapFromId>(Context.Memory, InputPosition);
 
-            NvMapHandle map = GetNvMap(context, args.Id);
+            NvMapHandle Map = GetNvMap(Context, Args.Id);
 
-            if (map == null)
+            if (Map == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{args.Handle:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
 
                 return NvResult.InvalidInput;
             }
 
-            map.IncrementRefCount();
+            Map.IncrementRefCount();
 
-            args.Handle = args.Id;
+            Args.Handle = Args.Id;
 
-            MemoryHelper.Write(context.Memory, outputPosition, args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             return NvResult.Success;
         }
 
-        private static int Alloc(ServiceCtx context)
+        private static int Alloc(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvMapAlloc args = MemoryHelper.Read<NvMapAlloc>(context.Memory, inputPosition);
+            NvMapAlloc Args = MemoryHelper.Read<NvMapAlloc>(Context.Memory, InputPosition);
 
-            NvMapHandle map = GetNvMap(context, args.Handle);
+            NvMapHandle Map = GetNvMap(Context, Args.Handle);
 
-            if (map == null)
+            if (Map == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{args.Handle:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
 
                 return NvResult.InvalidInput;
             }
 
-            if ((args.Align & (args.Align - 1)) != 0)
+            if ((Args.Align & (Args.Align - 1)) != 0)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid alignment 0x{args.Align:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid alignment 0x{Args.Align:x8}!");
 
                 return NvResult.InvalidInput;
             }
 
-            if ((uint)args.Align < NvGpuVmm.PageSize)
+            if ((uint)Args.Align < NvGpuVmm.PageSize)
             {
-                args.Align = NvGpuVmm.PageSize;
+                Args.Align = NvGpuVmm.PageSize;
             }
 
-            int result = NvResult.Success;
+            int Result = NvResult.Success;
 
-            if (!map.Allocated)
+            if (!Map.Allocated)
             {
-                map.Allocated = true;
+                Map.Allocated = true;
 
-                map.Align =       args.Align;
-                map.Kind  = (byte)args.Kind;
+                Map.Align =       Args.Align;
+                Map.Kind  = (byte)Args.Kind;
 
-                int size = IntUtils.AlignUp(map.Size, NvGpuVmm.PageSize);
+                int Size = IntUtils.AlignUp(Map.Size, NvGpuVmm.PageSize);
 
-                long address = args.Address;
+                long Address = Args.Address;
 
-                if (address == 0)
+                if (Address == 0)
                 {
                     //When the address is zero, we need to allocate
                     //our own backing memory for the NvMap.
                     //TODO: Is this allocation inside the transfer memory?
-                    result = NvResult.OutOfMemory;
+                    Result = NvResult.OutOfMemory;
                 }
 
-                if (result == NvResult.Success)
+                if (Result == NvResult.Success)
                 {
-                    map.Size    = size;
-                    map.Address = address;
+                    Map.Size    = Size;
+                    Map.Address = Address;
                 }
             }
 
-            MemoryHelper.Write(context.Memory, outputPosition, args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
-            return result;
+            return Result;
         }
 
-        private static int Free(ServiceCtx context)
+        private static int Free(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvMapFree args = MemoryHelper.Read<NvMapFree>(context.Memory, inputPosition);
+            NvMapFree Args = MemoryHelper.Read<NvMapFree>(Context.Memory, InputPosition);
 
-            NvMapHandle map = GetNvMap(context, args.Handle);
+            NvMapHandle Map = GetNvMap(Context, Args.Handle);
 
-            if (map == null)
+            if (Map == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{args.Handle:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
 
                 return NvResult.InvalidInput;
             }
 
-            if (map.DecrementRefCount() <= 0)
+            if (Map.DecrementRefCount() <= 0)
             {
-                DeleteNvMap(context, args.Handle);
+                DeleteNvMap(Context, Args.Handle);
 
-                Logger.PrintInfo(LogClass.ServiceNv, $"Deleted map {args.Handle}!");
+                Logger.PrintInfo(LogClass.ServiceNv, $"Deleted map {Args.Handle}!");
 
-                args.Address = map.Address;
-                args.Flags   = 0;
+                Args.Address = Map.Address;
+                Args.Flags   = 0;
             }
             else
             {
-                args.Address = 0;
-                args.Flags   = FlagNotFreedYet;
+                Args.Address = 0;
+                Args.Flags   = FlagNotFreedYet;
             }
 
-            args.Size = map.Size;
+            Args.Size = Map.Size;
 
-            MemoryHelper.Write(context.Memory, outputPosition, args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             return NvResult.Success;
         }
 
-        private static int Param(ServiceCtx context)
+        private static int Param(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvMapParam args = MemoryHelper.Read<NvMapParam>(context.Memory, inputPosition);
+            NvMapParam Args = MemoryHelper.Read<NvMapParam>(Context.Memory, InputPosition);
 
-            NvMapHandle map = GetNvMap(context, args.Handle);
+            NvMapHandle Map = GetNvMap(Context, Args.Handle);
 
-            if (map == null)
+            if (Map == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{args.Handle:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
 
                 return NvResult.InvalidInput;
             }
 
-            switch ((NvMapHandleParam)args.Param)
+            switch ((NvMapHandleParam)Args.Param)
             {
-                case NvMapHandleParam.Size:  args.Result = map.Size;   break;
-                case NvMapHandleParam.Align: args.Result = map.Align;  break;
-                case NvMapHandleParam.Heap:  args.Result = 0x40000000; break;
-                case NvMapHandleParam.Kind:  args.Result = map.Kind;   break;
-                case NvMapHandleParam.Compr: args.Result = 0;          break;
+                case NvMapHandleParam.Size:  Args.Result = Map.Size;   break;
+                case NvMapHandleParam.Align: Args.Result = Map.Align;  break;
+                case NvMapHandleParam.Heap:  Args.Result = 0x40000000; break;
+                case NvMapHandleParam.Kind:  Args.Result = Map.Kind;   break;
+                case NvMapHandleParam.Compr: Args.Result = 0;          break;
 
                 //Note: Base is not supported and returns an error.
                 //Any other value also returns an error.
                 default: return NvResult.InvalidInput;
             }
 
-            MemoryHelper.Write(context.Memory, outputPosition, args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             return NvResult.Success;
         }
 
-        private static int GetId(ServiceCtx context)
+        private static int GetId(ServiceCtx Context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long InputPosition  = Context.Request.GetBufferType0x21().Position;
+            long OutputPosition = Context.Request.GetBufferType0x22().Position;
 
-            NvMapGetId args = MemoryHelper.Read<NvMapGetId>(context.Memory, inputPosition);
+            NvMapGetId Args = MemoryHelper.Read<NvMapGetId>(Context.Memory, InputPosition);
 
-            NvMapHandle map = GetNvMap(context, args.Handle);
+            NvMapHandle Map = GetNvMap(Context, Args.Handle);
 
-            if (map == null)
+            if (Map == null)
             {
-                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{args.Handle:x8}!");
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid handle 0x{Args.Handle:x8}!");
 
                 return NvResult.InvalidInput;
             }
 
-            args.Id = args.Handle;
+            Args.Id = Args.Handle;
 
-            MemoryHelper.Write(context.Memory, outputPosition, args);
+            MemoryHelper.Write(Context.Memory, OutputPosition, Args);
 
             return NvResult.Success;
         }
 
-        private static int AddNvMap(ServiceCtx context, NvMapHandle map)
+        private static int AddNvMap(ServiceCtx Context, NvMapHandle Map)
         {
-            IdDictionary dict = _maps.GetOrAdd(context.Process, (key) =>
+            IdDictionary Dict = Maps.GetOrAdd(Context.Process, (Key) =>
             {
-                IdDictionary newDict = new IdDictionary();
+                IdDictionary NewDict = new IdDictionary();
 
-                newDict.Add(0, new NvMapHandle());
+                NewDict.Add(0, new NvMapHandle());
 
-                return newDict;
+                return NewDict;
             });
 
-            return dict.Add(map);
+            return Dict.Add(Map);
         }
 
-        private static bool DeleteNvMap(ServiceCtx context, int handle)
+        private static bool DeleteNvMap(ServiceCtx Context, int Handle)
         {
-            if (_maps.TryGetValue(context.Process, out IdDictionary dict))
+            if (Maps.TryGetValue(Context.Process, out IdDictionary Dict))
             {
-                return dict.Delete(handle) != null;
+                return Dict.Delete(Handle) != null;
             }
 
             return false;
         }
 
-        public static void InitializeNvMap(ServiceCtx context)
+        public static void InitializeNvMap(ServiceCtx Context)
         {
-            IdDictionary dict = _maps.GetOrAdd(context.Process, (key) =>new IdDictionary());
+            IdDictionary Dict = Maps.GetOrAdd(Context.Process, (Key) =>new IdDictionary());
 
-            dict.Add(0, new NvMapHandle());
+            Dict.Add(0, new NvMapHandle());
         }
 
-        public static NvMapHandle GetNvMapWithFb(ServiceCtx context, int handle)
+        public static NvMapHandle GetNvMapWithFb(ServiceCtx Context, int Handle)
         {
-            if (_maps.TryGetValue(context.Process, out IdDictionary dict))
+            if (Maps.TryGetValue(Context.Process, out IdDictionary Dict))
             {
-                return dict.GetData<NvMapHandle>(handle);
+                return Dict.GetData<NvMapHandle>(Handle);
             }
 
             return null;
         }
 
-        public static NvMapHandle GetNvMap(ServiceCtx context, int handle)
+        public static NvMapHandle GetNvMap(ServiceCtx Context, int Handle)
         {
-            if (handle != 0 && _maps.TryGetValue(context.Process, out IdDictionary dict))
+            if (Handle != 0 && Maps.TryGetValue(Context.Process, out IdDictionary Dict))
             {
-                return dict.GetData<NvMapHandle>(handle);
+                return Dict.GetData<NvMapHandle>(Handle);
             }
 
             return null;
         }
 
-        public static void UnloadProcess(KProcess process)
+        public static void UnloadProcess(KProcess Process)
         {
-            _maps.TryRemove(process, out _);
+            Maps.TryRemove(Process, out _);
         }
     }
 }

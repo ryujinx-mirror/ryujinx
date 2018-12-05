@@ -13,26 +13,26 @@ namespace Ryujinx.HLE.HOS.Kernel
         public int DeviceRefCount { get; set; }
 
         public KMemoryBlock(
-            ulong            baseAddress,
-            ulong            pagesCount,
-            MemoryState      state,
-            MemoryPermission permission,
-            MemoryAttribute  attribute)
+            ulong            BaseAddress,
+            ulong            PagesCount,
+            MemoryState      State,
+            MemoryPermission Permission,
+            MemoryAttribute  Attribute)
         {
-            BaseAddress = baseAddress;
-            PagesCount  = pagesCount;
-            State       = state;
-            Attribute   = attribute;
-            Permission  = permission;
+            this.BaseAddress = BaseAddress;
+            this.PagesCount  = PagesCount;
+            this.State       = State;
+            this.Attribute   = Attribute;
+            this.Permission  = Permission;
         }
 
         public KMemoryInfo GetInfo()
         {
-            ulong size = PagesCount * KMemoryManager.PageSize;
+            ulong Size = PagesCount * KMemoryManager.PageSize;
 
             return new KMemoryInfo(
                 BaseAddress,
-                size,
+                Size,
                 State,
                 Permission,
                 Attribute,
