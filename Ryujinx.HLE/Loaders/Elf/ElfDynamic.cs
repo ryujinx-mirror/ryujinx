@@ -6,10 +6,10 @@ namespace Ryujinx.HLE.Loaders.Elf
 
         public long Value { get; private set; }
 
-        public ElfDynamic(ElfDynamicTag Tag, long Value)
+        public ElfDynamic(ElfDynamicTag tag, long value)
         {
-            this.Tag   = Tag;
-            this.Value = Value;
+            Tag   = tag;
+            Value = value;
         }
     }
 }

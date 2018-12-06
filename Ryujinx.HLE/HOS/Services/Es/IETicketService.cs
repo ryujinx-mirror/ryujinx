@@ -1,20 +1,19 @@
 ﻿using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Es
 {
-    class IETicketService : IpcService
+    class IeTicketService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private bool IsInitialized;
+        private bool _isInitialized;
 
-        public IETicketService()
+        public IeTicketService()
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
 
             };

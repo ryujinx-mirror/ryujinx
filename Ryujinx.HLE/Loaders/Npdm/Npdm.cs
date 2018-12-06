@@ -21,52 +21,52 @@ namespace Ryujinx.HLE.Loaders.Npdm
         public string TitleName           { get; private set; }
         public byte[] ProductCode         { get; private set; }
 
-        public ACI0 ACI0 { get; private set; }
-        public ACID ACID { get; private set; }
+        public Aci0 Aci0 { get; private set; }
+        public Acid Acid { get; private set; }
 
-        public Npdm(Stream Stream)
+        public Npdm(Stream stream)
         {
-            BinaryReader Reader = new BinaryReader(Stream);
+            BinaryReader reader = new BinaryReader(stream);
 
-            if (Reader.ReadInt32() != MetaMagic)
+            if (reader.ReadInt32() != MetaMagic)
             {
                 throw new InvalidNpdmException("NPDM Stream doesn't contain NPDM file!");
             }
 
-            Reader.ReadInt64();
+            reader.ReadInt64();
 
-            MmuFlags = Reader.ReadByte();
+            MmuFlags = reader.ReadByte();
 
             Is64Bits = (MmuFlags & 1) != 0;
 
-            Reader.ReadByte();
+            reader.ReadByte();
 
-            MainThreadPriority = Reader.ReadByte();
-            DefaultCpuId       = Reader.ReadByte();
+            MainThreadPriority = reader.ReadByte();
+            DefaultCpuId       = reader.ReadByte();
 
-            Reader.ReadInt32();
+            reader.ReadInt32();
 
-            PersonalMmHeapSize = Reader.ReadInt32();
+            PersonalMmHeapSize = reader.ReadInt32();
 
-            ProcessCategory = Reader.ReadInt32();
+            ProcessCategory = reader.ReadInt32();
 
-            MainThreadStackSize = Reader.ReadInt32();
+            MainThreadStackSize = reader.ReadInt32();
 
-            byte[] TempTitleName = Reader.ReadBytes(0x10);
+            byte[] tempTitleName = reader.ReadBytes(0x10);
 
-            TitleName = Encoding.UTF8.GetString(TempTitleName, 0, TempTitleName.Length).Trim('\0');
+            TitleName = Encoding.UTF8.GetString(tempTitleName, 0, tempTitleName.Length).Trim('\0');
 
-            ProductCode = Reader.ReadBytes(0x10);
+            ProductCode = reader.ReadBytes(0x10);
 
-            Stream.Seek(0x30, SeekOrigin.Current);
+            stream.Seek(0x30, SeekOrigin.Current);
 
-            int ACI0Offset = Reader.ReadInt32();
-            int ACI0Size   = Reader.ReadInt32();
-            int ACIDOffset = Reader.ReadInt32();
-            int ACIDSize   = Reader.ReadInt32();
+            int aci0Offset = reader.ReadInt32();
+            int aci0Size   = reader.ReadInt32();
+            int acidOffset = reader.ReadInt32();
+            int acidSize   = reader.ReadInt32();
 
-            ACI0 = new ACI0(Stream, ACI0Offset);
-            ACID = new ACID(Stream, ACIDOffset);
+            Aci0 = new Aci0(stream, aci0Offset);
+            Acid = new Acid(stream, acidOffset);
         }
     }
 }

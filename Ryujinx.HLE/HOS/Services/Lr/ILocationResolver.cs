@@ -12,15 +12,15 @@ namespace Ryujinx.HLE.HOS.Services.Lr
 {
     class ILocationResolver : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private StorageId StorageId;
+        private StorageId _storageId;
 
-        public ILocationResolver(StorageId StorageId)
+        public ILocationResolver(StorageId storageId)
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0,  ResolveProgramPath                      },
                 { 1,  RedirectProgramPath                     },
@@ -40,103 +40,103 @@ namespace Ryujinx.HLE.HOS.Services.Lr
                 { 15, DeleteInfoHtmlNcaPath                   }
             };
 
-            this.StorageId = StorageId;
+            _storageId = storageId;
         }
 
         // DeleteInfoHtmlNcaPath()
-        public long DeleteInfoHtmlNcaPath(ServiceCtx Context)
+        public long DeleteInfoHtmlNcaPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            DeleteContentPath(Context, TitleId, ContentType.Manual);
+            DeleteContentPath(context, titleId, ContentType.Manual);
 
             return 0;
         }
 
         // DeleteDocHtmlNcaPath()
-        public long DeleteDocHtmlNcaPath(ServiceCtx Context)
+        public long DeleteDocHtmlNcaPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            DeleteContentPath(Context, TitleId, ContentType.Manual);
+            DeleteContentPath(context, titleId, ContentType.Manual);
 
             return 0;
         }
 
         // DeleteControlNcaPath()
-        public long DeleteControlNcaPath(ServiceCtx Context)
+        public long DeleteControlNcaPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            DeleteContentPath(Context, TitleId, ContentType.Control);
+            DeleteContentPath(context, titleId, ContentType.Control);
 
             return 0;
         }
 
         // DeleteProgramNcaPath()
-        public long DeleteProgramNcaPath(ServiceCtx Context)
+        public long DeleteProgramNcaPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            DeleteContentPath(Context, TitleId, ContentType.Program);
+            DeleteContentPath(context, titleId, ContentType.Program);
 
             return 0;
         }
 
         // ClearLocationResolver2()
-        public long ClearLocationResolver2(ServiceCtx Context)
+        public long ClearLocationResolver2(ServiceCtx context)
         {
-            Context.Device.System.ContentManager.RefreshEntries(StorageId, 1);
+            context.Device.System.ContentManager.RefreshEntries(_storageId, 1);
 
             return 0;
         }
 
         // SetProgramNcaPath2()
-        public long SetProgramNcaPath2(ServiceCtx Context)
+        public long SetProgramNcaPath2(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            RedirectPath(Context, TitleId, 1, ContentType.Program);
+            RedirectPath(context, titleId, 1, ContentType.Program);
 
             return 0;
         }
 
         // RedirectApplicationControlPath()
-        public long RedirectApplicationControlPath(ServiceCtx Context)
+        public long RedirectApplicationControlPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            RedirectPath(Context, TitleId, 1, ContentType.Control);
+            RedirectPath(context, titleId, 1, ContentType.Control);
 
             return 0;
         }
 
         // RedirectApplicationHtmlDocumentPath()
-        public long RedirectApplicationHtmlDocumentPath(ServiceCtx Context)
+        public long RedirectApplicationHtmlDocumentPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            RedirectPath(Context, TitleId, 1, ContentType.Manual);
+            RedirectPath(context, titleId, 1, ContentType.Manual);
 
             return 0;
         }
 
         // RedirectApplicationLegalInformationPath()
-        public long RedirectApplicationLegalInformationPath(ServiceCtx Context)
+        public long RedirectApplicationLegalInformationPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            RedirectPath(Context, TitleId, 1, ContentType.Manual);
+            RedirectPath(context, titleId, 1, ContentType.Manual);
 
             return 0;
         }
 
         // ResolveDataPath()
-        public long ResolveDataPath(ServiceCtx Context)
+        public long ResolveDataPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            if (ResolvePath(Context, TitleId, ContentType.Data) || ResolvePath(Context, TitleId, ContentType.AocData))
+            if (ResolvePath(context, titleId, ContentType.Data) || ResolvePath(context, titleId, ContentType.AocData))
             {
                 return 0;
             }
@@ -147,11 +147,11 @@ namespace Ryujinx.HLE.HOS.Services.Lr
         }
 
         // ResolveApplicationHtmlDocumentPath()
-        public long ResolveApplicationHtmlDocumentPath(ServiceCtx Context)
+        public long ResolveApplicationHtmlDocumentPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            if (ResolvePath(Context, TitleId, ContentType.Manual))
+            if (ResolvePath(context, titleId, ContentType.Manual))
             {
                 return 0;
             }
@@ -162,11 +162,11 @@ namespace Ryujinx.HLE.HOS.Services.Lr
         }
 
         // ResolveApplicationLegalInformationPath()
-        public long ResolveApplicationLegalInformationPath(ServiceCtx Context)
+        public long ResolveApplicationLegalInformationPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            if (ResolvePath(Context, TitleId, ContentType.Manual))
+            if (ResolvePath(context, titleId, ContentType.Manual))
             {
                 return 0;
             }
@@ -177,11 +177,11 @@ namespace Ryujinx.HLE.HOS.Services.Lr
         }
 
         // ResolveApplicationControlPath()
-        public long ResolveApplicationControlPath(ServiceCtx Context)
+        public long ResolveApplicationControlPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            if (ResolvePath(Context, TitleId, ContentType.Control))
+            if (ResolvePath(context, titleId, ContentType.Control))
             {
                 return 0;
             }
@@ -192,29 +192,29 @@ namespace Ryujinx.HLE.HOS.Services.Lr
         }
 
         // RedirectProgramPath()
-        public long RedirectProgramPath(ServiceCtx Context)
+        public long RedirectProgramPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            RedirectPath(Context, TitleId, 0, ContentType.Program);
+            RedirectPath(context, titleId, 0, ContentType.Program);
 
             return 0;
         }
 
         // Refresh()
-        public long Refresh(ServiceCtx Context)
+        public long Refresh(ServiceCtx context)
         {
-            Context.Device.System.ContentManager.RefreshEntries(StorageId, 1);
+            context.Device.System.ContentManager.RefreshEntries(_storageId, 1);
 
             return 0;
         }
 
         // ResolveProgramPath()
-        public long ResolveProgramPath(ServiceCtx Context)
+        public long ResolveProgramPath(ServiceCtx context)
         {
-            long TitleId = Context.RequestData.ReadInt64();
+            long titleId = context.RequestData.ReadInt64();
 
-            if (ResolvePath(Context, TitleId, ContentType.Program))
+            if (ResolvePath(context, titleId, ContentType.Program))
             {
                 return 0;
             }
@@ -224,27 +224,27 @@ namespace Ryujinx.HLE.HOS.Services.Lr
             }
         }
 
-        private void RedirectPath(ServiceCtx Context, long TitleId, int Flag, ContentType ContentType)
+        private void RedirectPath(ServiceCtx context, long titleId, int flag, ContentType contentType)
         {
-            string        ContentPath = ReadUtf8String(Context);
-            LocationEntry NewLocation = new LocationEntry(ContentPath, Flag, TitleId, ContentType);
+            string        contentPath = ReadUtf8String(context);
+            LocationEntry newLocation = new LocationEntry(contentPath, flag, titleId, contentType);
 
-            Context.Device.System.ContentManager.RedirectLocation(NewLocation, StorageId);
+            context.Device.System.ContentManager.RedirectLocation(newLocation, _storageId);
         }
 
-        private bool ResolvePath(ServiceCtx Context, long TitleId,ContentType ContentType)
+        private bool ResolvePath(ServiceCtx context, long titleId,ContentType contentType)
         {
-            ContentManager ContentManager = Context.Device.System.ContentManager;
-            string         ContentPath    = ContentManager.GetInstalledContentPath(TitleId, StorageId, ContentType.Program);
+            ContentManager contentManager = context.Device.System.ContentManager;
+            string         contentPath    = contentManager.GetInstalledContentPath(titleId, _storageId, ContentType.Program);
 
-            if (!string.IsNullOrWhiteSpace(ContentPath))
+            if (!string.IsNullOrWhiteSpace(contentPath))
             {
-                long Position = Context.Request.RecvListBuff[0].Position;
-                long Size     = Context.Request.RecvListBuff[0].Size;
+                long position = context.Request.RecvListBuff[0].Position;
+                long size     = context.Request.RecvListBuff[0].Size;
 
-                byte[] ContentPathBuffer = Encoding.UTF8.GetBytes(ContentPath);
+                byte[] contentPathBuffer = Encoding.UTF8.GetBytes(contentPath);
 
-                Context.Memory.WriteBytes(Position, ContentPathBuffer);
+                context.Memory.WriteBytes(position, contentPathBuffer);
             }
             else
             {
@@ -254,12 +254,12 @@ namespace Ryujinx.HLE.HOS.Services.Lr
             return true;
         }
 
-        private void DeleteContentPath(ServiceCtx Context, long TitleId, ContentType ContentType)
+        private void DeleteContentPath(ServiceCtx context, long titleId, ContentType contentType)
         {
-            ContentManager ContentManager = Context.Device.System.ContentManager;
-            string         ContentPath    = ContentManager.GetInstalledContentPath(TitleId, StorageId, ContentType.Manual);
+            ContentManager contentManager = context.Device.System.ContentManager;
+            string         contentPath    = contentManager.GetInstalledContentPath(titleId, _storageId, ContentType.Manual);
 
-            ContentManager.ClearEntry(TitleId, ContentType.Manual, StorageId);
+            contentManager.ClearEntry(titleId, ContentType.Manual, _storageId);
         }
     }
 }

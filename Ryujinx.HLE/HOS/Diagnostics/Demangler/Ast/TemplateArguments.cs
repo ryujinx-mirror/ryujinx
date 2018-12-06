@@ -5,22 +5,22 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class TemplateArguments : NodeArray
     {
-        public TemplateArguments(List<BaseNode> Nodes) : base(Nodes, NodeType.TemplateArguments) { }
+        public TemplateArguments(List<BaseNode> nodes) : base(nodes, NodeType.TemplateArguments) { }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
             string Params = string.Join<BaseNode>(", ", Nodes.ToArray());
 
-            Writer.Write("<");
+            writer.Write("<");
 
-            Writer.Write(Params);
+            writer.Write(Params);
 
             if (Params.EndsWith(">"))
             {
-                Writer.Write(" ");
+                writer.Write(" ");
             }
 
-            Writer.Write(">");
+            writer.Write(">");
         }
     }
 }

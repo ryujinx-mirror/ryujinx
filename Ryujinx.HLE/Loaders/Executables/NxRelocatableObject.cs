@@ -5,12 +5,12 @@ namespace Ryujinx.HLE.Loaders.Executables
     class NxRelocatableObject : IExecutable
     {
         public byte[] Text { get; private set; }
-        public byte[] RO   { get; private set; }
+        public byte[] Ro   { get; private set; }
         public byte[] Data { get; private set; }
 
         public int Mod0Offset { get; private set; }
         public int TextOffset { get; private set; }
-        public int ROOffset   { get; private set; }
+        public int RoOffset   { get; private set; }
         public int DataOffset { get; private set; }
         public int BssSize    { get; private set; }
 
@@ -19,46 +19,46 @@ namespace Ryujinx.HLE.Loaders.Executables
         public ulong SourceAddress { get; private set; }
         public ulong BssAddress    { get; private set; }
 
-        public NxRelocatableObject(Stream Input, ulong SourceAddress = 0, ulong BssAddress = 0)
+        public NxRelocatableObject(Stream input, ulong sourceAddress = 0, ulong bssAddress = 0)
         {
-            this.SourceAddress = SourceAddress;
-            this.BssAddress    = BssAddress;
+            SourceAddress = sourceAddress;
+            BssAddress    = bssAddress;
 
-            BinaryReader Reader = new BinaryReader(Input);
+            BinaryReader reader = new BinaryReader(input);
 
-            Input.Seek(4, SeekOrigin.Begin);
+            input.Seek(4, SeekOrigin.Begin);
 
-            int Mod0Offset = Reader.ReadInt32();
-            int Padding8   = Reader.ReadInt32();
-            int Paddingc   = Reader.ReadInt32();
-            int NroMagic   = Reader.ReadInt32();
-            int Unknown14  = Reader.ReadInt32();
-            int FileSize   = Reader.ReadInt32();
-            int Unknown1c  = Reader.ReadInt32();
-            int TextOffset = Reader.ReadInt32();
-            int TextSize   = Reader.ReadInt32();
-            int ROOffset   = Reader.ReadInt32();
-            int ROSize     = Reader.ReadInt32();
-            int DataOffset = Reader.ReadInt32();
-            int DataSize   = Reader.ReadInt32();
-            int BssSize    = Reader.ReadInt32();
+            int mod0Offset = reader.ReadInt32();
+            int padding8   = reader.ReadInt32();
+            int paddingC   = reader.ReadInt32();
+            int nroMagic   = reader.ReadInt32();
+            int unknown14  = reader.ReadInt32();
+            int fileSize   = reader.ReadInt32();
+            int unknown1C  = reader.ReadInt32();
+            int textOffset = reader.ReadInt32();
+            int textSize   = reader.ReadInt32();
+            int roOffset   = reader.ReadInt32();
+            int roSize     = reader.ReadInt32();
+            int dataOffset = reader.ReadInt32();
+            int dataSize   = reader.ReadInt32();
+            int bssSize    = reader.ReadInt32();
 
-            this.Mod0Offset = Mod0Offset;
-            this.TextOffset = TextOffset;
-            this.ROOffset   = ROOffset;
-            this.DataOffset = DataOffset;
-            this.BssSize    = BssSize;
+            Mod0Offset = mod0Offset;
+            TextOffset = textOffset;
+            RoOffset   = roOffset;
+            DataOffset = dataOffset;
+            BssSize    = bssSize;
 
-            byte[] Read(long Position, int Size)
+            byte[] Read(long position, int size)
             {
-                Input.Seek(Position, SeekOrigin.Begin);
+                input.Seek(position, SeekOrigin.Begin);
 
-                return Reader.ReadBytes(Size);
+                return reader.ReadBytes(size);
             }
 
-            Text = Read(TextOffset, TextSize);
-            RO   = Read(ROOffset,   ROSize);
-            Data = Read(DataOffset, DataSize);
+            Text = Read(textOffset, textSize);
+            Ro   = Read(roOffset,   roSize);
+            Data = Read(dataOffset, dataSize);
         }
     }
 }

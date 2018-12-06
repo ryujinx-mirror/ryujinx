@@ -5,21 +5,21 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
 {
     class IUserManager : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
         public IUserManager()
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0, GetUserInterface }
             };
         }
 
-        public long GetUserInterface(ServiceCtx Context)
+        public long GetUserInterface(ServiceCtx context)
         {
-            MakeObject(Context, new IUser(Context.Device.System));
+            MakeObject(context, new IUser(context.Device.System));
 
             return 0;
         }

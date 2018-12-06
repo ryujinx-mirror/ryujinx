@@ -7,10 +7,10 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public ulong EndAddr => Address + Size;
 
-        public KMemoryArrangeRegion(ulong Address, ulong Size)
+        public KMemoryArrangeRegion(ulong address, ulong size)
         {
-            this.Address = Address;
-            this.Size    = Size;
+            Address = address;
+            Size    = size;
         }
     }
 }

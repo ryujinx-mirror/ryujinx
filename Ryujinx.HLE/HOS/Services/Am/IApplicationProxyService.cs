@@ -5,21 +5,21 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class IApplicationProxyService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
         public IApplicationProxyService()
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0, OpenApplicationProxy }
             };
         }
 
-        public long OpenApplicationProxy(ServiceCtx Context)
+        public long OpenApplicationProxy(ServiceCtx context)
         {
-            MakeObject(Context, new IApplicationProxy());
+            MakeObject(context, new IApplicationProxy());
 
             return 0;
         }

@@ -5,25 +5,25 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class InitListExpression : BaseNode
     {
-        private BaseNode       TypeNode;
-        private List<BaseNode> Nodes;
+        private BaseNode       _typeNode;
+        private List<BaseNode> _nodes;
 
-        public InitListExpression(BaseNode TypeNode, List<BaseNode> Nodes) : base(NodeType.InitListExpression)
+        public InitListExpression(BaseNode typeNode, List<BaseNode> nodes) : base(NodeType.InitListExpression)
         {
-            this.TypeNode = TypeNode;
-            this.Nodes    = Nodes;
+            _typeNode = typeNode;
+            _nodes    = nodes;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            if (TypeNode != null)
+            if (_typeNode != null)
             {
-                TypeNode.Print(Writer);
+                _typeNode.Print(writer);
             }
 
-            Writer.Write("{");
-            Writer.Write(string.Join<BaseNode>(", ", Nodes.ToArray()));
-            Writer.Write("}");
+            writer.Write("{");
+            writer.Write(string.Join<BaseNode>(", ", _nodes.ToArray()));
+            writer.Write("}");
         }
     }
 }

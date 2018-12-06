@@ -4,9 +4,9 @@ namespace Ryujinx.HLE.HOS.Services.Vi
     {
         public string Name { get; private set; }
 
-        public Display(string Name)
+        public Display(string name)
         {
-            this.Name = Name;
+            Name = name;
         }
     }
 }

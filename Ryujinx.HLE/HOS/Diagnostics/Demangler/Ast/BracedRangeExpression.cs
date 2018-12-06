@@ -4,31 +4,31 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class BracedRangeExpression : BaseNode
     {
-        private BaseNode FirstNode;
-        private BaseNode LastNode;
-        private BaseNode Expression;
+        private BaseNode _firstNode;
+        private BaseNode _lastNode;
+        private BaseNode _expression;
 
-        public BracedRangeExpression(BaseNode FirstNode, BaseNode LastNode, BaseNode Expression) : base(NodeType.BracedRangeExpression)
+        public BracedRangeExpression(BaseNode firstNode, BaseNode lastNode, BaseNode expression) : base(NodeType.BracedRangeExpression)
         {
-            this.FirstNode  = FirstNode;
-            this.LastNode   = LastNode;
-            this.Expression = Expression;
+            _firstNode  = firstNode;
+            _lastNode   = lastNode;
+            _expression = expression;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write("[");
-            FirstNode.Print(Writer);
-            Writer.Write(" ... ");
-            LastNode.Print(Writer);
-            Writer.Write("]");
+            writer.Write("[");
+            _firstNode.Print(writer);
+            writer.Write(" ... ");
+            _lastNode.Print(writer);
+            writer.Write("]");
 
-            if (!Expression.GetType().Equals(NodeType.BracedExpression) || !Expression.GetType().Equals(NodeType.BracedRangeExpression))
+            if (!_expression.GetType().Equals(NodeType.BracedExpression) || !_expression.GetType().Equals(NodeType.BracedRangeExpression))
             {
-                Writer.Write(" = ");
+                writer.Write(" = ");
             }
 
-            Expression.Print(Writer);
+            _expression.Print(writer);
         }
     }
 }

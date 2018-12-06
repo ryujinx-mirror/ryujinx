@@ -16,10 +16,10 @@ namespace Ryujinx.HLE.HOS.SystemState
         public OpenCloseState AccountState    { get; set; }
         public OpenCloseState OnlinePlayState { get; set; }
 
-        public UserProfile(UInt128 Uuid, string Name)
+        public UserProfile(UInt128 uuid, string name)
         {
-            this.Uuid = Uuid;
-            this.Name = Name;
+            Uuid = uuid;
+            Name = name;
 
             LastModifiedTimestamp = 0;
 

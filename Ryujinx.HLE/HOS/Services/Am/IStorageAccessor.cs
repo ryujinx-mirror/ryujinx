@@ -6,76 +6,76 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class IStorageAccessor : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private IStorage Storage;
+        private IStorage _storage;
 
-        public IStorageAccessor(IStorage Storage)
+        public IStorageAccessor(IStorage storage)
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0,  GetSize },
                 { 10, Write   },
                 { 11, Read    }
             };
 
-            this.Storage = Storage;
+            _storage = storage;
         }
 
-        public long GetSize(ServiceCtx Context)
+        public long GetSize(ServiceCtx context)
         {
-            Context.ResponseData.Write((long)Storage.Data.Length);
+            context.ResponseData.Write((long)_storage.Data.Length);
 
             return 0;
         }
 
-        public long Write(ServiceCtx Context)
+        public long Write(ServiceCtx context)
         {
             //TODO: Error conditions.
-            long WritePosition = Context.RequestData.ReadInt64();
+            long writePosition = context.RequestData.ReadInt64();
 
-            (long Position, long Size) = Context.Request.GetBufferType0x21();
+            (long position, long size) = context.Request.GetBufferType0x21();
 
-            if (Size > 0)
+            if (size > 0)
             {
-                long MaxSize = Storage.Data.Length - WritePosition;
+                long maxSize = _storage.Data.Length - writePosition;
 
-                if (Size > MaxSize)
+                if (size > maxSize)
                 {
-                    Size = MaxSize;
+                    size = maxSize;
                 }
 
-                byte[] Data = Context.Memory.ReadBytes(Position, Size);
+                byte[] data = context.Memory.ReadBytes(position, size);
 
-                Buffer.BlockCopy(Data, 0, Storage.Data, (int)WritePosition, (int)Size);
+                Buffer.BlockCopy(data, 0, _storage.Data, (int)writePosition, (int)size);
             }
 
             return 0;
         }
 
-        public long Read(ServiceCtx Context)
+        public long Read(ServiceCtx context)
         {
             //TODO: Error conditions.
-            long ReadPosition = Context.RequestData.ReadInt64();
+            long readPosition = context.RequestData.ReadInt64();
 
-            (long Position, long Size) = Context.Request.GetBufferType0x22();
+            (long position, long size) = context.Request.GetBufferType0x22();
 
-            byte[] Data;
+            byte[] data;
 
-            if (Storage.Data.Length > Size)
+            if (_storage.Data.Length > size)
             {
-                Data = new byte[Size];
+                data = new byte[size];
 
-                Buffer.BlockCopy(Storage.Data, 0, Data, 0, (int)Size);
+                Buffer.BlockCopy(_storage.Data, 0, data, 0, (int)size);
             }
             else
             {
-                Data = Storage.Data;
+                data = _storage.Data;
             }
 
-            Context.Memory.WriteBytes(Position, Data);
+            context.Memory.WriteBytes(position, data);
 
             return 0;
         }

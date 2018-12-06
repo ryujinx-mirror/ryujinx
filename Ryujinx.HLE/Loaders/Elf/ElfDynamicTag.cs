@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Ryujinx.HLE.Loaders.Elf
 {
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     enum ElfDynamicTag
     {
         DT_NULL            = 0,

@@ -4,51 +4,51 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class NewExpression : BaseNode
     {
-        private NodeArray Expressions;
-        private BaseNode  TypeNode;
-        private NodeArray Initializers;
+        private NodeArray _expressions;
+        private BaseNode  _typeNode;
+        private NodeArray _initializers;
 
-        private bool IsGlobal;
-        private bool IsArrayExpression;
+        private bool _isGlobal;
+        private bool _isArrayExpression;
 
-        public NewExpression(NodeArray Expressions, BaseNode TypeNode, NodeArray Initializers, bool IsGlobal, bool IsArrayExpression) : base(NodeType.NewExpression)
+        public NewExpression(NodeArray expressions, BaseNode typeNode, NodeArray initializers, bool isGlobal, bool isArrayExpression) : base(NodeType.NewExpression)
         {
-            this.Expressions       = Expressions;
-            this.TypeNode          = TypeNode;
-            this.Initializers      = Initializers;
+            _expressions       = expressions;
+            _typeNode          = typeNode;
+            _initializers      = initializers;
 
-            this.IsGlobal          = IsGlobal;
-            this.IsArrayExpression = IsArrayExpression;
+            _isGlobal          = isGlobal;
+            _isArrayExpression = isArrayExpression;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            if (IsGlobal)
+            if (_isGlobal)
             {
-                Writer.Write("::operator ");
+                writer.Write("::operator ");
             }
 
-            Writer.Write("new ");
+            writer.Write("new ");
 
-            if (IsArrayExpression)
+            if (_isArrayExpression)
             {
-                Writer.Write("[] ");
+                writer.Write("[] ");
             }
 
-            if (Expressions.Nodes.Count != 0)
+            if (_expressions.Nodes.Count != 0)
             {
-                Writer.Write("(");
-                Expressions.Print(Writer);
-                Writer.Write(")");
+                writer.Write("(");
+                _expressions.Print(writer);
+                writer.Write(")");
             }
 
-            TypeNode.Print(Writer);
+            _typeNode.Print(writer);
 
-            if (Initializers.Nodes.Count != 0)
+            if (_initializers.Nodes.Count != 0)
             {
-                Writer.Write("(");
-                Initializers.Print(Writer);
-                Writer.Write(")");
+                writer.Write("(");
+                _initializers.Print(writer);
+                writer.Write(")");
             }
         }
     }

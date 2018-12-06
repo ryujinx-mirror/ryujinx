@@ -4,7 +4,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public enum NodeType
     {
-        CVQualifierType,
+        CvQualifierType,
         SimpleReferenceType,
         NameType,
         EncodedFunction,
@@ -62,22 +62,22 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
     {
         public NodeType Type { get; protected set; }
 
-        public BaseNode(NodeType Type)
+        public BaseNode(NodeType type)
         {
-            this.Type = Type;
+            Type = type;
         }
 
-        public virtual void Print(TextWriter Writer)
+        public virtual void Print(TextWriter writer)
         {
-            PrintLeft(Writer);
+            PrintLeft(writer);
 
             if (HasRightPart())
             {
-                PrintRight(Writer);
+                PrintRight(writer);
             }
         }
 
-        public abstract void PrintLeft(TextWriter Writer);
+        public abstract void PrintLeft(TextWriter writer);
 
         public virtual bool HasRightPart()
         {
@@ -99,15 +99,15 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
             return null;
         }
 
-        public virtual void PrintRight(TextWriter Writer) {}
+        public virtual void PrintRight(TextWriter writer) {}
 
         public override string ToString()
         {
-            StringWriter Writer = new StringWriter();
+            StringWriter writer = new StringWriter();
 
-            Print(Writer);
+            Print(writer);
 
-            return Writer.ToString();
+            return writer.ToString();
         }
     }
 }

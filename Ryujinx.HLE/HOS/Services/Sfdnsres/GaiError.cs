@@ -17,6 +17,6 @@
         BadHints,
         Protocol,
         Overflow,
-        Max,
+        Max
     }
 }

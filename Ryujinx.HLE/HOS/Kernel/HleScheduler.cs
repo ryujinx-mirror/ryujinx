@@ -7,21 +7,21 @@ namespace Ryujinx.HLE.HOS.Kernel
     {
         private const int RoundRobinTimeQuantumMs = 10;
 
-        private int CurrentCore;
+        private int _currentCore;
 
         public bool MultiCoreScheduling { get; set; }
 
         public HleCoreManager CoreManager { get; private set; }
 
-        private bool KeepPreempting;
+        private bool _keepPreempting;
 
         public void StartAutoPreemptionThread()
         {
-            Thread PreemptionThread = new Thread(PreemptCurrentThread);
+            Thread preemptionThread = new Thread(PreemptCurrentThread);
 
-            KeepPreempting = true;
+            _keepPreempting = true;
 
-            PreemptionThread.Start();
+            preemptionThread.Start();
         }
 
         public void ContextSwitch()
@@ -30,28 +30,28 @@ namespace Ryujinx.HLE.HOS.Kernel
             {
                 if (MultiCoreScheduling)
                 {
-                    int SelectedCount = 0;
+                    int selectedCount = 0;
 
-                    for (int Core = 0; Core < KScheduler.CpuCoresCount; Core++)
+                    for (int core = 0; core < CpuCoresCount; core++)
                     {
-                        KCoreContext CoreContext = CoreContexts[Core];
+                        KCoreContext coreContext = CoreContexts[core];
 
-                        if (CoreContext.ContextSwitchNeeded && (CoreContext.CurrentThread?.Context.IsCurrentThread() ?? false))
+                        if (coreContext.ContextSwitchNeeded && (coreContext.CurrentThread?.Context.IsCurrentThread() ?? false))
                         {
-                            CoreContext.ContextSwitch();
+                            coreContext.ContextSwitch();
                         }
 
-                        if (CoreContext.CurrentThread?.Context.IsCurrentThread() ?? false)
+                        if (coreContext.CurrentThread?.Context.IsCurrentThread() ?? false)
                         {
-                            SelectedCount++;
+                            selectedCount++;
                         }
                     }
 
-                    if (SelectedCount == 0)
+                    if (selectedCount == 0)
                     {
                         CoreManager.Reset(Thread.CurrentThread);
                     }
-                    else if (SelectedCount == 1)
+                    else if (selectedCount == 1)
                     {
                         CoreManager.Set(Thread.CurrentThread);
                     }
@@ -62,41 +62,41 @@ namespace Ryujinx.HLE.HOS.Kernel
                 }
                 else
                 {
-                    KThread CurrentThread = CoreContexts[CurrentCore].CurrentThread;
+                    KThread currentThread = CoreContexts[_currentCore].CurrentThread;
 
-                    bool HasThreadExecuting = CurrentThread != null;
+                    bool hasThreadExecuting = currentThread != null;
 
-                    if (HasThreadExecuting)
+                    if (hasThreadExecuting)
                     {
                         //If this is not the thread that is currently executing, we need
                         //to request an interrupt to allow safely starting another thread.
-                        if (!CurrentThread.Context.IsCurrentThread())
+                        if (!currentThread.Context.IsCurrentThread())
                         {
-                            CurrentThread.Context.RequestInterrupt();
+                            currentThread.Context.RequestInterrupt();
 
                             return;
                         }
 
-                        CoreManager.Reset(CurrentThread.Context.Work);
+                        CoreManager.Reset(currentThread.Context.Work);
                     }
 
                     //Advance current core and try picking a thread,
                     //keep advancing if it is null.
-                    for (int Core = 0; Core < 4; Core++)
+                    for (int core = 0; core < 4; core++)
                     {
-                        CurrentCore = (CurrentCore + 1) % CpuCoresCount;
+                        _currentCore = (_currentCore + 1) % CpuCoresCount;
 
-                        KCoreContext CoreContext = CoreContexts[CurrentCore];
+                        KCoreContext coreContext = CoreContexts[_currentCore];
 
-                        CoreContext.UpdateCurrentThread();
+                        coreContext.UpdateCurrentThread();
 
-                        if (CoreContext.CurrentThread != null)
+                        if (coreContext.CurrentThread != null)
                         {
-                            CoreContext.CurrentThread.ClearExclusive();
+                            coreContext.CurrentThread.ClearExclusive();
 
-                            CoreManager.Set(CoreContext.CurrentThread.Context.Work);
+                            CoreManager.Set(coreContext.CurrentThread.Context.Work);
 
-                            CoreContext.CurrentThread.Context.Execute();
+                            coreContext.CurrentThread.Context.Execute();
 
                             break;
                         }
@@ -104,7 +104,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
                     //If nothing was running before, then we are on a "external"
                     //HLE thread, we don't need to wait.
-                    if (!HasThreadExecuting)
+                    if (!hasThreadExecuting)
                     {
                         return;
                     }
@@ -119,13 +119,13 @@ namespace Ryujinx.HLE.HOS.Kernel
             //Preempts current thread every 10 milliseconds on a round-robin fashion,
             //when multi core scheduling is disabled, to try ensuring that all threads
             //gets a chance to run.
-            while (KeepPreempting)
+            while (_keepPreempting)
             {
                 lock (CoreContexts)
                 {
-                    KThread CurrentThread = CoreContexts[CurrentCore].CurrentThread;
+                    KThread currentThread = CoreContexts[_currentCore].CurrentThread;
 
-                    CurrentThread?.Context.RequestInterrupt();
+                    currentThread?.Context.RequestInterrupt();
                 }
 
                 PreemptThreads();
@@ -134,16 +134,16 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        public void ExitThread(KThread Thread)
+        public void ExitThread(KThread thread)
         {
-            Thread.Context.StopExecution();
+            thread.Context.StopExecution();
 
-            CoreManager.Exit(Thread.Context.Work);
+            CoreManager.Exit(thread.Context.Work);
         }
 
-        public void RemoveThread(KThread Thread)
+        public void RemoveThread(KThread thread)
         {
-            CoreManager.RemoveThread(Thread.Context.Work);
+            CoreManager.RemoveThread(thread.Context.Work);
         }
     }
 }

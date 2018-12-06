@@ -5,26 +5,26 @@ namespace Ryujinx.HLE.HOS.Services.Hid
     public enum HidNpadJoyAssignmentMode
     {
         Dual,
-        Single,
+        Single
     }
 
     public enum HidNpadHandheldActivationMode
     {
         Dual,
         Single,
-        None,
+        None
     }
 
     public enum HidNpadJoyDeviceType
     {
         Left,
-        Right,
+        Right
     }
 
     public enum HidNpadJoyHoldType
     {
         Vertical,
-        Horizontal,
+        Horizontal
     }
 
     [Flags]
@@ -36,6 +36,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         Dual     = 1 << 2,
         Left     = 1 << 3,
         Right    = 1 << 4,
-        Invalid  = 1 << 5,
+        Invalid  = 1 << 5
     }
 }

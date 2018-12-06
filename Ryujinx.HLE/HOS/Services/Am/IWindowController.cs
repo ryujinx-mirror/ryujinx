@@ -6,29 +6,29 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class IWindowController : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
         public IWindowController()
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 1,  GetAppletResourceUserId },
                 { 10, AcquireForegroundRights }
             };
         }
 
-        public long GetAppletResourceUserId(ServiceCtx Context)
+        public long GetAppletResourceUserId(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
-            Context.ResponseData.Write(0L);
+            context.ResponseData.Write(0L);
 
             return 0;
         }
 
-        public long AcquireForegroundRights(ServiceCtx Context)
+        public long AcquireForegroundRights(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 

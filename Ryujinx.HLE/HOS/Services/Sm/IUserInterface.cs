@@ -7,15 +7,15 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 {
     class IUserInterface : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private bool IsInitialized;
+        private bool _isInitialized;
 
         public IUserInterface()
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0, Initialize },
                 { 1, GetService }
@@ -24,48 +24,48 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
         private const int SmNotInitialized = 0x415;
 
-        public long Initialize(ServiceCtx Context)
+        public long Initialize(ServiceCtx context)
         {
-            IsInitialized = true;
+            _isInitialized = true;
 
             return 0;
         }
 
-        public long GetService(ServiceCtx Context)
+        public long GetService(ServiceCtx context)
         {
             //Only for kernel version > 3.0.0.
-            if (!IsInitialized)
+            if (!_isInitialized)
             {
                 //return SmNotInitialized;
             }
 
-            string Name = string.Empty;
+            string name = string.Empty;
 
-            for (int Index = 0; Index < 8 &&
-                Context.RequestData.BaseStream.Position <
-                Context.RequestData.BaseStream.Length; Index++)
+            for (int index = 0; index < 8 &&
+                context.RequestData.BaseStream.Position <
+                context.RequestData.BaseStream.Length; index++)
             {
-                byte Chr = Context.RequestData.ReadByte();
+                byte chr = context.RequestData.ReadByte();
 
-                if (Chr >= 0x20 && Chr < 0x7f)
+                if (chr >= 0x20 && chr < 0x7f)
                 {
-                    Name += (char)Chr;
+                    name += (char)chr;
                 }
             }
 
-            if (Name == string.Empty)
+            if (name == string.Empty)
             {
                 return 0;
             }
 
-            KSession Session = new KSession(ServiceFactory.MakeService(Context.Device.System, Name), Name);
+            KSession session = new KSession(ServiceFactory.MakeService(context.Device.System, name), name);
 
-            if (Context.Process.HandleTable.GenerateHandle(Session, out int Handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(session, out int handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            Context.Response.HandleDesc = IpcHandleDesc.MakeMove(Handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
 
             return 0;
         }

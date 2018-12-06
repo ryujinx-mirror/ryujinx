@@ -5,22 +5,22 @@ namespace Ryujinx.HLE.HOS.Kernel
         public KServerPort ServerPort { get; private set; }
         public KClientPort ClientPort { get; private set; }
 
-        private long NameAddress;
-        private bool IsLight;
+        private long _nameAddress;
+        private bool _isLight;
 
-        public KPort(Horizon System) : base(System)
+        public KPort(Horizon system) : base(system)
         {
-            ServerPort = new KServerPort(System);
-            ClientPort = new KClientPort(System);
+            ServerPort = new KServerPort(system);
+            ClientPort = new KClientPort(system);
         }
 
-        public void Initialize(int MaxSessions, bool IsLight, long NameAddress)
+        public void Initialize(int maxSessions, bool isLight, long nameAddress)
         {
             ServerPort.Initialize(this);
-            ClientPort.Initialize(this, MaxSessions);
+            ClientPort.Initialize(this, maxSessions);
 
-            this.IsLight     = IsLight;
-            this.NameAddress = NameAddress;
+            _isLight     = isLight;
+            _nameAddress = nameAddress;
         }
     }
 }

@@ -11,14 +11,14 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
             String,
             IStream,
             OStream,
-            IOStream,
+            IOStream
         }
 
-        private SpecialType SpecialSubstitutionKey;
+        private SpecialType _specialSubstitutionKey;
 
-        public SpecialSubstitution(SpecialType SpecialSubstitutionKey) : base(NodeType.SpecialSubstitution)
+        public SpecialSubstitution(SpecialType specialSubstitutionKey) : base(NodeType.SpecialSubstitution)
         {
-            this.SpecialSubstitutionKey = SpecialSubstitutionKey;
+            _specialSubstitutionKey = specialSubstitutionKey;
         }
 
         public void SetExtended()
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 
         public override string GetName()
         {
-            switch (SpecialSubstitutionKey)
+            switch (_specialSubstitutionKey)
             {
                 case SpecialType.Allocator:
                     return "allocator";
@@ -54,7 +54,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 
         private string GetExtendedName()
         {
-            switch (SpecialSubstitutionKey)
+            switch (_specialSubstitutionKey)
             {
                 case SpecialType.Allocator:
                     return "std::allocator";
@@ -73,16 +73,16 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
             return null;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
             if (Type == NodeType.ExpandedSpecialSubstitution)
             {
-                Writer.Write(GetExtendedName());
+                writer.Write(GetExtendedName());
             }
             else
             {
-                Writer.Write("std::");
-                Writer.Write(GetName());
+                writer.Write("std::");
+                writer.Write(GetName());
             }
         }
     }

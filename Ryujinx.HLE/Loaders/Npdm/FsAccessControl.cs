@@ -11,18 +11,18 @@ namespace Ryujinx.HLE.Loaders.Npdm
         public int   Unknown3           { get; private set; }
         public int   Unknown4           { get; private set; }
 
-        public FsAccessControl(Stream Stream, int Offset, int Size)
+        public FsAccessControl(Stream stream, int offset, int size)
         {
-            Stream.Seek(Offset, SeekOrigin.Begin);
+            stream.Seek(offset, SeekOrigin.Begin);
 
-            BinaryReader Reader = new BinaryReader(Stream);
+            BinaryReader reader = new BinaryReader(stream);
 
-            Version            = Reader.ReadInt32();
-            PermissionsBitmask = Reader.ReadUInt64();
-            Unknown1           = Reader.ReadInt32();
-            Unknown2           = Reader.ReadInt32();
-            Unknown3           = Reader.ReadInt32();
-            Unknown4           = Reader.ReadInt32();
+            Version            = reader.ReadInt32();
+            PermissionsBitmask = reader.ReadUInt64();
+            Unknown1           = reader.ReadInt32();
+            Unknown2           = reader.ReadInt32();
+            Unknown3           = reader.ReadInt32();
+            Unknown4           = reader.ReadInt32();
         }
     }
 }

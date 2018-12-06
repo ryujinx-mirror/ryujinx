@@ -4,14 +4,14 @@ namespace Ryujinx.HLE.HOS.Kernel
     {
         protected Horizon System;
 
-        public KAutoObject(Horizon System)
+        public KAutoObject(Horizon system)
         {
-            this.System = System;
+            System = system;
         }
 
-        public virtual KernelResult SetName(string Name)
+        public virtual KernelResult SetName(string name)
         {
-            if (!System.AutoObjectNames.TryAdd(Name, this))
+            if (!System.AutoObjectNames.TryAdd(name, this))
             {
                 return KernelResult.InvalidState;
             }
@@ -19,9 +19,9 @@ namespace Ryujinx.HLE.HOS.Kernel
             return KernelResult.Success;
         }
 
-        public static KernelResult RemoveName(Horizon System, string Name)
+        public static KernelResult RemoveName(Horizon system, string name)
         {
-            if (!System.AutoObjectNames.TryRemove(Name, out _))
+            if (!system.AutoObjectNames.TryRemove(name, out _))
             {
                 return KernelResult.NotFound;
             }
@@ -29,11 +29,11 @@ namespace Ryujinx.HLE.HOS.Kernel
             return KernelResult.Success;
         }
 
-        public static KAutoObject FindNamedObject(Horizon System, string Name)
+        public static KAutoObject FindNamedObject(Horizon system, string name)
         {
-            if (System.AutoObjectNames.TryGetValue(Name, out KAutoObject Obj))
+            if (system.AutoObjectNames.TryGetValue(name, out KAutoObject obj))
             {
-                return Obj;
+                return obj;
             }
 
             return null;

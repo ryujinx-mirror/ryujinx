@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using LibHac;
+﻿using LibHac;
 
 namespace Ryujinx.HLE.FileSystem.Content
 {
@@ -12,17 +9,17 @@ namespace Ryujinx.HLE.FileSystem.Content
         public long        TitleId     { get; private set; }
         public ContentType ContentType { get; private set; }
 
-        public LocationEntry(string ContentPath, int Flag, long TitleId, ContentType ContentType)
+        public LocationEntry(string contentPath, int flag, long titleId, ContentType contentType)
         {
-            this.ContentPath = ContentPath;
-            this.Flag        = Flag;
-            this.TitleId     = TitleId;
-            this.ContentType = ContentType;
+            ContentPath = contentPath;
+            Flag        = flag;
+            TitleId     = titleId;
+            ContentType = contentType;
         }
 
-        public void SetFlag(int Flag)
+        public void SetFlag(int flag)
         {
-            this.Flag = Flag;
+            Flag = flag;
         }
     }
 }

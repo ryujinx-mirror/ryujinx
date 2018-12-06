@@ -5,19 +5,19 @@ namespace Ryujinx.HLE.Utilities
 {
     class StructWriter
     {
-        private MemoryManager Memory;
+        private MemoryManager _memory;
 
         public long Position { get; private set; }
 
-        public StructWriter(MemoryManager Memory, long Position)
+        public StructWriter(MemoryManager memory, long position)
         {
-            this.Memory   = Memory;
-            this.Position = Position;
+            _memory  = memory;
+            Position = position;
         }
 
-        public void Write<T>(T Value) where T : struct
+        public void Write<T>(T value) where T : struct
         {
-            MemoryHelper.Write(Memory, Position, Value);
+            MemoryHelper.Write(_memory, Position, value);
 
             Position += Marshal.SizeOf<T>();
         }

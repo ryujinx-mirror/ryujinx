@@ -2,43 +2,43 @@
 {
     public class HidProController : HidControllerBase
     {
-        bool Wired = false;
+        bool _wired = false;
 
-        public HidProController(Switch Device) : base(HidControllerType.ProController, Device)
+        public HidProController(Switch device) : base(HidControllerType.ProController, device)
         {
-            Wired = true;
+            _wired = true;
         }
 
-        public override void Connect(HidControllerId ControllerId)
+        public override void Connect(HidControllerId controllerId)
         {
-            base.Connect(ControllerId);
+            base.Connect(controllerId);
 
-            HidControllerColorDesc SingleColorDesc =
-                HidControllerColorDesc.ColorDesc_ColorsNonexistent;
+            HidControllerColorDesc singleColorDesc =
+                HidControllerColorDesc.ColorDescColorsNonexistent;
 
-            HidControllerColorDesc SplitColorDesc = 0;
+            HidControllerColorDesc splitColorDesc = 0;
 
-            NpadColor SingleColorBody    = NpadColor.Black;
-            NpadColor SingleColorButtons = NpadColor.Black;
+            NpadColor singleColorBody    = NpadColor.Black;
+            NpadColor singleColorButtons = NpadColor.Black;
 
-            Device.Memory.WriteInt32(Offset + 0x08, (int)SingleColorDesc);
-            Device.Memory.WriteInt32(Offset + 0x0c, (int)SingleColorBody);
-            Device.Memory.WriteInt32(Offset + 0x10, (int)SingleColorButtons);
-            Device.Memory.WriteInt32(Offset + 0x14, (int)SplitColorDesc);
+            Device.Memory.WriteInt32(Offset + 0x08, (int)singleColorDesc);
+            Device.Memory.WriteInt32(Offset + 0x0c, (int)singleColorBody);
+            Device.Memory.WriteInt32(Offset + 0x10, (int)singleColorButtons);
+            Device.Memory.WriteInt32(Offset + 0x14, (int)splitColorDesc);
 
             Connected = true;
         }
 
         public override void SendInput(
-            HidControllerButtons Buttons,
-            HidJoystickPosition  LeftStick,
-            HidJoystickPosition  RightStick)
+            HidControllerButtons buttons,
+            HidJoystickPosition  leftStick,
+            HidJoystickPosition  rightStick)
         {
-            long ControllerOffset = WriteInput(Buttons, LeftStick, RightStick, HidControllerLayouts.Pro_Controller);
+            long controllerOffset = WriteInput(buttons, leftStick, rightStick, HidControllerLayouts.ProController);
 
-            Device.Memory.WriteInt64(ControllerOffset + 0x28,
-              (Connected ? (uint)HidControllerConnState.Controller_State_Connected : 0) |
-              (Wired ? (uint)HidControllerConnState.Controller_State_Wired : 0));
+            Device.Memory.WriteInt64(controllerOffset + 0x28,
+              (Connected ? (uint)HidControllerConnState.ControllerStateConnected : 0) |
+              (_wired ? (uint)HidControllerConnState.ControllerStateWired : 0));
         }
     }
 }

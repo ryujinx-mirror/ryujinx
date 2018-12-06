@@ -4,19 +4,19 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class IntegerCastExpression : ParentNode
     {
-        private string Number;
+        private string _number;
 
-        public IntegerCastExpression(BaseNode Type, string Number) : base(NodeType.IntegerCastExpression, Type)
+        public IntegerCastExpression(BaseNode type, string number) : base(NodeType.IntegerCastExpression, type)
         {
-            this.Number = Number;
+            _number = number;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write("(");
-            Child.Print(Writer);
-            Writer.Write(")");
-            Writer.Write(Number);
+            writer.Write("(");
+            Child.Print(writer);
+            writer.Write(")");
+            writer.Write(_number);
         }
     }
 }

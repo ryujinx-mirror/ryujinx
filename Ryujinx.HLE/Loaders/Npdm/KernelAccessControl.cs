@@ -6,17 +6,17 @@ namespace Ryujinx.HLE.Loaders.Npdm
     {
         public int[] Capabilities { get; private set; }
 
-        public KernelAccessControl(Stream Stream, int Offset, int Size)
+        public KernelAccessControl(Stream stream, int offset, int size)
         {
-            Stream.Seek(Offset, SeekOrigin.Begin);
+            stream.Seek(offset, SeekOrigin.Begin);
 
-            Capabilities = new int[Size / 4];
+            Capabilities = new int[size / 4];
 
-            BinaryReader Reader = new BinaryReader(Stream);
+            BinaryReader reader = new BinaryReader(stream);
 
-            for (int Index = 0; Index < Capabilities.Length; Index++)
+            for (int index = 0; index < Capabilities.Length; index++)
             {
-                Capabilities[Index] = Reader.ReadInt32();
+                Capabilities[index] = reader.ReadInt32();
             }
         }
     }

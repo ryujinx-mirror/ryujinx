@@ -13,21 +13,21 @@ namespace Ryujinx.HLE.HOS.Kernel
         public int DeviceRefCount { get; private set; }
 
         public KMemoryInfo(
-            ulong            Address,
-            ulong            Size,
-            MemoryState      State,
-            MemoryPermission Permission,
-            MemoryAttribute  Attribute,
-            int              IpcRefCount,
-            int              DeviceRefCount)
+            ulong            address,
+            ulong            size,
+            MemoryState      state,
+            MemoryPermission permission,
+            MemoryAttribute  attribute,
+            int              ipcRefCount,
+            int              deviceRefCount)
         {
-            this.Address        = Address;
-            this.Size           = Size;
-            this.State          = State;
-            this.Attribute      = Attribute;
-            this.Permission     = Permission;
-            this.IpcRefCount    = IpcRefCount;
-            this.DeviceRefCount = DeviceRefCount;
+            Address        = address;
+            Size           = size;
+            State          = state;
+            Attribute      = attribute;
+            Permission     = permission;
+            IpcRefCount    = ipcRefCount;
+            DeviceRefCount = deviceRefCount;
         }
     }
 }

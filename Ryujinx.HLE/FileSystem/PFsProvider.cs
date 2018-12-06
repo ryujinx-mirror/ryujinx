@@ -12,98 +12,98 @@ namespace Ryujinx.HLE.FileSystem
 {
     class PFsProvider : IFileSystemProvider
     {
-        private Pfs Pfs;
+        private Pfs _pfs;
 
-        public PFsProvider(Pfs Pfs)
+        public PFsProvider(Pfs pfs)
         {
-            this.Pfs = Pfs;
+            _pfs = pfs;
         }
 
-        public long CreateDirectory(string Name)
-        {
-            throw new NotSupportedException();
-        }
-
-        public long CreateFile(string Name, long Size)
+        public long CreateDirectory(string name)
         {
             throw new NotSupportedException();
         }
 
-        public long DeleteDirectory(string Name, bool Recursive)
+        public long CreateFile(string name, long size)
         {
             throw new NotSupportedException();
         }
 
-        public long DeleteFile(string Name)
+        public long DeleteDirectory(string name, bool recursive)
         {
             throw new NotSupportedException();
         }
 
-        public DirectoryEntry[] GetDirectories(string Path)
+        public long DeleteFile(string name)
+        {
+            throw new NotSupportedException();
+        }
+
+        public DirectoryEntry[] GetDirectories(string path)
         {
             return new DirectoryEntry[0];
         }
 
-        public DirectoryEntry[] GetEntries(string Path)
+        public DirectoryEntry[] GetEntries(string path)
         {
-            List<DirectoryEntry> Entries = new List<DirectoryEntry>();
+            List<DirectoryEntry> entries = new List<DirectoryEntry>();
 
-            foreach (PfsFileEntry File in Pfs.Files)
+            foreach (PfsFileEntry file in _pfs.Files)
             {
-                DirectoryEntry DirectoryEntry = new DirectoryEntry(File.Name, DirectoryEntryType.File, File.Size);
+                DirectoryEntry directoryEntry = new DirectoryEntry(file.Name, DirectoryEntryType.File, file.Size);
 
-                Entries.Add(DirectoryEntry);
+                entries.Add(directoryEntry);
             }
 
-            return Entries.ToArray();
+            return entries.ToArray();
         }
 
-        public DirectoryEntry[] GetFiles(string Path)
+        public DirectoryEntry[] GetFiles(string path)
         {
-            List<DirectoryEntry> Entries = new List<DirectoryEntry>();
+            List<DirectoryEntry> entries = new List<DirectoryEntry>();
 
-            foreach (PfsFileEntry File in Pfs.Files)
+            foreach (PfsFileEntry file in _pfs.Files)
             {
-                DirectoryEntry DirectoryEntry = new DirectoryEntry(File.Name, DirectoryEntryType.File, File.Size);
+                DirectoryEntry directoryEntry = new DirectoryEntry(file.Name, DirectoryEntryType.File, file.Size);
 
-                Entries.Add(DirectoryEntry);
+                entries.Add(directoryEntry);
             }
 
-            return Entries.ToArray();
+            return entries.ToArray();
         }
 
-        public long GetFreeSpace(ServiceCtx Context)
+        public long GetFreeSpace(ServiceCtx context)
         {
             return 0;
         }
 
-        public string GetFullPath(string Name)
+        public string GetFullPath(string name)
         {
-            return Name;
+            return name;
         }
 
-        public long GetTotalSpace(ServiceCtx Context)
+        public long GetTotalSpace(ServiceCtx context)
         {
-            return Pfs.Files.Sum(x => x.Size);
+            return _pfs.Files.Sum(x => x.Size);
         }
 
-        public bool DirectoryExists(string Name)
+        public bool DirectoryExists(string name)
         {
-            return Name == "/" ? true : false;
+            return name == "/";
         }
 
-        public bool FileExists(string Name)
+        public bool FileExists(string name)
         {
-            Name = Name.TrimStart('/');
+            name = name.TrimStart('/');
 
-            return Pfs.FileExists(Name);
+            return _pfs.FileExists(name);
         }
 
-        public long OpenDirectory(string Name, int FilterFlags, out IDirectory DirectoryInterface)
+        public long OpenDirectory(string name, int filterFlags, out IDirectory directoryInterface)
         {
-            if (Name == "/")
+            if (name == "/")
             {
-                DirectoryInterface = new IDirectory(Name, FilterFlags, this);
+                directoryInterface = new IDirectory(name, filterFlags, this);
 
                 return 0;
             }
@@ -111,34 +111,34 @@ namespace Ryujinx.HLE.FileSystem
             throw new NotSupportedException();
         }
 
-        public long OpenFile(string Name, out IFile FileInterface)
+        public long OpenFile(string name, out IFile fileInterface)
         {
-            Name = Name.TrimStart('/');
+            name = name.TrimStart('/');
 
-            if (Pfs.FileExists(Name))
+            if (_pfs.FileExists(name))
             {
-                Stream Stream = Pfs.OpenFile(Name);
-                FileInterface = new IFile(Stream, Name);
+                Stream stream = _pfs.OpenFile(name);
+                fileInterface = new IFile(stream, name);
 
                 return 0;
             }
 
-            FileInterface = null;
+            fileInterface = null;
 
             return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
         }
 
-        public long RenameDirectory(string OldName, string NewName)
+        public long RenameDirectory(string oldName, string newName)
         {
             throw new NotSupportedException();
         }
 
-        public long RenameFile(string OldName, string NewName)
+        public long RenameFile(string oldName, string newName)
         {
             throw new NotSupportedException();
         }
 
-        public void CheckIfOutsideBasePath(string Path)
+        public void CheckIfOutsideBasePath(string path)
         {
             throw new NotSupportedException();
         }

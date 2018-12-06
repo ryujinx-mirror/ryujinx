@@ -4,12 +4,12 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class GlobalQualifiedName : ParentNode
     {
-        public GlobalQualifiedName(BaseNode Child) : base(NodeType.GlobalQualifiedName, Child) { }
+        public GlobalQualifiedName(BaseNode child) : base(NodeType.GlobalQualifiedName, child) { }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write("::");
-            Child.Print(Writer);
+            writer.Write("::");
+            Child.Print(writer);
         }
     }
 }

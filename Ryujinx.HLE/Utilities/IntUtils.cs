@@ -2,24 +2,24 @@ namespace Ryujinx.HLE.Utilities
 {
     static class IntUtils
     {
-        public static int AlignUp(int Value, int Size)
+        public static int AlignUp(int value, int size)
         {
-            return (Value + (Size - 1)) & ~(Size - 1);
+            return (value + (size - 1)) & ~(size - 1);
         }
 
-        public static long AlignUp(long Value, int Size)
+        public static long AlignUp(long value, int size)
         {
-            return (Value + (Size - 1)) & ~((long)Size - 1);
+            return (value + (size - 1)) & ~((long)size - 1);
         }
 
-        public static int AlignDown(int Value, int Size)
+        public static int AlignDown(int value, int size)
         {
-            return Value & ~(Size - 1);
+            return value & ~(size - 1);
         }
 
-        public static long AlignDown(long Value, int Size)
+        public static long AlignDown(long value, int size)
         {
-            return Value & ~((long)Size - 1);
+            return value & ~((long)size - 1);
         }
     }
 }

@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Ryujinx.HLE.Utilities
 {
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     enum LinuxError
     {
         SUCCESS         = 0,
@@ -147,6 +150,6 @@ namespace Ryujinx.HLE.Utilities
 
         ERFKILL         = 132     /* Operation not possible due to RF-kill */,
 
-        EHWPOISON       = 133     /* Memory page has hardware error */,
+        EHWPOISON       = 133     /* Memory page has hardware error */
     }
 }

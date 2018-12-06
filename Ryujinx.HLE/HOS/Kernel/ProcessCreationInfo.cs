@@ -15,23 +15,23 @@ namespace Ryujinx.HLE.HOS.Kernel
         public int PersonalMmHeapPagesCount { get; private set; }
 
         public ProcessCreationInfo(
-            string Name,
-            int    Category,
-            long   TitleId,
-            ulong  CodeAddress,
-            int    CodePagesCount,
-            int    MmuFlags,
-            int    ResourceLimitHandle,
-            int    PersonalMmHeapPagesCount)
+            string name,
+            int    category,
+            long   titleId,
+            ulong  codeAddress,
+            int    codePagesCount,
+            int    mmuFlags,
+            int    resourceLimitHandle,
+            int    personalMmHeapPagesCount)
         {
-            this.Name                     = Name;
-            this.Category                 = Category;
-            this.TitleId                  = TitleId;
-            this.CodeAddress              = CodeAddress;
-            this.CodePagesCount           = CodePagesCount;
-            this.MmuFlags                 = MmuFlags;
-            this.ResourceLimitHandle      = ResourceLimitHandle;
-            this.PersonalMmHeapPagesCount = PersonalMmHeapPagesCount;
+            Name                     = name;
+            Category                 = category;
+            TitleId                  = titleId;
+            CodeAddress              = codeAddress;
+            CodePagesCount           = codePagesCount;
+            MmuFlags                 = mmuFlags;
+            ResourceLimitHandle      = resourceLimitHandle;
+            PersonalMmHeapPagesCount = personalMmHeapPagesCount;
         }
     }
 }

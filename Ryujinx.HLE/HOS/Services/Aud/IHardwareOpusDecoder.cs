@@ -10,80 +10,80 @@ namespace Ryujinx.HLE.HOS.Services.Aud
     {
         private const int FixedSampleRate = 48000;
 
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private int SampleRate;
-        private int ChannelsCount;
+        private int _sampleRate;
+        private int _channelsCount;
 
-        private OpusDecoder Decoder;
+        private OpusDecoder _decoder;
 
-        public IHardwareOpusDecoder(int SampleRate, int ChannelsCount)
+        public IHardwareOpusDecoder(int sampleRate, int channelsCount)
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0, DecodeInterleaved         },
                 { 4, DecodeInterleavedWithPerf }
             };
 
-            this.SampleRate    = SampleRate;
-            this.ChannelsCount = ChannelsCount;
+            _sampleRate    = sampleRate;
+            _channelsCount = channelsCount;
 
-            Decoder = new OpusDecoder(FixedSampleRate, ChannelsCount);
+            _decoder = new OpusDecoder(FixedSampleRate, channelsCount);
         }
 
-        public long DecodeInterleavedWithPerf(ServiceCtx Context)
+        public long DecodeInterleavedWithPerf(ServiceCtx context)
         {
-            long Result = DecodeInterleaved(Context);
+            long result = DecodeInterleaved(context);
 
             //TODO: Figure out what this value is.
             //According to switchbrew, it is now used.
-            Context.ResponseData.Write(0L);
+            context.ResponseData.Write(0L);
 
-            return Result;
+            return result;
         }
 
-        public long DecodeInterleaved(ServiceCtx Context)
+        public long DecodeInterleaved(ServiceCtx context)
         {
-            long InPosition = Context.Request.SendBuff[0].Position;
-            long InSize     = Context.Request.SendBuff[0].Size;
+            long inPosition = context.Request.SendBuff[0].Position;
+            long inSize     = context.Request.SendBuff[0].Size;
 
-            if (InSize < 8)
+            if (inSize < 8)
             {
                 return MakeError(ErrorModule.Audio, AudErr.OpusInvalidInput);
             }
 
-            long OutPosition = Context.Request.ReceiveBuff[0].Position;
-            long OutSize     = Context.Request.ReceiveBuff[0].Size;
+            long outPosition = context.Request.ReceiveBuff[0].Position;
+            long outSize     = context.Request.ReceiveBuff[0].Size;
 
-            byte[] OpusData = Context.Memory.ReadBytes(InPosition, InSize);
+            byte[] opusData = context.Memory.ReadBytes(inPosition, inSize);
 
-            int Processed = ((OpusData[0] << 24) |
-                             (OpusData[1] << 16) |
-                             (OpusData[2] << 8)  |
-                             (OpusData[3] << 0)) + 8;
+            int processed = ((opusData[0] << 24) |
+                             (opusData[1] << 16) |
+                             (opusData[2] << 8)  |
+                             (opusData[3] << 0)) + 8;
 
-            if ((uint)Processed > (ulong)InSize)
+            if ((uint)processed > (ulong)inSize)
             {
                 return MakeError(ErrorModule.Audio, AudErr.OpusInvalidInput);
             }
 
-            short[] Pcm = new short[OutSize / 2];
+            short[] pcm = new short[outSize / 2];
 
-            int FrameSize = Pcm.Length / (ChannelsCount * 2);
+            int frameSize = pcm.Length / (_channelsCount * 2);
 
-            int Samples = Decoder.Decode(OpusData, 0, OpusData.Length, Pcm, 0, FrameSize);
+            int samples = _decoder.Decode(opusData, 0, opusData.Length, pcm, 0, frameSize);
 
-            foreach (short Sample in Pcm)
+            foreach (short sample in pcm)
             {
-                Context.Memory.WriteInt16(OutPosition, Sample);
+                context.Memory.WriteInt16(outPosition, sample);
 
-                OutPosition += 2;
+                outPosition += 2;
             }
 
-            Context.ResponseData.Write(Processed);
-            Context.ResponseData.Write(Samples);
+            context.ResponseData.Write(processed);
+            context.ResponseData.Write(samples);
 
             return 0;
         }

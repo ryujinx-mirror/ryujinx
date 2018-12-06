@@ -6,62 +6,62 @@ namespace Ryujinx.HLE.HOS
 {
     class GlobalStateTable
     {
-        private ConcurrentDictionary<KProcess, IdDictionary> DictByProcess;
+        private ConcurrentDictionary<KProcess, IdDictionary> _dictByProcess;
 
         public GlobalStateTable()
         {
-            DictByProcess = new ConcurrentDictionary<KProcess, IdDictionary>();
+            _dictByProcess = new ConcurrentDictionary<KProcess, IdDictionary>();
         }
 
-        public bool Add(KProcess Process, int Id, object Data)
+        public bool Add(KProcess process, int id, object data)
         {
-            IdDictionary Dict = DictByProcess.GetOrAdd(Process, (Key) => new IdDictionary());
+            IdDictionary dict = _dictByProcess.GetOrAdd(process, (key) => new IdDictionary());
 
-            return Dict.Add(Id, Data);
+            return dict.Add(id, data);
         }
 
-        public int Add(KProcess Process, object Data)
+        public int Add(KProcess process, object data)
         {
-            IdDictionary Dict = DictByProcess.GetOrAdd(Process, (Key) => new IdDictionary());
+            IdDictionary dict = _dictByProcess.GetOrAdd(process, (key) => new IdDictionary());
 
-            return Dict.Add(Data);
+            return dict.Add(data);
         }
 
-        public object GetData(KProcess Process, int Id)
+        public object GetData(KProcess process, int id)
         {
-            if (DictByProcess.TryGetValue(Process, out IdDictionary Dict))
+            if (_dictByProcess.TryGetValue(process, out IdDictionary dict))
             {
-                return Dict.GetData(Id);
+                return dict.GetData(id);
             }
 
             return null;
         }
 
-        public T GetData<T>(KProcess Process, int Id)
+        public T GetData<T>(KProcess process, int id)
         {
-            if (DictByProcess.TryGetValue(Process, out IdDictionary Dict))
+            if (_dictByProcess.TryGetValue(process, out IdDictionary dict))
             {
-                return Dict.GetData<T>(Id);
+                return dict.GetData<T>(id);
             }
 
             return default(T);
         }
 
-        public object Delete(KProcess Process, int Id)
+        public object Delete(KProcess process, int id)
         {
-            if (DictByProcess.TryGetValue(Process, out IdDictionary Dict))
+            if (_dictByProcess.TryGetValue(process, out IdDictionary dict))
             {
-                return Dict.Delete(Id);
+                return dict.Delete(id);
             }
 
             return null;
         }
 
-        public ICollection<object> DeleteProcess(KProcess Process)
+        public ICollection<object> DeleteProcess(KProcess process)
         {
-            if (DictByProcess.TryRemove(Process, out IdDictionary Dict))
+            if (_dictByProcess.TryRemove(process, out IdDictionary dict))
             {
-                return Dict.Clear();
+                return dict.Clear();
             }
 
             return null;

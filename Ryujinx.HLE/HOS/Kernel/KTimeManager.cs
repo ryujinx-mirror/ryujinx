@@ -14,112 +14,112 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             public long TimePoint { get; private set; }
 
-            public WaitingObject(IKFutureSchedulerObject Object, long TimePoint)
+            public WaitingObject(IKFutureSchedulerObject schedulerObj, long timePoint)
             {
-                this.Object    = Object;
-                this.TimePoint = TimePoint;
+                Object    = schedulerObj;
+                TimePoint = timePoint;
             }
         }
 
-        private List<WaitingObject> WaitingObjects;
+        private List<WaitingObject> _waitingObjects;
 
-        private AutoResetEvent WaitEvent;
+        private AutoResetEvent _waitEvent;
 
-        private bool KeepRunning;
+        private bool _keepRunning;
 
         public KTimeManager()
         {
-            WaitingObjects = new List<WaitingObject>();
+            _waitingObjects = new List<WaitingObject>();
 
-            KeepRunning = true;
+            _keepRunning = true;
 
-            Thread Work = new Thread(WaitAndCheckScheduledObjects);
+            Thread work = new Thread(WaitAndCheckScheduledObjects);
 
-            Work.Start();
+            work.Start();
         }
 
-        public void ScheduleFutureInvocation(IKFutureSchedulerObject Object, long Timeout)
+        public void ScheduleFutureInvocation(IKFutureSchedulerObject schedulerObj, long timeout)
         {
-            long TimePoint = PerformanceCounter.ElapsedMilliseconds + ConvertNanosecondsToMilliseconds(Timeout);
+            long timePoint = PerformanceCounter.ElapsedMilliseconds + ConvertNanosecondsToMilliseconds(timeout);
 
-            lock (WaitingObjects)
+            lock (_waitingObjects)
             {
-                WaitingObjects.Add(new WaitingObject(Object, TimePoint));
+                _waitingObjects.Add(new WaitingObject(schedulerObj, timePoint));
             }
 
-            WaitEvent.Set();
+            _waitEvent.Set();
         }
 
-        public static long ConvertNanosecondsToMilliseconds(long Time)
+        public static long ConvertNanosecondsToMilliseconds(long time)
         {
-            Time /= 1000000;
+            time /= 1000000;
 
-            if ((ulong)Time > int.MaxValue)
+            if ((ulong)time > int.MaxValue)
             {
                 return int.MaxValue;
             }
 
-            return Time;
+            return time;
         }
 
-        public static long ConvertMillisecondsToNanoseconds(long Time)
+        public static long ConvertMillisecondsToNanoseconds(long time)
         {
-            return Time * 1000000;
+            return time * 1000000;
         }
 
-        public static long ConvertMillisecondsToTicks(long Time)
+        public static long ConvertMillisecondsToTicks(long time)
         {
-            return Time * 19200;
+            return time * 19200;
         }
 
         public void UnscheduleFutureInvocation(IKFutureSchedulerObject Object)
         {
-            lock (WaitingObjects)
+            lock (_waitingObjects)
             {
-                WaitingObjects.RemoveAll(x => x.Object == Object);
+                _waitingObjects.RemoveAll(x => x.Object == Object);
             }
         }
 
         private void WaitAndCheckScheduledObjects()
         {
-            using (WaitEvent = new AutoResetEvent(false))
+            using (_waitEvent = new AutoResetEvent(false))
             {
-                while (KeepRunning)
+                while (_keepRunning)
                 {
-                    WaitingObject Next;
+                    WaitingObject next;
 
-                    lock (WaitingObjects)
+                    lock (_waitingObjects)
                     {
-                        Next = WaitingObjects.OrderBy(x => x.TimePoint).FirstOrDefault();
+                        next = _waitingObjects.OrderBy(x => x.TimePoint).FirstOrDefault();
                     }
 
-                    if (Next != null)
+                    if (next != null)
                     {
-                        long TimePoint = PerformanceCounter.ElapsedMilliseconds;
+                        long timePoint = PerformanceCounter.ElapsedMilliseconds;
 
-                        if (Next.TimePoint > TimePoint)
+                        if (next.TimePoint > timePoint)
                         {
-                            WaitEvent.WaitOne((int)(Next.TimePoint - TimePoint));
+                            _waitEvent.WaitOne((int)(next.TimePoint - timePoint));
                         }
 
-                        bool TimeUp = PerformanceCounter.ElapsedMilliseconds >= Next.TimePoint;
+                        bool timeUp = PerformanceCounter.ElapsedMilliseconds >= next.TimePoint;
 
-                        if (TimeUp)
+                        if (timeUp)
                         {
-                            lock (WaitingObjects)
+                            lock (_waitingObjects)
                             {
-                                TimeUp = WaitingObjects.Remove(Next);
+                                timeUp = _waitingObjects.Remove(next);
                             }
                         }
 
-                        if (TimeUp)
+                        if (timeUp)
                         {
-                            Next.Object.TimeUp();
+                            next.Object.TimeUp();
                         }
                     }
                     else
                     {
-                        WaitEvent.WaitOne();
+                        _waitEvent.WaitOne();
                     }
                 }
             }
@@ -130,13 +130,13 @@ namespace Ryujinx.HLE.HOS.Kernel
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool Disposing)
+        protected virtual void Dispose(bool disposing)
         {
-            if (Disposing)
+            if (disposing)
             {
-                KeepRunning = false;
+                _keepRunning = false;
 
-                WaitEvent?.Set();
+                _waitEvent?.Set();
             }
         }
     }

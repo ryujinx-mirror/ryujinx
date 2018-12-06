@@ -9,9 +9,9 @@ namespace Ryujinx.HLE.HOS.Kernel
         public ushort HandleId { get; set; }
         public object Obj      { get; set; }
 
-        public KHandleEntry(int Index)
+        public KHandleEntry(int index)
         {
-            this.Index = Index;
+            Index = index;
         }
     }
 }

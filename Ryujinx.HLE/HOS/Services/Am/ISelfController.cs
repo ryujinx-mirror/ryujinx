@@ -8,17 +8,17 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class ISelfController : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private KEvent LaunchableEvent;
+        private KEvent _launchableEvent;
 
-        private int IdleTimeDetectionExtension;
+        private int _idleTimeDetectionExtension;
 
-        public ISelfController(Horizon System)
+        public ISelfController(Horizon system)
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0,  Exit                                  },
                 { 1,  LockExit                              },
@@ -36,114 +36,114 @@ namespace Ryujinx.HLE.HOS.Services.Am
                 { 63, GetIdleTimeDetectionExtension         }
             };
 
-            LaunchableEvent = new KEvent(System);
+            _launchableEvent = new KEvent(system);
         }
 
-        public long Exit(ServiceCtx Context)
+        public long Exit(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long LockExit(ServiceCtx Context)
+        public long LockExit(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long UnlockExit(ServiceCtx Context)
+        public long UnlockExit(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long GetLibraryAppletLaunchableEvent(ServiceCtx Context)
+        public long GetLibraryAppletLaunchableEvent(ServiceCtx context)
         {
-            LaunchableEvent.ReadableEvent.Signal();
+            _launchableEvent.ReadableEvent.Signal();
 
-            if (Context.Process.HandleTable.GenerateHandle(LaunchableEvent.ReadableEvent, out int Handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_launchableEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long SetScreenShotPermission(ServiceCtx Context)
+        public long SetScreenShotPermission(ServiceCtx context)
         {
-            bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
+            bool enable = context.RequestData.ReadByte() != 0;
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long SetOperationModeChangedNotification(ServiceCtx Context)
+        public long SetOperationModeChangedNotification(ServiceCtx context)
         {
-            bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
+            bool enable = context.RequestData.ReadByte() != 0;
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long SetPerformanceModeChangedNotification(ServiceCtx Context)
+        public long SetPerformanceModeChangedNotification(ServiceCtx context)
         {
-            bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
+            bool enable = context.RequestData.ReadByte() != 0;
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long SetFocusHandlingMode(ServiceCtx Context)
+        public long SetFocusHandlingMode(ServiceCtx context)
         {
-            bool Flag1 = Context.RequestData.ReadByte() != 0 ? true : false;
-            bool Flag2 = Context.RequestData.ReadByte() != 0 ? true : false;
-            bool Flag3 = Context.RequestData.ReadByte() != 0 ? true : false;
+            bool flag1 = context.RequestData.ReadByte() != 0;
+            bool flag2 = context.RequestData.ReadByte() != 0;
+            bool flag3 = context.RequestData.ReadByte() != 0;
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long SetRestartMessageEnabled(ServiceCtx Context)
+        public long SetRestartMessageEnabled(ServiceCtx context)
         {
-            bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
+            bool enable = context.RequestData.ReadByte() != 0;
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long SetOutOfFocusSuspendingEnabled(ServiceCtx Context)
+        public long SetOutOfFocusSuspendingEnabled(ServiceCtx context)
         {
-            bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
+            bool enable = context.RequestData.ReadByte() != 0;
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long SetScreenShotImageOrientation(ServiceCtx Context)
+        public long SetScreenShotImageOrientation(ServiceCtx context)
         {
-            int Orientation = Context.RequestData.ReadInt32();
+            int orientation = context.RequestData.ReadInt32();
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
             return 0;
         }
 
-        public long SetHandlesRequestToDisplay(ServiceCtx Context)
+        public long SetHandlesRequestToDisplay(ServiceCtx context)
         {
-            bool Enable = Context.RequestData.ReadByte() != 0 ? true : false;
+            bool enable = context.RequestData.ReadByte() != 0;
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
@@ -151,21 +151,21 @@ namespace Ryujinx.HLE.HOS.Services.Am
         }
 
         // SetIdleTimeDetectionExtension(u32)
-        public long SetIdleTimeDetectionExtension(ServiceCtx Context)
+        public long SetIdleTimeDetectionExtension(ServiceCtx context)
         {
-            IdleTimeDetectionExtension = Context.RequestData.ReadInt32();
+            _idleTimeDetectionExtension = context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceAm, $"Stubbed. IdleTimeDetectionExtension: {IdleTimeDetectionExtension}");
+            Logger.PrintStub(LogClass.ServiceAm, $"Stubbed. IdleTimeDetectionExtension: {_idleTimeDetectionExtension}");
 
             return 0;
         }
 
         // GetIdleTimeDetectionExtension() -> u32
-        public long GetIdleTimeDetectionExtension(ServiceCtx Context)
+        public long GetIdleTimeDetectionExtension(ServiceCtx context)
         {
-            Context.ResponseData.Write(IdleTimeDetectionExtension);
+            context.ResponseData.Write(_idleTimeDetectionExtension);
 
-            Logger.PrintStub(LogClass.ServiceAm, $"Stubbed. IdleTimeDetectionExtension: {IdleTimeDetectionExtension}");
+            Logger.PrintStub(LogClass.ServiceAm, $"Stubbed. IdleTimeDetectionExtension: {_idleTimeDetectionExtension}");
 
             return 0;
         }

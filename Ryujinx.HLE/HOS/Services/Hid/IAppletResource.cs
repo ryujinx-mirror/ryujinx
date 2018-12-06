@@ -7,30 +7,30 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 {
     class IAppletResource : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private KSharedMemory HidSharedMem;
+        private KSharedMemory _hidSharedMem;
 
-        public IAppletResource(KSharedMemory HidSharedMem)
+        public IAppletResource(KSharedMemory hidSharedMem)
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0, GetSharedMemoryHandle }
             };
 
-            this.HidSharedMem = HidSharedMem;
+            _hidSharedMem = hidSharedMem;
         }
 
-        public long GetSharedMemoryHandle(ServiceCtx Context)
+        public long GetSharedMemoryHandle(ServiceCtx context)
         {
-            if (Context.Process.HandleTable.GenerateHandle(HidSharedMem, out int Handle) != KernelResult.Success)
+            if (context.Process.HandleTable.GenerateHandle(_hidSharedMem, out int handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");
             }
 
-            Context.Response.HandleDesc = IpcHandleDesc.MakeCopy(Handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
             return 0;
         }

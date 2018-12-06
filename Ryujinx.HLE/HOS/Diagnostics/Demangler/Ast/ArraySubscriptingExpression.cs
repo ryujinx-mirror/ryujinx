@@ -4,22 +4,22 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class ArraySubscriptingExpression : BaseNode
     {
-        private BaseNode LeftNode;
-        private BaseNode Subscript;
+        private BaseNode _leftNode;
+        private BaseNode _subscript;
 
-        public ArraySubscriptingExpression(BaseNode LeftNode, BaseNode Subscript) : base(NodeType.ArraySubscriptingExpression)
+        public ArraySubscriptingExpression(BaseNode leftNode, BaseNode subscript) : base(NodeType.ArraySubscriptingExpression)
         {
-            this.LeftNode  = LeftNode;
-            this.Subscript = Subscript;
+            _leftNode  = leftNode;
+            _subscript = subscript;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write("(");
-            LeftNode.Print(Writer);
-            Writer.Write(")[");
-            Subscript.Print(Writer);
-            Writer.Write("]");            
+            writer.Write("(");
+            _leftNode.Print(writer);
+            writer.Write(")[");
+            _subscript.Print(writer);
+            writer.Write("]");            
         }
     }
 }

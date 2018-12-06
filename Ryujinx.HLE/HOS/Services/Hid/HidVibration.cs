@@ -10,7 +10,7 @@
     {
         None,
         Left,
-        Right,
+        Right
     }
 
     public struct HidVibrationDeviceValue

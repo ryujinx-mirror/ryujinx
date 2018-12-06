@@ -23,8 +23,8 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public KMemoryManager MemoryManager { get; private set; }
 
-        private SortedDictionary<ulong, KTlsPageInfo> FullTlsPages;
-        private SortedDictionary<ulong, KTlsPageInfo> FreeTlsPages;
+        private SortedDictionary<ulong, KTlsPageInfo> _fullTlsPages;
+        private SortedDictionary<ulong, KTlsPageInfo> _freeTlsPages;
 
         public int DefaultCpuCore { get; private set; }
 
@@ -34,43 +34,43 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public ulong PersonalMmHeapPagesCount { get; private set; }
 
-        private ProcessState State;
+        private ProcessState _state;
 
-        private object ProcessLock;
-        private object ThreadingLock;
+        private object _processLock;
+        private object _threadingLock;
 
         public KAddressArbiter AddressArbiter { get; private set; }
 
         public long[] RandomEntropy { get; private set; }
 
-        private bool Signaled;
-        private bool UseSystemMemBlocks;
+        private bool _signaled;
+        private bool _useSystemMemBlocks;
 
         public string Name { get; private set; }
 
-        private int ThreadCount;
+        private int _threadCount;
 
         public int MmuFlags { get; private set; }
 
-        private MemoryRegion MemRegion;
+        private MemoryRegion _memRegion;
 
         public KProcessCapabilities Capabilities { get; private set; }
 
         public long TitleId { get; private set; }
         public long Pid     { get; private set; }
 
-        private long  CreationTimestamp;
-        private ulong Entrypoint;
-        private ulong ImageSize;
-        private ulong MainThreadStackSize;
-        private ulong MemoryUsageCapacity;
-        private int   Category;
+        private long  _creationTimestamp;
+        private ulong _entrypoint;
+        private ulong _imageSize;
+        private ulong _mainThreadStackSize;
+        private ulong _memoryUsageCapacity;
+        private int   _category;
 
         public KHandleTable HandleTable { get; private set; }
 
         public ulong UserExceptionContextAddress { get; private set; }
 
-        private LinkedList<KThread> Threads;
+        private LinkedList<KThread> _threads;
 
         public bool IsPaused { get; private set; }
 
@@ -78,98 +78,98 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public MemoryManager CpuMemory { get; private set; }
 
-        private SvcHandler SvcHandler;
+        private SvcHandler _svcHandler;
 
         public HleProcessDebugger Debugger { get; private set; }
 
-        public KProcess(Horizon System) : base(System)
+        public KProcess(Horizon system) : base(system)
         {
-            ProcessLock   = new object();
-            ThreadingLock = new object();
+            _processLock   = new object();
+            _threadingLock = new object();
 
-            CpuMemory = new MemoryManager(System.Device.Memory.RamPointer);
+            CpuMemory = new MemoryManager(system.Device.Memory.RamPointer);
 
             CpuMemory.InvalidAccess += InvalidAccessHandler;
 
-            AddressArbiter = new KAddressArbiter(System);
+            AddressArbiter = new KAddressArbiter(system);
 
-            MemoryManager = new KMemoryManager(System, CpuMemory);
+            MemoryManager = new KMemoryManager(system, CpuMemory);
 
-            FullTlsPages = new SortedDictionary<ulong, KTlsPageInfo>();
-            FreeTlsPages = new SortedDictionary<ulong, KTlsPageInfo>();
+            _fullTlsPages = new SortedDictionary<ulong, KTlsPageInfo>();
+            _freeTlsPages = new SortedDictionary<ulong, KTlsPageInfo>();
 
             Capabilities = new KProcessCapabilities();
 
             RandomEntropy = new long[KScheduler.CpuCoresCount];
 
-            Threads = new LinkedList<KThread>();
+            _threads = new LinkedList<KThread>();
 
             Translator = new Translator();
 
             Translator.CpuTrace += CpuTraceHandler;
 
-            SvcHandler = new SvcHandler(System.Device, this);
+            _svcHandler = new SvcHandler(system.Device, this);
 
             Debugger = new HleProcessDebugger(this);
         }
 
         public KernelResult InitializeKip(
-            ProcessCreationInfo CreationInfo,
-            int[]               Caps,
-            KPageList           PageList,
-            KResourceLimit      ResourceLimit,
-            MemoryRegion        MemRegion)
+            ProcessCreationInfo creationInfo,
+            int[]               caps,
+            KPageList           pageList,
+            KResourceLimit      resourceLimit,
+            MemoryRegion        memRegion)
         {
-            this.ResourceLimit = ResourceLimit;
-            this.MemRegion     = MemRegion;
+            ResourceLimit = resourceLimit;
+            _memRegion     = memRegion;
 
-            AddressSpaceType AddrSpaceType = (AddressSpaceType)((CreationInfo.MmuFlags >> 1) & 7);
+            AddressSpaceType addrSpaceType = (AddressSpaceType)((creationInfo.MmuFlags >> 1) & 7);
 
-            bool AslrEnabled = ((CreationInfo.MmuFlags >> 5) & 1) != 0;
+            bool aslrEnabled = ((creationInfo.MmuFlags >> 5) & 1) != 0;
 
-            ulong CodeAddress = CreationInfo.CodeAddress;
+            ulong codeAddress = creationInfo.CodeAddress;
 
-            ulong CodeSize = (ulong)CreationInfo.CodePagesCount * KMemoryManager.PageSize;
+            ulong codeSize = (ulong)creationInfo.CodePagesCount * KMemoryManager.PageSize;
 
-            KMemoryBlockAllocator MemoryBlockAllocator = (MmuFlags & 0x40) != 0
+            KMemoryBlockAllocator memoryBlockAllocator = (MmuFlags & 0x40) != 0
                 ? System.LargeMemoryBlockAllocator
                 : System.SmallMemoryBlockAllocator;
 
-            KernelResult Result = MemoryManager.InitializeForProcess(
-                AddrSpaceType,
-                AslrEnabled,
-                !AslrEnabled,
-                MemRegion,
-                CodeAddress,
-                CodeSize,
-                MemoryBlockAllocator);
+            KernelResult result = MemoryManager.InitializeForProcess(
+                addrSpaceType,
+                aslrEnabled,
+                !aslrEnabled,
+                memRegion,
+                codeAddress,
+                codeSize,
+                memoryBlockAllocator);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                return Result;
+                return result;
             }
 
-            if (!ValidateCodeAddressAndSize(CodeAddress, CodeSize))
+            if (!ValidateCodeAddressAndSize(codeAddress, codeSize))
             {
                 return KernelResult.InvalidMemRange;
             }
 
-            Result = MemoryManager.MapPages(
-                CodeAddress,
-                PageList,
+            result = MemoryManager.MapPages(
+                codeAddress,
+                pageList,
                 MemoryState.CodeStatic,
                 MemoryPermission.None);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                return Result;
+                return result;
             }
 
-            Result = Capabilities.InitializeForKernel(Caps, MemoryManager);
+            result = Capabilities.InitializeForKernel(caps, MemoryManager);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                return Result;
+                return result;
             }
 
             Pid = System.GetKipId();
@@ -179,29 +179,29 @@ namespace Ryujinx.HLE.HOS.Kernel
                 throw new InvalidOperationException($"Invalid KIP Id {Pid}.");
             }
 
-            Result = ParseProcessInfo(CreationInfo);
+            result = ParseProcessInfo(creationInfo);
 
-            return Result;
+            return result;
         }
 
         public KernelResult Initialize(
-            ProcessCreationInfo CreationInfo,
-            int[]               Caps,
-            KResourceLimit      ResourceLimit,
-            MemoryRegion        MemRegion)
+            ProcessCreationInfo creationInfo,
+            int[]               caps,
+            KResourceLimit      resourceLimit,
+            MemoryRegion        memRegion)
         {
-            this.ResourceLimit = ResourceLimit;
-            this.MemRegion     = MemRegion;
+            ResourceLimit = resourceLimit;
+            _memRegion    = memRegion;
 
-            ulong PersonalMmHeapSize = GetPersonalMmHeapSize((ulong)CreationInfo.PersonalMmHeapPagesCount, MemRegion);
+            ulong personalMmHeapSize = GetPersonalMmHeapSize((ulong)creationInfo.PersonalMmHeapPagesCount, memRegion);
 
-            ulong CodePagesCount = (ulong)CreationInfo.CodePagesCount;
+            ulong codePagesCount = (ulong)creationInfo.CodePagesCount;
 
-            ulong NeededSizeForProcess = PersonalMmHeapSize + CodePagesCount * KMemoryManager.PageSize;
+            ulong neededSizeForProcess = personalMmHeapSize + codePagesCount * KMemoryManager.PageSize;
 
-            if (NeededSizeForProcess != 0 && ResourceLimit != null)
+            if (neededSizeForProcess != 0 && resourceLimit != null)
             {
-                if (!ResourceLimit.Reserve(LimitableResource.Memory, NeededSizeForProcess))
+                if (!resourceLimit.Reserve(LimitableResource.Memory, neededSizeForProcess))
                 {
                     return KernelResult.ResLimitExceeded;
                 }
@@ -209,78 +209,78 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             void CleanUpForError()
             {
-                if (NeededSizeForProcess != 0 && ResourceLimit != null)
+                if (neededSizeForProcess != 0 && resourceLimit != null)
                 {
-                    ResourceLimit.Release(LimitableResource.Memory, NeededSizeForProcess);
+                    resourceLimit.Release(LimitableResource.Memory, neededSizeForProcess);
                 }
             }
 
-            PersonalMmHeapPagesCount = (ulong)CreationInfo.PersonalMmHeapPagesCount;
+            PersonalMmHeapPagesCount = (ulong)creationInfo.PersonalMmHeapPagesCount;
 
-            KMemoryBlockAllocator MemoryBlockAllocator;
+            KMemoryBlockAllocator memoryBlockAllocator;
 
             if (PersonalMmHeapPagesCount != 0)
             {
-                MemoryBlockAllocator = new KMemoryBlockAllocator(PersonalMmHeapPagesCount * KMemoryManager.PageSize);
+                memoryBlockAllocator = new KMemoryBlockAllocator(PersonalMmHeapPagesCount * KMemoryManager.PageSize);
             }
             else
             {
-                MemoryBlockAllocator = (MmuFlags & 0x40) != 0
+                memoryBlockAllocator = (MmuFlags & 0x40) != 0
                     ? System.LargeMemoryBlockAllocator
                     : System.SmallMemoryBlockAllocator;
             }
 
-            AddressSpaceType AddrSpaceType = (AddressSpaceType)((CreationInfo.MmuFlags >> 1) & 7);
+            AddressSpaceType addrSpaceType = (AddressSpaceType)((creationInfo.MmuFlags >> 1) & 7);
 
-            bool AslrEnabled = ((CreationInfo.MmuFlags >> 5) & 1) != 0;
+            bool aslrEnabled = ((creationInfo.MmuFlags >> 5) & 1) != 0;
 
-            ulong CodeAddress = CreationInfo.CodeAddress;
+            ulong codeAddress = creationInfo.CodeAddress;
 
-            ulong CodeSize = CodePagesCount * KMemoryManager.PageSize;
+            ulong codeSize = codePagesCount * KMemoryManager.PageSize;
 
-            KernelResult Result = MemoryManager.InitializeForProcess(
-                AddrSpaceType,
-                AslrEnabled,
-                !AslrEnabled,
-                MemRegion,
-                CodeAddress,
-                CodeSize,
-                MemoryBlockAllocator);
+            KernelResult result = MemoryManager.InitializeForProcess(
+                addrSpaceType,
+                aslrEnabled,
+                !aslrEnabled,
+                memRegion,
+                codeAddress,
+                codeSize,
+                memoryBlockAllocator);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
                 CleanUpForError();
 
-                return Result;
+                return result;
             }
 
-            if (!ValidateCodeAddressAndSize(CodeAddress, CodeSize))
+            if (!ValidateCodeAddressAndSize(codeAddress, codeSize))
             {
                 CleanUpForError();
 
                 return KernelResult.InvalidMemRange;
             }
 
-            Result = MemoryManager.MapNewProcessCode(
-                CodeAddress,
-                CodePagesCount,
+            result = MemoryManager.MapNewProcessCode(
+                codeAddress,
+                codePagesCount,
                 MemoryState.CodeStatic,
                 MemoryPermission.None);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
                 CleanUpForError();
 
-                return Result;
+                return result;
             }
 
-            Result = Capabilities.InitializeForUser(Caps, MemoryManager);
+            result = Capabilities.InitializeForUser(caps, MemoryManager);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
                 CleanUpForError();
 
-                return Result;
+                return result;
             }
 
             Pid = System.GetProcessId();
@@ -290,53 +290,53 @@ namespace Ryujinx.HLE.HOS.Kernel
                 throw new InvalidOperationException($"Invalid Process Id {Pid}.");
             }
 
-            Result = ParseProcessInfo(CreationInfo);
+            result = ParseProcessInfo(creationInfo);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
                 CleanUpForError();
             }
 
-            return Result;
+            return result;
         }
 
-        private bool ValidateCodeAddressAndSize(ulong Address, ulong Size)
+        private bool ValidateCodeAddressAndSize(ulong address, ulong size)
         {
-            ulong CodeRegionStart;
-            ulong CodeRegionSize;
+            ulong codeRegionStart;
+            ulong codeRegionSize;
 
             switch (MemoryManager.AddrSpaceWidth)
             {
                 case 32:
-                    CodeRegionStart = 0x200000;
-                    CodeRegionSize  = 0x3fe00000;
+                    codeRegionStart = 0x200000;
+                    codeRegionSize  = 0x3fe00000;
                     break;
 
                 case 36:
-                    CodeRegionStart = 0x8000000;
-                    CodeRegionSize  = 0x78000000;
+                    codeRegionStart = 0x8000000;
+                    codeRegionSize  = 0x78000000;
                     break;
 
                 case 39:
-                    CodeRegionStart = 0x8000000;
-                    CodeRegionSize  = 0x7ff8000000;
+                    codeRegionStart = 0x8000000;
+                    codeRegionSize  = 0x7ff8000000;
                     break;
 
                 default: throw new InvalidOperationException("Invalid address space width on memory manager.");
             }
 
-            ulong EndAddr = Address + Size;
+            ulong endAddr = address + size;
 
-            ulong CodeRegionEnd = CodeRegionStart + CodeRegionSize;
+            ulong codeRegionEnd = codeRegionStart + codeRegionSize;
 
-            if (EndAddr     <= Address ||
-                EndAddr - 1 >  CodeRegionEnd - 1)
+            if (endAddr     <= address ||
+                endAddr - 1 >  codeRegionEnd - 1)
             {
                 return false;
             }
 
-            if (MemoryManager.InsideHeapRegion (Address, Size) ||
-                MemoryManager.InsideAliasRegion(Address, Size))
+            if (MemoryManager.InsideHeapRegion (address, size) ||
+                MemoryManager.InsideAliasRegion(address, size))
             {
                 return false;
             }
@@ -344,69 +344,69 @@ namespace Ryujinx.HLE.HOS.Kernel
             return true;
         }
 
-        private KernelResult ParseProcessInfo(ProcessCreationInfo CreationInfo)
+        private KernelResult ParseProcessInfo(ProcessCreationInfo creationInfo)
         {
             //Ensure that the current kernel version is equal or above to the minimum required.
-            uint RequiredKernelVersionMajor =  (uint)Capabilities.KernelReleaseVersion >> 19;
-            uint RequiredKernelVersionMinor = ((uint)Capabilities.KernelReleaseVersion >> 15) & 0xf;
+            uint requiredKernelVersionMajor =  (uint)Capabilities.KernelReleaseVersion >> 19;
+            uint requiredKernelVersionMinor = ((uint)Capabilities.KernelReleaseVersion >> 15) & 0xf;
 
             if (System.EnableVersionChecks)
             {
-                if (RequiredKernelVersionMajor > KernelVersionMajor)
+                if (requiredKernelVersionMajor > KernelVersionMajor)
                 {
                     return KernelResult.InvalidCombination;
                 }
 
-                if (RequiredKernelVersionMajor != KernelVersionMajor && RequiredKernelVersionMajor < 3)
+                if (requiredKernelVersionMajor != KernelVersionMajor && requiredKernelVersionMajor < 3)
                 {
                     return KernelResult.InvalidCombination;
                 }
 
-                if (RequiredKernelVersionMinor > KernelVersionMinor)
+                if (requiredKernelVersionMinor > KernelVersionMinor)
                 {
                     return KernelResult.InvalidCombination;
                 }
             }
 
-            KernelResult Result = AllocateThreadLocalStorage(out ulong UserExceptionContextAddress);
+            KernelResult result = AllocateThreadLocalStorage(out ulong userExceptionContextAddress);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                return Result;
+                return result;
             }
 
-            this.UserExceptionContextAddress = UserExceptionContextAddress;
+            UserExceptionContextAddress = userExceptionContextAddress;
 
-            MemoryHelper.FillWithZeros(CpuMemory, (long)UserExceptionContextAddress, KTlsPageInfo.TlsEntrySize);
+            MemoryHelper.FillWithZeros(CpuMemory, (long)userExceptionContextAddress, KTlsPageInfo.TlsEntrySize);
 
-            Name = CreationInfo.Name;
+            Name = creationInfo.Name;
 
-            State = ProcessState.Created;
+            _state = ProcessState.Created;
 
-            CreationTimestamp = PerformanceCounter.ElapsedMilliseconds;
+            _creationTimestamp = PerformanceCounter.ElapsedMilliseconds;
 
-            MmuFlags   = CreationInfo.MmuFlags;
-            Category   = CreationInfo.Category;
-            TitleId    = CreationInfo.TitleId;
-            Entrypoint = CreationInfo.CodeAddress;
-            ImageSize  = (ulong)CreationInfo.CodePagesCount * KMemoryManager.PageSize;
+            MmuFlags    = creationInfo.MmuFlags;
+            _category   = creationInfo.Category;
+            TitleId     = creationInfo.TitleId;
+            _entrypoint = creationInfo.CodeAddress;
+            _imageSize  = (ulong)creationInfo.CodePagesCount * KMemoryManager.PageSize;
 
-            UseSystemMemBlocks = ((MmuFlags >> 6) & 1) != 0;
+            _useSystemMemBlocks = ((MmuFlags >> 6) & 1) != 0;
 
             switch ((AddressSpaceType)((MmuFlags >> 1) & 7))
             {
                 case AddressSpaceType.Addr32Bits:
                 case AddressSpaceType.Addr36Bits:
                 case AddressSpaceType.Addr39Bits:
-                    MemoryUsageCapacity = MemoryManager.HeapRegionEnd -
+                    _memoryUsageCapacity = MemoryManager.HeapRegionEnd -
                                           MemoryManager.HeapRegionStart;
                     break;
 
                 case AddressSpaceType.Addr32BitsNoMap:
-                    MemoryUsageCapacity = MemoryManager.HeapRegionEnd -
-                                          MemoryManager.HeapRegionStart +
-                                          MemoryManager.AliasRegionEnd -
-                                          MemoryManager.AliasRegionStart;
+                    _memoryUsageCapacity = MemoryManager.HeapRegionEnd -
+                                           MemoryManager.HeapRegionStart +
+                                           MemoryManager.AliasRegionEnd -
+                                           MemoryManager.AliasRegionStart;
                     break;
 
                 default: throw new InvalidOperationException($"Invalid MMU flags value 0x{MmuFlags:x2}.");
@@ -417,130 +417,130 @@ namespace Ryujinx.HLE.HOS.Kernel
             return KernelResult.Success;
         }
 
-        public KernelResult AllocateThreadLocalStorage(out ulong Address)
+        public KernelResult AllocateThreadLocalStorage(out ulong address)
         {
             System.CriticalSection.Enter();
 
-            KernelResult Result;
+            KernelResult result;
 
-            if (FreeTlsPages.Count > 0)
+            if (_freeTlsPages.Count > 0)
             {
                 //If we have free TLS pages available, just use the first one.
-                KTlsPageInfo PageInfo = FreeTlsPages.Values.First();
+                KTlsPageInfo pageInfo = _freeTlsPages.Values.First();
 
-                if (!PageInfo.TryGetFreePage(out Address))
+                if (!pageInfo.TryGetFreePage(out address))
                 {
                     throw new InvalidOperationException("Unexpected failure getting free TLS page!");
                 }
 
-                if (PageInfo.IsFull())
+                if (pageInfo.IsFull())
                 {
-                    FreeTlsPages.Remove(PageInfo.PageAddr);
+                    _freeTlsPages.Remove(pageInfo.PageAddr);
 
-                    FullTlsPages.Add(PageInfo.PageAddr, PageInfo);
+                    _fullTlsPages.Add(pageInfo.PageAddr, pageInfo);
                 }
 
-                Result = KernelResult.Success;
+                result = KernelResult.Success;
             }
             else
             {
                 //Otherwise, we need to create a new one.
-                Result = AllocateTlsPage(out KTlsPageInfo PageInfo);
+                result = AllocateTlsPage(out KTlsPageInfo pageInfo);
 
-                if (Result == KernelResult.Success)
+                if (result == KernelResult.Success)
                 {
-                    if (!PageInfo.TryGetFreePage(out Address))
+                    if (!pageInfo.TryGetFreePage(out address))
                     {
                         throw new InvalidOperationException("Unexpected failure getting free TLS page!");
                     }
 
-                    FreeTlsPages.Add(PageInfo.PageAddr, PageInfo);
+                    _freeTlsPages.Add(pageInfo.PageAddr, pageInfo);
                 }
                 else
                 {
-                    Address = 0;
+                    address = 0;
                 }
             }
 
             System.CriticalSection.Leave();
 
-            return Result;
+            return result;
         }
 
-        private KernelResult AllocateTlsPage(out KTlsPageInfo PageInfo)
+        private KernelResult AllocateTlsPage(out KTlsPageInfo pageInfo)
         {
-            PageInfo = default(KTlsPageInfo);
+            pageInfo = default(KTlsPageInfo);
 
-            if (!System.UserSlabHeapPages.TryGetItem(out ulong TlsPagePa))
+            if (!System.UserSlabHeapPages.TryGetItem(out ulong tlsPagePa))
             {
                 return KernelResult.OutOfMemory;
             }
 
-            ulong RegionStart = MemoryManager.TlsIoRegionStart;
-            ulong RegionSize  = MemoryManager.TlsIoRegionEnd - RegionStart;
+            ulong regionStart = MemoryManager.TlsIoRegionStart;
+            ulong regionSize  = MemoryManager.TlsIoRegionEnd - regionStart;
 
-            ulong RegionPagesCount = RegionSize / KMemoryManager.PageSize;
+            ulong regionPagesCount = regionSize / KMemoryManager.PageSize;
 
-            KernelResult Result = MemoryManager.AllocateOrMapPa(
+            KernelResult result = MemoryManager.AllocateOrMapPa(
                 1,
                 KMemoryManager.PageSize,
-                TlsPagePa,
+                tlsPagePa,
                 true,
-                RegionStart,
-                RegionPagesCount,
+                regionStart,
+                regionPagesCount,
                 MemoryState.ThreadLocal,
                 MemoryPermission.ReadAndWrite,
-                out ulong TlsPageVa);
+                out ulong tlsPageVa);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                System.UserSlabHeapPages.Free(TlsPagePa);
+                System.UserSlabHeapPages.Free(tlsPagePa);
             }
             else
             {
-                PageInfo = new KTlsPageInfo(TlsPageVa);
+                pageInfo = new KTlsPageInfo(tlsPageVa);
 
-                MemoryHelper.FillWithZeros(CpuMemory, (long)TlsPageVa, KMemoryManager.PageSize);
+                MemoryHelper.FillWithZeros(CpuMemory, (long)tlsPageVa, KMemoryManager.PageSize);
             }
 
-            return Result;
+            return result;
         }
 
-        public KernelResult FreeThreadLocalStorage(ulong TlsSlotAddr)
+        public KernelResult FreeThreadLocalStorage(ulong tlsSlotAddr)
         {
-            ulong TlsPageAddr = BitUtils.AlignDown(TlsSlotAddr, KMemoryManager.PageSize);
+            ulong tlsPageAddr = BitUtils.AlignDown(tlsSlotAddr, KMemoryManager.PageSize);
 
             System.CriticalSection.Enter();
 
-            KernelResult Result = KernelResult.Success;
+            KernelResult result = KernelResult.Success;
 
-            KTlsPageInfo PageInfo = null;
+            KTlsPageInfo pageInfo = null;
 
-            if (FullTlsPages.TryGetValue(TlsPageAddr, out PageInfo))
+            if (_fullTlsPages.TryGetValue(tlsPageAddr, out pageInfo))
             {
                 //TLS page was full, free slot and move to free pages tree.
-                FullTlsPages.Remove(TlsPageAddr);
+                _fullTlsPages.Remove(tlsPageAddr);
 
-                FreeTlsPages.Add(TlsPageAddr, PageInfo);
+                _freeTlsPages.Add(tlsPageAddr, pageInfo);
             }
-            else if (!FreeTlsPages.TryGetValue(TlsPageAddr, out PageInfo))
+            else if (!_freeTlsPages.TryGetValue(tlsPageAddr, out pageInfo))
             {
-                Result = KernelResult.InvalidAddress;
+                result = KernelResult.InvalidAddress;
             }
 
-            if (PageInfo != null)
+            if (pageInfo != null)
             {
-                PageInfo.FreeTlsSlot(TlsSlotAddr);
+                pageInfo.FreeTlsSlot(tlsSlotAddr);
 
-                if (PageInfo.IsEmpty())
+                if (pageInfo.IsEmpty())
                 {
                     //TLS page is now empty, we should ensure it is removed
                     //from all trees, and free the memory it was using.
-                    FreeTlsPages.Remove(TlsPageAddr);
+                    _freeTlsPages.Remove(tlsPageAddr);
 
                     System.CriticalSection.Leave();
 
-                    FreeTlsPage(PageInfo);
+                    FreeTlsPage(pageInfo);
 
                     return KernelResult.Success;
                 }
@@ -548,26 +548,26 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             System.CriticalSection.Leave();
 
-            return Result;
+            return result;
         }
 
-        private KernelResult FreeTlsPage(KTlsPageInfo PageInfo)
+        private KernelResult FreeTlsPage(KTlsPageInfo pageInfo)
         {
-            KernelResult Result = MemoryManager.ConvertVaToPa(PageInfo.PageAddr, out ulong TlsPagePa);
+            KernelResult result = MemoryManager.ConvertVaToPa(pageInfo.PageAddr, out ulong tlsPagePa);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
                 throw new InvalidOperationException("Unexpected failure translating virtual address to physical.");
             }
 
-            Result = MemoryManager.UnmapForKernel(PageInfo.PageAddr, 1, MemoryState.ThreadLocal);
+            result = MemoryManager.UnmapForKernel(pageInfo.PageAddr, 1, MemoryState.ThreadLocal);
 
-            if (Result == KernelResult.Success)
+            if (result == KernelResult.Success)
             {
-                System.UserSlabHeapPages.Free(TlsPagePa);
+                System.UserSlabHeapPages.Free(tlsPagePa);
             }
 
-            return Result;
+            return result;
         }
 
         private void GenerateRandomEntropy()
@@ -575,11 +575,11 @@ namespace Ryujinx.HLE.HOS.Kernel
             //TODO.
         }
 
-        public KernelResult Start(int MainThreadPriority, ulong StackSize)
+        public KernelResult Start(int mainThreadPriority, ulong stackSize)
         {
-            lock (ProcessLock)
+            lock (_processLock)
             {
-                if (State > ProcessState.CreatedAttached)
+                if (_state > ProcessState.CreatedAttached)
                 {
                     return KernelResult.InvalidState;
                 }
@@ -589,153 +589,153 @@ namespace Ryujinx.HLE.HOS.Kernel
                     return KernelResult.ResLimitExceeded;
                 }
 
-                KResourceLimit ThreadResourceLimit = ResourceLimit;
-                KResourceLimit MemoryResourceLimit = null;
+                KResourceLimit threadResourceLimit = ResourceLimit;
+                KResourceLimit memoryResourceLimit = null;
 
-                if (MainThreadStackSize != 0)
+                if (_mainThreadStackSize != 0)
                 {
                     throw new InvalidOperationException("Trying to start a process with a invalid state!");
                 }
 
-                ulong StackSizeRounded = BitUtils.AlignUp(StackSize, KMemoryManager.PageSize);
+                ulong stackSizeRounded = BitUtils.AlignUp(stackSize, KMemoryManager.PageSize);
 
-                ulong NeededSize = StackSizeRounded + ImageSize;
+                ulong neededSize = stackSizeRounded + _imageSize;
 
                 //Check if the needed size for the code and the stack will fit on the
                 //memory usage capacity of this Process. Also check for possible overflow
                 //on the above addition.
-                if (NeededSize > MemoryUsageCapacity ||
-                    NeededSize < StackSizeRounded)
+                if (neededSize > _memoryUsageCapacity ||
+                    neededSize < stackSizeRounded)
                 {
-                    ThreadResourceLimit?.Release(LimitableResource.Thread, 1);
+                    threadResourceLimit?.Release(LimitableResource.Thread, 1);
 
                     return KernelResult.OutOfMemory;
                 }
 
-                if (StackSizeRounded != 0 && ResourceLimit != null)
+                if (stackSizeRounded != 0 && ResourceLimit != null)
                 {
-                    MemoryResourceLimit = ResourceLimit;
+                    memoryResourceLimit = ResourceLimit;
 
-                    if (!MemoryResourceLimit.Reserve(LimitableResource.Memory, StackSizeRounded))
+                    if (!memoryResourceLimit.Reserve(LimitableResource.Memory, stackSizeRounded))
                     {
-                        ThreadResourceLimit?.Release(LimitableResource.Thread, 1);
+                        threadResourceLimit?.Release(LimitableResource.Thread, 1);
 
                         return KernelResult.ResLimitExceeded;
                     }
                 }
 
-                KernelResult Result;
+                KernelResult result;
 
-                KThread MainThread = null;
+                KThread mainThread = null;
 
-                ulong StackTop = 0;
+                ulong stackTop = 0;
 
                 void CleanUpForError()
                 {
-                    MainThread?.Terminate();
+                    mainThread?.Terminate();
                     HandleTable.Destroy();
 
-                    if (MainThreadStackSize != 0)
+                    if (_mainThreadStackSize != 0)
                     {
-                        ulong StackBottom = StackTop - MainThreadStackSize;
+                        ulong stackBottom = stackTop - _mainThreadStackSize;
 
-                        ulong StackPagesCount = MainThreadStackSize / KMemoryManager.PageSize;
+                        ulong stackPagesCount = _mainThreadStackSize / KMemoryManager.PageSize;
 
-                        MemoryManager.UnmapForKernel(StackBottom, StackPagesCount, MemoryState.Stack);
+                        MemoryManager.UnmapForKernel(stackBottom, stackPagesCount, MemoryState.Stack);
                     }
 
-                    MemoryResourceLimit?.Release(LimitableResource.Memory, StackSizeRounded);
-                    ThreadResourceLimit?.Release(LimitableResource.Thread, 1);
+                    memoryResourceLimit?.Release(LimitableResource.Memory, stackSizeRounded);
+                    threadResourceLimit?.Release(LimitableResource.Thread, 1);
                 }
 
-                if (StackSizeRounded != 0)
+                if (stackSizeRounded != 0)
                 {
-                    ulong StackPagesCount = StackSizeRounded / KMemoryManager.PageSize;
+                    ulong stackPagesCount = stackSizeRounded / KMemoryManager.PageSize;
 
-                    ulong RegionStart = MemoryManager.StackRegionStart;
-                    ulong RegionSize  = MemoryManager.StackRegionEnd - RegionStart;
+                    ulong regionStart = MemoryManager.StackRegionStart;
+                    ulong regionSize  = MemoryManager.StackRegionEnd - regionStart;
 
-                    ulong RegionPagesCount = RegionSize / KMemoryManager.PageSize;
+                    ulong regionPagesCount = regionSize / KMemoryManager.PageSize;
 
-                    Result = MemoryManager.AllocateOrMapPa(
-                        StackPagesCount,
+                    result = MemoryManager.AllocateOrMapPa(
+                        stackPagesCount,
                         KMemoryManager.PageSize,
                         0,
                         false,
-                        RegionStart,
-                        RegionPagesCount,
+                        regionStart,
+                        regionPagesCount,
                         MemoryState.Stack,
                         MemoryPermission.ReadAndWrite,
-                        out ulong StackBottom);
+                        out ulong stackBottom);
 
-                    if (Result != KernelResult.Success)
+                    if (result != KernelResult.Success)
                     {
                         CleanUpForError();
 
-                        return Result;
+                        return result;
                     }
 
-                    MainThreadStackSize += StackSizeRounded;
+                    _mainThreadStackSize += stackSizeRounded;
 
-                    StackTop = StackBottom + StackSizeRounded;
+                    stackTop = stackBottom + stackSizeRounded;
                 }
 
-                ulong HeapCapacity = MemoryUsageCapacity - MainThreadStackSize - ImageSize;
+                ulong heapCapacity = _memoryUsageCapacity - _mainThreadStackSize - _imageSize;
 
-                Result = MemoryManager.SetHeapCapacity(HeapCapacity);
+                result = MemoryManager.SetHeapCapacity(heapCapacity);
 
-                if (Result != KernelResult.Success)
+                if (result != KernelResult.Success)
                 {
                     CleanUpForError();
 
-                    return Result;
+                    return result;
                 }
 
                 HandleTable = new KHandleTable(System);
 
-                Result = HandleTable.Initialize(Capabilities.HandleTableSize);
+                result = HandleTable.Initialize(Capabilities.HandleTableSize);
 
-                if (Result != KernelResult.Success)
+                if (result != KernelResult.Success)
                 {
                     CleanUpForError();
 
-                    return Result;
+                    return result;
                 }
 
-                MainThread = new KThread(System);
+                mainThread = new KThread(System);
 
-                Result = MainThread.Initialize(
-                    Entrypoint,
+                result = mainThread.Initialize(
+                    _entrypoint,
                     0,
-                    StackTop,
-                    MainThreadPriority,
+                    stackTop,
+                    mainThreadPriority,
                     DefaultCpuCore,
                     this);
 
-                if (Result != KernelResult.Success)
+                if (result != KernelResult.Success)
                 {
                     CleanUpForError();
 
-                    return Result;
+                    return result;
                 }
 
-                Result = HandleTable.GenerateHandle(MainThread, out int MainThreadHandle);
+                result = HandleTable.GenerateHandle(mainThread, out int mainThreadHandle);
 
-                if (Result != KernelResult.Success)
+                if (result != KernelResult.Success)
                 {
                     CleanUpForError();
 
-                    return Result;
+                    return result;
                 }
 
-                MainThread.SetEntryArguments(0, MainThreadHandle);
+                mainThread.SetEntryArguments(0, mainThreadHandle);
 
-                ProcessState OldState = State;
-                ProcessState NewState = State != ProcessState.Created
+                ProcessState oldState = _state;
+                ProcessState newState = _state != ProcessState.Created
                     ? ProcessState.Attached
                     : ProcessState.Started;
 
-                SetState(NewState);
+                SetState(newState);
 
                 //TODO: We can't call KThread.Start from a non-guest thread.
                 //We will need to make some changes to allow the creation of
@@ -750,41 +750,41 @@ namespace Ryujinx.HLE.HOS.Kernel
                     CleanUpForError();
                 } */
 
-                MainThread.Reschedule(ThreadSchedState.Running);
+                mainThread.Reschedule(ThreadSchedState.Running);
 
-                return Result;
+                return result;
             }
         }
 
-        private void SetState(ProcessState NewState)
+        private void SetState(ProcessState newState)
         {
-            if (State != NewState)
+            if (_state != newState)
             {
-                State    = NewState;
-                Signaled = true;
+                _state    = newState;
+                _signaled = true;
 
                 Signal();
             }
         }
 
         public KernelResult InitializeThread(
-            KThread Thread,
-            ulong   Entrypoint,
-            ulong   ArgsPtr,
-            ulong   StackTop,
-            int     Priority,
-            int     CpuCore)
+            KThread thread,
+            ulong   entrypoint,
+            ulong   argsPtr,
+            ulong   stackTop,
+            int     priority,
+            int     cpuCore)
         {
-            lock (ProcessLock)
+            lock (_processLock)
             {
-                return Thread.Initialize(Entrypoint, ArgsPtr, StackTop, Priority, CpuCore, this);
+                return thread.Initialize(entrypoint, argsPtr, stackTop, priority, cpuCore, this);
             }
         }
 
-        public void SubscribeThreadEventHandlers(CpuThread Context)
+        public void SubscribeThreadEventHandlers(CpuThread context)
         {
-            Context.ThreadState.Interrupt += InterruptHandler;
-            Context.ThreadState.SvcCall   += SvcHandler.SvcCall;
+            context.ThreadState.Interrupt += InterruptHandler;
+            context.ThreadState.SvcCall   += _svcHandler.SvcCall;
         }
 
         private void InterruptHandler(object sender, EventArgs e)
@@ -794,7 +794,7 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public void IncrementThreadCount()
         {
-            Interlocked.Increment(ref ThreadCount);
+            Interlocked.Increment(ref _threadCount);
 
             System.ThreadCounter.AddCount();
         }
@@ -803,7 +803,7 @@ namespace Ryujinx.HLE.HOS.Kernel
         {
             System.ThreadCounter.Signal();
 
-            if (Interlocked.Decrement(ref ThreadCount) == 0)
+            if (Interlocked.Decrement(ref _threadCount) == 0)
             {
                 Terminate();
             }
@@ -811,25 +811,25 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public ulong GetMemoryCapacity()
         {
-            ulong TotalCapacity = (ulong)ResourceLimit.GetRemainingValue(LimitableResource.Memory);
+            ulong totalCapacity = (ulong)ResourceLimit.GetRemainingValue(LimitableResource.Memory);
 
-            TotalCapacity += MemoryManager.GetTotalHeapSize();
+            totalCapacity += MemoryManager.GetTotalHeapSize();
 
-            TotalCapacity += GetPersonalMmHeapSize();
+            totalCapacity += GetPersonalMmHeapSize();
 
-            TotalCapacity += ImageSize + MainThreadStackSize;
+            totalCapacity += _imageSize + _mainThreadStackSize;
 
-            if (TotalCapacity <= MemoryUsageCapacity)
+            if (totalCapacity <= _memoryUsageCapacity)
             {
-                return TotalCapacity;
+                return totalCapacity;
             }
 
-            return MemoryUsageCapacity;
+            return _memoryUsageCapacity;
         }
 
         public ulong GetMemoryUsage()
         {
-            return ImageSize + MainThreadStackSize + MemoryManager.GetTotalHeapSize() + GetPersonalMmHeapSize();
+            return _imageSize + _mainThreadStackSize + MemoryManager.GetTotalHeapSize() + GetPersonalMmHeapSize();
         }
 
         public ulong GetMemoryCapacityWithoutPersonalMmHeap()
@@ -844,83 +844,83 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         private ulong GetPersonalMmHeapSize()
         {
-            return GetPersonalMmHeapSize(PersonalMmHeapPagesCount, MemRegion);
+            return GetPersonalMmHeapSize(PersonalMmHeapPagesCount, _memRegion);
         }
 
-        private static ulong GetPersonalMmHeapSize(ulong PersonalMmHeapPagesCount, MemoryRegion MemRegion)
+        private static ulong GetPersonalMmHeapSize(ulong personalMmHeapPagesCount, MemoryRegion memRegion)
         {
-            if (MemRegion == MemoryRegion.Applet)
+            if (memRegion == MemoryRegion.Applet)
             {
                 return 0;
             }
 
-            return PersonalMmHeapPagesCount * KMemoryManager.PageSize;
+            return personalMmHeapPagesCount * KMemoryManager.PageSize;
         }
 
-        public void AddThread(KThread Thread)
+        public void AddThread(KThread thread)
         {
-            lock (ThreadingLock)
+            lock (_threadingLock)
             {
-                Thread.ProcessListNode = Threads.AddLast(Thread);
+                thread.ProcessListNode = _threads.AddLast(thread);
             }
         }
 
-        public void RemoveThread(KThread Thread)
+        public void RemoveThread(KThread thread)
         {
-            lock (ThreadingLock)
+            lock (_threadingLock)
             {
-                Threads.Remove(Thread.ProcessListNode);
+                _threads.Remove(thread.ProcessListNode);
             }
         }
 
-        public bool IsCpuCoreAllowed(int Core)
+        public bool IsCpuCoreAllowed(int core)
         {
-            return (Capabilities.AllowedCpuCoresMask & (1L << Core)) != 0;
+            return (Capabilities.AllowedCpuCoresMask & (1L << core)) != 0;
         }
 
-        public bool IsPriorityAllowed(int Priority)
+        public bool IsPriorityAllowed(int priority)
         {
-            return (Capabilities.AllowedThreadPriosMask & (1L << Priority)) != 0;
+            return (Capabilities.AllowedThreadPriosMask & (1L << priority)) != 0;
         }
 
         public override bool IsSignaled()
         {
-            return Signaled;
+            return _signaled;
         }
 
         public KernelResult Terminate()
         {
-            KernelResult Result;
+            KernelResult result;
 
-            bool ShallTerminate = false;
+            bool shallTerminate = false;
 
             System.CriticalSection.Enter();
 
-            lock (ProcessLock)
+            lock (_processLock)
             {
-                if (State >= ProcessState.Started)
+                if (_state >= ProcessState.Started)
                 {
-                    if (State == ProcessState.Started  ||
-                        State == ProcessState.Crashed  ||
-                        State == ProcessState.Attached ||
-                        State == ProcessState.DebugSuspended)
+                    if (_state == ProcessState.Started  ||
+                        _state == ProcessState.Crashed  ||
+                        _state == ProcessState.Attached ||
+                        _state == ProcessState.DebugSuspended)
                     {
                         SetState(ProcessState.Exiting);
 
-                        ShallTerminate = true;
+                        shallTerminate = true;
                     }
 
-                    Result = KernelResult.Success;
+                    result = KernelResult.Success;
                 }
                 else
                 {
-                    Result = KernelResult.InvalidState;
+                    result = KernelResult.InvalidState;
                 }
             }
 
             System.CriticalSection.Leave();
 
-            if (ShallTerminate)
+            if (shallTerminate)
             {
                 //UnpauseAndTerminateAllThreadsExcept(System.Scheduler.GetCurrentThread());
 
@@ -930,10 +930,10 @@ namespace Ryujinx.HLE.HOS.Kernel
                 SignalExit();
             }
 
-            return Result;
+            return result;
         }
 
-        private void UnpauseAndTerminateAllThreadsExcept(KThread Thread)
+        private void UnpauseAndTerminateAllThreadsExcept(KThread thread)
         {
             //TODO.
         }
@@ -959,38 +959,38 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public KernelResult ClearIfNotExited()
         {
-            KernelResult Result;
+            KernelResult result;
 
             System.CriticalSection.Enter();
 
-            lock (ProcessLock)
+            lock (_processLock)
             {
-                if (State != ProcessState.Exited && Signaled)
+                if (_state != ProcessState.Exited && _signaled)
                 {
-                    Signaled = false;
+                    _signaled = false;
 
-                    Result = KernelResult.Success;
+                    result = KernelResult.Success;
                 }
                 else
                 {
-                    Result = KernelResult.InvalidState;
+                    result = KernelResult.InvalidState;
                 }
             }
 
             System.CriticalSection.Leave();
 
-            return Result;
+            return result;
         }
 
         public void StopAllThreads()
         {
-            lock (ThreadingLock)
+            lock (_threadingLock)
             {
-                foreach (KThread Thread in Threads)
+                foreach (KThread thread in _threads)
                 {
-                    Thread.Context.StopExecution();
+                    thread.Context.StopExecution();
 
-                    System.Scheduler.CoreManager.Set(Thread.Context.Work);
+                    System.Scheduler.CoreManager.Set(thread.Context.Work);
                 }
             }
         }

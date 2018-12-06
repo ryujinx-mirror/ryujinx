@@ -4,25 +4,25 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class CastExpression : BaseNode
     {
-        private string   Kind;
-        private BaseNode To;
-        private BaseNode From;
+        private string   _kind;
+        private BaseNode _to;
+        private BaseNode _from;
 
-        public CastExpression(string Kind, BaseNode To, BaseNode From) : base(NodeType.CastExpression)
+        public CastExpression(string kind, BaseNode to, BaseNode from) : base(NodeType.CastExpression)
         {
-            this.Kind = Kind;
-            this.To   = To;
-            this.From = From;
+            _kind = kind;
+            _to   = to;
+            _from = from;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write(Kind);
-            Writer.Write("<");
-            To.PrintLeft(Writer);
-            Writer.Write(">(");
-            From.PrintLeft(Writer);
-            Writer.Write(")");
+            writer.Write(_kind);
+            writer.Write("<");
+            _to.PrintLeft(writer);
+            writer.Write(">(");
+            _from.PrintLeft(writer);
+            writer.Write(")");
         }
     }
 }

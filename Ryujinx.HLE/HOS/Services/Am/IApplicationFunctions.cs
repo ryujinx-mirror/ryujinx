@@ -6,13 +6,13 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class IApplicationFunctions : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
         public IApplicationFunctions()
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 1,  PopLaunchParameter          },
                 { 20, EnsureSaveData              },
@@ -26,88 +26,88 @@ namespace Ryujinx.HLE.HOS.Services.Am
             };
         }
 
-        public long PopLaunchParameter(ServiceCtx Context)
+        public long PopLaunchParameter(ServiceCtx context)
         {
             //Only the first 0x18 bytes of the Data seems to be actually used.
-            MakeObject(Context, new IStorage(StorageHelper.MakeLaunchParams()));
+            MakeObject(context, new IStorage(StorageHelper.MakeLaunchParams()));
 
             return 0;
         }
 
-        public long EnsureSaveData(ServiceCtx Context)
+        public long EnsureSaveData(ServiceCtx context)
         {
-            long UIdLow  = Context.RequestData.ReadInt64();
-            long UIdHigh = Context.RequestData.ReadInt64();
+            long uIdLow  = context.RequestData.ReadInt64();
+            long uIdHigh = context.RequestData.ReadInt64();
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
-            Context.ResponseData.Write(0L);
+            context.ResponseData.Write(0L);
 
             return 0;
         }
 
-        public long GetDesiredLanguage(ServiceCtx Context)
+        public long GetDesiredLanguage(ServiceCtx context)
         {
-            Context.ResponseData.Write(Context.Device.System.State.DesiredLanguageCode);
+            context.ResponseData.Write(context.Device.System.State.DesiredLanguageCode);
 
             return 0;
         }
 
-        public long SetTerminateResult(ServiceCtx Context)
+        public long SetTerminateResult(ServiceCtx context)
         {
-            int ErrorCode = Context.RequestData.ReadInt32();
+            int errorCode = context.RequestData.ReadInt32();
 
-            string Result = GetFormattedErrorCode(ErrorCode);
+            string result = GetFormattedErrorCode(errorCode);
 
-            Logger.PrintInfo(LogClass.ServiceAm, $"Result = 0x{ErrorCode:x8} ({Result}).");
+            Logger.PrintInfo(LogClass.ServiceAm, $"Result = 0x{errorCode:x8} ({result}).");
 
             return 0;
         }
 
-        private string GetFormattedErrorCode(int ErrorCode)
+        private string GetFormattedErrorCode(int errorCode)
         {
-            int Module      = (ErrorCode >> 0) & 0x1ff;
-            int Description = (ErrorCode >> 9) & 0x1fff;
+            int module      = (errorCode >> 0) & 0x1ff;
+            int description = (errorCode >> 9) & 0x1fff;
 
-            return $"{(2000 + Module):d4}-{Description:d4}";
+            return $"{(2000 + module):d4}-{description:d4}";
         }
 
-        public long GetDisplayVersion(ServiceCtx Context)
+        public long GetDisplayVersion(ServiceCtx context)
         {
             //FIXME: Need to check correct version on a switch.
-            Context.ResponseData.Write(1L);
-            Context.ResponseData.Write(0L);
+            context.ResponseData.Write(1L);
+            context.ResponseData.Write(0L);
 
             return 0;
         }
 
-        public long NotifyRunning(ServiceCtx Context)
+        public long NotifyRunning(ServiceCtx context)
         {
-            Context.ResponseData.Write(1);
+            context.ResponseData.Write(1);
 
             return 0;
         }
 
-        public long GetPseudoDeviceId(ServiceCtx Context)
-        {
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
-
-            Context.ResponseData.Write(0L);
-            Context.ResponseData.Write(0L);
-
-            return 0;
-        }
-
-        public long InitializeGamePlayRecording(ServiceCtx Context)
+        public long GetPseudoDeviceId(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 
+            context.ResponseData.Write(0L);
+            context.ResponseData.Write(0L);
+
             return 0;
         }
 
-        public long SetGamePlayRecordingState(ServiceCtx Context)
+        public long InitializeGamePlayRecording(ServiceCtx context)
         {
-            int State = Context.RequestData.ReadInt32();
+            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+
+            return 0;
+        }
+
+        public long SetGamePlayRecordingState(ServiceCtx context)
+        {
+            int state = context.RequestData.ReadInt32();
 
             Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
 

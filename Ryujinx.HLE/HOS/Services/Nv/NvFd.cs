@@ -4,9 +4,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv
     {
         public string Name { get; private set; }
 
-        public NvFd(string Name)
+        public NvFd(string name)
         {
-            this.Name = Name;
+            Name = name;
         }
     }
 }

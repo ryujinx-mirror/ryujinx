@@ -4,9 +4,9 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
     {
         public BaseNode Child { get; private set; }
 
-        public ParentNode(NodeType Type, BaseNode Child) : base(Type)
+        public ParentNode(NodeType type, BaseNode child) : base(type)
         {
-            this.Child = Child;
+            Child = child;
         }
 
         public override string GetName()

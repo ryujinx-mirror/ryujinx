@@ -9,32 +9,32 @@ namespace Ryujinx.HLE.Loaders.Elf
         public ElfSymbolVisibility Visibility { get; private set; }
 
         public bool IsFuncOrObject =>
-            Type == ElfSymbolType.STT_FUNC ||
-            Type == ElfSymbolType.STT_OBJECT;
+            Type == ElfSymbolType.SttFunc ||
+            Type == ElfSymbolType.SttObject;
 
         public bool IsGlobalOrWeak =>
-            Binding == ElfSymbolBinding.STB_GLOBAL ||
-            Binding == ElfSymbolBinding.STB_WEAK;
+            Binding == ElfSymbolBinding.StbGlobal ||
+            Binding == ElfSymbolBinding.StbWeak;
 
-        public int  SHIdx { get; private set; }
+        public int  ShIdx { get; private set; }
         public long Value { get; private set; }
         public long Size  { get; private set; }
 
         public ElfSymbol(
-            string Name,
-            int    Info,
-            int    Other,
-            int    SHIdx,
-            long   Value,
-            long   Size)
+            string name,
+            int    info,
+            int    other,
+            int    shIdx,
+            long   value,
+            long   size)
         {
-            this.Name       = Name;
-            this.Type       = (ElfSymbolType)(Info & 0xf);
-            this.Binding    = (ElfSymbolBinding)(Info >> 4);
-            this.Visibility = (ElfSymbolVisibility)Other;
-            this.SHIdx      = SHIdx;
-            this.Value      = Value;
-            this.Size       = Size;
+            Name       = name;
+            Type       = (ElfSymbolType)(info & 0xf);
+            Binding    = (ElfSymbolBinding)(info >> 4);
+            Visibility = (ElfSymbolVisibility)other;
+            ShIdx      = shIdx;
+            Value      = value;
+            Size       = size;
         }
     }
 }

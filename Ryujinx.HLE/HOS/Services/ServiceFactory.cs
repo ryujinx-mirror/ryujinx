@@ -31,9 +31,9 @@ namespace Ryujinx.HLE.HOS.Services
 {
     static class ServiceFactory
     {
-        public static IpcService MakeService(Horizon System, string Name)
+        public static IpcService MakeService(Horizon system, string name)
         {
-            switch (Name)
+            switch (name)
             {
                 case "acc:u0":
                     return new IAccountService();
@@ -90,7 +90,7 @@ namespace Ryujinx.HLE.HOS.Services
                     return new IRandomInterface();
 
                 case "es":
-                    return new IETicketService();
+                    return new IeTicketService();
 
                 case "friend:a":
                     return new Friend.IServiceCreator();
@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Services
                     return new IFileSystemProxy();
 
                 case "hid":
-                    return new IHidServer(System);
+                    return new IHidServer(system);
 
                 case "irs":
                     return new IIrSensorServer();
@@ -141,10 +141,10 @@ namespace Ryujinx.HLE.HOS.Services
                     return new IVulnerabilityManagerInterface();
 
                 case "nvdrv":
-                    return new INvDrvServices(System);
+                    return new INvDrvServices(system);
 
                 case "nvdrv:a":
-                    return new INvDrvServices(System);
+                    return new INvDrvServices(system);
 
                 case "pctl:s":
                     return new IParentalControlServiceFactory();
@@ -204,7 +204,7 @@ namespace Ryujinx.HLE.HOS.Services
                     return new IApplicationRootService();
             }
 
-            throw new NotImplementedException(Name);
+            throw new NotImplementedException(name);
         }
     }
 }

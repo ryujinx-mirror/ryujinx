@@ -30,183 +30,185 @@ namespace Ryujinx.HLE.HOS.Ipc
             ObjectIds = new List<int>();
         }
 
-        public IpcMessage(byte[] Data, long CmdPtr) : this()
+        public IpcMessage(byte[] data, long cmdPtr) : this()
         {
-            using (MemoryStream MS = new MemoryStream(Data))
+            using (MemoryStream ms = new MemoryStream(data))
             {
-                BinaryReader Reader = new BinaryReader(MS);
+                BinaryReader reader = new BinaryReader(ms);
 
-                Initialize(Reader, CmdPtr);
+                Initialize(reader, cmdPtr);
             }
         }
 
-        private void Initialize(BinaryReader Reader, long CmdPtr)
+        private void Initialize(BinaryReader reader, long cmdPtr)
         {
-            int Word0 = Reader.ReadInt32();
-            int Word1 = Reader.ReadInt32();
+            int word0 = reader.ReadInt32();
+            int word1 = reader.ReadInt32();
 
-            Type = (IpcMessageType)(Word0 & 0xffff);
+            Type = (IpcMessageType)(word0 & 0xffff);
 
-            int  PtrBuffCount  = (Word0 >> 16) & 0xf;
-            int  SendBuffCount = (Word0 >> 20) & 0xf;
-            int  RecvBuffCount = (Word0 >> 24) & 0xf;
-            int  XchgBuffCount = (Word0 >> 28) & 0xf;
+            int  ptrBuffCount  = (word0 >> 16) & 0xf;
+            int  sendBuffCount = (word0 >> 20) & 0xf;
+            int  recvBuffCount = (word0 >> 24) & 0xf;
+            int  xchgBuffCount = (word0 >> 28) & 0xf;
 
-            int  RawDataSize   =  (Word1 >>  0) & 0x3ff;
-            int  RecvListFlags =  (Word1 >> 10) & 0xf;
-            bool HndDescEnable = ((Word1 >> 31) & 0x1) != 0;
+            int  rawDataSize   =  (word1 >>  0) & 0x3ff;
+            int  recvListFlags =  (word1 >> 10) & 0xf;
+            bool hndDescEnable = ((word1 >> 31) & 0x1) != 0;
 
-            if (HndDescEnable)
+            if (hndDescEnable)
             {
-                HandleDesc = new IpcHandleDesc(Reader);
+                HandleDesc = new IpcHandleDesc(reader);
             }
 
-            for (int Index = 0; Index < PtrBuffCount; Index++)
+            for (int index = 0; index < ptrBuffCount; index++)
             {
-                PtrBuff.Add(new IpcPtrBuffDesc(Reader));
+                PtrBuff.Add(new IpcPtrBuffDesc(reader));
             }
 
-            void ReadBuff(List<IpcBuffDesc> Buff, int Count)
+            void ReadBuff(List<IpcBuffDesc> buff, int count)
             {
-                for (int Index = 0; Index < Count; Index++)
+                for (int index = 0; index < count; index++)
                 {
-                    Buff.Add(new IpcBuffDesc(Reader));
+                    buff.Add(new IpcBuffDesc(reader));
                 }
             }
 
-            ReadBuff(SendBuff,     SendBuffCount);
-            ReadBuff(ReceiveBuff,  RecvBuffCount);
-            ReadBuff(ExchangeBuff, XchgBuffCount);
+            ReadBuff(SendBuff,     sendBuffCount);
+            ReadBuff(ReceiveBuff,  recvBuffCount);
+            ReadBuff(ExchangeBuff, xchgBuffCount);
 
-            RawDataSize *= 4;
+            rawDataSize *= 4;
 
-            long RecvListPos = Reader.BaseStream.Position + RawDataSize;
+            long recvListPos = reader.BaseStream.Position + rawDataSize;
 
-            long Pad0 = GetPadSize16(Reader.BaseStream.Position + CmdPtr);
+            long pad0 = GetPadSize16(reader.BaseStream.Position + cmdPtr);
 
-            Reader.BaseStream.Seek(Pad0, SeekOrigin.Current);
+            reader.BaseStream.Seek(pad0, SeekOrigin.Current);
 
-            int RecvListCount = RecvListFlags - 2;
+            int recvListCount = recvListFlags - 2;
 
-            if (RecvListCount == 0)
+            if (recvListCount == 0)
             {
-                RecvListCount = 1;
+                recvListCount = 1;
             }
-            else if (RecvListCount < 0)
+            else if (recvListCount < 0)
             {
-                RecvListCount = 0;
+                recvListCount = 0;
             }
 
-            RawData = Reader.ReadBytes(RawDataSize);
+            RawData = reader.ReadBytes(rawDataSize);
 
-            Reader.BaseStream.Seek(RecvListPos, SeekOrigin.Begin);
+            reader.BaseStream.Seek(recvListPos, SeekOrigin.Begin);
 
-            for (int Index = 0; Index < RecvListCount; Index++)
+            for (int index = 0; index < recvListCount; index++)
             {
-                RecvListBuff.Add(new IpcRecvListBuffDesc(Reader));
+                RecvListBuff.Add(new IpcRecvListBuffDesc(reader));
             }
         }
 
-        public byte[] GetBytes(long CmdPtr)
+        public byte[] GetBytes(long cmdPtr)
         {
-            using (MemoryStream MS = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream())
             {
-                BinaryWriter Writer = new BinaryWriter(MS);
+                BinaryWriter writer = new BinaryWriter(ms);
 
-                int Word0;
-                int Word1;
+                int word0;
+                int word1;
 
-                Word0  = (int)Type;
-                Word0 |= (PtrBuff.Count      & 0xf) << 16;
-                Word0 |= (SendBuff.Count     & 0xf) << 20;
-                Word0 |= (ReceiveBuff.Count  & 0xf) << 24;
-                Word0 |= (ExchangeBuff.Count & 0xf) << 28;
+                word0  = (int)Type;
+                word0 |= (PtrBuff.Count      & 0xf) << 16;
+                word0 |= (SendBuff.Count     & 0xf) << 20;
+                word0 |= (ReceiveBuff.Count  & 0xf) << 24;
+                word0 |= (ExchangeBuff.Count & 0xf) << 28;
 
-                byte[] HandleData = new byte[0];
+                byte[] handleData = new byte[0];
 
                 if (HandleDesc != null)
                 {
-                    HandleData = HandleDesc.GetBytes();
+                    handleData = HandleDesc.GetBytes();
                 }
 
-                int DataLength = RawData?.Length ?? 0;
+                int dataLength = RawData?.Length ?? 0;
 
-                int Pad0 = (int)GetPadSize16(CmdPtr + 8 + HandleData.Length);
+                int pad0 = (int)GetPadSize16(cmdPtr + 8 + handleData.Length);
 
                 //Apparently, padding after Raw Data is 16 bytes, however when there is
                 //padding before Raw Data too, we need to subtract the size of this padding.
                 //This is the weirdest padding I've seen so far...
-                int Pad1 = 0x10 - Pad0;
+                int pad1 = 0x10 - pad0;
 
-                DataLength = (DataLength + Pad0 + Pad1) / 4;
+                dataLength = (dataLength + pad0 + pad1) / 4;
 
-                Word1 = DataLength & 0x3ff;
+                word1 = dataLength & 0x3ff;
 
                 if (HandleDesc != null)
                 {
-                    Word1 |= 1 << 31;
+                    word1 |= 1 << 31;
                 }
 
-                Writer.Write(Word0);
-                Writer.Write(Word1);
-                Writer.Write(HandleData);
+                writer.Write(word0);
+                writer.Write(word1);
+                writer.Write(handleData);
 
-                MS.Seek(Pad0, SeekOrigin.Current);
+                ms.Seek(pad0, SeekOrigin.Current);
 
                 if (RawData != null)
                 {
-                    Writer.Write(RawData);
+                    writer.Write(RawData);
                 }
 
-                Writer.Write(new byte[Pad1]);
+                writer.Write(new byte[pad1]);
 
-                return MS.ToArray();
+                return ms.ToArray();
             }
         }
 
-        private long GetPadSize16(long Position)
+        private long GetPadSize16(long position)
         {
-            if ((Position & 0xf) != 0)
+            if ((position & 0xf) != 0)
             {
-                return 0x10 - (Position & 0xf);
+                return 0x10 - (position & 0xf);
             }
 
             return 0;
         }
 
-        public (long Position, long Size) GetBufferType0x21(int Index = 0)
+        // ReSharper disable once InconsistentNaming
+        public (long Position, long Size) GetBufferType0x21(int index = 0)
         {
-            if (PtrBuff.Count > Index &&
-                PtrBuff[Index].Position != 0 &&
-                PtrBuff[Index].Size     != 0)
+            if (PtrBuff.Count > index &&
+                PtrBuff[index].Position != 0 &&
+                PtrBuff[index].Size     != 0)
             {
-                return (PtrBuff[Index].Position, PtrBuff[Index].Size);
+                return (PtrBuff[index].Position, PtrBuff[index].Size);
             }
 
-            if (SendBuff.Count > Index &&
-                SendBuff[Index].Position != 0 &&
-                SendBuff[Index].Size     != 0)
+            if (SendBuff.Count > index &&
+                SendBuff[index].Position != 0 &&
+                SendBuff[index].Size     != 0)
             {
-                return (SendBuff[Index].Position, SendBuff[Index].Size);
+                return (SendBuff[index].Position, SendBuff[index].Size);
             }
 
             return (0, 0);
         }
 
-        public (long Position, long Size) GetBufferType0x22(int Index = 0)
+        // ReSharper disable once InconsistentNaming
+        public (long Position, long Size) GetBufferType0x22(int index = 0)
         {
-            if (RecvListBuff.Count > Index &&
-                RecvListBuff[Index].Position != 0 &&
-                RecvListBuff[Index].Size     != 0)
+            if (RecvListBuff.Count > index &&
+                RecvListBuff[index].Position != 0 &&
+                RecvListBuff[index].Size     != 0)
             {
-                return (RecvListBuff[Index].Position, RecvListBuff[Index].Size);
+                return (RecvListBuff[index].Position, RecvListBuff[index].Size);
             }
 
-            if (ReceiveBuff.Count > Index &&
-                ReceiveBuff[Index].Position != 0 &&
-                ReceiveBuff[Index].Size     != 0)
+            if (ReceiveBuff.Count > index &&
+                ReceiveBuff[index].Position != 0 &&
+                ReceiveBuff[index].Size     != 0)
             {
-                return (ReceiveBuff[Index].Position, ReceiveBuff[Index].Size);
+                return (ReceiveBuff[index].Position, ReceiveBuff[index].Size);
             }
 
             return (0, 0);

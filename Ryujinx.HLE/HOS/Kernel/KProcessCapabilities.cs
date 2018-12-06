@@ -21,91 +21,91 @@ namespace Ryujinx.HLE.HOS.Kernel
             IrqAccessMask = new byte[0x80];
         }
 
-        public KernelResult InitializeForKernel(int[] Caps, KMemoryManager MemoryManager)
+        public KernelResult InitializeForKernel(int[] caps, KMemoryManager memoryManager)
         {
             AllowedCpuCoresMask    = 0xf;
             AllowedThreadPriosMask = -1;
             DebuggingFlags        &= ~3;
             KernelReleaseVersion   = KProcess.KernelVersionPacked;
 
-            return Parse(Caps, MemoryManager);
+            return Parse(caps, memoryManager);
         }
 
-        public KernelResult InitializeForUser(int[] Caps, KMemoryManager MemoryManager)
+        public KernelResult InitializeForUser(int[] caps, KMemoryManager memoryManager)
         {
-            return Parse(Caps, MemoryManager);
+            return Parse(caps, memoryManager);
         }
 
-        private KernelResult Parse(int[] Caps, KMemoryManager MemoryManager)
+        private KernelResult Parse(int[] caps, KMemoryManager memoryManager)
         {
-            int Mask0 = 0;
-            int Mask1 = 0;
+            int mask0 = 0;
+            int mask1 = 0;
 
-            for (int Index = 0; Index < Caps.Length; Index++)
+            for (int index = 0; index < caps.Length; index++)
             {
-                int Cap = Caps[Index];
+                int cap = caps[index];
 
-                if (((Cap + 1) & ~Cap) != 0x40)
+                if (((cap + 1) & ~cap) != 0x40)
                 {
-                    KernelResult Result = ParseCapability(Cap, ref Mask0, ref Mask1, MemoryManager);
+                    KernelResult result = ParseCapability(cap, ref mask0, ref mask1, memoryManager);
 
-                    if (Result != KernelResult.Success)
+                    if (result != KernelResult.Success)
                     {
-                        return Result;
+                        return result;
                     }
                 }
                 else
                 {
-                    if ((uint)Index + 1 >= Caps.Length)
+                    if ((uint)index + 1 >= caps.Length)
                     {
                         return KernelResult.InvalidCombination;
                     }
 
-                    int PrevCap = Cap;
+                    int prevCap = cap;
 
-                    Cap = Caps[++Index];
+                    cap = caps[++index];
 
-                    if (((Cap + 1) & ~Cap) != 0x40)
+                    if (((cap + 1) & ~cap) != 0x40)
                     {
                         return KernelResult.InvalidCombination;
                     }
 
-                    if ((Cap & 0x78000000) != 0)
+                    if ((cap & 0x78000000) != 0)
                     {
                         return KernelResult.MaximumExceeded;
                     }
 
-                    if ((Cap & 0x7ffff80) == 0)
+                    if ((cap & 0x7ffff80) == 0)
                     {
                         return KernelResult.InvalidSize;
                     }
 
-                    long Address = ((long)(uint)PrevCap << 5) & 0xffffff000;
-                    long Size    = ((long)(uint)Cap     << 5) & 0xfffff000;
+                    long address = ((long)(uint)prevCap << 5) & 0xffffff000;
+                    long size    = ((long)(uint)cap     << 5) & 0xfffff000;
 
-                    if (((ulong)(Address + Size - 1) >> 36) != 0)
+                    if (((ulong)(address + size - 1) >> 36) != 0)
                     {
                         return KernelResult.InvalidAddress;
                     }
 
-                    MemoryPermission Perm = (PrevCap >> 31) != 0
+                    MemoryPermission perm = (prevCap >> 31) != 0
                         ? MemoryPermission.Read
                         : MemoryPermission.ReadAndWrite;
 
-                    KernelResult Result;
+                    KernelResult result;
 
-                    if ((Cap >> 31) != 0)
+                    if ((cap >> 31) != 0)
                     {
-                        Result = MemoryManager.MapNormalMemory(Address, Size, Perm);
+                        result = memoryManager.MapNormalMemory(address, size, perm);
                     }
                     else
                     {
-                        Result = MemoryManager.MapIoMemory(Address, Size, Perm);
+                        result = memoryManager.MapIoMemory(address, size, perm);
                     }
 
-                    if (Result != KernelResult.Success)
+                    if (result != KernelResult.Success)
                     {
-                        return Result;
+                        return result;
                     }
                 }
             }
@@ -113,30 +113,30 @@ namespace Ryujinx.HLE.HOS.Kernel
             return KernelResult.Success;
         }
 
-        private KernelResult ParseCapability(int Cap, ref int Mask0, ref int Mask1, KMemoryManager MemoryManager)
+        private KernelResult ParseCapability(int cap, ref int mask0, ref int mask1, KMemoryManager memoryManager)
         {
-            int Code = (Cap + 1) & ~Cap;
+            int code = (cap + 1) & ~cap;
 
-            if (Code == 1)
+            if (code == 1)
             {
                 return KernelResult.InvalidCapability;
             }
-            else if (Code == 0)
+            else if (code == 0)
             {
                 return KernelResult.Success;
             }
 
-            int CodeMask = 1 << (32 - BitUtils.CountLeadingZeros32(Code + 1));
+            int codeMask = 1 << (32 - BitUtils.CountLeadingZeros32(code + 1));
 
             //Check if the property was already set.
-            if (((Mask0 & CodeMask) & 0x1e008) != 0)
+            if (((mask0 & codeMask) & 0x1e008) != 0)
             {
                 return KernelResult.InvalidCombination;
             }
 
-            Mask0 |= CodeMask;
+            mask0 |= codeMask;
 
-            switch (Code)
+            switch (code)
             {
                 case 8:
                 {
@@ -145,65 +145,65 @@ namespace Ryujinx.HLE.HOS.Kernel
                         return KernelResult.InvalidCapability;
                     }
 
-                    int LowestCpuCore  = (Cap >> 16) & 0xff;
-                    int HighestCpuCore = (Cap >> 24) & 0xff;
+                    int lowestCpuCore  = (cap >> 16) & 0xff;
+                    int highestCpuCore = (cap >> 24) & 0xff;
 
-                    if (LowestCpuCore > HighestCpuCore)
+                    if (lowestCpuCore > highestCpuCore)
                     {
                         return KernelResult.InvalidCombination;
                     }
 
-                    int HighestThreadPrio = (Cap >>  4) & 0x3f;
-                    int LowestThreadPrio  = (Cap >> 10) & 0x3f;
+                    int highestThreadPrio = (cap >>  4) & 0x3f;
+                    int lowestThreadPrio  = (cap >> 10) & 0x3f;
 
-                    if (LowestThreadPrio > HighestThreadPrio)
+                    if (lowestThreadPrio > highestThreadPrio)
                     {
                         return KernelResult.InvalidCombination;
                     }
 
-                    if (HighestCpuCore >= KScheduler.CpuCoresCount)
+                    if (highestCpuCore >= KScheduler.CpuCoresCount)
                     {
                         return KernelResult.InvalidCpuCore;
                     }
 
-                    AllowedCpuCoresMask    = GetMaskFromMinMax(LowestCpuCore,    HighestCpuCore);
-                    AllowedThreadPriosMask = GetMaskFromMinMax(LowestThreadPrio, HighestThreadPrio);
+                    AllowedCpuCoresMask    = GetMaskFromMinMax(lowestCpuCore,    highestCpuCore);
+                    AllowedThreadPriosMask = GetMaskFromMinMax(lowestThreadPrio, highestThreadPrio);
 
                     break;
                 }
 
                 case 0x10:
                 {
-                    int Slot = (Cap >> 29) & 7;
+                    int slot = (cap >> 29) & 7;
 
-                    int SvcSlotMask = 1 << Slot;
+                    int svcSlotMask = 1 << slot;
 
-                    if ((Mask1 & SvcSlotMask) != 0)
+                    if ((mask1 & svcSlotMask) != 0)
                     {
                         return KernelResult.InvalidCombination;
                     }
 
-                    Mask1 |= SvcSlotMask;
+                    mask1 |= svcSlotMask;
 
-                    int SvcMask = (Cap >> 5) & 0xffffff;
+                    int svcMask = (cap >> 5) & 0xffffff;
 
-                    int BaseSvc = Slot * 24;
+                    int baseSvc = slot * 24;
 
-                    for (int Index = 0; Index < 24; Index++)
+                    for (int index = 0; index < 24; index++)
                     {
-                        if (((SvcMask >> Index) & 1) == 0)
+                        if (((svcMask >> index) & 1) == 0)
                         {
                             continue;
                         }
 
-                        int SvcId = BaseSvc + Index;
+                        int svcId = baseSvc + index;
 
-                        if (SvcId > 0x7f)
+                        if (svcId > 0x7f)
                         {
                             return KernelResult.MaximumExceeded;
                         }
 
-                        SvcAccessMask[SvcId / 8] |= (byte)(1 << (SvcId & 7));
+                        SvcAccessMask[svcId / 8] |= (byte)(1 << (svcId & 7));
                     }
 
                     break;
@@ -211,9 +211,9 @@ namespace Ryujinx.HLE.HOS.Kernel
 
                 case 0x80:
                 {
-                    long Address = ((long)(uint)Cap << 4) & 0xffffff000;
+                    long address = ((long)(uint)cap << 4) & 0xffffff000;
 
-                    MemoryManager.MapIoMemory(Address, KMemoryManager.PageSize, MemoryPermission.ReadAndWrite);
+                    memoryManager.MapIoMemory(address, KMemoryManager.PageSize, MemoryPermission.ReadAndWrite);
 
                     break;
                 }
@@ -221,17 +221,17 @@ namespace Ryujinx.HLE.HOS.Kernel
                 case 0x800:
                 {
                     //TODO: GIC distributor check.
-                    int Irq0 = (Cap >> 12) & 0x3ff;
-                    int Irq1 = (Cap >> 22) & 0x3ff;
+                    int irq0 = (cap >> 12) & 0x3ff;
+                    int irq1 = (cap >> 22) & 0x3ff;
 
-                    if (Irq0 != 0x3ff)
+                    if (irq0 != 0x3ff)
                     {
-                        IrqAccessMask[Irq0 / 8] |= (byte)(1 << (Irq0 & 7));
+                        IrqAccessMask[irq0 / 8] |= (byte)(1 << (irq0 & 7));
                     }
 
-                    if (Irq1 != 0x3ff)
+                    if (irq1 != 0x3ff)
                     {
-                        IrqAccessMask[Irq1 / 8] |= (byte)(1 << (Irq1 & 7));
+                        IrqAccessMask[irq1 / 8] |= (byte)(1 << (irq1 & 7));
                     }
 
                     break;
@@ -239,14 +239,14 @@ namespace Ryujinx.HLE.HOS.Kernel
 
                 case 0x2000:
                 {
-                    int ApplicationType = Cap >> 14;
+                    int applicationType = cap >> 14;
 
-                    if ((uint)ApplicationType > 7)
+                    if ((uint)applicationType > 7)
                     {
                         return KernelResult.ReservedValue;
                     }
 
-                    this.ApplicationType = ApplicationType;
+                    ApplicationType = applicationType;
 
                     break;
                 }
@@ -254,41 +254,41 @@ namespace Ryujinx.HLE.HOS.Kernel
                 case 0x4000:
                 {
                     //Note: This check is bugged on kernel too, we are just replicating the bug here.
-                    if ((KernelReleaseVersion >> 17) != 0 || Cap < 0x80000)
+                    if ((KernelReleaseVersion >> 17) != 0 || cap < 0x80000)
                     {
                         return KernelResult.ReservedValue;
                     }
 
-                    KernelReleaseVersion = Cap;
+                    KernelReleaseVersion = cap;
 
                     break;
                 }
 
                 case 0x8000:
                 {
-                    int HandleTableSize = Cap >> 26;
+                    int handleTableSize = cap >> 26;
 
-                    if ((uint)HandleTableSize > 0x3ff)
+                    if ((uint)handleTableSize > 0x3ff)
                     {
                         return KernelResult.ReservedValue;
                     }
 
-                    this.HandleTableSize = HandleTableSize;
+                    HandleTableSize = handleTableSize;
 
                     break;
                 }
 
                 case 0x10000:
                 {
-                    int DebuggingFlags = Cap >> 19;
+                    int debuggingFlags = cap >> 19;
 
-                    if ((uint)DebuggingFlags > 3)
+                    if ((uint)debuggingFlags > 3)
                     {
                         return KernelResult.ReservedValue;
                     }
 
-                    this.DebuggingFlags &= ~3;
-                    this.DebuggingFlags |= DebuggingFlags;
+                    DebuggingFlags &= ~3;
+                    DebuggingFlags |= debuggingFlags;
 
                     break;
                 }
@@ -299,13 +299,13 @@ namespace Ryujinx.HLE.HOS.Kernel
             return KernelResult.Success;
         }
 
-        private static long GetMaskFromMinMax(int Min, int Max)
+        private static long GetMaskFromMinMax(int min, int max)
         {
-            int Range = Max - Min + 1;
+            int range = max - min + 1;
 
-            long Mask = (1L << Range) - 1;
+            long mask = (1L << range) - 1;
 
-            return Mask << Min;
+            return mask << min;
         }
     }
 }

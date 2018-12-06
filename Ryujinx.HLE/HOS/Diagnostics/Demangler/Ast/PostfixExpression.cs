@@ -4,19 +4,19 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler.Ast
 {
     public class PostfixExpression : ParentNode
     {
-        private string Operator;
+        private string _operator;
 
-        public PostfixExpression(BaseNode Type, string Operator) : base(NodeType.PostfixExpression, Type)
+        public PostfixExpression(BaseNode type, string Operator) : base(NodeType.PostfixExpression, type)
         {
-            this.Operator = Operator;
+            _operator = Operator;
         }
 
-        public override void PrintLeft(TextWriter Writer)
+        public override void PrintLeft(TextWriter writer)
         {
-            Writer.Write("(");
-            Child.Print(Writer);
-            Writer.Write(")");
-            Writer.Write(Operator);
+            writer.Write("(");
+            Child.Print(writer);
+            writer.Write(")");
+            writer.Write(_operator);
         }
     }
 }

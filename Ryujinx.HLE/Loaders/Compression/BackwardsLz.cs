@@ -7,22 +7,22 @@ namespace Ryujinx.HLE.Loaders.Compression
     {
         private class BackwardsReader
         {
-            private Stream BaseStream;
+            private Stream _baseStream;
 
-            public BackwardsReader(Stream BaseStream)
+            public BackwardsReader(Stream baseStream)
             {
-                this.BaseStream = BaseStream;
+                _baseStream = baseStream;
             }
 
             public byte ReadByte()
             {
-                BaseStream.Seek(-1, SeekOrigin.Current);
+                _baseStream.Seek(-1, SeekOrigin.Current);
 
-                byte Value = (byte)BaseStream.ReadByte();
+                byte value = (byte)_baseStream.ReadByte();
 
-                BaseStream.Seek(-1, SeekOrigin.Current);
+                _baseStream.Seek(-1, SeekOrigin.Current);
 
-                return Value;
+                return value;
             }
 
             public short ReadInt16()
@@ -39,67 +39,67 @@ namespace Ryujinx.HLE.Loaders.Compression
             }
         }
 
-        public static byte[] Decompress(Stream Input, int DecompressedLength)
+        public static byte[] Decompress(Stream input, int decompressedLength)
         {
-            long End = Input.Position;
+            long end = input.Position;
 
-            BackwardsReader Reader = new BackwardsReader(Input);
+            BackwardsReader reader = new BackwardsReader(input);
 
-            int AdditionalDecLength = Reader.ReadInt32();
-            int StartOffset         = Reader.ReadInt32();
-            int CompressedLength    = Reader.ReadInt32();
+            int additionalDecLength = reader.ReadInt32();
+            int startOffset         = reader.ReadInt32();
+            int compressedLength    = reader.ReadInt32();
 
-            Input.Seek(12 - StartOffset, SeekOrigin.Current);
+            input.Seek(12 - startOffset, SeekOrigin.Current);
 
-            byte[] Dec = new byte[DecompressedLength];
+            byte[] dec = new byte[decompressedLength];
 
-            int DecompressedLengthUnpadded = CompressedLength + AdditionalDecLength;
+            int decompressedLengthUnpadded = compressedLength + additionalDecLength;
 
-            int DecompressionStart = DecompressedLength - DecompressedLengthUnpadded;
+            int decompressionStart = decompressedLength - decompressedLengthUnpadded;
 
-            int DecPos = Dec.Length;
+            int decPos = dec.Length;
 
-            byte Mask   = 0;
-            byte Header = 0;
+            byte mask   = 0;
+            byte header = 0;
 
-            while (DecPos > DecompressionStart)
+            while (decPos > decompressionStart)
             {
-                if ((Mask >>= 1) == 0)
+                if ((mask >>= 1) == 0)
                 {
-                    Header = Reader.ReadByte();
-                    Mask   = 0x80;
+                    header = reader.ReadByte();
+                    mask   = 0x80;
                 }
 
-                if ((Header & Mask) == 0)
+                if ((header & mask) == 0)
                 {
-                    Dec[--DecPos] = Reader.ReadByte();
+                    dec[--decPos] = reader.ReadByte();
                 }
                 else
                 {
-                    ushort Pair = (ushort)Reader.ReadInt16();
+                    ushort pair = (ushort)reader.ReadInt16();
 
-                    int Length   = (Pair >> 12)   + 3;
-                    int Position = (Pair & 0xfff) + 3;
+                    int length   = (pair >> 12)   + 3;
+                    int position = (pair & 0xfff) + 3;
 
-                    DecPos -= Length;
+                    decPos -= length;
 
-                    if (Length <= Position)
+                    if (length <= position)
                     {
-                        int SrcPos = DecPos + Position;
+                        int srcPos = decPos + position;
 
-                        Buffer.BlockCopy(Dec, SrcPos, Dec, DecPos, Length);
+                        Buffer.BlockCopy(dec, srcPos, dec, decPos, length);
                     }
                     else
                     {
-                        for (int Offset = 0; Offset < Length; Offset++)
+                        for (int offset = 0; offset < length; offset++)
                         {
-                            Dec[DecPos + Offset] = Dec[DecPos + Position + Offset];
+                            dec[decPos + offset] = dec[decPos + position + offset];
                         }
                     }
                 }
             }
 
-            return Dec;
+            return dec;
         }
     }
 }

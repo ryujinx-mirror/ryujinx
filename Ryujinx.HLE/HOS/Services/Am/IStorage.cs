@@ -5,25 +5,25 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class IStorage : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> m_Commands;
+        private Dictionary<int, ServiceProcessRequest> _commands;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => m_Commands;
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
         public byte[] Data { get; private set; }
 
-        public IStorage(byte[] Data)
+        public IStorage(byte[] data)
         {
-            m_Commands = new Dictionary<int, ServiceProcessRequest>()
+            _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 0, Open }
             };
 
-            this.Data = Data;
+            Data = data;
         }
 
-        public long Open(ServiceCtx Context)
+        public long Open(ServiceCtx context)
         {
-            MakeObject(Context, new IStorageAccessor(this));
+            MakeObject(context, new IStorageAccessor(this));
 
             return 0;
         }

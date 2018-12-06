@@ -12,24 +12,24 @@ namespace Ryujinx.HLE.HOS.Kernel
             Nodes = new LinkedList<KPageNode>();
         }
 
-        public KernelResult AddRange(ulong Address, ulong PagesCount)
+        public KernelResult AddRange(ulong address, ulong pagesCount)
         {
-            if (PagesCount != 0)
+            if (pagesCount != 0)
             {
                 if (Nodes.Last != null)
                 {
-                    KPageNode LastNode = Nodes.Last.Value;
+                    KPageNode lastNode = Nodes.Last.Value;
 
-                    if (LastNode.Address + LastNode.PagesCount * KMemoryManager.PageSize == Address)
+                    if (lastNode.Address + lastNode.PagesCount * KMemoryManager.PageSize == address)
                     {
-                        Address     = LastNode.Address;
-                        PagesCount += LastNode.PagesCount;
+                        address     = lastNode.Address;
+                        pagesCount += lastNode.PagesCount;
 
                         Nodes.RemoveLast();
                     }
                 }
 
-                Nodes.AddLast(new KPageNode(Address, PagesCount));
+                Nodes.AddLast(new KPageNode(address, pagesCount));
             }
 
             return KernelResult.Success;
@@ -37,34 +37,34 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public ulong GetPagesCount()
         {
-            ulong Sum = 0;
+            ulong sum = 0;
 
-            foreach (KPageNode Node in Nodes)
+            foreach (KPageNode node in Nodes)
             {
-                Sum += Node.PagesCount;
+                sum += node.PagesCount;
             }
 
-            return Sum;
+            return sum;
         }
 
-        public bool IsEqual(KPageList Other)
+        public bool IsEqual(KPageList other)
         {
-            LinkedListNode<KPageNode> ThisNode  = Nodes.First;
-            LinkedListNode<KPageNode> OtherNode = Other.Nodes.First;
+            LinkedListNode<KPageNode> thisNode  = Nodes.First;
+            LinkedListNode<KPageNode> otherNode = other.Nodes.First;
 
-            while (ThisNode != null && OtherNode != null)
+            while (thisNode != null && otherNode != null)
             {
-                if (ThisNode.Value.Address    != OtherNode.Value.Address ||
-                    ThisNode.Value.PagesCount != OtherNode.Value.PagesCount)
+                if (thisNode.Value.Address    != otherNode.Value.Address ||
+                    thisNode.Value.PagesCount != otherNode.Value.PagesCount)
                 {
                     return false;
                 }
 
-                ThisNode  = ThisNode.Next;
-                OtherNode = OtherNode.Next;
+                thisNode  = thisNode.Next;
+                otherNode = otherNode.Next;
             }
 
-            return ThisNode == null && OtherNode == null;
+            return thisNode == null && otherNode == null;
         }
 
         public IEnumerator<KPageNode> GetEnumerator()

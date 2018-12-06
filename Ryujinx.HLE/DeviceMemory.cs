@@ -9,107 +9,107 @@ namespace Ryujinx.HLE
 
         public IntPtr RamPointer { get; private set; }
 
-        private unsafe byte* RamPtr;
+        private unsafe byte* _ramPtr;
 
         public unsafe DeviceMemory()
         {
             RamPointer = Marshal.AllocHGlobal(new IntPtr(RamSize));
 
-            RamPtr = (byte*)RamPointer;
+            _ramPtr = (byte*)RamPointer;
         }
 
-        public sbyte ReadSByte(long Position)
+        public sbyte ReadSByte(long position)
         {
-            return (sbyte)ReadByte(Position);
+            return (sbyte)ReadByte(position);
         }
 
-        public short ReadInt16(long Position)
+        public short ReadInt16(long position)
         {
-            return (short)ReadUInt16(Position);
+            return (short)ReadUInt16(position);
         }
 
-        public int ReadInt32(long Position)
+        public int ReadInt32(long position)
         {
-            return (int)ReadUInt32(Position);
+            return (int)ReadUInt32(position);
         }
 
-        public long ReadInt64(long Position)
+        public long ReadInt64(long position)
         {
-            return (long)ReadUInt64(Position);
+            return (long)ReadUInt64(position);
         }
 
-        public unsafe byte ReadByte(long Position)
+        public unsafe byte ReadByte(long position)
         {
-            return *((byte*)(RamPtr + Position));
+            return *(_ramPtr + position);
         }
 
-        public unsafe ushort ReadUInt16(long Position)
+        public unsafe ushort ReadUInt16(long position)
         {
-            return *((ushort*)(RamPtr + Position));
+            return *((ushort*)(_ramPtr + position));
         }
 
-        public unsafe uint ReadUInt32(long Position)
+        public unsafe uint ReadUInt32(long position)
         {
-            return *((uint*)(RamPtr + Position));
+            return *((uint*)(_ramPtr + position));
         }
 
-        public unsafe ulong ReadUInt64(long Position)
+        public unsafe ulong ReadUInt64(long position)
         {
-            return *((ulong*)(RamPtr + Position));
+            return *((ulong*)(_ramPtr + position));
         }
 
-        public void WriteSByte(long Position, sbyte Value)
+        public void WriteSByte(long position, sbyte value)
         {
-            WriteByte(Position, (byte)Value);
+            WriteByte(position, (byte)value);
         }
 
-        public void WriteInt16(long Position, short Value)
+        public void WriteInt16(long position, short value)
         {
-            WriteUInt16(Position, (ushort)Value);
+            WriteUInt16(position, (ushort)value);
         }
 
-        public void WriteInt32(long Position, int Value)
+        public void WriteInt32(long position, int value)
         {
-            WriteUInt32(Position, (uint)Value);
+            WriteUInt32(position, (uint)value);
         }
 
-        public void WriteInt64(long Position, long Value)
+        public void WriteInt64(long position, long value)
         {
-            WriteUInt64(Position, (ulong)Value);
+            WriteUInt64(position, (ulong)value);
         }
 
-        public unsafe void WriteByte(long Position, byte Value)
+        public unsafe void WriteByte(long position, byte value)
         {
-            *((byte*)(RamPtr + Position)) = Value;
+            *(_ramPtr + position) = value;
         }
 
-        public unsafe void WriteUInt16(long Position, ushort Value)
+        public unsafe void WriteUInt16(long position, ushort value)
         {
-            *((ushort*)(RamPtr + Position)) = Value;
+            *((ushort*)(_ramPtr + position)) = value;
         }
 
-        public unsafe void WriteUInt32(long Position, uint Value)
+        public unsafe void WriteUInt32(long position, uint value)
         {
-            *((uint*)(RamPtr + Position)) = Value;
+            *((uint*)(_ramPtr + position)) = value;
         }
 
-        public unsafe void WriteUInt64(long Position, ulong Value)
+        public unsafe void WriteUInt64(long position, ulong value)
         {
-            *((ulong*)(RamPtr + Position)) = Value;
+            *((ulong*)(_ramPtr + position)) = value;
         }
 
-        public void FillWithZeros(long Position, int Size)
+        public void FillWithZeros(long position, int size)
         {
-            int Size8 = Size & ~(8 - 1);
+            int size8 = size & ~(8 - 1);
 
-            for (int Offs = 0; Offs < Size8; Offs += 8)
+            for (int offs = 0; offs < size8; offs += 8)
             {
-                WriteInt64(Position + Offs, 0);
+                WriteInt64(position + offs, 0);
             }
 
-            for (int Offs = Size8; Offs < (Size - Size8); Offs++)
+            for (int offs = size8; offs < (size - size8); offs++)
             {
-                WriteByte(Position + Offs, 0);
+                WriteByte(position + offs, 0);
             }
         }
 
@@ -118,7 +118,7 @@ namespace Ryujinx.HLE
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool Disposing)
+        protected virtual void Dispose(bool disposing)
         {
             Marshal.FreeHGlobal(RamPointer);
         }

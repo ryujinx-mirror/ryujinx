@@ -5,53 +5,53 @@ namespace Ryujinx.HLE.HOS.Services.Android
 {
     static class Parcel
     {
-        public static byte[] GetParcelData(byte[] Parcel)
+        public static byte[] GetParcelData(byte[] parcel)
         {
-            if (Parcel == null)
+            if (parcel == null)
             {
-                throw new ArgumentNullException(nameof(Parcel));
+                throw new ArgumentNullException(nameof(parcel));
             }
 
-            using (MemoryStream MS = new MemoryStream(Parcel))
+            using (MemoryStream ms = new MemoryStream(parcel))
             {
-                BinaryReader Reader = new BinaryReader(MS);
+                BinaryReader reader = new BinaryReader(ms);
 
-                int DataSize   = Reader.ReadInt32();
-                int DataOffset = Reader.ReadInt32();
-                int ObjsSize   = Reader.ReadInt32();
-                int ObjsOffset = Reader.ReadInt32();
+                int dataSize   = reader.ReadInt32();
+                int dataOffset = reader.ReadInt32();
+                int objsSize   = reader.ReadInt32();
+                int objsOffset = reader.ReadInt32();
 
-                MS.Seek(DataOffset - 0x10, SeekOrigin.Current);
+                ms.Seek(dataOffset - 0x10, SeekOrigin.Current);
 
-                return Reader.ReadBytes(DataSize);
+                return reader.ReadBytes(dataSize);
             }
         }
 
-        public static byte[] MakeParcel(byte[] Data, byte[] Objs)
+        public static byte[] MakeParcel(byte[] data, byte[] objs)
         {
-            if (Data == null)
+            if (data == null)
             {
-                throw new ArgumentNullException(nameof(Data));
+                throw new ArgumentNullException(nameof(data));
             }
 
-            if (Objs == null)
+            if (objs == null)
             {
-                throw new ArgumentNullException(nameof(Objs));
+                throw new ArgumentNullException(nameof(objs));
             }
 
-            using (MemoryStream MS = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream())
             {
-                BinaryWriter Writer = new BinaryWriter(MS);
+                BinaryWriter writer = new BinaryWriter(ms);
 
-                Writer.Write(Data.Length);
-                Writer.Write(0x10);
-                Writer.Write(Objs.Length);
-                Writer.Write(Data.Length + 0x10);
+                writer.Write(data.Length);
+                writer.Write(0x10);
+                writer.Write(objs.Length);
+                writer.Write(data.Length + 0x10);
 
-                Writer.Write(Data);
-                Writer.Write(Objs);
+                writer.Write(data);
+                writer.Write(objs);
 
-                return MS.ToArray();
+                return ms.ToArray();
             }
         }
     }

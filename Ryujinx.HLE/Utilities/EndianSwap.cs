@@ -2,16 +2,16 @@
 {
     static class EndianSwap
     {
-        public static ushort Swap16(ushort Value) => (ushort)(((Value >> 8) & 0xff) | (Value << 8));
+        public static ushort Swap16(ushort value) => (ushort)(((value >> 8) & 0xff) | (value << 8));
 
-        public static int Swap32(int Value)
+        public static int Swap32(int value)
         {
-            uint UintVal = (uint)Value;
+            uint uintVal = (uint)value;
 
-            return (int)(((UintVal >> 24) & 0x000000ff) |
-                         ((UintVal >>  8) & 0x0000ff00) |
-                         ((UintVal <<  8) & 0x00ff0000) |
-                         ((UintVal << 24) & 0xff000000));
+            return (int)(((uintVal >> 24) & 0x000000ff) |
+                         ((uintVal >>  8) & 0x0000ff00) |
+                         ((uintVal <<  8) & 0x00ff0000) |
+                         ((uintVal << 24) & 0xff000000));
         }
     }
 }

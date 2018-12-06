@@ -10,43 +10,43 @@ namespace Ryujinx.HLE
         private const int FrameTypeSystem = 0;
         private const int FrameTypeGame   = 1;
 
-        private double[] AverageFrameRate;
-        private double[] AccumulatedFrameTime;
-        private double[] PreviousFrameTime;
+        private double[] _averageFrameRate;
+        private double[] _accumulatedFrameTime;
+        private double[] _previousFrameTime;
 
-        private long[] FramesRendered;
+        private long[] _framesRendered;
 
-        private object[] FrameLock;
+        private object[] _frameLock;
 
-        private double TicksToSeconds;
+        private double _ticksToSeconds;
 
-        private Stopwatch ExecutionTime;
+        private Stopwatch _executionTime;
 
-        private Timer ResetTimer;
+        private Timer _resetTimer;
 
         public PerformanceStatistics()
         {
-            AverageFrameRate     = new double[2];
-            AccumulatedFrameTime = new double[2];
-            PreviousFrameTime    = new double[2];
+            _averageFrameRate     = new double[2];
+            _accumulatedFrameTime = new double[2];
+            _previousFrameTime    = new double[2];
 
-            FramesRendered = new long[2];
+            _framesRendered = new long[2];
 
-            FrameLock = new object[] { new object(), new object() };
+            _frameLock = new object[] { new object(), new object() };
 
-            ExecutionTime = new Stopwatch();
+            _executionTime = new Stopwatch();
 
-            ExecutionTime.Start();
+            _executionTime.Start();
 
-            ResetTimer = new Timer(1000);
+            _resetTimer = new Timer(1000);
 
-            ResetTimer.Elapsed += ResetTimerElapsed;
+            _resetTimer.Elapsed += ResetTimerElapsed;
 
-            ResetTimer.AutoReset = true;
+            _resetTimer.AutoReset = true;
 
-            ResetTimer.Start();
+            _resetTimer.Start();
 
-            TicksToSeconds = 1.0 / Stopwatch.Frequency;
+            _ticksToSeconds = 1.0 / Stopwatch.Frequency;
         }
 
         private void ResetTimerElapsed(object sender, ElapsedEventArgs e)
@@ -55,28 +55,28 @@ namespace Ryujinx.HLE
             CalculateAverageFrameRate(FrameTypeGame);
         }
 
-        private void CalculateAverageFrameRate(int FrameType)
+        private void CalculateAverageFrameRate(int frameType)
         {
-            double FrameRate = 0;
+            double frameRate = 0;
 
-            if (AccumulatedFrameTime[FrameType] > 0)
+            if (_accumulatedFrameTime[frameType] > 0)
             {
-                FrameRate = FramesRendered[FrameType] / AccumulatedFrameTime[FrameType];
+                frameRate = _framesRendered[frameType] / _accumulatedFrameTime[frameType];
             }
 
-            lock (FrameLock[FrameType])
+            lock (_frameLock[frameType])
             {
-                AverageFrameRate[FrameType] = LinearInterpolate(AverageFrameRate[FrameType], FrameRate);
+                _averageFrameRate[frameType] = LinearInterpolate(_averageFrameRate[frameType], frameRate);
 
-                FramesRendered[FrameType] = 0;
+                _framesRendered[frameType] = 0;
 
-                AccumulatedFrameTime[FrameType] = 0;
+                _accumulatedFrameTime[frameType] = 0;
             }
         }
 
-        private double LinearInterpolate(double Old, double New)
+        private double LinearInterpolate(double old, double New)
         {
-            return Old * (1.0 - FrameRateWeight) + New * FrameRateWeight;
+            return old * (1.0 - FrameRateWeight) + New * FrameRateWeight;
         }
 
         public void RecordSystemFrameTime()
@@ -89,30 +89,30 @@ namespace Ryujinx.HLE
             RecordFrameTime(FrameTypeGame);
         }
 
-        private void RecordFrameTime(int FrameType)
+        private void RecordFrameTime(int frameType)
         {
-            double CurrentFrameTime = ExecutionTime.ElapsedTicks * TicksToSeconds;
+            double currentFrameTime = _executionTime.ElapsedTicks * _ticksToSeconds;
 
-            double ElapsedFrameTime = CurrentFrameTime - PreviousFrameTime[FrameType];
+            double elapsedFrameTime = currentFrameTime - _previousFrameTime[frameType];
 
-            PreviousFrameTime[FrameType] = CurrentFrameTime;
+            _previousFrameTime[frameType] = currentFrameTime;
 
-            lock (FrameLock[FrameType])
+            lock (_frameLock[frameType])
             {
-                AccumulatedFrameTime[FrameType] += ElapsedFrameTime;
+                _accumulatedFrameTime[frameType] += elapsedFrameTime;
 
-                FramesRendered[FrameType]++;
+                _framesRendered[frameType]++;
             }
         }
 
         public double GetSystemFrameRate()
         {
-            return AverageFrameRate[FrameTypeSystem];
+            return _averageFrameRate[FrameTypeSystem];
         }
 
         public double GetGameFrameRate()
         {
-            return AverageFrameRate[FrameTypeGame];
+            return _averageFrameRate[FrameTypeGame];
         }
     }
 }

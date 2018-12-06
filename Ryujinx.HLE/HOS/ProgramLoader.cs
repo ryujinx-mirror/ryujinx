@@ -15,278 +15,278 @@ namespace Ryujinx.HLE.HOS
         private const int ArgsDataSize   = 0x9000;
         private const int ArgsTotalSize  = ArgsHeaderSize + ArgsDataSize;
 
-        public static bool LoadKernelInitalProcess(Horizon System, KernelInitialProcess Kip)
+        public static bool LoadKernelInitalProcess(Horizon system, KernelInitialProcess kip)
         {
-            int EndOffset = Kip.DataOffset + Kip.Data.Length;
+            int endOffset = kip.DataOffset + kip.Data.Length;
 
-            if (Kip.BssSize != 0)
+            if (kip.BssSize != 0)
             {
-                EndOffset = Kip.BssOffset + Kip.BssSize;
+                endOffset = kip.BssOffset + kip.BssSize;
             }
 
-            int CodeSize = BitUtils.AlignUp(Kip.TextOffset + EndOffset, KMemoryManager.PageSize);
+            int codeSize = BitUtils.AlignUp(kip.TextOffset + endOffset, KMemoryManager.PageSize);
 
-            int CodePagesCount = CodeSize / KMemoryManager.PageSize;
+            int codePagesCount = codeSize / KMemoryManager.PageSize;
 
-            ulong CodeBaseAddress = Kip.Addr39Bits ? 0x8000000UL : 0x200000UL;
+            ulong codeBaseAddress = kip.Addr39Bits ? 0x8000000UL : 0x200000UL;
 
-            ulong CodeAddress = CodeBaseAddress + (ulong)Kip.TextOffset;
+            ulong codeAddress = codeBaseAddress + (ulong)kip.TextOffset;
 
-            int MmuFlags = 0;
+            int mmuFlags = 0;
 
             if (AslrEnabled)
             {
                 //TODO: Randomization.
 
-                MmuFlags |= 0x20;
+                mmuFlags |= 0x20;
             }
 
-            if (Kip.Addr39Bits)
+            if (kip.Addr39Bits)
             {
-                MmuFlags |= (int)AddressSpaceType.Addr39Bits << 1;
+                mmuFlags |= (int)AddressSpaceType.Addr39Bits << 1;
             }
 
-            if (Kip.Is64Bits)
+            if (kip.Is64Bits)
             {
-                MmuFlags |= 1;
+                mmuFlags |= 1;
             }
 
-            ProcessCreationInfo CreationInfo = new ProcessCreationInfo(
-                Kip.Name,
-                Kip.ProcessCategory,
-                Kip.TitleId,
-                CodeAddress,
-                CodePagesCount,
-                MmuFlags,
+            ProcessCreationInfo creationInfo = new ProcessCreationInfo(
+                kip.Name,
+                kip.ProcessCategory,
+                kip.TitleId,
+                codeAddress,
+                codePagesCount,
+                mmuFlags,
                 0,
                 0);
 
-            MemoryRegion MemRegion = Kip.IsService
+            MemoryRegion memRegion = kip.IsService
                 ? MemoryRegion.Service
                 : MemoryRegion.Application;
 
-            KMemoryRegionManager Region = System.MemoryRegions[(int)MemRegion];
+            KMemoryRegionManager region = system.MemoryRegions[(int)memRegion];
 
-            KernelResult Result = Region.AllocatePages((ulong)CodePagesCount, false, out KPageList PageList);
+            KernelResult result = region.AllocatePages((ulong)codePagesCount, false, out KPageList pageList);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{Result}\".");
+                Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
                 return false;
             }
 
-            KProcess Process = new KProcess(System);
+            KProcess process = new KProcess(system);
 
-            Result = Process.InitializeKip(
-                CreationInfo,
-                Kip.Capabilities,
-                PageList,
-                System.ResourceLimit,
-                MemRegion);
+            result = process.InitializeKip(
+                creationInfo,
+                kip.Capabilities,
+                pageList,
+                system.ResourceLimit,
+                memRegion);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{Result}\".");
+                Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
                 return false;
             }
 
-            Result = LoadIntoMemory(Process, Kip, CodeBaseAddress);
+            result = LoadIntoMemory(process, kip, codeBaseAddress);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{Result}\".");
+                Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
                 return false;
             }
 
-            Result = Process.Start(Kip.MainThreadPriority, (ulong)Kip.MainThreadStackSize);
+            result = process.Start(kip.MainThreadPriority, (ulong)kip.MainThreadStackSize);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process start returned error \"{Result}\".");
+                Logger.PrintError(LogClass.Loader, $"Process start returned error \"{result}\".");
 
                 return false;
             }
 
-            System.Processes.Add(Process.Pid, Process);
+            system.Processes.Add(process.Pid, process);
 
             return true;
         }
 
         public static bool LoadStaticObjects(
-            Horizon       System,
-            Npdm          MetaData,
-            IExecutable[] StaticObjects,
-            byte[]        Arguments = null)
+            Horizon       system,
+            Npdm          metaData,
+            IExecutable[] staticObjects,
+            byte[]        arguments = null)
         {
-            ulong ArgsStart = 0;
-            int   ArgsSize  = 0;
-            ulong CodeStart = 0x8000000;
-            int   CodeSize  = 0;
+            ulong argsStart = 0;
+            int   argsSize  = 0;
+            ulong codeStart = 0x8000000;
+            int   codeSize  = 0;
 
-            ulong[] NsoBase = new ulong[StaticObjects.Length];
+            ulong[] nsoBase = new ulong[staticObjects.Length];
 
-            for (int Index = 0; Index < StaticObjects.Length; Index++)
+            for (int index = 0; index < staticObjects.Length; index++)
             {
-                IExecutable StaticObject = StaticObjects[Index];
+                IExecutable staticObject = staticObjects[index];
 
-                int TextEnd = StaticObject.TextOffset + StaticObject.Text.Length;
-                int ROEnd   = StaticObject.ROOffset   + StaticObject.RO.Length;
-                int DataEnd = StaticObject.DataOffset + StaticObject.Data.Length + StaticObject.BssSize;
+                int textEnd = staticObject.TextOffset + staticObject.Text.Length;
+                int roEnd   = staticObject.RoOffset   + staticObject.Ro.Length;
+                int dataEnd = staticObject.DataOffset + staticObject.Data.Length + staticObject.BssSize;
 
-                int NsoSize = TextEnd;
+                int nsoSize = textEnd;
 
-                if ((uint)NsoSize < (uint)ROEnd)
+                if ((uint)nsoSize < (uint)roEnd)
                 {
-                    NsoSize = ROEnd;
+                    nsoSize = roEnd;
                 }
 
-                if ((uint)NsoSize < (uint)DataEnd)
+                if ((uint)nsoSize < (uint)dataEnd)
                 {
-                    NsoSize = DataEnd;
+                    nsoSize = dataEnd;
                 }
 
-                NsoSize = BitUtils.AlignUp(NsoSize, KMemoryManager.PageSize);
+                nsoSize = BitUtils.AlignUp(nsoSize, KMemoryManager.PageSize);
 
-                NsoBase[Index] = CodeStart + (ulong)CodeSize;
+                nsoBase[index] = codeStart + (ulong)codeSize;
 
-                CodeSize += NsoSize;
+                codeSize += nsoSize;
 
-                if (Arguments != null && ArgsSize == 0)
+                if (arguments != null && argsSize == 0)
                 {
-                    ArgsStart = (ulong)CodeSize;
+                    argsStart = (ulong)codeSize;
 
-                    ArgsSize = BitUtils.AlignDown(Arguments.Length * 2 + ArgsTotalSize - 1, KMemoryManager.PageSize);
+                    argsSize = BitUtils.AlignDown(arguments.Length * 2 + ArgsTotalSize - 1, KMemoryManager.PageSize);
 
-                    CodeSize += ArgsSize;
+                    codeSize += argsSize;
                 }
             }
 
-            int CodePagesCount = CodeSize / KMemoryManager.PageSize;
+            int codePagesCount = codeSize / KMemoryManager.PageSize;
 
-            int PersonalMmHeapPagesCount = MetaData.PersonalMmHeapSize / KMemoryManager.PageSize;
+            int personalMmHeapPagesCount = metaData.PersonalMmHeapSize / KMemoryManager.PageSize;
 
-            ProcessCreationInfo CreationInfo = new ProcessCreationInfo(
-                MetaData.TitleName,
-                MetaData.ProcessCategory,
-                MetaData.ACI0.TitleId,
-                CodeStart,
-                CodePagesCount,
-                MetaData.MmuFlags,
+            ProcessCreationInfo creationInfo = new ProcessCreationInfo(
+                metaData.TitleName,
+                metaData.ProcessCategory,
+                metaData.Aci0.TitleId,
+                codeStart,
+                codePagesCount,
+                metaData.MmuFlags,
                 0,
-                PersonalMmHeapPagesCount);
+                personalMmHeapPagesCount);
 
-            KernelResult Result;
+            KernelResult result;
 
-            KResourceLimit ResourceLimit = new KResourceLimit(System);
+            KResourceLimit resourceLimit = new KResourceLimit(system);
 
-            long ApplicationRgSize = (long)System.MemoryRegions[(int)MemoryRegion.Application].Size;
+            long applicationRgSize = (long)system.MemoryRegions[(int)MemoryRegion.Application].Size;
 
-            Result  = ResourceLimit.SetLimitValue(LimitableResource.Memory,         ApplicationRgSize);
-            Result |= ResourceLimit.SetLimitValue(LimitableResource.Thread,         608);
-            Result |= ResourceLimit.SetLimitValue(LimitableResource.Event,          700);
-            Result |= ResourceLimit.SetLimitValue(LimitableResource.TransferMemory, 128);
-            Result |= ResourceLimit.SetLimitValue(LimitableResource.Session,        894);
+            result  = resourceLimit.SetLimitValue(LimitableResource.Memory,         applicationRgSize);
+            result |= resourceLimit.SetLimitValue(LimitableResource.Thread,         608);
+            result |= resourceLimit.SetLimitValue(LimitableResource.Event,          700);
+            result |= resourceLimit.SetLimitValue(LimitableResource.TransferMemory, 128);
+            result |= resourceLimit.SetLimitValue(LimitableResource.Session,        894);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
                 Logger.PrintError(LogClass.Loader, $"Process initialization failed setting resource limit values.");
 
                 return false;
             }
 
-            KProcess Process = new KProcess(System);
+            KProcess process = new KProcess(system);
 
-            Result = Process.Initialize(
-                CreationInfo,
-                MetaData.ACI0.KernelAccessControl.Capabilities,
-                ResourceLimit,
+            result = process.Initialize(
+                creationInfo,
+                metaData.Aci0.KernelAccessControl.Capabilities,
+                resourceLimit,
                 MemoryRegion.Application);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{Result}\".");
+                Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
                 return false;
             }
 
-            for (int Index = 0; Index < StaticObjects.Length; Index++)
+            for (int index = 0; index < staticObjects.Length; index++)
             {
-                Logger.PrintInfo(LogClass.Loader, $"Loading image {Index} at 0x{NsoBase[Index]:x16}...");
+                Logger.PrintInfo(LogClass.Loader, $"Loading image {index} at 0x{nsoBase[index]:x16}...");
 
-                Result = LoadIntoMemory(Process, StaticObjects[Index], NsoBase[Index]);
+                result = LoadIntoMemory(process, staticObjects[index], nsoBase[index]);
 
-                if (Result != KernelResult.Success)
+                if (result != KernelResult.Success)
                 {
-                    Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{Result}\".");
+                    Logger.PrintError(LogClass.Loader, $"Process initialization returned error \"{result}\".");
 
                     return false;
                 }
             }
 
-            Result = Process.Start(MetaData.MainThreadPriority, (ulong)MetaData.MainThreadStackSize);
+            result = process.Start(metaData.MainThreadPriority, (ulong)metaData.MainThreadStackSize);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                Logger.PrintError(LogClass.Loader, $"Process start returned error \"{Result}\".");
+                Logger.PrintError(LogClass.Loader, $"Process start returned error \"{result}\".");
 
                 return false;
             }
 
-            System.Processes.Add(Process.Pid, Process);
+            system.Processes.Add(process.Pid, process);
 
             return true;
         }
 
-        private static KernelResult LoadIntoMemory(KProcess Process, IExecutable Image, ulong BaseAddress)
+        private static KernelResult LoadIntoMemory(KProcess process, IExecutable image, ulong baseAddress)
         {
-            ulong TextStart = BaseAddress + (ulong)Image.TextOffset;
-            ulong ROStart   = BaseAddress + (ulong)Image.ROOffset;
-            ulong DataStart = BaseAddress + (ulong)Image.DataOffset;
-            ulong BssStart  = BaseAddress + (ulong)Image.BssOffset;
+            ulong textStart = baseAddress + (ulong)image.TextOffset;
+            ulong roStart   = baseAddress + (ulong)image.RoOffset;
+            ulong dataStart = baseAddress + (ulong)image.DataOffset;
+            ulong bssStart  = baseAddress + (ulong)image.BssOffset;
 
-            ulong End = DataStart + (ulong)Image.Data.Length;
+            ulong end = dataStart + (ulong)image.Data.Length;
 
-            if (Image.BssSize != 0)
+            if (image.BssSize != 0)
             {
-                End = BssStart + (ulong)Image.BssSize;
+                end = bssStart + (ulong)image.BssSize;
             }
 
-            Process.CpuMemory.WriteBytes((long)TextStart, Image.Text);
-            Process.CpuMemory.WriteBytes((long)ROStart,   Image.RO);
-            Process.CpuMemory.WriteBytes((long)DataStart, Image.Data);
+            process.CpuMemory.WriteBytes((long)textStart, image.Text);
+            process.CpuMemory.WriteBytes((long)roStart,   image.Ro);
+            process.CpuMemory.WriteBytes((long)dataStart, image.Data);
 
-            MemoryHelper.FillWithZeros(Process.CpuMemory, (long)BssStart, Image.BssSize);
+            MemoryHelper.FillWithZeros(process.CpuMemory, (long)bssStart, image.BssSize);
 
-            KernelResult SetProcessMemoryPermission(ulong Address, ulong Size, MemoryPermission Permission)
+            KernelResult SetProcessMemoryPermission(ulong address, ulong size, MemoryPermission permission)
             {
-                if (Size == 0)
+                if (size == 0)
                 {
                     return KernelResult.Success;
                 }
 
-                Size = BitUtils.AlignUp(Size, KMemoryManager.PageSize);
+                size = BitUtils.AlignUp(size, KMemoryManager.PageSize);
 
-                return Process.MemoryManager.SetProcessMemoryPermission(Address, Size, Permission);
+                return process.MemoryManager.SetProcessMemoryPermission(address, size, permission);
             }
 
-            KernelResult Result = SetProcessMemoryPermission(TextStart, (ulong)Image.Text.Length, MemoryPermission.ReadAndExecute);
+            KernelResult result = SetProcessMemoryPermission(textStart, (ulong)image.Text.Length, MemoryPermission.ReadAndExecute);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                return Result;
+                return result;
             }
 
-            Result = SetProcessMemoryPermission(ROStart, (ulong)Image.RO.Length, MemoryPermission.Read);
+            result = SetProcessMemoryPermission(roStart, (ulong)image.Ro.Length, MemoryPermission.Read);
 
-            if (Result != KernelResult.Success)
+            if (result != KernelResult.Success)
             {
-                return Result;
+                return result;
             }
 
-            return SetProcessMemoryPermission(DataStart, End - DataStart, MemoryPermission.ReadAndWrite);
+            return SetProcessMemoryPermission(dataStart, end - dataStart, MemoryPermission.ReadAndWrite);
         }
     }
 }
