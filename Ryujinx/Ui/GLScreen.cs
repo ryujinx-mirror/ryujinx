@@ -174,6 +174,8 @@ namespace Ryujinx
                 Dy = rightJoystickDy
             };
 
+            currentButton |= _device.Hid.UpdateStickButtons(leftJoystick, rightJoystick);
+
             bool hasTouch = false;
 
             //Get screen touch position from left mouse click

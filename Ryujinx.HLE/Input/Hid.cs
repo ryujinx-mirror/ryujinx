@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.Input
             PrimaryController.Connect(controllerId);
         }
 
-        private HidControllerButtons UpdateStickButtons(
+        public HidControllerButtons UpdateStickButtons(
             HidJoystickPosition leftStick,
             HidJoystickPosition rightStick)
         {
