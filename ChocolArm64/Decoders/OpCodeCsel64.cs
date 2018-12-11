@@ -10,7 +10,7 @@ namespace ChocolArm64.Decoders
 
         public OpCodeCsel64(Inst inst, long position, int opCode) : base(inst, position, opCode)
         {
-            Rm   =         (opCode >> 16) & 0x1f;
+            Rm   =        (opCode >> 16) & 0x1f;
             Cond = (Cond)((opCode >> 12) & 0xf);
         }
     }

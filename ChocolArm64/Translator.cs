@@ -83,47 +83,45 @@ namespace ChocolArm64
         {
             Block block = Decoder.DecodeBasicBlock(state, memory, position);
 
-            Block[] graph = new Block[] { block };
+            ILEmitterCtx context = new ILEmitterCtx(_cache, block);
 
             string subName = GetSubroutineName(position);
 
-            ILEmitterCtx context = new ILEmitterCtx(_cache, graph, block, subName);
+            ILMethodBuilder ilMthdBuilder = new ILMethodBuilder(context.GetILBlocks(), subName);
 
-            do
-            {
-                context.EmitOpCode();
-            }
-            while (context.AdvanceOpCode());
-
-            TranslatedSub subroutine = context.GetSubroutine();
+            TranslatedSub subroutine = ilMthdBuilder.GetSubroutine();
 
             subroutine.SetType(TranslatedSubType.SubTier0);
 
             _cache.AddOrUpdate(position, subroutine, block.OpCodes.Count);
-
-            OpCode64 lastOp = block.GetLastOp();
 
             return subroutine;
         }
 
         private void TranslateTier1(CpuThreadState state, MemoryManager memory, long position)
         {
-            (Block[] graph, Block root) = Decoder.DecodeSubroutine(_cache, state, memory, position);
+            Block graph = Decoder.DecodeSubroutine(_cache, state, memory, position);
+
+            ILEmitterCtx context = new ILEmitterCtx(_cache, graph);
+
+            ILBlock[] ilBlocks = context.GetILBlocks();
 
             string subName = GetSubroutineName(position);
 
-            ILEmitterCtx context = new ILEmitterCtx(_cache, graph, root, subName);
+            ILMethodBuilder ilMthdBuilder = new ILMethodBuilder(ilBlocks, subName);
 
-            if (context.CurrBlock.Position != position)
+            TranslatedSub subroutine = ilMthdBuilder.GetSubroutine();
+
+            subroutine.SetType(TranslatedSubType.SubTier1);
+
+            int ilOpCount = 0;
+
+            foreach (ILBlock ilBlock in ilBlocks)
             {
-                context.Emit(OpCodes.Br, context.GetLabel(position));
+                ilOpCount += ilBlock.Count;
             }
 
-            do
-            {
-                context.EmitOpCode();
-            }
-            while (context.AdvanceOpCode());
+            _cache.AddOrUpdate(position, subroutine, ilOpCount);
 
             //Mark all methods that calls this method for ReJiting,
             //since we can now call it directly which is faster.
@@ -137,29 +135,11 @@ namespace ChocolArm64
                     }
                 }
             }
-
-            TranslatedSub subroutine = context.GetSubroutine();
-
-            subroutine.SetType(TranslatedSubType.SubTier1);
-
-            _cache.AddOrUpdate(position, subroutine, GetGraphInstCount(graph));
         }
 
         private string GetSubroutineName(long position)
         {
             return $"Sub{position:x16}";
-        }
-
-        private int GetGraphInstCount(Block[] graph)
-        {
-            int size = 0;
-
-            foreach (Block block in graph)
-            {
-                size += block.OpCodes.Count;
-            }
-
-            return size;
         }
     }
 }

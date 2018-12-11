@@ -3,7 +3,7 @@ using System.Reflection.Emit;
 
 namespace ChocolArm64.Translation
 {
-    struct IlOpCodeStore : IILEmit
+    struct ILOpCodeStore : IILEmit
     {
         public int Index { get; private set; }
 
@@ -11,29 +11,18 @@ namespace ChocolArm64.Translation
 
         public RegisterSize RegisterSize { get; private set; }
 
-        public IlOpCodeStore(int index, IoType ioType, RegisterSize registerSize = 0)
+        public ILOpCodeStore(int index, IoType ioType, RegisterSize registerSize = 0)
         {
             Index        = index;
             IoType       = ioType;
             RegisterSize = registerSize;
         }
 
-        public void Emit(ILEmitter context)
+        public void Emit(ILMethodBuilder context)
         {
             switch (IoType)
             {
                 case IoType.Arg: context.Generator.EmitStarg(Index); break;
-
-                case IoType.Fields:
-                {
-                    long intOutputs = context.LocalAlloc.GetIntOutputs(context.GetIlBlock(Index));
-                    long vecOutputs = context.LocalAlloc.GetVecOutputs(context.GetIlBlock(Index));
-
-                    StoreLocals(context, intOutputs, RegisterType.Int);
-                    StoreLocals(context, vecOutputs, RegisterType.Vector);
-                    
-                    break;
-                }
 
                 case IoType.Flag:   EmitStloc(context, Index, RegisterType.Flag);   break;
                 case IoType.Int:    EmitStloc(context, Index, RegisterType.Int);    break;
@@ -41,25 +30,7 @@ namespace ChocolArm64.Translation
             }
         }
 
-        private void StoreLocals(ILEmitter context, long outputs, RegisterType baseType)
-        {
-            for (int bit = 0; bit < 64; bit++)
-            {
-                long mask = 1L << bit;
-
-                if ((outputs & mask) != 0)
-                {
-                    Register reg = ILEmitter.GetRegFromBit(bit, baseType);
-
-                    context.Generator.EmitLdarg(TranslatedSub.StateArgIdx);
-                    context.Generator.EmitLdloc(context.GetLocalIndex(reg));
-
-                    context.Generator.Emit(OpCodes.Stfld, reg.GetField());
-                }
-            }
-        }
-
-        private void EmitStloc(ILEmitter context, int index, RegisterType registerType)
+        private void EmitStloc(ILMethodBuilder context, int index, RegisterType registerType)
         {
             Register reg = new Register(index, registerType);
 

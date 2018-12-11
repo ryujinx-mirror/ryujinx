@@ -8,12 +8,12 @@ namespace ChocolArm64.Translation
 
         private Label _lbl;
 
-        public void Emit(ILEmitter context)
+        public void Emit(ILMethodBuilder context)
         {
             context.Generator.MarkLabel(GetLabel(context));
         }
 
-        public Label GetLabel(ILEmitter context)
+        public Label GetLabel(ILMethodBuilder context)
         {
             if (!_hasLabel)
             {

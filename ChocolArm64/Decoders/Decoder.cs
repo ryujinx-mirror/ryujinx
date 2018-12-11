@@ -28,11 +28,11 @@ namespace ChocolArm64.Decoders
             return block;
         }
 
-        public static (Block[] Graph, Block Root) DecodeSubroutine(
-            TranslatorCache  cache,
-            CpuThreadState   state,
-            MemoryManager    memory,
-            long             start)
+        public static Block DecodeSubroutine(
+            TranslatorCache cache,
+            CpuThreadState  state,
+            MemoryManager   memory,
+            long            start)
         {
             Dictionary<long, Block> visited    = new Dictionary<long, Block>();
             Dictionary<long, Block> visitedEnd = new Dictionary<long, Block>();
@@ -53,7 +53,7 @@ namespace ChocolArm64.Decoders
                 return output;
             }
 
-            Block root = Enqueue(start);
+            Block entry = Enqueue(start);
 
             while (blocks.Count > 0)
             {
@@ -118,33 +118,7 @@ namespace ChocolArm64.Decoders
                 visitedEnd.Add(current.EndPosition, current);
             }
 
-            //Make and sort Graph blocks array by position.
-            Block[] graph = new Block[visited.Count];
-
-            while (visited.Count > 0)
-            {
-                ulong firstPos = ulong.MaxValue;
-
-                foreach (Block block in visited.Values)
-                {
-                    if (firstPos > (ulong)block.Position)
-                        firstPos = (ulong)block.Position;
-                }
-
-                Block current = visited[(long)firstPos];
-
-                do
-                {
-                    graph[graph.Length - visited.Count] = current;
-
-                    visited.Remove(current.Position);
-
-                    current = current.Next;
-                }
-                while (current != null);
-            }
-
-            return (graph, root);
+            return entry;
         }
 
         private static void FillBlock(CpuThreadState state, MemoryManager memory, Block block)

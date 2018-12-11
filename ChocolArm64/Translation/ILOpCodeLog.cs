@@ -9,7 +9,7 @@ namespace ChocolArm64.Translation
             _text = text;
         }
 
-        public void Emit(ILEmitter context)
+        public void Emit(ILMethodBuilder context)
         {
             context.Generator.EmitWriteLine(_text);
         }

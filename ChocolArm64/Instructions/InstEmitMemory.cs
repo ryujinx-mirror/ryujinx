@@ -60,7 +60,7 @@ namespace ChocolArm64.Instructions
             EmitWBackIfNeeded(context);
         }
 
-        public static void LdrLit(ILEmitterCtx context)
+        public static void Ldr_Literal(ILEmitterCtx context)
         {
             IOpCodeLit64 op = (IOpCodeLit64)context.CurrOp;
 

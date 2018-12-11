@@ -48,7 +48,7 @@ namespace ChocolArm64.Instructions
 
             if (context.CurrBlock.Next != null)
             {
-                context.EmitLoadState(context.CurrBlock.Next);
+                context.EmitLoadState();
             }
             else
             {
@@ -73,7 +73,7 @@ namespace ChocolArm64.Instructions
 
             if (context.CurrBlock.Next != null)
             {
-                context.EmitLoadState(context.CurrBlock.Next);
+                context.EmitLoadState();
             }
             else
             {

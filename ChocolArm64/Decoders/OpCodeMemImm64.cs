@@ -41,7 +41,7 @@ namespace ChocolArm64.Decoders
             if (WBack || Unscaled)
             {
                 //9-bits Signed Immediate.
-                Imm = (opCode << 43) >> 55;
+                Imm = (opCode << 11) >> 23;
             }
             else
             {

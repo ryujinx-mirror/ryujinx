@@ -51,7 +51,7 @@ namespace ChocolArm64.Translation
             _value = new ImmVal { R8 = value };
         }
 
-        public void Emit(ILEmitter context)
+        public void Emit(ILMethodBuilder context)
         {
             switch (_type)
             {

@@ -1,5 +1,4 @@
 using ChocolArm64.Instructions;
-using ChocolArm64.State;
 
 namespace ChocolArm64.Decoders
 {

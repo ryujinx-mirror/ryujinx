@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace ChocolArm64.Translation
@@ -65,11 +66,41 @@ namespace ChocolArm64.Translation
             public long VecInputs;
             public long IntOutputs;
             public long VecOutputs;
+
+            public override bool Equals(object obj)
+            {
+                if (!(obj is BlockIo other))
+                {
+                    return false;
+                }
+
+                return other.Block      == Block      &&
+                       other.Entry      == Entry      &&
+                       other.IntInputs  == IntInputs  &&
+                       other.VecInputs  == VecInputs  &&
+                       other.IntOutputs == IntOutputs &&
+                       other.VecOutputs == VecOutputs;
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(Block, Entry, IntInputs, VecInputs, IntOutputs, VecOutputs);
+            }
+
+            public static bool operator ==(BlockIo lhs, BlockIo rhs)
+            {
+                return lhs.Equals(rhs);
+            }
+
+            public static bool operator !=(BlockIo lhs, BlockIo rhs)
+            {
+                return !(lhs == rhs);
+            }
         }
 
         private const int MaxOptGraphLength = 40;
 
-        public LocalAlloc(ILBlock[] graph, ILBlock root)
+        public LocalAlloc(ILBlock[] graph, ILBlock entry)
         {
             _intPaths = new Dictionary<ILBlock, PathIo>();
             _vecPaths = new Dictionary<ILBlock, PathIo>();
@@ -77,7 +108,7 @@ namespace ChocolArm64.Translation
             if (graph.Length > 1 &&
                 graph.Length < MaxOptGraphLength)
             {
-                InitializeOptimal(graph, root);
+                InitializeOptimal(graph, entry);
             }
             else
             {
@@ -85,7 +116,7 @@ namespace ChocolArm64.Translation
             }
         }
 
-        private void InitializeOptimal(ILBlock[] graph, ILBlock root)
+        private void InitializeOptimal(ILBlock[] graph, ILBlock entry)
         {
             //This will go through all possible paths on the graph,
             //and store all inputs/outputs for each block. A register
@@ -93,7 +124,7 @@ namespace ChocolArm64.Translation
             //When a block can be reached by more than one path, then the
             //output from all paths needs to be set for this block, and
             //only outputs present in all of the parent blocks can be considered
-            //when doing input elimination. Each block chain have a root, that's where
+            //when doing input elimination. Each block chain have a entry, that's where
             //the code starts executing. They are present on the subroutine start point,
             //and on call return points too (address written to X30 by BL).
             HashSet<BlockIo> visited = new HashSet<BlockIo>();
@@ -112,8 +143,8 @@ namespace ChocolArm64.Translation
 
             Enqueue(new BlockIo()
             {
-                Block = root,
-                Entry = root
+                Block = entry,
+                Entry = entry
             });
 
             while (unvisited.Count > 0)
@@ -146,22 +177,22 @@ namespace ChocolArm64.Translation
 
                 void EnqueueFromCurrent(ILBlock block, bool retTarget)
                 {
-                    BlockIo blkIO = new BlockIo() { Block = block };
+                    BlockIo blockIo = new BlockIo() { Block = block };
 
                     if (retTarget)
                     {
-                        blkIO.Entry = block;
+                        blockIo.Entry = block;
                     }
                     else
                     {
-                        blkIO.Entry      = current.Entry;
-                        blkIO.IntInputs  = current.IntInputs;
-                        blkIO.VecInputs  = current.VecInputs;
-                        blkIO.IntOutputs = current.IntOutputs;
-                        blkIO.VecOutputs = current.VecOutputs;
+                        blockIo.Entry      = current.Entry;
+                        blockIo.IntInputs  = current.IntInputs;
+                        blockIo.VecInputs  = current.VecInputs;
+                        blockIo.IntOutputs = current.IntOutputs;
+                        blockIo.VecOutputs = current.VecOutputs;
                     }
 
-                    Enqueue(blkIO);
+                    Enqueue(blockIo);
                 }
 
                 if (current.Block.Next != null)
@@ -179,7 +210,7 @@ namespace ChocolArm64.Translation
         private void InitializeFast(ILBlock[] graph)
         {
             //This is WAY faster than InitializeOptimal, but results in
-            //uneeded loads and stores, so the resulting code will be slower.
+            //unneeded loads and stores, so the resulting code will be slower.
             long intInputs = 0, intOutputs = 0;
             long vecInputs = 0, vecOutputs = 0;
 

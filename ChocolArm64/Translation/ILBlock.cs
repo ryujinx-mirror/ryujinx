@@ -14,19 +14,21 @@ namespace ChocolArm64.Translation
 
         public bool HasStateStore { get; private set; }
 
-        public List<IILEmit> IlEmitters { get; private set; }
+        private List<IILEmit> _emitters;
+
+        public int Count => _emitters.Count;
 
         public ILBlock Next   { get; set; }
         public ILBlock Branch { get; set; }
 
         public ILBlock()
         {
-            IlEmitters = new List<IILEmit>();
+            _emitters = new List<IILEmit>();
         }
 
-        public void Add(IILEmit ilEmitter)
+        public void Add(IILEmit emitter)
         {
-            if (ilEmitter is ILBarrier)
+            if (emitter is ILBarrier)
             {
                 //Those barriers are used to separate the groups of CIL
                 //opcodes emitted by each ARM instruction.
@@ -35,7 +37,7 @@ namespace ChocolArm64.Translation
                 IntAwOutputs = IntOutputs;
                 VecAwOutputs = VecOutputs;
             }
-            else if (ilEmitter is IlOpCodeLoad ld && ILEmitter.IsRegIndex(ld.Index))
+            else if (emitter is ILOpCodeLoad ld && ILMethodBuilder.IsRegIndex(ld.Index))
             {
                 switch (ld.IoType)
                 {
@@ -44,30 +46,26 @@ namespace ChocolArm64.Translation
                     case IoType.Vector: VecInputs |=  (1L << ld.Index)        & ~VecAwOutputs; break;
                 }
             }
-            else if (ilEmitter is IlOpCodeStore st)
+            else if (emitter is ILOpCodeStore st && ILMethodBuilder.IsRegIndex(st.Index))
             {
-                if (ILEmitter.IsRegIndex(st.Index))
+                switch (st.IoType)
                 {
-                    switch (st.IoType)
-                    {
-                        case IoType.Flag:   IntOutputs |= (1L << st.Index) << 32; break;
-                        case IoType.Int:    IntOutputs |=  1L << st.Index;        break;
-                        case IoType.Vector: VecOutputs |=  1L << st.Index;        break;
-                    }
-                }
-
-                if (st.IoType == IoType.Fields)
-                {
-                    HasStateStore = true;
+                    case IoType.Flag:   IntOutputs |= (1L << st.Index) << 32; break;
+                    case IoType.Int:    IntOutputs |=  1L << st.Index;        break;
+                    case IoType.Vector: VecOutputs |=  1L << st.Index;        break;
                 }
             }
+            else if (emitter is ILOpCodeStoreState)
+            {
+                HasStateStore = true;
+            }
 
-            IlEmitters.Add(ilEmitter);
+            _emitters.Add(emitter);
         }
 
-        public void Emit(ILEmitter context)
+        public void Emit(ILMethodBuilder context)
         {
-            foreach (IILEmit ilEmitter in IlEmitters)
+            foreach (IILEmit ilEmitter in _emitters)
             {
                 ilEmitter.Emit(context);
             }

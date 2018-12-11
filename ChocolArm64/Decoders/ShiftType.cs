@@ -2,9 +2,9 @@ namespace ChocolArm64.Decoders
 {
     enum ShiftType
     {
-        Lsl,
-        Lsr,
-        Asr,
-        Ror
+        Lsl = 0,
+        Lsr = 1,
+        Asr = 2,
+        Ror = 3
     }
 }

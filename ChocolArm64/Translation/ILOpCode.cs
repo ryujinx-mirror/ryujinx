@@ -11,7 +11,7 @@ namespace ChocolArm64.Translation
             _ilOp = ilOp;
         }
 
-        public void Emit(ILEmitter context)
+        public void Emit(ILMethodBuilder context)
         {
             context.Generator.Emit(_ilOp);
         }

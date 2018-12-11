@@ -12,7 +12,7 @@ namespace ChocolArm64.Translation
             _mthdInfo = mthdInfo;
         }
 
-        public void Emit(ILEmitter context)
+        public void Emit(ILMethodBuilder context)
         {
             context.Generator.Emit(OpCodes.Call, _mthdInfo);
         }

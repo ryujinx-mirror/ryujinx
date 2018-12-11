@@ -244,7 +244,7 @@ namespace ChocolArm64.Instructions
             EmitFcvt_s_Gp(context, () => { });
         }
 
-        public static void Fcvtzs_Gp_Fix(ILEmitterCtx context)
+        public static void Fcvtzs_Gp_Fixed(ILEmitterCtx context)
         {
             EmitFcvtzs_Gp_Fix(context);
         }
@@ -264,7 +264,7 @@ namespace ChocolArm64.Instructions
             EmitFcvt_u_Gp(context, () => { });
         }
 
-        public static void Fcvtzu_Gp_Fix(ILEmitterCtx context)
+        public static void Fcvtzu_Gp_Fixed(ILEmitterCtx context)
         {
             EmitFcvtzu_Gp_Fix(context);
         }

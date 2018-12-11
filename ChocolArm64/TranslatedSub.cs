@@ -24,7 +24,7 @@ namespace ChocolArm64
 
         public DynamicMethod Method { get; private set; }
 
-        public ReadOnlyCollection<Register> Params { get; private set; }
+        public ReadOnlyCollection<Register> SubArgs { get; private set; }
 
         private HashSet<long> _callers;
 
@@ -34,20 +34,10 @@ namespace ChocolArm64
 
         private bool _needsReJit;
 
-        public TranslatedSub(DynamicMethod method, List<Register> Params)
+        public TranslatedSub(DynamicMethod method, List<Register> subArgs)
         {
-            if (method == null)
-            {
-                throw new ArgumentNullException(nameof(method));
-            }
-
-            if (Params == null)
-            {
-                throw new ArgumentNullException(nameof(Params));
-            }
-
-            Method = method;
-            this.Params = Params.AsReadOnly();
+            Method  = method                ?? throw new ArgumentNullException(nameof(method));;
+            SubArgs = subArgs?.AsReadOnly() ?? throw new ArgumentNullException(nameof(subArgs));
 
             _callers = new HashSet<long>();
 
@@ -89,7 +79,7 @@ namespace ChocolArm64
 
             generator.EmitLdargSeq(FixedArgTypes.Length);
 
-            foreach (Register reg in Params)
+            foreach (Register reg in SubArgs)
             {
                 generator.EmitLdarg(StateArgIdx);
 

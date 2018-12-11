@@ -119,6 +119,8 @@ namespace ChocolArm64.Memory
 
             if (!_monitors.TryGetValue(core, out ArmMonitor threadMon))
             {
+                Monitor.Exit(_monitors);
+
                 return false;
             }
 

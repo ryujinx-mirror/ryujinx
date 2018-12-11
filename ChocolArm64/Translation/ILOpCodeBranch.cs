@@ -13,7 +13,7 @@ namespace ChocolArm64.Translation
             _label = label;
         }
 
-        public void Emit(ILEmitter context)
+        public void Emit(ILMethodBuilder context)
         {
             context.Generator.Emit(_ilOp, _label.GetLabel(context));
         }

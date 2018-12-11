@@ -1,5 +1,4 @@
 using ChocolArm64.Instructions;
-using ChocolArm64.State;
 
 namespace ChocolArm64.Decoders
 {
@@ -61,12 +60,12 @@ namespace ChocolArm64.Decoders
             else if ((modeHigh & 0b110) == 0b100)
             {
                 //16-bits shifted Immediate.
-                Size = 1; imm <<= (modeHigh & 1) << 3; 
+                Size = 1; imm <<= (modeHigh & 1) << 3;
             }
             else if ((modeHigh & 0b100) == 0b000)
             {
                 //32-bits shifted Immediate.
-                Size = 2; imm <<= modeHigh << 3; 
+                Size = 2; imm <<= modeHigh << 3;
             }
             else if ((modeHigh & 0b111) == 0b110)
             {

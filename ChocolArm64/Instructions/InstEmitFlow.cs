@@ -58,7 +58,7 @@ namespace ChocolArm64.Instructions
 
                 context.Emit(OpCodes.Pop);
 
-                context.EmitLoadState(context.CurrBlock.Next);
+                context.EmitLoadState();
             }
             else
             {
@@ -73,13 +73,10 @@ namespace ChocolArm64.Instructions
             OpCodeBReg64 op = (OpCodeBReg64)context.CurrOp;
 
             context.EmitLdintzr(op.Rn);
-            context.EmitSttmp();
-
             context.EmitLdc_I(op.Position + 4);
             context.EmitStint(CpuThreadState.LrIndex);
             context.EmitStoreState();
 
-            context.EmitLdtmp();
             context.Emit(OpCodes.Ret);
         }
 

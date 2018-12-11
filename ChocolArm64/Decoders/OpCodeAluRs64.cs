@@ -22,7 +22,7 @@ namespace ChocolArm64.Decoders
 
             Shift = shift;
 
-            Rm        =              (opCode >> 16) & 0x1f;
+            Rm        =             (opCode >> 16) & 0x1f;
             ShiftType = (ShiftType)((opCode >> 22) & 0x3);
         }
     }
