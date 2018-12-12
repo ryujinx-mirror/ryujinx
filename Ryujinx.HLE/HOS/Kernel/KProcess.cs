@@ -995,7 +995,7 @@ namespace Ryujinx.HLE.HOS.Kernel
             }
         }
 
-        private void InvalidAccessHandler(object sender, InvalidAccessEventArgs e)
+        private void InvalidAccessHandler(object sender, MemoryAccessEventArgs e)
         {
             PrintCurrentThreadStackTrace();
         }

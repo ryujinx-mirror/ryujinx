@@ -36,7 +36,7 @@ namespace Ryujinx.Graphics.Memory
         {
             this.Memory = Memory;
 
-            Cache = new NvGpuVmmCache();
+            Cache = new NvGpuVmmCache(Memory);
 
             PageTable = new long[PTLvl0Size][];
         }
@@ -262,7 +262,7 @@ namespace Ryujinx.Graphics.Memory
 
         public bool IsRegionModified(long PA, long Size, NvGpuBufferType BufferType)
         {
-            return Cache.IsRegionModified(Memory, BufferType, PA, Size);
+            return Cache.IsRegionModified(PA, Size, BufferType);
         }
 
         public bool TryGetHostAddress(long Position, long Size, out IntPtr Ptr)
