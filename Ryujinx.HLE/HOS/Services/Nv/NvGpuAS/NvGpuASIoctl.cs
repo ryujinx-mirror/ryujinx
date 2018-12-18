@@ -1,7 +1,7 @@
 using ChocolArm64.Memory;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Memory;
-using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Services.Nv.NvMap;
 using System;
 using System.Collections.Concurrent;

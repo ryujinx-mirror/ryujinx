@@ -1,4 +1,4 @@
-using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Kernel.Process;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 

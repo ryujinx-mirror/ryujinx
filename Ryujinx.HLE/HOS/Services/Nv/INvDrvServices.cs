@@ -1,7 +1,9 @@
 using ChocolArm64.Memory;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.HLE.HOS.Kernel.Process;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Nv.NvGpuAS;
 using Ryujinx.HLE.HOS.Services.Nv.NvGpuGpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvHostChannel;

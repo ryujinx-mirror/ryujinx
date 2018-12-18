@@ -1,5 +1,7 @@
 using ChocolArm64.Memory;
-using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.HLE.HOS.Kernel.Ipc;
+using Ryujinx.HLE.HOS.Kernel.Process;
 using System;
 using System.IO;
 
@@ -7,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Ipc
 {
     static class IpcHandler
     {
-        public static long IpcCall(
+        public static KernelResult IpcCall(
             Switch        device,
             KProcess      process,
             MemoryManager memory,
@@ -100,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Ipc
                 memory.WriteBytes(cmdPtr, response.GetBytes(cmdPtr));
             }
 
-            return 0;
+            return KernelResult.Success;
         }
 
         private static IpcMessage FillResponse(IpcMessage response, long result, params int[] values)

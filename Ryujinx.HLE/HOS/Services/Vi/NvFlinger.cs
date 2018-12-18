@@ -1,7 +1,7 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
-using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Nv.NvGpuAS;
 using Ryujinx.HLE.HOS.Services.Nv.NvMap;
 using System;

@@ -1,6 +1,6 @@
 using Ryujinx.HLE.HOS.Font;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Kernel.Common;
 using System;
 using System.Collections.Generic;
 

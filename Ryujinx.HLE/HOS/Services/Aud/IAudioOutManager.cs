@@ -2,7 +2,7 @@ using ChocolArm64.Memory;
 using Ryujinx.Audio;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Aud.AudioOut;
 using System.Collections.Generic;
 using System.Text;

@@ -1,6 +1,6 @@
 using ChocolArm64.Memory;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Kernel.Common;
 using System.Collections.Generic;
 using System;
 using System.IO;

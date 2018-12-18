@@ -1,6 +1,6 @@
 using ChocolArm64.Memory;
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Kernel.Process;
 using System;
 using System.Collections.Concurrent;
 using System.Text;
