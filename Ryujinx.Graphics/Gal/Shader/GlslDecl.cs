@@ -1,4 +1,3 @@
-using Ryujinx.Graphics.Gal.OpenGL;
 using System;
 using System.Collections.Generic;
 
@@ -49,8 +48,6 @@ namespace Ryujinx.Graphics.Gal.Shader
         public const int SsyStackSize = 16;
         public const string SsyStackName = "ssy_stack";
         public const string SsyCursorName = "ssy_cursor";
-
-        public static int MaxUboSize => OGLLimit.MaxUboSize / 16;
 
         private string[] StagePrefixes = new string[] { "vp", "tcp", "tep", "gp", "fp" };
 

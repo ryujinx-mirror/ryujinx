@@ -31,7 +31,9 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private StringBuilder SB;
 
-        public GlslDecompiler()
+        public int MaxUboSize { get; }
+
+        public GlslDecompiler(int MaxUboSize)
         {
             InstsExpr = new Dictionary<ShaderIrInst, GetInstExpr>()
             {
@@ -106,6 +108,8 @@ namespace Ryujinx.Graphics.Gal.Shader
                 { ShaderIrInst.Utof,   GetUtofExpr   },
                 { ShaderIrInst.Xor,    GetXorExpr    }
             };
+
+            this.MaxUboSize = MaxUboSize / 16;
         }
 
         public GlslProgram Decompile(
@@ -259,7 +263,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             {
                 SB.AppendLine($"layout (std140) uniform {DeclInfo.Name} {{");
 
-                SB.AppendLine($"{IdentationStr}vec4 {DeclInfo.Name}_data[{GlslDecl.MaxUboSize}];");
+                SB.AppendLine($"{IdentationStr}vec4 {DeclInfo.Name}_data[{MaxUboSize}];");
 
                 SB.AppendLine("};");
             }

@@ -7,11 +7,13 @@ namespace Ryujinx.ShaderTools
 {
     class Program
     {
+        private static readonly int MaxUboSize = 65536;
+
         static void Main(string[] args)
         {
             if (args.Length == 2)
             {
-                GlslDecompiler Decompiler = new GlslDecompiler();
+                GlslDecompiler Decompiler = new GlslDecompiler(MaxUboSize);
 
                 GalShaderType ShaderType = GalShaderType.Vertex;
 
