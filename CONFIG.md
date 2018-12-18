@@ -116,6 +116,56 @@
   Controls_Right_JoyConController_Button_ZR (String)
   ```
 
+- Default Mapping
+   - Controller
+     - Left Joycon:
+       - Analog Stick = Left Analog Stick
+	   - DPad Up = DPad Up
+	   - DPad Down = DPad Down
+	   - DPad Left = DPad Left
+	   - DPad Right = DPad Right
+	   - Minus = Select / Back / Share
+	   - L = Left Shoulder Button
+	   - ZL = Left Trigger
+	 
+     - Right Joycon:
+	   - Analog Stick = Right Analog Stick
+	   - A = B / Circle
+	   - B = A / Cross
+	   - X = Y / Triangle
+	   - Y = X / Square
+	   - Plus = Start / Options
+	   - R = Right Shoulder Button
+	   - ZR = Right Trigger
+   - Keyboard
+     - Left Joycon:
+	   - Stick Up = W
+	   - Stick Down = S
+	   - Stick Left = A
+	   - Stick Right = D
+	   - Stick Button = F
+	   - DPad Up = Up
+	   - DPad Down = Down
+	   - DPad Left = Left
+	   - DPad Right = Right
+	   - Minus = -
+	   - L = E
+	   - ZL = Q
+
+     - Right Joycon:
+	   - Stick Up = I
+	   - Stick Down = K
+	   - Stick Left = J
+	   - Stick Right = L
+	   - Stick Button = H
+	   - A = Z
+	   - B = X
+	   - X = C
+	   - Y = V
+	   - Plus = +
+	   - R = U
+	   - ZR = O
+  
 - Valid Button Mappings
   - A = The A / Cross Button
   - B = The B / Circle Button
