@@ -1380,6 +1380,22 @@ namespace ChocolArm64.Instructions
             });
         }
 
+        public static void Frintz_S(ILEmitterCtx context)
+        {
+            EmitScalarUnaryOpF(context, () =>
+            {
+                EmitUnaryMathCall(context, nameof(Math.Truncate));
+            });
+        }
+
+        public static void Frintz_V(ILEmitterCtx context)
+        {
+            EmitVectorUnaryOpF(context, () =>
+            {
+                EmitUnaryMathCall(context, nameof(Math.Truncate));
+            });
+        }
+
         public static void Frsqrte_S(ILEmitterCtx context)
         {
             EmitScalarUnaryOpF(context, () =>
