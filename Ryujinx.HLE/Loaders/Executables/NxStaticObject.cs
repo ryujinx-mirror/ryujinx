@@ -80,7 +80,7 @@ namespace Ryujinx.HLE.Loaders.Executables
 
             Text = reader.ReadBytes(textSize);
 
-            if (flags.HasFlag(NsoFlags.IsTextCompressed))
+            if (flags.HasFlag(NsoFlags.IsTextCompressed) && textSize != 0)
             {
                 Text = Lz4.Decompress(Text, textDecSize);
             }
@@ -90,7 +90,7 @@ namespace Ryujinx.HLE.Loaders.Executables
 
             Ro = reader.ReadBytes(roSize);
 
-            if (flags.HasFlag(NsoFlags.IsRoCompressed))
+            if (flags.HasFlag(NsoFlags.IsRoCompressed) && roSize != 0)
             {
                 Ro = Lz4.Decompress(Ro, roDecSize);
             }
@@ -100,7 +100,7 @@ namespace Ryujinx.HLE.Loaders.Executables
 
             Data = reader.ReadBytes(dataSize);
 
-            if (flags.HasFlag(NsoFlags.IsDataCompressed))
+            if (flags.HasFlag(NsoFlags.IsDataCompressed) && dataSize != 0)
             {
                 Data = Lz4.Decompress(Data, dataDecSize);
             }
