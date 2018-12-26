@@ -322,26 +322,6 @@ namespace ChocolArm64.Instructions
             context.EmitCall(mthdInfo);
         }
 
-        public static void EmitUnarySoftFloatCall(ILEmitterCtx context, string name)
-        {
-            IOpCodeSimd64 op = (IOpCodeSimd64)context.CurrOp;
-
-            int sizeF = op.Size & 1;
-
-            MethodInfo mthdInfo;
-
-            if (sizeF == 0)
-            {
-                mthdInfo = typeof(SoftFloat).GetMethod(name, new Type[] { typeof(float) });
-            }
-            else /* if (sizeF == 1) */
-            {
-                mthdInfo = typeof(SoftFloat).GetMethod(name, new Type[] { typeof(double) });
-            }
-
-            context.EmitCall(mthdInfo);
-        }
-
         public static void EmitSoftFloatCall(ILEmitterCtx context, string name)
         {
             IOpCodeSimd64 op = (IOpCodeSimd64)context.CurrOp;
@@ -906,6 +886,96 @@ namespace ChocolArm64.Instructions
             if (op.RegisterSize == RegisterSize.Simd64)
             {
                 EmitVectorZeroUpper(context, op.Rd);
+            }
+        }
+
+        public static void EmitVectorPairwiseSseOrSse2OpF(ILEmitterCtx context, string name)
+        {
+            OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+            int sizeF = op.Size & 1;
+
+            if (sizeF == 0)
+            {
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    Type[] types = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>) };
+
+                    context.EmitLdvec(op.Rn);
+                    context.EmitLdvec(op.Rm);
+
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.UnpackLow), types));
+
+                    context.Emit(OpCodes.Dup);
+                    context.EmitStvectmp();
+
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveLowToHigh), types));
+
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+
+                    context.EmitLdvectmp();
+
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveHighToLow), types));
+
+                    context.EmitCall(typeof(Sse).GetMethod(name, types));
+
+                    context.EmitStvec(op.Rd);
+                }
+                else /* if (op.RegisterSize == RegisterSize.Simd128) */
+                {
+                    Type[] typesSfl = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>), typeof(byte) };
+                    Type[] types    = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>) };
+
+                    context.EmitLdvec(op.Rn);
+
+                    context.Emit(OpCodes.Dup);
+                    context.EmitStvectmp();
+
+                    context.EmitLdvec(op.Rm);
+
+                    context.Emit(OpCodes.Dup);
+                    context.EmitStvectmp2();
+
+                    context.EmitLdc_I4(2 << 6 | 0 << 4 | 2 << 2 | 0 << 0);
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.Shuffle), typesSfl));
+
+                    context.EmitLdvectmp();
+                    context.EmitLdvectmp2();
+
+                    context.EmitLdc_I4(3 << 6 | 1 << 4 | 3 << 2 | 1 << 0);
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.Shuffle), typesSfl));
+
+                    context.EmitCall(typeof(Sse).GetMethod(name, types));
+
+                    context.EmitStvec(op.Rd);
+                }
+            }
+            else /* if (sizeF == 1) */
+            {
+                Type[] types = new Type[] { typeof(Vector128<double>), typeof(Vector128<double>) };
+
+                EmitLdvecWithCastToDouble(context, op.Rn);
+
+                context.Emit(OpCodes.Dup);
+                context.EmitStvectmp();
+
+                EmitLdvecWithCastToDouble(context, op.Rm);
+
+                context.Emit(OpCodes.Dup);
+                context.EmitStvectmp2();
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.UnpackLow), types));
+
+                context.EmitLdvectmp();
+                context.EmitLdvectmp2();
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.UnpackHigh), types));
+
+                context.EmitCall(typeof(Sse2).GetMethod(name, types));
+
+                EmitStvecWithCastFromDouble(context, op.Rd);
             }
         }
 

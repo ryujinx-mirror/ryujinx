@@ -22,9 +22,11 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimdShImm64 op = (OpCodeSimdShImm64)context.CurrOp;
 
+            int shift = GetImmShl(op);
+
             EmitScalarUnaryOpZx(context, () =>
             {
-                context.EmitLdc_I4(GetImmShl(op));
+                context.EmitLdc_I4(shift);
 
                 context.Emit(OpCodes.Shl);
             });
@@ -34,13 +36,15 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimdShImm64 op = (OpCodeSimdShImm64)context.CurrOp;
 
+            int shift = GetImmShl(op);
+
             if (Optimizations.UseSse2 && op.Size > 0)
             {
                 Type[] typesSll = new Type[] { VectorUIntTypesPerSizeLog2[op.Size], typeof(byte) };
 
                 EmitLdvecWithUnsignedCast(context, op.Rn, op.Size);
 
-                context.EmitLdc_I4(GetImmShl(op));
+                context.EmitLdc_I4(shift);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftLeftLogical), typesSll));
 
                 EmitStvecWithUnsignedCast(context, op.Rd, op.Size);
@@ -54,7 +58,7 @@ namespace ChocolArm64.Instructions
             {
                 EmitVectorUnaryOpZx(context, () =>
                 {
-                    context.EmitLdc_I4(GetImmShl(op));
+                    context.EmitLdc_I4(shift);
 
                     context.Emit(OpCodes.Shl);
                 });
@@ -67,7 +71,33 @@ namespace ChocolArm64.Instructions
 
             int shift = 8 << op.Size;
 
-            EmitVectorShImmWidenBinaryZx(context, () => context.Emit(OpCodes.Shl), shift);
+            if (Optimizations.UseSse41)
+            {
+                Type[] typesSll = new Type[] { VectorUIntTypesPerSizeLog2[op.Size + 1], typeof(byte) };
+                Type[] typesCvt = new Type[] { VectorUIntTypesPerSizeLog2[op.Size] };
+
+                string[] namesCvt = new string[] { nameof(Sse41.ConvertToVector128Int16),
+                                                   nameof(Sse41.ConvertToVector128Int32),
+                                                   nameof(Sse41.ConvertToVector128Int64) };
+
+                int numBytes = op.RegisterSize == RegisterSize.Simd128 ? 8 : 0;
+
+                EmitLdvecWithUnsignedCast(context, op.Rn, op.Size);
+
+                context.EmitLdc_I4(numBytes);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), typesSll));
+
+                context.EmitCall(typeof(Sse41).GetMethod(namesCvt[op.Size], typesCvt));
+
+                context.EmitLdc_I4(shift);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftLeftLogical), typesSll));
+
+                EmitStvecWithUnsignedCast(context, op.Rd, op.Size + 1);
+            }
+            else
+            {
+                EmitVectorShImmWidenBinaryZx(context, () => context.Emit(OpCodes.Shl), shift);
+            }
         }
 
         public static void Shrn_V(ILEmitterCtx context)
@@ -362,7 +392,35 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimdShImm64 op = (OpCodeSimdShImm64)context.CurrOp;
 
-            EmitVectorShImmWidenBinarySx(context, () => context.Emit(OpCodes.Shl), GetImmShl(op));
+            int shift = GetImmShl(op);
+
+            if (Optimizations.UseSse41)
+            {
+                Type[] typesSll = new Type[] { VectorIntTypesPerSizeLog2[op.Size + 1], typeof(byte) };
+                Type[] typesCvt = new Type[] { VectorIntTypesPerSizeLog2[op.Size] };
+
+                string[] namesCvt = new string[] { nameof(Sse41.ConvertToVector128Int16),
+                                                   nameof(Sse41.ConvertToVector128Int32),
+                                                   nameof(Sse41.ConvertToVector128Int64) };
+
+                int numBytes = op.RegisterSize == RegisterSize.Simd128 ? 8 : 0;
+
+                EmitLdvecWithSignedCast(context, op.Rn, op.Size);
+
+                context.EmitLdc_I4(numBytes);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), typesSll));
+
+                context.EmitCall(typeof(Sse41).GetMethod(namesCvt[op.Size], typesCvt));
+
+                context.EmitLdc_I4(shift);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftLeftLogical), typesSll));
+
+                EmitStvecWithSignedCast(context, op.Rd, op.Size + 1);
+            }
+            else
+            {
+                EmitVectorShImmWidenBinarySx(context, () => context.Emit(OpCodes.Shl), shift);
+            }
         }
 
         public static void Sshr_S(ILEmitterCtx context)
@@ -663,7 +721,35 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimdShImm64 op = (OpCodeSimdShImm64)context.CurrOp;
 
-            EmitVectorShImmWidenBinaryZx(context, () => context.Emit(OpCodes.Shl), GetImmShl(op));
+            int shift = GetImmShl(op);
+
+            if (Optimizations.UseSse41)
+            {
+                Type[] typesSll = new Type[] { VectorUIntTypesPerSizeLog2[op.Size + 1], typeof(byte) };
+                Type[] typesCvt = new Type[] { VectorUIntTypesPerSizeLog2[op.Size] };
+
+                string[] namesCvt = new string[] { nameof(Sse41.ConvertToVector128Int16),
+                                                   nameof(Sse41.ConvertToVector128Int32),
+                                                   nameof(Sse41.ConvertToVector128Int64) };
+
+                int numBytes = op.RegisterSize == RegisterSize.Simd128 ? 8 : 0;
+
+                EmitLdvecWithUnsignedCast(context, op.Rn, op.Size);
+
+                context.EmitLdc_I4(numBytes);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), typesSll));
+
+                context.EmitCall(typeof(Sse41).GetMethod(namesCvt[op.Size], typesCvt));
+
+                context.EmitLdc_I4(shift);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftLeftLogical), typesSll));
+
+                EmitStvecWithUnsignedCast(context, op.Rd, op.Size + 1);
+            }
+            else
+            {
+                EmitVectorShImmWidenBinaryZx(context, () => context.Emit(OpCodes.Shl), shift);
+            }
         }
 
         public static void Ushr_S(ILEmitterCtx context)

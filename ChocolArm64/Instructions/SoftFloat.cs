@@ -9,191 +9,72 @@ namespace ChocolArm64.Instructions
     {
         static SoftFloat()
         {
-            RecipEstimateTable   = BuildRecipEstimateTable();
-            InvSqrtEstimateTable = BuildInvSqrtEstimateTable();
+            RecipEstimateTable     = BuildRecipEstimateTable();
+            RecipSqrtEstimateTable = BuildRecipSqrtEstimateTable();
         }
 
-        private static readonly byte[] RecipEstimateTable;
-        private static readonly byte[] InvSqrtEstimateTable;
+        internal static readonly byte[] RecipEstimateTable;
+        internal static readonly byte[] RecipSqrtEstimateTable;
 
         private static byte[] BuildRecipEstimateTable()
         {
-            byte[] table = new byte[256];
-            for (ulong index = 0; index < 256; index++)
+            byte[] tbl = new byte[256];
+
+            for (int idx = 0; idx < 256; idx++)
             {
-                ulong a = index | 0x100;
+                uint src = (uint)idx + 256u;
 
-                a = (a << 1) + 1;
-                ulong b = 0x80000 / a;
-                b = (b + 1) >> 1;
+                Debug.Assert(256u <= src && src < 512u);
 
-                table[index] = (byte)(b & 0xFF);
+                src = (src << 1) + 1u;
+
+                uint aux = (1u << 19) / src;
+
+                uint dst = (aux + 1u) >> 1;
+
+                Debug.Assert(256u <= dst && dst < 512u);
+
+                tbl[idx] = (byte)(dst - 256u);
             }
-            return table;
+
+            return tbl;
         }
 
-        private static byte[] BuildInvSqrtEstimateTable()
+        private static byte[] BuildRecipSqrtEstimateTable()
         {
-            byte[] table = new byte[512];
-            for (ulong index = 128; index < 512; index++)
+            byte[] tbl = new byte[384];
+
+            for (int idx = 0; idx < 384; idx++)
             {
-                ulong a = index;
-                if (a < 256)
+                uint src = (uint)idx + 128u;
+
+                Debug.Assert(128u <= src && src < 512u);
+
+                if (src < 256u)
                 {
-                    a = (a << 1) + 1;
+                    src = (src << 1) + 1u;
                 }
                 else
                 {
-                    a = (a | 1) << 1;
+                    src = (src >> 1) << 1;
+                    src = (src + 1u) << 1;
                 }
 
-                ulong b = 256;
-                while (a * (b + 1) * (b + 1) < (1ul << 28))
+                uint aux = 512u;
+
+                while (src * (aux + 1u) * (aux + 1u) < (1u << 28))
                 {
-                    b++;
-                }
-                b = (b + 1) >> 1;
-
-                table[index] = (byte)(b & 0xFF);
-            }
-            return table;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float RecipEstimate(float x)
-        {
-            return (float)RecipEstimate((double)x);
-        }
-
-        public static double RecipEstimate(double x)
-        {
-            ulong xBits  = (ulong)BitConverter.DoubleToInt64Bits(x);
-            ulong xSign  = xBits & 0x8000000000000000;
-            ulong xExp   = (xBits >> 52) & 0x7FF;
-            ulong scaled = xBits & ((1ul << 52) - 1);
-
-            if (xExp >= 2045)
-            {
-                if (xExp == 0x7ff && scaled != 0)
-                {
-                    // NaN
-                    return BitConverter.Int64BitsToDouble((long)(xBits | 0x0008000000000000));
+                    aux = aux + 1u;
                 }
 
-                // Infinity, or Out of range -> Zero
-                return BitConverter.Int64BitsToDouble((long)xSign);
+                uint dst = (aux + 1u) >> 1;
+
+                Debug.Assert(256u <= dst && dst < 512u);
+
+                tbl[idx] = (byte)(dst - 256u);
             }
 
-            if (xExp == 0)
-            {
-                if (scaled == 0)
-                {
-                    // Zero -> Infinity
-                    return BitConverter.Int64BitsToDouble((long)(xSign | 0x7FF0000000000000));
-                }
-
-                // Denormal
-                if ((scaled & (1ul << 51)) == 0)
-                {
-                    xExp = ~0ul;
-                    scaled <<= 2;
-                }
-                else
-                {
-                    scaled <<= 1;
-                }
-            }
-
-            scaled >>= 44;
-            scaled &= 0xFF;
-
-            ulong resultExp = (2045 - xExp) & 0x7FF;
-            ulong estimate  = (ulong)RecipEstimateTable[scaled];
-            ulong fraction  = estimate << 44;
-
-            if (resultExp == 0)
-            {
-                fraction >>= 1;
-                fraction |= 1ul << 51;
-            }
-            else if (resultExp == 0x7FF)
-            {
-                resultExp = 0;
-                fraction >>= 2;
-                fraction |= 1ul << 50;
-            }
-
-            ulong result = xSign | (resultExp << 52) | fraction;
-            return BitConverter.Int64BitsToDouble((long)result);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float InvSqrtEstimate(float x)
-        {
-            return (float)InvSqrtEstimate((double)x);
-        }
-
-        public static double InvSqrtEstimate(double x)
-        {
-            ulong xBits  = (ulong)BitConverter.DoubleToInt64Bits(x);
-            ulong xSign  = xBits & 0x8000000000000000;
-            long  xExp   = (long)((xBits >> 52) & 0x7FF);
-            ulong scaled = xBits & ((1ul << 52) - 1);
-
-            if (xExp == 0x7FF && scaled != 0)
-            {
-                // NaN
-                return BitConverter.Int64BitsToDouble((long)(xBits | 0x0008000000000000));
-            }
-
-            if (xExp == 0)
-            {
-                if (scaled == 0)
-                {
-                    // Zero -> Infinity
-                    return BitConverter.Int64BitsToDouble((long)(xSign | 0x7FF0000000000000));
-                }
-
-                // Denormal
-                while ((scaled & (1 << 51)) == 0)
-                {
-                    scaled <<= 1;
-                    xExp--;
-                }
-                scaled <<= 1;
-            }
-
-            if (xSign != 0)
-            {
-                // Negative -> NaN
-                return BitConverter.Int64BitsToDouble((long)0x7FF8000000000000);
-            }
-
-            if (xExp == 0x7ff && scaled == 0)
-            {
-                // Infinity -> Zero
-                return BitConverter.Int64BitsToDouble((long)xSign);
-            }
-
-            if (((ulong)xExp & 1) == 1)
-            {
-                scaled >>= 45;
-                scaled &= 0xFF;
-                scaled |= 0x80;
-            }
-            else
-            {
-                scaled >>= 44;
-                scaled &= 0xFF;
-                scaled |= 0x100;
-            }
-
-            ulong resultExp = ((ulong)(3068 - xExp) / 2) & 0x7FF;
-            ulong estimate  = (ulong)InvSqrtEstimateTable[scaled];
-            ulong fraction  = estimate << 44;
-
-            ulong result = xSign | (resultExp << 52) | fraction;
-            return BitConverter.Int64BitsToDouble((long)result);
+            return tbl;
         }
     }
 
@@ -395,12 +276,12 @@ namespace ChocolArm64.Instructions
             {
                 intMant++;
 
-                if (intMant == (uint)Math.Pow(2d, f))
+                if (intMant == 1u << f)
                 {
                     biasedExp = 1u;
                 }
 
-                if (intMant == (uint)Math.Pow(2d, f + 1))
+                if (intMant == 1u << (f + 1))
                 {
                     biasedExp++;
                     intMant >>= 1;
@@ -409,7 +290,7 @@ namespace ChocolArm64.Instructions
 
             float result;
 
-            if (biasedExp >= (uint)Math.Pow(2d, e) - 1u)
+            if (biasedExp >= (1u << e) - 1u)
             {
                 result = overflowToInf ? FPInfinity(sign) : FPMaxNormal(sign);
 
@@ -666,12 +547,12 @@ namespace ChocolArm64.Instructions
             {
                 intMant++;
 
-                if (intMant == (uint)Math.Pow(2d, f))
+                if (intMant == 1u << f)
                 {
                     biasedExp = 1u;
                 }
 
-                if (intMant == (uint)Math.Pow(2d, f + 1))
+                if (intMant == 1u << (f + 1))
                 {
                     biasedExp++;
                     intMant >>= 1;
@@ -682,7 +563,7 @@ namespace ChocolArm64.Instructions
 
             if (!state.GetFpcrFlag(Fpcr.Ahp))
             {
-                if (biasedExp >= (uint)Math.Pow(2d, e) - 1u)
+                if (biasedExp >= (1u << e) - 1u)
                 {
                     resultBits = overflowToInf ? FPInfinity(sign) : FPMaxNormal(sign);
 
@@ -697,7 +578,7 @@ namespace ChocolArm64.Instructions
             }
             else
             {
-                if (biasedExp >= (uint)Math.Pow(2d, e))
+                if (biasedExp >= 1u << e)
                 {
                     resultBits = (ushort)((sign ? 1u : 0u) << 15 | 0x7FFFu);
 
@@ -824,6 +705,94 @@ namespace ChocolArm64.Instructions
             }
 
             return result;
+        }
+
+        public static float FPCompareEQ(float value1, float value2, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPCompareEQ: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            value1 = value1.FPUnpack(out FpType type1, out _, out _, state);
+            value2 = value2.FPUnpack(out FpType type2, out _, out _, state);
+
+            float result;
+
+            if (type1 == FpType.SNaN || type1 == FpType.QNaN || type2 == FpType.SNaN || type2 == FpType.QNaN)
+            {
+                result = ZerosOrOnes(false);
+
+                if (type1 == FpType.SNaN || type2 == FpType.SNaN)
+                {
+                    FPProcessException(FpExc.InvalidOp, state);
+                }
+            }
+            else
+            {
+                result = ZerosOrOnes(value1 == value2);
+            }
+
+            return result;
+        }
+
+        public static float FPCompareGE(float value1, float value2, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPCompareGE: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            value1 = value1.FPUnpack(out FpType type1, out _, out _, state);
+            value2 = value2.FPUnpack(out FpType type2, out _, out _, state);
+
+            float result;
+
+            if (type1 == FpType.SNaN || type1 == FpType.QNaN || type2 == FpType.SNaN || type2 == FpType.QNaN)
+            {
+                result = ZerosOrOnes(false);
+
+                FPProcessException(FpExc.InvalidOp, state);
+            }
+            else
+            {
+                result = ZerosOrOnes(value1 >= value2);
+            }
+
+            return result;
+        }
+
+        public static float FPCompareGT(float value1, float value2, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPCompareGT: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            value1 = value1.FPUnpack(out FpType type1, out _, out _, state);
+            value2 = value2.FPUnpack(out FpType type2, out _, out _, state);
+
+            float result;
+
+            if (type1 == FpType.SNaN || type1 == FpType.QNaN || type2 == FpType.SNaN || type2 == FpType.QNaN)
+            {
+                result = ZerosOrOnes(false);
+
+                FPProcessException(FpExc.InvalidOp, state);
+            }
+            else
+            {
+                result = ZerosOrOnes(value1 > value2);
+            }
+
+            return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float FPCompareLE(float value1, float value2, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPCompareLE: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            return FPCompareGE(value2, value1, state);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float FPCompareLT(float value1, float value2, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPCompareLT: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            return FPCompareGT(value2, value1, state);
         }
 
         public static float FPDiv(float value1, float value2, CpuThreadState state)
@@ -1188,6 +1157,95 @@ namespace ChocolArm64.Instructions
             return result;
         }
 
+        public static float FPRecipEstimate(float value, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPRecipEstimate: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            value.FPUnpack(out FpType type, out bool sign, out uint op, state);
+
+            float result;
+
+            if (type == FpType.SNaN || type == FpType.QNaN)
+            {
+                result = FPProcessNaN(type, op, state);
+            }
+            else if (type == FpType.Infinity)
+            {
+                result = FPZero(sign);
+            }
+            else if (type == FpType.Zero)
+            {
+                result = FPInfinity(sign);
+
+                FPProcessException(FpExc.DivideByZero, state);
+            }
+            else if (MathF.Abs(value) < MathF.Pow(2f, -128))
+            {
+                bool overflowToInf;
+
+                switch (state.FPRoundingMode())
+                {
+                    default:
+                    case RoundMode.ToNearest:            overflowToInf = true;  break;
+                    case RoundMode.TowardsPlusInfinity:  overflowToInf = !sign; break;
+                    case RoundMode.TowardsMinusInfinity: overflowToInf = sign;  break;
+                    case RoundMode.TowardsZero:          overflowToInf = false; break;
+                }
+
+                result = overflowToInf ? FPInfinity(sign) : FPMaxNormal(sign);
+
+                FPProcessException(FpExc.Overflow, state);
+                FPProcessException(FpExc.Inexact,  state);
+            }
+            else if (state.GetFpcrFlag(Fpcr.Fz) && (MathF.Abs(value) >= MathF.Pow(2f, 126)))
+            {
+                result = FPZero(sign);
+
+                state.SetFpsrFlag(Fpsr.Ufc);
+            }
+            else
+            {
+                ulong fraction = (ulong)(op & 0x007FFFFFu) << 29;
+                uint exp = (op & 0x7F800000u) >> 23;
+
+                if (exp == 0u)
+                {
+                    if ((fraction & 0x0008000000000000ul) == 0ul)
+                    {
+                        fraction = (fraction & 0x0003FFFFFFFFFFFFul) << 2;
+                        exp -= 1u;
+                    }
+                    else
+                    {
+                        fraction = (fraction & 0x0007FFFFFFFFFFFFul) << 1;
+                    }
+                }
+
+                uint scaled = (uint)(((fraction & 0x000FF00000000000ul) | 0x0010000000000000ul) >> 44);
+
+                uint resultExp = 253u - exp;
+
+                uint estimate = (uint)SoftFloat.RecipEstimateTable[scaled - 256u] + 256u;
+
+                fraction = (ulong)(estimate & 0xFFu) << 44;
+
+                if (resultExp == 0u)
+                {
+                    fraction = ((fraction & 0x000FFFFFFFFFFFFEul) | 0x0010000000000000ul) >> 1;
+                }
+                else if (resultExp + 1u == 0u)
+                {
+                    fraction = ((fraction & 0x000FFFFFFFFFFFFCul) | 0x0010000000000000ul) >> 2;
+                    resultExp = 0u;
+                }
+
+                result = BitConverter.Int32BitsToSingle(
+                    (int)((sign ? 1u : 0u) << 31 | (resultExp & 0xFFu) << 23 | (uint)(fraction >> 29) & 0x007FFFFFu));
+            }
+
+            return result;
+        }
+
         public static float FPRecipStepFused(float value1, float value2, CpuThreadState state)
         {
             Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPRecipStepFused: state.Fpcr = 0x{state.Fpcr:X8}");
@@ -1250,6 +1308,71 @@ namespace ChocolArm64.Instructions
 
                 result = BitConverter.Int32BitsToSingle(
                     (int)((sign ? 1u : 0u) << 31 | (notExp == 0xFFu ? maxExp : notExp) << 23));
+            }
+
+            return result;
+        }
+
+        public static float FPRSqrtEstimate(float value, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPRSqrtEstimate: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            value.FPUnpack(out FpType type, out bool sign, out uint op, state);
+
+            float result;
+
+            if (type == FpType.SNaN || type == FpType.QNaN)
+            {
+                result = FPProcessNaN(type, op, state);
+            }
+            else if (type == FpType.Zero)
+            {
+                result = FPInfinity(sign);
+
+                FPProcessException(FpExc.DivideByZero, state);
+            }
+            else if (sign)
+            {
+                result = FPDefaultNaN();
+
+                FPProcessException(FpExc.InvalidOp, state);
+            }
+            else if (type == FpType.Infinity)
+            {
+                result = FPZero(false);
+            }
+            else
+            {
+                ulong fraction = (ulong)(op & 0x007FFFFFu) << 29;
+                uint exp = (op & 0x7F800000u) >> 23;
+
+                if (exp == 0u)
+                {
+                    while ((fraction & 0x0008000000000000ul) == 0ul)
+                    {
+                        fraction = (fraction & 0x0007FFFFFFFFFFFFul) << 1;
+                        exp -= 1u;
+                    }
+
+                    fraction = (fraction & 0x0007FFFFFFFFFFFFul) << 1;
+                }
+
+                uint scaled;
+
+                if ((exp & 1u) == 0u)
+                {
+                    scaled = (uint)(((fraction & 0x000FF00000000000ul) | 0x0010000000000000ul) >> 44);
+                }
+                else
+                {
+                    scaled = (uint)(((fraction & 0x000FE00000000000ul) | 0x0010000000000000ul) >> 45);
+                }
+
+                uint resultExp = (380u - exp) >> 1;
+
+                uint estimate = (uint)SoftFloat.RecipSqrtEstimateTable[scaled - 128u] + 256u;
+
+                result = BitConverter.Int32BitsToSingle((int)((resultExp & 0xFFu) << 23 | (estimate & 0xFFu) << 15));
             }
 
             return result;
@@ -1402,6 +1525,11 @@ namespace ChocolArm64.Instructions
             return sign ? -0f : +0f;
         }
 
+        private static float FPMaxNormal(bool sign)
+        {
+            return sign ? float.MinValue : float.MaxValue;
+        }
+
         private static float FPTwo(bool sign)
         {
             return sign ? -2f : +2f;
@@ -1415,6 +1543,11 @@ namespace ChocolArm64.Instructions
         private static float FPNeg(this float value)
         {
             return -value;
+        }
+
+        private static float ZerosOrOnes(bool zeros)
+        {
+            return BitConverter.Int32BitsToSingle(!zeros ? 0 : -1);
         }
 
         private static float FPUnpack(
@@ -1656,6 +1789,94 @@ namespace ChocolArm64.Instructions
             }
 
             return result;
+        }
+
+        public static double FPCompareEQ(double value1, double value2, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPCompareEQ: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            value1 = value1.FPUnpack(out FpType type1, out _, out _, state);
+            value2 = value2.FPUnpack(out FpType type2, out _, out _, state);
+
+            double result;
+
+            if (type1 == FpType.SNaN || type1 == FpType.QNaN || type2 == FpType.SNaN || type2 == FpType.QNaN)
+            {
+                result = ZerosOrOnes(false);
+
+                if (type1 == FpType.SNaN || type2 == FpType.SNaN)
+                {
+                    FPProcessException(FpExc.InvalidOp, state);
+                }
+            }
+            else
+            {
+                result = ZerosOrOnes(value1 == value2);
+            }
+
+            return result;
+        }
+
+        public static double FPCompareGE(double value1, double value2, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPCompareGE: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            value1 = value1.FPUnpack(out FpType type1, out _, out _, state);
+            value2 = value2.FPUnpack(out FpType type2, out _, out _, state);
+
+            double result;
+
+            if (type1 == FpType.SNaN || type1 == FpType.QNaN || type2 == FpType.SNaN || type2 == FpType.QNaN)
+            {
+                result = ZerosOrOnes(false);
+
+                FPProcessException(FpExc.InvalidOp, state);
+            }
+            else
+            {
+                result = ZerosOrOnes(value1 >= value2);
+            }
+
+            return result;
+        }
+
+        public static double FPCompareGT(double value1, double value2, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPCompareGT: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            value1 = value1.FPUnpack(out FpType type1, out _, out _, state);
+            value2 = value2.FPUnpack(out FpType type2, out _, out _, state);
+
+            double result;
+
+            if (type1 == FpType.SNaN || type1 == FpType.QNaN || type2 == FpType.SNaN || type2 == FpType.QNaN)
+            {
+                result = ZerosOrOnes(false);
+
+                FPProcessException(FpExc.InvalidOp, state);
+            }
+            else
+            {
+                result = ZerosOrOnes(value1 > value2);
+            }
+
+            return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double FPCompareLE(double value1, double value2, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPCompareLE: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            return FPCompareGE(value2, value1, state);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double FPCompareLT(double value1, double value2, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPCompareLT: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            return FPCompareGT(value2, value1, state);
         }
 
         public static double FPDiv(double value1, double value2, CpuThreadState state)
@@ -2020,6 +2241,95 @@ namespace ChocolArm64.Instructions
             return result;
         }
 
+        public static double FPRecipEstimate(double value, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPRecipEstimate: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            value.FPUnpack(out FpType type, out bool sign, out ulong op, state);
+
+            double result;
+
+            if (type == FpType.SNaN || type == FpType.QNaN)
+            {
+                result = FPProcessNaN(type, op, state);
+            }
+            else if (type == FpType.Infinity)
+            {
+                result = FPZero(sign);
+            }
+            else if (type == FpType.Zero)
+            {
+                result = FPInfinity(sign);
+
+                FPProcessException(FpExc.DivideByZero, state);
+            }
+            else if (Math.Abs(value) < Math.Pow(2d, -1024))
+            {
+                bool overflowToInf;
+
+                switch (state.FPRoundingMode())
+                {
+                    default:
+                    case RoundMode.ToNearest:            overflowToInf = true;  break;
+                    case RoundMode.TowardsPlusInfinity:  overflowToInf = !sign; break;
+                    case RoundMode.TowardsMinusInfinity: overflowToInf = sign;  break;
+                    case RoundMode.TowardsZero:          overflowToInf = false; break;
+                }
+
+                result = overflowToInf ? FPInfinity(sign) : FPMaxNormal(sign);
+
+                FPProcessException(FpExc.Overflow, state);
+                FPProcessException(FpExc.Inexact,  state);
+            }
+            else if (state.GetFpcrFlag(Fpcr.Fz) && (Math.Abs(value) >= Math.Pow(2d, 1022)))
+            {
+                result = FPZero(sign);
+
+                state.SetFpsrFlag(Fpsr.Ufc);
+            }
+            else
+            {
+                ulong fraction = op & 0x000FFFFFFFFFFFFFul;
+                uint exp = (uint)((op & 0x7FF0000000000000ul) >> 52);
+
+                if (exp == 0u)
+                {
+                    if ((fraction & 0x0008000000000000ul) == 0ul)
+                    {
+                        fraction = (fraction & 0x0003FFFFFFFFFFFFul) << 2;
+                        exp -= 1u;
+                    }
+                    else
+                    {
+                        fraction = (fraction & 0x0007FFFFFFFFFFFFul) << 1;
+                    }
+                }
+
+                uint scaled = (uint)(((fraction & 0x000FF00000000000ul) | 0x0010000000000000ul) >> 44);
+
+                uint resultExp = 2045u - exp;
+
+                uint estimate = (uint)SoftFloat.RecipEstimateTable[scaled - 256u] + 256u;
+
+                fraction = (ulong)(estimate & 0xFFu) << 44;
+
+                if (resultExp == 0u)
+                {
+                    fraction = ((fraction & 0x000FFFFFFFFFFFFEul) | 0x0010000000000000ul) >> 1;
+                }
+                else if (resultExp + 1u == 0u)
+                {
+                    fraction = ((fraction & 0x000FFFFFFFFFFFFCul) | 0x0010000000000000ul) >> 2;
+                    resultExp = 0u;
+                }
+
+                result = BitConverter.Int64BitsToDouble(
+                    (long)((sign ? 1ul : 0ul) << 63 | (resultExp & 0x7FFul) << 52 | (fraction & 0x000FFFFFFFFFFFFFul)));
+            }
+
+            return result;
+        }
+
         public static double FPRecipStepFused(double value1, double value2, CpuThreadState state)
         {
             Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPRecipStepFused: state.Fpcr = 0x{state.Fpcr:X8}");
@@ -2082,6 +2392,71 @@ namespace ChocolArm64.Instructions
 
                 result = BitConverter.Int64BitsToDouble(
                     (long)((sign ? 1ul : 0ul) << 63 | (notExp == 0x7FFul ? maxExp : notExp) << 52));
+            }
+
+            return result;
+        }
+
+        public static double FPRSqrtEstimate(double value, CpuThreadState state)
+        {
+            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPRSqrtEstimate: state.Fpcr = 0x{state.Fpcr:X8}");
+
+            value.FPUnpack(out FpType type, out bool sign, out ulong op, state);
+
+            double result;
+
+            if (type == FpType.SNaN || type == FpType.QNaN)
+            {
+                result = FPProcessNaN(type, op, state);
+            }
+            else if (type == FpType.Zero)
+            {
+                result = FPInfinity(sign);
+
+                FPProcessException(FpExc.DivideByZero, state);
+            }
+            else if (sign)
+            {
+                result = FPDefaultNaN();
+
+                FPProcessException(FpExc.InvalidOp, state);
+            }
+            else if (type == FpType.Infinity)
+            {
+                result = FPZero(false);
+            }
+            else
+            {
+                ulong fraction = op & 0x000FFFFFFFFFFFFFul;
+                uint exp = (uint)((op & 0x7FF0000000000000ul) >> 52);
+
+                if (exp == 0u)
+                {
+                    while ((fraction & 0x0008000000000000ul) == 0ul)
+                    {
+                        fraction = (fraction & 0x0007FFFFFFFFFFFFul) << 1;
+                        exp -= 1u;
+                    }
+
+                    fraction = (fraction & 0x0007FFFFFFFFFFFFul) << 1;
+                }
+
+                uint scaled;
+
+                if ((exp & 1u) == 0u)
+                {
+                    scaled = (uint)(((fraction & 0x000FF00000000000ul) | 0x0010000000000000ul) >> 44);
+                }
+                else
+                {
+                    scaled = (uint)(((fraction & 0x000FE00000000000ul) | 0x0010000000000000ul) >> 45);
+                }
+
+                uint resultExp = (3068u - exp) >> 1;
+
+                uint estimate = (uint)SoftFloat.RecipSqrtEstimateTable[scaled - 128u] + 256u;
+
+                result = BitConverter.Int64BitsToDouble((long)((resultExp & 0x7FFul) << 52 | (estimate & 0xFFul) << 44));
             }
 
             return result;
@@ -2234,6 +2609,11 @@ namespace ChocolArm64.Instructions
             return sign ? -0d : +0d;
         }
 
+        private static double FPMaxNormal(bool sign)
+        {
+            return sign ? double.MinValue : double.MaxValue;
+        }
+
         private static double FPTwo(bool sign)
         {
             return sign ? -2d : +2d;
@@ -2247,6 +2627,11 @@ namespace ChocolArm64.Instructions
         private static double FPNeg(this double value)
         {
             return -value;
+        }
+
+        private static double ZerosOrOnes(bool zeros)
+        {
+            return BitConverter.Int64BitsToDouble(!zeros ? 0L : -1L);
         }
 
         private static double FPUnpack(

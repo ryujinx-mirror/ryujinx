@@ -377,75 +377,47 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
-            int elems = 8 >> op.Size;
-
-            int part = op.RegisterSize == RegisterSize.Simd128 ? elems : 0;
-
-            if (Optimizations.UseSse41 && op.Size < 2)
+            if (Optimizations.UseSsse3)
             {
-                void EmitZeroVector()
+                long[] masks = new long[]
                 {
-                    switch (op.Size)
-                    {
-                        case 0: VectorHelper.EmitCall(context, nameof(VectorHelper.VectorInt16Zero)); break;
-                        case 1: VectorHelper.EmitCall(context, nameof(VectorHelper.VectorInt32Zero)); break;
-                    }
-                }
+                    14L << 56 | 12L << 48 | 10L << 40 | 08L << 32 | 06L << 24 | 04L << 16 | 02L << 8 | 00L << 0,
+                    13L << 56 | 12L << 48 | 09L << 40 | 08L << 32 | 05L << 24 | 04L << 16 | 01L << 8 | 00L << 0,
+                    11L << 56 | 10L << 48 | 09L << 40 | 08L << 32 | 03L << 24 | 02L << 16 | 01L << 8 | 00L << 0
+                };
 
-                //For XTN, first operand is source, second operand is 0.
-                //For XTN2, first operand is 0, second operand is source.
-                if (part != 0)
-                {
-                    EmitZeroVector();
-                }
+                Type[] typesMov = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>) };
+                Type[] typesSfl = new Type[] { typeof(Vector128<sbyte>), typeof(Vector128<sbyte>) };
+                Type[] typesSve = new Type[] { typeof(long), typeof(long) };
 
-                EmitLdvecWithSignedCast(context, op.Rn, op.Size + 1);
+                string nameMov = op.RegisterSize == RegisterSize.Simd128
+                    ? nameof(Sse.MoveLowToHigh)
+                    : nameof(Sse.MoveHighToLow);
 
-                //Set mask to discard the upper half of the wide elements.
-                switch (op.Size)
-                {
-                    case 0: context.EmitLdc_I4(0x00ff);     break;
-                    case 1: context.EmitLdc_I4(0x0000ffff); break;
-                }
+                context.EmitLdvec(op.Rd);
+                VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
 
-                Type wideType = IntTypesPerSizeLog2[op.Size + 1];
+                context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveLowToHigh), typesMov));
 
-                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), new Type[] { wideType }));
+                EmitLdvecWithSignedCast(context, op.Rn, 0);
 
-                wideType = VectorIntTypesPerSizeLog2[op.Size + 1];
+                context.EmitLdc_I8(masks[op.Size]);
+                context.Emit(OpCodes.Dup);
 
-                Type[] wideTypes = new Type[] { wideType, wideType };
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetVector128), typesSve));
 
-                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.And), wideTypes));
+                context.EmitCall(typeof(Ssse3).GetMethod(nameof(Ssse3.Shuffle), typesSfl));
 
-                if (part == 0)
-                {
-                    EmitZeroVector();
-                }
+                context.EmitCall(typeof(Sse).GetMethod(nameMov, typesMov));
 
-                //Pack values with signed saturation, the signed saturation shouldn't
-                //saturate anything since the upper bits were masked off.
-                Type sseType = op.Size == 0 ? typeof(Sse2) : typeof(Sse41);
-
-                context.EmitCall(sseType.GetMethod(nameof(Sse2.PackUnsignedSaturate), wideTypes));
-
-                if (part != 0)
-                {
-                    //For XTN2, we additionally need to discard the upper bits
-                    //of the target register and OR the result with it.
-                    EmitVectorZeroUpper(context, op.Rd);
-
-                    EmitLdvecWithUnsignedCast(context, op.Rd, op.Size);
-
-                    Type narrowType = VectorUIntTypesPerSizeLog2[op.Size];
-
-                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Or), new Type[] { narrowType, narrowType }));
-                }
-
-                EmitStvecWithUnsignedCast(context, op.Rd, op.Size);
+                context.EmitStvec(op.Rd);
             }
             else
             {
+                int elems = 8 >> op.Size;
+
+                int part = op.RegisterSize == RegisterSize.Simd128 ? elems : 0;
+
                 if (part != 0)
                 {
                     context.EmitLdvec(op.Rd);

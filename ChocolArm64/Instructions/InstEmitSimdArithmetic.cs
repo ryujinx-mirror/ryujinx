@@ -176,12 +176,119 @@ namespace ChocolArm64.Instructions
 
         public static void Fabd_S(ILEmitterCtx context)
         {
-            EmitScalarBinaryOpF(context, () =>
+            if (Optimizations.FastFP && Optimizations.UseSse2)
             {
-                context.Emit(OpCodes.Sub);
+                OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
 
-                EmitUnaryMathCall(context, nameof(Math.Abs));
-            });
+                int sizeF = op.Size & 1;
+
+                if (sizeF == 0)
+                {
+                    Type[] typesSsv       = new Type[] { typeof(float) };
+                    Type[] typesSubAndNot = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>) };
+
+                    context.EmitLdc_R4(-0f);
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.SetScalarVector128), typesSsv));
+
+                    context.EmitLdvec(op.Rn);
+                    context.EmitLdvec(op.Rm);
+
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.SubtractScalar), typesSubAndNot));
+
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.AndNot), typesSubAndNot));
+
+                    context.EmitStvec(op.Rd);
+
+                    EmitVectorZero32_128(context, op.Rd);
+                }
+                else /* if (sizeF == 1) */
+                {
+                    Type[] typesSsv       = new Type[] { typeof(double) };
+                    Type[] typesSubAndNot = new Type[] { typeof(Vector128<double>), typeof(Vector128<double>) };
+
+                    context.EmitLdc_R8(-0d);
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetScalarVector128), typesSsv));
+
+                    EmitLdvecWithCastToDouble(context, op.Rn);
+                    EmitLdvecWithCastToDouble(context, op.Rm);
+
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SubtractScalar), typesSubAndNot));
+
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesSubAndNot));
+
+                    EmitStvecWithCastFromDouble(context, op.Rd);
+
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
+            }
+            else
+            {
+                EmitScalarBinaryOpF(context, () =>
+                {
+                    EmitSoftFloatCall(context, nameof(SoftFloat32.FPSub));
+
+                    EmitUnaryMathCall(context, nameof(Math.Abs));
+                });
+            }
+        }
+
+        public static void Fabd_V(ILEmitterCtx context)
+        {
+            if (Optimizations.FastFP && Optimizations.UseSse2)
+            {
+                OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+                int sizeF = op.Size & 1;
+
+                if (sizeF == 0)
+                {
+                    Type[] typesSav       = new Type[] { typeof(float) };
+                    Type[] typesSubAndNot = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>) };
+
+                    context.EmitLdc_R4(-0f);
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.SetAllVector128), typesSav));
+
+                    context.EmitLdvec(op.Rn);
+                    context.EmitLdvec(op.Rm);
+
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.Subtract), typesSubAndNot));
+
+                    context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.AndNot), typesSubAndNot));
+
+                    context.EmitStvec(op.Rd);
+
+                    if (op.RegisterSize == RegisterSize.Simd64)
+                    {
+                        EmitVectorZeroUpper(context, op.Rd);
+                    }
+                }
+                else /* if (sizeF == 1) */
+                {
+                    Type[] typesSav       = new Type[] { typeof(double) };
+                    Type[] typesSubAndNot = new Type[] { typeof(Vector128<double>), typeof(Vector128<double>) };
+
+                    context.EmitLdc_R8(-0d);
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
+
+                    EmitLdvecWithCastToDouble(context, op.Rn);
+                    EmitLdvecWithCastToDouble(context, op.Rm);
+
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Subtract), typesSubAndNot));
+
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesSubAndNot));
+
+                    EmitStvecWithCastFromDouble(context, op.Rd);
+                }
+            }
+            else
+            {
+                EmitVectorBinaryOpF(context, () =>
+                {
+                    EmitSoftFloatCall(context, nameof(SoftFloat32.FPSub));
+
+                    EmitUnaryMathCall(context, nameof(Math.Abs));
+                });
+            }
         }
 
         public static void Fabs_S(ILEmitterCtx context)
@@ -321,17 +428,60 @@ namespace ChocolArm64.Instructions
 
             int sizeF = op.Size & 1;
 
-            EmitVectorExtractF(context, op.Rn, 0, sizeF);
-            EmitVectorExtractF(context, op.Rn, 1, sizeF);
+            if (Optimizations.FastFP && Optimizations.UseSse3)
+            {
+                if (sizeF == 0)
+                {
+                    Type[] typesAddH = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>) };
 
-            context.Emit(OpCodes.Add);
+                    context.EmitLdvec(op.Rn);
+                    context.Emit(OpCodes.Dup);
 
-            EmitScalarSetF(context, op.Rd, sizeF);
+                    context.EmitCall(typeof(Sse3).GetMethod(nameof(Sse3.HorizontalAdd), typesAddH));
+
+                    context.EmitStvec(op.Rd);
+
+                    EmitVectorZero32_128(context, op.Rd);
+                }
+                else /* if (sizeF == 1) */
+                {
+                    Type[] typesAddH = new Type[] { typeof(Vector128<double>), typeof(Vector128<double>) };
+
+                    EmitLdvecWithCastToDouble(context, op.Rn);
+                    context.Emit(OpCodes.Dup);
+
+                    context.EmitCall(typeof(Sse3).GetMethod(nameof(Sse3.HorizontalAdd), typesAddH));
+
+                    EmitStvecWithCastFromDouble(context, op.Rd);
+
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
+            }
+            else
+            {
+                EmitVectorExtractF(context, op.Rn, 0, sizeF);
+                EmitVectorExtractF(context, op.Rn, 1, sizeF);
+
+                EmitSoftFloatCall(context, nameof(SoftFloat32.FPAdd));
+
+                EmitScalarSetF(context, op.Rd, sizeF);
+            }
         }
 
         public static void Faddp_V(ILEmitterCtx context)
         {
-            EmitVectorPairwiseOpF(context, () => context.Emit(OpCodes.Add));
+            if (Optimizations.FastFP && Optimizations.UseSse
+                                     && Optimizations.UseSse2)
+            {
+                EmitVectorPairwiseSseOrSse2OpF(context, nameof(Sse.Add));
+            }
+            else
+            {
+                EmitVectorPairwiseOpF(context, () =>
+                {
+                    EmitSoftFloatCall(context, nameof(SoftFloat32.FPAdd));
+                });
+            }
         }
 
         public static void Fdiv_S(ILEmitterCtx context)
@@ -462,10 +612,18 @@ namespace ChocolArm64.Instructions
 
         public static void Fmaxp_V(ILEmitterCtx context)
         {
-            EmitVectorPairwiseOpF(context, () =>
+            if (Optimizations.FastFP && Optimizations.UseSse
+                                     && Optimizations.UseSse2)
             {
-                EmitSoftFloatCall(context, nameof(SoftFloat32.FPMax));
-            });
+                EmitVectorPairwiseSseOrSse2OpF(context, nameof(Sse.Max));
+            }
+            else
+            {
+                EmitVectorPairwiseOpF(context, () =>
+                {
+                    EmitSoftFloatCall(context, nameof(SoftFloat32.FPMax));
+                });
+            }
         }
 
         public static void Fmin_S(ILEmitterCtx context)
@@ -518,10 +676,18 @@ namespace ChocolArm64.Instructions
 
         public static void Fminp_V(ILEmitterCtx context)
         {
-            EmitVectorPairwiseOpF(context, () =>
+            if (Optimizations.FastFP && Optimizations.UseSse
+                                     && Optimizations.UseSse2)
             {
-                EmitSoftFloatCall(context, nameof(SoftFloat32.FPMin));
-            });
+                EmitVectorPairwiseSseOrSse2OpF(context, nameof(Sse.Min));
+            }
+            else
+            {
+                EmitVectorPairwiseOpF(context, () =>
+                {
+                    EmitSoftFloatCall(context, nameof(SoftFloat32.FPMin));
+                });
+            }
         }
 
         public static void Fmla_Se(ILEmitterCtx context)
@@ -1085,18 +1251,42 @@ namespace ChocolArm64.Instructions
 
         public static void Frecpe_S(ILEmitterCtx context)
         {
-            EmitScalarUnaryOpF(context, () =>
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+            int sizeF = op.Size & 1;
+
+            if (Optimizations.FastFP && Optimizations.UseSse
+                                     && sizeF == 0)
             {
-                EmitUnarySoftFloatCall(context, nameof(SoftFloat.RecipEstimate));
-            });
+                EmitScalarSseOrSse2OpF(context, nameof(Sse.ReciprocalScalar));
+            }
+            else
+            {
+                EmitScalarUnaryOpF(context, () =>
+                {
+                    EmitSoftFloatCall(context, nameof(SoftFloat32.FPRecipEstimate));
+                });
+            }
         }
 
         public static void Frecpe_V(ILEmitterCtx context)
         {
-            EmitVectorUnaryOpF(context, () =>
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+            int sizeF = op.Size & 1;
+
+            if (Optimizations.FastFP && Optimizations.UseSse
+                                     && sizeF == 0)
             {
-                EmitUnarySoftFloatCall(context, nameof(SoftFloat.RecipEstimate));
-            });
+                EmitVectorSseOrSse2OpF(context, nameof(Sse.Reciprocal));
+            }
+            else
+            {
+                EmitVectorUnaryOpF(context, () =>
+                {
+                    EmitSoftFloatCall(context, nameof(SoftFloat32.FPRecipEstimate));
+                });
+            }
         }
 
         public static void Frecps_S(ILEmitterCtx context) // Fused.
@@ -1398,18 +1588,42 @@ namespace ChocolArm64.Instructions
 
         public static void Frsqrte_S(ILEmitterCtx context)
         {
-            EmitScalarUnaryOpF(context, () =>
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+            int sizeF = op.Size & 1;
+
+            if (Optimizations.FastFP && Optimizations.UseSse
+                                     && sizeF == 0)
             {
-                EmitUnarySoftFloatCall(context, nameof(SoftFloat.InvSqrtEstimate));
-            });
+                EmitScalarSseOrSse2OpF(context, nameof(Sse.ReciprocalSqrtScalar));
+            }
+            else
+            {
+                EmitScalarUnaryOpF(context, () =>
+                {
+                    EmitSoftFloatCall(context, nameof(SoftFloat32.FPRSqrtEstimate));
+                });
+            }
         }
 
         public static void Frsqrte_V(ILEmitterCtx context)
         {
-            EmitVectorUnaryOpF(context, () =>
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+            int sizeF = op.Size & 1;
+
+            if (Optimizations.FastFP && Optimizations.UseSse
+                                     && sizeF == 0)
             {
-                EmitUnarySoftFloatCall(context, nameof(SoftFloat.InvSqrtEstimate));
-            });
+                EmitVectorSseOrSse2OpF(context, nameof(Sse.ReciprocalSqrt));
+            }
+            else
+            {
+                EmitVectorUnaryOpF(context, () =>
+                {
+                    EmitSoftFloatCall(context, nameof(SoftFloat32.FPRSqrtEstimate));
+                });
+            }
         }
 
         public static void Frsqrts_S(ILEmitterCtx context) // Fused.
