@@ -878,7 +878,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 }
             }
 
-            if (DeclInfo.Index >= 16)
+            if (DeclInfo.Index >= 32)
             {
                 throw new InvalidOperationException($"Shader attribute offset {Abuf.Offs} is invalid.");
             }

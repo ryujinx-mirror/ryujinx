@@ -734,6 +734,11 @@ namespace Ryujinx.Graphics.Graphics3d
 
                 long VbPosition = MakeInt64From2xInt32(NvGpuEngine3dReg.VertexArrayNAddress + ArrayIndex * 4);
 
+                if (VbPosition == 0)
+                {
+                    continue;
+                }
+
                 bool IsConst = ((Packed >> 6) & 1) != 0;
 
                 int Offset = (Packed >> 7) & 0x3fff;
