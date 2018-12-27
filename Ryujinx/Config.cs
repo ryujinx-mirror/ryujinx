@@ -1,6 +1,7 @@
 using LibHac;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE;
+using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Input;
 using Ryujinx.UI.Input;
 using System;
@@ -60,6 +61,10 @@ namespace Ryujinx
                     }
                 }
             }
+
+            SystemLanguage SetLanguage = Enum.Parse<SystemLanguage>(parser.Value("System_Language"));
+
+            device.System.State.SetLanguage(SetLanguage);
 
             device.System.State.DockedMode = Convert.ToBoolean(parser.Value("Docked_Mode"));
 
