@@ -150,24 +150,22 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             byte[]    padding   = context.RequestData.ReadBytes(7);
             long      titleId   = context.RequestData.ReadInt64();
 
+            ContentType contentType = ContentType.Data;
+
             StorageId installedStorage =
-                context.Device.System.ContentManager.GetInstalledStorage(titleId, ContentType.Data, storageId);
+                context.Device.System.ContentManager.GetInstalledStorage(titleId, contentType, storageId);
 
             if (installedStorage == StorageId.None)
             {
+                contentType = ContentType.AocData;
+
                 installedStorage =
-                    context.Device.System.ContentManager.GetInstalledStorage(titleId, ContentType.AocData, storageId);
+                    context.Device.System.ContentManager.GetInstalledStorage(titleId, contentType, storageId);
             }
 
             if (installedStorage != StorageId.None)
             {
-                string contentPath = context.Device.System.ContentManager.GetInstalledContentPath(titleId, storageId, ContentType.AocData);
-
-                if (string.IsNullOrWhiteSpace(contentPath))
-                {
-                    contentPath = context.Device.System.ContentManager.GetInstalledContentPath(titleId, storageId, ContentType.AocData);
-                }
-
+                string contentPath = context.Device.System.ContentManager.GetInstalledContentPath(titleId, storageId, contentType);
                 string installPath = context.Device.FileSystem.SwitchPathToSystemPath(contentPath);
 
                 if (!string.IsNullOrWhiteSpace(installPath))
