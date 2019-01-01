@@ -141,7 +141,7 @@ namespace Ryujinx.HLE.FileSystem.Content
             }
         }
 
-        public void ClearEntry(long titleId, ContentType contentType,StorageId storageId)
+        public void ClearEntry(long titleId, ContentType contentType, StorageId storageId)
         {
             RemoveLocationEntry(titleId, contentType, storageId);
         }
@@ -295,7 +295,7 @@ namespace Ryujinx.HLE.FileSystem.Content
             return _sharedFontTitleDictionary.TryGetValue(fontName, out titleId);
         }
 
-        private LocationEntry GetLocation(long titleId, ContentType contentType,StorageId storageId)
+        private LocationEntry GetLocation(long titleId, ContentType contentType, StorageId storageId)
         {
             LinkedList<LocationEntry> locationList = _locationEntries[storageId];
 
