@@ -4,17 +4,17 @@ namespace Ryujinx.Graphics
 {
     static class QuadHelper
     {
-        public static int ConvertIbSizeQuadsToTris(int Size)
+        public static int ConvertSizeQuadsToTris(int Size)
         {
             return Size <= 0 ? 0 : (Size / 4) * 6;
         }
 
-        public static int ConvertIbSizeQuadStripToTris(int Size)
+        public static int ConvertSizeQuadStripToTris(int Size)
         {
             return Size <= 1 ? 0 : ((Size - 2) / 2) * 6;
         }
 
-        public static byte[] ConvertIbQuadsToTris(byte[] Data, int EntrySize, int Count)
+        public static byte[] ConvertQuadsToTris(byte[] Data, int EntrySize, int Count)
         {
             int PrimitivesCount = Count / 4;
 
@@ -46,7 +46,7 @@ namespace Ryujinx.Graphics
             return Output;
         }
 
-        public static byte[] ConvertIbQuadStripToTris(byte[] Data, int EntrySize, int Count)
+        public static byte[] ConvertQuadStripToTris(byte[] Data, int EntrySize, int Count)
         {
             int PrimitivesCount = (Count - 2) / 2;
 
