@@ -1,4 +1,5 @@
 using LibHac;
+using LibHac.IO;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.Resource;
@@ -67,14 +68,18 @@ namespace Ryujinx.HLE.HOS.Font
                                 fileIndex = 1;
                             }
 
-                            FileStream ncaFileStream = new FileStream(fontPath, FileMode.Open, FileAccess.Read);
-                            Nca        nca           = new Nca(_device.System.KeySet, ncaFileStream, false);
-                            NcaSection romfsSection  = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
-                            Romfs      romfs         = new Romfs(nca.OpenSection(romfsSection.SectionNum, false, _device.System.FsIntegrityCheckLevel));
-                            Stream     fontFile      = romfs.OpenFile(romfs.Files[fileIndex]);
+                            byte[] data;
+                            
+                            using (FileStream ncaFileStream = new FileStream(fontPath, FileMode.Open, FileAccess.Read))
+                            {
+                                Nca        nca          = new Nca(_device.System.KeySet, ncaFileStream.AsStorage(), false);
+                                NcaSection romfsSection = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
+                                Romfs      romfs        = new Romfs(nca.OpenSection(romfsSection.SectionNum, false, _device.System.FsIntegrityCheckLevel, false));
+                                Stream     fontFile     = romfs.OpenFile(romfs.Files[fileIndex]).AsStream();
 
-                            byte[] data = DecryptFont(fontFile);
-
+                                data = DecryptFont(fontFile);
+                            }
+                                
                             FontInfo info = new FontInfo((int)fontOffset, data.Length);
 
                             WriteMagicAndSize(_physicalAddress + fontOffset, data.Length);
@@ -87,9 +92,6 @@ namespace Ryujinx.HLE.HOS.Font
                             {
                                 _device.Memory.WriteByte(_physicalAddress + fontOffset, data[fontOffset - start]);
                             }
-
-                            ncaFileStream.Dispose();
-                            nca.Dispose();
 
                             return info;
                         }

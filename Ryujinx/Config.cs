@@ -1,4 +1,4 @@
-using LibHac;
+using LibHac.IO;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE;
 using Ryujinx.HLE.HOS.SystemState;

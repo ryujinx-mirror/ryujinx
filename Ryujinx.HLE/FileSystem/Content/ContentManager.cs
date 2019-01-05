@@ -1,4 +1,5 @@
 ﻿using LibHac;
+using LibHac.IO;
 using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
@@ -73,7 +74,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                         using (FileStream ncaFile = new FileStream(Directory.GetFiles(directoryPath)[0], FileMode.Open, FileAccess.Read))
                         {
-                            Nca nca = new Nca(_device.System.KeySet, ncaFile, false);
+                            Nca nca = new Nca(_device.System.KeySet, ncaFile.AsStorage(), false);
 
                             string switchPath = Path.Combine(contentPathString + ":",
                                                               ncaFile.Name.Replace(contentDirectory, string.Empty).TrimStart('\\'));
@@ -89,10 +90,6 @@ namespace Ryujinx.HLE.FileSystem.Content
                             AddEntry(entry);
 
                             _contentDictionary.Add((nca.Header.TitleId, nca.Header.ContentType), ncaName);
-
-                            ncaFile.Close();
-                            nca.Dispose();
-                            ncaFile.Dispose();
                         }
                     }
                 }
@@ -105,7 +102,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                         using (FileStream ncaFile = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                         {
-                            Nca nca = new Nca(_device.System.KeySet, ncaFile, false);
+                            Nca nca = new Nca(_device.System.KeySet, ncaFile.AsStorage(), false);
 
                             string switchPath = Path.Combine(contentPathString + ":",
                                                               filePath.Replace(contentDirectory, string.Empty).TrimStart('\\'));
@@ -121,10 +118,6 @@ namespace Ryujinx.HLE.FileSystem.Content
                             AddEntry(entry);
 
                             _contentDictionary.Add((nca.Header.TitleId, nca.Header.ContentType), ncaName);
-
-                            ncaFile.Close();
-                            nca.Dispose();
-                            ncaFile.Dispose();
                         }
                     }
                 }
@@ -235,14 +228,13 @@ namespace Ryujinx.HLE.FileSystem.Content
             {
                 if (File.Exists(installedPath))
                 {
-                    FileStream file         = new FileStream(installedPath, FileMode.Open, FileAccess.Read);
-                    Nca        nca          = new Nca(_device.System.KeySet, file, false);
-                    bool       contentCheck = nca.Header.ContentType == contentType;
+                    using (FileStream file = new FileStream(installedPath, FileMode.Open, FileAccess.Read))
+                    {
+                        Nca  nca          = new Nca(_device.System.KeySet, file.AsStorage(), false);
+                        bool contentCheck = nca.Header.ContentType == contentType;
 
-                    nca.Dispose();
-                    file.Dispose();
-
-                    return contentCheck;
+                        return contentCheck;
+                    }
                 }
             }
 

@@ -1,4 +1,5 @@
 ﻿using LibHac;
+using LibHac.IO;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.FspSrv;
 using System;
@@ -117,7 +118,7 @@ namespace Ryujinx.HLE.FileSystem
 
             if (_pfs.FileExists(name))
             {
-                Stream stream = _pfs.OpenFile(name);
+                Stream stream = _pfs.OpenFile(name).AsStream();
                 fileInterface = new IFile(stream, name);
 
                 return 0;

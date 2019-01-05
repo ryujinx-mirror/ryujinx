@@ -1,4 +1,5 @@
 ﻿using LibHac;
+using LibHac.IO;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.FspSrv;
 using System;
@@ -14,9 +15,9 @@ namespace Ryujinx.HLE.FileSystem
     {
         private Romfs _romFs;
 
-        public RomFsProvider(Stream storageStream)
+        public RomFsProvider(LibHac.IO.IStorage storage)
         {
-            _romFs = new Romfs(storageStream);
+            _romFs = new Romfs(storage);
         }
 
         public long CreateDirectory(string name)
@@ -133,7 +134,7 @@ namespace Ryujinx.HLE.FileSystem
         {
             if (_romFs.FileExists(name))
             {
-                Stream stream = _romFs.OpenFile(name);
+                Stream stream = _romFs.OpenFile(name).AsStream();
 
                 fileInterface = new IFile(stream, name);
 

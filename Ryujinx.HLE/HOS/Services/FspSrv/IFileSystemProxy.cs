@@ -1,4 +1,5 @@
 using LibHac;
+using LibHac.IO;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.Utilities;
@@ -65,7 +66,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             if (extension == ".nca")
             {
-                return OpenNcaFs(context, fullPath, fileStream);
+                return OpenNcaFs(context, fullPath, fileStream.AsStorage());
             }
             else if (extension == ".nsp")
             {
@@ -174,10 +175,10 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
                     if (File.Exists(ncaPath))
                     {
-                        FileStream ncaStream    = new FileStream(ncaPath, FileMode.Open, FileAccess.Read);
-                        Nca        nca          = new Nca(context.Device.System.KeySet, ncaStream, false);
-                        NcaSection romfsSection = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
-                        Stream     romfsStream  = nca.OpenSection(romfsSection.SectionNum, false, context.Device.System.FsIntegrityCheckLevel);
+                        LibHac.IO.IStorage ncaStorage   = new FileStream(ncaPath, FileMode.Open, FileAccess.Read).AsStorage();
+                        Nca                nca          = new Nca(context.Device.System.KeySet, ncaStorage, false);
+                        NcaSection         romfsSection = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
+                        Stream             romfsStream  = nca.OpenSection(romfsSection.SectionNum, false, context.Device.System.FsIntegrityCheckLevel, false).AsStream();
 
                         MakeObject(context, new IStorage(romfsStream));
 
@@ -234,17 +235,11 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         private long OpenNsp(ServiceCtx context, string pfsPath)
         {
-            FileStream   pfsFile    = new FileStream(pfsPath, FileMode.Open, FileAccess.Read);
-            Pfs          nsp        = new Pfs(pfsFile);
-            PfsFileEntry ticketFile = nsp.Files.FirstOrDefault(x => x.Name.EndsWith(".tik"));
+            FileStream pfsFile = new FileStream(pfsPath, FileMode.Open, FileAccess.Read);
+            Pfs        nsp     = new Pfs(pfsFile.AsStorage());
 
-            if (ticketFile != null)
-            {
-                Ticket ticket = new Ticket(nsp.OpenFile(ticketFile));
+            ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
 
-                context.Device.System.KeySet.TitleKeys[ticket.RightsId] =
-                    ticket.GetTitleKey(context.Device.System.KeySet);
-            }
 
             IFileSystem nspFileSystem = new IFileSystem(pfsPath, new PFsProvider(nsp));
 
@@ -253,25 +248,25 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
-        private long OpenNcaFs(ServiceCtx context,string ncaPath, Stream ncaStream)
+        private long OpenNcaFs(ServiceCtx context, string ncaPath, LibHac.IO.IStorage ncaStorage)
         {
-            Nca nca = new Nca(context.Device.System.KeySet, ncaStream, false);
+            Nca nca = new Nca(context.Device.System.KeySet, ncaStorage, false);
 
             NcaSection romfsSection = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
             NcaSection pfsSection   = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Pfs0);
 
             if (romfsSection != null)
             {
-                Stream      romfsStream   = nca.OpenSection(romfsSection.SectionNum, false, context.Device.System.FsIntegrityCheckLevel);
-                IFileSystem ncaFileSystem = new IFileSystem(ncaPath, new RomFsProvider(romfsStream));
+                LibHac.IO.IStorage romfsStorage = nca.OpenSection(romfsSection.SectionNum, false, context.Device.System.FsIntegrityCheckLevel, false);
+                IFileSystem ncaFileSystem       = new IFileSystem(ncaPath, new RomFsProvider(romfsStorage));
 
                 MakeObject(context, ncaFileSystem);
             }
-            else if(pfsSection !=null)
+            else if(pfsSection != null)
             {
-                Stream      pfsStream     = nca.OpenSection(pfsSection.SectionNum, false, context.Device.System.FsIntegrityCheckLevel);
-                Pfs         pfs           = new Pfs(pfsStream);
-                IFileSystem ncaFileSystem = new IFileSystem(ncaPath, new PFsProvider(pfs));
+                LibHac.IO.IStorage pfsStorage    = nca.OpenSection(pfsSection.SectionNum, false, context.Device.System.FsIntegrityCheckLevel, false);
+                Pfs                pfs           = new Pfs(pfsStorage);
+                IFileSystem        ncaFileSystem = new IFileSystem(ncaPath, new PFsProvider(pfs));
 
                 MakeObject(context, ncaFileSystem);
             }
@@ -299,17 +294,10 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                     FileMode.Open,
                     FileAccess.Read);
 
-                Pfs          nsp        = new Pfs(pfsFile);
-                PfsFileEntry ticketFile = nsp.Files.FirstOrDefault(x => x.Name.EndsWith(".tik"));
+                Pfs nsp = new Pfs(pfsFile.AsStorage());
 
-                if (ticketFile != null)
-                {
-                    Ticket ticket = new Ticket(nsp.OpenFile(ticketFile));
-
-                    context.Device.System.KeySet.TitleKeys[ticket.RightsId] =
-                        ticket.GetTitleKey(context.Device.System.KeySet);
-                }
-
+                ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
+                
                 string filename = fullPath.Replace(archivePath.FullName, string.Empty).TrimStart('\\');
 
                 if (nsp.FileExists(filename))
@@ -319,6 +307,19 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
 
             return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
+        }
+
+        private void ImportTitleKeysFromNsp(Pfs nsp, Keyset keySet)
+        {
+            foreach (PfsFileEntry ticketEntry in nsp.Files.Where(x => x.Name.EndsWith(".tik")))
+            {
+                Ticket ticket = new Ticket(nsp.OpenFile(ticketEntry).AsStream());
+
+                if (!keySet.TitleKeys.ContainsKey(ticket.RightsId))
+                {
+                    keySet.TitleKeys.Add(ticket.RightsId, ticket.GetTitleKey(keySet));
+                }
+            }
         }
     }
 }

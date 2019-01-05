@@ -1,4 +1,5 @@
 using LibHac;
+using LibHac.IO;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS.Font;
@@ -242,7 +243,7 @@ namespace Ryujinx.HLE.HOS
         {
             FileStream file = new FileStream(xciFile, FileMode.Open, FileAccess.Read);
 
-            Xci xci = new Xci(KeySet, file);
+            Xci xci = new Xci(KeySet, file.AsStorage());
 
             (Nca mainNca, Nca controlNca) = GetXciGameData(xci);
 
@@ -271,7 +272,7 @@ namespace Ryujinx.HLE.HOS
 
             foreach (PfsFileEntry ticketEntry in xci.SecurePartition.Files.Where(x => x.Name.EndsWith(".tik")))
             {
-                Ticket ticket = new Ticket(xci.SecurePartition.OpenFile(ticketEntry));
+                Ticket ticket = new Ticket(xci.SecurePartition.OpenFile(ticketEntry).AsStream());
 
                 if (!KeySet.TitleKeys.ContainsKey(ticket.RightsId))
                 {
@@ -281,9 +282,9 @@ namespace Ryujinx.HLE.HOS
 
             foreach (PfsFileEntry fileEntry in xci.SecurePartition.Files.Where(x => x.Name.EndsWith(".nca")))
             {
-                Stream ncaStream = xci.SecurePartition.OpenFile(fileEntry);
+                IStorage ncaStorage = xci.SecurePartition.OpenFile(fileEntry);
 
-                Nca nca = new Nca(KeySet, ncaStream, true);
+                Nca nca = new Nca(KeySet, ncaStorage, true);
 
                 if (nca.Header.ContentType == ContentType.Program)
                 {
@@ -326,20 +327,18 @@ namespace Ryujinx.HLE.HOS
 
         public void ReadControlData(Nca controlNca)
         {
-            Romfs controlRomfs = new Romfs(controlNca.OpenSection(0, false, FsIntegrityCheckLevel));
+            Romfs controlRomfs = new Romfs(controlNca.OpenSection(0, false, FsIntegrityCheckLevel, true));
 
-            byte[] controlFile = controlRomfs.GetFile("/control.nacp");
+            IStorage controlFile = controlRomfs.OpenFile("/control.nacp");
 
-            BinaryReader reader = new BinaryReader(new MemoryStream(controlFile));
-
-            ControlData = new Nacp(reader);
+            ControlData = new Nacp(controlFile.AsStream());
         }
 
         public void LoadNca(string ncaFile)
         {
             FileStream file = new FileStream(ncaFile, FileMode.Open, FileAccess.Read);
 
-            Nca nca = new Nca(KeySet, file, true);
+            Nca nca = new Nca(KeySet, file.AsStorage(false), false);
 
             LoadNca(nca, null);
         }
@@ -348,16 +347,16 @@ namespace Ryujinx.HLE.HOS
         {
             FileStream file = new FileStream(nspFile, FileMode.Open, FileAccess.Read);
 
-            Pfs nsp = new Pfs(file);
+            Pfs nsp = new Pfs(file.AsStorage(false));
 
-            PfsFileEntry ticketFile = nsp.Files.FirstOrDefault(x => x.Name.EndsWith(".tik"));
-
-            // Load title key from the NSP's ticket in case the user doesn't have a title key file
-            if (ticketFile != null)
+            foreach (PfsFileEntry ticketEntry in nsp.Files.Where(x => x.Name.EndsWith(".tik")))
             {
-                Ticket ticket = new Ticket(nsp.OpenFile(ticketFile));
+                Ticket ticket = new Ticket(nsp.OpenFile(ticketEntry).AsStream());
 
-                KeySet.TitleKeys[ticket.RightsId] = ticket.GetTitleKey(KeySet);
+                if (!KeySet.TitleKeys.ContainsKey(ticket.RightsId))
+                {
+                    KeySet.TitleKeys.Add(ticket.RightsId, ticket.GetTitleKey(KeySet));
+                }
             }
 
             Nca mainNca    = null;
@@ -396,26 +395,26 @@ namespace Ryujinx.HLE.HOS
                 return;
             }
 
-            Stream romfsStream = mainNca.OpenSection(ProgramPartitionType.Data, false, FsIntegrityCheckLevel);
-            Stream exefsStream = mainNca.OpenSection(ProgramPartitionType.Code, false, FsIntegrityCheckLevel);
+            IStorage romfsStorage = mainNca.OpenSection(ProgramPartitionType.Data, false, FsIntegrityCheckLevel, false);
+            IStorage exefsStorage = mainNca.OpenSection(ProgramPartitionType.Code, false, FsIntegrityCheckLevel, true);
 
-            if (exefsStream == null)
+            if (exefsStorage == null)
             {
                 Logger.PrintError(LogClass.Loader, "No ExeFS found in NCA");
 
                 return;
             }
 
-            if (romfsStream == null)
+            if (romfsStorage == null)
             {
                 Logger.PrintWarning(LogClass.Loader, "No RomFS found in NCA");
             }
             else
             {
-                Device.FileSystem.SetRomFs(romfsStream);
+                Device.FileSystem.SetRomFs(romfsStorage.AsStream(false));
             }
 
-            Pfs exefs = new Pfs(exefsStream);
+            Pfs exefs = new Pfs(exefsStorage);
 
             Npdm metaData = null;
 
@@ -423,7 +422,7 @@ namespace Ryujinx.HLE.HOS
             {
                 Logger.PrintInfo(LogClass.Loader, "Loading main.npdm...");
 
-                metaData = new Npdm(exefs.OpenFile("main.npdm"));
+                metaData = new Npdm(exefs.OpenFile("main.npdm").AsStream());
             }
             else
             {
@@ -445,7 +444,7 @@ namespace Ryujinx.HLE.HOS
 
                     Logger.PrintInfo(LogClass.Loader, $"Loading {filename}...");
 
-                    NxStaticObject staticObject = new NxStaticObject(exefs.OpenFile(file));
+                    NxStaticObject staticObject = new NxStaticObject(exefs.OpenFile(file).AsStream());
 
                     staticObjects.Add(staticObject);
                 }
@@ -453,19 +452,17 @@ namespace Ryujinx.HLE.HOS
 
             Nacp ReadControlData()
             {
-                Romfs controlRomfs = new Romfs(controlNca.OpenSection(0, false, FsIntegrityCheckLevel));
+                Romfs controlRomfs = new Romfs(controlNca.OpenSection(0, false, FsIntegrityCheckLevel, true));
 
-                byte[] controlFile = controlRomfs.GetFile("/control.nacp");
+                IStorage controlFile = controlRomfs.OpenFile("/control.nacp");
 
-                BinaryReader reader = new BinaryReader(new MemoryStream(controlFile));
+                Nacp controlData = new Nacp(controlFile.AsStream());
 
-                Nacp controlData = new Nacp(reader);
-
-                CurrentTitle = controlData.Languages[(int)State.DesiredTitleLanguage].Title;
+                CurrentTitle = controlData.Descriptions[(int)State.DesiredTitleLanguage].Title;
 
                 if (string.IsNullOrWhiteSpace(CurrentTitle))
                 {
-                    CurrentTitle = controlData.Languages.ToList().Find(x => !string.IsNullOrWhiteSpace(x.Title)).Title;
+                    CurrentTitle = controlData.Descriptions.ToList().Find(x => !string.IsNullOrWhiteSpace(x.Title)).Title;
                 }
 
                 return controlData;
