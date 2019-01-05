@@ -24,6 +24,7 @@ namespace Ryujinx.Graphics.Gal
 
         RGBA4,
         RGB565,
+        BGR565,
         BGR5A1,
         RGB5A1,
         R8,

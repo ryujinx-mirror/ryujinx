@@ -1,60 +1,165 @@
+using Ryujinx.Common;
+using System;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Android
 {
+    [StructLayout(LayoutKind.Sequential, Size = 0x28)]
+    struct GraphicBufferHeader
+    {
+        public int Magic;
+        public int Width;
+        public int Height;
+        public int Stride;
+        public int Format;
+        public int Usage;
+
+        public int Pid;
+        public int RefCount;
+
+        public int FdsCount;
+        public int IntsCount;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x58)]
+    struct NvGraphicBufferSurface
+    {
+        [FieldOffset(0)]
+        public uint Width;
+
+        [FieldOffset(0x4)]
+        public uint Height;
+
+        [FieldOffset(0x8)]
+        public ColorFormat ColorFormat;
+
+        [FieldOffset(0x10)]
+        public int Layout;
+
+        [FieldOffset(0x14)]
+        public int Pitch;
+
+        [FieldOffset(0x18)]
+        public int NvMapHandle;
+
+        [FieldOffset(0x1C)]
+        public int Offset;
+
+        [FieldOffset(0x20)]
+        public int Kind;
+
+        [FieldOffset(0x24)]
+        public int BlockHeightLog2;
+
+        [FieldOffset(0x28)]
+        public int ScanFormat;
+
+        [FieldOffset(0x30)]
+        public long Flags;
+
+        [FieldOffset(0x38)]
+        public long Size;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    struct NvGraphicBufferSurfaceArray
+    {
+        [FieldOffset(0x0)]
+        private NvGraphicBufferSurface Surface0;
+
+        [FieldOffset(0x58)]
+        private NvGraphicBufferSurface Surface1;
+
+        [FieldOffset(0xb0)]
+        private NvGraphicBufferSurface Surface2;
+
+        public NvGraphicBufferSurface this[int index]
+        {
+            get
+            {
+                if (index == 0)
+                {
+                    return Surface0;
+                }
+                else if (index == 1)
+                {
+                    return Surface1;
+                }
+                else if (index == 2)
+                {
+                    return Surface2;
+                }
+
+                throw new IndexOutOfRangeException();
+            }
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x144)]
+    struct NvGraphicBuffer
+    {
+        [FieldOffset(0x4)]
+        public int NvMapId;
+
+        [FieldOffset(0xC)]
+        public int Magic;
+
+        [FieldOffset(0x10)]
+        public int Pid;
+
+        [FieldOffset(0x14)]
+        public int Type;
+
+        [FieldOffset(0x18)]
+        public int Usage;
+
+        [FieldOffset(0x1C)]
+        public int PixelFormat;
+
+        [FieldOffset(0x20)]
+        public int ExternalPixelFormat;
+
+        [FieldOffset(0x24)]
+        public int Stride;
+
+        [FieldOffset(0x28)]
+        public int FrameBufferSize;
+
+        [FieldOffset(0x2C)]
+        public int PlanesCount;
+
+        [FieldOffset(0x34)]
+        public NvGraphicBufferSurfaceArray Surfaces;
+    }
+
     struct GbpBuffer
     {
-        public int Magic  { get; private set; }
-        public int Width  { get; private set; }
-        public int Height { get; private set; }
-        public int Stride { get; private set; }
-        public int Format { get; private set; }
-        public int Usage  { get; private set; }
+        public GraphicBufferHeader Header { get; private set; }
+        public NvGraphicBuffer     Buffer { get; private set; }
 
-        public int Pid      { get; private set; }
-        public int RefCount { get; private set; }
-
-        public int FdsCount  { get; private set; }
-        public int IntsCount { get; private set; }
-
-        public byte[] RawData { get; private set; }
-
-        public int Size => RawData.Length + 10 * 4;
+        public int Size => Marshal.SizeOf<NvGraphicBuffer>() + Marshal.SizeOf<GraphicBufferHeader>();
 
         public GbpBuffer(BinaryReader reader)
         {
-            Magic  = reader.ReadInt32();
-            Width  = reader.ReadInt32();
-            Height = reader.ReadInt32();
-            Stride = reader.ReadInt32();
-            Format = reader.ReadInt32();
-            Usage  = reader.ReadInt32();
+            Header = reader.ReadStruct<GraphicBufferHeader>();
 
-            Pid      = reader.ReadInt32();
-            RefCount = reader.ReadInt32();
+            // ignore fds
+            // TODO: check if that is used in official implementation
+            reader.BaseStream.Position += Header.FdsCount * 4;
 
-            FdsCount  = reader.ReadInt32();
-            IntsCount = reader.ReadInt32();
+            if (Header.IntsCount != 0x51)
+            {
+                throw new System.NotImplementedException($"Unexpected Graphic Buffer ints count (expected 0x51, found 0x{Header.IntsCount:x}");
+            }
 
-            RawData = reader.ReadBytes((FdsCount + IntsCount) * 4);
+            Buffer = reader.ReadStruct<NvGraphicBuffer>();
         }
 
         public void Write(BinaryWriter writer)
         {
-            writer.Write(Magic);
-            writer.Write(Width);
-            writer.Write(Height);
-            writer.Write(Stride);
-            writer.Write(Format);
-            writer.Write(Usage);
-
-            writer.Write(Pid);
-            writer.Write(RefCount);
-
-            writer.Write(FdsCount);
-            writer.Write(IntsCount);
-
-            writer.Write(RawData);
+            writer.WriteStruct(Header);
+            writer.WriteStruct(Buffer);
         }
     }
 }

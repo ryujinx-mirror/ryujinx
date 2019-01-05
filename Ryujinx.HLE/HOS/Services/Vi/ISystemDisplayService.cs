@@ -10,13 +10,14 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public ISystemDisplayService()
+        public ISystemDisplayService(IApplicationDisplayService applicationDisplayService)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
-                { 2205, SetLayerZ },
-                { 2207, SetLayerVisibility },
-                { 3200, GetDisplayMode }
+                { 2205, SetLayerZ                                  },
+                { 2207, SetLayerVisibility                         },
+                { 2312, applicationDisplayService.CreateStrayLayer },
+                { 3200, GetDisplayMode                             }
             };
         }
 

@@ -52,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         public long GetSystemDisplayService(ServiceCtx context)
         {
-            MakeObject(context, new ISystemDisplayService());
+            MakeObject(context, new ISystemDisplayService(this));
 
             return 0;
         }

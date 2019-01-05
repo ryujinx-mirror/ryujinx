@@ -7,6 +7,7 @@ using Ryujinx.HLE.HOS.Services.Nv.NvMap;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
@@ -30,9 +31,11 @@ namespace Ryujinx.HLE.HOS.Services.Android
         [Flags]
         private enum HalTransform
         {
-            FlipX     = 1 << 0,
-            FlipY     = 1 << 1,
-            Rotate90  = 1 << 2
+            FlipX     = 1,
+            FlipY     = 2,
+            Rotate90  = 4,
+            Rotate180 = FlipX | FlipY,
+            Rotate270 = Rotate90 | Rotate180,
         }
 
         private enum BufferState
@@ -43,12 +46,70 @@ namespace Ryujinx.HLE.HOS.Services.Android
             Acquired
         }
 
+        [StructLayout(LayoutKind.Sequential, Size = 0x8)]
+        private struct Fence
+        {
+            public int id;
+            public int value;
+        }
+
+        [StructLayout(LayoutKind.Explicit, Size = 0x24)]
+        private struct MultiFence
+        {
+            [FieldOffset(0x0)]
+            public int FenceCount;
+
+            [FieldOffset(0x4)]
+            public Fence Fence0;
+
+            [FieldOffset(0xC)]
+            public Fence Fence1;
+
+            [FieldOffset(0x14)]
+            public Fence Fence2;
+
+            [FieldOffset(0x1C)]
+            public Fence Fence3;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Size = 0x10)]
         private struct Rect
         {
             public int Top;
             public int Left;
             public int Right;
             public int Bottom;
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        private struct QueueBufferObject
+        {
+            [FieldOffset(0x0)]
+            public long Timestamp;
+
+            [FieldOffset(0x8)]
+            public int IsAutoTimestamp;
+
+            [FieldOffset(0xC)]
+            public Rect Crop;
+
+            [FieldOffset(0x1C)]
+            public int ScalingMode;
+
+            [FieldOffset(0x20)]
+            public HalTransform Transform;
+
+            [FieldOffset(0x24)]
+            public int StickyTransform;
+
+            [FieldOffset(0x28)]
+            public int Unknown;
+
+            [FieldOffset(0x2C)]
+            public int SwapInterval;
+
+            [FieldOffset(0x30)]
+            public MultiFence Fence;
         }
 
         private struct BufferEntry
@@ -169,32 +230,15 @@ namespace Ryujinx.HLE.HOS.Services.Android
 
             //TODO: Errors.
             int slot            = parcelReader.ReadInt32();
-            int unknown4        = parcelReader.ReadInt32();
-            int unknown8        = parcelReader.ReadInt32();
-            int unknownC        = parcelReader.ReadInt32();
-            int timestamp       = parcelReader.ReadInt32();
-            int isAutoTimestamp = parcelReader.ReadInt32();
-            int cropTop         = parcelReader.ReadInt32();
-            int cropLeft        = parcelReader.ReadInt32();
-            int cropRight       = parcelReader.ReadInt32();
-            int cropBottom      = parcelReader.ReadInt32();
-            int scalingMode     = parcelReader.ReadInt32();
-            int transform       = parcelReader.ReadInt32();
-            int stickyTransform = parcelReader.ReadInt32();
-            int unknown34       = parcelReader.ReadInt32();
-            int unknown38       = parcelReader.ReadInt32();
-            int isFenceValid    = parcelReader.ReadInt32();
-            int fence0Id        = parcelReader.ReadInt32();
-            int fence0Value     = parcelReader.ReadInt32();
-            int fence1Id        = parcelReader.ReadInt32();
-            int fence1Value     = parcelReader.ReadInt32();
 
-            _bufferQueue[slot].Transform = (HalTransform)transform;
+            long Position = parcelReader.BaseStream.Position;
 
-            _bufferQueue[slot].Crop.Top    = cropTop;
-            _bufferQueue[slot].Crop.Left   = cropLeft;
-            _bufferQueue[slot].Crop.Right  = cropRight;
-            _bufferQueue[slot].Crop.Bottom = cropBottom;
+            QueueBufferObject queueBufferObject = ReadFlattenedObject<QueueBufferObject>(parcelReader);
+
+            parcelReader.BaseStream.Position = Position;
+
+            _bufferQueue[slot].Transform = queueBufferObject.Transform;
+            _bufferQueue[slot].Crop      = queueBufferObject.Crop;
 
             _bufferQueue[slot].State = BufferState.Queued;
 
@@ -217,6 +261,8 @@ namespace Ryujinx.HLE.HOS.Services.Android
         {
             //TODO: Errors.
             int slot = parcelReader.ReadInt32();
+
+            MultiFence fence = ReadFlattenedObject<MultiFence>(parcelReader);
 
             _bufferQueue[slot].State = BufferState.Free;
 
@@ -244,18 +290,39 @@ namespace Ryujinx.HLE.HOS.Services.Android
         {
             int slot = parcelReader.ReadInt32();
 
-            int bufferCount = parcelReader.ReadInt32();
+            bool hasInput = parcelReader.ReadInt32() == 1;
 
-            if (bufferCount > 0)
+            if (hasInput)
             {
-                long bufferSize = parcelReader.ReadInt64();
+                byte[] graphicBuffer = ReadFlattenedObject(parcelReader);
 
                 _bufferQueue[slot].State = BufferState.Free;
 
-                _bufferQueue[slot].Data = new GbpBuffer(parcelReader);
+                using (BinaryReader graphicBufferReader = new BinaryReader(new MemoryStream(graphicBuffer)))
+                {
+                    _bufferQueue[slot].Data = new GbpBuffer(graphicBufferReader);
+                }
+
             }
 
             return MakeReplyParcel(context, 0);
+        }
+
+        private byte[] ReadFlattenedObject(BinaryReader reader)
+        {
+            long flattenedObjectSize = reader.ReadInt64();
+
+            return reader.ReadBytes((int)flattenedObjectSize);
+        }
+
+        private unsafe T ReadFlattenedObject<T>(BinaryReader reader) where T: struct
+        {
+            byte[] data = ReadFlattenedObject(reader);
+
+            fixed (byte* ptr = data)
+            {
+                return Marshal.PtrToStructure<T>((IntPtr)ptr);
+            }
         }
 
         private long MakeReplyParcel(ServiceCtx context, params int[] ints)
@@ -284,13 +351,39 @@ namespace Ryujinx.HLE.HOS.Services.Android
             return 0;
         }
 
+        private GalImageFormat ConvertColorFormat(ColorFormat colorFormat)
+        {
+            switch (colorFormat)
+            {
+                case ColorFormat.A8B8G8R8:
+                    return GalImageFormat.RGBA8  | GalImageFormat.Unorm;
+                case ColorFormat.X8B8G8R8:
+                    return GalImageFormat.RGBX8  | GalImageFormat.Unorm;
+                case ColorFormat.R5G6B5:
+                    return GalImageFormat.BGR565 | GalImageFormat.Unorm;
+                case ColorFormat.A8R8G8B8:
+                    return GalImageFormat.BGRA8  | GalImageFormat.Unorm;
+                case ColorFormat.A4B4G4R4:
+                    return GalImageFormat.RGBA4  | GalImageFormat.Unorm;
+                default:
+                    throw new NotImplementedException($"Color Format \"{colorFormat}\" not implemented!");
+            }
+        }
+
+        // TODO: support multi surface
         private void SendFrameBuffer(ServiceCtx context, int slot)
         {
-            int fbWidth  = _bufferQueue[slot].Data.Width;
-            int fbHeight = _bufferQueue[slot].Data.Height;
+            int fbWidth  = _bufferQueue[slot].Data.Header.Width;
+            int fbHeight = _bufferQueue[slot].Data.Header.Height;
 
-            int nvMapHandle  = BitConverter.ToInt32(_bufferQueue[slot].Data.RawData, 0x4c);
-            int bufferOffset = BitConverter.ToInt32(_bufferQueue[slot].Data.RawData, 0x50);
+            int nvMapHandle = _bufferQueue[slot].Data.Buffer.Surfaces[0].NvMapHandle;
+
+            if (nvMapHandle == 0)
+            {
+                nvMapHandle = _bufferQueue[slot].Data.Buffer.NvMapId;
+            }
+
+            int bufferOffset = _bufferQueue[slot].Data.Buffer.Surfaces[0].Offset;
 
             NvMapHandle map = NvMapIoctl.GetNvMap(context, nvMapHandle);
 
@@ -302,6 +395,10 @@ namespace Ryujinx.HLE.HOS.Services.Android
 
             bool flipX = _bufferQueue[slot].Transform.HasFlag(HalTransform.FlipX);
             bool flipY = _bufferQueue[slot].Transform.HasFlag(HalTransform.FlipY);
+
+            GalImageFormat imageFormat = ConvertColorFormat(_bufferQueue[slot].Data.Buffer.Surfaces[0].ColorFormat);
+
+            int BlockHeight = 1 << _bufferQueue[slot].Data.Buffer.Surfaces[0].BlockHeightLog2;
 
             //Note: Rotation is being ignored.
 
@@ -318,9 +415,9 @@ namespace Ryujinx.HLE.HOS.Services.Android
                 {
                     image = new GalImage(
                         fbWidth,
-                        fbHeight, 1, 16,
+                        fbHeight, 1, BlockHeight,
                         GalMemoryLayout.BlockLinear,
-                        GalImageFormat.RGBA8 | GalImageFormat.Unorm);
+                        imageFormat);
                 }
 
                 context.Device.Gpu.ResourceManager.ClearPbCache();
@@ -378,8 +475,8 @@ namespace Ryujinx.HLE.HOS.Services.Android
 
                     GbpBuffer data = _bufferQueue[slot].Data;
 
-                    if (data.Width  == width &&
-                        data.Height == height)
+                    if (data.Header.Width  == width &&
+                        data.Header.Height == height)
                     {
                         _bufferQueue[slot].State = BufferState.Dequeued;
 

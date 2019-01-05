@@ -106,6 +106,7 @@ namespace Ryujinx.Graphics.Texture
             { GalImageFormat.BGR5A1,      new ImageDescriptor(2,  1,  1,  TargetBuffer.Color) },
             { GalImageFormat.RGB5A1,      new ImageDescriptor(2,  1,  1,  TargetBuffer.Color) },
             { GalImageFormat.RGB565,      new ImageDescriptor(2,  1,  1,  TargetBuffer.Color) },
+            { GalImageFormat.BGR565,      new ImageDescriptor(2,  1,  1,  TargetBuffer.Color) },
             { GalImageFormat.BptcUnorm,   new ImageDescriptor(16, 4,  4,  TargetBuffer.Color) },
             { GalImageFormat.RG16,        new ImageDescriptor(4,  1,  1,  TargetBuffer.Color) },
             { GalImageFormat.RG8,         new ImageDescriptor(2,  1,  1,  TargetBuffer.Color) },
