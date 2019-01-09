@@ -122,6 +122,8 @@ namespace Ryujinx.HLE.FileSystem
 
                     entries.Add(directoryEntry);
                 }
+
+                return entries.ToArray();
             }
 
             return null;
