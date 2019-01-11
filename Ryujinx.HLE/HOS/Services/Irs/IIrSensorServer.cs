@@ -26,7 +26,7 @@ namespace Ryujinx.HLE.HOS.Services.Irs
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceIrs, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceIrs, new { appletResourceUserId });
 
             return 0;
         }
@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Irs
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceIrs, $"Stubbed. AppletResourceUserId: {appletResourceUserId}");
+            Logger.PrintStub(LogClass.ServiceIrs, new { appletResourceUserId });
 
             return 0;
         }

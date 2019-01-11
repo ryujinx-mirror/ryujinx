@@ -32,8 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             int unknown1 = context.RequestData.ReadInt32();
             int unknown2 = context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceMm, $"Stubbed. Unknown0: {unknown0} - " +
-                                                 $"Unknown1: {unknown1} - Unknown2: {unknown2}");
+            Logger.PrintStub(LogClass.ServiceMm, new { unknown0, unknown1, unknown2 });
 
             return 0;
         }
@@ -43,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         {
             context.Device.Gpu.UninitializeVideoDecoder();
 
-            Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceMm);
 
             return 0;
         }
@@ -55,8 +54,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             int unknown1 = context.RequestData.ReadInt32();
             int unknown2 = context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceMm, $"Stubbed. Unknown0: {unknown0} - " +
-                                                 $"Unknown1: {unknown1} - Unknown2: {unknown2}");
+            Logger.PrintStub(LogClass.ServiceMm, new { unknown0, unknown1, unknown2 });
             return 0;
         }
 
@@ -65,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         {
             int unknown0 = context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceMm, $"Stubbed. Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceMm, new { unknown0 });
 
             context.ResponseData.Write(0);
 
@@ -75,7 +73,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         // Initialize()
         public long Initialize(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceMm);
 
             return 0;
         }
@@ -85,7 +83,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         {
             context.Device.Gpu.UninitializeVideoDecoder();
 
-            Logger.PrintStub(LogClass.ServiceMm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceMm);
 
             return 0;
         }
@@ -97,8 +95,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             int unknown1 = context.RequestData.ReadInt32();
             int unknown2 = context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceMm, $"Stubbed. Unknown0: {unknown0} - " +
-                                                 $"Unknown1: {unknown1} - Unknown2: {unknown2}");
+            Logger.PrintStub(LogClass.ServiceMm, new { unknown0, unknown1, unknown2 });
 
             return 0;
         }
@@ -108,7 +105,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         {
             int unknown0 = context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceMm, $"Stubbed. Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceMm, new { unknown0 });
 
             context.ResponseData.Write(0);
 

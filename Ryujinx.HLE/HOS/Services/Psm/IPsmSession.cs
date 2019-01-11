@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_stateChangeEventHandle);
 
-            Logger.PrintStub(LogClass.ServicePsm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServicePsm);
 
             return 0;
         }
@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
                 _stateChangeEventHandle = -1;
             }
 
-            Logger.PrintStub(LogClass.ServicePsm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServicePsm);
 
             return 0;
         }
@@ -69,7 +69,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
         {
             bool chargerTypeChangeEventEnabled = context.RequestData.ReadBoolean();
 
-            Logger.PrintStub(LogClass.ServicePsm, $"Stubbed. ChargerTypeChangeEventEnabled: {chargerTypeChangeEventEnabled}");
+            Logger.PrintStub(LogClass.ServicePsm, new { chargerTypeChangeEventEnabled });
 
             return 0;
         }
@@ -79,7 +79,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
         {
             bool powerSupplyChangeEventEnabled = context.RequestData.ReadBoolean();
 
-            Logger.PrintStub(LogClass.ServicePsm, $"Stubbed. PowerSupplyChangeEventEnabled: {powerSupplyChangeEventEnabled}");
+            Logger.PrintStub(LogClass.ServicePsm, new { powerSupplyChangeEventEnabled });
 
             return 0;
         }
@@ -89,7 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
         {
             bool batteryVoltageStateChangeEventEnabled = context.RequestData.ReadBoolean();
 
-            Logger.PrintStub(LogClass.ServicePsm, $"Stubbed. BatteryVoltageStateChangeEventEnabled: {batteryVoltageStateChangeEventEnabled}");
+            Logger.PrintStub(LogClass.ServicePsm, new { batteryVoltageStateChangeEventEnabled });
 
             return 0;
         }

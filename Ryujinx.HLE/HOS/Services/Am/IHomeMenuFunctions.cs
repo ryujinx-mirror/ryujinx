@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long RequestToGetForeground(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }
@@ -43,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }

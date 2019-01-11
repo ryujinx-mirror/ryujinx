@@ -150,7 +150,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
         public long FinishInitialize(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNv);
 
             return 0;
         }

@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
 
             context.ResponseData.Write((uint)PerformanceConfiguration.PerformanceConfiguration1);
 
-            Logger.PrintStub(LogClass.ServiceApm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceApm);
 
             return 0;
         }

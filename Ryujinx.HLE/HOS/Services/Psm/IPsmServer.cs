@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
 
             context.ResponseData.Write(chargePercentage);
 
-            Logger.PrintStub(LogClass.ServicePsm, $"Stubbed. ChargePercentage: {chargePercentage}");
+            Logger.PrintStub(LogClass.ServicePsm, new { chargePercentage });
 
             return 0;
         }
@@ -42,9 +42,11 @@ namespace Ryujinx.HLE.HOS.Services.Psm
         // GetChargerType() -> u32
         public static long GetChargerType(ServiceCtx context)
         {
-            context.ResponseData.Write((int)ChargerType.ChargerOrDock);
+            ChargerType chargerType = ChargerType.ChargerOrDock;
 
-            Logger.PrintStub(LogClass.ServicePsm, $"Stubbed. ChargerType: {ChargerType.ChargerOrDock}");
+            context.ResponseData.Write((int)chargerType);
+
+            Logger.PrintStub(LogClass.ServicePsm, new { chargerType });
 
             return 0;
         }

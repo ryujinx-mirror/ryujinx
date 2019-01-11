@@ -36,14 +36,14 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
         {
             context.ResponseData.Write(1);
 
-            Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNifm);
 
             return 0;
         }
 
         public long GetResult(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNifm);
 
             return 0;
         }
@@ -67,21 +67,21 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 
         public long Cancel(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNifm);
 
             return 0;
         }
 
         public long Submit(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNifm);
 
             return 0;
         }
 
         public long SetConnectionConfirmationOption(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNifm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNifm);
 
             return 0;
         }

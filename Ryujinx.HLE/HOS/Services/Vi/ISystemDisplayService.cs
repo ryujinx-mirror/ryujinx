@@ -23,14 +23,14 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         public static long SetLayerZ(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceVi, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceVi);
 
             return 0;
         }
 
         public static long SetLayerVisibility(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceVi, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceVi);
 
             return 0;
         }

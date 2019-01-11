@@ -166,7 +166,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             long bufferSize     = context.Request.SendBuff[0].Size;
 
             // TODO: This is stubbed in 2.0.0+, reverse 1.0.0 version for the sake completeness.
-            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
 
             return MakeError(ErrorModule.Os, 1023);
         }
@@ -177,7 +177,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             uint unknown0 = context.RequestData.ReadUInt32();
 
             // TODO: This is stubbed in 2.0.0+, reverse 1.0.0 version for the sake completeness.
-            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
 
             return MakeError(ErrorModule.Os, 1023);
         }
@@ -369,7 +369,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
 
             context.ResponseData.Write(0);
 
-            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
 
             return 0;
         }
@@ -380,8 +380,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             uint  unknown0 = context.RequestData.ReadUInt32();
             ulong unknown1 = context.RequestData.ReadUInt64();
 
-            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {unknown0} - " +
-                                                       $"Unknown1: {unknown1}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0, unknown1 });
 
             return 0;
         }
@@ -391,7 +390,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
         {
             uint unknown0 = context.RequestData.ReadUInt32();
 
-            Logger.PrintStub(LogClass.ServiceSfdnsres, $"Stubbed. Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
 
             return 0;
         }

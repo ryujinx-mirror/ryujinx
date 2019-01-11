@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
         public long Get(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAcc, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAcc);
 
             long position = context.Request.ReceiveBuff[0].Position;
 

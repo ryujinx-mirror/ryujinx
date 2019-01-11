@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
 
         public static long SaveReportWithUser(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServicePrepo, "Stubbed.");
+            Logger.PrintStub(LogClass.ServicePrepo);
 
             return 0;
         }

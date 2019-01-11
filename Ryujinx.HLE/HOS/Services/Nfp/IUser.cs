@@ -46,7 +46,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
 
         public long Initialize(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNfp);
 
             _state = State.Initialized;
 
@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
 
         public long AttachActivateEvent(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNfp);
 
             if (context.Process.HandleTable.GenerateHandle(_activateEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
@@ -69,7 +69,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
 
         public long AttachDeactivateEvent(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNfp);
 
             if (context.Process.HandleTable.GenerateHandle(_deactivateEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
@@ -85,7 +85,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
         {
             context.ResponseData.Write((int)_state);
 
-            Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNfp);
 
             return 0;
         }
@@ -94,7 +94,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
         {
             context.ResponseData.Write((int)_deviceState);
 
-            Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNfp);
 
             return 0;
         }
@@ -103,14 +103,14 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
         {
             context.ResponseData.Write((int)NpadId);
 
-            Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNfp);
 
             return 0;
         }
 
         public long AttachAvailabilityChangeEvent(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceNfp, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNfp);
 
             if (context.Process.HandleTable.GenerateHandle(_availabilityChangeEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {

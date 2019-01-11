@@ -40,28 +40,28 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }
 
         public long Start(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }
 
         public long GetResult(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }
 
         public long PushInData(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }

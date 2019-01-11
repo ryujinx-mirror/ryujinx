@@ -81,7 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             string deviceName = Encoding.ASCII.GetString(deviceNameBuffer);
 
-            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio);
 
             return 0;
         }
@@ -116,7 +116,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio);
 
             return 0;
         }
@@ -125,7 +125,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
         {
             context.ResponseData.Write(2);
 
-            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio);
 
             return 0;
         }
@@ -169,7 +169,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             string deviceName = Encoding.UTF8.GetString(deviceNameBuffer);
 
-            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio);
 
             return 0;
         }
@@ -178,7 +178,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
         {
             context.ResponseData.Write(1f);
 
-            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio);
 
             return 0;
         }
@@ -212,7 +212,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio);
 
             return 0;
         }
@@ -226,7 +226,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio);
 
             return 0;
         }

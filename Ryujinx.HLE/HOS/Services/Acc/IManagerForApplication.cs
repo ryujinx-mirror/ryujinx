@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
         // CheckAvailability()
         public long CheckAvailability(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAcc, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAcc);
 
             return 0;
         }
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
         {
             long networkServiceAccountId = 0xcafe;
 
-            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. NetworkServiceAccountId: {networkServiceAccountId}");
+            Logger.PrintStub(LogClass.ServiceAcc, new { networkServiceAccountId });
 
             context.ResponseData.Write(networkServiceAccountId);
 

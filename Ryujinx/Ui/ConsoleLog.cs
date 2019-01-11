@@ -2,6 +2,8 @@ using Ryujinx.Common.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Text;
 using System.Threading;
 
 namespace Ryujinx
@@ -14,8 +16,6 @@ namespace Ryujinx
 
         private static Dictionary<LogLevel, ConsoleColor> _logColors;
 
-        private static object _consoleLock;
-
         static ConsoleLog()
         {
             _logColors = new Dictionary<LogLevel, ConsoleColor>()
@@ -27,8 +27,6 @@ namespace Ryujinx
             };
 
             _messageQueue = new BlockingCollection<LogEventArgs>(10);
-
-            _consoleLock = new object();
 
             _messageThread = new Thread(() =>
             {
@@ -55,25 +53,46 @@ namespace Ryujinx
 
         private static void PrintLog(LogEventArgs e)
         {
-            string formattedTime = e.Time.ToString(@"hh\:mm\:ss\.fff");
+            StringBuilder sb = new StringBuilder();
 
-            string currentThread = Thread.CurrentThread.ManagedThreadId.ToString("d4");
+            sb.AppendFormat(@"{0:hh\:mm\:ss\.fff}", e.Time);
+            sb.Append(" | ");
+            sb.AppendFormat("{0:d4}", e.ThreadId);
+            sb.Append(' ');
+            sb.Append(e.Message);
 
-            string message = formattedTime + " | " + currentThread + " " + e.Message;
+            if (e.Data != null)
+            {
+                PropertyInfo[] props = e.Data.GetType().GetProperties();
+
+                sb.Append(' ');
+
+                foreach (var prop in props)
+                {
+                    sb.Append(prop.Name);
+                    sb.Append(": ");
+                    sb.Append(prop.GetValue(e.Data));
+                    sb.Append(" - ");
+                }
+
+                // We remove the final '-' from the string
+                if (props.Length > 0)
+                {
+                    sb.Remove(sb.Length - 3, 3);
+                }
+            }
 
             if (_logColors.TryGetValue(e.Level, out ConsoleColor color))
             {
-                lock (_consoleLock)
-                {
-                    Console.ForegroundColor = color;
+                Console.ForegroundColor = color;
 
-                    Console.WriteLine(message);
-                    Console.ResetColor();
-                }
+                Console.WriteLine(sb.ToString());
+
+                Console.ResetColor();
             }
             else
             {
-                Console.WriteLine(message);
+                Console.WriteLine(sb.ToString());
             }
         }
 

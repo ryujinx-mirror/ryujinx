@@ -1,4 +1,5 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
@@ -117,7 +118,7 @@ namespace Ryujinx.HLE.HOS.Services
             {
                 string dbgMessage = $"{context.Session.ServiceName} {service.GetType().Name}: {commandId}";
 
-                throw new NotImplementedException(dbgMessage);
+                throw new ServiceNotImplementedException(context, dbgMessage);
             }
         }
 

@@ -86,7 +86,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             context.ResponseData.Write((byte)0); //Unknown value.
 
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }
@@ -115,7 +115,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }

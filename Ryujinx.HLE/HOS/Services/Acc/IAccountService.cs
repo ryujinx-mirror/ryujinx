@@ -118,7 +118,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
         {
             long unknown = context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {unknown}");
+            Logger.PrintStub(LogClass.ServiceAcc, new { unknown });
 
             context.ResponseData.Write(false);
 
@@ -130,7 +130,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
         {
             bool unknown = context.RequestData.ReadBoolean();
 
-            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {unknown}");
+            Logger.PrintStub(LogClass.ServiceAcc, new { unknown });
 
             UserProfile profile = context.Device.System.State.LastOpenUser;
 
@@ -144,7 +144,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
         {
             long unknown = context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceAcc, $"Stubbed. Unknown: {unknown}");
+            Logger.PrintStub(LogClass.ServiceAcc, new { unknown });
 
             return 0;
         }

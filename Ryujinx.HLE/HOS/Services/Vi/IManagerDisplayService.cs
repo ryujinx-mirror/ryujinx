@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         public static long CreateManagedLayer(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceVi, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceVi);
 
             context.ResponseData.Write(0L); //LayerId
 
@@ -32,21 +32,21 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         public long DestroyManagedLayer(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceVi, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceVi);
 
             return 0;
         }
 
         public static long AddToLayerStack(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceVi, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceVi);
 
             return 0;
         }
 
         public static long SetLayerVisibility(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceVi, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceVi);
 
             return 0;
         }

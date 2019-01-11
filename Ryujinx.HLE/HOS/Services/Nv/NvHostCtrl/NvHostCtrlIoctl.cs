@@ -145,7 +145,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
 
             int eventId = context.Memory.ReadInt32(inputPosition);
 
-            Logger.PrintStub(LogClass.ServiceNv, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceNv);
 
             return NvResult.Success;
         }

@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
             long uIdLow  = context.RequestData.ReadInt64();
             long uIdHigh = context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             context.ResponseData.Write(0L);
 
@@ -90,7 +90,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long GetPseudoDeviceId(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             context.ResponseData.Write(0L);
             context.ResponseData.Write(0L);
@@ -100,7 +100,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long InitializeGamePlayRecording(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }
@@ -109,7 +109,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             int state = context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }

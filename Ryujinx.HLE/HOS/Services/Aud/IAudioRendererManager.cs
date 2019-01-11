@@ -178,8 +178,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             long appletResourceUserId = context.RequestData.ReadInt64();
             int  revisionInfo         = context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceAudio, $"Stubbed. AppletResourceUserId: {appletResourceUserId} - " +
-                                                                $"RevisionInfo: {revisionInfo}");
+            Logger.PrintStub(LogClass.ServiceAudio, new { appletResourceUserId, revisionInfo });
 
             return GetAudioDeviceService(context);
         }

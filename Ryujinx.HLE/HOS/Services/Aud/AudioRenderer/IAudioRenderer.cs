@@ -110,7 +110,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
         {
             context.ResponseData.Write((int)_playState);
 
-            Logger.PrintStub(LogClass.ServiceAudio, $"Stubbed. Renderer State: {Enum.GetName(typeof(PlayState), _playState)}");
+            Logger.PrintStub(LogClass.ServiceAudio, new { State = Enum.GetName(typeof(PlayState), _playState) });
 
             return 0;
         }
@@ -249,7 +249,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         public long StartAudioRenderer(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio);
 
             _playState = PlayState.Playing;
 
@@ -258,7 +258,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         public long StopAudioRenderer(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAudio, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAudio);
 
             _playState = PlayState.Stopped;
 

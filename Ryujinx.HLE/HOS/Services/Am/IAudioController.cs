@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
             float appletVolume        = context.RequestData.ReadSingle();
             float libraryAppletVolume = context.RequestData.ReadSingle();
 
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }
@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             context.ResponseData.Write(1f);
 
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }
@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             context.ResponseData.Write(1f);
 
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }
@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
             float unknown0 = context.RequestData.ReadSingle();
             long  unknown1 = context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }
@@ -64,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             float unknown0 = context.RequestData.ReadSingle();
 
-            Logger.PrintStub(LogClass.ServiceAm, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return 0;
         }

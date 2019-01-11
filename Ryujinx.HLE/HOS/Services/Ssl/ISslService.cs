@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
             int  sslVersion = context.RequestData.ReadInt32();
             long unknown    = context.RequestData.ReadInt64();
 
-            Logger.PrintStub(LogClass.ServiceSsl, $"Stubbed. SslVersion: {sslVersion} - Unknown: {unknown}");
+            Logger.PrintStub(LogClass.ServiceSsl, new { sslVersion, unknown });
 
             MakeObject(context, new ISslContext());
 
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
         {
             int version = context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceSsl, $"Stubbed. Version: {version}");
+            Logger.PrintStub(LogClass.ServiceSsl, new { version });
 
             return 0;
         }

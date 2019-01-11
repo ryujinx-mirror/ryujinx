@@ -277,7 +277,7 @@ namespace Ryujinx.HLE.HOS.Services.Bsd
             // bsd_error
             context.ResponseData.Write(0);
 
-            Logger.PrintStub(LogClass.ServiceBsd, "Stubbed.");
+            Logger.PrintStub(LogClass.ServiceBsd);
 
             return 0;
         }
@@ -287,7 +287,7 @@ namespace Ryujinx.HLE.HOS.Services.Bsd
         {
             ulong unknown0 = context.RequestData.ReadUInt64();
 
-            Logger.PrintStub(LogClass.ServiceBsd, $"Stubbed. Unknown0: {unknown0}");
+            Logger.PrintStub(LogClass.ServiceBsd, new { unknown0 });
 
             return 0;
         }
@@ -316,8 +316,7 @@ namespace Ryujinx.HLE.HOS.Services.Bsd
 
             WriteBsdResult(context, -1, LinuxError.EOPNOTSUPP);
 
-            Logger.PrintStub(LogClass.ServiceBsd, $"Stubbed. Path: {path} - " +
-                                                  $"Flags: {flags}");
+            Logger.PrintStub(LogClass.ServiceBsd, new { path, flags });
 
             return 0;
         }
@@ -327,7 +326,7 @@ namespace Ryujinx.HLE.HOS.Services.Bsd
         {
             WriteBsdResult(context, -1, LinuxError.EOPNOTSUPP);
 
-            Logger.PrintStub(LogClass.ServiceBsd, $"Stubbed.");
+            Logger.PrintStub(LogClass.ServiceBsd);
 
             return 0;
         }
@@ -462,7 +461,7 @@ namespace Ryujinx.HLE.HOS.Services.Bsd
         {
             WriteBsdResult(context, -1, LinuxError.EOPNOTSUPP);
 
-            Logger.PrintStub(LogClass.ServiceBsd, $"Stubbed.");
+            Logger.PrintStub(LogClass.ServiceBsd);
 
             return 0;
         }
