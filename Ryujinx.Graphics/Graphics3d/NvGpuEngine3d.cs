@@ -24,6 +24,9 @@ namespace Ryujinx.Graphics.Graphics3d
 
         private ConstBuffer[][] ConstBuffers;
 
+        // Height kept for flipping y axis
+        private int ViewportHeight = 0;
+
         private int CurrentInstance = 0;
 
         public NvGpuEngine3d(NvGpu Gpu)
@@ -97,6 +100,7 @@ namespace Ryujinx.Graphics.Graphics3d
             SetCullFace(State);
             SetDepth(State);
             SetStencil(State);
+            SetScissor(State);
             SetBlending(State);
             SetColorMask(State);
             SetPrimitiveRestart(State);
@@ -207,6 +211,8 @@ namespace Ryujinx.Graphics.Graphics3d
             GalImage Image = new GalImage(Width, Height, 1, GobBlockHeight, Layout, Format);
 
             Gpu.ResourceManager.SendColorBuffer(Vmm, Key, FbIndex, Image);
+
+            ViewportHeight = VpH;
 
             Gpu.Renderer.RenderTarget.SetViewport(FbIndex, VpX, VpY, VpW, VpH);
         }
@@ -404,6 +410,36 @@ namespace Ryujinx.Graphics.Graphics3d
                 State.StencilFrontOpZFail  =    (GalStencilOp)ReadRegister(NvGpuEngine3dReg.StencilFrontOpZFail);
                 State.StencilFrontOpZPass  =    (GalStencilOp)ReadRegister(NvGpuEngine3dReg.StencilFrontOpZPass);
                 State.StencilFrontMask     =            (uint)ReadRegister(NvGpuEngine3dReg.StencilFrontMask);
+            }
+        }
+
+        private void SetScissor(GalPipelineState State)
+        {
+            // FIXME: Stubbed, only the first scissor test is valid without a geometry shader loaded. At time of writing geometry shaders are also stubbed.
+            // Once geometry shaders are fixed it should be equal to GalPipelineState.RenderTargetCount when shader loaded, otherwise equal to 1
+            State.ScissorTestCount = 1;
+
+            for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
+            {
+                State.ScissorTestEnabled[Index] = ReadRegisterBool(NvGpuEngine3dReg.ScissorEnable + Index * 4);
+
+                if (State.ScissorTestEnabled[Index])
+                {
+                    uint ScissorHorizontal        = (uint)ReadRegister(NvGpuEngine3dReg.ScissorHorizontal + Index * 4);
+                    uint ScissorVertical          = (uint)ReadRegister(NvGpuEngine3dReg.ScissorVertical + Index * 4);
+
+                    State.ScissorTestX[Index]     = (int)((ScissorHorizontal & 0xFFFF) * State.FlipX);                          // X, lower 16 bits
+                    State.ScissorTestWidth[Index] = (int)((ScissorHorizontal >> 16) * State.FlipX) - State.ScissorTestX[Index]; // Width, right side is upper 16 bits
+
+                    State.ScissorTestY[Index]      = (int)((ScissorVertical & 0xFFFF));                                         // Y, lower 16 bits
+                    State.ScissorTestHeight[Index] = (int)((ScissorVertical >> 16)) - State.ScissorTestY[Index];                // Height, top side is upper 16 bits
+
+                    // Y coordinates may have to be flipped
+                    if ((int)State.FlipY == -1)
+                    {
+                        State.ScissorTestY[Index] = ViewportHeight - State.ScissorTestY[Index] - State.ScissorTestHeight[Index];
+                    }
+                }
             }
         }
 

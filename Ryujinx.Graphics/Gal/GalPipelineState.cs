@@ -91,6 +91,13 @@
         public GalStencilOp    StencilFrontOpZPass;
         public uint            StencilFrontMask;
 
+        public int             ScissorTestCount;
+        public bool[]          ScissorTestEnabled;
+        public int[]           ScissorTestX;
+        public int[]           ScissorTestY;
+        public int[]           ScissorTestWidth;
+        public int[]           ScissorTestHeight;
+
         public bool         BlendIndependent;
         public BlendState[] Blends;
 
@@ -110,6 +117,12 @@
             }
 
             Blends = new BlendState[RenderTargetsCount];
+
+            ScissorTestEnabled  = new bool[RenderTargetsCount];
+            ScissorTestY        = new int[RenderTargetsCount];
+            ScissorTestX        = new int[RenderTargetsCount];
+            ScissorTestWidth    = new int[RenderTargetsCount];
+            ScissorTestHeight   = new int[RenderTargetsCount];
 
             ColorMasks = new ColorMaskState[RenderTargetsCount];
         }

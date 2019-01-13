@@ -270,6 +270,57 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 }
             }
 
+
+            // Scissor Test
+            bool forceUpdate;
+
+            for (int Index = 0; Index < New.ScissorTestCount; Index++)
+            {
+                forceUpdate = false;
+
+                if (New.ScissorTestEnabled[Index] != Old.ScissorTestEnabled[Index])
+                {
+                    if (New.ScissorTestEnabled[Index])
+                    {
+                        // If there is only 1 scissor test geometry shaders are disables so the scissor test applies to all viewports
+                        if (New.ScissorTestCount == 1)
+                        {
+                            GL.Enable(EnableCap.ScissorTest);
+                        }
+                        else
+                        {
+                            GL.Enable(IndexedEnableCap.ScissorTest, Index);
+                        }
+                        forceUpdate = true;
+                    }
+                    else
+                    {
+                        GL.Disable(IndexedEnableCap.ScissorTest, Index);
+                    }
+                }
+
+                if (New.ScissorTestEnabled[Index] &&
+                   (New.ScissorTestX[Index]      != Old.ScissorTestX[Index]      ||
+                    New.ScissorTestY[Index]      != Old.ScissorTestY[Index]      ||
+                    New.ScissorTestWidth[Index]  != Old.ScissorTestWidth[Index]  ||
+                    New.ScissorTestHeight[Index] != Old.ScissorTestHeight[Index] ||
+                    forceUpdate)) // Force update intentionally last to reduce if comparisons
+                {
+                    // If there is only 1 scissor test geometry shaders are disables so the scissor test applies to all viewports
+                    if (New.ScissorTestCount == 1)
+                    {
+                        GL.Scissor(New.ScissorTestX[Index], New.ScissorTestY[Index],
+                                   New.ScissorTestWidth[Index], New.ScissorTestHeight[Index]);
+                    }
+                    else
+                    {
+                        GL.ScissorIndexed(Index, New.ScissorTestX[Index], New.ScissorTestY[Index],
+                                                 New.ScissorTestWidth[Index], New.ScissorTestHeight[Index]);
+                    }
+                }
+            }
+
+
             if (New.BlendIndependent)
             {
                 for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
