@@ -1,12 +1,18 @@
+using System.Threading;
+
 namespace Ryujinx.HLE.HOS.Kernel.Common
 {
     class KAutoObject
     {
         protected Horizon System;
 
+        private int _referenceCount;
+
         public KAutoObject(Horizon system)
         {
             System = system;
+
+            _referenceCount = 1;
         }
 
         public virtual KernelResult SetName(string name)
@@ -38,5 +44,20 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
             return null;
         }
+
+        public void IncrementReferenceCount()
+        {
+            Interlocked.Increment(ref _referenceCount);
+        }
+
+        public void DecrementReferenceCount()
+        {
+            if (Interlocked.Decrement(ref _referenceCount) == 0)
+            {
+                Destroy();
+            }
+        }
+
+        protected virtual void Destroy() { }
     }
 }

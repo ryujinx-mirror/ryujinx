@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         private SortedDictionary<ulong, KTlsPageInfo> _fullTlsPages;
         private SortedDictionary<ulong, KTlsPageInfo> _freeTlsPages;
 
-        public int DefaultCpuCore { get; private set; }
+        public int DefaultCpuCore { get; set; }
 
         public bool Debug { get; private set; }
 
@@ -557,14 +557,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         private KernelResult FreeTlsPage(KTlsPageInfo pageInfo)
         {
-            KernelResult result = MemoryManager.ConvertVaToPa(pageInfo.PageAddr, out ulong tlsPagePa);
-
-            if (result != KernelResult.Success)
+            if (!MemoryManager.ConvertVaToPa(pageInfo.PageAddr, out ulong tlsPagePa))
             {
                 throw new InvalidOperationException("Unexpected failure translating virtual address to physical.");
             }
 
-            result = MemoryManager.UnmapForKernel(pageInfo.PageAddr, 1, MemoryState.ThreadLocal);
+            KernelResult result = MemoryManager.UnmapForKernel(pageInfo.PageAddr, 1, MemoryState.ThreadLocal);
 
             if (result == KernelResult.Success)
             {
@@ -636,8 +634,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                 void CleanUpForError()
                 {
-                    mainThread?.Terminate();
                     HandleTable.Destroy();
+
+                    mainThread?.DecrementReferenceCount();
 
                     if (_mainThreadStackSize != 0)
                     {
@@ -646,6 +645,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                         ulong stackPagesCount = _mainThreadStackSize / KMemoryManager.PageSize;
 
                         MemoryManager.UnmapForKernel(stackBottom, stackPagesCount, MemoryState.Stack);
+
+                        _mainThreadStackSize = 0;
                     }
 
                     memoryResourceLimit?.Release(LimitableResource.Memory, stackSizeRounded);
@@ -755,6 +756,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 } */
 
                 mainThread.Reschedule(ThreadSchedState.Running);
+
+                if (result == KernelResult.Success)
+                {
+                    mainThread.IncrementReferenceCount();
+                }
+
+                mainThread.DecrementReferenceCount();
 
                 return result;
             }

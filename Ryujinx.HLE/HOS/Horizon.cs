@@ -7,6 +7,7 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.Services.Sm;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Npdm;
@@ -157,14 +158,16 @@ namespace Ryujinx.HLE.HOS
             hidPageList .AddRange(hidPa,  HidSize  / KMemoryManager.PageSize);
             fontPageList.AddRange(fontPa, FontSize / KMemoryManager.PageSize);
 
-            HidSharedMem  = new KSharedMemory(hidPageList,  0, 0, MemoryPermission.Read);
-            FontSharedMem = new KSharedMemory(fontPageList, 0, 0, MemoryPermission.Read);
+            HidSharedMem  = new KSharedMemory(this, hidPageList,  0, 0, MemoryPermission.Read);
+            FontSharedMem = new KSharedMemory(this, fontPageList, 0, 0, MemoryPermission.Read);
 
             AppletState = new AppletStateMgr(this);
 
             AppletState.SetFocus(true);
 
             Font = new SharedFontManager(device, (long)(fontPa - DramMemoryMap.DramBase));
+
+            IUserInterface.InitializePort(this);
 
             VsyncEvent = new KEvent(this);
 
@@ -257,6 +260,14 @@ namespace Ryujinx.HLE.HOS
             ContentManager.LoadEntries();
 
             LoadNca(mainNca, controlNca);
+        }
+
+        public void LoadKip(string kipFile)
+        {
+            using (FileStream fs = new FileStream(kipFile, FileMode.Open))
+            {
+                ProgramLoader.LoadKernelInitalProcess(this, new KernelInitialProcess(fs));
+            }
         }
 
         private (Nca Main, Nca Control) GetXciGameData(Xci xci)

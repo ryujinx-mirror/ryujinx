@@ -9,6 +9,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
     class KMemoryManager
     {
+        private static readonly int[] MappingUnitSizes = new int[]
+        {
+            0x1000,
+            0x10000,
+            0x200000,
+            0x400000,
+            0x2000000,
+            0x40000000
+        };
+
         public const int PageSize = 0x1000;
 
         private const int KMemoryBlockSize = 0x40;
@@ -335,7 +345,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             ulong addrSpacePagesCount = (addrSpaceEnd - addrSpaceStart) / PageSize;
 
-            InsertBlock(addrSpaceStart, addrSpacePagesCount, MemoryState.Unmapped);
+            _blocks.AddFirst(new KMemoryBlock(
+                addrSpaceStart,
+                addrSpacePagesCount,
+                MemoryState.Unmapped,
+                MemoryPermission.None,
+                MemoryAttribute.None));
 
             return KernelResult.Success;
         }
@@ -488,67 +503,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 return KernelResult.OutOfMemory;
             }
 
-            ulong reservedPagesCount = _isKernel ? 1UL : 4UL;
-
             lock (_blocks)
             {
-                if (_aslrEnabled)
-                {
-                    ulong totalNeededSize = (reservedPagesCount + neededPagesCount) * PageSize;
-
-                    ulong remainingPages = regionPagesCount - neededPagesCount;
-
-                    ulong aslrMaxOffset = ((remainingPages + reservedPagesCount) * PageSize) / (ulong)alignment;
-
-                    for (int attempt = 0; attempt < 8; attempt++)
-                    {
-                        address = BitUtils.AlignDown(regionStart + GetRandomValue(0, aslrMaxOffset) * (ulong)alignment, alignment);
-
-                        ulong endAddr = address + totalNeededSize;
-
-                        KMemoryInfo info = FindBlock(address).GetInfo();
-
-                        if (info.State != MemoryState.Unmapped)
-                        {
-                            continue;
-                        }
-
-                        ulong currBaseAddr = info.Address + reservedPagesCount * PageSize;
-                        ulong currEndAddr  = info.Address + info.Size;
-
-                        if (address     >= regionStart       &&
-                            address     >= currBaseAddr      &&
-                            endAddr - 1 <= regionEndAddr - 1 &&
-                            endAddr - 1 <= currEndAddr   - 1)
-                        {
-                            break;
-                        }
-                    }
-
-                    if (address == 0)
-                    {
-                        ulong aslrPage = GetRandomValue(0, aslrMaxOffset);
-
-                        address = FindFirstFit(
-                            regionStart      + aslrPage * PageSize,
-                            regionPagesCount - aslrPage,
-                            neededPagesCount,
-                            alignment,
-                            0,
-                            reservedPagesCount);
-                    }
-                }
-
-                if (address == 0)
-                {
-                    address = FindFirstFit(
-                        regionStart,
-                        regionPagesCount,
-                        neededPagesCount,
-                        alignment,
-                        0,
-                        reservedPagesCount);
-                }
+                address = AllocateVa(regionStart, regionPagesCount, neededPagesCount, alignment);
 
                 if (address == 0)
                 {
@@ -977,6 +934,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     MemoryState.Reserved,
                     MemoryPermission.None,
                     MemoryAttribute.None,
+                    MemoryPermission.None,
                     0,
                     0);
             }
@@ -1325,22 +1283,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             {
                 ulong mappedSize = 0;
 
-                KMemoryInfo info;
-
-                LinkedListNode<KMemoryBlock> node = FindBlockNode(address);
-
-                do
+                foreach (KMemoryInfo info in IterateOverRange(address, endAddr))
                 {
-                    info = node.Value.GetInfo();
-
                     if (info.State != MemoryState.Unmapped)
                     {
                         mappedSize += GetSizeInRange(info, address, endAddr);
                     }
-
-                    node = node.Next;
                 }
-                while (info.Address + info.Size < endAddr && node != null);
 
                 if (mappedSize == size)
                 {
@@ -1419,16 +1368,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                 KPageList pageList = new KPageList();
 
-                KMemoryInfo info;
-
-                LinkedListNode<KMemoryBlock> baseNode = FindBlockNode(address);
-
-                LinkedListNode<KMemoryBlock> node = baseNode;
-
-                do
+                foreach (KMemoryInfo info in IterateOverRange(address, endAddr))
                 {
-                    info = node.Value.GetInfo();
-
                     if (info.State == MemoryState.Heap)
                     {
                         if (info.Attribute != MemoryAttribute.None)
@@ -1447,10 +1388,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     {
                         return KernelResult.InvalidMemState;
                     }
-
-                    node = node.Next;
                 }
-                while (info.Address + info.Size < endAddr && node != null);
 
                 if (heapMappedSize == 0)
                 {
@@ -1465,12 +1403,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 //Try to unmap all the heap mapped memory inside range.
                 KernelResult result = KernelResult.Success;
 
-                node = baseNode;
-
-                do
+                foreach (KMemoryInfo info in IterateOverRange(address, endAddr))
                 {
-                    info = node.Value.GetInfo();
-
                     if (info.State == MemoryState.Heap)
                     {
                         ulong blockSize    = GetSizeInRange(info, address, endAddr);
@@ -1488,10 +1422,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                             break;
                         }
                     }
-
-                    node = node.Next;
                 }
-                while (info.Address + info.Size < endAddr && node != null);
 
                 if (result == KernelResult.Success)
                 {
@@ -1514,10 +1445,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         private void MapPhysicalMemory(KPageList pageList, ulong address, ulong endAddr)
         {
-            KMemoryInfo info;
-
-            LinkedListNode<KMemoryBlock> node = FindBlockNode(address);
-
             LinkedListNode<KPageNode> pageListNode = pageList.Nodes.First;
 
             KPageNode pageNode = pageListNode.Value;
@@ -1525,10 +1452,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             ulong srcPa      = pageNode.Address;
             ulong srcPaPages = pageNode.PagesCount;
 
-            do
+            foreach (KMemoryInfo info in IterateOverRange(address, endAddr))
             {
-                info = node.Value.GetInfo();
-
                 if (info.State == MemoryState.Unmapped)
                 {
                     ulong blockSize = GetSizeInRange(info, address, endAddr);
@@ -1570,10 +1495,777 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         dstVaPages -= pagesCount;
                     }
                 }
-
-                node = node.Next;
             }
-            while (info.Address + info.Size < endAddr && node != null);
+        }
+
+        public KernelResult CopyDataToCurrentProcess(
+            ulong            dst,
+            ulong            size,
+            ulong            src,
+            MemoryState      stateMask,
+            MemoryState      stateExpected,
+            MemoryPermission permission,
+            MemoryAttribute  attributeMask,
+            MemoryAttribute  attributeExpected)
+        {
+            //Client -> server.
+            return CopyDataFromOrToCurrentProcess(
+                size,
+                src,
+                dst,
+                stateMask,
+                stateExpected,
+                permission,
+                attributeMask,
+                attributeExpected,
+                toServer: true);
+        }
+
+        public KernelResult CopyDataFromCurrentProcess(
+            ulong            dst,
+            ulong            size,
+            MemoryState      stateMask,
+            MemoryState      stateExpected,
+            MemoryPermission permission,
+            MemoryAttribute  attributeMask,
+            MemoryAttribute  attributeExpected,
+            ulong            src)
+        {
+            //Server -> client.
+            return CopyDataFromOrToCurrentProcess(
+                size,
+                dst,
+                src,
+                stateMask,
+                stateExpected,
+                permission,
+                attributeMask,
+                attributeExpected,
+                toServer: false);
+        }
+
+        private KernelResult CopyDataFromOrToCurrentProcess(
+            ulong            size,
+            ulong            clientAddress,
+            ulong            serverAddress,
+            MemoryState      stateMask,
+            MemoryState      stateExpected,
+            MemoryPermission permission,
+            MemoryAttribute  attributeMask,
+            MemoryAttribute  attributeExpected,
+            bool             toServer)
+        {
+            if (AddrSpaceStart > clientAddress)
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            ulong srcEndAddr = clientAddress + size;
+
+            if (srcEndAddr <= clientAddress || srcEndAddr - 1 > AddrSpaceEnd - 1)
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            lock (_blocks)
+            {
+                if (CheckRange(
+                    clientAddress,
+                    size,
+                    stateMask,
+                    stateExpected,
+                    permission,
+                    permission,
+                    attributeMask | MemoryAttribute.Uncached,
+                    attributeExpected))
+                {
+                    KProcess currentProcess = _system.Scheduler.GetCurrentProcess();
+
+                    serverAddress = currentProcess.MemoryManager.GetDramAddressFromVa(serverAddress);
+
+                    if (toServer)
+                    {
+                        _system.Device.Memory.Copy(serverAddress, GetDramAddressFromVa(clientAddress), size);
+                    }
+                    else
+                    {
+                        _system.Device.Memory.Copy(GetDramAddressFromVa(clientAddress), serverAddress, size);
+                    }
+
+                    return KernelResult.Success;
+                }
+                else
+                {
+                    return KernelResult.InvalidMemState;
+                }
+            }
+        }
+
+        public KernelResult MapBufferFromClientProcess(
+            ulong            size,
+            ulong            src,
+            KMemoryManager   sourceMemMgr,
+            MemoryPermission permission,
+            MemoryState      state,
+            bool             copyData,
+            out ulong        dst)
+        {
+            dst = 0;
+
+            KernelResult result = sourceMemMgr.GetPagesForMappingIntoAnotherProcess(
+                src,
+                size,
+                permission,
+                state,
+                copyData,
+                _aslrDisabled,
+                _memRegion,
+                out KPageList pageList);
+
+            if (result != KernelResult.Success)
+            {
+                return result;
+            }
+
+            result = MapPagesFromAnotherProcess(size, src, permission, state, pageList, out ulong va);
+
+            if (result != KernelResult.Success)
+            {
+                sourceMemMgr.UnmapIpcRestorePermission(src, size, state);
+            }
+            else
+            {
+                dst = va;
+            }
+
+            return result;
+        }
+
+        private KernelResult GetPagesForMappingIntoAnotherProcess(
+            ulong            address,
+            ulong            size,
+            MemoryPermission permission,
+            MemoryState      state,
+            bool             copyData,
+            bool             aslrDisabled,
+            MemoryRegion     region,
+            out KPageList    pageList)
+        {
+            pageList = null;
+
+            if (AddrSpaceStart > address)
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            ulong endAddr = address + size;
+
+            if (endAddr <= address || endAddr - 1 > AddrSpaceEnd - 1)
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            MemoryState stateMask;
+
+            switch (state)
+            {
+                case MemoryState.IpcBuffer0: stateMask = MemoryState.IpcSendAllowedType0; break;
+                case MemoryState.IpcBuffer1: stateMask = MemoryState.IpcSendAllowedType1; break;
+                case MemoryState.IpcBuffer3: stateMask = MemoryState.IpcSendAllowedType3; break;
+
+                default: return KernelResult.InvalidCombination;
+            }
+
+            MemoryPermission permissionMask = permission == MemoryPermission.ReadAndWrite
+                ? MemoryPermission.None
+                : MemoryPermission.Read;
+
+            MemoryAttribute attributeMask = MemoryAttribute.Borrowed | MemoryAttribute.Uncached;
+
+            if (state == MemoryState.IpcBuffer0)
+            {
+                attributeMask |= MemoryAttribute.DeviceMapped;
+            }
+
+            ulong addressRounded   = BitUtils.AlignUp  (address, PageSize);
+            ulong endAddrRounded   = BitUtils.AlignUp  (endAddr, PageSize);
+            ulong endAddrTruncated = BitUtils.AlignDown(endAddr, PageSize);
+
+            if (!_blockAllocator.CanAllocate(MaxBlocksNeededForInsertion))
+            {
+                return KernelResult.OutOfResource;
+            }
+
+            ulong visitedSize = 0;
+
+            void CleanUpForError()
+            {
+                ulong endAddrVisited = address + visitedSize;
+
+                foreach (KMemoryInfo info in IterateOverRange(address, endAddrVisited))
+                {
+                    if ((info.Permission & MemoryPermission.ReadAndWrite) != permissionMask && info.IpcRefCount == 0)
+                    {
+                        ulong blockAddress = GetAddrInRange(info, addressRounded);
+                        ulong blockSize    = GetSizeInRange(info, addressRounded, endAddrVisited);
+
+                        ulong blockPagesCount = blockSize / PageSize;
+
+                        if (DoMmuOperation(
+                            blockAddress,
+                            blockPagesCount,
+                            0,
+                            false,
+                            info.Permission,
+                            MemoryOperation.ChangePermRw) != KernelResult.Success)
+                        {
+                            throw new InvalidOperationException("Unexpected failure trying to restore permission.");
+                        }
+                    }
+                }
+            }
+
+            lock (_blocks)
+            {
+                KernelResult result;
+
+                foreach (KMemoryInfo info in IterateOverRange(address, endAddrRounded))
+                {
+                    //Check if the block state matches what we expect.
+                    if ((info.State      & stateMask)     != stateMask  ||
+                        (info.Permission & permission)    != permission ||
+                        (info.Attribute  & attributeMask) != MemoryAttribute.None)
+                    {
+                        CleanUpForError();
+
+                        return KernelResult.InvalidMemState;
+                    }
+
+                    ulong blockAddress = GetAddrInRange(info, addressRounded);
+                    ulong blockSize    = GetSizeInRange(info, addressRounded, endAddrTruncated);
+
+                    ulong blockPagesCount = blockSize / PageSize;
+
+                    if ((info.Permission & MemoryPermission.ReadAndWrite) != permissionMask && info.IpcRefCount == 0)
+                    {
+                        result = DoMmuOperation(
+                            blockAddress,
+                            blockPagesCount,
+                            0,
+                            false,
+                            permissionMask,
+                            MemoryOperation.ChangePermRw);
+
+                        if (result != KernelResult.Success)
+                        {
+                            CleanUpForError();
+
+                            return result;
+                        }
+                    }
+
+                    visitedSize += blockSize;
+                }
+
+                result = GetPagesForIpcTransfer(address, size, copyData, aslrDisabled, region, out pageList);
+
+                if (result != KernelResult.Success)
+                {
+                    CleanUpForError();
+
+                    return result;
+                }
+
+                if (visitedSize != 0)
+                {
+                    InsertBlock(address, visitedSize / PageSize, SetIpcMappingPermissions, permissionMask);
+                }
+            }
+
+            return KernelResult.Success;
+        }
+
+        private KernelResult GetPagesForIpcTransfer(
+            ulong         address,
+            ulong         size,
+            bool          copyData,
+            bool          aslrDisabled,
+            MemoryRegion  region,
+            out KPageList pageList)
+        {
+            pageList = null;
+
+            ulong addressTruncated = BitUtils.AlignDown(address, PageSize);
+            ulong addressRounded   = BitUtils.AlignUp  (address, PageSize);
+
+            ulong endAddr = address + size;
+
+            ulong dstFirstPagePa = AllocateSinglePage(region, aslrDisabled);
+
+            if (dstFirstPagePa == 0)
+            {
+                return KernelResult.OutOfMemory;
+            }
+
+            ulong dstLastPagePa = 0;
+
+            void CleanUpForError()
+            {
+                FreeSinglePage(region, dstFirstPagePa);
+
+                if (dstLastPagePa != 0)
+                {
+                    FreeSinglePage(region, dstLastPagePa);
+                }
+            }
+
+            ulong firstPageFillAddress = dstFirstPagePa;
+
+            if (!ConvertVaToPa(addressTruncated, out ulong srcFirstPagePa))
+            {
+                CleanUpForError();
+
+                return KernelResult.InvalidMemState;
+            }
+
+            ulong unusedSizeAfter;
+
+            //When the start address is unaligned, we can't safely map the
+            //first page as it would expose other undesirable information on the
+            //target process. So, instead we allocate new pages, copy the data
+            //inside the range, and then clear the remaining space.
+            //The same also holds for the last page, if the end address
+            //(address + size) is also not aligned.
+            if (copyData)
+            {
+                ulong unusedSizeBefore = address - addressTruncated;
+
+                _system.Device.Memory.Set(dstFirstPagePa, 0, unusedSizeBefore);
+
+                ulong copySize = addressRounded <= endAddr ? addressRounded - address : size;
+
+                _system.Device.Memory.Copy(
+                    GetDramAddressFromPa(dstFirstPagePa + unusedSizeBefore),
+                    GetDramAddressFromPa(srcFirstPagePa + unusedSizeBefore), copySize);
+
+                firstPageFillAddress += unusedSizeBefore + copySize;
+
+                unusedSizeAfter = addressRounded > endAddr ? addressRounded - endAddr : 0;
+            }
+            else
+            {
+                unusedSizeAfter = PageSize;
+            }
+
+            if (unusedSizeAfter != 0)
+            {
+                _system.Device.Memory.Set(firstPageFillAddress, 0, unusedSizeAfter);
+            }
+
+            KPageList pages = new KPageList();
+
+            if (pages.AddRange(dstFirstPagePa, 1) != KernelResult.Success)
+            {
+                CleanUpForError();
+
+                return KernelResult.OutOfResource;
+            }
+
+            ulong endAddrTruncated = BitUtils.AlignDown(endAddr, PageSize);
+            ulong endAddrRounded   = BitUtils.AlignUp  (endAddr, PageSize);
+
+            if (endAddrTruncated > addressRounded)
+            {
+                ulong alignedPagesCount = (endAddrTruncated - addressRounded) / PageSize;
+
+                AddVaRangeToPageList(pages, addressRounded, alignedPagesCount);
+            }
+
+            if (endAddrTruncated != endAddrRounded)
+            {
+                //End is also not aligned...
+                dstLastPagePa = AllocateSinglePage(region, aslrDisabled);
+
+                if (dstLastPagePa == 0)
+                {
+                    CleanUpForError();
+
+                    return KernelResult.OutOfMemory;
+                }
+
+                ulong lastPageFillAddr = dstLastPagePa;
+
+                if (!ConvertVaToPa(endAddrTruncated, out ulong srcLastPagePa))
+                {
+                    CleanUpForError();
+
+                    return KernelResult.InvalidMemState;
+                }
+
+                if (copyData)
+                {
+                    ulong copySize = endAddr - endAddrTruncated;
+
+                    _system.Device.Memory.Copy(
+                        GetDramAddressFromPa(dstLastPagePa),
+                        GetDramAddressFromPa(srcLastPagePa), copySize);
+
+                    lastPageFillAddr += copySize;
+
+                    unusedSizeAfter = PageSize - copySize;
+                }
+                else
+                {
+                    unusedSizeAfter = PageSize;
+                }
+
+                _system.Device.Memory.Set(lastPageFillAddr, 0, unusedSizeAfter);
+
+                if (pages.AddRange(dstFirstPagePa, 1) != KernelResult.Success)
+                {
+                    CleanUpForError();
+
+                    return KernelResult.OutOfResource;
+                }
+            }
+
+            pageList = pages;
+
+            return KernelResult.Success;
+        }
+
+        private ulong AllocateSinglePage(MemoryRegion region, bool aslrDisabled)
+        {
+            KMemoryRegionManager regionMgr = _system.MemoryRegions[(int)region];
+
+            return regionMgr.AllocatePagesContiguous(1, aslrDisabled);
+        }
+
+        private void FreeSinglePage(MemoryRegion region, ulong address)
+        {
+            KMemoryRegionManager regionMgr = _system.MemoryRegions[(int)region];
+
+            regionMgr.FreePage(address);
+        }
+
+        private KernelResult MapPagesFromAnotherProcess(
+            ulong            size,
+            ulong            address,
+            MemoryPermission permission,
+            MemoryState      state,
+            KPageList        pageList,
+            out ulong        mappedVa)
+        {
+            mappedVa = 0;
+
+            lock (_blocks)
+            {
+                if (!_blockAllocator.CanAllocate(MaxBlocksNeededForInsertion))
+                {
+                    return KernelResult.OutOfResource;
+                }
+
+                ulong endAddr = address + size;
+
+                ulong addressTruncated = BitUtils.AlignDown(address, PageSize);
+                ulong endAddrRounded   = BitUtils.AlignUp  (endAddr, PageSize);
+
+                ulong neededSize = endAddrRounded - addressTruncated;
+
+                ulong neededPagesCount = neededSize / PageSize;
+
+                ulong regionPagesCount = (AliasRegionEnd - AliasRegionStart) / PageSize;
+
+                ulong va = 0;
+
+                for (int unit = MappingUnitSizes.Length - 1; unit >= 0 && va == 0; unit--)
+                {
+                    int alignemnt = MappingUnitSizes[unit];
+
+                    va = AllocateVa(AliasRegionStart, regionPagesCount, neededPagesCount, alignemnt);
+                }
+
+                if (va == 0)
+                {
+                    return KernelResult.OutOfVaSpace;
+                }
+
+                if (pageList.Nodes.Count != 0)
+                {
+                    KernelResult result = MapPages(va, pageList, permission);
+
+                    if (result != KernelResult.Success)
+                    {
+                        return result;
+                    }
+                }
+
+                InsertBlock(va, neededPagesCount, state, permission);
+
+                mappedVa = va;
+            }
+
+            return KernelResult.Success;
+        }
+
+        public KernelResult UnmapNoAttributeIfStateEquals(ulong address, ulong size, MemoryState state)
+        {
+            if (AddrSpaceStart > address)
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            ulong endAddr = address + size;
+
+            if (endAddr <= address || endAddr - 1 > AddrSpaceEnd - 1)
+            {
+                return KernelResult.InvalidMemState;
+            }
+
+            lock (_blocks)
+            {
+                if (CheckRange(
+                    address,
+                    size,
+                    MemoryState.Mask,
+                    state,
+                    MemoryPermission.Read,
+                    MemoryPermission.Read,
+                    MemoryAttribute.Mask,
+                    MemoryAttribute.None,
+                    MemoryAttribute.IpcAndDeviceMapped,
+                    out _,
+                    out _,
+                    out _))
+                {
+                    if (!_blockAllocator.CanAllocate(MaxBlocksNeededForInsertion))
+                    {
+                        return KernelResult.OutOfResource;
+                    }
+
+                    ulong addressTruncated = BitUtils.AlignDown(address, PageSize);
+                    ulong endAddrRounded   = BitUtils.AlignUp  (endAddr, PageSize);
+
+                    ulong pagesCount = (endAddrRounded - addressTruncated) / PageSize;
+
+                    KernelResult result = DoMmuOperation(
+                        addressTruncated,
+                        pagesCount,
+                        0,
+                        false,
+                        MemoryPermission.None,
+                        MemoryOperation.Unmap);
+
+                    if (result == KernelResult.Success)
+                    {
+                        InsertBlock(addressTruncated, pagesCount, MemoryState.Unmapped);
+                    }
+
+                    return result;
+                }
+                else
+                {
+                    return KernelResult.InvalidMemState;
+                }
+            }
+        }
+
+        public KernelResult UnmapIpcRestorePermission(ulong address, ulong size, MemoryState state)
+        {
+            ulong endAddr = address + size;
+
+            ulong addressRounded   = BitUtils.AlignUp  (address, PageSize);
+            ulong endAddrTruncated = BitUtils.AlignDown(endAddr, PageSize);
+
+            ulong pagesCount = (endAddrTruncated - addressRounded) / PageSize;
+
+            MemoryState stateMask;
+
+            switch (state)
+            {
+                case MemoryState.IpcBuffer0: stateMask = MemoryState.IpcSendAllowedType0; break;
+                case MemoryState.IpcBuffer1: stateMask = MemoryState.IpcSendAllowedType1; break;
+                case MemoryState.IpcBuffer3: stateMask = MemoryState.IpcSendAllowedType3; break;
+
+                default: return KernelResult.InvalidCombination;
+            }
+
+            MemoryAttribute attributeMask =
+                MemoryAttribute.Borrowed  |
+                MemoryAttribute.IpcMapped |
+                MemoryAttribute.Uncached;
+
+            if (state == MemoryState.IpcBuffer0)
+            {
+                attributeMask |= MemoryAttribute.DeviceMapped;
+            }
+
+            if (!_blockAllocator.CanAllocate(MaxBlocksNeededForInsertion))
+            {
+                return KernelResult.OutOfResource;
+            }
+
+            lock (_blocks)
+            {
+                foreach (KMemoryInfo info in IterateOverRange(address, endAddrTruncated))
+                {
+                    //Check if the block state matches what we expect.
+                    if ((info.State      & stateMask)     != stateMask ||
+                        (info.Attribute  & attributeMask) != MemoryAttribute.IpcMapped)
+                    {
+                        return KernelResult.InvalidMemState;
+                    }
+
+                    if (info.Permission != info.SourcePermission && info.IpcRefCount == 1)
+                    {
+                        ulong blockAddress = GetAddrInRange(info, addressRounded);
+                        ulong blockSize    = GetSizeInRange(info, addressRounded, endAddrTruncated);
+
+                        ulong blockPagesCount = blockSize / PageSize;
+
+                        KernelResult result = DoMmuOperation(
+                            blockAddress,
+                            blockPagesCount,
+                            0,
+                            false,
+                            info.SourcePermission,
+                            MemoryOperation.ChangePermRw);
+
+                        if (result != KernelResult.Success)
+                        {
+                            return result;
+                        }
+                    }
+                }
+            }
+
+            InsertBlock(address, pagesCount, RestoreIpcMappingPermissions);
+
+            return KernelResult.Success;
+        }
+
+        public KernelResult UnborrowIpcBuffer(ulong address, ulong size)
+        {
+            return ClearAttributesAndChangePermission(
+                address,
+                size,
+                MemoryState.IpcBufferAllowed,
+                MemoryState.IpcBufferAllowed,
+                MemoryPermission.None,
+                MemoryPermission.None,
+                MemoryAttribute.Mask,
+                MemoryAttribute.Borrowed,
+                MemoryPermission.ReadAndWrite,
+                MemoryAttribute.Borrowed);
+        }
+
+        private KernelResult ClearAttributesAndChangePermission(
+            ulong            address,
+            ulong            size,
+            MemoryState      stateMask,
+            MemoryState      stateExpected,
+            MemoryPermission permissionMask,
+            MemoryPermission permissionExpected,
+            MemoryAttribute  attributeMask,
+            MemoryAttribute  attributeExpected,
+            MemoryPermission newPermission,
+            MemoryAttribute  attributeClearMask,
+            KPageList        pageList = null)
+        {
+            lock (_blocks)
+            {
+                if (CheckRange(
+                    address,
+                    size,
+                    stateMask     | MemoryState.IsPoolAllocated,
+                    stateExpected | MemoryState.IsPoolAllocated,
+                    permissionMask,
+                    permissionExpected,
+                    attributeMask,
+                    attributeExpected,
+                    MemoryAttribute.IpcAndDeviceMapped,
+                    out MemoryState      oldState,
+                    out MemoryPermission oldPermission,
+                    out MemoryAttribute  oldAttribute))
+                {
+                    ulong pagesCount = size / PageSize;
+
+                    if (pageList != null)
+                    {
+                        KPageList currPageList = new KPageList();
+
+                        AddVaRangeToPageList(currPageList, address, pagesCount);
+
+                        if (!currPageList.IsEqual(pageList))
+                        {
+                            return KernelResult.InvalidMemRange;
+                        }
+                    }
+
+                    if (!_blockAllocator.CanAllocate(MaxBlocksNeededForInsertion))
+                    {
+                        return KernelResult.OutOfResource;
+                    }
+
+                    if (newPermission == MemoryPermission.None)
+                    {
+                        newPermission = oldPermission;
+                    }
+
+                    if (newPermission != oldPermission)
+                    {
+                        KernelResult result = DoMmuOperation(
+                            address,
+                            pagesCount,
+                            0,
+                            false,
+                            newPermission,
+                            MemoryOperation.ChangePermRw);
+
+                        if (result != KernelResult.Success)
+                        {
+                            return result;
+                        }
+                    }
+
+                    MemoryAttribute newAttribute = oldAttribute & ~attributeClearMask;
+
+                    InsertBlock(address, pagesCount, oldState, newPermission, newAttribute);
+
+                    return KernelResult.Success;
+                }
+                else
+                {
+                    return KernelResult.InvalidMemState;
+                }
+            }
+        }
+
+        private void AddVaRangeToPageList(KPageList pageList, ulong start, ulong pagesCount)
+        {
+            ulong address = start;
+
+            while (address < start + pagesCount * PageSize)
+            {
+                if (!ConvertVaToPa(address, out ulong pa))
+                {
+                    throw new InvalidOperationException("Unexpected failure translating virtual address.");
+                }
+
+                pageList.AddRange(pa, 1);
+
+                address += PageSize;
+            }
+        }
+
+        private static ulong GetAddrInRange(KMemoryInfo info, ulong start)
+        {
+            if (info.Address < start)
+            {
+                return start;
+            }
+
+            return info.Address;
         }
 
         private static ulong GetSizeInRange(KMemoryInfo info, ulong start, ulong end)
@@ -1592,35 +2284,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             }
 
             return size;
-        }
-
-        private static ulong GetAddrInRange(KMemoryInfo info, ulong start)
-        {
-            if (info.Address < start)
-            {
-                return start;
-            }
-
-            return info.Address;
-        }
-
-        private void AddVaRangeToPageList(KPageList pageList, ulong start, ulong pagesCount)
-        {
-            ulong address = start;
-
-            while (address < start + pagesCount * PageSize)
-            {
-                KernelResult result = ConvertVaToPa(address, out ulong pa);
-
-                if (result != KernelResult.Success)
-                {
-                    throw new InvalidOperationException("Unexpected failure translating virtual address.");
-                }
-
-                pageList.AddRange(pa, 1);
-
-                address += PageSize;
-            }
         }
 
         private bool IsUnmapped(ulong address, ulong size)
@@ -1654,7 +2317,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             out MemoryPermission outPermission,
             out MemoryAttribute  outAttribute)
         {
-            ulong endAddr = address + size - 1;
+            ulong endAddr = address + size;
 
             LinkedListNode<KMemoryBlock> node = FindBlockNode(address);
 
@@ -1676,28 +2339,20 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     (firstState      & stateMask)           != stateExpected                          ||
                     (firstPermission & permissionMask)      != permissionExpected)
                 {
-                    break;
+                    outState      = MemoryState.Unmapped;
+                    outPermission = MemoryPermission.None;
+                    outAttribute  = MemoryAttribute.None;
+
+                    return false;
                 }
-
-                //Check if this is the last block on the range, if so return success.
-                if (endAddr <= info.Address + info.Size - 1)
-                {
-                    outState      = firstState;
-                    outPermission = firstPermission;
-                    outAttribute  = firstAttribute & ~attributeIgnoreMask;
-
-                    return true;
-                }
-
-                node = node.Next;
             }
-            while (node != null);
+            while (info.Address + info.Size - 1 < endAddr - 1 && (node = node.Next) != null);
 
-            outState      = MemoryState.Unmapped;
-            outPermission = MemoryPermission.None;
-            outAttribute  = MemoryAttribute.None;
+            outState      = firstState;
+            outPermission = firstPermission;
+            outAttribute  = firstAttribute & ~attributeIgnoreMask;
 
-            return false;
+            return true;
         }
 
         private bool CheckRange(
@@ -1710,33 +2365,33 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             MemoryAttribute  attributeMask,
             MemoryAttribute  attributeExpected)
         {
-            ulong endAddr = address + size - 1;
-
-            LinkedListNode<KMemoryBlock> node = FindBlockNode(address);
-
-            do
+            foreach (KMemoryInfo info in IterateOverRange(address, address + size))
             {
-                KMemoryInfo info = node.Value.GetInfo();
-
                 //Check if the block state matches what we expect.
                 if ((info.State      & stateMask)      != stateExpected      ||
                     (info.Permission & permissionMask) != permissionExpected ||
                     (info.Attribute  & attributeMask)  != attributeExpected)
                 {
-                    break;
+                    return false;
                 }
-
-                //Check if this is the last block on the range, if so return success.
-                if (endAddr <= info.Address + info.Size - 1)
-                {
-                    return true;
-                }
-
-                node = node.Next;
             }
-            while (node != null);
 
-            return false;
+            return true;
+        }
+
+        private IEnumerable<KMemoryInfo> IterateOverRange(ulong start, ulong end)
+        {
+            LinkedListNode<KMemoryBlock> node = FindBlockNode(start);
+
+            KMemoryInfo info;
+
+            do
+            {
+                info = node.Value.GetInfo();
+
+                yield return info;
+            }
+            while (info.Address + info.Size - 1 < end - 1 && (node = node.Next) != null);
         }
 
         private void InsertBlock(
@@ -1750,22 +2405,21 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             MemoryAttribute  newAttribute)
         {
             //Insert new block on the list only on areas where the state
-            //of the block matches the state specified on the Old* state
+            //of the block matches the state specified on the old* state
             //arguments, otherwise leave it as is.
             int oldCount = _blocks.Count;
 
             oldAttribute |= MemoryAttribute.IpcAndDeviceMapped;
 
-            ulong endAddr = pagesCount * PageSize + baseAddress;
+            ulong endAddr = baseAddress + pagesCount * PageSize;
 
             LinkedListNode<KMemoryBlock> node = _blocks.First;
 
             while (node != null)
             {
-                LinkedListNode<KMemoryBlock> newNode  = node;
-                LinkedListNode<KMemoryBlock> nextNode = node.Next;
-
                 KMemoryBlock currBlock = node.Value;
+
+                LinkedListNode<KMemoryBlock> nextNode = node.Next;
 
                 ulong currBaseAddr = currBlock.BaseAddress;
                 ulong currEndAddr  = currBlock.PagesCount * PageSize + currBaseAddr;
@@ -1783,65 +2437,26 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         continue;
                     }
 
-                    if (currBaseAddr >= baseAddress && currEndAddr <= endAddr)
+                    LinkedListNode<KMemoryBlock> newNode = node;
+
+                    if (baseAddress > currBaseAddr)
                     {
-                        currBlock.State      = newState;
-                        currBlock.Permission = newPermission;
-                        currBlock.Attribute &= ~MemoryAttribute.IpcAndDeviceMapped;
-                        currBlock.Attribute |= newAttribute;
+                        _blocks.AddBefore(node, currBlock.SplitRightAtAddress(baseAddress));
                     }
-                    else if (currBaseAddr >= baseAddress)
+
+                    if (endAddr < currEndAddr)
                     {
-                        currBlock.BaseAddress = endAddr;
-
-                        currBlock.PagesCount = (currEndAddr - endAddr) / PageSize;
-
-                        ulong newPagesCount = (endAddr - currBaseAddr) / PageSize;
-
-                        newNode = _blocks.AddBefore(node, new KMemoryBlock(
-                            currBaseAddr,
-                            newPagesCount,
-                            newState,
-                            newPermission,
-                            newAttribute));
+                        newNode = _blocks.AddBefore(node, currBlock.SplitRightAtAddress(endAddr));
                     }
-                    else if (currEndAddr <= endAddr)
-                    {
-                        currBlock.PagesCount = (baseAddress - currBaseAddr) / PageSize;
 
-                        ulong newPagesCount = (currEndAddr - baseAddress) / PageSize;
-
-                        newNode = _blocks.AddAfter(node, new KMemoryBlock(
-                            baseAddress,
-                            newPagesCount,
-                            newState,
-                            newPermission,
-                            newAttribute));
-                    }
-                    else
-                    {
-                        currBlock.PagesCount = (baseAddress - currBaseAddr) / PageSize;
-
-                        ulong nextPagesCount = (currEndAddr - endAddr) / PageSize;
-
-                        newNode = _blocks.AddAfter(node, new KMemoryBlock(
-                            baseAddress,
-                            pagesCount,
-                            newState,
-                            newPermission,
-                            newAttribute));
-
-                        _blocks.AddAfter(newNode, new KMemoryBlock(
-                            endAddr,
-                            nextPagesCount,
-                            currBlock.State,
-                            currBlock.Permission,
-                            currBlock.Attribute));
-
-                        nextNode = null;
-                    }
+                    newNode.Value.SetState(newPermission, newState, newAttribute);
 
                     MergeEqualStateNeighbours(newNode);
+                }
+
+                if (currEndAddr - 1 >= endAddr - 1)
+                {
+                    break;
                 }
 
                 node = nextNode;
@@ -1859,13 +2474,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             //Inserts new block at the list, replacing and spliting
             //existing blocks as needed.
-            KMemoryBlock block = new KMemoryBlock(baseAddress, pagesCount, state, permission, attribute);
-
             int oldCount = _blocks.Count;
 
-            ulong endAddr = pagesCount * PageSize + baseAddress;
-
-            LinkedListNode<KMemoryBlock> newNode = null;
+            ulong endAddr = baseAddress + pagesCount * PageSize;
 
             LinkedListNode<KMemoryBlock> node = _blocks.First;
 
@@ -1880,68 +2491,98 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                 if (baseAddress < currEndAddr && currBaseAddr < endAddr)
                 {
-                    if (baseAddress >= currBaseAddr && endAddr <= currEndAddr)
+                    LinkedListNode<KMemoryBlock> newNode = node;
+
+                    if (baseAddress > currBaseAddr)
                     {
-                        block.Attribute |= currBlock.Attribute & MemoryAttribute.IpcAndDeviceMapped;
+                        _blocks.AddBefore(node, currBlock.SplitRightAtAddress(baseAddress));
                     }
 
-                    if (baseAddress > currBaseAddr && endAddr < currEndAddr)
+                    if (endAddr < currEndAddr)
                     {
-                        currBlock.PagesCount = (baseAddress - currBaseAddr) / PageSize;
-
-                        ulong nextPagesCount = (currEndAddr - endAddr) / PageSize;
-
-                        newNode = _blocks.AddAfter(node, block);
-
-                        _blocks.AddAfter(newNode, new KMemoryBlock(
-                            endAddr,
-                            nextPagesCount,
-                            currBlock.State,
-                            currBlock.Permission,
-                            currBlock.Attribute));
-
-                        break;
+                        newNode = _blocks.AddBefore(node, currBlock.SplitRightAtAddress(endAddr));
                     }
-                    else if (baseAddress <= currBaseAddr && endAddr < currEndAddr)
-                    {
-                        currBlock.BaseAddress = endAddr;
 
-                        currBlock.PagesCount = (currEndAddr - endAddr) / PageSize;
+                    newNode.Value.SetState(permission, state, attribute);
 
-                        if (newNode == null)
-                        {
-                            newNode = _blocks.AddBefore(node, block);
-                        }
-                    }
-                    else if (baseAddress > currBaseAddr && endAddr >= currEndAddr)
-                    {
-                        currBlock.PagesCount = (baseAddress - currBaseAddr) / PageSize;
+                    MergeEqualStateNeighbours(newNode);
+                }
 
-                        if (newNode == null)
-                        {
-                            newNode = _blocks.AddAfter(node, block);
-                        }
-                    }
-                    else
-                    {
-                        if (newNode == null)
-                        {
-                            newNode = _blocks.AddBefore(node, block);
-                        }
-
-                        _blocks.Remove(node);
-                    }
+                if (currEndAddr - 1 >= endAddr - 1)
+                {
+                    break;
                 }
 
                 node = nextNode;
             }
 
-            if (newNode == null)
-            {
-                newNode = _blocks.AddFirst(block);
-            }
+            _blockAllocator.Count += _blocks.Count - oldCount;
+        }
 
-            MergeEqualStateNeighbours(newNode);
+        private static void SetIpcMappingPermissions(KMemoryBlock block, MemoryPermission permission)
+        {
+            block.SetIpcMappingPermission(permission);
+        }
+
+        private static void RestoreIpcMappingPermissions(KMemoryBlock block, MemoryPermission permission)
+        {
+            block.RestoreIpcMappingPermission();
+        }
+
+        private delegate void BlockMutator(KMemoryBlock block, MemoryPermission newPerm);
+
+        private void InsertBlock(
+            ulong            baseAddress,
+            ulong            pagesCount,
+            BlockMutator     blockMutate,
+            MemoryPermission permission = MemoryPermission.None)
+        {
+            //Inserts new block at the list, replacing and spliting
+            //existing blocks as needed, then calling the callback
+            //function on the new block.
+            int oldCount = _blocks.Count;
+
+            ulong endAddr = baseAddress + pagesCount * PageSize;
+
+            LinkedListNode<KMemoryBlock> node = _blocks.First;
+
+            while (node != null)
+            {
+                KMemoryBlock currBlock = node.Value;
+
+                LinkedListNode<KMemoryBlock> nextNode = node.Next;
+
+                ulong currBaseAddr = currBlock.BaseAddress;
+                ulong currEndAddr  = currBlock.PagesCount * PageSize + currBaseAddr;
+
+                if (baseAddress < currEndAddr && currBaseAddr < endAddr)
+                {
+                    LinkedListNode<KMemoryBlock> newNode = node;
+
+                    if (baseAddress > currBaseAddr)
+                    {
+                        _blocks.AddBefore(node, currBlock.SplitRightAtAddress(baseAddress));
+                    }
+
+                    if (endAddr < currEndAddr)
+                    {
+                        newNode = _blocks.AddBefore(node, currBlock.SplitRightAtAddress(endAddr));
+                    }
+
+                    KMemoryBlock newBlock = newNode.Value;
+
+                    blockMutate(newBlock, permission);
+
+                    MergeEqualStateNeighbours(newNode);
+                }
+
+                if (currEndAddr - 1 >= endAddr - 1)
+                {
+                    break;
+                }
+
+                node = nextNode;
+            }
 
             _blockAllocator.Count += _blocks.Count - oldCount;
         }
@@ -1950,42 +2591,117 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             KMemoryBlock block = node.Value;
 
-            ulong endAddr = block.PagesCount * PageSize + block.BaseAddress;
-
             if (node.Previous != null)
             {
-                KMemoryBlock previous = node.Previous.Value;
+                KMemoryBlock previousBlock = node.Previous.Value;
 
-                if (BlockStateEquals(block, previous))
+                if (BlockStateEquals(block, previousBlock))
                 {
-                    _blocks.Remove(node.Previous);
+                    LinkedListNode<KMemoryBlock> previousNode = node.Previous;
 
-                    block.BaseAddress = previous.BaseAddress;
+                    _blocks.Remove(node);
+
+                    previousBlock.AddPages(block.PagesCount);
+
+                    node  = previousNode;
+                    block = previousBlock;
                 }
             }
 
             if (node.Next != null)
             {
-                KMemoryBlock next = node.Next.Value;
+                KMemoryBlock nextBlock = node.Next.Value;
 
-                if (BlockStateEquals(block, next))
+                if (BlockStateEquals(block, nextBlock))
                 {
                     _blocks.Remove(node.Next);
 
-                    endAddr = next.BaseAddress + next.PagesCount * PageSize;
+                    block.AddPages(nextBlock.PagesCount);
                 }
             }
-
-            block.PagesCount = (endAddr - block.BaseAddress) / PageSize;
         }
 
         private static bool BlockStateEquals(KMemoryBlock lhs, KMemoryBlock rhs)
         {
-            return lhs.State          == rhs.State          &&
-                   lhs.Permission     == rhs.Permission     &&
-                   lhs.Attribute      == rhs.Attribute      &&
-                   lhs.DeviceRefCount == rhs.DeviceRefCount &&
-                   lhs.IpcRefCount    == rhs.IpcRefCount;
+            return lhs.State            == rhs.State            &&
+                   lhs.Permission       == rhs.Permission       &&
+                   lhs.Attribute        == rhs.Attribute        &&
+                   lhs.SourcePermission == rhs.SourcePermission &&
+                   lhs.DeviceRefCount   == rhs.DeviceRefCount   &&
+                   lhs.IpcRefCount      == rhs.IpcRefCount;
+        }
+
+        private ulong AllocateVa(
+            ulong regionStart,
+            ulong regionPagesCount,
+            ulong neededPagesCount,
+            int   alignment)
+        {
+            ulong address = 0;
+
+            ulong regionEndAddr = regionStart + regionPagesCount * PageSize;
+
+            ulong reservedPagesCount = _isKernel ? 1UL : 4UL;
+
+            if (_aslrEnabled)
+            {
+                ulong totalNeededSize = (reservedPagesCount + neededPagesCount) * PageSize;
+
+                ulong remainingPages = regionPagesCount - neededPagesCount;
+
+                ulong aslrMaxOffset = ((remainingPages + reservedPagesCount) * PageSize) / (ulong)alignment;
+
+                for (int attempt = 0; attempt < 8; attempt++)
+                {
+                    address = BitUtils.AlignDown(regionStart + GetRandomValue(0, aslrMaxOffset) * (ulong)alignment, alignment);
+
+                    ulong endAddr = address + totalNeededSize;
+
+                    KMemoryInfo info = FindBlock(address).GetInfo();
+
+                    if (info.State != MemoryState.Unmapped)
+                    {
+                        continue;
+                    }
+
+                    ulong currBaseAddr = info.Address + reservedPagesCount * PageSize;
+                    ulong currEndAddr  = info.Address + info.Size;
+
+                    if (address     >= regionStart       &&
+                        address     >= currBaseAddr      &&
+                        endAddr - 1 <= regionEndAddr - 1 &&
+                        endAddr - 1 <= currEndAddr   - 1)
+                    {
+                        break;
+                    }
+                }
+
+                if (address == 0)
+                {
+                    ulong aslrPage = GetRandomValue(0, aslrMaxOffset);
+
+                    address = FindFirstFit(
+                        regionStart      + aslrPage * PageSize,
+                        regionPagesCount - aslrPage,
+                        neededPagesCount,
+                        alignment,
+                        0,
+                        reservedPagesCount);
+                }
+            }
+
+            if (address == 0)
+            {
+                address = FindFirstFit(
+                    regionStart,
+                    regionPagesCount,
+                    neededPagesCount,
+                    alignment,
+                    0,
+                    reservedPagesCount);
+            }
+
+            return address;
         }
 
         private ulong FindFirstFit(
@@ -2397,11 +3113,21 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             return KernelResult.Success;
         }
 
-        public KernelResult ConvertVaToPa(ulong va, out ulong pa)
+        public ulong GetDramAddressFromVa(ulong va)
+        {
+            return (ulong)_cpuMemory.GetPhysicalAddress((long)va);
+        }
+
+        public bool ConvertVaToPa(ulong va, out ulong pa)
         {
             pa = DramMemoryMap.DramBase + (ulong)_cpuMemory.GetPhysicalAddress((long)va);
 
-            return KernelResult.Success;
+            return true;
+        }
+
+        public static ulong GetDramAddressFromPa(ulong pa)
+        {
+            return pa - DramMemoryMap.DramBase;
         }
 
         public long GetMmUsedPages()

@@ -1,10 +1,7 @@
 using ChocolArm64.Events;
 using ChocolArm64.Memory;
 using ChocolArm64.State;
-using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Process;
-using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
 
 namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
@@ -15,26 +12,6 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         private KProcess      _process;
         private Horizon       _system;
         private MemoryManager _memory;
-
-        private struct HleIpcMessage
-        {
-            public KThread    Thread     { get; private set; }
-            public KSession   Session    { get; private set; }
-            public IpcMessage Message    { get; private set; }
-            public long       MessagePtr { get; private set; }
-
-            public HleIpcMessage(
-                KThread    thread,
-                KSession   session,
-                IpcMessage message,
-                long       messagePtr)
-            {
-                Thread     = thread;
-                Session    = session;
-                Message    = message;
-                MessagePtr = messagePtr;
-            }
-        }
 
         public SvcHandler(Switch device, KProcess process)
         {

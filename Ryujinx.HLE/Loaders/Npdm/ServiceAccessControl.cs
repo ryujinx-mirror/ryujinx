@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
                 int  length          = (controlByte & 0x07) + 1;
                 bool registerAllowed = (controlByte & 0x80) != 0;
 
-                services.Add(Encoding.ASCII.GetString(reader.ReadBytes(length), 0, length), registerAllowed);
+                services[Encoding.ASCII.GetString(reader.ReadBytes(length))] = registerAllowed;
 
                 byteReaded += length + 1;
             }

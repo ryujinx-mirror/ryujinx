@@ -210,7 +210,27 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 }
             }
 
+            return GetDummyThread();
+
             throw new InvalidOperationException("Current thread is not scheduled!");
+        }
+
+        private KThread _dummyThread;
+
+        private KThread GetDummyThread()
+        {
+            if (_dummyThread != null)
+            {
+                return _dummyThread;
+            }
+
+            KProcess dummyProcess = new KProcess(_system);
+
+            KThread dummyThread = new KThread(_system);
+
+            dummyThread.Initialize(0, 0, 0, 44, 0, dummyProcess, ThreadType.Dummy);
+
+            return _dummyThread = dummyThread;
         }
 
         public KProcess GetCurrentProcess()

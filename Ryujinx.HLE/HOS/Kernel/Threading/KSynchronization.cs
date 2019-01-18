@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                 _system.CriticalSection.Leave();
 
-                return 0;
+                return KernelResult.Success;
             }
 
             if (timeout == 0)

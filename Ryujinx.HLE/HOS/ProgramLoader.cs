@@ -63,11 +63,11 @@ namespace Ryujinx.HLE.HOS
                 0,
                 0);
 
-            MemoryRegion memRegion = kip.IsService
+            MemoryRegion memoryRegion = kip.IsService
                 ? MemoryRegion.Service
                 : MemoryRegion.Application;
 
-            KMemoryRegionManager region = system.MemoryRegions[(int)memRegion];
+            KMemoryRegionManager region = system.MemoryRegions[(int)memoryRegion];
 
             KernelResult result = region.AllocatePages((ulong)codePagesCount, false, out KPageList pageList);
 
@@ -85,7 +85,7 @@ namespace Ryujinx.HLE.HOS
                 kip.Capabilities,
                 pageList,
                 system.ResourceLimit,
-                memRegion);
+                memoryRegion);
 
             if (result != KernelResult.Success)
             {
@@ -102,6 +102,8 @@ namespace Ryujinx.HLE.HOS
 
                 return false;
             }
+
+            process.DefaultCpuCore = kip.DefaultProcessorId;
 
             result = process.Start(kip.MainThreadPriority, (ulong)kip.MainThreadStackSize);
 
@@ -201,11 +203,20 @@ namespace Ryujinx.HLE.HOS
 
             KProcess process = new KProcess(system);
 
+            MemoryRegion memoryRegion = (MemoryRegion)((metaData.Acid.Flags >> 2) & 0xf);
+
+            if (memoryRegion > MemoryRegion.NvServices)
+            {
+                Logger.PrintError(LogClass.Loader, $"Process initialization failed due to invalid ACID flags.");
+
+                return false;
+            }
+
             result = process.Initialize(
                 creationInfo,
                 metaData.Aci0.KernelAccessControl.Capabilities,
                 resourceLimit,
-                MemoryRegion.Application);
+                memoryRegion);
 
             if (result != KernelResult.Success)
             {
@@ -227,6 +238,8 @@ namespace Ryujinx.HLE.HOS
                     return false;
                 }
             }
+
+            process.DefaultCpuCore = metaData.DefaultCpuId;
 
             result = process.Start(metaData.MainThreadPriority, (ulong)metaData.MainThreadStackSize);
 

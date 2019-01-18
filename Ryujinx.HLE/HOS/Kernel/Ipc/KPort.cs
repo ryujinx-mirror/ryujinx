@@ -4,25 +4,68 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 {
     class KPort : KAutoObject
     {
-        public KServerPort ServerPort { get; private set; }
-        public KClientPort ClientPort { get; private set; }
+        public KServerPort ServerPort { get; }
+        public KClientPort ClientPort { get; }
 
         private long _nameAddress;
-        private bool _isLight;
 
-        public KPort(Horizon system) : base(system)
+        private ChannelState _state;
+
+        public bool IsLight { get; private set; }
+
+        public KPort(Horizon system, int maxSessions, bool isLight, long nameAddress) : base(system)
         {
-            ServerPort = new KServerPort(system);
-            ClientPort = new KClientPort(system);
+            ServerPort = new KServerPort(system, this);
+            ClientPort = new KClientPort(system, this, maxSessions);
+
+            IsLight      = isLight;
+            _nameAddress = nameAddress;
+
+            _state = ChannelState.Open;
         }
 
-        public void Initialize(int maxSessions, bool isLight, long nameAddress)
+        public KernelResult EnqueueIncomingSession(KServerSession session)
         {
-            ServerPort.Initialize(this);
-            ClientPort.Initialize(this, maxSessions);
+            KernelResult result;
 
-            _isLight     = isLight;
-            _nameAddress = nameAddress;
+            System.CriticalSection.Enter();
+
+            if (_state == ChannelState.Open)
+            {
+                ServerPort.EnqueueIncomingSession(session);
+
+                result = KernelResult.Success;
+            }
+            else
+            {
+                result = KernelResult.PortClosed;
+            }
+
+            System.CriticalSection.Leave();
+
+            return result;
+        }
+
+        public KernelResult EnqueueIncomingLightSession(KLightServerSession session)
+        {
+            KernelResult result;
+
+            System.CriticalSection.Enter();
+
+            if (_state == ChannelState.Open)
+            {
+                ServerPort.EnqueueIncomingLightSession(session);
+
+                result = KernelResult.Success;
+            }
+            else
+            {
+                result = KernelResult.PortClosed;
+            }
+
+            System.CriticalSection.Leave();
+
+            return result;
         }
     }
 }

@@ -4,7 +4,7 @@ using Ryujinx.HLE.HOS.Kernel.Process;
 
 namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
-    class KSharedMemory
+    class KSharedMemory : KAutoObject
     {
         private KPageList _pageList;
 
@@ -14,10 +14,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         private MemoryPermission _userPermission;
 
         public KSharedMemory(
+            Horizon          system,
             KPageList        pageList,
             long             ownerPid,
             MemoryPermission ownerPermission,
-            MemoryPermission userPermission)
+            MemoryPermission userPermission) : base(system)
         {
             _pageList        = pageList;
             _ownerPid        = ownerPid;

@@ -6,8 +6,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 {
     class KHandleTable
     {
-        private const int SelfThreadHandle  = (0x1ffff << 15) | 0;
-        private const int SelfProcessHandle = (0x1ffff << 15) | 1;
+        public const int SelfThreadHandle  = (0x1ffff << 15) | 0;
+        public const int SelfProcessHandle = (0x1ffff << 15) | 1;
 
         private Horizon _system;
 
@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             return KernelResult.Success;
         }
 
-        public KernelResult GenerateHandle(object obj, out int handle)
+        public KernelResult GenerateHandle(KAutoObject obj, out int handle)
         {
             handle = 0;
 
@@ -85,7 +85,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                 _activeSlotsCount++;
 
-                handle = (int)((_idCounter << 15) & 0xffff8000) | entry.Index;
+                handle = (_idCounter << 15) | entry.Index;
+
+                obj.IncrementReferenceCount();
 
                 if ((short)(_idCounter + 1) >= 0)
                 {
@@ -100,6 +102,72 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             return KernelResult.Success;
         }
 
+        public KernelResult ReserveHandle(out int handle)
+        {
+            handle = 0;
+
+            lock (_table)
+            {
+                if (_activeSlotsCount >= _size)
+                {
+                    return KernelResult.HandleTableFull;
+                }
+
+                KHandleEntry entry = _nextFreeEntry;
+
+                _nextFreeEntry = entry.Next;
+
+                _activeSlotsCount++;
+
+                handle = (_idCounter << 15) | entry.Index;
+
+                if ((short)(_idCounter + 1) >= 0)
+                {
+                    _idCounter++;
+                }
+                else
+                {
+                    _idCounter = 1;
+                }
+            }
+
+            return KernelResult.Success;
+        }
+
+        public void CancelHandleReservation(int handle)
+        {
+            int index    = (handle >> 0) & 0x7fff;
+            int handleId = (handle >> 15);
+
+            lock (_table)
+            {
+                KHandleEntry entry = _table[index];
+
+                entry.Obj  = null;
+                entry.Next = _nextFreeEntry;
+
+                _nextFreeEntry = entry;
+
+                _activeSlotsCount--;
+            }
+        }
+
+        public void SetReservedHandleObj(int handle, KAutoObject obj)
+        {
+            int index    = (handle >> 0) & 0x7fff;
+            int handleId = (handle >> 15);
+
+            lock (_table)
+            {
+                KHandleEntry entry = _table[index];
+
+                entry.Obj      = obj;
+                entry.HandleId = (ushort)(handle >> 15);
+
+                obj.IncrementReferenceCount();
+            }
+        }
+
         public bool CloseHandle(int handle)
         {
             if ((handle >> 30) != 0 ||
@@ -112,6 +180,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             int index    = (handle >> 0) & 0x7fff;
             int handleId = (handle >> 15);
 
+            KAutoObject obj = null;
+
             bool result = false;
 
             lock (_table)
@@ -120,7 +190,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 {
                     KHandleEntry entry = _table[index];
 
-                    if (entry.Obj != null && entry.HandleId == handleId)
+                    if ((obj = entry.Obj) != null && entry.HandleId == handleId)
                     {
                         entry.Obj  = null;
                         entry.Next = _nextFreeEntry;
@@ -134,17 +204,22 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 }
             }
 
+            if (result)
+            {
+                obj.DecrementReferenceCount();
+            }
+
             return result;
         }
 
-        public T GetObject<T>(int handle)
+        public T GetObject<T>(int handle) where T : KAutoObject
         {
             int index    = (handle >> 0) & 0x7fff;
             int handleId = (handle >> 15);
 
             lock (_table)
             {
-                if ((handle >> 30) == 0 && handleId != 0)
+                if ((handle >> 30) == 0 && handleId != 0 && index < _size)
                 {
                     KHandleEntry entry = _table[index];
 

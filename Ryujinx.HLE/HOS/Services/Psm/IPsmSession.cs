@@ -35,7 +35,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
         {
             if (_stateChangeEventHandle == -1)
             {
-                KernelResult resultCode = context.Process.HandleTable.GenerateHandle(_stateChangeEvent, out int stateChangeEventHandle);
+                KernelResult resultCode = context.Process.HandleTable.GenerateHandle(_stateChangeEvent.ReadableEvent, out int stateChangeEventHandle);
 
                 if (resultCode != KernelResult.Success)
                 {

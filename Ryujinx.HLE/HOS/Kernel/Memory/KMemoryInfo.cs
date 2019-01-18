@@ -2,15 +2,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
     class KMemoryInfo
     {
-        public ulong Address { get; private set; }
-        public ulong Size    { get; private set; }
+        public ulong Address { get; }
+        public ulong Size    { get; }
 
-        public MemoryState      State      { get; private set; }
-        public MemoryPermission Permission { get; private set; }
-        public MemoryAttribute  Attribute  { get; private set; }
+        public MemoryState      State            { get; }
+        public MemoryPermission Permission       { get; }
+        public MemoryAttribute  Attribute        { get; }
+        public MemoryPermission SourcePermission { get; }
 
-        public int IpcRefCount    { get; private set; }
-        public int DeviceRefCount { get; private set; }
+        public int IpcRefCount    { get; }
+        public int DeviceRefCount { get; }
 
         public KMemoryInfo(
             ulong            address,
@@ -18,16 +19,18 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             MemoryState      state,
             MemoryPermission permission,
             MemoryAttribute  attribute,
+            MemoryPermission sourcePermission,
             int              ipcRefCount,
             int              deviceRefCount)
         {
-            Address        = address;
-            Size           = size;
-            State          = state;
-            Attribute      = attribute;
-            Permission     = permission;
-            IpcRefCount    = ipcRefCount;
-            DeviceRefCount = deviceRefCount;
+            Address          = address;
+            Size             = size;
+            State            = state;
+            Permission       = permission;
+            Attribute        = attribute;
+            SourcePermission = sourcePermission;
+            IpcRefCount      = ipcRefCount;
+            DeviceRefCount   = deviceRefCount;
         }
     }
 }

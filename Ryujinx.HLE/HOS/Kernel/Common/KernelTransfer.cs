@@ -22,6 +22,26 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             return false;
         }
 
+        public static bool UserToKernelInt32Array(Horizon system, ulong address, int[] values)
+        {
+            KProcess currentProcess = system.Scheduler.GetCurrentProcess();
+
+            for (int index = 0; index < values.Length; index++, address += 4)
+            {
+                if (currentProcess.CpuMemory.IsMapped((long)address) &&
+                    currentProcess.CpuMemory.IsMapped((long)address + 3))
+                {
+                    values[index]= currentProcess.CpuMemory.ReadInt32((long)address);
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public static bool UserToKernelString(Horizon system, ulong address, int size, out string value)
         {
             KProcess currentProcess = system.Scheduler.GetCurrentProcess();

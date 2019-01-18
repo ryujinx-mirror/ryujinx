@@ -5,7 +5,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 {
     class KSynchronizationObject : KAutoObject
     {
-        public LinkedList<KThread> WaitingThreads;
+        public LinkedList<KThread> WaitingThreads { get; }
 
         public KSynchronizationObject(Horizon system) : base(system)
         {

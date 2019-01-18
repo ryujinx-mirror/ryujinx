@@ -1,18 +1,40 @@
-using Ryujinx.HLE.HOS.Services;
+using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.HLE.HOS.Kernel.Process;
 using System;
 
 namespace Ryujinx.HLE.HOS.Kernel.Ipc
 {
-    class KSession : IDisposable
+    class KSession : KAutoObject, IDisposable
     {
-        public IpcService Service { get; private set; }
+        public KServerSession ServerSession { get; }
+        public KClientSession ClientSession { get; }
 
-        public string ServiceName { get; private set; }
+        private bool _hasBeenInitialized;
 
-        public KSession(IpcService service, string serviceName)
+        public KSession(Horizon system) : base(system)
         {
-            Service     = service;
-            ServiceName = serviceName;
+            ServerSession = new KServerSession(system, this);
+            ClientSession = new KClientSession(system, this);
+
+            _hasBeenInitialized = true;
+        }
+
+        public void DisconnectClient()
+        {
+            if (ClientSession.State == ChannelState.Open)
+            {
+                ClientSession.State = ChannelState.ClientDisconnected;
+
+                ServerSession.CancelAllRequestsClientDisconnected();
+            }
+        }
+
+        public void DisconnectServer()
+        {
+            if (ClientSession.State == ChannelState.Open)
+            {
+                ClientSession.State = ChannelState.ServerDisconnected;
+            }
         }
 
         public void Dispose()
@@ -22,9 +44,21 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing && Service is IDisposable disposableService)
+            if (disposing && ClientSession.Service is IDisposable disposableService)
             {
                 disposableService.Dispose();
+            }
+        }
+
+        protected override void Destroy()
+        {
+            if (_hasBeenInitialized)
+            {
+                KProcess creatorProcess = ClientSession.CreatorProcess;
+
+                creatorProcess.ResourceLimit?.Release(LimitableResource.Session, 1);
+
+                creatorProcess.DecrementReferenceCount();
             }
         }
     }

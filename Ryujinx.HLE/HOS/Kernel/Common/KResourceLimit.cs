@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Kernel.Common
 {
-    class KResourceLimit
+    class KResourceLimit : KAutoObject
     {
         private const int Time10SecondsMs = 10000;
 
@@ -18,9 +18,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
         private int _waitingThreadsCount;
 
-        private Horizon _system;
-
-        public KResourceLimit(Horizon system)
+        public KResourceLimit(Horizon system) : base(system)
         {
             _current   = new long[(int)LimitableResource.Count];
             _limit     = new long[(int)LimitableResource.Count];
@@ -29,8 +27,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             _lockObj = new object();
 
             _waitingThreads = new LinkedList<KThread>();
-
-            _system = system;
         }
 
         public bool Reserve(LimitableResource resource, ulong amount)
@@ -61,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
                 {
                     _waitingThreadsCount++;
 
-                    KConditionVariable.Wait(_system, _waitingThreads, _lockObj, timeout);
+                    KConditionVariable.Wait(System, _waitingThreads, _lockObj, timeout);
 
                     _waitingThreadsCount--;
 
@@ -94,7 +90,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             Release(resource, amount, amount);
         }
 
-        private void Release(LimitableResource resource, long usedAmount, long availableAmount)
+        public void Release(LimitableResource resource, long usedAmount, long availableAmount)
         {
             int index = GetIndex(resource);
 
@@ -105,7 +101,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
                 if (_waitingThreadsCount > 0)
                 {
-                    KConditionVariable.NotifyAll(_system, _waitingThreads);
+                    KConditionVariable.NotifyAll(System, _waitingThreads);
                 }
             }
         }

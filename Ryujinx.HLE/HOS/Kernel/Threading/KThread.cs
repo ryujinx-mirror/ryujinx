@@ -30,6 +30,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         private ulong _tlsAddress;
 
+        public ulong TlsAddress => _tlsAddress;
+        public ulong TlsDramAddress { get; private set; }
+
         public long LastScheduledTime { get; set; }
 
         public LinkedListNode<KThread>[] SiblingsPerCore { get; private set; }
@@ -67,6 +70,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         public bool WaitingSync   { get; set; }
 
         private bool _hasExited;
+        private bool _hasBeenInitialized;
+        private bool _hasBeenReleased;
 
         public bool WaitingInArbitration { get; set; }
 
@@ -124,6 +129,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     return KernelResult.OutOfMemory;
                 }
 
+                TlsDramAddress = owner.MemoryManager.GetDramAddressFromVa(_tlsAddress);
+
                 MemoryHelper.FillWithZeros(owner.CpuMemory, (long)_tlsAddress, KTlsPageInfo.TlsEntrySize);
             }
 
@@ -133,6 +140,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             {
                 Owner = owner;
 
+                owner.IncrementReferenceCount();
                 owner.IncrementThreadCount();
 
                 is64Bits = (owner.MmuFlags & 1) != 0;
@@ -155,6 +163,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             Context.WorkFinished += ThreadFinishedHandler;
 
             ThreadUid = System.GetThreadUid();
+
+            _hasBeenInitialized = true;
 
             if (owner != null)
             {
@@ -252,6 +262,15 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public void Exit()
         {
+            //TODO: Debug event.
+
+            if (Owner != null)
+            {
+                Owner.ResourceLimit?.Release(LimitableResource.Thread, 0, 1);
+
+                _hasBeenReleased = true;
+            }
+
             System.CriticalSection.Enter();
 
             _forcePauseFlags &= ~ThreadSchedState.ForcePauseMask;
@@ -259,6 +278,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             ExitImpl();
 
             System.CriticalSection.Leave();
+
+            DecrementReferenceCount();
         }
 
         private void ExitImpl()
@@ -930,7 +951,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 return;
             }
 
-            //Remove from old queues.
+            //Remove thread from the old priority queues.
             for (int core = 0; core < KScheduler.CpuCoresCount; core++)
             {
                 if (((oldAffinityMask >> core) & 1) != 0)
@@ -946,7 +967,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 }
             }
 
-            //Insert on new queues.
+            //Add thread to the new priority queues.
             for (int core = 0; core < KScheduler.CpuCoresCount; core++)
             {
                 if (((AffinityMask >> core) & 1) != 0)
@@ -963,11 +984,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             }
 
             _scheduler.ThreadReselectionRequested = true;
-        }
-
-        public override bool IsSignaled()
-        {
-            return _hasExited;
         }
 
         public void SetEntryArguments(long argsPtr, int threadHandle)
@@ -994,13 +1010,36 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
         private void ThreadFinishedHandler(object sender, EventArgs e)
         {
             System.Scheduler.ExitThread(this);
-
-            Terminate();
-
             System.Scheduler.RemoveThread(this);
         }
 
-        public void Terminate()
+        public override bool IsSignaled()
+        {
+            return _hasExited;
+        }
+
+        protected override void Destroy()
+        {
+            if (_hasBeenInitialized)
+            {
+                FreeResources();
+
+                bool released = Owner != null || _hasBeenReleased;
+
+                if (Owner != null)
+                {
+                    Owner.ResourceLimit?.Release(LimitableResource.Thread, 1, released ? 0 : 1);
+
+                    Owner.DecrementReferenceCount();
+                }
+                else
+                {
+                    System.ResourceLimit.Release(LimitableResource.Thread, 1, released ? 0 : 1);
+                }
+            }
+        }
+
+        private void FreeResources()
         {
             Owner?.RemoveThread(this);
 
@@ -1011,8 +1050,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             System.CriticalSection.Enter();
 
-            //Wake up all threads that may be waiting for a mutex being held
-            //by this thread.
+            //Wake up all threads that may be waiting for a mutex being held by this thread.
             foreach (KThread thread in _mutexWaiters)
             {
                 thread.MutexOwner             = null;

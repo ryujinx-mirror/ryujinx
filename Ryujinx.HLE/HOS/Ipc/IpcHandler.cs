@@ -10,12 +10,12 @@ namespace Ryujinx.HLE.HOS.Ipc
     static class IpcHandler
     {
         public static KernelResult IpcCall(
-            Switch        device,
-            KProcess      process,
-            MemoryManager memory,
-            KSession      session,
-            IpcMessage    request,
-            long          cmdPtr)
+            Switch         device,
+            KProcess       process,
+            MemoryManager  memory,
+            KClientSession session,
+            IpcMessage     request,
+            long           cmdPtr)
         {
             IpcMessage response = new IpcMessage();
 

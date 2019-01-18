@@ -306,6 +306,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             int range = max - min + 1;
 
+            if (range == 64)
+            {
+                return -1L;
+            }
+
             long mask = (1L << range) - 1;
 
             return mask << min;

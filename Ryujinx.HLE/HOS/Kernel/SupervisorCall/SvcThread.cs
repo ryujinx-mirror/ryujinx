@@ -62,21 +62,16 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 priority,
                 cpuCore);
 
-            if (result != KernelResult.Success)
+            if (result == KernelResult.Success)
+            {
+                result = _process.HandleTable.GenerateHandle(thread, out handle);
+            }
+            else
             {
                 currentProcess.ResourceLimit?.Release(LimitableResource.Thread, 1);
-
-                return result;
             }
 
-            result = _process.HandleTable.GenerateHandle(thread, out handle);
-
-            if (result != KernelResult.Success)
-            {
-                thread.Terminate();
-
-                currentProcess.ResourceLimit?.Release(LimitableResource.Thread, 1);
-            }
+            thread.DecrementReferenceCount();
 
             return result;
         }
@@ -88,11 +83,22 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         private KernelResult StartThread(int handle)
         {
-            KThread thread = _process.HandleTable.GetObject<KThread>(handle);
+            KThread thread = _process.HandleTable.GetKThread(handle);
 
             if (thread != null)
             {
-                return thread.Start();
+                thread.IncrementReferenceCount();
+
+                KernelResult result = thread.Start();
+
+                if (result == KernelResult.Success)
+                {
+                    thread.IncrementReferenceCount();
+                }
+
+                thread.DecrementReferenceCount();
+
+                return result;
             }
             else
             {

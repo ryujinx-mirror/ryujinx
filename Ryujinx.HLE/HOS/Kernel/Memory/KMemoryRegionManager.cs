@@ -94,6 +94,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             }
         }
 
+        public ulong AllocatePagesContiguous(ulong pagesCount, bool backwards)
+        {
+            lock (_blocks)
+            {
+                return AllocatePagesContiguousImpl(pagesCount, backwards);
+            }
+        }
+
         private KernelResult AllocatePagesImpl(ulong pagesCount, bool backwards, out KPageList pageList)
         {
             pageList = new KPageList();
@@ -122,128 +130,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 //If so, try allocating as much requested pages as possible.
                 while (blockPagesCount <= pagesCount)
                 {
-                    ulong address = 0;
-
-                    for (int currBlockIndex = blockIndex;
-                             currBlockIndex < _blockOrdersCount && address == 0;
-                             currBlockIndex++)
-                    {
-                        block = _blocks[currBlockIndex];
-
-                        int index = 0;
-
-                        bool zeroMask = false;
-
-                        for (int level = 0; level < block.MaxLevel; level++)
-                        {
-                            long mask = block.Masks[level][index];
-
-                            if (mask == 0)
-                            {
-                                zeroMask = true;
-
-                                break;
-                            }
-
-                            if (backwards)
-                            {
-                                index = (index * 64 + 63) - BitUtils.CountLeadingZeros64(mask);
-                            }
-                            else
-                            {
-                                index = index * 64 + BitUtils.CountLeadingZeros64(BitUtils.ReverseBits64(mask));
-                            }
-                        }
-
-                        if (block.SizeInBlocksTruncated <= (ulong)index || zeroMask)
-                        {
-                            continue;
-                        }
-
-                        block.FreeCount--;
-
-                        int tempIdx = index;
-
-                        for (int level = block.MaxLevel - 1; level >= 0; level--, tempIdx /= 64)
-                        {
-                            block.Masks[level][tempIdx / 64] &= ~(1L << (tempIdx & 63));
-
-                            if (block.Masks[level][tempIdx / 64] != 0)
-                            {
-                                break;
-                            }
-                        }
-
-                        address = block.StartAligned + ((ulong)index << block.Order);
-                    }
-
-                    for (int currBlockIndex = blockIndex;
-                             currBlockIndex < _blockOrdersCount && address == 0;
-                             currBlockIndex++)
-                    {
-                        block = _blocks[currBlockIndex];
-
-                        int index = 0;
-
-                        bool zeroMask = false;
-
-                        for (int level = 0; level < block.MaxLevel; level++)
-                        {
-                            long mask = block.Masks[level][index];
-
-                            if (mask == 0)
-                            {
-                                zeroMask = true;
-
-                                break;
-                            }
-
-                            if (backwards)
-                            {
-                                index = index * 64 + BitUtils.CountLeadingZeros64(BitUtils.ReverseBits64(mask));
-                            }
-                            else
-                            {
-                                index = (index * 64 + 63) - BitUtils.CountLeadingZeros64(mask);
-                            }
-                        }
-
-                        if (block.SizeInBlocksTruncated <= (ulong)index || zeroMask)
-                        {
-                            continue;
-                        }
-
-                        block.FreeCount--;
-
-                        int tempIdx = index;
-
-                        for (int level = block.MaxLevel - 1; level >= 0; level--, tempIdx /= 64)
-                        {
-                            block.Masks[level][tempIdx / 64] &= ~(1L << (tempIdx & 63));
-
-                            if (block.Masks[level][tempIdx / 64] != 0)
-                            {
-                                break;
-                            }
-                        }
-
-                        address = block.StartAligned + ((ulong)index << block.Order);
-                    }
+                    ulong address = AllocatePagesForOrder(blockIndex, backwards, bestFitBlockSize);
 
                     //The address being zero means that no free space was found on that order,
                     //just give up and try with the next one.
                     if (address == 0)
                     {
                         break;
-                    }
-
-                    //If we are using a larger order than best fit, then we should
-                    //split it into smaller blocks.
-                    ulong firstFreeBlockSize = 1UL << block.Order;
-
-                    if (firstFreeBlockSize > bestFitBlockSize)
-                    {
-                        FreePages(address + bestFitBlockSize, (firstFreeBlockSize - bestFitBlockSize) / KMemoryManager.PageSize);
                     }
 
                     //Add new allocated page(s) to the pages list.
@@ -281,6 +174,172 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             pageList = null;
 
             return KernelResult.OutOfMemory;
+        }
+
+        private ulong AllocatePagesContiguousImpl(ulong pagesCount, bool backwards)
+        {
+            if (pagesCount == 0 || _blocks.Length < 1)
+            {
+                return 0;
+            }
+
+            int blockIndex = 0;
+
+            while ((1UL << _blocks[blockIndex].Order) / KMemoryManager.PageSize < pagesCount)
+            {
+                if (++blockIndex >= _blocks.Length)
+                {
+                    return 0;
+                }
+            }
+
+            ulong tightestFitBlockSize = 1UL << _blocks[blockIndex].Order;
+
+            ulong address = AllocatePagesForOrder(blockIndex, backwards, tightestFitBlockSize);
+
+            ulong requiredSize = pagesCount * KMemoryManager.PageSize;
+
+            if (address != 0 && tightestFitBlockSize > requiredSize)
+            {
+                FreePages(address + requiredSize, (tightestFitBlockSize - requiredSize) / KMemoryManager.PageSize);
+            }
+
+            return address;
+        }
+
+        private ulong AllocatePagesForOrder(int blockIndex, bool backwards, ulong bestFitBlockSize)
+        {
+            ulong address = 0;
+
+            KMemoryRegionBlock block = null;
+
+            for (int currBlockIndex = blockIndex;
+                     currBlockIndex < _blockOrdersCount && address == 0;
+                     currBlockIndex++)
+            {
+                block = _blocks[currBlockIndex];
+
+                int index = 0;
+
+                bool zeroMask = false;
+
+                for (int level = 0; level < block.MaxLevel; level++)
+                {
+                    long mask = block.Masks[level][index];
+
+                    if (mask == 0)
+                    {
+                        zeroMask = true;
+
+                        break;
+                    }
+
+                    if (backwards)
+                    {
+                        index = (index * 64 + 63) - BitUtils.CountLeadingZeros64(mask);
+                    }
+                    else
+                    {
+                        index = index * 64 + BitUtils.CountLeadingZeros64(BitUtils.ReverseBits64(mask));
+                    }
+                }
+
+                if (block.SizeInBlocksTruncated <= (ulong)index || zeroMask)
+                {
+                    continue;
+                }
+
+                block.FreeCount--;
+
+                int tempIdx = index;
+
+                for (int level = block.MaxLevel - 1; level >= 0; level--, tempIdx /= 64)
+                {
+                    block.Masks[level][tempIdx / 64] &= ~(1L << (tempIdx & 63));
+
+                    if (block.Masks[level][tempIdx / 64] != 0)
+                    {
+                        break;
+                    }
+                }
+
+                address = block.StartAligned + ((ulong)index << block.Order);
+            }
+
+            for (int currBlockIndex = blockIndex;
+                     currBlockIndex < _blockOrdersCount && address == 0;
+                     currBlockIndex++)
+            {
+                block = _blocks[currBlockIndex];
+
+                int index = 0;
+
+                bool zeroMask = false;
+
+                for (int level = 0; level < block.MaxLevel; level++)
+                {
+                    long mask = block.Masks[level][index];
+
+                    if (mask == 0)
+                    {
+                        zeroMask = true;
+
+                        break;
+                    }
+
+                    if (backwards)
+                    {
+                        index = index * 64 + BitUtils.CountLeadingZeros64(BitUtils.ReverseBits64(mask));
+                    }
+                    else
+                    {
+                        index = (index * 64 + 63) - BitUtils.CountLeadingZeros64(mask);
+                    }
+                }
+
+                if (block.SizeInBlocksTruncated <= (ulong)index || zeroMask)
+                {
+                    continue;
+                }
+
+                block.FreeCount--;
+
+                int tempIdx = index;
+
+                for (int level = block.MaxLevel - 1; level >= 0; level--, tempIdx /= 64)
+                {
+                    block.Masks[level][tempIdx / 64] &= ~(1L << (tempIdx & 63));
+
+                    if (block.Masks[level][tempIdx / 64] != 0)
+                    {
+                        break;
+                    }
+                }
+
+                address = block.StartAligned + ((ulong)index << block.Order);
+            }
+
+            if (address != 0)
+            {
+                //If we are using a larger order than best fit, then we should
+                //split it into smaller blocks.
+                ulong firstFreeBlockSize = 1UL << block.Order;
+
+                if (firstFreeBlockSize > bestFitBlockSize)
+                {
+                    FreePages(address + bestFitBlockSize, (firstFreeBlockSize - bestFitBlockSize) / KMemoryManager.PageSize);
+                }
+            }
+
+            return address;
+        }
+
+        public void FreePage(ulong address)
+        {
+            lock (_blocks)
+            {
+                FreePages(address, 1);
+            }
         }
 
         public void FreePages(KPageList pageList)

@@ -2,14 +2,11 @@ using ChocolArm64.Memory;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
-using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.HLE.HOS.Services;
-using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 {
@@ -82,7 +79,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         private KernelResult CloseHandle(int handle)
         {
-            object obj = _process.HandleTable.GetObject<object>(handle);
+            KAutoObject obj = _process.HandleTable.GetObject<KAutoObject>(handle);
 
             _process.HandleTable.CloseHandle(handle);
 
@@ -142,88 +139,6 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         public ulong GetSystemTick64()
         {
             return _system.Scheduler.GetCurrentThread().Context.ThreadState.CntpctEl0;
-        }
-
-        public KernelResult ConnectToNamedPort64(ulong namePtr, out int handle)
-        {
-            return ConnectToNamedPort(namePtr, out handle);
-        }
-
-        private KernelResult ConnectToNamedPort(ulong namePtr, out int handle)
-        {
-            string name = MemoryHelper.ReadAsciiString(_memory, (long)namePtr, 8);
-
-            //TODO: Validate that app has perms to access the service, and that the service
-            //actually exists, return error codes otherwise.
-            KSession session = new KSession(ServiceFactory.MakeService(_system, name), name);
-
-            return _process.HandleTable.GenerateHandle(session, out handle);
-        }
-
-        public KernelResult SendSyncRequest64(int handle)
-        {
-            return SendSyncRequest((ulong)_system.Scheduler.GetCurrentThread().Context.ThreadState.Tpidr, 0x100, handle);
-        }
-
-        public KernelResult SendSyncRequestWithUserBuffer64(ulong messagePtr, ulong size, int handle)
-        {
-            return SendSyncRequest(messagePtr, size, handle);
-        }
-
-        private KernelResult SendSyncRequest(ulong messagePtr, ulong size, int handle)
-        {
-            byte[] messageData = _memory.ReadBytes((long)messagePtr, (long)size);
-
-            KSession session = _process.HandleTable.GetObject<KSession>(handle);
-
-            if (session != null)
-            {
-                _system.CriticalSection.Enter();
-
-                KThread currentThread = _system.Scheduler.GetCurrentThread();
-
-                currentThread.SignaledObj   = null;
-                currentThread.ObjSyncResult = KernelResult.Success;
-
-                currentThread.Reschedule(ThreadSchedState.Paused);
-
-                IpcMessage message = new IpcMessage(messageData, (long)messagePtr);
-
-                ThreadPool.QueueUserWorkItem(ProcessIpcRequest, new HleIpcMessage(
-                    currentThread,
-                    session,
-                    message,
-                    (long)messagePtr));
-
-                _system.ThreadCounter.AddCount();
-
-                _system.CriticalSection.Leave();
-
-                return currentThread.ObjSyncResult;
-            }
-            else
-            {
-                Logger.PrintWarning(LogClass.KernelSvc, $"Invalid session handle 0x{handle:x8}!");
-
-                return KernelResult.InvalidHandle;
-            }
-        }
-
-        private void ProcessIpcRequest(object state)
-        {
-            HleIpcMessage ipcMessage = (HleIpcMessage)state;
-
-            ipcMessage.Thread.ObjSyncResult = IpcHandler.IpcCall(
-                _device,
-                _process,
-                _memory,
-                ipcMessage.Session,
-                ipcMessage.Message,
-                ipcMessage.MessagePtr);
-
-            _system.ThreadCounter.Signal();
-
-            ipcMessage.Thread.Reschedule(ThreadSchedState.Running);
         }
 
         public KernelResult GetProcessId64(int handle, out long pid)
@@ -663,100 +578,6 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
 
             return KernelResult.Success;
-        }
-
-        public KernelResult CreatePort64(
-            int     maxSessions,
-            bool    isLight,
-            ulong   namePtr,
-            out int serverPortHandle,
-            out int clientPortHandle)
-        {
-            return CreatePort(maxSessions, isLight, namePtr, out serverPortHandle, out clientPortHandle);
-        }
-
-        private KernelResult CreatePort(
-            int     maxSessions,
-            bool    isLight,
-            ulong   namePtr,
-            out int serverPortHandle,
-            out int clientPortHandle)
-        {
-            serverPortHandle = clientPortHandle = 0;
-
-            if (maxSessions < 1)
-            {
-                return KernelResult.MaximumExceeded;
-            }
-
-            KPort port = new KPort(_system);
-
-            port.Initialize(maxSessions, isLight, (long)namePtr);
-
-            KProcess currentProcess = _system.Scheduler.GetCurrentProcess();
-
-            KernelResult result = currentProcess.HandleTable.GenerateHandle(port.ClientPort, out clientPortHandle);
-
-            if (result != KernelResult.Success)
-            {
-                return result;
-            }
-
-            result = currentProcess.HandleTable.GenerateHandle(port.ServerPort, out serverPortHandle);
-
-            if (result != KernelResult.Success)
-            {
-                currentProcess.HandleTable.CloseHandle(clientPortHandle);
-            }
-
-            return result;
-        }
-
-        public KernelResult ManageNamedPort64(ulong namePtr, int maxSessions, out int handle)
-        {
-            return ManageNamedPort(namePtr, maxSessions, out handle);
-        }
-
-        private KernelResult ManageNamedPort(ulong namePtr, int maxSessions, out int handle)
-        {
-            handle = 0;
-
-            if (!KernelTransfer.UserToKernelString(_system, namePtr, 12, out string name))
-            {
-                return KernelResult.UserCopyFailed;
-            }
-
-            if (maxSessions < 0 || name.Length > 11)
-            {
-                return KernelResult.MaximumExceeded;
-            }
-
-            if (maxSessions == 0)
-            {
-                return KClientPort.RemoveName(_system, name);
-            }
-
-            KPort port = new KPort(_system);
-
-            KProcess currentProcess = _system.Scheduler.GetCurrentProcess();
-
-            KernelResult result = currentProcess.HandleTable.GenerateHandle(port.ServerPort, out handle);
-
-            if (result != KernelResult.Success)
-            {
-                return result;
-            }
-
-            port.Initialize(maxSessions, false, 0);
-
-            result = port.SetName(name);
-
-            if (result != KernelResult.Success)
-            {
-                currentProcess.HandleTable.CloseHandle(handle);
-            }
-
-            return result;
         }
     }
 }

@@ -2,11 +2,11 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 
 namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
-    class KWritableEvent
+    class KWritableEvent : KAutoObject
     {
         private KEvent _parent;
 
-        public KWritableEvent(KEvent parent)
+        public KWritableEvent(Horizon system, KEvent parent) : base(system)
         {
             _parent = parent;
         }

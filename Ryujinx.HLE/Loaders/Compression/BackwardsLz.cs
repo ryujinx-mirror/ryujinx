@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 
 namespace Ryujinx.HLE.Loaders.Compression
 {
@@ -7,22 +6,26 @@ namespace Ryujinx.HLE.Loaders.Compression
     {
         private class BackwardsReader
         {
-            private Stream _baseStream;
+            private byte[] _data;
 
-            public BackwardsReader(Stream baseStream)
+            private int _position;
+
+            public int Position => _position;
+
+            public BackwardsReader(byte[] data, int end)
             {
-                _baseStream = baseStream;
+                _data     = data;
+                _position = end;
+            }
+
+            public void SeekCurrent(int offset)
+            {
+                _position += offset;
             }
 
             public byte ReadByte()
             {
-                _baseStream.Seek(-1, SeekOrigin.Current);
-
-                byte value = (byte)_baseStream.ReadByte();
-
-                _baseStream.Seek(-1, SeekOrigin.Current);
-
-                return value;
+                return _data[--_position];
             }
 
             public short ReadInt16()
@@ -39,30 +42,24 @@ namespace Ryujinx.HLE.Loaders.Compression
             }
         }
 
-        public static byte[] Decompress(Stream input, int decompressedLength)
+        public static void DecompressInPlace(byte[] buffer, int headerEnd)
         {
-            long end = input.Position;
-
-            BackwardsReader reader = new BackwardsReader(input);
+            BackwardsReader reader = new BackwardsReader(buffer, headerEnd);
 
             int additionalDecLength = reader.ReadInt32();
             int startOffset         = reader.ReadInt32();
             int compressedLength    = reader.ReadInt32();
 
-            input.Seek(12 - startOffset, SeekOrigin.Current);
+            reader.SeekCurrent(12 - startOffset);
 
-            byte[] dec = new byte[decompressedLength];
+            int decBase = headerEnd - compressedLength;
 
-            int decompressedLengthUnpadded = compressedLength + additionalDecLength;
-
-            int decompressionStart = decompressedLength - decompressedLengthUnpadded;
-
-            int decPos = dec.Length;
+            int decPos = compressedLength + additionalDecLength;
 
             byte mask   = 0;
             byte header = 0;
 
-            while (decPos > decompressionStart)
+            while (decPos > 0)
             {
                 if ((mask >>= 1) == 0)
                 {
@@ -72,7 +69,7 @@ namespace Ryujinx.HLE.Loaders.Compression
 
                 if ((header & mask) == 0)
                 {
-                    dec[--decPos] = reader.ReadByte();
+                    buffer[decBase + --decPos] = reader.ReadByte();
                 }
                 else
                 {
@@ -81,25 +78,30 @@ namespace Ryujinx.HLE.Loaders.Compression
                     int length   = (pair >> 12)   + 3;
                     int position = (pair & 0xfff) + 3;
 
+                    if (length > decPos)
+                    {
+                        length = decPos;
+                    }
+
                     decPos -= length;
+
+                    int dstPos = decBase + decPos;
 
                     if (length <= position)
                     {
-                        int srcPos = decPos + position;
+                        int srcPos = dstPos + position;
 
-                        Buffer.BlockCopy(dec, srcPos, dec, decPos, length);
+                        Buffer.BlockCopy(buffer, srcPos, buffer, dstPos, length);
                     }
                     else
                     {
                         for (int offset = 0; offset < length; offset++)
                         {
-                            dec[decPos + offset] = dec[decPos + position + offset];
+                            buffer[dstPos + offset] = buffer[dstPos + position + offset];
                         }
                     }
                 }
             }
-
-            return dec;
         }
     }
 }
