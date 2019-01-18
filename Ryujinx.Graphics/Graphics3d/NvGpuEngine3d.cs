@@ -783,12 +783,18 @@ namespace Ryujinx.Graphics.Graphics3d
                 GalVertexAttribType Type = (GalVertexAttribType)((Packed >> 27) & 0x7);
 
                 bool IsRgba = ((Packed >> 31) & 1) != 0;
+                
+                // Check vertex array is enabled to avoid out of bounds exception when reading bytes
+                bool Enable = (ReadRegister(NvGpuEngine3dReg.VertexArrayNControl + ArrayIndex * 4) & 0x1000) != 0;
 
                 //Note: 16 is the maximum size of an attribute,
                 //having a component size of 32-bits with 4 elements (a vec4).
-                byte[] Data = Vmm.ReadBytes(VbPosition + Offset, 16);
+                if (Enable)
+                {
+                    byte[] Data = Vmm.ReadBytes(VbPosition + Offset, 16);
 
-                Attribs[ArrayIndex].Add(new GalVertexAttrib(Attr, IsConst, Offset, Data, Size, Type, IsRgba));
+                    Attribs[ArrayIndex].Add(new GalVertexAttrib(Attr, IsConst, Offset, Data, Size, Type, IsRgba));
+                }
             }
 
             State.VertexBindings = new GalVertexBinding[32];
