@@ -16,9 +16,8 @@ namespace Ryujinx.HLE.Exceptions
     [Serializable]
     internal class ServiceNotImplementedException : Exception
     {
-        public KSession   Session { get; }
-        public IpcMessage Request { get; }
         public ServiceCtx Context { get; }
+        public IpcMessage Request { get; }
 
         public ServiceNotImplementedException(ServiceCtx context)
             : this(context, "The service call is not implemented.")
@@ -28,7 +27,6 @@ namespace Ryujinx.HLE.Exceptions
             : base(message)
         {
             Context = context;
-            Session = context.Session;
             Request = context.Request;
         }
 
@@ -36,7 +34,6 @@ namespace Ryujinx.HLE.Exceptions
             : base(message, inner)
         {
             Context = context;
-            Session = context.Session;
             Request = context.Request;
         }
 
@@ -74,7 +71,7 @@ namespace Ryujinx.HLE.Exceptions
 
                 if (ipcMethod != null)
                 {
-                    sb.AppendLine($"Service Command: {Session.ServiceName} {ipcService.GetType().Name}: {ipcCommandId} ({ipcMethod.Method.Name})");
+                    sb.AppendLine($"Service Command: {ipcService.GetType().FullName}: {ipcCommandId} ({ipcMethod.Method.Name})");
                     sb.AppendLine();
                 }
             }
