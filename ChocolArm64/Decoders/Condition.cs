@@ -1,6 +1,6 @@
 namespace ChocolArm64.Decoders
 {
-    enum Cond
+    enum Condition
     {
         Eq   = 0,
         Ne   = 1,

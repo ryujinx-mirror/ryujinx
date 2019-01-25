@@ -23,6 +23,8 @@ namespace ChocolArm64.Translation
         public Block    CurrBlock => _currBlock;
         public OpCode64 CurrOp    => _currBlock?.OpCodes[_opcIndex];
 
+        public Aarch32Mode Mode { get; } = Aarch32Mode.User; //TODO
+
         private Dictionary<Block, ILBlock> _visitedBlocks;
 
         private Queue<Block> _branchTargets;
@@ -97,9 +99,50 @@ namespace ChocolArm64.Translation
                 EmitSynchronization();
             }
 
+            //On AARCH32 mode, (almost) all instruction can be conditionally
+            //executed, and the required condition is encoded on the opcode.
+            //We handle that here, skipping the instruction if the condition
+            //is not met. We can just ignore it when the condition is "Always",
+            //because in this case the instruction is always going to be executed.
+            //Condition "Never" is also ignored because this is a special encoding
+            //used by some unconditional instructions.
+            ILLabel lblSkip = null;
+
+            if (CurrOp is OpCode32 op && op.Cond < Condition.Al)
+            {
+                lblSkip = new ILLabel();
+
+                EmitCondBranch(lblSkip, GetInverseCond(op.Cond));
+            }
+
             CurrOp.Emitter(this);
 
+            if (lblSkip != null)
+            {
+                MarkLabel(lblSkip);
+
+                //If this is the last op on the block, and there's no "next" block
+                //after this one, then we have to return right now, with the address
+                //of the next instruction to be executed (in the case that the condition
+                //is false, and the branch was not taken, as all basic blocks should end with
+                //some kind of branch).
+                if (CurrOp == CurrBlock.GetLastOp() && CurrBlock.Next == null)
+                {
+                    EmitStoreState();
+                    EmitLdc_I8(CurrOp.Position + CurrOp.OpCodeSizeInBytes);
+
+                    Emit(OpCodes.Ret);
+                }
+            }
+
             _ilBlock.Add(new ILBarrier());
+        }
+
+        private Condition GetInverseCond(Condition cond)
+        {
+            //Bit 0 of all conditions is basically a negation bit, so
+            //inverting this bit has the effect of inverting the condition.
+            return (Condition)((int)cond ^ 1);
         }
 
         private void EmitSynchronization()
@@ -243,27 +286,27 @@ namespace ChocolArm64.Translation
         {
             _optOpLastCompare = CurrOp;
 
-            InstEmitAluHelper.EmitDataLoadOpers(this);
+            InstEmitAluHelper.EmitAluLoadOpers(this);
 
             Stloc(CmpOptTmp2Index, IoType.Int);
             Stloc(CmpOptTmp1Index, IoType.Int);
         }
 
-        private Dictionary<Cond, OpCode> _branchOps = new Dictionary<Cond, OpCode>()
+        private Dictionary<Condition, OpCode> _branchOps = new Dictionary<Condition, OpCode>()
         {
-            { Cond.Eq,   OpCodes.Beq    },
-            { Cond.Ne,   OpCodes.Bne_Un },
-            { Cond.GeUn, OpCodes.Bge_Un },
-            { Cond.LtUn, OpCodes.Blt_Un },
-            { Cond.GtUn, OpCodes.Bgt_Un },
-            { Cond.LeUn, OpCodes.Ble_Un },
-            { Cond.Ge,   OpCodes.Bge    },
-            { Cond.Lt,   OpCodes.Blt    },
-            { Cond.Gt,   OpCodes.Bgt    },
-            { Cond.Le,   OpCodes.Ble    }
+            { Condition.Eq,   OpCodes.Beq    },
+            { Condition.Ne,   OpCodes.Bne_Un },
+            { Condition.GeUn, OpCodes.Bge_Un },
+            { Condition.LtUn, OpCodes.Blt_Un },
+            { Condition.GtUn, OpCodes.Bgt_Un },
+            { Condition.LeUn, OpCodes.Ble_Un },
+            { Condition.Ge,   OpCodes.Bge    },
+            { Condition.Lt,   OpCodes.Blt    },
+            { Condition.Gt,   OpCodes.Bgt    },
+            { Condition.Le,   OpCodes.Ble    }
         };
 
-        public void EmitCondBranch(ILLabel target, Cond cond)
+        public void EmitCondBranch(ILLabel target, Condition cond)
         {
             OpCode ilOp;
 
@@ -432,7 +475,7 @@ namespace ChocolArm64.Translation
 
         public void EmitLdintzr(int index)
         {
-            if (index != CpuThreadState.ZrIndex)
+            if (index != RegisterAlias.Zr)
             {
                 EmitLdint(index);
             }
@@ -444,7 +487,7 @@ namespace ChocolArm64.Translation
 
         public void EmitStintzr(int index)
         {
-            if (index != CpuThreadState.ZrIndex)
+            if (index != RegisterAlias.Zr)
             {
                 EmitStint(index);
             }

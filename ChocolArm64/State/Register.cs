@@ -43,6 +43,8 @@ namespace ChocolArm64.State
         {
             switch ((PState)Index)
             {
+                case PState.TBit: return GetField(nameof(CpuThreadState.Thumb));
+
                 case PState.VBit: return GetField(nameof(CpuThreadState.Overflow));
                 case PState.CBit: return GetField(nameof(CpuThreadState.Carry));
                 case PState.ZBit: return GetField(nameof(CpuThreadState.Zero));

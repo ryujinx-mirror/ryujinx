@@ -4,7 +4,6 @@ using ChocolArm64.Memory;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
-using System.Reflection.Emit;
 
 namespace ChocolArm64
 {
@@ -23,34 +22,10 @@ namespace ChocolArm64
 
         internal void ExecuteSubroutine(CpuThread thread, long position)
         {
-            //TODO: Both the execute A32/A64 methods should be merged on the future,
-            //when both ISAs are implemented with the interpreter and JIT.
-            //As of now, A32 only has a interpreter and A64 a JIT.
-            CpuThreadState state  = thread.ThreadState;
-            MemoryManager  memory = thread.Memory;
-
-            if (state.ExecutionMode == ExecutionMode.AArch32)
-            {
-                ExecuteSubroutineA32(state, memory);
-            }
-            else
-            {
-                ExecuteSubroutineA64(state, memory, position);
-            }
+            ExecuteSubroutine(thread.ThreadState, thread.Memory, position);
         }
 
-        private void ExecuteSubroutineA32(CpuThreadState state, MemoryManager memory)
-        {
-            do
-            {
-                OpCode64 opCode = Decoder.DecodeOpCode(state, memory, state.R15);
-
-                opCode.Interpreter(state, memory, opCode);
-            }
-            while (state.R15 != 0 && state.Running);
-        }
-
-        private void ExecuteSubroutineA64(CpuThreadState state, MemoryManager memory, long position)
+        private void ExecuteSubroutine(CpuThreadState state, MemoryManager memory, long position)
         {
             do
             {
@@ -61,12 +36,12 @@ namespace ChocolArm64
 
                 if (!_cache.TryGetSubroutine(position, out TranslatedSub sub))
                 {
-                    sub = TranslateTier0(state, memory, position);
+                    sub = TranslateTier0(memory, position, state.GetExecutionMode());
                 }
 
                 if (sub.ShouldReJit())
                 {
-                    TranslateTier1(state, memory, position);
+                    TranslateTier1(memory, position, state.GetExecutionMode());
                 }
 
                 position = sub.Execute(state, memory);
@@ -79,9 +54,9 @@ namespace ChocolArm64
             return _cache.HasSubroutine(position);
         }
 
-        private TranslatedSub TranslateTier0(CpuThreadState state, MemoryManager memory, long position)
+        private TranslatedSub TranslateTier0(MemoryManager memory, long position, ExecutionMode mode)
         {
-            Block block = Decoder.DecodeBasicBlock(state, memory, position);
+            Block block = Decoder.DecodeBasicBlock(memory, position, mode);
 
             ILEmitterCtx context = new ILEmitterCtx(_cache, block);
 
@@ -98,9 +73,9 @@ namespace ChocolArm64
             return subroutine;
         }
 
-        private void TranslateTier1(CpuThreadState state, MemoryManager memory, long position)
+        private void TranslateTier1(MemoryManager memory, long position, ExecutionMode mode)
         {
-            Block graph = Decoder.DecodeSubroutine(_cache, state, memory, position);
+            Block graph = Decoder.DecodeSubroutine(_cache, memory, position, mode);
 
             ILEmitterCtx context = new ILEmitterCtx(_cache, graph);
 

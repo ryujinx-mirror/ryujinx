@@ -3,6 +3,7 @@ using ChocolArm64.Events;
 using ChocolArm64.Memory;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.SupervisorCall;
@@ -797,6 +798,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             context.ThreadState.Interrupt += InterruptHandler;
             context.ThreadState.SvcCall   += _svcHandler.SvcCall;
+            context.ThreadState.Undefined += UndefinedInstructionHandler;
         }
 
         private void InterruptHandler(object sender, EventArgs e)
@@ -1020,6 +1022,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         private void CpuTraceHandler(object sender, CpuTraceEventArgs e)
         {
             Logger.PrintInfo(LogClass.Cpu, $"Executing at 0x{e.Position:X16}.");
+        }
+
+        private void UndefinedInstructionHandler(object sender, InstUndefinedEventArgs e)
+        {
+            throw new UndefinedInstructionException(e.Position, e.RawOpCode);
         }
     }
 }

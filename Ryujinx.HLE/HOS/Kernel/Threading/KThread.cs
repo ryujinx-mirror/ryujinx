@@ -152,6 +152,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             Context = new CpuThread(owner.Translator, owner.CpuMemory, (long)entrypoint);
 
+            Context.ThreadState.IsAarch32 = (Owner.MmuFlags & 1) == 0;
+
             Context.ThreadState.X0  = argsPtr;
             Context.ThreadState.X31 = stackTop;
 

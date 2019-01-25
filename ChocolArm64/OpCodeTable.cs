@@ -1,7 +1,5 @@
 using ChocolArm64.Decoders;
-using ChocolArm64.Decoders32;
 using ChocolArm64.Instructions;
-using ChocolArm64.Instructions32;
 using ChocolArm64.State;
 using System;
 using System.Collections.Generic;
@@ -10,13 +8,47 @@ namespace ChocolArm64
 {
     static class OpCodeTable
     {
+        private const int FastLookupSize = 0x1000;
+
+        private class InstInfo
+        {
+            public int Mask;
+            public int Value;
+
+            public Inst Inst;
+
+            public InstInfo(int mask, int value, Inst inst)
+            {
+                Mask  = mask;
+                Value = value;
+                Inst  = inst;
+            }
+        }
+
+        private static List<InstInfo> _allInstA32 = new List<InstInfo>();
+        private static List<InstInfo> _allInstT32 = new List<InstInfo>();
+        private static List<InstInfo> _allInstA64 = new List<InstInfo>();
+
+        private static InstInfo[][] _instA32FastLookup = new InstInfo[FastLookupSize][];
+        private static InstInfo[][] _instT32FastLookup = new InstInfo[FastLookupSize][];
+        private static InstInfo[][] _instA64FastLookup = new InstInfo[FastLookupSize][];
+
         static OpCodeTable()
         {
 #region "OpCode Table (AArch32)"
             //Integer
-            SetA32("<<<<1010xxxxxxxxxxxxxxxxxxxxxxxx", A32InstInterpret.B,      typeof(A32OpCodeBImmAl));
-            SetA32("<<<<1011xxxxxxxxxxxxxxxxxxxxxxxx", A32InstInterpret.Bl,     typeof(A32OpCodeBImmAl));
-            SetA32("1111101xxxxxxxxxxxxxxxxxxxxxxxxx", A32InstInterpret.Blx,    typeof(A32OpCodeBImmAl));
+            SetA32("<<<<0010100xxxxxxxxxxxxxxxxxxxxx", InstEmit32.Add, typeof(OpCodeAluImm32));
+            SetA32("<<<<0000100xxxxxxxxxxxxxxxx0xxxx", InstEmit32.Add, typeof(OpCodeAluRsImm32));
+            SetA32("<<<<1010xxxxxxxxxxxxxxxxxxxxxxxx", InstEmit32.B,   typeof(OpCodeBImm32));
+            SetA32("<<<<1011xxxxxxxxxxxxxxxxxxxxxxxx", InstEmit32.Bl,  typeof(OpCodeBImm32));
+            SetA32("1111101xxxxxxxxxxxxxxxxxxxxxxxxx", InstEmit32.Blx, typeof(OpCodeBImm32));
+            SetA32("<<<<000100101111111111110001xxxx", InstEmit32.Bx,  typeof(OpCodeBReg32));
+            SetT32(                "010001110xxxx000", InstEmit32.Bx,  typeof(OpCodeBRegT16));
+            SetA32("<<<<0011101x0000xxxxxxxxxxxxxxxx", InstEmit32.Mov, typeof(OpCodeAluImm32));
+            SetA32("<<<<0001101x0000xxxxxxxxxxx0xxxx", InstEmit32.Mov, typeof(OpCodeAluRsImm32));
+            SetT32(                "00100xxxxxxxxxxx", InstEmit32.Mov, typeof(OpCodeAluImm8T16));
+            SetA32("<<<<0010010xxxxxxxxxxxxxxxxxxxxx", InstEmit32.Sub, typeof(OpCodeAluImm32));
+            SetA32("<<<<0000010xxxxxxxxxxxxxxxx0xxxx", InstEmit32.Sub, typeof(OpCodeAluRsImm32));
 #endregion
 
 #region "OpCode Table (AArch64)"
@@ -544,63 +576,29 @@ namespace ChocolArm64
             SetA64("0>001110<<0xxxxx011110xxxxxxxxxx", InstEmit.Zip2_V,          typeof(OpCodeSimdReg64));
 #endregion
 
-#region "Generate InstA64FastLookup Table (AArch64)"
-            var tmp = new List<InstInfo>[_fastLookupSize];
-            for (int i = 0; i < _fastLookupSize; i++)
-            {
-                tmp[i] = new List<InstInfo>();
-            }
-
-            foreach (var inst in _allInstA64)
-            {
-                int mask  = ToFastLookupIndex(inst.Mask);
-                int value = ToFastLookupIndex(inst.Value);
-
-                for (int i = 0; i < _fastLookupSize; i++)
-                {
-                    if ((i & mask) == value)
-                    {
-                        tmp[i].Add(inst);
-                    }
-                }
-            }
-
-            for (int i = 0; i < _fastLookupSize; i++)
-            {
-                _instA64FastLookup[i] = tmp[i].ToArray();
-            }
-#endregion
+            FillFastLookupTable(_instA32FastLookup, _allInstA32);
+            FillFastLookupTable(_instT32FastLookup, _allInstT32);
+            FillFastLookupTable(_instA64FastLookup, _allInstA64);
         }
 
-        private class InstInfo
+        private static void SetA32(string encoding, InstEmitter emitter, Type type)
         {
-            public int Mask;
-            public int Value;
-
-            public Inst Inst;
-
-            public InstInfo(int mask, int value, Inst inst)
-            {
-                Mask  = mask;
-                Value = value;
-                Inst  = inst;
-            }
+            Set(encoding, new Inst(emitter, type), ExecutionMode.Aarch32Arm);
         }
 
-        private static List<InstInfo> _allInstA32 = new List<InstInfo>();
-        private static List<InstInfo> _allInstA64 = new List<InstInfo>();
-
-        private static int _fastLookupSize = 0x1000;
-        private static InstInfo[][] _instA64FastLookup = new InstInfo[_fastLookupSize][];
-
-        private static void SetA32(string encoding, InstInterpreter interpreter, Type type)
+        private static void SetT32(string encoding, InstEmitter emitter, Type type)
         {
-            Set(encoding, new Inst(interpreter, null, type), ExecutionMode.AArch32);
+            if (encoding.Length == 16)
+            {
+                encoding = "xxxxxxxxxxxxxxxx" + encoding;
+            }
+
+            Set(encoding, new Inst(emitter, type), ExecutionMode.Aarch32Thumb);
         }
 
         private static void SetA64(string encoding, InstEmitter emitter, Type type)
         {
-            Set(encoding, new Inst(null, emitter, type), ExecutionMode.AArch64);
+            Set(encoding, new Inst(emitter, type), ExecutionMode.Aarch64);
         }
 
         private static void Set(string encoding, Inst inst, ExecutionMode mode)
@@ -673,27 +671,55 @@ namespace ChocolArm64
             }
         }
 
-        private static void InsertInst(
-            int           xMask,
-            int           value,
-            Inst          inst,
-            ExecutionMode mode)
+        private static void InsertInst(int xMask, int value, Inst inst, ExecutionMode mode)
         {
             InstInfo info = new InstInfo(xMask, value, inst);
 
-            if (mode == ExecutionMode.AArch64)
+            switch (mode)
             {
-                _allInstA64.Add(info);
+                case ExecutionMode.Aarch32Arm:   _allInstA32.Add(info); break;
+                case ExecutionMode.Aarch32Thumb: _allInstT32.Add(info); break;
+                case ExecutionMode.Aarch64:      _allInstA64.Add(info); break;
             }
-            else
+        }
+
+        private static void FillFastLookupTable(InstInfo[][] table, List<InstInfo> allInsts)
+        {
+            List<InstInfo>[] tmp = new List<InstInfo>[FastLookupSize];
+
+            for (int i = 0; i < FastLookupSize; i++)
             {
-                _allInstA32.Add(info);
+                tmp[i] = new List<InstInfo>();
+            }
+
+            foreach (InstInfo inst in allInsts)
+            {
+                int mask  = ToFastLookupIndex(inst.Mask);
+                int value = ToFastLookupIndex(inst.Value);
+
+                for (int i = 0; i < FastLookupSize; i++)
+                {
+                    if ((i & mask) == value)
+                    {
+                        tmp[i].Add(inst);
+                    }
+                }
+            }
+
+            for (int i = 0; i < FastLookupSize; i++)
+            {
+                table[i] = tmp[i].ToArray();
             }
         }
 
         public static Inst GetInstA32(int opCode)
         {
-            return GetInstFromList(_allInstA32, opCode);
+            return GetInstFromList(_instA32FastLookup[ToFastLookupIndex(opCode)], opCode);
+        }
+
+        public static Inst GetInstT32(int opCode)
+        {
+            return GetInstFromList(_instT32FastLookup[ToFastLookupIndex(opCode)], opCode);
         }
 
         public static Inst GetInstA64(int opCode)
@@ -708,7 +734,7 @@ namespace ChocolArm64
 
         private static Inst GetInstFromList(IEnumerable<InstInfo> instList, int opCode)
         {
-            foreach (var node in instList)
+            foreach (InstInfo node in instList)
             {
                 if ((opCode & node.Mask) == node.Value)
                 {

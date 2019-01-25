@@ -36,36 +36,10 @@ namespace ChocolArm64.Instructions
             OpCodeBImmAl64 op = (OpCodeBImmAl64)context.CurrOp;
 
             context.EmitLdc_I(op.Position + 4);
-            context.EmitStint(CpuThreadState.LrIndex);
+            context.EmitStint(RegisterAlias.Lr);
             context.EmitStoreState();
 
-            if (context.TryOptEmitSubroutineCall())
-            {
-                //Note: the return value of the called method will be placed
-                //at the Stack, the return value is always a Int64 with the
-                //return address of the function. We check if the address is
-                //correct, if it isn't we keep returning until we reach the dispatcher.
-                context.Emit(OpCodes.Dup);
-
-                context.EmitLdc_I8(op.Position + 4);
-
-                ILLabel lblContinue = new ILLabel();
-
-                context.Emit(OpCodes.Beq_S, lblContinue);
-                context.Emit(OpCodes.Ret);
-
-                context.MarkLabel(lblContinue);
-
-                context.Emit(OpCodes.Pop);
-
-                context.EmitLoadState();
-            }
-            else
-            {
-                context.EmitLdc_I8(op.Imm);
-
-                context.Emit(OpCodes.Ret);
-            }
+            InstEmitFlowHelper.EmitCall(context, op.Imm);
         }
 
         public static void Blr(ILEmitterCtx context)
@@ -74,7 +48,7 @@ namespace ChocolArm64.Instructions
 
             context.EmitLdintzr(op.Rn);
             context.EmitLdc_I(op.Position + 4);
-            context.EmitStint(CpuThreadState.LrIndex);
+            context.EmitStint(RegisterAlias.Lr);
             context.EmitStoreState();
 
             context.Emit(OpCodes.Ret);
@@ -106,7 +80,7 @@ namespace ChocolArm64.Instructions
         public static void Ret(ILEmitterCtx context)
         {
             context.EmitStoreState();
-            context.EmitLdint(CpuThreadState.LrIndex);
+            context.EmitLdint(RegisterAlias.Lr);
 
             context.Emit(OpCodes.Ret);
         }
@@ -128,7 +102,7 @@ namespace ChocolArm64.Instructions
             EmitBranch(context, ilOp);
         }
 
-        private static void EmitBranch(ILEmitterCtx context, Cond cond)
+        private static void EmitBranch(ILEmitterCtx context, Condition cond)
         {
             OpCodeBImm64 op = (OpCodeBImm64)context.CurrOp;
 

@@ -48,7 +48,7 @@ namespace ChocolArm64.Instructions
 
             context.MarkLabel(lblTrue);
 
-            EmitDataLoadOpers(context);
+            EmitAluLoadOpers(context);
 
             if (cmpOp == CcmpOp.Cmp)
             {

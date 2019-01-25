@@ -78,6 +78,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 }
             }
 
+            //TODO: ARM32.
             long framePointer = (long)threadState.X29;
 
             while (framePointer != 0)
@@ -245,6 +246,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             long ehHdrEndOffset   = memory.ReadInt32(mod0Offset + 0x14) + mod0Offset;
             long modObjOffset     = memory.ReadInt32(mod0Offset + 0x18) + mod0Offset;
 
+            //TODO: Elf32.
             while (true)
             {
                 long tagVal = memory.ReadInt64(dynamicOffset + 0);

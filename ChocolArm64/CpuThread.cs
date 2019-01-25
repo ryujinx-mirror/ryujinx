@@ -25,8 +25,6 @@ namespace ChocolArm64
 
             ThreadState = new CpuThreadState();
 
-            ThreadState.ExecutionMode = ExecutionMode.AArch64;
-
             ThreadState.Running = true;
 
             Work = new Thread(delegate()

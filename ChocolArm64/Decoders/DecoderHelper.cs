@@ -89,6 +89,11 @@ namespace ChocolArm64.Decoders
             return value;
         }
 
+        public static long DecodeImm24_2(int opCode)
+        {
+            return ((long)opCode << 40) >> 38;
+        }
+
         public static long DecodeImm26_2(int opCode)
         {
             return ((long)opCode << 38) >> 36;

@@ -17,7 +17,7 @@ namespace ChocolArm64.Instructions
 
         private static void EmitAdc(ILEmitterCtx context, bool setFlags)
         {
-            EmitDataLoadOpers(context);
+            EmitAluLoadOpers(context);
 
             context.Emit(OpCodes.Add);
 
@@ -44,14 +44,14 @@ namespace ChocolArm64.Instructions
                 EmitAddsVCheck(context);
             }
 
-            EmitDataStore(context);
+            EmitAluStore(context);
         }
 
-        public static void Add(ILEmitterCtx context) => EmitDataOp(context, OpCodes.Add);
+        public static void Add(ILEmitterCtx context) => EmitAluOp(context, OpCodes.Add);
 
         public static void Adds(ILEmitterCtx context)
         {
-            EmitDataLoadOpers(context);
+            EmitAluLoadOpers(context);
 
             context.Emit(OpCodes.Add);
 
@@ -59,14 +59,14 @@ namespace ChocolArm64.Instructions
 
             EmitAddsCCheck(context);
             EmitAddsVCheck(context);
-            EmitDataStoreS(context);
+            EmitAluStoreS(context);
         }
 
-        public static void And(ILEmitterCtx context) => EmitDataOp(context, OpCodes.And);
+        public static void And(ILEmitterCtx context) => EmitAluOp(context, OpCodes.And);
 
         public static void Ands(ILEmitterCtx context)
         {
-            EmitDataLoadOpers(context);
+            EmitAluLoadOpers(context);
 
             context.Emit(OpCodes.And);
 
@@ -74,17 +74,17 @@ namespace ChocolArm64.Instructions
 
             context.EmitZnFlagCheck();
 
-            EmitDataStoreS(context);
+            EmitAluStoreS(context);
         }
 
-        public static void Asrv(ILEmitterCtx context) => EmitDataOpShift(context, OpCodes.Shr);
+        public static void Asrv(ILEmitterCtx context) => EmitAluOpShift(context, OpCodes.Shr);
 
         public static void Bic(ILEmitterCtx context)  => EmitBic(context, false);
         public static void Bics(ILEmitterCtx context) => EmitBic(context, true);
 
         private static void EmitBic(ILEmitterCtx context, bool setFlags)
         {
-            EmitDataLoadOpers(context);
+            EmitAluLoadOpers(context);
 
             context.Emit(OpCodes.Not);
             context.Emit(OpCodes.And);
@@ -96,7 +96,7 @@ namespace ChocolArm64.Instructions
                 context.EmitZnFlagCheck();
             }
 
-            EmitDataStore(context, setFlags);
+            EmitAluStore(context, setFlags);
         }
 
         public static void Cls(ILEmitterCtx context)
@@ -136,15 +136,15 @@ namespace ChocolArm64.Instructions
 
         public static void Eon(ILEmitterCtx context)
         {
-            EmitDataLoadOpers(context);
+            EmitAluLoadOpers(context);
 
             context.Emit(OpCodes.Not);
             context.Emit(OpCodes.Xor);
 
-            EmitDataStore(context);
+            EmitAluStore(context);
         }
 
-        public static void Eor(ILEmitterCtx context) => EmitDataOp(context, OpCodes.Xor);
+        public static void Eor(ILEmitterCtx context) => EmitAluOp(context, OpCodes.Xor);
 
         public static void Extr(ILEmitterCtx context)
         {
@@ -166,18 +166,18 @@ namespace ChocolArm64.Instructions
                 context.Emit(OpCodes.Or);
             }
 
-            EmitDataStore(context);
+            EmitAluStore(context);
         }
 
-        public static void Lslv(ILEmitterCtx context) => EmitDataOpShift(context, OpCodes.Shl);
-        public static void Lsrv(ILEmitterCtx context) => EmitDataOpShift(context, OpCodes.Shr_Un);
+        public static void Lslv(ILEmitterCtx context) => EmitAluOpShift(context, OpCodes.Shl);
+        public static void Lsrv(ILEmitterCtx context) => EmitAluOpShift(context, OpCodes.Shr_Un);
 
         public static void Sbc(ILEmitterCtx context)  => EmitSbc(context, false);
         public static void Sbcs(ILEmitterCtx context) => EmitSbc(context, true);
 
         private static void EmitSbc(ILEmitterCtx context, bool setFlags)
         {
-            EmitDataLoadOpers(context);
+            EmitAluLoadOpers(context);
 
             context.Emit(OpCodes.Sub);
 
@@ -208,16 +208,16 @@ namespace ChocolArm64.Instructions
                 EmitSubsVCheck(context);
             }
 
-            EmitDataStore(context);
+            EmitAluStore(context);
         }
 
-        public static void Sub(ILEmitterCtx context) => EmitDataOp(context, OpCodes.Sub);
+        public static void Sub(ILEmitterCtx context) => EmitAluOp(context, OpCodes.Sub);
 
         public static void Subs(ILEmitterCtx context)
         {
             context.TryOptMarkCondWithoutCmp();
 
-            EmitDataLoadOpers(context);
+            EmitAluLoadOpers(context);
 
             context.Emit(OpCodes.Sub);
 
@@ -225,20 +225,20 @@ namespace ChocolArm64.Instructions
 
             EmitSubsCCheck(context);
             EmitSubsVCheck(context);
-            EmitDataStoreS(context);
+            EmitAluStoreS(context);
         }
 
         public static void Orn(ILEmitterCtx context)
         {
-            EmitDataLoadOpers(context);
+            EmitAluLoadOpers(context);
 
             context.Emit(OpCodes.Not);
             context.Emit(OpCodes.Or);
 
-            EmitDataStore(context);
+            EmitAluStore(context);
         }
 
-        public static void Orr(ILEmitterCtx context) => EmitDataOp(context, OpCodes.Or);
+        public static void Orr(ILEmitterCtx context) => EmitAluOp(context, OpCodes.Or);
 
         public static void Rbit(ILEmitterCtx context) => EmitFallback32_64(context,
             nameof(SoftFallback.ReverseBits32),
@@ -283,22 +283,22 @@ namespace ChocolArm64.Instructions
 
         public static void Rorv(ILEmitterCtx context)
         {
-            EmitDataLoadRn(context);
-            EmitDataLoadShift(context);
+            EmitAluLoadRn(context);
+            EmitAluLoadShift(context);
 
             context.Emit(OpCodes.Shr_Un);
 
-            EmitDataLoadRn(context);
+            EmitAluLoadRn(context);
 
             context.EmitLdc_I4(context.CurrOp.GetBitsCount());
 
-            EmitDataLoadShift(context);
+            EmitAluLoadShift(context);
 
             context.Emit(OpCodes.Sub);
             context.Emit(OpCodes.Shl);
             context.Emit(OpCodes.Or);
 
-            EmitDataStore(context);
+            EmitAluStore(context);
         }
 
         public static void Sdiv(ILEmitterCtx context) => EmitDiv(context, OpCodes.Div);
@@ -309,7 +309,7 @@ namespace ChocolArm64.Instructions
             //If Rm == 0, Rd = 0 (division by zero).
             context.EmitLdc_I(0);
 
-            EmitDataLoadRm(context);
+            EmitAluLoadRm(context);
 
             context.EmitLdc_I(0);
 
@@ -325,13 +325,13 @@ namespace ChocolArm64.Instructions
 
                 context.EmitLdc_I(intMin);
 
-                EmitDataLoadRn(context);
+                EmitAluLoadRn(context);
 
                 context.EmitLdc_I(intMin);
 
                 context.Emit(OpCodes.Ceq);
 
-                EmitDataLoadRm(context);
+                EmitAluLoadRm(context);
 
                 context.EmitLdc_I(-1);
 
@@ -341,38 +341,38 @@ namespace ChocolArm64.Instructions
                 context.Emit(OpCodes.Pop);
             }
 
-            EmitDataLoadRn(context);
-            EmitDataLoadRm(context);
+            EmitAluLoadRn(context);
+            EmitAluLoadRm(context);
 
             context.Emit(ilOp);
 
             context.MarkLabel(badDiv);
 
-            EmitDataStore(context);
+            EmitAluStore(context);
         }
 
-        private static void EmitDataOp(ILEmitterCtx context, OpCode ilOp)
+        private static void EmitAluOp(ILEmitterCtx context, OpCode ilOp)
         {
-            EmitDataLoadOpers(context);
+            EmitAluLoadOpers(context);
 
             context.Emit(ilOp);
 
-            EmitDataStore(context);
+            EmitAluStore(context);
         }
 
-        private static void EmitDataOpShift(ILEmitterCtx context, OpCode ilOp)
+        private static void EmitAluOpShift(ILEmitterCtx context, OpCode ilOp)
         {
-            EmitDataLoadRn(context);
-            EmitDataLoadShift(context);
+            EmitAluLoadRn(context);
+            EmitAluLoadShift(context);
 
             context.Emit(ilOp);
 
-            EmitDataStore(context);
+            EmitAluStore(context);
         }
 
-        private static void EmitDataLoadShift(ILEmitterCtx context)
+        private static void EmitAluLoadShift(ILEmitterCtx context)
         {
-            EmitDataLoadRm(context);
+            EmitAluLoadRm(context);
 
             context.EmitLdc_I(context.CurrOp.GetBitsCount() - 1);
 
@@ -397,6 +397,23 @@ namespace ChocolArm64.Instructions
             context.EmitLdc_I4(0);
 
             context.EmitStflg((int)PState.CBit);
+        }
+
+        public static void EmitAluStore(ILEmitterCtx context)  => EmitAluStore(context, false);
+        public static void EmitAluStoreS(ILEmitterCtx context) => EmitAluStore(context, true);
+
+        public static void EmitAluStore(ILEmitterCtx context, bool setFlags)
+        {
+            IOpCodeAlu64 op = (IOpCodeAlu64)context.CurrOp;
+
+            if (setFlags || op is IOpCodeAluRs64)
+            {
+                context.EmitStintzr(op.Rd);
+            }
+            else
+            {
+                context.EmitStint(op.Rd);
+            }
         }
     }
 }

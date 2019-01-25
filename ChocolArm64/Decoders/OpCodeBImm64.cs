@@ -2,7 +2,7 @@ using ChocolArm64.Instructions;
 
 namespace ChocolArm64.Decoders
 {
-    class OpCodeBImm64 : OpCode64
+    class OpCodeBImm64 : OpCode64, IOpCodeBImm
     {
         public long Imm { get; protected set; }
 

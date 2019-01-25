@@ -8,7 +8,7 @@ namespace ChocolArm64.Decoders
         public    int Nzcv { get; private set; }
         protected int RmImm;
 
-        public Cond Cond { get; private set; }
+        public Condition Cond { get; private set; }
 
         public OpCodeCcmp64(Inst inst, long position, int opCode) : base(inst, position, opCode)
         {
@@ -21,11 +21,11 @@ namespace ChocolArm64.Decoders
                 return;
             }
 
-            Nzcv  =        (opCode >>  0) & 0xf;
-            Cond  = (Cond)((opCode >> 12) & 0xf);
-            RmImm =        (opCode >> 16) & 0x1f;
+            Nzcv  =             (opCode >>  0) & 0xf;
+            Cond  = (Condition)((opCode >> 12) & 0xf);
+            RmImm =             (opCode >> 16) & 0x1f;
 
-            Rd = CpuThreadState.ZrIndex;
+            Rd = RegisterAlias.Zr;
         }
     }
 }

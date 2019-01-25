@@ -1,7 +1,9 @@
 namespace ChocolArm64.Decoders
 {
-    interface IOpCodeCond64 : IOpCode64
+    interface IOpCode32 : IOpCode64
     {
         Condition Cond { get; }
+
+        uint GetPc();
     }
 }

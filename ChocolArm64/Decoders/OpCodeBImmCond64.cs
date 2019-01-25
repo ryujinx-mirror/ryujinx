@@ -4,7 +4,7 @@ namespace ChocolArm64.Decoders
 {
     class OpCodeBImmCond64 : OpCodeBImm64, IOpCodeCond64
     {
-        public Cond Cond { get; private set; }
+        public Condition Cond { get; private set; }
 
         public OpCodeBImmCond64(Inst inst, long position, int opCode) : base(inst, position, opCode)
         {
@@ -17,7 +17,7 @@ namespace ChocolArm64.Decoders
                 return;
             }
 
-            Cond = (Cond)(opCode & 0xf);
+            Cond = (Condition)(opCode & 0xf);
 
             Imm = position + DecoderHelper.DecodeImmS19_2(opCode);
         }

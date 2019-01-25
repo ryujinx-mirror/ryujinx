@@ -9,9 +9,10 @@ namespace ChocolArm64.Decoders
         public long Position  { get; private set; }
         public int  RawOpCode { get; private set; }
 
-        public InstEmitter     Emitter      { get; protected set; }
-        public InstInterpreter Interpreter  { get; protected set; }
-        public RegisterSize    RegisterSize { get; protected set; }
+        public int OpCodeSizeInBytes { get; protected set; } = 4;
+
+        public InstEmitter  Emitter      { get; protected set; }
+        public RegisterSize RegisterSize { get; protected set; }
 
         public OpCode64(Inst inst, long position, int opCode)
         {
@@ -20,8 +21,7 @@ namespace ChocolArm64.Decoders
 
             RegisterSize = RegisterSize.Int64;
 
-            Emitter     = inst.Emitter;
-            Interpreter = inst.Interpreter;
+            Emitter = inst.Emitter;
         }
 
         public int GetBitsCount()
