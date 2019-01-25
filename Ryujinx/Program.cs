@@ -61,6 +61,7 @@ namespace Ryujinx
                             device.LoadNca(args[0]);
                             break;
                         case ".nsp":
+                        case ".pfs0":
                             Console.WriteLine("Loading as NSP.");
                             device.LoadNsp(args[0]);
                             break;

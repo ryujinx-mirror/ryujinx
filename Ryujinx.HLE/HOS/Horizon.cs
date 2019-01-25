@@ -394,7 +394,62 @@ namespace Ryujinx.HLE.HOS
                 return;
             }
 
-            Logger.PrintError(LogClass.Loader, "Could not find an Application NCA in the provided NSP file");
+            // This is not a normal NSP, it's actually a ExeFS as a NSP
+            Npdm metaData = null;
+
+            PfsFileEntry npdmFile = nsp.Files.FirstOrDefault(x => x.Name.Equals("main.npdm"));
+
+            if (npdmFile != null)
+            {
+                Logger.PrintInfo(LogClass.Loader, $"Loading main.npdm...");
+
+                metaData = new Npdm(nsp.OpenFile(npdmFile).AsStream());
+            }
+            else
+            {
+                Logger.PrintWarning(LogClass.Loader, $"NPDM file not found, using default values!");
+
+                metaData = GetDefaultNpdm();
+            }
+
+            List<IExecutable> staticObjects = new List<IExecutable>();
+
+            void LoadNso(string searchPattern)
+            {
+                PfsFileEntry entry = nsp.Files.FirstOrDefault(x => x.Name.Equals(searchPattern));
+
+                if (entry != null)
+                {
+                    Logger.PrintInfo(LogClass.Loader, $"Loading {entry.Name}...");
+
+                    NxStaticObject staticObject = new NxStaticObject(nsp.OpenFile(entry).AsStream());
+
+                    staticObjects.Add(staticObject);
+                }
+            }
+
+            if (!metaData.Is64Bits)
+            {
+                throw new NotImplementedException("32-bit titles are unsupported!");
+            }
+
+            CurrentTitle = metaData.Aci0.TitleId.ToString("x16");
+
+            LoadNso("rtld");
+            LoadNso("main");
+            LoadNso("subsdk*");
+            LoadNso("sdk");
+
+            ContentManager.LoadEntries();
+
+            if (staticObjects.Count == 0)
+            {
+                Logger.PrintError(LogClass.Loader, "Could not find an Application NCA in the provided NSP file");
+            }
+            else
+            {
+                ProgramLoader.LoadStaticObjects(this, metaData, staticObjects.ToArray());
+            }
         }
 
         public void LoadNca(Nca mainNca, Nca controlNca)
