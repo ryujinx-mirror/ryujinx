@@ -11,7 +11,7 @@ namespace ChocolArm64.Instructions
     {
         public static void B(ILEmitterCtx context)
         {
-            IOpCodeBImm32 op = (IOpCodeBImm32)context.CurrOp;
+            IOpCode32BImm op = (IOpCode32BImm)context.CurrOp;
 
             if (context.CurrBlock.Branch != null)
             {
@@ -38,7 +38,7 @@ namespace ChocolArm64.Instructions
 
         public static void Bx(ILEmitterCtx context)
         {
-            IOpCodeBReg32 op = (IOpCodeBReg32)context.CurrOp;
+            IOpCode32BReg op = (IOpCode32BReg)context.CurrOp;
 
             context.EmitStoreState();
 
@@ -49,7 +49,7 @@ namespace ChocolArm64.Instructions
 
         private static void Blx(ILEmitterCtx context, bool x)
         {
-            IOpCodeBImm32 op = (IOpCodeBImm32)context.CurrOp;
+            IOpCode32BImm op = (IOpCode32BImm)context.CurrOp;
 
             uint pc = op.GetPc();
 
@@ -77,23 +77,6 @@ namespace ChocolArm64.Instructions
             }
 
             InstEmitFlowHelper.EmitCall(context, op.Imm);
-        }
-
-        private static void EmitBxWritePc(ILEmitterCtx context)
-        {
-            context.Emit(OpCodes.Dup);
-
-            context.EmitLdc_I4(1);
-
-            context.Emit(OpCodes.And);
-
-            context.EmitStflg((int)PState.TBit);
-
-            context.EmitLdc_I4(~1);
-
-            context.Emit(OpCodes.And);
-            context.Emit(OpCodes.Conv_U8);
-            context.Emit(OpCodes.Ret);
         }
     }
 }

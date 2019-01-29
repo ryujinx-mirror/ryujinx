@@ -2,6 +2,7 @@ using ChocolArm64.Decoders;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
+using System.Reflection.Emit;
 
 namespace ChocolArm64.Instructions
 {
@@ -24,6 +25,51 @@ namespace ChocolArm64.Instructions
             {
                 context.EmitLdint(InstEmit32Helper.GetRegisterAlias(context.Mode, register));
             }
+        }
+
+        public static void EmitStoreToRegister(ILEmitterCtx context, int register)
+        {
+            if (register == RegisterAlias.Aarch32Pc)
+            {
+                context.EmitStoreState();
+
+                EmitBxWritePc(context);
+            }
+            else
+            {
+                context.EmitStint(GetRegisterAlias(context.Mode, register));
+            }
+        }
+
+        public static void EmitBxWritePc(ILEmitterCtx context)
+        {
+            context.Emit(OpCodes.Dup);
+
+            context.EmitLdc_I4(1);
+
+            context.Emit(OpCodes.And);
+            context.Emit(OpCodes.Dup);
+
+            context.EmitStflg((int)PState.TBit);
+
+            ILLabel lblArmMode = new ILLabel();
+            ILLabel lblEnd     = new ILLabel();
+
+            context.Emit(OpCodes.Brtrue_S, lblArmMode);
+
+            context.EmitLdc_I4(~1);
+
+            context.Emit(OpCodes.Br_S, lblEnd);
+
+            context.MarkLabel(lblArmMode);
+
+            context.EmitLdc_I4(~3);
+
+            context.MarkLabel(lblEnd);
+
+            context.Emit(OpCodes.And);
+            context.Emit(OpCodes.Conv_U8);
+            context.Emit(OpCodes.Ret);
         }
 
         public static int GetRegisterAlias(Aarch32Mode mode, int register)

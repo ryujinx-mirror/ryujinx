@@ -127,7 +127,7 @@ namespace ChocolArm64.Instructions
             {
                 context.EmitLdintzr(op.Rm);
             }
-            else if (context.CurrOp is OpCodeAluRsImm32 op32)
+            else if (context.CurrOp is OpCode32AluRsImm op32)
             {
                 InstEmit32Helper.EmitLoadFromRegister(context, op32.Rm);
             }
@@ -156,7 +156,7 @@ namespace ChocolArm64.Instructions
                     context.EmitLdint(op.Rn);
                 }
             }
-            else if (context.CurrOp is IOpCodeAlu32 op32)
+            else if (context.CurrOp is IOpCode32Alu op32)
             {
                 InstEmit32Helper.EmitLoadFromRegister(context, op32.Rn);
             }
@@ -171,7 +171,7 @@ namespace ChocolArm64.Instructions
             switch (context.CurrOp)
             {
                 //ARM32.
-                case OpCodeAluImm32 op:
+                case OpCode32AluImm op:
                     context.EmitLdc_I4(op.Imm);
 
                     if (op.SetFlags && op.IsRotated)
@@ -182,11 +182,11 @@ namespace ChocolArm64.Instructions
                     }
                     break;
 
-                case OpCodeAluRsImm32 op:
+                case OpCode32AluRsImm op:
                     EmitLoadRmShiftedByImmediate(context, op, setCarry);
                     break;
 
-                case OpCodeAluImm8T16 op:
+                case OpCodeT16AluImm8 op:
                     context.EmitLdc_I4(op.Imm);
                     break;
 
@@ -246,7 +246,7 @@ namespace ChocolArm64.Instructions
         }
 
         //ARM32 helpers.
-        private static void EmitLoadRmShiftedByImmediate(ILEmitterCtx context, OpCodeAluRsImm32 op, bool setCarry)
+        private static void EmitLoadRmShiftedByImmediate(ILEmitterCtx context, OpCode32AluRsImm op, bool setCarry)
         {
             int shift = op.Imm;
 

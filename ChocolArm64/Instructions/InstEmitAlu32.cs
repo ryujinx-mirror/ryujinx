@@ -12,7 +12,7 @@ namespace ChocolArm64.Instructions
     {
         public static void Add(ILEmitterCtx context)
         {
-            IOpCodeAlu32 op = (IOpCodeAlu32)context.CurrOp;
+            IOpCode32Alu op = (IOpCode32Alu)context.CurrOp;
 
             EmitAluLoadOpers(context, setCarry: false);
 
@@ -29,9 +29,25 @@ namespace ChocolArm64.Instructions
             EmitAluStore(context);
         }
 
+        public static void Cmp(ILEmitterCtx context)
+        {
+            IOpCode32Alu op = (IOpCode32Alu)context.CurrOp;
+
+            EmitAluLoadOpers(context, setCarry: false);
+
+            context.Emit(OpCodes.Sub);
+
+            context.EmitZnFlagCheck();
+
+            EmitSubsCCheck(context);
+            EmitSubsVCheck(context);
+
+            context.Emit(OpCodes.Pop);
+        }
+
         public static void Mov(ILEmitterCtx context)
         {
-            IOpCodeAlu32 op = (IOpCodeAlu32)context.CurrOp;
+            IOpCode32Alu op = (IOpCode32Alu)context.CurrOp;
 
             EmitAluLoadOper2(context);
 
@@ -45,7 +61,7 @@ namespace ChocolArm64.Instructions
 
         public static void Sub(ILEmitterCtx context)
         {
-            IOpCodeAlu32 op = (IOpCodeAlu32)context.CurrOp;
+            IOpCode32Alu op = (IOpCode32Alu)context.CurrOp;
 
             EmitAluLoadOpers(context, setCarry: false);
 
@@ -64,7 +80,7 @@ namespace ChocolArm64.Instructions
 
         private static void EmitAluStore(ILEmitterCtx context)
         {
-            IOpCodeAlu32 op = (IOpCodeAlu32)context.CurrOp;
+            IOpCode32Alu op = (IOpCode32Alu)context.CurrOp;
 
             if (op.Rd == RegisterAlias.Aarch32Pc)
             {
@@ -106,6 +122,8 @@ namespace ChocolArm64.Instructions
 
         private static void EmitAluWritePc(ILEmitterCtx context)
         {
+            context.EmitStoreState();
+
             if (IsThumb(context.CurrOp))
             {
                 context.EmitLdc_I4(~1);

@@ -2,7 +2,7 @@ using ChocolArm64.Instructions;
 
 namespace ChocolArm64.Decoders
 {
-    class OpCodeAluImm8T16 : OpCodeT16, IOpCodeAlu32
+    class OpCodeT16AluImm8 : OpCodeT16, IOpCode32Alu
     {
         private int _rdn;
 
@@ -13,7 +13,7 @@ namespace ChocolArm64.Decoders
 
         public int Imm { get; private set; }
 
-        public OpCodeAluImm8T16(Inst inst, long position, int opCode) : base(inst, position, opCode)
+        public OpCodeT16AluImm8(Inst inst, long position, int opCode) : base(inst, position, opCode)
         {
             Imm  = (opCode >> 0) & 0xff;
             _rdn = (opCode >> 8) & 0x7;

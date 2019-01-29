@@ -530,7 +530,15 @@ namespace ChocolArm64.Translation
         public void EmitLdflg(int index) => Ldloc(index, IoType.Flag);
         public void EmitStflg(int index)
         {
-            _optOpLastFlagSet = CurrOp;
+            //Set this only if any of the NZCV flag bits were modified.
+            //This is used to ensure that, when emiting a direct IL branch
+            //instruction for compare + branch sequences, we're not expecting
+            //to use comparison values from an old instruction, when in fact
+            //the flags were already overwritten by another instruction further along.
+            if (index >= (int)PState.VBit)
+            {
+                _optOpLastFlagSet = CurrOp;
+            }
 
             Stloc(index, IoType.Flag);
         }

@@ -44,6 +44,7 @@ namespace ChocolArm64.State
             switch ((PState)Index)
             {
                 case PState.TBit: return GetField(nameof(CpuThreadState.Thumb));
+                case PState.EBit: return GetField(nameof(CpuThreadState.BigEndian));
 
                 case PState.VBit: return GetField(nameof(CpuThreadState.Overflow));
                 case PState.CBit: return GetField(nameof(CpuThreadState.Carry));

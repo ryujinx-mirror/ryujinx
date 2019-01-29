@@ -152,10 +152,20 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             Context = new CpuThread(owner.Translator, owner.CpuMemory, (long)entrypoint);
 
-            Context.ThreadState.IsAarch32 = (Owner.MmuFlags & 1) == 0;
+            bool isAarch32 = (Owner.MmuFlags & 1) == 0;
+
+            Context.ThreadState.Aarch32 = isAarch32;
 
             Context.ThreadState.X0  = argsPtr;
-            Context.ThreadState.X31 = stackTop;
+
+            if (isAarch32)
+            {
+                Context.ThreadState.X13 = (uint)stackTop;
+            }
+            else
+            {
+                Context.ThreadState.X31 = stackTop;
+            }
 
             Context.ThreadState.CntfrqEl0 = 19200000;
             Context.ThreadState.Tpidr     = (long)_tlsAddress;

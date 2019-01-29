@@ -37,18 +37,32 @@ namespace ChocolArm64
         {
 #region "OpCode Table (AArch32)"
             //Integer
-            SetA32("<<<<0010100xxxxxxxxxxxxxxxxxxxxx", InstEmit32.Add, typeof(OpCodeAluImm32));
-            SetA32("<<<<0000100xxxxxxxxxxxxxxxx0xxxx", InstEmit32.Add, typeof(OpCodeAluRsImm32));
-            SetA32("<<<<1010xxxxxxxxxxxxxxxxxxxxxxxx", InstEmit32.B,   typeof(OpCodeBImm32));
-            SetA32("<<<<1011xxxxxxxxxxxxxxxxxxxxxxxx", InstEmit32.Bl,  typeof(OpCodeBImm32));
-            SetA32("1111101xxxxxxxxxxxxxxxxxxxxxxxxx", InstEmit32.Blx, typeof(OpCodeBImm32));
-            SetA32("<<<<000100101111111111110001xxxx", InstEmit32.Bx,  typeof(OpCodeBReg32));
-            SetT32(                "010001110xxxx000", InstEmit32.Bx,  typeof(OpCodeBRegT16));
-            SetA32("<<<<0011101x0000xxxxxxxxxxxxxxxx", InstEmit32.Mov, typeof(OpCodeAluImm32));
-            SetA32("<<<<0001101x0000xxxxxxxxxxx0xxxx", InstEmit32.Mov, typeof(OpCodeAluRsImm32));
-            SetT32(                "00100xxxxxxxxxxx", InstEmit32.Mov, typeof(OpCodeAluImm8T16));
-            SetA32("<<<<0010010xxxxxxxxxxxxxxxxxxxxx", InstEmit32.Sub, typeof(OpCodeAluImm32));
-            SetA32("<<<<0000010xxxxxxxxxxxxxxxx0xxxx", InstEmit32.Sub, typeof(OpCodeAluRsImm32));
+            SetA32("<<<<0010100xxxxxxxxxxxxxxxxxxxxx", InstEmit32.Add,           typeof(OpCode32AluImm));
+            SetA32("<<<<0000100xxxxxxxxxxxxxxxx0xxxx", InstEmit32.Add,           typeof(OpCode32AluRsImm));
+            SetA32("<<<<1010xxxxxxxxxxxxxxxxxxxxxxxx", InstEmit32.B,             typeof(OpCode32BImm));
+            SetA32("<<<<1011xxxxxxxxxxxxxxxxxxxxxxxx", InstEmit32.Bl,            typeof(OpCode32BImm));
+            SetA32("1111101xxxxxxxxxxxxxxxxxxxxxxxxx", InstEmit32.Blx,           typeof(OpCode32BImm));
+            SetA32("<<<<000100101111111111110001xxxx", InstEmit32.Bx,            typeof(OpCode32BReg));
+            SetT32("010001110xxxx000",                 InstEmit32.Bx,            typeof(OpCodeT16BReg));
+            SetA32("<<<<00110101xxxx0000xxxxxxxxxxxx", InstEmit32.Cmp,           typeof(OpCode32AluImm));
+            SetA32("<<<<00010101xxxx0000xxxxxxx0xxxx", InstEmit32.Cmp,           typeof(OpCode32AluRsImm));
+            SetA32("<<<<100xx0x1xxxxxxxxxxxxxxxxxxxx", InstEmit32.Ldm,           typeof(OpCode32MemMult));
+            SetA32("<<<<010xx0x1xxxxxxxxxxxxxxxxxxxx", InstEmit32.Ldr,           typeof(OpCode32MemImm));
+            SetA32("<<<<010xx1x1xxxxxxxxxxxxxxxxxxxx", InstEmit32.Ldrb,          typeof(OpCode32MemImm));
+            SetA32("<<<<000xx1x0xxxxxxxxxxxx1101xxxx", InstEmit32.Ldrd,          typeof(OpCode32MemImm8));
+            SetA32("<<<<000xx1x1xxxxxxxxxxxx1011xxxx", InstEmit32.Ldrh,          typeof(OpCode32MemImm8));
+            SetA32("<<<<000xx1x1xxxxxxxxxxxx1101xxxx", InstEmit32.Ldrsb,         typeof(OpCode32MemImm8));
+            SetA32("<<<<000xx1x1xxxxxxxxxxxx1111xxxx", InstEmit32.Ldrsh,         typeof(OpCode32MemImm8));
+            SetA32("<<<<0011101x0000xxxxxxxxxxxxxxxx", InstEmit32.Mov,           typeof(OpCode32AluImm));
+            SetA32("<<<<0001101x0000xxxxxxxxxxx0xxxx", InstEmit32.Mov,           typeof(OpCode32AluRsImm));
+            SetT32("00100xxxxxxxxxxx",                 InstEmit32.Mov,           typeof(OpCodeT16AluImm8));
+            SetA32("<<<<100xx0x0xxxxxxxxxxxxxxxxxxxx", InstEmit32.Stm,           typeof(OpCode32MemMult));
+            SetA32("<<<<010xx0x0xxxxxxxxxxxxxxxxxxxx", InstEmit32.Str,           typeof(OpCode32MemImm));
+            SetA32("<<<<010xx1x0xxxxxxxxxxxxxxxxxxxx", InstEmit32.Strb,          typeof(OpCode32MemImm));
+            SetA32("<<<<000xx1x0xxxxxxxxxxxx1111xxxx", InstEmit32.Strd,          typeof(OpCode32MemImm8));
+            SetA32("<<<<000xx1x0xxxxxxxxxxxx1011xxxx", InstEmit32.Strh,          typeof(OpCode32MemImm8));
+            SetA32("<<<<0010010xxxxxxxxxxxxxxxxxxxxx", InstEmit32.Sub,           typeof(OpCode32AluImm));
+            SetA32("<<<<0000010xxxxxxxxxxxxxxxx0xxxx", InstEmit32.Sub,           typeof(OpCode32AluRsImm));
 #endregion
 
 #region "OpCode Table (AArch64)"

@@ -2,11 +2,11 @@ using ChocolArm64.Instructions;
 
 namespace ChocolArm64.Decoders
 {
-    class OpCodeBImm32 : OpCode32, IOpCodeBImm32
+    class OpCode32BImm : OpCode32, IOpCode32BImm
     {
         public long Imm { get; private set; }
 
-        public OpCodeBImm32(Inst inst, long position, int opCode) : base(inst, position, opCode)
+        public OpCode32BImm(Inst inst, long position, int opCode) : base(inst, position, opCode)
         {
             uint pc = GetPc();
 
