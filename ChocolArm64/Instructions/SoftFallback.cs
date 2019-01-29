@@ -664,7 +664,7 @@ namespace ChocolArm64.Instructions
 
             for (int bit = highBit; bit >= 0; bit--)
             {
-                if (((value >> bit) & 0b1) != 0)
+                if (((int)(value >> bit) & 0b1) != 0)
                 {
                     return (ulong)(highBit - bit);
                 }
@@ -688,7 +688,7 @@ namespace ChocolArm64.Instructions
             do
             {
                 nibbleIdx -= 4;
-                preCount = ClzNibbleTbl[(value >> nibbleIdx) & 0b1111];
+                preCount = ClzNibbleTbl[(int)(value >> nibbleIdx) & 0b1111];
                 count += preCount;
             }
             while (preCount == 4);
@@ -698,11 +698,6 @@ namespace ChocolArm64.Instructions
 
         public static ulong CountSetBits8(ulong value) // "size" is 8 (SIMD&FP Inst.).
         {
-            if (value == 0xfful)
-            {
-                return 8ul;
-            }
-
             value = ((value >> 1) & 0x55ul) + (value & 0x55ul);
             value = ((value >> 2) & 0x33ul) + (value & 0x33ul);
 

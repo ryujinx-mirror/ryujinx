@@ -173,8 +173,7 @@ namespace ChocolArm64.Instructions
 
         public static void Fcmeq_S(ILEmitterCtx context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse
-                                     && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse2)
             {
                 EmitCmpSseOrSse2OpF(context, nameof(Sse.CompareEqualScalar), scalar: true);
             }
@@ -186,8 +185,7 @@ namespace ChocolArm64.Instructions
 
         public static void Fcmeq_V(ILEmitterCtx context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse
-                                     && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse2)
             {
                 EmitCmpSseOrSse2OpF(context, nameof(Sse.CompareEqual), scalar: false);
             }
@@ -199,8 +197,7 @@ namespace ChocolArm64.Instructions
 
         public static void Fcmge_S(ILEmitterCtx context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse
-                                     && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse2)
             {
                 EmitCmpSseOrSse2OpF(context, nameof(Sse.CompareGreaterThanOrEqualScalar), scalar: true);
             }
@@ -212,8 +209,7 @@ namespace ChocolArm64.Instructions
 
         public static void Fcmge_V(ILEmitterCtx context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse
-                                     && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse2)
             {
                 EmitCmpSseOrSse2OpF(context, nameof(Sse.CompareGreaterThanOrEqual), scalar: false);
             }
@@ -225,8 +221,7 @@ namespace ChocolArm64.Instructions
 
         public static void Fcmgt_S(ILEmitterCtx context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse
-                                     && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse2)
             {
                 EmitCmpSseOrSse2OpF(context, nameof(Sse.CompareGreaterThanScalar), scalar: true);
             }
@@ -238,8 +233,7 @@ namespace ChocolArm64.Instructions
 
         public static void Fcmgt_V(ILEmitterCtx context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse
-                                     && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse2)
             {
                 EmitCmpSseOrSse2OpF(context, nameof(Sse.CompareGreaterThan), scalar: false);
             }
@@ -251,8 +245,7 @@ namespace ChocolArm64.Instructions
 
         public static void Fcmle_S(ILEmitterCtx context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse
-                                     && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse2)
             {
                 EmitCmpSseOrSse2OpF(context, nameof(Sse.CompareGreaterThanOrEqualScalar), scalar: true, isLeOrLt: true);
             }
@@ -264,8 +257,7 @@ namespace ChocolArm64.Instructions
 
         public static void Fcmle_V(ILEmitterCtx context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse
-                                     && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse2)
             {
                 EmitCmpSseOrSse2OpF(context, nameof(Sse.CompareGreaterThanOrEqual), scalar: false, isLeOrLt: true);
             }
@@ -277,8 +269,7 @@ namespace ChocolArm64.Instructions
 
         public static void Fcmlt_S(ILEmitterCtx context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse
-                                     && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse2)
             {
                 EmitCmpSseOrSse2OpF(context, nameof(Sse.CompareGreaterThanScalar), scalar: true, isLeOrLt: true);
             }
@@ -290,8 +281,7 @@ namespace ChocolArm64.Instructions
 
         public static void Fcmlt_V(ILEmitterCtx context)
         {
-            if (Optimizations.FastFP && Optimizations.UseSse
-                                     && Optimizations.UseSse2)
+            if (Optimizations.FastFP && Optimizations.UseSse2)
             {
                 EmitCmpSseOrSse2OpF(context, nameof(Sse.CompareGreaterThan), scalar: false, isLeOrLt: true);
             }

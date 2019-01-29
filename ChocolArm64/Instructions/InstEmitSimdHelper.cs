@@ -642,21 +642,21 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimdRegElem64 op = (OpCodeSimdRegElem64)context.CurrOp;
 
-            EmitVectorOpByElem(context, emit, op.Index, false, true);
+            EmitVectorOpByElem(context, emit, op.Index, ternary: false, signed: true);
         }
 
         public static void EmitVectorBinaryOpByElemZx(ILEmitterCtx context, Action emit)
         {
             OpCodeSimdRegElem64 op = (OpCodeSimdRegElem64)context.CurrOp;
 
-            EmitVectorOpByElem(context, emit, op.Index, false, false);
+            EmitVectorOpByElem(context, emit, op.Index, ternary: false, signed: false);
         }
 
         public static void EmitVectorTernaryOpByElemZx(ILEmitterCtx context, Action emit)
         {
             OpCodeSimdRegElem64 op = (OpCodeSimdRegElem64)context.CurrOp;
 
-            EmitVectorOpByElem(context, emit, op.Index, true, false);
+            EmitVectorOpByElem(context, emit, op.Index, ternary: true, signed: false);
         }
 
         public static void EmitVectorOpByElem(ILEmitterCtx context, Action emit, int elem, bool ternary, bool signed)
@@ -799,6 +799,64 @@ namespace ChocolArm64.Instructions
 
                 EmitVectorExtract(context, op.Rn, part + index, op.Size, signed);
                 EmitVectorExtract(context, op.Rm, part + index, op.Size, signed);
+
+                emit();
+
+                EmitVectorInsertTmp(context, index, op.Size + 1);
+            }
+
+            context.EmitLdvectmp();
+            context.EmitStvec(op.Rd);
+        }
+
+        public static void EmitVectorWidenBinaryOpByElemSx(ILEmitterCtx context, Action emit)
+        {
+            OpCodeSimdRegElem64 op = (OpCodeSimdRegElem64)context.CurrOp;
+
+            EmitVectorWidenOpByElem(context, emit, op.Index, ternary: false, signed: true);
+        }
+
+        public static void EmitVectorWidenBinaryOpByElemZx(ILEmitterCtx context, Action emit)
+        {
+            OpCodeSimdRegElem64 op = (OpCodeSimdRegElem64)context.CurrOp;
+
+            EmitVectorWidenOpByElem(context, emit, op.Index, ternary: false, signed: false);
+        }
+
+        public static void EmitVectorWidenTernaryOpByElemSx(ILEmitterCtx context, Action emit)
+        {
+            OpCodeSimdRegElem64 op = (OpCodeSimdRegElem64)context.CurrOp;
+
+            EmitVectorWidenOpByElem(context, emit, op.Index, ternary: true, signed: true);
+        }
+
+        public static void EmitVectorWidenTernaryOpByElemZx(ILEmitterCtx context, Action emit)
+        {
+            OpCodeSimdRegElem64 op = (OpCodeSimdRegElem64)context.CurrOp;
+
+            EmitVectorWidenOpByElem(context, emit, op.Index, ternary: true, signed: false);
+        }
+
+        public static void EmitVectorWidenOpByElem(ILEmitterCtx context, Action emit, int elem, bool ternary, bool signed)
+        {
+            OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+            int elems = 8 >> op.Size;
+
+            int part = op.RegisterSize == RegisterSize.Simd128 ? elems : 0;
+
+            EmitVectorExtract(context, op.Rm, elem, op.Size, signed);
+            context.EmitSttmp();
+
+            for (int index = 0; index < elems; index++)
+            {
+                if (ternary)
+                {
+                    EmitVectorExtract(context, op.Rd, index, op.Size + 1, signed);
+                }
+
+                EmitVectorExtract(context, op.Rn, part + index, op.Size, signed);
+                context.EmitLdtmp();
 
                 emit();
 
@@ -1416,7 +1474,7 @@ namespace ChocolArm64.Instructions
             if (Optimizations.UseSse)
             {
                 //TODO: Use Sse2.MoveScalar once it is fixed,
-                //as of the time of writing it just crashes the JIT (SDK 2.1.500).
+                //as of the time of writing it just crashes the JIT (SDK 2.1.503).
 
                 /*Type[] typesMov = new Type[] { typeof(Vector128<ulong>) };
 

@@ -9,7 +9,7 @@ namespace ChocolArm64.Instructions
     static class CryptoHelper
     {
 #region "LookUp Tables"
-        private static byte[] _sBox =
+        private static readonly byte[] _sBox = new byte[]
         {
             0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
             0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
@@ -29,7 +29,7 @@ namespace ChocolArm64.Instructions
             0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
         };
 
-        private static byte[] _invSBox =
+        private static readonly byte[] _invSBox = new byte[]
         {
             0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
             0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb,
@@ -49,7 +49,7 @@ namespace ChocolArm64.Instructions
             0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
         };
 
-        private static byte[] _gfMul02 =
+        private static readonly byte[] _gfMul02 = new byte[]
         {
             0x00, 0x02, 0x04, 0x06, 0x08, 0x0a, 0x0c, 0x0e, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1a, 0x1c, 0x1e,
             0x20, 0x22, 0x24, 0x26, 0x28, 0x2a, 0x2c, 0x2e, 0x30, 0x32, 0x34, 0x36, 0x38, 0x3a, 0x3c, 0x3e,
@@ -69,7 +69,7 @@ namespace ChocolArm64.Instructions
             0xfb, 0xf9, 0xff, 0xfd, 0xf3, 0xf1, 0xf7, 0xf5, 0xeb, 0xe9, 0xef, 0xed, 0xe3, 0xe1, 0xe7, 0xe5
         };
 
-        private static byte[] _gfMul03 =
+        private static readonly byte[] _gfMul03 = new byte[]
         {
             0x00, 0x03, 0x06, 0x05, 0x0c, 0x0f, 0x0a, 0x09, 0x18, 0x1b, 0x1e, 0x1d, 0x14, 0x17, 0x12, 0x11,
             0x30, 0x33, 0x36, 0x35, 0x3c, 0x3f, 0x3a, 0x39, 0x28, 0x2b, 0x2e, 0x2d, 0x24, 0x27, 0x22, 0x21,
@@ -89,7 +89,7 @@ namespace ChocolArm64.Instructions
             0x0b, 0x08, 0x0d, 0x0e, 0x07, 0x04, 0x01, 0x02, 0x13, 0x10, 0x15, 0x16, 0x1f, 0x1c, 0x19, 0x1a
         };
 
-        private static byte[] _gfMul09 =
+        private static readonly byte[] _gfMul09 = new byte[]
         {
             0x00, 0x09, 0x12, 0x1b, 0x24, 0x2d, 0x36, 0x3f, 0x48, 0x41, 0x5a, 0x53, 0x6c, 0x65, 0x7e, 0x77,
             0x90, 0x99, 0x82, 0x8b, 0xb4, 0xbd, 0xa6, 0xaf, 0xd8, 0xd1, 0xca, 0xc3, 0xfc, 0xf5, 0xee, 0xe7,
@@ -109,7 +109,7 @@ namespace ChocolArm64.Instructions
             0x31, 0x38, 0x23, 0x2a, 0x15, 0x1c, 0x07, 0x0e, 0x79, 0x70, 0x6b, 0x62, 0x5d, 0x54, 0x4f, 0x46
         };
 
-        private static byte[] _gfMul0B =
+        private static readonly byte[] _gfMul0B = new byte[]
         {
             0x00, 0x0b, 0x16, 0x1d, 0x2c, 0x27, 0x3a, 0x31, 0x58, 0x53, 0x4e, 0x45, 0x74, 0x7f, 0x62, 0x69,
             0xb0, 0xbb, 0xa6, 0xad, 0x9c, 0x97, 0x8a, 0x81, 0xe8, 0xe3, 0xfe, 0xf5, 0xc4, 0xcf, 0xd2, 0xd9,
@@ -129,7 +129,7 @@ namespace ChocolArm64.Instructions
             0xca, 0xc1, 0xdc, 0xd7, 0xe6, 0xed, 0xf0, 0xfb, 0x92, 0x99, 0x84, 0x8f, 0xbe, 0xb5, 0xa8, 0xa3
         };
 
-        private static byte[] _gfMul0D =
+        private static readonly byte[] _gfMul0D = new byte[]
         {
             0x00, 0x0d, 0x1a, 0x17, 0x34, 0x39, 0x2e, 0x23, 0x68, 0x65, 0x72, 0x7f, 0x5c, 0x51, 0x46, 0x4b,
             0xd0, 0xdd, 0xca, 0xc7, 0xe4, 0xe9, 0xfe, 0xf3, 0xb8, 0xb5, 0xa2, 0xaf, 0x8c, 0x81, 0x96, 0x9b,
@@ -149,7 +149,7 @@ namespace ChocolArm64.Instructions
             0xdc, 0xd1, 0xc6, 0xcb, 0xe8, 0xe5, 0xf2, 0xff, 0xb4, 0xb9, 0xae, 0xa3, 0x80, 0x8d, 0x9a, 0x97
         };
 
-        private static byte[] _gfMul0E =
+        private static readonly byte[] _gfMul0E = new byte[]
         {
             0x00, 0x0e, 0x1c, 0x12, 0x38, 0x36, 0x24, 0x2a, 0x70, 0x7e, 0x6c, 0x62, 0x48, 0x46, 0x54, 0x5a,
             0xe0, 0xee, 0xfc, 0xf2, 0xd8, 0xd6, 0xc4, 0xca, 0x90, 0x9e, 0x8c, 0x82, 0xa8, 0xa6, 0xb4, 0xba,
@@ -169,9 +169,15 @@ namespace ChocolArm64.Instructions
             0xd7, 0xd9, 0xcb, 0xc5, 0xef, 0xe1, 0xf3, 0xfd, 0xa7, 0xa9, 0xbb, 0xb5, 0x9f, 0x91, 0x83, 0x8d
         };
 
-        private static byte[] _srPerm = { 0, 13, 10, 7, 4, 1, 14, 11, 8, 5, 2, 15, 12, 9, 6, 3 };
+        private static readonly byte[] _srPerm = new byte[]
+        {
+            0, 13, 10, 7, 4, 1, 14, 11, 8, 5, 2, 15, 12, 9, 6, 3
+        };
 
-        private static byte[] _isrPerm = { 0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 1, 6, 11 };
+        private static readonly byte[] _isrPerm = new byte[]
+        {
+            0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 1, 6, 11
+        };
 #endregion
 
         public static Vector128<float> AesInvMixColumns(Vector128<float> op)
@@ -179,7 +185,7 @@ namespace ChocolArm64.Instructions
             byte[] inState  = new byte[16];
             byte[] outState = new byte[16];
 
-            FromVectorToByteArray(inState, ref op);
+            FromVectorToByteArray(op, inState);
 
             for (int columns = 0; columns <= 3; columns++)
             {
@@ -206,7 +212,7 @@ namespace ChocolArm64.Instructions
             byte[] inState  = new byte[16];
             byte[] outState = new byte[16];
 
-            FromVectorToByteArray(inState, ref op);
+            FromVectorToByteArray(op, inState);
 
             for (int idx = 0; idx <= 15; idx++)
             {
@@ -223,7 +229,7 @@ namespace ChocolArm64.Instructions
             byte[] inState  = new byte[16];
             byte[] outState = new byte[16];
 
-            FromVectorToByteArray(inState, ref op);
+            FromVectorToByteArray(op, inState);
 
             for (int idx = 0; idx <= 15; idx++)
             {
@@ -240,7 +246,7 @@ namespace ChocolArm64.Instructions
             byte[] inState  = new byte[16];
             byte[] outState = new byte[16];
 
-            FromVectorToByteArray(inState, ref op);
+            FromVectorToByteArray(op, inState);
 
             for (int columns = 0; columns <= 3; columns++)
             {
@@ -267,7 +273,7 @@ namespace ChocolArm64.Instructions
             byte[] inState  = new byte[16];
             byte[] outState = new byte[16];
 
-            FromVectorToByteArray(inState, ref op);
+            FromVectorToByteArray(op, inState);
 
             for (int idx = 0; idx <= 15; idx++)
             {
@@ -284,7 +290,7 @@ namespace ChocolArm64.Instructions
             byte[] inState  = new byte[16];
             byte[] outState = new byte[16];
 
-            FromVectorToByteArray(inState, ref op);
+            FromVectorToByteArray(op, inState);
 
             for (int idx = 0; idx <= 15; idx++)
             {
@@ -296,33 +302,30 @@ namespace ChocolArm64.Instructions
             return op;
         }
 
-        private static void FromVectorToByteArray(byte[] state, ref Vector128<float> op)
-        {
-            ulong uLongLow  = VectorHelper.VectorExtractIntZx((op), (byte)0, 3);
-            ulong uLongHigh = VectorHelper.VectorExtractIntZx((op), (byte)1, 3);
-
-            for (int idx = 0; idx <= 7; idx++)
-            {
-                state[idx + 0] = (byte)(uLongLow  & 0xFFUL);
-                state[idx + 8] = (byte)(uLongHigh & 0xFFUL);
-
-                uLongLow  >>= 8;
-                uLongHigh >>= 8;
-            }
-        }
-
-        private static void FromByteArrayToVector(byte[] state, ref Vector128<float> op)
+        private unsafe static void FromVectorToByteArray(Vector128<float> op, byte[] state)
         {
             if (!Sse2.IsSupported)
             {
                 throw new PlatformNotSupportedException();
             }
 
-            op = Sse.StaticCast<byte, float>(Sse2.SetVector128(
-                state[15], state[14], state[13], state[12],
-                state[11], state[10], state[9],  state[8],
-                state[7],  state[6],  state[5],  state[4],
-                state[3],  state[2],  state[1],  state[0]));
+            fixed (byte* ptr = &state[0])
+            {
+                Sse2.Store(ptr, Sse.StaticCast<float, byte>(op));
+            }
+        }
+
+        private unsafe static void FromByteArrayToVector(byte[] state, ref Vector128<float> op)
+        {
+            if (!Sse2.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
+            fixed (byte* ptr = &state[0])
+            {
+                op = Sse.StaticCast<byte, float>(Sse2.LoadVector128(ptr));
+            }
         }
     }
 }

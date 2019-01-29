@@ -78,7 +78,6 @@ namespace ChocolArm64.Instructions
 
             if (Optimizations.UseSse2 && sizeF == 1)
             {
-                Type[] typesMov = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>) };
                 Type[] typesCvt = new Type[] { typeof(Vector128<float>) };
 
                 string nameMov = op.RegisterSize == RegisterSize.Simd128
@@ -88,7 +87,7 @@ namespace ChocolArm64.Instructions
                 context.EmitLdvec(op.Rn);
                 context.Emit(OpCodes.Dup);
 
-                context.EmitCall(typeof(Sse).GetMethod(nameMov, typesMov));
+                context.EmitCall(typeof(Sse).GetMethod(nameMov));
 
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertToVector128Double), typesCvt));
 
@@ -144,7 +143,6 @@ namespace ChocolArm64.Instructions
 
             if (Optimizations.UseSse2 && sizeF == 1)
             {
-                Type[] typesMov = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>) };
                 Type[] typesCvt = new Type[] { typeof(Vector128<double>) };
 
                 string nameMov = op.RegisterSize == RegisterSize.Simd128
@@ -154,15 +152,15 @@ namespace ChocolArm64.Instructions
                 context.EmitLdvec(op.Rd);
                 VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
 
-                context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveLowToHigh), typesMov));
+                context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveLowToHigh)));
 
                 EmitLdvecWithCastToDouble(context, op.Rn);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertToVector128Single), typesCvt));
                 context.Emit(OpCodes.Dup);
 
-                context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveLowToHigh), typesMov));
+                context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveLowToHigh)));
 
-                context.EmitCall(typeof(Sse).GetMethod(nameMov, typesMov));
+                context.EmitCall(typeof(Sse).GetMethod(nameMov));
 
                 context.EmitStvec(op.Rd);
             }

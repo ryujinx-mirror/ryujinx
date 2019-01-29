@@ -1545,9 +1545,9 @@ namespace ChocolArm64.Instructions
             return -value;
         }
 
-        private static float ZerosOrOnes(bool zeros)
+        private static float ZerosOrOnes(bool ones)
         {
-            return BitConverter.Int32BitsToSingle(!zeros ? 0 : -1);
+            return BitConverter.Int32BitsToSingle(ones ? -1 : 0);
         }
 
         private static float FPUnpack(
@@ -2629,9 +2629,9 @@ namespace ChocolArm64.Instructions
             return -value;
         }
 
-        private static double ZerosOrOnes(bool zeros)
+        private static double ZerosOrOnes(bool ones)
         {
-            return BitConverter.Int64BitsToDouble(!zeros ? 0L : -1L);
+            return BitConverter.Int64BitsToDouble(ones ? -1L : 0L);
         }
 
         private static double FPUnpack(
