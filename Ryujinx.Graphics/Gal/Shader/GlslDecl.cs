@@ -63,6 +63,7 @@ namespace Ryujinx.Graphics.Gal.Shader
         private Dictionary<int, ShaderDeclInfo> m_OutAttributes;
 
         private Dictionary<int, ShaderDeclInfo> m_Gprs;
+        private Dictionary<int, ShaderDeclInfo> m_GprsHalf;
         private Dictionary<int, ShaderDeclInfo> m_Preds;
 
         public IReadOnlyDictionary<ShaderIrOp, ShaderDeclInfo> CbTextures => m_CbTextures;
@@ -74,8 +75,9 @@ namespace Ryujinx.Graphics.Gal.Shader
         public IReadOnlyDictionary<int, ShaderDeclInfo> InAttributes  => m_InAttributes;
         public IReadOnlyDictionary<int, ShaderDeclInfo> OutAttributes => m_OutAttributes;
 
-        public IReadOnlyDictionary<int, ShaderDeclInfo> Gprs  => m_Gprs;
-        public IReadOnlyDictionary<int, ShaderDeclInfo> Preds => m_Preds;
+        public IReadOnlyDictionary<int, ShaderDeclInfo> Gprs     => m_Gprs;
+        public IReadOnlyDictionary<int, ShaderDeclInfo> GprsHalf => m_GprsHalf;
+        public IReadOnlyDictionary<int, ShaderDeclInfo> Preds    => m_Preds;
 
         public GalShaderType ShaderType { get; private set; }
 
@@ -92,8 +94,9 @@ namespace Ryujinx.Graphics.Gal.Shader
             m_InAttributes  = new Dictionary<int, ShaderDeclInfo>();
             m_OutAttributes = new Dictionary<int, ShaderDeclInfo>();
 
-            m_Gprs  = new Dictionary<int, ShaderDeclInfo>();
-            m_Preds = new Dictionary<int, ShaderDeclInfo>();
+            m_Gprs     = new Dictionary<int, ShaderDeclInfo>();
+            m_GprsHalf = new Dictionary<int, ShaderDeclInfo>();
+            m_Preds    = new Dictionary<int, ShaderDeclInfo>();
         }
 
         public GlslDecl(ShaderIrBlock[] Blocks, GalShaderType ShaderType, ShaderHeader Header) : this(ShaderType)
@@ -146,8 +149,9 @@ namespace Ryujinx.Graphics.Gal.Shader
             Merge(Combined.m_Attributes,    VpA.m_Attributes,    VpB.m_Attributes);
             Merge(Combined.m_OutAttributes, VpA.m_OutAttributes, VpB.m_OutAttributes);
 
-            Merge(Combined.m_Gprs,  VpA.m_Gprs,  VpB.m_Gprs);
-            Merge(Combined.m_Preds, VpA.m_Preds, VpB.m_Preds);
+            Merge(Combined.m_Gprs,     VpA.m_Gprs,     VpB.m_Gprs);
+            Merge(Combined.m_GprsHalf, VpA.m_GprsHalf, VpB.m_GprsHalf);
+            Merge(Combined.m_Preds,    VpA.m_Preds,    VpB.m_Preds);
 
             //Merge input attributes.
             foreach (KeyValuePair<int, ShaderDeclInfo> KV in VpA.m_InAttributes)
@@ -343,7 +347,20 @@ namespace Ryujinx.Graphics.Gal.Shader
                     {
                         string Name = GetGprName(Gpr.Index);
 
-                        m_Gprs.TryAdd(Gpr.Index, new ShaderDeclInfo(Name, Gpr.Index));
+                        if (Gpr.RegisterSize == ShaderRegisterSize.Single)
+                        {
+                            m_Gprs.TryAdd(Gpr.Index, new ShaderDeclInfo(Name, Gpr.Index));
+                        }
+                        else if (Gpr.RegisterSize == ShaderRegisterSize.Half)
+                        {
+                            Name += "_h" + Gpr.HalfPart;
+
+                            m_GprsHalf.TryAdd((Gpr.Index << 1) | Gpr.HalfPart, new ShaderDeclInfo(Name, Gpr.Index));
+                        }
+                        else /* if (Gpr.RegisterSize == ShaderRegisterSize.Double) */
+                        {
+                            throw new NotImplementedException("Double types are not supported.");
+                        }
                     }
                     break;
                 }

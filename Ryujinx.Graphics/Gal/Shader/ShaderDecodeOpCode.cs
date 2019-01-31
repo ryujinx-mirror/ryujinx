@@ -75,6 +75,49 @@ namespace Ryujinx.Graphics.Gal.Shader
             return new ShaderIrOperGpr(OpCode.Read(28, 0xff));
         }
 
+        private static ShaderIrOperGpr[] GprHalfVec8(this long OpCode)
+        {
+            return GetGprHalfVec2(OpCode.Read(8, 0xff), OpCode.Read(47, 3));
+        }
+
+        private static ShaderIrOperGpr[] GprHalfVec20(this long OpCode)
+        {
+            return GetGprHalfVec2(OpCode.Read(20, 0xff), OpCode.Read(28, 3));
+        }
+
+        private static ShaderIrOperGpr[] GetGprHalfVec2(int Gpr, int Mask)
+        {
+            if (Mask == 1)
+            {
+                //This value is used for FP32, the whole 32-bits register
+                //is used as each element on the vector.
+                return new ShaderIrOperGpr[]
+                {
+                    new ShaderIrOperGpr(Gpr),
+                    new ShaderIrOperGpr(Gpr)
+                };
+            }
+
+            ShaderIrOperGpr Low  = new ShaderIrOperGpr(Gpr, 0);
+            ShaderIrOperGpr High = new ShaderIrOperGpr(Gpr, 1);
+
+            return new ShaderIrOperGpr[]
+            {
+                (Mask & 1) != 0 ? High : Low,
+                (Mask & 2) != 0 ? High : Low
+            };
+        }
+
+        private static ShaderIrOperGpr GprHalf0(this long OpCode, int HalfPart)
+        {
+            return new ShaderIrOperGpr(OpCode.Read(0, 0xff), HalfPart);
+        }
+
+        private static ShaderIrOperGpr GprHalf28(this long OpCode, int HalfPart)
+        {
+            return new ShaderIrOperGpr(OpCode.Read(28, 0xff), HalfPart);
+        }
+
         private static ShaderIrOperImm Imm5_39(this long OpCode)
         {
             return new ShaderIrOperImm(OpCode.Read(39, 0x1f));

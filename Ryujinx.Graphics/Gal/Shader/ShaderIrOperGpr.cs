@@ -6,13 +6,26 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public bool IsConst => Index == ZRIndex;
 
-        public bool IsValidRegister => (Index <= ZRIndex);
+        public bool IsValidRegister => (uint)Index <= ZRIndex;
 
-        public int Index { get; set; }
+        public int Index    { get; set; }
+        public int HalfPart { get; set; }
+
+        public ShaderRegisterSize RegisterSize { get; private set; }
 
         public ShaderIrOperGpr(int Index)
         {
             this.Index = Index;
+
+            RegisterSize = ShaderRegisterSize.Single;
+        }
+
+        public ShaderIrOperGpr(int Index, int HalfPart)
+        {
+            this.Index    = Index;
+            this.HalfPart = HalfPart;
+
+            RegisterSize = ShaderRegisterSize.Half;
         }
 
         public static ShaderIrOperGpr MakeTemporary(int Index = 0)

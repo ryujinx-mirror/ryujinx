@@ -39,7 +39,7 @@ namespace Ryujinx.Graphics.Gal
                 ulong Instruction = 0;
 
                 //Dump until a NOP instruction is found
-                while ((Instruction >> 52 & 0xfff8) != 0x50b0)
+                while ((Instruction >> 48 & 0xfff8) != 0x50b0)
                 {
                     uint Word0 = (uint)Memory.ReadInt32(Position + 0x50 + Offset + 0);
                     uint Word1 = (uint)Memory.ReadInt32(Position + 0x50 + Offset + 4);

@@ -6,6 +6,14 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     static partial class ShaderDecode
     {
+        private enum HalfOutputType
+        {
+            PackedFp16,
+            Fp32,
+            MergeH0,
+            MergeH1
+        }
+
         public static void Bfe_C(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitBfe(Block, OpCode, ShaderOper.CR);
@@ -142,6 +150,16 @@ namespace Ryujinx.Graphics.Gal.Shader
         public static void Fsetp_R(ShaderIrBlock Block, long OpCode, int Position)
         {
             EmitFsetp(Block, OpCode, ShaderOper.RR);
+        }
+
+        public static void Hadd2_R(ShaderIrBlock Block, long OpCode, int Position)
+        {
+            EmitBinaryHalfOp(Block, OpCode, ShaderIrInst.Fadd);
+        }
+
+        public static void Hmul2_R(ShaderIrBlock Block, long OpCode, int Position)
+        {
+            EmitBinaryHalfOp(Block, OpCode, ShaderIrInst.Fmul);
         }
 
         public static void Iadd_C(ShaderIrBlock Block, long OpCode, int Position)
@@ -1039,6 +1057,47 @@ namespace Ryujinx.Graphics.Gal.Shader
             Op = new ShaderIrOp(LopInst, P0Node, P2NNode);
 
             Block.AddNode(OpCode.PredNode(new ShaderIrAsg(P0Node, Op)));
+        }
+
+        private static void EmitBinaryHalfOp(ShaderIrBlock Block, long OpCode, ShaderIrInst Inst)
+        {
+            bool AbsB = OpCode.Read(30);
+            bool NegB = OpCode.Read(31);
+            bool Sat  = OpCode.Read(32);
+            bool AbsA = OpCode.Read(44);
+
+            ShaderIrOperGpr[] VecA = OpCode.GprHalfVec8();
+            ShaderIrOperGpr[] VecB = OpCode.GprHalfVec20();
+
+            HalfOutputType OutputType = (HalfOutputType)OpCode.Read(49, 3);
+
+            int Elems = OutputType == HalfOutputType.PackedFp16 ? 2 : 1;
+            int First = OutputType == HalfOutputType.MergeH1    ? 1 : 0;
+
+            for (int Index = First; Index < Elems; Index++)
+            {
+                ShaderIrNode OperA = GetAluFabs    (VecA[Index], AbsA);
+                ShaderIrNode OperB = GetAluFabsFneg(VecB[Index], AbsB, NegB);
+
+                ShaderIrNode Op = new ShaderIrOp(Inst, OperA, OperB);
+
+                ShaderIrOperGpr Dst = GetHalfDst(OpCode, OutputType, Index);
+
+                Block.AddNode(OpCode.PredNode(new ShaderIrAsg(Dst, GetAluFsat(Op, Sat))));
+            }
+        }
+
+        private static ShaderIrOperGpr GetHalfDst(long OpCode, HalfOutputType OutputType, int Index)
+        {
+            switch (OutputType)
+            {
+                case HalfOutputType.PackedFp16: return OpCode.GprHalf0(Index);
+                case HalfOutputType.Fp32:       return OpCode.Gpr0();
+                case HalfOutputType.MergeH0:    return OpCode.GprHalf0(0);
+                case HalfOutputType.MergeH1:    return OpCode.GprHalf0(1);
+            }
+
+            throw new ArgumentException(nameof(OutputType));
         }
 
         private static void EmitLop(ShaderIrBlock Block, long OpCode, ShaderOper Oper)

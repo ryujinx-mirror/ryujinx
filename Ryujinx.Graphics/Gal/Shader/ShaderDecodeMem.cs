@@ -6,8 +6,6 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     static partial class ShaderDecode
     {
-        private const int TempRegStart = 0x100;
-
         private const int ____ = 0x0;
         private const int R___ = 0x1;
         private const int _G__ = 0x2;
@@ -149,14 +147,18 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             for (int Index = 0; Index < Coords.Length; Index++)
             {
-                Coords[Index] = OpCode.Gpr8();
+                ShaderIrOperGpr CoordReg = OpCode.Gpr8();
 
-                Coords[Index].Index += Index;
+                CoordReg.Index += Index;
 
-                if (Coords[Index].Index > ShaderIrOperGpr.ZRIndex)
+                if (!CoordReg.IsValidRegister)
                 {
-                    Coords[Index].Index = ShaderIrOperGpr.ZRIndex;
+                    CoordReg.Index = ShaderIrOperGpr.ZRIndex;
                 }
+
+                Coords[Index] = ShaderIrOperGpr.MakeTemporary(Index);
+
+                Block.AddNode(new ShaderIrAsg(Coords[Index], CoordReg));
             }
 
             int ChMask = OpCode.Read(31, 0xf);
@@ -167,17 +169,6 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             ShaderIrInst Inst = GprHandle ? ShaderIrInst.Texb : ShaderIrInst.Texs;
 
-            for (int Ch = 0; Ch < 4; Ch++)
-            {
-                ShaderIrOperGpr Dst = new ShaderIrOperGpr(TempRegStart + Ch);
-
-                ShaderIrMetaTex Meta = new ShaderIrMetaTex(Ch);
-
-                ShaderIrOp Op = new ShaderIrOp(Inst, Coords[0], Coords[1], OperC, Meta);
-
-                Block.AddNode(OpCode.PredNode(new ShaderIrAsg(Dst, Op)));
-            }
-
             int RegInc = 0;
 
             for (int Ch = 0; Ch < 4; Ch++)
@@ -187,18 +178,20 @@ namespace Ryujinx.Graphics.Gal.Shader
                     continue;
                 }
 
-                ShaderIrOperGpr Src = new ShaderIrOperGpr(TempRegStart + Ch);
-
                 ShaderIrOperGpr Dst = OpCode.Gpr0();
 
                 Dst.Index += RegInc++;
 
-                if (Dst.Index >= ShaderIrOperGpr.ZRIndex)
+                if (!Dst.IsValidRegister || Dst.IsConst)
                 {
                     continue;
                 }
 
-                Block.AddNode(OpCode.PredNode(new ShaderIrAsg(Dst, Src)));
+                ShaderIrMetaTex Meta = new ShaderIrMetaTex(Ch);
+
+                ShaderIrOp Op = new ShaderIrOp(Inst, Coords[0], Coords[1], OperC, Meta);
+
+                Block.AddNode(OpCode.PredNode(new ShaderIrAsg(Dst, Op)));
             }
         }
 
@@ -215,56 +208,80 @@ namespace Ryujinx.Graphics.Gal.Shader
         private static void EmitTexs(ShaderIrBlock Block, long OpCode, ShaderIrInst Inst)
         {
             //TODO: Support other formats.
-            ShaderIrNode OperA = OpCode.Gpr8();
-            ShaderIrNode OperB = OpCode.Gpr20();
-            ShaderIrNode OperC = OpCode.Imm13_36();
-
             int LutIndex;
 
-            LutIndex  = OpCode.Gpr0 ().Index != ShaderIrOperGpr.ZRIndex ? 1 : 0;
-            LutIndex |= OpCode.Gpr28().Index != ShaderIrOperGpr.ZRIndex ? 2 : 0;
+            LutIndex  = !OpCode.Gpr0().IsConst  ? 1 : 0;
+            LutIndex |= !OpCode.Gpr28().IsConst ? 2 : 0;
 
             if (LutIndex == 0)
             {
-                //Both registers are RZ, color is not written anywhere.
-                //So, the intruction is basically a no-op.
+                //Both destination registers are RZ, do nothing.
                 return;
             }
 
-            int ChMask = MaskLut[LutIndex, OpCode.Read(50, 7)];
+            bool Fp16 = !OpCode.Read(59);
 
-            for (int Ch = 0; Ch < 4; Ch++)
-            {
-                ShaderIrOperGpr Dst = new ShaderIrOperGpr(TempRegStart + Ch);
-
-                ShaderIrMetaTex Meta = new ShaderIrMetaTex(Ch);
-
-                ShaderIrOp Op = new ShaderIrOp(Inst, OperA, OperB, OperC, Meta);
-
-                Block.AddNode(OpCode.PredNode(new ShaderIrAsg(Dst, Op)));
-            }
-
-            int RegInc = 0;
+            int DstIncrement = 0;
 
             ShaderIrOperGpr GetDst()
             {
                 ShaderIrOperGpr Dst;
 
-                switch (LutIndex)
+                if (Fp16)
                 {
-                    case 1: Dst = OpCode.Gpr0();  break;
-                    case 2: Dst = OpCode.Gpr28(); break;
-                    case 3: Dst = (RegInc >> 1) != 0
-                        ? OpCode.Gpr28()
-                        : OpCode.Gpr0 (); break;
+                    //FP16 mode, two components are packed on the two
+                    //halfs of a 32-bits register, as two half-float values.
+                    int HalfPart = DstIncrement & 1;
 
-                    default: throw new InvalidOperationException();
+                    switch (LutIndex)
+                    {
+                        case 1: Dst = OpCode.GprHalf0(HalfPart);  break;
+                        case 2: Dst = OpCode.GprHalf28(HalfPart); break;
+                        case 3: Dst = (DstIncrement >> 1) != 0
+                            ? OpCode.GprHalf28(HalfPart)
+                            : OpCode.GprHalf0(HalfPart); break;
+
+                        default: throw new InvalidOperationException();
+                    }
+                }
+                else
+                {
+                    //32-bits mode, each component uses one register.
+                    //Two components uses two consecutive registers.
+                    switch (LutIndex)
+                    {
+                        case 1: Dst = OpCode.Gpr0();  break;
+                        case 2: Dst = OpCode.Gpr28(); break;
+                        case 3: Dst = (DstIncrement >> 1) != 0
+                            ? OpCode.Gpr28()
+                            : OpCode.Gpr0(); break;
+
+                        default: throw new InvalidOperationException();
+                    }
+
+                    Dst.Index += DstIncrement & 1;
                 }
 
-                Dst.Index += RegInc++ & 1;
+                DstIncrement++;
 
                 return Dst;
             }
+
+            int ChMask = MaskLut[LutIndex, OpCode.Read(50, 7)];
+
+            if (ChMask == 0)
+            {
+                //All channels are disabled, do nothing.
+                return;
+            }
+
+            ShaderIrNode OperC = OpCode.Imm13_36();
+
+            ShaderIrOperGpr Coord0 = ShaderIrOperGpr.MakeTemporary(0);
+            ShaderIrOperGpr Coord1 = ShaderIrOperGpr.MakeTemporary(1);
+
+            Block.AddNode(new ShaderIrAsg(Coord0, OpCode.Gpr8()));
+            Block.AddNode(new ShaderIrAsg(Coord1, OpCode.Gpr20()));
 
             for (int Ch = 0; Ch < 4; Ch++)
             {
@@ -273,13 +290,15 @@ namespace Ryujinx.Graphics.Gal.Shader
                     continue;
                 }
 
-                ShaderIrOperGpr Src = new ShaderIrOperGpr(TempRegStart + Ch);
+                ShaderIrMetaTex Meta = new ShaderIrMetaTex(Ch);
+
+                ShaderIrOp Op = new ShaderIrOp(Inst, Coord0, Coord1, OperC, Meta);
 
                 ShaderIrOperGpr Dst = GetDst();
 
-                if (Dst.Index != ShaderIrOperGpr.ZRIndex)
+                if (Dst.IsValidRegister && !Dst.IsConst)
                 {
-                    Block.AddNode(OpCode.PredNode(new ShaderIrAsg(Dst, Src)));
+                    Block.AddNode(OpCode.PredNode(new ShaderIrAsg(Dst, Op)));
                 }
             }
         }
