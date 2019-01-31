@@ -5,6 +5,7 @@ namespace Ryujinx.Common.Logging
         Audio,
         Cpu,
         Font,
+        Emulation,
         Gpu,
         Hid,
         Kernel,

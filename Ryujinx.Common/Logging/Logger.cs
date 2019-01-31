@@ -16,6 +16,8 @@ namespace Ryujinx.Common.Logging
 
         public static event EventHandler<LogEventArgs> Updated;
 
+        public static bool EnableFileLog { get; set; }
+
         static Logger()
         {
             m_EnabledLevels  = new bool[Enum.GetNames(typeof(LogLevel)).Length];

@@ -62,6 +62,8 @@ namespace Ryujinx
                 }
             }
 
+            Logger.EnableFileLog = Convert.ToBoolean(parser.Value("Enable_File_Log"));
+
             SystemLanguage SetLanguage = Enum.Parse<SystemLanguage>(parser.Value("System_Language"));
 
             device.System.State.SetLanguage(SetLanguage);
@@ -118,7 +120,6 @@ namespace Ryujinx
                 });
 
             NpadController = new NpadController(
-
                        Convert.ToBoolean(parser.Value("GamePad_Enable")),
                        Convert.ToInt32  (parser.Value("GamePad_Index")),
                 (float)Convert.ToDouble (parser.Value("GamePad_Deadzone"),          CultureInfo.InvariantCulture),

@@ -1,22 +1,27 @@
-using Ryujinx.Common.Logging;
+﻿using Ryujinx.Common.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 
 namespace Ryujinx
 {
-    static class ConsoleLog
+    static class Log
     {
+        private static readonly string _path;
+
+        private static StreamWriter _logWriter;
+
         private static Thread _messageThread;
 
         private static BlockingCollection<LogEventArgs> _messageQueue;
 
         private static Dictionary<LogLevel, ConsoleColor> _logColors;
 
-        static ConsoleLog()
+        static Log()
         {
             _logColors = new Dictionary<LogLevel, ConsoleColor>()
             {
@@ -46,6 +51,13 @@ namespace Ryujinx
                     }
                 }
             });
+
+            _path = Path.Combine(Environment.CurrentDirectory, "Ryujinx.log");
+
+            if (Logger.EnableFileLog)
+            {
+                _logWriter = new StreamWriter(File.Open(_path,FileMode.Create, FileAccess.Write));
+            }
 
             _messageThread.IsBackground = true;
             _messageThread.Start();
@@ -82,25 +94,46 @@ namespace Ryujinx
                 }
             }
 
+            string message = sb.ToString();
+
             if (_logColors.TryGetValue(e.Level, out ConsoleColor color))
             {
                 Console.ForegroundColor = color;
 
-                Console.WriteLine(sb.ToString());
+                Console.WriteLine(message);
 
                 Console.ResetColor();
             }
             else
             {
-                Console.WriteLine(sb.ToString());
+                Console.WriteLine(message);
+            }
+
+            if (Logger.EnableFileLog)
+            {
+                _logWriter.WriteLine(message);
             }
         }
 
-        public static void Log(object sender, LogEventArgs e)
+        public static void LogMessage(object sender, LogEventArgs e)
         {
             if (!_messageQueue.IsAddingCompleted)
             {
                 _messageQueue.Add(e);
+            }
+        }
+
+        public static void Close()
+        {
+            _messageQueue.CompleteAdding();
+
+            _messageThread.Join();
+
+            if (Logger.EnableFileLog)
+            {
+                _logWriter.Flush();
+                _logWriter.Close();
+                _logWriter.Dispose();
             }
         }
     }
