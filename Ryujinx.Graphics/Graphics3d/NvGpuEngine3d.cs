@@ -419,7 +419,7 @@ namespace Ryujinx.Graphics.Graphics3d
             // Once geometry shaders are fixed it should be equal to GalPipelineState.RenderTargetCount when shader loaded, otherwise equal to 1
             State.ScissorTestCount = 1;
 
-            for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
+            for (int Index = 0; Index < State.ScissorTestCount; Index++)
             {
                 State.ScissorTestEnabled[Index] = ReadRegisterBool(NvGpuEngine3dReg.ScissorEnable + Index * 4);
 
@@ -438,6 +438,12 @@ namespace Ryujinx.Graphics.Graphics3d
                     if ((int)State.FlipY == -1)
                     {
                         State.ScissorTestY[Index] = ViewportHeight - State.ScissorTestY[Index] - State.ScissorTestHeight[Index];
+
+                        // Handle negative viewpont coordinate
+                        if (State.ScissorTestY[Index] < 0)
+                        {
+                            State.ScissorTestY[Index] = 0;
+                        }
                     }
                 }
             }
