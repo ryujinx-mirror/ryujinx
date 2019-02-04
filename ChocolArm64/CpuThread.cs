@@ -1,5 +1,6 @@
 using ChocolArm64.Memory;
 using ChocolArm64.State;
+using ChocolArm64.Translation;
 using System;
 using System.Threading;
 

@@ -5,16 +5,19 @@ namespace ChocolArm64.Translation
 {
     struct ILOpCodeCall : IILEmit
     {
-        private MethodInfo _mthdInfo;
+        public MethodInfo Info { get; private set; }
 
-        public ILOpCodeCall(MethodInfo mthdInfo)
+        public bool IsVirtual { get; private set; }
+
+        public ILOpCodeCall(MethodInfo info, bool isVirtual)
         {
-            _mthdInfo = mthdInfo;
+            Info      = info;
+            IsVirtual = isVirtual;
         }
 
         public void Emit(ILMethodBuilder context)
         {
-            context.Generator.Emit(OpCodes.Call, _mthdInfo);
+            context.Generator.Emit(IsVirtual ? OpCodes.Callvirt : OpCodes.Call, Info);
         }
     }
 }

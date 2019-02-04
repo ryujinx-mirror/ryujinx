@@ -1,6 +1,7 @@
 using ChocolArm64;
 using ChocolArm64.Memory;
 using ChocolArm64.State;
+using ChocolArm64.Translation;
 
 using NUnit.Framework;
 
@@ -48,10 +49,12 @@ namespace Ryujinx.Tests.Cpu
 
             _entryPoint = Position;
 
-            Translator translator = new Translator();
             _ramPointer = Marshal.AllocHGlobal(new IntPtr(_size));
             _memory = new MemoryManager(_ramPointer);
             _memory.Map(Position, 0, _size);
+
+            Translator translator = new Translator(_memory);
+
             _thread = new CpuThread(translator, _memory, _entryPoint);
 
             if (_unicornAvailable)

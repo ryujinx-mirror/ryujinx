@@ -789,7 +789,7 @@ namespace Ryujinx.Graphics.Graphics3d
                 GalVertexAttribType Type = (GalVertexAttribType)((Packed >> 27) & 0x7);
 
                 bool IsRgba = ((Packed >> 31) & 1) != 0;
-                
+
                 // Check vertex array is enabled to avoid out of bounds exception when reading bytes
                 bool Enable = (ReadRegister(NvGpuEngine3dReg.VertexArrayNControl + ArrayIndex * 4) & 0x1000) != 0;
 

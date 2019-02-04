@@ -11,6 +11,7 @@ namespace ChocolArm64.Translation
     class ILEmitterCtx
     {
         private TranslatorCache _cache;
+        private TranslatorQueue _queue;
 
         private Dictionary<long, ILLabel> _labels;
 
@@ -22,6 +23,8 @@ namespace ChocolArm64.Translation
 
         public Block    CurrBlock => _currBlock;
         public OpCode64 CurrOp    => _currBlock?.OpCodes[_opcIndex];
+
+        public TranslationTier Tier { get; }
 
         public Aarch32Mode Mode { get; } = Aarch32Mode.User; //TODO
 
@@ -47,10 +50,13 @@ namespace ChocolArm64.Translation
         private const int VecTmp1Index    = -5;
         private const int VecTmp2Index    = -6;
 
-        public ILEmitterCtx(TranslatorCache cache, Block graph)
+        public ILEmitterCtx(TranslatorCache cache, TranslatorQueue queue, TranslationTier tier, Block graph)
         {
             _cache     = cache ?? throw new ArgumentNullException(nameof(cache));
+            _queue     = queue ?? throw new ArgumentNullException(nameof(queue));
             _currBlock = graph ?? throw new ArgumentNullException(nameof(graph));
+
+            Tier = tier;
 
             _labels = new Dictionary<long, ILLabel>();
 
@@ -243,6 +249,16 @@ namespace ChocolArm64.Translation
             return new ILBlock();
         }
 
+        public void TranslateAhead(long position, ExecutionMode mode = ExecutionMode.Aarch64)
+        {
+            if (_cache.TryGetSubroutine(position, out TranslatedSub sub) && sub.Tier != TranslationTier.Tier0)
+            {
+                return;
+            }
+
+            _queue.Enqueue(new TranslatorQueueItem(position, mode, TranslationTier.Tier1));
+        }
+
         public bool TryOptEmitSubroutineCall()
         {
             if (_currBlock.Next == null)
@@ -265,19 +281,7 @@ namespace ChocolArm64.Translation
                 EmitLdarg(index);
             }
 
-            foreach (Register reg in subroutine.SubArgs)
-            {
-                switch (reg.Type)
-                {
-                    case RegisterType.Flag:   Ldloc(reg.Index, IoType.Flag);   break;
-                    case RegisterType.Int:    Ldloc(reg.Index, IoType.Int);    break;
-                    case RegisterType.Vector: Ldloc(reg.Index, IoType.Vector); break;
-                }
-            }
-
             EmitCall(subroutine.Method);
-
-            subroutine.AddCaller(_subPosition);
 
             return true;
         }
@@ -463,7 +467,12 @@ namespace ChocolArm64.Translation
             _ilBlock.Add(new ILOpCodeBranch(ilOp, label));
         }
 
-        public void Emit(string text)
+        public void EmitFieldLoad(FieldInfo info)
+        {
+            _ilBlock.Add(new ILOpCodeLoadField(info));
+        }
+
+        public void EmitPrint(string text)
         {
             _ilBlock.Add(new ILOpCodeLog(text));
         }
@@ -618,14 +627,9 @@ namespace ChocolArm64.Translation
             EmitCall(objType.GetMethod(mthdName, BindingFlags.Instance | BindingFlags.NonPublic));
         }
 
-        public void EmitCall(MethodInfo mthdInfo)
+        public void EmitCall(MethodInfo mthdInfo, bool isVirtual = false)
         {
-            if (mthdInfo == null)
-            {
-                throw new ArgumentNullException(nameof(mthdInfo));
-            }
-
-            _ilBlock.Add(new ILOpCodeCall(mthdInfo));
+            _ilBlock.Add(new ILOpCodeCall(mthdInfo ?? throw new ArgumentNullException(nameof(mthdInfo)), isVirtual));
         }
 
         public void EmitLdc_I(long value)

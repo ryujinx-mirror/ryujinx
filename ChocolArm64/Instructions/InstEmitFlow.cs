@@ -3,6 +3,8 @@ using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System.Reflection.Emit;
 
+using static ChocolArm64.Instructions.InstEmitFlowHelper;
+
 namespace ChocolArm64.Instructions
 {
     static partial class InstEmit
@@ -39,7 +41,7 @@ namespace ChocolArm64.Instructions
             context.EmitStint(RegisterAlias.Lr);
             context.EmitStoreState();
 
-            InstEmitFlowHelper.EmitCall(context, op.Imm);
+            EmitCall(context, op.Imm);
         }
 
         public static void Blr(ILEmitterCtx context)
@@ -51,7 +53,7 @@ namespace ChocolArm64.Instructions
             context.EmitStint(RegisterAlias.Lr);
             context.EmitStoreState();
 
-            context.Emit(OpCodes.Ret);
+            EmitVirtualCall(context);
         }
 
         public static void Br(ILEmitterCtx context)
@@ -61,7 +63,7 @@ namespace ChocolArm64.Instructions
             context.EmitStoreState();
             context.EmitLdintzr(op.Rn);
 
-            context.Emit(OpCodes.Ret);
+            EmitVirtualJump(context);
         }
 
         public static void Cbnz(ILEmitterCtx context) => EmitCb(context, OpCodes.Bne_Un);
@@ -106,10 +108,17 @@ namespace ChocolArm64.Instructions
         {
             OpCodeBImm64 op = (OpCodeBImm64)context.CurrOp;
 
-            if (context.CurrBlock.Next   != null &&
-                context.CurrBlock.Branch != null)
+            if (context.CurrBlock.Branch != null)
             {
                 context.EmitCondBranch(context.GetLabel(op.Imm), cond);
+
+                if (context.CurrBlock.Next == null)
+                {
+                    context.EmitStoreState();
+                    context.EmitLdc_I8(op.Position + 4);
+
+                    context.Emit(OpCodes.Ret);
+                }
             }
             else
             {
@@ -135,10 +144,17 @@ namespace ChocolArm64.Instructions
         {
             OpCodeBImm64 op = (OpCodeBImm64)context.CurrOp;
 
-            if (context.CurrBlock.Next   != null &&
-                context.CurrBlock.Branch != null)
+            if (context.CurrBlock.Branch != null)
             {
                 context.Emit(ilOp, context.GetLabel(op.Imm));
+
+                if (context.CurrBlock.Next == null)
+                {
+                    context.EmitStoreState();
+                    context.EmitLdc_I8(op.Position + 4);
+
+                    context.Emit(OpCodes.Ret);
+                }
             }
             else
             {

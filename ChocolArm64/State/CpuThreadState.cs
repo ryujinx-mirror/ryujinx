@@ -1,4 +1,5 @@
 using ChocolArm64.Events;
+using ChocolArm64.Translation;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -81,6 +82,8 @@ namespace ChocolArm64.State
         private static Stopwatch _tickCounter;
 
         private static double _hostTickFreq;
+
+        internal Translator CurrentTranslator;
 
         static CpuThreadState()
         {

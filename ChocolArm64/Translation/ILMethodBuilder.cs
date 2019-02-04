@@ -26,72 +26,30 @@ namespace ChocolArm64.Translation
             _subName  = subName;
         }
 
-        public TranslatedSub GetSubroutine()
+        public TranslatedSub GetSubroutine(TranslationTier tier)
         {
             LocalAlloc = new LocalAlloc(_ilBlocks, _ilBlocks[0]);
 
-            List<Register> subArgs = new List<Register>();
-
-            void SetArgs(long inputs, RegisterType baseType)
-            {
-                for (int bit = 0; bit < 64; bit++)
-                {
-                    long mask = 1L << bit;
-
-                    if ((inputs & mask) != 0)
-                    {
-                        subArgs.Add(GetRegFromBit(bit, baseType));
-                    }
-                }
-            }
-
-            SetArgs(LocalAlloc.GetIntInputs(_ilBlocks[0]), RegisterType.Int);
-            SetArgs(LocalAlloc.GetVecInputs(_ilBlocks[0]), RegisterType.Vector);
-
-            DynamicMethod method = new DynamicMethod(_subName, typeof(long), GetArgumentTypes(subArgs));
+            DynamicMethod method = new DynamicMethod(_subName, typeof(long), TranslatedSub.FixedArgTypes);
 
             Generator = method.GetILGenerator();
 
-            TranslatedSub subroutine = new TranslatedSub(method, subArgs);
-
-            int argsStart = TranslatedSub.FixedArgTypes.Length;
+            TranslatedSub subroutine = new TranslatedSub(method, tier);
 
             _locals = new Dictionary<Register, int>();
 
             _localsCount = 0;
 
-            for (int index = 0; index < subroutine.SubArgs.Count; index++)
-            {
-                Register reg = subroutine.SubArgs[index];
-
-                Generator.EmitLdarg(index + argsStart);
-                Generator.EmitStloc(GetLocalIndex(reg));
-            }
+            new ILOpCodeLoadState(_ilBlocks[0]).Emit(this);
 
             foreach (ILBlock ilBlock in _ilBlocks)
             {
                 ilBlock.Emit(this);
             }
 
+            subroutine.PrepareMethod();
+
             return subroutine;
-        }
-
-        private Type[] GetArgumentTypes(IList<Register> Params)
-        {
-            Type[] fixedArgs = TranslatedSub.FixedArgTypes;
-
-            Type[] output = new Type[Params.Count + fixedArgs.Length];
-
-            fixedArgs.CopyTo(output, 0);
-
-            int typeIdx = fixedArgs.Length;
-
-            for (int index = 0; index < Params.Count; index++)
-            {
-                output[typeIdx++] = GetFieldType(Params[index].Type);
-            }
-
-            return output;
         }
 
         public int GetLocalIndex(Register reg)
