@@ -1,8 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 
 namespace Ryujinx.Common.Logging
@@ -14,9 +13,9 @@ namespace Ryujinx.Common.Logging
         private static readonly bool[] m_EnabledLevels;
         private static readonly bool[] m_EnabledClasses;
 
-        public static event EventHandler<LogEventArgs> Updated;
+        private static readonly List<ILogTarget> m_LogTargets;
 
-        public static bool EnableFileLog { get; set; }
+        public static event EventHandler<LogEventArgs> Updated;
 
         static Logger()
         {
@@ -33,7 +32,28 @@ namespace Ryujinx.Common.Logging
                 m_EnabledClasses[index] = true;
             }
 
+            m_LogTargets = new List<ILogTarget>();
+
             m_Time = Stopwatch.StartNew();
+        }
+
+        public static void AddTarget(ILogTarget target)
+        {
+            m_LogTargets.Add(target);
+
+            Updated += target.Log;
+        }
+
+        public static void Shutdown()
+        {
+            Updated = null;
+
+            foreach(var target in m_LogTargets)
+            {
+                target.Dispose();
+            }
+
+            m_LogTargets.Clear();
         }
 
         public static void SetEnable(LogLevel logLevel, bool enabled)

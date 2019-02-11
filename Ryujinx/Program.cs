@@ -20,9 +20,8 @@ namespace Ryujinx
 
             Switch device = new Switch(renderer, audioOut);
 
-            Config.Read(device);
-
-            Logger.Updated += Log.LogMessage;
+            Configuration.Load("Config.jsonc");
+            Configuration.Configure(device);
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.ProcessExit        += CurrentDomain_ProcessExit;
@@ -40,13 +39,13 @@ namespace Ryujinx
 
                     if (romFsFiles.Length > 0)
                     {
-                        Console.WriteLine("Loading as cart with RomFS.");
+                        Logger.PrintInfo(LogClass.Application, "Loading as cart with RomFS.");
 
                         device.LoadCart(args[0], romFsFiles[0]);
                     }
                     else
                     {
-                        Console.WriteLine("Loading as cart WITHOUT RomFS.");
+                        Logger.PrintInfo(LogClass.Application, "Loading as cart WITHOUT RomFS.");
 
                         device.LoadCart(args[0]);
                     }
@@ -56,20 +55,20 @@ namespace Ryujinx
                     switch (Path.GetExtension(args[0]).ToLowerInvariant())
                     {
                         case ".xci":
-                            Console.WriteLine("Loading as XCI.");
+                            Logger.PrintInfo(LogClass.Application, "Loading as XCI.");
                             device.LoadXci(args[0]);
                             break;
                         case ".nca":
-                            Console.WriteLine("Loading as NCA.");
+                            Logger.PrintInfo(LogClass.Application, "Loading as NCA.");
                             device.LoadNca(args[0]);
                             break;
                         case ".nsp":
                         case ".pfs0":
-                            Console.WriteLine("Loading as NSP.");
+                            Logger.PrintInfo(LogClass.Application, "Loading as NSP.");
                             device.LoadNsp(args[0]);
                             break;
                         default:
-                            Console.WriteLine("Loading as homebrew.");
+                            Logger.PrintInfo(LogClass.Application, "Loading as homebrew.");
                             device.LoadProgram(args[0]);
                             break;
                     }
@@ -77,7 +76,7 @@ namespace Ryujinx
             }
             else
             {
-                Console.WriteLine("Please specify the folder with the NSOs/IStorage or a NSO/NRO.");
+                Logger.PrintInfo(LogClass.Application, "Please specify the folder with the NSOs/IStorage or a NSO/NRO.");
             }
 
             using (GlScreen screen = new GlScreen(device, renderer))
@@ -88,11 +87,13 @@ namespace Ryujinx
             }
 
             audioOut.Dispose();
+
+            Logger.Shutdown();
         }
 
         private static void CurrentDomain_ProcessExit(object sender, EventArgs e)
         {
-            Log.Close();
+            Logger.Shutdown();
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -103,7 +104,7 @@ namespace Ryujinx
 
             if (e.IsTerminating)
             {
-                Log.Close();
+                Logger.Shutdown();
             }
         }
 

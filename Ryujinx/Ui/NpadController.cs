@@ -8,28 +8,24 @@ namespace Ryujinx.UI.Input
     public enum ControllerInputId
     {
         Invalid,
-
         LStick,
+        RStick,
+        LShoulder,
+        RShoulder,
+        LTrigger,
+        RTrigger,
+        LJoystick,
+        RJoystick,
         DPadUp,
         DPadDown,
         DPadLeft,
         DPadRight,
+        Start,
         Back,
-        LShoulder,
-
-        RStick,
         A,
         B,
         X,
-        Y,
-        Start,
-        RShoulder,
-
-        LTrigger,
-        RTrigger,
-
-        LJoystick,
-        RJoystick
+        Y
     }
 
     public struct NpadControllerLeft
@@ -60,34 +56,55 @@ namespace Ryujinx.UI.Input
 
     public class NpadController
     {
-        public bool  Enabled          { private set; get; }
-        public int   Index            { private set; get; }
-        public float Deadzone         { private set; get; }
-        public float TriggerThreshold { private set; get; }
+        /// <summary>
+        /// Enables or disables controller support
+        /// </summary>
+        public bool Enabled { get; private set; }
 
-        public NpadControllerLeft  Left  { private set; get; }
-        public NpadControllerRight Right { private set; get; }
+        /// <summary>
+        /// Controller Device Index
+        /// </summary>
+        public int Index { get; private set; }
+
+        /// <summary>
+        /// Controller Analog Stick Deadzone
+        /// </summary>
+        public float Deadzone { get; private set; }
+
+        /// <summary>
+        /// Controller Trigger Threshold
+        /// </summary>
+        public float TriggerThreshold { get; private set; }
+
+        /// <summary>
+        /// Left JoyCon Controller Bindings
+        /// </summary>
+        public NpadControllerLeft LeftJoycon { get; private set; }
+
+        /// <summary>
+        /// Right JoyCon Controller Bindings
+        /// </summary>
+        public NpadControllerRight RightJoycon { get; private set; }
 
         public NpadController(
-            bool                  enabled,
-            int                   index,
-            float                 deadzone,
-            float                 triggerThreshold,
-            NpadControllerLeft    left,
-            NpadControllerRight   right)
+            bool                enabled,
+            int                 index,
+            float               deadzone,
+            float               triggerThreshold,
+            NpadControllerLeft  leftJoycon,
+            NpadControllerRight rightJoycon)
         {
             Enabled          = enabled;
             Index            = index;
             Deadzone         = deadzone;
             TriggerThreshold = triggerThreshold;
-            Left             = left;
-            Right            = right;
+            LeftJoycon       = leftJoycon;
+            RightJoycon      = rightJoycon;
+        }
 
-            //Unmapped controllers are problematic, skip them
-            if (GamePad.GetName(index) == "Unmapped Controller")
-            {
-                Enabled = false;
-            }
+        public void SetEnabled(bool enabled)
+        {
+            Enabled = enabled;
         }
 
         public HidControllerButtons GetButtons()
@@ -101,23 +118,23 @@ namespace Ryujinx.UI.Input
 
             HidControllerButtons buttons = 0;
 
-            if (IsPressed(gpState, Left.DPadUp))       buttons |= HidControllerButtons.DpadUp;
-            if (IsPressed(gpState, Left.DPadDown))     buttons |= HidControllerButtons.DpadDown;
-            if (IsPressed(gpState, Left.DPadLeft))     buttons |= HidControllerButtons.DpadLeft;
-            if (IsPressed(gpState, Left.DPadRight))    buttons |= HidControllerButtons.DPadRight;
-            if (IsPressed(gpState, Left.StickButton))  buttons |= HidControllerButtons.StickLeft;
-            if (IsPressed(gpState, Left.ButtonMinus))  buttons |= HidControllerButtons.Minus;
-            if (IsPressed(gpState, Left.ButtonL))      buttons |= HidControllerButtons.L;
-            if (IsPressed(gpState, Left.ButtonZl))     buttons |= HidControllerButtons.Zl;
+            if (IsPressed(gpState, LeftJoycon.DPadUp))       buttons |= HidControllerButtons.DpadUp;
+            if (IsPressed(gpState, LeftJoycon.DPadDown))     buttons |= HidControllerButtons.DpadDown;
+            if (IsPressed(gpState, LeftJoycon.DPadLeft))     buttons |= HidControllerButtons.DpadLeft;
+            if (IsPressed(gpState, LeftJoycon.DPadRight))    buttons |= HidControllerButtons.DPadRight;
+            if (IsPressed(gpState, LeftJoycon.StickButton))  buttons |= HidControllerButtons.StickLeft;
+            if (IsPressed(gpState, LeftJoycon.ButtonMinus))  buttons |= HidControllerButtons.Minus;
+            if (IsPressed(gpState, LeftJoycon.ButtonL))      buttons |= HidControllerButtons.L;
+            if (IsPressed(gpState, LeftJoycon.ButtonZl))     buttons |= HidControllerButtons.Zl;
 
-            if (IsPressed(gpState, Right.ButtonA))     buttons |= HidControllerButtons.A;
-            if (IsPressed(gpState, Right.ButtonB))     buttons |= HidControllerButtons.B;
-            if (IsPressed(gpState, Right.ButtonX))     buttons |= HidControllerButtons.X;
-            if (IsPressed(gpState, Right.ButtonY))     buttons |= HidControllerButtons.Y;
-            if (IsPressed(gpState, Right.StickButton)) buttons |= HidControllerButtons.StickRight;
-            if (IsPressed(gpState, Right.ButtonPlus))  buttons |= HidControllerButtons.Plus;
-            if (IsPressed(gpState, Right.ButtonR))     buttons |= HidControllerButtons.R;
-            if (IsPressed(gpState, Right.ButtonZr))    buttons |= HidControllerButtons.Zr;
+            if (IsPressed(gpState, RightJoycon.ButtonA))     buttons |= HidControllerButtons.A;
+            if (IsPressed(gpState, RightJoycon.ButtonB))     buttons |= HidControllerButtons.B;
+            if (IsPressed(gpState, RightJoycon.ButtonX))     buttons |= HidControllerButtons.X;
+            if (IsPressed(gpState, RightJoycon.ButtonY))     buttons |= HidControllerButtons.Y;
+            if (IsPressed(gpState, RightJoycon.StickButton)) buttons |= HidControllerButtons.StickRight;
+            if (IsPressed(gpState, RightJoycon.ButtonPlus))  buttons |= HidControllerButtons.Plus;
+            if (IsPressed(gpState, RightJoycon.ButtonR))     buttons |= HidControllerButtons.R;
+            if (IsPressed(gpState, RightJoycon.ButtonZr))    buttons |= HidControllerButtons.Zr;
 
             return buttons;
         }
@@ -129,7 +146,7 @@ namespace Ryujinx.UI.Input
                 return (0, 0);
             }
 
-            return GetStick(Left.Stick);
+            return GetStick(LeftJoycon.Stick);
         }
 
         public (short, short) GetRightStick()
@@ -139,7 +156,7 @@ namespace Ryujinx.UI.Input
                 return (0, 0);
             }
 
-            return GetStick(Right.Stick);
+            return GetStick(RightJoycon.Stick);
         }
 
         private (short, short) GetStick(ControllerInputId joystick)

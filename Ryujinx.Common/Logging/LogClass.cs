@@ -2,6 +2,7 @@ namespace Ryujinx.Common.Logging
 {
     public enum LogClass
     {
+        Application,
         Audio,
         Cpu,
         Font,

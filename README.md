@@ -18,7 +18,7 @@ or just drag'n'drop the homebrew *.NRO / *.NSO or the game *.NSP / *.XCI on the 
 
  - Controller Input is supported, see [CONFIG.md](CONFIG.md)
 
- - Config File: `Ryujinx.conf` should be present in executable folder.
+ - Config File: `Config.jsonc` should be present in executable folder.
    For more information [you can go here](CONFIG.md).
 
 **Help**

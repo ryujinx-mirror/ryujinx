@@ -1,123 +1,124 @@
 ## Config File
 
-`Ryujinx.conf` should be present in executable folder (It's an *.ini file) following this format:
+`Config.jsonc` should be present in executable folder. The available settings follow:
 
-- `Logging_Enable_Info` *(bool)*
+- `graphics_shaders_dump_path` *(string)*
+
+  Dump shaders in local directory (e.g. `C:\ShaderDumps`)
+
+- `logging_enable_debug` *(bool)*
+
+  Enable the Debug Logging.
+
+- `logging_enable_stub` *(bool)*
+
+  Enable the Trace Logging.
+
+- `logging_enable_info` *(bool)*
 
   Enable the Informations Logging.
 
-- `Logging_Enable_Trace` *(bool)*
+- `logging_enable_warn` *(bool)*
 
-  Enable the Trace Logging (Enabled in Debug recommended).
-  
-- `Logging_Enable_Debug` *(bool)*
+  Enable the Warning Logging.
 
-   Enable the Debug Logging (Enabled in Debug recommended).
+- `logging_enable_error` *(bool)*
 
-- `Logging_Enable_Warn` *(bool)*
+  Enable the Error Logging.
 
-  Enable the Warning Logging (Enabled in Debug recommended).
-
-- `Logging_Enable_Error` *(bool)*
-
-  Enable the Error Logging (Enabled in Debug recommended).
-
-- `Logging_Enable_Fatal` *(bool)*
-
-  Enable the Fatal Logging (Enabled in Debug recommended).
-
-- `Logging_Enable_Ipc` *(bool)*
-
-  Enable the Ipc Message Logging.
-
-- `Logging_Enable_LogFile` *(bool)*
+- `enable_file_log` *(bool)*
 
   Enable writing the logging inside a Ryujinx.log file.
-  
-- `GamePad_Index` *(int)*
 
-  The index of the Controller Device.
-  
-- `GamePad_Deadzone` *(float)*
+- `system_language` *(string)*
 
-  The deadzone of both analog sticks on the Controller.
+  Change System Language, [System Language list](https://gist.github.com/HorrorTroll/b6e4a88d774c3c9b3bdf54d79a7ca43b)
 
-- `GamePad_Enable` *(bool)*
-  
-  Whether or not to enable Controller Support.
-  
-- `Controls_Left_JoyConKeyboard_XX` *(int)*
-  ```
-  Controls_Left_JoyConKeyboard_Stick_Up (int)
-  Controls_Left_JoyConKeyboard_Stick_Down (int)
-  Controls_Left_JoyConKeyboard_Stick_Left (int)
-  Controls_Left_JoyConKeyboard_Stick_Right (int)
-  Controls_Left_JoyConKeyboard_Stick_Button (int)
-  Controls_Left_JoyConKeyboard_DPad_Up (int)
-  Controls_Left_JoyConKeyboard_DPad_Down (int)
-  Controls_Left_JoyConKeyboard_DPad_Left (int)
-  Controls_Left_JoyConKeyboard_DPad_Right (int)
-  Controls_Left_JoyConKeyboard_Button_Minus (int)
-  Controls_Left_JoyConKeyboard_Button_L (int)
-  Controls_Left_JoyConKeyboard_Button_ZL (int)
-  ```
-  
-  Keys of the Left Emulated Joycon, the values depend of the [OpenTK Enum Keys](https://github.com/opentk/opentk/blob/develop/src/OpenTK/Input/Key.cs).
-  
-  OpenTK use a QWERTY layout, so pay attention if you use another Keyboard Layout.
-  
-  Ex: `Controls_Left_JoyConKeyboard_Button_Minus = 52` > Tab key (All Layout).
+- `docked_mode` *(bool)*
 
-- `Controls_Right_JoyConKeyboard_XX` *(int)*
-  ```
-  Controls_Right_JoyConKeyboard_Stick_Up (int)
-  Controls_Right_JoyConKeyboard_Stick_Down (int)
-  Controls_Right_JoyConKeyboard_Stick_Left (int)
-  Controls_Right_JoyConKeyboard_Stick_Right (int)
-  Controls_Right_JoyConKeyboard_Stick_Button (int)
-  Controls_Right_JoyConKeyboard_Button_A (int)
-  Controls_Right_JoyConKeyboard_Button_B (int)
-  Controls_Right_JoyConKeyboard_Button_X (int)
-  Controls_Right_JoyConKeyboard_Button_Y (int)
-  Controls_Right_JoyConKeyboard_Button_Plus (int)
-  Controls_Right_JoyConKeyboard_Button_R (int)
-  Controls_Right_JoyConKeyboard_Button_ZR (int)
-  ```
+  Enable or Disable Docked Mode
 
-  Keys of the right Emulated Joycon, the values depend of the [OpenTK Enum Keys](https://github.com/opentk/opentk/blob/develop/src/OpenTK/Input/Key.cs).
-  
-  OpenTK use a QWERTY layout, so pay attention if you use another Keyboard Layout.
-  
-  Ex: `Controls_Right_JoyConKeyboard_Button_A = 83` > A key (QWERTY Layout) / Q key (AZERTY Layout).
-  
-- `Controls_Left_JoyConController_XX` *(String)*
-  ```
-  Controls_Left_JoyConController_Stick (String)
-  Controls_Left_JoyConController_Stick_Button (String)
-  Controls_Left_JoyConController_DPad_Up (String)
-  Controls_Left_JoyConController_DPad_Down (String)
-  Controls_Left_JoyConController_DPad_Left (String)
-  Controls_Left_JoyConController_DPad_Right (String)
-  Controls_Left_JoyConController_Button_Minus (String)
-  Controls_Left_JoyConController_Button_L (String)
-  Controls_Left_JoyConController_Button_ZL (String)
-  ```
-  
-- `Controls_Right_JoyConController_XX` *(String)*
-  ```
-  Controls_Right_JoyConController_Stick (String)
-  Controls_Right_JoyConController_Stick_Button (String)
-  Controls_Right_JoyConController_Button_A (String)
-  Controls_Right_JoyConController_Button_B (String)
-  Controls_Right_JoyConController_Button_X (String)
-  Controls_Right_JoyConController_Button_Y (String)
-  Controls_Right_JoyConController_Button_Plus (String)
-  Controls_Right_JoyConController_Button_R (String)
-  Controls_Right_JoyConController_Button_ZR (String)
-  ```
+- `enable_vsync` *(bool)*
 
-- Default Mapping
-   - Controller
+  Enable or Disable Game Vsync
+
+- `enable_multicore_scheduling` *(bool)*
+
+  Enable or Disable Multi-core scheduling of threads
+
+- `enable_fs_integrity_checks` *(bool)*
+
+  Enable integrity checks on Switch content files
+
+- `controller_type` *(string)*
+
+  The primary controller's type.
+  Supported Values: `Handheld`, `ProController`, `NpadPair`, `NpadLeft`, `NpadRight`
+
+- `keyboard_controls` *(object)* :
+  - `left_joycon` *(object)* :
+    Left JoyCon Keyboard Bindings
+    - `stick_up` *(string)*
+    - `stick_down` *(string)*
+    - `stick_left` *(string)*
+    - `stick_right` *(string)*
+    - `stick_button` *(string)*
+    - `dpad_up` *(string)*
+    - `dpad_down` *(string)*
+    - `dpad_left` *(string)*
+    - `dpad_right` *(string)*
+    - `button_minus` *(string)*
+    - `button_l` *(string)*
+    - `button_zl` *(string)*
+  - `right_joycon` *(object)* :
+    Right JoyCon Keyboard Bindings
+    - `stick_up` *(string)*
+    - `stick_down` *(string)*
+    - `stick_left` *(string)*
+    - `stick_right` *(string)*
+    - `stick_button` *(string)*
+    - `button_a` *(string)*
+    - `button_b` *(string)*
+    - `button_x` *(string)*
+    - `button_y` *(string)*
+    - `button_plus` *(string)*
+    - `button_r` *(string)*
+    - `button_zr` *(string)*
+
+- `gamepad_controls` *(object)* :
+  - `enabled` *(bool)*
+    Whether or not to enable Controller Support.
+  - `index` *(int)*
+    The index of the Controller Device.
+  - `deadzone` *(number)*
+    The deadzone of both analog sticks on the Controller.
+  - `trigger_threshold` *(number)*
+    The value of how pressed down each trigger has to be in order to register a button press
+  - `left_joycon` *(object)* :
+    Left JoyCon Controller Bindings
+    - `stick` *(string)*
+    - `stick_button` *(string)*
+    - `dpad_up` *(string)*
+    - `dpad_down` *(string)*
+    - `dpad_left` *(string)*
+    - `dpad_right` *(string)*
+    - `button_minus` *(string)*
+    - `button_l` *(string)*
+    - `button_zl` *(string)*
+  - `right_joycon` *(object)* :
+  Right JoyCon Controller Bindings
+    - `stick` *(string)*
+    - `stick_button` *(string)*
+    - `button_a` *(string)*
+    - `button_b` *(string)*
+    - `button_x` *(string)*
+    - `button_y` *(string)*
+    - `button_plus` *(string)*
+    - `button_r` *(string)*
+    - `button_zr` *(string)*
+  
+### Default Mapping
+   #### Controller
      - Left Joycon:
        - Analog Stick = Left Analog Stick
 	   - DPad Up = DPad Up
@@ -137,7 +138,8 @@
 	   - Plus = Start / Options
 	   - R = Right Shoulder Button
 	   - ZR = Right Trigger
-   - Keyboard
+
+   #### Keyboard
      - Left Joycon:
 	   - Stick Up = W
 	   - Stick Down = S
@@ -166,7 +168,7 @@
 	   - R = U
 	   - ZR = O
   
-- Valid Button Mappings
+### Valid Button Mappings
   - A = The A / Cross Button
   - B = The B / Circle Button
   - X = The X / Square Button

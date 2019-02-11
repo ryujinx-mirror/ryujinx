@@ -1,0 +1,124 @@
+{
+    "$schema": "./_schema.json",
+
+    // Dump shaders in local directory (e.g. `C:\ShaderDumps`)
+    "graphics_shaders_dump_path": "",
+
+    // Enable print debug logs
+    "logging_enable_debug": false,
+
+    // Enable print stubbed calls logs
+    "logging_enable_stub": true,
+
+    // Enable print informations logs
+    "logging_enable_info": true,
+
+    // Enable print warning logs
+    "logging_enable_warn": true,
+
+    // Enable print error logs
+    "logging_enable_error": true,
+
+    // Filtered log classes, in a JSON array, eg. `[ "Loader", "ServiceFs" ]`
+    "logging_filtered_classes": [ ],
+
+    // Enable file logging
+    "enable_file_log": true,
+
+    // Change System Language
+    // System Language list: https://gist.github.com/HorrorTroll/b6e4a88d774c3c9b3bdf54d79a7ca43b
+    "system_language": "AmericanEnglish",
+
+    // Enable or Disable Docked Mode
+    "docked_mode": false,
+    
+    // Enable or Disable Game Vsync
+    "enable_vsync": true,
+    
+    // Enable or Disable Multi-core scheduling of threads
+    "enable_multicore_scheduling": false,
+    
+    // Enable integrity checks on Switch content files
+    "enable_fs_integrity_checks": true,
+    
+    // The primary controller's type
+    // Supported Values: Handheld, ProController, NpadPair, NpadLeft, NpadRight
+    "controller_type": "Handheld",
+
+    // Keyboard Controls
+    // https://github.com/opentk/opentk/blob/master/src/OpenTK/Input/Key.cs
+    "keyboard_controls": {
+        // Left JoyCon Keyboard Bindings
+        "left_joycon": {
+            "stick_up": "W",
+            "stick_down": "S",
+            "stick_left": "A",
+            "stick_right": "D",
+            "stick_button": "F",
+            "dpad_up": "Up",
+            "dpad_down": "Down",
+            "dpad_left": "Left",
+            "dpad_right": "Right",
+            "button_minus": "Minus",
+            "button_l": "E",
+            "button_zl": "Q"
+        },
+
+        // Right JoyCon Keyboard Bindings
+        "right_joycon": {
+            "stick_up": "I",
+            "stick_down": "K",
+            "stick_left": "J",
+            "stick_right": "L",
+            "stick_button": "H",
+            "button_a": "Z",
+            "button_b": "X",
+            "button_x": "C",
+            "button_y": "V",
+            "button_plus": "Plus",
+            "button_r": "U",
+            "button_zr": "O"
+        }
+    },
+
+    // Controller Controls
+    "gamepad_controls": {
+        // Whether or not to enable Controller support
+        "enabled": true,
+
+        // Controller Device Index
+        "index": 0,
+
+        // Controller Analog Stick Deadzone
+        "deadzone": 0.05,
+
+        // The value of how pressed down each trigger has to be in order to register a button press
+        "trigger_threshold": 0.5,
+
+        // Left JoyCon Controller Bindings
+        "left_joycon": {
+            "stick": "LJoystick",
+            "stick_button": "LStick",
+            "dpad_up": "DPadUp",
+            "dpad_down": "DPadDown",
+            "dpad_left": "DPadLeft",
+            "dpad_right": "DPadRight",
+            "button_minus": "Back",
+            "button_l": "LShoulder",
+            "button_zl": "LTrigger"
+        },
+
+        // Right JoyCon Controller Bindings
+        "right_joycon": {
+            "stick": "RJoystick",
+            "stick_button": "RStick",
+            "button_a": "B",
+            "button_b": "A",
+            "button_x": "Y",
+            "button_y": "X",
+            "button_plus": "Start",
+            "button_r": "RShoulder",
+            "button_zr": "RTrigger"
+        }
+    }
+}
