@@ -157,7 +157,7 @@ namespace Ryujinx
             if (Instance.EnableFileLog)
             {
                 Logger.AddTarget(new AsyncLogTargetWrapper(
-                    new FileLogTarget("Ryujinx.log"),
+                    new FileLogTarget(Path.Combine(Program.ApplicationDirectory, "Ryujinx.log")),
                     1000,
                     AsyncLogTargetOverflowAction.Block
                 ));

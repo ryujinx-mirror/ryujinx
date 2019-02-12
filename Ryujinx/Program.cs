@@ -10,6 +10,8 @@ namespace Ryujinx
 {
     class Program
     {
+        public static string ApplicationDirectory => AppDomain.CurrentDomain.BaseDirectory;
+
         static void Main(string[] args)
         {
             Console.Title = "Ryujinx Console";
@@ -20,7 +22,7 @@ namespace Ryujinx
 
             Switch device = new Switch(renderer, audioOut);
 
-            Configuration.Load("Config.jsonc");
+            Configuration.Load(Path.Combine(ApplicationDirectory, "Config.jsonc"));
             Configuration.Configure(device);
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
