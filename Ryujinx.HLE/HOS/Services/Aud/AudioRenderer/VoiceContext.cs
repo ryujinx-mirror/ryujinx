@@ -14,20 +14,24 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
         private int _bufferIndex;
         private int _offset;
 
-        public int SampleRate;
-        public int ChannelsCount;
+        public int SampleRate    { get; set; }
+        public int ChannelsCount { get; set; }
 
-        public float Volume;
+        public float Volume { get; set; }
 
-        public PlayState PlayState;
+        public PlayState PlayState { get; set; }
 
-        public SampleFormat SampleFormat;
+        public SampleFormat SampleFormat { get; set; }
 
-        public AdpcmDecoderContext AdpcmCtx;
+        public AdpcmDecoderContext AdpcmCtx { get; set; }
 
-        public WaveBuffer[] WaveBuffers;
+        public WaveBuffer[] WaveBuffers { get; }
 
-        public VoiceOut OutStatus;
+        public WaveBuffer CurrentWaveBuffer => WaveBuffers[_bufferIndex];
+
+        private VoiceOut _outStatus;
+
+        public VoiceOut OutStatus => _outStatus;
 
         private int[] _samples;
 
@@ -56,9 +60,9 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             _bufferIndex = 0;
             _offset      = 0;
 
-            OutStatus.PlayedSamplesCount     = 0;
-            OutStatus.PlayedWaveBuffersCount = 0;
-            OutStatus.VoiceDropsCount        = 0;
+            _outStatus.PlayedSamplesCount     = 0;
+            _outStatus.PlayedWaveBuffersCount = 0;
+            _outStatus.VoiceDropsCount        = 0;
         }
 
         public int[] GetBufferData(MemoryManager memory, int maxSamples, out int samplesCount)
@@ -94,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
             samplesCount = size / AudioConsts.HostChannelsCount;
 
-            OutStatus.PlayedSamplesCount += samplesCount;
+            _outStatus.PlayedSamplesCount += samplesCount;
 
             _offset += size;
 
@@ -107,7 +111,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
                     SetBufferIndex((_bufferIndex + 1) & 3);
                 }
 
-                OutStatus.PlayedWaveBuffersCount++;
+                _outStatus.PlayedWaveBuffersCount++;
 
                 if (wb.LastBuffer != 0)
                 {
