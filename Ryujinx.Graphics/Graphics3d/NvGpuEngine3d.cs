@@ -1023,8 +1023,6 @@ namespace Ryujinx.Graphics.Graphics3d
 
                     long Timestamp = PerformanceCounter.ElapsedMilliseconds;
 
-                    Timestamp = (long)(Timestamp * 615384.615385);
-
                     Vmm.WriteInt64(Position + 0, Counter);
                     Vmm.WriteInt64(Position + 8, Timestamp);
 
