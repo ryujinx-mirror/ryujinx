@@ -36,60 +36,7 @@ namespace Ryujinx.Audio
         {
             get
             {
-                SoundIO          context = null;
-                SoundIODevice    device  = null;
-                SoundIOOutStream stream  = null;
-
-                bool backendDisconnected = false;
-
-                try
-                {
-                    context = new SoundIO();
-
-                    context.OnBackendDisconnect = (i) => {
-                        backendDisconnected = true;
-                    };
-
-                    context.Connect();
-                    context.FlushEvents();
-
-                    if(backendDisconnected)
-                    {
-                        return false;
-                    }
-
-                    device = context.GetOutputDevice(context.DefaultOutputDeviceIndex);
-
-                    if(device == null || backendDisconnected)
-                    {
-                        return false;
-                    }
-
-                    stream = device.CreateOutStream();
-
-                    if(stream == null || backendDisconnected)
-                    {
-                        return false;
-                    }
-
-                    return true;
-                }
-                catch
-                {
-                    return false;
-                }
-                finally
-                {
-                    if(stream != null)
-                    {
-                        stream.Dispose();
-                    }
-
-                    if(context != null)
-                    {
-                        context.Dispose();
-                    }
-                }
+                return IsSupportedInternal();
             }
         }
 
@@ -103,7 +50,7 @@ namespace Ryujinx.Audio
             m_AudioContext.Connect();
             m_AudioContext.FlushEvents();
 
-            m_AudioDevice = m_AudioContext.GetOutputDevice(m_AudioContext.DefaultOutputDeviceIndex);
+            m_AudioDevice = FindNonRawDefaultAudioDevice(m_AudioContext, true);
             m_TrackPool = new SoundIoAudioTrackPool(m_AudioContext, m_AudioDevice, MaximumTracks);
         }
 
@@ -243,6 +190,100 @@ namespace Ryujinx.Audio
             m_TrackPool.Dispose();
             m_AudioContext.Disconnect();
             m_AudioContext.Dispose();
+        }
+
+        /// <summary>
+        /// Searches for a shared version of the default audio device
+        /// </summary>
+        /// <param name="audioContext">The <see cref="SoundIO"/> audio context</param>
+        /// <param name="fallback">Whether to fallback to the raw default audio device if a non-raw device cannot be found</param>
+        private static SoundIODevice FindNonRawDefaultAudioDevice(SoundIO audioContext, bool fallback = false)
+        {
+            SoundIODevice defaultAudioDevice = audioContext.GetOutputDevice(audioContext.DefaultOutputDeviceIndex);
+
+            if(!defaultAudioDevice.IsRaw)
+            {
+                return defaultAudioDevice;
+            }
+
+            for(var i = 0; i < audioContext.BackendCount; i++)
+            {
+                SoundIODevice audioDevice = audioContext.GetOutputDevice(i);
+
+                if (audioDevice.Id == defaultAudioDevice.Id && !audioDevice.IsRaw)
+                {
+                    return audioDevice;
+                }
+            }
+
+            return fallback ? defaultAudioDevice : null;
+        }
+
+        /// <summary>
+        /// Determines if SoundIO can connect to a supported backend
+        /// </summary>
+        /// <returns></returns>
+        private static bool IsSupportedInternal()
+        {
+            SoundIO          context = null;
+            SoundIODevice    device  = null;
+            SoundIOOutStream stream  = null;
+
+            bool backendDisconnected = false;
+
+            try
+            {
+                context = new SoundIO();
+
+                context.OnBackendDisconnect = (i) => {
+                    backendDisconnected = true;
+                };
+
+                context.Connect();
+                context.FlushEvents();
+
+                if(backendDisconnected)
+                {
+                    return false;
+                }
+
+                if(context.OutputDeviceCount == 0)
+                {
+                    return false;
+                }
+
+                device = FindNonRawDefaultAudioDevice(context);
+
+                if(device == null || backendDisconnected)
+                {
+                    return false;
+                }
+
+                stream = device.CreateOutStream();
+
+                if(stream == null || backendDisconnected)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                if(stream != null)
+                {
+                    stream.Dispose();
+                }
+
+                if(context != null)
+                {
+                    context.Dispose();
+                }
+            }
         }
     }
 }

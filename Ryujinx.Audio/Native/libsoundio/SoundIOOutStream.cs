@@ -77,6 +77,12 @@ namespace SoundIOSharp
 		}
 		static readonly int software_latency_offset = (int)Marshal.OffsetOf<SoundIoOutStream> ("software_latency");
 
+		public float Volume {
+			get { return MarshalEx.ReadFloat (handle, volume_offset); }
+			set { MarshalEx.WriteFloat (handle, volume_offset, value); }
+		}
+		static readonly int volume_offset = (int)Marshal.OffsetOf<SoundIoOutStream> ("volume");
+
 		// error_callback
 		public Action ErrorCallback {
 			get { return error_callback; }
@@ -236,6 +242,13 @@ namespace SoundIOSharp
 				dptr = (double*) p;
 				return *dptr;
 			}
+		}
+
+		public void SetVolume (double volume)
+		{
+			var ret = (SoundIoError) Natives.soundio_outstream_set_volume (handle, volume);
+			if (ret != SoundIoError.SoundIoErrorNone)
+				throw new SoundIOException (ret);
 		}
 	}
 }
