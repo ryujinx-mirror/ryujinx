@@ -23,9 +23,10 @@ namespace Ryujinx.HLE.HOS.Services.Sm
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
-                { 0, Initialize      },
-                { 1, GetService      },
-                { 2, RegisterService }
+                { 0, Initialize        },
+                { 1, GetService        },
+                { 2, RegisterService   },
+                { 3, UnregisterService }
             };
 
             _registeredServices = new ConcurrentDictionary<string, KPort>();
@@ -124,6 +125,36 @@ namespace Ryujinx.HLE.HOS.Services.Sm
             }
 
             context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
+
+            return 0;
+        }
+
+        public long UnregisterService(ServiceCtx context)
+        {
+            if (!_isInitialized)
+            {
+                return ErrorCode.MakeError(ErrorModule.Sm, SmErr.NotInitialized);
+            }
+
+            long namePosition = context.RequestData.BaseStream.Position;
+
+            string name = ReadName(context);
+
+            context.RequestData.BaseStream.Seek(namePosition + 8, SeekOrigin.Begin);
+
+            bool isLight = (context.RequestData.ReadInt32() & 1) != 0;
+
+            int maxSessions = context.RequestData.ReadInt32();
+
+            if (name == string.Empty)
+            {
+                return ErrorCode.MakeError(ErrorModule.Sm, SmErr.InvalidName);
+            }
+
+            if (!_registeredServices.TryRemove(name, out _))
+            {
+                return ErrorCode.MakeError(ErrorModule.Sm, SmErr.NotRegistered);
+            }
 
             return 0;
         }

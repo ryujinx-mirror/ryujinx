@@ -13,6 +13,7 @@ namespace Ryujinx.HLE.Loaders.Executables
         public int RoOffset   { get; private set; }
         public int DataOffset { get; private set; }
         public int BssSize    { get; private set; }
+        public int FileSize   { get; private set; }
 
         public int BssOffset => DataOffset + Data.Length;
 
@@ -59,6 +60,8 @@ namespace Ryujinx.HLE.Loaders.Executables
             Text = Read(textOffset, textSize);
             Ro   = Read(roOffset,   roSize);
             Data = Read(dataOffset, dataSize);
+
+            FileSize = fileSize;
         }
     }
 }

@@ -160,5 +160,10 @@ namespace Ryujinx.HLE.FileSystem
         {
             throw new NotSupportedException();
         }
+
+        public FileTimestamp GetFileTimeStampRaw(string name)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

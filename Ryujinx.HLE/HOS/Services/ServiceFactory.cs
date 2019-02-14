@@ -17,6 +17,7 @@ using Ryujinx.HLE.HOS.Services.Ns;
 using Ryujinx.HLE.HOS.Services.Nv;
 using Ryujinx.HLE.HOS.Services.Pctl;
 using Ryujinx.HLE.HOS.Services.Pl;
+using Ryujinx.HLE.HOS.Services.Pm;
 using Ryujinx.HLE.HOS.Services.Prepo;
 using Ryujinx.HLE.HOS.Services.Psm;
 using Ryujinx.HLE.HOS.Services.Set;
@@ -131,6 +132,7 @@ namespace Ryujinx.HLE.HOS.Services
                 case "ns:am":
                     return new IApplicationManagerInterface();
 
+                case "ns:am2":
                 case "ns:ec":
                     return new IServiceGetterInterface();
 
@@ -160,6 +162,9 @@ namespace Ryujinx.HLE.HOS.Services
 
                 case "pl:u":
                     return new ISharedFontManager();
+
+                case "pm:shell":
+                    return new IShellInterface();
 
                 case "prepo:a":
                     return new IPrepoService();

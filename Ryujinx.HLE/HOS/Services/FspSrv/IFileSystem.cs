@@ -38,8 +38,8 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 { 10, Commit                     },
                 { 11, GetFreeSpaceSize           },
                 { 12, GetTotalSpaceSize          },
-                { 13, CleanDirectoryRecursively  }
-                //{ 14, GetFileTimeStampRaw        }
+                { 13, CleanDirectoryRecursively  },
+                { 14, GetFileTimeStampRaw        }
             };
 
             _openPaths = new HashSet<string>();
@@ -366,6 +366,34 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
 
             return 0;
+        }
+
+        // GetFileTimeStampRaw(buffer<bytes<0x301>, 0x19, 0x301> path) -> bytes<0x20> timestamp
+        public long GetFileTimeStampRaw(ServiceCtx context)
+        {
+            string name = ReadUtf8String(context);
+
+            string path = _provider.GetFullPath(name);
+
+            if (_provider.FileExists(path) || _provider.DirectoryExists(path))
+            {
+                FileTimestamp timestamp = _provider.GetFileTimeStampRaw(path);
+
+                context.ResponseData.Write(new DateTimeOffset(timestamp.CreationDateTime).ToUnixTimeSeconds());
+                context.ResponseData.Write(new DateTimeOffset(timestamp.ModifiedDateTime).ToUnixTimeSeconds());
+                context.ResponseData.Write(new DateTimeOffset(timestamp.LastAccessDateTime).ToUnixTimeSeconds());
+
+                byte[] data = new byte[8];
+
+                // is valid?
+                data[0] = 1;
+
+                context.ResponseData.Write(data);
+
+                return 0;
+            }
+
+            return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
         }
 
         private bool IsPathAlreadyInUse(string path)

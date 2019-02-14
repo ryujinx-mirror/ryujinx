@@ -1,5 +1,6 @@
 ﻿using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.FspSrv;
+using System;
 
 namespace Ryujinx.HLE.FileSystem
 {
@@ -36,5 +37,7 @@ namespace Ryujinx.HLE.FileSystem
         long GetFreeSpace(ServiceCtx context);
 
         long GetTotalSpace(ServiceCtx context);
+
+        FileTimestamp GetFileTimeStampRaw(string name);
     }
 }

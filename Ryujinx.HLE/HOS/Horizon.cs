@@ -102,6 +102,8 @@ namespace Ryujinx.HLE.HOS
 
         public Horizon(Switch device)
         {
+            ControlData = new Nacp();
+
             Device = device;
 
             State = new SystemStateMgr();
@@ -549,14 +551,58 @@ namespace Ryujinx.HLE.HOS
 
             bool isNro = Path.GetExtension(filePath).ToLower() == ".nro";
 
-            using (FileStream input = new FileStream(filePath, FileMode.Open))
-            {
-                IExecutable staticObject = isNro
-                    ? (IExecutable)new NxRelocatableObject(input)
-                    : new NxStaticObject(input);
+            FileStream input = new FileStream(filePath, FileMode.Open);
 
-                ProgramLoader.LoadStaticObjects(this, metaData, new IExecutable[] { staticObject });
+            IExecutable staticObject;
+
+            if (isNro)
+            {
+                NxRelocatableObject obj = new NxRelocatableObject(input);
+                staticObject = obj;
+
+                // homebrew NRO can actually have some data after the actual NRO
+                if (input.Length > obj.FileSize)
+                {
+                    input.Position = obj.FileSize;
+
+                    BinaryReader reader = new BinaryReader(input);
+
+                    uint asetMagic = reader.ReadUInt32();
+
+                    if (asetMagic == 0x54455341)
+                    {
+                        uint asetVersion = reader.ReadUInt32();
+                        if (asetVersion == 0)
+                        {
+                            ulong iconOffset = reader.ReadUInt64();
+                            ulong iconSize = reader.ReadUInt64();
+
+                            ulong nacpOffset = reader.ReadUInt64();
+                            ulong nacpSize = reader.ReadUInt64();
+
+                            ulong romfsOffset = reader.ReadUInt64();
+                            ulong romfsSize = reader.ReadUInt64();
+
+                            if (romfsSize != 0)
+                            {
+                                Device.FileSystem.SetRomFs(new HomebrewRomFsStream(input, obj.FileSize + (long)romfsOffset));
+                            }
+                        }
+                        else
+                        {
+                            Logger.PrintWarning(LogClass.Loader, $"Unsupported ASET header version found \"{asetVersion}\"");
+                        }
+                    }
+                }
             }
+            else
+            {
+                staticObject = new NxStaticObject(input);
+            }
+
+            ContentManager.LoadEntries();
+
+            ProgramLoader.LoadStaticObjects(this, metaData, new IExecutable[] { staticObject });
         }
 
         private Npdm GetDefaultNpdm()

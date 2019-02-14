@@ -13,8 +13,15 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
-                //...
+                { 7996, GetApplicationManagerInterface }
             };
+        }
+
+        public long GetApplicationManagerInterface(ServiceCtx context)
+        {
+            MakeObject(context, new IApplicationManagerInterface());
+
+            return 0;
         }
     }
 }
