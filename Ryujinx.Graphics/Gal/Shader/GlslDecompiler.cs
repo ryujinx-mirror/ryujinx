@@ -845,9 +845,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 {
                     case GlslDecl.PointCoordAttrX: return "gl_PointCoord.x";
                     case GlslDecl.PointCoordAttrY: return "gl_PointCoord.y";
-
-                    //Note: It's a guess that Maxwell's face is 1 when gl_FrontFacing == true
-                    case GlslDecl.FaceAttr: return "(gl_FrontFacing ? 1 : 0)";
+                    case GlslDecl.FaceAttr:        return "(gl_FrontFacing ? -1 : 0)";
                 }
             }
 

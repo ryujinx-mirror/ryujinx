@@ -159,25 +159,23 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 Shader.SetExtraData(New.FlipX, New.FlipY, New.Instance);
             }
 
-            //Note: Uncomment SetFrontFace and SetCullFace when flipping issues are solved
+            if (New.FrontFace != Old.FrontFace)
+            {
+                GL.FrontFace(OGLEnumConverter.GetFrontFace(New.FrontFace));
+            }
 
-            //if (New.FrontFace != Old.FrontFace)
-            //{
-            //    GL.FrontFace(OGLEnumConverter.GetFrontFace(New.FrontFace));
-            //}
+            if (New.CullFaceEnabled != Old.CullFaceEnabled)
+            {
+                Enable(EnableCap.CullFace, New.CullFaceEnabled);
+            }
 
-            //if (New.CullFaceEnabled != Old.CullFaceEnabled)
-            //{
-            //    Enable(EnableCap.CullFace, New.CullFaceEnabled);
-            //}
-
-            //if (New.CullFaceEnabled)
-            //{
-            //    if (New.CullFace != Old.CullFace)
-            //    {
-            //        GL.CullFace(OGLEnumConverter.GetCullFace(New.CullFace));
-            //    }
-            //}
+            if (New.CullFaceEnabled)
+            {
+                if (New.CullFace != Old.CullFace)
+                {
+                    GL.CullFace(OGLEnumConverter.GetCullFace(New.CullFace));
+                }
+            }
 
             if (New.DepthTestEnabled != Old.DepthTestEnabled)
             {

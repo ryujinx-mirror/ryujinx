@@ -1148,41 +1148,87 @@ namespace Ryujinx.Graphics.Gal.Shader
             Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Op)));
         }
 
+        private enum XmadMode
+        {
+            Cfull = 0,
+            Clo   = 1,
+            Chi   = 2,
+            Csfu  = 3,
+            Cbcc  = 4
+        }
+
         private static void EmitXmad(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
         {
-            //TODO: Confirm SignAB/C, it is just a guess.
-            //TODO: Implement Mode 3 (CSFU), what it does?
-            bool SignAB = OpCode.Read(48);
-            bool SignC  = OpCode.Read(49);
-            bool HighB  = OpCode.Read(52);
-            bool HighA  = OpCode.Read(53);
+            bool SignedA = OpCode.Read(48);
+            bool SignedB = OpCode.Read(49);
+            bool HighB   = OpCode.Read(52);
+            bool HighA   = OpCode.Read(53);
 
             int Mode = OpCode.Read(50, 7);
 
             ShaderIrNode OperA = OpCode.Gpr8(), OperB, OperC;
 
-            ShaderIrOperImm Imm16  = new ShaderIrOperImm(16);
-            ShaderIrOperImm ImmMsk = new ShaderIrOperImm(0xffff);
-
-            ShaderIrInst ShiftAB = SignAB ? ShaderIrInst.Asr : ShaderIrInst.Lsr;
-            ShaderIrInst ShiftC  = SignC  ? ShaderIrInst.Asr : ShaderIrInst.Lsr;
-
-            if (HighA)
-            {
-                OperA = new ShaderIrOp(ShiftAB, OperA, Imm16);
-            }
-
             switch (Oper)
             {
-                case ShaderOper.CR:  OperB = OpCode.Cbuf34();   break;
-                case ShaderOper.Imm: OperB = OpCode.Imm19_20(); break;
-                case ShaderOper.RC:  OperB = OpCode.Gpr39();    break;
-                case ShaderOper.RR:  OperB = OpCode.Gpr20();    break;
+                case ShaderOper.CR:  OperB = OpCode.Cbuf34();    break;
+                case ShaderOper.Imm: OperB = OpCode.ImmU16_20(); break;
+                case ShaderOper.RC:  OperB = OpCode.Gpr39();     break;
+                case ShaderOper.RR:  OperB = OpCode.Gpr20();     break;
 
                 default: throw new ArgumentException(nameof(Oper));
             }
 
-            bool ProductShiftLeft = false, Merge = false;
+            ShaderIrNode OperB2 = OperB;
+
+            if (Oper == ShaderOper.Imm)
+            {
+                int Imm = ((ShaderIrOperImm)OperB2).Value;
+
+                if (!HighB)
+                {
+                    Imm <<= 16;
+                }
+
+                if (SignedB)
+                {
+                    Imm >>= 16;
+                }
+                else
+                {
+                    Imm = (int)((uint)Imm >> 16);
+                }
+
+                OperB2 = new ShaderIrOperImm(Imm);
+            }
+
+            ShaderIrOperImm Imm16 = new ShaderIrOperImm(16);
+
+            //If we are working with the lower 16-bits of the A/B operands,
+            //we need to shift the lower 16-bits to the top 16-bits. Later,
+            //they will be right shifted. For U16 types, this will be a logical
+            //right shift, and for S16 types, a arithmetic right shift.
+            if (!HighA)
+            {
+                OperA = new ShaderIrOp(ShaderIrInst.Lsl, OperA, Imm16);
+            }
+
+            if (!HighB && Oper != ShaderOper.Imm)
+            {
+                OperB2 = new ShaderIrOp(ShaderIrInst.Lsl, OperB2, Imm16);
+            }
+
+            ShaderIrInst ShiftA = SignedA ? ShaderIrInst.Asr : ShaderIrInst.Lsr;
+            ShaderIrInst ShiftB = SignedB ? ShaderIrInst.Asr : ShaderIrInst.Lsr;
+
+            OperA = new ShaderIrOp(ShiftA, OperA,  Imm16);
+
+            if (Oper != ShaderOper.Imm)
+            {
+                OperB2 = new ShaderIrOp(ShiftB, OperB2, Imm16);
+            }
+
+            bool ProductShiftLeft = false;
+            bool Merge            = false;
 
             if (Oper == ShaderOper.RC)
             {
@@ -1196,40 +1242,53 @@ namespace Ryujinx.Graphics.Gal.Shader
                 Merge            = OpCode.Read(37);
             }
 
-            switch (Mode)
-            {
-                //CLO.
-                case 1: OperC = ExtendTo32(OperC, SignC, 16); break;
-
-                //CHI.
-                case 2: OperC = new ShaderIrOp(ShiftC, OperC, Imm16); break;
-            }
-
-            ShaderIrNode OperBH = OperB;
-
-            if (HighB)
-            {
-                OperBH = new ShaderIrOp(ShiftAB, OperBH, Imm16);
-            }
-
-            ShaderIrOp MulOp = new ShaderIrOp(ShaderIrInst.Mul, OperA, OperBH);
+            ShaderIrOp MulOp = new ShaderIrOp(ShaderIrInst.Mul, OperA, OperB2);
 
             if (ProductShiftLeft)
             {
                 MulOp = new ShaderIrOp(ShaderIrInst.Lsl, MulOp, Imm16);
             }
 
+            switch ((XmadMode)Mode)
+            {
+                case XmadMode.Clo: OperC = ExtendTo32(OperC, Signed: false, Size: 16); break;
+
+                case XmadMode.Chi: OperC = new ShaderIrOp(ShaderIrInst.Lsr, OperC, Imm16); break;
+
+                case XmadMode.Cbcc:
+                {
+                    ShaderIrOp OperBLsh16 = new ShaderIrOp(ShaderIrInst.Lsl, OperB, Imm16);
+
+                    OperC = new ShaderIrOp(ShaderIrInst.Add, OperC, OperBLsh16);
+
+                    break;
+                }
+
+                case XmadMode.Csfu:
+                {
+                    ShaderIrOperImm Imm31 = new ShaderIrOperImm(31);
+
+                    ShaderIrOp SignAdjustA = new ShaderIrOp(ShaderIrInst.Lsr, OperA,  Imm31);
+                    ShaderIrOp SignAdjustB = new ShaderIrOp(ShaderIrInst.Lsr, OperB2, Imm31);
+
+                    SignAdjustA = new ShaderIrOp(ShaderIrInst.Lsl, SignAdjustA, Imm16);
+                    SignAdjustB = new ShaderIrOp(ShaderIrInst.Lsl, SignAdjustB, Imm16);
+
+                    ShaderIrOp SignAdjust = new ShaderIrOp(ShaderIrInst.Add, SignAdjustA, SignAdjustB);
+
+                    OperC = new ShaderIrOp(ShaderIrInst.Sub, OperC, SignAdjust);
+
+                    break;
+                }
+            }
+
             ShaderIrOp AddOp = new ShaderIrOp(ShaderIrInst.Add, MulOp, OperC);
 
             if (Merge)
             {
-                AddOp = new ShaderIrOp(ShaderIrInst.And, AddOp, ImmMsk);
-                OperB = new ShaderIrOp(ShaderIrInst.Lsl, OperB, Imm16);
-                AddOp = new ShaderIrOp(ShaderIrInst.Or,  AddOp, OperB);
-            }
+                ShaderIrOperImm Imm16Mask = new ShaderIrOperImm(0xffff);
 
-            if (Mode == 4)
-            {
+                AddOp = new ShaderIrOp(ShaderIrInst.And, AddOp, Imm16Mask);
                 OperB = new ShaderIrOp(ShaderIrInst.Lsl, OperB, Imm16);
                 AddOp = new ShaderIrOp(ShaderIrInst.Or,  AddOp, OperB);
             }
