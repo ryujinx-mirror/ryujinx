@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Text;
 
+using static Ryujinx.HLE.HOS.ErrorCode;
 using static Ryujinx.HLE.HOS.Services.Android.Parcel;
 
 namespace Ryujinx.HLE.HOS.Services.Vi
@@ -35,6 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
                 { 2030, CreateStrayLayer                     },
                 { 2031, DestroyStrayLayer                    },
                 { 2101, SetLayerScalingMode                  },
+                { 2102, ConvertScalingMode                   },
                 { 5202, GetDisplayVSyncEvent                 }
             };
 
@@ -174,6 +176,35 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             long unknown     = context.RequestData.ReadInt64();
 
             return 0;
+        }
+
+        public long ConvertScalingMode(ServiceCtx context)
+        {
+            SrcScalingMode  scalingMode     = (SrcScalingMode)context.RequestData.ReadInt32();
+            DstScalingMode? destScalingMode = ConvetScalingModeImpl(scalingMode);
+
+            if (!destScalingMode.HasValue)
+            {
+                return MakeError(ErrorModule.Vi, 1);
+            }
+
+            context.ResponseData.Write((ulong)destScalingMode);
+
+            return 0;
+        }
+
+        private DstScalingMode? ConvetScalingModeImpl(SrcScalingMode srcScalingMode)
+        {
+            switch (srcScalingMode)
+            {
+                case SrcScalingMode.None:                return DstScalingMode.None;
+                case SrcScalingMode.Freeze:              return DstScalingMode.Freeze;
+                case SrcScalingMode.ScaleAndCrop:        return DstScalingMode.ScaleAndCrop;
+                case SrcScalingMode.ScaleToWindow:       return DstScalingMode.ScaleToWindow;
+                case SrcScalingMode.PreserveAspectRatio: return DstScalingMode.PreserveAspectRatio;
+            }
+
+            return null;
         }
 
         public long GetDisplayVSyncEvent(ServiceCtx context)
