@@ -16,7 +16,8 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
-                { 0, Read }
+                { 0, Read    },
+                { 4, GetSize }
             };
 
             _baseStream = baseStream;
@@ -48,6 +49,14 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
                 context.Memory.WriteBytes(buffDesc.Position, data);
             }
+
+            return 0;
+        }
+
+        // GetSize() -> u64 size
+        public long GetSize(ServiceCtx context)
+        {
+            context.ResponseData.Write(_baseStream.Length);
 
             return 0;
         }
