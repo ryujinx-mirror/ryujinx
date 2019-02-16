@@ -79,7 +79,7 @@ namespace Ryujinx
         /// <summary>
         /// Enables or disables multi-core scheduling of threads
         /// </summary>
-        public bool EnableMultiCoreScheduling { get; private set; }
+        public bool EnableMulticoreScheduling { get; private set; }
 
         /// <summary>
         /// Enables integrity checks on Game content files
@@ -188,7 +188,7 @@ namespace Ryujinx
 
             device.System.State.SetLanguage(Instance.SystemLanguage);
 
-            if (Instance.EnableMultiCoreScheduling)
+            if (Instance.EnableMulticoreScheduling)
             {
                 device.System.EnableMultiCoreScheduling();
             }
