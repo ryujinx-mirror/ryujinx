@@ -51,6 +51,8 @@ namespace ChocolArm64.Instructions
 
         public static void Adds(ILEmitterCtx context)
         {
+            context.TryOptMarkCondWithoutCmp();
+
             EmitAluLoadOpers(context);
 
             context.Emit(OpCodes.Add);

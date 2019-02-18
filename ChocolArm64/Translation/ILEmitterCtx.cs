@@ -312,19 +312,57 @@ namespace ChocolArm64.Translation
 
         public void EmitCondBranch(ILLabel target, Condition cond)
         {
+            if (_optOpLastCompare != null &&
+                _optOpLastCompare == _optOpLastFlagSet && _branchOps.ContainsKey(cond))
+            {
+                if (_optOpLastCompare.Emitter == InstEmit.Subs)
+                {
+                    Ldloc(CmpOptTmp1Index, IoType.Int, _optOpLastCompare.RegisterSize);
+                    Ldloc(CmpOptTmp2Index, IoType.Int, _optOpLastCompare.RegisterSize);
+
+                    Emit(_branchOps[cond], target);
+
+                    return;
+                }
+                else if (_optOpLastCompare.Emitter == InstEmit.Adds && cond != Condition.GeUn
+                                                                    && cond != Condition.LtUn
+                                                                    && cond != Condition.GtUn
+                                                                    && cond != Condition.LeUn)
+                {
+                    //There are several limitations that needs to be taken into account for CMN comparisons:
+                    //* The unsigned comparisons are not valid, as they depend on the
+                    //carry flag value, and they will have different values for addition and
+                    //subtraction. For addition, it's carry, and for subtraction, it's borrow.
+                    //So, we need to make sure we're not doing a unsigned compare for the CMN case.
+                    //* We can only do the optimization for the immediate variants,
+                    //because when the second operand value is exactly INT_MIN, we can't
+                    //negate the value as theres no positive counterpart.
+                    //Such invalid values can't be encoded on the immediate encodings.
+                    if (_optOpLastCompare is IOpCodeAluImm64 op)
+                    {
+                        Ldloc(CmpOptTmp1Index, IoType.Int, _optOpLastCompare.RegisterSize);
+
+                        if (_optOpLastCompare.RegisterSize == RegisterSize.Int32)
+                        {
+                            EmitLdc_I4((int)-op.Imm);
+                        }
+                        else
+                        {
+                            EmitLdc_I8(-op.Imm);
+                        }
+
+                        Emit(_branchOps[cond], target);
+
+                        return;
+                    }
+                }
+            }
+
             OpCode ilOp;
 
             int intCond = (int)cond;
 
-            if (_optOpLastCompare != null &&
-                _optOpLastCompare == _optOpLastFlagSet && _branchOps.ContainsKey(cond))
-            {
-                Ldloc(CmpOptTmp1Index, IoType.Int, _optOpLastCompare.RegisterSize);
-                Ldloc(CmpOptTmp2Index, IoType.Int, _optOpLastCompare.RegisterSize);
-
-                ilOp = _branchOps[cond];
-            }
-            else if (intCond < 14)
+            if (intCond < 14)
             {
                 int condTrue = intCond >> 1;
 
