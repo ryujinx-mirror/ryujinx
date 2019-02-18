@@ -1,3 +1,5 @@
+#define Misc
+
 using ChocolArm64.State;
 
 using NUnit.Framework;
@@ -6,9 +8,120 @@ using System.Runtime.Intrinsics.X86;
 
 namespace Ryujinx.Tests.Cpu
 {
-    [Category("Misc"), Explicit]
+    [Category("Misc")]
     public sealed class CpuTestMisc : CpuTest
     {
+#if Misc
+        private const int RndCnt     = 2;
+        private const int RndCntImm  = 2;
+
+#region "AluImm & Csel"
+        [Test, Pairwise]
+        public void Adds_Csinc_64bit([Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
+                                             0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xn,
+                                     [Values(0u, 4095u)] [Random(0u, 4095u, RndCntImm)] uint imm,
+                                     [Values(0b00u, 0b01u)] uint shift,          // <LSL #0, LSL #12>
+                                     [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u, // <EQ, NE, CS/HS, CC/LO,
+                                             0b0100u, 0b0101u, 0b0110u, 0b0111u, //  MI, PL, VS, VC,
+                                             0b1000u, 0b1001u, 0b1010u, 0b1011u, //  HI, LS, GE, LT,
+                                             0b1100u, 0b1101u)] uint cond)       //  GT, LE>
+        {
+            uint opCmn  = 0xB100001F; // ADDS  X31, X0,  #0,  LSL #0 -> CMN  X0, #0, LSL #0
+            uint opCset = 0x9A9F07E0; // CSINC X0,  X31, X31, EQ     -> CSET X0, NE
+
+            opCmn  |= ((shift & 3) << 22) | ((imm & 4095) << 10);
+            opCset |= ((cond & 15) << 12);
+
+            SetThreadState(x0: xn);
+            Opcode(opCmn);
+            Opcode(opCset);
+            Opcode(0xD4200000); // BRK #0
+            Opcode(0xD65F03C0); // RET
+            ExecuteOpcodes();
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void Adds_Csinc_32bit([Values(0x00000000u, 0x7FFFFFFFu,
+                                             0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
+                                     [Values(0u, 4095u)] [Random(0u, 4095u, RndCntImm)] uint imm,
+                                     [Values(0b00u, 0b01u)] uint shift,          // <LSL #0, LSL #12>
+                                     [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u, // <EQ, NE, CS/HS, CC/LO,
+                                             0b0100u, 0b0101u, 0b0110u, 0b0111u, //  MI, PL, VS, VC,
+                                             0b1000u, 0b1001u, 0b1010u, 0b1011u, //  HI, LS, GE, LT,
+                                             0b1100u, 0b1101u)] uint cond)       //  GT, LE>
+        {
+            uint opCmn  = 0x3100001F; // ADDS  W31, W0,  #0,  LSL #0 -> CMN  W0, #0, LSL #0
+            uint opCset = 0x1A9F07E0; // CSINC W0,  W31, W31, EQ     -> CSET W0, NE
+
+            opCmn  |= ((shift & 3) << 22) | ((imm & 4095) << 10);
+            opCset |= ((cond & 15) << 12);
+
+            SetThreadState(x0: wn);
+            Opcode(opCmn);
+            Opcode(opCset);
+            Opcode(0xD4200000); // BRK #0
+            Opcode(0xD65F03C0); // RET
+            ExecuteOpcodes();
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void Subs_Csinc_64bit([Values(0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
+                                             0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul)] [Random(RndCnt)] ulong xn,
+                                     [Values(0u, 4095u)] [Random(0u, 4095u, RndCntImm)] uint imm,
+                                     [Values(0b00u, 0b01u)] uint shift,          // <LSL #0, LSL #12>
+                                     [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u, // <EQ, NE, CS/HS, CC/LO,
+                                             0b0100u, 0b0101u, 0b0110u, 0b0111u, //  MI, PL, VS, VC,
+                                             0b1000u, 0b1001u, 0b1010u, 0b1011u, //  HI, LS, GE, LT,
+                                             0b1100u, 0b1101u)] uint cond)       //  GT, LE>
+        {
+            uint opCmp  = 0xF100001F; // SUBS  X31, X0,  #0,  LSL #0 -> CMP  X0, #0, LSL #0
+            uint opCset = 0x9A9F07E0; // CSINC X0,  X31, X31, EQ     -> CSET X0, NE
+
+            opCmp  |= ((shift & 3) << 22) | ((imm & 4095) << 10);
+            opCset |= ((cond & 15) << 12);
+
+            SetThreadState(x0: xn);
+            Opcode(opCmp);
+            Opcode(opCset);
+            Opcode(0xD4200000); // BRK #0
+            Opcode(0xD65F03C0); // RET
+            ExecuteOpcodes();
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void Subs_Csinc_32bit([Values(0x00000000u, 0x7FFFFFFFu,
+                                             0x80000000u, 0xFFFFFFFFu)] [Random(RndCnt)] uint wn,
+                                     [Values(0u, 4095u)] [Random(0u, 4095u, RndCntImm)] uint imm,
+                                     [Values(0b00u, 0b01u)] uint shift,          // <LSL #0, LSL #12>
+                                     [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u, // <EQ, NE, CS/HS, CC/LO,
+                                             0b0100u, 0b0101u, 0b0110u, 0b0111u, //  MI, PL, VS, VC,
+                                             0b1000u, 0b1001u, 0b1010u, 0b1011u, //  HI, LS, GE, LT,
+                                             0b1100u, 0b1101u)] uint cond)       //  GT, LE>
+        {
+            uint opCmp  = 0x7100001F; // SUBS  W31, W0,  #0,  LSL #0 -> CMP  W0, #0, LSL #0
+            uint opCset = 0x1A9F07E0; // CSINC W0,  W31, W31, EQ     -> CSET W0, NE
+
+            opCmp  |= ((shift & 3) << 22) | ((imm & 4095) << 10);
+            opCset |= ((cond & 15) << 12);
+
+            SetThreadState(x0: wn);
+            Opcode(opCmp);
+            Opcode(opCset);
+            Opcode(0xD4200000); // BRK #0
+            Opcode(0xD65F03C0); // RET
+            ExecuteOpcodes();
+
+            CompareAgainstUnicorn();
+        }
+#endregion
+
+        [Explicit]
         [TestCase(0xFFFFFFFDu)] // Roots.
         [TestCase(0x00000005u)]
         public void Misc1(uint a)
@@ -42,6 +155,7 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(GetThreadState().X0, Is.Zero);
         }
 
+        [Explicit]
         [TestCase(-20f,  -5f)] // 18 integer solutions.
         [TestCase(-12f,  -6f)]
         [TestCase(-12f,   3f)]
@@ -91,6 +205,7 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(Sse41.Extract(GetThreadState().V0, (byte)0), Is.EqualTo(16f));
         }
 
+        [Explicit]
         [TestCase(-20d,  -5d)] // 18 integer solutions.
         [TestCase(-12d,  -6d)]
         [TestCase(-12d,   3d)]
@@ -140,7 +255,7 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(VectorExtractDouble(GetThreadState().V0, (byte)0), Is.EqualTo(16d));
         }
 
-        [Test]
+        [Test, Ignore("The Tester supports only one return point.")]
         public void MiscF([Range(0u, 92u, 1u)] uint a)
         {
             ulong Fn(uint n)
@@ -213,6 +328,7 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(GetThreadState().X0, Is.EqualTo(Fn(a)));
         }
 
+        [Explicit]
         [Test]
         public void MiscR()
         {
@@ -255,6 +371,7 @@ namespace Ryujinx.Tests.Cpu
             Assert.That(GetThreadState().X0, Is.EqualTo(result));
         }
 
+        [Explicit]
         [TestCase( 0ul)]
         [TestCase( 1ul)]
         [TestCase( 2ul)]
@@ -266,5 +383,6 @@ namespace Ryujinx.Tests.Cpu
 
             Assert.That(threadState.X0, Is.EqualTo(a));
         }
+#endif
     }
 }
