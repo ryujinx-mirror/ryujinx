@@ -32,8 +32,6 @@ namespace ChocolArm64
             {
                 translator.ExecuteSubroutine(this, entrypoint);
 
-                memory.RemoveMonitor(ThreadState.Core);
-
                 WorkFinished?.Invoke(this, EventArgs.Empty);
             });
         }

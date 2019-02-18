@@ -228,43 +228,31 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             KProcess currentProcess = _system.Scheduler.GetCurrentProcess();
 
-            currentProcess.CpuMemory.SetExclusive(0, (long)address);
+            int mutexValue, newMutexValue;
 
-            if (!KernelTransfer.UserToKernelInt32(_system, address, out int mutexValue))
+            do
             {
-                //Invalid address.
-                currentProcess.CpuMemory.ClearExclusive(0);
-
-                requester.SignaledObj   = null;
-                requester.ObjSyncResult = KernelResult.InvalidMemState;
-
-                return null;
-            }
-
-            while (true)
-            {
-                if (currentProcess.CpuMemory.TestExclusive(0, (long)address))
+                if (!KernelTransfer.UserToKernelInt32(_system, address, out mutexValue))
                 {
-                    if (mutexValue != 0)
-                    {
-                        //Update value to indicate there is a mutex waiter now.
-                        currentProcess.CpuMemory.WriteInt32((long)address, mutexValue | HasListenersMask);
-                    }
-                    else
-                    {
-                        //No thread owning the mutex, assign to requesting thread.
-                        currentProcess.CpuMemory.WriteInt32((long)address, requester.ThreadHandleForUserMutex);
-                    }
+                    //Invalid address.
+                    requester.SignaledObj   = null;
+                    requester.ObjSyncResult = KernelResult.InvalidMemState;
 
-                    currentProcess.CpuMemory.ClearExclusiveForStore(0);
-
-                    break;
+                    return null;
                 }
 
-                currentProcess.CpuMemory.SetExclusive(0, (long)address);
-
-                mutexValue = currentProcess.CpuMemory.ReadInt32((long)address);
+                if (mutexValue != 0)
+                {
+                    //Update value to indicate there is a mutex waiter now.
+                    newMutexValue = mutexValue | HasListenersMask;
+                }
+                else
+                {
+                    //No thread owning the mutex, assign to requesting thread.
+                    newMutexValue = requester.ThreadHandleForUserMutex;
+                }
             }
+            while (!currentProcess.CpuMemory.AtomicCompareExchangeInt32((long)address, mutexValue, newMutexValue));
 
             if (mutexValue == 0)
             {
@@ -392,9 +380,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             KProcess currentProcess = _system.Scheduler.GetCurrentProcess();
 
-            //If ShouldDecrement is true, do atomic decrement of the value at Address.
-            currentProcess.CpuMemory.SetExclusive(0, (long)address);
-
             if (!KernelTransfer.UserToKernelInt32(_system, address, out int currentValue))
             {
                 _system.CriticalSection.Leave();
@@ -404,24 +389,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (shouldDecrement)
             {
-                while (currentValue < value)
-                {
-                    if (currentProcess.CpuMemory.TestExclusive(0, (long)address))
-                    {
-                        currentProcess.CpuMemory.WriteInt32((long)address, currentValue - 1);
-
-                        currentProcess.CpuMemory.ClearExclusiveForStore(0);
-
-                        break;
-                    }
-
-                    currentProcess.CpuMemory.SetExclusive(0, (long)address);
-
-                    currentValue = currentProcess.CpuMemory.ReadInt32((long)address);
-                }
+                currentValue = currentProcess.CpuMemory.AtomicDecrementInt32((long)address) + 1;
             }
-
-            currentProcess.CpuMemory.ClearExclusive(0);
 
             if (currentValue < value)
             {
@@ -511,39 +480,25 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             KProcess currentProcess = _system.Scheduler.GetCurrentProcess();
 
-            currentProcess.CpuMemory.SetExclusive(0, (long)address);
+            int currentValue;
 
-            if (!KernelTransfer.UserToKernelInt32(_system, address, out int currentValue))
+            do
             {
-                _system.CriticalSection.Leave();
-
-                return KernelResult.InvalidMemState;
-            }
-
-            while (currentValue == value)
-            {
-                if (currentProcess.CpuMemory.TestExclusive(0, (long)address))
+                if (!KernelTransfer.UserToKernelInt32(_system, address, out currentValue))
                 {
-                    currentProcess.CpuMemory.WriteInt32((long)address, currentValue + 1);
+                    _system.CriticalSection.Leave();
 
-                    currentProcess.CpuMemory.ClearExclusiveForStore(0);
-
-                    break;
+                    return KernelResult.InvalidMemState;
                 }
 
-                currentProcess.CpuMemory.SetExclusive(0, (long)address);
+                if (currentValue != value)
+                {
+                    _system.CriticalSection.Leave();
 
-                currentValue = currentProcess.CpuMemory.ReadInt32((long)address);
+                    return KernelResult.InvalidState;
+                }
             }
-
-            currentProcess.CpuMemory.ClearExclusive(0);
-
-            if (currentValue != value)
-            {
-                _system.CriticalSection.Leave();
-
-                return KernelResult.InvalidState;
-            }
+            while (!currentProcess.CpuMemory.AtomicCompareExchangeInt32((long)address, currentValue, currentValue + 1));
 
             WakeArbiterThreads(address, count);
 
@@ -582,39 +537,25 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             KProcess currentProcess = _system.Scheduler.GetCurrentProcess();
 
-            currentProcess.CpuMemory.SetExclusive(0, (long)address);
+            int currentValue;
 
-            if (!KernelTransfer.UserToKernelInt32(_system, address, out int currentValue))
+            do
             {
-                _system.CriticalSection.Leave();
-
-                return KernelResult.InvalidMemState;
-            }
-
-            while (currentValue == value)
-            {
-                if (currentProcess.CpuMemory.TestExclusive(0, (long)address))
+                if (!KernelTransfer.UserToKernelInt32(_system, address, out currentValue))
                 {
-                    currentProcess.CpuMemory.WriteInt32((long)address, currentValue + offset);
+                    _system.CriticalSection.Leave();
 
-                    currentProcess.CpuMemory.ClearExclusiveForStore(0);
-
-                    break;
+                    return KernelResult.InvalidMemState;
                 }
 
-                currentProcess.CpuMemory.SetExclusive(0, (long)address);
+                if (currentValue != value)
+                {
+                    _system.CriticalSection.Leave();
 
-                currentValue = currentProcess.CpuMemory.ReadInt32((long)address);
+                    return KernelResult.InvalidState;
+                }
             }
-
-            currentProcess.CpuMemory.ClearExclusive(0);
-
-            if (currentValue != value)
-            {
-                _system.CriticalSection.Leave();
-
-                return KernelResult.InvalidState;
-            }
+            while (!currentProcess.CpuMemory.AtomicCompareExchangeInt32((long)address, currentValue, currentValue + offset));
 
             WakeArbiterThreads(address, count);
 

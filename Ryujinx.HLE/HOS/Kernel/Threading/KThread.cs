@@ -1004,11 +1004,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             Context.ThreadState.X1 = (ulong)threadHandle;
         }
 
-        public void ClearExclusive()
-        {
-            Owner.CpuMemory.ClearExclusive(CurrentCore);
-        }
-
         public void TimeUp()
         {
             ReleaseAndResume();

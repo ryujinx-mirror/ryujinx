@@ -23,7 +23,9 @@ namespace ChocolArm64.Instructions
 
         public static void Clrex(ILEmitterCtx context)
         {
-            EmitMemoryCall(context, nameof(MemoryManager.ClearExclusive));
+            context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+            context.EmitPrivateCall(typeof(CpuThreadState), nameof(CpuThreadState.ClearExclusiveAddress));
         }
 
         public static void Dmb(ILEmitterCtx context) => EmitBarrier(context);
@@ -37,12 +39,12 @@ namespace ChocolArm64.Instructions
 
         private static void EmitLdr(ILEmitterCtx context, AccessType accType)
         {
-            EmitLoad(context, accType, false);
+            EmitLoad(context, accType, pair: false);
         }
 
         private static void EmitLdp(ILEmitterCtx context, AccessType accType)
         {
-            EmitLoad(context, accType, true);
+            EmitLoad(context, accType, pair: true);
         }
 
         private static void EmitLoad(ILEmitterCtx context, AccessType accType, bool pair)
@@ -57,32 +59,128 @@ namespace ChocolArm64.Instructions
                 EmitBarrier(context);
             }
 
-            if (exclusive)
-            {
-                EmitMemoryCall(context, nameof(MemoryManager.SetExclusive), op.Rn);
-            }
-
             context.EmitLdint(op.Rn);
             context.EmitSttmp();
 
-            context.EmitLdarg(TranslatedSub.MemoryArgIdx);
-            context.EmitLdtmp();
+            if (exclusive)
+            {
+                context.EmitLdarg(TranslatedSub.StateArgIdx);
+                context.EmitLdtmp();
 
-            EmitReadZxCall(context, op.Size);
+                context.EmitPrivateCall(typeof(CpuThreadState), nameof(CpuThreadState.SetExclusiveAddress));
+            }
 
-            context.EmitStintzr(op.Rt);
+            void WriteExclusiveValue(string propName)
+            {
+                if (op.Size < 3)
+                {
+                    context.Emit(OpCodes.Conv_U8);
+                }
+
+                context.EmitSttmp2();
+                context.EmitLdarg(TranslatedSub.StateArgIdx);
+                context.EmitLdtmp2();
+
+                context.EmitCallPrivatePropSet(typeof(CpuThreadState), propName);
+
+                context.EmitLdtmp2();
+
+                if (op.Size < 3)
+                {
+                    context.Emit(OpCodes.Conv_U4);
+                }
+            }
 
             if (pair)
             {
+                //Exclusive loads should be atomic. For pairwise loads, we need to
+                //read all the data at once. For a 32-bits pairwise load, we do a
+                //simple 64-bits load, for a 128-bits load, we need to call a special
+                //method to read 128-bits atomically.
+                if (op.Size == 2)
+                {
+                    context.EmitLdarg(TranslatedSub.MemoryArgIdx);
+                    context.EmitLdtmp();
+
+                    EmitReadZxCall(context, 3);
+
+                    context.Emit(OpCodes.Dup);
+
+                    //Mask low half.
+                    context.Emit(OpCodes.Conv_U4);
+
+                    if (exclusive)
+                    {
+                        WriteExclusiveValue(nameof(CpuThreadState.ExclusiveValueLow));
+                    }
+
+                    context.EmitStintzr(op.Rt);
+
+                    //Shift high half.
+                    context.EmitLsr(32);
+                    context.Emit(OpCodes.Conv_U4);
+
+                    if (exclusive)
+                    {
+                        WriteExclusiveValue(nameof(CpuThreadState.ExclusiveValueHigh));
+                    }
+
+                    context.EmitStintzr(op.Rt2);
+                }
+                else if (op.Size == 3)
+                {
+                    context.EmitLdarg(TranslatedSub.MemoryArgIdx);
+                    context.EmitLdtmp();
+
+                    context.EmitPrivateCall(typeof(MemoryManager), nameof(MemoryManager.AtomicReadInt128));
+
+                    context.Emit(OpCodes.Dup);
+
+                    //Load low part of the vector.
+                    context.EmitLdc_I4(0);
+                    context.EmitLdc_I4(3);
+
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorExtractIntZx));
+
+                    if (exclusive)
+                    {
+                        WriteExclusiveValue(nameof(CpuThreadState.ExclusiveValueLow));
+                    }
+
+                    context.EmitStintzr(op.Rt);
+
+                    //Load high part of the vector.
+                    context.EmitLdc_I4(1);
+                    context.EmitLdc_I4(3);
+
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorExtractIntZx));
+
+                    if (exclusive)
+                    {
+                        WriteExclusiveValue(nameof(CpuThreadState.ExclusiveValueHigh));
+                    }
+
+                    context.EmitStintzr(op.Rt2);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Invalid store size of {1 << op.Size} bytes.");
+                }
+            }
+            else
+            {
+                //8, 16, 32 or 64-bits (non-pairwise) load.
                 context.EmitLdarg(TranslatedSub.MemoryArgIdx);
                 context.EmitLdtmp();
-                context.EmitLdc_I8(1 << op.Size);
-
-                context.Emit(OpCodes.Add);
 
                 EmitReadZxCall(context, op.Size);
 
-                context.EmitStintzr(op.Rt2);
+                if (exclusive)
+                {
+                    WriteExclusiveValue(nameof(CpuThreadState.ExclusiveValueLow));
+                }
+
+                context.EmitStintzr(op.Rt);
             }
         }
 
@@ -99,12 +197,12 @@ namespace ChocolArm64.Instructions
 
         private static void EmitStr(ILEmitterCtx context, AccessType accType)
         {
-            EmitStore(context, accType, false);
+            EmitStore(context, accType, pair: false);
         }
 
         private static void EmitStp(ILEmitterCtx context, AccessType accType)
         {
-            EmitStore(context, accType, true);
+            EmitStore(context, accType, pair: true);
         }
 
         private static void EmitStore(ILEmitterCtx context, AccessType accType, bool pair)
@@ -119,66 +217,133 @@ namespace ChocolArm64.Instructions
                 EmitBarrier(context);
             }
 
-            ILLabel lblEx  = new ILLabel();
-            ILLabel lblEnd = new ILLabel();
-
             if (exclusive)
             {
-                EmitMemoryCall(context, nameof(MemoryManager.TestExclusive), op.Rn);
+                ILLabel lblEx  = new ILLabel();
+                ILLabel lblEnd = new ILLabel();
+
+                context.EmitLdarg(TranslatedSub.StateArgIdx);
+                context.EmitLdint(op.Rn);
+
+                context.EmitPrivateCall(typeof(CpuThreadState), nameof(CpuThreadState.CheckExclusiveAddress));
 
                 context.Emit(OpCodes.Brtrue_S, lblEx);
 
-                context.EmitLdc_I8(1);
+                //Address check failed, set error right away and do not store anything.
+                context.EmitLdc_I4(1);
                 context.EmitStintzr(op.Rs);
 
-                context.Emit(OpCodes.Br_S, lblEnd);
-            }
+                context.Emit(OpCodes.Br, lblEnd);
 
-            context.MarkLabel(lblEx);
+                //Address check passsed.
+                context.MarkLabel(lblEx);
 
-            context.EmitLdarg(TranslatedSub.MemoryArgIdx);
-            context.EmitLdint(op.Rn);
-            context.EmitLdintzr(op.Rt);
-
-            EmitWriteCall(context, op.Size);
-
-            if (pair)
-            {
                 context.EmitLdarg(TranslatedSub.MemoryArgIdx);
                 context.EmitLdint(op.Rn);
-                context.EmitLdc_I8(1 << op.Size);
 
-                context.Emit(OpCodes.Add);
+                context.EmitLdarg(TranslatedSub.StateArgIdx);
 
-                context.EmitLdintzr(op.Rt2);
+                context.EmitCallPrivatePropGet(typeof(CpuThreadState), nameof(CpuThreadState.ExclusiveValueLow));
 
-                EmitWriteCall(context, op.Size);
-            }
+                void EmitCast()
+                {
+                    //The input should be always int64.
+                    switch (op.Size)
+                    {
+                        case 0: context.Emit(OpCodes.Conv_U1); break;
+                        case 1: context.Emit(OpCodes.Conv_U2); break;
+                        case 2: context.Emit(OpCodes.Conv_U4); break;
+                    }
+                }
 
-            if (exclusive)
-            {
-                context.EmitLdc_I8(0);
+                EmitCast();
+
+                if (pair)
+                {
+                    context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                    context.EmitCallPrivatePropGet(typeof(CpuThreadState), nameof(CpuThreadState.ExclusiveValueHigh));
+
+                    EmitCast();
+
+                    context.EmitLdintzr(op.Rt);
+
+                    EmitCast();
+
+                    context.EmitLdintzr(op.Rt2);
+
+                    EmitCast();
+
+                    switch (op.Size)
+                    {
+                        case 2: context.EmitPrivateCall(typeof(MemoryManager), nameof(MemoryManager.AtomicCompareExchange2xInt32)); break;
+                        case 3: context.EmitPrivateCall(typeof(MemoryManager), nameof(MemoryManager.AtomicCompareExchangeInt128));  break;
+
+                        default: throw new InvalidOperationException($"Invalid store size of {1 << op.Size} bytes.");
+                    }
+                }
+                else
+                {
+                    context.EmitLdintzr(op.Rt);
+
+                    EmitCast();
+
+                    switch (op.Size)
+                    {
+                        case 0: context.EmitCall(typeof(MemoryManager), nameof(MemoryManager.AtomicCompareExchangeByte));  break;
+                        case 1: context.EmitCall(typeof(MemoryManager), nameof(MemoryManager.AtomicCompareExchangeInt16)); break;
+                        case 2: context.EmitCall(typeof(MemoryManager), nameof(MemoryManager.AtomicCompareExchangeInt32)); break;
+                        case 3: context.EmitCall(typeof(MemoryManager), nameof(MemoryManager.AtomicCompareExchangeInt64)); break;
+
+                        default: throw new InvalidOperationException($"Invalid store size of {1 << op.Size} bytes.");
+                    }
+                }
+
+                //The value returned is a bool, true if the values compared
+                //were equal and the new value was written, false otherwise.
+                //We need to invert this result, as on ARM 1 indicates failure,
+                //and 0 success on those instructions.
+                context.EmitLdc_I4(1);
+
+                context.Emit(OpCodes.Xor);
+                context.Emit(OpCodes.Dup);
+                context.Emit(OpCodes.Conv_U8);
+
                 context.EmitStintzr(op.Rs);
 
-                EmitMemoryCall(context, nameof(MemoryManager.ClearExclusiveForStore));
+                //Only clear the exclusive monitor if the store was successful (Rs = false).
+                context.Emit(OpCodes.Brtrue_S, lblEnd);
+
+                Clrex(context);
+
+                context.MarkLabel(lblEnd);
             }
-
-            context.MarkLabel(lblEnd);
-        }
-
-        private static void EmitMemoryCall(ILEmitterCtx context, string name, int rn = -1)
-        {
-            context.EmitLdarg(TranslatedSub.MemoryArgIdx);
-            context.EmitLdarg(TranslatedSub.StateArgIdx);
-
-            context.EmitCallPropGet(typeof(CpuThreadState), nameof(CpuThreadState.Core));
-
-            if (rn != -1)
+            else
             {
-                context.EmitLdint(rn);
-            }
+                void EmitWrite(int rt, long offset)
+                {
+                    context.EmitLdarg(TranslatedSub.MemoryArgIdx);
+                    context.EmitLdint(op.Rn);
 
-            context.EmitCall(typeof(MemoryManager), name);
+                    if (offset != 0)
+                    {
+                        context.EmitLdc_I8(offset);
+
+                        context.Emit(OpCodes.Add);
+                    }
+
+                    context.EmitLdintzr(rt);
+
+                    EmitWriteCall(context, op.Size);
+                }
+
+                EmitWrite(op.Rt, 0);
+
+                if (pair)
+                {
+                    EmitWrite(op.Rt2, 1 << op.Size);
+                }
+            }
         }
 
         private static void EmitBarrier(ILEmitterCtx context)

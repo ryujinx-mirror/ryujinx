@@ -66,7 +66,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             if (currentProcess.CpuMemory.IsMapped((long)address) &&
                 currentProcess.CpuMemory.IsMapped((long)address + 3))
             {
-                currentProcess.CpuMemory.WriteInt32ToSharedAddr((long)address, value);
+                currentProcess.CpuMemory.WriteInt32((long)address, value);
 
                 return true;
             }

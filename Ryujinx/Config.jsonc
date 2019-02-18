@@ -36,7 +36,7 @@
     "enable_vsync": true,
     
     // Enable or Disable Multi-core scheduling of threads
-    "enable_multicore_scheduling": false,
+    "enable_multicore_scheduling": true,
     
     // Enable integrity checks on Switch content files
     "enable_fs_integrity_checks": true,

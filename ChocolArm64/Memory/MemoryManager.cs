@@ -1,15 +1,15 @@
 using ChocolArm64.Events;
 using ChocolArm64.Exceptions;
 using ChocolArm64.Instructions;
-using ChocolArm64.State;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Threading;
+
+using static ChocolArm64.Memory.CompareExchange128;
 
 namespace ChocolArm64.Memory
 {
@@ -30,21 +30,6 @@ namespace ChocolArm64.Memory
         private const int PtLvl0Bit = PageBits + PtLvl1Bits;
         private const int PtLvl1Bit = PageBits;
 
-        private const long ErgMask = (4 << CpuThreadState.ErgSizeLog2) - 1;
-
-        private class ArmMonitor
-        {
-            public long Position;
-            public bool ExState;
-
-            public bool HasExclusiveAccess(long position)
-            {
-                return Position == position && ExState;
-            }
-        }
-
-        private Dictionary<int, ArmMonitor> _monitors;
-
         private ConcurrentDictionary<long, IntPtr> _observedPages;
 
         public IntPtr Ram { get; private set; }
@@ -59,8 +44,6 @@ namespace ChocolArm64.Memory
 
         public MemoryManager(IntPtr ram)
         {
-            _monitors = new Dictionary<int, ArmMonitor>();
-
             _observedPages = new ConcurrentDictionary<long, IntPtr>();
 
             Ram = ram;
@@ -75,104 +58,139 @@ namespace ChocolArm64.Memory
             }
         }
 
-        public void RemoveMonitor(int core)
+        internal bool AtomicCompareExchange2xInt32(
+            long position,
+            int  expectedLow,
+            int  expectedHigh,
+            int  desiredLow,
+            int  desiredHigh)
         {
-            lock (_monitors)
-            {
-                ClearExclusive(core);
+            long expected = (uint)expectedLow;
+            long desired  = (uint)desiredLow;
 
-                _monitors.Remove(core);
-            }
+            expected |= (long)expectedHigh << 32;
+            desired  |= (long)desiredHigh  << 32;
+
+            return AtomicCompareExchangeInt64(position, expected, desired);
         }
 
-        public void SetExclusive(int core, long position)
+        internal bool AtomicCompareExchangeInt128(
+            long  position,
+            ulong expectedLow,
+            ulong expectedHigh,
+            ulong desiredLow,
+            ulong desiredHigh)
         {
-            position &= ~ErgMask;
-
-            lock (_monitors)
+            if ((position & 0xf) != 0)
             {
-                foreach (ArmMonitor mon in _monitors.Values)
-                {
-                    if (mon.Position == position && mon.ExState)
-                    {
-                        mon.ExState = false;
-                    }
-                }
-
-                if (!_monitors.TryGetValue(core, out ArmMonitor threadMon))
-                {
-                    threadMon = new ArmMonitor();
-
-                    _monitors.Add(core, threadMon);
-                }
-
-                threadMon.Position = position;
-                threadMon.ExState  = true;
+                AbortWithAlignmentFault(position);
             }
+
+            IntPtr ptr = new IntPtr(TranslateWrite(position));
+
+            return InterlockedCompareExchange128(ptr, expectedLow, expectedHigh, desiredLow, desiredHigh);
         }
 
-        public bool TestExclusive(int core, long position)
+        internal Vector128<float> AtomicReadInt128(long position)
         {
-            //Note: Any call to this method also should be followed by a
-            //call to ClearExclusiveForStore if this method returns true.
-            position &= ~ErgMask;
-
-            Monitor.Enter(_monitors);
-
-            if (!_monitors.TryGetValue(core, out ArmMonitor threadMon))
+            if ((position & 0xf) != 0)
             {
-                Monitor.Exit(_monitors);
-
-                return false;
+                AbortWithAlignmentFault(position);
             }
 
-            bool exState = threadMon.HasExclusiveAccess(position);
+            IntPtr ptr = new IntPtr(Translate(position));
 
-            if (!exState)
-            {
-                Monitor.Exit(_monitors);
-            }
+            InterlockedRead128(ptr, out ulong low, out ulong high);
 
-            return exState;
+            Vector128<float> vector = default(Vector128<float>);
+
+            vector = VectorHelper.VectorInsertInt(low,  vector, 0, 3);
+            vector = VectorHelper.VectorInsertInt(high, vector, 1, 3);
+
+            return vector;
         }
 
-        public void ClearExclusiveForStore(int core)
+        public bool AtomicCompareExchangeByte(long position, byte expected, byte desired)
         {
-            if (_monitors.TryGetValue(core, out ArmMonitor threadMon))
-            {
-                threadMon.ExState = false;
-            }
+            int* ptr = (int*)Translate(position);
 
-            Monitor.Exit(_monitors);
+            int currentValue = *ptr;
+
+            int expected32 = (currentValue & ~byte.MaxValue) | expected;
+            int desired32  = (currentValue & ~byte.MaxValue) | desired;
+
+            return Interlocked.CompareExchange(ref *ptr, desired32, expected32) == expected32;
         }
 
-        public void ClearExclusive(int core)
+        public bool AtomicCompareExchangeInt16(long position, short expected, short desired)
         {
-            lock (_monitors)
+            if ((position & 1) != 0)
             {
-                if (_monitors.TryGetValue(core, out ArmMonitor threadMon))
-                {
-                    threadMon.ExState = false;
-                }
+                AbortWithAlignmentFault(position);
             }
+
+            int* ptr = (int*)Translate(position);
+
+            int currentValue = *ptr;
+
+            int expected32 = (currentValue & ~ushort.MaxValue) | (ushort)expected;
+            int desired32  = (currentValue & ~ushort.MaxValue) | (ushort)desired;
+
+            return Interlocked.CompareExchange(ref *ptr, desired32, expected32) == expected32;
         }
 
-        public void WriteInt32ToSharedAddr(long position, int value)
+        public bool AtomicCompareExchangeInt32(long position, int expected, int desired)
         {
-            long maskedPosition = position & ~ErgMask;
-
-            lock (_monitors)
+            if ((position & 3) != 0)
             {
-                foreach (ArmMonitor mon in _monitors.Values)
-                {
-                    if (mon.Position == maskedPosition && mon.ExState)
-                    {
-                        mon.ExState = false;
-                    }
-                }
-
-                WriteInt32(position, value);
+                AbortWithAlignmentFault(position);
             }
+
+            int* ptr = (int*)TranslateWrite(position);
+
+            return Interlocked.CompareExchange(ref *ptr, desired, expected) == expected;
+        }
+
+        public bool AtomicCompareExchangeInt64(long position, long expected, long desired)
+        {
+            if ((position & 7) != 0)
+            {
+                AbortWithAlignmentFault(position);
+            }
+
+            long* ptr = (long*)TranslateWrite(position);
+
+            return Interlocked.CompareExchange(ref *ptr, desired, expected) == expected;
+        }
+
+        public int AtomicIncrementInt32(long position)
+        {
+            if ((position & 3) != 0)
+            {
+                AbortWithAlignmentFault(position);
+            }
+
+            int* ptr = (int*)TranslateWrite(position);
+
+            return Interlocked.Increment(ref *ptr);
+        }
+
+        public int AtomicDecrementInt32(long position)
+        {
+            if ((position & 3) != 0)
+            {
+                AbortWithAlignmentFault(position);
+            }
+
+            int* ptr = (int*)TranslateWrite(position);
+
+            return Interlocked.Decrement(ref *ptr);
+        }
+
+        private void AbortWithAlignmentFault(long position)
+        {
+            //TODO: Abort mode and exception support on the CPU.
+            throw new InvalidOperationException($"Tried to compare exchange a misaligned address 0x{position:X16}.");
         }
 
         public sbyte ReadSByte(long position)

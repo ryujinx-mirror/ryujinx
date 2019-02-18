@@ -92,8 +92,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                         if (coreContext.CurrentThread != null)
                         {
-                            coreContext.CurrentThread.ClearExclusive();
-
                             CoreManager.Set(coreContext.CurrentThread.Context.Work);
 
                             coreContext.CurrentThread.Context.Execute();

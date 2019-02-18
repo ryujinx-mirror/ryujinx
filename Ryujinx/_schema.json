@@ -382,7 +382,7 @@
       "type": "boolean",
       "title": "Enable Multicore Scheduling",
       "description": "Enables or disables multi-core scheduling of threads",
-      "default": false,
+      "default": true,
       "examples": [
         true,
         false

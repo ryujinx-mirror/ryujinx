@@ -49,6 +49,7 @@ namespace ChocolArm64.Translation
         private const int CmpOptTmp2Index = -4;
         private const int VecTmp1Index    = -5;
         private const int VecTmp2Index    = -6;
+        private const int IntTmp2Index    = -7;
 
         public ILEmitterCtx(TranslatorCache cache, TranslatorQueue queue, TranslationTier tier, Block graph)
         {
@@ -562,6 +563,9 @@ namespace ChocolArm64.Translation
         public void EmitLdtmp() => EmitLdint(IntTmpIndex);
         public void EmitSttmp() => EmitStint(IntTmpIndex);
 
+        public void EmitLdtmp2() => EmitLdint(IntTmp2Index);
+        public void EmitSttmp2() => EmitStint(IntTmp2Index);
+
         public void EmitLdvectmp() => EmitLdvec(VecTmp1Index);
         public void EmitStvectmp() => EmitStvec(VecTmp1Index);
 
@@ -633,6 +637,36 @@ namespace ChocolArm64.Translation
             }
 
             EmitCall(objType.GetMethod($"set_{propName}"));
+        }
+
+        public void EmitCallPrivatePropGet(Type objType, string propName)
+        {
+            if (objType == null)
+            {
+                throw new ArgumentNullException(nameof(objType));
+            }
+
+            if (propName == null)
+            {
+                throw new ArgumentNullException(nameof(propName));
+            }
+
+            EmitPrivateCall(objType, $"get_{propName}");
+        }
+
+        public void EmitCallPrivatePropSet(Type objType, string propName)
+        {
+            if (objType == null)
+            {
+                throw new ArgumentNullException(nameof(objType));
+            }
+
+            if (propName == null)
+            {
+                throw new ArgumentNullException(nameof(propName));
+            }
+
+            EmitPrivateCall(objType, $"set_{propName}");
         }
 
         public void EmitCall(Type objType, string mthdName)

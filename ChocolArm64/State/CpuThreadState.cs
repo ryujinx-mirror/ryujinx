@@ -37,7 +37,6 @@ namespace ChocolArm64.State
         public int ElrHyp;
 
         public bool Running { get; set; }
-        public int  Core    { get; set; }
 
         private bool _interrupted;
 
@@ -85,6 +84,16 @@ namespace ChocolArm64.State
 
         internal Translator CurrentTranslator;
 
+        private ulong _exclusiveAddress;
+
+        internal ulong ExclusiveValueLow  { get; set; }
+        internal ulong ExclusiveValueHigh { get; set; }
+
+        public CpuThreadState()
+        {
+            ClearExclusiveAddress();
+        }
+
         static CpuThreadState()
         {
             _hostTickFreq = 1.0 / Stopwatch.Frequency;
@@ -92,6 +101,26 @@ namespace ChocolArm64.State
             _tickCounter = new Stopwatch();
 
             _tickCounter.Start();
+        }
+
+        internal void SetExclusiveAddress(ulong address)
+        {
+            _exclusiveAddress = GetMaskedExclusiveAddress(address);
+        }
+
+        internal bool CheckExclusiveAddress(ulong address)
+        {
+            return GetMaskedExclusiveAddress(address) == _exclusiveAddress;
+        }
+
+        internal void ClearExclusiveAddress()
+        {
+            _exclusiveAddress = ulong.MaxValue;
+        }
+
+        private ulong GetMaskedExclusiveAddress(ulong address)
+        {
+            return address & ~((4UL << ErgSizeLog2) - 1);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

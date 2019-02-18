@@ -70,8 +70,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 CurrentThread.TotalTimeRunning += currentTime - CurrentThread.LastScheduledTime;
                 CurrentThread.LastScheduledTime = currentTime;
 
-                CurrentThread.ClearExclusive();
-
                 _coreManager.Set(CurrentThread.Context.Work);
 
                 CurrentThread.Context.Execute();
