@@ -66,6 +66,8 @@ namespace Ryujinx.Graphics.Graphics3d
 
             WriteRegister(NvGpuEngine3dReg.FrameBufferSrgb, 1);
 
+            WriteRegister(NvGpuEngine3dReg.FrontFace, (int)GalFrontFace.CW);
+
             for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
             {
                 WriteRegister(NvGpuEngine3dReg.IBlendNEquationRgb   + Index * 8, (int)GalBlendEquation.FuncAdd);
