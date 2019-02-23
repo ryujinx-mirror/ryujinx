@@ -8,17 +8,8 @@ namespace ChocolArm64.Decoders
 
         public OpCodeSimdCvt64(Inst inst, long position, int opCode) : base(inst, position, opCode)
         {
-            //TODO:
-            //Und of Fixed Point variants.
             int scale = (opCode >> 10) & 0x3f;
             int sf    = (opCode >> 31) & 0x1;
-
-            /*if (Type != SF && !(Type == 2 && SF == 1))
-            {
-                Emitter = AInstEmit.Und;
-
-                return;
-            }*/
 
             FBits = 64 - scale;
 
