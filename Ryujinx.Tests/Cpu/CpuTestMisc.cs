@@ -12,8 +12,8 @@ namespace Ryujinx.Tests.Cpu
     public sealed class CpuTestMisc : CpuTest
     {
 #if Misc
-        private const int RndCnt     = 2;
-        private const int RndCntImm  = 2;
+        private const int RndCnt    = 2;
+        private const int RndCntImm = 2;
 
 #region "AluImm & Csel"
         [Test, Pairwise]
