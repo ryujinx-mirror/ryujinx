@@ -62,11 +62,6 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 attributeMask,
                 attributeValue);
 
-            if (result == KernelResult.Success)
-            {
-                _memory.StopObservingRegion((long)position, (long)size);
-            }
-
             return result;
         }
 
@@ -157,14 +152,14 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         {
             KMemoryInfo blkInfo = _process.MemoryManager.QueryMemory(position);
 
-            _memory.WriteUInt64((long)infoPtr + 0x00, blkInfo.Address);
-            _memory.WriteUInt64((long)infoPtr + 0x08, blkInfo.Size);
-            _memory.WriteInt32 ((long)infoPtr + 0x10, (int)blkInfo.State & 0xff);
-            _memory.WriteInt32 ((long)infoPtr + 0x14, (int)blkInfo.Attribute);
-            _memory.WriteInt32 ((long)infoPtr + 0x18, (int)blkInfo.Permission);
-            _memory.WriteInt32 ((long)infoPtr + 0x1c, blkInfo.IpcRefCount);
-            _memory.WriteInt32 ((long)infoPtr + 0x20, blkInfo.DeviceRefCount);
-            _memory.WriteInt32 ((long)infoPtr + 0x24, 0);
+            _process.CpuMemory.WriteUInt64((long)infoPtr + 0x00, blkInfo.Address);
+            _process.CpuMemory.WriteUInt64((long)infoPtr + 0x08, blkInfo.Size);
+            _process.CpuMemory.WriteInt32 ((long)infoPtr + 0x10, (int)blkInfo.State & 0xff);
+            _process.CpuMemory.WriteInt32 ((long)infoPtr + 0x14, (int)blkInfo.Attribute);
+            _process.CpuMemory.WriteInt32 ((long)infoPtr + 0x18, (int)blkInfo.Permission);
+            _process.CpuMemory.WriteInt32 ((long)infoPtr + 0x1c, blkInfo.IpcRefCount);
+            _process.CpuMemory.WriteInt32 ((long)infoPtr + 0x20, blkInfo.DeviceRefCount);
+            _process.CpuMemory.WriteInt32 ((long)infoPtr + 0x24, 0);
 
             return KernelResult.Success;
         }

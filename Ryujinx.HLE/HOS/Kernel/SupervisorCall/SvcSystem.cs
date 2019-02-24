@@ -201,7 +201,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         private void OutputDebugString(ulong strPtr, ulong size)
         {
-            string str = MemoryHelper.ReadAsciiString(_memory, (long)strPtr, (long)size);
+            string str = MemoryHelper.ReadAsciiString(_process.CpuMemory, (long)strPtr, (long)size);
 
             Logger.PrintWarning(LogClass.KernelSvc, str);
         }

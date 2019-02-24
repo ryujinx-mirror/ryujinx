@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace ChocolArm64.Memory
 {
-    static class MemoryAllocWindows
+    static class MemoryManagementWindows
     {
         [Flags]
         private enum AllocationType : uint
@@ -21,7 +21,7 @@ namespace ChocolArm64.Memory
         }
 
         [Flags]
-        private enum MemoryProtection
+        private enum MemoryProtection : uint
         {
             NoAccess                 = 0x01,
             ReadOnly                 = 0x02,
@@ -59,7 +59,7 @@ namespace ChocolArm64.Memory
         [DllImport("kernel32.dll")]
         private static extern bool VirtualFree(
             IntPtr         lpAddress,
-            uint           dwSize,
+            IntPtr         dwSize,
             AllocationType dwFreeType);
 
         [DllImport("kernel32.dll")]
@@ -127,7 +127,7 @@ namespace ChocolArm64.Memory
 
         public static bool Free(IntPtr address)
         {
-            return VirtualFree(address, 0, AllocationType.Release);
+            return VirtualFree(address, IntPtr.Zero, AllocationType.Release);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

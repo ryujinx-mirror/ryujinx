@@ -72,6 +72,8 @@ namespace ChocolArm64.Instructions
 
             void WriteExclusiveValue(string propName)
             {
+                context.Emit(OpCodes.Dup);
+
                 if (op.Size < 3)
                 {
                     context.Emit(OpCodes.Conv_U8);
@@ -82,13 +84,6 @@ namespace ChocolArm64.Instructions
                 context.EmitLdtmp2();
 
                 context.EmitCallPrivatePropSet(typeof(CpuThreadState), propName);
-
-                context.EmitLdtmp2();
-
-                if (op.Size < 3)
-                {
-                    context.Emit(OpCodes.Conv_U4);
-                }
             }
 
             if (pair)
@@ -99,7 +94,6 @@ namespace ChocolArm64.Instructions
                 //method to read 128-bits atomically.
                 if (op.Size == 2)
                 {
-                    context.EmitLdarg(TranslatedSub.MemoryArgIdx);
                     context.EmitLdtmp();
 
                     EmitReadZxCall(context, 3);
@@ -164,13 +158,12 @@ namespace ChocolArm64.Instructions
                 }
                 else
                 {
-                    throw new InvalidOperationException($"Invalid store size of {1 << op.Size} bytes.");
+                    throw new InvalidOperationException($"Invalid load size of {1 << op.Size} bytes.");
                 }
             }
             else
             {
                 //8, 16, 32 or 64-bits (non-pairwise) load.
-                context.EmitLdarg(TranslatedSub.MemoryArgIdx);
                 context.EmitLdtmp();
 
                 EmitReadZxCall(context, op.Size);
@@ -320,9 +313,8 @@ namespace ChocolArm64.Instructions
             }
             else
             {
-                void EmitWrite(int rt, long offset)
+                void EmitWriteCall(int rt, long offset)
                 {
-                    context.EmitLdarg(TranslatedSub.MemoryArgIdx);
                     context.EmitLdint(op.Rn);
 
                     if (offset != 0)
@@ -334,14 +326,14 @@ namespace ChocolArm64.Instructions
 
                     context.EmitLdintzr(rt);
 
-                    EmitWriteCall(context, op.Size);
+                    InstEmitMemoryHelper.EmitWriteCall(context, op.Size);
                 }
 
-                EmitWrite(op.Rt, 0);
+                EmitWriteCall(op.Rt, 0);
 
                 if (pair)
                 {
-                    EmitWrite(op.Rt2, 1 << op.Size);
+                    EmitWriteCall(op.Rt2, 1 << op.Size);
                 }
             }
         }

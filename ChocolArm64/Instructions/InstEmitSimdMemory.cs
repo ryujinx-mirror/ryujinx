@@ -45,7 +45,6 @@ namespace ChocolArm64.Instructions
 
                 if (isLoad)
                 {
-                    context.EmitLdarg(TranslatedSub.MemoryArgIdx);
                     context.EmitLdint(op.Rn);
                     context.EmitLdc_I8(offset);
 
@@ -62,7 +61,6 @@ namespace ChocolArm64.Instructions
                 }
                 else
                 {
-                    context.EmitLdarg(TranslatedSub.MemoryArgIdx);
                     context.EmitLdint(op.Rn);
                     context.EmitLdc_I8(offset);
 
@@ -90,7 +88,6 @@ namespace ChocolArm64.Instructions
 
             void EmitMemAddress()
             {
-                context.EmitLdarg(TranslatedSub.MemoryArgIdx);
                 context.EmitLdint(op.Rn);
                 context.EmitLdc_I8(offset);
 

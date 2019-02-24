@@ -80,11 +80,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public bool IsPaused { get; private set; }
 
-        public Translator Translator { get; private set; }
-
         public MemoryManager CpuMemory { get; private set; }
 
+        public Translator Translator { get; private set; }
+
         private SvcHandler _svcHandler;
+
+        private Horizon _system;
 
         public HleProcessDebugger Debugger { get; private set; }
 
@@ -93,13 +95,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             _processLock   = new object();
             _threadingLock = new object();
 
-            CpuMemory = new MemoryManager(system.Device.Memory.RamPointer);
-
-            CpuMemory.InvalidAccess += InvalidAccessHandler;
+            _system = system;
 
             AddressArbiter = new KAddressArbiter(system);
-
-            MemoryManager = new KMemoryManager(system, CpuMemory);
 
             _fullTlsPages = new SortedDictionary<ulong, KTlsPageInfo>();
             _freeTlsPages = new SortedDictionary<ulong, KTlsPageInfo>();
@@ -109,10 +107,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             RandomEntropy = new long[KScheduler.CpuCoresCount];
 
             _threads = new LinkedList<KThread>();
-
-            Translator = new Translator(CpuMemory);
-
-            Translator.CpuTrace += CpuTraceHandler;
 
             _svcHandler = new SvcHandler(system.Device, this);
 
@@ -130,6 +124,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             _memRegion     = memRegion;
 
             AddressSpaceType addrSpaceType = (AddressSpaceType)((creationInfo.MmuFlags >> 1) & 7);
+
+            InitializeMemoryManager(addrSpaceType, memRegion);
 
             bool aslrEnabled = ((creationInfo.MmuFlags >> 5) & 1) != 0;
 
@@ -237,6 +233,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
 
             AddressSpaceType addrSpaceType = (AddressSpaceType)((creationInfo.MmuFlags >> 1) & 7);
+
+            InitializeMemoryManager(addrSpaceType, memRegion);
 
             bool aslrEnabled = ((creationInfo.MmuFlags >> 5) & 1) != 0;
 
@@ -405,7 +403,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 case AddressSpaceType.Addr36Bits:
                 case AddressSpaceType.Addr39Bits:
                     _memoryUsageCapacity = MemoryManager.HeapRegionEnd -
-                                          MemoryManager.HeapRegionStart;
+                                           MemoryManager.HeapRegionStart;
                     break;
 
                 case AddressSpaceType.Addr32BitsNoMap:
@@ -1010,9 +1008,29 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
         }
 
-        private void InvalidAccessHandler(object sender, MemoryAccessEventArgs e)
+        private void InitializeMemoryManager(AddressSpaceType addrSpaceType, MemoryRegion memRegion)
         {
-            PrintCurrentThreadStackTrace();
+            int addrSpaceBits;
+
+            switch (addrSpaceType)
+            {
+                case AddressSpaceType.Addr32Bits:      addrSpaceBits = 32; break;
+                case AddressSpaceType.Addr36Bits:      addrSpaceBits = 36; break;
+                case AddressSpaceType.Addr32BitsNoMap: addrSpaceBits = 32; break;
+                case AddressSpaceType.Addr39Bits:      addrSpaceBits = 39; break;
+
+                default: throw new ArgumentException(nameof(addrSpaceType));
+            }
+
+            bool useFlatPageTable = memRegion == MemoryRegion.Application;
+
+            CpuMemory = new MemoryManager(_system.Device.Memory.RamPointer, addrSpaceBits, useFlatPageTable);
+
+            MemoryManager = new KMemoryManager(_system, CpuMemory);
+
+            Translator = new Translator(CpuMemory);
+
+            Translator.CpuTrace += CpuTraceHandler;
         }
 
         public void PrintCurrentThreadStackTrace()

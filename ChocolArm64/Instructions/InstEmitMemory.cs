@@ -31,8 +31,6 @@ namespace ChocolArm64.Instructions
         {
             OpCodeMem64 op = (OpCodeMem64)context.CurrOp;
 
-            context.EmitLdarg(TranslatedSub.MemoryArgIdx);
-
             EmitLoadAddress(context);
 
             if (signed && op.Extend64)
@@ -69,7 +67,6 @@ namespace ChocolArm64.Instructions
                 return;
             }
 
-            context.EmitLdarg(TranslatedSub.MemoryArgIdx);
             context.EmitLdc_I8(op.Imm);
 
             if (op.Signed)
@@ -116,13 +113,10 @@ namespace ChocolArm64.Instructions
                 }
             }
 
-            context.EmitLdarg(TranslatedSub.MemoryArgIdx);
-
             EmitLoadAddress(context);
 
             EmitReadAndStore(op.Rt);
 
-            context.EmitLdarg(TranslatedSub.MemoryArgIdx);
             context.EmitLdtmp();
             context.EmitLdc_I8(1 << op.Size);
 
@@ -136,8 +130,6 @@ namespace ChocolArm64.Instructions
         public static void Str(ILEmitterCtx context)
         {
             OpCodeMem64 op = (OpCodeMem64)context.CurrOp;
-
-            context.EmitLdarg(TranslatedSub.MemoryArgIdx);
 
             EmitLoadAddress(context);
 
@@ -159,8 +151,6 @@ namespace ChocolArm64.Instructions
         {
             OpCodeMemPair64 op = (OpCodeMemPair64)context.CurrOp;
 
-            context.EmitLdarg(TranslatedSub.MemoryArgIdx);
-
             EmitLoadAddress(context);
 
             if (op is IOpCodeSimd64)
@@ -174,7 +164,6 @@ namespace ChocolArm64.Instructions
 
             EmitWriteCall(context, op.Size);
 
-            context.EmitLdarg(TranslatedSub.MemoryArgIdx);
             context.EmitLdtmp();
             context.EmitLdc_I8(1 << op.Size);
 

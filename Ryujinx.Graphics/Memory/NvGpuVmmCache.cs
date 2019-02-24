@@ -1,4 +1,3 @@
-using ChocolArm64.Events;
 using ChocolArm64.Memory;
 using System.Collections.Concurrent;
 
@@ -19,35 +18,28 @@ namespace Ryujinx.Graphics.Memory
         {
             _memory = memory;
 
-            _memory.ObservedAccess += MemoryAccessHandler;
-
             CachedPages = new ConcurrentDictionary<long, int>[1 << 20];
-        }
-
-        private void MemoryAccessHandler(object sender, MemoryAccessEventArgs e)
-        {
-            long pa = _memory.GetPhysicalAddress(e.Position);
-
-            CachedPages[pa >> PageBits]?.Clear();
         }
 
         public bool IsRegionModified(long position, long size, NvGpuBufferType bufferType)
         {
-            long pa = _memory.GetPhysicalAddress(position);
+            long va = position;
 
-            long addr = pa;
+            long pa = _memory.GetPhysicalAddress(va);
 
-            long endAddr = (addr + size + PageMask) & ~PageMask;
+            long endAddr = (va + size + PageMask) & ~PageMask;
+
+            long addrTruncated = va & ~PageMask;
+
+            bool modified = _memory.IsRegionModified(addrTruncated, endAddr - addrTruncated);
 
             int newBuffMask = 1 << (int)bufferType;
 
-            _memory.StartObservingRegion(position, size);
-
             long cachedPagesCount = 0;
 
-            while (addr < endAddr)
+            while (va < endAddr)
             {
-                long page = addr >> PageBits;
+                long page = _memory.GetPhysicalAddress(va) >> PageBits;
 
                 ConcurrentDictionary<long, int> dictionary = CachedPages[page];
 
@@ -56,6 +48,10 @@ namespace Ryujinx.Graphics.Memory
                     dictionary = new ConcurrentDictionary<long, int>();
 
                     CachedPages[page] = dictionary;
+                }
+                else if (modified)
+                {
+                    CachedPages[page].Clear();
                 }
 
                 if (dictionary.TryGetValue(pa, out int currBuffMask))
@@ -74,10 +70,10 @@ namespace Ryujinx.Graphics.Memory
                     dictionary[pa] = newBuffMask;
                 }
 
-                addr += PageSize;
+                va += PageSize;
             }
 
-            return cachedPagesCount != (endAddr - pa + PageMask) >> PageBits;
+            return cachedPagesCount != (endAddr - addrTruncated) >> PageBits;
         }
     }
 }

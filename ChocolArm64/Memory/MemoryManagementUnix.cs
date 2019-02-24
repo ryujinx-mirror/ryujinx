@@ -3,7 +3,7 @@ using System;
 
 namespace ChocolArm64.Memory
 {
-    static class MemoryAllocUnix
+    static class MemoryManagementUnix
     {
         public static IntPtr Allocate(ulong size)
         {

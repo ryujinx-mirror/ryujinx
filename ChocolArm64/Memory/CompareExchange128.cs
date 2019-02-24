@@ -95,7 +95,7 @@ namespace ChocolArm64.Memory
 
             int cpuId = getCpuId();
 
-            MemoryAlloc.Free(funcPtr);
+            MemoryManagement.Free(funcPtr);
 
             return (cpuId & (1 << 13)) != 0;
         }
@@ -104,7 +104,7 @@ namespace ChocolArm64.Memory
         {
             ulong codeLength = (ulong)code.Length;
 
-            IntPtr funcPtr = MemoryAlloc.Allocate(codeLength);
+            IntPtr funcPtr = MemoryManagement.Allocate(codeLength);
 
             unsafe
             {
@@ -118,7 +118,7 @@ namespace ChocolArm64.Memory
                 }
             }
 
-            MemoryAlloc.Reprotect(funcPtr, codeLength, MemoryProtection.Execute);
+            MemoryManagement.Reprotect(funcPtr, codeLength, MemoryProtection.Execute);
 
             return funcPtr;
         }

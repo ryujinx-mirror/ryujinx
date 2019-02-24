@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace ChocolArm64.Memory
 {
-    public static class MemoryAlloc
+    public static class MemoryManagement
     {
         public static bool HasWriteWatchSupport => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
@@ -14,12 +14,12 @@ namespace ChocolArm64.Memory
             {
                 IntPtr sizeNint = new IntPtr((long)size);
 
-                return MemoryAllocWindows.Allocate(sizeNint);
+                return MemoryManagementWindows.Allocate(sizeNint);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
                      RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return MemoryAllocUnix.Allocate(size);
+                return MemoryManagementUnix.Allocate(size);
             }
             else
             {
@@ -33,12 +33,12 @@ namespace ChocolArm64.Memory
             {
                 IntPtr sizeNint = new IntPtr((long)size);
 
-                return MemoryAllocWindows.AllocateWriteTracked(sizeNint);
+                return MemoryManagementWindows.AllocateWriteTracked(sizeNint);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
                      RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return MemoryAllocUnix.Allocate(size);
+                return MemoryManagementUnix.Allocate(size);
             }
             else
             {
@@ -54,12 +54,12 @@ namespace ChocolArm64.Memory
             {
                 IntPtr sizeNint = new IntPtr((long)size);
 
-                result = MemoryAllocWindows.Reprotect(address, sizeNint, permission);
+                result = MemoryManagementWindows.Reprotect(address, sizeNint, permission);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
                      RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                result = MemoryAllocUnix.Reprotect(address, size, permission);
+                result = MemoryManagementUnix.Reprotect(address, size, permission);
             }
             else
             {
@@ -76,12 +76,12 @@ namespace ChocolArm64.Memory
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return MemoryAllocWindows.Free(address);
+                return MemoryManagementWindows.Free(address);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
                      RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return MemoryAllocUnix.Free(address);
+                return MemoryManagementUnix.Free(address);
             }
             else
             {
@@ -101,7 +101,7 @@ namespace ChocolArm64.Memory
             //write tracking support on the OS.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return MemoryAllocWindows.GetModifiedPages(address, size, addresses, out count);
+                return MemoryManagementWindows.GetModifiedPages(address, size, addresses, out count);
             }
             else
             {

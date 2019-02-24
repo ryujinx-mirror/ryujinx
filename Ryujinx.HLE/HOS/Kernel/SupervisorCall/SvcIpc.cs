@@ -93,7 +93,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         private KernelResult SendSyncRequest(ulong messagePtr, ulong size, int handle)
         {
-            byte[] messageData = _memory.ReadBytes((long)messagePtr, (long)size);
+            byte[] messageData = _process.CpuMemory.ReadBytes((long)messagePtr, (long)size);
 
             KClientSession clientSession = _process.HandleTable.GetObject<KClientSession>(handle);
 
@@ -142,7 +142,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             ipcMessage.Thread.ObjSyncResult = IpcHandler.IpcCall(
                 _device,
                 _process,
-                _memory,
+                _process.CpuMemory,
                 ipcMessage.Session,
                 ipcMessage.Message,
                 ipcMessage.MessagePtr);

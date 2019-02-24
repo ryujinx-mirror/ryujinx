@@ -64,9 +64,7 @@ namespace ChocolArm64.Instructions
             {
                 if ((mask & 1) != 0)
                 {
-                    context.EmitLdarg(TranslatedSub.MemoryArgIdx);
                     context.EmitLdtmp();
-
                     context.EmitLdc_I4(offset);
 
                     context.Emit(OpCodes.Add);
@@ -129,9 +127,7 @@ namespace ChocolArm64.Instructions
             {
                 if ((mask & 1) != 0)
                 {
-                    context.EmitLdarg(TranslatedSub.MemoryArgIdx);
                     context.EmitLdtmp();
-
                     context.EmitLdc_I4(offset);
 
                     context.Emit(OpCodes.Add);
@@ -197,8 +193,6 @@ namespace ChocolArm64.Instructions
 
                 context.EmitSttmp();
             }
-
-            context.EmitLdarg(TranslatedSub.MemoryArgIdx);
 
             if (op.Index)
             {

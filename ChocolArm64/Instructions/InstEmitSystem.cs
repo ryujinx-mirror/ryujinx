@@ -102,7 +102,6 @@ namespace ChocolArm64.Instructions
                     //DC ZVA
                     for (int offs = 0; offs < (4 << CpuThreadState.DczSizeLog2); offs += 8)
                     {
-                        context.EmitLdarg(TranslatedSub.MemoryArgIdx);
                         context.EmitLdintzr(op.Rt);
                         context.EmitLdc_I(offs);
 

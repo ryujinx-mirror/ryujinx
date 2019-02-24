@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             for (int index = 0; index < handlesCount; index++)
             {
-                int handle = _memory.ReadInt32((long)handlesPtr + index * 4);
+                int handle = _process.CpuMemory.ReadInt32((long)handlesPtr + index * 4);
 
                 KSynchronizationObject syncObj = _process.HandleTable.GetObject<KSynchronizationObject>(handle);
 

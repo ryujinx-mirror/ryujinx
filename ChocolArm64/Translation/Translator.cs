@@ -138,7 +138,7 @@ namespace ChocolArm64.Translation
         {
             Block block = Decoder.DecodeBasicBlock(_memory, position, mode);
 
-            ILEmitterCtx context = new ILEmitterCtx(_cache, _queue, TranslationTier.Tier0, block);
+            ILEmitterCtx context = new ILEmitterCtx(_memory, _cache, _queue, TranslationTier.Tier0, block);
 
             string subName = GetSubroutineName(position);
 
@@ -153,7 +153,7 @@ namespace ChocolArm64.Translation
         {
             Block graph = Decoder.DecodeSubroutine(_memory, position, mode);
 
-            ILEmitterCtx context = new ILEmitterCtx(_cache, _queue, TranslationTier.Tier1, graph);
+            ILEmitterCtx context = new ILEmitterCtx(_memory, _cache, _queue, TranslationTier.Tier1, graph);
 
             ILBlock[] ilBlocks = context.GetILBlocks();
 
