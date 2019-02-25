@@ -23,7 +23,7 @@ namespace ChocolArm64.Instructions
                     //Double -> Single.
                     VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
 
-                    EmitLdvecWithCastToDouble(context, op.Rn);
+                    context.EmitLdvec(op.Rn);
 
                     Type[] types = new Type[] { typeof(Vector128<float>), typeof(Vector128<double>) };
 
@@ -42,7 +42,7 @@ namespace ChocolArm64.Instructions
 
                     context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertScalarToVector128Double), types));
 
-                    EmitStvecWithCastFromDouble(context, op.Rd);
+                    context.EmitStvec(op.Rd);
                 }
                 else
                 {
@@ -91,7 +91,7 @@ namespace ChocolArm64.Instructions
 
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertToVector128Double), typesCvt));
 
-                EmitStvecWithCastFromDouble(context, op.Rd);
+                context.EmitStvec(op.Rd);
             }
             else
             {
@@ -154,7 +154,7 @@ namespace ChocolArm64.Instructions
 
                 context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.MoveLowToHigh)));
 
-                EmitLdvecWithCastToDouble(context, op.Rn);
+                context.EmitLdvec(op.Rn);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertToVector128Single), typesCvt));
                 context.Emit(OpCodes.Dup);
 
@@ -332,7 +332,7 @@ namespace ChocolArm64.Instructions
             {
                 Type[] typesCvt = new Type[] { typeof(Vector128<int>) };
 
-                EmitLdvecWithSignedCast(context, op.Rn, 2);
+                context.EmitLdvec(op.Rn);
 
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertToVector128Single), typesCvt));
 

@@ -382,7 +382,7 @@ namespace ChocolArm64.Instructions
                     ILLabel lblNaN = new ILLabel();
                     ILLabel lblEnd = new ILLabel();
 
-                    EmitLdvecWithCastToDouble(context, op.Rn);
+                    context.EmitLdvec(op.Rn);
 
                     context.Emit(OpCodes.Dup);
                     context.EmitStvectmp();
@@ -393,7 +393,7 @@ namespace ChocolArm64.Instructions
                     }
                     else
                     {
-                        EmitLdvecWithCastToDouble(context, op.Rm);
+                        context.EmitLdvec(op.Rm);
                     }
 
                     context.Emit(OpCodes.Dup);
@@ -656,12 +656,12 @@ namespace ChocolArm64.Instructions
 
                 if (!isLeOrLt)
                 {
-                    EmitLdvecWithCastToDouble(context, op.Rn);
+                    context.EmitLdvec(op.Rn);
                 }
 
                 if (op is OpCodeSimdReg64 binOp)
                 {
-                    EmitLdvecWithCastToDouble(context, binOp.Rm);
+                    context.EmitLdvec(binOp.Rm);
                 }
                 else
                 {
@@ -670,12 +670,12 @@ namespace ChocolArm64.Instructions
 
                 if (isLeOrLt)
                 {
-                    EmitLdvecWithCastToDouble(context, op.Rn);
+                    context.EmitLdvec(op.Rn);
                 }
 
                 context.EmitCall(typeof(Sse2).GetMethod(name, types));
 
-                EmitStvecWithCastFromDouble(context, op.Rd);
+                context.EmitStvec(op.Rd);
 
                 if (scalar)
                 {

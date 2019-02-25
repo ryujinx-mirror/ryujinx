@@ -200,7 +200,7 @@ namespace ChocolArm64.Instructions
 
             switch (size)
             {
-                case 2: context.EmitCall(typeof(Sse),  nameof(Sse.LoadScalarVector128));  break;
+                case 2: context.EmitCall(typeof(Sse), nameof(Sse.LoadScalarVector128));  break;
 
                 case 3:
                 {
@@ -208,12 +208,10 @@ namespace ChocolArm64.Instructions
 
                     context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.LoadScalarVector128), types));
 
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorDoubleToSingle));
-
                     break;
                 }
 
-                case 4: context.EmitCall(typeof(Sse),  nameof(Sse.LoadAlignedVector128)); break;
+                case 4: context.EmitCall(typeof(Sse), nameof(Sse.LoadAlignedVector128)); break;
 
                 throw new InvalidOperationException($"Invalid vector load size of {1 << size} bytes.");
             }
@@ -283,18 +281,9 @@ namespace ChocolArm64.Instructions
 
             switch (size)
             {
-                case 2: context.EmitCall(typeof(Sse), nameof(Sse.StoreScalar)); break;
-
-                case 3:
-                {
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleToDouble));
-
-                    context.EmitCall(typeof(Sse2), nameof(Sse2.StoreScalar));
-
-                    break;
-                }
-
-                case 4: context.EmitCall(typeof(Sse), nameof(Sse.StoreAligned)); break;
+                case 2: context.EmitCall(typeof(Sse),  nameof(Sse.StoreScalar));  break;
+                case 3: context.EmitCall(typeof(Sse2), nameof(Sse2.StoreScalar)); break;
+                case 4: context.EmitCall(typeof(Sse),  nameof(Sse.StoreAligned)); break;
 
                 default: throw new InvalidOperationException($"Invalid vector store size of {1 << size} bytes.");
             }

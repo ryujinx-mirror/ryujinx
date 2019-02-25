@@ -42,12 +42,12 @@ namespace ChocolArm64.Instructions
             {
                 Type[] typesSll = new Type[] { VectorUIntTypesPerSizeLog2[op.Size], typeof(byte) };
 
-                EmitLdvecWithUnsignedCast(context, op.Rn, op.Size);
+                context.EmitLdvec(op.Rn);
 
                 context.EmitLdc_I4(shift);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftLeftLogical), typesSll));
 
-                EmitStvecWithUnsignedCast(context, op.Rd, op.Size);
+                context.EmitStvec(op.Rd);
 
                 if (op.RegisterSize == RegisterSize.Simd64)
                 {
@@ -82,7 +82,7 @@ namespace ChocolArm64.Instructions
 
                 int numBytes = op.RegisterSize == RegisterSize.Simd128 ? 8 : 0;
 
-                EmitLdvecWithUnsignedCast(context, op.Rn, op.Size);
+                context.EmitLdvec(op.Rn);
 
                 context.EmitLdc_I4(numBytes);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), typesSll));
@@ -92,7 +92,7 @@ namespace ChocolArm64.Instructions
                 context.EmitLdc_I4(shift);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftLeftLogical), typesSll));
 
-                EmitStvecWithUnsignedCast(context, op.Rd, op.Size + 1);
+                context.EmitStvec(op.Rd);
             }
             else
             {
@@ -280,7 +280,7 @@ namespace ChocolArm64.Instructions
                 int shift = GetImmShr(op);
                 int eSize = 8 << op.Size;
 
-                EmitLdvecWithSignedCast(context, op.Rn, op.Size);
+                context.EmitLdvec(op.Rn);
 
                 context.Emit(OpCodes.Dup);
                 context.EmitStvectmp();
@@ -298,7 +298,7 @@ namespace ChocolArm64.Instructions
 
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Add), typesAdd));
 
-                EmitStvecWithSignedCast(context, op.Rd, op.Size);
+                context.EmitStvec(op.Rd);
 
                 if (op.RegisterSize == RegisterSize.Simd64)
                 {
@@ -329,8 +329,8 @@ namespace ChocolArm64.Instructions
                 int shift = GetImmShr(op);
                 int eSize = 8 << op.Size;
 
-                EmitLdvecWithSignedCast(context, op.Rd, op.Size);
-                EmitLdvecWithSignedCast(context, op.Rn, op.Size);
+                context.EmitLdvec(op.Rd);
+                context.EmitLdvec(op.Rn);
 
                 context.Emit(OpCodes.Dup);
                 context.EmitStvectmp();
@@ -349,7 +349,7 @@ namespace ChocolArm64.Instructions
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Add), typesAdd));
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Add), typesAdd));
 
-                EmitStvecWithSignedCast(context, op.Rd, op.Size);
+                context.EmitStvec(op.Rd);
 
                 if (op.RegisterSize == RegisterSize.Simd64)
                 {
@@ -405,7 +405,7 @@ namespace ChocolArm64.Instructions
 
                 int numBytes = op.RegisterSize == RegisterSize.Simd128 ? 8 : 0;
 
-                EmitLdvecWithSignedCast(context, op.Rn, op.Size);
+                context.EmitLdvec(op.Rn);
 
                 context.EmitLdc_I4(numBytes);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), typesSll));
@@ -415,7 +415,7 @@ namespace ChocolArm64.Instructions
                 context.EmitLdc_I4(shift);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftLeftLogical), typesSll));
 
-                EmitStvecWithSignedCast(context, op.Rd, op.Size + 1);
+                context.EmitStvec(op.Rd);
             }
             else
             {
@@ -437,12 +437,12 @@ namespace ChocolArm64.Instructions
             {
                 Type[] typesSra = new Type[] { VectorIntTypesPerSizeLog2[op.Size], typeof(byte) };
 
-                EmitLdvecWithSignedCast(context, op.Rn, op.Size);
+                context.EmitLdvec(op.Rn);
 
                 context.EmitLdc_I4(GetImmShr(op));
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightArithmetic), typesSra));
 
-                EmitStvecWithSignedCast(context, op.Rd, op.Size);
+                context.EmitStvec(op.Rd);
 
                 if (op.RegisterSize == RegisterSize.Simd64)
                 {
@@ -470,15 +470,15 @@ namespace ChocolArm64.Instructions
                 Type[] typesSra = new Type[] { VectorIntTypesPerSizeLog2[op.Size], typeof(byte) };
                 Type[] typesAdd = new Type[] { VectorIntTypesPerSizeLog2[op.Size], VectorIntTypesPerSizeLog2[op.Size] };
 
-                EmitLdvecWithSignedCast(context, op.Rd, op.Size);
-                EmitLdvecWithSignedCast(context, op.Rn, op.Size);
+                context.EmitLdvec(op.Rd);
+                context.EmitLdvec(op.Rn);
 
                 context.EmitLdc_I4(GetImmShr(op));
 
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightArithmetic), typesSra));
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Add), typesAdd));
 
-                EmitStvecWithSignedCast(context, op.Rd, op.Size);
+                context.EmitStvec(op.Rd);
 
                 if (op.RegisterSize == RegisterSize.Simd64)
                 {
@@ -610,7 +610,7 @@ namespace ChocolArm64.Instructions
                 int shift = GetImmShr(op);
                 int eSize = 8 << op.Size;
 
-                EmitLdvecWithUnsignedCast(context, op.Rn, op.Size);
+                context.EmitLdvec(op.Rn);
 
                 context.Emit(OpCodes.Dup);
                 context.EmitStvectmp();
@@ -628,7 +628,7 @@ namespace ChocolArm64.Instructions
 
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Add), typesAdd));
 
-                EmitStvecWithUnsignedCast(context, op.Rd, op.Size);
+                context.EmitStvec(op.Rd);
 
                 if (op.RegisterSize == RegisterSize.Simd64)
                 {
@@ -658,8 +658,8 @@ namespace ChocolArm64.Instructions
                 int shift = GetImmShr(op);
                 int eSize = 8 << op.Size;
 
-                EmitLdvecWithUnsignedCast(context, op.Rd, op.Size);
-                EmitLdvecWithUnsignedCast(context, op.Rn, op.Size);
+                context.EmitLdvec(op.Rd);
+                context.EmitLdvec(op.Rn);
 
                 context.Emit(OpCodes.Dup);
                 context.EmitStvectmp();
@@ -678,7 +678,7 @@ namespace ChocolArm64.Instructions
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Add), typesAdd));
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Add), typesAdd));
 
-                EmitStvecWithUnsignedCast(context, op.Rd, op.Size);
+                context.EmitStvec(op.Rd);
 
                 if (op.RegisterSize == RegisterSize.Simd64)
                 {
@@ -734,7 +734,7 @@ namespace ChocolArm64.Instructions
 
                 int numBytes = op.RegisterSize == RegisterSize.Simd128 ? 8 : 0;
 
-                EmitLdvecWithUnsignedCast(context, op.Rn, op.Size);
+                context.EmitLdvec(op.Rn);
 
                 context.EmitLdc_I4(numBytes);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), typesSll));
@@ -744,7 +744,7 @@ namespace ChocolArm64.Instructions
                 context.EmitLdc_I4(shift);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftLeftLogical), typesSll));
 
-                EmitStvecWithUnsignedCast(context, op.Rd, op.Size + 1);
+                context.EmitStvec(op.Rd);
             }
             else
             {
@@ -765,12 +765,12 @@ namespace ChocolArm64.Instructions
             {
                 Type[] typesSrl = new Type[] { VectorUIntTypesPerSizeLog2[op.Size], typeof(byte) };
 
-                EmitLdvecWithUnsignedCast(context, op.Rn, op.Size);
+                context.EmitLdvec(op.Rn);
 
                 context.EmitLdc_I4(GetImmShr(op));
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical), typesSrl));
 
-                EmitStvecWithUnsignedCast(context, op.Rd, op.Size);
+                context.EmitStvec(op.Rd);
 
                 if (op.RegisterSize == RegisterSize.Simd64)
                 {
@@ -797,15 +797,15 @@ namespace ChocolArm64.Instructions
                 Type[] typesSrl = new Type[] { VectorUIntTypesPerSizeLog2[op.Size], typeof(byte) };
                 Type[] typesAdd = new Type[] { VectorUIntTypesPerSizeLog2[op.Size], VectorUIntTypesPerSizeLog2[op.Size] };
 
-                EmitLdvecWithUnsignedCast(context, op.Rd, op.Size);
-                EmitLdvecWithUnsignedCast(context, op.Rn, op.Size);
+                context.EmitLdvec(op.Rd);
+                context.EmitLdvec(op.Rn);
 
                 context.EmitLdc_I4(GetImmShr(op));
 
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical), typesSrl));
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Add), typesAdd));
 
-                EmitStvecWithUnsignedCast(context, op.Rd, op.Size);
+                context.EmitStvec(op.Rd);
 
                 if (op.RegisterSize == RegisterSize.Simd64)
                 {
