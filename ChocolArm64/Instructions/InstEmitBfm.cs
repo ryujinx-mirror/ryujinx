@@ -11,21 +11,56 @@ namespace ChocolArm64.Instructions
         {
             OpCodeBfm64 op = (OpCodeBfm64)context.CurrOp;
 
-            EmitBfmLoadRn(context);
+            if (op.Pos < op.Shift)
+            {
+                //BFI.
+                context.EmitLdintzr(op.Rn);
 
-            context.EmitLdintzr(op.Rd);
-            context.EmitLdc_I(~op.WMask & op.TMask);
+                int shift = op.GetBitsCount() - op.Shift;
 
-            context.Emit(OpCodes.And);
-            context.Emit(OpCodes.Or);
+                int width = op.Pos + 1;
 
-            context.EmitLdintzr(op.Rd);
-            context.EmitLdc_I(~op.TMask);
+                long mask = (long)(ulong.MaxValue >> (64 - width));
 
-            context.Emit(OpCodes.And);
-            context.Emit(OpCodes.Or);
+                context.EmitLdc_I(mask);
 
-            context.EmitStintzr(op.Rd);
+                context.Emit(OpCodes.And);
+
+                context.EmitLsl(shift);
+
+                context.EmitLdintzr(op.Rd);
+
+                context.EmitLdc_I(~(mask << shift));
+
+                context.Emit(OpCodes.And);
+                context.Emit(OpCodes.Or);
+
+                context.EmitStintzr(op.Rd);
+            }
+            else
+            {
+                //BFXIL.
+                context.EmitLdintzr(op.Rn);
+
+                context.EmitLsr(op.Shift);
+
+                int width = op.Pos - op.Shift + 1;
+
+                long mask = (long)(ulong.MaxValue >> (64 - width));
+
+                context.EmitLdc_I(mask);
+
+                context.Emit(OpCodes.And);
+
+                context.EmitLdintzr(op.Rd);
+
+                context.EmitLdc_I(~mask);
+
+                context.Emit(OpCodes.And);
+                context.Emit(OpCodes.Or);
+
+                context.EmitStintzr(op.Rd);
+            }
         }
 
         public static void Sbfm(ILEmitterCtx context)
