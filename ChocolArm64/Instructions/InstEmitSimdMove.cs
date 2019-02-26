@@ -318,12 +318,26 @@ namespace ChocolArm64.Instructions
 
         public static void Movi_V(ILEmitterCtx context)
         {
-            EmitVectorImmUnaryOp(context, () => { });
+            if (Optimizations.UseSse2)
+            {
+                EmitMoviMvni(context, not: false);
+            }
+            else
+            {
+                EmitVectorImmUnaryOp(context, () => { });
+            }
         }
 
         public static void Mvni_V(ILEmitterCtx context)
         {
-            EmitVectorImmUnaryOp(context, () => context.Emit(OpCodes.Not));
+            if (Optimizations.UseSse2)
+            {
+                EmitMoviMvni(context, not: true);
+            }
+            else
+            {
+                EmitVectorImmUnaryOp(context, () => context.Emit(OpCodes.Not));
+            }
         }
 
         public static void Smov_S(ILEmitterCtx context)
@@ -477,6 +491,38 @@ namespace ChocolArm64.Instructions
             {
                 context.Emit(OpCodes.Conv_U4);
                 context.Emit(OpCodes.Conv_U8);
+            }
+        }
+
+        private static void EmitMoviMvni(ILEmitterCtx context, bool not)
+        {
+            OpCodeSimdImm64 op = (OpCodeSimdImm64)context.CurrOp;
+
+            Type[] typesSav = new Type[] { UIntTypesPerSizeLog2[op.Size] };
+
+            long imm = op.Imm;
+
+            if (not)
+            {
+                imm = ~imm;
+            }
+
+            if (op.Size < 3)
+            {
+                context.EmitLdc_I4((int)imm);
+            }
+            else
+            {
+                context.EmitLdc_I8(imm);
+            }
+
+            context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
+
+            context.EmitStvec(op.Rd);
+
+            if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                EmitVectorZeroUpper(context, op.Rd);
             }
         }
 
