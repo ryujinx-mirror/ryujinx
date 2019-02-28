@@ -8,6 +8,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public int Width  => Image.Width;
         public int Height => Image.Height;
+        public int Depth  => Image.Depth;
 
         public GalImageFormat Format => Image.Format;
 

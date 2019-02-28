@@ -12,12 +12,16 @@ namespace Ryujinx.Graphics.Texture
 
             GalImageFormat Format = GetImageFormat(Tic);
 
+            GalTextureTarget TextureTarget = (GalTextureTarget)((Tic[4] >> 23) & 0xF);
+
             GalTextureSource XSource = (GalTextureSource)((Tic[0] >> 19) & 7);
             GalTextureSource YSource = (GalTextureSource)((Tic[0] >> 22) & 7);
             GalTextureSource ZSource = (GalTextureSource)((Tic[0] >> 25) & 7);
             GalTextureSource WSource = (GalTextureSource)((Tic[0] >> 28) & 7);
 
             TextureSwizzle Swizzle = (TextureSwizzle)((Tic[2] >> 21) & 7);
+
+            int MaxMipmapLevel = (Tic[3] >> 28) & 0xF + 1;
 
             GalMemoryLayout Layout;
 
@@ -31,22 +35,61 @@ namespace Ryujinx.Graphics.Texture
                 Layout = GalMemoryLayout.Pitch;
             }
 
-            int BlockHeightLog2 = (Tic[3] >> 3)  & 7;
-            int TileWidthLog2   = (Tic[3] >> 10) & 7;
+            int GobBlockHeightLog2 = (Tic[3] >> 3)  & 7;
+            int GobBlockDepthLog2  = (Tic[3] >> 6)  & 7;
+            int TileWidthLog2      = (Tic[3] >> 10) & 7;
 
-            int BlockHeight = 1 << BlockHeightLog2;
-            int TileWidth   = 1 << TileWidthLog2;
+            int GobBlockHeight = 1 << GobBlockHeightLog2;
+            int GobBlockDepth  = 1 << GobBlockDepthLog2;
+            int TileWidth      = 1 << TileWidthLog2;
 
-            int Width  = (Tic[4] & 0xffff) + 1;
-            int Height = (Tic[5] & 0xffff) + 1;
+            int Width  = ((Tic[4] >> 0)  & 0xffff) + 1;
+            int Height = ((Tic[5] >> 0)  & 0xffff) + 1;
+            int Depth  = ((Tic[5] >> 16) & 0x3fff) + 1;
+
+            int LayoutCount = 1;
+
+            // TODO: check this
+            if (ImageUtils.IsArray(TextureTarget))
+            {
+                LayoutCount = Depth;
+                Depth = 1;
+            }
+
+            if (TextureTarget == GalTextureTarget.OneD)
+            {
+                Height = 1;
+            }
+
+            if (TextureTarget == GalTextureTarget.TwoD || TextureTarget == GalTextureTarget.OneD)
+            {
+                Depth = 1;
+            }
+            else if (TextureTarget == GalTextureTarget.CubeMap)
+            {
+                // FIXME: This is a bit hacky but I guess it's fine for now
+                LayoutCount = 6;
+                Depth = 1;
+            }
+            else if (TextureTarget == GalTextureTarget.CubeArray)
+            {
+                // FIXME: This is a really really hacky but I guess it's fine for now
+                LayoutCount *= 6;
+                Depth = 1;
+            }
 
             GalImage Image = new GalImage(
                 Width,
                 Height,
+                Depth,
+                LayoutCount,
                 TileWidth,
-                BlockHeight,
+                GobBlockHeight,
+                GobBlockDepth,
                 Layout,
                 Format,
+                TextureTarget,
+                MaxMipmapLevel,
                 XSource,
                 YSource,
                 ZSource,
@@ -68,6 +111,10 @@ namespace Ryujinx.Graphics.Texture
             GalTextureWrap AddressV = (GalTextureWrap)((Tsc[0] >> 3) & 7);
             GalTextureWrap AddressP = (GalTextureWrap)((Tsc[0] >> 6) & 7);
 
+            bool DepthCompare = ((Tsc[0] >> 9) & 1) == 1;
+
+            DepthCompareFunc DepthCompareFunc = (DepthCompareFunc)((Tsc[0] >> 10) & 7);
+
             GalTextureFilter    MagFilter = (GalTextureFilter)   ((Tsc[1] >> 0) & 3);
             GalTextureFilter    MinFilter = (GalTextureFilter)   ((Tsc[1] >> 4) & 3);
             GalTextureMipFilter MipFilter = (GalTextureMipFilter)((Tsc[1] >> 6) & 3);
@@ -85,7 +132,9 @@ namespace Ryujinx.Graphics.Texture
                 MinFilter,
                 MagFilter,
                 MipFilter,
-                BorderColor);
+                BorderColor,
+                DepthCompare,
+                DepthCompareFunc);
         }
 
         private static GalImageFormat GetImageFormat(int[] Tic)

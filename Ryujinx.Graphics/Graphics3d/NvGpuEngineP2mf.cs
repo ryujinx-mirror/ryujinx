@@ -1,3 +1,4 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Memory;
 using Ryujinx.Graphics.Texture;
 using System.Collections.Generic;
@@ -119,14 +120,17 @@ namespace Ryujinx.Graphics.Graphics3d
                 }
                 else
                 {
-                    BlockLinearSwizzle Swizzle = new BlockLinearSwizzle(CopyWidth, 1, CopyGobBlockHeight);
+                    BlockLinearSwizzle Swizzle = new BlockLinearSwizzle(
+                        CopyWidth,
+                        CopyHeight, 1,
+                        CopyGobBlockHeight, 1, 1);
 
                     int SrcOffset = 0;
 
                     for (int Y = CopyStartY; Y < CopyHeight && SrcOffset < CopySize; Y++)
                     for (int X = CopyStartX; X < CopyWidth  && SrcOffset < CopySize; X++)
                     {
-                        int DstOffset = Swizzle.GetSwizzleOffset(X, Y);
+                        int DstOffset = Swizzle.GetSwizzleOffset(X, Y, 0);
 
                         Vmm.WriteByte(CopyAddress + DstOffset, Buffer[SrcOffset++]);
                     }

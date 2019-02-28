@@ -1,6 +1,8 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
 using Ryujinx.Graphics.Texture;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics
@@ -11,6 +13,7 @@ namespace Ryujinx.Graphics
         {
             None,
             Texture,
+            TextureArrayLayer,
             ColorBuffer,
             ZetaBuffer
         }
@@ -20,6 +23,7 @@ namespace Ryujinx.Graphics
         private HashSet<long>[] UploadedKeys;
 
         private Dictionary<long, ImageType> ImageTypes;
+        private Dictionary<long, int>      MirroredTextures;
 
         public GpuResourceManager(NvGpu Gpu)
         {
@@ -33,6 +37,7 @@ namespace Ryujinx.Graphics
             }
 
             ImageTypes = new Dictionary<long, ImageType>();
+            MirroredTextures = new Dictionary<long, int>();
         }
 
         public void SendColorBuffer(NvGpuVmm Vmm, long Position, int Attachment, GalImage NewImage)
@@ -70,6 +75,32 @@ namespace Ryujinx.Graphics
             ImageTypes[Position] = ImageType.Texture;
         }
 
+        public bool TryGetTextureLayer(long Position, out int LayerIndex)
+        {
+            if (MirroredTextures.TryGetValue(Position, out LayerIndex))
+            {
+                ImageType Type = ImageTypes[Position];
+
+                // FIXME(thog): I'm actually unsure if we should deny all other image type, gpu testing needs to be done here.
+                if (Type != ImageType.Texture && Type != ImageType.TextureArrayLayer)
+                {
+                    LayerIndex = -1;
+                    return false;
+                }
+
+                return true;
+            }
+
+            LayerIndex = -1;
+            return false;
+        }
+
+        public void SetTextureArrayLayer(long Position, int LayerIndex)
+        {
+            ImageTypes[Position] = ImageType.TextureArrayLayer;
+            MirroredTextures[Position] = LayerIndex;
+        }
+
         private void PrepareSendTexture(NvGpuVmm Vmm, long Position, GalImage NewImage)
         {
             long Size = ImageUtils.GetSize(NewImage);
@@ -102,7 +133,7 @@ namespace Ryujinx.Graphics
 
         private bool TryReuse(NvGpuVmm Vmm, long Position, GalImage NewImage)
         {
-            if (Gpu.Renderer.Texture.TryGetImage(Position, out GalImage CachedImage) && CachedImage.SizeMatches(NewImage))
+            if (Gpu.Renderer.Texture.TryGetImage(Position, out GalImage CachedImage) && CachedImage.TextureTarget == NewImage.TextureTarget && CachedImage.SizeMatches(NewImage))
             {
                 Gpu.Renderer.RenderTarget.Reinterpret(Position, NewImage);
 

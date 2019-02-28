@@ -34,6 +34,11 @@ namespace Ryujinx.Common
             return value & -(long)size;
         }
 
+        public static int DivRoundUp(int value, int dividend)
+        {
+            return (value + dividend - 1) / dividend;
+        }
+
         public static ulong DivRoundUp(ulong value, uint dividend)
         {
             return (value + dividend - 1) / dividend;
@@ -42,6 +47,24 @@ namespace Ryujinx.Common
         public static long DivRoundUp(long value, int dividend)
         {
             return (value + dividend - 1) / dividend;
+        }
+
+        public static int Pow2RoundUp(int value)
+        {
+            value--;
+
+            value |= (value >>  1);
+            value |= (value >>  2);
+            value |= (value >>  4);
+            value |= (value >>  8);
+            value |= (value >> 16);
+
+            return ++value;
+        }
+
+        public static int Pow2RoundDown(int value)
+        {
+            return IsPowerOfTwo32(value) ? value : Pow2RoundUp(value) >> 1;
         }
 
         public static bool IsPowerOfTwo32(int value)
@@ -83,6 +106,18 @@ namespace Ryujinx.Common
             while (preCount == 4);
 
             return (ulong)count;
+        }
+
+        public static int CountTrailingZeros32(int value)
+        {
+            int count = 0;
+
+            while (((value >> count) & 1) == 0)
+            {
+                count++;
+            }
+
+            return count;
         }
 
         public static long ReverseBits64(long value)

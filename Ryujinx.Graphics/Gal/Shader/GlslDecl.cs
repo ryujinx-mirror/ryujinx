@@ -1,3 +1,5 @@
+using Ryujinx.Graphics.Gal.OpenGL;
+using Ryujinx.Graphics.Texture;
 using System;
 using System.Collections.Generic;
 
@@ -224,6 +226,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                     if (Op.Inst == ShaderIrInst.Texq ||
                         Op.Inst == ShaderIrInst.Texs ||
+                        Op.Inst == ShaderIrInst.Tld4 ||
                         Op.Inst == ShaderIrInst.Txlf)
                     {
                         int Handle = ((ShaderIrOperImm)Op.OperandC).Value;
@@ -232,7 +235,25 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                         string Name = StagePrefix + TextureName + Index;
 
-                        m_Textures.TryAdd(Handle, new ShaderDeclInfo(Name, Handle));
+                        GalTextureTarget TextureTarget;
+                        
+                        TextureInstructionSuffix TextureInstructionSuffix;
+
+                        // TODO: Non 2D texture type for TEXQ?
+                        if (Op.Inst == ShaderIrInst.Texq)
+                        {
+                            TextureTarget            = GalTextureTarget.TwoD;
+                            TextureInstructionSuffix = TextureInstructionSuffix.None;
+                        }
+                        else
+                        {
+                            ShaderIrMetaTex Meta = ((ShaderIrMetaTex)Op.MetaData);
+
+                            TextureTarget            = Meta.TextureTarget;
+                            TextureInstructionSuffix = Meta.TextureInstructionSuffix;
+                        }
+
+                        m_Textures.TryAdd(Handle, new ShaderDeclInfo(Name, Handle, false, 0, 1, TextureTarget, TextureInstructionSuffix));
                     }
                     else if (Op.Inst == ShaderIrInst.Texb)
                     {
@@ -257,9 +278,10 @@ namespace Ryujinx.Graphics.Gal.Shader
 
                         if (HandleSrc != null && HandleSrc is ShaderIrOperCbuf Cbuf)
                         {
+                            ShaderIrMetaTex Meta = ((ShaderIrMetaTex)Op.MetaData);
                             string Name = StagePrefix + TextureName + "_cb" + Cbuf.Index + "_" + Cbuf.Pos;
 
-                            m_CbTextures.Add(Op, new ShaderDeclInfo(Name, Cbuf.Pos, true, Cbuf.Index));
+                            m_CbTextures.Add(Op, new ShaderDeclInfo(Name, Cbuf.Pos, true, Cbuf.Index, 1, Meta.TextureTarget, Meta.TextureInstructionSuffix));
                         }
                         else
                         {

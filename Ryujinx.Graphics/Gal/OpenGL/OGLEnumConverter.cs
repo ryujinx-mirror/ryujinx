@@ -189,6 +189,31 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             throw new NotImplementedException($"{Format & GalImageFormat.FormatMask} {Format & GalImageFormat.TypeMask}");
         }
 
+        public static All GetDepthCompareFunc(DepthCompareFunc DepthCompareFunc)
+        {
+            switch (DepthCompareFunc)
+            {
+                case DepthCompareFunc.LEqual:
+                    return All.Lequal;
+                case DepthCompareFunc.GEqual:
+                    return All.Gequal;
+                case DepthCompareFunc.Less:
+                    return All.Less;
+                case DepthCompareFunc.Greater:
+                    return All.Greater;
+                case DepthCompareFunc.Equal:
+                    return All.Equal;
+                case DepthCompareFunc.NotEqual:
+                    return All.Notequal;
+                case DepthCompareFunc.Always:
+                    return All.Always;
+                case DepthCompareFunc.Never:
+                    return All.Never;
+                default:
+                    throw new ArgumentException(nameof(DepthCompareFunc) + " \"" + DepthCompareFunc + "\" is not valid!");
+            }
+        }
+
         public static InternalFormat GetCompressedImageFormat(GalImageFormat Format)
         {
             switch (Format)

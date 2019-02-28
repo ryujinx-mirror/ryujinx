@@ -19,6 +19,11 @@ namespace Ryujinx.Graphics.Gal.Shader
             return ((int)(OpCode >> 20) << 8) >> 8;
         }
 
+        private static bool HasArray(this long OpCode)
+        {
+            return OpCode.Read(0x1c);
+        }
+
         private static ShaderIrOperAbuf[] Abuf20(this long OpCode)
         {
             int Abuf = OpCode.Read(20, 0x3ff);

@@ -1,6 +1,7 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
+using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Nv.NvGpuAS;
 using Ryujinx.HLE.HOS.Services.Nv.NvMap;
@@ -415,9 +416,10 @@ namespace Ryujinx.HLE.HOS.Services.Android
                 {
                     image = new GalImage(
                         fbWidth,
-                        fbHeight, 1, BlockHeight,
+                        fbHeight, 1, 1, 1, BlockHeight, 1,
                         GalMemoryLayout.BlockLinear,
-                        imageFormat);
+                        imageFormat,
+                        GalTextureTarget.TwoD);
                 }
 
                 context.Device.Gpu.ResourceManager.ClearPbCache();

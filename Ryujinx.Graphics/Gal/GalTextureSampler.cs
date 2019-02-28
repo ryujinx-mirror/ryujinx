@@ -12,6 +12,9 @@ namespace Ryujinx.Graphics.Gal
 
         public GalColorF BorderColor { get; private set; }
 
+        public bool             DepthCompare     { get; private set; }
+        public DepthCompareFunc DepthCompareFunc { get; private set; }
+
         public GalTextureSampler(
             GalTextureWrap      AddressU,
             GalTextureWrap      AddressV,
@@ -19,7 +22,9 @@ namespace Ryujinx.Graphics.Gal
             GalTextureFilter    MinFilter,
             GalTextureFilter    MagFilter,
             GalTextureMipFilter MipFilter,
-            GalColorF           BorderColor)
+            GalColorF           BorderColor,
+            bool                DepthCompare,
+            DepthCompareFunc    DepthCompareFunc)
         {
             this.AddressU    = AddressU;
             this.AddressV    = AddressV;
@@ -28,6 +33,9 @@ namespace Ryujinx.Graphics.Gal
             this.MagFilter   = MagFilter;
             this.MipFilter   = MipFilter;
             this.BorderColor = BorderColor;
+
+            this.DepthCompare     = DepthCompare;
+            this.DepthCompareFunc = DepthCompareFunc;
         }
     }
 }

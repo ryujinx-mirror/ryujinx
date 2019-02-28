@@ -1,3 +1,5 @@
+using OpenTK.Graphics.OpenGL;
+using Ryujinx.Graphics.Texture;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -33,7 +35,9 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public int MaxUboSize { get; }
 
-        public GlslDecompiler(int MaxUboSize)
+        private bool IsNvidiaDriver;
+
+        public GlslDecompiler(int MaxUboSize, bool IsNvidiaDriver)
         {
             InstsExpr = new Dictionary<ShaderIrInst, GetInstExpr>()
             {
@@ -103,6 +107,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 { ShaderIrInst.Texb,   GetTexbExpr   },
                 { ShaderIrInst.Texq,   GetTexqExpr   },
                 { ShaderIrInst.Texs,   GetTexsExpr   },
+                { ShaderIrInst.Tld4,   GetTld4Expr   },
                 { ShaderIrInst.Trunc,  GetTruncExpr  },
                 { ShaderIrInst.Txlf,   GetTxlfExpr   },
                 { ShaderIrInst.Utof,   GetUtofExpr   },
@@ -110,6 +115,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             };
 
             this.MaxUboSize = MaxUboSize / 16;
+            this.IsNvidiaDriver = IsNvidiaDriver;
         }
 
         public GlslProgram Decompile(
@@ -219,14 +225,70 @@ namespace Ryujinx.Graphics.Gal.Shader
             }
         }
 
+        private string GetSamplerType(TextureTarget TextureTarget, bool HasShadow)
+        {
+            string Result;
+
+            switch (TextureTarget)
+            {
+                case TextureTarget.Texture1D:
+                    Result = "sampler1D";
+                    break;
+                case TextureTarget.Texture2D:
+                    Result = "sampler2D";
+                    break;
+                case TextureTarget.Texture3D:
+                    Result = "sampler3D";
+                    break;
+                case TextureTarget.TextureCubeMap:
+                    Result = "samplerCube";
+                    break;
+                case TextureTarget.TextureRectangle:
+                    Result = "sampler2DRect";
+                    break;
+                case TextureTarget.Texture1DArray:
+                    Result = "sampler1DArray";
+                    break;
+                case TextureTarget.Texture2DArray:
+                    Result = "sampler2DArray";
+                    break;
+                case TextureTarget.TextureCubeMapArray:
+                    Result = "samplerCubeArray";
+                    break;
+                case TextureTarget.TextureBuffer:
+                    Result = "samplerBuffer";
+                    break;
+                case TextureTarget.Texture2DMultisample:
+                    Result = "sampler2DMS";
+                    break;
+                case TextureTarget.Texture2DMultisampleArray:
+                    Result = "sampler2DMSArray";
+                    break;
+                default:
+                    throw new NotSupportedException();
+            }
+
+            if (HasShadow)
+                Result += "Shadow";
+
+            return Result;
+        }
+
         private void PrintDeclTextures()
         {
             foreach (ShaderDeclInfo DeclInfo in IterateCbTextures())
             {
-                SB.AppendLine("uniform sampler2D " + DeclInfo.Name + ";");
+                TextureTarget Target = ImageUtils.GetTextureTarget(DeclInfo.TextureTarget);
+                SB.AppendLine($"// {DeclInfo.TextureSuffix}");
+                SB.AppendLine("uniform " + GetSamplerType(Target, (DeclInfo.TextureSuffix & TextureInstructionSuffix.DC) != 0) + " " + DeclInfo.Name + ";");
             }
 
-            PrintDecls(Decl.Textures, "uniform sampler2D");
+            foreach (ShaderDeclInfo DeclInfo in Decl.Textures.Values.OrderBy(DeclKeySelector))
+            {
+                TextureTarget Target = ImageUtils.GetTextureTarget(DeclInfo.TextureTarget);
+                SB.AppendLine($"// {DeclInfo.TextureSuffix}");
+                SB.AppendLine("uniform " + GetSamplerType(Target, (DeclInfo.TextureSuffix & TextureInstructionSuffix.DC) != 0) + " " + DeclInfo.Name + ";");
+            }
         }
 
         private IEnumerable<ShaderDeclInfo> IterateCbTextures()
@@ -778,6 +840,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 case ShaderIrInst.Ipa:
                 case ShaderIrInst.Texq:
                 case ShaderIrInst.Texs:
+                case ShaderIrInst.Tld4:
                 case ShaderIrInst.Txlf:
                     return false;
             }
@@ -1124,7 +1187,7 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             string Ch = "rgba".Substring(Meta.Elem, 1);
 
-            return "texture(" + DeclInfo.Name + ", " + Coords + ")." + Ch;
+            return GetTextureOperation(Op, DeclInfo.Name, Coords, Ch);
         }
 
         private string GetTexqExpr(ShaderIrOp Op)
@@ -1157,12 +1220,29 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             string Ch = "rgba".Substring(Meta.Elem, 1);
 
-            return "texture(" + Sampler + ", " + Coords + ")." + Ch;
+            return GetTextureOperation(Op, Sampler, Coords, Ch);
         }
 
-        private string GetTxlfExpr(ShaderIrOp Op)
+        private string GetTld4Expr(ShaderIrOp Op)
         {
             ShaderIrMetaTex Meta = (ShaderIrMetaTex)Op.MetaData;
+
+            string Sampler = GetTexSamplerName(Op);
+
+            string Coords = GetTexSamplerCoords(Op);
+
+            string Ch = "rgba".Substring(Meta.Elem, 1);
+
+            return GetTextureGatherOperation(Op, Sampler, Coords, Ch);
+        }
+
+        // TODO: support AOFFI on non nvidia drivers
+        private string GetTxlfExpr(ShaderIrOp Op)
+        {
+            // TODO: Support all suffixes
+            ShaderIrMetaTex Meta = (ShaderIrMetaTex)Op.MetaData;
+
+            TextureInstructionSuffix Suffix = Meta.TextureInstructionSuffix;
 
             string Sampler = GetTexSamplerName(Op);
 
@@ -1170,7 +1250,20 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             string Ch = "rgba".Substring(Meta.Elem, 1);
 
-            return "texelFetch(" + Sampler + ", " + Coords + ", 0)." + Ch;
+            string Lod = "0";
+
+            if (Meta.LevelOfDetail != null)
+            {
+                Lod = GetOperExpr(Op, Meta.LevelOfDetail);
+            }
+
+            if ((Suffix & TextureInstructionSuffix.AOffI) != 0 && IsNvidiaDriver)
+            {
+                string Offset = GetTextureOffset(Meta, GetOperExpr(Op, Meta.Offset));
+                return "texelFetchOffset(" + Sampler + ", " + Coords + ", " + Lod + ", " + Offset + ")." + Ch;
+            }
+
+            return "texelFetch(" + Sampler + ", " + Coords + ", " + Lod + ")." + Ch;
         }
 
         private string GetTruncExpr(ShaderIrOp Op) => GetUnaryCall(Op, "trunc");
@@ -1246,14 +1339,205 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private string GetTexSamplerCoords(ShaderIrOp Op)
         {
-            return "vec2(" + GetOperExpr(Op, Op.OperandA) + ", " +
-                             GetOperExpr(Op, Op.OperandB) + ")";
+            ShaderIrMetaTex Meta = (ShaderIrMetaTex)Op.MetaData;
+
+            bool HasDepth = (Meta.TextureInstructionSuffix & TextureInstructionSuffix.DC) != 0;
+
+            int Coords = ImageUtils.GetCoordsCountTextureTarget(Meta.TextureTarget);
+
+            bool IsArray = ImageUtils.IsArray(Meta.TextureTarget);
+
+
+            string GetLastArgument(ShaderIrNode Node)
+            {
+                string Result = GetOperExpr(Op, Node);
+
+                // array index is actually an integer so we need to pass it correctly
+                if (IsArray)
+                {
+                    Result = "float(floatBitsToInt(" + Result + "))";
+                }
+
+                return Result;
+            }
+
+            string LastArgument;
+            string DepthArgument = "";
+
+            int VecSize = Coords;
+            if (HasDepth && Op.Inst != ShaderIrInst.Tld4)
+            {
+                VecSize++;
+                DepthArgument = $", {GetOperExpr(Op, Meta.DepthCompare)}";
+            }
+
+            switch (Coords)
+            {
+                case 1:
+                    if (HasDepth)
+                    {
+                        return $"vec3({GetOperExpr(Op, Meta.Coordinates[0])}, 0.0{DepthArgument})";
+                    }
+
+                    return GetOperExpr(Op, Meta.Coordinates[0]);
+                case 2:
+                    LastArgument = GetLastArgument(Meta.Coordinates[1]);
+
+                    return $"vec{VecSize}({GetOperExpr(Op, Meta.Coordinates[0])}, {LastArgument}{DepthArgument})";
+                case 3:
+                    LastArgument = GetLastArgument(Meta.Coordinates[2]);
+
+                    return $"vec{VecSize}({GetOperExpr(Op, Meta.Coordinates[0])}, {GetOperExpr(Op, Meta.Coordinates[1])}, {LastArgument}{DepthArgument})";
+                case 4:
+                    LastArgument = GetLastArgument(Meta.Coordinates[3]);
+
+                    return $"vec4({GetOperExpr(Op, Meta.Coordinates[0])}, {GetOperExpr(Op, Meta.Coordinates[1])}, {GetOperExpr(Op, Meta.Coordinates[2])}, {LastArgument}){DepthArgument}";
+                default:
+                    throw new InvalidOperationException();
+            }
+
+        }
+
+        private string GetTextureOffset(ShaderIrMetaTex Meta, string Oper, int Shift = 4, int Mask = 0xF)
+        {
+            string GetOffset(string Operation, int Index)
+            {
+                return $"({Operation} >> {Index * Shift}) & 0x{Mask:x}";
+            }
+
+            int Coords = ImageUtils.GetCoordsCountTextureTarget(Meta.TextureTarget);
+
+            if (ImageUtils.IsArray(Meta.TextureTarget))
+                Coords -= 1;
+
+            switch (Coords)
+            {
+                case 1:
+                    return GetOffset(Oper, 0);
+                case 2:
+                    return "ivec2(" + GetOffset(Oper, 0) + ", " + GetOffset(Oper, 1) + ")";
+                case 3:
+                    return "ivec3(" + GetOffset(Oper, 0) + ", " + GetOffset(Oper, 1) + ", " + GetOffset(Oper, 2) + ")";
+                case 4:
+                    return "ivec4(" + GetOffset(Oper, 0) + ", " + GetOffset(Oper, 1) + ", " + GetOffset(Oper, 2) + ", " + GetOffset(Oper, 3) + ")";
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        // TODO: support AOFFI on non nvidia drivers
+        private string GetTextureGatherOperation(ShaderIrOp Op, string Sampler, string Coords, string Ch)
+        {
+            ShaderIrMetaTex Meta = (ShaderIrMetaTex)Op.MetaData;
+
+            TextureInstructionSuffix Suffix = Meta.TextureInstructionSuffix;
+
+            string ChString = "." + Ch;
+
+            string Comp = Meta.Component.ToString();
+
+            if ((Suffix & TextureInstructionSuffix.DC) != 0)
+            {
+                Comp = GetOperExpr(Op, Meta.DepthCompare);
+            }
+
+            if ((Suffix & TextureInstructionSuffix.AOffI) != 0 && IsNvidiaDriver)
+            {
+                string Offset = GetTextureOffset(Meta, "floatBitsToInt((" + GetOperExpr(Op, Meta.Offset) + "))", 8, 0x3F);
+
+                if ((Suffix & TextureInstructionSuffix.DC) != 0)
+                {
+                    return "textureGatherOffset(" + Sampler + ", " + Coords + ", " + Comp + ", " + Offset + ")" + ChString;
+                }
+
+                return "textureGatherOffset(" + Sampler + ", " + Coords + ", " + Offset + ", " + Comp + ")" + ChString;
+            }
+            // TODO: Support PTP
+            else if ((Suffix & TextureInstructionSuffix.PTP) != 0)
+            {
+                throw new NotImplementedException();
+            }
+
+            return "textureGather(" + Sampler + ", " + Coords + ", " + Comp + ")" + ChString;
+        }
+
+        // TODO: support AOFFI on non nvidia drivers
+        private string GetTextureOperation(ShaderIrOp Op, string Sampler, string Coords, string Ch)
+        {
+            ShaderIrMetaTex Meta = (ShaderIrMetaTex)Op.MetaData;
+
+            TextureInstructionSuffix Suffix = Meta.TextureInstructionSuffix;
+
+            string ChString = "." + Ch;
+
+            if ((Suffix & TextureInstructionSuffix.DC) != 0)
+            {
+                ChString = "";
+            }
+
+            // TODO: Support LBA and LLA
+            if ((Suffix & TextureInstructionSuffix.LZ) != 0)
+            {
+                if ((Suffix & TextureInstructionSuffix.AOffI) != 0 && IsNvidiaDriver)
+                {
+                    string Offset = GetTextureOffset(Meta, "floatBitsToInt((" + GetOperExpr(Op, Meta.Offset) + "))");
+
+                    return "textureLodOffset(" + Sampler + ", " + Coords + ", 0.0, " + Offset + ")" + ChString;
+                }
+
+                return "textureLod(" + Sampler + ", " + Coords + ", 0.0)" + ChString;
+            }
+            else if ((Suffix & TextureInstructionSuffix.LB) != 0)
+            {
+                if ((Suffix & TextureInstructionSuffix.AOffI) != 0 && IsNvidiaDriver)
+                {
+                    string Offset = GetTextureOffset(Meta, "floatBitsToInt((" + GetOperExpr(Op, Meta.Offset) + "))");
+
+                    return "textureOffset(" + Sampler + ", " + Coords + ", " + Offset + ", " + GetOperExpr(Op, Meta.LevelOfDetail) + ")" + ChString;
+                }
+
+                return "texture(" + Sampler + ", " + Coords + ", " + GetOperExpr(Op, Meta.LevelOfDetail) + ")" + ChString;
+            }
+            else if ((Suffix & TextureInstructionSuffix.LL) != 0)
+            {
+                if ((Suffix & TextureInstructionSuffix.AOffI) != 0 && IsNvidiaDriver)
+                {
+                    string Offset = GetTextureOffset(Meta, "floatBitsToInt((" + GetOperExpr(Op, Meta.Offset) + "))");
+
+                    return "textureLodOffset(" + Sampler + ", " + Coords + ", " + GetOperExpr(Op, Meta.LevelOfDetail) + ", " + Offset + ")" + ChString;
+                }
+
+                return "textureLod(" + Sampler + ", " + Coords + ", " + GetOperExpr(Op, Meta.LevelOfDetail) + ")" + ChString;
+            }
+            else if ((Suffix & TextureInstructionSuffix.AOffI) != 0 && IsNvidiaDriver)
+            {
+                string Offset = GetTextureOffset(Meta, "floatBitsToInt((" + GetOperExpr(Op, Meta.Offset) + "))");
+
+                return "textureOffset(" + Sampler + ", " + Coords + ", " + Offset + ")" + ChString;
+            }
+            else
+            {
+                return "texture(" + Sampler + ", " + Coords + ")" + ChString;
+            }
+            throw new NotImplementedException($"Texture Suffix {Meta.TextureInstructionSuffix} is not implemented");
+
         }
 
         private string GetITexSamplerCoords(ShaderIrOp Op)
         {
-            return "ivec2(" + GetOperExpr(Op, Op.OperandA) + ", " +
-                              GetOperExpr(Op, Op.OperandB) + ")";
+            ShaderIrMetaTex Meta = (ShaderIrMetaTex)Op.MetaData;
+
+            switch (ImageUtils.GetCoordsCountTextureTarget(Meta.TextureTarget))
+            {
+                case 1:
+                    return GetOperExpr(Op, Meta.Coordinates[0]);
+                case 2:
+                    return "ivec2(" + GetOperExpr(Op, Meta.Coordinates[0]) + ", " + GetOperExpr(Op, Meta.Coordinates[1]) + ")";
+                case 3:
+                    return "ivec3(" + GetOperExpr(Op, Meta.Coordinates[0]) + ", " + GetOperExpr(Op, Meta.Coordinates[1]) + ", " + GetOperExpr(Op, Meta.Coordinates[2]) + ")";
+                default:
+                    throw new InvalidOperationException();
+            }
         }
 
         private string GetOperExpr(ShaderIrOp Op, ShaderIrNode Oper)
@@ -1289,22 +1573,6 @@ namespace Ryujinx.Graphics.Gal.Shader
                         if (Gpr.IsConst)
                         {
                             return "0";
-                        }
-                        break;
-                    }
-
-                    case ShaderIrOperImm Imm:
-                    {
-                        //For integer immediates being used as float,
-                        //it's better (for readability) to just return the float value.
-                        if (DstType == OperType.F32)
-                        {
-                            float Value = BitConverter.Int32BitsToSingle(Imm.Value);
-
-                            if (!float.IsNaN(Value) && !float.IsInfinity(Value))
-                            {
-                                return GetFloatConst(Value);
-                            }
                         }
                         break;
                     }

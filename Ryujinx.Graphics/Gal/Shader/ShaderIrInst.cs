@@ -49,6 +49,7 @@ namespace Ryujinx.Graphics.Gal.Shader
         Ipa,
         Texb,
         Texs,
+        Tld4,
         Trunc,
         F_End,
 

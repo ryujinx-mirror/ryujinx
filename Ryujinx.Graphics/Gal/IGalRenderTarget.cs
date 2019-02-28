@@ -25,16 +25,20 @@ namespace Ryujinx.Graphics.Gal
         void Render();
 
         void Copy(
-            long SrcKey,
-            long DstKey,
-            int  SrcX0,
-            int  SrcY0,
-            int  SrcX1,
-            int  SrcY1,
-            int  DstX0,
-            int  DstY0,
-            int  DstX1,
-            int  DstY1);
+            GalImage SrcImage,
+            GalImage DstImage,
+            long     SrcKey,
+            long     DstKey,
+            int      SrcLayer,
+            int      DstLayer,
+            int      SrcX0,
+            int      SrcY0,
+            int      SrcX1,
+            int      SrcY1,
+            int      DstX0,
+            int      DstY0,
+            int      DstX1,
+            int      DstY1);
 
         void Reinterpret(long Key, GalImage NewImage);
     }

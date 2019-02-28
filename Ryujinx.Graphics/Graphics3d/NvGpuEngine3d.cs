@@ -1,4 +1,5 @@
 using Ryujinx.Common;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
 using Ryujinx.Graphics.Texture;
@@ -190,7 +191,11 @@ namespace Ryujinx.Graphics.Graphics3d
             int Width  = ReadRegister(NvGpuEngine3dReg.FrameBufferNWidth  + FbIndex * 0x10);
             int Height = ReadRegister(NvGpuEngine3dReg.FrameBufferNHeight + FbIndex * 0x10);
 
-            int BlockDim = ReadRegister(NvGpuEngine3dReg.FrameBufferNBlockDim + FbIndex * 0x10);
+            int ArrayMode   = ReadRegister(NvGpuEngine3dReg.FrameBufferNArrayMode + FbIndex * 0x10);
+            int LayerCount  = ArrayMode & 0xFFFF;
+            int LayerStride = ReadRegister(NvGpuEngine3dReg.FrameBufferNLayerStride + FbIndex * 0x10);
+            int BaseLayer   = ReadRegister(NvGpuEngine3dReg.FrameBufferNBaseLayer + FbIndex * 0x10);
+            int BlockDim    = ReadRegister(NvGpuEngine3dReg.FrameBufferNBlockDim + FbIndex * 0x10);
 
             int GobBlockHeight = 1 << ((BlockDim >> 4) & 7);
 
@@ -210,7 +215,7 @@ namespace Ryujinx.Graphics.Graphics3d
 
             GalImageFormat Format = ImageUtils.ConvertSurface((GalSurfaceFormat)SurfFormat);
 
-            GalImage Image = new GalImage(Width, Height, 1, GobBlockHeight, Layout, Format);
+            GalImage Image = new GalImage(Width, Height, 1, 1, 1, GobBlockHeight, 1, Layout, Format, GalTextureTarget.TwoD);
 
             Gpu.ResourceManager.SendColorBuffer(Vmm, Key, FbIndex, Image);
 
@@ -264,7 +269,8 @@ namespace Ryujinx.Graphics.Graphics3d
 
             GalImageFormat Format = ImageUtils.ConvertZeta((GalZetaFormat)ZetaFormat);
 
-            GalImage Image = new GalImage(Width, Height, 1, GobBlockHeight, Layout, Format);
+            // TODO: Support non 2D?
+            GalImage Image = new GalImage(Width, Height, 1, 1, 1, GobBlockHeight, 1, Layout, Format, GalTextureTarget.TwoD);
 
             Gpu.ResourceManager.SendZetaBuffer(Vmm, Key, Image);
         }
@@ -600,7 +606,7 @@ namespace Ryujinx.Graphics.Graphics3d
                 }
 
                 Gpu.Renderer.Texture.Bind(Key, Index, Image);
-                Gpu.Renderer.Texture.SetSampler(Sampler);
+                Gpu.Renderer.Texture.SetSampler(Image, Sampler);
             }
         }
 

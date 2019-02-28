@@ -13,6 +13,6 @@ namespace Ryujinx.Graphics.Gal
 
         void Bind(long Key, int Index, GalImage Image);
 
-        void SetSampler(GalTextureSampler Sampler);
+        void SetSampler(GalImage Image, GalTextureSampler Sampler);
     }
 }
