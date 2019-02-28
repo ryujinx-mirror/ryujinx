@@ -8,7 +8,10 @@ namespace ChocolArm64.Translation
 {
     class ILMethodBuilder
     {
-        public LocalAlloc LocalAlloc { get; private set; }
+        private const int RegsCount = 32;
+        private const int RegsMask  = RegsCount - 1;
+
+        public RegisterUsage RegUsage { get; private set; }
 
         public ILGenerator Generator { get; private set; }
 
@@ -18,29 +21,47 @@ namespace ChocolArm64.Translation
 
         private string _subName;
 
+        public bool IsAarch64 { get; }
+
+        public bool IsSubComplete { get; }
+
         private int _localsCount;
 
-        public ILMethodBuilder(ILBlock[] ilBlocks, string subName)
+        public ILMethodBuilder(
+            ILBlock[] ilBlocks,
+            string    subName,
+            bool      isAarch64,
+            bool      isSubComplete = false)
         {
-            _ilBlocks = ilBlocks;
-            _subName  = subName;
+            _ilBlocks     = ilBlocks;
+            _subName      = subName;
+            IsAarch64     = isAarch64;
+            IsSubComplete = isSubComplete;
         }
 
-        public TranslatedSub GetSubroutine(TranslationTier tier)
+        public TranslatedSub GetSubroutine(TranslationTier tier, bool isWorthOptimizing)
         {
-            LocalAlloc = new LocalAlloc(_ilBlocks, _ilBlocks[0]);
+            RegUsage = new RegisterUsage();
+
+            RegUsage.BuildUses(_ilBlocks[0]);
 
             DynamicMethod method = new DynamicMethod(_subName, typeof(long), TranslatedSub.FixedArgTypes);
 
-            Generator = method.GetILGenerator();
+            long intNiRegsMask = RegUsage.GetIntNotInputs(_ilBlocks[0]);
+            long vecNiRegsMask = RegUsage.GetVecNotInputs(_ilBlocks[0]);
 
-            TranslatedSub subroutine = new TranslatedSub(method, tier);
+            TranslatedSub subroutine = new TranslatedSub(
+                method,
+                intNiRegsMask,
+                vecNiRegsMask,
+                tier,
+                isWorthOptimizing);
 
             _locals = new Dictionary<Register, int>();
 
             _localsCount = 0;
 
-            new ILOpCodeLoadState(_ilBlocks[0]).Emit(this);
+            Generator = method.GetILGenerator();
 
             foreach (ILBlock ilBlock in _ilBlocks)
             {
@@ -80,13 +101,13 @@ namespace ChocolArm64.Translation
 
         public static Register GetRegFromBit(int bit, RegisterType baseType)
         {
-            if (bit < 32)
+            if (bit < RegsCount)
             {
                 return new Register(bit, baseType);
             }
             else if (baseType == RegisterType.Int)
             {
-                return new Register(bit & 0x1f, RegisterType.Flag);
+                return new Register(bit & RegsMask, RegisterType.Flag);
             }
             else
             {
@@ -96,7 +117,7 @@ namespace ChocolArm64.Translation
 
         public static bool IsRegIndex(int index)
         {
-            return (uint)index < 32;
+            return (uint)index < RegsCount;
         }
     }
 }

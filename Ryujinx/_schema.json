@@ -17,6 +17,7 @@
     "enable_vsync",
     "enable_multicore_scheduling",
     "enable_fs_integrity_checks",
+    "enable_aggressive_cpu_opts",
     "controller_type",
     "keyboard_controls",
     "gamepad_controls"
@@ -393,6 +394,17 @@
       "type": "boolean",
       "title": "Enable Filesystem Integrity Checks",
       "description": "Enables integrity checks on Game content files. Only applies to ROMs loaded as XCI files",
+      "default": true,
+      "examples": [
+        true,
+        false
+      ]
+    },
+    "enable_aggressive_cpu_opts": {
+      "$id": "#/properties/enable_aggressive_cpu_opts",
+      "type": "boolean",
+      "title": "Enable Aggressive CPU Optimizations",
+      "description": "Enable or disable aggressive CPU optimizations",
       "default": true,
       "examples": [
         true,

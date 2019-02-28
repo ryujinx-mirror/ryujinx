@@ -10,11 +10,18 @@ namespace ChocolArm64.Translation
 
         public TranslationTier Tier { get; }
 
-        public TranslatorQueueItem(long position, ExecutionMode mode, TranslationTier tier)
+        public bool IsComplete { get; }
+
+        public TranslatorQueueItem(
+            long            position,
+            ExecutionMode   mode,
+            TranslationTier tier,
+            bool            isComplete = false)
         {
-            Position = position;
-            Mode     = mode;
-            Tier     = tier;
+            Position   = position;
+            Mode       = mode;
+            Tier       = tier;
+            IsComplete = isComplete;
         }
     }
 }

@@ -7,15 +7,24 @@ namespace ChocolArm64.Translation
     {
         private ILBlock _block;
 
-        public ILOpCodeLoadState(ILBlock block)
+        private bool _isSubEntry;
+
+        public ILOpCodeLoadState(ILBlock block, bool isSubEntry = false)
         {
-            _block = block;
+            _block      = block;
+            _isSubEntry = isSubEntry;
         }
 
         public void Emit(ILMethodBuilder context)
         {
-            long intInputs = context.LocalAlloc.GetIntInputs(_block);
-            long vecInputs = context.LocalAlloc.GetVecInputs(_block);
+            long intInputs = context.RegUsage.GetIntInputs(_block);
+            long vecInputs = context.RegUsage.GetVecInputs(_block);
+
+            if (Optimizations.AssumeStrictAbiCompliance && context.IsSubComplete)
+            {
+                intInputs = RegisterUsage.ClearCallerSavedIntRegs(intInputs, context.IsAarch64);
+                vecInputs = RegisterUsage.ClearCallerSavedVecRegs(vecInputs, context.IsAarch64);
+            }
 
             LoadLocals(context, intInputs, RegisterType.Int);
             LoadLocals(context, vecInputs, RegisterType.Vector);

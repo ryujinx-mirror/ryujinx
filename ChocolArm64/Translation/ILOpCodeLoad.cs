@@ -5,28 +5,28 @@ namespace ChocolArm64.Translation
 {
     struct ILOpCodeLoad : IILEmit
     {
-        public int Index { get; private set; }
+        public int Index { get; }
 
-        public IoType IoType { get; private set; }
+        public VarType VarType { get; }
 
-        public RegisterSize RegisterSize { get; private set; }
+        public RegisterSize RegisterSize { get; }
 
-        public ILOpCodeLoad(int index, IoType ioType, RegisterSize registerSize = 0)
+        public ILOpCodeLoad(int index, VarType varType, RegisterSize registerSize = 0)
         {
             Index        = index;
-            IoType       = ioType;
+            VarType      = varType;
             RegisterSize = registerSize;
         }
 
         public void Emit(ILMethodBuilder context)
         {
-            switch (IoType)
+            switch (VarType)
             {
-                case IoType.Arg: context.Generator.EmitLdarg(Index); break;
+                case VarType.Arg: context.Generator.EmitLdarg(Index); break;
 
-                case IoType.Flag:   EmitLdloc(context, Index, RegisterType.Flag);   break;
-                case IoType.Int:    EmitLdloc(context, Index, RegisterType.Int);    break;
-                case IoType.Vector: EmitLdloc(context, Index, RegisterType.Vector); break;
+                case VarType.Flag:   EmitLdloc(context, Index, RegisterType.Flag);   break;
+                case VarType.Int:    EmitLdloc(context, Index, RegisterType.Int);    break;
+                case VarType.Vector: EmitLdloc(context, Index, RegisterType.Vector); break;
             }
         }
 

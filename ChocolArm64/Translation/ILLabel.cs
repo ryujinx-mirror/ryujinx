@@ -6,7 +6,7 @@ namespace ChocolArm64.Translation
     {
         private bool _hasLabel;
 
-        private Label _lbl;
+        private Label _label;
 
         public void Emit(ILMethodBuilder context)
         {
@@ -17,12 +17,12 @@ namespace ChocolArm64.Translation
         {
             if (!_hasLabel)
             {
-                _lbl = context.Generator.DefineLabel();
+                _label = context.Generator.DefineLabel();
 
                 _hasLabel = true;
             }
 
-            return _lbl;
+            return _label;
         }
     }
 }

@@ -4,16 +4,16 @@ namespace ChocolArm64.Translation
 {
     struct ILOpCode : IILEmit
     {
-        private OpCode _ilOp;
+        public OpCode ILOp { get; }
 
         public ILOpCode(OpCode ilOp)
         {
-            _ilOp = ilOp;
+            ILOp = ilOp;
         }
 
         public void Emit(ILMethodBuilder context)
         {
-            context.Generator.Emit(_ilOp);
+            context.Generator.Emit(ILOp);
         }
     }
 }

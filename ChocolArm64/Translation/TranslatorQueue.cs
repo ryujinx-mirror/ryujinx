@@ -1,3 +1,4 @@
+using ChocolArm64.State;
 using System.Collections.Concurrent;
 using System.Threading;
 
@@ -5,10 +6,6 @@ namespace ChocolArm64.Translation
 {
     class TranslatorQueue
     {
-        //This is the maximum number of functions to be translated that the queue can hold.
-        //The value may need some tuning to find the sweet spot.
-        private const int MaxQueueSize = 1024;
-
         private ConcurrentStack<TranslatorQueueItem>[] _translationQueue;
 
         private ManualResetEvent _queueDataReceivedEvent;
@@ -27,14 +24,11 @@ namespace ChocolArm64.Translation
             _queueDataReceivedEvent = new ManualResetEvent(false);
         }
 
-        public void Enqueue(TranslatorQueueItem item)
+        public void Enqueue(long position, ExecutionMode mode, TranslationTier tier, bool isComplete)
         {
-            ConcurrentStack<TranslatorQueueItem> queue = _translationQueue[(int)item.Tier];
+            TranslatorQueueItem item = new TranslatorQueueItem(position, mode, tier, isComplete);
 
-            if (queue.Count >= MaxQueueSize)
-            {
-                queue.TryPop(out _);
-            }
+            ConcurrentStack<TranslatorQueueItem> queue = _translationQueue[(int)tier];
 
             queue.Push(item);
 

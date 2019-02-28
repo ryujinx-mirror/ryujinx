@@ -5,9 +5,9 @@ namespace ChocolArm64.Translation
 {
     struct ILOpCodeCall : IILEmit
     {
-        public MethodInfo Info { get; private set; }
+        public MethodInfo Info { get; }
 
-        public bool IsVirtual { get; private set; }
+        public bool IsVirtual { get; }
 
         public ILOpCodeCall(MethodInfo info, bool isVirtual)
         {

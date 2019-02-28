@@ -5,7 +5,7 @@ namespace ChocolArm64.Translation
 {
     struct ILOpCodeLoadField : IILEmit
     {
-        public FieldInfo Info { get; private set; }
+        public FieldInfo Info { get; }
 
         public ILOpCodeLoadField(FieldInfo info)
         {

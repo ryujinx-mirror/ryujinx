@@ -29,18 +29,21 @@
     // System Language list: https://gist.github.com/HorrorTroll/b6e4a88d774c3c9b3bdf54d79a7ca43b
     "system_language": "AmericanEnglish",
 
-    // Enable or Disable Docked Mode
+    // Enable or disable Docked Mode
     "docked_mode": false,
-    
-    // Enable or Disable Game Vsync
+
+    // Enable or disable Game Vsync
     "enable_vsync": true,
-    
-    // Enable or Disable Multi-core scheduling of threads
+
+    // Enable or disable Multi-core scheduling of threads
     "enable_multicore_scheduling": true,
-    
+
     // Enable integrity checks on Switch content files
     "enable_fs_integrity_checks": true,
-    
+
+    // Enable or disable aggressive CPU optimizations
+    "enable_aggressive_cpu_opts": true,
+
     // The primary controller's type
     // Supported Values: Handheld, ProController, NpadPair, NpadLeft, NpadRight
     "controller_type": "Handheld",

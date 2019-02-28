@@ -87,6 +87,11 @@ namespace Ryujinx
         public bool EnableFsIntegrityChecks { get; private set; }
 
         /// <summary>
+        /// Enable or Disable aggressive CPU optimizations
+        /// </summary>
+        public bool EnableAggressiveCpuOpts { get; private set; }
+
+        /// <summary>
         ///  The primary controller's type
         /// </summary>
         public HidControllerType ControllerType { get; private set; }
@@ -196,6 +201,11 @@ namespace Ryujinx
             device.System.FsIntegrityCheckLevel = Instance.EnableFsIntegrityChecks
                 ? IntegrityCheckLevel.ErrorOnInvalid
                 : IntegrityCheckLevel.None;
+
+            if (Instance.EnableAggressiveCpuOpts)
+            {
+                Optimizations.AssumeStrictAbiCompliance = true;
+            }
 
             if(Instance.GamepadControls.Enabled)
             {

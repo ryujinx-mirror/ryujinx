@@ -39,7 +39,6 @@ namespace ChocolArm64.Instructions
 
             context.EmitLdc_I(op.Position + 4);
             context.EmitStint(RegisterAlias.Lr);
-            context.EmitStoreState();
 
             EmitCall(context, op.Imm);
         }
@@ -59,6 +58,8 @@ namespace ChocolArm64.Instructions
         public static void Br(ILEmitterCtx context)
         {
             OpCodeBReg64 op = (OpCodeBReg64)context.CurrOp;
+
+            context.HasIndirectJump = true;
 
             context.EmitStoreState();
             context.EmitLdintzr(op.Rn);

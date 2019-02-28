@@ -1,6 +1,6 @@
 namespace ChocolArm64.Translation
 {
-    enum IoType
+    enum VarType
     {
         Arg,
         Flag,

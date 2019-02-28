@@ -4,13 +4,13 @@ namespace ChocolArm64.Translation
 {
     class ILBlock : IILEmit
     {
-        public long IntInputs    { get; private set; }
-        public long IntOutputs   { get; private set; }
-        public long IntAwOutputs { get; private set; }
+        public  long IntInputs  { get; private set; }
+        public  long IntOutputs { get; private set; }
+        private long _intAwOutputs;
 
-        public long VecInputs    { get; private set; }
-        public long VecOutputs   { get; private set; }
-        public long VecAwOutputs { get; private set; }
+        public  long VecInputs  { get; private set; }
+        public  long VecOutputs { get; private set; }
+        private long _vecAwOutputs;
 
         public bool HasStateStore { get; private set; }
 
@@ -34,25 +34,25 @@ namespace ChocolArm64.Translation
                 //opcodes emitted by each ARM instruction.
                 //We can only consider the new outputs for doing input elimination
                 //after all the CIL opcodes used by the instruction being emitted.
-                IntAwOutputs = IntOutputs;
-                VecAwOutputs = VecOutputs;
+                _intAwOutputs = IntOutputs;
+                _vecAwOutputs = VecOutputs;
             }
             else if (emitter is ILOpCodeLoad ld && ILMethodBuilder.IsRegIndex(ld.Index))
             {
-                switch (ld.IoType)
+                switch (ld.VarType)
                 {
-                    case IoType.Flag:   IntInputs |= ((1L << ld.Index) << 32) & ~IntAwOutputs; break;
-                    case IoType.Int:    IntInputs |=  (1L << ld.Index)        & ~IntAwOutputs; break;
-                    case IoType.Vector: VecInputs |=  (1L << ld.Index)        & ~VecAwOutputs; break;
+                    case VarType.Flag:   IntInputs |= ((1L << ld.Index) << 32) & ~_intAwOutputs; break;
+                    case VarType.Int:    IntInputs |=  (1L << ld.Index)        & ~_intAwOutputs; break;
+                    case VarType.Vector: VecInputs |=  (1L << ld.Index)        & ~_vecAwOutputs; break;
                 }
             }
             else if (emitter is ILOpCodeStore st && ILMethodBuilder.IsRegIndex(st.Index))
             {
-                switch (st.IoType)
+                switch (st.VarType)
                 {
-                    case IoType.Flag:   IntOutputs |= (1L << st.Index) << 32; break;
-                    case IoType.Int:    IntOutputs |=  1L << st.Index;        break;
-                    case IoType.Vector: VecOutputs |=  1L << st.Index;        break;
+                    case VarType.Flag:   IntOutputs |= (1L << st.Index) << 32; break;
+                    case VarType.Int:    IntOutputs |=  1L << st.Index;        break;
+                    case VarType.Vector: VecOutputs |=  1L << st.Index;        break;
                 }
             }
             else if (emitter is ILOpCodeStoreState)

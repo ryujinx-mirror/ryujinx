@@ -16,6 +16,8 @@ namespace ChocolArm64.Translation
 
         private ImmVal _value;
 
+        public long Value => _value.I8;
+
         private enum ConstType
         {
             Int32,
