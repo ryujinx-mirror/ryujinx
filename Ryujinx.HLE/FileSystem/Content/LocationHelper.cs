@@ -14,9 +14,9 @@ namespace Ryujinx.HLE.FileSystem.Content
             switch (switchContentPath)
             {
                 case ContentPath.SystemContent:
-                    return Path.Combine(fileSystem.GetBasePath(), SystemNandPath, "Contents");
+                    return Path.Combine(basePath, SystemNandPath, "Contents");
                 case ContentPath.UserContent:
-                    return Path.Combine(fileSystem.GetBasePath(), UserNandPath, "Contents");
+                    return Path.Combine(basePath, UserNandPath, "Contents");
                 case ContentPath.SdCardContent:
                     return Path.Combine(fileSystem.GetSdCardPath(), "Nintendo", "Contents");
                 case ContentPath.System:
