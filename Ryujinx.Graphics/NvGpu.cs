@@ -8,6 +8,8 @@ namespace Ryujinx.Graphics
 {
     public class NvGpu
     {
+        public const int MaxViewportSize = 0x3FFF;
+
         public IGalRenderer Renderer { get; private set; }
 
         public GpuResourceManager ResourceManager { get; private set; }

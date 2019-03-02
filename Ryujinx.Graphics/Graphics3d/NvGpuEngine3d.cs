@@ -25,7 +25,12 @@ namespace Ryujinx.Graphics.Graphics3d
 
         private ConstBuffer[][] ConstBuffers;
 
-        // Height kept for flipping y axis
+        // Viewport dimensions kept for scissor test limits
+        private int ViewportX0 = 0;
+        private int ViewportY0 = 0;
+        private int ViewportX1 = 0;
+        private int ViewportY1 = 0;
+        private int ViewportWidth = 0;
         private int ViewportHeight = 0;
 
         private int CurrentInstance = 0;
@@ -98,7 +103,14 @@ namespace Ryujinx.Graphics.Graphics3d
 
             GalPipelineState State = new GalPipelineState();
 
+            // Framebuffer must be run configured because viewport dimensions may be used in other methods
             SetFrameBuffer(State);
+
+            for (int FbIndex = 0; FbIndex < 8; FbIndex++)
+            {
+                SetFrameBuffer(Vmm, FbIndex);
+            }
+
             SetFrontFace(State);
             SetCullFace(State);
             SetDepth(State);
@@ -107,11 +119,6 @@ namespace Ryujinx.Graphics.Graphics3d
             SetBlending(State);
             SetColorMask(State);
             SetPrimitiveRestart(State);
-
-            for (int FbIndex = 0; FbIndex < 8; FbIndex++)
-            {
-                SetFrameBuffer(Vmm, FbIndex);
-            }
 
             SetZeta(Vmm);
 
@@ -207,11 +214,11 @@ namespace Ryujinx.Graphics.Graphics3d
             float SX = ReadRegisterFloat(NvGpuEngine3dReg.ViewportNScaleX + FbIndex * 8);
             float SY = ReadRegisterFloat(NvGpuEngine3dReg.ViewportNScaleY + FbIndex * 8);
 
-            int VpX = (int)MathF.Max(0, TX - MathF.Abs(SX));
-            int VpY = (int)MathF.Max(0, TY - MathF.Abs(SY));
+            ViewportX0 = (int)MathF.Max(0, TX - MathF.Abs(SX));
+            ViewportY0 = (int)MathF.Max(0, TY - MathF.Abs(SY));
 
-            int VpW = (int)(TX + MathF.Abs(SX)) - VpX;
-            int VpH = (int)(TY + MathF.Abs(SY)) - VpY;
+            ViewportX1 = (int)(TX + MathF.Abs(SX));
+            ViewportY1 = (int)(TY + MathF.Abs(SY));
 
             GalImageFormat Format = ImageUtils.ConvertSurface((GalSurfaceFormat)SurfFormat);
 
@@ -219,9 +226,7 @@ namespace Ryujinx.Graphics.Graphics3d
 
             Gpu.ResourceManager.SendColorBuffer(Vmm, Key, FbIndex, Image);
 
-            ViewportHeight = VpH;
-
-            Gpu.Renderer.RenderTarget.SetViewport(FbIndex, VpX, VpY, VpW, VpH);
+            Gpu.Renderer.RenderTarget.SetViewport(FbIndex, ViewportX0, ViewportY0, ViewportX1 - ViewportX0, ViewportY1 - ViewportY0);
         }
 
         private void SetFrameBuffer(GalPipelineState State)
@@ -423,38 +428,83 @@ namespace Ryujinx.Graphics.Graphics3d
 
         private void SetScissor(GalPipelineState State)
         {
-            // FIXME: Stubbed, only the first scissor test is valid without a geometry shader loaded. At time of writing geometry shaders are also stubbed.
-            // Once geometry shaders are fixed it should be equal to GalPipelineState.RenderTargetCount when shader loaded, otherwise equal to 1
-            State.ScissorTestCount = 1;
+            int count = 0;
 
-            for (int Index = 0; Index < State.ScissorTestCount; Index++)
+            for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
             {
                 State.ScissorTestEnabled[Index] = ReadRegisterBool(NvGpuEngine3dReg.ScissorEnable + Index * 4);
 
                 if (State.ScissorTestEnabled[Index])
                 {
-                    uint ScissorHorizontal        = (uint)ReadRegister(NvGpuEngine3dReg.ScissorHorizontal + Index * 4);
-                    uint ScissorVertical          = (uint)ReadRegister(NvGpuEngine3dReg.ScissorVertical + Index * 4);
+                    uint ScissorHorizontal = (uint)ReadRegister(NvGpuEngine3dReg.ScissorHorizontal + Index * 4);
+                    uint ScissorVertical   = (uint)ReadRegister(NvGpuEngine3dReg.ScissorVertical   + Index * 4);
 
-                    State.ScissorTestX[Index]     = (int)((ScissorHorizontal & 0xFFFF) * State.FlipX);                          // X, lower 16 bits
-                    State.ScissorTestWidth[Index] = (int)((ScissorHorizontal >> 16) * State.FlipX) - State.ScissorTestX[Index]; // Width, right side is upper 16 bits
+                    int left  = (int)(ScissorHorizontal & 0xFFFF); // Left, lower 16 bits
+                    int right = (int)(ScissorHorizontal >> 16);    // Right, upper 16 bits
 
-                    State.ScissorTestY[Index]      = (int)((ScissorVertical & 0xFFFF));                                         // Y, lower 16 bits
-                    State.ScissorTestHeight[Index] = (int)((ScissorVertical >> 16)) - State.ScissorTestY[Index];                // Height, top side is upper 16 bits
+                    int bottom = (int)(ScissorVertical & 0xFFFF); // Bottom, lower 16 bits
+                    int top    = (int)(ScissorVertical >> 16);    // Top, upper 16 bits
 
-                    // Y coordinates may have to be flipped
-                    if ((int)State.FlipY == -1)
+                    int width  = Math.Abs(right - left);
+                    int height = Math.Abs(top   - bottom);
+
+                    // If the scissor test covers the whole possible viewport, i.e. uninititalized, disable scissor test
+                    if ((width > NvGpu.MaxViewportSize && height > NvGpu.MaxViewportSize) || width <= 0 || height <= 0)
                     {
-                        State.ScissorTestY[Index] = ViewportHeight - State.ScissorTestY[Index] - State.ScissorTestHeight[Index];
-
-                        // Handle negative viewpont coordinate
-                        if (State.ScissorTestY[Index] < 0)
-                        {
-                            State.ScissorTestY[Index] = 0;
-                        }
+                        State.ScissorTestEnabled[Index] = false;
+                        continue;
                     }
+
+                    // Keep track of how many scissor tests are active.
+                    // If only 1, and it's the first user should apply to all viewports
+                    count++;
+
+                    // Flip X
+                    if (State.FlipX == -1)
+                    {
+                        left  = ViewportX1 - (left  - ViewportX0);
+                        right = ViewportX1 - (right - ViewportX0);
+                    }
+                    
+                    // Ensure X is in the right order
+                    if (left > right)
+                    {
+                        int temp = left;
+                        left     = right;
+                        right    = temp;
+                    }
+
+                    // Flip Y
+                    if (State.FlipY == -1)
+                    {
+                        bottom = ViewportY1 - (bottom - ViewportY0);
+                        top    = ViewportY1 - (top - ViewportY0);
+                    }
+
+                    // Ensure Y is in the right order
+                    if (bottom > top)
+                    {
+                        int temp = top;
+                        top      = bottom;
+                        bottom   = temp;
+                    }
+
+                    // Handle out of active viewport dimensions
+                    left   = Math.Clamp(left,   ViewportX0, ViewportX1);
+                    right  = Math.Clamp(right,  ViewportX0, ViewportX1);
+                    top    = Math.Clamp(top,    ViewportY0, ViewportY1);
+                    bottom = Math.Clamp(bottom, ViewportY0, ViewportY1);
+
+                    // Save values to state
+                    State.ScissorTestX[Index] = left;
+                    State.ScissorTestY[Index] = bottom;
+
+                    State.ScissorTestWidth[Index]  = right - left;
+                    State.ScissorTestHeight[Index] = top - bottom;
                 }
             }
+
+            State.ScissorTestCount = count;
         }
 
         private void SetBlending(GalPipelineState State)
@@ -996,6 +1046,9 @@ namespace Ryujinx.Graphics.Graphics3d
 
                 Gpu.Renderer.Rasterizer.DrawArrays(VertexFirst, VertexCount, PrimType);
             }
+
+            // Reset pipeline for host OpenGL calls
+            Gpu.Renderer.Pipeline.Unbind(State);
 
             //Is the GPU really clearing those registers after draw?
             WriteRegister(NvGpuEngine3dReg.IndexBatchFirst, 0);
