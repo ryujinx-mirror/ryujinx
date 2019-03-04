@@ -177,6 +177,24 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                             data.Length,
                             data);
                         break;
+                    case TextureTarget.TextureCubeMap:
+                        Span<byte> array = new Span<byte>(data);
+
+                        int faceSize = ImageUtils.GetSize(image) / 6;
+
+                        for (int Face = 0; Face < 6; Face++)
+                        {
+                            GL.CompressedTexImage2D(
+                                TextureTarget.TextureCubeMapPositiveX + Face,
+                                level,
+                                internalFmt,
+                                image.Width,
+                                image.Height,
+                                border,
+                                faceSize,
+                                array.Slice(Face * faceSize, faceSize).ToArray());
+                        }
+                        break;
                     default:
                         throw new NotImplementedException($"Unsupported texture target type: {target}");
                 }
