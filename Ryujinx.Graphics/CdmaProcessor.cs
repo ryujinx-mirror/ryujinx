@@ -8,41 +8,41 @@ namespace Ryujinx.Graphics
         private const int MethSetMethod = 0x10;
         private const int MethSetData   = 0x11;
 
-        private NvGpu Gpu;
+        private NvGpu _gpu;
 
-        public CdmaProcessor(NvGpu Gpu)
+        public CdmaProcessor(NvGpu gpu)
         {
-            this.Gpu = Gpu;
+            _gpu = gpu;
         }
 
-        public void PushCommands(NvGpuVmm Vmm, int[] CmdBuffer)
+        public void PushCommands(NvGpuVmm vmm, int[] cmdBuffer)
         {
-            List<ChCommand> Commands = new List<ChCommand>();
+            List<ChCommand> commands = new List<ChCommand>();
 
-            ChClassId CurrentClass = 0;
+            ChClassId currentClass = 0;
 
-            for (int Index = 0; Index < CmdBuffer.Length; Index++)
+            for (int index = 0; index < cmdBuffer.Length; index++)
             {
-                int Cmd = CmdBuffer[Index];
+                int cmd = cmdBuffer[index];
 
-                int Value        = (Cmd >> 0)  & 0xffff;
-                int MethodOffset = (Cmd >> 16) & 0xfff;
+                int value        = (cmd >> 0)  & 0xffff;
+                int methodOffset = (cmd >> 16) & 0xfff;
 
-                ChSubmissionMode SubmissionMode = (ChSubmissionMode)((Cmd >> 28) & 0xf);
+                ChSubmissionMode submissionMode = (ChSubmissionMode)((cmd >> 28) & 0xf);
 
-                switch (SubmissionMode)
+                switch (submissionMode)
                 {
-                    case ChSubmissionMode.SetClass: CurrentClass = (ChClassId)(Value >> 6); break;
+                    case ChSubmissionMode.SetClass: currentClass = (ChClassId)(value >> 6); break;
 
                     case ChSubmissionMode.Incrementing:
                     {
-                        int Count = Value;
+                        int count = value;
 
-                        for (int ArgIdx = 0; ArgIdx < Count; ArgIdx++)
+                        for (int argIdx = 0; argIdx < count; argIdx++)
                         {
-                            int Argument = CmdBuffer[++Index];
+                            int argument = cmdBuffer[++index];
 
-                            Commands.Add(new ChCommand(CurrentClass, MethodOffset + ArgIdx, Argument));
+                            commands.Add(new ChCommand(currentClass, methodOffset + argIdx, argument));
                         }
 
                         break;
@@ -50,44 +50,44 @@ namespace Ryujinx.Graphics
 
                     case ChSubmissionMode.NonIncrementing:
                     {
-                        int Count = Value;
+                        int count = value;
 
-                        int[] Arguments = new int[Count];
+                        int[] arguments = new int[count];
 
-                        for (int ArgIdx = 0; ArgIdx < Count; ArgIdx++)
+                        for (int argIdx = 0; argIdx < count; argIdx++)
                         {
-                            Arguments[ArgIdx] = CmdBuffer[++Index];
+                            arguments[argIdx] = cmdBuffer[++index];
                         }
 
-                        Commands.Add(new ChCommand(CurrentClass, MethodOffset, Arguments));
+                        commands.Add(new ChCommand(currentClass, methodOffset, arguments));
 
                         break;
                     }
                 }
             }
 
-            ProcessCommands(Vmm, Commands.ToArray());
+            ProcessCommands(vmm, commands.ToArray());
         }
 
-        private void ProcessCommands(NvGpuVmm Vmm, ChCommand[] Commands)
+        private void ProcessCommands(NvGpuVmm vmm, ChCommand[] commands)
         {
-            int MethodOffset = 0;
+            int methodOffset = 0;
 
-            foreach (ChCommand Command in Commands)
+            foreach (ChCommand command in commands)
             {
-                switch (Command.MethodOffset)
+                switch (command.MethodOffset)
                 {
-                    case MethSetMethod: MethodOffset = Command.Arguments[0]; break;
+                    case MethSetMethod: methodOffset = command.Arguments[0]; break;
 
                     case MethSetData:
                     {
-                        if (Command.ClassId == ChClassId.NvDec)
+                        if (command.ClassId == ChClassId.NvDec)
                         {
-                            Gpu.VideoDecoder.Process(Vmm, MethodOffset, Command.Arguments);
+                            _gpu.VideoDecoder.Process(vmm, methodOffset, command.Arguments);
                         }
-                        else if (Command.ClassId == ChClassId.GraphicsVic)
+                        else if (command.ClassId == ChClassId.GraphicsVic)
                         {
-                            Gpu.VideoImageComposer.Process(Vmm, MethodOffset, Command.Arguments);
+                            _gpu.VideoImageComposer.Process(vmm, methodOffset, command.Arguments);
                         }
 
                         break;

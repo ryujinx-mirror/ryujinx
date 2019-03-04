@@ -25,63 +25,63 @@ namespace Ryujinx.Graphics.Gal
         public GalTextureTarget TextureTarget;
 
         public GalImage(
-            int              Width,
-            int              Height,
-            int              Depth,
-            int              LayerCount,
-            int              TileWidth,
-            int              GobBlockHeight,
-            int              GobBlockDepth,
-            GalMemoryLayout  Layout,
-            GalImageFormat   Format,
-            GalTextureTarget TextureTarget,
-            int              MaxMipmapLevel = 1,
-            GalTextureSource XSource        = GalTextureSource.Red,
-            GalTextureSource YSource        = GalTextureSource.Green,
-            GalTextureSource ZSource        = GalTextureSource.Blue,
-            GalTextureSource WSource        = GalTextureSource.Alpha)
+            int              width,
+            int              height,
+            int              depth,
+            int              layerCount,
+            int              tileWidth,
+            int              gobBlockHeight,
+            int              gobBlockDepth,
+            GalMemoryLayout  layout,
+            GalImageFormat   format,
+            GalTextureTarget textureTarget,
+            int              maxMipmapLevel = 1,
+            GalTextureSource xSource        = GalTextureSource.Red,
+            GalTextureSource ySource        = GalTextureSource.Green,
+            GalTextureSource zSource        = GalTextureSource.Blue,
+            GalTextureSource wSource        = GalTextureSource.Alpha)
         {
-            this.Width          = Width;
-            this.Height         = Height;
-            this.LayerCount     = LayerCount;
-            this.Depth          = Depth;
-            this.TileWidth      = TileWidth;
-            this.GobBlockHeight = GobBlockHeight;
-            this.GobBlockDepth  = GobBlockDepth;
-            this.Layout         = Layout;
-            this.Format         = Format;
-            this.MaxMipmapLevel = MaxMipmapLevel;
-            this.XSource        = XSource;
-            this.YSource        = YSource;
-            this.ZSource        = ZSource;
-            this.WSource        = WSource;
-            this.TextureTarget  = TextureTarget;
+            Width          = width;
+            Height         = height;
+            LayerCount     = layerCount;
+            Depth          = depth;
+            TileWidth      = tileWidth;
+            GobBlockHeight = gobBlockHeight;
+            GobBlockDepth  = gobBlockDepth;
+            Layout         = layout;
+            Format         = format;
+            MaxMipmapLevel = maxMipmapLevel;
+            XSource        = xSource;
+            YSource        = ySource;
+            ZSource        = zSource;
+            WSource        = wSource;
+            TextureTarget  = textureTarget;
 
-            Pitch = ImageUtils.GetPitch(Format, Width);
+            Pitch = ImageUtils.GetPitch(format, width);
         }
 
-        public bool SizeMatches(GalImage Image, bool IgnoreLayer = false)
+        public bool SizeMatches(GalImage image, bool ignoreLayer = false)
         {
             if (ImageUtils.GetBytesPerPixel(Format) !=
-                ImageUtils.GetBytesPerPixel(Image.Format))
+                ImageUtils.GetBytesPerPixel(image.Format))
             {
                 return false;
             }
 
             if (ImageUtils.GetAlignedWidth(this) !=
-                ImageUtils.GetAlignedWidth(Image))
+                ImageUtils.GetAlignedWidth(image))
             {
                 return false;
             }
 
-            bool Result = Height == Image.Height && Depth == Image.Depth;
+            bool result = Height == image.Height && Depth == image.Depth;
 
-            if (!IgnoreLayer)
+            if (!ignoreLayer)
             {
-                Result = Result && LayerCount == Image.LayerCount;
+                result = result && LayerCount == image.LayerCount;
             }
 
-            return Result;
+            return result;
         }
     }
 }

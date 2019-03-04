@@ -6,6 +6,6 @@ namespace Ryujinx.Graphics.Graphics3d
     {
         int[] Registers { get; }
 
-        void CallMethod(NvGpuVmm Vmm, GpuMethodCall MethCall);
+        void CallMethod(NvGpuVmm vmm, GpuMethodCall methCall);
     }
 }

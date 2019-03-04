@@ -10,98 +10,98 @@ namespace Ryujinx.Graphics.Texture
 
         private const int GobSize = GobWidth * GobHeight;
 
-        private int TexWidth;
-        private int TexHeight;
-        private int TexDepth;
-        private int TexGobBlockHeight;
-        private int TexGobBlockDepth;
-        private int TexBpp;
+        private int _texWidth;
+        private int _texHeight;
+        private int _texDepth;
+        private int _texGobBlockHeight;
+        private int _texGobBlockDepth;
+        private int _texBpp;
 
-        private int BhMask;
-        private int BdMask;
+        private int _bhMask;
+        private int _bdMask;
 
-        private int BhShift;
-        private int BdShift;
-        private int BppShift;
+        private int _bhShift;
+        private int _bdShift;
+        private int _bppShift;
 
-        private int XShift;
+        private int _xShift;
 
-        private int RobSize;
-        private int SliceSize;
+        private int _robSize;
+        private int _sliceSize;
 
-        private int BaseOffset;
+        private int _baseOffset;
 
         public BlockLinearSwizzle(
-            int Width,
-            int Height,
-            int Depth,
-            int GobBlockHeight,
-            int GobBlockDepth,
-            int Bpp)
+            int width,
+            int height,
+            int depth,
+            int gobBlockHeight,
+            int gobBlockDepth,
+            int bpp)
         {
-            TexWidth          = Width;
-            TexHeight         = Height;
-            TexDepth          = Depth;
-            TexGobBlockHeight = GobBlockHeight;
-            TexGobBlockDepth  = GobBlockDepth;
-            TexBpp            = Bpp;
+            _texWidth          = width;
+            _texHeight         = height;
+            _texDepth          = depth;
+            _texGobBlockHeight = gobBlockHeight;
+            _texGobBlockDepth  = gobBlockDepth;
+            _texBpp            = bpp;
 
-            BppShift = BitUtils.CountTrailingZeros32(Bpp);
+            _bppShift = BitUtils.CountTrailingZeros32(bpp);
 
             SetMipLevel(0);
         }
 
-        public void SetMipLevel(int Level)
+        public void SetMipLevel(int level)
         {
-            BaseOffset = GetMipOffset(Level);
+            _baseOffset = GetMipOffset(level);
 
-            int Width  = Math.Max(1, TexWidth  >> Level);
-            int Height = Math.Max(1, TexHeight >> Level);
-            int Depth  = Math.Max(1, TexDepth  >> Level);
+            int width  = Math.Max(1, _texWidth  >> level);
+            int height = Math.Max(1, _texHeight >> level);
+            int depth  = Math.Max(1, _texDepth  >> level);
 
-            GobBlockSizes GbSizes = AdjustGobBlockSizes(Height, Depth);
+            GobBlockSizes gbSizes = AdjustGobBlockSizes(height, depth);
 
-            BhMask = GbSizes.Height - 1;
-            BdMask = GbSizes.Depth  - 1;
+            _bhMask = gbSizes.Height - 1;
+            _bdMask = gbSizes.Depth  - 1;
 
-            BhShift = BitUtils.CountTrailingZeros32(GbSizes.Height);
-            BdShift = BitUtils.CountTrailingZeros32(GbSizes.Depth);
+            _bhShift = BitUtils.CountTrailingZeros32(gbSizes.Height);
+            _bdShift = BitUtils.CountTrailingZeros32(gbSizes.Depth);
 
-            XShift = BitUtils.CountTrailingZeros32(GobSize * GbSizes.Height * GbSizes.Depth);
+            _xShift = BitUtils.CountTrailingZeros32(GobSize * gbSizes.Height * gbSizes.Depth);
 
-            RobAndSliceSizes GsSizes = GetRobAndSliceSizes(Width, Height, GbSizes);
+            RobAndSliceSizes gsSizes = GetRobAndSliceSizes(width, height, gbSizes);
 
-            RobSize   = GsSizes.RobSize;
-            SliceSize = GsSizes.SliceSize;
+            _robSize   = gsSizes.RobSize;
+            _sliceSize = gsSizes.SliceSize;
         }
 
-        public int GetImageSize(int MipsCount)
+        public int GetImageSize(int mipsCount)
         {
-            int Size = GetMipOffset(MipsCount);
+            int size = GetMipOffset(mipsCount);
 
-            Size = (Size + 0x1fff) & ~0x1fff;
+            size = (size + 0x1fff) & ~0x1fff;
 
-            return Size;
+            return size;
         }
 
-        public int GetMipOffset(int Level)
+        public int GetMipOffset(int level)
         {
-            int TotalSize = 0;
+            int totalSize = 0;
 
-            for (int Index = 0; Index < Level; Index++)
+            for (int index = 0; index < level; index++)
             {
-                int Width  = Math.Max(1, TexWidth  >> Index);
-                int Height = Math.Max(1, TexHeight >> Index);
-                int Depth  = Math.Max(1, TexDepth  >> Index);
+                int width  = Math.Max(1, _texWidth  >> index);
+                int height = Math.Max(1, _texHeight >> index);
+                int depth  = Math.Max(1, _texDepth  >> index);
 
-                GobBlockSizes GbSizes = AdjustGobBlockSizes(Height, Depth);
+                GobBlockSizes gbSizes = AdjustGobBlockSizes(height, depth);
 
-                RobAndSliceSizes RsSizes = GetRobAndSliceSizes(Width, Height, GbSizes);
+                RobAndSliceSizes rsSizes = GetRobAndSliceSizes(width, height, gbSizes);
 
-                TotalSize += BitUtils.DivRoundUp(Depth, GbSizes.Depth) * RsSizes.SliceSize;
+                totalSize += BitUtils.DivRoundUp(depth, gbSizes.Depth) * rsSizes.SliceSize;
             }
 
-            return TotalSize;
+            return totalSize;
         }
 
         private struct GobBlockSizes
@@ -109,32 +109,32 @@ namespace Ryujinx.Graphics.Texture
             public int Height;
             public int Depth;
 
-            public GobBlockSizes(int GobBlockHeight, int GobBlockDepth)
+            public GobBlockSizes(int gobBlockHeight, int gobBlockDepth)
             {
-                this.Height = GobBlockHeight;
-                this.Depth  = GobBlockDepth;
+                Height = gobBlockHeight;
+                Depth  = gobBlockDepth;
             }
         }
 
-        private GobBlockSizes AdjustGobBlockSizes(int Height, int Depth)
+        private GobBlockSizes AdjustGobBlockSizes(int height, int depth)
         {
-            int GobBlockHeight = TexGobBlockHeight;
-            int GobBlockDepth  = TexGobBlockDepth;
+            int gobBlockHeight = _texGobBlockHeight;
+            int gobBlockDepth  = _texGobBlockDepth;
 
-            int Pow2Height = BitUtils.Pow2RoundUp(Height);
-            int Pow2Depth  = BitUtils.Pow2RoundUp(Depth);
+            int pow2Height = BitUtils.Pow2RoundUp(height);
+            int pow2Depth  = BitUtils.Pow2RoundUp(depth);
 
-            while (GobBlockHeight * GobHeight > Pow2Height && GobBlockHeight > 1)
+            while (gobBlockHeight * GobHeight > pow2Height && gobBlockHeight > 1)
             {
-                GobBlockHeight >>= 1;
+                gobBlockHeight >>= 1;
             }
 
-            while (GobBlockDepth > Pow2Depth && GobBlockDepth > 1)
+            while (gobBlockDepth > pow2Depth && gobBlockDepth > 1)
             {
-                GobBlockDepth >>= 1;
+                gobBlockDepth >>= 1;
             }
 
-            return new GobBlockSizes(GobBlockHeight, GobBlockDepth);
+            return new GobBlockSizes(gobBlockHeight, gobBlockDepth);
         }
 
         private struct RobAndSliceSizes
@@ -142,45 +142,45 @@ namespace Ryujinx.Graphics.Texture
             public int RobSize;
             public int SliceSize;
 
-            public RobAndSliceSizes(int RobSize, int SliceSize)
+            public RobAndSliceSizes(int robSize, int sliceSize)
             {
-                this.RobSize   = RobSize;
-                this.SliceSize = SliceSize;
+                RobSize   = robSize;
+                SliceSize = sliceSize;
             }
         }
 
-        private RobAndSliceSizes GetRobAndSliceSizes(int Width, int Height, GobBlockSizes GbSizes)
+        private RobAndSliceSizes GetRobAndSliceSizes(int width, int height, GobBlockSizes gbSizes)
         {
-            int WidthInGobs = BitUtils.DivRoundUp(Width * TexBpp, GobWidth);
+            int widthInGobs = BitUtils.DivRoundUp(width * _texBpp, GobWidth);
 
-            int RobSize = GobSize * GbSizes.Height * GbSizes.Depth * WidthInGobs;
+            int robSize = GobSize * gbSizes.Height * gbSizes.Depth * widthInGobs;
 
-            int SliceSize = BitUtils.DivRoundUp(Height, GbSizes.Height * GobHeight) * RobSize;
+            int sliceSize = BitUtils.DivRoundUp(height, gbSizes.Height * GobHeight) * robSize;
 
-            return new RobAndSliceSizes(RobSize, SliceSize);
+            return new RobAndSliceSizes(robSize, sliceSize);
         }
 
-        public int GetSwizzleOffset(int X, int Y, int Z)
+        public int GetSwizzleOffset(int x, int y, int z)
         {
-            X <<= BppShift;
+            x <<= _bppShift;
 
-            int YH = Y / GobHeight;
+            int yh = y / GobHeight;
 
-            int Position = (Z >> BdShift) * SliceSize + (YH >> BhShift) * RobSize;
+            int position = (z >> _bdShift) * _sliceSize + (yh >> _bhShift) * _robSize;
 
-            Position += (X / GobWidth) << XShift;
+            position += (x / GobWidth) << _xShift;
 
-            Position += (YH & BhMask) * GobSize;
+            position += (yh & _bhMask) * GobSize;
 
-            Position += ((Z & BdMask) * GobSize) << BhShift;
+            position += ((z & _bdMask) * GobSize) << _bhShift;
 
-            Position += ((X & 0x3f) >> 5) << 8;
-            Position += ((Y & 0x07) >> 1) << 6;
-            Position += ((X & 0x1f) >> 4) << 5;
-            Position += ((Y & 0x01) >> 0) << 4;
-            Position += ((X & 0x0f) >> 0) << 0;
+            position += ((x & 0x3f) >> 5) << 8;
+            position += ((y & 0x07) >> 1) << 6;
+            position += ((x & 0x1f) >> 4) << 5;
+            position += ((y & 0x01) >> 0) << 4;
+            position += ((x & 0x0f) >> 0) << 0;
 
-            return BaseOffset + Position;
+            return _baseOffset + position;
         }
     }
 }

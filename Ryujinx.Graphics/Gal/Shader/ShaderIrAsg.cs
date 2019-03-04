@@ -5,10 +5,10 @@ namespace Ryujinx.Graphics.Gal.Shader
         public ShaderIrNode Dst { get; set; }
         public ShaderIrNode Src { get; set; }
 
-        public ShaderIrAsg(ShaderIrNode Dst, ShaderIrNode Src)
+        public ShaderIrAsg(ShaderIrNode dst, ShaderIrNode src)
         {
-            this.Dst = Dst;
-            this.Src = Src;
+            Dst = dst;
+            Src = src;
         }
     }
 }

@@ -4,227 +4,227 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     static partial class ShaderDecode
     {
-        private static int Read(this long OpCode, int Position, int Mask)
+        private static int Read(this long opCode, int position, int mask)
         {
-            return (int)(OpCode >> Position) & Mask;
+            return (int)(opCode >> position) & mask;
         }
 
-        private static bool Read(this long OpCode, int Position)
+        private static bool Read(this long opCode, int position)
         {
-            return ((OpCode >> Position) & 1) != 0;
+            return ((opCode >> position) & 1) != 0;
         }
 
-        private static int Branch(this long OpCode)
+        private static int Branch(this long opCode)
         {
-            return ((int)(OpCode >> 20) << 8) >> 8;
+            return ((int)(opCode >> 20) << 8) >> 8;
         }
 
-        private static bool HasArray(this long OpCode)
+        private static bool HasArray(this long opCode)
         {
-            return OpCode.Read(0x1c);
+            return opCode.Read(0x1c);
         }
 
-        private static ShaderIrOperAbuf[] Abuf20(this long OpCode)
+        private static ShaderIrOperAbuf[] Abuf20(this long opCode)
         {
-            int Abuf = OpCode.Read(20, 0x3ff);
-            int Size = OpCode.Read(47, 3);
+            int abuf = opCode.Read(20, 0x3ff);
+            int size = opCode.Read(47, 3);
 
-            ShaderIrOperGpr Vertex = OpCode.Gpr39();
+            ShaderIrOperGpr vertex = opCode.Gpr39();
 
-            ShaderIrOperAbuf[] Opers = new ShaderIrOperAbuf[Size + 1];
+            ShaderIrOperAbuf[] opers = new ShaderIrOperAbuf[size + 1];
 
-            for (int Index = 0; Index <= Size; Index++)
+            for (int index = 0; index <= size; index++)
             {
-                Opers[Index] = new ShaderIrOperAbuf(Abuf + Index * 4, Vertex);
+                opers[index] = new ShaderIrOperAbuf(abuf + index * 4, vertex);
             }
 
-            return Opers;
+            return opers;
         }
 
-        private static ShaderIrOperAbuf Abuf28(this long OpCode)
+        private static ShaderIrOperAbuf Abuf28(this long opCode)
         {
-            int Abuf = OpCode.Read(28, 0x3ff);
+            int abuf = opCode.Read(28, 0x3ff);
 
-            return new ShaderIrOperAbuf(Abuf, OpCode.Gpr39());
+            return new ShaderIrOperAbuf(abuf, opCode.Gpr39());
         }
 
-        private static ShaderIrOperCbuf Cbuf34(this long OpCode)
+        private static ShaderIrOperCbuf Cbuf34(this long opCode)
         {
             return new ShaderIrOperCbuf(
-                OpCode.Read(34, 0x1f),
-                OpCode.Read(20, 0x3fff));
+                opCode.Read(34, 0x1f),
+                opCode.Read(20, 0x3fff));
         }
 
-        private static ShaderIrOperGpr Gpr8(this long OpCode)
+        private static ShaderIrOperGpr Gpr8(this long opCode)
         {
-            return new ShaderIrOperGpr(OpCode.Read(8, 0xff));
+            return new ShaderIrOperGpr(opCode.Read(8, 0xff));
         }
 
-        private static ShaderIrOperGpr Gpr20(this long OpCode)
+        private static ShaderIrOperGpr Gpr20(this long opCode)
         {
-            return new ShaderIrOperGpr(OpCode.Read(20, 0xff));
+            return new ShaderIrOperGpr(opCode.Read(20, 0xff));
         }
 
-        private static ShaderIrOperGpr Gpr39(this long OpCode)
+        private static ShaderIrOperGpr Gpr39(this long opCode)
         {
-            return new ShaderIrOperGpr(OpCode.Read(39, 0xff));
+            return new ShaderIrOperGpr(opCode.Read(39, 0xff));
         }
 
-        private static ShaderIrOperGpr Gpr0(this long OpCode)
+        private static ShaderIrOperGpr Gpr0(this long opCode)
         {
-            return new ShaderIrOperGpr(OpCode.Read(0, 0xff));
+            return new ShaderIrOperGpr(opCode.Read(0, 0xff));
         }
 
-        private static ShaderIrOperGpr Gpr28(this long OpCode)
+        private static ShaderIrOperGpr Gpr28(this long opCode)
         {
-            return new ShaderIrOperGpr(OpCode.Read(28, 0xff));
+            return new ShaderIrOperGpr(opCode.Read(28, 0xff));
         }
 
-        private static ShaderIrOperGpr[] GprHalfVec8(this long OpCode)
+        private static ShaderIrOperGpr[] GprHalfVec8(this long opCode)
         {
-            return GetGprHalfVec2(OpCode.Read(8, 0xff), OpCode.Read(47, 3));
+            return GetGprHalfVec2(opCode.Read(8, 0xff), opCode.Read(47, 3));
         }
 
-        private static ShaderIrOperGpr[] GprHalfVec20(this long OpCode)
+        private static ShaderIrOperGpr[] GprHalfVec20(this long opCode)
         {
-            return GetGprHalfVec2(OpCode.Read(20, 0xff), OpCode.Read(28, 3));
+            return GetGprHalfVec2(opCode.Read(20, 0xff), opCode.Read(28, 3));
         }
 
-        private static ShaderIrOperGpr[] GetGprHalfVec2(int Gpr, int Mask)
+        private static ShaderIrOperGpr[] GetGprHalfVec2(int gpr, int mask)
         {
-            if (Mask == 1)
+            if (mask == 1)
             {
                 //This value is used for FP32, the whole 32-bits register
                 //is used as each element on the vector.
                 return new ShaderIrOperGpr[]
                 {
-                    new ShaderIrOperGpr(Gpr),
-                    new ShaderIrOperGpr(Gpr)
+                    new ShaderIrOperGpr(gpr),
+                    new ShaderIrOperGpr(gpr)
                 };
             }
 
-            ShaderIrOperGpr Low  = new ShaderIrOperGpr(Gpr, 0);
-            ShaderIrOperGpr High = new ShaderIrOperGpr(Gpr, 1);
+            ShaderIrOperGpr low  = new ShaderIrOperGpr(gpr, 0);
+            ShaderIrOperGpr high = new ShaderIrOperGpr(gpr, 1);
 
             return new ShaderIrOperGpr[]
             {
-                (Mask & 1) != 0 ? High : Low,
-                (Mask & 2) != 0 ? High : Low
+                (mask & 1) != 0 ? high : low,
+                (mask & 2) != 0 ? high : low
             };
         }
 
-        private static ShaderIrOperGpr GprHalf0(this long OpCode, int HalfPart)
+        private static ShaderIrOperGpr GprHalf0(this long opCode, int halfPart)
         {
-            return new ShaderIrOperGpr(OpCode.Read(0, 0xff), HalfPart);
+            return new ShaderIrOperGpr(opCode.Read(0, 0xff), halfPart);
         }
 
-        private static ShaderIrOperGpr GprHalf28(this long OpCode, int HalfPart)
+        private static ShaderIrOperGpr GprHalf28(this long opCode, int halfPart)
         {
-            return new ShaderIrOperGpr(OpCode.Read(28, 0xff), HalfPart);
+            return new ShaderIrOperGpr(opCode.Read(28, 0xff), halfPart);
         }
 
-        private static ShaderIrOperImm Imm5_39(this long OpCode)
+        private static ShaderIrOperImm Imm5_39(this long opCode)
         {
-            return new ShaderIrOperImm(OpCode.Read(39, 0x1f));
+            return new ShaderIrOperImm(opCode.Read(39, 0x1f));
         }
 
-        private static ShaderIrOperImm Imm13_36(this long OpCode)
+        private static ShaderIrOperImm Imm13_36(this long opCode)
         {
-            return new ShaderIrOperImm(OpCode.Read(36, 0x1fff));
+            return new ShaderIrOperImm(opCode.Read(36, 0x1fff));
         }
 
-        private static ShaderIrOperImm Imm32_20(this long OpCode)
+        private static ShaderIrOperImm Imm32_20(this long opCode)
         {
-            return new ShaderIrOperImm((int)(OpCode >> 20));
+            return new ShaderIrOperImm((int)(opCode >> 20));
         }
 
-        private static ShaderIrOperImmf Immf32_20(this long OpCode)
+        private static ShaderIrOperImmf Immf32_20(this long opCode)
         {
-            return new ShaderIrOperImmf(BitConverter.Int32BitsToSingle((int)(OpCode >> 20)));
+            return new ShaderIrOperImmf(BitConverter.Int32BitsToSingle((int)(opCode >> 20)));
         }
 
-        private static ShaderIrOperImm ImmU16_20(this long OpCode)
+        private static ShaderIrOperImm ImmU16_20(this long opCode)
         {
-            return new ShaderIrOperImm(OpCode.Read(20, 0xffff));
+            return new ShaderIrOperImm(opCode.Read(20, 0xffff));
         }
 
-        private static ShaderIrOperImm Imm19_20(this long OpCode)
+        private static ShaderIrOperImm Imm19_20(this long opCode)
         {
-            int Value = OpCode.Read(20, 0x7ffff);
+            int value = opCode.Read(20, 0x7ffff);
 
-            bool Neg = OpCode.Read(56);
+            bool neg = opCode.Read(56);
 
-            if (Neg)
+            if (neg)
             {
-                Value = -Value;
+                value = -value;
             }
 
-            return new ShaderIrOperImm(Value);
+            return new ShaderIrOperImm(value);
         }
 
-        private static ShaderIrOperImmf Immf19_20(this long OpCode)
+        private static ShaderIrOperImmf Immf19_20(this long opCode)
         {
-            uint Imm = (uint)(OpCode >> 20) & 0x7ffff;
+            uint imm = (uint)(opCode >> 20) & 0x7ffff;
 
-            bool Neg = OpCode.Read(56);
+            bool neg = opCode.Read(56);
 
-            Imm <<= 12;
+            imm <<= 12;
 
-            if (Neg)
+            if (neg)
             {
-                Imm |= 0x80000000;
+                imm |= 0x80000000;
             }
 
-            float Value = BitConverter.Int32BitsToSingle((int)Imm);
+            float value = BitConverter.Int32BitsToSingle((int)imm);
 
-            return new ShaderIrOperImmf(Value);
+            return new ShaderIrOperImmf(value);
         }
 
-        private static ShaderIrOperPred Pred0(this long OpCode)
+        private static ShaderIrOperPred Pred0(this long opCode)
         {
-            return new ShaderIrOperPred(OpCode.Read(0, 7));
+            return new ShaderIrOperPred(opCode.Read(0, 7));
         }
 
-        private static ShaderIrOperPred Pred3(this long OpCode)
+        private static ShaderIrOperPred Pred3(this long opCode)
         {
-            return new ShaderIrOperPred(OpCode.Read(3, 7));
+            return new ShaderIrOperPred(opCode.Read(3, 7));
         }
 
-        private static ShaderIrOperPred Pred12(this long OpCode)
+        private static ShaderIrOperPred Pred12(this long opCode)
         {
-            return new ShaderIrOperPred(OpCode.Read(12, 7));
+            return new ShaderIrOperPred(opCode.Read(12, 7));
         }
 
-        private static ShaderIrOperPred Pred29(this long OpCode)
+        private static ShaderIrOperPred Pred29(this long opCode)
         {
-            return new ShaderIrOperPred(OpCode.Read(29, 7));
+            return new ShaderIrOperPred(opCode.Read(29, 7));
         }
 
-        private static ShaderIrNode Pred39N(this long OpCode)
+        private static ShaderIrNode Pred39N(this long opCode)
         {
-            ShaderIrNode Node = OpCode.Pred39();
+            ShaderIrNode node = opCode.Pred39();
 
-            if (OpCode.Read(42))
+            if (opCode.Read(42))
             {
-                Node = new ShaderIrOp(ShaderIrInst.Bnot, Node);
+                node = new ShaderIrOp(ShaderIrInst.Bnot, node);
             }
 
-            return Node;
+            return node;
         }
 
-        private static ShaderIrOperPred Pred39(this long OpCode)
+        private static ShaderIrOperPred Pred39(this long opCode)
         {
-            return new ShaderIrOperPred(OpCode.Read(39, 7));
+            return new ShaderIrOperPred(opCode.Read(39, 7));
         }
 
-        private static ShaderIrOperPred Pred48(this long OpCode)
+        private static ShaderIrOperPred Pred48(this long opCode)
         {
-            return new ShaderIrOperPred(OpCode.Read(48, 7));
+            return new ShaderIrOperPred(opCode.Read(48, 7));
         }
 
-        private static ShaderIrInst Cmp(this long OpCode)
+        private static ShaderIrInst Cmp(this long opCode)
         {
-            switch (OpCode.Read(49, 7))
+            switch (opCode.Read(49, 7))
             {
                 case 1: return ShaderIrInst.Clt;
                 case 2: return ShaderIrInst.Ceq;
@@ -234,12 +234,12 @@ namespace Ryujinx.Graphics.Gal.Shader
                 case 6: return ShaderIrInst.Cge;
             }
 
-            throw new ArgumentException(nameof(OpCode));
+            throw new ArgumentException(nameof(opCode));
         }
 
-        private static ShaderIrInst CmpF(this long OpCode)
+        private static ShaderIrInst CmpF(this long opCode)
         {
-            switch (OpCode.Read(48, 0xf))
+            switch (opCode.Read(48, 0xf))
             {
                 case 0x1: return ShaderIrInst.Fclt;
                 case 0x2: return ShaderIrInst.Fceq;
@@ -257,57 +257,57 @@ namespace Ryujinx.Graphics.Gal.Shader
                 case 0xe: return ShaderIrInst.Fcgeu;
             }
 
-            throw new ArgumentException(nameof(OpCode));
+            throw new ArgumentException(nameof(opCode));
         }
 
-        private static ShaderIrInst BLop45(this long OpCode)
+        private static ShaderIrInst BLop45(this long opCode)
         {
-            switch (OpCode.Read(45, 3))
+            switch (opCode.Read(45, 3))
             {
                 case 0: return ShaderIrInst.Band;
                 case 1: return ShaderIrInst.Bor;
                 case 2: return ShaderIrInst.Bxor;
             }
 
-            throw new ArgumentException(nameof(OpCode));
+            throw new ArgumentException(nameof(opCode));
         }
 
-        private static ShaderIrInst BLop24(this long OpCode)
+        private static ShaderIrInst BLop24(this long opCode)
         {
-            switch (OpCode.Read(24, 3))
+            switch (opCode.Read(24, 3))
             {
                 case 0: return ShaderIrInst.Band;
                 case 1: return ShaderIrInst.Bor;
                 case 2: return ShaderIrInst.Bxor;
             }
 
-            throw new ArgumentException(nameof(OpCode));
+            throw new ArgumentException(nameof(opCode));
         }
 
-        private static ShaderIrNode PredNode(this long OpCode, ShaderIrNode Node)
+        private static ShaderIrNode PredNode(this long opCode, ShaderIrNode node)
         {
-            ShaderIrOperPred Pred = OpCode.PredNode();
+            ShaderIrOperPred pred = opCode.PredNode();
 
-            if (Pred.Index != ShaderIrOperPred.UnusedIndex)
+            if (pred.Index != ShaderIrOperPred.UnusedIndex)
             {
-                bool Inv = OpCode.Read(19);
+                bool inv = opCode.Read(19);
 
-                Node = new ShaderIrCond(Pred, Node, Inv);
+                node = new ShaderIrCond(pred, node, inv);
             }
 
-            return Node;
+            return node;
         }
 
-        private static ShaderIrOperPred PredNode(this long OpCode)
+        private static ShaderIrOperPred PredNode(this long opCode)
         {
-            int Pred = OpCode.Read(16, 0xf);
+            int pred = opCode.Read(16, 0xf);
 
-            if (Pred != 0xf)
+            if (pred != 0xf)
             {
-                Pred &= 7;
+                pred &= 7;
             }
 
-            return new ShaderIrOperPred(Pred);
+            return new ShaderIrOperPred(pred);
         }
     }
 }

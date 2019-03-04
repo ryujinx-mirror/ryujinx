@@ -4,54 +4,54 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     static partial class ShaderDecode
     {
-        public static void Bra(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Bra(ShaderIrBlock block, long opCode, int position)
         {
-            if ((OpCode & 0x20) != 0)
+            if ((opCode & 0x20) != 0)
             {
                 //This reads the target offset from the constant buffer.
                 //Almost impossible to support with GLSL.
                 throw new NotImplementedException();
             }
 
-            ShaderIrOperImm Imm = new ShaderIrOperImm(Position + OpCode.Branch());
+            ShaderIrOperImm imm = new ShaderIrOperImm(position + opCode.Branch());
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrOp(ShaderIrInst.Bra, Imm)));
+            block.AddNode(opCode.PredNode(new ShaderIrOp(ShaderIrInst.Bra, imm)));
         }
 
-        public static void Exit(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Exit(ShaderIrBlock block, long opCode, int position)
         {
-            int CCode = (int)OpCode & 0x1f;
+            int cCode = (int)opCode & 0x1f;
 
             //TODO: Figure out what the other condition codes mean...
-            if (CCode == 0xf)
+            if (cCode == 0xf)
             {
-                Block.AddNode(OpCode.PredNode(new ShaderIrOp(ShaderIrInst.Exit)));
+                block.AddNode(opCode.PredNode(new ShaderIrOp(ShaderIrInst.Exit)));
             }
         }
 
-        public static void Kil(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Kil(ShaderIrBlock block, long opCode, int position)
         {
-            Block.AddNode(OpCode.PredNode(new ShaderIrOp(ShaderIrInst.Kil)));
+            block.AddNode(opCode.PredNode(new ShaderIrOp(ShaderIrInst.Kil)));
         }
 
-        public static void Ssy(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Ssy(ShaderIrBlock block, long opCode, int position)
         {
-            if ((OpCode & 0x20) != 0)
+            if ((opCode & 0x20) != 0)
             {
                 //This reads the target offset from the constant buffer.
                 //Almost impossible to support with GLSL.
                 throw new NotImplementedException();
             }
 
-            ShaderIrOperImm Imm = new ShaderIrOperImm(Position + OpCode.Branch());
+            ShaderIrOperImm imm = new ShaderIrOperImm(position + opCode.Branch());
 
-            Block.AddNode(new ShaderIrOp(ShaderIrInst.Ssy, Imm));
+            block.AddNode(new ShaderIrOp(ShaderIrInst.Ssy, imm));
         }
 
-        public static void Sync(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Sync(ShaderIrBlock block, long opCode, int position)
         {
             //TODO: Implement Sync condition codes
-            Block.AddNode(OpCode.PredNode(new ShaderIrOp(ShaderIrInst.Sync)));
+            block.AddNode(opCode.PredNode(new ShaderIrOp(ShaderIrInst.Sync)));
         }
     }
 }

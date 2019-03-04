@@ -10,15 +10,15 @@ namespace Ryujinx.Graphics
         public bool IsLastCall => MethodCount <= 1;
 
         public GpuMethodCall(
-            int Method,
-            int Argument,
-            int SubChannel  = 0,
-            int MethodCount = 0)
+            int method,
+            int argument,
+            int subChannel  = 0,
+            int methodCount = 0)
         {
-            this.Method      = Method;
-            this.Argument    = Argument;
-            this.SubChannel  = SubChannel;
-            this.MethodCount = MethodCount;
+            Method      = method;
+            Argument    = argument;
+            SubChannel  = subChannel;
+            MethodCount = methodCount;
         }
     }
 }

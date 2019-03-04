@@ -1,7 +1,7 @@
 namespace Ryujinx.Graphics.Gal
 {
-    public unsafe interface IGalMemory
+    public interface IGalMemory
     {
-        int ReadInt32(long Position);
+        int ReadInt32(long position);
     }
 }

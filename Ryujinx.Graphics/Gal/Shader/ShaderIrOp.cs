@@ -9,17 +9,17 @@ namespace Ryujinx.Graphics.Gal.Shader
         public ShaderIrMeta MetaData { get; set; }
 
         public ShaderIrOp(
-            ShaderIrInst Inst,
-            ShaderIrNode OperandA = null,
-            ShaderIrNode OperandB = null,
-            ShaderIrNode OperandC = null,
-            ShaderIrMeta MetaData = null)
+            ShaderIrInst inst,
+            ShaderIrNode operandA = null,
+            ShaderIrNode operandB = null,
+            ShaderIrNode operandC = null,
+            ShaderIrMeta metaData = null)
         {
-            this.Inst     = Inst;
-            this.OperandA = OperandA;
-            this.OperandB = OperandB;
-            this.OperandC = OperandC;
-            this.MetaData = MetaData;
+            Inst     = inst;
+            OperandA = operandA;
+            OperandB = operandB;
+            OperandC = operandC;
+            MetaData = metaData;
         }
     }
 }

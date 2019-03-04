@@ -4,9 +4,9 @@ namespace Ryujinx.Graphics.Gal.Shader
     {
         public int Value { get; private set; }
 
-        public ShaderIrOperImm(int Value)
+        public ShaderIrOperImm(int value)
         {
-            this.Value = Value;
+            Value = value;
         }
     }
 }

@@ -5,67 +5,67 @@ namespace Ryujinx.Graphics.Gal
 {
     static class ShaderDumper
     {
-        private static string RuntimeDir;
+        private static string _runtimeDir;
 
         public static int DumpIndex { get; private set; } = 1;
 
-        public static void Dump(IGalMemory Memory, long Position, GalShaderType Type, string ExtSuffix = "")
+        public static void Dump(IGalMemory memory, long position, GalShaderType type, string extSuffix = "")
         {
             if (!IsDumpEnabled())
             {
                 return;
             }
 
-            string FileName = "Shader" + DumpIndex.ToString("d4") + "." + ShaderExtension(Type) + ExtSuffix + ".bin";
+            string fileName = "Shader" + DumpIndex.ToString("d4") + "." + ShaderExtension(type) + extSuffix + ".bin";
 
-            string FullPath = Path.Combine(FullDir(), FileName);
-            string CodePath = Path.Combine(CodeDir(), FileName);
+            string fullPath = Path.Combine(FullDir(), fileName);
+            string codePath = Path.Combine(CodeDir(), fileName);
 
             DumpIndex++;
 
-            using (FileStream FullFile = File.Create(FullPath))
-            using (FileStream CodeFile = File.Create(CodePath))
+            using (FileStream fullFile = File.Create(fullPath))
+            using (FileStream codeFile = File.Create(codePath))
             {
-                BinaryWriter FullWriter = new BinaryWriter(FullFile);
-                BinaryWriter CodeWriter = new BinaryWriter(CodeFile);
+                BinaryWriter fullWriter = new BinaryWriter(fullFile);
+                BinaryWriter codeWriter = new BinaryWriter(codeFile);
 
                 for (long i = 0; i < 0x50; i += 4)
                 {
-                    FullWriter.Write(Memory.ReadInt32(Position + i));
+                    fullWriter.Write(memory.ReadInt32(position + i));
                 }
 
-                long Offset = 0;
+                long offset = 0;
 
-                ulong Instruction = 0;
+                ulong instruction = 0;
 
                 //Dump until a NOP instruction is found
-                while ((Instruction >> 48 & 0xfff8) != 0x50b0)
+                while ((instruction >> 48 & 0xfff8) != 0x50b0)
                 {
-                    uint Word0 = (uint)Memory.ReadInt32(Position + 0x50 + Offset + 0);
-                    uint Word1 = (uint)Memory.ReadInt32(Position + 0x50 + Offset + 4);
+                    uint word0 = (uint)memory.ReadInt32(position + 0x50 + offset + 0);
+                    uint word1 = (uint)memory.ReadInt32(position + 0x50 + offset + 4);
 
-                    Instruction = Word0 | (ulong)Word1 << 32;
+                    instruction = word0 | (ulong)word1 << 32;
 
                     //Zero instructions (other kind of NOP) stop immediatly,
                     //this is to avoid two rows of zeroes
-                    if (Instruction == 0)
+                    if (instruction == 0)
                     {
                         break;
                     }
 
-                    FullWriter.Write(Instruction);
-                    CodeWriter.Write(Instruction);
+                    fullWriter.Write(instruction);
+                    codeWriter.Write(instruction);
 
-                    Offset += 8;
+                    offset += 8;
                 }
 
                 //Align to meet nvdisasm requeriments
-                while (Offset % 0x20 != 0)
+                while (offset % 0x20 != 0)
                 {
-                    FullWriter.Write(0);
-                    CodeWriter.Write(0);
+                    fullWriter.Write(0);
+                    codeWriter.Write(0);
 
-                    Offset += 4;
+                    offset += 4;
                 }
             }
         }
@@ -87,37 +87,37 @@ namespace Ryujinx.Graphics.Gal
 
         private static string DumpDir()
         {
-            if (string.IsNullOrEmpty(RuntimeDir))
+            if (string.IsNullOrEmpty(_runtimeDir))
             {
-                int Index = 1;
+                int index = 1;
 
                 do
                 {
-                    RuntimeDir = Path.Combine(GraphicsConfig.ShadersDumpPath, "Dumps" + Index.ToString("d2"));
+                    _runtimeDir = Path.Combine(GraphicsConfig.ShadersDumpPath, "Dumps" + index.ToString("d2"));
 
-                    Index++;
+                    index++;
                 }
-                while (Directory.Exists(RuntimeDir));
+                while (Directory.Exists(_runtimeDir));
 
-                Directory.CreateDirectory(RuntimeDir);
+                Directory.CreateDirectory(_runtimeDir);
             }
 
-            return RuntimeDir;
+            return _runtimeDir;
         }
 
-        private static string CreateAndReturn(string Dir)
+        private static string CreateAndReturn(string dir)
         {
-            if (!Directory.Exists(Dir))
+            if (!Directory.Exists(dir))
             {
-                Directory.CreateDirectory(Dir);
+                Directory.CreateDirectory(dir);
             }
 
-            return Dir;
+            return dir;
         }
 
-        private static string ShaderExtension(GalShaderType Type)
+        private static string ShaderExtension(GalShaderType type)
         {
-            switch (Type)
+            switch (type)
             {
                 case GalShaderType.Vertex:         return "vert";
                 case GalShaderType.TessControl:    return "tesc";
@@ -125,7 +125,7 @@ namespace Ryujinx.Graphics.Gal
                 case GalShaderType.Geometry:       return "geom";
                 case GalShaderType.Fragment:       return "frag";
 
-                default: throw new ArgumentException(nameof(Type));
+                default: throw new ArgumentException(nameof(type));
             }
         }
     }

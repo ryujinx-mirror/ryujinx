@@ -4,21 +4,21 @@ namespace Ryujinx.Graphics.VDec
 {
     class H264BitStreamWriter : BitStreamWriter
     {
-        public H264BitStreamWriter(Stream BaseStream) : base(BaseStream) { }
+        public H264BitStreamWriter(Stream baseStream) : base(baseStream) { }
 
-        public void WriteU(int Value, int ValueSize)
+        public void WriteU(int value, int valueSize)
         {
-            WriteBits(Value, ValueSize);
+            WriteBits(value, valueSize);
         }
 
-        public void WriteSe(int Value)
+        public void WriteSe(int value)
         {
-            WriteExpGolombCodedInt(Value);
+            WriteExpGolombCodedInt(value);
         }
 
-        public void WriteUe(int Value)
+        public void WriteUe(int value)
         {
-            WriteExpGolombCodedUInt((uint)Value);
+            WriteExpGolombCodedUInt((uint)value);
         }
 
         public void End()
@@ -28,52 +28,52 @@ namespace Ryujinx.Graphics.VDec
             Flush();
         }
 
-        private void WriteExpGolombCodedInt(int Value)
+        private void WriteExpGolombCodedInt(int value)
         {
-            int Sign = Value <= 0 ? 0 : 1;
+            int sign = value <= 0 ? 0 : 1;
 
-            if (Value < 0)
+            if (value < 0)
             {
-                Value = -Value;
+                value = -value;
             }
 
-            Value = (Value << 1) - Sign;
+            value = (value << 1) - sign;
 
-            WriteExpGolombCodedUInt((uint)Value);
+            WriteExpGolombCodedUInt((uint)value);
         }
 
-        private void WriteExpGolombCodedUInt(uint Value)
+        private void WriteExpGolombCodedUInt(uint value)
         {
-            int Size = 32 - CountLeadingZeros((int)Value + 1);
+            int size = 32 - CountLeadingZeros((int)value + 1);
 
-            WriteBits(1, Size);
+            WriteBits(1, size);
 
-            Value -= (1u << (Size - 1)) - 1;
+            value -= (1u << (size - 1)) - 1;
 
-            WriteBits((int)Value, Size - 1);
+            WriteBits((int)value, size - 1);
         }
 
         private static readonly byte[] ClzNibbleTbl = { 4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-        private static int CountLeadingZeros(int Value)
+        private static int CountLeadingZeros(int value)
         {
-            if (Value == 0)
+            if (value == 0)
             {
                 return 32;
             }
 
-            int NibbleIdx = 32;
-            int PreCount, Count = 0;
+            int nibbleIdx = 32;
+            int preCount, count = 0;
 
             do
             {
-                NibbleIdx -= 4;
-                PreCount = ClzNibbleTbl[(Value >> NibbleIdx) & 0b1111];
-                Count += PreCount;
+                nibbleIdx -= 4;
+                preCount = ClzNibbleTbl[(value >> nibbleIdx) & 0b1111];
+                count += preCount;
             }
-            while (PreCount == 4);
+            while (preCount == 4);
 
-            return Count;
+            return count;
         }
     }
 }

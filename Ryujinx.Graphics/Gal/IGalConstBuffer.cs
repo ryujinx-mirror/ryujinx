@@ -7,11 +7,11 @@ namespace Ryujinx.Graphics.Gal
         void LockCache();
         void UnlockCache();
 
-        void Create(long Key, long Size);
+        void Create(long key, long size);
 
-        bool IsCached(long Key, long Size);
+        bool IsCached(long key, long size);
 
-        void SetData(long Key, long Size, IntPtr HostAddress);
-        void SetData(long Key, byte[] Data);
+        void SetData(long key, long size, IntPtr hostAddress);
+        void SetData(long key, byte[] data);
     }
 }

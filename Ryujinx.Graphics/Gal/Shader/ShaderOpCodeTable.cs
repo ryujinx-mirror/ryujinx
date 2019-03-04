@@ -12,18 +12,18 @@ namespace Ryujinx.Graphics.Gal.Shader
 
             public int XBits;
 
-            public ShaderDecodeEntry(ShaderDecodeFunc Func, int XBits)
+            public ShaderDecodeEntry(ShaderDecodeFunc func, int xBits)
             {
-                this.Func  = Func;
-                this.XBits = XBits;
+                Func  = func;
+                XBits = xBits;
             }
         }
 
-        private static ShaderDecodeEntry[] OpCodes;
+        private static ShaderDecodeEntry[] _opCodes;
 
         static ShaderOpCodeTable()
         {
-            OpCodes = new ShaderDecodeEntry[1 << EncodingBits];
+            _opCodes = new ShaderDecodeEntry[1 << EncodingBits];
 
 #region Instructions
             Set("0100110000000x", ShaderDecode.Bfe_C);
@@ -123,7 +123,7 @@ namespace Ryujinx.Graphics.Gal.Shader
             Set("1101x00xxxxxxx", ShaderDecode.Texs);
             Set("1101101xxxxxxx", ShaderDecode.Tlds);
             Set("110010xxxx111x", ShaderDecode.Tld4);
-            Set("1101111100xxxx", ShaderDecode.Tld4s);
+            Set("1101111100xxxx", ShaderDecode.Tld4S);
             Set("01011111xxxxxx", ShaderDecode.Vmad);
             Set("0100111xxxxxxx", ShaderDecode.Xmad_CR);
             Set("0011011x00xxxx", ShaderDecode.Xmad_I);
@@ -132,59 +132,59 @@ namespace Ryujinx.Graphics.Gal.Shader
 #endregion
         }
 
-        private static void Set(string Encoding, ShaderDecodeFunc Func)
+        private static void Set(string encoding, ShaderDecodeFunc func)
         {
-            if (Encoding.Length != EncodingBits)
+            if (encoding.Length != EncodingBits)
             {
-                throw new ArgumentException(nameof(Encoding));
+                throw new ArgumentException(nameof(encoding));
             }
 
-            int Bit   = Encoding.Length - 1;
-            int Value = 0;
-            int XMask = 0;
-            int XBits = 0;
+            int bit   = encoding.Length - 1;
+            int value = 0;
+            int xMask = 0;
+            int xBits = 0;
 
-            int[] XPos = new int[Encoding.Length];
+            int[] xPos = new int[encoding.Length];
 
-            for (int Index = 0; Index < Encoding.Length; Index++, Bit--)
+            for (int index = 0; index < encoding.Length; index++, bit--)
             {
-                char Chr = Encoding[Index];
+                char chr = encoding[index];
 
-                if (Chr == '1')
+                if (chr == '1')
                 {
-                    Value |= 1 << Bit;
+                    value |= 1 << bit;
                 }
-                else if (Chr == 'x')
+                else if (chr == 'x')
                 {
-                    XMask |= 1 << Bit;
+                    xMask |= 1 << bit;
 
-                    XPos[XBits++] = Bit;
+                    xPos[xBits++] = bit;
                 }
             }
 
-            XMask = ~XMask;
+            xMask = ~xMask;
 
-            ShaderDecodeEntry Entry = new ShaderDecodeEntry(Func, XBits);
+            ShaderDecodeEntry entry = new ShaderDecodeEntry(func, xBits);
 
-            for (int Index = 0; Index < (1 << XBits); Index++)
+            for (int index = 0; index < (1 << xBits); index++)
             {
-                Value &= XMask;
+                value &= xMask;
 
-                for (int X = 0; X < XBits; X++)
+                for (int x = 0; x < xBits; x++)
                 {
-                    Value |= ((Index >> X) & 1) << XPos[X];
+                    value |= ((index >> x) & 1) << xPos[x];
                 }
 
-                if (OpCodes[Value] == null || OpCodes[Value].XBits > XBits)
+                if (_opCodes[value] == null || _opCodes[value].XBits > xBits)
                 {
-                    OpCodes[Value] = Entry;
+                    _opCodes[value] = entry;
                 }
             }
         }
 
-        public static ShaderDecodeFunc GetDecoder(long OpCode)
+        public static ShaderDecodeFunc GetDecoder(long opCode)
         {
-            return OpCodes[(ulong)OpCode >> (64 - EncodingBits)]?.Func;
+            return _opCodes[(ulong)opCode >> (64 - EncodingBits)]?.Func;
         }
     }
 }

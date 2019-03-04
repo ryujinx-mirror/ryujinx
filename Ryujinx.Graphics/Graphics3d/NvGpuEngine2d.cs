@@ -1,4 +1,3 @@
-using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
 using Ryujinx.Graphics.Texture;
@@ -20,187 +19,187 @@ namespace Ryujinx.Graphics.Graphics3d
 
         public int[] Registers { get; private set; }
 
-        private NvGpu Gpu;
+        private NvGpu _gpu;
 
-        public NvGpuEngine2d(NvGpu Gpu)
+        public NvGpuEngine2d(NvGpu gpu)
         {
-            this.Gpu = Gpu;
+            _gpu = gpu;
 
             Registers = new int[0x238];
         }
 
-        public void CallMethod(NvGpuVmm Vmm, GpuMethodCall MethCall)
+        public void CallMethod(NvGpuVmm vmm, GpuMethodCall methCall)
         {
-            WriteRegister(MethCall);
+            WriteRegister(methCall);
 
-            if ((NvGpuEngine2dReg)MethCall.Method == NvGpuEngine2dReg.BlitSrcYInt)
+            if ((NvGpuEngine2dReg)methCall.Method == NvGpuEngine2dReg.BlitSrcYInt)
             {
-                TextureCopy(Vmm);
+                TextureCopy(vmm);
             }
         }
 
-        private void TextureCopy(NvGpuVmm Vmm)
+        private void TextureCopy(NvGpuVmm vmm)
         {
-            CopyOperation Operation = (CopyOperation)ReadRegister(NvGpuEngine2dReg.CopyOperation);
+            CopyOperation operation = (CopyOperation)ReadRegister(NvGpuEngine2dReg.CopyOperation);
 
-            int  DstFormat = ReadRegister(NvGpuEngine2dReg.DstFormat);
-            bool DstLinear = ReadRegister(NvGpuEngine2dReg.DstLinear) != 0;
-            int  DstWidth  = ReadRegister(NvGpuEngine2dReg.DstWidth);
-            int  DstHeight = ReadRegister(NvGpuEngine2dReg.DstHeight);
-            int  DstDepth  = ReadRegister(NvGpuEngine2dReg.DstDepth);
-            int  DstLayer  = ReadRegister(NvGpuEngine2dReg.DstLayer);
-            int  DstPitch  = ReadRegister(NvGpuEngine2dReg.DstPitch);
-            int  DstBlkDim = ReadRegister(NvGpuEngine2dReg.DstBlockDimensions);
+            int  dstFormat = ReadRegister(NvGpuEngine2dReg.DstFormat);
+            bool dstLinear = ReadRegister(NvGpuEngine2dReg.DstLinear) != 0;
+            int  dstWidth  = ReadRegister(NvGpuEngine2dReg.DstWidth);
+            int  dstHeight = ReadRegister(NvGpuEngine2dReg.DstHeight);
+            int  dstDepth  = ReadRegister(NvGpuEngine2dReg.DstDepth);
+            int  dstLayer  = ReadRegister(NvGpuEngine2dReg.DstLayer);
+            int  dstPitch  = ReadRegister(NvGpuEngine2dReg.DstPitch);
+            int  dstBlkDim = ReadRegister(NvGpuEngine2dReg.DstBlockDimensions);
 
-            int  SrcFormat = ReadRegister(NvGpuEngine2dReg.SrcFormat);
-            bool SrcLinear = ReadRegister(NvGpuEngine2dReg.SrcLinear) != 0;
-            int  SrcWidth  = ReadRegister(NvGpuEngine2dReg.SrcWidth);
-            int  SrcHeight = ReadRegister(NvGpuEngine2dReg.SrcHeight);
-            int  SrcDepth  = ReadRegister(NvGpuEngine2dReg.SrcDepth);
-            int  SrcLayer  = ReadRegister(NvGpuEngine2dReg.SrcLayer);
-            int  SrcPitch  = ReadRegister(NvGpuEngine2dReg.SrcPitch);
-            int  SrcBlkDim = ReadRegister(NvGpuEngine2dReg.SrcBlockDimensions);
+            int  srcFormat = ReadRegister(NvGpuEngine2dReg.SrcFormat);
+            bool srcLinear = ReadRegister(NvGpuEngine2dReg.SrcLinear) != 0;
+            int  srcWidth  = ReadRegister(NvGpuEngine2dReg.SrcWidth);
+            int  srcHeight = ReadRegister(NvGpuEngine2dReg.SrcHeight);
+            int  srcDepth  = ReadRegister(NvGpuEngine2dReg.SrcDepth);
+            int  srcLayer  = ReadRegister(NvGpuEngine2dReg.SrcLayer);
+            int  srcPitch  = ReadRegister(NvGpuEngine2dReg.SrcPitch);
+            int  srcBlkDim = ReadRegister(NvGpuEngine2dReg.SrcBlockDimensions);
 
-            int DstBlitX = ReadRegister(NvGpuEngine2dReg.BlitDstX);
-            int DstBlitY = ReadRegister(NvGpuEngine2dReg.BlitDstY);
-            int DstBlitW = ReadRegister(NvGpuEngine2dReg.BlitDstW);
-            int DstBlitH = ReadRegister(NvGpuEngine2dReg.BlitDstH);
+            int dstBlitX = ReadRegister(NvGpuEngine2dReg.BlitDstX);
+            int dstBlitY = ReadRegister(NvGpuEngine2dReg.BlitDstY);
+            int dstBlitW = ReadRegister(NvGpuEngine2dReg.BlitDstW);
+            int dstBlitH = ReadRegister(NvGpuEngine2dReg.BlitDstH);
 
-            long BlitDuDx = ReadRegisterFixed1_31_32(NvGpuEngine2dReg.BlitDuDxFract);
-            long BlitDvDy = ReadRegisterFixed1_31_32(NvGpuEngine2dReg.BlitDvDyFract);
+            long blitDuDx = ReadRegisterFixed1_31_32(NvGpuEngine2dReg.BlitDuDxFract);
+            long blitDvDy = ReadRegisterFixed1_31_32(NvGpuEngine2dReg.BlitDvDyFract);
 
-            long SrcBlitX = ReadRegisterFixed1_31_32(NvGpuEngine2dReg.BlitSrcXFract);
-            long SrcBlitY = ReadRegisterFixed1_31_32(NvGpuEngine2dReg.BlitSrcYFract);
+            long srcBlitX = ReadRegisterFixed1_31_32(NvGpuEngine2dReg.BlitSrcXFract);
+            long srcBlitY = ReadRegisterFixed1_31_32(NvGpuEngine2dReg.BlitSrcYFract);
 
-            GalImageFormat SrcImgFormat = ImageUtils.ConvertSurface((GalSurfaceFormat)SrcFormat);
-            GalImageFormat DstImgFormat = ImageUtils.ConvertSurface((GalSurfaceFormat)DstFormat);
+            GalImageFormat srcImgFormat = ImageUtils.ConvertSurface((GalSurfaceFormat)srcFormat);
+            GalImageFormat dstImgFormat = ImageUtils.ConvertSurface((GalSurfaceFormat)dstFormat);
 
-            GalMemoryLayout SrcLayout = GetLayout(SrcLinear);
-            GalMemoryLayout DstLayout = GetLayout(DstLinear);
+            GalMemoryLayout srcLayout = GetLayout(srcLinear);
+            GalMemoryLayout dstLayout = GetLayout(dstLinear);
 
-            int SrcBlockHeight = 1 << ((SrcBlkDim >> 4) & 0xf);
-            int DstBlockHeight = 1 << ((DstBlkDim >> 4) & 0xf);
+            int srcBlockHeight = 1 << ((srcBlkDim >> 4) & 0xf);
+            int dstBlockHeight = 1 << ((dstBlkDim >> 4) & 0xf);
 
-            long SrcAddress = MakeInt64From2xInt32(NvGpuEngine2dReg.SrcAddress);
-            long DstAddress = MakeInt64From2xInt32(NvGpuEngine2dReg.DstAddress);
+            long srcAddress = MakeInt64From2xInt32(NvGpuEngine2dReg.SrcAddress);
+            long dstAddress = MakeInt64From2xInt32(NvGpuEngine2dReg.DstAddress);
 
-            long SrcKey = Vmm.GetPhysicalAddress(SrcAddress);
-            long DstKey = Vmm.GetPhysicalAddress(DstAddress);
+            long srcKey = vmm.GetPhysicalAddress(srcAddress);
+            long dstKey = vmm.GetPhysicalAddress(dstAddress);
 
-            bool IsSrcLayered = false;
-            bool IsDstLayered = false;
+            bool isSrcLayered = false;
+            bool isDstLayered = false;
 
-            GalTextureTarget SrcTarget = GalTextureTarget.TwoD;
+            GalTextureTarget srcTarget = GalTextureTarget.TwoD;
 
-            if (SrcDepth != 0)
+            if (srcDepth != 0)
             {
-                SrcTarget = GalTextureTarget.TwoDArray;
-                SrcDepth++;
-                IsSrcLayered = true;
+                srcTarget = GalTextureTarget.TwoDArray;
+                srcDepth++;
+                isSrcLayered = true;
             }
             else
             {
-                SrcDepth = 1;
+                srcDepth = 1;
             }
 
-            GalTextureTarget DstTarget = GalTextureTarget.TwoD;
+            GalTextureTarget dstTarget = GalTextureTarget.TwoD;
 
-            if (DstDepth != 0)
+            if (dstDepth != 0)
             {
-                DstTarget = GalTextureTarget.TwoDArray;
-                DstDepth++;
-                IsDstLayered = true;
+                dstTarget = GalTextureTarget.TwoDArray;
+                dstDepth++;
+                isDstLayered = true;
             }
             else
             {
-                DstDepth = 1;
+                dstDepth = 1;
             }
 
-            GalImage SrcTexture = new GalImage(
-                SrcWidth,
-                SrcHeight,
-                1, SrcDepth, 1,
-                SrcBlockHeight, 1,
-                SrcLayout,
-                SrcImgFormat,
-                SrcTarget);
+            GalImage srcTexture = new GalImage(
+                srcWidth,
+                srcHeight,
+                1, srcDepth, 1,
+                srcBlockHeight, 1,
+                srcLayout,
+                srcImgFormat,
+                srcTarget);
 
-            GalImage DstTexture = new GalImage(
-                DstWidth,
-                DstHeight,
-                1, DstDepth, 1,
-                DstBlockHeight, 1,
-                DstLayout,
-                DstImgFormat,
-                DstTarget);
+            GalImage dstTexture = new GalImage(
+                dstWidth,
+                dstHeight,
+                1, dstDepth, 1,
+                dstBlockHeight, 1,
+                dstLayout,
+                dstImgFormat,
+                dstTarget);
 
-            SrcTexture.Pitch = SrcPitch;
-            DstTexture.Pitch = DstPitch;
+            srcTexture.Pitch = srcPitch;
+            dstTexture.Pitch = dstPitch;
 
-            long GetLayerOffset(GalImage Image, int Layer)
+            long GetLayerOffset(GalImage image, int layer)
             {
-                int TargetMipLevel = Image.MaxMipmapLevel <= 1 ? 1 : Image.MaxMipmapLevel - 1;
-                return ImageUtils.GetLayerOffset(Image, TargetMipLevel) * Layer;
+                int targetMipLevel = image.MaxMipmapLevel <= 1 ? 1 : image.MaxMipmapLevel - 1;
+                return ImageUtils.GetLayerOffset(image, targetMipLevel) * layer;
             }
 
-            int SrcLayerIndex = -1;
+            int srcLayerIndex = -1;
 
-            if (IsSrcLayered && Gpu.ResourceManager.TryGetTextureLayer(SrcKey, out SrcLayerIndex) && SrcLayerIndex != 0)
+            if (isSrcLayered && _gpu.ResourceManager.TryGetTextureLayer(srcKey, out srcLayerIndex) && srcLayerIndex != 0)
             {
-                SrcKey = SrcKey - GetLayerOffset(SrcTexture, SrcLayerIndex);
+                srcKey = srcKey - GetLayerOffset(srcTexture, srcLayerIndex);
             }
 
-            int DstLayerIndex = -1;
+            int dstLayerIndex = -1;
 
-            if (IsDstLayered && Gpu.ResourceManager.TryGetTextureLayer(DstKey, out DstLayerIndex) && DstLayerIndex != 0)
+            if (isDstLayered && _gpu.ResourceManager.TryGetTextureLayer(dstKey, out dstLayerIndex) && dstLayerIndex != 0)
             {
-                DstKey = DstKey - GetLayerOffset(DstTexture, DstLayerIndex);
+                dstKey = dstKey - GetLayerOffset(dstTexture, dstLayerIndex);
             }
 
-            Gpu.ResourceManager.SendTexture(Vmm, SrcKey, SrcTexture);
-            Gpu.ResourceManager.SendTexture(Vmm, DstKey, DstTexture);
+            _gpu.ResourceManager.SendTexture(vmm, srcKey, srcTexture);
+            _gpu.ResourceManager.SendTexture(vmm, dstKey, dstTexture);
 
-            if (IsSrcLayered && SrcLayerIndex == -1)
+            if (isSrcLayered && srcLayerIndex == -1)
             {
-                for (int Layer = 0; Layer < SrcTexture.LayerCount; Layer++)
+                for (int layer = 0; layer < srcTexture.LayerCount; layer++)
                 {
-                    Gpu.ResourceManager.SetTextureArrayLayer(SrcKey + GetLayerOffset(SrcTexture, Layer), Layer);
+                    _gpu.ResourceManager.SetTextureArrayLayer(srcKey + GetLayerOffset(srcTexture, layer), layer);
                 }
 
-                SrcLayerIndex = 0;
+                srcLayerIndex = 0;
             }
 
-            if (IsDstLayered && DstLayerIndex == -1)
+            if (isDstLayered && dstLayerIndex == -1)
             {
-                for (int Layer = 0; Layer < DstTexture.LayerCount; Layer++)
+                for (int layer = 0; layer < dstTexture.LayerCount; layer++)
                 {
-                    Gpu.ResourceManager.SetTextureArrayLayer(DstKey + GetLayerOffset(DstTexture, Layer), Layer);
+                    _gpu.ResourceManager.SetTextureArrayLayer(dstKey + GetLayerOffset(dstTexture, layer), layer);
                 }
 
-                DstLayerIndex = 0;
+                dstLayerIndex = 0;
             }
 
-            int SrcBlitX1 = (int)(SrcBlitX >> 32);
-            int SrcBlitY1 = (int)(SrcBlitY >> 32);
+            int srcBlitX1 = (int)(srcBlitX >> 32);
+            int srcBlitY1 = (int)(srcBlitY >> 32);
 
-            int SrcBlitX2 = (int)(SrcBlitX + DstBlitW * BlitDuDx >> 32);
-            int SrcBlitY2 = (int)(SrcBlitY + DstBlitH * BlitDvDy >> 32);
+            int srcBlitX2 = (int)(srcBlitX + dstBlitW * blitDuDx >> 32);
+            int srcBlitY2 = (int)(srcBlitY + dstBlitH * blitDvDy >> 32);
 
-            Gpu.Renderer.RenderTarget.Copy(
-                SrcTexture,
-                DstTexture,
-                SrcKey,
-                DstKey,
-                SrcLayerIndex,
-                DstLayerIndex,
-                SrcBlitX1,
-                SrcBlitY1,
-                SrcBlitX2,
-                SrcBlitY2,
-                DstBlitX,
-                DstBlitY,
-                DstBlitX + DstBlitW,
-                DstBlitY + DstBlitH);
+            _gpu.Renderer.RenderTarget.Copy(
+                srcTexture,
+                dstTexture,
+                srcKey,
+                dstKey,
+                srcLayerIndex,
+                dstLayerIndex,
+                srcBlitX1,
+                srcBlitY1,
+                srcBlitX2,
+                srcBlitY2,
+                dstBlitX,
+                dstBlitY,
+                dstBlitX + dstBlitW,
+                dstBlitY + dstBlitH);
 
             //Do a guest side copy aswell. This is necessary when
             //the texture is modified by the guest, however it doesn't
@@ -209,51 +208,51 @@ namespace Ryujinx.Graphics.Graphics3d
 
             // FIXME: SUPPORT MULTILAYER CORRECTLY HERE (this will cause weird stuffs on the first layer)
             ImageUtils.CopyTexture(
-                Vmm,
-                SrcTexture,
-                DstTexture,
-                SrcAddress,
-                DstAddress,
-                SrcBlitX1,
-                SrcBlitY1,
-                DstBlitX,
-                DstBlitY,
-                DstBlitW,
-                DstBlitH);
+                vmm,
+                srcTexture,
+                dstTexture,
+                srcAddress,
+                dstAddress,
+                srcBlitX1,
+                srcBlitY1,
+                dstBlitX,
+                dstBlitY,
+                dstBlitW,
+                dstBlitH);
 
-            Vmm.IsRegionModified(DstKey, ImageUtils.GetSize(DstTexture), NvGpuBufferType.Texture);
+            vmm.IsRegionModified(dstKey, ImageUtils.GetSize(dstTexture), NvGpuBufferType.Texture);
         }
 
-        private static GalMemoryLayout GetLayout(bool Linear)
+        private static GalMemoryLayout GetLayout(bool linear)
         {
-            return Linear
+            return linear
                 ? GalMemoryLayout.Pitch
                 : GalMemoryLayout.BlockLinear;
         }
 
-        private long MakeInt64From2xInt32(NvGpuEngine2dReg Reg)
+        private long MakeInt64From2xInt32(NvGpuEngine2dReg reg)
         {
             return
-                (long)Registers[(int)Reg + 0] << 32 |
-                (uint)Registers[(int)Reg + 1];
+                (long)Registers[(int)reg + 0] << 32 |
+                (uint)Registers[(int)reg + 1];
         }
 
-        private void WriteRegister(GpuMethodCall MethCall)
+        private void WriteRegister(GpuMethodCall methCall)
         {
-            Registers[MethCall.Method] = MethCall.Argument;
+            Registers[methCall.Method] = methCall.Argument;
         }
 
-        private long ReadRegisterFixed1_31_32(NvGpuEngine2dReg Reg)
+        private long ReadRegisterFixed1_31_32(NvGpuEngine2dReg reg)
         {
-            long Low  = (uint)ReadRegister(Reg + 0);
-            long High = (uint)ReadRegister(Reg + 1);
+            long low  = (uint)ReadRegister(reg + 0);
+            long high = (uint)ReadRegister(reg + 1);
 
-            return Low | (High << 32);
+            return low | (high << 32);
         }
 
-        private int ReadRegister(NvGpuEngine2dReg Reg)
+        private int ReadRegister(NvGpuEngine2dReg reg)
         {
-            return Registers[(int)Reg];
+            return Registers[(int)reg];
         }
     }
 }

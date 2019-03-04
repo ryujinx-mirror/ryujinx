@@ -14,18 +14,18 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public List<ShaderIrNode> Nodes { get; private set; }
 
-        public ShaderIrBlock(int Position)
+        public ShaderIrBlock(int position)
         {
-            this.Position = Position;
+            Position = position;
 
             Sources = new List<ShaderIrBlock>();
 
             Nodes = new List<ShaderIrNode>();
         }
 
-        public void AddNode(ShaderIrNode Node)
+        public void AddNode(ShaderIrNode node)
         {
-            Nodes.Add(Node);
+            Nodes.Add(node);
         }
 
         public ShaderIrNode[] GetNodes()

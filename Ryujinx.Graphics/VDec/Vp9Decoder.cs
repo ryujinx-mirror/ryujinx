@@ -33,7 +33,7 @@ namespace Ryujinx.Graphics.VDec
         private byte[] DefaultTx16x16Probs = new byte[] { 20, 152, 15, 101 };
         private byte[] DefaultTx32x32Probs = new byte[] { 3, 136, 37, 5, 52, 13 };
 
-        private byte[] DefaultCoefProbs = new byte[]
+        private byte[] _defaultCoefProbs = new byte[]
         {
             195, 29,  183, 0, 84,  49,  136, 0, 8,   42,  71,  0, 0,   0,   0,   0,
             0,   0,   0,   0, 0,   0,   0,   0, 31,  107, 169, 0, 35,  99,  159, 0,
@@ -181,39 +181,39 @@ namespace Ryujinx.Graphics.VDec
             1,   115, 166, 0, 1,   84,  121, 0, 1,   51,  67,  0, 1,   16,  6,   0
         };
 
-        private byte[] DefaultSkipProbs = new byte[] { 192, 128, 64 };
+        private byte[] _defaultSkipProbs = new byte[] { 192, 128, 64 };
 
-        private byte[] DefaultInterModeProbs = new byte[]
+        private byte[] _defaultInterModeProbs = new byte[]
         {
             2, 173, 34, 0, 7,  145, 85, 0, 7,  166, 63, 0, 7, 94, 66, 0,
             8, 64,  46, 0, 17, 81,  31, 0, 25, 29,  30, 0
         };
 
-        private byte[] DefaultInterpFilterProbs = new byte[]
+        private byte[] _defaultInterpFilterProbs = new byte[]
         {
             235, 162, 36, 255, 34, 3, 149, 144
         };
 
-        private byte[] DefaultIsInterProbs = new byte[] { 9, 102, 187, 225 };
+        private byte[] _defaultIsInterProbs = new byte[] { 9, 102, 187, 225 };
 
-        private byte[] DefaultCompModeProbs = new byte[] { 239, 183, 119, 96, 41 };
+        private byte[] _defaultCompModeProbs = new byte[] { 239, 183, 119, 96, 41 };
 
-        private byte[] DefaultSingleRefProbs = new byte[]
+        private byte[] _defaultSingleRefProbs = new byte[]
         {
             33, 16, 77, 74, 142, 142, 172, 170, 238, 247
         };
 
-        private byte[] DefaultCompRefProbs = new byte[] { 50, 126, 123, 221, 226 };
+        private byte[] _defaultCompRefProbs = new byte[] { 50, 126, 123, 221, 226 };
 
-        private byte[] DefaultYModeProbs0 = new byte[]
+        private byte[] _defaultYModeProbs0 = new byte[]
         {
             65,  32, 18, 144, 162, 194, 41, 51, 132, 68,  18, 165, 217, 196, 45, 40,
             173, 80, 19, 176, 240, 193, 64, 35, 221, 135, 38, 194, 248, 121, 96, 85
         };
 
-        private byte[] DefaultYModeProbs1 = new byte[] { 98, 78, 46, 29 };
+        private byte[] _defaultYModeProbs1 = new byte[] { 98, 78, 46, 29 };
 
-        private byte[] DefaultPartitionProbs = new byte[]
+        private byte[] _defaultPartitionProbs = new byte[]
         {
             199, 122, 141, 0, 147, 63,  159, 0, 148, 133, 118, 0, 121, 104, 114, 0,
             174, 73,  87,  0, 92,  41,  83,  0, 82,  99,  50,  0, 53,  39,  39,  0,
@@ -221,184 +221,184 @@ namespace Ryujinx.Graphics.VDec
             222, 34,  30,  0, 72,  16,  44,  0, 58,  32,  12,  0, 10,  7,   6,   0
         };
 
-        private byte[] DefaultMvJointProbs = new byte[] { 32, 64, 96 };
+        private byte[] _defaultMvJointProbs = new byte[] { 32, 64, 96 };
 
-        private byte[] DefaultMvSignProbs = new byte[] { 128, 128 };
+        private byte[] _defaultMvSignProbs = new byte[] { 128, 128 };
 
-        private byte[] DefaultMvClassProbs = new byte[]
+        private byte[] _defaultMvClassProbs = new byte[]
         {
             224, 144, 192, 168, 192, 176, 192, 198, 198, 245, 216, 128, 176, 160, 176, 176,
             192, 198, 198, 208
         };
 
-        private byte[] DefaultMvClass0BitProbs = new byte[] { 216, 208 };
+        private byte[] _defaultMvClass0BitProbs = new byte[] { 216, 208 };
 
-        private byte[] DefaultMvBitsProbs = new byte[]
+        private byte[] _defaultMvBitsProbs = new byte[]
         {
             136, 140, 148, 160, 176, 192, 224, 234, 234, 240, 136, 140, 148, 160, 176, 192,
             224, 234, 234, 240
         };
 
-        private byte[] DefaultMvClass0FrProbs = new byte[]
+        private byte[] _defaultMvClass0FrProbs = new byte[]
         {
             128, 128, 64, 96, 112, 64, 128, 128, 64, 96, 112, 64
         };
 
-        private byte[] DefaultMvFrProbs = new byte[] { 64, 96, 64, 64, 96, 64 };
+        private byte[] _defaultMvFrProbs = new byte[] { 64, 96, 64, 64, 96, 64 };
 
-        private byte[] DefaultMvClass0HpProbs = new byte[] { 160, 160 };
+        private byte[] _defaultMvClass0HpProbs = new byte[] { 160, 160 };
 
-        private byte[] DefaultMvHpProbs = new byte[] { 128, 128 };
+        private byte[] _defaultMvHpProbs = new byte[] { 128, 128 };
 
-        private sbyte[] LoopFilterRefDeltas;
-        private sbyte[] LoopFilterModeDeltas;
+        private sbyte[] _loopFilterRefDeltas;
+        private sbyte[] _loopFilterModeDeltas;
 
-        private LinkedList<int> FrameSlotByLastUse;
+        private LinkedList<int> _frameSlotByLastUse;
 
-        private Dictionary<long, LinkedListNode<int>> CachedRefFrames;
+        private Dictionary<long, LinkedListNode<int>> _cachedRefFrames;
 
         public Vp9Decoder()
         {
-            LoopFilterRefDeltas  = new sbyte[4];
-            LoopFilterModeDeltas = new sbyte[2];
+            _loopFilterRefDeltas  = new sbyte[4];
+            _loopFilterModeDeltas = new sbyte[2];
 
-            FrameSlotByLastUse = new LinkedList<int>();
+            _frameSlotByLastUse = new LinkedList<int>();
 
-            for (int Slot = 0; Slot < 8; Slot++)
+            for (int slot = 0; slot < 8; slot++)
             {
-                FrameSlotByLastUse.AddFirst(Slot);
+                _frameSlotByLastUse.AddFirst(slot);
             }
 
-            CachedRefFrames = new Dictionary<long, LinkedListNode<int>>();
+            _cachedRefFrames = new Dictionary<long, LinkedListNode<int>>();
         }
 
         public void Decode(
-            Vp9FrameKeys         Keys,
-            Vp9FrameHeader       Header,
-            Vp9ProbabilityTables Probs,
-            byte[]               FrameData)
+            Vp9FrameKeys         keys,
+            Vp9FrameHeader       header,
+            Vp9ProbabilityTables probs,
+            byte[]               frameData)
         {
-            bool IsKeyFrame         = ((Header.Flags >> 0) & 1) != 0;
-            bool LastIsKeyFrame     = ((Header.Flags >> 1) & 1) != 0;
-            bool FrameSizeChanged   = ((Header.Flags >> 2) & 1) != 0;
-            bool ErrorResilientMode = ((Header.Flags >> 3) & 1) != 0;
-            bool LastShowFrame      = ((Header.Flags >> 4) & 1) != 0;
-            bool IsFrameIntra       = ((Header.Flags >> 5) & 1) != 0;
+            bool isKeyFrame         = ((header.Flags >> 0) & 1) != 0;
+            bool lastIsKeyFrame     = ((header.Flags >> 1) & 1) != 0;
+            bool frameSizeChanged   = ((header.Flags >> 2) & 1) != 0;
+            bool errorResilientMode = ((header.Flags >> 3) & 1) != 0;
+            bool lastShowFrame      = ((header.Flags >> 4) & 1) != 0;
+            bool isFrameIntra       = ((header.Flags >> 5) & 1) != 0;
 
-            bool ShowFrame = !IsFrameIntra;
+            bool showFrame = !isFrameIntra;
 
             //Write compressed header.
-            byte[] CompressedHeaderData;
+            byte[] compressedHeaderData;
 
-            using (MemoryStream CompressedHeader = new MemoryStream())
+            using (MemoryStream compressedHeader = new MemoryStream())
             {
-                VpxRangeEncoder Writer = new VpxRangeEncoder(CompressedHeader);
+                VpxRangeEncoder writer = new VpxRangeEncoder(compressedHeader);
 
-                if (!Header.Lossless)
+                if (!header.Lossless)
                 {
-                    if ((uint)Header.TxMode >= 3)
+                    if ((uint)header.TxMode >= 3)
                     {
-                        Writer.Write(3, 2);
-                        Writer.Write(Header.TxMode == 4);
+                        writer.Write(3, 2);
+                        writer.Write(header.TxMode == 4);
                     }
                     else
                     {
-                        Writer.Write(Header.TxMode, 2);
+                        writer.Write(header.TxMode, 2);
                     }
                 }
 
-                if (Header.TxMode == 4)
+                if (header.TxMode == 4)
                 {
-                    WriteProbabilityUpdate(Writer, Probs.Tx8x8Probs,   DefaultTx8x8Probs);
-                    WriteProbabilityUpdate(Writer, Probs.Tx16x16Probs, DefaultTx16x16Probs);
-                    WriteProbabilityUpdate(Writer, Probs.Tx32x32Probs, DefaultTx32x32Probs);
+                    WriteProbabilityUpdate(writer, probs.Tx8x8Probs,   DefaultTx8x8Probs);
+                    WriteProbabilityUpdate(writer, probs.Tx16x16Probs, DefaultTx16x16Probs);
+                    WriteProbabilityUpdate(writer, probs.Tx32x32Probs, DefaultTx32x32Probs);
                 }
 
-                WriteCoefProbabilityUpdate(Writer, Header.TxMode, Probs.CoefProbs, DefaultCoefProbs);
+                WriteCoefProbabilityUpdate(writer, header.TxMode, probs.CoefProbs, _defaultCoefProbs);
 
-                WriteProbabilityUpdate(Writer, Probs.SkipProbs, DefaultSkipProbs);
+                WriteProbabilityUpdate(writer, probs.SkipProbs, _defaultSkipProbs);
 
-                if (!IsFrameIntra)
+                if (!isFrameIntra)
                 {
-                    WriteProbabilityUpdateAligned4(Writer, Probs.InterModeProbs, DefaultInterModeProbs);
+                    WriteProbabilityUpdateAligned4(writer, probs.InterModeProbs, _defaultInterModeProbs);
 
-                    if (Header.RawInterpolationFilter == 4)
+                    if (header.RawInterpolationFilter == 4)
                     {
-                        WriteProbabilityUpdate(Writer, Probs.InterpFilterProbs, DefaultInterpFilterProbs);
+                        WriteProbabilityUpdate(writer, probs.InterpFilterProbs, _defaultInterpFilterProbs);
                     }
 
-                    WriteProbabilityUpdate(Writer, Probs.IsInterProbs, DefaultIsInterProbs);
+                    WriteProbabilityUpdate(writer, probs.IsInterProbs, _defaultIsInterProbs);
 
-                    if ((Header.RefFrameSignBias[1] & 1) != (Header.RefFrameSignBias[2] & 1) ||
-                        (Header.RefFrameSignBias[1] & 1) != (Header.RefFrameSignBias[3] & 1))
+                    if ((header.RefFrameSignBias[1] & 1) != (header.RefFrameSignBias[2] & 1) ||
+                        (header.RefFrameSignBias[1] & 1) != (header.RefFrameSignBias[3] & 1))
                     {
-                        if ((uint)Header.CompPredMode >= 1)
+                        if ((uint)header.CompPredMode >= 1)
                         {
-                            Writer.Write(1, 1);
-                            Writer.Write(Header.CompPredMode == 2);
+                            writer.Write(1, 1);
+                            writer.Write(header.CompPredMode == 2);
                         }
                         else
                         {
-                            Writer.Write(0, 1);
+                            writer.Write(0, 1);
                         }
                     }
 
-                    if (Header.CompPredMode == 2)
+                    if (header.CompPredMode == 2)
                     {
-                        WriteProbabilityUpdate(Writer, Probs.CompModeProbs, DefaultCompModeProbs);
+                        WriteProbabilityUpdate(writer, probs.CompModeProbs, _defaultCompModeProbs);
                     }
 
-                    if (Header.CompPredMode != 1)
+                    if (header.CompPredMode != 1)
                     {
-                        WriteProbabilityUpdate(Writer, Probs.SingleRefProbs, DefaultSingleRefProbs);
+                        WriteProbabilityUpdate(writer, probs.SingleRefProbs, _defaultSingleRefProbs);
                     }
 
-                    if (Header.CompPredMode != 0)
+                    if (header.CompPredMode != 0)
                     {
-                        WriteProbabilityUpdate(Writer, Probs.CompRefProbs, DefaultCompRefProbs);
+                        WriteProbabilityUpdate(writer, probs.CompRefProbs, _defaultCompRefProbs);
                     }
 
-                    for (int Index = 0; Index < 4; Index++)
+                    for (int index = 0; index < 4; index++)
                     {
-                        int i = Index * 8;
-                        int j = Index;
+                        int i = index * 8;
+                        int j = index;
 
-                        WriteProbabilityUpdate(Writer, Probs.YModeProbs0[i + 0], DefaultYModeProbs0[i + 0]);
-                        WriteProbabilityUpdate(Writer, Probs.YModeProbs0[i + 1], DefaultYModeProbs0[i + 1]);
-                        WriteProbabilityUpdate(Writer, Probs.YModeProbs0[i + 2], DefaultYModeProbs0[i + 2]);
-                        WriteProbabilityUpdate(Writer, Probs.YModeProbs0[i + 3], DefaultYModeProbs0[i + 3]);
-                        WriteProbabilityUpdate(Writer, Probs.YModeProbs0[i + 4], DefaultYModeProbs0[i + 4]);
-                        WriteProbabilityUpdate(Writer, Probs.YModeProbs0[i + 5], DefaultYModeProbs0[i + 5]);
-                        WriteProbabilityUpdate(Writer, Probs.YModeProbs0[i + 6], DefaultYModeProbs0[i + 6]);
-                        WriteProbabilityUpdate(Writer, Probs.YModeProbs0[i + 7], DefaultYModeProbs0[i + 7]);
-                        WriteProbabilityUpdate(Writer, Probs.YModeProbs1[j + 0], DefaultYModeProbs1[j + 0]);
+                        WriteProbabilityUpdate(writer, probs.YModeProbs0[i + 0], _defaultYModeProbs0[i + 0]);
+                        WriteProbabilityUpdate(writer, probs.YModeProbs0[i + 1], _defaultYModeProbs0[i + 1]);
+                        WriteProbabilityUpdate(writer, probs.YModeProbs0[i + 2], _defaultYModeProbs0[i + 2]);
+                        WriteProbabilityUpdate(writer, probs.YModeProbs0[i + 3], _defaultYModeProbs0[i + 3]);
+                        WriteProbabilityUpdate(writer, probs.YModeProbs0[i + 4], _defaultYModeProbs0[i + 4]);
+                        WriteProbabilityUpdate(writer, probs.YModeProbs0[i + 5], _defaultYModeProbs0[i + 5]);
+                        WriteProbabilityUpdate(writer, probs.YModeProbs0[i + 6], _defaultYModeProbs0[i + 6]);
+                        WriteProbabilityUpdate(writer, probs.YModeProbs0[i + 7], _defaultYModeProbs0[i + 7]);
+                        WriteProbabilityUpdate(writer, probs.YModeProbs1[j + 0], _defaultYModeProbs1[j + 0]);
                     }
 
-                    WriteProbabilityUpdateAligned4(Writer, Probs.PartitionProbs, DefaultPartitionProbs);
+                    WriteProbabilityUpdateAligned4(writer, probs.PartitionProbs, _defaultPartitionProbs);
 
                     for (int i = 0; i < 3; i++)
                     {
-                        WriteMvProbabilityUpdate(Writer, Probs.MvJointProbs[i], DefaultMvJointProbs[i]);
+                        WriteMvProbabilityUpdate(writer, probs.MvJointProbs[i], _defaultMvJointProbs[i]);
                     }
 
                     for (int i = 0; i < 2; i++)
                     {
-                        WriteMvProbabilityUpdate(Writer, Probs.MvSignProbs[i], DefaultMvSignProbs[i]);
+                        WriteMvProbabilityUpdate(writer, probs.MvSignProbs[i], _defaultMvSignProbs[i]);
 
                         for (int j = 0; j < 10; j++)
                         {
-                            int Index = i * 10 + j;
+                            int index = i * 10 + j;
 
-                            WriteMvProbabilityUpdate(Writer, Probs.MvClassProbs[Index], DefaultMvClassProbs[Index]);
+                            WriteMvProbabilityUpdate(writer, probs.MvClassProbs[index], _defaultMvClassProbs[index]);
                         }
 
-                        WriteMvProbabilityUpdate(Writer, Probs.MvClass0BitProbs[i], DefaultMvClass0BitProbs[i]);
+                        WriteMvProbabilityUpdate(writer, probs.MvClass0BitProbs[i], _defaultMvClass0BitProbs[i]);
 
                         for (int j = 0; j < 10; j++)
                         {
-                            int Index = i * 10 + j;
+                            int index = i * 10 + j;
 
-                            WriteMvProbabilityUpdate(Writer, Probs.MvBitsProbs[Index], DefaultMvBitsProbs[Index]);
+                            WriteMvProbabilityUpdate(writer, probs.MvBitsProbs[index], _defaultMvBitsProbs[index]);
                         }
                     }
 
@@ -408,249 +408,249 @@ namespace Ryujinx.Graphics.VDec
                         {
                             for (int k = 0; k < 3; k++)
                             {
-                                int Index = i * 2 * 3 + j * 3 + k;
+                                int index = i * 2 * 3 + j * 3 + k;
 
-                                WriteMvProbabilityUpdate(Writer, Probs.MvClass0FrProbs[Index], DefaultMvClass0FrProbs[Index]);
+                                WriteMvProbabilityUpdate(writer, probs.MvClass0FrProbs[index], _defaultMvClass0FrProbs[index]);
                             }
                         }
 
                         for (int j = 0; j < 3; j++)
                         {
-                            int Index = i * 3 + j;
+                            int index = i * 3 + j;
 
-                            WriteMvProbabilityUpdate(Writer, Probs.MvFrProbs[Index], DefaultMvFrProbs[Index]);
+                            WriteMvProbabilityUpdate(writer, probs.MvFrProbs[index], _defaultMvFrProbs[index]);
                         }
                     }
 
-                    if (Header.AllowHighPrecisionMv)
+                    if (header.AllowHighPrecisionMv)
                     {
-                        for (int Index = 0; Index < 2; Index++)
+                        for (int index = 0; index < 2; index++)
                         {
-                            WriteMvProbabilityUpdate(Writer, Probs.MvClass0HpProbs[Index], DefaultMvClass0HpProbs[Index]);
-                            WriteMvProbabilityUpdate(Writer, Probs.MvHpProbs[Index],       DefaultMvHpProbs[Index]);
+                            WriteMvProbabilityUpdate(writer, probs.MvClass0HpProbs[index], _defaultMvClass0HpProbs[index]);
+                            WriteMvProbabilityUpdate(writer, probs.MvHpProbs[index],       _defaultMvHpProbs[index]);
                         }
                     }
                 }
 
-                Writer.End();
+                writer.End();
 
-                CompressedHeaderData = CompressedHeader.ToArray();
+                compressedHeaderData = compressedHeader.ToArray();
             }
 
             //Write uncompressed header.
-            using (MemoryStream EncodedHeader = new MemoryStream())
+            using (MemoryStream encodedHeader = new MemoryStream())
             {
-                VpxBitStreamWriter Writer = new VpxBitStreamWriter(EncodedHeader);
+                VpxBitStreamWriter writer = new VpxBitStreamWriter(encodedHeader);
 
-                Writer.WriteU(2, 2); //Frame marker.
-                Writer.WriteU(0, 2); //Profile.
-                Writer.WriteBit(false); //Show existing frame.
-                Writer.WriteBit(!IsKeyFrame);
-                Writer.WriteBit(ShowFrame);
-                Writer.WriteBit(ErrorResilientMode);
+                writer.WriteU(2, 2); //Frame marker.
+                writer.WriteU(0, 2); //Profile.
+                writer.WriteBit(false); //Show existing frame.
+                writer.WriteBit(!isKeyFrame);
+                writer.WriteBit(showFrame);
+                writer.WriteBit(errorResilientMode);
 
-                if (IsKeyFrame)
+                if (isKeyFrame)
                 {
-                    Writer.WriteU(FrameSyncCode, 24);
-                    Writer.WriteU(0, 3); //Color space.
-                    Writer.WriteU(0, 1); //Color range.
-                    Writer.WriteU(Header.CurrentFrame.Width - 1, 16);
-                    Writer.WriteU(Header.CurrentFrame.Height - 1, 16);
-                    Writer.WriteBit(false); //Render and frame size different.
+                    writer.WriteU(FrameSyncCode, 24);
+                    writer.WriteU(0, 3); //Color space.
+                    writer.WriteU(0, 1); //Color range.
+                    writer.WriteU(header.CurrentFrame.Width - 1, 16);
+                    writer.WriteU(header.CurrentFrame.Height - 1, 16);
+                    writer.WriteBit(false); //Render and frame size different.
 
-                    CachedRefFrames.Clear();
+                    _cachedRefFrames.Clear();
 
                     //On key frames, all frame slots are set to the current frame,
                     //so the value of the selected slot doesn't really matter.
-                    GetNewFrameSlot(Keys.CurrKey);
+                    GetNewFrameSlot(keys.CurrKey);
                 }
                 else
                 {
-                    if (!ShowFrame)
+                    if (!showFrame)
                     {
-                        Writer.WriteBit(IsFrameIntra);
+                        writer.WriteBit(isFrameIntra);
                     }
 
-                    if (!ErrorResilientMode)
+                    if (!errorResilientMode)
                     {
-                        Writer.WriteU(0, 2); //Reset frame context.
+                        writer.WriteU(0, 2); //Reset frame context.
                     }
 
-                    int RefreshFrameFlags = 1 << GetNewFrameSlot(Keys.CurrKey);
+                    int refreshFrameFlags = 1 << GetNewFrameSlot(keys.CurrKey);
 
-                    if (IsFrameIntra)
+                    if (isFrameIntra)
                     {
-                        Writer.WriteU(FrameSyncCode, 24);
-                        Writer.WriteU(RefreshFrameFlags, 8);
-                        Writer.WriteU(Header.CurrentFrame.Width - 1, 16);
-                        Writer.WriteU(Header.CurrentFrame.Height - 1, 16);
-                        Writer.WriteBit(false); //Render and frame size different.
+                        writer.WriteU(FrameSyncCode, 24);
+                        writer.WriteU(refreshFrameFlags, 8);
+                        writer.WriteU(header.CurrentFrame.Width - 1, 16);
+                        writer.WriteU(header.CurrentFrame.Height - 1, 16);
+                        writer.WriteBit(false); //Render and frame size different.
                     }
                     else
                     {
-                        Writer.WriteU(RefreshFrameFlags, 8);
+                        writer.WriteU(refreshFrameFlags, 8);
 
-                        int[] RefFrameIndex = new int[]
+                        int[] refFrameIndex = new int[]
                         {
-                            GetFrameSlot(Keys.Ref0Key),
-                            GetFrameSlot(Keys.Ref1Key),
-                            GetFrameSlot(Keys.Ref2Key)
+                            GetFrameSlot(keys.Ref0Key),
+                            GetFrameSlot(keys.Ref1Key),
+                            GetFrameSlot(keys.Ref2Key)
                         };
 
-                        byte[] RefFrameSignBias = Header.RefFrameSignBias;
+                        byte[] refFrameSignBias = header.RefFrameSignBias;
 
-                        for (int Index = 1; Index < 4; Index++)
+                        for (int index = 1; index < 4; index++)
                         {
-                            Writer.WriteU(RefFrameIndex[Index - 1], 3);
-                            Writer.WriteU(RefFrameSignBias[Index], 1);
+                            writer.WriteU(refFrameIndex[index - 1], 3);
+                            writer.WriteU(refFrameSignBias[index], 1);
                         }
 
-                        Writer.WriteBit(true); //Frame size with refs.
-                        Writer.WriteBit(false); //Render and frame size different.
-                        Writer.WriteBit(Header.AllowHighPrecisionMv);
-                        Writer.WriteBit(Header.RawInterpolationFilter == 4);
+                        writer.WriteBit(true); //Frame size with refs.
+                        writer.WriteBit(false); //Render and frame size different.
+                        writer.WriteBit(header.AllowHighPrecisionMv);
+                        writer.WriteBit(header.RawInterpolationFilter == 4);
 
-                        if (Header.RawInterpolationFilter != 4)
+                        if (header.RawInterpolationFilter != 4)
                         {
-                            Writer.WriteU(Header.RawInterpolationFilter, 2);
+                            writer.WriteU(header.RawInterpolationFilter, 2);
                         }
                     }
                 }
 
-                if (!ErrorResilientMode)
+                if (!errorResilientMode)
                 {
-                    Writer.WriteBit(false); //Refresh frame context.
-                    Writer.WriteBit(true); //Frame parallel decoding mode.
+                    writer.WriteBit(false); //Refresh frame context.
+                    writer.WriteBit(true); //Frame parallel decoding mode.
                 }
 
-                Writer.WriteU(0, 2); //Frame context index.
+                writer.WriteU(0, 2); //Frame context index.
 
-                Writer.WriteU(Header.LoopFilterLevel, 6);
-                Writer.WriteU(Header.LoopFilterSharpness, 3);
-                Writer.WriteBit(Header.LoopFilterDeltaEnabled);
+                writer.WriteU(header.LoopFilterLevel, 6);
+                writer.WriteU(header.LoopFilterSharpness, 3);
+                writer.WriteBit(header.LoopFilterDeltaEnabled);
 
-                if (Header.LoopFilterDeltaEnabled)
+                if (header.LoopFilterDeltaEnabled)
                 {
-                    bool[] UpdateLoopFilterRefDeltas  = new bool[4];
-                    bool[] UpdateLoopFilterModeDeltas = new bool[2];
+                    bool[] updateLoopFilterRefDeltas  = new bool[4];
+                    bool[] updateLoopFilterModeDeltas = new bool[2];
 
-                    bool LoopFilterDeltaUpdate = false;
+                    bool loopFilterDeltaUpdate = false;
 
-                    for (int Index = 0; Index < Header.LoopFilterRefDeltas.Length; Index++)
+                    for (int index = 0; index < header.LoopFilterRefDeltas.Length; index++)
                     {
-                        sbyte Old =        LoopFilterRefDeltas[Index];
-                        sbyte New = Header.LoopFilterRefDeltas[Index];
+                        sbyte old =        _loopFilterRefDeltas[index];
+                        sbyte New = header.LoopFilterRefDeltas[index];
 
-                        LoopFilterDeltaUpdate |= (UpdateLoopFilterRefDeltas[Index] = Old != New);
+                        loopFilterDeltaUpdate |= (updateLoopFilterRefDeltas[index] = old != New);
                     }
 
-                    for (int Index = 0; Index < Header.LoopFilterModeDeltas.Length; Index++)
+                    for (int index = 0; index < header.LoopFilterModeDeltas.Length; index++)
                     {
-                        sbyte Old =        LoopFilterModeDeltas[Index];
-                        sbyte New = Header.LoopFilterModeDeltas[Index];
+                        sbyte old =        _loopFilterModeDeltas[index];
+                        sbyte New = header.LoopFilterModeDeltas[index];
 
-                        LoopFilterDeltaUpdate |= (UpdateLoopFilterModeDeltas[Index] = Old != New);
+                        loopFilterDeltaUpdate |= (updateLoopFilterModeDeltas[index] = old != New);
                     }
 
-                    Writer.WriteBit(LoopFilterDeltaUpdate);
+                    writer.WriteBit(loopFilterDeltaUpdate);
 
-                    if (LoopFilterDeltaUpdate)
+                    if (loopFilterDeltaUpdate)
                     {
-                        for (int Index = 0; Index < Header.LoopFilterRefDeltas.Length; Index++)
+                        for (int index = 0; index < header.LoopFilterRefDeltas.Length; index++)
                         {
-                            Writer.WriteBit(UpdateLoopFilterRefDeltas[Index]);
+                            writer.WriteBit(updateLoopFilterRefDeltas[index]);
 
-                            if (UpdateLoopFilterRefDeltas[Index])
+                            if (updateLoopFilterRefDeltas[index])
                             {
-                                Writer.WriteS(Header.LoopFilterRefDeltas[Index], 6);
+                                writer.WriteS(header.LoopFilterRefDeltas[index], 6);
                             }
                         }
 
-                        for (int Index = 0; Index < Header.LoopFilterModeDeltas.Length; Index++)
+                        for (int index = 0; index < header.LoopFilterModeDeltas.Length; index++)
                         {
-                            Writer.WriteBit(UpdateLoopFilterModeDeltas[Index]);
+                            writer.WriteBit(updateLoopFilterModeDeltas[index]);
 
-                            if (UpdateLoopFilterModeDeltas[Index])
+                            if (updateLoopFilterModeDeltas[index])
                             {
-                                Writer.WriteS(Header.LoopFilterModeDeltas[Index], 6);
+                                writer.WriteS(header.LoopFilterModeDeltas[index], 6);
                             }
                         }
                     }
                 }
 
-                Writer.WriteU(Header.BaseQIndex, 8);
+                writer.WriteU(header.BaseQIndex, 8);
 
-                Writer.WriteDeltaQ(Header.DeltaQYDc);
-                Writer.WriteDeltaQ(Header.DeltaQUvDc);
-                Writer.WriteDeltaQ(Header.DeltaQUvAc);
+                writer.WriteDeltaQ(header.DeltaQYDc);
+                writer.WriteDeltaQ(header.DeltaQUvDc);
+                writer.WriteDeltaQ(header.DeltaQUvAc);
 
-                Writer.WriteBit(false); //Segmentation enabled (TODO).
+                writer.WriteBit(false); //Segmentation enabled (TODO).
 
-                int MinTileColsLog2 = CalcMinLog2TileCols(Header.CurrentFrame.Width);
-                int MaxTileColsLog2 = CalcMaxLog2TileCols(Header.CurrentFrame.Width);
+                int minTileColsLog2 = CalcMinLog2TileCols(header.CurrentFrame.Width);
+                int maxTileColsLog2 = CalcMaxLog2TileCols(header.CurrentFrame.Width);
 
-                int TileColsLog2Diff = Header.TileColsLog2 - MinTileColsLog2;
+                int tileColsLog2Diff = header.TileColsLog2 - minTileColsLog2;
 
-                int TileColsLog2IncMask = (1 << TileColsLog2Diff) - 1;
+                int tileColsLog2IncMask = (1 << tileColsLog2Diff) - 1;
 
                 //If it's less than the maximum, we need to add an extra 0 on the bitstream
                 //to indicate that it should stop reading.
-                if (Header.TileColsLog2 < MaxTileColsLog2)
+                if (header.TileColsLog2 < maxTileColsLog2)
                 {
-                    Writer.WriteU(TileColsLog2IncMask << 1, TileColsLog2Diff + 1);
+                    writer.WriteU(tileColsLog2IncMask << 1, tileColsLog2Diff + 1);
                 }
                 else
                 {
-                    Writer.WriteU(TileColsLog2IncMask, TileColsLog2Diff);
+                    writer.WriteU(tileColsLog2IncMask, tileColsLog2Diff);
                 }
 
-                bool TileRowsLog2IsNonZero = Header.TileRowsLog2 != 0;
+                bool tileRowsLog2IsNonZero = header.TileRowsLog2 != 0;
 
-                Writer.WriteBit(TileRowsLog2IsNonZero);
+                writer.WriteBit(tileRowsLog2IsNonZero);
 
-                if (TileRowsLog2IsNonZero)
+                if (tileRowsLog2IsNonZero)
                 {
-                    Writer.WriteBit(Header.TileRowsLog2 > 1);
+                    writer.WriteBit(header.TileRowsLog2 > 1);
                 }
 
-                Writer.WriteU(CompressedHeaderData.Length, 16);
+                writer.WriteU(compressedHeaderData.Length, 16);
 
-                Writer.Flush();
+                writer.Flush();
 
-                EncodedHeader.Write(CompressedHeaderData, 0, CompressedHeaderData.Length);
+                encodedHeader.Write(compressedHeaderData, 0, compressedHeaderData.Length);
 
                 if (!FFmpegWrapper.IsInitialized)
                 {
                     FFmpegWrapper.Vp9Initialize();
                 }
 
-                FFmpegWrapper.DecodeFrame(DecoderHelper.Combine(EncodedHeader.ToArray(), FrameData));
+                FFmpegWrapper.DecodeFrame(DecoderHelper.Combine(encodedHeader.ToArray(), frameData));
             }
 
-            LoopFilterRefDeltas  = Header.LoopFilterRefDeltas;
-            LoopFilterModeDeltas = Header.LoopFilterModeDeltas;
+            _loopFilterRefDeltas  = header.LoopFilterRefDeltas;
+            _loopFilterModeDeltas = header.LoopFilterModeDeltas;
         }
 
-        private int GetNewFrameSlot(long Key)
+        private int GetNewFrameSlot(long key)
         {
-            LinkedListNode<int> Node = FrameSlotByLastUse.Last;
+            LinkedListNode<int> node = _frameSlotByLastUse.Last;
 
-            FrameSlotByLastUse.RemoveLast();
-            FrameSlotByLastUse.AddFirst(Node);
+            _frameSlotByLastUse.RemoveLast();
+            _frameSlotByLastUse.AddFirst(node);
 
-            CachedRefFrames[Key] = Node;
+            _cachedRefFrames[key] = node;
 
-            return Node.Value;
+            return node.Value;
         }
 
-        private int GetFrameSlot(long Key)
+        private int GetFrameSlot(long key)
         {
-            if (CachedRefFrames.TryGetValue(Key, out LinkedListNode<int> Node))
+            if (_cachedRefFrames.TryGetValue(key, out LinkedListNode<int> node))
             {
-                FrameSlotByLastUse.Remove(Node);
-                FrameSlotByLastUse.AddFirst(Node);
+                _frameSlotByLastUse.Remove(node);
+                _frameSlotByLastUse.AddFirst(node);
 
-                return Node.Value;
+                return node.Value;
             }
 
             //Reference frame was lost.
@@ -658,53 +658,53 @@ namespace Ryujinx.Graphics.VDec
             return 0;
         }
 
-        private void WriteProbabilityUpdate(VpxRangeEncoder Writer, byte[] New, byte[] Old)
+        private void WriteProbabilityUpdate(VpxRangeEncoder writer, byte[] New, byte[] old)
         {
-            for (int Offset = 0; Offset < New.Length; Offset++)
+            for (int offset = 0; offset < New.Length; offset++)
             {
-                WriteProbabilityUpdate(Writer, New[Offset], Old[Offset]);
+                WriteProbabilityUpdate(writer, New[offset], old[offset]);
             }
         }
 
-        private void WriteCoefProbabilityUpdate(VpxRangeEncoder Writer, int TxMode, byte[] New, byte[] Old)
+        private void WriteCoefProbabilityUpdate(VpxRangeEncoder writer, int txMode, byte[] New, byte[] old)
         {
             //Note: There's 1 byte added on each packet for alignment,
             //this byte is ignored when doing updates.
-            const int BlockBytes = 2 * 2 * 6 * 6 * 4;
+            const int blockBytes = 2 * 2 * 6 * 6 * 4;
 
-            bool NeedsUpdate(int BaseIndex)
+            bool NeedsUpdate(int baseIndex)
             {
-                int Index = BaseIndex;
+                int index = baseIndex;
 
                 for (int i = 0; i < 2; i++)
                 for (int j = 0; j < 2; j++)
                 for (int k = 0; k < 6; k++)
                 for (int l = 0; l < 6; l++)
                 {
-                    if (New[Index + 0] != Old[Index + 0] ||
-                        New[Index + 1] != Old[Index + 1] ||
-                        New[Index + 2] != Old[Index + 2])
+                    if (New[index + 0] != old[index + 0] ||
+                        New[index + 1] != old[index + 1] ||
+                        New[index + 2] != old[index + 2])
                     {
                         return true;
                     }
 
-                    Index += 4;
+                    index += 4;
                 }
 
                 return false;
             }
 
-            for (int BlockIndex = 0; BlockIndex < 4; BlockIndex++)
+            for (int blockIndex = 0; blockIndex < 4; blockIndex++)
             {
-                int BaseIndex = BlockIndex * BlockBytes;
+                int baseIndex = blockIndex * blockBytes;
 
-                bool Update = NeedsUpdate(BaseIndex);
+                bool update = NeedsUpdate(baseIndex);
 
-                Writer.Write(Update);
+                writer.Write(update);
 
-                if (Update)
+                if (update)
                 {
-                    int Index = BaseIndex;
+                    int index = baseIndex;
 
                     for (int i = 0; i < 2; i++)
                     for (int j = 0; j < 2; j++)
@@ -713,167 +713,167 @@ namespace Ryujinx.Graphics.VDec
                     {
                         if (k != 0 || l < 3)
                         {
-                            WriteProbabilityUpdate(Writer, New[Index + 0], Old[Index + 0]);
-                            WriteProbabilityUpdate(Writer, New[Index + 1], Old[Index + 1]);
-                            WriteProbabilityUpdate(Writer, New[Index + 2], Old[Index + 2]);
+                            WriteProbabilityUpdate(writer, New[index + 0], old[index + 0]);
+                            WriteProbabilityUpdate(writer, New[index + 1], old[index + 1]);
+                            WriteProbabilityUpdate(writer, New[index + 2], old[index + 2]);
                         }
 
-                        Index += 4;
+                        index += 4;
                     }
                 }
 
-                if (BlockIndex == TxMode)
+                if (blockIndex == txMode)
                 {
                     break;
                 }
             }
         }
 
-        private void WriteProbabilityUpdateAligned4(VpxRangeEncoder Writer, byte[] New, byte[] Old)
+        private void WriteProbabilityUpdateAligned4(VpxRangeEncoder writer, byte[] New, byte[] old)
         {
-            for (int Offset = 0; Offset < New.Length; Offset += 4)
+            for (int offset = 0; offset < New.Length; offset += 4)
             {
-                WriteProbabilityUpdate(Writer, New[Offset + 0], Old[Offset + 0]);
-                WriteProbabilityUpdate(Writer, New[Offset + 1], Old[Offset + 1]);
-                WriteProbabilityUpdate(Writer, New[Offset + 2], Old[Offset + 2]);
+                WriteProbabilityUpdate(writer, New[offset + 0], old[offset + 0]);
+                WriteProbabilityUpdate(writer, New[offset + 1], old[offset + 1]);
+                WriteProbabilityUpdate(writer, New[offset + 2], old[offset + 2]);
             }
         }
 
-        private void WriteProbabilityUpdate(VpxRangeEncoder Writer, byte New, byte Old)
+        private void WriteProbabilityUpdate(VpxRangeEncoder writer, byte New, byte old)
         {
-            bool Update = New != Old;
+            bool update = New != old;
 
-            Writer.Write(Update, DiffUpdateProbability);
+            writer.Write(update, DiffUpdateProbability);
 
-            if (Update)
+            if (update)
             {
-                WriteProbabilityDelta(Writer, New, Old);
+                WriteProbabilityDelta(writer, New, old);
             }
         }
 
-        private void WriteProbabilityDelta(VpxRangeEncoder Writer, int New, int Old)
+        private void WriteProbabilityDelta(VpxRangeEncoder writer, int New, int old)
         {
-            int Delta = RemapProbability(New, Old);
+            int delta = RemapProbability(New, old);
 
-            EncodeTermSubExp(Writer, Delta);
+            EncodeTermSubExp(writer, delta);
         }
 
-        private int RemapProbability(int New, int Old)
+        private int RemapProbability(int New, int old)
         {
             New--;
-            Old--;
+            old--;
 
-            int Index;
+            int index;
 
-            if (Old * 2 <= 0xff)
+            if (old * 2 <= 0xff)
             {
-                Index = RecenterNonNeg(New, Old) - 1;
+                index = RecenterNonNeg(New, old) - 1;
             }
             else
             {
-                Index = RecenterNonNeg(0xff - 1 - New, 0xff - 1 - Old) - 1;
+                index = RecenterNonNeg(0xff - 1 - New, 0xff - 1 - old) - 1;
             }
 
-            return MapLut[Index];
+            return MapLut[index];
         }
 
-        private int RecenterNonNeg(int New, int Old)
+        private int RecenterNonNeg(int New, int old)
         {
-            if (New > Old * 2)
+            if (New > old * 2)
             {
                 return New;
             }
-            else if (New >= Old)
+            else if (New >= old)
             {
-                return (New - Old) * 2;
+                return (New - old) * 2;
             }
             else /* if (New < Old) */
             {
-                return (Old - New) * 2 - 1;
+                return (old - New) * 2 - 1;
             }
         }
 
-        private void EncodeTermSubExp(VpxRangeEncoder Writer, int Value)
+        private void EncodeTermSubExp(VpxRangeEncoder writer, int value)
         {
-            if (WriteLessThan(Writer, Value, 16))
+            if (WriteLessThan(writer, value, 16))
             {
-                Writer.Write(Value, 4);
+                writer.Write(value, 4);
             }
-            else if (WriteLessThan(Writer, Value, 32))
+            else if (WriteLessThan(writer, value, 32))
             {
-                Writer.Write(Value - 16, 4);
+                writer.Write(value - 16, 4);
             }
-            else if (WriteLessThan(Writer, Value, 64))
+            else if (WriteLessThan(writer, value, 64))
             {
-                Writer.Write(Value - 32, 5);
+                writer.Write(value - 32, 5);
             }
             else
             {
-                Value -= 64;
+                value -= 64;
 
-                const int Size = 8;
+                const int size = 8;
 
-                int Mask = (1 << Size) - 191;
+                int mask = (1 << size) - 191;
 
-                int Delta = Value - Mask;
+                int delta = value - mask;
 
-                if (Delta < 0)
+                if (delta < 0)
                 {
-                    Writer.Write(Value, Size - 1);
+                    writer.Write(value, size - 1);
                 }
                 else
                 {
-                    Writer.Write(Delta / 2 + Mask, Size - 1);
-                    Writer.Write(Delta & 1, 1);
+                    writer.Write(delta / 2 + mask, size - 1);
+                    writer.Write(delta & 1, 1);
                 }
             }
         }
 
-        private bool WriteLessThan(VpxRangeEncoder Writer, int Value, int Test)
+        private bool WriteLessThan(VpxRangeEncoder writer, int value, int test)
         {
-            bool IsLessThan = Value < Test;
+            bool isLessThan = value < test;
 
-            Writer.Write(!IsLessThan);
+            writer.Write(!isLessThan);
 
-            return IsLessThan;
+            return isLessThan;
         }
 
-        private void WriteMvProbabilityUpdate(VpxRangeEncoder Writer, byte New, byte Old)
+        private void WriteMvProbabilityUpdate(VpxRangeEncoder writer, byte New, byte old)
         {
-            bool Update = New != Old;
+            bool update = New != old;
 
-            Writer.Write(Update, DiffUpdateProbability);
+            writer.Write(update, DiffUpdateProbability);
 
-            if (Update)
+            if (update)
             {
-                Writer.Write(New >> 1, 7);
+                writer.Write(New >> 1, 7);
             }
         }
 
-        private static int CalcMinLog2TileCols(int FrameWidth)
+        private static int CalcMinLog2TileCols(int frameWidth)
         {
-            int Sb64Cols = (FrameWidth + 63) / 64;
-            int MinLog2  = 0;
+            int sb64Cols = (frameWidth + 63) / 64;
+            int minLog2  = 0;
 
-            while ((64 << MinLog2) < Sb64Cols)
+            while ((64 << minLog2) < sb64Cols)
             {
-                MinLog2++;
+                minLog2++;
             }
 
-            return MinLog2;
+            return minLog2;
         }
 
-        private static int CalcMaxLog2TileCols(int FrameWidth)
+        private static int CalcMaxLog2TileCols(int frameWidth)
         {
-            int Sb64Cols = (FrameWidth + 63) / 64;
-            int MaxLog2  = 1;
+            int sb64Cols = (frameWidth + 63) / 64;
+            int maxLog2  = 1;
 
-            while ((Sb64Cols >> MaxLog2) >= 4)
+            while ((sb64Cols >> maxLog2) >= 4)
             {
-                MaxLog2++;
+                maxLog2++;
             }
 
-            return MaxLog2 - 1;
+            return maxLog2 - 1;
         }
     }
 }

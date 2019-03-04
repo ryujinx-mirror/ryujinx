@@ -6,6 +6,6 @@ namespace Ryujinx.Graphics.Gal
     {
         public ShaderException() : base() { }
 
-        public ShaderException(string Message) : base(Message) { }
+        public ShaderException(string message) : base(message) { }
     }
 }

@@ -4,15 +4,15 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.VDec
 {
-    unsafe static class FFmpegWrapper
+    static unsafe class FFmpegWrapper
     {
-        private static AVCodec*        Codec;
-        private static AVCodecContext* Context;
-        private static AVFrame*        Frame;
-        private static SwsContext*     ScalerCtx;
+        private static AVCodec*        _codec;
+        private static AVCodecContext* _context;
+        private static AVFrame*        _frame;
+        private static SwsContext*     _scalerCtx;
 
-        private static int ScalerWidth;
-        private static int ScalerHeight;
+        private static int _scalerWidth;
+        private static int _scalerHeight;
 
         public static bool IsInitialized { get; private set; }
 
@@ -26,42 +26,42 @@ namespace Ryujinx.Graphics.VDec
             EnsureCodecInitialized(AVCodecID.AV_CODEC_ID_VP9);
         }
 
-        private static void EnsureCodecInitialized(AVCodecID CodecId)
+        private static void EnsureCodecInitialized(AVCodecID codecId)
         {
             if (IsInitialized)
             {
                 Uninitialize();
             }
 
-            Codec   = ffmpeg.avcodec_find_decoder(CodecId);
-            Context = ffmpeg.avcodec_alloc_context3(Codec);
-            Frame   = ffmpeg.av_frame_alloc();
+            _codec   = ffmpeg.avcodec_find_decoder(codecId);
+            _context = ffmpeg.avcodec_alloc_context3(_codec);
+            _frame   = ffmpeg.av_frame_alloc();
 
-            ffmpeg.avcodec_open2(Context, Codec, null);
+            ffmpeg.avcodec_open2(_context, _codec, null);
 
             IsInitialized = true;
         }
 
-        public static int DecodeFrame(byte[] Data)
+        public static int DecodeFrame(byte[] data)
         {
             if (!IsInitialized)
             {
                 throw new InvalidOperationException("Tried to use uninitialized codec!");
             }
 
-            AVPacket Packet;
+            AVPacket packet;
 
-            ffmpeg.av_init_packet(&Packet);
+            ffmpeg.av_init_packet(&packet);
 
-            fixed (byte* Ptr = Data)
+            fixed (byte* ptr = data)
             {
-                Packet.data = Ptr;
-                Packet.size = Data.Length;
+                packet.data = ptr;
+                packet.size = data.Length;
 
-                ffmpeg.avcodec_send_packet(Context, &Packet);
+                ffmpeg.avcodec_send_packet(_context, &packet);
             }
 
-            return ffmpeg.avcodec_receive_frame(Context, Frame);
+            return ffmpeg.avcodec_receive_frame(_context, _frame);
         }
 
         public static FFmpegFrame GetFrame()
@@ -71,18 +71,18 @@ namespace Ryujinx.Graphics.VDec
                 throw new InvalidOperationException("Tried to use uninitialized codec!");
             }
 
-            AVFrame ManagedFrame = Marshal.PtrToStructure<AVFrame>((IntPtr)Frame);
+            AVFrame managedFrame = Marshal.PtrToStructure<AVFrame>((IntPtr)_frame);
 
-            byte*[] Data = ManagedFrame.data.ToArray();
+            byte*[] data = managedFrame.data.ToArray();
 
             return new FFmpegFrame()
             {
-                Width  = ManagedFrame.width,
-                Height = ManagedFrame.height,
+                Width  = managedFrame.width,
+                Height = managedFrame.height,
 
-                LumaPtr    = Data[0],
-                ChromaBPtr = Data[1],
-                ChromaRPtr = Data[2]
+                LumaPtr    = data[0],
+                ChromaBPtr = data[1],
+                ChromaRPtr = data[2]
             };
         }
 
@@ -93,51 +93,51 @@ namespace Ryujinx.Graphics.VDec
                 throw new InvalidOperationException("Tried to use uninitialized codec!");
             }
 
-            AVFrame ManagedFrame = Marshal.PtrToStructure<AVFrame>((IntPtr)Frame);
+            AVFrame managedFrame = Marshal.PtrToStructure<AVFrame>((IntPtr)_frame);
 
-            EnsureScalerSetup(ManagedFrame.width, ManagedFrame.height);
+            EnsureScalerSetup(managedFrame.width, managedFrame.height);
 
-            byte*[] Data = ManagedFrame.data.ToArray();
+            byte*[] data = managedFrame.data.ToArray();
 
-            int[] LineSizes = ManagedFrame.linesize.ToArray();
+            int[] lineSizes = managedFrame.linesize.ToArray();
 
-            byte[] Dst = new byte[ManagedFrame.width * ManagedFrame.height * 4];
+            byte[] dst = new byte[managedFrame.width * managedFrame.height * 4];
 
-            fixed (byte* Ptr = Dst)
+            fixed (byte* ptr = dst)
             {
-                byte*[] DstData = new byte*[] { Ptr };
+                byte*[] dstData = new byte*[] { ptr };
 
-                int[] DstLineSizes = new int[] { ManagedFrame.width * 4 };
+                int[] dstLineSizes = new int[] { managedFrame.width * 4 };
 
-                ffmpeg.sws_scale(ScalerCtx, Data, LineSizes, 0, ManagedFrame.height, DstData, DstLineSizes);
+                ffmpeg.sws_scale(_scalerCtx, data, lineSizes, 0, managedFrame.height, dstData, dstLineSizes);
             }
 
             return new FFmpegFrame()
             {
-                Width  = ManagedFrame.width,
-                Height = ManagedFrame.height,
+                Width  = managedFrame.width,
+                Height = managedFrame.height,
 
-                Data = Dst
+                Data = dst
             };
         }
 
-        private static void EnsureScalerSetup(int Width, int Height)
+        private static void EnsureScalerSetup(int width, int height)
         {
-            if (Width == 0 || Height == 0)
+            if (width == 0 || height == 0)
             {
                 return;
             }
 
-            if (ScalerCtx == null || ScalerWidth != Width || ScalerHeight != Height)
+            if (_scalerCtx == null || _scalerWidth != width || _scalerHeight != height)
             {
                 FreeScaler();
 
-                ScalerCtx = ffmpeg.sws_getContext(
-                    Width, Height, AVPixelFormat.AV_PIX_FMT_YUV420P,
-                    Width, Height, AVPixelFormat.AV_PIX_FMT_RGBA, 0, null, null, null);
+                _scalerCtx = ffmpeg.sws_getContext(
+                    width, height, AVPixelFormat.AV_PIX_FMT_YUV420P,
+                    width, height, AVPixelFormat.AV_PIX_FMT_RGBA, 0, null, null, null);
 
-                ScalerWidth  = Width;
-                ScalerHeight = Height;
+                _scalerWidth  = width;
+                _scalerHeight = height;
             }
         }
 
@@ -145,9 +145,9 @@ namespace Ryujinx.Graphics.VDec
         {
             if (IsInitialized)
             {
-                ffmpeg.av_frame_unref(Frame);
-                ffmpeg.av_free(Frame);
-                ffmpeg.avcodec_close(Context);
+                ffmpeg.av_frame_unref(_frame);
+                ffmpeg.av_free(_frame);
+                ffmpeg.avcodec_close(_context);
 
                 FreeScaler();
 
@@ -157,11 +157,11 @@ namespace Ryujinx.Graphics.VDec
 
         private static void FreeScaler()
         {
-            if (ScalerCtx != null)
+            if (_scalerCtx != null)
             {
-                ffmpeg.sws_freeContext(ScalerCtx);
+                ffmpeg.sws_freeContext(_scalerCtx);
 
-                ScalerCtx = null;
+                _scalerCtx = null;
             }
         }
     }

@@ -9,103 +9,103 @@ namespace Ryujinx.Graphics.Texture
 
         public int Position { get; private set; }
 
-        public BitArrayStream(BitArray BitArray)
+        public BitArrayStream(BitArray bitArray)
         {
-            BitsArray = BitArray;
+            BitsArray = bitArray;
             Position  = 0;
         }
 
-        public short ReadBits(int Length)
+        public short ReadBits(int length)
         {
-            int RetValue = 0;
-            for (int i = Position; i < Position + Length; i++)
+            int retValue = 0;
+            for (int i = Position; i < Position + length; i++)
             {
                 if (BitsArray[i])
                 {
-                    RetValue |= 1 << (i - Position);
+                    retValue |= 1 << (i - Position);
                 }
             }
 
-            Position += Length;
-            return (short)RetValue;
+            Position += length;
+            return (short)retValue;
         }
 
-        public int ReadBits(int Start, int End)
+        public int ReadBits(int start, int end)
         {
-            int RetValue = 0;
-            for (int i = Start; i <= End; i++)
+            int retValue = 0;
+            for (int i = start; i <= end; i++)
             {
                 if (BitsArray[i])
                 {
-                    RetValue |= 1 << (i - Start);
+                    retValue |= 1 << (i - start);
                 }
             }
 
-            return RetValue;
+            return retValue;
         }
 
-        public int ReadBit(int Index)
+        public int ReadBit(int index)
         {
-            return Convert.ToInt32(BitsArray[Index]);
+            return Convert.ToInt32(BitsArray[index]);
         }
 
-        public void WriteBits(int Value, int Length)
+        public void WriteBits(int value, int length)
         {
-            for (int i = Position; i < Position + Length; i++)
+            for (int i = Position; i < Position + length; i++)
             {
-                BitsArray[i] = ((Value >> (i - Position)) & 1) != 0;
+                BitsArray[i] = ((value >> (i - Position)) & 1) != 0;
             }
 
-            Position += Length;
+            Position += length;
         }
 
         public byte[] ToByteArray()
         {
-            byte[] RetArray = new byte[(BitsArray.Length + 7) / 8];
-            BitsArray.CopyTo(RetArray, 0);
-            return RetArray;
+            byte[] retArray = new byte[(BitsArray.Length + 7) / 8];
+            BitsArray.CopyTo(retArray, 0);
+            return retArray;
         }
 
-        public static int Replicate(int Value, int NumberBits, int ToBit)
+        public static int Replicate(int value, int numberBits, int toBit)
         {
-            if (NumberBits == 0) return 0;
-            if (ToBit == 0) return 0;
+            if (numberBits == 0) return 0;
+            if (toBit == 0) return 0;
 
-            int TempValue = Value & ((1 << NumberBits) - 1);
-            int RetValue  = TempValue;
-            int ResLength = NumberBits;
+            int tempValue = value & ((1 << numberBits) - 1);
+            int retValue  = tempValue;
+            int resLength = numberBits;
 
-            while (ResLength < ToBit)
+            while (resLength < toBit)
             {
-                int Comp = 0;
-                if (NumberBits > ToBit - ResLength)
+                int comp = 0;
+                if (numberBits > toBit - resLength)
                 {
-                    int NewShift = ToBit - ResLength;
-                    Comp         = NumberBits - NewShift;
-                    NumberBits   = NewShift;
+                    int newShift = toBit - resLength;
+                    comp         = numberBits - newShift;
+                    numberBits   = newShift;
                 }
-                RetValue <<= NumberBits;
-                RetValue  |= TempValue >> Comp;
-                ResLength += NumberBits;
+                retValue <<= numberBits;
+                retValue  |= tempValue >> comp;
+                resLength += numberBits;
             }
-            return RetValue;
+            return retValue;
         }
 
-        public static int PopCnt(int Number)
+        public static int PopCnt(int number)
         {
-            int Counter;
-            for (Counter = 0; Number != 0; Counter++)
+            int counter;
+            for (counter = 0; number != 0; counter++)
             {
-                Number &= Number - 1;
+                number &= number - 1;
             }
-            return Counter;
+            return counter;
         }
 
         public static void Swap<T>(ref T lhs, ref T rhs)
         {
-            T Temp = lhs;
+            T temp = lhs;
             lhs = rhs;
-            rhs = Temp;
+            rhs = temp;
         }
 
         // Transfers a bit as described in C.2.14

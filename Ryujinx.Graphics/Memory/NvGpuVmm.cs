@@ -8,177 +8,177 @@ namespace Ryujinx.Graphics.Memory
     {
         public const long AddrSize = 1L << 40;
 
-        private const int PTLvl0Bits = 14;
-        private const int PTLvl1Bits = 14;
-        private const int PTPageBits = 12;
+        private const int PtLvl0Bits = 14;
+        private const int PtLvl1Bits = 14;
+        private const int PtPageBits = 12;
 
-        private const int PTLvl0Size = 1 << PTLvl0Bits;
-        private const int PTLvl1Size = 1 << PTLvl1Bits;
-        public  const int PageSize   = 1 << PTPageBits;
+        private const int PtLvl0Size = 1 << PtLvl0Bits;
+        private const int PtLvl1Size = 1 << PtLvl1Bits;
+        public  const int PageSize   = 1 << PtPageBits;
 
-        private const int PTLvl0Mask = PTLvl0Size - 1;
-        private const int PTLvl1Mask = PTLvl1Size - 1;
+        private const int PtLvl0Mask = PtLvl0Size - 1;
+        private const int PtLvl1Mask = PtLvl1Size - 1;
         public  const int PageMask   = PageSize   - 1;
 
-        private const int PTLvl0Bit = PTPageBits + PTLvl1Bits;
-        private const int PTLvl1Bit = PTPageBits;
+        private const int PtLvl0Bit = PtPageBits + PtLvl1Bits;
+        private const int PtLvl1Bit = PtPageBits;
 
         public MemoryManager Memory { get; private set; }
 
-        private NvGpuVmmCache Cache;
+        private NvGpuVmmCache _cache;
 
         private const long PteUnmapped = -1;
         private const long PteReserved = -2;
 
-        private long[][] PageTable;
+        private long[][] _pageTable;
 
-        public NvGpuVmm(MemoryManager Memory)
+        public NvGpuVmm(MemoryManager memory)
         {
-            this.Memory = Memory;
+            Memory = memory;
 
-            Cache = new NvGpuVmmCache(Memory);
+            _cache = new NvGpuVmmCache(memory);
 
-            PageTable = new long[PTLvl0Size][];
+            _pageTable = new long[PtLvl0Size][];
         }
 
-        public long Map(long PA, long VA, long Size)
+        public long Map(long pa, long va, long size)
         {
-            lock (PageTable)
+            lock (_pageTable)
             {
-                for (long Offset = 0; Offset < Size; Offset += PageSize)
+                for (long offset = 0; offset < size; offset += PageSize)
                 {
-                    SetPte(VA + Offset, PA + Offset);
+                    SetPte(va + offset, pa + offset);
                 }
             }
 
-            return VA;
+            return va;
         }
 
-        public long Map(long PA, long Size)
+        public long Map(long pa, long size)
         {
-            lock (PageTable)
+            lock (_pageTable)
             {
-                long VA = GetFreePosition(Size);
+                long va = GetFreePosition(size);
 
-                if (VA != -1)
+                if (va != -1)
                 {
-                    for (long Offset = 0; Offset < Size; Offset += PageSize)
+                    for (long offset = 0; offset < size; offset += PageSize)
                     {
-                        SetPte(VA + Offset, PA + Offset);
+                        SetPte(va + offset, pa + offset);
                     }
                 }
 
-                return VA;
+                return va;
             }
         }
 
-        public long MapLow(long PA, long Size)
+        public long MapLow(long pa, long size)
         {
-            lock (PageTable)
+            lock (_pageTable)
             {
-                long VA = GetFreePosition(Size, 1, PageSize);
+                long va = GetFreePosition(size, 1, PageSize);
 
-                if (VA != -1 && (ulong)VA <= uint.MaxValue && (ulong)(VA + Size) <= uint.MaxValue)
+                if (va != -1 && (ulong)va <= uint.MaxValue && (ulong)(va + size) <= uint.MaxValue)
                 {
-                    for (long Offset = 0; Offset < Size; Offset += PageSize)
+                    for (long offset = 0; offset < size; offset += PageSize)
                     {
-                        SetPte(VA + Offset, PA + Offset);
+                        SetPte(va + offset, pa + offset);
                     }
                 }
                 else
                 {
-                    VA = -1;
+                    va = -1;
                 }
 
-                return VA;
+                return va;
             }
         }
 
-        public long ReserveFixed(long VA, long Size)
+        public long ReserveFixed(long va, long size)
         {
-            lock (PageTable)
+            lock (_pageTable)
             {
-                for (long Offset = 0; Offset < Size; Offset += PageSize)
+                for (long offset = 0; offset < size; offset += PageSize)
                 {
-                    if (IsPageInUse(VA + Offset))
+                    if (IsPageInUse(va + offset))
                     {
                         return -1;
                     }
                 }
 
-                for (long Offset = 0; Offset < Size; Offset += PageSize)
+                for (long offset = 0; offset < size; offset += PageSize)
                 {
-                    SetPte(VA + Offset, PteReserved);
+                    SetPte(va + offset, PteReserved);
                 }
             }
 
-            return VA;
+            return va;
         }
 
-        public long Reserve(long Size, long Align)
+        public long Reserve(long size, long align)
         {
-            lock (PageTable)
+            lock (_pageTable)
             {
-                long Position = GetFreePosition(Size, Align);
+                long position = GetFreePosition(size, align);
 
-                if (Position != -1)
+                if (position != -1)
                 {
-                    for (long Offset = 0; Offset < Size; Offset += PageSize)
+                    for (long offset = 0; offset < size; offset += PageSize)
                     {
-                        SetPte(Position + Offset, PteReserved);
+                        SetPte(position + offset, PteReserved);
                     }
                 }
 
-                return Position;
+                return position;
             }
         }
 
-        public void Free(long VA, long Size)
+        public void Free(long va, long size)
         {
-            lock (PageTable)
+            lock (_pageTable)
             {
-                for (long Offset = 0; Offset < Size; Offset += PageSize)
+                for (long offset = 0; offset < size; offset += PageSize)
                 {
-                    SetPte(VA + Offset, PteUnmapped);
+                    SetPte(va + offset, PteUnmapped);
                 }
             }
         }
 
-        private long GetFreePosition(long Size, long Align = 1, long Start = 1L << 32)
+        private long GetFreePosition(long size, long align = 1, long start = 1L << 32)
         {
             //Note: Address 0 is not considered valid by the driver,
             //when 0 is returned it's considered a mapping error.
-            long Position = Start;
-            long FreeSize = 0;
+            long position = start;
+            long freeSize = 0;
 
-            if (Align < 1)
+            if (align < 1)
             {
-                Align = 1;
+                align = 1;
             }
 
-            Align = (Align + PageMask) & ~PageMask;
+            align = (align + PageMask) & ~PageMask;
 
-            while (Position + FreeSize < AddrSize)
+            while (position + freeSize < AddrSize)
             {
-                if (!IsPageInUse(Position + FreeSize))
+                if (!IsPageInUse(position + freeSize))
                 {
-                    FreeSize += PageSize;
+                    freeSize += PageSize;
 
-                    if (FreeSize >= Size)
+                    if (freeSize >= size)
                     {
-                        return Position;
+                        return position;
                     }
                 }
                 else
                 {
-                    Position += FreeSize + PageSize;
-                    FreeSize  = 0;
+                    position += freeSize + PageSize;
+                    freeSize  = 0;
 
-                    long Remainder = Position % Align;
+                    long remainder = position % align;
 
-                    if (Remainder != 0)
+                    if (remainder != 0)
                     {
-                        Position = (Position - Remainder) + Align;
+                        position = (position - remainder) + align;
                     }
                 }
             }
@@ -186,23 +186,23 @@ namespace Ryujinx.Graphics.Memory
             return -1;
         }
 
-        public long GetPhysicalAddress(long VA)
+        public long GetPhysicalAddress(long va)
         {
-            long BasePos = GetPte(VA);
+            long basePos = GetPte(va);
 
-            if (BasePos < 0)
+            if (basePos < 0)
             {
                 return -1;
             }
 
-            return BasePos + (VA & PageMask);
+            return basePos + (va & PageMask);
         }
 
-        public bool IsRegionFree(long VA, long Size)
+        public bool IsRegionFree(long va, long size)
         {
-            for (long Offset = 0; Offset < Size; Offset += PageSize)
+            for (long offset = 0; offset < size; offset += PageSize)
             {
-                if (IsPageInUse(VA + Offset))
+                if (IsPageInUse(va + offset))
                 {
                     return false;
                 }
@@ -211,189 +211,189 @@ namespace Ryujinx.Graphics.Memory
             return true;
         }
 
-        private bool IsPageInUse(long VA)
+        private bool IsPageInUse(long va)
         {
-            if (VA >> PTLvl0Bits + PTLvl1Bits + PTPageBits != 0)
+            if (va >> PtLvl0Bits + PtLvl1Bits + PtPageBits != 0)
             {
                 return false;
             }
 
-            long L0 = (VA >> PTLvl0Bit) & PTLvl0Mask;
-            long L1 = (VA >> PTLvl1Bit) & PTLvl1Mask;
+            long l0 = (va >> PtLvl0Bit) & PtLvl0Mask;
+            long l1 = (va >> PtLvl1Bit) & PtLvl1Mask;
 
-            if (PageTable[L0] == null)
+            if (_pageTable[l0] == null)
             {
                 return false;
             }
 
-            return PageTable[L0][L1] != PteUnmapped;
+            return _pageTable[l0][l1] != PteUnmapped;
         }
 
-        private long GetPte(long Position)
+        private long GetPte(long position)
         {
-            long L0 = (Position >> PTLvl0Bit) & PTLvl0Mask;
-            long L1 = (Position >> PTLvl1Bit) & PTLvl1Mask;
+            long l0 = (position >> PtLvl0Bit) & PtLvl0Mask;
+            long l1 = (position >> PtLvl1Bit) & PtLvl1Mask;
 
-            if (PageTable[L0] == null)
+            if (_pageTable[l0] == null)
             {
                 return -1;
             }
 
-            return PageTable[L0][L1];
+            return _pageTable[l0][l1];
         }
 
-        private void SetPte(long Position, long TgtAddr)
+        private void SetPte(long position, long tgtAddr)
         {
-            long L0 = (Position >> PTLvl0Bit) & PTLvl0Mask;
-            long L1 = (Position >> PTLvl1Bit) & PTLvl1Mask;
+            long l0 = (position >> PtLvl0Bit) & PtLvl0Mask;
+            long l1 = (position >> PtLvl1Bit) & PtLvl1Mask;
 
-            if (PageTable[L0] == null)
+            if (_pageTable[l0] == null)
             {
-                PageTable[L0] = new long[PTLvl1Size];
+                _pageTable[l0] = new long[PtLvl1Size];
 
-                for (int Index = 0; Index < PTLvl1Size; Index++)
+                for (int index = 0; index < PtLvl1Size; index++)
                 {
-                    PageTable[L0][Index] = PteUnmapped;
+                    _pageTable[l0][index] = PteUnmapped;
                 }
             }
 
-            PageTable[L0][L1] = TgtAddr;
+            _pageTable[l0][l1] = tgtAddr;
         }
 
-        public bool IsRegionModified(long PA, long Size, NvGpuBufferType BufferType)
+        public bool IsRegionModified(long pa, long size, NvGpuBufferType bufferType)
         {
-            return Cache.IsRegionModified(PA, Size, BufferType);
+            return _cache.IsRegionModified(pa, size, bufferType);
         }
 
-        public bool TryGetHostAddress(long Position, long Size, out IntPtr Ptr)
+        public bool TryGetHostAddress(long position, long size, out IntPtr ptr)
         {
-            return Memory.TryGetHostAddress(GetPhysicalAddress(Position), Size, out Ptr);
+            return Memory.TryGetHostAddress(GetPhysicalAddress(position), size, out ptr);
         }
 
-        public byte ReadByte(long Position)
+        public byte ReadByte(long position)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            return Memory.ReadByte(Position);
+            return Memory.ReadByte(position);
         }
 
-        public ushort ReadUInt16(long Position)
+        public ushort ReadUInt16(long position)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            return Memory.ReadUInt16(Position);
+            return Memory.ReadUInt16(position);
         }
 
-        public uint ReadUInt32(long Position)
+        public uint ReadUInt32(long position)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            return Memory.ReadUInt32(Position);
+            return Memory.ReadUInt32(position);
         }
 
-        public ulong ReadUInt64(long Position)
+        public ulong ReadUInt64(long position)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            return Memory.ReadUInt64(Position);
+            return Memory.ReadUInt64(position);
         }
 
-        public sbyte ReadSByte(long Position)
+        public sbyte ReadSByte(long position)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            return Memory.ReadSByte(Position);
+            return Memory.ReadSByte(position);
         }
 
-        public short ReadInt16(long Position)
+        public short ReadInt16(long position)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            return Memory.ReadInt16(Position);
+            return Memory.ReadInt16(position);
         }
 
-        public int ReadInt32(long Position)
+        public int ReadInt32(long position)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            return Memory.ReadInt32(Position);
+            return Memory.ReadInt32(position);
         }
 
-        public long ReadInt64(long Position)
+        public long ReadInt64(long position)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            return Memory.ReadInt64(Position);
+            return Memory.ReadInt64(position);
         }
 
-        public byte[] ReadBytes(long Position, long Size)
+        public byte[] ReadBytes(long position, long size)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            return Memory.ReadBytes(Position, Size);
+            return Memory.ReadBytes(position, size);
         }
 
-        public void WriteByte(long Position, byte Value)
+        public void WriteByte(long position, byte value)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            Memory.WriteByte(Position, Value);
+            Memory.WriteByte(position, value);
         }
 
-        public void WriteUInt16(long Position, ushort Value)
+        public void WriteUInt16(long position, ushort value)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            Memory.WriteUInt16(Position, Value);
+            Memory.WriteUInt16(position, value);
         }
 
-        public void WriteUInt32(long Position, uint Value)
+        public void WriteUInt32(long position, uint value)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            Memory.WriteUInt32(Position, Value);
+            Memory.WriteUInt32(position, value);
         }
 
-        public void WriteUInt64(long Position, ulong Value)
+        public void WriteUInt64(long position, ulong value)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            Memory.WriteUInt64(Position, Value);
+            Memory.WriteUInt64(position, value);
         }
 
-        public void WriteSByte(long Position, sbyte Value)
+        public void WriteSByte(long position, sbyte value)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            Memory.WriteSByte(Position, Value);
+            Memory.WriteSByte(position, value);
         }
 
-        public void WriteInt16(long Position, short Value)
+        public void WriteInt16(long position, short value)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            Memory.WriteInt16(Position, Value);
+            Memory.WriteInt16(position, value);
         }
 
-        public void WriteInt32(long Position, int Value)
+        public void WriteInt32(long position, int value)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            Memory.WriteInt32(Position, Value);
+            Memory.WriteInt32(position, value);
         }
 
-        public void WriteInt64(long Position, long Value)
+        public void WriteInt64(long position, long value)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            Memory.WriteInt64(Position, Value);
+            Memory.WriteInt64(position, value);
         }
 
-        public void WriteBytes(long Position, byte[] Data)
+        public void WriteBytes(long position, byte[] data)
         {
-            Position = GetPhysicalAddress(Position);
+            position = GetPhysicalAddress(position);
 
-            Memory.WriteBytes(Position, Data);
+            Memory.WriteBytes(position, data);
         }
     }
 }

@@ -2,7 +2,7 @@ namespace Ryujinx.Graphics.Texture
 {
     public enum TextureSwizzle
     {
-        _1dBuffer           = 0,
+        _1DBuffer           = 0,
         PitchColorKey       = 1,
         Pitch               = 2,
         BlockLinear         = 3,

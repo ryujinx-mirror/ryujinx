@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.Memory
         private const long PageSize = MemoryManager.PageSize;
         private const long PageMask = MemoryManager.PageMask;
 
-        private ConcurrentDictionary<long, int>[] CachedPages;
+        private ConcurrentDictionary<long, int>[] _cachedPages;
 
         private MemoryManager _memory;
 
@@ -18,7 +18,7 @@ namespace Ryujinx.Graphics.Memory
         {
             _memory = memory;
 
-            CachedPages = new ConcurrentDictionary<long, int>[1 << 20];
+            _cachedPages = new ConcurrentDictionary<long, int>[1 << 20];
         }
 
         public bool IsRegionModified(long position, long size, NvGpuBufferType bufferType)
@@ -41,17 +41,17 @@ namespace Ryujinx.Graphics.Memory
             {
                 long page = _memory.GetPhysicalAddress(va) >> PageBits;
 
-                ConcurrentDictionary<long, int> dictionary = CachedPages[page];
+                ConcurrentDictionary<long, int> dictionary = _cachedPages[page];
 
                 if (dictionary == null)
                 {
                     dictionary = new ConcurrentDictionary<long, int>();
 
-                    CachedPages[page] = dictionary;
+                    _cachedPages[page] = dictionary;
                 }
                 else if (modified)
                 {
-                    CachedPages[page].Clear();
+                    _cachedPages[page].Clear();
                 }
 
                 if (dictionary.TryGetValue(pa, out int currBuffMask))

@@ -4,33 +4,33 @@ namespace Ryujinx.Graphics
 {
     static class QuadHelper
     {
-        public static int ConvertSizeQuadsToTris(int Size)
+        public static int ConvertSizeQuadsToTris(int size)
         {
-            return Size <= 0 ? 0 : (Size / 4) * 6;
+            return size <= 0 ? 0 : (size / 4) * 6;
         }
 
-        public static int ConvertSizeQuadStripToTris(int Size)
+        public static int ConvertSizeQuadStripToTris(int size)
         {
-            return Size <= 1 ? 0 : ((Size - 2) / 2) * 6;
+            return size <= 1 ? 0 : ((size - 2) / 2) * 6;
         }
 
-        public static byte[] ConvertQuadsToTris(byte[] Data, int EntrySize, int Count)
+        public static byte[] ConvertQuadsToTris(byte[] data, int entrySize, int count)
         {
-            int PrimitivesCount = Count / 4;
+            int primitivesCount = count / 4;
 
-            int QuadPrimSize = 4 * EntrySize;
-            int TrisPrimSize = 6 * EntrySize;
+            int quadPrimSize = 4 * entrySize;
+            int trisPrimSize = 6 * entrySize;
 
-            byte[] Output = new byte[PrimitivesCount * 6 * EntrySize];
+            byte[] output = new byte[primitivesCount * 6 * entrySize];
 
-            for (int Prim = 0; Prim < PrimitivesCount; Prim++)
+            for (int prim = 0; prim < primitivesCount; prim++)
             {
-                void AssignIndex(int Src, int Dst, int CopyCount = 1)
+                void AssignIndex(int src, int dst, int copyCount = 1)
                 {
-                    Src = Prim * QuadPrimSize + Src * EntrySize;
-                    Dst = Prim * TrisPrimSize + Dst * EntrySize;
+                    src = prim * quadPrimSize + src * entrySize;
+                    dst = prim * trisPrimSize + dst * entrySize;
 
-                    Buffer.BlockCopy(Data, Src, Output, Dst, CopyCount * EntrySize);
+                    Buffer.BlockCopy(data, src, output, dst, copyCount * entrySize);
                 }
 
                 //0 1 2 -> 0 1 2.
@@ -43,26 +43,26 @@ namespace Ryujinx.Graphics
                 AssignIndex(0, 5);
             }
 
-            return Output;
+            return output;
         }
 
-        public static byte[] ConvertQuadStripToTris(byte[] Data, int EntrySize, int Count)
+        public static byte[] ConvertQuadStripToTris(byte[] data, int entrySize, int count)
         {
-            int PrimitivesCount = (Count - 2) / 2;
+            int primitivesCount = (count - 2) / 2;
 
-            int QuadPrimSize = 2 * EntrySize;
-            int TrisPrimSize = 6 * EntrySize;
+            int quadPrimSize = 2 * entrySize;
+            int trisPrimSize = 6 * entrySize;
 
-            byte[] Output = new byte[PrimitivesCount * 6 * EntrySize];
+            byte[] output = new byte[primitivesCount * 6 * entrySize];
 
-            for (int Prim = 0; Prim < PrimitivesCount; Prim++)
+            for (int prim = 0; prim < primitivesCount; prim++)
             {
-                void AssignIndex(int Src, int Dst, int CopyCount = 1)
+                void AssignIndex(int src, int dst, int copyCount = 1)
                 {
-                    Src = Prim * QuadPrimSize + Src * EntrySize + 2 * EntrySize;
-                    Dst = Prim * TrisPrimSize + Dst * EntrySize;
+                    src = prim * quadPrimSize + src * entrySize + 2 * entrySize;
+                    dst = prim * trisPrimSize + dst * entrySize;
 
-                    Buffer.BlockCopy(Data, Src, Output, Dst, CopyCount * EntrySize);
+                    Buffer.BlockCopy(data, src, output, dst, copyCount * entrySize);
                 }
 
                 //-2 -1 0 -> 0 1 2.
@@ -75,7 +75,7 @@ namespace Ryujinx.Graphics
                 AssignIndex(-2, 5);
             }
 
-            return Output;
+            return output;
         }
     }
 }

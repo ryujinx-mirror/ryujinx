@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.Gal
 {
     public interface IGalRenderer
     {
-        void QueueAction(Action ActionMthd);
+        void QueueAction(Action actionMthd);
 
         void RunActions();
 

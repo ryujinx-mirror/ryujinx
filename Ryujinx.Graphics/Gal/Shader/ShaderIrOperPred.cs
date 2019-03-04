@@ -9,9 +9,9 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public int Index { get; set; }
 
-        public ShaderIrOperPred(int Index)
+        public ShaderIrOperPred(int index)
         {
-            this.Index = Index;
+            Index = index;
         }
     }
 }

@@ -4,42 +4,42 @@ namespace Ryujinx.Graphics.Gal
     {
         void Bind();
 
-        void BindColor(long Key, int Attachment);
+        void BindColor(long key, int attachment);
 
-        void UnbindColor(int Attachment);
+        void UnbindColor(int attachment);
 
-        void BindZeta(long Key);
+        void BindZeta(long key);
 
         void UnbindZeta();
 
-        void Present(long Key);
+        void Present(long key);
 
-        void SetMap(int[] Map);
+        void SetMap(int[] map);
 
-        void SetTransform(bool FlipX, bool FlipY, int Top, int Left, int Right, int Bottom);
+        void SetTransform(bool flipX, bool flipY, int top, int left, int right, int bottom);
 
-        void SetWindowSize(int Width, int Height);
+        void SetWindowSize(int width, int height);
 
-        void SetViewport(int Attachment, int X, int Y, int Width, int Height);
+        void SetViewport(int attachment, int x, int y, int width, int height);
 
         void Render();
 
         void Copy(
-            GalImage SrcImage,
-            GalImage DstImage,
-            long     SrcKey,
-            long     DstKey,
-            int      SrcLayer,
-            int      DstLayer,
-            int      SrcX0,
-            int      SrcY0,
-            int      SrcX1,
-            int      SrcY1,
-            int      DstX0,
-            int      DstY0,
-            int      DstX1,
-            int      DstY1);
+            GalImage srcImage,
+            GalImage dstImage,
+            long     srcKey,
+            long     dstKey,
+            int      srcLayer,
+            int      dstLayer,
+            int      srcX0,
+            int      srcY0,
+            int      srcX1,
+            int      srcY1,
+            int      dstX0,
+            int      dstY0,
+            int      dstX1,
+            int      dstY1);
 
-        void Reinterpret(long Key, GalImage NewImage);
+        void Reinterpret(long key, GalImage newImage);
     }
 }

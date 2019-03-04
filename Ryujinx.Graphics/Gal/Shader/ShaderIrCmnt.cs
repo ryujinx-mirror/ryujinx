@@ -4,9 +4,9 @@ namespace Ryujinx.Graphics.Gal.Shader
     {
         public string Comment { get; private set; }
 
-        public ShaderIrCmnt(string Comment)
+        public ShaderIrCmnt(string comment)
         {
-            this.Comment = Comment;
+            Comment = comment;
         }
     }
 }

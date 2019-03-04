@@ -4,42 +4,42 @@ namespace Ryujinx.Graphics.Texture
 {
     class LinearSwizzle : ISwizzle
     {
-        private int Pitch;
-        private int Bpp;
+        private int _pitch;
+        private int _bpp;
 
-        private int SliceSize;
+        private int _sliceSize;
 
-        public LinearSwizzle(int Pitch, int Bpp, int Width, int Height)
+        public LinearSwizzle(int pitch, int bpp, int width, int height)
         {
-            this.Pitch  = Pitch;
-            this.Bpp    = Bpp;
-            SliceSize   = Width * Height * Bpp;
+            _pitch     = pitch;
+            _bpp       = bpp;
+            _sliceSize = width * height * bpp;
         }
 
-        public void SetMipLevel(int Level)
+        public void SetMipLevel(int level)
         {
             throw new NotImplementedException();
         }
 
-        public int GetMipOffset(int Level)
+        public int GetMipOffset(int level)
         {
-            if (Level == 1)
-                return SliceSize;
+            if (level == 1)
+                return _sliceSize;
             throw new NotImplementedException();
         }
 
-        public int GetImageSize(int MipsCount)
+        public int GetImageSize(int mipsCount)
         {
-            int Size = GetMipOffset(MipsCount);
+            int size = GetMipOffset(mipsCount);
 
-            Size = (Size + 0x1fff) & ~0x1fff;
+            size = (size + 0x1fff) & ~0x1fff;
 
-            return Size;
+            return size;
         }
 
-        public int GetSwizzleOffset(int X, int Y, int Z)
+        public int GetSwizzleOffset(int x, int y, int z)
         {
-            return Z * SliceSize + X * Bpp + Y * Pitch;
+            return z * _sliceSize + x * _bpp + y * _pitch;
         }
     }
 }

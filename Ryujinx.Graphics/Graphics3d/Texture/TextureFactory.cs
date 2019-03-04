@@ -6,161 +6,161 @@ namespace Ryujinx.Graphics.Texture
 {
     static class TextureFactory
     {
-        public static GalImage MakeTexture(NvGpuVmm Vmm, long TicPosition)
+        public static GalImage MakeTexture(NvGpuVmm vmm, long ticPosition)
         {
-            int[] Tic = ReadWords(Vmm, TicPosition, 8);
+            int[] tic = ReadWords(vmm, ticPosition, 8);
 
-            GalImageFormat Format = GetImageFormat(Tic);
+            GalImageFormat format = GetImageFormat(tic);
 
-            GalTextureTarget TextureTarget = (GalTextureTarget)((Tic[4] >> 23) & 0xF);
+            GalTextureTarget textureTarget = (GalTextureTarget)((tic[4] >> 23) & 0xF);
 
-            GalTextureSource XSource = (GalTextureSource)((Tic[0] >> 19) & 7);
-            GalTextureSource YSource = (GalTextureSource)((Tic[0] >> 22) & 7);
-            GalTextureSource ZSource = (GalTextureSource)((Tic[0] >> 25) & 7);
-            GalTextureSource WSource = (GalTextureSource)((Tic[0] >> 28) & 7);
+            GalTextureSource xSource = (GalTextureSource)((tic[0] >> 19) & 7);
+            GalTextureSource ySource = (GalTextureSource)((tic[0] >> 22) & 7);
+            GalTextureSource zSource = (GalTextureSource)((tic[0] >> 25) & 7);
+            GalTextureSource wSource = (GalTextureSource)((tic[0] >> 28) & 7);
 
-            TextureSwizzle Swizzle = (TextureSwizzle)((Tic[2] >> 21) & 7);
+            TextureSwizzle swizzle = (TextureSwizzle)((tic[2] >> 21) & 7);
 
-            int MaxMipmapLevel = (Tic[3] >> 28) & 0xF + 1;
+            int maxMipmapLevel = (tic[3] >> 28) & 0xF + 1;
 
-            GalMemoryLayout Layout;
+            GalMemoryLayout layout;
 
-            if (Swizzle == TextureSwizzle.BlockLinear ||
-                Swizzle == TextureSwizzle.BlockLinearColorKey)
+            if (swizzle == TextureSwizzle.BlockLinear ||
+                swizzle == TextureSwizzle.BlockLinearColorKey)
             {
-                Layout = GalMemoryLayout.BlockLinear;
+                layout = GalMemoryLayout.BlockLinear;
             }
             else
             {
-                Layout = GalMemoryLayout.Pitch;
+                layout = GalMemoryLayout.Pitch;
             }
 
-            int GobBlockHeightLog2 = (Tic[3] >> 3)  & 7;
-            int GobBlockDepthLog2  = (Tic[3] >> 6)  & 7;
-            int TileWidthLog2      = (Tic[3] >> 10) & 7;
+            int gobBlockHeightLog2 = (tic[3] >> 3)  & 7;
+            int gobBlockDepthLog2  = (tic[3] >> 6)  & 7;
+            int tileWidthLog2      = (tic[3] >> 10) & 7;
 
-            int GobBlockHeight = 1 << GobBlockHeightLog2;
-            int GobBlockDepth  = 1 << GobBlockDepthLog2;
-            int TileWidth      = 1 << TileWidthLog2;
+            int gobBlockHeight = 1 << gobBlockHeightLog2;
+            int gobBlockDepth  = 1 << gobBlockDepthLog2;
+            int tileWidth      = 1 << tileWidthLog2;
 
-            int Width  = ((Tic[4] >> 0)  & 0xffff) + 1;
-            int Height = ((Tic[5] >> 0)  & 0xffff) + 1;
-            int Depth  = ((Tic[5] >> 16) & 0x3fff) + 1;
+            int width  = ((tic[4] >> 0)  & 0xffff) + 1;
+            int height = ((tic[5] >> 0)  & 0xffff) + 1;
+            int depth  = ((tic[5] >> 16) & 0x3fff) + 1;
 
-            int LayoutCount = 1;
+            int layoutCount = 1;
 
             // TODO: check this
-            if (ImageUtils.IsArray(TextureTarget))
+            if (ImageUtils.IsArray(textureTarget))
             {
-                LayoutCount = Depth;
-                Depth = 1;
+                layoutCount = depth;
+                depth = 1;
             }
 
-            if (TextureTarget == GalTextureTarget.OneD)
+            if (textureTarget == GalTextureTarget.OneD)
             {
-                Height = 1;
+                height = 1;
             }
 
-            if (TextureTarget == GalTextureTarget.TwoD || TextureTarget == GalTextureTarget.OneD)
+            if (textureTarget == GalTextureTarget.TwoD || textureTarget == GalTextureTarget.OneD)
             {
-                Depth = 1;
+                depth = 1;
             }
-            else if (TextureTarget == GalTextureTarget.CubeMap)
+            else if (textureTarget == GalTextureTarget.CubeMap)
             {
                 // FIXME: This is a bit hacky but I guess it's fine for now
-                LayoutCount = 6;
-                Depth = 1;
+                layoutCount = 6;
+                depth = 1;
             }
-            else if (TextureTarget == GalTextureTarget.CubeArray)
+            else if (textureTarget == GalTextureTarget.CubeArray)
             {
                 // FIXME: This is a really really hacky but I guess it's fine for now
-                LayoutCount *= 6;
-                Depth = 1;
+                layoutCount *= 6;
+                depth = 1;
             }
 
-            GalImage Image = new GalImage(
-                Width,
-                Height,
-                Depth,
-                LayoutCount,
-                TileWidth,
-                GobBlockHeight,
-                GobBlockDepth,
-                Layout,
-                Format,
-                TextureTarget,
-                MaxMipmapLevel,
-                XSource,
-                YSource,
-                ZSource,
-                WSource);
+            GalImage image = new GalImage(
+                width,
+                height,
+                depth,
+                layoutCount,
+                tileWidth,
+                gobBlockHeight,
+                gobBlockDepth,
+                layout,
+                format,
+                textureTarget,
+                maxMipmapLevel,
+                xSource,
+                ySource,
+                zSource,
+                wSource);
 
-            if (Layout == GalMemoryLayout.Pitch)
+            if (layout == GalMemoryLayout.Pitch)
             {
-                Image.Pitch = (Tic[3] & 0xffff) << 5;
+                image.Pitch = (tic[3] & 0xffff) << 5;
             }
 
-            return Image;
+            return image;
         }
 
-        public static GalTextureSampler MakeSampler(NvGpu Gpu, NvGpuVmm Vmm, long TscPosition)
+        public static GalTextureSampler MakeSampler(NvGpu gpu, NvGpuVmm vmm, long tscPosition)
         {
-            int[] Tsc = ReadWords(Vmm, TscPosition, 8);
+            int[] tsc = ReadWords(vmm, tscPosition, 8);
 
-            GalTextureWrap AddressU = (GalTextureWrap)((Tsc[0] >> 0) & 7);
-            GalTextureWrap AddressV = (GalTextureWrap)((Tsc[0] >> 3) & 7);
-            GalTextureWrap AddressP = (GalTextureWrap)((Tsc[0] >> 6) & 7);
+            GalTextureWrap addressU = (GalTextureWrap)((tsc[0] >> 0) & 7);
+            GalTextureWrap addressV = (GalTextureWrap)((tsc[0] >> 3) & 7);
+            GalTextureWrap addressP = (GalTextureWrap)((tsc[0] >> 6) & 7);
 
-            bool DepthCompare = ((Tsc[0] >> 9) & 1) == 1;
+            bool depthCompare = ((tsc[0] >> 9) & 1) == 1;
 
-            DepthCompareFunc DepthCompareFunc = (DepthCompareFunc)((Tsc[0] >> 10) & 7);
+            DepthCompareFunc depthCompareFunc = (DepthCompareFunc)((tsc[0] >> 10) & 7);
 
-            GalTextureFilter    MagFilter = (GalTextureFilter)   ((Tsc[1] >> 0) & 3);
-            GalTextureFilter    MinFilter = (GalTextureFilter)   ((Tsc[1] >> 4) & 3);
-            GalTextureMipFilter MipFilter = (GalTextureMipFilter)((Tsc[1] >> 6) & 3);
+            GalTextureFilter    magFilter = (GalTextureFilter)   ((tsc[1] >> 0) & 3);
+            GalTextureFilter    minFilter = (GalTextureFilter)   ((tsc[1] >> 4) & 3);
+            GalTextureMipFilter mipFilter = (GalTextureMipFilter)((tsc[1] >> 6) & 3);
 
-            GalColorF BorderColor = new GalColorF(
-                BitConverter.Int32BitsToSingle(Tsc[4]),
-                BitConverter.Int32BitsToSingle(Tsc[5]),
-                BitConverter.Int32BitsToSingle(Tsc[6]),
-                BitConverter.Int32BitsToSingle(Tsc[7]));
+            GalColorF borderColor = new GalColorF(
+                BitConverter.Int32BitsToSingle(tsc[4]),
+                BitConverter.Int32BitsToSingle(tsc[5]),
+                BitConverter.Int32BitsToSingle(tsc[6]),
+                BitConverter.Int32BitsToSingle(tsc[7]));
 
             return new GalTextureSampler(
-                AddressU,
-                AddressV,
-                AddressP,
-                MinFilter,
-                MagFilter,
-                MipFilter,
-                BorderColor,
-                DepthCompare,
-                DepthCompareFunc);
+                addressU,
+                addressV,
+                addressP,
+                minFilter,
+                magFilter,
+                mipFilter,
+                borderColor,
+                depthCompare,
+                depthCompareFunc);
         }
 
-        private static GalImageFormat GetImageFormat(int[] Tic)
+        private static GalImageFormat GetImageFormat(int[] tic)
         {
-            GalTextureType RType = (GalTextureType)((Tic[0] >> 7)  & 7);
-            GalTextureType GType = (GalTextureType)((Tic[0] >> 10) & 7);
-            GalTextureType BType = (GalTextureType)((Tic[0] >> 13) & 7);
-            GalTextureType AType = (GalTextureType)((Tic[0] >> 16) & 7);
+            GalTextureType rType = (GalTextureType)((tic[0] >> 7)  & 7);
+            GalTextureType gType = (GalTextureType)((tic[0] >> 10) & 7);
+            GalTextureType bType = (GalTextureType)((tic[0] >> 13) & 7);
+            GalTextureType aType = (GalTextureType)((tic[0] >> 16) & 7);
 
-            GalTextureFormat Format = (GalTextureFormat)(Tic[0] & 0x7f);
+            GalTextureFormat format = (GalTextureFormat)(tic[0] & 0x7f);
 
-            bool ConvSrgb = ((Tic[4] >> 22) & 1) != 0;
+            bool convSrgb = ((tic[4] >> 22) & 1) != 0;
 
-            return ImageUtils.ConvertTexture(Format, RType, GType, BType, AType, ConvSrgb);
+            return ImageUtils.ConvertTexture(format, rType, gType, bType, aType, convSrgb);
         }
 
-        private static int[] ReadWords(NvGpuVmm Vmm, long Position, int Count)
+        private static int[] ReadWords(NvGpuVmm vmm, long position, int count)
         {
-            int[] Words = new int[Count];
+            int[] words = new int[count];
 
-            for (int Index = 0; Index < Count; Index++, Position += 4)
+            for (int index = 0; index < count; index++, position += 4)
             {
-                Words[Index] = Vmm.ReadInt32(Position);
+                words[index] = vmm.ReadInt32(position);
             }
 
-            return Words;
+            return words;
         }
     }
 }

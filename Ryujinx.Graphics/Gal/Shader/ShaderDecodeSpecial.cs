@@ -2,23 +2,23 @@
 {
     static partial class ShaderDecode
     {
-        public static void Out_R(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Out_R(ShaderIrBlock block, long opCode, int position)
         {
             //TODO: Those registers have to be used for something
-            ShaderIrOperGpr Gpr0  = OpCode.Gpr0();
-            ShaderIrOperGpr Gpr8  = OpCode.Gpr8();
-            ShaderIrOperGpr Gpr20 = OpCode.Gpr20();
+            ShaderIrOperGpr gpr0  = opCode.Gpr0();
+            ShaderIrOperGpr gpr8  = opCode.Gpr8();
+            ShaderIrOperGpr gpr20 = opCode.Gpr20();
 
-            int Type = OpCode.Read(39, 3);
+            int type = opCode.Read(39, 3);
 
-            if ((Type & 1) != 0)
+            if ((type & 1) != 0)
             {
-                Block.AddNode(OpCode.PredNode(new ShaderIrOp(ShaderIrInst.Emit)));
+                block.AddNode(opCode.PredNode(new ShaderIrOp(ShaderIrInst.Emit)));
             }
 
-            if ((Type & 2) != 0)
+            if ((type & 2) != 0)
             {
-                Block.AddNode(OpCode.PredNode(new ShaderIrOp(ShaderIrInst.Cut)));
+                block.AddNode(opCode.PredNode(new ShaderIrOp(ShaderIrInst.Cut)));
             }
         }
     }

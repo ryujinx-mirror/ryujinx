@@ -5,74 +5,74 @@ namespace Ryujinx.Graphics.Gal.Shader
         private static readonly ShaderIrOperImmf ImmfZero = new ShaderIrOperImmf(0);
         private static readonly ShaderIrOperImmf ImmfOne  = new ShaderIrOperImmf(1);
 
-        public static ShaderIrNode GetAluFabsFneg(ShaderIrNode Node, bool Abs, bool Neg)
+        public static ShaderIrNode GetAluFabsFneg(ShaderIrNode node, bool abs, bool neg)
         {
-            return GetAluFneg(GetAluFabs(Node, Abs), Neg);
+            return GetAluFneg(GetAluFabs(node, abs), neg);
         }
 
-        public static ShaderIrNode GetAluFabs(ShaderIrNode Node, bool Abs)
+        public static ShaderIrNode GetAluFabs(ShaderIrNode node, bool abs)
         {
-            return Abs ? new ShaderIrOp(ShaderIrInst.Fabs, Node) : Node;
+            return abs ? new ShaderIrOp(ShaderIrInst.Fabs, node) : node;
         }
 
-        public static ShaderIrNode GetAluFneg(ShaderIrNode Node, bool Neg)
+        public static ShaderIrNode GetAluFneg(ShaderIrNode node, bool neg)
         {
-            return Neg ? new ShaderIrOp(ShaderIrInst.Fneg, Node) : Node;
+            return neg ? new ShaderIrOp(ShaderIrInst.Fneg, node) : node;
         }
 
-        public static ShaderIrNode GetAluFsat(ShaderIrNode Node, bool Sat)
+        public static ShaderIrNode GetAluFsat(ShaderIrNode node, bool sat)
         {
-            return Sat ? new ShaderIrOp(ShaderIrInst.Fclamp, Node, ImmfZero, ImmfOne) : Node;
+            return sat ? new ShaderIrOp(ShaderIrInst.Fclamp, node, ImmfZero, ImmfOne) : node;
         }
 
-        public static ShaderIrNode GetAluIabsIneg(ShaderIrNode Node, bool Abs, bool Neg)
+        public static ShaderIrNode GetAluIabsIneg(ShaderIrNode node, bool abs, bool neg)
         {
-            return GetAluIneg(GetAluIabs(Node, Abs), Neg);
+            return GetAluIneg(GetAluIabs(node, abs), neg);
         }
 
-        public static ShaderIrNode GetAluIabs(ShaderIrNode Node, bool Abs)
+        public static ShaderIrNode GetAluIabs(ShaderIrNode node, bool abs)
         {
-            return Abs ? new ShaderIrOp(ShaderIrInst.Abs, Node) : Node;
+            return abs ? new ShaderIrOp(ShaderIrInst.Abs, node) : node;
         }
 
-        public static ShaderIrNode GetAluIneg(ShaderIrNode Node, bool Neg)
+        public static ShaderIrNode GetAluIneg(ShaderIrNode node, bool neg)
         {
-            return Neg ? new ShaderIrOp(ShaderIrInst.Neg, Node) : Node;
+            return neg ? new ShaderIrOp(ShaderIrInst.Neg, node) : node;
         }
 
-        public static ShaderIrNode GetAluNot(ShaderIrNode Node, bool Not)
+        public static ShaderIrNode GetAluNot(ShaderIrNode node, bool not)
         {
-            return Not ? new ShaderIrOp(ShaderIrInst.Not, Node) : Node;
+            return not ? new ShaderIrOp(ShaderIrInst.Not, node) : node;
         }
 
-        public static ShaderIrNode ExtendTo32(ShaderIrNode Node, bool Signed, int Size)
+        public static ShaderIrNode ExtendTo32(ShaderIrNode node, bool signed, int size)
         {
-            int Shift = 32 - Size;
+            int shift = 32 - size;
 
-            ShaderIrInst RightShift = Signed
+            ShaderIrInst rightShift = signed
                 ? ShaderIrInst.Asr
                 : ShaderIrInst.Lsr;
 
-            Node = new ShaderIrOp(ShaderIrInst.Lsl, Node, new ShaderIrOperImm(Shift));
-            Node = new ShaderIrOp(RightShift,       Node, new ShaderIrOperImm(Shift));
+            node = new ShaderIrOp(ShaderIrInst.Lsl, node, new ShaderIrOperImm(shift));
+            node = new ShaderIrOp(rightShift,       node, new ShaderIrOperImm(shift));
 
-            return Node;
+            return node;
         }
 
-        public static ShaderIrNode ExtendTo32(ShaderIrNode Node, bool Signed, ShaderIrNode Size)
+        public static ShaderIrNode ExtendTo32(ShaderIrNode node, bool signed, ShaderIrNode size)
         {
-            ShaderIrOperImm WordSize = new ShaderIrOperImm(32);
+            ShaderIrOperImm wordSize = new ShaderIrOperImm(32);
 
-            ShaderIrOp Shift = new ShaderIrOp(ShaderIrInst.Sub, WordSize, Size);
+            ShaderIrOp shift = new ShaderIrOp(ShaderIrInst.Sub, wordSize, size);
 
-            ShaderIrInst RightShift = Signed
+            ShaderIrInst rightShift = signed
                 ? ShaderIrInst.Asr
                 : ShaderIrInst.Lsr;
 
-            Node = new ShaderIrOp(ShaderIrInst.Lsl, Node, Shift);
-            Node = new ShaderIrOp(RightShift,       Node, Shift);
+            node = new ShaderIrOp(ShaderIrInst.Lsl, node, shift);
+            node = new ShaderIrOp(rightShift,       node, shift);
 
-            return Node;
+            return node;
         }
     }
 }

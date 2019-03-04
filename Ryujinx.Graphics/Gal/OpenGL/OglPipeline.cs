@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gal.OpenGL
 {
-    class OGLPipeline : IGalPipeline
+    class OglPipeline : IGalPipeline
     {
-        private static Dictionary<GalVertexAttribSize, int> AttribElements =
+        private static Dictionary<GalVertexAttribSize, int> _attribElements =
                    new Dictionary<GalVertexAttribSize, int>()
         {
             { GalVertexAttribSize._32_32_32_32, 4 },
@@ -25,7 +25,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             { GalVertexAttribSize._11_11_10,    3 }
         };
 
-        private static Dictionary<GalVertexAttribSize, VertexAttribPointerType> FloatAttribTypes =
+        private static Dictionary<GalVertexAttribSize, VertexAttribPointerType> _floatAttribTypes =
                    new Dictionary<GalVertexAttribSize, VertexAttribPointerType>()
         {
             { GalVertexAttribSize._32_32_32_32, VertexAttribPointerType.Float     },
@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             { GalVertexAttribSize._16,          VertexAttribPointerType.HalfFloat }
         };
 
-        private static Dictionary<GalVertexAttribSize, VertexAttribPointerType> SignedAttribTypes =
+        private static Dictionary<GalVertexAttribSize, VertexAttribPointerType> _signedAttribTypes =
                    new Dictionary<GalVertexAttribSize, VertexAttribPointerType>()
         {
             { GalVertexAttribSize._32_32_32_32, VertexAttribPointerType.Int           },
@@ -56,7 +56,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             { GalVertexAttribSize._10_10_10_2,  VertexAttribPointerType.Int2101010Rev }
         };
 
-        private static Dictionary<GalVertexAttribSize, VertexAttribPointerType> UnsignedAttribTypes =
+        private static Dictionary<GalVertexAttribSize, VertexAttribPointerType> _unsignedAttribTypes =
                    new Dictionary<GalVertexAttribSize, VertexAttribPointerType>()
         {
             { GalVertexAttribSize._32_32_32_32, VertexAttribPointerType.UnsignedInt             },
@@ -75,30 +75,30 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             { GalVertexAttribSize._11_11_10,    VertexAttribPointerType.UnsignedInt10F11F11FRev }
         };
 
-        private GalPipelineState Old;
+        private GalPipelineState _old;
 
-        private OGLConstBuffer  Buffer;
-        private OGLRenderTarget RenderTarget;
-        private OGLRasterizer   Rasterizer;
-        private OGLShader       Shader;
+        private OglConstBuffer  _buffer;
+        private OglRenderTarget _renderTarget;
+        private OglRasterizer   _rasterizer;
+        private OglShader       _shader;
 
-        private int VaoHandle;
+        private int _vaoHandle;
 
-        public OGLPipeline(
-            OGLConstBuffer  Buffer,
-            OGLRenderTarget RenderTarget,
-            OGLRasterizer   Rasterizer,
-            OGLShader       Shader)
+        public OglPipeline(
+            OglConstBuffer  buffer,
+            OglRenderTarget renderTarget,
+            OglRasterizer   rasterizer,
+            OglShader       shader)
         {
-            this.Buffer       = Buffer;
-            this.RenderTarget = RenderTarget;
-            this.Rasterizer   = Rasterizer;
-            this.Shader       = Shader;
+            _buffer       = buffer;
+            _renderTarget = renderTarget;
+            _rasterizer   = rasterizer;
+            _shader       = shader;
 
             //These values match OpenGL's defaults
-            Old = new GalPipelineState
+            _old = new GalPipelineState
             {
-                FrontFace = GalFrontFace.CCW,
+                FrontFace = GalFrontFace.Ccw,
 
                 CullFaceEnabled = false,
                 CullFace        = GalCullFace.Back,
@@ -133,11 +133,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 PrimitiveRestartIndex   = 0
             };
 
-            for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
+            for (int index = 0; index < GalPipelineState.RenderTargetsCount; index++)
             {
-                Old.Blends[Index] = BlendState.Default;
+                _old.Blends[index] = BlendState.Default;
 
-                Old.ColorMasks[Index] = ColorMaskState.Default;
+                _old.ColorMasks[index] = ColorMaskState.Default;
             }
         }
 
@@ -147,122 +147,122 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             BindVertexLayout(New);
 
-            if (New.FramebufferSrgb != Old.FramebufferSrgb)
+            if (New.FramebufferSrgb != _old.FramebufferSrgb)
             {
                 Enable(EnableCap.FramebufferSrgb, New.FramebufferSrgb);
 
-                RenderTarget.FramebufferSrgb = New.FramebufferSrgb;
+                _renderTarget.FramebufferSrgb = New.FramebufferSrgb;
             }
 
-            if (New.FlipX != Old.FlipX || New.FlipY != Old.FlipY || New.Instance != Old.Instance)
+            if (New.FlipX != _old.FlipX || New.FlipY != _old.FlipY || New.Instance != _old.Instance)
             {
-                Shader.SetExtraData(New.FlipX, New.FlipY, New.Instance);
+                _shader.SetExtraData(New.FlipX, New.FlipY, New.Instance);
             }
 
-            if (New.FrontFace != Old.FrontFace)
+            if (New.FrontFace != _old.FrontFace)
             {
-                GL.FrontFace(OGLEnumConverter.GetFrontFace(New.FrontFace));
+                GL.FrontFace(OglEnumConverter.GetFrontFace(New.FrontFace));
             }
 
-            if (New.CullFaceEnabled != Old.CullFaceEnabled)
+            if (New.CullFaceEnabled != _old.CullFaceEnabled)
             {
                 Enable(EnableCap.CullFace, New.CullFaceEnabled);
             }
 
             if (New.CullFaceEnabled)
             {
-                if (New.CullFace != Old.CullFace)
+                if (New.CullFace != _old.CullFace)
                 {
-                    GL.CullFace(OGLEnumConverter.GetCullFace(New.CullFace));
+                    GL.CullFace(OglEnumConverter.GetCullFace(New.CullFace));
                 }
             }
 
-            if (New.DepthTestEnabled != Old.DepthTestEnabled)
+            if (New.DepthTestEnabled != _old.DepthTestEnabled)
             {
                 Enable(EnableCap.DepthTest, New.DepthTestEnabled);
             }
 
-            if (New.DepthWriteEnabled != Old.DepthWriteEnabled)
+            if (New.DepthWriteEnabled != _old.DepthWriteEnabled)
             {
                 GL.DepthMask(New.DepthWriteEnabled);
             }
 
             if (New.DepthTestEnabled)
             {
-                if (New.DepthFunc != Old.DepthFunc)
+                if (New.DepthFunc != _old.DepthFunc)
                 {
-                    GL.DepthFunc(OGLEnumConverter.GetDepthFunc(New.DepthFunc));
+                    GL.DepthFunc(OglEnumConverter.GetDepthFunc(New.DepthFunc));
                 }
             }
 
-            if (New.DepthRangeNear != Old.DepthRangeNear ||
-                New.DepthRangeFar  != Old.DepthRangeFar)
+            if (New.DepthRangeNear != _old.DepthRangeNear ||
+                New.DepthRangeFar  != _old.DepthRangeFar)
             {
                 GL.DepthRange(New.DepthRangeNear, New.DepthRangeFar);
             }
 
-            if (New.StencilTestEnabled != Old.StencilTestEnabled)
+            if (New.StencilTestEnabled != _old.StencilTestEnabled)
             {
                 Enable(EnableCap.StencilTest, New.StencilTestEnabled);
             }
 
-            if (New.StencilTwoSideEnabled != Old.StencilTwoSideEnabled)
+            if (New.StencilTwoSideEnabled != _old.StencilTwoSideEnabled)
             {
                 Enable((EnableCap)All.StencilTestTwoSideExt, New.StencilTwoSideEnabled);
             }
 
             if (New.StencilTestEnabled)
             {
-                if (New.StencilBackFuncFunc != Old.StencilBackFuncFunc ||
-                    New.StencilBackFuncRef  != Old.StencilBackFuncRef  ||
-                    New.StencilBackFuncMask != Old.StencilBackFuncMask)
+                if (New.StencilBackFuncFunc != _old.StencilBackFuncFunc ||
+                    New.StencilBackFuncRef  != _old.StencilBackFuncRef  ||
+                    New.StencilBackFuncMask != _old.StencilBackFuncMask)
                 {
                     GL.StencilFuncSeparate(
                         StencilFace.Back,
-                        OGLEnumConverter.GetStencilFunc(New.StencilBackFuncFunc),
+                        OglEnumConverter.GetStencilFunc(New.StencilBackFuncFunc),
                         New.StencilBackFuncRef,
                         New.StencilBackFuncMask);
                 }
 
-                if (New.StencilBackOpFail  != Old.StencilBackOpFail  ||
-                    New.StencilBackOpZFail != Old.StencilBackOpZFail ||
-                    New.StencilBackOpZPass != Old.StencilBackOpZPass)
+                if (New.StencilBackOpFail  != _old.StencilBackOpFail  ||
+                    New.StencilBackOpZFail != _old.StencilBackOpZFail ||
+                    New.StencilBackOpZPass != _old.StencilBackOpZPass)
                 {
                     GL.StencilOpSeparate(
                         StencilFace.Back,
-                        OGLEnumConverter.GetStencilOp(New.StencilBackOpFail),
-                        OGLEnumConverter.GetStencilOp(New.StencilBackOpZFail),
-                        OGLEnumConverter.GetStencilOp(New.StencilBackOpZPass));
+                        OglEnumConverter.GetStencilOp(New.StencilBackOpFail),
+                        OglEnumConverter.GetStencilOp(New.StencilBackOpZFail),
+                        OglEnumConverter.GetStencilOp(New.StencilBackOpZPass));
                 }
 
-                if (New.StencilBackMask != Old.StencilBackMask)
+                if (New.StencilBackMask != _old.StencilBackMask)
                 {
                     GL.StencilMaskSeparate(StencilFace.Back, New.StencilBackMask);
                 }
 
-                if (New.StencilFrontFuncFunc != Old.StencilFrontFuncFunc ||
-                    New.StencilFrontFuncRef  != Old.StencilFrontFuncRef  ||
-                    New.StencilFrontFuncMask != Old.StencilFrontFuncMask)
+                if (New.StencilFrontFuncFunc != _old.StencilFrontFuncFunc ||
+                    New.StencilFrontFuncRef  != _old.StencilFrontFuncRef  ||
+                    New.StencilFrontFuncMask != _old.StencilFrontFuncMask)
                 {
                     GL.StencilFuncSeparate(
                         StencilFace.Front,
-                        OGLEnumConverter.GetStencilFunc(New.StencilFrontFuncFunc),
+                        OglEnumConverter.GetStencilFunc(New.StencilFrontFuncFunc),
                         New.StencilFrontFuncRef,
                         New.StencilFrontFuncMask);
                 }
 
-                if (New.StencilFrontOpFail  != Old.StencilFrontOpFail  ||
-                    New.StencilFrontOpZFail != Old.StencilFrontOpZFail ||
-                    New.StencilFrontOpZPass != Old.StencilFrontOpZPass)
+                if (New.StencilFrontOpFail  != _old.StencilFrontOpFail  ||
+                    New.StencilFrontOpZFail != _old.StencilFrontOpZFail ||
+                    New.StencilFrontOpZPass != _old.StencilFrontOpZPass)
                 {
                     GL.StencilOpSeparate(
                         StencilFace.Front,
-                        OGLEnumConverter.GetStencilOp(New.StencilFrontOpFail),
-                        OGLEnumConverter.GetStencilOp(New.StencilFrontOpZFail),
-                        OGLEnumConverter.GetStencilOp(New.StencilFrontOpZPass));
+                        OglEnumConverter.GetStencilOp(New.StencilFrontOpFail),
+                        OglEnumConverter.GetStencilOp(New.StencilFrontOpZFail),
+                        OglEnumConverter.GetStencilOp(New.StencilFrontOpZPass));
                 }
 
-                if (New.StencilFrontMask != Old.StencilFrontMask)
+                if (New.StencilFrontMask != _old.StencilFrontMask)
                 {
                     GL.StencilMaskSeparate(StencilFace.Front, New.StencilFrontMask);
                 }
@@ -277,42 +277,42 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 int  scissorsApplied = 0;
                 bool applyToAll      = false;
 
-                for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
+                for (int index = 0; index < GalPipelineState.RenderTargetsCount; index++)
                 {
-                    if (New.ScissorTestEnabled[Index])
+                    if (New.ScissorTestEnabled[index])
                     {
                         // If viewport arrays are unavailable apply first scissor test to all or
                         // there is only 1 scissor test and it's the first, the scissor test applies to all viewports
-                        if (!OGLExtension.Required.ViewportArray || (Index == 0 && New.ScissorTestCount == 1))
+                        if (!OglExtension.Required.ViewportArray || (index == 0 && New.ScissorTestCount == 1))
                         {
                             GL.Enable(EnableCap.ScissorTest);
                             applyToAll = true;
                         }
                         else
                         {
-                            GL.Enable(IndexedEnableCap.ScissorTest, Index);
+                            GL.Enable(IndexedEnableCap.ScissorTest, index);
                         }
 
-                        if (New.ScissorTestEnabled[Index] != Old.ScissorTestEnabled[Index] ||
-                            New.ScissorTestX[Index]       != Old.ScissorTestX[Index]       ||
-                            New.ScissorTestY[Index]       != Old.ScissorTestY[Index]       ||
-                            New.ScissorTestWidth[Index]   != Old.ScissorTestWidth[Index]   ||
-                            New.ScissorTestHeight[Index]  != Old.ScissorTestHeight[Index])
+                        if (New.ScissorTestEnabled[index] != _old.ScissorTestEnabled[index] ||
+                            New.ScissorTestX[index]       != _old.ScissorTestX[index]       ||
+                            New.ScissorTestY[index]       != _old.ScissorTestY[index]       ||
+                            New.ScissorTestWidth[index]   != _old.ScissorTestWidth[index]   ||
+                            New.ScissorTestHeight[index]  != _old.ScissorTestHeight[index])
                         {
                             if (applyToAll)
                             {
-                                GL.Scissor(New.ScissorTestX[Index],     New.ScissorTestY[Index],
-                                           New.ScissorTestWidth[Index], New.ScissorTestHeight[Index]);
+                                GL.Scissor(New.ScissorTestX[index],     New.ScissorTestY[index],
+                                           New.ScissorTestWidth[index], New.ScissorTestHeight[index]);
                             }
                             else
                             {
-                                GL.ScissorIndexed(Index, New.ScissorTestX[Index],     New.ScissorTestY[Index],
-                                                         New.ScissorTestWidth[Index], New.ScissorTestHeight[Index]);
+                                GL.ScissorIndexed(index, New.ScissorTestX[index],     New.ScissorTestY[index],
+                                                         New.ScissorTestWidth[index], New.ScissorTestHeight[index]);
                             }
                         }
 
-                        // If all scissor tests have been applied, or viewport arrays are unavailable we can skip remaining itterations
-                        if (!OGLExtension.Required.ViewportArray || ++scissorsApplied == New.ScissorTestCount)
+                        // If all scissor tests have been applied, or viewport arrays are unavailable we can skip remaining iterations
+                        if (!OglExtension.Required.ViewportArray || ++scissorsApplied == New.ScissorTestCount)
                         {
                             break;
                         }
@@ -323,26 +323,26 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             if (New.BlendIndependent)
             {
-                for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
+                for (int index = 0; index < GalPipelineState.RenderTargetsCount; index++)
                 {
-                    SetBlendState(Index, New.Blends[Index], Old.Blends[Index]);
+                    SetBlendState(index, New.Blends[index], _old.Blends[index]);
                 }
             }
             else
             {
-                if (New.BlendIndependent != Old.BlendIndependent)
+                if (New.BlendIndependent != _old.BlendIndependent)
                 {
                     SetAllBlendState(New.Blends[0]);
                 }
                 else
                 {
-                    SetBlendState(New.Blends[0], Old.Blends[0]);
+                    SetBlendState(New.Blends[0], _old.Blends[0]);
                 }
             }
 
             if (New.ColorMaskCommon)
             {
-                if (New.ColorMaskCommon != Old.ColorMaskCommon || !New.ColorMasks[0].Equals(Old.ColorMasks[0]))
+                if (New.ColorMaskCommon != _old.ColorMaskCommon || !New.ColorMasks[0].Equals(_old.ColorMasks[0]))
                 {
                     GL.ColorMask(
                         New.ColorMasks[0].Red,
@@ -353,39 +353,39 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
             else
             {
-                for (int Index = 0; Index < GalPipelineState.RenderTargetsCount; Index++)
+                for (int index = 0; index < GalPipelineState.RenderTargetsCount; index++)
                 {
-                    if (!New.ColorMasks[Index].Equals(Old.ColorMasks[Index]))
+                    if (!New.ColorMasks[index].Equals(_old.ColorMasks[index]))
                     {
                         GL.ColorMask(
-                            Index,
-                            New.ColorMasks[Index].Red,
-                            New.ColorMasks[Index].Green,
-                            New.ColorMasks[Index].Blue,
-                            New.ColorMasks[Index].Alpha);
+                            index,
+                            New.ColorMasks[index].Red,
+                            New.ColorMasks[index].Green,
+                            New.ColorMasks[index].Blue,
+                            New.ColorMasks[index].Alpha);
                     }
                 }
             }
 
-            if (New.PrimitiveRestartEnabled != Old.PrimitiveRestartEnabled)
+            if (New.PrimitiveRestartEnabled != _old.PrimitiveRestartEnabled)
             {
                 Enable(EnableCap.PrimitiveRestart, New.PrimitiveRestartEnabled);
             }
 
             if (New.PrimitiveRestartEnabled)
             {
-                if (New.PrimitiveRestartIndex != Old.PrimitiveRestartIndex)
+                if (New.PrimitiveRestartIndex != _old.PrimitiveRestartIndex)
                 {
                     GL.PrimitiveRestartIndex(New.PrimitiveRestartIndex);
                 }
             }
 
-            Old = New;
+            _old = New;
         }
 
-        public void Unbind(GalPipelineState State)
+        public void Unbind(GalPipelineState state)
         {
-            if (State.ScissorTestCount > 0)
+            if (state.ScissorTestCount > 0)
             {
                 GL.Disable(EnableCap.ScissorTest);
             }
@@ -400,29 +400,29 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 if (New.SeparateAlpha)
                 {
                     GL.BlendEquationSeparate(
-                        OGLEnumConverter.GetBlendEquation(New.EquationRgb),
-                        OGLEnumConverter.GetBlendEquation(New.EquationAlpha));
+                        OglEnumConverter.GetBlendEquation(New.EquationRgb),
+                        OglEnumConverter.GetBlendEquation(New.EquationAlpha));
 
                     GL.BlendFuncSeparate(
-                        (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcRgb),
-                        (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstRgb),
-                        (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcAlpha),
-                        (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstAlpha));
+                        (BlendingFactorSrc) OglEnumConverter.GetBlendFactor(New.FuncSrcRgb),
+                        (BlendingFactorDest)OglEnumConverter.GetBlendFactor(New.FuncDstRgb),
+                        (BlendingFactorSrc) OglEnumConverter.GetBlendFactor(New.FuncSrcAlpha),
+                        (BlendingFactorDest)OglEnumConverter.GetBlendFactor(New.FuncDstAlpha));
                 }
                 else
                 {
-                    GL.BlendEquation(OGLEnumConverter.GetBlendEquation(New.EquationRgb));
+                    GL.BlendEquation(OglEnumConverter.GetBlendEquation(New.EquationRgb));
 
                     GL.BlendFunc(
-                        OGLEnumConverter.GetBlendFactor(New.FuncSrcRgb),
-                        OGLEnumConverter.GetBlendFactor(New.FuncDstRgb));
+                        OglEnumConverter.GetBlendFactor(New.FuncSrcRgb),
+                        OglEnumConverter.GetBlendFactor(New.FuncDstRgb));
                 }
             }
         }
 
-        private void SetBlendState(BlendState New, BlendState Old)
+        private void SetBlendState(BlendState New, BlendState old)
         {
-            if (New.Enabled != Old.Enabled)
+            if (New.Enabled != old.Enabled)
             {
                 Enable(EnableCap.Blend, New.Enabled);
             }
@@ -431,91 +431,91 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 if (New.SeparateAlpha)
                 {
-                    if (New.EquationRgb   != Old.EquationRgb ||
-                        New.EquationAlpha != Old.EquationAlpha)
+                    if (New.EquationRgb   != old.EquationRgb ||
+                        New.EquationAlpha != old.EquationAlpha)
                     {
                         GL.BlendEquationSeparate(
-                            OGLEnumConverter.GetBlendEquation(New.EquationRgb),
-                            OGLEnumConverter.GetBlendEquation(New.EquationAlpha));
+                            OglEnumConverter.GetBlendEquation(New.EquationRgb),
+                            OglEnumConverter.GetBlendEquation(New.EquationAlpha));
                     }
 
-                    if (New.FuncSrcRgb   != Old.FuncSrcRgb   ||
-                        New.FuncDstRgb   != Old.FuncDstRgb   ||
-                        New.FuncSrcAlpha != Old.FuncSrcAlpha ||
-                        New.FuncDstAlpha != Old.FuncDstAlpha)
+                    if (New.FuncSrcRgb   != old.FuncSrcRgb   ||
+                        New.FuncDstRgb   != old.FuncDstRgb   ||
+                        New.FuncSrcAlpha != old.FuncSrcAlpha ||
+                        New.FuncDstAlpha != old.FuncDstAlpha)
                     {
                         GL.BlendFuncSeparate(
-                            (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcRgb),
-                            (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstRgb),
-                            (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcAlpha),
-                            (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstAlpha));
+                            (BlendingFactorSrc) OglEnumConverter.GetBlendFactor(New.FuncSrcRgb),
+                            (BlendingFactorDest)OglEnumConverter.GetBlendFactor(New.FuncDstRgb),
+                            (BlendingFactorSrc) OglEnumConverter.GetBlendFactor(New.FuncSrcAlpha),
+                            (BlendingFactorDest)OglEnumConverter.GetBlendFactor(New.FuncDstAlpha));
                     }
                 }
                 else
                 {
-                    if (New.EquationRgb != Old.EquationRgb)
+                    if (New.EquationRgb != old.EquationRgb)
                     {
-                        GL.BlendEquation(OGLEnumConverter.GetBlendEquation(New.EquationRgb));
+                        GL.BlendEquation(OglEnumConverter.GetBlendEquation(New.EquationRgb));
                     }
 
-                    if (New.FuncSrcRgb != Old.FuncSrcRgb ||
-                        New.FuncDstRgb != Old.FuncDstRgb)
+                    if (New.FuncSrcRgb != old.FuncSrcRgb ||
+                        New.FuncDstRgb != old.FuncDstRgb)
                     {
                         GL.BlendFunc(
-                            OGLEnumConverter.GetBlendFactor(New.FuncSrcRgb),
-                            OGLEnumConverter.GetBlendFactor(New.FuncDstRgb));
+                            OglEnumConverter.GetBlendFactor(New.FuncSrcRgb),
+                            OglEnumConverter.GetBlendFactor(New.FuncDstRgb));
                     }
                 }
             }
         }
 
-        private void SetBlendState(int Index, BlendState New, BlendState Old)
+        private void SetBlendState(int index, BlendState New, BlendState old)
         {
-            if (New.Enabled != Old.Enabled)
+            if (New.Enabled != old.Enabled)
             {
-                Enable(IndexedEnableCap.Blend, Index, New.Enabled);
+                Enable(IndexedEnableCap.Blend, index, New.Enabled);
             }
 
             if (New.Enabled)
             {
                 if (New.SeparateAlpha)
                 {
-                    if (New.EquationRgb   != Old.EquationRgb ||
-                        New.EquationAlpha != Old.EquationAlpha)
+                    if (New.EquationRgb   != old.EquationRgb ||
+                        New.EquationAlpha != old.EquationAlpha)
                     {
                         GL.BlendEquationSeparate(
-                            Index,
-                            OGLEnumConverter.GetBlendEquation(New.EquationRgb),
-                            OGLEnumConverter.GetBlendEquation(New.EquationAlpha));
+                            index,
+                            OglEnumConverter.GetBlendEquation(New.EquationRgb),
+                            OglEnumConverter.GetBlendEquation(New.EquationAlpha));
                     }
 
-                    if (New.FuncSrcRgb   != Old.FuncSrcRgb   ||
-                        New.FuncDstRgb   != Old.FuncDstRgb   ||
-                        New.FuncSrcAlpha != Old.FuncSrcAlpha ||
-                        New.FuncDstAlpha != Old.FuncDstAlpha)
+                    if (New.FuncSrcRgb   != old.FuncSrcRgb   ||
+                        New.FuncDstRgb   != old.FuncDstRgb   ||
+                        New.FuncSrcAlpha != old.FuncSrcAlpha ||
+                        New.FuncDstAlpha != old.FuncDstAlpha)
                     {
                         GL.BlendFuncSeparate(
-                            Index,
-                            (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcRgb),
-                            (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstRgb),
-                            (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcAlpha),
-                            (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstAlpha));
+                            index,
+                            (BlendingFactorSrc) OglEnumConverter.GetBlendFactor(New.FuncSrcRgb),
+                            (BlendingFactorDest)OglEnumConverter.GetBlendFactor(New.FuncDstRgb),
+                            (BlendingFactorSrc) OglEnumConverter.GetBlendFactor(New.FuncSrcAlpha),
+                            (BlendingFactorDest)OglEnumConverter.GetBlendFactor(New.FuncDstAlpha));
                     }
                 }
                 else
                 {
-                    if (New.EquationRgb != Old.EquationRgb)
+                    if (New.EquationRgb != old.EquationRgb)
                     {
-                        GL.BlendEquation(Index, OGLEnumConverter.GetBlendEquation(New.EquationRgb));
+                        GL.BlendEquation(index, OglEnumConverter.GetBlendEquation(New.EquationRgb));
                     }
 
-                    if (New.FuncSrcRgb != Old.FuncSrcRgb ||
-                        New.FuncDstRgb != Old.FuncDstRgb)
+                    if (New.FuncSrcRgb != old.FuncSrcRgb ||
+                        New.FuncDstRgb != old.FuncDstRgb)
                     {
                         GL.BlendFunc(
-                            Index,
-                            (BlendingFactorSrc) OGLEnumConverter.GetBlendFactor(New.FuncSrcRgb),
-                            (BlendingFactorDest)OGLEnumConverter.GetBlendFactor(New.FuncDstRgb));
+                            index,
+                            (BlendingFactorSrc) OglEnumConverter.GetBlendFactor(New.FuncSrcRgb),
+                            (BlendingFactorDest)OglEnumConverter.GetBlendFactor(New.FuncDstRgb));
                     }
                 }
             }
@@ -523,310 +523,310 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private void BindConstBuffers(GalPipelineState New)
         {
-            int FreeBinding = OGLShader.ReservedCbufCount;
+            int freeBinding = OglShader.ReservedCbufCount;
 
-            void BindIfNotNull(OGLShaderStage Stage)
+            void BindIfNotNull(OglShaderStage stage)
             {
-                if (Stage != null)
+                if (stage != null)
                 {
-                    foreach (ShaderDeclInfo DeclInfo in Stage.ConstBufferUsage)
+                    foreach (ShaderDeclInfo declInfo in stage.ConstBufferUsage)
                     {
-                        long Key = New.ConstBufferKeys[(int)Stage.Type][DeclInfo.Cbuf];
+                        long key = New.ConstBufferKeys[(int)stage.Type][declInfo.Cbuf];
 
-                        if (Key != 0 && Buffer.TryGetUbo(Key, out int UboHandle))
+                        if (key != 0 && _buffer.TryGetUbo(key, out int uboHandle))
                         {
-                            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, FreeBinding, UboHandle);
+                            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, freeBinding, uboHandle);
                         }
 
-                        FreeBinding++;
+                        freeBinding++;
                     }
                 }
             }
 
-            BindIfNotNull(Shader.Current.Vertex);
-            BindIfNotNull(Shader.Current.TessControl);
-            BindIfNotNull(Shader.Current.TessEvaluation);
-            BindIfNotNull(Shader.Current.Geometry);
-            BindIfNotNull(Shader.Current.Fragment);
+            BindIfNotNull(_shader.Current.Vertex);
+            BindIfNotNull(_shader.Current.TessControl);
+            BindIfNotNull(_shader.Current.TessEvaluation);
+            BindIfNotNull(_shader.Current.Geometry);
+            BindIfNotNull(_shader.Current.Fragment);
         }
 
         private void BindVertexLayout(GalPipelineState New)
         {
-            foreach (GalVertexBinding Binding in New.VertexBindings)
+            foreach (GalVertexBinding binding in New.VertexBindings)
             {
-                if (!Binding.Enabled || !Rasterizer.TryGetVbo(Binding.VboKey, out int VboHandle))
+                if (!binding.Enabled || !_rasterizer.TryGetVbo(binding.VboKey, out int vboHandle))
                 {
                     continue;
                 }
 
-                if (VaoHandle == 0)
+                if (_vaoHandle == 0)
                 {
-                    VaoHandle = GL.GenVertexArray();
+                    _vaoHandle = GL.GenVertexArray();
 
                     //Vertex arrays shouldn't be used anywhere else in OpenGL's backend
                     //if you want to use it, move this line out of the if
-                    GL.BindVertexArray(VaoHandle);
+                    GL.BindVertexArray(_vaoHandle);
                 }
 
-                foreach (GalVertexAttrib Attrib in Binding.Attribs)
+                foreach (GalVertexAttrib attrib in binding.Attribs)
                 {
                     //Skip uninitialized attributes.
-                    if (Attrib.Size == 0)
+                    if (attrib.Size == 0)
                     {
                         continue;
                     }
 
-                    GL.BindBuffer(BufferTarget.ArrayBuffer, VboHandle);
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, vboHandle);
 
-                    bool Unsigned =
-                        Attrib.Type == GalVertexAttribType.Unorm ||
-                        Attrib.Type == GalVertexAttribType.Uint  ||
-                        Attrib.Type == GalVertexAttribType.Uscaled;
+                    bool unsigned =
+                        attrib.Type == GalVertexAttribType.Unorm ||
+                        attrib.Type == GalVertexAttribType.Uint  ||
+                        attrib.Type == GalVertexAttribType.Uscaled;
 
-                    bool Normalize =
-                        Attrib.Type == GalVertexAttribType.Snorm ||
-                        Attrib.Type == GalVertexAttribType.Unorm;
+                    bool normalize =
+                        attrib.Type == GalVertexAttribType.Snorm ||
+                        attrib.Type == GalVertexAttribType.Unorm;
 
-                    VertexAttribPointerType Type = 0;
+                    VertexAttribPointerType type = 0;
 
-                    if (Attrib.Type == GalVertexAttribType.Float)
+                    if (attrib.Type == GalVertexAttribType.Float)
                     {
-                        Type = GetType(FloatAttribTypes, Attrib);
+                        type = GetType(_floatAttribTypes, attrib);
                     }
                     else
                     {
-                        if (Unsigned)
+                        if (unsigned)
                         {
-                            Type = GetType(UnsignedAttribTypes, Attrib);
+                            type = GetType(_unsignedAttribTypes, attrib);
                         }
                         else
                         {
-                            Type = GetType(SignedAttribTypes, Attrib);
+                            type = GetType(_signedAttribTypes, attrib);
                         }
                     }
 
-                    if (!AttribElements.TryGetValue(Attrib.Size, out int Size))
+                    if (!_attribElements.TryGetValue(attrib.Size, out int size))
                     {
-                        throw new InvalidOperationException("Invalid attribute size \"" + Attrib.Size + "\"!");
+                        throw new InvalidOperationException("Invalid attribute size \"" + attrib.Size + "\"!");
                     }
 
-                    int Offset = Attrib.Offset;
+                    int offset = attrib.Offset;
 
-                    if (Binding.Stride != 0)
+                    if (binding.Stride != 0)
                     {
-                        GL.EnableVertexAttribArray(Attrib.Index);
+                        GL.EnableVertexAttribArray(attrib.Index);
 
-                        if (Attrib.Type == GalVertexAttribType.Sint ||
-                            Attrib.Type == GalVertexAttribType.Uint)
+                        if (attrib.Type == GalVertexAttribType.Sint ||
+                            attrib.Type == GalVertexAttribType.Uint)
                         {
-                            IntPtr Pointer = new IntPtr(Offset);
+                            IntPtr pointer = new IntPtr(offset);
 
-                            VertexAttribIntegerType IType = (VertexAttribIntegerType)Type;
+                            VertexAttribIntegerType iType = (VertexAttribIntegerType)type;
 
-                            GL.VertexAttribIPointer(Attrib.Index, Size, IType, Binding.Stride, Pointer);
+                            GL.VertexAttribIPointer(attrib.Index, size, iType, binding.Stride, pointer);
                         }
                         else
                         {
-                            GL.VertexAttribPointer(Attrib.Index, Size, Type, Normalize, Binding.Stride, Offset);
+                            GL.VertexAttribPointer(attrib.Index, size, type, normalize, binding.Stride, offset);
                         }
                     }
                     else
                     {
-                        GL.DisableVertexAttribArray(Attrib.Index);
+                        GL.DisableVertexAttribArray(attrib.Index);
 
-                        SetConstAttrib(Attrib);
+                        SetConstAttrib(attrib);
                     }
 
-                    if (Binding.Instanced && Binding.Divisor != 0)
+                    if (binding.Instanced && binding.Divisor != 0)
                     {
-                        GL.VertexAttribDivisor(Attrib.Index, 1);
+                        GL.VertexAttribDivisor(attrib.Index, 1);
                     }
                     else
                     {
-                        GL.VertexAttribDivisor(Attrib.Index, 0);
+                        GL.VertexAttribDivisor(attrib.Index, 0);
                     }
                 }
             }
         }
 
-        private static VertexAttribPointerType GetType(Dictionary<GalVertexAttribSize, VertexAttribPointerType> Dict, GalVertexAttrib Attrib)
+        private static VertexAttribPointerType GetType(Dictionary<GalVertexAttribSize, VertexAttribPointerType> dict, GalVertexAttrib attrib)
         {
-            if (!Dict.TryGetValue(Attrib.Size, out VertexAttribPointerType Type))
+            if (!dict.TryGetValue(attrib.Size, out VertexAttribPointerType type))
             {
-                ThrowUnsupportedAttrib(Attrib);
+                ThrowUnsupportedAttrib(attrib);
             }
 
-            return Type;
+            return type;
         }
 
-        private unsafe static void SetConstAttrib(GalVertexAttrib Attrib)
+        private static unsafe void SetConstAttrib(GalVertexAttrib attrib)
         {
-            if (Attrib.Size == GalVertexAttribSize._10_10_10_2 ||
-                Attrib.Size == GalVertexAttribSize._11_11_10)
+            if (attrib.Size == GalVertexAttribSize._10_10_10_2 ||
+                attrib.Size == GalVertexAttribSize._11_11_10)
             {
-                ThrowUnsupportedAttrib(Attrib);
+                ThrowUnsupportedAttrib(attrib);
             }
 
-            fixed (byte* Ptr = Attrib.Data)
+            fixed (byte* ptr = attrib.Data)
             {
-                if (Attrib.Type == GalVertexAttribType.Unorm)
+                if (attrib.Type == GalVertexAttribType.Unorm)
                 {
-                    switch (Attrib.Size)
+                    switch (attrib.Size)
                     {
                         case GalVertexAttribSize._8:
                         case GalVertexAttribSize._8_8:
                         case GalVertexAttribSize._8_8_8:
                         case GalVertexAttribSize._8_8_8_8:
-                            GL.VertexAttrib4N((uint)Attrib.Index, Ptr);
+                            GL.VertexAttrib4N((uint)attrib.Index, ptr);
                             break;
 
                         case GalVertexAttribSize._16:
                         case GalVertexAttribSize._16_16:
                         case GalVertexAttribSize._16_16_16:
                         case GalVertexAttribSize._16_16_16_16:
-                            GL.VertexAttrib4N((uint)Attrib.Index, (ushort*)Ptr);
+                            GL.VertexAttrib4N((uint)attrib.Index, (ushort*)ptr);
                             break;
 
                         case GalVertexAttribSize._32:
                         case GalVertexAttribSize._32_32:
                         case GalVertexAttribSize._32_32_32:
                         case GalVertexAttribSize._32_32_32_32:
-                            GL.VertexAttrib4N((uint)Attrib.Index, (uint*)Ptr);
+                            GL.VertexAttrib4N((uint)attrib.Index, (uint*)ptr);
                             break;
                     }
                 }
-                else if (Attrib.Type == GalVertexAttribType.Snorm)
+                else if (attrib.Type == GalVertexAttribType.Snorm)
                 {
-                    switch (Attrib.Size)
+                    switch (attrib.Size)
                     {
                         case GalVertexAttribSize._8:
                         case GalVertexAttribSize._8_8:
                         case GalVertexAttribSize._8_8_8:
                         case GalVertexAttribSize._8_8_8_8:
-                            GL.VertexAttrib4N((uint)Attrib.Index, (sbyte*)Ptr);
+                            GL.VertexAttrib4N((uint)attrib.Index, (sbyte*)ptr);
                             break;
 
                         case GalVertexAttribSize._16:
                         case GalVertexAttribSize._16_16:
                         case GalVertexAttribSize._16_16_16:
                         case GalVertexAttribSize._16_16_16_16:
-                            GL.VertexAttrib4N((uint)Attrib.Index, (short*)Ptr);
+                            GL.VertexAttrib4N((uint)attrib.Index, (short*)ptr);
                             break;
 
                         case GalVertexAttribSize._32:
                         case GalVertexAttribSize._32_32:
                         case GalVertexAttribSize._32_32_32:
                         case GalVertexAttribSize._32_32_32_32:
-                            GL.VertexAttrib4N((uint)Attrib.Index, (int*)Ptr);
+                            GL.VertexAttrib4N((uint)attrib.Index, (int*)ptr);
                             break;
                     }
                 }
-                else if (Attrib.Type == GalVertexAttribType.Uint)
+                else if (attrib.Type == GalVertexAttribType.Uint)
                 {
-                    switch (Attrib.Size)
+                    switch (attrib.Size)
                     {
                         case GalVertexAttribSize._8:
                         case GalVertexAttribSize._8_8:
                         case GalVertexAttribSize._8_8_8:
                         case GalVertexAttribSize._8_8_8_8:
-                            GL.VertexAttribI4((uint)Attrib.Index, Ptr);
+                            GL.VertexAttribI4((uint)attrib.Index, ptr);
                             break;
 
                         case GalVertexAttribSize._16:
                         case GalVertexAttribSize._16_16:
                         case GalVertexAttribSize._16_16_16:
                         case GalVertexAttribSize._16_16_16_16:
-                            GL.VertexAttribI4((uint)Attrib.Index, (ushort*)Ptr);
+                            GL.VertexAttribI4((uint)attrib.Index, (ushort*)ptr);
                             break;
 
                         case GalVertexAttribSize._32:
                         case GalVertexAttribSize._32_32:
                         case GalVertexAttribSize._32_32_32:
                         case GalVertexAttribSize._32_32_32_32:
-                            GL.VertexAttribI4((uint)Attrib.Index, (uint*)Ptr);
+                            GL.VertexAttribI4((uint)attrib.Index, (uint*)ptr);
                             break;
                     }
                 }
-                else if (Attrib.Type == GalVertexAttribType.Sint)
+                else if (attrib.Type == GalVertexAttribType.Sint)
                 {
-                    switch (Attrib.Size)
+                    switch (attrib.Size)
                     {
                         case GalVertexAttribSize._8:
                         case GalVertexAttribSize._8_8:
                         case GalVertexAttribSize._8_8_8:
                         case GalVertexAttribSize._8_8_8_8:
-                            GL.VertexAttribI4((uint)Attrib.Index, (sbyte*)Ptr);
+                            GL.VertexAttribI4((uint)attrib.Index, (sbyte*)ptr);
                             break;
 
                         case GalVertexAttribSize._16:
                         case GalVertexAttribSize._16_16:
                         case GalVertexAttribSize._16_16_16:
                         case GalVertexAttribSize._16_16_16_16:
-                            GL.VertexAttribI4((uint)Attrib.Index, (short*)Ptr);
+                            GL.VertexAttribI4((uint)attrib.Index, (short*)ptr);
                             break;
 
                         case GalVertexAttribSize._32:
                         case GalVertexAttribSize._32_32:
                         case GalVertexAttribSize._32_32_32:
                         case GalVertexAttribSize._32_32_32_32:
-                            GL.VertexAttribI4((uint)Attrib.Index, (int*)Ptr);
+                            GL.VertexAttribI4((uint)attrib.Index, (int*)ptr);
                             break;
                     }
                 }
-                else if (Attrib.Type == GalVertexAttribType.Float)
+                else if (attrib.Type == GalVertexAttribType.Float)
                 {
-                    switch (Attrib.Size)
+                    switch (attrib.Size)
                     {
                         case GalVertexAttribSize._32:
                         case GalVertexAttribSize._32_32:
                         case GalVertexAttribSize._32_32_32:
                         case GalVertexAttribSize._32_32_32_32:
-                            GL.VertexAttrib4(Attrib.Index, (float*)Ptr);
+                            GL.VertexAttrib4(attrib.Index, (float*)ptr);
                             break;
 
-                        default: ThrowUnsupportedAttrib(Attrib); break;
+                        default: ThrowUnsupportedAttrib(attrib); break;
                     }
                 }
             }
         }
 
-        private static void ThrowUnsupportedAttrib(GalVertexAttrib Attrib)
+        private static void ThrowUnsupportedAttrib(GalVertexAttrib attrib)
         {
-            throw new NotImplementedException("Unsupported size \"" + Attrib.Size + "\" on type \"" + Attrib.Type + "\"!");
+            throw new NotImplementedException("Unsupported size \"" + attrib.Size + "\" on type \"" + attrib.Type + "\"!");
         }
 
-        private void Enable(EnableCap Cap, bool Enabled)
+        private void Enable(EnableCap cap, bool enabled)
         {
-            if (Enabled)
+            if (enabled)
             {
-                GL.Enable(Cap);
+                GL.Enable(cap);
             }
             else
             {
-                GL.Disable(Cap);
+                GL.Disable(cap);
             }
         }
 
-        private void Enable(IndexedEnableCap Cap, int Index, bool Enabled)
+        private void Enable(IndexedEnableCap cap, int index, bool enabled)
         {
-            if (Enabled)
+            if (enabled)
             {
-                GL.Enable(Cap, Index);
+                GL.Enable(cap, index);
             }
             else
             {
-                GL.Disable(Cap, Index);
+                GL.Disable(cap, index);
             }
         }
 
         public void ResetDepthMask()
         {
-            Old.DepthWriteEnabled = true;
+            _old.DepthWriteEnabled = true;
         }
 
-        public void ResetColorMask(int Index)
+        public void ResetColorMask(int index)
         {
-            Old.ColorMasks[Index] = ColorMaskState.Default;
+            _old.ColorMasks[index] = ColorMaskState.Default;
         }
     }
 }

@@ -2,7 +2,7 @@
 {
     public enum GalFrontFace
     {
-        CW  = 0x900,
-        CCW = 0x901
+        Cw  = 0x900,
+        Ccw = 0x901
     }
 }

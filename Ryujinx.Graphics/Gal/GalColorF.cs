@@ -8,15 +8,15 @@ namespace Ryujinx.Graphics.Gal
         public float Alpha { get; private set; }
 
         public GalColorF(
-            float Red,
-            float Green,
-            float Blue,
-            float Alpha)
+            float red,
+            float green,
+            float blue,
+            float alpha)
         {
-            this.Red   = Red;
-            this.Green = Green;
-            this.Blue  = Blue;
-            this.Alpha = Alpha;
+            Red   = red;
+            Green = green;
+            Blue  = blue;
+            Alpha = alpha;
         }
     }
 }

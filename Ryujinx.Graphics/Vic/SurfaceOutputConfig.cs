@@ -13,21 +13,21 @@ namespace Ryujinx.Graphics.Vic
         public long SurfaceChromaVAddress;
 
         public SurfaceOutputConfig(
-            SurfacePixelFormat PixelFormat,
-            int                SurfaceWidth,
-            int                SurfaceHeight,
-            int                GobBlockHeight,
-            long               OutputSurfaceLumaAddress,
-            long               OutputSurfaceChromaUAddress,
-            long               OutputSurfaceChromaVAddress)
+            SurfacePixelFormat pixelFormat,
+            int                surfaceWidth,
+            int                surfaceHeight,
+            int                gobBlockHeight,
+            long               outputSurfaceLumaAddress,
+            long               outputSurfaceChromaUAddress,
+            long               outputSurfaceChromaVAddress)
         {
-            this.PixelFormat           = PixelFormat;
-            this.SurfaceWidth          = SurfaceWidth;
-            this.SurfaceHeight         = SurfaceHeight;
-            this.GobBlockHeight        = GobBlockHeight;
-            this.SurfaceLumaAddress    = OutputSurfaceLumaAddress;
-            this.SurfaceChromaUAddress = OutputSurfaceChromaUAddress;
-            this.SurfaceChromaVAddress = OutputSurfaceChromaVAddress;
+            PixelFormat           = pixelFormat;
+            SurfaceWidth          = surfaceWidth;
+            SurfaceHeight         = surfaceHeight;
+            GobBlockHeight        = gobBlockHeight;
+            SurfaceLumaAddress    = outputSurfaceLumaAddress;
+            SurfaceChromaUAddress = outputSurfaceChromaUAddress;
+            SurfaceChromaVAddress = outputSurfaceChromaVAddress;
         }
     }
 }

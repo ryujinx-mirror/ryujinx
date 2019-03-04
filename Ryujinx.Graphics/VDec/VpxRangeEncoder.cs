@@ -26,106 +26,106 @@ namespace Ryujinx.Graphics.VDec
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         };
 
-        private Stream BaseStream;
+        private Stream _baseStream;
 
-        private uint LowValue;
-        private uint Range;
-        private int  Count;
+        private uint _lowValue;
+        private uint _range;
+        private int  _count;
 
-        public VpxRangeEncoder(Stream BaseStream)
+        public VpxRangeEncoder(Stream baseStream)
         {
-            this.BaseStream = BaseStream;
+            _baseStream = baseStream;
 
-            Range = 0xff;
-            Count = -24;
+            _range = 0xff;
+            _count = -24;
 
             Write(false);
         }
 
-        public void WriteByte(byte Value)
+        public void WriteByte(byte value)
         {
-            Write(Value, 8);
+            Write(value, 8);
         }
 
-        public void Write(int Value, int ValueSize)
+        public void Write(int value, int valueSize)
         {
-            for (int Bit = ValueSize - 1; Bit >= 0; Bit--)
+            for (int bit = valueSize - 1; bit >= 0; bit--)
             {
-                Write(((Value >> Bit) & 1) != 0);
+                Write(((value >> bit) & 1) != 0);
             }
         }
 
-        public void Write(bool Bit)
+        public void Write(bool bit)
         {
-            Write(Bit, HalfProbability);
+            Write(bit, HalfProbability);
         }
 
-        public void Write(bool Bit, int Probability)
+        public void Write(bool bit, int probability)
         {
-            uint Range = this.Range;
+            uint range = _range;
 
-            uint Split = 1 + (((Range - 1) * (uint)Probability) >> 8);
+            uint split = 1 + (((range - 1) * (uint)probability) >> 8);
 
-            Range = Split;
+            range = split;
 
-            if (Bit)
+            if (bit)
             {
-                LowValue += Split;
-                Range     = this.Range - Split;
+                _lowValue += split;
+                range      = _range - split;
             }
 
-            int Shift = NormLut[Range];
+            int shift = NormLut[range];
 
-            Range <<= Shift;
-            Count +=  Shift;
+            range  <<= shift;
+            _count  += shift;
 
-            if (Count >= 0)
+            if (_count >= 0)
             {
-                int Offset = Shift - Count;
+                int offset = shift - _count;
 
-                if (((LowValue << (Offset - 1)) >> 31) != 0)
+                if (((_lowValue << (offset - 1)) >> 31) != 0)
                 {
-                    long CurrentPos = BaseStream.Position;
+                    long currentPos = _baseStream.Position;
 
-                    BaseStream.Seek(-1, SeekOrigin.Current);
+                    _baseStream.Seek(-1, SeekOrigin.Current);
 
-                    while (BaseStream.Position >= 0 && PeekByte() == 0xff)
+                    while (_baseStream.Position >= 0 && PeekByte() == 0xff)
                     {
-                        BaseStream.WriteByte(0);
+                        _baseStream.WriteByte(0);
 
-                        BaseStream.Seek(-2, SeekOrigin.Current);
+                        _baseStream.Seek(-2, SeekOrigin.Current);
                     }
 
-                    BaseStream.WriteByte((byte)(PeekByte() + 1));
+                    _baseStream.WriteByte((byte)(PeekByte() + 1));
 
-                    BaseStream.Seek(CurrentPos, SeekOrigin.Begin);
+                    _baseStream.Seek(currentPos, SeekOrigin.Begin);
                 }
 
-                BaseStream.WriteByte((byte)(LowValue >> (24 - Offset)));
+                _baseStream.WriteByte((byte)(_lowValue >> (24 - offset)));
 
-                LowValue <<= Offset;
-                Shift      = Count;
-                LowValue  &= 0xffffff;
-                Count     -= 8;
+                _lowValue <<= offset;
+                shift       = _count;
+                _lowValue  &= 0xffffff;
+                _count     -= 8;
             }
 
-            LowValue <<= Shift;
+            _lowValue <<= shift;
 
-            this.Range = Range;
+            _range = range;
         }
 
         private byte PeekByte()
         {
-            byte Value = (byte)BaseStream.ReadByte();
+            byte value = (byte)_baseStream.ReadByte();
 
-            BaseStream.Seek(-1, SeekOrigin.Current);
+            _baseStream.Seek(-1, SeekOrigin.Current);
 
-            return Value;
+            return value;
         }
 
         public void End()
         {
-            for (int Index = 0; Index < 32; Index++)
+            for (int index = 0; index < 32; index++)
             {
                 Write(false);
             }

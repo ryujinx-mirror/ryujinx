@@ -6,10 +6,10 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public ShaderIrNode Vertex { get; private set; }
 
-        public ShaderIrOperAbuf(int Offs, ShaderIrNode Vertex)
+        public ShaderIrOperAbuf(int offs, ShaderIrNode vertex)
         {
-            this.Offs   = Offs;
-            this.Vertex = Vertex;
+            Offs   = offs;
+            Vertex = vertex;
         }
     }
 }

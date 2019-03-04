@@ -357,15 +357,15 @@ namespace Ryujinx.HLE.HOS.Services.Android
             switch (colorFormat)
             {
                 case ColorFormat.A8B8G8R8:
-                    return GalImageFormat.RGBA8  | GalImageFormat.Unorm;
+                    return GalImageFormat.Rgba8  | GalImageFormat.Unorm;
                 case ColorFormat.X8B8G8R8:
-                    return GalImageFormat.RGBX8  | GalImageFormat.Unorm;
+                    return GalImageFormat.Rgbx8  | GalImageFormat.Unorm;
                 case ColorFormat.R5G6B5:
-                    return GalImageFormat.BGR565 | GalImageFormat.Unorm;
+                    return GalImageFormat.Bgr565 | GalImageFormat.Unorm;
                 case ColorFormat.A8R8G8B8:
-                    return GalImageFormat.BGRA8  | GalImageFormat.Unorm;
+                    return GalImageFormat.Bgra8  | GalImageFormat.Unorm;
                 case ColorFormat.A4B4G4R4:
-                    return GalImageFormat.RGBA4  | GalImageFormat.Unorm;
+                    return GalImageFormat.Rgba4  | GalImageFormat.Unorm;
                 default:
                     throw new NotImplementedException($"Color Format \"{colorFormat}\" not implemented!");
             }

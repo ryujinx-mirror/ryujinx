@@ -25,400 +25,400 @@ namespace Ryujinx.Graphics.Gal.Shader
             F64 = 3
         }
 
-        public static void F2f_C(ShaderIrBlock Block, long OpCode, int Position)
+        public static void F2f_C(ShaderIrBlock block, long opCode, int position)
         {
-            EmitF2f(Block, OpCode, ShaderOper.CR);
+            EmitF2F(block, opCode, ShaderOper.Cr);
         }
 
-        public static void F2f_I(ShaderIrBlock Block, long OpCode, int Position)
+        public static void F2f_I(ShaderIrBlock block, long opCode, int position)
         {
-            EmitF2f(Block, OpCode, ShaderOper.Immf);
+            EmitF2F(block, opCode, ShaderOper.Immf);
         }
 
-        public static void F2f_R(ShaderIrBlock Block, long OpCode, int Position)
+        public static void F2f_R(ShaderIrBlock block, long opCode, int position)
         {
-            EmitF2f(Block, OpCode, ShaderOper.RR);
+            EmitF2F(block, opCode, ShaderOper.Rr);
         }
 
-        public static void F2i_C(ShaderIrBlock Block, long OpCode, int Position)
+        public static void F2i_C(ShaderIrBlock block, long opCode, int position)
         {
-            EmitF2i(Block, OpCode, ShaderOper.CR);
+            EmitF2I(block, opCode, ShaderOper.Cr);
         }
 
-        public static void F2i_I(ShaderIrBlock Block, long OpCode, int Position)
+        public static void F2i_I(ShaderIrBlock block, long opCode, int position)
         {
-            EmitF2i(Block, OpCode, ShaderOper.Immf);
+            EmitF2I(block, opCode, ShaderOper.Immf);
         }
 
-        public static void F2i_R(ShaderIrBlock Block, long OpCode, int Position)
+        public static void F2i_R(ShaderIrBlock block, long opCode, int position)
         {
-            EmitF2i(Block, OpCode, ShaderOper.RR);
+            EmitF2I(block, opCode, ShaderOper.Rr);
         }
 
-        public static void I2f_C(ShaderIrBlock Block, long OpCode, int Position)
+        public static void I2f_C(ShaderIrBlock block, long opCode, int position)
         {
-            EmitI2f(Block, OpCode, ShaderOper.CR);
+            EmitI2F(block, opCode, ShaderOper.Cr);
         }
 
-        public static void I2f_I(ShaderIrBlock Block, long OpCode, int Position)
+        public static void I2f_I(ShaderIrBlock block, long opCode, int position)
         {
-            EmitI2f(Block, OpCode, ShaderOper.Imm);
+            EmitI2F(block, opCode, ShaderOper.Imm);
         }
 
-        public static void I2f_R(ShaderIrBlock Block, long OpCode, int Position)
+        public static void I2f_R(ShaderIrBlock block, long opCode, int position)
         {
-            EmitI2f(Block, OpCode, ShaderOper.RR);
+            EmitI2F(block, opCode, ShaderOper.Rr);
         }
 
-        public static void I2i_C(ShaderIrBlock Block, long OpCode, int Position)
+        public static void I2i_C(ShaderIrBlock block, long opCode, int position)
         {
-            EmitI2i(Block, OpCode, ShaderOper.CR);
+            EmitI2I(block, opCode, ShaderOper.Cr);
         }
 
-        public static void I2i_I(ShaderIrBlock Block, long OpCode, int Position)
+        public static void I2i_I(ShaderIrBlock block, long opCode, int position)
         {
-            EmitI2i(Block, OpCode, ShaderOper.Imm);
+            EmitI2I(block, opCode, ShaderOper.Imm);
         }
 
-        public static void I2i_R(ShaderIrBlock Block, long OpCode, int Position)
+        public static void I2i_R(ShaderIrBlock block, long opCode, int position)
         {
-            EmitI2i(Block, OpCode, ShaderOper.RR);
+            EmitI2I(block, opCode, ShaderOper.Rr);
         }
 
-        public static void Isberd(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Isberd(ShaderIrBlock block, long opCode, int position)
         {
             //This instruction seems to be used to translate from an address to a vertex index in a GS
             //Stub it as such
 
-            Block.AddNode(new ShaderIrCmnt("Stubbed."));
+            block.AddNode(new ShaderIrCmnt("Stubbed."));
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), OpCode.Gpr8())));
+            block.AddNode(opCode.PredNode(new ShaderIrAsg(opCode.Gpr0(), opCode.Gpr8())));
         }
 
-        public static void Mov_C(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Mov_C(ShaderIrBlock block, long opCode, int position)
         {
-            ShaderIrOperCbuf Cbuf = OpCode.Cbuf34();
+            ShaderIrOperCbuf cbuf = opCode.Cbuf34();
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Cbuf)));
+            block.AddNode(opCode.PredNode(new ShaderIrAsg(opCode.Gpr0(), cbuf)));
         }
 
-        public static void Mov_I(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Mov_I(ShaderIrBlock block, long opCode, int position)
         {
-            ShaderIrOperImm Imm = OpCode.Imm19_20();
+            ShaderIrOperImm imm = opCode.Imm19_20();
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Imm)));
+            block.AddNode(opCode.PredNode(new ShaderIrAsg(opCode.Gpr0(), imm)));
         }
 
-        public static void Mov_I32(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Mov_I32(ShaderIrBlock block, long opCode, int position)
         {
-            ShaderIrOperImm Imm = OpCode.Imm32_20();
+            ShaderIrOperImm imm = opCode.Imm32_20();
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Imm)));
+            block.AddNode(opCode.PredNode(new ShaderIrAsg(opCode.Gpr0(), imm)));
         }
 
-        public static void Mov_R(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Mov_R(ShaderIrBlock block, long opCode, int position)
         {
-            ShaderIrOperGpr Gpr = OpCode.Gpr20();
+            ShaderIrOperGpr gpr = opCode.Gpr20();
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Gpr)));
+            block.AddNode(opCode.PredNode(new ShaderIrAsg(opCode.Gpr0(), gpr)));
         }
 
-        public static void Sel_C(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Sel_C(ShaderIrBlock block, long opCode, int position)
         {
-            EmitSel(Block, OpCode, ShaderOper.CR);
+            EmitSel(block, opCode, ShaderOper.Cr);
         }
 
-        public static void Sel_I(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Sel_I(ShaderIrBlock block, long opCode, int position)
         {
-            EmitSel(Block, OpCode, ShaderOper.Imm);
+            EmitSel(block, opCode, ShaderOper.Imm);
         }
 
-        public static void Sel_R(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Sel_R(ShaderIrBlock block, long opCode, int position)
         {
-            EmitSel(Block, OpCode, ShaderOper.RR);
+            EmitSel(block, opCode, ShaderOper.Rr);
         }
 
-        public static void Mov_S(ShaderIrBlock Block, long OpCode, int Position)
+        public static void Mov_S(ShaderIrBlock block, long opCode, int position)
         {
-            Block.AddNode(new ShaderIrCmnt("Stubbed."));
+            block.AddNode(new ShaderIrCmnt("Stubbed."));
 
             //Zero is used as a special number to get a valid "0 * 0 + VertexIndex" in a GS
-            ShaderIrNode Source = new ShaderIrOperImm(0);
+            ShaderIrNode source = new ShaderIrOperImm(0);
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Source)));
+            block.AddNode(opCode.PredNode(new ShaderIrAsg(opCode.Gpr0(), source)));
         }
 
-        private static void EmitF2f(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        private static void EmitF2F(ShaderIrBlock block, long opCode, ShaderOper oper)
         {
-            bool NegA = OpCode.Read(45);
-            bool AbsA = OpCode.Read(49);
+            bool negA = opCode.Read(45);
+            bool absA = opCode.Read(49);
 
-            ShaderIrNode OperA;
+            ShaderIrNode operA;
 
-            switch (Oper)
+            switch (oper)
             {
-                case ShaderOper.CR:   OperA = OpCode.Cbuf34();    break;
-                case ShaderOper.Immf: OperA = OpCode.Immf19_20(); break;
-                case ShaderOper.RR:   OperA = OpCode.Gpr20();     break;
+                case ShaderOper.Cr:   operA = opCode.Cbuf34();    break;
+                case ShaderOper.Immf: operA = opCode.Immf19_20(); break;
+                case ShaderOper.Rr:   operA = opCode.Gpr20();     break;
 
-                default: throw new ArgumentException(nameof(Oper));
+                default: throw new ArgumentException(nameof(oper));
             }
 
-            OperA = GetAluFabsFneg(OperA, AbsA, NegA);
+            operA = GetAluFabsFneg(operA, absA, negA);
 
-            ShaderIrInst RoundInst = GetRoundInst(OpCode);
+            ShaderIrInst roundInst = GetRoundInst(opCode);
 
-            if (RoundInst != ShaderIrInst.Invalid)
+            if (roundInst != ShaderIrInst.Invalid)
             {
-                OperA = new ShaderIrOp(RoundInst, OperA);
+                operA = new ShaderIrOp(roundInst, operA);
             }
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), OperA)));
+            block.AddNode(opCode.PredNode(new ShaderIrAsg(opCode.Gpr0(), operA)));
         }
 
-        private static void EmitF2i(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        private static void EmitF2I(ShaderIrBlock block, long opCode, ShaderOper oper)
         {
-            IntType Type = GetIntType(OpCode);
+            IntType type = GetIntType(opCode);
 
-            if (Type == IntType.U64 ||
-                Type == IntType.S64)
+            if (type == IntType.U64 ||
+                type == IntType.S64)
             {
                 //TODO: 64-bits support.
                 //Note: GLSL doesn't support 64-bits integers.
                 throw new NotImplementedException();
             }
 
-            bool NegA = OpCode.Read(45);
-            bool AbsA = OpCode.Read(49);
+            bool negA = opCode.Read(45);
+            bool absA = opCode.Read(49);
 
-            ShaderIrNode OperA;
+            ShaderIrNode operA;
 
-            switch (Oper)
+            switch (oper)
             {
-                case ShaderOper.CR:   OperA = OpCode.Cbuf34();    break;
-                case ShaderOper.Immf: OperA = OpCode.Immf19_20(); break;
-                case ShaderOper.RR:   OperA = OpCode.Gpr20();     break;
+                case ShaderOper.Cr:   operA = opCode.Cbuf34();    break;
+                case ShaderOper.Immf: operA = opCode.Immf19_20(); break;
+                case ShaderOper.Rr:   operA = opCode.Gpr20();     break;
 
-                default: throw new ArgumentException(nameof(Oper));
+                default: throw new ArgumentException(nameof(oper));
             }
 
-            OperA = GetAluFabsFneg(OperA, AbsA, NegA);
+            operA = GetAluFabsFneg(operA, absA, negA);
 
-            ShaderIrInst RoundInst = GetRoundInst(OpCode);
+            ShaderIrInst roundInst = GetRoundInst(opCode);
 
-            if (RoundInst != ShaderIrInst.Invalid)
+            if (roundInst != ShaderIrInst.Invalid)
             {
-                OperA = new ShaderIrOp(RoundInst, OperA);
+                operA = new ShaderIrOp(roundInst, operA);
             }
 
-            bool Signed = Type >= IntType.S8;
+            bool signed = type >= IntType.S8;
 
-            int Size = 8 << ((int)Type & 3);
+            int size = 8 << ((int)type & 3);
 
-            if (Size < 32)
+            if (size < 32)
             {
-                uint Mask = uint.MaxValue >> (32 - Size);
+                uint mask = uint.MaxValue >> (32 - size);
 
-                float CMin = 0;
-                float CMax = Mask;
+                float cMin = 0;
+                float cMax = mask;
 
-                if (Signed)
+                if (signed)
                 {
-                    uint HalfMask = Mask >> 1;
+                    uint halfMask = mask >> 1;
 
-                    CMin -= HalfMask + 1;
-                    CMax  = HalfMask;
+                    cMin -= halfMask + 1;
+                    cMax  = halfMask;
                 }
 
-                ShaderIrOperImmf IMin = new ShaderIrOperImmf(CMin);
-                ShaderIrOperImmf IMax = new ShaderIrOperImmf(CMax);
+                ShaderIrOperImmf min = new ShaderIrOperImmf(cMin);
+                ShaderIrOperImmf max = new ShaderIrOperImmf(cMax);
 
-                OperA = new ShaderIrOp(ShaderIrInst.Fclamp, OperA, IMin, IMax);
+                operA = new ShaderIrOp(ShaderIrInst.Fclamp, operA, min, max);
             }
 
-            ShaderIrInst Inst = Signed
+            ShaderIrInst inst = signed
                 ? ShaderIrInst.Ftos
                 : ShaderIrInst.Ftou;
 
-            ShaderIrNode Op = new ShaderIrOp(Inst, OperA);
+            ShaderIrNode op = new ShaderIrOp(inst, operA);
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Op)));
+            block.AddNode(opCode.PredNode(new ShaderIrAsg(opCode.Gpr0(), op)));
         }
 
-        private static void EmitI2f(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        private static void EmitI2F(ShaderIrBlock block, long opCode, ShaderOper oper)
         {
-            IntType Type = GetIntType(OpCode);
+            IntType type = GetIntType(opCode);
 
-            if (Type == IntType.U64 ||
-                Type == IntType.S64)
+            if (type == IntType.U64 ||
+                type == IntType.S64)
             {
                 //TODO: 64-bits support.
                 //Note: GLSL doesn't support 64-bits integers.
                 throw new NotImplementedException();
             }
 
-            int Sel = OpCode.Read(41, 3);
+            int sel = opCode.Read(41, 3);
 
-            bool NegA = OpCode.Read(45);
-            bool AbsA = OpCode.Read(49);
+            bool negA = opCode.Read(45);
+            bool absA = opCode.Read(49);
 
-            ShaderIrNode OperA;
+            ShaderIrNode operA;
 
-            switch (Oper)
+            switch (oper)
             {
-                case ShaderOper.CR:  OperA = OpCode.Cbuf34();   break;
-                case ShaderOper.Imm: OperA = OpCode.Imm19_20(); break;
-                case ShaderOper.RR:  OperA = OpCode.Gpr20();    break;
+                case ShaderOper.Cr:  operA = opCode.Cbuf34();   break;
+                case ShaderOper.Imm: operA = opCode.Imm19_20(); break;
+                case ShaderOper.Rr:  operA = opCode.Gpr20();    break;
 
-                default: throw new ArgumentException(nameof(Oper));
+                default: throw new ArgumentException(nameof(oper));
             }
 
-            OperA = GetAluIabsIneg(OperA, AbsA, NegA);
+            operA = GetAluIabsIneg(operA, absA, negA);
 
-            bool Signed = Type >= IntType.S8;
+            bool signed = type >= IntType.S8;
 
-            int Shift = Sel * 8;
+            int shift = sel * 8;
 
-            int Size = 8 << ((int)Type & 3);
+            int size = 8 << ((int)type & 3);
 
-            if (Shift != 0)
+            if (shift != 0)
             {
-                OperA = new ShaderIrOp(ShaderIrInst.Asr, OperA, new ShaderIrOperImm(Shift));
+                operA = new ShaderIrOp(ShaderIrInst.Asr, operA, new ShaderIrOperImm(shift));
             }
 
-            if (Size < 32)
+            if (size < 32)
             {
-                OperA = ExtendTo32(OperA, Signed, Size);
+                operA = ExtendTo32(operA, signed, size);
             }
 
-            ShaderIrInst Inst = Signed
+            ShaderIrInst inst = signed
                 ? ShaderIrInst.Stof
                 : ShaderIrInst.Utof;
 
-            ShaderIrNode Op = new ShaderIrOp(Inst, OperA);
+            ShaderIrNode op = new ShaderIrOp(inst, operA);
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), Op)));
+            block.AddNode(opCode.PredNode(new ShaderIrAsg(opCode.Gpr0(), op)));
         }
 
-        private static void EmitI2i(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        private static void EmitI2I(ShaderIrBlock block, long opCode, ShaderOper oper)
         {
-            IntType Type = GetIntType(OpCode);
+            IntType type = GetIntType(opCode);
 
-            if (Type == IntType.U64 ||
-                Type == IntType.S64)
+            if (type == IntType.U64 ||
+                type == IntType.S64)
             {
                 //TODO: 64-bits support.
                 //Note: GLSL doesn't support 64-bits integers.
                 throw new NotImplementedException();
             }
 
-            int Sel = OpCode.Read(41, 3);
+            int sel = opCode.Read(41, 3);
 
-            bool NegA = OpCode.Read(45);
-            bool AbsA = OpCode.Read(49);
-            bool SatA = OpCode.Read(50);
+            bool negA = opCode.Read(45);
+            bool absA = opCode.Read(49);
+            bool satA = opCode.Read(50);
 
-            ShaderIrNode OperA;
+            ShaderIrNode operA;
 
-            switch (Oper)
+            switch (oper)
             {
-                case ShaderOper.CR:   OperA = OpCode.Cbuf34();    break;
-                case ShaderOper.Immf: OperA = OpCode.Immf19_20(); break;
-                case ShaderOper.RR:   OperA = OpCode.Gpr20();     break;
+                case ShaderOper.Cr:   operA = opCode.Cbuf34();    break;
+                case ShaderOper.Immf: operA = opCode.Immf19_20(); break;
+                case ShaderOper.Rr:   operA = opCode.Gpr20();     break;
 
-                default: throw new ArgumentException(nameof(Oper));
+                default: throw new ArgumentException(nameof(oper));
             }
 
-            OperA = GetAluIabsIneg(OperA, AbsA, NegA);
+            operA = GetAluIabsIneg(operA, absA, negA);
 
-            bool Signed = Type >= IntType.S8;
+            bool signed = type >= IntType.S8;
 
-            int Shift = Sel * 8;
+            int shift = sel * 8;
 
-            int Size = 8 << ((int)Type & 3);
+            int size = 8 << ((int)type & 3);
 
-            if (Shift != 0)
+            if (shift != 0)
             {
-                OperA = new ShaderIrOp(ShaderIrInst.Asr, OperA, new ShaderIrOperImm(Shift));
+                operA = new ShaderIrOp(ShaderIrInst.Asr, operA, new ShaderIrOperImm(shift));
             }
 
-            if (Size < 32)
+            if (size < 32)
             {
-                uint Mask = uint.MaxValue >> (32 - Size);
+                uint mask = uint.MaxValue >> (32 - size);
 
-                if (SatA)
+                if (satA)
                 {
-                    uint CMin = 0;
-                    uint CMax = Mask;
+                    uint cMin = 0;
+                    uint cMax = mask;
 
-                    if (Signed)
+                    if (signed)
                     {
-                        uint HalfMask = Mask >> 1;
+                        uint halfMask = mask >> 1;
 
-                        CMin -= HalfMask + 1;
-                        CMax  = HalfMask;
+                        cMin -= halfMask + 1;
+                        cMax  = halfMask;
                     }
 
-                    ShaderIrOperImm IMin = new ShaderIrOperImm((int)CMin);
-                    ShaderIrOperImm IMax = new ShaderIrOperImm((int)CMax);
+                    ShaderIrOperImm min = new ShaderIrOperImm((int)cMin);
+                    ShaderIrOperImm max = new ShaderIrOperImm((int)cMax);
 
-                    OperA = new ShaderIrOp(Signed
+                    operA = new ShaderIrOp(signed
                         ? ShaderIrInst.Clamps
-                        : ShaderIrInst.Clampu, OperA, IMin, IMax);
+                        : ShaderIrInst.Clampu, operA, min, max);
                 }
                 else
                 {
-                    OperA = ExtendTo32(OperA, Signed, Size);
+                    operA = ExtendTo32(operA, signed, size);
                 }
             }
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrAsg(OpCode.Gpr0(), OperA)));
+            block.AddNode(opCode.PredNode(new ShaderIrAsg(opCode.Gpr0(), operA)));
         }
 
-        private static void EmitSel(ShaderIrBlock Block, long OpCode, ShaderOper Oper)
+        private static void EmitSel(ShaderIrBlock block, long opCode, ShaderOper oper)
         {
-            ShaderIrOperGpr Dst  = OpCode.Gpr0();
-            ShaderIrNode    Pred = OpCode.Pred39N();
+            ShaderIrOperGpr dst  = opCode.Gpr0();
+            ShaderIrNode    pred = opCode.Pred39N();
 
-            ShaderIrNode ResultA = OpCode.Gpr8();
-            ShaderIrNode ResultB;
+            ShaderIrNode resultA = opCode.Gpr8();
+            ShaderIrNode resultB;
 
-            switch (Oper)
+            switch (oper)
             {
-                case ShaderOper.CR:  ResultB = OpCode.Cbuf34();   break;
-                case ShaderOper.Imm: ResultB = OpCode.Imm19_20(); break;
-                case ShaderOper.RR:  ResultB = OpCode.Gpr20();    break;
+                case ShaderOper.Cr:  resultB = opCode.Cbuf34();   break;
+                case ShaderOper.Imm: resultB = opCode.Imm19_20(); break;
+                case ShaderOper.Rr:  resultB = opCode.Gpr20();    break;
 
-                default: throw new ArgumentException(nameof(Oper));
+                default: throw new ArgumentException(nameof(oper));
             }
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrCond(Pred, new ShaderIrAsg(Dst, ResultA), false)));
+            block.AddNode(opCode.PredNode(new ShaderIrCond(pred, new ShaderIrAsg(dst, resultA), false)));
 
-            Block.AddNode(OpCode.PredNode(new ShaderIrCond(Pred, new ShaderIrAsg(Dst, ResultB), true)));
+            block.AddNode(opCode.PredNode(new ShaderIrCond(pred, new ShaderIrAsg(dst, resultB), true)));
         }
 
-        private static IntType GetIntType(long OpCode)
+        private static IntType GetIntType(long opCode)
         {
-            bool Signed = OpCode.Read(13);
+            bool signed = opCode.Read(13);
 
-            IntType Type = (IntType)(OpCode.Read(10, 3));
+            IntType type = (IntType)(opCode.Read(10, 3));
 
-            if (Signed)
+            if (signed)
             {
-                Type += (int)IntType.S8;
+                type += (int)IntType.S8;
             }
 
-            return Type;
+            return type;
         }
 
-        private static FloatType GetFloatType(long OpCode)
+        private static FloatType GetFloatType(long opCode)
         {
-            return (FloatType)(OpCode.Read(8, 3));
+            return (FloatType)(opCode.Read(8, 3));
         }
 
-        private static ShaderIrInst GetRoundInst(long OpCode)
+        private static ShaderIrInst GetRoundInst(long opCode)
         {
-            switch (OpCode.Read(39, 3))
+            switch (opCode.Read(39, 3))
             {
                 case 1: return ShaderIrInst.Floor;
                 case 2: return ShaderIrInst.Ceil;

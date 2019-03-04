@@ -5,14 +5,14 @@ namespace Ryujinx.Graphics.Gal
         void LockCache();
         void UnlockCache();
 
-        void Create(long Key, int Size, GalImage Image);
+        void Create(long key, int size, GalImage image);
 
-        void Create(long Key, byte[] Data, GalImage Image);
+        void Create(long key, byte[] data, GalImage image);
 
-        bool TryGetImage(long Key, out GalImage Image);
+        bool TryGetImage(long key, out GalImage image);
 
-        void Bind(long Key, int Index, GalImage Image);
+        void Bind(long key, int index, GalImage image);
 
-        void SetSampler(GalImage Image, GalTextureSampler Sampler);
+        void SetSampler(GalImage image, GalTextureSampler sampler);
     }
 }

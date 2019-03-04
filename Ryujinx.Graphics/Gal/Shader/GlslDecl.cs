@@ -1,4 +1,3 @@
-using Ryujinx.Graphics.Gal.OpenGL;
 using Ryujinx.Graphics.Texture;
 using System;
 using System.Collections.Generic;
@@ -51,9 +50,9 @@ namespace Ryujinx.Graphics.Gal.Shader
         public const string SsyStackName = "ssy_stack";
         public const string SsyCursorName = "ssy_cursor";
 
-        private string[] StagePrefixes = new string[] { "vp", "tcp", "tep", "gp", "fp" };
+        private string[] _stagePrefixes = new string[] { "vp", "tcp", "tep", "gp", "fp" };
 
-        private string StagePrefix;
+        private string _stagePrefix;
 
         private Dictionary<ShaderIrOp, ShaderDeclInfo> m_CbTextures;
 
@@ -83,9 +82,9 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public GalShaderType ShaderType { get; private set; }
 
-        private GlslDecl(GalShaderType ShaderType)
+        private GlslDecl(GalShaderType shaderType)
         {
-            this.ShaderType = ShaderType;
+            ShaderType = shaderType;
 
             m_CbTextures = new Dictionary<ShaderIrOp, ShaderDeclInfo>();
 
@@ -101,187 +100,187 @@ namespace Ryujinx.Graphics.Gal.Shader
             m_Preds    = new Dictionary<int, ShaderDeclInfo>();
         }
 
-        public GlslDecl(ShaderIrBlock[] Blocks, GalShaderType ShaderType, ShaderHeader Header) : this(ShaderType)
+        public GlslDecl(ShaderIrBlock[] blocks, GalShaderType shaderType, ShaderHeader header) : this(shaderType)
         {
-            StagePrefix = StagePrefixes[(int)ShaderType] + "_";
+            _stagePrefix = _stagePrefixes[(int)shaderType] + "_";
 
-            if (ShaderType == GalShaderType.Fragment)
+            if (shaderType == GalShaderType.Fragment)
             {
-                int Index = 0;
+                int index = 0;
 
-                for (int Attachment = 0; Attachment < 8; Attachment++)
+                for (int attachment = 0; attachment < 8; attachment++)
                 {
-                    for (int Component = 0; Component < 4; Component++)
+                    for (int component = 0; component < 4; component++)
                     {
-                        if (Header.OmapTargets[Attachment].ComponentEnabled(Component))
+                        if (header.OmapTargets[attachment].ComponentEnabled(component))
                         {
-                            m_Gprs.TryAdd(Index, new ShaderDeclInfo(GetGprName(Index), Index));
+                            m_Gprs.TryAdd(index, new ShaderDeclInfo(GetGprName(index), index));
 
-                            Index++;
+                            index++;
                         }
                     }
                 }
 
-                if (Header.OmapDepth)
+                if (header.OmapDepth)
                 {
-                    Index = Header.DepthRegister;
+                    index = header.DepthRegister;
 
-                    m_Gprs.TryAdd(Index, new ShaderDeclInfo(GetGprName(Index), Index));
+                    m_Gprs.TryAdd(index, new ShaderDeclInfo(GetGprName(index), index));
                 }
             }
 
-            foreach (ShaderIrBlock Block in Blocks)
+            foreach (ShaderIrBlock block in blocks)
             {
-                ShaderIrNode[] Nodes = Block.GetNodes();
+                ShaderIrNode[] nodes = block.GetNodes();
 
-                foreach (ShaderIrNode Node in Nodes)
+                foreach (ShaderIrNode node in nodes)
                 {
-                    Traverse(Nodes, null, Node);
+                    Traverse(nodes, null, node);
                 }
             }
         }
 
-        public static GlslDecl Merge(GlslDecl VpA, GlslDecl VpB)
+        public static GlslDecl Merge(GlslDecl vpA, GlslDecl vpB)
         {
-            GlslDecl Combined = new GlslDecl(GalShaderType.Vertex);
+            GlslDecl combined = new GlslDecl(GalShaderType.Vertex);
 
-            Merge(Combined.m_Textures, VpA.m_Textures, VpB.m_Textures);
-            Merge(Combined.m_Uniforms, VpA.m_Uniforms, VpB.m_Uniforms);
+            Merge(combined.m_Textures, vpA.m_Textures, vpB.m_Textures);
+            Merge(combined.m_Uniforms, vpA.m_Uniforms, vpB.m_Uniforms);
 
-            Merge(Combined.m_Attributes,    VpA.m_Attributes,    VpB.m_Attributes);
-            Merge(Combined.m_OutAttributes, VpA.m_OutAttributes, VpB.m_OutAttributes);
+            Merge(combined.m_Attributes,    vpA.m_Attributes,    vpB.m_Attributes);
+            Merge(combined.m_OutAttributes, vpA.m_OutAttributes, vpB.m_OutAttributes);
 
-            Merge(Combined.m_Gprs,     VpA.m_Gprs,     VpB.m_Gprs);
-            Merge(Combined.m_GprsHalf, VpA.m_GprsHalf, VpB.m_GprsHalf);
-            Merge(Combined.m_Preds,    VpA.m_Preds,    VpB.m_Preds);
+            Merge(combined.m_Gprs,     vpA.m_Gprs,     vpB.m_Gprs);
+            Merge(combined.m_GprsHalf, vpA.m_GprsHalf, vpB.m_GprsHalf);
+            Merge(combined.m_Preds,    vpA.m_Preds,    vpB.m_Preds);
 
             //Merge input attributes.
-            foreach (KeyValuePair<int, ShaderDeclInfo> KV in VpA.m_InAttributes)
+            foreach (KeyValuePair<int, ShaderDeclInfo> kv in vpA.m_InAttributes)
             {
-                Combined.m_InAttributes.TryAdd(KV.Key, KV.Value);
+                combined.m_InAttributes.TryAdd(kv.Key, kv.Value);
             }
 
-            foreach (KeyValuePair<int, ShaderDeclInfo> KV in VpB.m_InAttributes)
+            foreach (KeyValuePair<int, ShaderDeclInfo> kv in vpB.m_InAttributes)
             {
                 //If Vertex Program A already writes to this attribute,
                 //then we don't need to add it as an input attribute since
                 //Vertex Program A will already have written to it anyway,
                 //and there's no guarantee that there is an input attribute
                 //for this slot.
-                if (!VpA.m_OutAttributes.ContainsKey(KV.Key))
+                if (!vpA.m_OutAttributes.ContainsKey(kv.Key))
                 {
-                    Combined.m_InAttributes.TryAdd(KV.Key, KV.Value);
+                    combined.m_InAttributes.TryAdd(kv.Key, kv.Value);
                 }
             }
 
-            return Combined;
+            return combined;
         }
 
-        public static string GetGprName(int Index)
+        public static string GetGprName(int index)
         {
-            return GprName + Index;
+            return GprName + index;
         }
 
         private static void Merge(
-            Dictionary<int, ShaderDeclInfo> C,
-            Dictionary<int, ShaderDeclInfo> A,
-            Dictionary<int, ShaderDeclInfo> B)
+            Dictionary<int, ShaderDeclInfo> c,
+            Dictionary<int, ShaderDeclInfo> a,
+            Dictionary<int, ShaderDeclInfo> b)
         {
-            foreach (KeyValuePair<int, ShaderDeclInfo> KV in A)
+            foreach (KeyValuePair<int, ShaderDeclInfo> kv in a)
             {
-                C.TryAdd(KV.Key, KV.Value);
+                c.TryAdd(kv.Key, kv.Value);
             }
 
-            foreach (KeyValuePair<int, ShaderDeclInfo> KV in B)
+            foreach (KeyValuePair<int, ShaderDeclInfo> kv in b)
             {
-                C.TryAdd(KV.Key, KV.Value);
+                c.TryAdd(kv.Key, kv.Value);
             }
         }
 
-        private void Traverse(ShaderIrNode[] Nodes, ShaderIrNode Parent, ShaderIrNode Node)
+        private void Traverse(ShaderIrNode[] nodes, ShaderIrNode parent, ShaderIrNode node)
         {
-            switch (Node)
+            switch (node)
             {
-                case ShaderIrAsg Asg:
+                case ShaderIrAsg asg:
                 {
-                    Traverse(Nodes, Asg, Asg.Dst);
-                    Traverse(Nodes, Asg, Asg.Src);
+                    Traverse(nodes, asg, asg.Dst);
+                    Traverse(nodes, asg, asg.Src);
 
                     break;
                 }
 
-                case ShaderIrCond Cond:
+                case ShaderIrCond cond:
                 {
-                    Traverse(Nodes, Cond, Cond.Pred);
-                    Traverse(Nodes, Cond, Cond.Child);
+                    Traverse(nodes, cond, cond.Pred);
+                    Traverse(nodes, cond, cond.Child);
 
                     break;
                 }
 
-                case ShaderIrOp Op:
+                case ShaderIrOp op:
                 {
-                    Traverse(Nodes, Op, Op.OperandA);
-                    Traverse(Nodes, Op, Op.OperandB);
-                    Traverse(Nodes, Op, Op.OperandC);
+                    Traverse(nodes, op, op.OperandA);
+                    Traverse(nodes, op, op.OperandB);
+                    Traverse(nodes, op, op.OperandC);
 
-                    if (Op.Inst == ShaderIrInst.Texq ||
-                        Op.Inst == ShaderIrInst.Texs ||
-                        Op.Inst == ShaderIrInst.Tld4 ||
-                        Op.Inst == ShaderIrInst.Txlf)
+                    if (op.Inst == ShaderIrInst.Texq ||
+                        op.Inst == ShaderIrInst.Texs ||
+                        op.Inst == ShaderIrInst.Tld4 ||
+                        op.Inst == ShaderIrInst.Txlf)
                     {
-                        int Handle = ((ShaderIrOperImm)Op.OperandC).Value;
+                        int handle = ((ShaderIrOperImm)op.OperandC).Value;
 
-                        int Index = Handle - TexStartIndex;
+                        int index = handle - TexStartIndex;
 
-                        string Name = StagePrefix + TextureName + Index;
+                        string name = _stagePrefix + TextureName + index;
 
-                        GalTextureTarget TextureTarget;
+                        GalTextureTarget textureTarget;
                         
-                        TextureInstructionSuffix TextureInstructionSuffix;
+                        TextureInstructionSuffix textureInstructionSuffix;
 
                         // TODO: Non 2D texture type for TEXQ?
-                        if (Op.Inst == ShaderIrInst.Texq)
+                        if (op.Inst == ShaderIrInst.Texq)
                         {
-                            TextureTarget            = GalTextureTarget.TwoD;
-                            TextureInstructionSuffix = TextureInstructionSuffix.None;
+                            textureTarget            = GalTextureTarget.TwoD;
+                            textureInstructionSuffix = TextureInstructionSuffix.None;
                         }
                         else
                         {
-                            ShaderIrMetaTex Meta = ((ShaderIrMetaTex)Op.MetaData);
+                            ShaderIrMetaTex meta = ((ShaderIrMetaTex)op.MetaData);
 
-                            TextureTarget            = Meta.TextureTarget;
-                            TextureInstructionSuffix = Meta.TextureInstructionSuffix;
+                            textureTarget            = meta.TextureTarget;
+                            textureInstructionSuffix = meta.TextureInstructionSuffix;
                         }
 
-                        m_Textures.TryAdd(Handle, new ShaderDeclInfo(Name, Handle, false, 0, 1, TextureTarget, TextureInstructionSuffix));
+                        m_Textures.TryAdd(handle, new ShaderDeclInfo(name, handle, false, 0, 1, textureTarget, textureInstructionSuffix));
                     }
-                    else if (Op.Inst == ShaderIrInst.Texb)
+                    else if (op.Inst == ShaderIrInst.Texb)
                     {
-                        ShaderIrNode HandleSrc = null;
+                        ShaderIrNode handleSrc = null;
 
-                        int Index = Array.IndexOf(Nodes, Parent) - 1;
+                        int index = Array.IndexOf(nodes, parent) - 1;
 
-                        for (; Index >= 0; Index--)
+                        for (; index >= 0; index--)
                         {
-                            ShaderIrNode Curr = Nodes[Index];
+                            ShaderIrNode curr = nodes[index];
 
-                            if (Curr is ShaderIrAsg Asg && Asg.Dst is ShaderIrOperGpr Gpr)
+                            if (curr is ShaderIrAsg asg && asg.Dst is ShaderIrOperGpr gpr)
                             {
-                                if (Gpr.Index == ((ShaderIrOperGpr)Op.OperandC).Index)
+                                if (gpr.Index == ((ShaderIrOperGpr)op.OperandC).Index)
                                 {
-                                    HandleSrc = Asg.Src;
+                                    handleSrc = asg.Src;
 
                                     break;
                                 }
                             }
                         }
 
-                        if (HandleSrc != null && HandleSrc is ShaderIrOperCbuf Cbuf)
+                        if (handleSrc != null && handleSrc is ShaderIrOperCbuf cbuf)
                         {
-                            ShaderIrMetaTex Meta = ((ShaderIrMetaTex)Op.MetaData);
-                            string Name = StagePrefix + TextureName + "_cb" + Cbuf.Index + "_" + Cbuf.Pos;
+                            ShaderIrMetaTex meta = ((ShaderIrMetaTex)op.MetaData);
+                            string name = _stagePrefix + TextureName + "_cb" + cbuf.Index + "_" + cbuf.Pos;
 
-                            m_CbTextures.Add(Op, new ShaderDeclInfo(Name, Cbuf.Pos, true, Cbuf.Index, 1, Meta.TextureTarget, Meta.TextureInstructionSuffix));
+                            m_CbTextures.Add(op, new ShaderDeclInfo(name, cbuf.Pos, true, cbuf.Index, 1, meta.TextureTarget, meta.TextureInstructionSuffix));
                         }
                         else
                         {
@@ -291,93 +290,93 @@ namespace Ryujinx.Graphics.Gal.Shader
                     break;
                 }
 
-                case ShaderIrOperCbuf Cbuf:
+                case ShaderIrOperCbuf cbuf:
                 {
-                    if (!m_Uniforms.ContainsKey(Cbuf.Index))
+                    if (!m_Uniforms.ContainsKey(cbuf.Index))
                     {
-                        string Name = StagePrefix + UniformName + Cbuf.Index;
+                        string name = _stagePrefix + UniformName + cbuf.Index;
 
-                        ShaderDeclInfo DeclInfo = new ShaderDeclInfo(Name, Cbuf.Pos, true, Cbuf.Index);
+                        ShaderDeclInfo declInfo = new ShaderDeclInfo(name, cbuf.Pos, true, cbuf.Index);
 
-                        m_Uniforms.Add(Cbuf.Index, DeclInfo);
+                        m_Uniforms.Add(cbuf.Index, declInfo);
                     }
                     break;
                 }
 
-                case ShaderIrOperAbuf Abuf:
+                case ShaderIrOperAbuf abuf:
                 {
                     //This is a built-in variable.
-                    if (Abuf.Offs == LayerAttr       ||
-                        Abuf.Offs == PointSizeAttr   ||
-                        Abuf.Offs == PointCoordAttrX ||
-                        Abuf.Offs == PointCoordAttrY ||
-                        Abuf.Offs == VertexIdAttr    ||
-                        Abuf.Offs == InstanceIdAttr  ||
-                        Abuf.Offs == FaceAttr)
+                    if (abuf.Offs == LayerAttr       ||
+                        abuf.Offs == PointSizeAttr   ||
+                        abuf.Offs == PointCoordAttrX ||
+                        abuf.Offs == PointCoordAttrY ||
+                        abuf.Offs == VertexIdAttr    ||
+                        abuf.Offs == InstanceIdAttr  ||
+                        abuf.Offs == FaceAttr)
                     {
                         break;
                     }
 
-                    int Index =  Abuf.Offs >> 4;
-                    int Elem  = (Abuf.Offs >> 2) & 3;
+                    int index =  abuf.Offs >> 4;
+                    int elem  = (abuf.Offs >> 2) & 3;
 
-                    int GlslIndex = Index - AttrStartIndex;
+                    int glslIndex = index - AttrStartIndex;
 
-                    if (GlslIndex < 0)
+                    if (glslIndex < 0)
                     {
                         return;
                     }
 
-                    ShaderDeclInfo DeclInfo;
+                    ShaderDeclInfo declInfo;
 
-                    if (Parent is ShaderIrAsg Asg && Asg.Dst == Node)
+                    if (parent is ShaderIrAsg asg && asg.Dst == node)
                     {
-                        if (!m_OutAttributes.TryGetValue(Index, out DeclInfo))
+                        if (!m_OutAttributes.TryGetValue(index, out declInfo))
                         {
-                            DeclInfo = new ShaderDeclInfo(OutAttrName + GlslIndex, GlslIndex);
+                            declInfo = new ShaderDeclInfo(OutAttrName + glslIndex, glslIndex);
 
-                            m_OutAttributes.Add(Index, DeclInfo);
+                            m_OutAttributes.Add(index, declInfo);
                         }
                     }
                     else
                     {
-                        if (!m_InAttributes.TryGetValue(Index, out DeclInfo))
+                        if (!m_InAttributes.TryGetValue(index, out declInfo))
                         {
-                            DeclInfo = new ShaderDeclInfo(InAttrName + GlslIndex, GlslIndex);
+                            declInfo = new ShaderDeclInfo(InAttrName + glslIndex, glslIndex);
 
-                            m_InAttributes.Add(Index, DeclInfo);
+                            m_InAttributes.Add(index, declInfo);
                         }
                     }
 
-                    DeclInfo.Enlarge(Elem + 1);
+                    declInfo.Enlarge(elem + 1);
 
-                    if (!m_Attributes.ContainsKey(Index))
+                    if (!m_Attributes.ContainsKey(index))
                     {
-                        DeclInfo = new ShaderDeclInfo(AttrName + GlslIndex, GlslIndex, false, 0, 4);
+                        declInfo = new ShaderDeclInfo(AttrName + glslIndex, glslIndex, false, 0, 4);
 
-                        m_Attributes.Add(Index, DeclInfo);
+                        m_Attributes.Add(index, declInfo);
                     }
 
-                    Traverse(Nodes, Abuf, Abuf.Vertex);
+                    Traverse(nodes, abuf, abuf.Vertex);
 
                     break;
                 }
 
-                case ShaderIrOperGpr Gpr:
+                case ShaderIrOperGpr gpr:
                 {
-                    if (!Gpr.IsConst)
+                    if (!gpr.IsConst)
                     {
-                        string Name = GetGprName(Gpr.Index);
+                        string name = GetGprName(gpr.Index);
 
-                        if (Gpr.RegisterSize == ShaderRegisterSize.Single)
+                        if (gpr.RegisterSize == ShaderRegisterSize.Single)
                         {
-                            m_Gprs.TryAdd(Gpr.Index, new ShaderDeclInfo(Name, Gpr.Index));
+                            m_Gprs.TryAdd(gpr.Index, new ShaderDeclInfo(name, gpr.Index));
                         }
-                        else if (Gpr.RegisterSize == ShaderRegisterSize.Half)
+                        else if (gpr.RegisterSize == ShaderRegisterSize.Half)
                         {
-                            Name += "_h" + Gpr.HalfPart;
+                            name += "_h" + gpr.HalfPart;
 
-                            m_GprsHalf.TryAdd((Gpr.Index << 1) | Gpr.HalfPart, new ShaderDeclInfo(Name, Gpr.Index));
+                            m_GprsHalf.TryAdd((gpr.Index << 1) | gpr.HalfPart, new ShaderDeclInfo(name, gpr.Index));
                         }
                         else /* if (Gpr.RegisterSize == ShaderRegisterSize.Double) */
                         {
@@ -387,35 +386,35 @@ namespace Ryujinx.Graphics.Gal.Shader
                     break;
                 }
 
-                case ShaderIrOperPred Pred:
+                case ShaderIrOperPred pred:
                 {
-                    if (!Pred.IsConst && !HasName(m_Preds, Pred.Index))
+                    if (!pred.IsConst && !HasName(m_Preds, pred.Index))
                     {
-                        string Name = PredName + Pred.Index;
+                        string name = PredName + pred.Index;
 
-                        m_Preds.TryAdd(Pred.Index, new ShaderDeclInfo(Name, Pred.Index));
+                        m_Preds.TryAdd(pred.Index, new ShaderDeclInfo(name, pred.Index));
                     }
                     break;
                 }
             }
         }
 
-        private bool HasName(Dictionary<int, ShaderDeclInfo> Decls, int Index)
+        private bool HasName(Dictionary<int, ShaderDeclInfo> decls, int index)
         {
             //This is used to check if the dictionary already contains
             //a entry for a vector at a given index position.
             //Used to enable turning gprs into vectors.
-            int VecIndex = Index & ~3;
+            int vecIndex = index & ~3;
 
-            if (Decls.TryGetValue(VecIndex, out ShaderDeclInfo DeclInfo))
+            if (decls.TryGetValue(vecIndex, out ShaderDeclInfo declInfo))
             {
-                if (DeclInfo.Size > 1 && Index < VecIndex + DeclInfo.Size)
+                if (declInfo.Size > 1 && index < vecIndex + declInfo.Size)
                 {
                     return true;
                 }
             }
 
-            return Decls.ContainsKey(Index);
+            return decls.ContainsKey(index);
         }
     }
 }

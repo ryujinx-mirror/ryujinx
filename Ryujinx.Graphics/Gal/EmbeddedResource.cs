@@ -5,15 +5,15 @@ namespace Ryujinx.Graphics.Gal
 {
     static class EmbeddedResource
     {
-        public static string GetString(string Name)
+        public static string GetString(string name)
         {
-            Assembly Asm = typeof(EmbeddedResource).Assembly;
+            Assembly asm = typeof(EmbeddedResource).Assembly;
 
-            using (Stream ResStream = Asm.GetManifestResourceStream(Name))
+            using (Stream resStream = asm.GetManifestResourceStream(name))
             {
-                StreamReader Reader = new StreamReader(ResStream);
+                StreamReader reader = new StreamReader(resStream);
 
-                return Reader.ReadToEnd();
+                return reader.ReadToEnd();
             }
         }
     }

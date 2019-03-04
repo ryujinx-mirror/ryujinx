@@ -6,8 +6,8 @@
         Unorm = 2,
         Sint = 3,
         Uint = 4,
-        Snorm_Force_Fp16 = 5,
-        Unorm_Force_Fp16 = 6,
+        SnormForceFp16 = 5,
+        UnormForceFp16 = 6,
         Float = 7
     }
 }

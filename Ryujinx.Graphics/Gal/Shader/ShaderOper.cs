@@ -2,10 +2,10 @@ namespace Ryujinx.Graphics.Gal.Shader
 {
     enum ShaderOper
     {
-        CR,
+        Cr,
         Imm,
         Immf,
-        RC,
-        RR
+        Rc,
+        Rr
     }
 }

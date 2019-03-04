@@ -4,14 +4,14 @@ namespace Ryujinx.Graphics.VDec
 {
     static class DecoderHelper
     {
-        public static byte[] Combine(byte[] Arr0, byte[] Arr1)
+        public static byte[] Combine(byte[] arr0, byte[] arr1)
         {
-            byte[] Output = new byte[Arr0.Length + Arr1.Length];
+            byte[] output = new byte[arr0.Length + arr1.Length];
 
-            Buffer.BlockCopy(Arr0, 0, Output, 0, Arr0.Length);
-            Buffer.BlockCopy(Arr1, 0, Output, Arr0.Length, Arr1.Length);
+            Buffer.BlockCopy(arr0, 0, output, 0, arr0.Length);
+            Buffer.BlockCopy(arr1, 0, output, arr0.Length, arr1.Length);
 
-            return Output;
+            return output;
         }
     }
 }

@@ -12,81 +12,81 @@ namespace Ryujinx.Graphics.Texture
             Trit
         }
 
-        EIntegerEncoding Encoding;
+        EIntegerEncoding _encoding;
         public int NumberBits { get; private set; }
         public int BitValue   { get; private set; }
         public int TritValue  { get; private set; }
         public int QuintValue { get; private set; }
 
-        public IntegerEncoded(EIntegerEncoding _Encoding, int NumBits)
+        public IntegerEncoded(EIntegerEncoding encoding, int numBits)
         {
-            Encoding   = _Encoding;
-            NumberBits = NumBits;
+            _encoding  = encoding;
+            NumberBits = numBits;
             BitValue   = 0;
             TritValue  = 0;
             QuintValue = 0;
         }
 
-        public bool MatchesEncoding(IntegerEncoded Other)
+        public bool MatchesEncoding(IntegerEncoded other)
         {
-            return Encoding == Other.Encoding && NumberBits == Other.NumberBits;
+            return _encoding == other._encoding && NumberBits == other.NumberBits;
         }
 
         public EIntegerEncoding GetEncoding()
         {
-            return Encoding;
+            return _encoding;
         }
 
-        public int GetBitLength(int NumberVals)
+        public int GetBitLength(int numberVals)
         {
-            int TotalBits = NumberBits * NumberVals;
-            if (Encoding == EIntegerEncoding.Trit)
+            int totalBits = NumberBits * numberVals;
+            if (_encoding == EIntegerEncoding.Trit)
             {
-                TotalBits += (NumberVals * 8 + 4) / 5;
+                totalBits += (numberVals * 8 + 4) / 5;
             }
-            else if (Encoding == EIntegerEncoding.Quint)
+            else if (_encoding == EIntegerEncoding.Quint)
             {
-                TotalBits += (NumberVals * 7 + 2) / 3;
+                totalBits += (numberVals * 7 + 2) / 3;
             }
-            return TotalBits;
+            return totalBits;
         }
 
-        public static IntegerEncoded CreateEncoding(int MaxVal)
+        public static IntegerEncoded CreateEncoding(int maxVal)
         {
-            while (MaxVal > 0)
+            while (maxVal > 0)
             {
-                int Check = MaxVal + 1;
+                int check = maxVal + 1;
 
                 // Is maxVal a power of two?
-                if ((Check & (Check - 1)) == 0)
+                if ((check & (check - 1)) == 0)
                 {
-                    return new IntegerEncoded(EIntegerEncoding.JustBits, BitArrayStream.PopCnt(MaxVal));
+                    return new IntegerEncoded(EIntegerEncoding.JustBits, BitArrayStream.PopCnt(maxVal));
                 }
 
                 // Is maxVal of the type 3*2^n - 1?
-                if ((Check % 3 == 0) && ((Check / 3) & ((Check / 3) - 1)) == 0)
+                if ((check % 3 == 0) && ((check / 3) & ((check / 3) - 1)) == 0)
                 {
-                    return new IntegerEncoded(EIntegerEncoding.Trit, BitArrayStream.PopCnt(Check / 3 - 1));
+                    return new IntegerEncoded(EIntegerEncoding.Trit, BitArrayStream.PopCnt(check / 3 - 1));
                 }
 
                 // Is maxVal of the type 5*2^n - 1?
-                if ((Check % 5 == 0) && ((Check / 5) & ((Check / 5) - 1)) == 0)
+                if ((check % 5 == 0) && ((check / 5) & ((check / 5) - 1)) == 0)
                 {
-                    return new IntegerEncoded(EIntegerEncoding.Quint, BitArrayStream.PopCnt(Check / 5 - 1));
+                    return new IntegerEncoded(EIntegerEncoding.Quint, BitArrayStream.PopCnt(check / 5 - 1));
                 }
 
                 // Apparently it can't be represented with a bounded integer sequence...
                 // just iterate.
-                MaxVal--;
+                maxVal--;
             }
 
             return new IntegerEncoded(EIntegerEncoding.JustBits, 0);
         }
 
         public static void DecodeTritBlock(
-            BitArrayStream       BitStream, 
-            List<IntegerEncoded> ListIntegerEncoded, 
-            int                  NumberBitsPerValue)
+            BitArrayStream       bitStream, 
+            List<IntegerEncoded> listIntegerEncoded, 
+            int                  numberBitsPerValue)
         {
             // Implement the algorithm in section C.2.12
             int[] m = new int[5];
@@ -95,170 +95,170 @@ namespace Ryujinx.Graphics.Texture
 
             // Read the trit encoded block according to
             // table C.2.14
-            m[0] = BitStream.ReadBits(NumberBitsPerValue);
-            T    = BitStream.ReadBits(2);
-            m[1] = BitStream.ReadBits(NumberBitsPerValue);
-            T   |= BitStream.ReadBits(2) << 2;
-            m[2] = BitStream.ReadBits(NumberBitsPerValue);
-            T   |= BitStream.ReadBits(1) << 4;
-            m[3] = BitStream.ReadBits(NumberBitsPerValue);
-            T   |= BitStream.ReadBits(2) << 5;
-            m[4] = BitStream.ReadBits(NumberBitsPerValue);
-            T   |= BitStream.ReadBits(1) << 7;
+            m[0] = bitStream.ReadBits(numberBitsPerValue);
+            T    = bitStream.ReadBits(2);
+            m[1] = bitStream.ReadBits(numberBitsPerValue);
+            T   |= bitStream.ReadBits(2) << 2;
+            m[2] = bitStream.ReadBits(numberBitsPerValue);
+            T   |= bitStream.ReadBits(1) << 4;
+            m[3] = bitStream.ReadBits(numberBitsPerValue);
+            T   |= bitStream.ReadBits(2) << 5;
+            m[4] = bitStream.ReadBits(numberBitsPerValue);
+            T   |= bitStream.ReadBits(1) << 7;
 
-            int C = 0;
+            int c = 0;
 
-            BitArrayStream Tb = new BitArrayStream(new BitArray(new int[] { T }));
-            if (Tb.ReadBits(2, 4) == 7)
+            BitArrayStream tb = new BitArrayStream(new BitArray(new int[] { T }));
+            if (tb.ReadBits(2, 4) == 7)
             {
-                C    = (Tb.ReadBits(5, 7) << 2) | Tb.ReadBits(0, 1);
+                c    = (tb.ReadBits(5, 7) << 2) | tb.ReadBits(0, 1);
                 t[4] = t[3] = 2;
             }
             else
             {
-                C = Tb.ReadBits(0, 4);
-                if (Tb.ReadBits(5, 6) == 3)
+                c = tb.ReadBits(0, 4);
+                if (tb.ReadBits(5, 6) == 3)
                 {
                     t[4] = 2;
-                    t[3] = Tb.ReadBit(7);
+                    t[3] = tb.ReadBit(7);
                 }
                 else
                 {
-                    t[4] = Tb.ReadBit(7);
-                    t[3] = Tb.ReadBits(5, 6);
+                    t[4] = tb.ReadBit(7);
+                    t[3] = tb.ReadBits(5, 6);
                 }
             }
 
-            BitArrayStream Cb = new BitArrayStream(new BitArray(new int[] { C }));
-            if (Cb.ReadBits(0, 1) == 3)
+            BitArrayStream cb = new BitArrayStream(new BitArray(new int[] { c }));
+            if (cb.ReadBits(0, 1) == 3)
             {
                 t[2] = 2;
-                t[1] = Cb.ReadBit(4);
-                t[0] = (Cb.ReadBit(3) << 1) | (Cb.ReadBit(2) & ~Cb.ReadBit(3));
+                t[1] = cb.ReadBit(4);
+                t[0] = (cb.ReadBit(3) << 1) | (cb.ReadBit(2) & ~cb.ReadBit(3));
             }
-            else if (Cb.ReadBits(2, 3) == 3)
+            else if (cb.ReadBits(2, 3) == 3)
             {
                 t[2] = 2;
                 t[1] = 2;
-                t[0] = Cb.ReadBits(0, 1);
+                t[0] = cb.ReadBits(0, 1);
             }
             else
             {
-                t[2] = Cb.ReadBit(4);
-                t[1] = Cb.ReadBits(2, 3);
-                t[0] = (Cb.ReadBit(1) << 1) | (Cb.ReadBit(0) & ~Cb.ReadBit(1));
+                t[2] = cb.ReadBit(4);
+                t[1] = cb.ReadBits(2, 3);
+                t[0] = (cb.ReadBit(1) << 1) | (cb.ReadBit(0) & ~cb.ReadBit(1));
             }
 
             for (int i = 0; i < 5; i++)
             {
-                IntegerEncoded IntEncoded = new IntegerEncoded(EIntegerEncoding.Trit, NumberBitsPerValue)
+                IntegerEncoded intEncoded = new IntegerEncoded(EIntegerEncoding.Trit, numberBitsPerValue)
                 {
                     BitValue  = m[i],
                     TritValue = t[i]
                 };
-                ListIntegerEncoded.Add(IntEncoded);
+                listIntegerEncoded.Add(intEncoded);
             }
         }
 
         public static void DecodeQuintBlock(
-            BitArrayStream       BitStream, 
-            List<IntegerEncoded> ListIntegerEncoded, 
-            int                  NumberBitsPerValue)
+            BitArrayStream       bitStream, 
+            List<IntegerEncoded> listIntegerEncoded, 
+            int                  numberBitsPerValue)
         {
             // Implement the algorithm in section C.2.12
             int[] m = new int[3];
-            int[] q = new int[3];
-            int Q;
+            int[] qa = new int[3];
+            int q;
 
             // Read the trit encoded block according to
             // table C.2.15
-            m[0] = BitStream.ReadBits(NumberBitsPerValue);
-            Q    = BitStream.ReadBits(3);
-            m[1] = BitStream.ReadBits(NumberBitsPerValue);
-            Q   |= BitStream.ReadBits(2) << 3;
-            m[2] = BitStream.ReadBits(NumberBitsPerValue);
-            Q   |= BitStream.ReadBits(2) << 5;
+            m[0] = bitStream.ReadBits(numberBitsPerValue);
+            q    = bitStream.ReadBits(3);
+            m[1] = bitStream.ReadBits(numberBitsPerValue);
+            q   |= bitStream.ReadBits(2) << 3;
+            m[2] = bitStream.ReadBits(numberBitsPerValue);
+            q   |= bitStream.ReadBits(2) << 5;
 
-            BitArrayStream Qb = new BitArrayStream(new BitArray(new int[] { Q }));
-            if (Qb.ReadBits(1, 2) == 3 && Qb.ReadBits(5, 6) == 0)
+            BitArrayStream qb = new BitArrayStream(new BitArray(new int[] { q }));
+            if (qb.ReadBits(1, 2) == 3 && qb.ReadBits(5, 6) == 0)
             {
-                q[0] = q[1] = 4;
-                q[2] = (Qb.ReadBit(0) << 2) | ((Qb.ReadBit(4) & ~Qb.ReadBit(0)) << 1) | (Qb.ReadBit(3) & ~Qb.ReadBit(0));
+                qa[0] = qa[1] = 4;
+                qa[2] = (qb.ReadBit(0) << 2) | ((qb.ReadBit(4) & ~qb.ReadBit(0)) << 1) | (qb.ReadBit(3) & ~qb.ReadBit(0));
             }
             else
             {
-                int C = 0;
-                if (Qb.ReadBits(1, 2) == 3)
+                int c = 0;
+                if (qb.ReadBits(1, 2) == 3)
                 {
-                    q[2] = 4;
-                    C    = (Qb.ReadBits(3, 4) << 3) | ((~Qb.ReadBits(5, 6) & 3) << 1) | Qb.ReadBit(0);
+                    qa[2] = 4;
+                    c    = (qb.ReadBits(3, 4) << 3) | ((~qb.ReadBits(5, 6) & 3) << 1) | qb.ReadBit(0);
                 }
                 else
                 {
-                    q[2] = Qb.ReadBits(5, 6);
-                    C    = Qb.ReadBits(0, 4);
+                    qa[2] = qb.ReadBits(5, 6);
+                    c    = qb.ReadBits(0, 4);
                 }
 
-                BitArrayStream Cb = new BitArrayStream(new BitArray(new int[] { C }));
-                if (Cb.ReadBits(0, 2) == 5)
+                BitArrayStream cb = new BitArrayStream(new BitArray(new int[] { c }));
+                if (cb.ReadBits(0, 2) == 5)
                 {
-                    q[1] = 4;
-                    q[0] = Cb.ReadBits(3, 4);
+                    qa[1] = 4;
+                    qa[0] = cb.ReadBits(3, 4);
                 }
                 else
                 {
-                    q[1] = Cb.ReadBits(3, 4);
-                    q[0] = Cb.ReadBits(0, 2);
+                    qa[1] = cb.ReadBits(3, 4);
+                    qa[0] = cb.ReadBits(0, 2);
                 }
             }
 
             for (int i = 0; i < 3; i++)
             {
-                IntegerEncoded IntEncoded = new IntegerEncoded(EIntegerEncoding.Quint, NumberBitsPerValue)
+                IntegerEncoded intEncoded = new IntegerEncoded(EIntegerEncoding.Quint, numberBitsPerValue)
                 {
                     BitValue   = m[i],
-                    QuintValue = q[i]
+                    QuintValue = qa[i]
                 };
-                ListIntegerEncoded.Add(IntEncoded);
+                listIntegerEncoded.Add(intEncoded);
             }
         }
 
         public static void DecodeIntegerSequence(
-            List<IntegerEncoded> DecodeIntegerSequence, 
-            BitArrayStream       BitStream, 
-            int                  MaxRange, 
-            int                  NumberValues)
+            List<IntegerEncoded> decodeIntegerSequence, 
+            BitArrayStream       bitStream, 
+            int                  maxRange, 
+            int                  numberValues)
         {
             // Determine encoding parameters
-            IntegerEncoded IntEncoded = CreateEncoding(MaxRange);
+            IntegerEncoded intEncoded = CreateEncoding(maxRange);
 
             // Start decoding
-            int NumberValuesDecoded = 0;
-            while (NumberValuesDecoded < NumberValues)
+            int numberValuesDecoded = 0;
+            while (numberValuesDecoded < numberValues)
             {
-                switch (IntEncoded.GetEncoding())
+                switch (intEncoded.GetEncoding())
                 {
                     case EIntegerEncoding.Quint:
                     {
-                        DecodeQuintBlock(BitStream, DecodeIntegerSequence, IntEncoded.NumberBits);
-                        NumberValuesDecoded += 3;
+                        DecodeQuintBlock(bitStream, decodeIntegerSequence, intEncoded.NumberBits);
+                        numberValuesDecoded += 3;
 
                         break;
                     }
 
                     case EIntegerEncoding.Trit:
                     {
-                        DecodeTritBlock(BitStream, DecodeIntegerSequence, IntEncoded.NumberBits);
-                        NumberValuesDecoded += 5;
+                        DecodeTritBlock(bitStream, decodeIntegerSequence, intEncoded.NumberBits);
+                        numberValuesDecoded += 5;
 
                         break;
                     }
 
                     case EIntegerEncoding.JustBits:
                     {
-                        IntEncoded.BitValue = BitStream.ReadBits(IntEncoded.NumberBits);
-                        DecodeIntegerSequence.Add(IntEncoded);
-                        NumberValuesDecoded++;
+                        intEncoded.BitValue = bitStream.ReadBits(intEncoded.NumberBits);
+                        decodeIntegerSequence.Add(intEncoded);
+                        numberValuesDecoded++;
 
                         break;
                     }

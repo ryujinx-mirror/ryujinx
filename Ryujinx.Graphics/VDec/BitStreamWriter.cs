@@ -6,69 +6,69 @@ namespace Ryujinx.Graphics.VDec
     {
         private const int BufferSize = 8;
 
-        private Stream BaseStream;
+        private Stream _baseStream;
 
-        private int Buffer;
-        private int BufferPos;
+        private int _buffer;
+        private int _bufferPos;
 
-        public BitStreamWriter(Stream BaseStream)
+        public BitStreamWriter(Stream baseStream)
         {
-            this.BaseStream = BaseStream;
+            _baseStream = baseStream;
         }
 
-        public void WriteBit(bool Value)
+        public void WriteBit(bool value)
         {
-            WriteBits(Value ? 1 : 0, 1);
+            WriteBits(value ? 1 : 0, 1);
         }
 
-        public void WriteBits(int Value, int ValueSize)
+        public void WriteBits(int value, int valueSize)
         {
-            int ValuePos = 0;
+            int valuePos = 0;
 
-            int Remaining = ValueSize;
+            int remaining = valueSize;
 
-            while (Remaining > 0)
+            while (remaining > 0)
             {
-                int CopySize = Remaining;
+                int copySize = remaining;
 
-                int Free = GetFreeBufferBits();
+                int free = GetFreeBufferBits();
 
-                if (CopySize > Free)
+                if (copySize > free)
                 {
-                    CopySize = Free;
+                    copySize = free;
                 }
 
-                int Mask = (1 << CopySize) - 1;
+                int mask = (1 << copySize) - 1;
 
-                int SrcShift = (ValueSize  - ValuePos)  - CopySize;
-                int DstShift = (BufferSize - BufferPos) - CopySize;
+                int srcShift = (valueSize  - valuePos)  - copySize;
+                int dstShift = (BufferSize - _bufferPos) - copySize;
 
-                Buffer |= ((Value >> SrcShift) & Mask) << DstShift;
+                _buffer |= ((value >> srcShift) & mask) << dstShift;
 
-                ValuePos  += CopySize;
-                BufferPos += CopySize;
-                Remaining -= CopySize;
+                valuePos   += copySize;
+                _bufferPos += copySize;
+                remaining  -= copySize;
             }
         }
 
         private int GetFreeBufferBits()
         {
-            if (BufferPos == BufferSize)
+            if (_bufferPos == BufferSize)
             {
                 Flush();
             }
 
-            return BufferSize - BufferPos;
+            return BufferSize - _bufferPos;
         }
 
         public void Flush()
         {
-            if (BufferPos != 0)
+            if (_bufferPos != 0)
             {
-                BaseStream.WriteByte((byte)Buffer);
+                _baseStream.WriteByte((byte)_buffer);
 
-                Buffer    = 0;
-                BufferPos = 0;
+                _buffer    = 0;
+                _bufferPos = 0;
             }
         }
     }

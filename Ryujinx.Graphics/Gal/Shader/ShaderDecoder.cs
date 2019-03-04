@@ -8,74 +8,74 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         private const bool AddDbgComments = true;
 
-        public static ShaderIrBlock[] Decode(IGalMemory Memory, long Start)
+        public static ShaderIrBlock[] Decode(IGalMemory memory, long start)
         {
-            Dictionary<int, ShaderIrBlock> Visited    = new Dictionary<int, ShaderIrBlock>();
-            Dictionary<int, ShaderIrBlock> VisitedEnd = new Dictionary<int, ShaderIrBlock>();
+            Dictionary<int, ShaderIrBlock> visited    = new Dictionary<int, ShaderIrBlock>();
+            Dictionary<int, ShaderIrBlock> visitedEnd = new Dictionary<int, ShaderIrBlock>();
 
-            Queue<ShaderIrBlock> Blocks = new Queue<ShaderIrBlock>();
+            Queue<ShaderIrBlock> blocks = new Queue<ShaderIrBlock>();
 
-            long Beginning = Start + HeaderSize;
+            long beginning = start + HeaderSize;
 
-            ShaderIrBlock Enqueue(int Position, ShaderIrBlock Source = null)
+            ShaderIrBlock Enqueue(int position, ShaderIrBlock source = null)
             {
-                if (!Visited.TryGetValue(Position, out ShaderIrBlock Output))
+                if (!visited.TryGetValue(position, out ShaderIrBlock output))
                 {
-                    Output = new ShaderIrBlock(Position);
+                    output = new ShaderIrBlock(position);
 
-                    Blocks.Enqueue(Output);
+                    blocks.Enqueue(output);
 
-                    Visited.Add(Position, Output);
+                    visited.Add(position, output);
                 }
 
-                if (Source != null)
+                if (source != null)
                 {
-                    Output.Sources.Add(Source);
+                    output.Sources.Add(source);
                 }
 
-                return Output;
+                return output;
             }
 
-            ShaderIrBlock Entry = Enqueue(0);
+            ShaderIrBlock entry = Enqueue(0);
 
-            while (Blocks.Count > 0)
+            while (blocks.Count > 0)
             {
-                ShaderIrBlock Current = Blocks.Dequeue();
+                ShaderIrBlock current = blocks.Dequeue();
 
-                FillBlock(Memory, Current, Beginning);
+                FillBlock(memory, current, beginning);
 
                 //Set child blocks. "Branch" is the block the branch instruction
                 //points to (when taken), "Next" is the block at the next address,
                 //executed when the branch is not taken. For Unconditional Branches
                 //or end of shader, Next is null.
-                if (Current.Nodes.Count > 0)
+                if (current.Nodes.Count > 0)
                 {
-                    ShaderIrNode LastNode = Current.GetLastNode();
+                    ShaderIrNode lastNode = current.GetLastNode();
 
-                    ShaderIrOp InnerOp = GetInnermostOp(LastNode);
+                    ShaderIrOp innerOp = GetInnermostOp(lastNode);
 
-                    if (InnerOp?.Inst == ShaderIrInst.Bra)
+                    if (innerOp?.Inst == ShaderIrInst.Bra)
                     {
-                        int Target = ((ShaderIrOperImm)InnerOp.OperandA).Value;
+                        int target = ((ShaderIrOperImm)innerOp.OperandA).Value;
 
-                        Current.Branch = Enqueue(Target, Current);
+                        current.Branch = Enqueue(target, current);
                     }
 
-                    foreach (ShaderIrNode Node in Current.Nodes)
+                    foreach (ShaderIrNode node in current.Nodes)
                     {
-                        InnerOp = GetInnermostOp(Node);
+                        innerOp = GetInnermostOp(node);
 
-                        if (InnerOp is ShaderIrOp CurrOp && CurrOp.Inst == ShaderIrInst.Ssy)
+                        if (innerOp is ShaderIrOp currOp && currOp.Inst == ShaderIrInst.Ssy)
                         {
-                            int Target = ((ShaderIrOperImm)CurrOp.OperandA).Value;
+                            int target = ((ShaderIrOperImm)currOp.OperandA).Value;
 
-                            Enqueue(Target, Current);
+                            Enqueue(target, current);
                         }
                     }
 
-                    if (NodeHasNext(LastNode))
+                    if (NodeHasNext(lastNode))
                     {
-                        Current.Next = Enqueue(Current.EndPosition);
+                        current.Next = Enqueue(current.EndPosition);
                     }
                 }
 
@@ -83,136 +83,136 @@ namespace Ryujinx.Graphics.Gal.Shader
                 //then we need to split the bigger block and have two small blocks,
                 //the end position of the bigger "Current" block should then be == to
                 //the position of the "Smaller" block.
-                while (VisitedEnd.TryGetValue(Current.EndPosition, out ShaderIrBlock Smaller))
+                while (visitedEnd.TryGetValue(current.EndPosition, out ShaderIrBlock smaller))
                 {
-                    if (Current.Position > Smaller.Position)
+                    if (current.Position > smaller.Position)
                     {
-                        ShaderIrBlock Temp = Smaller;
+                        ShaderIrBlock temp = smaller;
 
-                        Smaller = Current;
-                        Current = Temp;
+                        smaller = current;
+                        current = temp;
                     }
 
-                    Current.EndPosition = Smaller.Position;
-                    Current.Next        = Smaller;
-                    Current.Branch      = null;
+                    current.EndPosition = smaller.Position;
+                    current.Next        = smaller;
+                    current.Branch      = null;
 
-                    Current.Nodes.RemoveRange(
-                        Current.Nodes.Count - Smaller.Nodes.Count,
-                        Smaller.Nodes.Count);
+                    current.Nodes.RemoveRange(
+                        current.Nodes.Count - smaller.Nodes.Count,
+                        smaller.Nodes.Count);
 
-                    VisitedEnd[Smaller.EndPosition] = Smaller;
+                    visitedEnd[smaller.EndPosition] = smaller;
                 }
 
-                VisitedEnd.Add(Current.EndPosition, Current);
+                visitedEnd.Add(current.EndPosition, current);
             }
 
             //Make and sort Graph blocks array by position.
-            ShaderIrBlock[] Graph = new ShaderIrBlock[Visited.Count];
+            ShaderIrBlock[] graph = new ShaderIrBlock[visited.Count];
 
-            while (Visited.Count > 0)
+            while (visited.Count > 0)
             {
-                uint FirstPos = uint.MaxValue;
+                uint firstPos = uint.MaxValue;
 
-                foreach (ShaderIrBlock Block in Visited.Values)
+                foreach (ShaderIrBlock block in visited.Values)
                 {
-                    if (FirstPos > (uint)Block.Position)
-                        FirstPos = (uint)Block.Position;
+                    if (firstPos > (uint)block.Position)
+                        firstPos = (uint)block.Position;
                 }
 
-                ShaderIrBlock Current = Visited[(int)FirstPos];
+                ShaderIrBlock current = visited[(int)firstPos];
 
                 do
                 {
-                    Graph[Graph.Length - Visited.Count] = Current;
+                    graph[graph.Length - visited.Count] = current;
 
-                    Visited.Remove(Current.Position);
+                    visited.Remove(current.Position);
 
-                    Current = Current.Next;
+                    current = current.Next;
                 }
-                while (Current != null);
+                while (current != null);
             }
 
-            return Graph;
+            return graph;
         }
 
-        private static void FillBlock(IGalMemory Memory, ShaderIrBlock Block, long Beginning)
+        private static void FillBlock(IGalMemory memory, ShaderIrBlock block, long beginning)
         {
-            int Position = Block.Position;
+            int position = block.Position;
 
             do
             {
                 //Ignore scheduling instructions, which are written every 32 bytes.
-                if ((Position & 0x1f) == 0)
+                if ((position & 0x1f) == 0)
                 {
-                    Position += 8;
+                    position += 8;
 
                     continue;
                 }
 
-                uint Word0 = (uint)Memory.ReadInt32(Position + Beginning + 0);
-                uint Word1 = (uint)Memory.ReadInt32(Position + Beginning + 4);
+                uint word0 = (uint)memory.ReadInt32(position + beginning + 0);
+                uint word1 = (uint)memory.ReadInt32(position + beginning + 4);
 
-                Position += 8;
+                position += 8;
 
-                long OpCode = Word0 | (long)Word1 << 32;
+                long opCode = word0 | (long)word1 << 32;
 
-                ShaderDecodeFunc Decode = ShaderOpCodeTable.GetDecoder(OpCode);
+                ShaderDecodeFunc decode = ShaderOpCodeTable.GetDecoder(opCode);
 
                 if (AddDbgComments)
                 {
-                    string DbgOpCode = $"0x{(Position - 8):x16}: 0x{OpCode:x16} ";
+                    string dbgOpCode = $"0x{(position - 8):x16}: 0x{opCode:x16} ";
 
-                    DbgOpCode += (Decode?.Method.Name ?? "???");
+                    dbgOpCode += (decode?.Method.Name ?? "???");
 
-                    if (Decode == ShaderDecode.Bra || Decode == ShaderDecode.Ssy)
+                    if (decode == ShaderDecode.Bra || decode == ShaderDecode.Ssy)
                     {
-                        int Offset = ((int)(OpCode >> 20) << 8) >> 8;
+                        int offset = ((int)(opCode >> 20) << 8) >> 8;
 
-                        long Target = Position + Offset;
+                        long target = position + offset;
 
-                        DbgOpCode += " (0x" + Target.ToString("x16") + ")";
+                        dbgOpCode += " (0x" + target.ToString("x16") + ")";
                     }
 
-                    Block.AddNode(new ShaderIrCmnt(DbgOpCode));
+                    block.AddNode(new ShaderIrCmnt(dbgOpCode));
                 }
 
-                if (Decode == null)
+                if (decode == null)
                 {
                     continue;
                 }
 
-                Decode(Block, OpCode, Position);
+                decode(block, opCode, position);
             }
-            while (!IsFlowChange(Block.GetLastNode()));
+            while (!IsFlowChange(block.GetLastNode()));
 
-            Block.EndPosition = Position;
+            block.EndPosition = position;
         }
 
-        private static bool IsFlowChange(ShaderIrNode Node)
+        private static bool IsFlowChange(ShaderIrNode node)
         {
-            return !NodeHasNext(GetInnermostOp(Node));
+            return !NodeHasNext(GetInnermostOp(node));
         }
 
-        private static ShaderIrOp GetInnermostOp(ShaderIrNode Node)
+        private static ShaderIrOp GetInnermostOp(ShaderIrNode node)
         {
-            if (Node is ShaderIrCond Cond)
+            if (node is ShaderIrCond cond)
             {
-                Node = Cond.Child;
+                node = cond.Child;
             }
 
-            return Node is ShaderIrOp Op ? Op : null;
+            return node is ShaderIrOp op ? op : null;
         }
 
-        private static bool NodeHasNext(ShaderIrNode Node)
+        private static bool NodeHasNext(ShaderIrNode node)
         {
-            if (!(Node is ShaderIrOp Op))
+            if (!(node is ShaderIrOp op))
             {
                 return true;
             }
 
-            return Op.Inst != ShaderIrInst.Exit &&
-                   Op.Inst != ShaderIrInst.Bra;
+            return op.Inst != ShaderIrInst.Exit &&
+                   op.Inst != ShaderIrInst.Bra;
         }
     }
 }

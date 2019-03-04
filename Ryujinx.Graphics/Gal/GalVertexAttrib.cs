@@ -13,21 +13,21 @@ namespace Ryujinx.Graphics.Gal
         public bool IsBgra { get; private set; }
 
         public GalVertexAttrib(
-            int                 Index,
-            bool                IsConst,
-            int                 Offset,
-            byte[]              Data,
-            GalVertexAttribSize Size,
-            GalVertexAttribType Type,
-            bool                IsBgra)
+            int                 index,
+            bool                isConst,
+            int                 offset,
+            byte[]              data,
+            GalVertexAttribSize size,
+            GalVertexAttribType type,
+            bool                isBgra)
         {
-            this.Index   = Index;
-            this.IsConst = IsConst;
-            this.Data    = Data;
-            this.Offset  = Offset;
-            this.Size    = Size;
-            this.Type    = Type;
-            this.IsBgra  = IsBgra;
+            Index   = index;
+            IsConst = isConst;
+            Data    = data;
+            Offset  = offset;
+            Size    = size;
+            Type    = type;
+            IsBgra  = isBgra;
         }
     }
 }

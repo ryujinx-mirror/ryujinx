@@ -10,13 +10,13 @@ namespace Ryujinx.Graphics.Gal.Shader
         public IEnumerable<ShaderDeclInfo> Uniforms { get; private set; }
 
         public GlslProgram(
-            string                      Code,
-            IEnumerable<ShaderDeclInfo> Textures,
-            IEnumerable<ShaderDeclInfo> Uniforms)
+            string                      code,
+            IEnumerable<ShaderDeclInfo> textures,
+            IEnumerable<ShaderDeclInfo> uniforms)
         {
-            this.Code     = Code;
-            this.Textures = Textures;
-            this.Uniforms = Uniforms;
+            Code     = code;
+            Textures = textures;
+            Uniforms = uniforms;
         }
     }
 }

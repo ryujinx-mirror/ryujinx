@@ -42,78 +42,78 @@ namespace Ryujinx.Graphics.Graphics3d
             BitwiseNotAnd      = 12
         }
 
-        private NvGpuFifo    PFifo;
-        private INvGpuEngine Engine;
+        private NvGpuFifo    _pFifo;
+        private INvGpuEngine _engine;
 
         public Queue<int> Fifo { get; private set; }
 
-        private int[] Gprs;
+        private int[] _gprs;
 
-        private int MethAddr;
-        private int MethIncr;
+        private int _methAddr;
+        private int _methIncr;
 
-        private bool Carry;
+        private bool _carry;
 
-        private int OpCode;
+        private int _opCode;
 
-        private int PipeOp;
+        private int _pipeOp;
 
-        private int Pc;
+        private int _pc;
 
-        public MacroInterpreter(NvGpuFifo PFifo, INvGpuEngine Engine)
+        public MacroInterpreter(NvGpuFifo pFifo, INvGpuEngine engine)
         {
-            this.PFifo  = PFifo;
-            this.Engine = Engine;
+            _pFifo  = pFifo;
+            _engine = engine;
 
             Fifo = new Queue<int>();
 
-            Gprs = new int[8];
+            _gprs = new int[8];
         }
 
-        public void Execute(NvGpuVmm Vmm, int[] Mme, int Position, int Param)
+        public void Execute(NvGpuVmm vmm, int[] mme, int position, int param)
         {
             Reset();
 
-            Gprs[1] = Param;
+            _gprs[1] = param;
 
-            Pc = Position;
+            _pc = position;
 
-            FetchOpCode(Mme);
+            FetchOpCode(mme);
 
-            while (Step(Vmm, Mme));
+            while (Step(vmm, mme));
 
             //Due to the delay slot, we still need to execute
             //one more instruction before we actually exit.
-            Step(Vmm, Mme);
+            Step(vmm, mme);
         }
 
         private void Reset()
         {
-            for (int Index = 0; Index < Gprs.Length; Index++)
+            for (int index = 0; index < _gprs.Length; index++)
             {
-                Gprs[Index] = 0;
+                _gprs[index] = 0;
             }
 
-            MethAddr = 0;
-            MethIncr = 0;
+            _methAddr = 0;
+            _methIncr = 0;
 
-            Carry = false;
+            _carry = false;
         }
 
-        private bool Step(NvGpuVmm Vmm, int[] Mme)
+        private bool Step(NvGpuVmm vmm, int[] mme)
         {
-            int BaseAddr = Pc - 1;
+            int baseAddr = _pc - 1;
 
-            FetchOpCode(Mme);
+            FetchOpCode(mme);
 
-            if ((OpCode & 7) < 7)
+            if ((_opCode & 7) < 7)
             {
                 //Operation produces a value.
-                AssignmentOperation AsgOp = (AssignmentOperation)((OpCode >> 4) & 7);
+                AssignmentOperation asgOp = (AssignmentOperation)((_opCode >> 4) & 7);
 
-                int Result = GetAluResult();
+                int result = GetAluResult();
 
-                switch (AsgOp)
+                switch (asgOp)
                 {
                     //Fetch parameter and ignore result.
                     case AssignmentOperation.IgnoreAndFetch:
@@ -126,7 +126,7 @@ namespace Ryujinx.Graphics.Graphics3d
                     //Move result.
                     case AssignmentOperation.Move:
                     {
-                        SetDstGpr(Result);
+                        SetDstGpr(result);
 
                         break;
                     }
@@ -134,9 +134,9 @@ namespace Ryujinx.Graphics.Graphics3d
                     //Move result and use as Method Address.
                     case AssignmentOperation.MoveAndSetMaddr:
                     {
-                        SetDstGpr(Result);
+                        SetDstGpr(result);
 
-                        SetMethAddr(Result);
+                        SetMethAddr(result);
 
                         break;
                     }
@@ -146,7 +146,7 @@ namespace Ryujinx.Graphics.Graphics3d
                     {
                         SetDstGpr(FetchParam());
 
-                        Send(Vmm, Result);
+                        Send(vmm, result);
 
                         break;
                     }
@@ -154,9 +154,9 @@ namespace Ryujinx.Graphics.Graphics3d
                     //Move and send result.
                     case AssignmentOperation.MoveAndSend:
                     {
-                        SetDstGpr(Result);
+                        SetDstGpr(result);
 
-                        Send(Vmm, Result);
+                        Send(vmm, result);
 
                         break;
                     }
@@ -166,7 +166,7 @@ namespace Ryujinx.Graphics.Graphics3d
                     {
                         SetDstGpr(FetchParam());
 
-                        SetMethAddr(Result);
+                        SetMethAddr(result);
 
                         break;
                     }
@@ -174,11 +174,11 @@ namespace Ryujinx.Graphics.Graphics3d
                     //Move result and use as Method Address, then fetch and send paramter.
                     case AssignmentOperation.MoveAndSetMaddrThenFetchAndSend:
                     {
-                        SetDstGpr(Result);
+                        SetDstGpr(result);
 
-                        SetMethAddr(Result);
+                        SetMethAddr(result);
 
-                        Send(Vmm, FetchParam());
+                        Send(vmm, FetchParam());
 
                         break;
                     }
@@ -186,11 +186,11 @@ namespace Ryujinx.Graphics.Graphics3d
                     //Move result and use as Method Address, then send bits 17:12 of result.
                     case AssignmentOperation.MoveAndSetMaddrThenSendHigh:
                     {
-                        SetDstGpr(Result);
+                        SetDstGpr(result);
 
-                        SetMethAddr(Result);
+                        SetMethAddr(result);
 
-                        Send(Vmm, (Result >> 12) & 0x3f);
+                        Send(vmm, (result >> 12) & 0x3f);
 
                         break;
                     }
@@ -199,50 +199,50 @@ namespace Ryujinx.Graphics.Graphics3d
             else
             {
                 //Branch.
-                bool OnNotZero = ((OpCode >> 4) & 1) != 0;
+                bool onNotZero = ((_opCode >> 4) & 1) != 0;
 
-                bool Taken = OnNotZero
+                bool taken = onNotZero
                     ? GetGprA() != 0
                     : GetGprA() == 0;
 
-                if (Taken)
+                if (taken)
                 {
-                    Pc = BaseAddr + GetImm();
+                    _pc = baseAddr + GetImm();
 
-                    bool NoDelays = (OpCode & 0x20) != 0;
+                    bool noDelays = (_opCode & 0x20) != 0;
 
-                    if (NoDelays)
+                    if (noDelays)
                     {
-                        FetchOpCode(Mme);
+                        FetchOpCode(mme);
                     }
 
                     return true;
                 }
             }
 
-            bool Exit = (OpCode & 0x80) != 0;
+            bool exit = (_opCode & 0x80) != 0;
 
-            return !Exit;
+            return !exit;
         }
 
-        private void FetchOpCode(int[] Mme)
+        private void FetchOpCode(int[] mme)
         {
-            OpCode = PipeOp;
+            _opCode = _pipeOp;
 
-            PipeOp = Mme[Pc++];
+            _pipeOp = mme[_pc++];
         }
 
         private int GetAluResult()
         {
-            AluOperation Op = (AluOperation)(OpCode & 7);
+            AluOperation op = (AluOperation)(_opCode & 7);
 
-            switch (Op)
+            switch (op)
             {
                 case AluOperation.AluReg:
                 {
-                    AluRegOperation AluOp = (AluRegOperation)((OpCode >> 17) & 0x1f);
+                    AluRegOperation aluOp = (AluRegOperation)((_opCode >> 17) & 0x1f);
 
-                    return GetAluResult(AluOp, GetGprA(), GetGprB());
+                    return GetAluResult(aluOp, GetGprA(), GetGprB());
                 }
 
                 case AluOperation.AddImmediate:
@@ -254,40 +254,40 @@ namespace Ryujinx.Graphics.Graphics3d
                 case AluOperation.BitfieldExtractLslImm:
                 case AluOperation.BitfieldExtractLslReg:
                 {
-                    int BfSrcBit = (OpCode >> 17) & 0x1f;
-                    int BfSize   = (OpCode >> 22) & 0x1f;
-                    int BfDstBit = (OpCode >> 27) & 0x1f;
+                    int bfSrcBit = (_opCode >> 17) & 0x1f;
+                    int bfSize   = (_opCode >> 22) & 0x1f;
+                    int bfDstBit = (_opCode >> 27) & 0x1f;
 
-                    int BfMask = (1 << BfSize) - 1;
+                    int bfMask = (1 << bfSize) - 1;
 
-                    int Dst = GetGprA();
-                    int Src = GetGprB();
+                    int dst = GetGprA();
+                    int src = GetGprB();
 
-                    switch (Op)
+                    switch (op)
                     {
                         case AluOperation.BitfieldReplace:
                         {
-                            Src = (int)((uint)Src >> BfSrcBit) & BfMask;
+                            src = (int)((uint)src >> bfSrcBit) & bfMask;
 
-                            Dst &= ~(BfMask << BfDstBit);
+                            dst &= ~(bfMask << bfDstBit);
 
-                            Dst |= Src << BfDstBit;
+                            dst |= src << bfDstBit;
 
-                            return Dst;
+                            return dst;
                         }
 
                         case AluOperation.BitfieldExtractLslImm:
                         {
-                            Src = (int)((uint)Src >> Dst) & BfMask;
+                            src = (int)((uint)src >> dst) & bfMask;
 
-                            return Src << BfDstBit;
+                            return src << bfDstBit;
                         }
 
                         case AluOperation.BitfieldExtractLslReg:
                         {
-                            Src = (int)((uint)Src >> BfSrcBit) & BfMask;
+                            src = (int)((uint)src >> bfSrcBit) & bfMask;
 
-                            return Src << Dst;
+                            return src << dst;
                         }
                     }
 
@@ -300,117 +300,117 @@ namespace Ryujinx.Graphics.Graphics3d
                 }
             }
 
-            throw new ArgumentException(nameof(OpCode));
+            throw new ArgumentException(nameof(_opCode));
         }
 
-        private int GetAluResult(AluRegOperation AluOp, int A, int B)
+        private int GetAluResult(AluRegOperation aluOp, int a, int b)
         {
-            switch (AluOp)
+            switch (aluOp)
             {
                 case AluRegOperation.Add:
                 {
-                    ulong Result = (ulong)A + (ulong)B;
+                    ulong result = (ulong)a + (ulong)b;
 
-                    Carry = Result > 0xffffffff;
+                    _carry = result > 0xffffffff;
 
-                    return (int)Result;
+                    return (int)result;
                 }
 
                 case AluRegOperation.AddWithCarry:
                 {
-                    ulong Result = (ulong)A + (ulong)B + (Carry ? 1UL : 0UL);
+                    ulong result = (ulong)a + (ulong)b + (_carry ? 1UL : 0UL);
 
-                    Carry = Result > 0xffffffff;
+                    _carry = result > 0xffffffff;
 
-                    return (int)Result;
+                    return (int)result;
                 }
 
                 case AluRegOperation.Subtract:
                 {
-                    ulong Result = (ulong)A - (ulong)B;
+                    ulong result = (ulong)a - (ulong)b;
 
-                    Carry = Result < 0x100000000;
+                    _carry = result < 0x100000000;
 
-                    return (int)Result;
+                    return (int)result;
                 }
 
                 case AluRegOperation.SubtractWithBorrow:
                 {
-                    ulong Result = (ulong)A - (ulong)B - (Carry ? 0UL : 1UL);
+                    ulong result = (ulong)a - (ulong)b - (_carry ? 0UL : 1UL);
 
-                    Carry = Result < 0x100000000;
+                    _carry = result < 0x100000000;
 
-                    return (int)Result;
+                    return (int)result;
                 }
 
-                case AluRegOperation.BitwiseExclusiveOr: return   A ^  B;
-                case AluRegOperation.BitwiseOr:          return   A |  B;
-                case AluRegOperation.BitwiseAnd:         return   A &  B;
-                case AluRegOperation.BitwiseAndNot:      return   A & ~B;
-                case AluRegOperation.BitwiseNotAnd:      return ~(A &  B);
+                case AluRegOperation.BitwiseExclusiveOr: return   a ^  b;
+                case AluRegOperation.BitwiseOr:          return   a |  b;
+                case AluRegOperation.BitwiseAnd:         return   a &  b;
+                case AluRegOperation.BitwiseAndNot:      return   a & ~b;
+                case AluRegOperation.BitwiseNotAnd:      return ~(a &  b);
             }
 
-            throw new ArgumentOutOfRangeException(nameof(AluOp));
+            throw new ArgumentOutOfRangeException(nameof(aluOp));
         }
 
         private int GetImm()
         {
             //Note: The immediate is signed, the sign-extension is intended here.
-            return OpCode >> 14;
+            return _opCode >> 14;
         }
 
-        private void SetMethAddr(int Value)
+        private void SetMethAddr(int value)
         {
-            MethAddr = (Value >>  0) & 0xfff;
-            MethIncr = (Value >> 12) & 0x3f;
+            _methAddr = (value >>  0) & 0xfff;
+            _methIncr = (value >> 12) & 0x3f;
         }
 
-        private void SetDstGpr(int Value)
+        private void SetDstGpr(int value)
         {
-            Gprs[(OpCode >> 8) & 7] = Value;
+            _gprs[(_opCode >> 8) & 7] = value;
         }
 
         private int GetGprA()
         {
-            return GetGprValue((OpCode >> 11) & 7);
+            return GetGprValue((_opCode >> 11) & 7);
         }
 
         private int GetGprB()
         {
-            return GetGprValue((OpCode >> 14) & 7);
+            return GetGprValue((_opCode >> 14) & 7);
         }
 
-        private int GetGprValue(int Index)
+        private int GetGprValue(int index)
         {
-            return Index != 0 ? Gprs[Index] : 0;
+            return index != 0 ? _gprs[index] : 0;
         }
 
         private int FetchParam()
         {
-            int Value;
+            int value;
 
-            if (!Fifo.TryDequeue(out Value))
+            if (!Fifo.TryDequeue(out value))
             {
                 Logger.PrintWarning(LogClass.Gpu, "Macro attempted to fetch an inexistent argument.");
 
                 return 0;
             }
 
-            return Value;
+            return value;
         }
 
-        private int Read(int Reg)
+        private int Read(int reg)
         {
-            return Engine.Registers[Reg];
+            return _engine.Registers[reg];
         }
 
-        private void Send(NvGpuVmm Vmm, int Value)
+        private void Send(NvGpuVmm vmm, int value)
         {
-            GpuMethodCall MethCall = new GpuMethodCall(MethAddr, Value);
+            GpuMethodCall methCall = new GpuMethodCall(_methAddr, value);
 
-            Engine.CallMethod(Vmm, MethCall);
+            _engine.CallMethod(vmm, methCall);
 
-            MethAddr += MethIncr;
+            _methAddr += _methIncr;
         }
     }
 }

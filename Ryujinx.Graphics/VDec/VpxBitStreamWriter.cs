@@ -4,34 +4,34 @@ namespace Ryujinx.Graphics.VDec
 {
     class VpxBitStreamWriter : BitStreamWriter
     {
-        public VpxBitStreamWriter(Stream BaseStream) : base(BaseStream) { }
+        public VpxBitStreamWriter(Stream baseStream) : base(baseStream) { }
 
-        public void WriteU(int Value, int ValueSize)
+        public void WriteU(int value, int valueSize)
         {
-            WriteBits(Value, ValueSize);
+            WriteBits(value, valueSize);
         }
 
-        public void WriteS(int Value, int ValueSize)
+        public void WriteS(int value, int valueSize)
         {
-            bool Sign = Value < 0;
+            bool sign = value < 0;
 
-            if (Sign)
+            if (sign)
             {
-                Value = -Value;
+                value = -value;
             }
 
-            WriteBits((Value << 1) | (Sign ? 1 : 0), ValueSize + 1);
+            WriteBits((value << 1) | (sign ? 1 : 0), valueSize + 1);
         }
 
-        public void WriteDeltaQ(int Value)
+        public void WriteDeltaQ(int value)
         {
-            bool DeltaCoded = Value != 0;
+            bool deltaCoded = value != 0;
 
-            WriteBit(DeltaCoded);
+            WriteBit(deltaCoded);
 
-            if (DeltaCoded)
+            if (deltaCoded)
             {
-                WriteBits(Value, 4);
+                WriteBits(value, 4);
             }
         }
     }

@@ -1,4 +1,3 @@
-using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Memory;
 using Ryujinx.Graphics.Texture;
 using System.Collections.Generic;
@@ -9,41 +8,41 @@ namespace Ryujinx.Graphics.Graphics3d
     {
         public int[] Registers { get; private set; }
 
-        private NvGpu Gpu;
+        private NvGpu _gpu;
 
-        private Dictionary<int, NvGpuMethod> Methods;
+        private Dictionary<int, NvGpuMethod> _methods;
 
-        private int CopyStartX;
-        private int CopyStartY;
+        private int _copyStartX;
+        private int _copyStartY;
 
-        private int CopyWidth;
-        private int CopyHeight;
-        private int CopyGobBlockHeight;
+        private int _copyWidth;
+        private int _copyHeight;
+        private int _copyGobBlockHeight;
 
-        private long CopyAddress;
+        private long _copyAddress;
 
-        private int CopyOffset;
-        private int CopySize;
+        private int _copyOffset;
+        private int _copySize;
 
-        private bool CopyLinear;
+        private bool _copyLinear;
 
-        private byte[] Buffer;
+        private byte[] _buffer;
 
-        public NvGpuEngineP2mf(NvGpu Gpu)
+        public NvGpuEngineP2mf(NvGpu gpu)
         {
-            this.Gpu = Gpu;
+            _gpu = gpu;
 
             Registers = new int[0x80];
 
-            Methods = new Dictionary<int, NvGpuMethod>();
+            _methods = new Dictionary<int, NvGpuMethod>();
 
-            void AddMethod(int Meth, int Count, int Stride, NvGpuMethod Method)
+            void AddMethod(int meth, int count, int stride, NvGpuMethod method)
             {
-                while (Count-- > 0)
+                while (count-- > 0)
                 {
-                    Methods.Add(Meth, Method);
+                    _methods.Add(meth, method);
 
-                    Meth += Stride;
+                    meth += stride;
                 }
             }
 
@@ -51,115 +50,115 @@ namespace Ryujinx.Graphics.Graphics3d
             AddMethod(0x6d, 1, 1, PushData);
         }
 
-        public void CallMethod(NvGpuVmm Vmm, GpuMethodCall MethCall)
+        public void CallMethod(NvGpuVmm vmm, GpuMethodCall methCall)
         {
-            if (Methods.TryGetValue(MethCall.Method, out NvGpuMethod Method))
+            if (_methods.TryGetValue(methCall.Method, out NvGpuMethod method))
             {
-                Method(Vmm, MethCall);
+                method(vmm, methCall);
             }
             else
             {
-                WriteRegister(MethCall);
+                WriteRegister(methCall);
             }
         }
 
-        private void Execute(NvGpuVmm Vmm, GpuMethodCall MethCall)
+        private void Execute(NvGpuVmm vmm, GpuMethodCall methCall)
         {
             //TODO: Some registers and copy modes are still not implemented.
-            int Control = MethCall.Argument;
+            int control = methCall.Argument;
 
-            long DstAddress = MakeInt64From2xInt32(NvGpuEngineP2mfReg.DstAddress);
+            long dstAddress = MakeInt64From2xInt32(NvGpuEngineP2mfReg.DstAddress);
 
-            int DstPitch  = ReadRegister(NvGpuEngineP2mfReg.DstPitch);
-            int DstBlkDim = ReadRegister(NvGpuEngineP2mfReg.DstBlockDim);
+            int dstPitch  = ReadRegister(NvGpuEngineP2mfReg.DstPitch);
+            int dstBlkDim = ReadRegister(NvGpuEngineP2mfReg.DstBlockDim);
 
-            int DstX = ReadRegister(NvGpuEngineP2mfReg.DstX);
-            int DstY = ReadRegister(NvGpuEngineP2mfReg.DstY);
+            int dstX = ReadRegister(NvGpuEngineP2mfReg.DstX);
+            int dstY = ReadRegister(NvGpuEngineP2mfReg.DstY);
 
-            int DstWidth  = ReadRegister(NvGpuEngineP2mfReg.DstWidth);
-            int DstHeight = ReadRegister(NvGpuEngineP2mfReg.DstHeight);
+            int dstWidth  = ReadRegister(NvGpuEngineP2mfReg.DstWidth);
+            int dstHeight = ReadRegister(NvGpuEngineP2mfReg.DstHeight);
 
-            int LineLengthIn = ReadRegister(NvGpuEngineP2mfReg.LineLengthIn);
-            int LineCount    = ReadRegister(NvGpuEngineP2mfReg.LineCount);
+            int lineLengthIn = ReadRegister(NvGpuEngineP2mfReg.LineLengthIn);
+            int lineCount    = ReadRegister(NvGpuEngineP2mfReg.LineCount);
 
-            CopyLinear = (Control & 1) != 0;
+            _copyLinear = (control & 1) != 0;
 
-            CopyGobBlockHeight = 1 << ((DstBlkDim >> 4) & 0xf);
+            _copyGobBlockHeight = 1 << ((dstBlkDim >> 4) & 0xf);
 
-            CopyStartX = DstX;
-            CopyStartY = DstY;
+            _copyStartX = dstX;
+            _copyStartY = dstY;
 
-            CopyWidth  = DstWidth;
-            CopyHeight = DstHeight;
+            _copyWidth  = dstWidth;
+            _copyHeight = dstHeight;
 
-            CopyAddress = DstAddress;
+            _copyAddress = dstAddress;
 
-            CopyOffset = 0;
-            CopySize   = LineLengthIn * LineCount;
+            _copyOffset = 0;
+            _copySize   = lineLengthIn * lineCount;
 
-            Buffer = new byte[CopySize];
+            _buffer = new byte[_copySize];
         }
 
-        private void PushData(NvGpuVmm Vmm, GpuMethodCall MethCall)
+        private void PushData(NvGpuVmm vmm, GpuMethodCall methCall)
         {
-            if (Buffer == null)
+            if (_buffer == null)
             {
                 return;
             }
 
-            for (int Shift = 0; Shift < 32 && CopyOffset < CopySize; Shift += 8, CopyOffset++)
+            for (int shift = 0; shift < 32 && _copyOffset < _copySize; shift += 8, _copyOffset++)
             {
-                Buffer[CopyOffset] = (byte)(MethCall.Argument >> Shift);
+                _buffer[_copyOffset] = (byte)(methCall.Argument >> shift);
             }
 
-            if (MethCall.IsLastCall)
+            if (methCall.IsLastCall)
             {
-                if (CopyLinear)
+                if (_copyLinear)
                 {
-                    Vmm.WriteBytes(CopyAddress, Buffer);
+                    vmm.WriteBytes(_copyAddress, _buffer);
                 }
                 else
                 {
-                    BlockLinearSwizzle Swizzle = new BlockLinearSwizzle(
-                        CopyWidth,
-                        CopyHeight, 1,
-                        CopyGobBlockHeight, 1, 1);
+                    BlockLinearSwizzle swizzle = new BlockLinearSwizzle(
+                        _copyWidth,
+                        _copyHeight, 1,
+                        _copyGobBlockHeight, 1, 1);
 
-                    int SrcOffset = 0;
+                    int srcOffset = 0;
 
-                    for (int Y = CopyStartY; Y < CopyHeight && SrcOffset < CopySize; Y++)
-                    for (int X = CopyStartX; X < CopyWidth  && SrcOffset < CopySize; X++)
+                    for (int y = _copyStartY; y < _copyHeight && srcOffset < _copySize; y++)
+                    for (int x = _copyStartX; x < _copyWidth  && srcOffset < _copySize; x++)
                     {
-                        int DstOffset = Swizzle.GetSwizzleOffset(X, Y, 0);
+                        int dstOffset = swizzle.GetSwizzleOffset(x, y, 0);
 
-                        Vmm.WriteByte(CopyAddress + DstOffset, Buffer[SrcOffset++]);
+                        vmm.WriteByte(_copyAddress + dstOffset, _buffer[srcOffset++]);
                     }
                 }
 
-                Buffer = null;
+                _buffer = null;
             }
         }
 
-        private long MakeInt64From2xInt32(NvGpuEngineP2mfReg Reg)
+        private long MakeInt64From2xInt32(NvGpuEngineP2mfReg reg)
         {
             return
-                (long)Registers[(int)Reg + 0] << 32 |
-                (uint)Registers[(int)Reg + 1];
+                (long)Registers[(int)reg + 0] << 32 |
+                (uint)Registers[(int)reg + 1];
         }
 
-        private void WriteRegister(GpuMethodCall MethCall)
+        private void WriteRegister(GpuMethodCall methCall)
         {
-            Registers[MethCall.Method] = MethCall.Argument;
+            Registers[methCall.Method] = methCall.Argument;
         }
 
-        private int ReadRegister(NvGpuEngineP2mfReg Reg)
+        private int ReadRegister(NvGpuEngineP2mfReg reg)
         {
-            return Registers[(int)Reg];
+            return Registers[(int)reg];
         }
 
-        private void WriteRegister(NvGpuEngineP2mfReg Reg, int Value)
+        private void WriteRegister(NvGpuEngineP2mfReg reg, int value)
         {
-            Registers[(int)Reg] = Value;
+            Registers[(int)reg] = value;
         }
     }
 }

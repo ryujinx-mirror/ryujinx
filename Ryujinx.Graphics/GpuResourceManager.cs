@@ -1,8 +1,6 @@
-using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
 using Ryujinx.Graphics.Texture;
-using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics
@@ -18,124 +16,124 @@ namespace Ryujinx.Graphics
             ZetaBuffer
         }
 
-        private NvGpu Gpu;
+        private NvGpu _gpu;
 
-        private HashSet<long>[] UploadedKeys;
+        private HashSet<long>[] _uploadedKeys;
 
-        private Dictionary<long, ImageType> ImageTypes;
-        private Dictionary<long, int>      MirroredTextures;
+        private Dictionary<long, ImageType> _imageTypes;
+        private Dictionary<long, int>      _mirroredTextures;
 
-        public GpuResourceManager(NvGpu Gpu)
+        public GpuResourceManager(NvGpu gpu)
         {
-            this.Gpu = Gpu;
+            _gpu = gpu;
 
-            UploadedKeys = new HashSet<long>[(int)NvGpuBufferType.Count];
+            _uploadedKeys = new HashSet<long>[(int)NvGpuBufferType.Count];
 
-            for (int Index = 0; Index < UploadedKeys.Length; Index++)
+            for (int index = 0; index < _uploadedKeys.Length; index++)
             {
-                UploadedKeys[Index] = new HashSet<long>();
+                _uploadedKeys[index] = new HashSet<long>();
             }
 
-            ImageTypes = new Dictionary<long, ImageType>();
-            MirroredTextures = new Dictionary<long, int>();
+            _imageTypes = new Dictionary<long, ImageType>();
+            _mirroredTextures = new Dictionary<long, int>();
         }
 
-        public void SendColorBuffer(NvGpuVmm Vmm, long Position, int Attachment, GalImage NewImage)
+        public void SendColorBuffer(NvGpuVmm vmm, long position, int attachment, GalImage newImage)
         {
-            long Size = (uint)ImageUtils.GetSize(NewImage);
+            long size = (uint)ImageUtils.GetSize(newImage);
 
-            ImageTypes[Position] = ImageType.ColorBuffer;
+            _imageTypes[position] = ImageType.ColorBuffer;
 
-            if (!TryReuse(Vmm, Position, NewImage))
+            if (!TryReuse(vmm, position, newImage))
             {
-                Gpu.Renderer.Texture.Create(Position, (int)Size, NewImage);
+                _gpu.Renderer.Texture.Create(position, (int)size, newImage);
             }
 
-            Gpu.Renderer.RenderTarget.BindColor(Position, Attachment);
+            _gpu.Renderer.RenderTarget.BindColor(position, attachment);
         }
 
-        public void SendZetaBuffer(NvGpuVmm Vmm, long Position, GalImage NewImage)
+        public void SendZetaBuffer(NvGpuVmm vmm, long position, GalImage newImage)
         {
-            long Size = (uint)ImageUtils.GetSize(NewImage);
+            long size = (uint)ImageUtils.GetSize(newImage);
 
-            ImageTypes[Position] = ImageType.ZetaBuffer;
+            _imageTypes[position] = ImageType.ZetaBuffer;
 
-            if (!TryReuse(Vmm, Position, NewImage))
+            if (!TryReuse(vmm, position, newImage))
             {
-                Gpu.Renderer.Texture.Create(Position, (int)Size, NewImage);
+                _gpu.Renderer.Texture.Create(position, (int)size, newImage);
             }
 
-            Gpu.Renderer.RenderTarget.BindZeta(Position);
+            _gpu.Renderer.RenderTarget.BindZeta(position);
         }
 
-        public void SendTexture(NvGpuVmm Vmm, long Position, GalImage NewImage)
+        public void SendTexture(NvGpuVmm vmm, long position, GalImage newImage)
         {
-            PrepareSendTexture(Vmm, Position, NewImage);
+            PrepareSendTexture(vmm, position, newImage);
 
-            ImageTypes[Position] = ImageType.Texture;
+            _imageTypes[position] = ImageType.Texture;
         }
 
-        public bool TryGetTextureLayer(long Position, out int LayerIndex)
+        public bool TryGetTextureLayer(long position, out int layerIndex)
         {
-            if (MirroredTextures.TryGetValue(Position, out LayerIndex))
+            if (_mirroredTextures.TryGetValue(position, out layerIndex))
             {
-                ImageType Type = ImageTypes[Position];
+                ImageType type = _imageTypes[position];
 
                 // FIXME(thog): I'm actually unsure if we should deny all other image type, gpu testing needs to be done here.
-                if (Type != ImageType.Texture && Type != ImageType.TextureArrayLayer)
+                if (type != ImageType.Texture && type != ImageType.TextureArrayLayer)
                 {
-                    LayerIndex = -1;
+                    layerIndex = -1;
                     return false;
                 }
 
                 return true;
             }
 
-            LayerIndex = -1;
+            layerIndex = -1;
             return false;
         }
 
-        public void SetTextureArrayLayer(long Position, int LayerIndex)
+        public void SetTextureArrayLayer(long position, int layerIndex)
         {
-            ImageTypes[Position] = ImageType.TextureArrayLayer;
-            MirroredTextures[Position] = LayerIndex;
+            _imageTypes[position] = ImageType.TextureArrayLayer;
+            _mirroredTextures[position] = layerIndex;
         }
 
-        private void PrepareSendTexture(NvGpuVmm Vmm, long Position, GalImage NewImage)
+        private void PrepareSendTexture(NvGpuVmm vmm, long position, GalImage newImage)
         {
-            long Size = ImageUtils.GetSize(NewImage);
+            long size = ImageUtils.GetSize(newImage);
 
-            bool SkipCheck = false;
+            bool skipCheck = false;
 
-            if (ImageTypes.TryGetValue(Position, out ImageType OldType))
+            if (_imageTypes.TryGetValue(position, out ImageType oldType))
             {
-                if (OldType == ImageType.ColorBuffer || OldType == ImageType.ZetaBuffer)
+                if (oldType == ImageType.ColorBuffer || oldType == ImageType.ZetaBuffer)
                 {
                     //Avoid data destruction
-                    MemoryRegionModified(Vmm, Position, Size, NvGpuBufferType.Texture);
+                    MemoryRegionModified(vmm, position, size, NvGpuBufferType.Texture);
 
-                    SkipCheck = true;
+                    skipCheck = true;
                 }
             }
 
-            if (SkipCheck || !MemoryRegionModified(Vmm, Position, Size, NvGpuBufferType.Texture))
+            if (skipCheck || !MemoryRegionModified(vmm, position, size, NvGpuBufferType.Texture))
             {
-                if (TryReuse(Vmm, Position, NewImage))
+                if (TryReuse(vmm, position, newImage))
                 {
                     return;
                 }
             }
 
-            byte[] Data = ImageUtils.ReadTexture(Vmm, NewImage, Position);
+            byte[] data = ImageUtils.ReadTexture(vmm, newImage, position);
 
-            Gpu.Renderer.Texture.Create(Position, Data, NewImage);
+            _gpu.Renderer.Texture.Create(position, data, newImage);
         }
 
-        private bool TryReuse(NvGpuVmm Vmm, long Position, GalImage NewImage)
+        private bool TryReuse(NvGpuVmm vmm, long position, GalImage newImage)
         {
-            if (Gpu.Renderer.Texture.TryGetImage(Position, out GalImage CachedImage) && CachedImage.TextureTarget == NewImage.TextureTarget && CachedImage.SizeMatches(NewImage))
+            if (_gpu.Renderer.Texture.TryGetImage(position, out GalImage cachedImage) && cachedImage.TextureTarget == newImage.TextureTarget && cachedImage.SizeMatches(newImage))
             {
-                Gpu.Renderer.RenderTarget.Reinterpret(Position, NewImage);
+                _gpu.Renderer.RenderTarget.Reinterpret(position, newImage);
 
                 return true;
             }
@@ -143,29 +141,29 @@ namespace Ryujinx.Graphics
             return false;
         }
 
-        public bool MemoryRegionModified(NvGpuVmm Vmm, long Position, long Size, NvGpuBufferType Type)
+        public bool MemoryRegionModified(NvGpuVmm vmm, long position, long size, NvGpuBufferType type)
         {
-            HashSet<long> Uploaded = UploadedKeys[(int)Type];
+            HashSet<long> uploaded = _uploadedKeys[(int)type];
 
-            if (!Uploaded.Add(Position))
+            if (!uploaded.Add(position))
             {
                 return false;
             }
 
-            return Vmm.IsRegionModified(Position, Size, Type);
+            return vmm.IsRegionModified(position, size, type);
         }
 
         public void ClearPbCache()
         {
-            for (int Index = 0; Index < UploadedKeys.Length; Index++)
+            for (int index = 0; index < _uploadedKeys.Length; index++)
             {
-                UploadedKeys[Index].Clear();
+                _uploadedKeys[index].Clear();
             }
         }
 
-        public void ClearPbCache(NvGpuBufferType Type)
+        public void ClearPbCache(NvGpuBufferType type)
         {
-            UploadedKeys[(int)Type].Clear();
+            _uploadedKeys[(int)type].Clear();
         }
     }
 }

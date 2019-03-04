@@ -8,11 +8,11 @@ namespace Ryujinx.Graphics
 
         public int[] Arguments { get; private set; }
 
-        public ChCommand(ChClassId ClassId, int MethodOffset, params int[] Arguments)
+        public ChCommand(ChClassId classId, int methodOffset, params int[] arguments)
         {
-            this.ClassId      = ClassId;
-            this.MethodOffset = MethodOffset;
-            this.Arguments    = Arguments;
+            ClassId      = classId;
+            MethodOffset = methodOffset;
+            Arguments    = arguments;
         }
     }
 }

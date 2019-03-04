@@ -4,104 +4,104 @@ namespace Ryujinx.Graphics.Vic
 {
     class VideoImageComposer
     {
-        private NvGpu Gpu;
+        private NvGpu _gpu;
 
-        private long ConfigStructAddress;
-        private long OutputSurfaceLumaAddress;
-        private long OutputSurfaceChromaUAddress;
-        private long OutputSurfaceChromaVAddress;
+        private long _configStructAddress;
+        private long _outputSurfaceLumaAddress;
+        private long _outputSurfaceChromaUAddress;
+        private long _outputSurfaceChromaVAddress;
 
-        public VideoImageComposer(NvGpu Gpu)
+        public VideoImageComposer(NvGpu gpu)
         {
-            this.Gpu = Gpu;
+            _gpu = gpu;
         }
 
-        public void Process(NvGpuVmm Vmm, int MethodOffset, int[] Arguments)
+        public void Process(NvGpuVmm vmm, int methodOffset, int[] arguments)
         {
-            VideoImageComposerMeth Method = (VideoImageComposerMeth)MethodOffset;
+            VideoImageComposerMeth method = (VideoImageComposerMeth)methodOffset;
 
-            switch (Method)
+            switch (method)
             {
                 case VideoImageComposerMeth.Execute:
-                    Execute(Vmm, Arguments);
+                    Execute(vmm, arguments);
                     break;
 
                 case VideoImageComposerMeth.SetConfigStructOffset:
-                    SetConfigStructOffset(Vmm, Arguments);
+                    SetConfigStructOffset(vmm, arguments);
                     break;
 
                 case VideoImageComposerMeth.SetOutputSurfaceLumaOffset:
-                    SetOutputSurfaceLumaOffset(Vmm, Arguments);
+                    SetOutputSurfaceLumaOffset(vmm, arguments);
                     break;
 
                 case VideoImageComposerMeth.SetOutputSurfaceChromaUOffset:
-                    SetOutputSurfaceChromaUOffset(Vmm, Arguments);
+                    SetOutputSurfaceChromaUOffset(vmm, arguments);
                     break;
 
                 case VideoImageComposerMeth.SetOutputSurfaceChromaVOffset:
-                    SetOutputSurfaceChromaVOffset(Vmm, Arguments);
+                    SetOutputSurfaceChromaVOffset(vmm, arguments);
                     break;
             }
         }
 
-        private void Execute(NvGpuVmm Vmm, int[] Arguments)
+        private void Execute(NvGpuVmm vmm, int[] arguments)
         {
-            StructUnpacker Unpacker = new StructUnpacker(Vmm, ConfigStructAddress + 0x20);
+            StructUnpacker unpacker = new StructUnpacker(vmm, _configStructAddress + 0x20);
 
-            SurfacePixelFormat PixelFormat = (SurfacePixelFormat)Unpacker.Read(7);
+            SurfacePixelFormat pixelFormat = (SurfacePixelFormat)unpacker.Read(7);
 
-            int ChromaLocHoriz = Unpacker.Read(2);
-            int ChromaLocVert  = Unpacker.Read(2);
+            int chromaLocHoriz = unpacker.Read(2);
+            int chromaLocVert  = unpacker.Read(2);
 
-            int BlockLinearKind       = Unpacker.Read(4);
-            int BlockLinearHeightLog2 = Unpacker.Read(4);
+            int blockLinearKind       = unpacker.Read(4);
+            int blockLinearHeightLog2 = unpacker.Read(4);
 
-            int Reserved0 = Unpacker.Read(3);
-            int Reserved1 = Unpacker.Read(10);
+            int reserved0 = unpacker.Read(3);
+            int reserved1 = unpacker.Read(10);
 
-            int SurfaceWidthMinus1  = Unpacker.Read(14);
-            int SurfaceHeightMinus1 = Unpacker.Read(14);
+            int surfaceWidthMinus1  = unpacker.Read(14);
+            int surfaceHeightMinus1 = unpacker.Read(14);
 
-            int GobBlockHeight = 1 << BlockLinearHeightLog2;
+            int gobBlockHeight = 1 << blockLinearHeightLog2;
 
-            int SurfaceWidth  = SurfaceWidthMinus1  + 1;
-            int SurfaceHeight = SurfaceHeightMinus1 + 1;
+            int surfaceWidth  = surfaceWidthMinus1  + 1;
+            int surfaceHeight = surfaceHeightMinus1 + 1;
 
-            SurfaceOutputConfig OutputConfig = new SurfaceOutputConfig(
-                PixelFormat,
-                SurfaceWidth,
-                SurfaceHeight,
-                GobBlockHeight,
-                OutputSurfaceLumaAddress,
-                OutputSurfaceChromaUAddress,
-                OutputSurfaceChromaVAddress);
+            SurfaceOutputConfig outputConfig = new SurfaceOutputConfig(
+                pixelFormat,
+                surfaceWidth,
+                surfaceHeight,
+                gobBlockHeight,
+                _outputSurfaceLumaAddress,
+                _outputSurfaceChromaUAddress,
+                _outputSurfaceChromaVAddress);
 
-            Gpu.VideoDecoder.CopyPlanes(Vmm, OutputConfig);
+            _gpu.VideoDecoder.CopyPlanes(vmm, outputConfig);
         }
 
-        private void SetConfigStructOffset(NvGpuVmm Vmm, int[] Arguments)
+        private void SetConfigStructOffset(NvGpuVmm vmm, int[] arguments)
         {
-            ConfigStructAddress = GetAddress(Arguments);
+            _configStructAddress = GetAddress(arguments);
         }
 
-        private void SetOutputSurfaceLumaOffset(NvGpuVmm Vmm, int[] Arguments)
+        private void SetOutputSurfaceLumaOffset(NvGpuVmm vmm, int[] arguments)
         {
-            OutputSurfaceLumaAddress = GetAddress(Arguments);
+            _outputSurfaceLumaAddress = GetAddress(arguments);
         }
 
-        private void SetOutputSurfaceChromaUOffset(NvGpuVmm Vmm, int[] Arguments)
+        private void SetOutputSurfaceChromaUOffset(NvGpuVmm vmm, int[] arguments)
         {
-            OutputSurfaceChromaUAddress = GetAddress(Arguments);
+            _outputSurfaceChromaUAddress = GetAddress(arguments);
         }
 
-        private void SetOutputSurfaceChromaVOffset(NvGpuVmm Vmm, int[] Arguments)
+        private void SetOutputSurfaceChromaVOffset(NvGpuVmm vmm, int[] arguments)
         {
-            OutputSurfaceChromaVAddress = GetAddress(Arguments);
+            _outputSurfaceChromaVAddress = GetAddress(arguments);
         }
 
-        private static long GetAddress(int[] Arguments)
+        private static long GetAddress(int[] arguments)
         {
-            return (long)(uint)Arguments[0] << 8;
+            return (long)(uint)arguments[0] << 8;
         }
     }
 }

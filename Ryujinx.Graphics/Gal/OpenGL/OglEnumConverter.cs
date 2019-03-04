@@ -3,34 +3,34 @@ using System;
 
 namespace Ryujinx.Graphics.Gal.OpenGL
 {
-    static class OGLEnumConverter
+    static class OglEnumConverter
     {
-        public static FrontFaceDirection GetFrontFace(GalFrontFace FrontFace)
+        public static FrontFaceDirection GetFrontFace(GalFrontFace frontFace)
         {
-            switch (FrontFace)
+            switch (frontFace)
             {
-                case GalFrontFace.CW:  return FrontFaceDirection.Cw;
-                case GalFrontFace.CCW: return FrontFaceDirection.Ccw;
+                case GalFrontFace.Cw:  return FrontFaceDirection.Cw;
+                case GalFrontFace.Ccw: return FrontFaceDirection.Ccw;
             }
 
-            throw new ArgumentException(nameof(FrontFace) + " \"" + FrontFace + "\" is not valid!");
+            throw new ArgumentException(nameof(frontFace) + " \"" + frontFace + "\" is not valid!");
         }
 
-        public static CullFaceMode GetCullFace(GalCullFace CullFace)
+        public static CullFaceMode GetCullFace(GalCullFace cullFace)
         {
-            switch (CullFace)
+            switch (cullFace)
             {
                 case GalCullFace.Front:        return CullFaceMode.Front;
                 case GalCullFace.Back:         return CullFaceMode.Back;
                 case GalCullFace.FrontAndBack: return CullFaceMode.FrontAndBack;
             }
 
-            throw new ArgumentException(nameof(CullFace) + " \"" + CullFace + "\" is not valid!");
+            throw new ArgumentException(nameof(cullFace) + " \"" + cullFace + "\" is not valid!");
         }
 
-        public static StencilOp GetStencilOp(GalStencilOp Op)
+        public static StencilOp GetStencilOp(GalStencilOp op)
         {
-            switch (Op)
+            switch (op)
             {
                 case GalStencilOp.Keep:     return StencilOp.Keep;
                 case GalStencilOp.Zero:     return StencilOp.Zero;
@@ -42,28 +42,28 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalStencilOp.DecrWrap: return StencilOp.DecrWrap;
             }
 
-            throw new ArgumentException(nameof(Op) + " \"" + Op + "\" is not valid!");
+            throw new ArgumentException(nameof(op) + " \"" + op + "\" is not valid!");
         }
 
-        public static DepthFunction GetDepthFunc(GalComparisonOp Func)
+        public static DepthFunction GetDepthFunc(GalComparisonOp func)
         {
-            return (DepthFunction)GetFunc(Func);
+            return (DepthFunction)GetFunc(func);
         }
 
-        public static StencilFunction GetStencilFunc(GalComparisonOp Func)
+        public static StencilFunction GetStencilFunc(GalComparisonOp func)
         {
-            return (StencilFunction)GetFunc(Func);
+            return (StencilFunction)GetFunc(func);
         }
 
-        private static All GetFunc(GalComparisonOp Func)
+        private static All GetFunc(GalComparisonOp func)
         {
-            if ((int)Func >= (int)All.Never &&
-                (int)Func <= (int)All.Always)
+            if ((int)func >= (int)All.Never &&
+                (int)func <= (int)All.Always)
             {
-                return (All)Func;
+                return (All)func;
             }
 
-            switch (Func)
+            switch (func)
             {
                 case GalComparisonOp.Never:    return All.Never;
                 case GalComparisonOp.Less:     return All.Less;
@@ -75,24 +75,24 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalComparisonOp.Always:   return All.Always;
             }
 
-            throw new ArgumentException(nameof(Func) + " \"" + Func + "\" is not valid!");
+            throw new ArgumentException(nameof(func) + " \"" + func + "\" is not valid!");
         }
 
-        public static DrawElementsType GetDrawElementsType(GalIndexFormat Format)
+        public static DrawElementsType GetDrawElementsType(GalIndexFormat format)
         {
-            switch (Format)
+            switch (format)
             {
                 case GalIndexFormat.Byte:  return DrawElementsType.UnsignedByte;
                 case GalIndexFormat.Int16: return DrawElementsType.UnsignedShort;
                 case GalIndexFormat.Int32: return DrawElementsType.UnsignedInt;
             }
 
-            throw new ArgumentException(nameof(Format) + " \"" + Format + "\" is not valid!");
+            throw new ArgumentException(nameof(format) + " \"" + format + "\" is not valid!");
         }
 
-        public static PrimitiveType GetPrimitiveType(GalPrimitiveType Type)
+        public static PrimitiveType GetPrimitiveType(GalPrimitiveType type)
         {
-            switch (Type)
+            switch (type)
             {
                 case GalPrimitiveType.Points:                 return PrimitiveType.Points;
                 case GalPrimitiveType.Lines:                  return PrimitiveType.Lines;
@@ -109,12 +109,12 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalPrimitiveType.Patches:                return PrimitiveType.Patches;
             }
 
-            throw new ArgumentException(nameof(Type) + " \"" + Type + "\" is not valid!");
+            throw new ArgumentException(nameof(type) + " \"" + type + "\" is not valid!");
         }
 
-        public static ShaderType GetShaderType(GalShaderType Type)
+        public static ShaderType GetShaderType(GalShaderType type)
         {
-            switch (Type)
+            switch (type)
             {
                 case GalShaderType.Vertex:         return ShaderType.VertexShader;
                 case GalShaderType.TessControl:    return ShaderType.TessControlShader;
@@ -123,50 +123,50 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalShaderType.Fragment:       return ShaderType.FragmentShader;
             }
 
-            throw new ArgumentException(nameof(Type) + " \"" + Type + "\" is not valid!");
+            throw new ArgumentException(nameof(type) + " \"" + type + "\" is not valid!");
         }
 
-        public static (PixelInternalFormat, PixelFormat, PixelType) GetImageFormat(GalImageFormat Format)
+        public static (PixelInternalFormat, PixelFormat, PixelType) GetImageFormat(GalImageFormat format)
         {
-            switch (Format)
+            switch (format)
             {
-                case GalImageFormat.RGBA32    | GalImageFormat.Float: return (PixelInternalFormat.Rgba32f,      PixelFormat.Rgba,        PixelType.Float);
-                case GalImageFormat.RGBA32    | GalImageFormat.Sint:  return (PixelInternalFormat.Rgba32i,      PixelFormat.RgbaInteger, PixelType.Int);
-                case GalImageFormat.RGBA32    | GalImageFormat.Uint:  return (PixelInternalFormat.Rgba32ui,     PixelFormat.RgbaInteger, PixelType.UnsignedInt);
-                case GalImageFormat.RGBA16    | GalImageFormat.Float: return (PixelInternalFormat.Rgba16f,      PixelFormat.Rgba,        PixelType.HalfFloat);
-                case GalImageFormat.RGBA16    | GalImageFormat.Sint:  return (PixelInternalFormat.Rgba16i,      PixelFormat.RgbaInteger, PixelType.Short);
-                case GalImageFormat.RGBA16    | GalImageFormat.Uint:  return (PixelInternalFormat.Rgba16ui,     PixelFormat.RgbaInteger, PixelType.UnsignedShort);
-                case GalImageFormat.RGBA16    | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba16,       PixelFormat.Rgba,        PixelType.UnsignedShort);
-                case GalImageFormat.RG32      | GalImageFormat.Float: return (PixelInternalFormat.Rg32f,        PixelFormat.Rg,          PixelType.Float);
-                case GalImageFormat.RG32      | GalImageFormat.Sint:  return (PixelInternalFormat.Rg32i,        PixelFormat.RgInteger,   PixelType.Int);
-                case GalImageFormat.RG32      | GalImageFormat.Uint:  return (PixelInternalFormat.Rg32ui,       PixelFormat.RgInteger,   PixelType.UnsignedInt);
-                case GalImageFormat.RGBX8     | GalImageFormat.Unorm: return (PixelInternalFormat.Rgb8,         PixelFormat.Rgba,        PixelType.UnsignedByte);
-                case GalImageFormat.RGBA8     | GalImageFormat.Snorm: return (PixelInternalFormat.Rgba8Snorm,   PixelFormat.Rgba,        PixelType.Byte);
-                case GalImageFormat.RGBA8     | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba8,        PixelFormat.Rgba,        PixelType.UnsignedByte);
-                case GalImageFormat.RGBA8     | GalImageFormat.Sint:  return (PixelInternalFormat.Rgba8i,       PixelFormat.RgbaInteger, PixelType.Byte);
-                case GalImageFormat.RGBA8     | GalImageFormat.Uint:  return (PixelInternalFormat.Rgba8ui,      PixelFormat.RgbaInteger, PixelType.UnsignedByte);
-                case GalImageFormat.RGBA8     | GalImageFormat.Srgb:  return (PixelInternalFormat.Srgb8Alpha8,  PixelFormat.Rgba,        PixelType.UnsignedByte);
-                case GalImageFormat.BGRA8     | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba8,        PixelFormat.Bgra,        PixelType.UnsignedByte);
-                case GalImageFormat.BGRA8     | GalImageFormat.Srgb:  return (PixelInternalFormat.Srgb8Alpha8,  PixelFormat.Bgra,        PixelType.UnsignedByte);
-                case GalImageFormat.RGBA4     | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba4,        PixelFormat.Rgba,        PixelType.UnsignedShort4444Reversed);
-                case GalImageFormat.RGB10A2   | GalImageFormat.Uint:  return (PixelInternalFormat.Rgb10A2ui,    PixelFormat.RgbaInteger, PixelType.UnsignedInt2101010Reversed);
-                case GalImageFormat.RGB10A2   | GalImageFormat.Unorm: return (PixelInternalFormat.Rgb10A2,      PixelFormat.Rgba,        PixelType.UnsignedInt2101010Reversed);
+                case GalImageFormat.Rgba32    | GalImageFormat.Float: return (PixelInternalFormat.Rgba32f,      PixelFormat.Rgba,        PixelType.Float);
+                case GalImageFormat.Rgba32    | GalImageFormat.Sint:  return (PixelInternalFormat.Rgba32i,      PixelFormat.RgbaInteger, PixelType.Int);
+                case GalImageFormat.Rgba32    | GalImageFormat.Uint:  return (PixelInternalFormat.Rgba32ui,     PixelFormat.RgbaInteger, PixelType.UnsignedInt);
+                case GalImageFormat.Rgba16    | GalImageFormat.Float: return (PixelInternalFormat.Rgba16f,      PixelFormat.Rgba,        PixelType.HalfFloat);
+                case GalImageFormat.Rgba16    | GalImageFormat.Sint:  return (PixelInternalFormat.Rgba16i,      PixelFormat.RgbaInteger, PixelType.Short);
+                case GalImageFormat.Rgba16    | GalImageFormat.Uint:  return (PixelInternalFormat.Rgba16ui,     PixelFormat.RgbaInteger, PixelType.UnsignedShort);
+                case GalImageFormat.Rgba16    | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba16,       PixelFormat.Rgba,        PixelType.UnsignedShort);
+                case GalImageFormat.Rg32      | GalImageFormat.Float: return (PixelInternalFormat.Rg32f,        PixelFormat.Rg,          PixelType.Float);
+                case GalImageFormat.Rg32      | GalImageFormat.Sint:  return (PixelInternalFormat.Rg32i,        PixelFormat.RgInteger,   PixelType.Int);
+                case GalImageFormat.Rg32      | GalImageFormat.Uint:  return (PixelInternalFormat.Rg32ui,       PixelFormat.RgInteger,   PixelType.UnsignedInt);
+                case GalImageFormat.Rgbx8     | GalImageFormat.Unorm: return (PixelInternalFormat.Rgb8,         PixelFormat.Rgba,        PixelType.UnsignedByte);
+                case GalImageFormat.Rgba8     | GalImageFormat.Snorm: return (PixelInternalFormat.Rgba8Snorm,   PixelFormat.Rgba,        PixelType.Byte);
+                case GalImageFormat.Rgba8     | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba8,        PixelFormat.Rgba,        PixelType.UnsignedByte);
+                case GalImageFormat.Rgba8     | GalImageFormat.Sint:  return (PixelInternalFormat.Rgba8i,       PixelFormat.RgbaInteger, PixelType.Byte);
+                case GalImageFormat.Rgba8     | GalImageFormat.Uint:  return (PixelInternalFormat.Rgba8ui,      PixelFormat.RgbaInteger, PixelType.UnsignedByte);
+                case GalImageFormat.Rgba8     | GalImageFormat.Srgb:  return (PixelInternalFormat.Srgb8Alpha8,  PixelFormat.Rgba,        PixelType.UnsignedByte);
+                case GalImageFormat.Bgra8     | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba8,        PixelFormat.Bgra,        PixelType.UnsignedByte);
+                case GalImageFormat.Bgra8     | GalImageFormat.Srgb:  return (PixelInternalFormat.Srgb8Alpha8,  PixelFormat.Bgra,        PixelType.UnsignedByte);
+                case GalImageFormat.Rgba4     | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba4,        PixelFormat.Rgba,        PixelType.UnsignedShort4444Reversed);
+                case GalImageFormat.Rgb10A2   | GalImageFormat.Uint:  return (PixelInternalFormat.Rgb10A2ui,    PixelFormat.RgbaInteger, PixelType.UnsignedInt2101010Reversed);
+                case GalImageFormat.Rgb10A2   | GalImageFormat.Unorm: return (PixelInternalFormat.Rgb10A2,      PixelFormat.Rgba,        PixelType.UnsignedInt2101010Reversed);
                 case GalImageFormat.R32       | GalImageFormat.Float: return (PixelInternalFormat.R32f,         PixelFormat.Red,         PixelType.Float);
                 case GalImageFormat.R32       | GalImageFormat.Sint:  return (PixelInternalFormat.R32i,         PixelFormat.Red,         PixelType.Int);
                 case GalImageFormat.R32       | GalImageFormat.Uint:  return (PixelInternalFormat.R32ui,        PixelFormat.Red,         PixelType.UnsignedInt);
-                case GalImageFormat.BGR5A1    | GalImageFormat.Unorm: return (PixelInternalFormat.Rgb5A1,       PixelFormat.Rgba,        PixelType.UnsignedShort5551);
-                case GalImageFormat.RGB5A1    | GalImageFormat.Unorm: return (PixelInternalFormat.Rgb5A1,       PixelFormat.Rgba,        PixelType.UnsignedShort1555Reversed);
-                case GalImageFormat.RGB565    | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba,         PixelFormat.Rgb,         PixelType.UnsignedShort565Reversed);
-                case GalImageFormat.BGR565    | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba,         PixelFormat.Rgb,         PixelType.UnsignedShort565);
-                case GalImageFormat.RG16      | GalImageFormat.Float: return (PixelInternalFormat.Rg16f,        PixelFormat.Rg,          PixelType.HalfFloat);
-                case GalImageFormat.RG16      | GalImageFormat.Sint:  return (PixelInternalFormat.Rg16i,        PixelFormat.RgInteger,   PixelType.Short);
-                case GalImageFormat.RG16      | GalImageFormat.Snorm: return (PixelInternalFormat.Rg16Snorm,    PixelFormat.Rg,          PixelType.Short);
-                case GalImageFormat.RG16      | GalImageFormat.Uint:  return (PixelInternalFormat.Rg16ui,       PixelFormat.RgInteger,   PixelType.UnsignedShort);
-                case GalImageFormat.RG16      | GalImageFormat.Unorm: return (PixelInternalFormat.Rg16,         PixelFormat.Rg,          PixelType.UnsignedShort);
-                case GalImageFormat.RG8       | GalImageFormat.Sint:  return (PixelInternalFormat.Rg8i,         PixelFormat.RgInteger,   PixelType.Byte);
-                case GalImageFormat.RG8       | GalImageFormat.Snorm: return (PixelInternalFormat.Rg8Snorm,     PixelFormat.Rg,          PixelType.Byte);
-                case GalImageFormat.RG8       | GalImageFormat.Uint:  return (PixelInternalFormat.Rg8ui,        PixelFormat.RgInteger,   PixelType.UnsignedByte);
-                case GalImageFormat.RG8       | GalImageFormat.Unorm: return (PixelInternalFormat.Rg8,          PixelFormat.Rg,          PixelType.UnsignedByte);
+                case GalImageFormat.Bgr5A1    | GalImageFormat.Unorm: return (PixelInternalFormat.Rgb5A1,       PixelFormat.Rgba,        PixelType.UnsignedShort5551);
+                case GalImageFormat.Rgb5A1    | GalImageFormat.Unorm: return (PixelInternalFormat.Rgb5A1,       PixelFormat.Rgba,        PixelType.UnsignedShort1555Reversed);
+                case GalImageFormat.Rgb565    | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba,         PixelFormat.Rgb,         PixelType.UnsignedShort565Reversed);
+                case GalImageFormat.Bgr565    | GalImageFormat.Unorm: return (PixelInternalFormat.Rgba,         PixelFormat.Rgb,         PixelType.UnsignedShort565);
+                case GalImageFormat.Rg16      | GalImageFormat.Float: return (PixelInternalFormat.Rg16f,        PixelFormat.Rg,          PixelType.HalfFloat);
+                case GalImageFormat.Rg16      | GalImageFormat.Sint:  return (PixelInternalFormat.Rg16i,        PixelFormat.RgInteger,   PixelType.Short);
+                case GalImageFormat.Rg16      | GalImageFormat.Snorm: return (PixelInternalFormat.Rg16Snorm,    PixelFormat.Rg,          PixelType.Short);
+                case GalImageFormat.Rg16      | GalImageFormat.Uint:  return (PixelInternalFormat.Rg16ui,       PixelFormat.RgInteger,   PixelType.UnsignedShort);
+                case GalImageFormat.Rg16      | GalImageFormat.Unorm: return (PixelInternalFormat.Rg16,         PixelFormat.Rg,          PixelType.UnsignedShort);
+                case GalImageFormat.Rg8       | GalImageFormat.Sint:  return (PixelInternalFormat.Rg8i,         PixelFormat.RgInteger,   PixelType.Byte);
+                case GalImageFormat.Rg8       | GalImageFormat.Snorm: return (PixelInternalFormat.Rg8Snorm,     PixelFormat.Rg,          PixelType.Byte);
+                case GalImageFormat.Rg8       | GalImageFormat.Uint:  return (PixelInternalFormat.Rg8ui,        PixelFormat.RgInteger,   PixelType.UnsignedByte);
+                case GalImageFormat.Rg8       | GalImageFormat.Unorm: return (PixelInternalFormat.Rg8,          PixelFormat.Rg,          PixelType.UnsignedByte);
                 case GalImageFormat.R16       | GalImageFormat.Float: return (PixelInternalFormat.R16f,         PixelFormat.Red,         PixelType.HalfFloat);
                 case GalImageFormat.R16       | GalImageFormat.Sint:  return (PixelInternalFormat.R16i,         PixelFormat.RedInteger,  PixelType.Short);
                 case GalImageFormat.R16       | GalImageFormat.Snorm: return (PixelInternalFormat.R16Snorm,     PixelFormat.Red,         PixelType.Short);
@@ -186,12 +186,12 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalImageFormat.D32S8 | GalImageFormat.Float: return (PixelInternalFormat.Depth32fStencil8,  PixelFormat.DepthStencil,   PixelType.Float32UnsignedInt248Rev);
             }
 
-            throw new NotImplementedException($"{Format & GalImageFormat.FormatMask} {Format & GalImageFormat.TypeMask}");
+            throw new NotImplementedException($"{format & GalImageFormat.FormatMask} {format & GalImageFormat.TypeMask}");
         }
 
-        public static All GetDepthCompareFunc(DepthCompareFunc DepthCompareFunc)
+        public static All GetDepthCompareFunc(DepthCompareFunc depthCompareFunc)
         {
-            switch (DepthCompareFunc)
+            switch (depthCompareFunc)
             {
                 case DepthCompareFunc.LEqual:
                     return All.Lequal;
@@ -210,13 +210,13 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case DepthCompareFunc.Never:
                     return All.Never;
                 default:
-                    throw new ArgumentException(nameof(DepthCompareFunc) + " \"" + DepthCompareFunc + "\" is not valid!");
+                    throw new ArgumentException(nameof(depthCompareFunc) + " \"" + depthCompareFunc + "\" is not valid!");
             }
         }
 
-        public static InternalFormat GetCompressedImageFormat(GalImageFormat Format)
+        public static InternalFormat GetCompressedImageFormat(GalImageFormat format)
         {
-            switch (Format)
+            switch (format)
             {
                 case GalImageFormat.BptcSfloat | GalImageFormat.Float: return InternalFormat.CompressedRgbBptcSignedFloat;
                 case GalImageFormat.BptcUfloat | GalImageFormat.Float: return InternalFormat.CompressedRgbBptcUnsignedFloat;
@@ -234,12 +234,12 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalImageFormat.BC5        | GalImageFormat.Unorm: return InternalFormat.CompressedRgRgtc2;
             }
 
-            throw new NotImplementedException($"{Format & GalImageFormat.FormatMask} {Format & GalImageFormat.TypeMask}");
+            throw new NotImplementedException($"{format & GalImageFormat.FormatMask} {format & GalImageFormat.TypeMask}");
         }
 
-        public static All GetTextureSwizzle(GalTextureSource Source)
+        public static All GetTextureSwizzle(GalTextureSource source)
         {
-            switch (Source)
+            switch (source)
             {
                 case GalTextureSource.Zero:     return All.Zero;
                 case GalTextureSource.Red:      return All.Red;
@@ -250,12 +250,12 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalTextureSource.OneFloat: return All.One;
             }
 
-            throw new ArgumentException(nameof(Source) + " \"" + Source + "\" is not valid!");
+            throw new ArgumentException(nameof(source) + " \"" + source + "\" is not valid!");
         }
 
-        public static TextureWrapMode GetTextureWrapMode(GalTextureWrap Wrap)
+        public static TextureWrapMode GetTextureWrapMode(GalTextureWrap wrap)
         {
-            switch (Wrap)
+            switch (wrap)
             {
                 case GalTextureWrap.Repeat:         return TextureWrapMode.Repeat;
                 case GalTextureWrap.MirroredRepeat: return TextureWrapMode.MirroredRepeat;
@@ -264,9 +264,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 case GalTextureWrap.Clamp:          return TextureWrapMode.Clamp;
             }
 
-            if (OGLExtension.TextureMirrorClamp)
+            if (OglExtension.TextureMirrorClamp)
             {
-                switch (Wrap)
+                switch (wrap)
                 {
                     case GalTextureWrap.MirrorClampToEdge:   return (TextureWrapMode)ExtTextureMirrorClamp.MirrorClampToEdgeExt;
                     case GalTextureWrap.MirrorClampToBorder: return (TextureWrapMode)ExtTextureMirrorClamp.MirrorClampToBorderExt;
@@ -276,7 +276,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             else
             {
                 //Fallback to non-mirrored clamps
-                switch (Wrap)
+                switch (wrap)
                 {
                     case GalTextureWrap.MirrorClampToEdge:   return TextureWrapMode.ClampToEdge;
                     case GalTextureWrap.MirrorClampToBorder: return TextureWrapMode.ClampToBorder;
@@ -284,37 +284,37 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 }
             }
 
-            throw new ArgumentException(nameof(Wrap) + " \"" + Wrap + "\" is not valid!");
+            throw new ArgumentException(nameof(wrap) + " \"" + wrap + "\" is not valid!");
         }
 
         public static TextureMinFilter GetTextureMinFilter(
-            GalTextureFilter    MinFilter,
-            GalTextureMipFilter MipFilter)
+            GalTextureFilter    minFilter,
+            GalTextureMipFilter mipFilter)
         {
             //TODO: Mip (needs mipmap support first).
-            switch (MinFilter)
+            switch (minFilter)
             {
                 case GalTextureFilter.Nearest: return TextureMinFilter.Nearest;
                 case GalTextureFilter.Linear:  return TextureMinFilter.Linear;
             }
 
-            throw new ArgumentException(nameof(MinFilter) + " \"" + MinFilter + "\" is not valid!");
+            throw new ArgumentException(nameof(minFilter) + " \"" + minFilter + "\" is not valid!");
         }
 
-        public static TextureMagFilter GetTextureMagFilter(GalTextureFilter Filter)
+        public static TextureMagFilter GetTextureMagFilter(GalTextureFilter filter)
         {
-            switch (Filter)
+            switch (filter)
             {
                 case GalTextureFilter.Nearest: return TextureMagFilter.Nearest;
                 case GalTextureFilter.Linear:  return TextureMagFilter.Linear;
             }
 
-            throw new ArgumentException(nameof(Filter) + " \"" + Filter + "\" is not valid!");
+            throw new ArgumentException(nameof(filter) + " \"" + filter + "\" is not valid!");
         }
 
-        public static BlendEquationMode GetBlendEquation(GalBlendEquation BlendEquation)
+        public static BlendEquationMode GetBlendEquation(GalBlendEquation blendEquation)
         {
-            switch (BlendEquation)
+            switch (blendEquation)
             {
                 case GalBlendEquation.FuncAdd:
                 case GalBlendEquation.FuncAddGl:
@@ -337,12 +337,12 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     return BlendEquationMode.Max;
             }
 
-            throw new ArgumentException(nameof(BlendEquation) + " \"" + BlendEquation + "\" is not valid!");
+            throw new ArgumentException(nameof(blendEquation) + " \"" + blendEquation + "\" is not valid!");
         }
 
-        public static BlendingFactor GetBlendFactor(GalBlendFactor BlendFactor)
+        public static BlendingFactor GetBlendFactor(GalBlendFactor blendFactor)
         {
-            switch (BlendFactor)
+            switch (blendFactor)
             {
                 case GalBlendFactor.Zero:
                 case GalBlendFactor.ZeroGl:
@@ -421,7 +421,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                     return BlendingFactor.ConstantColor;
             }
 
-            throw new ArgumentException(nameof(BlendFactor) + " \"" + BlendFactor + "\" is not valid!");
+            throw new ArgumentException(nameof(blendFactor) + " \"" + blendFactor + "\" is not valid!");
         }
     }
 }

@@ -16,29 +16,29 @@ namespace Ryujinx.Graphics.Gal
         public TextureInstructionSuffix TextureSuffix { get; private set; }
 
         public ShaderDeclInfo(
-            string Name,
-            int    Index,
-            bool   IsCb = false,
-            int    Cbuf = 0,
-            int    Size = 1,
-            GalTextureTarget         TextureTarget = GalTextureTarget.TwoD,
-            TextureInstructionSuffix TextureSuffix = TextureInstructionSuffix.None)
+            string name,
+            int    index,
+            bool   isCb = false,
+            int    cbuf = 0,
+            int    size = 1,
+            GalTextureTarget         textureTarget = GalTextureTarget.TwoD,
+            TextureInstructionSuffix textureSuffix = TextureInstructionSuffix.None)
         {
-            this.Name        = Name;
-            this.Index       = Index;
-            this.IsCb        = IsCb;
-            this.Cbuf        = Cbuf;
-            this.Size        = Size;
+            Name        = name;
+            Index       = index;
+            IsCb        = isCb;
+            Cbuf        = cbuf;
+            Size        = size;
 
-            this.TextureTarget = TextureTarget;
-            this.TextureSuffix = TextureSuffix;
+            TextureTarget = textureTarget;
+            TextureSuffix = textureSuffix;
         }
 
-        internal void Enlarge(int NewSize)
+        internal void Enlarge(int newSize)
         {
-            if (Size < NewSize)
+            if (Size < newSize)
             {
-                Size = NewSize;
+                Size = newSize;
             }
         }
     }

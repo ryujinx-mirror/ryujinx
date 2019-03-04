@@ -11,9 +11,9 @@ namespace Ryujinx.Graphics.Gal.Shader
 
         public bool Enabled => Red || Green || Blue || Alpha;
 
-        public bool ComponentEnabled(int Component)
+        public bool ComponentEnabled(int component)
         {
-            switch (Component)
+            switch (component)
             {
                 case 0: return Red;
                 case 1: return Green;
@@ -21,7 +21,7 @@ namespace Ryujinx.Graphics.Gal.Shader
                 case 3: return Alpha;
             }
 
-            throw new ArgumentException(nameof(Component));
+            throw new ArgumentException(nameof(component));
         }
     }
 
@@ -59,88 +59,88 @@ namespace Ryujinx.Graphics.Gal.Shader
         public bool         OmapSampleMask { get; private set; }
         public bool         OmapDepth      { get; private set; }
 
-        public ShaderHeader(IGalMemory Memory, long Position)
+        public ShaderHeader(IGalMemory memory, long position)
         {
-            uint CommonWord0 = (uint)Memory.ReadInt32(Position + 0);
-            uint CommonWord1 = (uint)Memory.ReadInt32(Position + 4);
-            uint CommonWord2 = (uint)Memory.ReadInt32(Position + 8);
-            uint CommonWord3 = (uint)Memory.ReadInt32(Position + 12);
-            uint CommonWord4 = (uint)Memory.ReadInt32(Position + 16);
+            uint commonWord0 = (uint)memory.ReadInt32(position + 0);
+            uint commonWord1 = (uint)memory.ReadInt32(position + 4);
+            uint commonWord2 = (uint)memory.ReadInt32(position + 8);
+            uint commonWord3 = (uint)memory.ReadInt32(position + 12);
+            uint commonWord4 = (uint)memory.ReadInt32(position + 16);
 
-            SphType         = ReadBits(CommonWord0,  0, 5);
-            Version         = ReadBits(CommonWord0,  5, 5);
-            ShaderType      = ReadBits(CommonWord0, 10, 4);
-            MrtEnable       = ReadBits(CommonWord0, 14, 1) != 0;
-            KillsPixels     = ReadBits(CommonWord0, 15, 1) != 0;
-            DoesGlobalStore = ReadBits(CommonWord0, 16, 1) != 0;
-            SassVersion     = ReadBits(CommonWord0, 17, 4);
-            DoesLoadOrStore = ReadBits(CommonWord0, 26, 1) != 0;
-            DoesFp64        = ReadBits(CommonWord0, 27, 1) != 0;
-            StreamOutMask   = ReadBits(CommonWord0, 28, 4);
+            SphType         = ReadBits(commonWord0,  0, 5);
+            Version         = ReadBits(commonWord0,  5, 5);
+            ShaderType      = ReadBits(commonWord0, 10, 4);
+            MrtEnable       = ReadBits(commonWord0, 14, 1) != 0;
+            KillsPixels     = ReadBits(commonWord0, 15, 1) != 0;
+            DoesGlobalStore = ReadBits(commonWord0, 16, 1) != 0;
+            SassVersion     = ReadBits(commonWord0, 17, 4);
+            DoesLoadOrStore = ReadBits(commonWord0, 26, 1) != 0;
+            DoesFp64        = ReadBits(commonWord0, 27, 1) != 0;
+            StreamOutMask   = ReadBits(commonWord0, 28, 4);
 
-            ShaderLocalMemoryLowSize = ReadBits(CommonWord1,  0, 24);
-            PerPatchAttributeCount   = ReadBits(CommonWord1, 24,  8);
+            ShaderLocalMemoryLowSize = ReadBits(commonWord1,  0, 24);
+            PerPatchAttributeCount   = ReadBits(commonWord1, 24,  8);
 
-            ShaderLocalMemoryHighSize = ReadBits(CommonWord2,  0, 24);
-            ThreadsPerInputPrimitive  = ReadBits(CommonWord2, 24,  8);
+            ShaderLocalMemoryHighSize = ReadBits(commonWord2,  0, 24);
+            ThreadsPerInputPrimitive  = ReadBits(commonWord2, 24,  8);
 
-            ShaderLocalMemoryCrsSize = ReadBits(CommonWord3,  0, 24);
-            OutputTopology           = ReadBits(CommonWord3, 24,  4);
+            ShaderLocalMemoryCrsSize = ReadBits(commonWord3,  0, 24);
+            OutputTopology           = ReadBits(commonWord3, 24,  4);
 
-            MaxOutputVertexCount = ReadBits(CommonWord4,  0, 12);
-            StoreReqStart        = ReadBits(CommonWord4, 12,  8);
-            StoreReqEnd          = ReadBits(CommonWord4, 24,  8);
+            MaxOutputVertexCount = ReadBits(commonWord4,  0, 12);
+            StoreReqStart        = ReadBits(commonWord4, 12,  8);
+            StoreReqEnd          = ReadBits(commonWord4, 24,  8);
 
             //Type 2 (fragment?) reading
-            uint Type2OmapTarget = (uint)Memory.ReadInt32(Position + 72);
-            uint Type2Omap       = (uint)Memory.ReadInt32(Position + 76);
+            uint type2OmapTarget = (uint)memory.ReadInt32(position + 72);
+            uint type2Omap       = (uint)memory.ReadInt32(position + 76);
 
             OmapTargets = new OmapTarget[8];
 
             for (int i = 0; i < OmapTargets.Length; i++)
             {
-                int Offset = i * 4;
+                int offset = i * 4;
 
                 OmapTargets[i] = new OmapTarget
                 {
-                    Red   = ReadBits(Type2OmapTarget, Offset + 0, 1) != 0,
-                    Green = ReadBits(Type2OmapTarget, Offset + 1, 1) != 0,
-                    Blue  = ReadBits(Type2OmapTarget, Offset + 2, 1) != 0,
-                    Alpha = ReadBits(Type2OmapTarget, Offset + 3, 1) != 0
+                    Red   = ReadBits(type2OmapTarget, offset + 0, 1) != 0,
+                    Green = ReadBits(type2OmapTarget, offset + 1, 1) != 0,
+                    Blue  = ReadBits(type2OmapTarget, offset + 2, 1) != 0,
+                    Alpha = ReadBits(type2OmapTarget, offset + 3, 1) != 0
                 };
             }
 
-            OmapSampleMask = ReadBits(Type2Omap, 0, 1) != 0;
-            OmapDepth      = ReadBits(Type2Omap, 1, 1) != 0;
+            OmapSampleMask = ReadBits(type2Omap, 0, 1) != 0;
+            OmapDepth      = ReadBits(type2Omap, 1, 1) != 0;
         }
 
         public int DepthRegister
         {
             get
             {
-                int Count = 0;
+                int count = 0;
 
-                for (int Index = 0; Index < OmapTargets.Length; Index++)
+                for (int index = 0; index < OmapTargets.Length; index++)
                 {
-                    for (int Component = 0; Component < 4; Component++)
+                    for (int component = 0; component < 4; component++)
                     {
-                        if (OmapTargets[Index].ComponentEnabled(Component))
+                        if (OmapTargets[index].ComponentEnabled(component))
                         {
-                            Count++;
+                            count++;
                         }
                     }
                 }
 
                 // Depth register is always two registers after the last color output
-                return Count + 1;
+                return count + 1;
             }
         }
 
-        private static int ReadBits(uint Word, int Offset, int BitWidth)
+        private static int ReadBits(uint word, int offset, int bitWidth)
         {
-            uint Mask = (1u << BitWidth) - 1u;
+            uint mask = (1u << bitWidth) - 1u;
 
-            return (int)((Word >> Offset) & Mask);
+            return (int)((word >> offset) & mask);
         }
     }
 }

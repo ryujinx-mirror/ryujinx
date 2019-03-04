@@ -7,47 +7,47 @@ namespace Ryujinx.Graphics.Texture
 {
     static class TextureHelper
     {
-        public static ISwizzle GetSwizzle(GalImage Image)
+        public static ISwizzle GetSwizzle(GalImage image)
         {
-            int BlockWidth    = ImageUtils.GetBlockWidth   (Image.Format);
-            int BlockHeight   = ImageUtils.GetBlockHeight  (Image.Format);
-            int BlockDepth    = ImageUtils.GetBlockDepth   (Image.Format);
-            int BytesPerPixel = ImageUtils.GetBytesPerPixel(Image.Format);
+            int blockWidth    = ImageUtils.GetBlockWidth   (image.Format);
+            int blockHeight   = ImageUtils.GetBlockHeight  (image.Format);
+            int blockDepth    = ImageUtils.GetBlockDepth   (image.Format);
+            int bytesPerPixel = ImageUtils.GetBytesPerPixel(image.Format);
 
-            int Width  = BitUtils.DivRoundUp(Image.Width,  BlockWidth);
-            int Height = BitUtils.DivRoundUp(Image.Height, BlockHeight);
-            int Depth  = BitUtils.DivRoundUp(Image.Depth,  BlockDepth);
+            int width  = BitUtils.DivRoundUp(image.Width,  blockWidth);
+            int height = BitUtils.DivRoundUp(image.Height, blockHeight);
+            int depth  = BitUtils.DivRoundUp(image.Depth,  blockDepth);
 
-            if (Image.Layout == GalMemoryLayout.BlockLinear)
+            if (image.Layout == GalMemoryLayout.BlockLinear)
             {
-                int AlignMask = Image.TileWidth * (64 / BytesPerPixel) - 1;
+                int alignMask = image.TileWidth * (64 / bytesPerPixel) - 1;
 
-                Width = (Width + AlignMask) & ~AlignMask;
+                width = (width + alignMask) & ~alignMask;
 
                 return new BlockLinearSwizzle(
-                    Width,
-                    Height,
-                    Depth,
-                    Image.GobBlockHeight,
-                    Image.GobBlockDepth,
-                    BytesPerPixel);
+                    width,
+                    height,
+                    depth,
+                    image.GobBlockHeight,
+                    image.GobBlockDepth,
+                    bytesPerPixel);
             }
             else
             {
-                return new LinearSwizzle(Image.Pitch, BytesPerPixel, Width, Height);
+                return new LinearSwizzle(image.Pitch, bytesPerPixel, width, height);
             }
         }
 
         public static (MemoryManager Memory, long Position) GetMemoryAndPosition(
-            IMemory Memory,
-            long    Position)
+            IMemory memory,
+            long    position)
         {
-            if (Memory is NvGpuVmm Vmm)
+            if (memory is NvGpuVmm vmm)
             {
-                return (Vmm.Memory, Vmm.GetPhysicalAddress(Position));
+                return (vmm.Memory, vmm.GetPhysicalAddress(position));
             }
 
-            return ((MemoryManager)Memory, Position);
+            return ((MemoryManager)memory, position);
         }
     }
 }

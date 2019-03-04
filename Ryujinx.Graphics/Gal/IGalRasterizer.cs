@@ -8,29 +8,29 @@ namespace Ryujinx.Graphics.Gal
         void UnlockCaches();
 
         void ClearBuffers(
-            GalClearBufferFlags Flags,
-            int Attachment,
-            float Red,
-            float Green,
-            float Blue,
-            float Alpha,
-            float Depth,
-            int Stencil);
+            GalClearBufferFlags flags,
+            int attachment,
+            float red,
+            float green,
+            float blue,
+            float alpha,
+            float depth,
+            int stencil);
 
-        bool IsVboCached(long Key, long DataSize);
+        bool IsVboCached(long key, long dataSize);
 
-        bool IsIboCached(long Key, long DataSize);
+        bool IsIboCached(long key, long dataSize);
 
-        void CreateVbo(long Key, int DataSize, IntPtr HostAddress);
-        void CreateVbo(long Key, byte[] Data);
+        void CreateVbo(long key, int dataSize, IntPtr hostAddress);
+        void CreateVbo(long key, byte[] data);
 
-        void CreateIbo(long Key, int DataSize, IntPtr HostAddress);
-        void CreateIbo(long Key, int DataSize, byte[] Buffer);
+        void CreateIbo(long key, int dataSize, IntPtr hostAddress);
+        void CreateIbo(long key, int dataSize, byte[] buffer);
 
-        void SetIndexArray(int Size, GalIndexFormat Format);
+        void SetIndexArray(int size, GalIndexFormat format);
 
-        void DrawArrays(int First, int Count, GalPrimitiveType PrimType);
+        void DrawArrays(int first, int count, GalPrimitiveType primType);
 
-        void DrawElements(long IboKey, int First, int VertexBase, GalPrimitiveType PrimType);
+        void DrawElements(long iboKey, int first, int vertexBase, GalPrimitiveType primType);
     }
 }

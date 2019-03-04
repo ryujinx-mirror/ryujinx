@@ -6,10 +6,10 @@ namespace Ryujinx.Graphics
 {
     public class DmaPusher
     {
-        private ConcurrentQueue<(NvGpuVmm, long)> IbBuffer;
+        private ConcurrentQueue<(NvGpuVmm, long)> _ibBuffer;
 
-        private long DmaPut;
-        private long DmaGet;
+        private long _dmaPut;
+        private long _dmaGet;
 
         private struct DmaState
         {
@@ -21,43 +21,43 @@ namespace Ryujinx.Graphics
             public int  LengthPending;
         }
 
-        private DmaState State;
+        private DmaState _state;
 
-        private bool SliEnable;
-        private bool SliActive;
+        private bool _sliEnable;
+        private bool _sliActive;
 
-        private bool IbEnable;
-        private bool NonMain;
+        private bool _ibEnable;
+        private bool _nonMain;
 
-        private long DmaMGet;
+        private long _dmaMGet;
 
-        private NvGpuVmm Vmm;
+        private NvGpuVmm _vmm;
 
-        private NvGpu Gpu;
+        private NvGpu _gpu;
 
-        private AutoResetEvent Event;
+        private AutoResetEvent _event;
 
-        public DmaPusher(NvGpu Gpu)
+        public DmaPusher(NvGpu gpu)
         {
-            this.Gpu = Gpu;
+            _gpu = gpu;
 
-            IbBuffer = new ConcurrentQueue<(NvGpuVmm, long)>();
+            _ibBuffer = new ConcurrentQueue<(NvGpuVmm, long)>();
 
-            IbEnable = true;
+            _ibEnable = true;
 
-            Event = new AutoResetEvent(false);
+            _event = new AutoResetEvent(false);
         }
 
-        public void Push(NvGpuVmm Vmm, long Entry)
+        public void Push(NvGpuVmm vmm, long entry)
         {
-            IbBuffer.Enqueue((Vmm, Entry));
+            _ibBuffer.Enqueue((vmm, entry));
 
-            Event.Set();
+            _event.Set();
         }
 
         public bool WaitForCommands()
         {
-            return Event.WaitOne(8);
+            return _event.WaitOne(8);
         }
 
         public void DispatchCalls()
@@ -67,101 +67,101 @@ namespace Ryujinx.Graphics
 
         private bool Step()
         {
-            if (DmaGet != DmaPut)
+            if (_dmaGet != _dmaPut)
             {
-                int Word = Vmm.ReadInt32(DmaGet);
+                int word = _vmm.ReadInt32(_dmaGet);
 
-                DmaGet += 4;
+                _dmaGet += 4;
 
-                if (!NonMain)
+                if (!_nonMain)
                 {
-                    DmaMGet = DmaGet;
+                    _dmaMGet = _dmaGet;
                 }
 
-                if (State.LengthPending != 0)
+                if (_state.LengthPending != 0)
                 {
-                    State.LengthPending = 0;
-                    State.MethodCount   = Word & 0xffffff;
+                    _state.LengthPending = 0;
+                    _state.MethodCount   = word & 0xffffff;
                 }
-                else if (State.MethodCount != 0)
+                else if (_state.MethodCount != 0)
                 {
-                    if (!SliEnable || SliActive)
+                    if (!_sliEnable || _sliActive)
                     {
-                        CallMethod(Word);
+                        CallMethod(word);
                     }
 
-                    if (!State.NonIncrementing)
+                    if (!_state.NonIncrementing)
                     {
-                        State.Method++;
+                        _state.Method++;
                     }
 
-                    if (State.IncrementOnce)
+                    if (_state.IncrementOnce)
                     {
-                        State.NonIncrementing = true;
+                        _state.NonIncrementing = true;
                     }
 
-                    State.MethodCount--;
+                    _state.MethodCount--;
                 }
                 else
                 {
-                    int SumissionMode = (Word >> 29) & 7;
+                    int sumissionMode = (word >> 29) & 7;
 
-                    switch (SumissionMode)
+                    switch (sumissionMode)
                     {
                         case 1:
                             //Incrementing.
-                            SetNonImmediateState(Word);
+                            SetNonImmediateState(word);
 
-                            State.NonIncrementing = false;
-                            State.IncrementOnce   = false;
+                            _state.NonIncrementing = false;
+                            _state.IncrementOnce   = false;
 
                             break;
 
                         case 3:
                             //Non-incrementing.
-                            SetNonImmediateState(Word);
+                            SetNonImmediateState(word);
 
-                            State.NonIncrementing = true;
-                            State.IncrementOnce   = false;
+                            _state.NonIncrementing = true;
+                            _state.IncrementOnce   = false;
 
                             break;
 
                         case 4:
                             //Immediate.
-                            State.Method          = (Word >> 0)  & 0x1fff;
-                            State.SubChannel      = (Word >> 13) & 7;
-                            State.NonIncrementing = true;
-                            State.IncrementOnce   = false;
+                            _state.Method          = (word >> 0)  & 0x1fff;
+                            _state.SubChannel      = (word >> 13) & 7;
+                            _state.NonIncrementing = true;
+                            _state.IncrementOnce   = false;
 
-                            CallMethod((Word >> 16) & 0x1fff);
+                            CallMethod((word >> 16) & 0x1fff);
 
                             break;
 
                         case 5:
                             //Increment-once.
-                            SetNonImmediateState(Word);
+                            SetNonImmediateState(word);
 
-                            State.NonIncrementing = false;
-                            State.IncrementOnce   = true;
+                            _state.NonIncrementing = false;
+                            _state.IncrementOnce   = true;
 
                             break;
                     }
                 }
             }
-            else if (IbEnable && IbBuffer.TryDequeue(out (NvGpuVmm Vmm, long Entry) Tuple))
+            else if (_ibEnable && _ibBuffer.TryDequeue(out (NvGpuVmm Vmm, long Entry) tuple))
             {
-                this.Vmm = Tuple.Vmm;
+                _vmm = tuple.Vmm;
 
-                long Entry = Tuple.Entry;
+                long entry = tuple.Entry;
 
-                int Length = (int)(Entry >> 42) & 0x1fffff;
+                int length = (int)(entry >> 42) & 0x1fffff;
 
-                DmaGet = Entry & 0xfffffffffc;
-                DmaPut = DmaGet + Length * 4;
+                _dmaGet = entry & 0xfffffffffc;
+                _dmaPut = _dmaGet + length * 4;
 
-                NonMain = (Entry & (1L << 41)) != 0;
+                _nonMain = (entry & (1L << 41)) != 0;
 
-                Gpu.ResourceManager.ClearPbCache();
+                _gpu.ResourceManager.ClearPbCache();
             }
             else
             {
@@ -171,20 +171,20 @@ namespace Ryujinx.Graphics
             return true;
         }
 
-        private void SetNonImmediateState(int Word)
+        private void SetNonImmediateState(int word)
         {
-            State.Method      = (Word >> 0)  & 0x1fff;
-            State.SubChannel  = (Word >> 13) & 7;
-            State.MethodCount = (Word >> 16) & 0x1fff;
+            _state.Method      = (word >> 0)  & 0x1fff;
+            _state.SubChannel  = (word >> 13) & 7;
+            _state.MethodCount = (word >> 16) & 0x1fff;
         }
 
-        private void CallMethod(int Argument)
+        private void CallMethod(int argument)
         {
-            Gpu.Fifo.CallMethod(Vmm, new GpuMethodCall(
-                State.Method,
-                Argument,
-                State.SubChannel,
-                State.MethodCount));
+            _gpu.Fifo.CallMethod(_vmm, new GpuMethodCall(
+                _state.Method,
+                argument,
+                _state.SubChannel,
+                _state.MethodCount));
         }
     }
 }

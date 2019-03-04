@@ -5,64 +5,64 @@ namespace Ryujinx.Graphics.Vic
 {
     class StructUnpacker
     {
-        private NvGpuVmm Vmm;
+        private NvGpuVmm _vmm;
 
-        private long Position;
+        private long _position;
 
-        private ulong Buffer;
-        private int   BuffPos;
+        private ulong _buffer;
+        private int   _buffPos;
 
-        public StructUnpacker(NvGpuVmm Vmm, long Position)
+        public StructUnpacker(NvGpuVmm vmm, long position)
         {
-            this.Vmm      = Vmm;
-            this.Position = Position;
+            _vmm      = vmm;
+            _position = position;
 
-            BuffPos = 64;
+            _buffPos = 64;
         }
 
-        public int Read(int Bits)
+        public int Read(int bits)
         {
-            if ((uint)Bits > 32)
+            if ((uint)bits > 32)
             {
-                throw new ArgumentOutOfRangeException(nameof(Bits));
+                throw new ArgumentOutOfRangeException(nameof(bits));
             }
 
-            int Value = 0;
+            int value = 0;
 
-            while (Bits > 0)
+            while (bits > 0)
             {
                 RefillBufferIfNeeded();
 
-                int ReadBits = Bits;
+                int readBits = bits;
 
-                int MaxReadBits = 64 - BuffPos;
+                int maxReadBits = 64 - _buffPos;
 
-                if (ReadBits > MaxReadBits)
+                if (readBits > maxReadBits)
                 {
-                    ReadBits = MaxReadBits;
+                    readBits = maxReadBits;
                 }
 
-                Value <<= ReadBits;
+                value <<= readBits;
 
-                Value |= (int)(Buffer >> BuffPos) & (int)(0xffffffff >> (32 - ReadBits));
+                value |= (int)(_buffer >> _buffPos) & (int)(0xffffffff >> (32 - readBits));
 
-                BuffPos += ReadBits;
+                _buffPos += readBits;
 
-                Bits -= ReadBits;
+                bits -= readBits;
             }
 
-            return Value;
+            return value;
         }
 
         private void RefillBufferIfNeeded()
         {
-            if (BuffPos >= 64)
+            if (_buffPos >= 64)
             {
-                Buffer = Vmm.ReadUInt64(Position);
+                _buffer = _vmm.ReadUInt64(_position);
 
-                Position += 8;
+                _position += 8;
 
-                BuffPos = 0;
+                _buffPos = 0;
             }
         }
     }
