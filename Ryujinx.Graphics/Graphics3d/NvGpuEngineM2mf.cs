@@ -151,6 +151,14 @@ namespace Ryujinx.Graphics.Graphics3d
                             dstCpp);
                     }
 
+                    // Calculate the bits per pixel
+                    int bpp = srcPitch / xCount;
+
+                    // Copying all the bits at the same time corrupts the texture, unknown why but probably because the texture isn't linear
+                    // To avoid this we will simply loop more times to cover all the bits,
+                    // this allows up to recalculate the memory locations for each iteration around the loop
+                    xCount *= bpp / srcCpp;
+
                     for (int y = 0; y < yCount; y++)
                     for (int x = 0; x < xCount; x++)
                     {
