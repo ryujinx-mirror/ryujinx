@@ -61,8 +61,7 @@ namespace ChocolArm64.Translation
 
         //Vectors are part of another "set" of locals.
         private const int VecGpTmp1Index   = ReservedLocalsCount + 0;
-        private const int VecGpTmp2Index   = ReservedLocalsCount + 1;
-        private const int UserVecTempStart = ReservedLocalsCount + 2;
+        private const int UserVecTempStart = ReservedLocalsCount + 1;
 
         private static int _userIntTempCount;
         private static int _userVecTempCount;
@@ -629,9 +628,6 @@ namespace ChocolArm64.Translation
 
         public void EmitLdvectmp() => EmitLdvec(VecGpTmp1Index);
         public void EmitStvectmp() => EmitStvec(VecGpTmp1Index);
-
-        public void EmitLdvectmp2() => EmitLdvec(VecGpTmp2Index);
-        public void EmitStvectmp2() => EmitStvec(VecGpTmp2Index);
 
         public void EmitLdint(int index) => Ldloc(index, VarType.Int);
         public void EmitStint(int index) => Stloc(index, VarType.Int);

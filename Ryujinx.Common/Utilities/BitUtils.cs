@@ -100,7 +100,7 @@ namespace Ryujinx.Common
             do
             {
                 nibbleIdx -= 4;
-                preCount = ClzNibbleTbl[(value >> nibbleIdx) & 0b1111];
+                preCount = ClzNibbleTbl[(int)(value >> nibbleIdx) & 0b1111];
                 count += preCount;
             }
             while (preCount == 4);

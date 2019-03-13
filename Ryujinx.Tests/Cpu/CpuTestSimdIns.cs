@@ -67,7 +67,8 @@ namespace Ryujinx.Tests.Cpu
         }
 #endregion
 
-        private const int RndCnt = 2;
+        private const int RndCnt      = 2;
+        private const int RndCntIndex = 2;
 
         [Test, Pairwise, Description("DUP <Vd>.<T>, <R><n>")]
         public void Dup_Gp_W([Values(0u)]      uint rd,
@@ -109,7 +110,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Test, Pairwise, Description("DUP B0, V1.B[<index>]")]
         public void Dup_S_B([ValueSource("_8B_")] [Random(RndCnt)] ulong a,
-                            [Range(0u, 15u)] uint index)
+                            [Values(0u, 15u)] [Random(1u, 14u, RndCntIndex)] uint index)
         {
             const int size = 0;
 
@@ -129,7 +130,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Test, Pairwise, Description("DUP H0, V1.H[<index>]")]
         public void Dup_S_H([ValueSource("_4H_")] [Random(RndCnt)] ulong a,
-                            [Range(0u, 7u)] uint index)
+                            [Values(0u, 7u)] [Random(1u, 6u, RndCntIndex)] uint index)
         {
             const int size = 1;
 
@@ -192,7 +193,7 @@ namespace Ryujinx.Tests.Cpu
                                  [Values(1u, 0u)] uint rn,
                                  [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
                                  [ValueSource("_8B_")] [Random(RndCnt)] ulong a,
-                                 [Range(0u, 15u)] uint index,
+                                 [Values(0u, 15u)] [Random(1u, 14u, RndCntIndex)] uint index,
                                  [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             const int size = 0;
@@ -217,7 +218,7 @@ namespace Ryujinx.Tests.Cpu
                                 [Values(1u, 0u)] uint rn,
                                 [ValueSource("_4H_")] [Random(RndCnt)] ulong z,
                                 [ValueSource("_4H_")] [Random(RndCnt)] ulong a,
-                                [Range(0u, 7u)] uint index,
+                                [Values(0u, 7u)] [Random(1u, 6u, RndCntIndex)] uint index,
                                 [Values(0b0u, 0b1u)] uint q) // <4H, 8H>
         {
             const int size = 1;

@@ -434,6 +434,26 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
+        private static uint[] _Mla_Mls_Mul_V_8B_4H_2S_()
+        {
+            return new uint[]
+            {
+                0x0E209400u, // MLA V0.8B, V0.8B, V0.8B
+                0x2E209400u, // MLS V0.8B, V0.8B, V0.8B
+                0x0E209C00u  // MUL V0.8B, V0.8B, V0.8B
+            };
+        }
+
+        private static uint[] _Mla_Mls_Mul_V_16B_8H_4S_()
+        {
+            return new uint[]
+            {
+                0x4E209400u, // MLA V0.16B, V0.16B, V0.16B
+                0x6E209400u, // MLS V0.16B, V0.16B, V0.16B
+                0x4E209C00u  // MUL V0.16B, V0.16B, V0.16B
+            };
+        }
+
         private static uint[] _Sha1c_Sha1m_Sha1p_Sha1su0_V_()
         {
             return new uint[]
@@ -1784,6 +1804,50 @@ namespace Ryujinx.Tests.Cpu
             SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, fpcr: fpcr);
 
             CompareAgainstUnicorn(Fpsr.Ioc | Fpsr.Idc, FpSkips.IfUnderflow, FpTolerances.UpToOneUlpsD);
+        }
+
+        [Test, Pairwise]
+        public void Mla_Mls_Mul_V_8B_4H_2S([ValueSource("_Mla_Mls_Mul_V_8B_4H_2S_")] uint opcodes,
+                                           [Values(0u)]     uint rd,
+                                           [Values(1u, 0u)] uint rn,
+                                           [Values(2u, 0u)] uint rm,
+                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
+                                           [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
+        {
+            opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((size & 3) << 22);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v2 = MakeVectorE0(b);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void Mla_Mls_Mul_V_16B_8H_4S([ValueSource("_Mla_Mls_Mul_V_16B_8H_4S_")] uint opcodes,
+                                            [Values(0u)]     uint rd,
+                                            [Values(1u, 0u)] uint rn,
+                                            [Values(2u, 0u)] uint rm,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
+                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B, 8H, 4S>
+        {
+            opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((size & 3) << 22);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            Vector128<float> v2 = MakeVectorE0E1(b, b);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("ORN <Vd>.<T>, <Vn>.<T>, <Vm>.<T>")]

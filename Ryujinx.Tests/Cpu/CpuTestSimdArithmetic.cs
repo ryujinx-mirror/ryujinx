@@ -8,26 +8,6 @@ namespace Ryujinx.Tests.Cpu
 {
     public class CpuTestSimdArithmetic : CpuTest
     {
-        [TestCase(0x00000000u, 0x7F800000u)]
-        [TestCase(0x80000000u, 0xFF800000u)]
-        [TestCase(0x00FFF000u, 0x7E000000u)]
-        [TestCase(0x41200000u, 0x3DCC8000u)]
-        [TestCase(0xC1200000u, 0xBDCC8000u)]
-        [TestCase(0x001FFFFFu, 0x7F800000u)]
-        [TestCase(0x007FF000u, 0x7E800000u)]
-        public void Frecpe_S(uint a, uint result)
-        {
-            uint opcode = 0x5EA1D820; // FRECPE S0, S1
-
-            Vector128<float> v1 = MakeVectorE0(a);
-
-            CpuThreadState threadState = SingleOpcode(opcode, v1: v1);
-
-            Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result));
-
-            CompareAgainstUnicorn();
-        }
-
         [TestCase(0x3FE66666u, false, 0x40000000u)]
         [TestCase(0x3F99999Au, false, 0x3F800000u)]
         [TestCase(0x404CCCCDu, false, 0x40400000u)]
@@ -598,20 +578,6 @@ namespace Ryujinx.Tests.Cpu
                 Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result0));
                 Assert.That(GetVectorE1(threadState.V0), Is.EqualTo(result1));
             });
-
-            CompareAgainstUnicorn();
-        }
-
-        [TestCase(0x41200000u, 0x3EA18000u)]
-        public void Frsqrte_S(uint a, uint result)
-        {
-            uint opcode = 0x7EA1D820; // FRSQRTE S0, S1
-
-            Vector128<float> v1 = MakeVectorE0(a);
-
-            CpuThreadState threadState = SingleOpcode(opcode, v1: v1);
-
-            Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(result));
 
             CompareAgainstUnicorn();
         }

@@ -30,12 +30,12 @@ namespace ChocolArm64.Instructions
             {
                 OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
 
-                Type[] typesAndNot = new Type[] { typeof(Vector128<byte>), typeof(Vector128<byte>) };
+                Type[] typesAnt = new Type[] { typeof(Vector128<byte>), typeof(Vector128<byte>) };
 
                 context.EmitLdvec(op.Rm);
                 context.EmitLdvec(op.Rn);
 
-                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAndNot));
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAnt));
 
                 context.EmitStvec(op.Rd);
 
@@ -79,18 +79,18 @@ namespace ChocolArm64.Instructions
 
             if (Optimizations.UseSse2)
             {
-                Type[] typesXorAndNot = new Type[] { typeof(Vector128<byte>), typeof(Vector128<byte>) };
+                Type[] typesXorAnd = new Type[] { typeof(Vector128<byte>), typeof(Vector128<byte>) };
 
-                string nameAndNot = notRm ? nameof(Sse2.AndNot) : nameof(Sse2.And);
+                string nameAnd = notRm ? nameof(Sse2.AndNot) : nameof(Sse2.And);
 
                 context.EmitLdvec(op.Rd);
                 context.EmitLdvec(op.Rm);
                 context.EmitLdvec(op.Rn);
                 context.EmitLdvec(op.Rd);
 
-                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Xor), typesXorAndNot));
-                context.EmitCall(typeof(Sse2).GetMethod(nameAndNot,       typesXorAndNot));
-                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Xor), typesXorAndNot));
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Xor), typesXorAnd));
+                context.EmitCall(typeof(Sse2).GetMethod(nameAnd,          typesXorAnd));
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Xor), typesXorAnd));
 
                 context.EmitStvec(op.Rd);
 
@@ -120,7 +120,6 @@ namespace ChocolArm64.Instructions
                     }
 
                     context.Emit(OpCodes.And);
-
                     context.Emit(OpCodes.Xor);
 
                     EmitVectorInsert(context, op.Rd, index, 3);
@@ -142,8 +141,7 @@ namespace ChocolArm64.Instructions
                 Type[] typesXorAnd = new Type[] { typeof(Vector128<byte>), typeof(Vector128<byte>) };
 
                 context.EmitLdvec(op.Rm);
-                context.Emit(OpCodes.Dup);
-
+                context.EmitLdvec(op.Rm);
                 context.EmitLdvec(op.Rn);
 
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Xor), typesXorAnd));
@@ -151,7 +149,6 @@ namespace ChocolArm64.Instructions
                 context.EmitLdvec(op.Rd);
 
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.And), typesXorAnd));
-
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Xor), typesXorAnd));
 
                 context.EmitStvec(op.Rd);
@@ -196,15 +193,15 @@ namespace ChocolArm64.Instructions
             {
                 OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
-                Type[] typesSav    = new Type[] { typeof(byte) };
-                Type[] typesAndNot = new Type[] { typeof(Vector128<byte>), typeof(Vector128<byte>) };
+                Type[] typesSav = new Type[] { typeof(byte) };
+                Type[] typesAnt = new Type[] { typeof(Vector128<byte>), typeof(Vector128<byte>) };
 
                 context.EmitLdvec(op.Rn);
 
                 context.EmitLdc_I4(byte.MaxValue);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
 
-                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAndNot));
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAnt));
 
                 context.EmitStvec(op.Rd);
 
@@ -225,8 +222,8 @@ namespace ChocolArm64.Instructions
             {
                 OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
 
-                Type[] typesSav      = new Type[] { typeof(byte) };
-                Type[] typesAndNotOr = new Type[] { typeof(Vector128<byte>), typeof(Vector128<byte>) };
+                Type[] typesSav   = new Type[] { typeof(byte) };
+                Type[] typesAntOr = new Type[] { typeof(Vector128<byte>), typeof(Vector128<byte>) };
 
                 context.EmitLdvec(op.Rn);
                 context.EmitLdvec(op.Rm);
@@ -234,8 +231,8 @@ namespace ChocolArm64.Instructions
                 context.EmitLdc_I4(byte.MaxValue);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
 
-                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAndNotOr));
-                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Or),     typesAndNotOr));
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAntOr));
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Or),     typesAntOr));
 
                 context.EmitStvec(op.Rd);
 

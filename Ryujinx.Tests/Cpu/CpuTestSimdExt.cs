@@ -19,7 +19,8 @@ namespace Ryujinx.Tests.Cpu
         }
 #endregion
 
-        private const int RndCnt = 2;
+        private const int RndCnt      = 2;
+        private const int RndCntIndex = 2;
 
         [Test, Pairwise, Description("EXT <Vd>.8B, <Vn>.8B, <Vm>.8B, #<index>")]
         public void Ext_V_8B([Values(0u)]     uint rd,
@@ -28,7 +29,7 @@ namespace Ryujinx.Tests.Cpu
                              [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
                              [ValueSource("_8B_")] [Random(RndCnt)] ulong a,
                              [ValueSource("_8B_")] [Random(RndCnt)] ulong b,
-                             [Range(0u, 7u)] uint index)
+                             [Values(0u, 7u)] [Random(1u, 6u, RndCntIndex)] uint index)
         {
             uint imm4 = index & 0x7u;
 
@@ -52,7 +53,7 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
                               [ValueSource("_8B_")] [Random(RndCnt)] ulong a,
                               [ValueSource("_8B_")] [Random(RndCnt)] ulong b,
-                              [Range(0u, 15u)] uint index)
+                              [Values(0u, 15u)] [Random(1u, 14u, RndCntIndex)] uint index)
         {
             uint imm4 = index & 0xFu;
 
