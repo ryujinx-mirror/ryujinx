@@ -2,6 +2,7 @@ using ChocolArm64.Memory;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Process;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using System.IO;
 
 namespace Ryujinx.HLE.HOS
@@ -11,6 +12,7 @@ namespace Ryujinx.HLE.HOS
         public Switch         Device       { get; }
         public KProcess       Process      { get; }
         public MemoryManager  Memory       { get; }
+        public KThread        Thread       { get; }
         public KClientSession Session      { get; }
         public IpcMessage     Request      { get; }
         public IpcMessage     Response     { get; }
@@ -21,6 +23,7 @@ namespace Ryujinx.HLE.HOS
             Switch         device,
             KProcess       process,
             MemoryManager  memory,
+            KThread        thread,
             KClientSession session,
             IpcMessage     request,
             IpcMessage     response,
@@ -30,6 +33,7 @@ namespace Ryujinx.HLE.HOS
             Device       = device;
             Process      = process;
             Memory       = memory;
+            Thread       = thread;
             Session      = session;
             Request      = request;
             Response     = response;

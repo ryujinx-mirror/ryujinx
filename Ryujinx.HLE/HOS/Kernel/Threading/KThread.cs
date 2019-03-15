@@ -1,10 +1,12 @@
 using ChocolArm64;
 using ChocolArm64.Memory;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
@@ -1009,9 +1011,19 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             ReleaseAndResume();
         }
 
+        public string GetGuestStackTrace()
+        {
+            return Owner.Debugger.GetGuestStackTrace(Context.ThreadState);
+        }
+
         public void PrintGuestStackTrace()
         {
-            Owner.Debugger.PrintGuestStackTrace(Context.ThreadState);
+            StringBuilder trace = new StringBuilder();
+
+            trace.AppendLine("Guest stack trace:");
+            trace.AppendLine(GetGuestStackTrace());
+
+            Logger.PrintInfo(LogClass.Cpu, trace.ToString());
         }
 
         private void ThreadFinishedHandler(object sender, EventArgs e)

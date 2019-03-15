@@ -143,6 +143,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 _device,
                 _process,
                 _process.CpuMemory,
+                ipcMessage.Thread,
                 ipcMessage.Session,
                 ipcMessage.Message,
                 ipcMessage.MessagePtr);

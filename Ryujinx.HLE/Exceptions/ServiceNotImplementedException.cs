@@ -76,60 +76,70 @@ namespace Ryujinx.HLE.Exceptions
                 }
             }
 
+            sb.AppendLine("Guest Stack Trace:");
+            sb.AppendLine(Context.Thread.GetGuestStackTrace());
+
             // Print buffer information
-            sb.AppendLine("Buffer Information");
-
-            if (Request.PtrBuff.Count > 0)
+            if (Request.PtrBuff.Count > 0 ||
+                Request.SendBuff.Count > 0 ||
+                Request.ReceiveBuff.Count > 0 ||
+                Request.ExchangeBuff.Count > 0 ||
+                Request.RecvListBuff.Count > 0)
             {
-                sb.AppendLine("\tPtrBuff:");
+                sb.AppendLine("Buffer Information:");
 
-                foreach (var buff in Request.PtrBuff)
+                if (Request.PtrBuff.Count > 0)
                 {
-                    sb.AppendLine($"\t[{buff.Index}] Position: 0x{buff.Position:x16} Size: 0x{buff.Size:x16}");
+                    sb.AppendLine("\tPtrBuff:");
+
+                    foreach (var buff in Request.PtrBuff)
+                    {
+                        sb.AppendLine($"\t[{buff.Index}] Position: 0x{buff.Position:x16} Size: 0x{buff.Size:x16}");
+                    }
                 }
-            }
 
-            if (Request.SendBuff.Count > 0)
-            {
-                sb.AppendLine("\tSendBuff:");
-
-                foreach (var buff in Request.SendBuff)
+                if (Request.SendBuff.Count > 0)
                 {
-                    sb.AppendLine($"\tPosition: 0x{buff.Position:x16} Size: 0x{buff.Size:x16} Flags: {buff.Flags}");
+                    sb.AppendLine("\tSendBuff:");
+
+                    foreach (var buff in Request.SendBuff)
+                    {
+                        sb.AppendLine($"\tPosition: 0x{buff.Position:x16} Size: 0x{buff.Size:x16} Flags: {buff.Flags}");
+                    }
                 }
-            }
 
-            if (Request.ReceiveBuff.Count > 0)
-            {
-                sb.AppendLine("\tReceiveBuff:");
-
-                foreach (var buff in Request.ReceiveBuff)
+                if (Request.ReceiveBuff.Count > 0)
                 {
-                    sb.AppendLine($"\tPosition: 0x{buff.Position:x16} Size: 0x{buff.Size:x16} Flags: {buff.Flags}");
+                    sb.AppendLine("\tReceiveBuff:");
+
+                    foreach (var buff in Request.ReceiveBuff)
+                    {
+                        sb.AppendLine($"\tPosition: 0x{buff.Position:x16} Size: 0x{buff.Size:x16} Flags: {buff.Flags}");
+                    }
                 }
-            }
 
-            if (Request.ExchangeBuff.Count > 0)
-            {
-                sb.AppendLine("\tExchangeBuff:");
-
-                foreach (var buff in Request.ExchangeBuff)
+                if (Request.ExchangeBuff.Count > 0)
                 {
-                    sb.AppendLine($"\tPosition: 0x{buff.Position:x16} Size: 0x{buff.Size:x16} Flags: {buff.Flags}");
+                    sb.AppendLine("\tExchangeBuff:");
+
+                    foreach (var buff in Request.ExchangeBuff)
+                    {
+                        sb.AppendLine($"\tPosition: 0x{buff.Position:x16} Size: 0x{buff.Size:x16} Flags: {buff.Flags}");
+                    }
                 }
-            }
 
-            if (Request.RecvListBuff.Count > 0)
-            {
-                sb.AppendLine("\tRecvListBuff:");
-
-                foreach (var buff in Request.RecvListBuff)
+                if (Request.RecvListBuff.Count > 0)
                 {
-                    sb.AppendLine($"\tPosition: 0x{buff.Position:x16} Size: 0x{buff.Size:x16}");
-                }
-            }
+                    sb.AppendLine("\tRecvListBuff:");
 
-            sb.AppendLine();
+                    foreach (var buff in Request.RecvListBuff)
+                    {
+                        sb.AppendLine($"\tPosition: 0x{buff.Position:x16} Size: 0x{buff.Size:x16}");
+                    }
+                }
+
+                sb.AppendLine();
+            }
 
             sb.AppendLine("Raw Request Data:");
             sb.Append(HexUtils.HexTable(Request.RawData));
