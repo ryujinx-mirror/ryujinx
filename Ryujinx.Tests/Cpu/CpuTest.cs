@@ -93,10 +93,14 @@ namespace Ryujinx.Tests.Cpu
         }
 
         protected void SetThreadState(ulong x0 = 0, ulong x1 = 0, ulong x2 = 0, ulong x3 = 0, ulong x31 = 0,
-                                      Vector128<float> v0 = default(Vector128<float>),
-                                      Vector128<float> v1 = default(Vector128<float>),
-                                      Vector128<float> v2 = default(Vector128<float>),
-                                      Vector128<float> v3 = default(Vector128<float>),
+                                      Vector128<float> v0  = default(Vector128<float>),
+                                      Vector128<float> v1  = default(Vector128<float>),
+                                      Vector128<float> v2  = default(Vector128<float>),
+                                      Vector128<float> v3  = default(Vector128<float>),
+                                      Vector128<float> v4  = default(Vector128<float>),
+                                      Vector128<float> v5  = default(Vector128<float>),
+                                      Vector128<float> v30 = default(Vector128<float>),
+                                      Vector128<float> v31 = default(Vector128<float>),
                                       bool overflow = false, bool carry = false, bool zero = false, bool negative = false,
                                       int fpcr = 0x0, int fpsr = 0x0)
         {
@@ -107,10 +111,14 @@ namespace Ryujinx.Tests.Cpu
 
             _thread.ThreadState.X31 = x31;
 
-            _thread.ThreadState.V0 = v0;
-            _thread.ThreadState.V1 = v1;
-            _thread.ThreadState.V2 = v2;
-            _thread.ThreadState.V3 = v3;
+            _thread.ThreadState.V0  = v0;
+            _thread.ThreadState.V1  = v1;
+            _thread.ThreadState.V2  = v2;
+            _thread.ThreadState.V3  = v3;
+            _thread.ThreadState.V4  = v4;
+            _thread.ThreadState.V5  = v5;
+            _thread.ThreadState.V30 = v30;
+            _thread.ThreadState.V31 = v31;
 
             _thread.ThreadState.Overflow = overflow;
             _thread.ThreadState.Carry    = carry;
@@ -129,10 +137,14 @@ namespace Ryujinx.Tests.Cpu
 
                 _unicornEmu.SP = x31;
 
-                _unicornEmu.Q[0] = v0;
-                _unicornEmu.Q[1] = v1;
-                _unicornEmu.Q[2] = v2;
-                _unicornEmu.Q[3] = v3;
+                _unicornEmu.Q[0]  = v0;
+                _unicornEmu.Q[1]  = v1;
+                _unicornEmu.Q[2]  = v2;
+                _unicornEmu.Q[3]  = v3;
+                _unicornEmu.Q[4]  = v4;
+                _unicornEmu.Q[5]  = v5;
+                _unicornEmu.Q[30] = v30;
+                _unicornEmu.Q[31] = v31;
 
                 _unicornEmu.OverflowFlag = overflow;
                 _unicornEmu.CarryFlag    = carry;
@@ -165,17 +177,21 @@ namespace Ryujinx.Tests.Cpu
 
         protected CpuThreadState SingleOpcode(uint opcode,
                                               ulong x0 = 0, ulong x1 = 0, ulong x2 = 0, ulong x3 = 0, ulong x31 = 0,
-                                              Vector128<float> v0 = default(Vector128<float>),
-                                              Vector128<float> v1 = default(Vector128<float>),
-                                              Vector128<float> v2 = default(Vector128<float>),
-                                              Vector128<float> v3 = default(Vector128<float>),
+                                              Vector128<float> v0  = default(Vector128<float>),
+                                              Vector128<float> v1  = default(Vector128<float>),
+                                              Vector128<float> v2  = default(Vector128<float>),
+                                              Vector128<float> v3  = default(Vector128<float>),
+                                              Vector128<float> v4  = default(Vector128<float>),
+                                              Vector128<float> v5  = default(Vector128<float>),
+                                              Vector128<float> v30 = default(Vector128<float>),
+                                              Vector128<float> v31 = default(Vector128<float>),
                                               bool overflow = false, bool carry = false, bool zero = false, bool negative = false,
                                               int fpcr = 0x0, int fpsr = 0x0)
         {
             Opcode(opcode);
             Opcode(0xD4200000); // BRK #0
             Opcode(0xD65F03C0); // RET
-            SetThreadState(x0, x1, x2, x3, x31, v0, v1, v2, v3, overflow, carry, zero, negative, fpcr, fpsr);
+            SetThreadState(x0, x1, x2, x3, x31, v0, v1, v2, v3, v4, v5, v30, v31, overflow, carry, zero, negative, fpcr, fpsr);
             ExecuteOpcodes();
 
             return GetThreadState();

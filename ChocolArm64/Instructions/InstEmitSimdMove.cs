@@ -355,35 +355,94 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimdTbl64 op = (OpCodeSimdTbl64)context.CurrOp;
 
-            context.EmitLdvec(op.Rm);
-
-            for (int index = 0; index < op.Size; index++)
+            if (Optimizations.UseSsse3)
             {
-                context.EmitLdvec((op.Rn + index) & 0x1f);
-            }
+                Type[] typesCmpSflSub = new Type[] { typeof(Vector128<sbyte>), typeof(Vector128<sbyte>) };
+                Type[] typesOr        = new Type[] { typeof(Vector128<long> ), typeof(Vector128<long> ) };
+                Type[] typesSav       = new Type[] { typeof(long) };
 
-            switch (op.Size)
+                context.EmitLdvec(op.Rn);
+                context.EmitLdvec(op.Rm);
+
+                context.EmitLdc_I8(0x0F0F0F0F0F0F0F0FL);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
+
+                context.EmitStvectmp2();
+                context.EmitLdvectmp2();
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.CompareGreaterThan), typesCmpSflSub));
+
+                context.EmitLdvec(op.Rm);
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Or), typesOr));
+
+                context.EmitCall(typeof(Ssse3).GetMethod(nameof(Ssse3.Shuffle), typesCmpSflSub));
+
+                for (int index = 1; index < op.Size; index++)
+                {
+                    context.EmitLdvec((op.Rn + index) & 0x1F);
+                    context.EmitLdvec(op.Rm);
+
+                    context.EmitLdc_I8(0x1010101010101010L * index);
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
+
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Subtract), typesCmpSflSub));
+
+                    context.EmitStvectmp();
+                    context.EmitLdvectmp();
+
+                    context.EmitLdvectmp2();
+
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.CompareGreaterThan), typesCmpSflSub));
+
+                    context.EmitLdvectmp();
+
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Or), typesOr));
+
+                    context.EmitCall(typeof(Ssse3).GetMethod(nameof(Ssse3.Shuffle), typesCmpSflSub));
+
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Or), typesOr));
+                }
+
+                context.EmitStvec(op.Rd);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
+            }
+            else
             {
-                case 1: VectorHelper.EmitCall(context,
-                    nameof(VectorHelper.Tbl1_V64),
-                    nameof(VectorHelper.Tbl1_V128)); break;
+                context.EmitLdvec(op.Rm);
 
-                case 2: VectorHelper.EmitCall(context,
-                    nameof(VectorHelper.Tbl2_V64),
-                    nameof(VectorHelper.Tbl2_V128)); break;
+                for (int index = 0; index < op.Size; index++)
+                {
+                    context.EmitLdvec((op.Rn + index) & 0x1F);
+                }
 
-                case 3: VectorHelper.EmitCall(context,
-                    nameof(VectorHelper.Tbl3_V64),
-                    nameof(VectorHelper.Tbl3_V128)); break;
+                switch (op.Size)
+                {
+                    case 1: VectorHelper.EmitCall(context,
+                        nameof(VectorHelper.Tbl1_V64),
+                        nameof(VectorHelper.Tbl1_V128)); break;
 
-                case 4: VectorHelper.EmitCall(context,
-                    nameof(VectorHelper.Tbl4_V64),
-                    nameof(VectorHelper.Tbl4_V128)); break;
+                    case 2: VectorHelper.EmitCall(context,
+                        nameof(VectorHelper.Tbl2_V64),
+                        nameof(VectorHelper.Tbl2_V128)); break;
 
-                default: throw new InvalidOperationException();
+                    case 3: VectorHelper.EmitCall(context,
+                        nameof(VectorHelper.Tbl3_V64),
+                        nameof(VectorHelper.Tbl3_V128)); break;
+
+                    case 4: VectorHelper.EmitCall(context,
+                        nameof(VectorHelper.Tbl4_V64),
+                        nameof(VectorHelper.Tbl4_V128)); break;
+
+                    default: throw new InvalidOperationException();
+                }
+
+                context.EmitStvec(op.Rd);
             }
-
-            context.EmitStvec(op.Rd);
         }
 
         public static void Trn1_V(ILEmitterCtx context)
