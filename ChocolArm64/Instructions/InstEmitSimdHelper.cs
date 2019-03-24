@@ -872,8 +872,8 @@ namespace ChocolArm64.Instructions
 
                     context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.UnpackLow), types));
 
-                    context.Emit(OpCodes.Dup);
                     context.EmitStvectmp();
+                    context.EmitLdvectmp();
 
                     VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
 

@@ -20,19 +20,32 @@ namespace ChocolArm64.Instructions
 
         public static void Cmeq_V(ILEmitterCtx context)
         {
-            if (context.CurrOp is OpCodeSimdReg64 op)
+            if (Optimizations.UseSse41)
             {
-                if (op.Size < 3 && Optimizations.UseSse2)
+                OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+                Type[] typesCmp = new Type[] { VectorIntTypesPerSizeLog2[op.Size], VectorIntTypesPerSizeLog2[op.Size] };
+
+                Type typeSse = op.Size != 3 ? typeof(Sse2) : typeof(Sse41);
+
+                context.EmitLdvec(op.Rn);
+
+                if (op is OpCodeSimdReg64 binOp)
                 {
-                    EmitSse2Op(context, nameof(Sse2.CompareEqual));
-                }
-                else if (op.Size == 3 && Optimizations.UseSse41)
-                {
-                    EmitSse41Op(context, nameof(Sse41.CompareEqual));
+                    context.EmitLdvec(binOp.Rm);
                 }
                 else
                 {
-                    EmitCmpOp(context, OpCodes.Beq_S, scalar: false);
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+                }
+
+                context.EmitCall(typeSse.GetMethod(nameof(Sse2.CompareEqual), typesCmp));
+
+                context.EmitStvec(op.Rd);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
                 }
             }
             else
@@ -48,7 +61,45 @@ namespace ChocolArm64.Instructions
 
         public static void Cmge_V(ILEmitterCtx context)
         {
-            EmitCmpOp(context, OpCodes.Bge_S, scalar: false);
+            if (Optimizations.UseSse42)
+            {
+                OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+                Type[] typesCmp = new Type[] { VectorIntTypesPerSizeLog2[op.Size], VectorIntTypesPerSizeLog2[op.Size] };
+                Type[] typesAnt = new Type[] { typeof(Vector128<long>), typeof(Vector128<long>) };
+                Type[] typesSav = new Type[] { typeof(long) };
+
+                Type typeSse = op.Size != 3 ? typeof(Sse2) : typeof(Sse42);
+
+                if (op is OpCodeSimdReg64 binOp)
+                {
+                    context.EmitLdvec(binOp.Rm);
+                }
+                else
+                {
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+                }
+
+                context.EmitLdvec(op.Rn);
+
+                context.EmitCall(typeSse.GetMethod(nameof(Sse2.CompareGreaterThan), typesCmp));
+
+                context.EmitLdc_I8(-1L);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAnt));
+
+                context.EmitStvec(op.Rd);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
+            }
+            else
+            {
+                EmitCmpOp(context, OpCodes.Bge_S, scalar: false);
+            }
         }
 
         public static void Cmgt_S(ILEmitterCtx context)
@@ -58,19 +109,32 @@ namespace ChocolArm64.Instructions
 
         public static void Cmgt_V(ILEmitterCtx context)
         {
-            if (context.CurrOp is OpCodeSimdReg64 op)
+            if (Optimizations.UseSse42)
             {
-                if (op.Size < 3 && Optimizations.UseSse2)
+                OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+                Type[] typesCmp = new Type[] { VectorIntTypesPerSizeLog2[op.Size], VectorIntTypesPerSizeLog2[op.Size] };
+
+                Type typeSse = op.Size != 3 ? typeof(Sse2) : typeof(Sse42);
+
+                context.EmitLdvec(op.Rn);
+
+                if (op is OpCodeSimdReg64 binOp)
                 {
-                    EmitSse2Op(context, nameof(Sse2.CompareGreaterThan));
-                }
-                else if (op.Size == 3 && Optimizations.UseSse42)
-                {
-                    EmitSse42Op(context, nameof(Sse42.CompareGreaterThan));
+                    context.EmitLdvec(binOp.Rm);
                 }
                 else
                 {
-                    EmitCmpOp(context, OpCodes.Bgt_S, scalar: false);
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+                }
+
+                context.EmitCall(typeSse.GetMethod(nameof(Sse2.CompareGreaterThan), typesCmp));
+
+                context.EmitStvec(op.Rd);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
                 }
             }
             else
@@ -92,8 +156,8 @@ namespace ChocolArm64.Instructions
             {
                 Type[] typesMax = new Type[] { VectorUIntTypesPerSizeLog2[op.Size], VectorUIntTypesPerSizeLog2[op.Size] };
                 Type[] typesCmp = new Type[] { VectorIntTypesPerSizeLog2 [op.Size], VectorIntTypesPerSizeLog2 [op.Size] };
-                Type[] typesAnt = new Type[] { typeof(Vector128<byte>), typeof(Vector128<byte>) };
-                Type[] typesSav = new Type[] { typeof(byte) };
+                Type[] typesAnt = new Type[] { typeof(Vector128<long>), typeof(Vector128<long>) };
+                Type[] typesSav = new Type[] { typeof(long) };
 
                 Type typeSse = op.Size == 0 ? typeof(Sse2) : typeof(Sse41);
 
@@ -106,7 +170,7 @@ namespace ChocolArm64.Instructions
 
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.CompareEqual), typesCmp));
 
-                context.EmitLdc_I4(byte.MaxValue);
+                context.EmitLdc_I8(-1L);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
 
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAnt));
@@ -169,7 +233,37 @@ namespace ChocolArm64.Instructions
 
         public static void Cmle_V(ILEmitterCtx context)
         {
-            EmitCmpOp(context, OpCodes.Ble_S, scalar: false);
+            if (Optimizations.UseSse42)
+            {
+                OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+                Type[] typesCmp = new Type[] { VectorIntTypesPerSizeLog2[op.Size], VectorIntTypesPerSizeLog2[op.Size] };
+                Type[] typesAnt = new Type[] { typeof(Vector128<long>), typeof(Vector128<long>) };
+                Type[] typesSav = new Type[] { typeof(long) };
+
+                Type typeSse = op.Size != 3 ? typeof(Sse2) : typeof(Sse42);
+
+                context.EmitLdvec(op.Rn);
+                VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+
+                context.EmitCall(typeSse.GetMethod(nameof(Sse2.CompareGreaterThan), typesCmp));
+
+                context.EmitLdc_I8(-1L);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAnt));
+
+                context.EmitStvec(op.Rd);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
+            }
+            else
+            {
+                EmitCmpOp(context, OpCodes.Ble_S, scalar: false);
+            }
         }
 
         public static void Cmlt_S(ILEmitterCtx context)
@@ -179,7 +273,30 @@ namespace ChocolArm64.Instructions
 
         public static void Cmlt_V(ILEmitterCtx context)
         {
-            EmitCmpOp(context, OpCodes.Blt_S, scalar: false);
+            if (Optimizations.UseSse42)
+            {
+                OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+                Type[] typesCmp = new Type[] { VectorIntTypesPerSizeLog2[op.Size], VectorIntTypesPerSizeLog2[op.Size] };
+
+                Type typeSse = op.Size != 3 ? typeof(Sse2) : typeof(Sse42);
+
+                VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+                context.EmitLdvec(op.Rn);
+
+                context.EmitCall(typeSse.GetMethod(nameof(Sse2.CompareGreaterThan), typesCmp));
+
+                context.EmitStvec(op.Rd);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
+            }
+            else
+            {
+                EmitCmpOp(context, OpCodes.Blt_S, scalar: false);
+            }
         }
 
         public static void Cmtst_S(ILEmitterCtx context)
@@ -390,8 +507,8 @@ namespace ChocolArm64.Instructions
                         context.EmitLdvec(op.Rm);
                     }
 
-                    context.Emit(OpCodes.Dup);
                     context.EmitStvectmp();
+                    context.EmitLdvectmp();
 
                     context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.CompareOrderedScalar), typesCmp));
                     VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
@@ -453,8 +570,8 @@ namespace ChocolArm64.Instructions
                         context.EmitLdvec(op.Rm);
                     }
 
-                    context.Emit(OpCodes.Dup);
                     context.EmitStvectmp();
+                    context.EmitLdvectmp();
 
                     context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.CompareOrderedScalar), typesCmp));
                     VectorHelper.EmitCall(context, nameof(VectorHelper.VectorDoubleZero));

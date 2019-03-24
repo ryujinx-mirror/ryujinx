@@ -1863,13 +1863,7 @@ namespace ChocolArm64.Instructions
 
                 Type[] typesSub = new Type[] { VectorIntTypesPerSizeLog2[op.Size], VectorIntTypesPerSizeLog2[op.Size] };
 
-                string[] namesSzv = new string[] { nameof(VectorHelper.VectorSByteZero),
-                                                   nameof(VectorHelper.VectorInt16Zero),
-                                                   nameof(VectorHelper.VectorInt32Zero),
-                                                   nameof(VectorHelper.VectorInt64Zero) };
-
-                VectorHelper.EmitCall(context, namesSzv[op.Size]);
-
+                VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
                 context.EmitLdvec(op.Rn);
 
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Subtract), typesSub));
@@ -1921,20 +1915,125 @@ namespace ChocolArm64.Instructions
 
         public static void Sabd_V(ILEmitterCtx context)
         {
-            EmitVectorBinaryOpSx(context, () =>
+            if (Optimizations.UseSse2)
             {
-                context.Emit(OpCodes.Sub);
-                EmitAbs(context);
-            });
+                OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+                Type[] typesCmpSub = new Type[] { VectorIntTypesPerSizeLog2[op.Size], VectorIntTypesPerSizeLog2[op.Size] };
+                Type[] typesAndOr  = new Type[] { typeof(Vector128<long>), typeof(Vector128<long>) };
+
+                context.EmitLdvec(op.Rn);
+                context.EmitLdvec(op.Rm);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.CompareGreaterThan), typesCmpSub));
+
+                context.EmitStvectmp(); // Cmp mask
+                context.EmitLdvectmp(); // Cmp mask
+
+                context.EmitLdvec(op.Rn);
+                context.EmitLdvec(op.Rm);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Subtract), typesCmpSub));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.And), typesAndOr));
+
+                context.EmitLdvectmp(); // Cmp mask
+
+                context.EmitLdvec(op.Rm);
+                context.EmitLdvec(op.Rn);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Subtract), typesCmpSub));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAndOr));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Or), typesAndOr));
+
+                context.EmitStvec(op.Rd);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
+            }
+            else
+            {
+                EmitVectorBinaryOpSx(context, () =>
+                {
+                    context.Emit(OpCodes.Sub);
+                    EmitAbs(context);
+                });
+            }
         }
 
         public static void Sabdl_V(ILEmitterCtx context)
         {
-            EmitVectorWidenRnRmBinaryOpSx(context, () =>
+            OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+            if (Optimizations.UseSse41 && op.Size < 2)
             {
-                context.Emit(OpCodes.Sub);
-                EmitAbs(context);
-            });
+                Type[] typesCmpSub = new Type[] { VectorIntTypesPerSizeLog2[op.Size + 1],
+                                                  VectorIntTypesPerSizeLog2[op.Size + 1] };
+                Type[] typesSrl    = new Type[] { VectorIntTypesPerSizeLog2[op.Size], typeof(byte) };
+                Type[] typesAndOr  = new Type[] { typeof(Vector128<long>), typeof(Vector128<long>) };
+                Type[] typesCvt    = new Type[] { VectorIntTypesPerSizeLog2[op.Size] };
+
+                string nameCvt = op.Size == 0
+                    ? nameof(Sse41.ConvertToVector128Int16)
+                    : nameof(Sse41.ConvertToVector128Int32);
+
+                context.EmitLdvec(op.Rn);
+
+                if (op.RegisterSize == RegisterSize.Simd128)
+                {
+                    context.Emit(OpCodes.Ldc_I4_8);
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), typesSrl));
+                }
+
+                context.EmitCall(typeof(Sse41).GetMethod(nameCvt, typesCvt));
+
+                context.EmitLdvec(op.Rm);
+
+                if (op.RegisterSize == RegisterSize.Simd128)
+                {
+                    context.Emit(OpCodes.Ldc_I4_8);
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), typesSrl));
+                }
+
+                context.EmitCall(typeof(Sse41).GetMethod(nameCvt, typesCvt));
+
+                context.EmitStvectmp2(); // Long Rm
+                context.EmitStvectmp();  // Long Rn
+
+                context.EmitLdvectmp();  // Long Rn
+                context.EmitLdvectmp2(); // Long Rm
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.CompareGreaterThan), typesCmpSub));
+
+                context.EmitStvectmp3(); // Cmp mask
+                context.EmitLdvectmp3(); // Cmp mask
+
+                context.EmitLdvectmp();  // Long Rn
+                context.EmitLdvectmp2(); // Long Rm
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Subtract), typesCmpSub));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.And), typesAndOr));
+
+                context.EmitLdvectmp3(); // Cmp mask
+
+                context.EmitLdvectmp2(); // Long Rm
+                context.EmitLdvectmp();  // Long Rn
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Subtract), typesCmpSub));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAndOr));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Or), typesAndOr));
+
+                context.EmitStvec(op.Rd);
+            }
+            else
+            {
+                EmitVectorWidenRnRmBinaryOpSx(context, () =>
+                {
+                    context.Emit(OpCodes.Sub);
+                    EmitAbs(context);
+                });
+            }
         }
 
         public static void Sadalp_V(ILEmitterCtx context)
@@ -2430,8 +2529,8 @@ namespace ChocolArm64.Instructions
                 context.EmitLdc_I4(op.Size == 0 ? sbyte.MinValue : short.MinValue);
                 context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
 
-                context.Emit(OpCodes.Dup);
                 context.EmitStvectmp();
+                context.EmitLdvectmp();
 
                 context.EmitLdvec(op.Rn);
                 context.EmitLdvectmp();
@@ -2604,20 +2703,152 @@ namespace ChocolArm64.Instructions
 
         public static void Uabd_V(ILEmitterCtx context)
         {
-            EmitVectorBinaryOpZx(context, () =>
+            if (Optimizations.UseSse41)
             {
-                context.Emit(OpCodes.Sub);
-                EmitAbs(context);
-            });
+                OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+                Type[] typesMax    = new Type[] { VectorUIntTypesPerSizeLog2[op.Size], VectorUIntTypesPerSizeLog2[op.Size] };
+                Type[] typesCmpSub = new Type[] { VectorIntTypesPerSizeLog2 [op.Size], VectorIntTypesPerSizeLog2 [op.Size] };
+                Type[] typesAndOr  = new Type[] { typeof(Vector128<long>), typeof(Vector128<long>) };
+                Type[] typesSav    = new Type[] { typeof(long) };
+
+                Type typeSse = op.Size == 0 ? typeof(Sse2) : typeof(Sse41);
+
+                context.EmitLdvec(op.Rm);
+                context.EmitLdvec(op.Rn);
+
+                context.EmitCall(typeSse.GetMethod(nameof(Sse2.Max), typesMax));
+
+                context.EmitLdvec(op.Rm);
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.CompareEqual), typesCmpSub));
+
+                context.EmitLdc_I8(-1L);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAndOr));
+
+                context.EmitStvectmp(); // Cmp mask
+                context.EmitLdvectmp(); // Cmp mask
+
+                context.EmitLdvec(op.Rn);
+                context.EmitLdvec(op.Rm);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Subtract), typesCmpSub));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.And), typesAndOr));
+
+                context.EmitLdvectmp(); // Cmp mask
+
+                context.EmitLdvec(op.Rm);
+                context.EmitLdvec(op.Rn);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Subtract), typesCmpSub));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAndOr));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Or), typesAndOr));
+
+                context.EmitStvec(op.Rd);
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
+            }
+            else
+            {
+                EmitVectorBinaryOpZx(context, () =>
+                {
+                    context.Emit(OpCodes.Sub);
+                    EmitAbs(context);
+                });
+            }
         }
 
         public static void Uabdl_V(ILEmitterCtx context)
         {
-            EmitVectorWidenRnRmBinaryOpZx(context, () =>
+            OpCodeSimdReg64 op = (OpCodeSimdReg64)context.CurrOp;
+
+            if (Optimizations.UseSse41 && op.Size < 2)
             {
-                context.Emit(OpCodes.Sub);
-                EmitAbs(context);
-            });
+                Type[] typesMax    = new Type[] { VectorUIntTypesPerSizeLog2[op.Size + 1],
+                                                  VectorUIntTypesPerSizeLog2[op.Size + 1] };
+                Type[] typesCmpSub = new Type[] { VectorIntTypesPerSizeLog2 [op.Size + 1],
+                                                  VectorIntTypesPerSizeLog2 [op.Size + 1] };
+                Type[] typesSrl    = new Type[] { VectorUIntTypesPerSizeLog2[op.Size], typeof(byte) };
+                Type[] typesAndOr  = new Type[] { typeof(Vector128<long>), typeof(Vector128<long>) };
+                Type[] typesCvt    = new Type[] { VectorUIntTypesPerSizeLog2[op.Size] };
+                Type[] typesSav    = new Type[] { typeof(long) };
+
+                string nameCvt = op.Size == 0
+                    ? nameof(Sse41.ConvertToVector128Int16)
+                    : nameof(Sse41.ConvertToVector128Int32);
+
+                context.EmitLdvec(op.Rn);
+
+                if (op.RegisterSize == RegisterSize.Simd128)
+                {
+                    context.Emit(OpCodes.Ldc_I4_8);
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), typesSrl));
+                }
+
+                context.EmitCall(typeof(Sse41).GetMethod(nameCvt, typesCvt));
+
+                context.EmitLdvec(op.Rm);
+
+                if (op.RegisterSize == RegisterSize.Simd128)
+                {
+                    context.Emit(OpCodes.Ldc_I4_8);
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical128BitLane), typesSrl));
+                }
+
+                context.EmitCall(typeof(Sse41).GetMethod(nameCvt, typesCvt));
+
+                context.EmitStvectmp2(); // Long Rm
+                context.EmitStvectmp();  // Long Rn
+
+                context.EmitLdvectmp2(); // Long Rm
+                context.EmitLdvectmp();  // Long Rn
+
+                context.EmitCall(typeof(Sse41).GetMethod(nameof(Sse41.Max), typesMax));
+
+                context.EmitLdvectmp2(); // Long Rm
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.CompareEqual), typesCmpSub));
+
+                context.EmitLdc_I8(-1L);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAndOr));
+
+                context.EmitStvectmp3(); // Cmp mask
+                context.EmitLdvectmp3(); // Cmp mask
+
+                context.EmitLdvectmp();  // Long Rn
+                context.EmitLdvectmp2(); // Long Rm
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Subtract), typesCmpSub));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.And), typesAndOr));
+
+                context.EmitLdvectmp3(); // Cmp mask
+
+                context.EmitLdvectmp2(); // Long Rm
+                context.EmitLdvectmp();  // Long Rn
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Subtract), typesCmpSub));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.AndNot), typesAndOr));
+
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Or), typesAndOr));
+
+                context.EmitStvec(op.Rd);
+            }
+            else
+            {
+                EmitVectorWidenRnRmBinaryOpZx(context, () =>
+                {
+                    context.Emit(OpCodes.Sub);
+                    EmitAbs(context);
+                });
+            }
         }
 
         public static void Uadalp_V(ILEmitterCtx context)
