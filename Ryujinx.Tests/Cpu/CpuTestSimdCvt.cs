@@ -13,8 +13,24 @@ namespace Ryujinx.Tests.Cpu
 #if SimdCvt
 
 #region "ValueSource (Types)"
-        private static IEnumerable<ulong> _1S_F_()
+        private static IEnumerable<ulong> _1S_F_Cvt_()
         {
+            // int
+            yield return 0x00000000CF000001; // -2.1474839E9f  (-2147483904)
+            yield return 0x00000000CF000000; // -2.14748365E9f (-2147483648)
+            yield return 0x00000000CEFFFFFF; // -2.14748352E9f (-2147483520)
+            yield return 0x000000004F000001; //  2.1474839E9f  (2147483904)
+            yield return 0x000000004F000000; //  2.14748365E9f (2147483648)
+            yield return 0x000000004EFFFFFF; //  2.14748352E9f (2147483520)
+
+            // long
+            yield return 0x00000000DF000001ul; // -9.223373E18f  (-9223373136366403584)
+            yield return 0x00000000DF000000ul; // -9.223372E18f  (-9223372036854775808)
+            yield return 0x00000000DEFFFFFFul; // -9.2233715E18f (-9223371487098961920)
+            yield return 0x000000005F000001ul; //  9.223373E18f  (9223373136366403584)
+            yield return 0x000000005F000000ul; //  9.223372E18f  (9223372036854775808)
+            yield return 0x000000005EFFFFFFul; //  9.2233715E18f (9223371487098961920)
+
             yield return 0x00000000FF7FFFFFul; // -Max Normal    (float.MinValue)
             yield return 0x0000000080800000ul; // -Min Normal
             yield return 0x00000000807FFFFFul; // -Max Subnormal
@@ -55,8 +71,24 @@ namespace Ryujinx.Tests.Cpu
             }
         }
 
-        private static IEnumerable<ulong> _1D_F_()
+        private static IEnumerable<ulong> _1D_F_Cvt_()
         {
+            // int
+            yield return 0xC1E0000000200000ul; // -2147483649.0000000d (-2147483649)
+            yield return 0xC1E0000000000000ul; // -2147483648.0000000d (-2147483648)
+            yield return 0xC1DFFFFFFFC00000ul; // -2147483647.0000000d (-2147483647)
+            yield return 0x41E0000000200000ul; //  2147483649.0000000d (2147483649)
+            yield return 0x41E0000000000000ul; //  2147483648.0000000d (2147483648)
+            yield return 0x41DFFFFFFFC00000ul; //  2147483647.0000000d (2147483647)
+
+            // long
+            yield return 0xC3E0000000000001ul; // -9.2233720368547780E18d (-9223372036854778000)
+            yield return 0xC3E0000000000000ul; // -9.2233720368547760E18d (-9223372036854776000)
+            yield return 0xC3DFFFFFFFFFFFFFul; // -9.2233720368547750E18d (-9223372036854775000)
+            yield return 0x43E0000000000001ul; //  9.2233720368547780E18d (9223372036854778000)
+            yield return 0x43E0000000000000ul; //  9.2233720368547760E18d (9223372036854776000)
+            yield return 0x43DFFFFFFFFFFFFFul; //  9.2233720368547750E18d (9223372036854775000)
+
             yield return 0xFFEFFFFFFFFFFFFFul; // -Max Normal    (double.MinValue)
             yield return 0x8010000000000000ul; // -Min Normal
             yield return 0x800FFFFFFFFFFFFFul; // -Max Subnormal
@@ -110,7 +142,67 @@ namespace Ryujinx.Tests.Cpu
 #endregion
 
 #region "ValueSource (Opcodes)"
-        private static uint[] _F_Cvt_Z_SU_S_SW_()
+        private static uint[] _F_Cvt_AMPZ_SU_Gp_SW_()
+        {
+            return new uint[]
+            {
+                0x1E240000u, // FCVTAS W0, S0
+                0x1E250000u, // FCVTAU W0, S0
+                0x1E300000u, // FCVTMS W0, S0
+                0x1E310000u, // FCVTMU W0, S0
+                0x1E280000u, // FCVTPS W0, S0
+                0x1E290000u, // FCVTPU W0, S0
+                0x1E380000u, // FCVTZS W0, S0
+                0x1E390000u  // FCVTZU W0, S0
+            };
+        }
+
+        private static uint[] _F_Cvt_AMPZ_SU_Gp_SX_()
+        {
+            return new uint[]
+            {
+                0x9E240000u, // FCVTAS X0, S0
+                0x9E250000u, // FCVTAU X0, S0
+                0x9E300000u, // FCVTMS X0, S0
+                0x9E310000u, // FCVTMU X0, S0
+                0x9E280000u, // FCVTPS X0, S0
+                0x9E290000u, // FCVTPU X0, S0
+                0x9E380000u, // FCVTZS X0, S0
+                0x9E390000u  // FCVTZU X0, S0
+            };
+        }
+
+        private static uint[] _F_Cvt_AMPZ_SU_Gp_DW_()
+        {
+            return new uint[]
+            {
+                0x1E640000u, // FCVTAS W0, D0
+                0x1E650000u, // FCVTAU W0, D0
+                0x1E700000u, // FCVTMS W0, D0
+                0x1E710000u, // FCVTMU W0, D0
+                0x1E680000u, // FCVTPS W0, D0
+                0x1E690000u, // FCVTPU W0, D0
+                0x1E780000u, // FCVTZS W0, D0
+                0x1E790000u  // FCVTZU W0, D0
+            };
+        }
+
+        private static uint[] _F_Cvt_AMPZ_SU_Gp_DX_()
+        {
+            return new uint[]
+            {
+                0x9E640000u, // FCVTAS X0, D0
+                0x9E650000u, // FCVTAU X0, D0
+                0x9E700000u, // FCVTMS X0, D0
+                0x9E710000u, // FCVTMU X0, D0
+                0x9E680000u, // FCVTPS X0, D0
+                0x9E690000u, // FCVTPU X0, D0
+                0x9E780000u, // FCVTZS X0, D0
+                0x9E790000u  // FCVTZU X0, D0
+            };
+        }
+
+        private static uint[] _F_Cvt_Z_SU_Gp_Fixed_SW_()
         {
             return new uint[]
             {
@@ -119,7 +211,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Cvt_Z_SU_S_SX_()
+        private static uint[] _F_Cvt_Z_SU_Gp_Fixed_SX_()
         {
             return new uint[]
             {
@@ -128,7 +220,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Cvt_Z_SU_S_DW_()
+        private static uint[] _F_Cvt_Z_SU_Gp_Fixed_DW_()
         {
             return new uint[]
             {
@@ -137,7 +229,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Cvt_Z_SU_S_DX_()
+        private static uint[] _F_Cvt_Z_SU_Gp_Fixed_DX_()
         {
             return new uint[]
             {
@@ -146,7 +238,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _SU_Cvt_F_S_WS_()
+        private static uint[] _SU_Cvt_F_Gp_Fixed_WS_()
         {
             return new uint[]
             {
@@ -155,7 +247,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _SU_Cvt_F_S_WD_()
+        private static uint[] _SU_Cvt_F_Gp_Fixed_WD_()
         {
             return new uint[]
             {
@@ -164,7 +256,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _SU_Cvt_F_S_XS_()
+        private static uint[] _SU_Cvt_F_Gp_Fixed_XS_()
         {
             return new uint[]
             {
@@ -173,7 +265,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _SU_Cvt_F_S_XD_()
+        private static uint[] _SU_Cvt_F_Gp_Fixed_XD_()
         {
             return new uint[]
             {
@@ -184,20 +276,86 @@ namespace Ryujinx.Tests.Cpu
 #endregion
 
         private const int RndCnt      = 2;
-        private const int RndCntFbits = 2;
+        private const int RndCntFBits = 2;
 
         private static readonly bool NoZeros = false;
         private static readonly bool NoInfs  = false;
         private static readonly bool NoNaNs  = false;
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_Z_SU_S_SW([ValueSource("_F_Cvt_Z_SU_S_SW_")] uint opcodes,
-                                    [Values(0u, 31u)] uint rd,
-                                    [Values(1u)]      uint rn,
-                                    [ValueSource("_1S_F_")] ulong a,
-                                    [Values(1u, 32u)] [Random(2u, 31u, RndCntFbits)] uint fbits)
+        public void F_Cvt_AMPZ_SU_Gp_SW([ValueSource("_F_Cvt_AMPZ_SU_Gp_SW_")] uint opcodes,
+                                        [Values(0u, 31u)] uint rd,
+                                        [Values(1u)]      uint rn,
+                                        [ValueSource("_1S_F_Cvt_")] ulong a)
         {
-            uint scale = (64u - fbits) & 0x3Fu;
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            ulong x0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
+            uint w31 = TestContext.CurrentContext.Random.NextUInt();
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, x0: x0, x31: w31, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Cvt_AMPZ_SU_Gp_SX([ValueSource("_F_Cvt_AMPZ_SU_Gp_SX_")] uint opcodes,
+                                        [Values(0u, 31u)] uint rd,
+                                        [Values(1u)]      uint rn,
+                                        [ValueSource("_1S_F_Cvt_")] ulong a)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            ulong x31 = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, x31: x31, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Cvt_AMPZ_SU_Gp_DW([ValueSource("_F_Cvt_AMPZ_SU_Gp_DW_")] uint opcodes,
+                                        [Values(0u, 31u)] uint rd,
+                                        [Values(1u)]      uint rn,
+                                        [ValueSource("_1D_F_Cvt_")] ulong a)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            ulong x0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
+            uint w31 = TestContext.CurrentContext.Random.NextUInt();
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, x0: x0, x31: w31, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Cvt_AMPZ_SU_Gp_DX([ValueSource("_F_Cvt_AMPZ_SU_Gp_DX_")] uint opcodes,
+                                        [Values(0u, 31u)] uint rd,
+                                        [Values(1u)]      uint rn,
+                                        [ValueSource("_1D_F_Cvt_")] ulong a)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            ulong x31 = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, x31: x31, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Cvt_Z_SU_Gp_Fixed_SW([ValueSource("_F_Cvt_Z_SU_Gp_Fixed_SW_")] uint opcodes,
+                                           [Values(0u, 31u)] uint rd,
+                                           [Values(1u)]      uint rn,
+                                           [ValueSource("_1S_F_Cvt_")] ulong a,
+                                           [Values(1u, 32u)] [Random(2u, 31u, RndCntFBits)] uint fBits)
+        {
+            uint scale = (64u - fBits) & 0x3Fu;
 
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= (scale << 10);
@@ -212,13 +370,13 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_Z_SU_S_SX([ValueSource("_F_Cvt_Z_SU_S_SX_")] uint opcodes,
-                                    [Values(0u, 31u)] uint rd,
-                                    [Values(1u)]      uint rn,
-                                    [ValueSource("_1S_F_")] ulong a,
-                                    [Values(1u, 64u)] [Random(2u, 63u, RndCntFbits)] uint fbits)
+        public void F_Cvt_Z_SU_Gp_Fixed_SX([ValueSource("_F_Cvt_Z_SU_Gp_Fixed_SX_")] uint opcodes,
+                                           [Values(0u, 31u)] uint rd,
+                                           [Values(1u)]      uint rn,
+                                           [ValueSource("_1S_F_Cvt_")] ulong a,
+                                           [Values(1u, 64u)] [Random(2u, 63u, RndCntFBits)] uint fBits)
         {
-            uint scale = (64u - fbits) & 0x3Fu;
+            uint scale = (64u - fBits) & 0x3Fu;
 
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= (scale << 10);
@@ -232,13 +390,13 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_Z_SU_S_DW([ValueSource("_F_Cvt_Z_SU_S_DW_")] uint opcodes,
-                                    [Values(0u, 31u)] uint rd,
-                                    [Values(1u)]      uint rn,
-                                    [ValueSource("_1D_F_")] ulong a,
-                                    [Values(1u, 32u)] [Random(2u, 31u, RndCntFbits)] uint fbits)
+        public void F_Cvt_Z_SU_Gp_Fixed_DW([ValueSource("_F_Cvt_Z_SU_Gp_Fixed_DW_")] uint opcodes,
+                                           [Values(0u, 31u)] uint rd,
+                                           [Values(1u)]      uint rn,
+                                           [ValueSource("_1D_F_Cvt_")] ulong a,
+                                           [Values(1u, 32u)] [Random(2u, 31u, RndCntFBits)] uint fBits)
         {
-            uint scale = (64u - fbits) & 0x3Fu;
+            uint scale = (64u - fBits) & 0x3Fu;
 
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= (scale << 10);
@@ -253,13 +411,13 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Cvt_Z_SU_S_DX([ValueSource("_F_Cvt_Z_SU_S_DX_")] uint opcodes,
-                                    [Values(0u, 31u)] uint rd,
-                                    [Values(1u)]      uint rn,
-                                    [ValueSource("_1D_F_")] ulong a,
-                                    [Values(1u, 64u)] [Random(2u, 63u, RndCntFbits)] uint fbits)
+        public void F_Cvt_Z_SU_Gp_Fixed_DX([ValueSource("_F_Cvt_Z_SU_Gp_Fixed_DX_")] uint opcodes,
+                                           [Values(0u, 31u)] uint rd,
+                                           [Values(1u)]      uint rn,
+                                           [ValueSource("_1D_F_Cvt_")] ulong a,
+                                           [Values(1u, 64u)] [Random(2u, 63u, RndCntFBits)] uint fBits)
         {
-            uint scale = (64u - fbits) & 0x3Fu;
+            uint scale = (64u - fBits) & 0x3Fu;
 
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= (scale << 10);
@@ -273,13 +431,13 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void SU_Cvt_F_S_WS([ValueSource("_SU_Cvt_F_S_WS_")] uint opcodes,
-                                  [Values(0u)]      uint rd,
-                                  [Values(1u, 31u)] uint rn,
-                                  [ValueSource("_W_")] [Random(RndCnt)] uint wn,
-                                  [Values(1u, 32u)] [Random(2u, 31u, RndCntFbits)] uint fbits)
+        public void SU_Cvt_F_Gp_Fixed_WS([ValueSource("_SU_Cvt_F_Gp_Fixed_WS_")] uint opcodes,
+                                         [Values(0u)]      uint rd,
+                                         [Values(1u, 31u)] uint rn,
+                                         [ValueSource("_W_")] [Random(RndCnt)] uint wn,
+                                         [Values(1u, 32u)] [Random(2u, 31u, RndCntFBits)] uint fBits)
         {
-            uint scale = (64u - fbits) & 0x3Fu;
+            uint scale = (64u - fBits) & 0x3Fu;
 
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= (scale << 10);
@@ -294,13 +452,13 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void SU_Cvt_F_S_WD([ValueSource("_SU_Cvt_F_S_WD_")] uint opcodes,
-                                  [Values(0u)]      uint rd,
-                                  [Values(1u, 31u)] uint rn,
-                                  [ValueSource("_W_")] [Random(RndCnt)] uint wn,
-                                  [Values(1u, 32u)] [Random(2u, 31u, RndCntFbits)] uint fbits)
+        public void SU_Cvt_F_Gp_Fixed_WD([ValueSource("_SU_Cvt_F_Gp_Fixed_WD_")] uint opcodes,
+                                         [Values(0u)]      uint rd,
+                                         [Values(1u, 31u)] uint rn,
+                                         [ValueSource("_W_")] [Random(RndCnt)] uint wn,
+                                         [Values(1u, 32u)] [Random(2u, 31u, RndCntFBits)] uint fBits)
         {
-            uint scale = (64u - fbits) & 0x3Fu;
+            uint scale = (64u - fBits) & 0x3Fu;
 
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= (scale << 10);
@@ -315,13 +473,13 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void SU_Cvt_F_S_XS([ValueSource("_SU_Cvt_F_S_XS_")] uint opcodes,
-                                  [Values(0u)]      uint rd,
-                                  [Values(1u, 31u)] uint rn,
-                                  [ValueSource("_X_")] [Random(RndCnt)] ulong xn,
-                                  [Values(1u, 64u)] [Random(2u, 63u, RndCntFbits)] uint fbits)
+        public void SU_Cvt_F_Gp_Fixed_XS([ValueSource("_SU_Cvt_F_Gp_Fixed_XS_")] uint opcodes,
+                                         [Values(0u)]      uint rd,
+                                         [Values(1u, 31u)] uint rn,
+                                         [ValueSource("_X_")] [Random(RndCnt)] ulong xn,
+                                         [Values(1u, 64u)] [Random(2u, 63u, RndCntFBits)] uint fBits)
         {
-            uint scale = (64u - fbits) & 0x3Fu;
+            uint scale = (64u - fBits) & 0x3Fu;
 
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= (scale << 10);
@@ -336,13 +494,13 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void SU_Cvt_F_S_XD([ValueSource("_SU_Cvt_F_S_XD_")] uint opcodes,
-                                  [Values(0u)]      uint rd,
-                                  [Values(1u, 31u)] uint rn,
-                                  [ValueSource("_X_")] [Random(RndCnt)] ulong xn,
-                                  [Values(1u, 64u)] [Random(2u, 63u, RndCntFbits)] uint fbits)
+        public void SU_Cvt_F_Gp_Fixed_XD([ValueSource("_SU_Cvt_F_Gp_Fixed_XD_")] uint opcodes,
+                                         [Values(0u)]      uint rd,
+                                         [Values(1u, 31u)] uint rn,
+                                         [ValueSource("_X_")] [Random(RndCnt)] ulong xn,
+                                         [Values(1u, 64u)] [Random(2u, 63u, RndCntFBits)] uint fBits)
         {
-            uint scale = (64u - fbits) & 0x3Fu;
+            uint scale = (64u - fBits) & 0x3Fu;
 
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= (scale << 10);

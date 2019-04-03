@@ -563,7 +563,7 @@ namespace ChocolArm64.Instructions
 
                     if (cmpWithZero)
                     {
-                        VectorHelper.EmitCall(context, nameof(VectorHelper.VectorDoubleZero));
+                        VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
                     }
                     else
                     {
@@ -574,7 +574,7 @@ namespace ChocolArm64.Instructions
                     context.EmitLdvectmp();
 
                     context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.CompareOrderedScalar), typesCmp));
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorDoubleZero));
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
 
                     context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.CompareEqualOrderedScalar), typesCmp));
 
@@ -839,7 +839,7 @@ namespace ChocolArm64.Instructions
                 }
                 else
                 {
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorDoubleZero));
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
                 }
 
                 if (isLeOrLt)

@@ -358,7 +358,7 @@ namespace ChocolArm64.Instructions
             if (Optimizations.UseSsse3)
             {
                 Type[] typesCmpSflSub = new Type[] { typeof(Vector128<sbyte>), typeof(Vector128<sbyte>) };
-                Type[] typesOr        = new Type[] { typeof(Vector128<long> ), typeof(Vector128<long> ) };
+                Type[] typesOr        = new Type[] { typeof(Vector128<long>),  typeof(Vector128<long>) };
                 Type[] typesSav       = new Type[] { typeof(long) };
 
                 context.EmitLdvec(op.Rn);
@@ -710,7 +710,7 @@ namespace ChocolArm64.Instructions
                         context.EmitCall(typeof(Ssse3).GetMethod(nameof(Ssse3.Shuffle), GetTypesSflUpk(0)));
                     }
 
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorInt64Zero));
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
 
                     context.EmitCall(typeof(Sse2).GetMethod(nameUpk, GetTypesSflUpk(3)));
 
@@ -763,7 +763,7 @@ namespace ChocolArm64.Instructions
                 else
                 {
                     context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.UnpackLow), GetTypesSflUpk(op.Size)));
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorInt64Zero));
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
 
                     context.EmitCall(typeof(Sse2).GetMethod(nameUpk, GetTypesSflUpk(3)));
                 }

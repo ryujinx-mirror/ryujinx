@@ -26,8 +26,8 @@ namespace ChocolArm64.Instructions
         {
             if (float.IsNaN(value)) return 0;
 
-            return value > int.MaxValue ? int.MaxValue :
-                   value < int.MinValue ? int.MinValue : (int)value;
+            return value >= int.MaxValue ? int.MaxValue :
+                   value <= int.MinValue ? int.MinValue : (int)value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -35,8 +35,8 @@ namespace ChocolArm64.Instructions
         {
             if (float.IsNaN(value)) return 0;
 
-            return value > long.MaxValue ? long.MaxValue :
-                   value < long.MinValue ? long.MinValue : (long)value;
+            return value >= long.MaxValue ? long.MaxValue :
+                   value <= long.MinValue ? long.MinValue : (long)value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,8 +44,8 @@ namespace ChocolArm64.Instructions
         {
             if (float.IsNaN(value)) return 0;
 
-            return value > uint.MaxValue ? uint.MaxValue :
-                   value < uint.MinValue ? uint.MinValue : (uint)value;
+            return value >= uint.MaxValue ? uint.MaxValue :
+                   value <= uint.MinValue ? uint.MinValue : (uint)value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -53,8 +53,8 @@ namespace ChocolArm64.Instructions
         {
             if (float.IsNaN(value)) return 0;
 
-            return value > ulong.MaxValue ? ulong.MaxValue :
-                   value < ulong.MinValue ? ulong.MinValue : (ulong)value;
+            return value >= ulong.MaxValue ? ulong.MaxValue :
+                   value <= ulong.MinValue ? ulong.MinValue : (ulong)value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -62,8 +62,8 @@ namespace ChocolArm64.Instructions
         {
             if (double.IsNaN(value)) return 0;
 
-            return value > int.MaxValue ? int.MaxValue :
-                   value < int.MinValue ? int.MinValue : (int)value;
+            return value >= int.MaxValue ? int.MaxValue :
+                   value <= int.MinValue ? int.MinValue : (int)value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -71,8 +71,8 @@ namespace ChocolArm64.Instructions
         {
             if (double.IsNaN(value)) return 0;
 
-            return value > long.MaxValue ? long.MaxValue :
-                   value < long.MinValue ? long.MinValue : (long)value;
+            return value >= long.MaxValue ? long.MaxValue :
+                   value <= long.MinValue ? long.MinValue : (long)value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -80,8 +80,8 @@ namespace ChocolArm64.Instructions
         {
             if (double.IsNaN(value)) return 0;
 
-            return value > uint.MaxValue ? uint.MaxValue :
-                   value < uint.MinValue ? uint.MinValue : (uint)value;
+            return value >= uint.MaxValue ? uint.MaxValue :
+                   value <= uint.MinValue ? uint.MinValue : (uint)value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -89,8 +89,8 @@ namespace ChocolArm64.Instructions
         {
             if (double.IsNaN(value)) return 0;
 
-            return value > ulong.MaxValue ? ulong.MaxValue :
-                   value < ulong.MinValue ? ulong.MinValue : (ulong)value;
+            return value >= ulong.MaxValue ? ulong.MaxValue :
+                   value <= ulong.MinValue ? ulong.MinValue : (ulong)value;
         }
 
         public static double Round(double value, CpuThreadState state)
@@ -501,66 +501,11 @@ namespace ChocolArm64.Instructions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector128<sbyte> VectorSByteZero()
-        {
-            if (Sse2.IsSupported)
-            {
-                return Sse2.SetZeroVector128<sbyte>();
-            }
-
-            throw new PlatformNotSupportedException();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector128<short> VectorInt16Zero()
-        {
-            if (Sse2.IsSupported)
-            {
-                return Sse2.SetZeroVector128<short>();
-            }
-
-            throw new PlatformNotSupportedException();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector128<int> VectorInt32Zero()
-        {
-            if (Sse2.IsSupported)
-            {
-                return Sse2.SetZeroVector128<int>();
-            }
-
-            throw new PlatformNotSupportedException();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector128<long> VectorInt64Zero()
-        {
-            if (Sse2.IsSupported)
-            {
-                return Sse2.SetZeroVector128<long>();
-            }
-
-            throw new PlatformNotSupportedException();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector128<float> VectorSingleZero()
         {
             if (Sse.IsSupported)
             {
                 return Sse.SetZeroVector128();
-            }
-
-            throw new PlatformNotSupportedException();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector128<double> VectorDoubleZero()
-        {
-            if (Sse2.IsSupported)
-            {
-                return Sse2.SetZeroVector128<double>();
             }
 
             throw new PlatformNotSupportedException();
