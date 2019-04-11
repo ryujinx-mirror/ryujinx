@@ -95,6 +95,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                         type,
                         IntPtr.Zero);
                     break;
+                // Cube map arrays are just 2D texture arrays with 6 entries
+                // per cube map so we can handle them in the same way
+                case TextureTarget.TextureCubeMapArray:
                 case TextureTarget.Texture2DArray:
                     GL.TexImage3D(
                         target,
