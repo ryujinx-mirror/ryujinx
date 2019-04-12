@@ -2,6 +2,7 @@
 
 using NUnit.Framework;
 
+using System;
 using System.Collections.Generic;
 using System.Runtime.Intrinsics;
 
@@ -13,15 +14,15 @@ namespace Ryujinx.Tests.Cpu
 #if SimdCvt
 
 #region "ValueSource (Types)"
-        private static IEnumerable<ulong> _1S_F_Cvt_()
+        private static IEnumerable<ulong> _1S_F_WX_()
         {
             // int
-            yield return 0x00000000CF000001; // -2.1474839E9f  (-2147483904)
-            yield return 0x00000000CF000000; // -2.14748365E9f (-2147483648)
-            yield return 0x00000000CEFFFFFF; // -2.14748352E9f (-2147483520)
-            yield return 0x000000004F000001; //  2.1474839E9f  (2147483904)
-            yield return 0x000000004F000000; //  2.14748365E9f (2147483648)
-            yield return 0x000000004EFFFFFF; //  2.14748352E9f (2147483520)
+            yield return 0x00000000CF000001ul; // -2.1474839E9f  (-2147483904)
+            yield return 0x00000000CF000000ul; // -2.14748365E9f (-2147483648)
+            yield return 0x00000000CEFFFFFFul; // -2.14748352E9f (-2147483520)
+            yield return 0x000000004F000001ul; //  2.1474839E9f  (2147483904)
+            yield return 0x000000004F000000ul; //  2.14748365E9f (2147483648)
+            yield return 0x000000004EFFFFFFul; //  2.14748352E9f (2147483520)
 
             // long
             yield return 0x00000000DF000001ul; // -9.223373E18f  (-9223373136366403584)
@@ -30,6 +31,16 @@ namespace Ryujinx.Tests.Cpu
             yield return 0x000000005F000001ul; //  9.223373E18f  (9223373136366403584)
             yield return 0x000000005F000000ul; //  9.223372E18f  (9223372036854775808)
             yield return 0x000000005EFFFFFFul; //  9.2233715E18f (9223371487098961920)
+
+            // uint
+            yield return 0x000000004F800001ul; // 4.2949678E9f  (4294967808)
+            yield return 0x000000004F800000ul; // 4.2949673E9f  (4294967296)
+            yield return 0x000000004F7FFFFFul; // 4.29496704E9f (4294967040)
+
+            // ulong
+            yield return 0x000000005F800001ul; // 1.8446746E19f (18446746272732807168)
+            yield return 0x000000005F800000ul; // 1.8446744E19f (18446744073709551616)
+            yield return 0x000000005F7FFFFFul; // 1.8446743E19f (18446742974197923840)
 
             yield return 0x00000000FF7FFFFFul; // -Max Normal    (float.MinValue)
             yield return 0x0000000080800000ul; // -Min Normal
@@ -63,15 +74,30 @@ namespace Ryujinx.Tests.Cpu
             for (int cnt = 1; cnt <= RndCnt; cnt++)
             {
                 ulong grbg = TestContext.CurrentContext.Random.NextUInt();
-                ulong rnd1 = GenNormalS();
-                ulong rnd2 = GenSubnormalS();
+
+                ulong rnd1 = (uint)BitConverter.SingleToInt32Bits(
+                    (float)((int)TestContext.CurrentContext.Random.NextUInt()));
+                ulong rnd2 = (uint)BitConverter.SingleToInt32Bits(
+                    (float)((long)TestContext.CurrentContext.Random.NextULong()));
+                ulong rnd3 = (uint)BitConverter.SingleToInt32Bits(
+                    (float)((uint)TestContext.CurrentContext.Random.NextUInt()));
+                ulong rnd4 = (uint)BitConverter.SingleToInt32Bits(
+                    (float)((ulong)TestContext.CurrentContext.Random.NextULong()));
+
+                ulong rnd5 = GenNormalS();
+                ulong rnd6 = GenSubnormalS();
 
                 yield return (grbg << 32) | rnd1;
                 yield return (grbg << 32) | rnd2;
+                yield return (grbg << 32) | rnd3;
+                yield return (grbg << 32) | rnd4;
+
+                yield return (grbg << 32) | rnd5;
+                yield return (grbg << 32) | rnd6;
             }
         }
 
-        private static IEnumerable<ulong> _1D_F_Cvt_()
+        private static IEnumerable<ulong> _1D_F_WX_()
         {
             // int
             yield return 0xC1E0000000200000ul; // -2147483649.0000000d (-2147483649)
@@ -88,6 +114,16 @@ namespace Ryujinx.Tests.Cpu
             yield return 0x43E0000000000001ul; //  9.2233720368547780E18d (9223372036854778000)
             yield return 0x43E0000000000000ul; //  9.2233720368547760E18d (9223372036854776000)
             yield return 0x43DFFFFFFFFFFFFFul; //  9.2233720368547750E18d (9223372036854775000)
+
+            // uint
+            yield return 0x41F0000000100000ul; // 4294967297.0000000d (4294967297)
+            yield return 0x41F0000000000000ul; // 4294967296.0000000d (4294967296)
+            yield return 0x41EFFFFFFFE00000ul; // 4294967295.0000000d (4294967295)
+
+            // ulong
+            yield return 0x43F0000000000001ul; // 1.8446744073709556e19d (18446744073709556000)
+            yield return 0x43F0000000000000ul; // 1.8446744073709552E19d (18446744073709552000)
+            yield return 0x43EFFFFFFFFFFFFFul; // 1.8446744073709550e19d (18446744073709550000)
 
             yield return 0xFFEFFFFFFFFFFFFFul; // -Max Normal    (double.MinValue)
             yield return 0x8010000000000000ul; // -Min Normal
@@ -120,11 +156,25 @@ namespace Ryujinx.Tests.Cpu
 
             for (int cnt = 1; cnt <= RndCnt; cnt++)
             {
-                ulong rnd1 = GenNormalD();
-                ulong rnd2 = GenSubnormalD();
+                ulong rnd1 = (ulong)BitConverter.DoubleToInt64Bits(
+                    (double)((int)TestContext.CurrentContext.Random.NextUInt()));
+                ulong rnd2 = (ulong)BitConverter.DoubleToInt64Bits(
+                    (double)((long)TestContext.CurrentContext.Random.NextULong()));
+                ulong rnd3 = (ulong)BitConverter.DoubleToInt64Bits(
+                    (double)((uint)TestContext.CurrentContext.Random.NextUInt()));
+                ulong rnd4 = (ulong)BitConverter.DoubleToInt64Bits(
+                    (double)((ulong)TestContext.CurrentContext.Random.NextULong()));
+
+                ulong rnd5 = GenNormalD();
+                ulong rnd6 = GenSubnormalD();
 
                 yield return rnd1;
                 yield return rnd2;
+                yield return rnd3;
+                yield return rnd4;
+
+                yield return rnd5;
+                yield return rnd6;
             }
         }
 
@@ -286,7 +336,7 @@ namespace Ryujinx.Tests.Cpu
         public void F_Cvt_AMPZ_SU_Gp_SW([ValueSource("_F_Cvt_AMPZ_SU_Gp_SW_")] uint opcodes,
                                         [Values(0u, 31u)] uint rd,
                                         [Values(1u)]      uint rn,
-                                        [ValueSource("_1S_F_Cvt_")] ulong a)
+                                        [ValueSource("_1S_F_WX_")] ulong a)
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
@@ -303,7 +353,7 @@ namespace Ryujinx.Tests.Cpu
         public void F_Cvt_AMPZ_SU_Gp_SX([ValueSource("_F_Cvt_AMPZ_SU_Gp_SX_")] uint opcodes,
                                         [Values(0u, 31u)] uint rd,
                                         [Values(1u)]      uint rn,
-                                        [ValueSource("_1S_F_Cvt_")] ulong a)
+                                        [ValueSource("_1S_F_WX_")] ulong a)
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
@@ -319,7 +369,7 @@ namespace Ryujinx.Tests.Cpu
         public void F_Cvt_AMPZ_SU_Gp_DW([ValueSource("_F_Cvt_AMPZ_SU_Gp_DW_")] uint opcodes,
                                         [Values(0u, 31u)] uint rd,
                                         [Values(1u)]      uint rn,
-                                        [ValueSource("_1D_F_Cvt_")] ulong a)
+                                        [ValueSource("_1D_F_WX_")] ulong a)
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
@@ -336,7 +386,7 @@ namespace Ryujinx.Tests.Cpu
         public void F_Cvt_AMPZ_SU_Gp_DX([ValueSource("_F_Cvt_AMPZ_SU_Gp_DX_")] uint opcodes,
                                         [Values(0u, 31u)] uint rd,
                                         [Values(1u)]      uint rn,
-                                        [ValueSource("_1D_F_Cvt_")] ulong a)
+                                        [ValueSource("_1D_F_WX_")] ulong a)
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
@@ -352,7 +402,7 @@ namespace Ryujinx.Tests.Cpu
         public void F_Cvt_Z_SU_Gp_Fixed_SW([ValueSource("_F_Cvt_Z_SU_Gp_Fixed_SW_")] uint opcodes,
                                            [Values(0u, 31u)] uint rd,
                                            [Values(1u)]      uint rn,
-                                           [ValueSource("_1S_F_Cvt_")] ulong a,
+                                           [ValueSource("_1S_F_WX_")] ulong a,
                                            [Values(1u, 32u)] [Random(2u, 31u, RndCntFBits)] uint fBits)
         {
             uint scale = (64u - fBits) & 0x3Fu;
@@ -373,7 +423,7 @@ namespace Ryujinx.Tests.Cpu
         public void F_Cvt_Z_SU_Gp_Fixed_SX([ValueSource("_F_Cvt_Z_SU_Gp_Fixed_SX_")] uint opcodes,
                                            [Values(0u, 31u)] uint rd,
                                            [Values(1u)]      uint rn,
-                                           [ValueSource("_1S_F_Cvt_")] ulong a,
+                                           [ValueSource("_1S_F_WX_")] ulong a,
                                            [Values(1u, 64u)] [Random(2u, 63u, RndCntFBits)] uint fBits)
         {
             uint scale = (64u - fBits) & 0x3Fu;
@@ -393,7 +443,7 @@ namespace Ryujinx.Tests.Cpu
         public void F_Cvt_Z_SU_Gp_Fixed_DW([ValueSource("_F_Cvt_Z_SU_Gp_Fixed_DW_")] uint opcodes,
                                            [Values(0u, 31u)] uint rd,
                                            [Values(1u)]      uint rn,
-                                           [ValueSource("_1D_F_Cvt_")] ulong a,
+                                           [ValueSource("_1D_F_WX_")] ulong a,
                                            [Values(1u, 32u)] [Random(2u, 31u, RndCntFBits)] uint fBits)
         {
             uint scale = (64u - fBits) & 0x3Fu;
@@ -414,7 +464,7 @@ namespace Ryujinx.Tests.Cpu
         public void F_Cvt_Z_SU_Gp_Fixed_DX([ValueSource("_F_Cvt_Z_SU_Gp_Fixed_DX_")] uint opcodes,
                                            [Values(0u, 31u)] uint rd,
                                            [Values(1u)]      uint rn,
-                                           [ValueSource("_1D_F_Cvt_")] ulong a,
+                                           [ValueSource("_1D_F_WX_")] ulong a,
                                            [Values(1u, 64u)] [Random(2u, 63u, RndCntFBits)] uint fBits)
         {
             uint scale = (64u - fBits) & 0x3Fu;
