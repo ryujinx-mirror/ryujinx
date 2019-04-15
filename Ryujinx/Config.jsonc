@@ -44,6 +44,9 @@
     // Enable or disable aggressive CPU optimizations
     "enable_aggressive_cpu_opts": true,
 
+    // Enable or disable ignoring missing services, this may cause instability
+    "ignore_missing_services": false, 
+
     // The primary controller's type
     // Supported Values: Handheld, ProController, NpadPair, NpadLeft, NpadRight
     "controller_type": "Handheld",

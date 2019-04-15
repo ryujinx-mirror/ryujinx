@@ -411,6 +411,17 @@
         false
       ]
     },
+    "ignore_missing_services": {
+      "$id": "#/properties/ignore_missing_services",
+      "type": "boolean",
+      "title": "Ignore Missing Services",
+      "description": "Enable or disable ignoring missing services, this may cause instability",
+      "default": false,
+      "examples": [
+        true,
+        false
+      ]
+    },
     "controller_type": {
       "$id": "#/properties/controller_type",
       "type": "string",

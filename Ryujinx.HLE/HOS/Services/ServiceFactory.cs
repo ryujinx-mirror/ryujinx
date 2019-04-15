@@ -1,3 +1,4 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Acc;
 using Ryujinx.HLE.HOS.Services.Am;
 using Ryujinx.HLE.HOS.Services.Apm;
@@ -30,6 +31,11 @@ using System;
 
 namespace Ryujinx.HLE.HOS.Services
 {
+    public static class ServiceConfiguration
+    {
+        public static bool IgnoreMissingServices { get; set; }
+    }
+
     static class ServiceFactory
     {
         public static IpcService MakeService(Horizon system, string name)
@@ -207,6 +213,12 @@ namespace Ryujinx.HLE.HOS.Services
 
                 case "vi:u":
                     return new IApplicationRootService();
+            }
+
+            if (ServiceConfiguration.IgnoreMissingServices)
+            {
+                Logger.PrintWarning(LogClass.Service, $"Missing service {name} ignored");
+                return new DummyService(name);
             }
 
             throw new NotImplementedException(name);
