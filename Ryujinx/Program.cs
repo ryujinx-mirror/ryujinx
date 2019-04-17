@@ -75,7 +75,7 @@ namespace Ryujinx
                             break;
                     }
                 }
-                else 
+                else
                 {
                     Logger.PrintWarning(LogClass.Application, "Please specify a valid XCI/NCA/NSP/PFS0/NRO file");
                 }

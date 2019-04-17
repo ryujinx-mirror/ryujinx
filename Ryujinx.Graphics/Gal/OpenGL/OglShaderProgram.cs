@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL;
+using Ryujinx.Graphics.Shader;
 using System;
 using System.Collections.Generic;
 
@@ -23,14 +24,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         public string Code { get; private set; }
 
-        public IEnumerable<ShaderDeclInfo> ConstBufferUsage { get; private set; }
-        public IEnumerable<ShaderDeclInfo> TextureUsage     { get; private set; }
+        public IEnumerable<CBufferDescriptor> ConstBufferUsage { get; private set; }
+        public IEnumerable<TextureDescriptor> TextureUsage     { get; private set; }
 
         public OglShaderStage(
-            GalShaderType               type,
-            string                      code,
-            IEnumerable<ShaderDeclInfo> constBufferUsage,
-            IEnumerable<ShaderDeclInfo> textureUsage)
+            GalShaderType                  type,
+            string                         code,
+            IEnumerable<CBufferDescriptor> constBufferUsage,
+            IEnumerable<TextureDescriptor> textureUsage)
         {
             Type             = type;
             Code             = code;

@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL;
+using Ryujinx.Graphics.Shader;
 using System;
 using System.Collections.Generic;
 
@@ -529,9 +530,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             {
                 if (stage != null)
                 {
-                    foreach (ShaderDeclInfo declInfo in stage.ConstBufferUsage)
+                    foreach (CBufferDescriptor desc in stage.ConstBufferUsage)
                     {
-                        long key = New.ConstBufferKeys[(int)stage.Type][declInfo.Cbuf];
+                        long key = New.ConstBufferKeys[(int)stage.Type][desc.Slot];
 
                         if (key != 0 && _buffer.TryGetUbo(key, out int uboHandle))
                         {

@@ -1,6 +1,7 @@
 using Ryujinx.Common;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
+using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Texture;
 using System;
 using System.Collections.Generic;
@@ -464,7 +465,7 @@ namespace Ryujinx.Graphics.Graphics3d
                         left  = _viewportX1 - (left  - _viewportX0);
                         right = _viewportX1 - (right - _viewportX0);
                     }
-                    
+
                     // Ensure X is in the right order
                     if (left > right)
                     {
@@ -626,20 +627,22 @@ namespace Ryujinx.Graphics.Graphics3d
 
             for (int index = 0; index < keys.Length; index++)
             {
-                foreach (ShaderDeclInfo declInfo in _gpu.Renderer.Shader.GetTextureUsage(keys[index]))
+                foreach (TextureDescriptor desc in _gpu.Renderer.Shader.GetTextureUsage(keys[index]))
                 {
-                    long position;
+                    int textureHandle;
 
-                    if (declInfo.IsCb)
+                    if (desc.IsBindless)
                     {
-                        position = _constBuffers[index][declInfo.Cbuf].Position;
+                        long position = _constBuffers[index][desc.CbufSlot].Position;
+
+                        textureHandle = vmm.ReadInt32(position + desc.CbufOffset * 4);
                     }
                     else
                     {
-                        position = _constBuffers[index][textureCbIndex].Position;
-                    }
+                        long position = _constBuffers[index][textureCbIndex].Position;
 
-                    int textureHandle = vmm.ReadInt32(position + declInfo.Index * 4);
+                        textureHandle = vmm.ReadInt32(position + desc.HandleIndex * 4);
+                    }
 
                     unboundTextures.Add(UploadTexture(vmm, textureHandle));
                 }
@@ -712,9 +715,9 @@ namespace Ryujinx.Graphics.Graphics3d
         {
             for (int stage = 0; stage < keys.Length; stage++)
             {
-                foreach (ShaderDeclInfo declInfo in _gpu.Renderer.Shader.GetConstBufferUsage(keys[stage]))
+                foreach (CBufferDescriptor desc in _gpu.Renderer.Shader.GetConstBufferUsage(keys[stage]))
                 {
-                    ConstBuffer cb = _constBuffers[stage][declInfo.Cbuf];
+                    ConstBuffer cb = _constBuffers[stage][desc.Slot];
 
                     if (!cb.Enabled)
                     {
@@ -735,7 +738,7 @@ namespace Ryujinx.Graphics.Graphics3d
                         }
                     }
 
-                    state.ConstBufferKeys[stage][declInfo.Cbuf] = key;
+                    state.ConstBufferKeys[stage][desc.Slot] = key;
                 }
             }
         }
