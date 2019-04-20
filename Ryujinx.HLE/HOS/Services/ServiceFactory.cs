@@ -112,7 +112,7 @@ namespace Ryujinx.HLE.HOS.Services
                     return new IHidServer(system);
 
                 case "irs":
-                    return new IIrSensorServer();
+                    return new IIrSensorServer(system.IirsSharedMem);
 
                 case "ldr:ro":
                     return new IRoInterface();
