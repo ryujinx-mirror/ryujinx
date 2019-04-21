@@ -2082,7 +2082,7 @@ namespace Ryujinx.Tests.Cpu
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn();
+            CompareAgainstUnicorn(fpTolerances: FpTolerances.UpToOneUlpsD); // unsigned
         }
 
         [Test, Pairwise] [Explicit]
@@ -2118,7 +2118,7 @@ namespace Ryujinx.Tests.Cpu
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
-            CompareAgainstUnicorn();
+            CompareAgainstUnicorn(fpTolerances: FpTolerances.UpToOneUlpsD); // unsigned
         }
 
         [Test, Pairwise]

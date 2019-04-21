@@ -288,6 +288,42 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
+        private static uint[] _SU_Cvt_F_Gp_WS_()
+        {
+            return new uint[]
+            {
+                0x1E220000u, // SCVTF S0, W0
+                0x1E230000u  // UCVTF S0, W0
+            };
+        }
+
+        private static uint[] _SU_Cvt_F_Gp_WD_()
+        {
+            return new uint[]
+            {
+                0x1E620000u, // SCVTF D0, W0
+                0x1E630000u  // UCVTF D0, W0
+            };
+        }
+
+        private static uint[] _SU_Cvt_F_Gp_XS_()
+        {
+            return new uint[]
+            {
+                0x9E220000u, // SCVTF S0, X0
+                0x9E230000u  // UCVTF S0, X0
+            };
+        }
+
+        private static uint[] _SU_Cvt_F_Gp_XD_()
+        {
+            return new uint[]
+            {
+                0x9E620000u, // SCVTF D0, X0
+                0x9E630000u  // UCVTF D0, X0
+            };
+        }
+
         private static uint[] _SU_Cvt_F_Gp_Fixed_WS_()
         {
             return new uint[]
@@ -481,6 +517,74 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
+        public void SU_Cvt_F_Gp_WS([ValueSource("_SU_Cvt_F_Gp_WS_")] uint opcodes,
+                                   [Values(0u)]      uint rd,
+                                   [Values(1u, 31u)] uint rn,
+                                   [ValueSource("_W_")] [Random(RndCnt)] uint wn)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            uint  w31 = TestContext.CurrentContext.Random.NextUInt();
+            ulong z   = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+
+            SingleOpcode(opcodes, x1: wn, x31: w31, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void SU_Cvt_F_Gp_WD([ValueSource("_SU_Cvt_F_Gp_WD_")] uint opcodes,
+                                   [Values(0u)]      uint rd,
+                                   [Values(1u, 31u)] uint rn,
+                                   [ValueSource("_W_")] [Random(RndCnt)] uint wn)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            uint  w31 = TestContext.CurrentContext.Random.NextUInt();
+            ulong z   = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE1(z);
+
+            SingleOpcode(opcodes, x1: wn, x31: w31, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void SU_Cvt_F_Gp_XS([ValueSource("_SU_Cvt_F_Gp_XS_")] uint opcodes,
+                                   [Values(0u)]      uint rd,
+                                   [Values(1u, 31u)] uint rn,
+                                   [ValueSource("_X_")] [Random(RndCnt)] ulong xn)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            ulong x31 = TestContext.CurrentContext.Random.NextULong();
+            ulong z   = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+
+            SingleOpcode(opcodes, x1: xn, x31: x31, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void SU_Cvt_F_Gp_XD([ValueSource("_SU_Cvt_F_Gp_XD_")] uint opcodes,
+                                   [Values(0u)]      uint rd,
+                                   [Values(1u, 31u)] uint rn,
+                                   [ValueSource("_X_")] [Random(RndCnt)] ulong xn)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            ulong x31 = TestContext.CurrentContext.Random.NextULong();
+            ulong z   = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE1(z);
+
+            SingleOpcode(opcodes, x1: xn, x31: x31, v0: v0);
+
+            CompareAgainstUnicorn(fpTolerances: FpTolerances.UpToOneUlpsD); // unsigned
+        }
+
+        [Test, Pairwise] [Explicit]
         public void SU_Cvt_F_Gp_Fixed_WS([ValueSource("_SU_Cvt_F_Gp_Fixed_WS_")] uint opcodes,
                                          [Values(0u)]      uint rd,
                                          [Values(1u, 31u)] uint rn,
@@ -561,7 +665,7 @@ namespace Ryujinx.Tests.Cpu
 
             SingleOpcode(opcodes, x1: xn, x31: x31, v0: v0);
 
-            CompareAgainstUnicorn();
+            CompareAgainstUnicorn(fpTolerances: FpTolerances.UpToOneUlpsD); // unsigned
         }
 #endif
     }

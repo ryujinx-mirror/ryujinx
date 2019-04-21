@@ -363,7 +363,7 @@ namespace ChocolArm64.Instructions
 
             if (context.CurrOp.RegisterSize == RegisterSize.Int32)
             {
-                context.Emit(OpCodes.Conv_U4);
+                context.Emit(OpCodes.Conv_I4);
             }
 
             EmitFloatCast(context, op.Size);
@@ -393,11 +393,20 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
-            EmitVectorExtractSx(context, op.Rn, 0, op.Size + 2);
+            int sizeF = op.Size & 1;
 
-            EmitFloatCast(context, op.Size);
+            if (Optimizations.UseSse2 && sizeF == 0)
+            {
+                EmitSse2cvtF_Signed(context, scalar: true);
+            }
+            else
+            {
+                EmitVectorExtractSx(context, op.Rn, 0, sizeF + 2);
 
-            EmitScalarSetF(context, op.Rd, op.Size);
+                EmitFloatCast(context, sizeF);
+
+                EmitScalarSetF(context, op.Rd, sizeF);
+            }
         }
 
         public static void Scvtf_V(ILEmitterCtx context)
@@ -408,18 +417,24 @@ namespace ChocolArm64.Instructions
 
             if (Optimizations.UseSse2 && sizeF == 0)
             {
-                Type[] typesCvt = new Type[] { typeof(Vector128<int>) };
+                EmitSse2cvtF_Signed(context, scalar: false);
+            }
+            else
+            {
+                EmitVectorCvtf(context, signed: true);
+            }
+        }
 
-                context.EmitLdvec(op.Rn);
+        public static void Scvtf_V_Fixed(ILEmitterCtx context)
+        {
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
-                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertToVector128Single), typesCvt));
+            // sizeF == ((OpCodeSimdShImm64)op).Size - 2
+            int sizeF = op.Size & 1;
 
-                context.EmitStvec(op.Rd);
-
-                if (op.RegisterSize == RegisterSize.Simd64)
-                {
-                    EmitVectorZeroUpper(context, op.Rd);
-                }
+            if (Optimizations.UseSse2 && sizeF == 0)
+            {
+                EmitSse2cvtF_Signed(context, scalar: false);
             }
             else
             {
@@ -469,18 +484,55 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
-            EmitVectorExtractZx(context, op.Rn, 0, op.Size + 2);
+            int sizeF = op.Size & 1;
 
-            context.Emit(OpCodes.Conv_R_Un);
+            if (Optimizations.UseSse2 && sizeF == 0)
+            {
+                EmitSse2cvtF_Unsigned(context, scalar: true);
+            }
+            else
+            {
+                EmitVectorExtractZx(context, op.Rn, 0, sizeF + 2);
 
-            EmitFloatCast(context, op.Size);
+                context.Emit(OpCodes.Conv_R_Un);
 
-            EmitScalarSetF(context, op.Rd, op.Size);
+                EmitFloatCast(context, sizeF);
+
+                EmitScalarSetF(context, op.Rd, sizeF);
+            }
         }
 
         public static void Ucvtf_V(ILEmitterCtx context)
         {
-            EmitVectorCvtf(context, signed: false);
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+            int sizeF = op.Size & 1;
+
+            if (Optimizations.UseSse2 && sizeF == 0)
+            {
+                EmitSse2cvtF_Unsigned(context, scalar: false);
+            }
+            else
+            {
+                EmitVectorCvtf(context, signed: false);
+            }
+        }
+
+        public static void Ucvtf_V_Fixed(ILEmitterCtx context)
+        {
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+            // sizeF == ((OpCodeSimdShImm64)op).Size - 2
+            int sizeF = op.Size & 1;
+
+            if (Optimizations.UseSse2 && sizeF == 0)
+            {
+                EmitSse2cvtF_Unsigned(context, scalar: false);
+            }
+            else
+            {
+                EmitVectorCvtf(context, signed: false);
+            }
         }
 
         private static void EmitFcvtn(ILEmitterCtx context, bool signed, bool scalar)
@@ -838,7 +890,7 @@ namespace ChocolArm64.Instructions
                     int fBits = GetImmShr(fixedOp);
 
                     // BitConverter.Int32BitsToSingle(fpScaled) == MathF.Pow(2f, fBits)
-                    int fpScaled = 0x40000000 + (fBits - 1) * 0x800000;
+                    int fpScaled = 0x3F800000 + fBits * 0x800000;
 
                     context.EmitLdc_I4(fpScaled);
                     context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
@@ -894,7 +946,7 @@ namespace ChocolArm64.Instructions
                     int fBits = GetImmShr(fixedOp);
 
                     // BitConverter.Int64BitsToDouble(fpScaled) == Math.Pow(2d, fBits)
-                    long fpScaled = 0x4000000000000000L + (fBits - 1) * 0x10000000000000L;
+                    long fpScaled = 0x3FF0000000000000L + fBits * 0x10000000000000L;
 
                     context.EmitLdc_I8(fpScaled);
                     context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
@@ -972,7 +1024,7 @@ namespace ChocolArm64.Instructions
                     int fBits = GetImmShr(fixedOp);
 
                     // BitConverter.Int32BitsToSingle(fpScaled) == MathF.Pow(2f, fBits)
-                    int fpScaled = 0x40000000 + (fBits - 1) * 0x800000;
+                    int fpScaled = 0x3F800000 + fBits * 0x800000;
 
                     context.EmitLdc_I4(fpScaled);
                     context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
@@ -1060,7 +1112,7 @@ namespace ChocolArm64.Instructions
                     int fBits = GetImmShr(fixedOp);
 
                     // BitConverter.Int64BitsToDouble(fpScaled) == Math.Pow(2d, fBits)
-                    long fpScaled = 0x4000000000000000L + (fBits - 1) * 0x10000000000000L;
+                    long fpScaled = 0x3FF0000000000000L + fBits * 0x10000000000000L;
 
                     context.EmitLdc_I8(fpScaled);
                     context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
@@ -1155,6 +1207,101 @@ namespace ChocolArm64.Instructions
                 {
                     EmitVectorZeroUpper(context, op.Rd);
                 }
+            }
+        }
+
+        private static void EmitSse2cvtF_Signed(ILEmitterCtx context, bool scalar)
+        {
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+            Type[] typesMul = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>) };
+            Type[] typesCvt = new Type[] { typeof(Vector128<int>) };
+            Type[] typesSav = new Type[] { typeof(int) };
+
+            context.EmitLdvec(op.Rn);
+
+            context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertToVector128Single), typesCvt));
+
+            if (op is OpCodeSimdShImm64 fixedOp)
+            {
+                int fBits = GetImmShr(fixedOp);
+
+                // BitConverter.Int32BitsToSingle(fpScaled) == 1f / MathF.Pow(2f, fBits)
+                int fpScaled = 0x3F800000 - fBits * 0x800000;
+
+                context.EmitLdc_I4(fpScaled);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
+
+                context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.Multiply), typesMul));
+            }
+
+            context.EmitStvec(op.Rd);
+
+            if (scalar)
+            {
+                EmitVectorZero32_128(context, op.Rd);
+            }
+            else if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                EmitVectorZeroUpper(context, op.Rd);
+            }
+        }
+
+        private static void EmitSse2cvtF_Unsigned(ILEmitterCtx context, bool scalar)
+        {
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+            Type[] typesMulAdd = new Type[] { typeof(Vector128<float>), typeof(Vector128<float>) };
+            Type[] typesSrlSll = new Type[] { typeof(Vector128<int>),   typeof(byte) };
+            Type[] typesCvt    = new Type[] { typeof(Vector128<int>) };
+            Type[] typesSav    = new Type[] { typeof(int) };
+
+            context.EmitLdvec(op.Rn);
+
+            context.EmitLdc_I4(16);
+            context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical), typesSrlSll));
+
+            context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertToVector128Single), typesCvt));
+
+            context.EmitLdc_I4(0x47800000); // 65536.0f (1 << 16)
+            context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
+
+            context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.Multiply), typesMulAdd));
+
+            context.EmitLdvec(op.Rn);
+
+            context.EmitLdc_I4(16);
+            context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftLeftLogical), typesSrlSll));
+
+            context.EmitLdc_I4(16);
+            context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ShiftRightLogical), typesSrlSll));
+
+            context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertToVector128Single), typesCvt));
+
+            context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.Add), typesMulAdd));
+
+            if (op is OpCodeSimdShImm64 fixedOp)
+            {
+                int fBits = GetImmShr(fixedOp);
+
+                // BitConverter.Int32BitsToSingle(fpScaled) == 1f / MathF.Pow(2f, fBits)
+                int fpScaled = 0x3F800000 - fBits * 0x800000;
+
+                context.EmitLdc_I4(fpScaled);
+                context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.SetAllVector128), typesSav));
+
+                context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.Multiply), typesMulAdd));
+            }
+
+            context.EmitStvec(op.Rd);
+
+            if (scalar)
+            {
+                EmitVectorZero32_128(context, op.Rd);
+            }
+            else if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                EmitVectorZeroUpper(context, op.Rd);
             }
         }
 

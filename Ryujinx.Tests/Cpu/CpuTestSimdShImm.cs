@@ -194,6 +194,24 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
+        private static uint[] _SU_Cvt_F_V_Fixed_2S_4S_()
+        {
+            return new uint[]
+            {
+                0x0F20E400u, // SCVTF V0.2S, V0.2S, #32
+                0x2F20E400u  // UCVTF V0.2S, V0.2S, #32
+            };
+        }
+
+        private static uint[] _SU_Cvt_F_V_Fixed_2D_()
+        {
+            return new uint[]
+            {
+                0x4F40E400u, // SCVTF V0.2D, V0.2D, #64
+                0x6F40E400u  // UCVTF V0.2D, V0.2D, #64
+            };
+        }
+
         private static uint[] _SU_Shll_V_8B8H_16B8H_()
         {
             return new uint[]
@@ -452,6 +470,50 @@ namespace Ryujinx.Tests.Cpu
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void SU_Cvt_F_V_Fixed_2S_4S([ValueSource("_SU_Cvt_F_V_Fixed_2S_4S_")] uint opcodes,
+                                           [Values(0u)]     uint rd,
+                                           [Values(1u, 0u)] uint rn,
+                                           [ValueSource("_2S_")] [Random(RndCnt)] ulong z,
+                                           [ValueSource("_2S_")] [Random(RndCnt)] ulong a,
+                                           [Values(1u, 32u)] [Random(2u, 31u, RndCntFBits)] uint fBits,
+                                           [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
+        {
+            uint immHb = (64 - fBits) & 0x7F;
+
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (immHb << 16);
+            opcodes |= ((q & 1) << 30);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void SU_Cvt_F_V_Fixed_2D([ValueSource("_SU_Cvt_F_V_Fixed_2D_")] uint opcodes,
+                                        [Values(0u)]     uint rd,
+                                        [Values(1u, 0u)] uint rn,
+                                        [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                                        [ValueSource("_1D_")] [Random(RndCnt)] ulong a,
+                                        [Values(1u, 64u)] [Random(2u, 63u, RndCntFBits)] uint fBits)
+        {
+            uint immHb = (128 - fBits) & 0x7F;
+
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (immHb << 16);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn(fpTolerances: FpTolerances.UpToOneUlpsD); // unsigned
         }
 
         [Test, Pairwise, Description("SHL <V><d>, <V><n>, #<shift>")]
