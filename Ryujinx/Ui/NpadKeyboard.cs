@@ -35,6 +35,11 @@ namespace Ryujinx.UI.Input
         public Key ButtonZr;
     }
 
+    public struct KeyboardHotkeys
+    {
+        public Key ToggleVsync;
+    }
+
     public class NpadKeyboard
     {
         /// <summary>
@@ -46,6 +51,11 @@ namespace Ryujinx.UI.Input
         /// Right JoyCon Keyboard Bindings
         /// </summary>
         public NpadKeyboardRight RightJoycon { get; private set; }
+
+        /// <summary>
+        /// Hotkey Keyboard Bindings
+        /// </summary>
+        public KeyboardHotkeys Hotkeys { get; private set; }
 
         public HidControllerButtons GetButtons(KeyboardState keyboard)
         {
@@ -96,6 +106,15 @@ namespace Ryujinx.UI.Input
             if (keyboard[(Key)RightJoycon.StickRight]) dx =  short.MaxValue;
 
             return (dx, dy);
+        }
+
+        public HidHotkeyButtons GetHotkeyButtons(KeyboardState keyboard)
+        {
+            HidHotkeyButtons buttons = 0;
+
+            if (keyboard[(Key)Hotkeys.ToggleVsync]) buttons |= HidHotkeyButtons.ToggleVSync;
+
+            return buttons;
         }
     }
 }

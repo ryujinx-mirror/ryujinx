@@ -636,9 +636,24 @@
               "default": "O"
             }
           }
+        },
+        "hotkeys": {
+          "$id": "#/properties/keyboard_controls/properties/hotkeys",
+          "type": "object",
+          "title": "Hotkey Controls",
+          "required": [
+            "toggle_vsync"
+          ],
+          "properties": {
+            "toggle_vsync": {
+              "$id": "#/properties/keyboard_controls/properties/hotkeys/properties/toggle_vsync",
+              "$ref": "#/definitions/key",
+              "title": "Toggle VSync",
+              "default": "Tab"
+            }
+          }
         }
-      }
-    },
+      },
     "gamepad_controls": {
       "$id": "#/properties/gamepad_controls",
       "type": "object",
