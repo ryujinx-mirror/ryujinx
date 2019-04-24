@@ -2,19 +2,27 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 {
     static class AttributeConsts
     {
-        public const int Layer       = 0x064;
-        public const int PointSize   = 0x06c;
-        public const int PositionX   = 0x070;
-        public const int PositionY   = 0x074;
-        public const int PositionZ   = 0x078;
-        public const int PositionW   = 0x07c;
-        public const int PointCoordX = 0x2e0;
-        public const int PointCoordY = 0x2e4;
-        public const int TessCoordX  = 0x2f0;
-        public const int TessCoordY  = 0x2f4;
-        public const int InstanceId  = 0x2f8;
-        public const int VertexId    = 0x2fc;
-        public const int FrontFacing = 0x3fc;
+        public const int Layer         = 0x064;
+        public const int PointSize     = 0x06c;
+        public const int PositionX     = 0x070;
+        public const int PositionY     = 0x074;
+        public const int PositionZ     = 0x078;
+        public const int PositionW     = 0x07c;
+        public const int ClipDistance0 = 0x2c0;
+        public const int ClipDistance1 = 0x2c4;
+        public const int ClipDistance2 = 0x2c8;
+        public const int ClipDistance3 = 0x2cc;
+        public const int ClipDistance4 = 0x2d0;
+        public const int ClipDistance5 = 0x2d4;
+        public const int ClipDistance6 = 0x2d8;
+        public const int ClipDistance7 = 0x2dc;
+        public const int PointCoordX   = 0x2e0;
+        public const int PointCoordY   = 0x2e4;
+        public const int TessCoordX    = 0x2f0;
+        public const int TessCoordY    = 0x2f4;
+        public const int InstanceId    = 0x2f8;
+        public const int VertexId      = 0x2fc;
+        public const int FrontFacing   = 0x3fc;
 
         public const int UserAttributesCount = 32;
         public const int UserAttributeBase   = 0x80;

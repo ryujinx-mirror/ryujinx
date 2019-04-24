@@ -28,20 +28,28 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         private static Dictionary<int, BuiltInAttribute> _builtInAttributes =
                    new Dictionary<int, BuiltInAttribute>()
         {
-            { AttributeConsts.Layer,               new BuiltInAttribute("gl_Layer",        VariableType.S32)  },
-            { AttributeConsts.PointSize,           new BuiltInAttribute("gl_PointSize",    VariableType.F32)  },
-            { AttributeConsts.PositionX,           new BuiltInAttribute("gl_Position.x",   VariableType.F32)  },
-            { AttributeConsts.PositionY,           new BuiltInAttribute("gl_Position.y",   VariableType.F32)  },
-            { AttributeConsts.PositionZ,           new BuiltInAttribute("gl_Position.z",   VariableType.F32)  },
-            { AttributeConsts.PositionW,           new BuiltInAttribute("gl_Position.w",   VariableType.F32)  },
-            { AttributeConsts.PointCoordX,         new BuiltInAttribute("gl_PointCoord.x", VariableType.F32)  },
-            { AttributeConsts.PointCoordY,         new BuiltInAttribute("gl_PointCoord.y", VariableType.F32)  },
-            { AttributeConsts.TessCoordX,          new BuiltInAttribute("gl_TessCoord.x",  VariableType.F32)  },
-            { AttributeConsts.TessCoordY,          new BuiltInAttribute("gl_TessCoord.y",  VariableType.F32)  },
-            { AttributeConsts.InstanceId,          new BuiltInAttribute("instance",        VariableType.S32)  },
-            { AttributeConsts.VertexId,            new BuiltInAttribute("gl_VertexID",     VariableType.S32)  },
-            { AttributeConsts.FrontFacing,         new BuiltInAttribute("gl_FrontFacing",  VariableType.Bool) },
-            { AttributeConsts.FragmentOutputDepth, new BuiltInAttribute("gl_FragDepth",    VariableType.F32)  }
+            { AttributeConsts.Layer,               new BuiltInAttribute("gl_Layer",           VariableType.S32)  },
+            { AttributeConsts.PointSize,           new BuiltInAttribute("gl_PointSize",       VariableType.F32)  },
+            { AttributeConsts.PositionX,           new BuiltInAttribute("gl_Position.x",      VariableType.F32)  },
+            { AttributeConsts.PositionY,           new BuiltInAttribute("gl_Position.y",      VariableType.F32)  },
+            { AttributeConsts.PositionZ,           new BuiltInAttribute("gl_Position.z",      VariableType.F32)  },
+            { AttributeConsts.PositionW,           new BuiltInAttribute("gl_Position.w",      VariableType.F32)  },
+            { AttributeConsts.ClipDistance0,       new BuiltInAttribute("gl_ClipDistance[0]", VariableType.F32)  },
+            { AttributeConsts.ClipDistance1,       new BuiltInAttribute("gl_ClipDistance[1]", VariableType.F32)  },
+            { AttributeConsts.ClipDistance2,       new BuiltInAttribute("gl_ClipDistance[2]", VariableType.F32)  },
+            { AttributeConsts.ClipDistance3,       new BuiltInAttribute("gl_ClipDistance[3]", VariableType.F32)  },
+            { AttributeConsts.ClipDistance4,       new BuiltInAttribute("gl_ClipDistance[4]", VariableType.F32)  },
+            { AttributeConsts.ClipDistance5,       new BuiltInAttribute("gl_ClipDistance[5]", VariableType.F32)  },
+            { AttributeConsts.ClipDistance6,       new BuiltInAttribute("gl_ClipDistance[6]", VariableType.F32)  },
+            { AttributeConsts.ClipDistance7,       new BuiltInAttribute("gl_ClipDistance[7]", VariableType.F32)  },
+            { AttributeConsts.PointCoordX,         new BuiltInAttribute("gl_PointCoord.x",    VariableType.F32)  },
+            { AttributeConsts.PointCoordY,         new BuiltInAttribute("gl_PointCoord.y",    VariableType.F32)  },
+            { AttributeConsts.TessCoordX,          new BuiltInAttribute("gl_TessCoord.x",     VariableType.F32)  },
+            { AttributeConsts.TessCoordY,          new BuiltInAttribute("gl_TessCoord.y",     VariableType.F32)  },
+            { AttributeConsts.InstanceId,          new BuiltInAttribute("instance",           VariableType.S32)  },
+            { AttributeConsts.VertexId,            new BuiltInAttribute("gl_VertexID",        VariableType.S32)  },
+            { AttributeConsts.FrontFacing,         new BuiltInAttribute("gl_FrontFacing",     VariableType.Bool) },
+            { AttributeConsts.FragmentOutputDepth, new BuiltInAttribute("gl_FragDepth",       VariableType.F32)  }
         };
 
         private Dictionary<AstOperand, string> _locals;
@@ -172,7 +180,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 }
             }
 
-            return DefaultNames.UndefinedName;
+            //TODO: Warn about unknown built-in attribute.
+
+            return isOutAttr ? "// bad_attr0x" + value.ToString("X") : "0.0";
         }
 
         public static string GetUbName(GalShaderType shaderType, int slot)
