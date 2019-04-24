@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                                       ('V' << 16) |
                                       ('0' << 24);
 
-        private const int Rev = 4;
+        private const int Rev = 5;
 
         public const int RevMagic = Rev0Magic + (Rev << 24);
 
@@ -58,8 +58,9 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             if (revision <= Rev)
             {
-                bool isSplitterSupported = revision >= 3;
-
+                bool isSplitterSupported                  = revision >= 3;
+                bool isVariadicCommandBufferSizeSupported = revision >= 5;
+                
                 long size;
 
                 size  = IntUtils.AlignUp(Params.Unknown8 * 4, 64);
@@ -99,7 +100,21 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                                (Params.PerformanceManagerCount + 1) + 0x13F) & ~0x3FL;
                 }
 
-                size = (size + 0x1907D) & ~0xFFFL;
+                if (isVariadicCommandBufferSizeSupported)
+                {
+                    size += Params.EffectCount * 0x840 + 
+                            Params.MixCount * 0x5A38 +
+                            Params.SinkCount * 0x148 +
+                            Params.SplitterDestinationDataCount * 0x540 +
+                            Params.VoiceCount * (Params.SplitterCount * 0x68 + 0x2E0) +
+                            ((Params.VoiceCount + Params.MixCount + Params.EffectCount + Params.SinkCount + 0x65) << 6) + 0x3F8 + 0x7E;
+                }
+                else
+                {
+                    size += 0x1807E;
+                }
+
+                size = size & ~0xFFFL;
 
                 context.ResponseData.Write(size);
 
