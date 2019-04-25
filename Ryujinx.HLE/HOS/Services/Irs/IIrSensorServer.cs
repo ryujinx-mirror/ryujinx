@@ -20,10 +20,11 @@ namespace Ryujinx.HLE.HOS.Services.Irs
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
-                { 302, ActivateIrsensor              },
-                { 303, DeactivateIrsensor            },
-                { 304, GetIrsensorSharedMemoryHandle },
-                { 311, GetNpadIrCameraHandle         }
+                { 302, ActivateIrsensor                  },
+                { 303, DeactivateIrsensor                },
+                { 304, GetIrsensorSharedMemoryHandle     },
+                { 311, GetNpadIrCameraHandle             },
+                { 319, ActivateIrsensorWithFunctionLevel }
             };
 
             _irsSharedMem = irsSharedMem;
@@ -102,6 +103,17 @@ namespace Ryujinx.HLE.HOS.Services.Irs
                 case 16: return 9;
                 default: throw new ArgumentOutOfRangeException(nameof(npadId));
             }
+        }
+
+        // ActivateIrsensorWithFunctionLevel(nn::applet::AppletResourceUserId, nn::irsensor::PackedFunctionLevel, pid)
+        public long ActivateIrsensorWithFunctionLevel(ServiceCtx context)
+        {
+            long appletResourceUserId = context.RequestData.ReadInt64();
+            long packedFunctionLevel  = context.RequestData.ReadInt64();
+
+            Logger.PrintStub(LogClass.ServiceIrs, new { appletResourceUserId, packedFunctionLevel });
+
+            return 0;
         }
     }
 }
