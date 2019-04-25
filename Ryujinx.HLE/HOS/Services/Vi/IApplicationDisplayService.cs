@@ -61,7 +61,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         public long GetManagerDisplayService(ServiceCtx context)
         {
-            MakeObject(context, new IManagerDisplayService());
+            MakeObject(context, new IManagerDisplayService(this));
 
             return 0;
         }

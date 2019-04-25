@@ -10,14 +10,15 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IManagerDisplayService()
+        public IManagerDisplayService(IApplicationDisplayService applicationDisplayService)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
-                { 2010, CreateManagedLayer  },
-                { 2011, DestroyManagedLayer },
-                { 6000, AddToLayerStack     },
-                { 6002, SetLayerVisibility  }
+                { 2010, CreateManagedLayer                         },
+                { 2011, DestroyManagedLayer                        },
+                { 2012, applicationDisplayService.CreateStrayLayer },
+                { 6000, AddToLayerStack                            },
+                { 6002, SetLayerVisibility                         }
             };
         }
 
