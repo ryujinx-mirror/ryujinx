@@ -697,6 +697,90 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
+        private static uint[] _F_Rint_AMNPZ_S_S_()
+        {
+            return new uint[]
+            {
+                0x1E264020u, // FRINTA S0, S1
+                0x1E254020u, // FRINTM S0, S1
+                0x1E244020u, // FRINTN S0, S1
+                0x1E24C020u, // FRINTP S0, S1
+                0x1E25C020u  // FRINTZ S0, S1
+            };
+        }
+
+        private static uint[] _F_Rint_AMNPZ_S_D_()
+        {
+            return new uint[]
+            {
+                0x1E664020u, // FRINTA D0, D1
+                0x1E654020u, // FRINTM D0, D1
+                0x1E644020u, // FRINTN D0, D1
+                0x1E64C020u, // FRINTP D0, D1
+                0x1E65C020u  // FRINTZ D0, D1
+            };
+        }
+
+        private static uint[] _F_Rint_AMNPZ_V_2S_4S_()
+        {
+            return new uint[]
+            {
+                0x2E218800u, // FRINTA V0.2S, V0.2S
+                0x0E219800u, // FRINTM V0.2S, V0.2S
+                0x0E218800u, // FRINTN V0.2S, V0.2S
+                0x0EA18800u, // FRINTP V0.2S, V0.2S
+                0x0EA19800u  // FRINTZ V0.2S, V0.2S
+            };
+        }
+
+        private static uint[] _F_Rint_AMNPZ_V_2D_()
+        {
+            return new uint[]
+            {
+                0x6E618800u, // FRINTA V0.2D, V0.2D
+                0x4E619800u, // FRINTM V0.2D, V0.2D
+                0x4E618800u, // FRINTN V0.2D, V0.2D
+                0x4EE18800u, // FRINTP V0.2D, V0.2D
+                0x4EE19800u  // FRINTZ V0.2D, V0.2D
+            };
+        }
+
+        private static uint[] _F_Rint_IX_S_S_()
+        {
+            return new uint[]
+            {
+                0x1E27C020u, // FRINTI S0, S1
+                0x1E274020u  // FRINTX S0, S1
+            };
+        }
+
+        private static uint[] _F_Rint_IX_S_D_()
+        {
+            return new uint[]
+            {
+                0x1E67C020u, // FRINTI D0, D1
+                0x1E674020u  // FRINTX D0, D1
+            };
+        }
+
+        private static uint[] _F_Rint_IX_V_2S_4S_()
+        {
+            return new uint[]
+            {
+                0x2EA19800u, // FRINTI V0.2S, V0.2S
+                0x2E219800u  // FRINTX V0.2S, V0.2S
+            };
+        }
+
+        private static uint[] _F_Rint_IX_V_2D_()
+        {
+            return new uint[]
+            {
+                0x6EE19800u, // FRINTI V0.2D, V0.2D
+                0x6E619800u  // FRINTX V0.2D, V0.2D
+            };
+        }
+
         private static uint[] _SU_Cvt_F_S_S_()
         {
             return new uint[]
@@ -1748,6 +1832,142 @@ namespace Ryujinx.Tests.Cpu
             SingleOpcode(opcodes, v0: v0, v1: v1, fpcr: fpcr);
 
             CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc | Fpsr.Dzc | Fpsr.Ofc | Fpsr.Ufc | Fpsr.Ixc | Fpsr.Idc);
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Rint_AMNPZ_S_S([ValueSource("_F_Rint_AMNPZ_S_S_")] uint opcodes,
+                                     [ValueSource("_1S_F_")] ulong a)
+        {
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Rint_AMNPZ_S_D([ValueSource("_F_Rint_AMNPZ_S_D_")] uint opcodes,
+                                     [ValueSource("_1D_F_")] ulong a)
+        {
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE1(z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Rint_AMNPZ_V_2S_4S([ValueSource("_F_Rint_AMNPZ_V_2S_4S_")] uint opcodes,
+                                         [Values(0u)]     uint rd,
+                                         [Values(1u, 0u)] uint rn,
+                                         [ValueSource("_2S_F_")] ulong z,
+                                         [ValueSource("_2S_F_")] ulong a,
+                                         [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((q & 1) << 30);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Rint_AMNPZ_V_2D([ValueSource("_F_Rint_AMNPZ_V_2D_")] uint opcodes,
+                                      [Values(0u)]     uint rd,
+                                      [Values(1u, 0u)] uint rn,
+                                      [ValueSource("_1D_F_")] ulong z,
+                                      [ValueSource("_1D_F_")] ulong a)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Rint_IX_S_S([ValueSource("_F_Rint_IX_S_S_")] uint opcodes,
+                                  [ValueSource("_1S_F_")] ulong a,
+                                  [Values] RMode rMode)
+        {
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            int fpcr = (int)rMode << (int)Fpcr.RMode;
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, fpcr: fpcr);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Rint_IX_S_D([ValueSource("_F_Rint_IX_S_D_")] uint opcodes,
+                                  [ValueSource("_1D_F_")] ulong a,
+                                  [Values] RMode rMode)
+        {
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE1(z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            int fpcr = (int)rMode << (int)Fpcr.RMode;
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, fpcr: fpcr);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Rint_IX_V_2S_4S([ValueSource("_F_Rint_IX_V_2S_4S_")] uint opcodes,
+                                      [Values(0u)]     uint rd,
+                                      [Values(1u, 0u)] uint rn,
+                                      [ValueSource("_2S_F_")] ulong z,
+                                      [ValueSource("_2S_F_")] ulong a,
+                                      [Values(0b0u, 0b1u)] uint q, // <2S, 4S>
+                                      [Values] RMode rMode)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((q & 1) << 30);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+
+            int fpcr = (int)rMode << (int)Fpcr.RMode;
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, fpcr: fpcr);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Rint_IX_V_2D([ValueSource("_F_Rint_IX_V_2D_")] uint opcodes,
+                                   [Values(0u)]     uint rd,
+                                   [Values(1u, 0u)] uint rn,
+                                   [ValueSource("_1D_F_")] ulong z,
+                                   [ValueSource("_1D_F_")] ulong a,
+                                   [Values] RMode rMode)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            int fpcr = (int)rMode << (int)Fpcr.RMode;
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, fpcr: fpcr);
+
+            CompareAgainstUnicorn();
         }
 
         [Test, Pairwise, Description("NEG <V><d>, <V><n>")]

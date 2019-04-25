@@ -237,7 +237,9 @@ namespace ChocolArm64.Instructions
         {
             IOpCodeSimd64 op = (IOpCodeSimd64)context.CurrOp;
 
-            Type type = (op.Size & 1) == 0
+            int sizeF = op.Size & 1;
+
+            Type type = sizeF == 0
                 ? typeof(SoftFloat32)
                 : typeof(SoftFloat64);
 

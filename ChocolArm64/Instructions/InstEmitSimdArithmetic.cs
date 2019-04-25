@@ -1382,13 +1382,10 @@ namespace ChocolArm64.Instructions
 
         public static void Frinta_S(ILEmitterCtx context)
         {
-            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
-
-            EmitVectorExtractF(context, op.Rn, 0, op.Size);
-
-            EmitRoundMathCall(context, MidpointRounding.AwayFromZero);
-
-            EmitScalarSetF(context, op.Rd, op.Size);
+            EmitScalarUnaryOpF(context, () =>
+            {
+                EmitRoundMathCall(context, MidpointRounding.AwayFromZero);
+            });
         }
 
         public static void Frinta_V(ILEmitterCtx context)
@@ -1403,23 +1400,40 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
-            EmitScalarUnaryOpF(context, () =>
+            if (Optimizations.UseSse41)
             {
+                VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+                context.EmitLdvec(op.Rn);
+
                 context.EmitLdarg(TranslatedSub.StateArgIdx);
 
                 if (op.Size == 0)
                 {
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.RoundF));
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.Sse41ScalarRoundF));
                 }
-                else if (op.Size == 1)
+                else /* if (op.Size == 1) */
                 {
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.Round));
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.Sse41ScalarRound));
                 }
-                else
+
+                context.EmitStvec(op.Rd);
+            }
+            else
+            {
+                EmitScalarUnaryOpF(context, () =>
                 {
-                    throw new InvalidOperationException();
-                }
-            });
+                    context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                    if (op.Size == 0)
+                    {
+                        VectorHelper.EmitCall(context, nameof(VectorHelper.RoundF));
+                    }
+                    else /* if (op.Size == 1) */
+                    {
+                        VectorHelper.EmitCall(context, nameof(VectorHelper.Round));
+                    }
+                });
+            }
         }
 
         public static void Frinti_V(ILEmitterCtx context)
@@ -1428,136 +1442,250 @@ namespace ChocolArm64.Instructions
 
             int sizeF = op.Size & 1;
 
-            EmitVectorUnaryOpF(context, () =>
+            if (Optimizations.UseSse41)
             {
+                context.EmitLdvec(op.Rn);
+
                 context.EmitLdarg(TranslatedSub.StateArgIdx);
 
                 if (sizeF == 0)
                 {
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.RoundF));
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.Sse41VectorRoundF));
                 }
-                else if (sizeF == 1)
+                else /* if (sizeF == 1) */
                 {
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.Round));
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.Sse41VectorRound));
                 }
-                else
+
+                context.EmitStvec(op.Rd);
+
+                if (sizeF == 0 && op.RegisterSize == RegisterSize.Simd64)
                 {
-                    throw new InvalidOperationException();
+                    EmitVectorZeroUpper(context, op.Rd);
                 }
-            });
+            }
+            else
+            {
+                EmitVectorUnaryOpF(context, () =>
+                {
+                    context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                    if (sizeF == 0)
+                    {
+                        VectorHelper.EmitCall(context, nameof(VectorHelper.RoundF));
+                    }
+                    else /* if (sizeF == 1) */
+                    {
+                        VectorHelper.EmitCall(context, nameof(VectorHelper.Round));
+                    }
+                });
+            }
         }
 
         public static void Frintm_S(ILEmitterCtx context)
         {
-            EmitScalarUnaryOpF(context, () =>
+            if (Optimizations.UseSse41)
             {
-                EmitUnaryMathCall(context, nameof(Math.Floor));
-            });
+                EmitSse41Frint(context, RoundMode.TowardsMinusInfinity, scalar: true);
+            }
+            else
+            {
+                EmitScalarUnaryOpF(context, () =>
+                {
+                    EmitUnaryMathCall(context, nameof(Math.Floor));
+                });
+            }
         }
 
         public static void Frintm_V(ILEmitterCtx context)
         {
-            EmitVectorUnaryOpF(context, () =>
+            if (Optimizations.UseSse41)
             {
-                EmitUnaryMathCall(context, nameof(Math.Floor));
-            });
+                EmitSse41Frint(context, RoundMode.TowardsMinusInfinity, scalar: false);
+            }
+            else
+            {
+                EmitVectorUnaryOpF(context, () =>
+                {
+                    EmitUnaryMathCall(context, nameof(Math.Floor));
+                });
+            }
         }
 
         public static void Frintn_S(ILEmitterCtx context)
         {
-            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
-
-            EmitVectorExtractF(context, op.Rn, 0, op.Size);
-
-            EmitRoundMathCall(context, MidpointRounding.ToEven);
-
-            EmitScalarSetF(context, op.Rd, op.Size);
+            if (Optimizations.UseSse41)
+            {
+                EmitSse41Frint(context, RoundMode.ToNearest, scalar: true);
+            }
+            else
+            {
+                EmitScalarUnaryOpF(context, () =>
+                {
+                    EmitRoundMathCall(context, MidpointRounding.ToEven);
+                });
+            }
         }
 
         public static void Frintn_V(ILEmitterCtx context)
         {
-            EmitVectorUnaryOpF(context, () =>
+            if (Optimizations.UseSse41)
             {
-                EmitRoundMathCall(context, MidpointRounding.ToEven);
-            });
+                EmitSse41Frint(context, RoundMode.ToNearest, scalar: false);
+            }
+            else
+            {
+                EmitVectorUnaryOpF(context, () =>
+                {
+                    EmitRoundMathCall(context, MidpointRounding.ToEven);
+                });
+            }
         }
 
         public static void Frintp_S(ILEmitterCtx context)
         {
-            EmitScalarUnaryOpF(context, () =>
+            if (Optimizations.UseSse41)
             {
-                EmitUnaryMathCall(context, nameof(Math.Ceiling));
-            });
+                EmitSse41Frint(context, RoundMode.TowardsPlusInfinity, scalar: true);
+            }
+            else
+            {
+                EmitScalarUnaryOpF(context, () =>
+                {
+                    EmitUnaryMathCall(context, nameof(Math.Ceiling));
+                });
+            }
         }
 
         public static void Frintp_V(ILEmitterCtx context)
         {
-            EmitVectorUnaryOpF(context, () =>
+            if (Optimizations.UseSse41)
             {
-                EmitUnaryMathCall(context, nameof(Math.Ceiling));
-            });
+                EmitSse41Frint(context, RoundMode.TowardsPlusInfinity, scalar: false);
+            }
+            else
+            {
+                EmitVectorUnaryOpF(context, () =>
+                {
+                    EmitUnaryMathCall(context, nameof(Math.Ceiling));
+                });
+            }
         }
 
         public static void Frintx_S(ILEmitterCtx context)
         {
             OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
-            EmitScalarUnaryOpF(context, () =>
+            if (Optimizations.UseSse41)
             {
+                VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+                context.EmitLdvec(op.Rn);
+
                 context.EmitLdarg(TranslatedSub.StateArgIdx);
 
                 if (op.Size == 0)
                 {
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.RoundF));
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.Sse41ScalarRoundF));
                 }
-                else if (op.Size == 1)
+                else /* if (op.Size == 1) */
                 {
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.Round));
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.Sse41ScalarRound));
                 }
-                else
+
+                context.EmitStvec(op.Rd);
+            }
+            else
+            {
+                EmitScalarUnaryOpF(context, () =>
                 {
-                    throw new InvalidOperationException();
-                }
-            });
+                    context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                    if (op.Size == 0)
+                    {
+                        VectorHelper.EmitCall(context, nameof(VectorHelper.RoundF));
+                    }
+                    else /* if (op.Size == 1) */
+                    {
+                        VectorHelper.EmitCall(context, nameof(VectorHelper.Round));
+                    }
+                });
+            }
         }
 
         public static void Frintx_V(ILEmitterCtx context)
         {
             OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
-            EmitVectorUnaryOpF(context, () =>
+            int sizeF = op.Size & 1;
+
+            if (Optimizations.UseSse41)
             {
+                context.EmitLdvec(op.Rn);
+
                 context.EmitLdarg(TranslatedSub.StateArgIdx);
 
-                if (op.Size == 0)
+                if (sizeF == 0)
                 {
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.RoundF));
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.Sse41VectorRoundF));
                 }
-                else if (op.Size == 1)
+                else /* if (sizeF == 1) */
                 {
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.Round));
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.Sse41VectorRound));
                 }
-                else
+
+                context.EmitStvec(op.Rd);
+
+                if (sizeF == 0 && op.RegisterSize == RegisterSize.Simd64)
                 {
-                    throw new InvalidOperationException();
+                    EmitVectorZeroUpper(context, op.Rd);
                 }
-            });
+            }
+            else
+            {
+                EmitVectorUnaryOpF(context, () =>
+                {
+                    context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                    if (sizeF == 0)
+                    {
+                        VectorHelper.EmitCall(context, nameof(VectorHelper.RoundF));
+                    }
+                    else /* if (sizeF == 1) */
+                    {
+                        VectorHelper.EmitCall(context, nameof(VectorHelper.Round));
+                    }
+                });
+            }
         }
 
         public static void Frintz_S(ILEmitterCtx context)
         {
-            EmitScalarUnaryOpF(context, () =>
+            if (Optimizations.UseSse41)
             {
-                EmitUnaryMathCall(context, nameof(Math.Truncate));
-            });
+                EmitSse41Frint(context, RoundMode.TowardsZero, scalar: true);
+            }
+            else
+            {
+                EmitScalarUnaryOpF(context, () =>
+                {
+                    EmitUnaryMathCall(context, nameof(Math.Truncate));
+                });
+            }
         }
 
         public static void Frintz_V(ILEmitterCtx context)
         {
-            EmitVectorUnaryOpF(context, () =>
+            if (Optimizations.UseSse41)
             {
-                EmitUnaryMathCall(context, nameof(Math.Truncate));
-            });
+                EmitSse41Frint(context, RoundMode.TowardsZero, scalar: false);
+            }
+            else
+            {
+                EmitVectorUnaryOpF(context, () =>
+                {
+                    EmitUnaryMathCall(context, nameof(Math.Truncate));
+                });
+            }
         }
 
         public static void Frsqrte_S(ILEmitterCtx context)
@@ -3539,6 +3667,44 @@ namespace ChocolArm64.Instructions
             if (part == 0)
             {
                 EmitVectorZeroUpper(context, op.Rd);
+            }
+        }
+
+        private static void EmitSse41Frint(ILEmitterCtx context, RoundMode roundMode, bool scalar)
+        {
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
+
+            if (scalar)
+            {
+                Type[] typesRnd = op.Size == 0
+                    ? new Type[] { typeof(Vector128<float>),  typeof(Vector128<float>) }
+                    : new Type[] { typeof(Vector128<double>), typeof(Vector128<double>) };
+
+                VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+                context.EmitLdvec(op.Rn);
+
+                context.EmitCall(typeof(Sse41).GetMethod(GetScalarSse41NameRnd(roundMode), typesRnd));
+
+                context.EmitStvec(op.Rd);
+            }
+            else
+            {
+                int sizeF = op.Size & 1;
+
+                Type[] typesRnd = sizeF == 0
+                    ? new Type[] { typeof(Vector128<float>) }
+                    : new Type[] { typeof(Vector128<double>) };
+
+                context.EmitLdvec(op.Rn);
+
+                context.EmitCall(typeof(Sse41).GetMethod(GetVectorSse41NameRnd(roundMode), typesRnd));
+
+                context.EmitStvec(op.Rd);
+
+                if (sizeF == 0 && op.RegisterSize == RegisterSize.Simd64)
+                {
+                    EmitVectorZeroUpper(context, op.Rd);
+                }
             }
         }
 

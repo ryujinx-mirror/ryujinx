@@ -93,30 +93,162 @@ namespace ChocolArm64.Instructions
                    value <= ulong.MinValue ? ulong.MinValue : (ulong)value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Round(double value, CpuThreadState state)
         {
-            switch (state.FPRoundingMode())
-            {
-                case RoundMode.ToNearest:            return Math.Round   (value);
-                case RoundMode.TowardsPlusInfinity:  return Math.Ceiling (value);
-                case RoundMode.TowardsMinusInfinity: return Math.Floor   (value);
-                case RoundMode.TowardsZero:          return Math.Truncate(value);
-            }
+            RoundMode roundMode = state.FPRoundingMode();
 
-            throw new InvalidOperationException();
+            if (roundMode == RoundMode.ToNearest)
+            {
+                return Math.Round(value); // even
+            }
+            else if (roundMode == RoundMode.TowardsPlusInfinity)
+            {
+                return Math.Ceiling(value);
+            }
+            else if (roundMode == RoundMode.TowardsMinusInfinity)
+            {
+                return Math.Floor(value);
+            }
+            else /* if (roundMode == RoundMode.TowardsZero) */
+            {
+                return Math.Truncate(value);
+            }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float RoundF(float value, CpuThreadState state)
         {
-            switch (state.FPRoundingMode())
+            RoundMode roundMode = state.FPRoundingMode();
+
+            if (roundMode == RoundMode.ToNearest)
             {
-                case RoundMode.ToNearest:            return MathF.Round   (value);
-                case RoundMode.TowardsPlusInfinity:  return MathF.Ceiling (value);
-                case RoundMode.TowardsMinusInfinity: return MathF.Floor   (value);
-                case RoundMode.TowardsZero:          return MathF.Truncate(value);
+                return MathF.Round(value); // even
+            }
+            else if (roundMode == RoundMode.TowardsPlusInfinity)
+            {
+                return MathF.Ceiling(value);
+            }
+            else if (roundMode == RoundMode.TowardsMinusInfinity)
+            {
+                return MathF.Floor(value);
+            }
+            else /* if (roundMode == RoundMode.TowardsZero) */
+            {
+                return MathF.Truncate(value);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<double> Sse41ScalarRound(Vector128<double> upper, Vector128<double> value, CpuThreadState state)
+        {
+            if (!Sse41.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
             }
 
-            throw new InvalidOperationException();
+            RoundMode roundMode = state.FPRoundingMode();
+
+            if (roundMode == RoundMode.ToNearest)
+            {
+                return Sse41.RoundToNearestIntegerScalar(upper, value); // even
+            }
+            else if (roundMode == RoundMode.TowardsPlusInfinity)
+            {
+                return Sse41.RoundToPositiveInfinityScalar(upper, value);
+            }
+            else if (roundMode == RoundMode.TowardsMinusInfinity)
+            {
+                return Sse41.RoundToNegativeInfinityScalar(upper, value);
+            }
+            else /* if (roundMode == RoundMode.TowardsZero) */
+            {
+                return Sse41.RoundToZeroScalar(upper, value);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> Sse41ScalarRoundF(Vector128<float> upper, Vector128<float> value, CpuThreadState state)
+        {
+            if (!Sse41.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
+            RoundMode roundMode = state.FPRoundingMode();
+
+            if (roundMode == RoundMode.ToNearest)
+            {
+                return Sse41.RoundToNearestIntegerScalar(upper, value); // even
+            }
+            else if (roundMode == RoundMode.TowardsPlusInfinity)
+            {
+                return Sse41.RoundToPositiveInfinityScalar(upper, value);
+            }
+            else if (roundMode == RoundMode.TowardsMinusInfinity)
+            {
+                return Sse41.RoundToNegativeInfinityScalar(upper, value);
+            }
+            else /* if (roundMode == RoundMode.TowardsZero) */
+            {
+                return Sse41.RoundToZeroScalar(upper, value);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<double> Sse41VectorRound(Vector128<double> value, CpuThreadState state)
+        {
+            if (!Sse41.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
+            RoundMode roundMode = state.FPRoundingMode();
+
+            if (roundMode == RoundMode.ToNearest)
+            {
+                return Sse41.RoundToNearestInteger(value); // even
+            }
+            else if (roundMode == RoundMode.TowardsPlusInfinity)
+            {
+                return Sse41.RoundToPositiveInfinity(value);
+            }
+            else if (roundMode == RoundMode.TowardsMinusInfinity)
+            {
+                return Sse41.RoundToNegativeInfinity(value);
+            }
+            else /* if (roundMode == RoundMode.TowardsZero) */
+            {
+                return Sse41.RoundToZero(value);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> Sse41VectorRoundF(Vector128<float> value, CpuThreadState state)
+        {
+            if (!Sse41.IsSupported)
+            {
+                throw new PlatformNotSupportedException();
+            }
+
+            RoundMode roundMode = state.FPRoundingMode();
+
+            if (roundMode == RoundMode.ToNearest)
+            {
+                return Sse41.RoundToNearestInteger(value); // even
+            }
+            else if (roundMode == RoundMode.TowardsPlusInfinity)
+            {
+                return Sse41.RoundToPositiveInfinity(value);
+            }
+            else if (roundMode == RoundMode.TowardsMinusInfinity)
+            {
+                return Sse41.RoundToNegativeInfinity(value);
+            }
+            else /* if (roundMode == RoundMode.TowardsZero) */
+            {
+                return Sse41.RoundToZero(value);
+            }
         }
 
         public static Vector128<float> Tbl1_V64(

@@ -898,7 +898,7 @@ namespace ChocolArm64.Instructions
                     context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.Multiply), types));
                 }
 
-                context.EmitCall(typeof(Sse41).GetMethod(GetSse41NameRnd(roundMode), typesRndCvt));
+                context.EmitCall(typeof(Sse41).GetMethod(GetVectorSse41NameRnd(roundMode), typesRndCvt));
 
                 context.EmitStvectmp();
                 context.EmitLdvectmp();
@@ -954,7 +954,7 @@ namespace ChocolArm64.Instructions
                     context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Multiply), types));
                 }
 
-                context.EmitCall(typeof(Sse41).GetMethod(GetSse41NameRnd(roundMode), typesRndCvt));
+                context.EmitCall(typeof(Sse41).GetMethod(GetVectorSse41NameRnd(roundMode), typesRndCvt));
 
                 context.EmitStvectmp();
 
@@ -1032,7 +1032,7 @@ namespace ChocolArm64.Instructions
                     context.EmitCall(typeof(Sse).GetMethod(nameof(Sse.Multiply), types));
                 }
 
-                context.EmitCall(typeof(Sse41).GetMethod(GetSse41NameRnd(roundMode), typesRndCvt));
+                context.EmitCall(typeof(Sse41).GetMethod(GetVectorSse41NameRnd(roundMode), typesRndCvt));
 
                 context.Emit(OpCodes.Dup);
 
@@ -1120,7 +1120,7 @@ namespace ChocolArm64.Instructions
                     context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.Multiply), types));
                 }
 
-                context.EmitCall(typeof(Sse41).GetMethod(GetSse41NameRnd(roundMode), typesRndCvt));
+                context.EmitCall(typeof(Sse41).GetMethod(GetVectorSse41NameRnd(roundMode), typesRndCvt));
 
                 context.Emit(OpCodes.Dup);
 
@@ -1305,23 +1305,39 @@ namespace ChocolArm64.Instructions
             }
         }
 
-        private static string GetSse41NameRnd(RoundMode roundMode)
+        private static string GetScalarSse41NameRnd(RoundMode roundMode)
+        {
+            switch (roundMode)
+            {
+                case RoundMode.ToNearest:
+                    return nameof(Sse41.RoundToNearestIntegerScalar); // even
+
+                case RoundMode.TowardsPlusInfinity:
+                    return nameof(Sse41.RoundToPositiveInfinityScalar);
+
+                case RoundMode.TowardsMinusInfinity:
+                    return nameof(Sse41.RoundToNegativeInfinityScalar);
+
+                default: /* case RoundMode.TowardsZero: */
+                    return nameof(Sse41.RoundToZeroScalar);
+            }
+        }
+
+        private static string GetVectorSse41NameRnd(RoundMode roundMode)
         {
             switch (roundMode)
             {
                 case RoundMode.ToNearest:
                     return nameof(Sse41.RoundToNearestInteger); // even
 
-                case RoundMode.TowardsMinusInfinity:
-                    return nameof(Sse41.RoundToNegativeInfinity);
-
                 case RoundMode.TowardsPlusInfinity:
                     return nameof(Sse41.RoundToPositiveInfinity);
 
-                case RoundMode.TowardsZero:
-                    return nameof(Sse41.RoundToZero);
+                case RoundMode.TowardsMinusInfinity:
+                    return nameof(Sse41.RoundToNegativeInfinity);
 
-                default: throw new ArgumentException(nameof(roundMode));
+                default: /* case RoundMode.TowardsZero: */
+                    return nameof(Sse41.RoundToZero);
             }
         }
     }
