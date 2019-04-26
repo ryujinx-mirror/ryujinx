@@ -3,6 +3,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Gal.OpenGL;
 using Ryujinx.HLE;
+using Ryujinx.Profiler;
 using System;
 using System.IO;
 
@@ -24,6 +25,8 @@ namespace Ryujinx
 
             Configuration.Load(Path.Combine(ApplicationDirectory, "Config.jsonc"));
             Configuration.Configure(device);
+
+            Profile.Initalize();
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.ProcessExit        += CurrentDomain_ProcessExit;
@@ -88,6 +91,8 @@ namespace Ryujinx
             using (GlScreen screen = new GlScreen(device, renderer))
             {
                 screen.MainLoop();
+
+                Profile.FinishProfiling();
 
                 device.Dispose();
             }

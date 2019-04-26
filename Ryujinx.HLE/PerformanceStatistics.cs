@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Ryujinx.Profiler;
+using System.Diagnostics;
 using System.Timers;
 
 namespace Ryujinx.HLE
@@ -82,11 +83,13 @@ namespace Ryujinx.HLE
         public void RecordSystemFrameTime()
         {
             RecordFrameTime(FrameTypeSystem);
+            Profile.FlagTime(TimingFlagType.SystemFrame);
         }
 
         public void RecordGameFrameTime()
         {
             RecordFrameTime(FrameTypeGame);
+            Profile.FlagTime(TimingFlagType.FrameSwap);
         }
 
         private void RecordFrameTime(int frameType)

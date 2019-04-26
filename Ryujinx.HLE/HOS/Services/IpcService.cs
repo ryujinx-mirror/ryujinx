@@ -6,6 +6,7 @@ using Ryujinx.HLE.HOS.Kernel.Ipc;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Ryujinx.Profiler;
 
 namespace Ryujinx.HLE.HOS.Services
 {
@@ -101,7 +102,13 @@ namespace Ryujinx.HLE.HOS.Services
                 {
                     Logger.PrintDebug(LogClass.KernelIpc, $"{service.GetType().Name}: {processRequest.Method.Name}");
 
+                    ProfileConfig profile = Profiles.ServiceCall;
+                    profile.SessionGroup  = service.GetType().Name;
+                    profile.SessionItem   = processRequest.Method.Name;
+
+                    Profile.Begin(profile);
                     result = processRequest(context);
+                    Profile.End(profile);
                 }
                 else
                 {
