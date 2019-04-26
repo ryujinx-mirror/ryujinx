@@ -82,13 +82,13 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             NvFd fdData = Fds.GetData<NvFd>(context.Process, fd);
 
-            int result;
+            int result = 0;
 
             if (_ioctlProcessors.TryGetValue(fdData.Name, out IoctlProcessor process))
             {
                 result = process(context, cmd);
             }
-            else
+            else if (!ServiceConfiguration.IgnoreMissingServices)
             {
                 throw new NotImplementedException($"{fdData.Name} {cmd:x4}");
             }
