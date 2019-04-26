@@ -1,4 +1,5 @@
 using ChocolArm64.Decoders;
+using ChocolArm64.IntermediateRepresentation;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System.Reflection.Emit;
@@ -21,7 +22,7 @@ namespace ChocolArm64.Instructions
         {
             OpCodeException64 op = (OpCodeException64)context.CurrOp;
 
-            context.EmitStoreState();
+            context.EmitStoreContext();
 
             context.EmitLdarg(TranslatedSub.StateArgIdx);
 
@@ -48,7 +49,7 @@ namespace ChocolArm64.Instructions
 
             if (context.CurrBlock.Next != null)
             {
-                context.EmitLoadState();
+                context.EmitLoadContext();
             }
             else
             {
@@ -62,7 +63,7 @@ namespace ChocolArm64.Instructions
         {
             OpCode64 op = context.CurrOp;
 
-            context.EmitStoreState();
+            context.EmitStoreContext();
 
             context.EmitLdarg(TranslatedSub.StateArgIdx);
 
@@ -73,7 +74,7 @@ namespace ChocolArm64.Instructions
 
             if (context.CurrBlock.Next != null)
             {
-                context.EmitLoadState();
+                context.EmitLoadContext();
             }
             else
             {

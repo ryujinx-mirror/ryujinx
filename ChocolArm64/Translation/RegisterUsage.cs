@@ -1,269 +1,160 @@
-using System;
+using ChocolArm64.IntermediateRepresentation;
+using ChocolArm64.State;
 using System.Collections.Generic;
 
 namespace ChocolArm64.Translation
 {
     class RegisterUsage
     {
-        public const long CallerSavedIntRegistersMask = 0x7fL  << 9;
-        public const long PStateNzcvFlagsMask         = 0xfL   << 60;
+        private const long CallerSavedIntRegistersMask = 0x7fL  << 9;
+        private const long PStateNzcvFlagsMask         = 0xfL   << 60;
 
-        public const long CallerSavedVecRegistersMask = 0xffffL << 16;
+        private const long CallerSavedVecRegistersMask = 0xffffL << 16;
 
-        private class PathIo
+        private RegisterMask[] _inputs;
+        private RegisterMask[] _outputs;
+
+        public RegisterUsage(BasicBlock entryBlock, int blocksCount)
         {
-            private Dictionary<ILBlock, long> _allInputs;
-            private Dictionary<ILBlock, long> _cmnOutputs;
+            _inputs  = new RegisterMask[blocksCount];
+            _outputs = new RegisterMask[blocksCount];
 
-            private long _allOutputs;
+            HashSet<BasicBlock> visited = new HashSet<BasicBlock>();
 
-            public PathIo()
+            Stack<BasicBlock> blockStack = new Stack<BasicBlock>();
+
+            List<BasicBlock> postOrderBlocks = new List<BasicBlock>(blocksCount);
+
+            visited.Add(entryBlock);
+
+            blockStack.Push(entryBlock);
+
+            while (blockStack.TryPop(out BasicBlock block))
             {
-                _allInputs  = new Dictionary<ILBlock, long>();
-                _cmnOutputs = new Dictionary<ILBlock, long>();
-            }
-
-            public void Set(ILBlock entry, long inputs, long outputs)
-            {
-                if (!_allInputs.TryAdd(entry, inputs))
+                if (block.Next != null && visited.Add(block.Next))
                 {
-                    _allInputs[entry] |= inputs;
+                    blockStack.Push(block);
+                    blockStack.Push(block.Next);
                 }
-
-                if (!_cmnOutputs.TryAdd(entry, outputs))
+                else if (block.Branch != null && visited.Add(block.Branch))
                 {
-                    _cmnOutputs[entry] &= outputs;
+                    blockStack.Push(block);
+                    blockStack.Push(block.Branch);
                 }
-
-                _allOutputs |= outputs;
-            }
-
-            public long GetInputs(ILBlock entry)
-            {
-                if (_allInputs.TryGetValue(entry, out long inputs))
+                else
                 {
-                    //We also need to read the registers that may not be written
-                    //by all paths that can reach a exit point, to ensure that
-                    //the local variable will not remain uninitialized depending
-                    //on the flow path taken.
-                    return inputs | (_allOutputs & ~_cmnOutputs[entry]);
-                }
-
-                return 0;
-            }
-
-            public long GetOutputs()
-            {
-                return _allOutputs;
-            }
-        }
-
-        private Dictionary<ILBlock, PathIo> _intPaths;
-        private Dictionary<ILBlock, PathIo> _vecPaths;
-
-        private struct BlockIo : IEquatable<BlockIo>
-        {
-            public ILBlock Block { get; }
-            public ILBlock Entry { get; }
-
-            public long IntInputs  { get; set; }
-            public long VecInputs  { get; set; }
-            public long IntOutputs { get; set; }
-            public long VecOutputs { get; set; }
-
-            public BlockIo(ILBlock block, ILBlock entry)
-            {
-                Block = block;
-                Entry = entry;
-
-                IntInputs = IntOutputs = 0;
-                VecInputs = VecOutputs = 0;
-            }
-
-            public BlockIo(
-                ILBlock block,
-                ILBlock entry,
-                long    intInputs,
-                long    vecInputs,
-                long    intOutputs,
-                long    vecOutputs) : this(block, entry)
-            {
-                IntInputs  = intInputs;
-                VecInputs  = vecInputs;
-                IntOutputs = intOutputs;
-                VecOutputs = vecOutputs;
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (!(obj is BlockIo other))
-                {
-                    return false;
-                }
-
-                return Equals(other);
-            }
-
-            public bool Equals(BlockIo other)
-            {
-                return other.Block      == Block      &&
-                       other.Entry      == Entry      &&
-                       other.IntInputs  == IntInputs  &&
-                       other.VecInputs  == VecInputs  &&
-                       other.IntOutputs == IntOutputs &&
-                       other.VecOutputs == VecOutputs;
-            }
-
-            public override int GetHashCode()
-            {
-                return HashCode.Combine(Block, Entry, IntInputs, VecInputs, IntOutputs, VecOutputs);
-            }
-
-            public static bool operator ==(BlockIo lhs, BlockIo rhs)
-            {
-                return lhs.Equals(rhs);
-            }
-
-            public static bool operator !=(BlockIo lhs, BlockIo rhs)
-            {
-                return !(lhs == rhs);
-            }
-        }
-
-        public RegisterUsage()
-        {
-            _intPaths = new Dictionary<ILBlock, PathIo>();
-            _vecPaths = new Dictionary<ILBlock, PathIo>();
-        }
-
-        public void BuildUses(ILBlock entry)
-        {
-            //This will go through all possible paths on the graph,
-            //and store all inputs/outputs for each block. A register
-            //that was previously written to already is not considered an input.
-            //When a block can be reached by more than one path, then the
-            //output from all paths needs to be set for this block, and
-            //only outputs present in all of the parent blocks can be considered
-            //when doing input elimination. Each block chain has a entry, that's where
-            //the code starts executing. They are present on the subroutine start point,
-            //and on call return points too (address written to X30 by BL).
-            HashSet<BlockIo> visited = new HashSet<BlockIo>();
-
-            Queue<BlockIo> unvisited = new Queue<BlockIo>();
-
-            void Enqueue(BlockIo block)
-            {
-                if (visited.Add(block))
-                {
-                    unvisited.Enqueue(block);
+                    postOrderBlocks.Add(block);
                 }
             }
 
-            Enqueue(new BlockIo(entry, entry));
+            RegisterMask[] cmnOutputMasks = new RegisterMask[blocksCount];
 
-            while (unvisited.Count > 0)
+            bool modified;
+
+            bool firstPass = true;
+
+            do
             {
-                BlockIo current = unvisited.Dequeue();
+                modified = false;
 
-                current.IntInputs  |= current.Block.IntInputs & ~current.IntOutputs;
-                current.VecInputs  |= current.Block.VecInputs & ~current.VecOutputs;
-                current.IntOutputs |= current.Block.IntOutputs;
-                current.VecOutputs |= current.Block.VecOutputs;
-
-                //Check if this is a exit block
-                //(a block that returns or calls another sub).
-                if ((current.Block.Next   == null &&
-                     current.Block.Branch == null) || current.Block.HasStateStore)
+                for (int blkIndex = postOrderBlocks.Count - 1; blkIndex >= 0; blkIndex--)
                 {
-                    if (!_intPaths.TryGetValue(current.Block, out PathIo intPath))
+                    BasicBlock block = postOrderBlocks[blkIndex];
+
+                    if (block.Predecessors.Count != 0 && !block.HasStateLoad)
                     {
-                        _intPaths.Add(current.Block, intPath = new PathIo());
+                        BasicBlock predecessor = block.Predecessors[0];
+
+                        RegisterMask cmnOutputs = predecessor.RegOutputs | cmnOutputMasks[predecessor.Index];
+
+                        RegisterMask outputs = _outputs[predecessor.Index];
+
+                        for (int pIndex = 1; pIndex < block.Predecessors.Count; pIndex++)
+                        {
+                            predecessor = block.Predecessors[pIndex];
+
+                            cmnOutputs &= predecessor.RegOutputs | cmnOutputMasks[predecessor.Index];
+
+                            outputs |= _outputs[predecessor.Index];
+                        }
+
+                        _inputs[block.Index] |= outputs & ~cmnOutputs;
+
+                        if (!firstPass)
+                        {
+                            cmnOutputs &= cmnOutputMasks[block.Index];
+                        }
+
+                        if (Exchange(cmnOutputMasks, block.Index, cmnOutputs))
+                        {
+                            modified = true;
+                        }
+
+                        outputs |= block.RegOutputs;
+
+                        if (Exchange(_outputs, block.Index, _outputs[block.Index] | outputs))
+                        {
+                            modified = true;
+                        }
+                    }
+                    else if (Exchange(_outputs, block.Index, block.RegOutputs))
+                    {
+                        modified = true;
+                    }
+                }
+
+                firstPass = false;
+            }
+            while (modified);
+
+            do
+            {
+                modified = false;
+
+                for (int blkIndex = 0; blkIndex < postOrderBlocks.Count; blkIndex++)
+                {
+                    BasicBlock block = postOrderBlocks[blkIndex];
+
+                    RegisterMask inputs = block.RegInputs;
+
+                    if (block.Next != null)
+                    {
+                        inputs |= _inputs[block.Next.Index];
                     }
 
-                    if (!_vecPaths.TryGetValue(current.Block, out PathIo vecPath))
+                    if (block.Branch != null)
                     {
-                        _vecPaths.Add(current.Block, vecPath = new PathIo());
+                        inputs |= _inputs[block.Branch.Index];
                     }
 
-                    intPath.Set(current.Entry, current.IntInputs, current.IntOutputs);
-                    vecPath.Set(current.Entry, current.VecInputs, current.VecOutputs);
-                }
+                    inputs &= ~cmnOutputMasks[block.Index];
 
-                void EnqueueFromCurrent(ILBlock block, bool retTarget)
-                {
-                    BlockIo blockIo;
-
-                    if (retTarget)
+                    if (Exchange(_inputs, block.Index, _inputs[block.Index] | inputs))
                     {
-                        blockIo = new BlockIo(block, block);
+                        modified = true;
                     }
-                    else
-                    {
-                        blockIo = new BlockIo(
-                            block,
-                            current.Entry,
-                            current.IntInputs,
-                            current.VecInputs,
-                            current.IntOutputs,
-                            current.VecOutputs);
-                    }
-
-                    Enqueue(blockIo);
-                }
-
-                if (current.Block.Next != null)
-                {
-                    EnqueueFromCurrent(current.Block.Next, current.Block.HasStateStore);
-                }
-
-                if (current.Block.Branch != null)
-                {
-                    EnqueueFromCurrent(current.Block.Branch, false);
                 }
             }
+            while (modified);
         }
 
-        public long GetIntInputs(ILBlock entry) => GetInputsImpl(entry, _intPaths.Values);
-        public long GetVecInputs(ILBlock entry) => GetInputsImpl(entry, _vecPaths.Values);
-
-        private long GetInputsImpl(ILBlock entry, IEnumerable<PathIo> values)
+        private static bool Exchange(RegisterMask[] masks, int blkIndex, RegisterMask value)
         {
-            long inputs = 0;
+            RegisterMask oldValue = masks[blkIndex];
 
-            foreach (PathIo path in values)
-            {
-                inputs |= path.GetInputs(entry);
-            }
+            masks[blkIndex] = value;
 
-            return inputs;
+            return oldValue != value;
         }
 
-        public long GetIntNotInputs(ILBlock entry) => GetNotInputsImpl(entry, _intPaths.Values);
-        public long GetVecNotInputs(ILBlock entry) => GetNotInputsImpl(entry, _vecPaths.Values);
+        public RegisterMask GetInputs(BasicBlock entryBlock) => _inputs[entryBlock.Index];
 
-        private long GetNotInputsImpl(ILBlock entry, IEnumerable<PathIo> values)
-        {
-            //Returns a mask with registers that are written to
-            //before being read. Only those registers that are
-            //written in all paths, and is not read before being
-            //written to on those paths, should be set on the mask.
-            long mask = -1L;
+        public RegisterMask GetOutputs(BasicBlock block) => _outputs[block.Index];
 
-            foreach (PathIo path in values)
-            {
-                mask &= path.GetOutputs() & ~path.GetInputs(entry);
-            }
-
-            return mask;
-        }
-
-        public long GetIntOutputs(ILBlock block) => _intPaths[block].GetOutputs();
-        public long GetVecOutputs(ILBlock block) => _vecPaths[block].GetOutputs();
-
-        public static long ClearCallerSavedIntRegs(long mask, bool isAarch64)
+        public static long ClearCallerSavedIntRegs(long mask, ExecutionMode mode)
         {
             //TODO: ARM32 support.
-            if (isAarch64)
+            if (mode == ExecutionMode.Aarch64)
             {
                 mask &= ~(CallerSavedIntRegistersMask | PStateNzcvFlagsMask);
             }
@@ -271,10 +162,10 @@ namespace ChocolArm64.Translation
             return mask;
         }
 
-        public static long ClearCallerSavedVecRegs(long mask, bool isAarch64)
+        public static long ClearCallerSavedVecRegs(long mask, ExecutionMode mode)
         {
             //TODO: ARM32 support.
-            if (isAarch64)
+            if (mode == ExecutionMode.Aarch64)
             {
                 mask &= ~CallerSavedVecRegistersMask;
             }

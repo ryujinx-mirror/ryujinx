@@ -1,4 +1,5 @@
 using ChocolArm64.Decoders;
+using ChocolArm64.IntermediateRepresentation;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System.Reflection.Emit;
@@ -19,7 +20,7 @@ namespace ChocolArm64.Instructions
             }
             else
             {
-                context.EmitStoreState();
+                context.EmitStoreContext();
                 context.EmitLdc_I8(op.Imm);
 
                 context.Emit(OpCodes.Ret);
@@ -50,7 +51,7 @@ namespace ChocolArm64.Instructions
             context.EmitLdintzr(op.Rn);
             context.EmitLdc_I(op.Position + 4);
             context.EmitStint(RegisterAlias.Lr);
-            context.EmitStoreState();
+            context.EmitStoreContext();
 
             EmitVirtualCall(context);
         }
@@ -61,7 +62,7 @@ namespace ChocolArm64.Instructions
 
             context.HasIndirectJump = true;
 
-            context.EmitStoreState();
+            context.EmitStoreContext();
             context.EmitLdintzr(op.Rn);
 
             EmitVirtualJump(context);
@@ -82,7 +83,7 @@ namespace ChocolArm64.Instructions
 
         public static void Ret(ILEmitterCtx context)
         {
-            context.EmitStoreState();
+            context.EmitStoreContext();
             context.EmitLdint(RegisterAlias.Lr);
 
             context.Emit(OpCodes.Ret);
@@ -115,7 +116,7 @@ namespace ChocolArm64.Instructions
 
                 if (context.CurrBlock.Next == null)
                 {
-                    context.EmitStoreState();
+                    context.EmitStoreContext();
                     context.EmitLdc_I8(op.Position + 4);
 
                     context.Emit(OpCodes.Ret);
@@ -123,7 +124,7 @@ namespace ChocolArm64.Instructions
             }
             else
             {
-                context.EmitStoreState();
+                context.EmitStoreContext();
 
                 ILLabel lblTaken = new ILLabel();
 
@@ -151,7 +152,7 @@ namespace ChocolArm64.Instructions
 
                 if (context.CurrBlock.Next == null)
                 {
-                    context.EmitStoreState();
+                    context.EmitStoreContext();
                     context.EmitLdc_I8(op.Position + 4);
 
                     context.Emit(OpCodes.Ret);
@@ -159,7 +160,7 @@ namespace ChocolArm64.Instructions
             }
             else
             {
-                context.EmitStoreState();
+                context.EmitStoreContext();
 
                 ILLabel lblTaken = new ILLabel();
 

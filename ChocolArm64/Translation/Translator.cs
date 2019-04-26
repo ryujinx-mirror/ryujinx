@@ -1,8 +1,10 @@
 using ChocolArm64.Decoders;
 using ChocolArm64.Events;
+using ChocolArm64.IntermediateRepresentation;
 using ChocolArm64.Memory;
 using ChocolArm64.State;
 using System;
+using System.Reflection.Emit;
 using System.Threading;
 
 namespace ChocolArm64.Translation
@@ -82,7 +84,7 @@ namespace ChocolArm64.Translation
                 sub = TranslateLowCq(position, state.GetExecutionMode());
             }
 
-            if (sub.IsWorthOptimizing())
+            if (sub.Rejit())
             {
                 bool isComplete = cs == CallType.Call ||
                                   cs == CallType.VirtualCall;
@@ -124,56 +126,123 @@ namespace ChocolArm64.Translation
 
         private TranslatedSub TranslateLowCq(long position, ExecutionMode mode)
         {
-            Block block = Decoder.DecodeBasicBlock(_memory, position, mode);
+            Block[] blocks = Decoder.DecodeBasicBlock(_memory, (ulong)position, mode);
 
-            ILEmitterCtx context = new ILEmitterCtx(_memory, _cache, _queue, TranslationTier.Tier0, block);
+            ILEmitterCtx context = new ILEmitterCtx(_memory, _cache, _queue, TranslationTier.Tier0);
 
-            string subName = GetSubroutineName(position);
+            BasicBlock[] bbs = EmitAndGetBlocks(context, blocks);
 
-            bool isAarch64 = mode == ExecutionMode.Aarch64;
+            TranslatedSubBuilder builder = new TranslatedSubBuilder(mode);
 
-            ILMethodBuilder ilMthdBuilder = new ILMethodBuilder(context.GetILBlocks(), subName, isAarch64);
+            string name = GetSubroutineName(position);
 
-            TranslatedSub subroutine = ilMthdBuilder.GetSubroutine(TranslationTier.Tier0, isWorthOptimizing: true);
+            TranslatedSub subroutine = builder.Build(bbs, name, TranslationTier.Tier0);
 
-            return _cache.GetOrAdd(position, subroutine, block.OpCodes.Count);
+            return _cache.GetOrAdd(position, subroutine, GetOpsCount(bbs));
         }
 
         private TranslatedSub TranslateHighCq(long position, ExecutionMode mode, bool isComplete)
         {
-            Block graph = Decoder.DecodeSubroutine(_memory, position, mode);
+            Block[] blocks = Decoder.DecodeSubroutine(_memory, (ulong)position, mode);
 
-            ILEmitterCtx context = new ILEmitterCtx(_memory, _cache, _queue, TranslationTier.Tier1, graph);
+            ILEmitterCtx context = new ILEmitterCtx(_memory, _cache, _queue, TranslationTier.Tier1);
 
-            ILBlock[] ilBlocks = context.GetILBlocks();
+            if (blocks[0].Address != (ulong)position)
+            {
+                context.Emit(OpCodes.Br, context.GetLabel(position));
+            }
 
-            string subName = GetSubroutineName(position);
-
-            bool isAarch64 = mode == ExecutionMode.Aarch64;
+            BasicBlock[] bbs = EmitAndGetBlocks(context, blocks);
 
             isComplete &= !context.HasIndirectJump;
 
-            ILMethodBuilder ilMthdBuilder = new ILMethodBuilder(ilBlocks, subName, isAarch64, isComplete);
+            TranslatedSubBuilder builder = new TranslatedSubBuilder(mode, isComplete);
 
-            TranslatedSub subroutine = ilMthdBuilder.GetSubroutine(TranslationTier.Tier1, context.HasSlowCall);
+            string name = GetSubroutineName(position);
 
-            int ilOpCount = 0;
-
-            foreach (ILBlock ilBlock in ilBlocks)
-            {
-                ilOpCount += ilBlock.Count;
-            }
+            TranslatedSub subroutine = builder.Build(bbs, name, TranslationTier.Tier1, context.HasSlowCall);
 
             ForceAheadOfTimeCompilation(subroutine);
 
-            _cache.AddOrUpdate(position, subroutine, ilOpCount);
+            _cache.AddOrUpdate(position, subroutine, GetOpsCount(bbs));
 
             return subroutine;
         }
 
-        private string GetSubroutineName(long position)
+        private static BasicBlock[] EmitAndGetBlocks(ILEmitterCtx context, Block[] blocks)
+        {
+            for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
+            {
+                Block block = blocks[blkIndex];
+
+                context.CurrBlock = block;
+
+                context.MarkLabel(context.GetLabel((long)block.Address));
+
+                for (int opcIndex = 0; opcIndex < block.OpCodes.Count; opcIndex++)
+                {
+                    OpCode64 opCode = block.OpCodes[opcIndex];
+
+                    context.CurrOp = opCode;
+
+                    bool isLastOp = opcIndex == block.OpCodes.Count - 1;
+
+                    if (isLastOp && block.Branch != null && block.Branch.Address <= block.Address)
+                    {
+                        context.EmitSynchronization();
+                    }
+
+                    ILLabel lblPredicateSkip = null;
+
+                    if (opCode is OpCode32 op && op.Cond < Condition.Al)
+                    {
+                        lblPredicateSkip = new ILLabel();
+
+                        context.EmitCondBranch(lblPredicateSkip, op.Cond.Invert());
+                    }
+
+                    opCode.Emitter(context);
+
+                    if (lblPredicateSkip != null)
+                    {
+                        context.MarkLabel(lblPredicateSkip);
+
+                        context.ResetBlockStateForPredicatedOp();
+
+                        //If this is the last op on the block, and there's no "next" block
+                        //after this one, then we have to return right now, with the address
+                        //of the next instruction to be executed (in the case that the condition
+                        //is false, and the branch was not taken, as all basic blocks should end
+                        //with some kind of branch).
+                        if (isLastOp && block.Next == null)
+                        {
+                            context.EmitStoreContext();
+                            context.EmitLdc_I8(opCode.Position + opCode.OpCodeSizeInBytes);
+
+                            context.Emit(OpCodes.Ret);
+                        }
+                    }
+                }
+            }
+
+            return context.GetBlocks();
+        }
+
+        private static string GetSubroutineName(long position)
         {
             return $"Sub{position:x16}";
+        }
+
+        private static int GetOpsCount(BasicBlock[] blocks)
+        {
+            int opCount = 0;
+
+            foreach (BasicBlock block in blocks)
+            {
+                opCount += block.Count;
+            }
+
+            return opCount;
         }
 
         private void ForceAheadOfTimeCompilation(TranslatedSub subroutine)

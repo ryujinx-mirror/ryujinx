@@ -26,25 +26,15 @@ namespace ChocolArm64.Translation
 
         public TranslationTier Tier { get; }
 
-        public long IntNiRegsMask { get; }
-        public long VecNiRegsMask { get; }
-
-        private bool _isWorthOptimizing;
+        private bool _rejit;
 
         private int _callCount;
 
-        public TranslatedSub(
-            DynamicMethod   method,
-            long            intNiRegsMask,
-            long            vecNiRegsMask,
-            TranslationTier tier,
-            bool            isWorthOptimizing)
+        public TranslatedSub(DynamicMethod method, TranslationTier tier, bool rejit)
         {
-            Method             = method ?? throw new ArgumentNullException(nameof(method));;
-            IntNiRegsMask      = intNiRegsMask;
-            VecNiRegsMask      = vecNiRegsMask;
-            _isWorthOptimizing = isWorthOptimizing;
-            Tier               = tier;
+            Method = method ?? throw new ArgumentNullException(nameof(method));;
+            Tier   = tier;
+            _rejit = rejit;
         }
 
         static TranslatedSub()
@@ -82,9 +72,9 @@ namespace ChocolArm64.Translation
             return Delegate(threadState, memory);
         }
 
-        public bool IsWorthOptimizing()
+        public bool Rejit()
         {
-           if (!_isWorthOptimizing)
+           if (!_rejit)
             {
                 return false;
             }
@@ -94,9 +84,8 @@ namespace ChocolArm64.Translation
                 return false;
             }
 
-            //Only return true once, so that it is
-            //added to the queue only once.
-            _isWorthOptimizing = false;
+            //Only return true once, so that it is added to the queue only once.
+            _rejit = false;
 
             return true;
         }

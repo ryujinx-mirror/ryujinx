@@ -1,4 +1,5 @@
 using ChocolArm64.Decoders;
+using ChocolArm64.IntermediateRepresentation;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;
@@ -31,7 +32,7 @@ namespace ChocolArm64.Instructions
         {
             if (register == RegisterAlias.Aarch32Pc)
             {
-                context.EmitStoreState();
+                context.EmitStoreContext();
 
                 EmitBxWritePc(context);
             }
@@ -112,13 +113,13 @@ namespace ChocolArm64.Instructions
                     switch (mode)
                     {
                         case Aarch32Mode.User:
-                        case Aarch32Mode.System:      return RegisterAlias.SpUsr;
-                        case Aarch32Mode.Fiq:         return RegisterAlias.SpFiq;
-                        case Aarch32Mode.Irq:         return RegisterAlias.SpIrq;
-                        case Aarch32Mode.Supervisor:  return RegisterAlias.SpSvc;
-                        case Aarch32Mode.Abort:       return RegisterAlias.SpAbt;
-                        case Aarch32Mode.Hypervisor:  return RegisterAlias.SpHyp;
-                        case Aarch32Mode.Undefined:   return RegisterAlias.SpUnd;
+                        case Aarch32Mode.System:     return RegisterAlias.SpUsr;
+                        case Aarch32Mode.Fiq:        return RegisterAlias.SpFiq;
+                        case Aarch32Mode.Irq:        return RegisterAlias.SpIrq;
+                        case Aarch32Mode.Supervisor: return RegisterAlias.SpSvc;
+                        case Aarch32Mode.Abort:      return RegisterAlias.SpAbt;
+                        case Aarch32Mode.Hypervisor: return RegisterAlias.SpHyp;
+                        case Aarch32Mode.Undefined:  return RegisterAlias.SpUnd;
 
                         default: throw new ArgumentException(nameof(mode));
                     }
@@ -128,12 +129,12 @@ namespace ChocolArm64.Instructions
                     {
                         case Aarch32Mode.User:
                         case Aarch32Mode.Hypervisor:
-                        case Aarch32Mode.System:      return RegisterAlias.LrUsr;
-                        case Aarch32Mode.Fiq:         return RegisterAlias.LrFiq;
-                        case Aarch32Mode.Irq:         return RegisterAlias.LrIrq;
-                        case Aarch32Mode.Supervisor:  return RegisterAlias.LrSvc;
-                        case Aarch32Mode.Abort:       return RegisterAlias.LrAbt;
-                        case Aarch32Mode.Undefined:   return RegisterAlias.LrUnd;
+                        case Aarch32Mode.System:     return RegisterAlias.LrUsr;
+                        case Aarch32Mode.Fiq:        return RegisterAlias.LrFiq;
+                        case Aarch32Mode.Irq:        return RegisterAlias.LrIrq;
+                        case Aarch32Mode.Supervisor: return RegisterAlias.LrSvc;
+                        case Aarch32Mode.Abort:      return RegisterAlias.LrAbt;
+                        case Aarch32Mode.Undefined:  return RegisterAlias.LrUnd;
 
                         default: throw new ArgumentException(nameof(mode));
                     }

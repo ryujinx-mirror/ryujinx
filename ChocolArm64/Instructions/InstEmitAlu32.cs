@@ -1,4 +1,5 @@
 using ChocolArm64.Decoders;
+using ChocolArm64.IntermediateRepresentation;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System.Reflection.Emit;
@@ -122,7 +123,7 @@ namespace ChocolArm64.Instructions
 
         private static void EmitAluWritePc(ILEmitterCtx context)
         {
-            context.EmitStoreState();
+            context.EmitStoreContext();
 
             if (IsThumb(context.CurrOp))
             {

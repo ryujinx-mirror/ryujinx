@@ -2,6 +2,7 @@
 // https://www.agner.org/optimize/#vectorclass @ vectori128.h
 
 using ChocolArm64.Decoders;
+using ChocolArm64.IntermediateRepresentation;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System;

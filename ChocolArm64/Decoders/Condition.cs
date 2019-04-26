@@ -19,4 +19,14 @@ namespace ChocolArm64.Decoders
         Al   = 14,
         Nv   = 15
     }
+
+    static class ConditionExtensions
+    {
+        public static Condition Invert(this Condition cond)
+        {
+            //Bit 0 of all conditions is basically a negation bit, so
+            //inverting this bit has the effect of inverting the condition.
+            return (Condition)((int)cond ^ 1);
+        }
+    }
 }

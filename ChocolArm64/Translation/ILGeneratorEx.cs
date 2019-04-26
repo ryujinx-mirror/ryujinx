@@ -117,13 +117,5 @@ namespace ChocolArm64
                     break;
             }
         }
-
-        public static void EmitLdargSeq(this ILGenerator generator, int count)
-        {
-            for (int index = 0; index < count; index++)
-            {
-                generator.EmitLdarg(index);
-            }
-        }
     }
 }

@@ -1,3 +1,4 @@
+using ChocolArm64.IntermediateRepresentation;
 using ChocolArm64.State;
 using ChocolArm64.Translation;
 using System.Reflection;
@@ -11,7 +12,7 @@ namespace ChocolArm64.Instructions
         {
             if (context.Tier == TranslationTier.Tier0)
             {
-                context.EmitStoreState();
+                context.EmitStoreContext();
 
                 context.TranslateAhead(imm);
 
@@ -26,13 +27,13 @@ namespace ChocolArm64.Instructions
             {
                 context.HasSlowCall = true;
 
-                context.EmitStoreState();
+                context.EmitStoreContext();
 
                 context.TranslateAhead(imm);
 
                 context.EmitLdarg(TranslatedSub.StateArgIdx);
 
-                context.EmitFieldLoad(typeof(CpuThreadState).GetField(nameof(CpuThreadState.CurrentTranslator),
+                context.EmitLdfld(typeof(CpuThreadState).GetField(nameof(CpuThreadState.CurrentTranslator),
                     BindingFlags.Instance |
                     BindingFlags.NonPublic));
 
@@ -72,7 +73,7 @@ namespace ChocolArm64.Instructions
                 context.EmitSttmp();
                 context.EmitLdarg(TranslatedSub.StateArgIdx);
 
-                context.EmitFieldLoad(typeof(CpuThreadState).GetField(nameof(CpuThreadState.CurrentTranslator),
+                context.EmitLdfld(typeof(CpuThreadState).GetField(nameof(CpuThreadState.CurrentTranslator),
                     BindingFlags.Instance |
                     BindingFlags.NonPublic));
 
@@ -132,7 +133,7 @@ namespace ChocolArm64.Instructions
 
                 context.Emit(OpCodes.Pop);
 
-                context.EmitLoadState();
+                context.EmitLoadContext();
             }
             else
             {

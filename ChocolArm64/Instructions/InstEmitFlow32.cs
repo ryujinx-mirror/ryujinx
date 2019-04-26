@@ -19,7 +19,7 @@ namespace ChocolArm64.Instructions
             }
             else
             {
-                context.EmitStoreState();
+                context.EmitStoreContext();
                 context.EmitLdc_I8(op.Imm);
 
                 context.Emit(OpCodes.Ret);
@@ -40,7 +40,7 @@ namespace ChocolArm64.Instructions
         {
             IOpCode32BReg op = (IOpCode32BReg)context.CurrOp;
 
-            context.EmitStoreState();
+            context.EmitStoreContext();
 
             EmitLoadFromRegister(context, op.Rm);
 

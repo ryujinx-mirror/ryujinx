@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace ChocolArm64.State
 {
-    struct Register
+    struct Register : IEquatable<Register>
     {
         public int Index;
 
@@ -22,9 +22,12 @@ namespace ChocolArm64.State
 
         public override bool Equals(object obj)
         {
-            return obj is Register reg &&
-                   reg.Index == Index &&
-                   reg.Type  == Type;
+            return obj is Register reg && Equals(reg);
+        }
+
+        public bool Equals(Register other)
+        {
+            return Index == other.Index && Type == other.Type;
         }
 
         public FieldInfo GetField()
