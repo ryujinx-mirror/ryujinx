@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace Ryujinx.Profiler
 {
@@ -18,7 +19,7 @@ namespace Ryujinx.Profiler
         [Conditional("USE_PROFILING")]
         public static void Initalize()
         {
-            var config = ProfilerConfiguration.Load("ProfilerConfig.jsonc");
+            var config = ProfilerConfiguration.Load(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ProfilerConfig.jsonc"));
 
             _settings = new ProfilerSettings()
             {
