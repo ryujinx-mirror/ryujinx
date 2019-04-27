@@ -653,7 +653,8 @@
             }
           }
         }
-      },
+      }
+    },
     "gamepad_controls": {
       "$id": "#/properties/gamepad_controls",
       "type": "object",
