@@ -39,6 +39,11 @@ namespace Ryujinx.HLE.Input
             PrimaryController.Connect(controllerId);
         }
 
+        public void InitilizeKeyboard()
+        {
+            _device.Memory.FillWithZeros(HidPosition + HidKeyboardOffset, HidKeyboardSize);
+        }
+
         public HidControllerButtons UpdateStickButtons(
             HidJoystickPosition leftStick,
             HidJoystickPosition rightStick)
@@ -129,6 +134,33 @@ namespace Ryujinx.HLE.Input
                 _device.Memory.WriteInt32(touchEntryOffset + 0x24, padding);
 
                 touchEntryOffset += HidTouchEntryTouchSize;
+            }
+        }
+
+        public void WriteKeyboard(HidKeyboard keyboard)
+        {
+            long keyboardOffset = HidPosition + HidKeyboardOffset;
+            long lastEntry      = _device.Memory.ReadInt64(keyboardOffset + 0x10);
+            long currEntry      = (lastEntry + 1) % HidEntryCount;
+            long timestamp      = GetTimestamp();
+
+            _device.Memory.WriteInt64(keyboardOffset + 0x00, timestamp);
+            _device.Memory.WriteInt64(keyboardOffset + 0x08, HidEntryCount);
+            _device.Memory.WriteInt64(keyboardOffset + 0x10, currEntry);
+            _device.Memory.WriteInt64(keyboardOffset + 0x18, HidEntryCount - 1);
+
+            long keyboardEntryOffset = keyboardOffset + HidKeyboardHeaderSize;
+            long lastEntryOffset     = keyboardEntryOffset + lastEntry * HidKeyboardEntrySize;
+            long sampleCounter       = _device.Memory.ReadInt64(lastEntryOffset);
+
+            keyboardEntryOffset += currEntry * HidKeyboardEntrySize;
+            _device.Memory.WriteInt64(keyboardEntryOffset + 0x00, sampleCounter + 1);
+            _device.Memory.WriteInt64(keyboardEntryOffset + 0x08, sampleCounter);
+            _device.Memory.WriteInt64(keyboardEntryOffset + 0x10, keyboard.Modifier);
+
+            for (int i = 0; i < keyboard.Keys.Length; i++)
+            {
+                _device.Memory.WriteInt32(keyboardEntryOffset + 0x18 + (i * 4), keyboard.Keys[i]);
             }
         }
 

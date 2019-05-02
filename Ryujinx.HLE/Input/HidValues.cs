@@ -26,6 +26,9 @@
         internal const int HidControllersSize       = 0x32000;
         internal const int HidUnkSection9Size       = 0x800;
 
+        internal const int HidKeyboardHeaderSize = 0x20;
+        internal const int HidKeyboardEntrySize  = 0x38;
+
         internal const int HidTouchHeaderSize = 0x28;
         internal const int HidTouchEntrySize  = 0x298;
 

@@ -103,6 +103,11 @@ namespace Ryujinx
         public HidControllerType ControllerType { get; private set; }
 
         /// <summary>
+        /// Enable or disable keyboard support (Independent from controllers binding)
+        /// </summary>
+        public bool EnableKeyboard { get; private set; }
+
+        /// <summary>
         /// Keyboard control bindings
         /// </summary>
         public NpadKeyboard KeyboardControls { get; private set; }
@@ -224,6 +229,7 @@ namespace Ryujinx
             }
 
             device.Hid.InitilizePrimaryController(Instance.ControllerType);
+            device.Hid.InitilizeKeyboard();
         }
 
         private class ConfigurationEnumFormatter<T> : IJsonFormatter<T>

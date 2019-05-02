@@ -45,11 +45,14 @@
     "enable_aggressive_cpu_opts": true,
 
     // Enable or disable ignoring missing services, this may cause instability
-    "ignore_missing_services": false, 
+    "ignore_missing_services": false,
 
     // The primary controller's type
     // Supported Values: Handheld, ProController, NpadPair, NpadLeft, NpadRight
     "controller_type": "Handheld",
+
+    // Enable or disable "direct keyboard access (HID) support" (Provides games access to your keyboard as a text entry device).
+    "enable_keyboard": true,
 
     // Keyboard Controls
     // https://github.com/opentk/opentk/blob/master/src/OpenTK/Input/Key.cs

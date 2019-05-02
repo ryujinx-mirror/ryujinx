@@ -19,6 +19,7 @@
     "enable_fs_integrity_checks",
     "enable_aggressive_cpu_opts",
     "controller_type",
+    "enable_keyboard",
     "keyboard_controls",
     "gamepad_controls"
   ],
@@ -440,6 +441,17 @@
         "NpadPair",
         "NpadLeft",
         "NpadRight"
+      ]
+    },
+    "enable_keyboard": {
+      "$id": "#/properties/enable_keyboard",
+      "type": "boolean",
+      "title": "(HID) Keyboard Enable",
+      "description": "Enable or disable direct keyboard access (HID) support (Provides games access to your keyboard as a text entry device).",
+      "default": true,
+      "examples": [
+        true,
+        false
       ]
     },
     "keyboard_controls": {
