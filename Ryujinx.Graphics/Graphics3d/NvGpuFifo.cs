@@ -131,7 +131,7 @@ namespace Ryujinx.Graphics.Graphics3d
                     {
                         int position = methCall.Argument;
 
-                        _macros[_currMacroBindIndex] = new CachedMacro(this, _gpu.Engine3d, position);
+                        _macros[_currMacroBindIndex++] = new CachedMacro(this, _gpu.Engine3d, position);
 
                         break;
                     }
