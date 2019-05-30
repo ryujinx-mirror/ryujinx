@@ -16,23 +16,10 @@ namespace ChocolArm64.Instructions
         {
             OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
-            if (Optimizations.UseSse2)
+            if (op.Size == 0 && op.Opc == 1) // Single -> Double.
             {
-                if (op.Size == 1 && op.Opc == 0)
+                if (Optimizations.UseSse2)
                 {
-                    //Double -> Single.
-                    Type[] typesCvt = new Type[] { typeof(Vector128<float>), typeof(Vector128<double>) };
-
-                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
-                    context.EmitLdvec(op.Rn);
-
-                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertScalarToVector128Single), typesCvt));
-
-                    context.EmitStvec(op.Rd);
-                }
-                else if (op.Size == 0 && op.Opc == 1)
-                {
-                    //Single -> Double.
                     Type[] typesCvt = new Type[] { typeof(Vector128<double>), typeof(Vector128<float>) };
 
                     VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
@@ -44,17 +31,68 @@ namespace ChocolArm64.Instructions
                 }
                 else
                 {
-                    //Invalid encoding.
-                    throw new InvalidOperationException();
+                    EmitVectorExtractF(context, op.Rn, 0, 0);
+
+                    EmitFloatCast(context, 1);
+
+                    EmitScalarSetF(context, op.Rd, 1);
                 }
             }
-            else
+            else if (op.Size == 1 && op.Opc == 0) // Double -> Single.
             {
-                EmitVectorExtractF(context, op.Rn, 0, op.Size);
+                if (Optimizations.UseSse2)
+                {
+                    Type[] typesCvt = new Type[] { typeof(Vector128<float>), typeof(Vector128<double>) };
 
-                EmitFloatCast(context, op.Opc);
+                    VectorHelper.EmitCall(context, nameof(VectorHelper.VectorSingleZero));
+                    context.EmitLdvec(op.Rn);
 
-                EmitScalarSetF(context, op.Rd, op.Opc);
+                    context.EmitCall(typeof(Sse2).GetMethod(nameof(Sse2.ConvertScalarToVector128Single), typesCvt));
+
+                    context.EmitStvec(op.Rd);
+                }
+                else
+                {
+                    EmitVectorExtractF(context, op.Rn, 0, 1);
+
+                    EmitFloatCast(context, 0);
+
+                    EmitScalarSetF(context, op.Rd, 0);
+                }
+            }
+            else if (op.Size == 0 && op.Opc == 3) // Single -> Half.
+            {
+                EmitVectorExtractF(context, op.Rn, 0, 0);
+
+                context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                context.EmitCall(typeof(SoftFloat32_16), nameof(SoftFloat32_16.FPConvert));
+
+                context.Emit(OpCodes.Conv_U8);
+                EmitScalarSet(context, op.Rd, 1);
+            }
+            else if (op.Size == 3 && op.Opc == 0) // Half -> Single.
+            {
+                EmitVectorExtractZx(context, op.Rn, 0, 1);
+                context.Emit(OpCodes.Conv_U2);
+
+                context.EmitLdarg(TranslatedSub.StateArgIdx);
+
+                context.EmitCall(typeof(SoftFloat16_32), nameof(SoftFloat16_32.FPConvert));
+
+                EmitScalarSetF(context, op.Rd, 0);
+            }
+            else if (op.Size == 1 && op.Opc == 3) // Double -> Half.
+            {
+                throw new NotImplementedException("Double-precision to half-precision.");
+            }
+            else if (op.Size == 3 && op.Opc == 1) // Double -> Half.
+            {
+                throw new NotImplementedException("Half-precision to double-precision.");
+            }
+            else // Invalid encoding.
+            {
+                throw new InvalidOperationException($"type == {op.Size} && opc == {op.Opc}");
             }
         }
 

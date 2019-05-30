@@ -90,6 +90,48 @@ namespace Ryujinx.Tests.Cpu
                                  0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul };
         }
 
+        private static IEnumerable<ulong> _1H_F_()
+        {
+            yield return 0x000000000000FBFFul; // -Max Normal
+            yield return 0x0000000000008400ul; // -Min Normal
+            yield return 0x00000000000083FFul; // -Max Subnormal
+            yield return 0x0000000000008001ul; // -Min Subnormal
+            yield return 0x0000000000007BFFul; // +Max Normal
+            yield return 0x0000000000000400ul; // +Min Normal
+            yield return 0x00000000000003FFul; // +Max Subnormal
+            yield return 0x0000000000000001ul; // +Min Subnormal
+
+            if (!NoZeros)
+            {
+                yield return 0x0000000000008000ul; // -Zero
+                yield return 0x0000000000000000ul; // +Zero
+            }
+
+            if (!NoInfs)
+            {
+                yield return 0x000000000000FC00ul; // -Infinity
+                yield return 0x0000000000007C00ul; // +Infinity
+            }
+
+            if (!NoNaNs)
+            {
+                yield return 0x000000000000FE00ul; // -QNaN (all zeros payload)
+                yield return 0x000000000000FDFFul; // -SNaN (all ones  payload)
+                yield return 0x0000000000007E00ul; // +QNaN (all zeros payload) (DefaultNaN)
+                yield return 0x0000000000007DFFul; // +SNaN (all ones  payload)
+            }
+
+            for (int cnt = 1; cnt <= RndCnt; cnt++)
+            {
+                ulong grbg = TestContext.CurrentContext.Random.NextUShort();
+                ulong rnd1 = GenNormalH();
+                ulong rnd2 = GenSubnormalH();
+
+                yield return (grbg << 48) | (grbg << 32) | (grbg << 16) | rnd1;
+                yield return (grbg << 48) | (grbg << 32) | (grbg << 16) | rnd2;
+            }
+        }
+
         private static IEnumerable<ulong> _4H_F_()
         {
             yield return 0xFBFFFBFFFBFFFBFFul; // -Max Normal
@@ -123,8 +165,8 @@ namespace Ryujinx.Tests.Cpu
 
             for (int cnt = 1; cnt <= RndCnt; cnt++)
             {
-                uint rnd1 = (uint)GenNormalH();
-                uint rnd2 = (uint)GenSubnormalH();
+                ulong rnd1 = GenNormalH();
+                ulong rnd2 = GenSubnormalH();
 
                 yield return (rnd1 << 48) | (rnd1 << 32) | (rnd1 << 16) | rnd1;
                 yield return (rnd2 << 48) | (rnd2 << 32) | (rnd2 << 16) | rnd2;
@@ -606,6 +648,22 @@ namespace Ryujinx.Tests.Cpu
             return new uint[]
             {
                 0x1E624020u // FCVT S0, D1
+            };
+        }
+
+        private static uint[] _F_Cvt_S_SH_()
+        {
+            return new uint[]
+            {
+                0x1E23C020u // FCVT H0, S1
+            };
+        }
+
+        private static uint[] _F_Cvt_S_HS_()
+        {
+            return new uint[]
+            {
+                0x1EE24020u // FCVT S0, H1
             };
         }
 
@@ -1604,6 +1662,32 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise] [Explicit]
         public void F_Cvt_S_DS([ValueSource("_F_Cvt_S_DS_")] uint opcodes,
                                [ValueSource("_1D_F_")] ulong a)
+        {
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Cvt_S_SH([ValueSource("_F_Cvt_S_SH_")] uint opcodes,
+                               [ValueSource("_1S_F_")] ulong a)
+        {
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Cvt_S_HS([ValueSource("_F_Cvt_S_HS_")] uint opcodes,
+                               [ValueSource("_1H_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> v0 = MakeVectorE0E1(z, z);

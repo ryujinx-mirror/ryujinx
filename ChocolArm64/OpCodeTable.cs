@@ -296,7 +296,7 @@ namespace ChocolArm64
             SetA64("000111100x1xxxxx001000xxxxx0x000", InstEmit.Fcmp_S,          typeof(OpCodeSimdReg64));
             SetA64("000111100x1xxxxx001000xxxxx1x000", InstEmit.Fcmpe_S,         typeof(OpCodeSimdReg64));
             SetA64("000111100x1xxxxxxxxx11xxxxxxxxxx", InstEmit.Fcsel_S,         typeof(OpCodeSimdFcond64));
-            SetA64("000111100x10001xx10000xxxxxxxxxx", InstEmit.Fcvt_S,          typeof(OpCodeSimd64));
+            SetA64("00011110xx10001xx10000xxxxxxxxxx", InstEmit.Fcvt_S,          typeof(OpCodeSimd64));
             SetA64("x00111100x100100000000xxxxxxxxxx", InstEmit.Fcvtas_Gp,       typeof(OpCodeSimdCvt64));
             SetA64("x00111100x100101000000xxxxxxxxxx", InstEmit.Fcvtau_Gp,       typeof(OpCodeSimdCvt64));
             SetA64("0x0011100x100001011110xxxxxxxxxx", InstEmit.Fcvtl_V,         typeof(OpCodeSimd64));
