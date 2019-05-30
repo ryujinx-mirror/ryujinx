@@ -68,21 +68,7 @@ namespace ChocolArm64.Instructions
 
         public static void Addv_V(ILEmitterCtx context)
         {
-            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
-
-            int bytes = op.GetBitsCount() >> 3;
-            int elems = bytes >> op.Size;
-
-            EmitVectorExtractZx(context, op.Rn, 0, op.Size);
-
-            for (int index = 1; index < elems; index++)
-            {
-                EmitVectorExtractZx(context, op.Rn, index, op.Size);
-
-                context.Emit(OpCodes.Add);
-            }
-
-            EmitScalarSet(context, op.Rd, op.Size);
+            EmitVectorAcrossVectorOpZx(context, () => context.Emit(OpCodes.Add));
         }
 
         public static void Cls_V(ILEmitterCtx context)
@@ -2388,6 +2374,15 @@ namespace ChocolArm64.Instructions
             EmitVectorPairwiseOpSx(context, () => context.EmitCall(mthdInfo));
         }
 
+        public static void Smaxv_V(ILEmitterCtx context)
+        {
+            Type[] types = new Type[] { typeof(long), typeof(long) };
+
+            MethodInfo mthdInfo = typeof(Math).GetMethod(nameof(Math.Max), types);
+
+            EmitVectorAcrossVectorOpSx(context, () => context.EmitCall(mthdInfo));
+        }
+
         public static void Smin_V(ILEmitterCtx context)
         {
             if (Optimizations.UseSse41)
@@ -2427,6 +2422,15 @@ namespace ChocolArm64.Instructions
             MethodInfo mthdInfo = typeof(Math).GetMethod(nameof(Math.Min), types);
 
             EmitVectorPairwiseOpSx(context, () => context.EmitCall(mthdInfo));
+        }
+
+        public static void Sminv_V(ILEmitterCtx context)
+        {
+            Type[] types = new Type[] { typeof(long), typeof(long) };
+
+            MethodInfo mthdInfo = typeof(Math).GetMethod(nameof(Math.Min), types);
+
+            EmitVectorAcrossVectorOpSx(context, () => context.EmitCall(mthdInfo));
         }
 
         public static void Smlal_V(ILEmitterCtx context)
@@ -3208,6 +3212,15 @@ namespace ChocolArm64.Instructions
             EmitVectorPairwiseOpZx(context, () => context.EmitCall(mthdInfo));
         }
 
+        public static void Umaxv_V(ILEmitterCtx context)
+        {
+            Type[] types = new Type[] { typeof(ulong), typeof(ulong) };
+
+            MethodInfo mthdInfo = typeof(Math).GetMethod(nameof(Math.Max), types);
+
+            EmitVectorAcrossVectorOpZx(context, () => context.EmitCall(mthdInfo));
+        }
+
         public static void Umin_V(ILEmitterCtx context)
         {
             if (Optimizations.UseSse41)
@@ -3247,6 +3260,15 @@ namespace ChocolArm64.Instructions
             MethodInfo mthdInfo = typeof(Math).GetMethod(nameof(Math.Min), types);
 
             EmitVectorPairwiseOpZx(context, () => context.EmitCall(mthdInfo));
+        }
+
+        public static void Uminv_V(ILEmitterCtx context)
+        {
+            Type[] types = new Type[] { typeof(ulong), typeof(ulong) };
+
+            MethodInfo mthdInfo = typeof(Math).GetMethod(nameof(Math.Min), types);
+
+            EmitVectorAcrossVectorOpZx(context, () => context.EmitCall(mthdInfo));
         }
 
         public static void Umlal_V(ILEmitterCtx context)

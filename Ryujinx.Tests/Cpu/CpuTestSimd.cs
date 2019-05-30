@@ -445,6 +445,30 @@ namespace Ryujinx.Tests.Cpu
 #endregion
 
 #region "ValueSource (Opcodes)"
+        private static uint[] _SU_Add_Max_Min_V_V_8BB_4HH_()
+        {
+            return new uint[]
+            {
+                0x0E31B800u, // ADDV  B0, V0.8B
+                0x0E30A800u, // SMAXV B0, V0.8B
+                0x0E31A800u, // SMINV B0, V0.8B
+                0x2E30A800u, // UMAXV B0, V0.8B
+                0x2E31A800u  // UMINV B0, V0.8B
+            };
+        }
+
+        private static uint[] _SU_Add_Max_Min_V_V_16BB_8HH_4SS_()
+        {
+            return new uint[]
+            {
+                0x4E31B800u, // ADDV  B0, V0.16B
+                0x4E30A800u, // SMAXV B0, V0.16B
+                0x4E31A800u, // SMINV B0, V0.16B
+                0x6E30A800u, // UMAXV B0, V0.16B
+                0x6E31A800u  // UMINV B0, V0.16B
+            };
+        }
+
         private static uint[] _F_Abs_Neg_Recpx_Sqrt_S_S_()
         {
             return new uint[]
@@ -913,40 +937,40 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("ADDV <V><d>, <Vn>.<T>")]
-        public void Addv_V_8BB_4HH([Values(0u)]     uint rd,
-                                   [Values(1u, 0u)] uint rn,
-                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong z,
-                                   [ValueSource("_8B4H_")] [Random(RndCnt)] ulong a,
-                                   [Values(0b00u, 0b01u)] uint size) // <8BB, 4HH>
+        [Test, Pairwise]
+        public void SU_Add_Max_Min_V_V_8BB_4HH([ValueSource("_SU_Add_Max_Min_V_V_8BB_4HH_")] uint opcodes,
+                                               [Values(0u)]     uint rd,
+                                               [Values(1u, 0u)] uint rn,
+                                               [ValueSource("_8B4H_")] [Random(RndCnt)] ulong z,
+                                               [ValueSource("_8B4H_")] [Random(RndCnt)] ulong a,
+                                               [Values(0b00u, 0b01u)] uint size) // <8BB, 4HH>
         {
-            uint opcode = 0x0E31B800; // ADDV B0, V0.8B
-            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((size & 3) << 22);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
             Vector128<float> v1 = MakeVectorE0(a);
 
-            SingleOpcode(opcode, v0: v0, v1: v1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("ADDV <V><d>, <Vn>.<T>")]
-        public void Addv_V_16BB_8HH_4SS([Values(0u)]     uint rd,
-                                        [Values(1u, 0u)] uint rn,
-                                        [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                        [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                        [Values(0b00u, 0b01u, 0b10u)] uint size) // <16BB, 8HH, 4SS>
+        [Test, Pairwise]
+        public void SU_Add_Max_Min_V_V_16BB_8HH_4SS([ValueSource("_SU_Add_Max_Min_V_V_16BB_8HH_4SS_")] uint opcodes,
+                                                    [Values(0u)]     uint rd,
+                                                    [Values(1u, 0u)] uint rn,
+                                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                                                    [Values(0b00u, 0b01u, 0b10u)] uint size) // <16BB, 8HH, 4SS>
         {
-            uint opcode = 0x4E31B800; // ADDV B0, V0.16B
-            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((size & 3) << 22);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
             Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            SingleOpcode(opcode, v0: v0, v1: v1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
