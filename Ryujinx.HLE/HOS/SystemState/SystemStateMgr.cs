@@ -42,6 +42,8 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         internal string ActiveAudioOutput { get; private set; }
 
+        public bool DiscordIntergrationEnabled { get; set; }
+
         public bool DockedMode { get; set; }
 
         public ColorSet ThemeColor { get; set; }

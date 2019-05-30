@@ -368,6 +368,17 @@
         false
       ]
     },
+    "enable_discord_intergration": {
+      "$id": "#/properties/enable_discord_intergration",
+      "type": "boolean",
+      "title": "Enable Discord Rich Presense",
+      "description": "Enable or disable Discord Rich Presense",
+      "default": true,
+      "examples": [
+        true,
+        false
+      ]
+    },
     "enable_vsync": {
       "$id": "#/properties/enable_vsync",
       "type": "boolean",
