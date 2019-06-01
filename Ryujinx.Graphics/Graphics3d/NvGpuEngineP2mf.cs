@@ -1,6 +1,7 @@
 using Ryujinx.Graphics.Memory;
 using Ryujinx.Graphics.Texture;
 using System.Collections.Generic;
+using Ryujinx.Profiler;
 
 namespace Ryujinx.Graphics.Graphics3d
 {
@@ -54,7 +55,13 @@ namespace Ryujinx.Graphics.Graphics3d
         {
             if (_methods.TryGetValue(methCall.Method, out NvGpuMethod method))
             {
+                ProfileConfig profile = Profiles.GPU.EngineP2mf.PushData;
+
+                profile.SessionItem = method.Method.Name;
+
+                Profile.Begin(profile);
                 method(vmm, methCall);
+                Profile.End(profile);
             }
             else
             {
@@ -64,6 +71,8 @@ namespace Ryujinx.Graphics.Graphics3d
 
         private void Execute(NvGpuVmm vmm, GpuMethodCall methCall)
         {
+            Profile.Begin(Profiles.GPU.EngineP2mf.Execute);
+
             //TODO: Some registers and copy modes are still not implemented.
             int control = methCall.Argument;
 
@@ -97,6 +106,8 @@ namespace Ryujinx.Graphics.Graphics3d
             _copySize   = lineLengthIn * lineCount;
 
             _buffer = new byte[_copySize];
+
+            Profile.End(Profiles.GPU.EngineP2mf.Execute);
         }
 
         private void PushData(NvGpuVmm vmm, GpuMethodCall methCall)
@@ -105,6 +116,8 @@ namespace Ryujinx.Graphics.Graphics3d
             {
                 return;
             }
+
+            Profile.Begin(Profiles.GPU.EngineP2mf.PushData);
 
             for (int shift = 0; shift < 32 && _copyOffset < _copySize; shift += 8, _copyOffset++)
             {
@@ -137,6 +150,8 @@ namespace Ryujinx.Graphics.Graphics3d
 
                 _buffer = null;
             }
+
+            Profile.End(Profiles.GPU.EngineP2mf.PushData);
         }
 
         private long MakeInt64From2xInt32(NvGpuEngineP2mfReg reg)

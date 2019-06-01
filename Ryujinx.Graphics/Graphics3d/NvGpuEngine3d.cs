@@ -5,6 +5,7 @@ using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Texture;
 using System;
 using System.Collections.Generic;
+using Ryujinx.Profiler;
 
 namespace Ryujinx.Graphics.Graphics3d
 {
@@ -89,7 +90,15 @@ namespace Ryujinx.Graphics.Graphics3d
         {
             if (_methods.TryGetValue(methCall.Method, out NvGpuMethod method))
             {
+                ProfileConfig profile = Profiles.GPU.Engine3d.CallMethod;
+
+                profile.SessionItem = method.Method.Name;
+
+                Profile.Begin(profile);
+
                 method(vmm, methCall);
+
+                Profile.End(profile);
             }
             else
             {
@@ -99,12 +108,18 @@ namespace Ryujinx.Graphics.Graphics3d
 
         private void VertexEndGl(NvGpuVmm vmm, GpuMethodCall methCall)
         {
+            Profile.Begin(Profiles.GPU.Engine3d.VertexEnd);
+
             LockCaches();
+
+            Profile.Begin(Profiles.GPU.Engine3d.ConfigureState);
 
             GalPipelineState state = new GalPipelineState();
 
             // Framebuffer must be run configured because viewport dimensions may be used in other methods
             SetFrameBuffer(state);
+
+            Profile.End(Profiles.GPU.Engine3d.ConfigureState);
 
             for (int fbIndex = 0; fbIndex < 8; fbIndex++)
             {
@@ -135,6 +150,8 @@ namespace Ryujinx.Graphics.Graphics3d
             DispatchRender(vmm, state);
 
             UnlockCaches();
+
+            Profile.End(Profiles.GPU.Engine3d.VertexEnd);
         }
 
         private void LockCaches()
@@ -153,6 +170,8 @@ namespace Ryujinx.Graphics.Graphics3d
 
         private void ClearBuffers(NvGpuVmm vmm, GpuMethodCall methCall)
         {
+            Profile.Begin(Profiles.GPU.Engine3d.ClearBuffers);
+
             int attachment = (methCall.Argument >> 6) & 0xf;
 
             GalClearBufferFlags flags = (GalClearBufferFlags)(methCall.Argument & 0x3f);
@@ -178,10 +197,18 @@ namespace Ryujinx.Graphics.Graphics3d
 
             _gpu.Renderer.Pipeline.ResetDepthMask();
             _gpu.Renderer.Pipeline.ResetColorMask(attachment);
+
+            Profile.End(Profiles.GPU.Engine3d.ClearBuffers);
         }
 
         private void SetFrameBuffer(NvGpuVmm vmm, int fbIndex)
         {
+            ProfileConfig profile = Profiles.GPU.Engine3d.SetFrameBuffer;
+
+            profile.SessionItem = fbIndex.ToString();
+
+            Profile.Begin(profile);
+
             long va = MakeInt64From2xInt32(NvGpuEngine3dReg.FrameBufferNAddress + fbIndex * 0x10);
 
             int surfFormat = ReadRegister(NvGpuEngine3dReg.FrameBufferNFormat + fbIndex * 0x10);
@@ -189,6 +216,8 @@ namespace Ryujinx.Graphics.Graphics3d
             if (va == 0 || surfFormat == 0)
             {
                 _gpu.Renderer.RenderTarget.UnbindColor(fbIndex);
+
+                Profile.End(profile);
 
                 return;
             }
@@ -227,6 +256,8 @@ namespace Ryujinx.Graphics.Graphics3d
             _gpu.ResourceManager.SendColorBuffer(vmm, key, fbIndex, image);
 
             _gpu.Renderer.RenderTarget.SetViewport(fbIndex, _viewportX0, _viewportY0, _viewportX1 - _viewportX0, _viewportY1 - _viewportY0);
+
+            Profile.End(profile);
         }
 
         private void SetFrameBuffer(GalPipelineState state)
@@ -248,6 +279,8 @@ namespace Ryujinx.Graphics.Graphics3d
 
         private void SetZeta(NvGpuVmm vmm)
         {
+            Profile.Begin(Profiles.GPU.Engine3d.SetZeta);
+
             long va = MakeInt64From2xInt32(NvGpuEngine3dReg.ZetaAddress);
 
             int zetaFormat = ReadRegister(NvGpuEngine3dReg.ZetaFormat);
@@ -264,6 +297,8 @@ namespace Ryujinx.Graphics.Graphics3d
             {
                 _gpu.Renderer.RenderTarget.UnbindZeta();
 
+                Profile.End(Profiles.GPU.Engine3d.SetZeta);
+
                 return;
             }
 
@@ -278,10 +313,14 @@ namespace Ryujinx.Graphics.Graphics3d
             GalImage image = new GalImage(width, height, 1, 1, 1, gobBlockHeight, 1, layout, format, GalTextureTarget.TwoD);
 
             _gpu.ResourceManager.SendZetaBuffer(vmm, key, image);
+
+            Profile.End(Profiles.GPU.Engine3d.SetZeta);
         }
 
         private long[] UploadShaders(NvGpuVmm vmm)
         {
+            Profile.Begin(Profiles.GPU.Engine3d.UploadShaders);
+
             long[] keys = new long[5];
 
             long basePosition = MakeInt64From2xInt32(NvGpuEngine3dReg.ShaderAddress);
@@ -338,6 +377,8 @@ namespace Ryujinx.Graphics.Graphics3d
                 _gpu.Renderer.Shader.Create(vmm, key, type);
                 _gpu.Renderer.Shader.Bind(key);
             }
+
+            Profile.End(Profiles.GPU.Engine3d.UploadShaders);
 
             return keys;
         }
@@ -619,6 +660,8 @@ namespace Ryujinx.Graphics.Graphics3d
 
         private void UploadTextures(NvGpuVmm vmm, GalPipelineState state, long[] keys)
         {
+            Profile.Begin(Profiles.GPU.Engine3d.UploadTextures);
+
             long baseShPosition = MakeInt64From2xInt32(NvGpuEngine3dReg.ShaderAddress);
 
             int textureCbIndex = ReadRegister(NvGpuEngine3dReg.TextureCbIndex);
@@ -660,6 +703,8 @@ namespace Ryujinx.Graphics.Graphics3d
                 _gpu.Renderer.Texture.Bind(key, index, image);
                 _gpu.Renderer.Texture.SetSampler(image, sampler);
             }
+
+            Profile.End(Profiles.GPU.Engine3d.UploadTextures);
         }
 
         private (long, GalImage, GalTextureSampler) UploadTexture(NvGpuVmm vmm, int textureHandle)
@@ -670,6 +715,8 @@ namespace Ryujinx.Graphics.Graphics3d
                 //This is a bug, most likely caused by sync issues.
                 return (0, default(GalImage), default(GalTextureSampler));
             }
+
+            Profile.Begin(Profiles.GPU.Engine3d.UploadTexture);
 
             bool linkedTsc = ReadRegisterBool(NvGpuEngine3dReg.LinkedTsc);
 
@@ -702,17 +749,23 @@ namespace Ryujinx.Graphics.Graphics3d
 
             if (key == -1)
             {
+                Profile.End(Profiles.GPU.Engine3d.UploadTexture);
+
                 //FIXME: Shouldn't ignore invalid addresses.
                 return (0, default(GalImage), default(GalTextureSampler));
             }
 
             _gpu.ResourceManager.SendTexture(vmm, key, image);
 
+            Profile.End(Profiles.GPU.Engine3d.UploadTexture);
+
             return (key, image, sampler);
         }
 
         private void UploadConstBuffers(NvGpuVmm vmm, GalPipelineState state, long[] keys)
         {
+            Profile.Begin(Profiles.GPU.Engine3d.UploadConstBuffers);
+
             for (int stage = 0; stage < keys.Length; stage++)
             {
                 foreach (CBufferDescriptor desc in _gpu.Renderer.Shader.GetConstBufferUsage(keys[stage]))
@@ -741,10 +794,14 @@ namespace Ryujinx.Graphics.Graphics3d
                     state.ConstBufferKeys[stage][desc.Slot] = key;
                 }
             }
+
+            Profile.End(Profiles.GPU.Engine3d.UploadConstBuffers);
         }
 
         private void UploadVertexArrays(NvGpuVmm vmm, GalPipelineState state)
         {
+            Profile.Begin(Profiles.GPU.Engine3d.UploadVertexArrays);
+
             long ibPosition = MakeInt64From2xInt32(NvGpuEngine3dReg.IndexArrayAddress);
 
             long iboKey = vmm.GetPhysicalAddress(ibPosition);
@@ -956,6 +1013,8 @@ namespace Ryujinx.Graphics.Graphics3d
                 state.VertexBindings[index].Divisor   = vertexDivisor;
                 state.VertexBindings[index].Attribs   = attribs[index].ToArray();
             }
+
+            Profile.End(Profiles.GPU.Engine3d.UploadVertexArrays);
         }
 
         private void DispatchRender(NvGpuVmm vmm, GalPipelineState state)

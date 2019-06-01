@@ -105,6 +105,132 @@ namespace Ryujinx.Profiler
             };
         }
 
+        public static class GPU
+        {
+            public static class Engine2d
+            {
+                public static ProfileConfig TextureCopy = new ProfileConfig()
+                {
+                    Category     = "GPU.Engine2D",
+                    SessionGroup = "TextureCopy"
+                };
+            }
+
+            public static class Engine3d
+            {
+                public static ProfileConfig CallMethod = new ProfileConfig()
+                {
+                    Category     = "GPU.Engine3D",
+                    SessionGroup = "CallMethod",
+                };
+
+                public static ProfileConfig VertexEnd = new ProfileConfig()
+                {
+                    Category     = "GPU.Engine3D",
+                    SessionGroup = "VertexEnd"
+                };
+
+                public static ProfileConfig ClearBuffers = new ProfileConfig()
+                {
+                    Category     = "GPU.Engine3D",
+                    SessionGroup = "ClearBuffers"
+                };
+
+                public static ProfileConfig SetFrameBuffer = new ProfileConfig()
+                {
+                    Category     = "GPU.Engine3D",
+                    SessionGroup = "SetFrameBuffer",
+                };
+
+                public static ProfileConfig SetZeta = new ProfileConfig()
+                {
+                    Category     = "GPU.Engine3D",
+                    SessionGroup = "SetZeta"
+                };
+
+                public static ProfileConfig UploadShaders = new ProfileConfig()
+                {
+                    Category     = "GPU.Engine3D",
+                    SessionGroup = "UploadShaders"
+                };
+
+                public static ProfileConfig UploadTextures = new ProfileConfig()
+                {
+                    Category     = "GPU.Engine3D",
+                    SessionGroup = "UploadTextures"
+                };
+
+                public static ProfileConfig UploadTexture = new ProfileConfig()
+                {
+                    Category     = "GPU.Engine3D",
+                    SessionGroup = "UploadTexture"
+                };
+
+                public static ProfileConfig UploadConstBuffers = new ProfileConfig()
+                {
+                    Category     = "GPU.Engine3D",
+                    SessionGroup = "UploadConstBuffers"
+                };
+
+                public static ProfileConfig UploadVertexArrays = new ProfileConfig()
+                {
+                    Category     = "GPU.Engine3D",
+                    SessionGroup = "UploadVertexArrays"
+                };
+
+                public static ProfileConfig ConfigureState = new ProfileConfig()
+                {
+                    Category     = "GPU.Engine3D",
+                    SessionGroup = "ConfigureState"
+                };
+            }
+
+            public static class EngineM2mf
+            {
+                public static ProfileConfig CallMethod = new ProfileConfig()
+                {
+                    Category     = "GPU.EngineM2mf",
+                    SessionGroup = "CallMethod",
+                };
+
+                public static ProfileConfig Execute = new ProfileConfig()
+                {
+                    Category     = "GPU.EngineM2mf",
+                    SessionGroup = "Execute",
+                };
+            }
+
+            public static class EngineP2mf
+            {
+                public static ProfileConfig CallMethod = new ProfileConfig()
+                {
+                    Category     = "GPU.EngineP2mf",
+                    SessionGroup = "CallMethod",
+                };
+
+                public static ProfileConfig Execute = new ProfileConfig()
+                {
+                    Category     = "GPU.EngineP2mf",
+                    SessionGroup = "Execute",
+                };
+
+                public static ProfileConfig PushData = new ProfileConfig()
+                {
+                    Category     = "GPU.EngineP2mf",
+                    SessionGroup = "PushData",
+                };
+            }
+
+            public static class Shader
+            {
+                public static ProfileConfig Decompile = new ProfileConfig()
+                {
+                    Category     = "GPU.Shader",
+                    SessionGroup = "Decompile",
+                };
+            }
+        }
+
         public static ProfileConfig ServiceCall = new ProfileConfig()
         {
             Category = "ServiceCall",

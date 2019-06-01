@@ -1,6 +1,7 @@
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
 using Ryujinx.Graphics.Texture;
+using Ryujinx.Profiler;
 
 namespace Ryujinx.Graphics.Graphics3d
 {
@@ -40,6 +41,8 @@ namespace Ryujinx.Graphics.Graphics3d
 
         private void TextureCopy(NvGpuVmm vmm)
         {
+            Profile.Begin(Profiles.GPU.Engine2d.TextureCopy);
+
             CopyOperation operation = (CopyOperation)ReadRegister(NvGpuEngine2dReg.CopyOperation);
 
             int  dstFormat = ReadRegister(NvGpuEngine2dReg.DstFormat);
@@ -221,6 +224,8 @@ namespace Ryujinx.Graphics.Graphics3d
                 dstBlitH);
 
             vmm.IsRegionModified(dstKey, ImageUtils.GetSize(dstTexture), NvGpuBufferType.Texture);
+        
+            Profile.End(Profiles.GPU.Engine2d.TextureCopy);
         }
 
         private static GalMemoryLayout GetLayout(bool linear)
