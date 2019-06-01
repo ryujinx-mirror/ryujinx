@@ -1,11 +1,11 @@
 using LibHac;
-using LibHac.IO;
+using LibHac.Fs;
+using LibHac.Fs.NcaUtils;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 using static Ryujinx.HLE.FileSystem.VirtualFileSystem;
 using static Ryujinx.HLE.HOS.ErrorCode;
@@ -79,31 +79,31 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // OpenBisFileSystem(nn::fssrv::sf::Partition partitionID, buffer<bytes<0x301>, 0x19, 0x301>) -> object<nn::fssrv::sf::IFileSystem> Bis
         public long OpenBisFileSystem(ServiceCtx context)
         {
-            int    bisPartitionId  = context.RequestData.ReadInt32();
-            string partitionString = ReadUtf8String(context);
-            string bisPartitonPath = string.Empty;
+            int    bisPartitionId   = context.RequestData.ReadInt32();
+            string partitionString  = ReadUtf8String(context);
+            string bisPartitionPath = string.Empty;
 
             switch (bisPartitionId)
             {
                 case 29:
-                    bisPartitonPath = SafeNandPath;
+                    bisPartitionPath = SafeNandPath;
                     break;
                 case 30:
                 case 31:
-                    bisPartitonPath = SystemNandPath;
+                    bisPartitionPath = SystemNandPath;
                     break;
                 case 32:
-                    bisPartitonPath = UserNandPath;
+                    bisPartitionPath = UserNandPath;
                     break;
                 default:
                     return MakeError(ErrorModule.Fs, FsErr.InvalidInput);
             }
 
-            string fullPath = context.Device.FileSystem.GetFullPartitionPath(bisPartitonPath);
+            string fullPath = context.Device.FileSystem.GetFullPartitionPath(bisPartitionPath);
 
-            FileSystemProvider fileSystemProvider = new FileSystemProvider(fullPath, context.Device.FileSystem.GetBasePath());
+            LocalFileSystem fileSystem = new LocalFileSystem(fullPath);
 
-            MakeObject(context, new IFileSystem(fullPath, fileSystemProvider));
+            MakeObject(context, new IFileSystem(fileSystem));
 
             return 0;
         }
@@ -113,9 +113,9 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             string sdCardPath = context.Device.FileSystem.GetSdCardPath();
 
-            FileSystemProvider fileSystemProvider = new FileSystemProvider(sdCardPath, context.Device.FileSystem.GetBasePath());
+            LocalFileSystem fileSystem = new LocalFileSystem(sdCardPath);
 
-            MakeObject(context, new IFileSystem(sdCardPath, fileSystemProvider));
+            MakeObject(context, new IFileSystem(fileSystem));
 
             return 0;
         }
@@ -139,7 +139,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // OpenDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage> dataStorage
         public long OpenDataStorageByCurrentProcess(ServiceCtx context)
         {
-            MakeObject(context, new IStorage(context.Device.FileSystem.RomFs));
+            MakeObject(context, new IStorage(context.Device.FileSystem.RomFs.AsStorage()));
 
             return 0;
         }
@@ -158,7 +158,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             if (installedStorage == StorageId.None)
             {
-                contentType = ContentType.AocData;
+                contentType = ContentType.PublicData;
 
                 installedStorage =
                     context.Device.System.ContentManager.GetInstalledStorage(titleId, contentType, storageId);
@@ -175,12 +175,11 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
                     if (File.Exists(ncaPath))
                     {
-                        LibHac.IO.IStorage ncaStorage   = new FileStream(ncaPath, FileMode.Open, FileAccess.Read).AsStorage();
-                        Nca                nca          = new Nca(context.Device.System.KeySet, ncaStorage, false);
-                        NcaSection         romfsSection = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
-                        Stream             romfsStream  = nca.OpenSection(romfsSection.SectionNum, false, context.Device.System.FsIntegrityCheckLevel, false).AsStream();
+                        LibHac.Fs.IStorage ncaStorage   = new LocalStorage(ncaPath, FileAccess.Read, FileMode.Open);
+                        Nca                nca          = new Nca(context.Device.System.KeySet, ncaStorage);
+                        LibHac.Fs.IStorage romfsStorage = nca.OpenStorage(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
 
-                        MakeObject(context, new IStorage(romfsStream));
+                        MakeObject(context, new IStorage(romfsStorage));
 
                         return 0;
                     }
@@ -201,7 +200,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // OpenPatchDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage>
         public long OpenPatchDataStorageByCurrentProcess(ServiceCtx context)
         {
-            MakeObject(context, new IStorage(context.Device.FileSystem.RomFs));
+            MakeObject(context, new IStorage(context.Device.FileSystem.RomFs.AsStorage()));
 
             return 0;
         }
@@ -224,56 +223,43 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 context.RequestData.ReadInt64(), 
                 context.RequestData.ReadInt64());
 
-            long               saveId             = context.RequestData.ReadInt64();
-            SaveDataType       saveDataType       = (SaveDataType)context.RequestData.ReadByte();
-            SaveInfo           saveInfo           = new SaveInfo(titleId, saveId, saveDataType, userId, saveSpaceId);
-            string             savePath           = context.Device.FileSystem.GetGameSavePath(saveInfo, context);
-            FileSystemProvider fileSystemProvider = new FileSystemProvider(savePath, context.Device.FileSystem.GetBasePath());
+            long            saveId       = context.RequestData.ReadInt64();
+            SaveDataType    saveDataType = (SaveDataType)context.RequestData.ReadByte();
+            SaveInfo        saveInfo     = new SaveInfo(titleId, saveId, saveDataType, userId, saveSpaceId);
+            string          savePath     = context.Device.FileSystem.GetGameSavePath(saveInfo, context);
+            LocalFileSystem fileSystem   = new LocalFileSystem(savePath);
 
-            MakeObject(context, new IFileSystem(savePath, fileSystemProvider));
+            DirectorySaveDataFileSystem saveFileSystem = new DirectorySaveDataFileSystem(fileSystem);
+
+            MakeObject(context, new IFileSystem(saveFileSystem));
         }
 
         private long OpenNsp(ServiceCtx context, string pfsPath)
         {
-            FileStream pfsFile = new FileStream(pfsPath, FileMode.Open, FileAccess.Read);
-            Pfs        nsp     = new Pfs(pfsFile.AsStorage());
+            LocalStorage        storage = new LocalStorage(pfsPath, FileAccess.Read, FileMode.Open);
+            PartitionFileSystem nsp     = new PartitionFileSystem(storage);
 
             ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
-
-
-            IFileSystem nspFileSystem = new IFileSystem(pfsPath, new PFsProvider(nsp));
+            
+            IFileSystem nspFileSystem = new IFileSystem(nsp);
 
             MakeObject(context, nspFileSystem);
 
             return 0;
         }
 
-        private long OpenNcaFs(ServiceCtx context, string ncaPath, LibHac.IO.IStorage ncaStorage)
+        private long OpenNcaFs(ServiceCtx context, string ncaPath, LibHac.Fs.IStorage ncaStorage)
         {
-            Nca nca = new Nca(context.Device.System.KeySet, ncaStorage, false);
+            Nca nca = new Nca(context.Device.System.KeySet, ncaStorage);
 
-            NcaSection romfsSection = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
-            NcaSection pfsSection   = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Pfs0);
-
-            if (romfsSection != null)
-            {
-                LibHac.IO.IStorage romfsStorage = nca.OpenSection(romfsSection.SectionNum, false, context.Device.System.FsIntegrityCheckLevel, false);
-                IFileSystem ncaFileSystem       = new IFileSystem(ncaPath, new RomFsProvider(romfsStorage));
-
-                MakeObject(context, ncaFileSystem);
-            }
-            else if(pfsSection != null)
-            {
-                LibHac.IO.IStorage pfsStorage    = nca.OpenSection(pfsSection.SectionNum, false, context.Device.System.FsIntegrityCheckLevel, false);
-                Pfs                pfs           = new Pfs(pfsStorage);
-                IFileSystem        ncaFileSystem = new IFileSystem(ncaPath, new PFsProvider(pfs));
-
-                MakeObject(context, ncaFileSystem);
-            }
-            else
+            if (!nca.SectionExists(NcaSectionType.Data))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PartitionNotFound);
             }
+
+            LibHac.Fs.IFileSystem fileSystem = nca.OpenFileSystem(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
+
+            MakeObject(context, new IFileSystem(fileSystem));
 
             return 0;
         }
@@ -294,7 +280,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                     FileMode.Open,
                     FileAccess.Read);
 
-                Pfs nsp = new Pfs(pfsFile.AsStorage());
+                PartitionFileSystem nsp = new PartitionFileSystem(pfsFile.AsStorage());
 
                 ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
                 
@@ -302,18 +288,18 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
                 if (nsp.FileExists(filename))
                 {
-                    return OpenNcaFs(context, fullPath, nsp.OpenFile(filename));
+                    return OpenNcaFs(context, fullPath, nsp.OpenFile(filename, OpenMode.Read).AsStorage());
                 }
             }
 
             return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
         }
 
-        private void ImportTitleKeysFromNsp(Pfs nsp, Keyset keySet)
+        private void ImportTitleKeysFromNsp(LibHac.Fs.IFileSystem nsp, Keyset keySet)
         {
-            foreach (PfsFileEntry ticketEntry in nsp.Files.Where(x => x.Name.EndsWith(".tik")))
+            foreach (LibHac.Fs.DirectoryEntry ticketEntry in nsp.EnumerateEntries("*.tik"))
             {
-                Ticket ticket = new Ticket(nsp.OpenFile(ticketEntry).AsStream());
+                Ticket ticket = new Ticket(nsp.OpenFile(ticketEntry.FullPath, OpenMode.Read).AsStream());
 
                 if (!keySet.TitleKeys.ContainsKey(ticket.RightsId))
                 {

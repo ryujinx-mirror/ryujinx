@@ -1,9 +1,9 @@
-using Ryujinx.HLE.FileSystem;
+using LibHac.Fs;
 using Ryujinx.HLE.HOS.Ipc;
 using System;
 using System.Collections.Generic;
 using System.IO;
-
+using Ryujinx.Common.Logging;
 using static Ryujinx.HLE.HOS.ErrorCode;
 using static Ryujinx.HLE.Utilities.StringUtils;
 
@@ -17,11 +17,9 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         private HashSet<string> _openPaths;
 
-        private string _path;
+        private LibHac.Fs.IFileSystem _provider;
 
-        private IFileSystemProvider _provider;
-
-        public IFileSystem(string path, IFileSystemProvider provider)
+        public IFileSystem(LibHac.Fs.IFileSystem provider)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
@@ -44,36 +42,50 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             _openPaths = new HashSet<string>();
 
-            _path     = path;
             _provider = provider;
         }
 
-        // CreateFile(u32 mode, u64 size, buffer<bytes<0x301>, 0x19, 0x301> path)
+        // CreateFile(u32 createOption, u64 size, buffer<bytes<0x301>, 0x19, 0x301> path)
         public long CreateFile(ServiceCtx context)
         {
             string name = ReadUtf8String(context);
 
-            long mode = context.RequestData.ReadInt64();
-            int  size = context.RequestData.ReadInt32();
+            int createOption = context.RequestData.ReadInt32();
+            context.RequestData.BaseStream.Position += 4;
 
-            string fileName = _provider.GetFullPath(name);
+            long size = context.RequestData.ReadInt64();
 
-            if (fileName == null)
+            if (name == null)
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (_provider.FileExists(fileName))
+            if (_provider.FileExists(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
 
-            if (IsPathAlreadyInUse(fileName))
+            if (IsPathAlreadyInUse(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            return _provider.CreateFile(fileName, size);
+            try
+            {
+                _provider.CreateFile(name, size, (CreateFileOptions)createOption);
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Logger.PrintError(LogClass.ServiceFs, $"Unable to access {name}");
+
+                throw;
+            }
+
+            return 0;
         }
 
         // DeleteFile(buffer<bytes<0x301>, 0x19, 0x301> path)
@@ -81,19 +93,32 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             string name = ReadUtf8String(context);
 
-            string fileName = _provider.GetFullPath(name);
-
-            if (!_provider.FileExists(fileName))
+            if (!_provider.FileExists(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (IsPathAlreadyInUse(fileName))
+            if (IsPathAlreadyInUse(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            return _provider.DeleteFile(fileName);
+            try
+            {
+                _provider.DeleteFile(name);
+            }
+            catch (FileNotFoundException)
+            {
+                return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Logger.PrintError(LogClass.ServiceFs, $"Unable to access {name}");
+
+                throw;
+            }
+
+            return 0;
         }
 
         // CreateDirectory(buffer<bytes<0x301>, 0x19, 0x301> path)
@@ -101,24 +126,35 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             string name = ReadUtf8String(context);
 
-            string dirName = _provider.GetFullPath(name);
-
-            if (dirName == null)
+            if (name == null)
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (_provider.DirectoryExists(dirName))
+            if (_provider.DirectoryExists(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
 
-            if (IsPathAlreadyInUse(dirName))
+            if (IsPathAlreadyInUse(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            _provider.CreateDirectory(dirName);
+            try
+            {
+                _provider.CreateDirectory(name);
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Logger.PrintError(LogClass.ServiceFs, $"Unable to access {name}");
+
+                throw;
+            }
 
             return 0;
         }
@@ -126,32 +162,61 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // DeleteDirectory(buffer<bytes<0x301>, 0x19, 0x301> path)
         public long DeleteDirectory(ServiceCtx context)
         {
-            return DeleteDirectory(context, false);
+            string name = ReadUtf8String(context);
+
+            if (!_provider.DirectoryExists(name))
+            {
+                return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
+            }
+
+            if (IsPathAlreadyInUse(name))
+            {
+                return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
+            }
+
+            try
+            {
+                _provider.DeleteDirectory(name);
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Logger.PrintError(LogClass.ServiceFs, $"Unable to access {name}");
+
+                throw;
+            }
+
+            return 0;
         }
 
         // DeleteDirectoryRecursively(buffer<bytes<0x301>, 0x19, 0x301> path)
         public long DeleteDirectoryRecursively(ServiceCtx context)
         {
-            return DeleteDirectory(context, true);
-        }
-        
-        private long DeleteDirectory(ServiceCtx context, bool recursive)
-        {
             string name = ReadUtf8String(context);
 
-            string dirName = _provider.GetFullPath(name);
-
-            if (!Directory.Exists(dirName))
+            if (!_provider.DirectoryExists(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (IsPathAlreadyInUse(dirName))
+            if (IsPathAlreadyInUse(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            _provider.DeleteDirectory(dirName, recursive);
+            try
+            {
+                _provider.DeleteDirectoryRecursively(name);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Logger.PrintError(LogClass.ServiceFs, $"Unable to access {name}");
+
+                throw;
+            }
 
             return 0;
         }
@@ -162,25 +227,37 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             string oldName = ReadUtf8String(context, 0);
             string newName = ReadUtf8String(context, 1);
 
-            string oldFileName = _provider.GetFullPath(oldName);
-            string newFileName = _provider.GetFullPath(newName);
-
-            if (_provider.FileExists(oldFileName))
+            if (_provider.FileExists(oldName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (_provider.FileExists(newFileName))
+            if (_provider.FileExists(newName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
 
-            if (IsPathAlreadyInUse(oldFileName))
+            if (IsPathAlreadyInUse(oldName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            return _provider.RenameFile(oldFileName, newFileName);
+            try
+            {
+                _provider.RenameFile(oldName, newName);
+            }
+            catch (FileNotFoundException)
+            {
+                return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Logger.PrintError(LogClass.ServiceFs, $"Unable to access {oldName} or {newName}");
+
+                throw;
+            }
+
+            return 0;
         }
 
         // RenameDirectory(buffer<bytes<0x301>, 0x19, 0x301> oldPath, buffer<bytes<0x301>, 0x19, 0x301> newPath)
@@ -189,25 +266,37 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             string oldName = ReadUtf8String(context, 0);
             string newName = ReadUtf8String(context, 1);
 
-            string oldDirName = _provider.GetFullPath(oldName);
-            string newDirName = _provider.GetFullPath(newName);
-
-            if (!_provider.DirectoryExists(oldDirName))
+            if (!_provider.DirectoryExists(oldName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (!_provider.DirectoryExists(newDirName))
+            if (!_provider.DirectoryExists(newName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyExists);
             }
 
-            if (IsPathAlreadyInUse(oldDirName))
+            if (IsPathAlreadyInUse(oldName))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            return _provider.RenameDirectory(oldDirName, newDirName);
+            try
+            {
+                _provider.RenameFile(oldName, newName);
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Logger.PrintError(LogClass.ServiceFs, $"Unable to access {oldName} or {newName}");
+
+                throw;
+            }
+
+            return 0;
         }
 
         // GetEntryType(buffer<bytes<0x301>, 0x19, 0x301> path) -> nn::fssrv::sf::DirectoryEntryType
@@ -215,17 +304,13 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             string name = ReadUtf8String(context);
 
-            string fileName = _provider.GetFullPath(name);
+            try
+            {
+                LibHac.Fs.DirectoryEntryType entryType = _provider.GetEntryType(name);
 
-            if (_provider.FileExists(fileName))
-            {
-                context.ResponseData.Write(1);
+                context.ResponseData.Write((int)entryType);
             }
-            else if (_provider.DirectoryExists(fileName))
-            {
-                context.ResponseData.Write(0);
-            }
-            else
+            catch (FileNotFoundException)
             {
                 context.ResponseData.Write(0);
 
@@ -238,81 +323,96 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // OpenFile(u32 mode, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IFile> file
         public long OpenFile(ServiceCtx context)
         {
-            int filterFlags = context.RequestData.ReadInt32();
+            int mode = context.RequestData.ReadInt32();
 
             string name = ReadUtf8String(context);
 
-            string fileName = _provider.GetFullPath(name);
-
-            if (!_provider.FileExists(fileName))
+            if (!_provider.FileExists(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (IsPathAlreadyInUse(fileName))
+            if (IsPathAlreadyInUse(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
+            IFile fileInterface;
 
-            long error = _provider.OpenFile(fileName, out IFile fileInterface);
-
-            if (error == 0)
+            try
             {
-                fileInterface.Disposed += RemoveFileInUse;
+                LibHac.Fs.IFile file = _provider.OpenFile(name, (OpenMode)mode);
 
-                lock (_openPaths)
-                {
-                    _openPaths.Add(fileName);
-                }
+                fileInterface = new IFile(file, name);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Logger.PrintError(LogClass.ServiceFs, $"Unable to access {name}");
 
-                MakeObject(context, fileInterface);
-
-                return 0;
+                throw;
             }
 
-            return error;
+            fileInterface.Disposed += RemoveFileInUse;
+
+            lock (_openPaths)
+            {
+                _openPaths.Add(fileInterface.Path);
+            }
+
+            MakeObject(context, fileInterface);
+
+            return 0;
         }
 
         // OpenDirectory(u32 filter_flags, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IDirectory> directory
         public long OpenDirectory(ServiceCtx context)
         {
-            int filterFlags = context.RequestData.ReadInt32();
+            int mode = context.RequestData.ReadInt32();
 
             string name = ReadUtf8String(context);
 
-            string dirName = _provider.GetFullPath(name);
-
-            if (!_provider.DirectoryExists(dirName))
+            if (!_provider.DirectoryExists(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (IsPathAlreadyInUse(dirName))
+            if (IsPathAlreadyInUse(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            long error = _provider.OpenDirectory(dirName, filterFlags, out IDirectory dirInterface);
+            IDirectory dirInterface;
 
-            if (error == 0)
+            try
             {
-                dirInterface.Disposed += RemoveDirectoryInUse;
+                LibHac.Fs.IDirectory dir = _provider.OpenDirectory(name, (OpenDirectoryMode) mode);
 
-                lock (_openPaths)
-                {
-                    _openPaths.Add(dirName);
-                }
+                dirInterface = new IDirectory(dir);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Logger.PrintError(LogClass.ServiceFs, $"Unable to access {name}");
 
-                MakeObject(context, dirInterface);
+                throw;
             }
 
-            return error;
+            dirInterface.Disposed += RemoveDirectoryInUse;
+
+            lock (_openPaths)
+            {
+                _openPaths.Add(dirInterface.Path);
+            }
+
+            MakeObject(context, dirInterface);
+
+            return 0;
         }
 
         // Commit()
         public long Commit(ServiceCtx context)
         {
+            _provider.Commit();
+
             return 0;
         }
 
@@ -321,7 +421,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             string name = ReadUtf8String(context);
 
-            context.ResponseData.Write(_provider.GetFreeSpace(context));
+            context.ResponseData.Write(_provider.GetFreeSpaceSize(name));
 
             return 0;
         }
@@ -331,7 +431,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             string name = ReadUtf8String(context);
 
-            context.ResponseData.Write(_provider.GetFreeSpace(context));
+            context.ResponseData.Write(_provider.GetTotalSpaceSize(name));
 
             return 0;
         }
@@ -341,28 +441,25 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             string name = ReadUtf8String(context);
 
-            string dirName = _provider.GetFullPath(name);
-
-            if (!_provider.DirectoryExists(dirName))
+            if (!_provider.DirectoryExists(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
             }
 
-            if (IsPathAlreadyInUse(dirName))
+            if (IsPathAlreadyInUse(name))
             {
                 return MakeError(ErrorModule.Fs, FsErr.PathAlreadyInUse);
             }
 
-            foreach (DirectoryEntry entry in _provider.GetEntries(dirName))
+            try
             {
-                if (_provider.DirectoryExists(entry.Path))
-                {
-                    _provider.DeleteDirectory(entry.Path, true);
-                }
-                else if (_provider.FileExists(entry.Path))
-                {
-                   _provider.DeleteFile(entry.Path);
-                }
+                _provider.CleanDirectoryRecursively(name);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Logger.PrintError(LogClass.ServiceFs, $"Unable to access {name}");
+
+                throw;
             }
 
             return 0;
@@ -373,15 +470,13 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             string name = ReadUtf8String(context);
 
-            string path = _provider.GetFullPath(name);
-
-            if (_provider.FileExists(path) || _provider.DirectoryExists(path))
+            if (_provider.FileExists(name) || _provider.DirectoryExists(name))
             {
-                FileTimestamp timestamp = _provider.GetFileTimeStampRaw(path);
+                FileTimeStampRaw timestamp = _provider.GetFileTimeStampRaw(name);
 
-                context.ResponseData.Write(new DateTimeOffset(timestamp.CreationDateTime).ToUnixTimeSeconds());
-                context.ResponseData.Write(new DateTimeOffset(timestamp.ModifiedDateTime).ToUnixTimeSeconds());
-                context.ResponseData.Write(new DateTimeOffset(timestamp.LastAccessDateTime).ToUnixTimeSeconds());
+                context.ResponseData.Write(timestamp.Created);
+                context.ResponseData.Write(timestamp.Modified);
+                context.ResponseData.Write(timestamp.Accessed);
 
                 byte[] data = new byte[8];
 
@@ -412,7 +507,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             {
                 fileInterface.Disposed -= RemoveFileInUse;
 
-                _openPaths.Remove(fileInterface.HostPath);
+                _openPaths.Remove(fileInterface.Path);
             }
         }
 
@@ -424,7 +519,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             {
                 dirInterface.Disposed -= RemoveDirectoryInUse;
 
-                _openPaths.Remove(dirInterface.DirectoryPath);
+                _openPaths.Remove(dirInterface.Path);
             }
         }
     }

@@ -1,6 +1,5 @@
 using Ryujinx.HLE.HOS.Ipc;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
@@ -10,9 +9,9 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private Stream _baseStream;
+        private LibHac.Fs.IStorage _baseStorage;
 
-        public IStorage(Stream baseStream)
+        public IStorage(LibHac.Fs.IStorage baseStorage)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
@@ -20,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 { 4, GetSize }
             };
 
-            _baseStream = baseStream;
+            _baseStorage = baseStorage;
         }
 
         // Read(u64 offset, u64 length) -> buffer<u8, 0x46, 0> buffer
@@ -41,11 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
                 byte[] data = new byte[size];
 
-                lock (_baseStream)
-                {
-                    _baseStream.Seek(offset, SeekOrigin.Begin);
-                    _baseStream.Read(data, 0, data.Length);
-                }
+                _baseStorage.Read(data, offset);
 
                 context.Memory.WriteBytes(buffDesc.Position, data);
             }
@@ -56,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // GetSize() -> u64 size
         public long GetSize(ServiceCtx context)
         {
-            context.ResponseData.Write(_baseStream.Length);
+            context.ResponseData.Write(_baseStorage.GetSize());
 
             return 0;
         }

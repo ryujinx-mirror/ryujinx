@@ -1,5 +1,5 @@
-﻿using LibHac;
-using LibHac.IO;
+﻿using LibHac.Fs;
+using LibHac.Fs.NcaUtils;
 using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
@@ -13,6 +13,7 @@ namespace Ryujinx.HLE.FileSystem.Content
         private Dictionary<StorageId, LinkedList<LocationEntry>> _locationEntries;
 
         private Dictionary<string, long> _sharedFontTitleDictionary;
+        private Dictionary<string, string> _sharedFontFilenameDictionary;
 
         private SortedDictionary<(ulong, ContentType), string> _contentDictionary;
 
@@ -31,6 +32,16 @@ namespace Ryujinx.HLE.FileSystem.Content
                 { "FontKorean",                    0x0100000000000812 },
                 { "FontChineseTraditional",        0x0100000000000813 },
                 { "FontNintendoExtended",          0x0100000000000810 }
+            };
+
+            _sharedFontFilenameDictionary = new Dictionary<string, string>
+            {
+                { "FontStandard",                  "nintendo_udsg-r_std_003.bfttf" },
+                { "FontChineseSimplified",         "nintendo_udsg-r_org_zh-cn_003.bfttf" },
+                { "FontExtendedChineseSimplified", "nintendo_udsg-r_ext_zh-cn_003.bfttf" },
+                { "FontKorean",                    "nintendo_udsg-r_ko_003.bfttf" },
+                { "FontChineseTraditional",        "nintendo_udjxh-db_zh-tw_003.bfttf" },
+                { "FontNintendoExtended",          "nintendo_ext_003.bfttf" }
             };
 
             _device = device;
@@ -74,7 +85,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                         using (FileStream ncaFile = new FileStream(Directory.GetFiles(directoryPath)[0], FileMode.Open, FileAccess.Read))
                         {
-                            Nca nca = new Nca(_device.System.KeySet, ncaFile.AsStorage(), false);
+                            Nca nca = new Nca(_device.System.KeySet, ncaFile.AsStorage());
 
                             string switchPath = Path.Combine(contentPathString + ":",
                                                               ncaFile.Name.Replace(contentDirectory, string.Empty).TrimStart('\\'));
@@ -102,7 +113,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                         using (FileStream ncaFile = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                         {
-                            Nca nca = new Nca(_device.System.KeySet, ncaFile.AsStorage(), false);
+                            Nca nca = new Nca(_device.System.KeySet, ncaFile.AsStorage());
 
                             string switchPath = Path.Combine(contentPathString + ":",
                                                               filePath.Replace(contentDirectory, string.Empty).TrimStart('\\'));
@@ -230,7 +241,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                 {
                     using (FileStream file = new FileStream(installedPath, FileMode.Open, FileAccess.Read))
                     {
-                        Nca  nca          = new Nca(_device.System.KeySet, file.AsStorage(), false);
+                        Nca  nca          = new Nca(_device.System.KeySet, file.AsStorage());
                         bool contentCheck = nca.Header.ContentType == contentType;
 
                         return contentCheck;
@@ -285,6 +296,11 @@ namespace Ryujinx.HLE.FileSystem.Content
         public bool TryGetFontTitle(string fontName, out long titleId)
         {
             return _sharedFontTitleDictionary.TryGetValue(fontName, out titleId);
+        }
+
+        public bool TryGetFontFilename(string fontName, out string filename)
+        {
+            return _sharedFontFilenameDictionary.TryGetValue(fontName, out filename);
         }
 
         private LocationEntry GetLocation(long titleId, ContentType contentType, StorageId storageId)

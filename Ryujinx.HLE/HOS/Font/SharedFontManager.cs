@@ -1,13 +1,11 @@
-using LibHac;
-using LibHac.IO;
+using LibHac.Fs;
+using LibHac.Fs.NcaUtils;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.Resource;
 using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-
 using static Ryujinx.HLE.Utilities.FontUtils;
 
 namespace Ryujinx.HLE.HOS.Font
@@ -53,29 +51,21 @@ namespace Ryujinx.HLE.HOS.Font
 
                 FontInfo CreateFont(string name)
                 {
-                    if (contentManager.TryGetFontTitle(name, out long fontTitle))
+                    if (contentManager.TryGetFontTitle(name, out long fontTitle) &&
+                        contentManager.TryGetFontFilename(name, out string fontFilename))
                     {
                         string contentPath = contentManager.GetInstalledContentPath(fontTitle, StorageId.NandSystem, ContentType.Data);
                         string fontPath    = _device.FileSystem.SwitchPathToSystemPath(contentPath);
 
                         if (!string.IsNullOrWhiteSpace(fontPath))
                         {
-                            int fileIndex = 0;
-
-                            //Use second file in Chinese Font title for standard
-                            if(name == "FontChineseSimplified")
-                            {
-                                fileIndex = 1;
-                            }
-
                             byte[] data;
                             
-                            using (FileStream ncaFileStream = new FileStream(fontPath, FileMode.Open, FileAccess.Read))
+                            using (IStorage ncaFileStream = new LocalStorage(fontPath, FileAccess.Read, FileMode.Open))
                             {
-                                Nca        nca          = new Nca(_device.System.KeySet, ncaFileStream.AsStorage(), false);
-                                NcaSection romfsSection = nca.Sections.FirstOrDefault(x => x?.Type == SectionType.Romfs);
-                                Romfs      romfs        = new Romfs(nca.OpenSection(romfsSection.SectionNum, false, _device.System.FsIntegrityCheckLevel, false));
-                                Stream     fontFile     = romfs.OpenFile(romfs.Files[fileIndex]).AsStream();
+                                Nca         nca          = new Nca(_device.System.KeySet, ncaFileStream);
+                                IFileSystem romfs        = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
+                                Stream      fontFile     = romfs.OpenFile(fontFilename, OpenMode.Read).AsStream();
 
                                 data = DecryptFont(fontFile);
                             }

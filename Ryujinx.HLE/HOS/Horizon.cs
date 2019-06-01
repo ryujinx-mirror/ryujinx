@@ -1,5 +1,6 @@
 using LibHac;
-using LibHac.IO;
+using LibHac.Fs;
+using LibHac.Fs.NcaUtils;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS.Font;
@@ -195,58 +196,9 @@ namespace Ryujinx.HLE.HOS
                 Device.FileSystem.LoadRomFs(romFsFile);
             }
 
-            string npdmFileName = Path.Combine(exeFsDir, "main.npdm");
+            LocalFileSystem codeFs = new LocalFileSystem(exeFsDir);
 
-            Npdm metaData = null;
-
-            if (File.Exists(npdmFileName))
-            {
-                Logger.PrintInfo(LogClass.Loader, $"Loading main.npdm...");
-
-                using (FileStream input = new FileStream(npdmFileName, FileMode.Open))
-                {
-                    metaData = new Npdm(input);
-                }
-            }
-            else
-            {
-                Logger.PrintWarning(LogClass.Loader, $"NPDM file not found, using default values!");
-
-                metaData = GetDefaultNpdm();
-            }
-
-            List<IExecutable> staticObjects = new List<IExecutable>();
-
-            void LoadNso(string searchPattern)
-            {
-                foreach (string file in Directory.GetFiles(exeFsDir, searchPattern))
-                {
-                    if (Path.GetExtension(file) != string.Empty)
-                    {
-                        continue;
-                    }
-
-                    Logger.PrintInfo(LogClass.Loader, $"Loading {Path.GetFileNameWithoutExtension(file)}...");
-
-                    using (FileStream input = new FileStream(file, FileMode.Open))
-                    {
-                        NxStaticObject staticObject = new NxStaticObject(input);
-
-                        staticObjects.Add(staticObject);
-                    }
-                }
-            }
-
-            TitleID = CurrentTitle = metaData.Aci0.TitleId.ToString("x16");
-
-            LoadNso("rtld");
-            LoadNso("main");
-            LoadNso("subsdk*");
-            LoadNso("sdk");
-
-            ContentManager.LoadEntries();
-
-            ProgramLoader.LoadStaticObjects(this, metaData, staticObjects.ToArray());
+            LoadExeFs(codeFs, out _);
         }
 
         public void LoadXci(string xciFile)
@@ -255,7 +207,7 @@ namespace Ryujinx.HLE.HOS
 
             Xci xci = new Xci(KeySet, file.AsStorage());
 
-            (Nca mainNca, Nca controlNca) = GetXciGameData(xci);
+            (Nca mainNca, Nca patchNca, Nca controlNca) = GetXciGameData(xci);
 
             if (mainNca == null)
             {
@@ -266,7 +218,7 @@ namespace Ryujinx.HLE.HOS
 
             ContentManager.LoadEntries();
 
-            LoadNca(mainNca, controlNca);
+            LoadNca(mainNca, patchNca, controlNca);
         }
 
         public void LoadKip(string kipFile)
@@ -277,9 +229,9 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
-        private (Nca Main, Nca Control) GetXciGameData(Xci xci)
+        private (Nca Main, Nca patch, Nca Control) GetXciGameData(Xci xci)
         {
-            if (xci.SecurePartition == null)
+            if (!xci.HasPartition(XciPartitionType.Secure))
             {
                 throw new InvalidDataException("Could not find XCI secure partition");
             }
@@ -288,9 +240,11 @@ namespace Ryujinx.HLE.HOS
             Nca patchNca   = null;
             Nca controlNca = null;
 
-            foreach (PfsFileEntry ticketEntry in xci.SecurePartition.Files.Where(x => x.Name.EndsWith(".tik")))
+            XciPartition securePartition = xci.OpenPartition(XciPartitionType.Secure);
+
+            foreach (DirectoryEntry ticketEntry in securePartition.EnumerateEntries("*.tik"))
             {
-                Ticket ticket = new Ticket(xci.SecurePartition.OpenFile(ticketEntry).AsStream());
+                Ticket ticket = new Ticket(securePartition.OpenFile(ticketEntry.FullPath, OpenMode.Read).AsStream());
 
                 if (!KeySet.TitleKeys.ContainsKey(ticket.RightsId))
                 {
@@ -298,21 +252,23 @@ namespace Ryujinx.HLE.HOS
                 }
             }
 
-            foreach (PfsFileEntry fileEntry in xci.SecurePartition.Files.Where(x => x.Name.EndsWith(".nca")))
+            foreach (DirectoryEntry fileEntry in securePartition.EnumerateEntries("*.nca"))
             {
-                IStorage ncaStorage = xci.SecurePartition.OpenFile(fileEntry);
+                IStorage ncaStorage = securePartition.OpenFile(fileEntry.FullPath, OpenMode.Read).AsStorage();
 
-                Nca nca = new Nca(KeySet, ncaStorage, true);
+                Nca nca = new Nca(KeySet, ncaStorage);
 
                 if (nca.Header.ContentType == ContentType.Program)
                 {
-                    if (nca.Sections.Any(x => x?.Type == SectionType.Romfs))
-                    {
-                        mainNca = nca;
-                    }
-                    else if (nca.Sections.Any(x => x?.Type == SectionType.Bktr))
+                    int dataIndex = Nca.SectionIndexFromType(NcaSectionType.Data, ContentType.Program);
+
+                    if (nca.Header.GetFsHeader(dataIndex).IsPatchSection())
                     {
                         patchNca = nca;
+                    }
+                    else
+                    {
+                        mainNca = nca;
                     }
                 }
                 else if (nca.Header.ContentType == ContentType.Control)
@@ -326,50 +282,43 @@ namespace Ryujinx.HLE.HOS
                 Logger.PrintError(LogClass.Loader, "Could not find an Application NCA in the provided XCI file");
             }
 
-            mainNca.SetBaseNca(patchNca);
-
             if (controlNca != null)
             {
                 ReadControlData(controlNca);
             }
 
-            if (patchNca != null)
-            {
-                patchNca.SetBaseNca(mainNca);
-
-                return (patchNca, controlNca);
-            }
-
-            return (mainNca, controlNca);
+            return (mainNca, patchNca, controlNca);
         }
 
         public void ReadControlData(Nca controlNca)
         {
-            Romfs controlRomfs = new Romfs(controlNca.OpenSection(0, false, FsIntegrityCheckLevel, true));
+            IFileSystem controlFs = controlNca.OpenFileSystem(NcaSectionType.Data, FsIntegrityCheckLevel);
 
-            IStorage controlFile = controlRomfs.OpenFile("/control.nacp");
+            IFile controlFile = controlFs.OpenFile("/control.nacp", OpenMode.Read);
 
             ControlData = new Nacp(controlFile.AsStream());
+
+            TitleName = CurrentTitle = ControlData.Descriptions[(int)State.DesiredTitleLanguage].Title;
         }
 
         public void LoadNca(string ncaFile)
         {
             FileStream file = new FileStream(ncaFile, FileMode.Open, FileAccess.Read);
 
-            Nca nca = new Nca(KeySet, file.AsStorage(false), false);
+            Nca nca = new Nca(KeySet, file.AsStorage(false));
 
-            LoadNca(nca, null);
+            LoadNca(nca, null, null);
         }
 
         public void LoadNsp(string nspFile)
         {
             FileStream file = new FileStream(nspFile, FileMode.Open, FileAccess.Read);
 
-            Pfs nsp = new Pfs(file.AsStorage(false));
+            PartitionFileSystem nsp = new PartitionFileSystem(file.AsStorage());
 
-            foreach (PfsFileEntry ticketEntry in nsp.Files.Where(x => x.Name.EndsWith(".tik")))
+            foreach (DirectoryEntry ticketEntry in nsp.EnumerateEntries("*.tik"))
             {
-                Ticket ticket = new Ticket(nsp.OpenFile(ticketEntry).AsStream());
+                Ticket ticket = new Ticket(nsp.OpenFile(ticketEntry.FullPath, OpenMode.Read).AsStream());
 
                 if (!KeySet.TitleKeys.ContainsKey(ticket.RightsId))
                 {
@@ -378,15 +327,27 @@ namespace Ryujinx.HLE.HOS
             }
 
             Nca mainNca    = null;
+            Nca patchNca   = null;
             Nca controlNca = null;
 
-            foreach (PfsFileEntry ncaFile in nsp.Files.Where(x => x.Name.EndsWith(".nca")))
+            foreach (DirectoryEntry fileEntry in nsp.EnumerateEntries("*.nca"))
             {
-                Nca nca = new Nca(KeySet, nsp.OpenFile(ncaFile), true);
+                IStorage ncaStorage = nsp.OpenFile(fileEntry.FullPath, OpenMode.Read).AsStorage();
+
+                Nca nca = new Nca(KeySet, ncaStorage);
 
                 if (nca.Header.ContentType == ContentType.Program)
                 {
-                    mainNca = nca;
+                    int dataIndex = Nca.SectionIndexFromType(NcaSectionType.Data, ContentType.Program);
+
+                    if (nca.Header.GetFsHeader(dataIndex).IsPatchSection())
+                    {
+                        patchNca = nca;
+                    }
+                    else
+                    {
+                        mainNca = nca;
+                    }
                 }
                 else if (nca.Header.ContentType == ContentType.Control)
                 {
@@ -396,65 +357,16 @@ namespace Ryujinx.HLE.HOS
 
             if (mainNca != null)
             {
-                LoadNca(mainNca, controlNca);
+                LoadNca(mainNca, patchNca, controlNca);
 
                 return;
             }
 
             // This is not a normal NSP, it's actually a ExeFS as a NSP
-            Npdm metaData = null;
-
-            PfsFileEntry npdmFile = nsp.Files.FirstOrDefault(x => x.Name.Equals("main.npdm"));
-
-            if (npdmFile != null)
-            {
-                Logger.PrintInfo(LogClass.Loader, $"Loading main.npdm...");
-
-                metaData = new Npdm(nsp.OpenFile(npdmFile).AsStream());
-            }
-            else
-            {
-                Logger.PrintWarning(LogClass.Loader, $"NPDM file not found, using default values!");
-
-                metaData = GetDefaultNpdm();
-            }
-
-            List<IExecutable> staticObjects = new List<IExecutable>();
-
-            void LoadNso(string searchPattern)
-            {
-                PfsFileEntry entry = nsp.Files.FirstOrDefault(x => x.Name.Equals(searchPattern));
-
-                if (entry != null)
-                {
-                    Logger.PrintInfo(LogClass.Loader, $"Loading {entry.Name}...");
-
-                    NxStaticObject staticObject = new NxStaticObject(nsp.OpenFile(entry).AsStream());
-
-                    staticObjects.Add(staticObject);
-                }
-            }
-
-            TitleID = CurrentTitle = metaData.Aci0.TitleId.ToString("x16");
-
-            LoadNso("rtld");
-            LoadNso("main");
-            LoadNso("subsdk*");
-            LoadNso("sdk");
-
-            ContentManager.LoadEntries();
-
-            if (staticObjects.Count == 0)
-            {
-                Logger.PrintError(LogClass.Loader, "Could not find an Application NCA in the provided NSP file");
-            }
-            else
-            {
-                ProgramLoader.LoadStaticObjects(this, metaData, staticObjects.ToArray());
-            }
+            LoadExeFs(nsp, out _);
         }
 
-        public void LoadNca(Nca mainNca, Nca controlNca)
+        public void LoadNca(Nca mainNca, Nca patchNca, Nca controlNca)
         {
             if (mainNca.Header.ContentType != ContentType.Program)
             {
@@ -463,71 +375,64 @@ namespace Ryujinx.HLE.HOS
                 return;
             }
 
-            IStorage romfsStorage = mainNca.OpenSection(ProgramPartitionType.Data, false, FsIntegrityCheckLevel, false);
-            IStorage exefsStorage = mainNca.OpenSection(ProgramPartitionType.Code, false, FsIntegrityCheckLevel, true);
+            IStorage    dataStorage = null;
+            IFileSystem codeFs      = null;
 
-            if (exefsStorage == null)
+            if (patchNca == null)
+            {
+                if (mainNca.CanOpenSection(NcaSectionType.Data))
+                {
+                    dataStorage = mainNca.OpenStorage(NcaSectionType.Data, FsIntegrityCheckLevel);
+                }
+
+                if (mainNca.CanOpenSection(NcaSectionType.Code))
+                {
+                    codeFs = mainNca.OpenFileSystem(NcaSectionType.Code, FsIntegrityCheckLevel);
+                }
+            }
+            else
+            {
+                if (patchNca.CanOpenSection(NcaSectionType.Data))
+                {
+                    dataStorage = mainNca.OpenStorageWithPatch(patchNca, NcaSectionType.Data, FsIntegrityCheckLevel);
+                }
+
+                if (patchNca.CanOpenSection(NcaSectionType.Code))
+                {
+                    codeFs = mainNca.OpenFileSystemWithPatch(patchNca, NcaSectionType.Code, FsIntegrityCheckLevel);
+                }
+            }
+
+            if (codeFs == null)
             {
                 Logger.PrintError(LogClass.Loader, "No ExeFS found in NCA");
 
                 return;
             }
 
-            if (romfsStorage == null)
+            if (dataStorage == null)
             {
                 Logger.PrintWarning(LogClass.Loader, "No RomFS found in NCA");
             }
             else
             {
-                Device.FileSystem.SetRomFs(romfsStorage.AsStream(false));
+                Device.FileSystem.SetRomFs(dataStorage.AsStream(FileAccess.Read));
             }
 
-            Pfs exefs = new Pfs(exefsStorage);
-
-            Npdm metaData = null;
-
-            if (exefs.FileExists("main.npdm"))
-            {
-                Logger.PrintInfo(LogClass.Loader, "Loading main.npdm...");
-
-                metaData = new Npdm(exefs.OpenFile("main.npdm").AsStream());
-            }
-            else
-            {
-                Logger.PrintWarning(LogClass.Loader, $"NPDM file not found, using default values!");
-
-                metaData = GetDefaultNpdm();
-            }
-
-            List<IExecutable> staticObjects = new List<IExecutable>();
-
-            void LoadNso(string filename)
-            {
-                foreach (PfsFileEntry file in exefs.Files.Where(x => x.Name.StartsWith(filename)))
-                {
-                    if (Path.GetExtension(file.Name) != string.Empty)
-                    {
-                        continue;
-                    }
-
-                    Logger.PrintInfo(LogClass.Loader, $"Loading {filename}...");
-
-                    NxStaticObject staticObject = new NxStaticObject(exefs.OpenFile(file).AsStream());
-
-                    staticObjects.Add(staticObject);
-                }
-            }
+            LoadExeFs(codeFs, out Npdm metaData);
 
             Nacp ReadControlData()
             {
-                Romfs controlRomfs = new Romfs(controlNca.OpenSection(0, false, FsIntegrityCheckLevel, true));
+                IFileSystem controlRomfs = controlNca.OpenFileSystem(NcaSectionType.Data, FsIntegrityCheckLevel);
 
-                IStorage controlFile = controlRomfs.OpenFile("/control.nacp");
+                IFile controlFile = controlRomfs.OpenFile("/control.nacp", OpenMode.Read);
 
                 Nacp controlData = new Nacp(controlFile.AsStream());
 
                 TitleName = CurrentTitle = controlData.Descriptions[(int)State.DesiredTitleLanguage].Title;
-                TitleID   = metaData.Aci0.TitleId.ToString("x16");
+                TitleID = metaData.Aci0.TitleId.ToString("x16");
+
+                CurrentTitle = controlData.Descriptions[(int)State.DesiredTitleLanguage].Title;
 
                 if (string.IsNullOrWhiteSpace(CurrentTitle))
                 {
@@ -545,6 +450,43 @@ namespace Ryujinx.HLE.HOS
             {
                 TitleID = CurrentTitle = metaData.Aci0.TitleId.ToString("x16");
             }
+        }
+
+        private void LoadExeFs(IFileSystem codeFs, out Npdm metaData)
+        {
+            if (codeFs.FileExists("/main.npdm"))
+            {
+                Logger.PrintInfo(LogClass.Loader, "Loading main.npdm...");
+
+                metaData = new Npdm(codeFs.OpenFile("/main.npdm", OpenMode.Read).AsStream());
+            }
+            else
+            {
+                Logger.PrintWarning(LogClass.Loader, "NPDM file not found, using default values!");
+
+                metaData = GetDefaultNpdm();
+            }
+
+            List<IExecutable> staticObjects = new List<IExecutable>();
+
+            void LoadNso(string filename)
+            {
+                foreach (DirectoryEntry file in codeFs.EnumerateEntries($"{filename}*"))
+                {
+                    if (Path.GetExtension(file.Name) != string.Empty)
+                    {
+                        continue;
+                    }
+
+                    Logger.PrintInfo(LogClass.Loader, $"Loading {file.Name}...");
+
+                    NxStaticObject staticObject = new NxStaticObject(codeFs.OpenFile(file.FullPath, OpenMode.Read).AsStream());
+
+                    staticObjects.Add(staticObject);
+                }
+            }
+
+            TitleID = CurrentTitle = metaData.Aci0.TitleId.ToString("x16");
 
             LoadNso("rtld");
             LoadNso("main");
@@ -613,7 +555,7 @@ namespace Ryujinx.HLE.HOS
 
             ContentManager.LoadEntries();
 
-            TitleID   = CurrentTitle = metaData.Aci0.TitleId.ToString("x16");
+            TitleID = CurrentTitle = metaData.Aci0.TitleId.ToString("x16");
             TitleName = metaData.TitleName;
 
             ProgramLoader.LoadStaticObjects(this, metaData, new IExecutable[] { staticObject });

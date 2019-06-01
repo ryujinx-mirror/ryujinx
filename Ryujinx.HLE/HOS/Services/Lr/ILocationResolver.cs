@@ -1,4 +1,4 @@
-﻿using LibHac;
+﻿using LibHac.Fs.NcaUtils;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS.Ipc;
@@ -136,7 +136,7 @@ namespace Ryujinx.HLE.HOS.Services.Lr
         {
             long titleId = context.RequestData.ReadInt64();
 
-            if (ResolvePath(context, titleId, ContentType.Data) || ResolvePath(context, titleId, ContentType.AocData))
+            if (ResolvePath(context, titleId, ContentType.Data) || ResolvePath(context, titleId, ContentType.PublicData))
             {
                 return 0;
             }

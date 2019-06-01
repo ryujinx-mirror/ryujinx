@@ -1,8 +1,6 @@
-using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Ipc;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.FspSrv
@@ -15,17 +13,15 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private List<DirectoryEntry> _directoryEntries;
-
-        private int _currentItemIndex;
+        private IEnumerator<LibHac.Fs.DirectoryEntry> _enumerator;
 
         public event EventHandler<EventArgs> Disposed;
 
-        public string DirectoryPath { get; private set; }
+        public string Path { get; }
 
-        private IFileSystemProvider _provider;
+        private LibHac.Fs.IDirectory _provider;
 
-        public IDirectory(string directoryPath, int flags, IFileSystemProvider provider)
+        public IDirectory(LibHac.Fs.IDirectory directory)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
@@ -33,22 +29,11 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 { 1, GetEntryCount }
             };
 
-            _provider     = provider;
-            DirectoryPath = directoryPath;
+            _provider = directory;
 
-            _directoryEntries = new List<DirectoryEntry>();
+            Path = directory.FullPath;
 
-            if ((flags & 1) != 0)
-            {
-                _directoryEntries.AddRange(provider.GetDirectories(directoryPath));
-            }
-
-            if ((flags & 2) != 0)
-            {
-                _directoryEntries.AddRange(provider.GetFiles(directoryPath));
-            }
-
-            _currentItemIndex = 0;
+            _enumerator = directory.Read().GetEnumerator();
         }
 
         // Read() -> (u64 count, buffer<nn::fssrv::sf::IDirectoryEntry, 6, 0> entries)
@@ -58,41 +43,42 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             long bufferLen      = context.Request.ReceiveBuff[0].Size;
 
             int maxReadCount = (int)(bufferLen / DirectoryEntrySize);
+            int readCount    = 0;
 
-            int count = Math.Min(_directoryEntries.Count - _currentItemIndex, maxReadCount);
-
-            for (int index = 0; index < count; index++)
+            while (readCount < maxReadCount && _enumerator.MoveNext())
             {
-                long position = bufferPosition + index * DirectoryEntrySize;
+                long position = bufferPosition + readCount * DirectoryEntrySize;
 
-                WriteDirectoryEntry(context, position, _directoryEntries[_currentItemIndex++]);
+                WriteDirectoryEntry(context, position, _enumerator.Current);
+
+                readCount++;
             }
 
-            context.ResponseData.Write((long)count);
+            context.ResponseData.Write((long)readCount);
 
             return 0;
         }
 
-        private void WriteDirectoryEntry(ServiceCtx context, long position, DirectoryEntry entry)
+        private void WriteDirectoryEntry(ServiceCtx context, long position, LibHac.Fs.DirectoryEntry entry)
         {
             for (int offset = 0; offset < 0x300; offset += 8)
             {
                 context.Memory.WriteInt64(position + offset, 0);
             }
 
-            byte[] nameBuffer = Encoding.UTF8.GetBytes(Path.GetFileName(entry.Path));
+            byte[] nameBuffer = Encoding.UTF8.GetBytes(entry.Name);
 
             context.Memory.WriteBytes(position, nameBuffer);
 
-            context.Memory.WriteInt32(position + 0x300, 0); //Padding?
-            context.Memory.WriteInt32(position + 0x304, (byte)entry.EntryType);
+            context.Memory.WriteInt32(position + 0x300, (int)entry.Attributes);
+            context.Memory.WriteInt32(position + 0x304, (byte)entry.Type);
             context.Memory.WriteInt64(position + 0x308, entry.Size);
         }
 
         // GetEntryCount() -> u64
         public long GetEntryCount(ServiceCtx context)
         {
-            context.ResponseData.Write((long)_directoryEntries.Count);
+            context.ResponseData.Write((long)_provider.GetEntryCount());
 
             return 0;
         }

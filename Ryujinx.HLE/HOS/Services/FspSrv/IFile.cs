@@ -1,7 +1,6 @@
 using Ryujinx.HLE.HOS.Ipc;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
@@ -11,13 +10,13 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private Stream _baseStream;
+        private LibHac.Fs.IFile _baseFile;
 
         public event EventHandler<EventArgs> Disposed;
 
-        public string HostPath { get; private set; }
+        public string Path { get; private set; }
 
-        public IFile(Stream baseStream, string hostPath)
+        public IFile(LibHac.Fs.IFile baseFile, string path)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
@@ -28,24 +27,24 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 { 4, GetSize }
             };
 
-            _baseStream = baseStream;
-            HostPath   = hostPath;
+            _baseFile = baseFile;
+            Path      = LibHac.Fs.PathTools.Normalize(path);
         }
 
-        // Read(u32, u64 offset, u64 size) -> (u64 out_size, buffer<u8, 0x46, 0> out_buf)
+        // Read(u32 readOption, u64 offset, u64 size) -> (u64 out_size, buffer<u8, 0x46, 0> out_buf)
         public long Read(ServiceCtx context)
         {
             long position = context.Request.ReceiveBuff[0].Position;
 
-            long zero   = context.RequestData.ReadInt64();
+            int readOption = context.RequestData.ReadInt32();
+            context.RequestData.BaseStream.Position += 4;
+
             long offset = context.RequestData.ReadInt64();
             long size   = context.RequestData.ReadInt64();
 
             byte[] data = new byte[size];
 
-            _baseStream.Seek(offset, SeekOrigin.Begin);
-
-            int readSize = _baseStream.Read(data, 0, (int)size);
+            int readSize = _baseFile.Read(data, offset);
 
             context.Memory.WriteBytes(position, data);
 
@@ -54,19 +53,20 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
-        // Write(u32, u64 offset, u64 size, buffer<u8, 0x45, 0>)
+        // Write(u32 writeOption, u64 offset, u64 size, buffer<u8, 0x45, 0>)
         public long Write(ServiceCtx context)
         {
             long position = context.Request.SendBuff[0].Position;
 
-            long zero   = context.RequestData.ReadInt64();
+            int writeOption = context.RequestData.ReadInt32();
+            context.RequestData.BaseStream.Position += 4;
+
             long offset = context.RequestData.ReadInt64();
             long size   = context.RequestData.ReadInt64();
 
             byte[] data = context.Memory.ReadBytes(position, size);
 
-            _baseStream.Seek(offset, SeekOrigin.Begin);
-            _baseStream.Write(data, 0, (int)size);
+            _baseFile.Write(data, offset);
 
             return 0;
         }
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // Flush()
         public long Flush(ServiceCtx context)
         {
-            _baseStream.Flush();
+            _baseFile.Flush();
 
             return 0;
         }
@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             long size = context.RequestData.ReadInt64();
 
-            _baseStream.SetLength(size);
+            _baseFile.SetSize(size);
 
             return 0;
         }
@@ -92,7 +92,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // GetSize() -> u64 fileSize
         public long GetSize(ServiceCtx context)
         {
-            context.ResponseData.Write(_baseStream.Length);
+            context.ResponseData.Write(_baseFile.GetSize());
 
             return 0;
         }
@@ -104,9 +104,9 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing && _baseStream != null)
+            if (disposing && _baseFile != null)
             {
-                _baseStream.Dispose();
+                _baseFile.Dispose();
 
                 Disposed?.Invoke(this, EventArgs.Empty);
             }

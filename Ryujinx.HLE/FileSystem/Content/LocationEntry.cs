@@ -1,4 +1,4 @@
-﻿using LibHac;
+﻿using LibHac.Fs.NcaUtils;
 
 namespace Ryujinx.HLE.FileSystem.Content
 {

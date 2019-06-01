@@ -1,4 +1,4 @@
-using LibHac.IO;
+using LibHac.Fs;
 using OpenTK.Input;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
