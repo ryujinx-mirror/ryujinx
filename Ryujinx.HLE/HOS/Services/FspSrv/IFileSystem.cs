@@ -50,7 +50,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             string name = ReadUtf8String(context);
 
-            int createOption = context.RequestData.ReadInt32();
+            CreateFileOptions createOption = (CreateFileOptions)context.RequestData.ReadInt32();
             context.RequestData.BaseStream.Position += 4;
 
             long size = context.RequestData.ReadInt64();
@@ -72,7 +72,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             try
             {
-                _provider.CreateFile(name, size, (CreateFileOptions)createOption);
+                _provider.CreateFile(name, size, createOption);
             }
             catch (DirectoryNotFoundException)
             {
@@ -323,7 +323,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // OpenFile(u32 mode, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IFile> file
         public long OpenFile(ServiceCtx context)
         {
-            int mode = context.RequestData.ReadInt32();
+            OpenMode mode = (OpenMode)context.RequestData.ReadInt32();
 
             string name = ReadUtf8String(context);
 
@@ -341,7 +341,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             try
             {
-                LibHac.Fs.IFile file = _provider.OpenFile(name, (OpenMode)mode);
+                LibHac.Fs.IFile file = _provider.OpenFile(name, mode);
 
                 fileInterface = new IFile(file, name);
             }
@@ -367,7 +367,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // OpenDirectory(u32 filter_flags, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IDirectory> directory
         public long OpenDirectory(ServiceCtx context)
         {
-            int mode = context.RequestData.ReadInt32();
+            OpenDirectoryMode mode = (OpenDirectoryMode)context.RequestData.ReadInt32();
 
             string name = ReadUtf8String(context);
 
@@ -385,7 +385,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             try
             {
-                LibHac.Fs.IDirectory dir = _provider.OpenDirectory(name, (OpenDirectoryMode) mode);
+                LibHac.Fs.IDirectory dir = _provider.OpenDirectory(name, mode);
 
                 dirInterface = new IDirectory(dir);
             }

@@ -1,3 +1,4 @@
+using LibHac.Fs;
 using Ryujinx.HLE.HOS.Ipc;
 using System;
 using System.Collections.Generic;
@@ -36,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             long position = context.Request.ReceiveBuff[0].Position;
 
-            int readOption = context.RequestData.ReadInt32();
+            ReadOption readOption = (ReadOption)context.RequestData.ReadInt32();
             context.RequestData.BaseStream.Position += 4;
 
             long offset = context.RequestData.ReadInt64();
@@ -44,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             byte[] data = new byte[size];
 
-            int readSize = _baseFile.Read(data, offset);
+            int readSize = _baseFile.Read(data, offset, readOption);
 
             context.Memory.WriteBytes(position, data);
 
@@ -58,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             long position = context.Request.SendBuff[0].Position;
 
-            int writeOption = context.RequestData.ReadInt32();
+            WriteOption writeOption = (WriteOption)context.RequestData.ReadInt32();
             context.RequestData.BaseStream.Position += 4;
 
             long offset = context.RequestData.ReadInt64();
@@ -66,7 +67,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             byte[] data = context.Memory.ReadBytes(position, size);
 
-            _baseFile.Write(data, offset);
+            _baseFile.Write(data, offset, writeOption);
 
             return 0;
         }

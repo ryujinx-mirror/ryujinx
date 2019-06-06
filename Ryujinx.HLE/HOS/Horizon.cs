@@ -260,7 +260,7 @@ namespace Ryujinx.HLE.HOS
 
                 if (nca.Header.ContentType == ContentType.Program)
                 {
-                    int dataIndex = Nca.SectionIndexFromType(NcaSectionType.Data, ContentType.Program);
+                    int dataIndex = Nca.GetSectionIndexFromType(NcaSectionType.Data, ContentType.Program);
 
                     if (nca.Header.GetFsHeader(dataIndex).IsPatchSection())
                     {
@@ -338,7 +338,7 @@ namespace Ryujinx.HLE.HOS
 
                 if (nca.Header.ContentType == ContentType.Program)
                 {
-                    int dataIndex = Nca.SectionIndexFromType(NcaSectionType.Data, ContentType.Program);
+                    int dataIndex = Nca.GetSectionIndexFromType(NcaSectionType.Data, ContentType.Program);
 
                     if (nca.Header.GetFsHeader(dataIndex).IsPatchSection())
                     {
