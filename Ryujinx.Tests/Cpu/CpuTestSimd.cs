@@ -13,6 +13,71 @@ namespace Ryujinx.Tests.Cpu
     {
 #if Simd
 
+#region "Helper methods"
+        private static byte GenLeadingSignsMinus8(int cnt) // 0 <= cnt <= 7
+        {
+            return (byte)(~(uint)GenLeadingZeros8(cnt + 1));
+        }
+
+        private static ushort GenLeadingSignsMinus16(int cnt) // 0 <= cnt <= 15
+        {
+            return (ushort)(~(uint)GenLeadingZeros16(cnt + 1));
+        }
+
+        private static uint GenLeadingSignsMinus32(int cnt) // 0 <= cnt <= 31
+        {
+            return ~GenLeadingZeros32(cnt + 1);
+        }
+
+        private static byte GenLeadingSignsPlus8(int cnt) // 0 <= cnt <= 7
+        {
+            return GenLeadingZeros8(cnt + 1);
+        }
+
+        private static ushort GenLeadingSignsPlus16(int cnt) // 0 <= cnt <= 15
+        {
+            return GenLeadingZeros16(cnt + 1);
+        }
+
+        private static uint GenLeadingSignsPlus32(int cnt) // 0 <= cnt <= 31
+        {
+            return GenLeadingZeros32(cnt + 1);
+        }
+
+        private static byte GenLeadingZeros8(int cnt) // 0 <= cnt <= 8
+        {
+            if (cnt == 8) return (byte)0;
+            if (cnt == 7) return (byte)1;
+
+            byte  rnd  = TestContext.CurrentContext.Random.NextByte();
+            sbyte mask = sbyte.MinValue;
+
+            return (byte)(((uint)rnd >> (cnt + 1)) | ((uint)((byte)mask) >> cnt));
+        }
+
+        private static ushort GenLeadingZeros16(int cnt) // 0 <= cnt <= 16
+        {
+            if (cnt == 16) return (ushort)0;
+            if (cnt == 15) return (ushort)1;
+
+            ushort rnd  = TestContext.CurrentContext.Random.NextUShort();
+            short  mask = short.MinValue;
+
+            return (ushort)(((uint)rnd >> (cnt + 1)) | ((uint)((ushort)mask) >> cnt));
+        }
+
+        private static uint GenLeadingZeros32(int cnt) // 0 <= cnt <= 32
+        {
+            if (cnt == 32) return 0u;
+            if (cnt == 31) return 1u;
+
+            uint rnd  = TestContext.CurrentContext.Random.NextUInt();
+            int  mask = int.MinValue;
+
+            return (rnd >> (cnt + 1)) | ((uint)mask >> cnt);
+        }
+#endregion
+
 #region "ValueSource (Types)"
         private static ulong[] _1B1H1S1D_()
         {
@@ -88,6 +153,75 @@ namespace Ryujinx.Tests.Cpu
                                  0x8000800080008000ul, 0x7FFFFFFF7FFFFFFFul,
                                  0x8000000080000000ul, 0x7FFFFFFFFFFFFFFFul,
                                  0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul };
+        }
+
+        private static IEnumerable<ulong> _GenLeadingSigns8B_()
+        {
+            for (int cnt = 0; cnt <= 7; cnt++)
+            {
+                ulong rnd1 = GenLeadingSignsMinus8(cnt);
+                ulong rnd2 = GenLeadingSignsPlus8(cnt);
+
+                yield return (rnd1 << 56) | (rnd1 << 48) | (rnd1 << 40) | (rnd1 << 32) |
+                             (rnd1 << 24) | (rnd1 << 16) | (rnd1 << 08) | rnd1;
+                yield return (rnd2 << 56) | (rnd2 << 48) | (rnd2 << 40) | (rnd2 << 32) |
+                             (rnd2 << 24) | (rnd2 << 16) | (rnd2 << 08) | rnd2;
+            }
+        }
+
+        private static IEnumerable<ulong> _GenLeadingSigns4H_()
+        {
+            for (int cnt = 0; cnt <= 15; cnt++)
+            {
+                ulong rnd1 = GenLeadingSignsMinus16(cnt);
+                ulong rnd2 = GenLeadingSignsPlus16(cnt);
+
+                yield return (rnd1 << 48) | (rnd1 << 32) | (rnd1 << 16) | rnd1;
+                yield return (rnd2 << 48) | (rnd2 << 32) | (rnd2 << 16) | rnd2;
+            }
+        }
+
+        private static IEnumerable<ulong> _GenLeadingSigns2S_()
+        {
+            for (int cnt = 0; cnt <= 31; cnt++)
+            {
+                ulong rnd1 = GenLeadingSignsMinus32(cnt);
+                ulong rnd2 = GenLeadingSignsPlus32(cnt);
+
+                yield return (rnd1 << 32) | rnd1;
+                yield return (rnd2 << 32) | rnd2;
+            }
+        }
+
+        private static IEnumerable<ulong> _GenLeadingZeros8B_()
+        {
+            for (int cnt = 0; cnt <= 8; cnt++)
+            {
+                ulong rnd = GenLeadingZeros8(cnt);
+
+                yield return (rnd << 56) | (rnd << 48) | (rnd << 40) | (rnd << 32) |
+                             (rnd << 24) | (rnd << 16) | (rnd << 08) | rnd;
+            }
+        }
+
+        private static IEnumerable<ulong> _GenLeadingZeros4H_()
+        {
+            for (int cnt = 0; cnt <= 16; cnt++)
+            {
+                ulong rnd = GenLeadingZeros16(cnt);
+
+                yield return (rnd << 48) | (rnd << 32) | (rnd << 16) | rnd;
+            }
+        }
+
+        private static IEnumerable<ulong> _GenLeadingZeros2S_()
+        {
+            for (int cnt = 0; cnt <= 32; cnt++)
+            {
+                ulong rnd = GenLeadingZeros32(cnt);
+
+                yield return (rnd << 32) | rnd;
+            }
         }
 
         private static IEnumerable<ulong> _1H_F_()
@@ -1034,18 +1168,18 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise, Description("CLS <Vd>.<T>, <Vn>.<T>")]
-        public void Cls_V_8B_4H_2S([Values(0u)]     uint rd,
-                                   [Values(1u, 0u)] uint rn,
-                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                   [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
+        public void Cls_V_8B_16B([Values(0u)]     uint rd,
+                                 [Values(1u, 0u)] uint rn,
+                                 [ValueSource("_GenLeadingSigns8B_")] [Random(RndCnt)] ulong z,
+                                 [ValueSource("_GenLeadingSigns8B_")] [Random(RndCnt)] ulong a,
+                                 [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             uint opcode = 0x0E204800; // CLS V0.8B, V0.8B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
+            opcode |= ((q & 1) << 30);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1053,18 +1187,37 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise, Description("CLS <Vd>.<T>, <Vn>.<T>")]
-        public void Cls_V_16B_8H_4S([Values(0u)]     uint rd,
-                                    [Values(1u, 0u)] uint rn,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                    [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B, 8H, 4S>
+        public void Cls_V_4H_8H([Values(0u)]     uint rd,
+                                [Values(1u, 0u)] uint rn,
+                                [ValueSource("_GenLeadingSigns4H_")] [Random(RndCnt)] ulong z,
+                                [ValueSource("_GenLeadingSigns4H_")] [Random(RndCnt)] ulong a,
+                                [Values(0b0u, 0b1u)] uint q) // <4H, 8H>
         {
-            uint opcode = 0x4E204800; // CLS V0.16B, V0.16B
+            uint opcode = 0x0E604800; // CLS V0.4H, V0.4H
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
+            opcode |= ((q & 1) << 30);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("CLS <Vd>.<T>, <Vn>.<T>")]
+        public void Cls_V_2S_4S([Values(0u)]     uint rd,
+                                [Values(1u, 0u)] uint rn,
+                                [ValueSource("_GenLeadingSigns2S_")] [Random(RndCnt)] ulong z,
+                                [ValueSource("_GenLeadingSigns2S_")] [Random(RndCnt)] ulong a,
+                                [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
+        {
+            uint opcode = 0x0EA04800; // CLS V0.2S, V0.2S
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((q & 1) << 30);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1072,18 +1225,18 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
-        public void Clz_V_8B_4H_2S([Values(0u)]     uint rd,
-                                   [Values(1u, 0u)] uint rn,
-                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                   [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B, 4H, 2S>
+        public void Clz_V_8B_16B([Values(0u)]     uint rd,
+                                 [Values(1u, 0u)] uint rn,
+                                 [ValueSource("_GenLeadingZeros8B_")] [Random(RndCnt)] ulong z,
+                                 [ValueSource("_GenLeadingZeros8B_")] [Random(RndCnt)] ulong a,
+                                 [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             uint opcode = 0x2E204800; // CLZ V0.8B, V0.8B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
+            opcode |= ((q & 1) << 30);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1091,18 +1244,37 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
-        public void Clz_V_16B_8H_4S([Values(0u)]     uint rd,
-                                    [Values(1u, 0u)] uint rn,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                    [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                    [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B, 8H, 4S>
+        public void Clz_V_4H_8H([Values(0u)]     uint rd,
+                                [Values(1u, 0u)] uint rn,
+                                [ValueSource("_GenLeadingZeros4H_")] [Random(RndCnt)] ulong z,
+                                [ValueSource("_GenLeadingZeros4H_")] [Random(RndCnt)] ulong a,
+                                [Values(0b0u, 0b1u)] uint q) // <4H, 8H>
         {
-            uint opcode = 0x6E204800; // CLZ V0.16B, V0.16B
+            uint opcode = 0x2E604800; // CLZ V0.4H, V0.4H
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
+            opcode |= ((q & 1) << 30);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
+        public void Clz_V_2S_4S([Values(0u)]     uint rd,
+                                [Values(1u, 0u)] uint rn,
+                                [ValueSource("_GenLeadingZeros2S_")] [Random(RndCnt)] ulong z,
+                                [ValueSource("_GenLeadingZeros2S_")] [Random(RndCnt)] ulong a,
+                                [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
+        {
+            uint opcode = 0x2EA04800; // CLZ V0.2S, V0.2S
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= ((q & 1) << 30);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 

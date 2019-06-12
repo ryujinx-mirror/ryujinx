@@ -8,11 +8,12 @@ namespace Ryujinx.Tests.Cpu
     public sealed class CpuTestMov : CpuTest
     {
 #if Mov
+        private const int RndCnt    = 2;
         private const int RndCntImm = 2;
 
         [Test, Pairwise, Description("MOVK <Xd>, #<imm>{, LSL #<shift>}")]
         public void Movk_64bit([Values(0u, 31u)] uint rd,
-                               [Random(RndCntImm)] ulong xd,
+                               [Random(RndCnt)] ulong xd,
                                [Values(0u, 65535u)] [Random(0u, 65535u, RndCntImm)] uint imm,
                                [Values(0u, 16u, 32u, 48u)] uint shift)
         {
@@ -29,7 +30,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Test, Pairwise, Description("MOVK <Wd>, #<imm>{, LSL #<shift>}")]
         public void Movk_32bit([Values(0u, 31u)] uint rd,
-                               [Random(RndCntImm)] uint wd,
+                               [Random(RndCnt)] uint wd,
                                [Values(0u, 65535u)] [Random(0u, 65535u, RndCntImm)] uint imm,
                                [Values(0u, 16u)] uint shift)
         {
