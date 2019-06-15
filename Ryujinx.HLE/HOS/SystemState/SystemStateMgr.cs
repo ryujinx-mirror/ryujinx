@@ -1,8 +1,6 @@
+using Ryujinx.HLE.HOS.Services.Acc;
 using Ryujinx.HLE.Utilities;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Ryujinx.HLE.HOS.SystemState
 {
@@ -50,21 +48,18 @@ namespace Ryujinx.HLE.HOS.SystemState
 
         public bool InstallContents { get; set; }
 
-        private ConcurrentDictionary<string, UserProfile> _profiles;
-
-        internal UserProfile LastOpenUser { get; private set; }
+        public AccountUtils Account { get; private set; }
 
         public SystemStateMgr()
         {
             SetAudioOutputAsBuiltInSpeaker();
 
-            _profiles = new ConcurrentDictionary<string, UserProfile>();
+            Account = new AccountUtils();
 
-            UInt128 defaultUuid = new UInt128("00000000000000000000000000000001");
+            UInt128 defaultUid = new UInt128("00000000000000000000000000000001");
 
-            AddUser(defaultUuid, "Player");
-
-            OpenUser(defaultUuid);
+            Account.AddUser(defaultUid, "Player");
+            Account.OpenUser(defaultUid);
         }
 
         public void SetLanguage(SystemLanguage language)
@@ -100,49 +95,6 @@ namespace Ryujinx.HLE.HOS.SystemState
         public void SetAudioOutputAsBuiltInSpeaker()
         {
             ActiveAudioOutput = AudioOutputs[2];
-        }
-
-        public void AddUser(UInt128 uuid, string name)
-        {
-            UserProfile profile = new UserProfile(uuid, name);
-
-            _profiles.AddOrUpdate(uuid.ToString(), profile, (key, old) => profile);
-        }
-
-        public void OpenUser(UInt128 uuid)
-        {
-            if (_profiles.TryGetValue(uuid.ToString(), out UserProfile profile))
-            {
-                (LastOpenUser = profile).AccountState = OpenCloseState.Open;
-            }
-        }
-
-        public void CloseUser(UInt128 uuid)
-        {
-            if (_profiles.TryGetValue(uuid.ToString(), out UserProfile profile))
-            {
-                profile.AccountState = OpenCloseState.Closed;
-            }
-        }
-
-        public int GetUserCount()
-        {
-            return _profiles.Count;
-        }
-
-        internal bool TryGetUser(UInt128 uuid, out UserProfile profile)
-        {
-            return _profiles.TryGetValue(uuid.ToString(), out profile);
-        }
-
-        internal IEnumerable<UserProfile> GetAllUsers()
-        {
-            return _profiles.Values;
-        }
-
-        internal IEnumerable<UserProfile> GetOpenUsers()
-        {
-            return _profiles.Values.Where(x => x.AccountState == OpenCloseState.Open);
         }
 
         internal static long GetLanguageCode(int index)

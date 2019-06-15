@@ -1,6 +1,6 @@
 namespace Ryujinx.HLE.HOS.SystemState
 {
-    public enum OpenCloseState
+    public enum AccountState
     {
         Closed,
         Open

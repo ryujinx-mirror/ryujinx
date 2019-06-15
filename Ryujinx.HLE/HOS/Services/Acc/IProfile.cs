@@ -52,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
         public long GetBase(ServiceCtx context)
         {
-            _profile.Uuid.Write(context.ResponseData);
+            _profile.UserId.Write(context.ResponseData);
 
             context.ResponseData.Write(_profile.LastModifiedTimestamp);
 

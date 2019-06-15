@@ -69,9 +69,9 @@ namespace Ryujinx.HLE.HOS.Services.Friend
                 context.RequestData.ReadInt64(),
                 context.RequestData.ReadInt64());
 
-            if (context.Device.System.State.TryGetUser(uuid, out UserProfile profile))
+            if (context.Device.System.State.Account.TryGetUser(uuid, out UserProfile profile))
             {
-                profile.OnlinePlayState = OpenCloseState.Open;
+                profile.OnlinePlayState = AccountState.Open;
             }
 
             Logger.PrintStub(LogClass.ServiceFriend, new { UserId = uuid.ToString(), profile.OnlinePlayState });
@@ -86,9 +86,9 @@ namespace Ryujinx.HLE.HOS.Services.Friend
                 context.RequestData.ReadInt64(),
                 context.RequestData.ReadInt64());
 
-            if (context.Device.System.State.TryGetUser(uuid, out UserProfile profile))
+            if (context.Device.System.State.Account.TryGetUser(uuid, out UserProfile profile))
             {
-                profile.OnlinePlayState = OpenCloseState.Closed;
+                profile.OnlinePlayState = AccountState.Closed;
             }
 
             Logger.PrintStub(LogClass.ServiceFriend, new { UserId = uuid.ToString(), profile.OnlinePlayState });

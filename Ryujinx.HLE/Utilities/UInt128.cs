@@ -9,10 +9,18 @@ namespace Ryujinx.HLE.Utilities
         public long High { get; private set; }
         public long Low  { get; private set; }
 
+        public bool IsNull => (Low | High) == 0;
+
         public UInt128(long low, long high)
         {
             Low  = low;
             High = high;
+        }
+
+        public UInt128(byte[] bytes)
+        {
+            Low  = BitConverter.ToInt64(bytes, 0);
+            High = BitConverter.ToInt64(bytes, 8);
         }
 
         public UInt128(string hex)
