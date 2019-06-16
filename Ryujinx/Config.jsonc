@@ -19,6 +19,12 @@
     // Enable print error logs
     "logging_enable_error": true,
 
+    // Enable printing guest logs
+    "logging_enable_guest": true,
+    
+    // Enable printing FS access logs. fs_global_access_log_mode must be 2 or 3
+    "logging_enable_fs_access_log": false,
+
     // Filtered log classes, in a JSON array, eg. `[ "Loader", "ServiceFs" ]`
     "logging_filtered_classes": [ ],
 
@@ -43,6 +49,9 @@
 
     // Enable integrity checks on Switch content files
     "enable_fs_integrity_checks": true,
+
+    // Sets the "GlobalAccessLogMode". Possible modes are 0-3
+    "fs_global_access_log_mode": 0,
 
     // Enable or disable aggressive CPU optimizations
     "enable_aggressive_cpu_opts": true,

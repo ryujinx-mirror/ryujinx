@@ -53,6 +53,16 @@ namespace Ryujinx
         public bool LoggingEnableError { get; private set; }
 
         /// <summary>
+        /// Enables printing guest log messages
+        /// </summary>
+        public bool LoggingEnableGuest { get; private set; }
+
+        /// <summary>
+        /// Enables printing FS access log messages
+        /// </summary>
+        public bool LoggingEnableFsAccessLog { get; private set; }
+
+        /// <summary>
         /// Controls which log messages are written to the log targets
         /// </summary>
         public LogClass[] LoggingFilteredClasses { get; private set; }
@@ -91,6 +101,11 @@ namespace Ryujinx
         /// Enables integrity checks on Game content files
         /// </summary>
         public bool EnableFsIntegrityChecks { get; private set; }
+
+        /// <summary>
+        /// Enables FS access log output to the console. Possible modes are 0-3
+        /// </summary>
+        public int FsGlobalAccessLogMode { get; private set; }
 
         /// <summary>
         /// Enable or Disable aggressive CPU optimizations
@@ -184,11 +199,13 @@ namespace Ryujinx
                 ));
             }
 
-            Logger.SetEnable(LogLevel.Debug,   Instance.LoggingEnableDebug);
-            Logger.SetEnable(LogLevel.Stub,    Instance.LoggingEnableStub);
-            Logger.SetEnable(LogLevel.Info,    Instance.LoggingEnableInfo);
-            Logger.SetEnable(LogLevel.Warning, Instance.LoggingEnableWarn);
-            Logger.SetEnable(LogLevel.Error,   Instance.LoggingEnableError);
+            Logger.SetEnable(LogLevel.Debug,     Instance.LoggingEnableDebug);
+            Logger.SetEnable(LogLevel.Stub,      Instance.LoggingEnableStub);
+            Logger.SetEnable(LogLevel.Info,      Instance.LoggingEnableInfo);
+            Logger.SetEnable(LogLevel.Warning,   Instance.LoggingEnableWarn);
+            Logger.SetEnable(LogLevel.Error,     Instance.LoggingEnableError);
+            Logger.SetEnable(LogLevel.Guest,     Instance.LoggingEnableGuest);
+            Logger.SetEnable(LogLevel.AccessLog, Instance.LoggingEnableFsAccessLog);
 
             if (Instance.LoggingFilteredClasses.Length > 0)
             {
@@ -219,6 +236,8 @@ namespace Ryujinx
             device.System.FsIntegrityCheckLevel = Instance.EnableFsIntegrityChecks
                 ? IntegrityCheckLevel.ErrorOnInvalid
                 : IntegrityCheckLevel.None;
+
+            device.System.GlobalAccessLogMode = Instance.FsGlobalAccessLogMode;
 
             if (Instance.EnableAggressiveCpuOpts)
             {

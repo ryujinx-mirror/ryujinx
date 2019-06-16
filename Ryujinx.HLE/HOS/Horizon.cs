@@ -105,6 +105,8 @@ namespace Ryujinx.HLE.HOS
 
         public IntegrityCheckLevel FsIntegrityCheckLevel { get; set; }
 
+        public int GlobalAccessLogMode { get; set; }
+
         internal long HidBaseAddress { get; private set; }
 
         public Horizon(Switch device)

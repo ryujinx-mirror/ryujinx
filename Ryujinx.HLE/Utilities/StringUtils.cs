@@ -72,5 +72,28 @@ namespace Ryujinx.HLE.Utilities
                 return Encoding.UTF8.GetString(ms.ToArray());
             }
         }
+
+        public static string ReadUtf8StringSend(ServiceCtx context, int index = 0)
+        {
+            long position = context.Request.SendBuff[index].Position;
+            long size     = context.Request.SendBuff[index].Size;
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                while (size-- > 0)
+                {
+                    byte value = context.Memory.ReadByte(position++);
+
+                    if (value == 0)
+                    {
+                        break;
+                    }
+
+                    ms.WriteByte(value);
+                }
+
+                return Encoding.UTF8.GetString(ms.ToArray());
+            }
+        }
     }
 }

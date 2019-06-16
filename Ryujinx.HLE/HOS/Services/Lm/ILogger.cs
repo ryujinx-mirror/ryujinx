@@ -41,6 +41,8 @@ namespace Ryujinx.HLE.HOS.Services.Lm
 
                 sb.AppendLine("Guest log:");
 
+                sb.AppendLine($" Log level: {(LmLogLevel)level}");
+
                 while (ms.Position < ms.Length)
                 {
                     byte type = reader.ReadByte();
@@ -86,14 +88,7 @@ namespace Ryujinx.HLE.HOS.Services.Lm
 
                 string text = sb.ToString();
 
-                switch((LmLogLevel)level)
-                {
-                    case LmLogLevel.Trace:    Logger.PrintDebug  (LogClass.ServiceLm, text); break;
-                    case LmLogLevel.Info:     Logger.PrintInfo   (LogClass.ServiceLm, text); break;
-                    case LmLogLevel.Warning:  Logger.PrintWarning(LogClass.ServiceLm, text); break;
-                    case LmLogLevel.Error:    Logger.PrintError  (LogClass.ServiceLm, text); break;
-                    case LmLogLevel.Critical: Logger.PrintError  (LogClass.ServiceLm, text); break;
-                }
+                Logger.PrintGuest(LogClass.ServiceLm, text);
             }
 
             return 0;

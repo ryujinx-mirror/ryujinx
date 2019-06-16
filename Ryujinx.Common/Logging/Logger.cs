@@ -22,10 +22,12 @@ namespace Ryujinx.Common.Logging
             m_EnabledLevels  = new bool[Enum.GetNames(typeof(LogLevel)).Length];
             m_EnabledClasses = new bool[Enum.GetNames(typeof(LogClass)).Length];
 
-            m_EnabledLevels[(int)LogLevel.Stub]    = true;
-            m_EnabledLevels[(int)LogLevel.Info]    = true;
-            m_EnabledLevels[(int)LogLevel.Warning] = true;
-            m_EnabledLevels[(int)LogLevel.Error]   = true;
+            m_EnabledLevels[(int)LogLevel.Stub]      = true;
+            m_EnabledLevels[(int)LogLevel.Info]      = true;
+            m_EnabledLevels[(int)LogLevel.Warning]   = true;
+            m_EnabledLevels[(int)LogLevel.Error]     = true;
+            m_EnabledLevels[(int)LogLevel.Guest]     = true;
+            m_EnabledLevels[(int)LogLevel.AccessLog] = true;
 
             for (int index = 0; index < m_EnabledClasses.Length; index++)
             {
@@ -99,6 +101,16 @@ namespace Ryujinx.Common.Logging
         public static void PrintStub<T>(LogClass logClass, string message, T obj, [CallerMemberName] string caller = "")
         {
             Print(LogLevel.Stub, logClass, GetFormattedMessage(logClass, "Stubbed. " + message, caller), obj);
+        }
+
+        public static void PrintGuest(LogClass logClass, string message, [CallerMemberName] string caller = "")
+        {
+            Print(LogLevel.Guest, logClass, GetFormattedMessage(logClass, message, caller));
+        }
+
+        public static void PrintAccessLog(LogClass logClass, string message)
+        {
+            Print(LogLevel.AccessLog, logClass, message);
         }
 
         private static void Print(LogLevel logLevel, LogClass logClass, string message)

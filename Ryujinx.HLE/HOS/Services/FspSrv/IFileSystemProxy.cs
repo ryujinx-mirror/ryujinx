@@ -1,6 +1,7 @@
 using LibHac;
 using LibHac.Fs;
 using LibHac.Fs.NcaUtils;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.Utilities;
@@ -32,7 +33,8 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 { 200,  OpenDataStorageByCurrentProcess          },
                 { 202,  OpenDataStorageByDataId                  },
                 { 203,  OpenPatchDataStorageByCurrentProcess     },
-                { 1005, GetGlobalAccessLogMode                   }
+                { 1005, GetGlobalAccessLogMode                   },
+                { 1006, OutputAccessLogToSdCard                  }
             };
         }
 
@@ -208,7 +210,20 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // GetGlobalAccessLogMode() -> u32 logMode
         public long GetGlobalAccessLogMode(ServiceCtx context)
         {
-            context.ResponseData.Write(0);
+            int mode = context.Device.System.GlobalAccessLogMode;
+
+            context.ResponseData.Write(mode);
+
+            return 0;
+        }
+
+        // OutputAccessLogToSdCard(buffer<bytes, 5> log_text)
+        public long OutputAccessLogToSdCard(ServiceCtx context)
+        {
+            string message = ReadUtf8StringSend(context);
+
+            // FS ends each line with a newline. Remove it because Ryujinx logging adds its own newline
+            Logger.PrintAccessLog(LogClass.ServiceFs, message.TrimEnd('\n'));
 
             return 0;
         }

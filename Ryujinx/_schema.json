@@ -10,6 +10,8 @@
     "logging_enable_info",
     "logging_enable_warn",
     "logging_enable_error",
+    "logging_enable_guest",
+    "logging_enable_fs_access_log",
     "logging_filtered_classes",
     "enable_file_log",
     "system_language",
@@ -17,6 +19,7 @@
     "enable_vsync",
     "enable_multicore_scheduling",
     "enable_fs_integrity_checks",
+    "fs_global_access_log_mode",
     "enable_aggressive_cpu_opts",
     "controller_type",
     "enable_keyboard",
@@ -265,6 +268,28 @@
         false
       ]
     },
+    "logging_enable_guest": {
+      "$id": "#/properties/logging_enable_guest",
+      "type": "boolean",
+      "title": "Logging Enable Guest",
+      "description": "Enables printing guest log messages",
+      "default": true,
+      "examples": [
+        true,
+        false
+      ]
+    },
+    "logging_enable_fs_access": {
+      "$id": "#/properties/logging_enable_fs_access_log",
+      "type": "boolean",
+      "title": "Logging Enable FS Access Log",
+      "description": "Enables printing FS access log messages",
+      "default": true,
+      "examples": [
+        true,
+        false
+      ]
+    },
     "logging_filtered_classes": {
       "$id": "#/properties/logging_filtered_classes",
       "type": "array",
@@ -410,6 +435,20 @@
       "examples": [
         true,
         false
+      ]
+    },
+    "fs_global_access_log_mode": {
+      "$id": "#/properties/fs_global_access_log_mode",
+      "type": "integer",
+      "title": "Enable FS access log",
+      "description": "Enables FS access log output. Possible modes are 0-3. Modes 2 and 3 output to the console.",
+      "default": 0,
+      "minimum": 0,
+      "examples": [
+        0,
+        1,
+        2,
+        3
       ]
     },
     "enable_aggressive_cpu_opts": {

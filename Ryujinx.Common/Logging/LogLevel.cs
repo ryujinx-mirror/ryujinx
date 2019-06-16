@@ -6,6 +6,8 @@ namespace Ryujinx.Common.Logging
         Stub,
         Info,
         Warning,
-        Error
+        Error,
+        Guest,
+        AccessLog
     }
 }
