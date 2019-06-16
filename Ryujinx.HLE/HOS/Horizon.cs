@@ -32,6 +32,7 @@ namespace Ryujinx.HLE.HOS
         internal const int HidSize  = 0x40000;
         internal const int FontSize = 0x1100000;
         internal const int IirsSize = 0x8000;
+        internal const int TimeSize = 0x1000;
 
         private const int MemoryBlockAllocatorSize = 0x2710;
 
@@ -84,6 +85,7 @@ namespace Ryujinx.HLE.HOS
         internal KSharedMemory HidSharedMem  { get; private set; }
         internal KSharedMemory FontSharedMem { get; private set; }
         internal KSharedMemory IirsSharedMem { get; private set; }
+        internal KSharedMemory TimeSharedMem { get; private set; }
 
         internal SharedFontManager Font { get; private set; }
 
@@ -161,20 +163,24 @@ namespace Ryujinx.HLE.HOS
             ulong hidPa  = region.Address;
             ulong fontPa = region.Address + HidSize;
             ulong iirsPa = region.Address + HidSize + FontSize;
+            ulong timePa = region.Address + HidSize + FontSize + IirsSize;
 
             HidBaseAddress = (long)(hidPa - DramMemoryMap.DramBase);
 
             KPageList hidPageList  = new KPageList();
             KPageList fontPageList = new KPageList();
             KPageList iirsPageList = new KPageList();
+            KPageList timePageList = new KPageList();
 
             hidPageList .AddRange(hidPa,  HidSize  / KMemoryManager.PageSize);
             fontPageList.AddRange(fontPa, FontSize / KMemoryManager.PageSize);
             iirsPageList.AddRange(iirsPa, IirsSize / KMemoryManager.PageSize);
+            timePageList.AddRange(timePa, TimeSize / KMemoryManager.PageSize);
 
             HidSharedMem  = new KSharedMemory(this, hidPageList,  0, 0, MemoryPermission.Read);
             FontSharedMem = new KSharedMemory(this, fontPageList, 0, 0, MemoryPermission.Read);
             IirsSharedMem = new KSharedMemory(this, iirsPageList, 0, 0, MemoryPermission.Read);
+            TimeSharedMem = new KSharedMemory(this, timePageList, 0, 0, MemoryPermission.Read);
 
             AppletState = new AppletStateMgr(this);
 
