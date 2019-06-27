@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Text;
 
 namespace Ryujinx.Common.Logging
@@ -31,7 +32,23 @@ namespace Ryujinx.Common.Logging
                     {
                         sb.Append(prop.Name);
                         sb.Append(": ");
-                        sb.Append(prop.GetValue(args.Data));
+
+                        if (typeof(Array).IsAssignableFrom(prop.PropertyType))
+                        {
+                            Array enumerable = (Array)prop.GetValue(args.Data);
+                            foreach (var item in enumerable)
+                            {
+                                sb.Append(item.ToString());
+                                sb.Append(", ");
+                            }
+
+                            sb.Remove(sb.Length - 2, 2);
+                        }
+                        else
+                        {
+                            sb.Append(prop.GetValue(args.Data));
+                        }
+
                         sb.Append(" - ");
                     }
 

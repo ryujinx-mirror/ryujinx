@@ -19,6 +19,26 @@ namespace Ryujinx.Common
             }
         }
 
+        public unsafe static T[] ReadStructArray<T>(this BinaryReader reader, int count)
+            where T : struct
+        {
+            int size = Marshal.SizeOf<T>();
+
+            T[] result = new T[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                byte[] data = reader.ReadBytes(size);
+
+                fixed (byte* ptr = data)
+                {
+                    result[i] = Marshal.PtrToStructure<T>((IntPtr)ptr);
+                }
+            }
+
+            return result;
+        }
+
         public unsafe static void WriteStruct<T>(this BinaryWriter writer, T value)
             where T : struct
         {
