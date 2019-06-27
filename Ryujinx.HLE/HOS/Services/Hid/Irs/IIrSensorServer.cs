@@ -1,33 +1,43 @@
 ﻿using Ryujinx.Common.Logging;
-using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
-using Ryujinx.HLE.HOS.Kernel.Memory;
+using Ryujinx.HLE.Input;
 using System;
 using System.Collections.Generic;
 
-namespace Ryujinx.HLE.HOS.Services.Irs
+namespace Ryujinx.HLE.HOS.Services.Hid.Irs
 {
     class IIrSensorServer : IpcService
     {
+        private int _irsensorSharedMemoryHandle = 0;
+
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        private KSharedMemory _irsSharedMem;
-
-        public IIrSensorServer(KSharedMemory irsSharedMem)
+        public IIrSensorServer()
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
                 { 302, ActivateIrsensor                  },
                 { 303, DeactivateIrsensor                },
                 { 304, GetIrsensorSharedMemoryHandle     },
+              //{ 305, StopImageProcessor                },
+              //{ 306, RunMomentProcessor                },
+              //{ 307, RunClusteringProcessor            },
+              //{ 308, RunImageTransferProcessor         },
+              //{ 309, GetImageTransferProcessorState    },
+              //{ 310, RunTeraPluginProcessor            },
                 { 311, GetNpadIrCameraHandle             },
-                { 319, ActivateIrsensorWithFunctionLevel }
+              //{ 312, RunPointingProcessor              },
+              //{ 313, SuspendImageProcessor             },
+              //{ 314, CheckFirmwareVersion              }, // 3.0.0+
+              //{ 315, SetFunctionLevel                  }, // 4.0.0+
+              //{ 316, RunImageTransferExProcessor       }, // 4.0.0+
+              //{ 317, RunIrLedProcessor                 }, // 4.0.0+
+              //{ 318, StopImageProcessorAsync           }, // 4.0.0+
+                { 319, ActivateIrsensorWithFunctionLevel }, // 4.0.0+
             };
-
-            _irsSharedMem = irsSharedMem;
         }
 
         // ActivateIrsensor(nn::applet::AppletResourceUserId, pid)
@@ -53,14 +63,15 @@ namespace Ryujinx.HLE.HOS.Services.Irs
         // GetIrsensorSharedMemoryHandle(nn::applet::AppletResourceUserId, pid) -> handle<copy>
         public long GetIrsensorSharedMemoryHandle(ServiceCtx context)
         {
-            var handleTable = context.Process.HandleTable;
-
-            if (handleTable.GenerateHandle(_irsSharedMem, out int handle) != KernelResult.Success)
+            if (_irsensorSharedMemoryHandle == 0)
             {
-                throw new InvalidOperationException("Out of handles!");
+                if (context.Process.HandleTable.GenerateHandle(context.Device.System.IirsSharedMem, out _irsensorSharedMemoryHandle) != KernelResult.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_irsensorSharedMemoryHandle);
 
             return 0;
         }
@@ -68,41 +79,23 @@ namespace Ryujinx.HLE.HOS.Services.Irs
         // GetNpadIrCameraHandle(u32) -> nn::irsensor::IrCameraHandle
         public long GetNpadIrCameraHandle(ServiceCtx context)
         {
-            uint npadId = context.RequestData.ReadUInt32();
+            NpadIdType npadIdType = (NpadIdType)context.RequestData.ReadUInt32();
 
-            if (npadId >= 8 && npadId != 16 && npadId != 32)
+            if (npadIdType >  NpadIdType.Player8 && 
+                npadIdType != NpadIdType.Unknown && 
+                npadIdType != NpadIdType.Handheld)
             {
-                return ErrorCode.MakeError(ErrorModule.Hid, 0x2c5);
+                return ErrorCode.MakeError(ErrorModule.Irsensor, IrsError.NpadIdOutOfRange);
             }
 
-            if (((1 << (int)npadId) & 0x1000100FF) == 0)
-            {
-                return ErrorCode.MakeError(ErrorModule.Hid, 0x2c5);
-            }
+            HidControllerId irCameraHandle = HidUtils.GetIndexFromNpadIdType(npadIdType);
 
-            int npadTypeId = GetNpadTypeId(npadId);
+            context.ResponseData.Write((int)irCameraHandle);
 
-            context.ResponseData.Write(npadTypeId);
+            // NOTE: If the irCameraHandle pointer is null this error is returned, Doesn't occur in our case. 
+            //       return ErrorCode.MakeError(ErrorModule.Irsensor, IrsError.HandlePointerIsNull);
 
             return 0;
-        }
-
-        private int GetNpadTypeId(uint npadId)
-        {
-            switch(npadId)
-            {
-                case 0:  return 0;
-                case 1:  return 1;
-                case 2:  return 2;
-                case 3:  return 3;
-                case 4:  return 4;
-                case 5:  return 5;
-                case 6:  return 6;
-                case 7:  return 7;
-                case 32: return 8;
-                case 16: return 9;
-                default: throw new ArgumentOutOfRangeException(nameof(npadId));
-            }
         }
 
         // ActivateIrsensorWithFunctionLevel(nn::applet::AppletResourceUserId, nn::irsensor::PackedFunctionLevel, pid)

@@ -8,7 +8,7 @@ using Ryujinx.HLE.HOS.Services.Caps;
 using Ryujinx.HLE.HOS.Services.Es;
 using Ryujinx.HLE.HOS.Services.FspSrv;
 using Ryujinx.HLE.HOS.Services.Hid;
-using Ryujinx.HLE.HOS.Services.Irs;
+using Ryujinx.HLE.HOS.Services.Hid.Irs;
 using Ryujinx.HLE.HOS.Services.Ldr;
 using Ryujinx.HLE.HOS.Services.Lm;
 using Ryujinx.HLE.HOS.Services.Mm;
@@ -112,7 +112,7 @@ namespace Ryujinx.HLE.HOS.Services
                     return new IHidServer(system);
 
                 case "irs":
-                    return new IIrSensorServer(system.IirsSharedMem);
+                    return new IIrSensorServer();
 
                 case "ldr:ro":
                     return new IRoInterface();
