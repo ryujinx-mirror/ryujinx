@@ -2,6 +2,8 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 
+using static Ryujinx.HLE.HOS.ErrorCode;
+
 namespace Ryujinx.HLE.HOS.Services.Friend
 {
     class IServiceCreator : IpcService
@@ -32,6 +34,11 @@ namespace Ryujinx.HLE.HOS.Services.Friend
         public static long CreateNotificationService(ServiceCtx context)
         {
             UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
+
+            if (userId.IsNull)
+            {
+                return MakeError(ErrorModule.Friends, FriendErr.InvalidArgument);
+            }
 
             MakeObject(context, new INotificationService(userId));
 
