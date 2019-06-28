@@ -1,7 +1,7 @@
 ﻿using Ryujinx.HLE.HOS.Ipc;
 using System.Collections.Generic;
 
-namespace Ryujinx.HLE.HOS.Services.Nfp
+namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 {
     class IUserManager : IpcService
     {
@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfp
 
         public long GetUserInterface(ServiceCtx context)
         {
-            MakeObject(context, new IUser(context.Device.System));
+            MakeObject(context, new IUser());
 
             return 0;
         }

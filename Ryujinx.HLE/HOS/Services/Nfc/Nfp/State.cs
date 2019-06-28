@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Nfp
+﻿namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 {
     enum State
     {

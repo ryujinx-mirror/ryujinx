@@ -13,7 +13,7 @@ using Ryujinx.HLE.HOS.Services.Ldr;
 using Ryujinx.HLE.HOS.Services.Lm;
 using Ryujinx.HLE.HOS.Services.Mm;
 using Ryujinx.HLE.HOS.Services.Ncm;
-using Ryujinx.HLE.HOS.Services.Nfp;
+using Ryujinx.HLE.HOS.Services.Nfc.Nfp;
 using Ryujinx.HLE.HOS.Services.Ns;
 using Ryujinx.HLE.HOS.Services.Nv;
 using Ryujinx.HLE.HOS.Services.Pctl;
