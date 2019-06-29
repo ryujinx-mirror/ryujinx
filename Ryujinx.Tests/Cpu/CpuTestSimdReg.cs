@@ -202,7 +202,7 @@ namespace Ryujinx.Tests.Cpu
 #endregion
 
 #region "ValueSource (Opcodes)"
-        private static uint[] _F_Add_Div_Mul_Mulx_Sub_S_S_()
+        private static uint[] _F_Abd_Add_Div_Mul_Mulx_Nmul_Sub_S_S_()
         {
             return new uint[]
             {
@@ -211,11 +211,12 @@ namespace Ryujinx.Tests.Cpu
                 0x1E221820u, // FDIV  S0, S1, S2
                 0x1E220820u, // FMUL  S0, S1, S2
                 0x5E22DC20u, // FMULX S0, S1, S2
+                0x1E228820u, // FNMUL S0, S1, S2
                 0x1E223820u  // FSUB  S0, S1, S2
             };
         }
 
-        private static uint[] _F_Add_Div_Mul_Mulx_Sub_S_D_()
+        private static uint[] _F_Abd_Add_Div_Mul_Mulx_Nmul_Sub_S_D_()
         {
             return new uint[]
             {
@@ -224,11 +225,12 @@ namespace Ryujinx.Tests.Cpu
                 0x1E621820u, // FDIV  D0, D1, D2
                 0x1E620820u, // FMUL  D0, D1, D2
                 0x5E62DC20u, // FMULX D0, D1, D2
+                0x1E628820u, // FNMUL D0, D1, D2
                 0x1E623820u  // FSUB  D0, D1, D2
             };
         }
 
-        private static uint[] _F_Add_Div_Mul_Mulx_Sub_P_V_2S_4S_()
+        private static uint[] _F_Abd_Add_Div_Mul_Mulx_Sub_P_V_2S_4S_()
         {
             return new uint[]
             {
@@ -242,7 +244,7 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Add_Div_Mul_Mulx_Sub_P_V_2D_()
+        private static uint[] _F_Abd_Add_Div_Mul_Mulx_Sub_P_V_2D_()
         {
             return new uint[]
             {
@@ -314,21 +316,25 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _F_Madd_Msub_S_S_()
+        private static uint[] _F_Madd_Msub_Nmadd_Nmsub_S_S_()
         {
             return new uint[]
             {
-                0x1F020C20u, // FMADD S0, S1, S2, S3
-                0x1F028C20u  // FMSUB S0, S1, S2, S3
+                0x1F020C20u, // FMADD  S0, S1, S2, S3
+                0x1F028C20u, // FMSUB  S0, S1, S2, S3
+                0x1F220C20u, // FNMADD S0, S1, S2, S3
+                0x1F228C20u  // FNMSUB S0, S1, S2, S3
             };
         }
 
-        private static uint[] _F_Madd_Msub_S_D_()
+        private static uint[] _F_Madd_Msub_Nmadd_Nmsub_S_D_()
         {
             return new uint[]
             {
-                0x1F420C20u, // FMADD D0, D1, D2, D3
-                0x1F428C20u  // FMSUB D0, D1, D2, D3
+                0x1F420C20u, // FMADD  D0, D1, D2, D3
+                0x1F428C20u, // FMSUB  D0, D1, D2, D3
+                0x1F620C20u, // FNMADD D0, D1, D2, D3
+                0x1F628C20u  // FNMSUB D0, D1, D2, D3
             };
         }
 
@@ -475,14 +481,44 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
-        private static uint[] _S_Max_Min_P_V_()
+        private static uint[] _SU_Max_Min_P_V_()
         {
             return new uint[]
             {
                 0x0E206400u, // SMAX  V0.8B, V0.8B, V0.8B
                 0x0E20A400u, // SMAXP V0.8B, V0.8B, V0.8B
                 0x0E206C00u, // SMIN  V0.8B, V0.8B, V0.8B
-                0x0E20AC00u  // SMINP V0.8B, V0.8B, V0.8B
+                0x0E20AC00u, // SMINP V0.8B, V0.8B, V0.8B
+                0x2E206400u, // UMAX  V0.8B, V0.8B, V0.8B
+                0x2E20A400u, // UMAXP V0.8B, V0.8B, V0.8B
+                0x2E206C00u, // UMIN  V0.8B, V0.8B, V0.8B
+                0x2E20AC00u  // UMINP V0.8B, V0.8B, V0.8B
+            };
+        }
+
+        private static uint[] _SU_Mlal_Mlsl_Mull_V_8B8H_4H4S_2S2D_()
+        {
+            return new uint[]
+            {
+                0x0E208000u, // SMLAL V0.8H, V0.8B, V0.8B
+                0x0E20A000u, // SMLSL V0.8H, V0.8B, V0.8B
+                0x0E20C000u, // SMULL V0.8H, V0.8B, V0.8B
+                0x2E208000u, // UMLAL V0.8H, V0.8B, V0.8B
+                0x2E20A000u, // UMLSL V0.8H, V0.8B, V0.8B
+                0x2E20C000u  // UMULL V0.8H, V0.8B, V0.8B
+            };
+        }
+
+        private static uint[] _SU_Mlal_Mlsl_Mull_V_16B8H_8H4S_4S2D_()
+        {
+            return new uint[]
+            {
+                0x4E208000u, // SMLAL2 V0.8H, V0.16B, V0.16B
+                0x4E20A000u, // SMLSL2 V0.8H, V0.16B, V0.16B
+                0x4E20C000u, // SMULL2 V0.8H, V0.16B, V0.16B
+                0x6E208000u, // UMLAL2 V0.8H, V0.16B, V0.16B
+                0x6E20A000u, // UMLSL2 V0.8H, V0.16B, V0.16B
+                0x6E20C000u  // UMULL2 V0.8H, V0.16B, V0.16B
             };
         }
 
@@ -513,17 +549,6 @@ namespace Ryujinx.Tests.Cpu
                 0x6E204C00u, // UQSHL  V0.16B, V0.16B, V0.16B
                 0x6E205400u, // URSHL  V0.16B, V0.16B, V0.16B
                 0x6E204400u  // USHL   V0.16B, V0.16B, V0.16B
-            };
-        }
-
-        private static uint[] _U_Max_Min_P_V_()
-        {
-            return new uint[]
-            {
-                0x2E206400u, // UMAX  V0.8B, V0.8B, V0.8B
-                0x2E20A400u, // UMAXP V0.8B, V0.8B, V0.8B
-                0x2E206C00u, // UMIN  V0.8B, V0.8B, V0.8B
-                0x2E20AC00u  // UMINP V0.8B, V0.8B, V0.8B
             };
         }
 #endregion
@@ -1311,9 +1336,9 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Add_Div_Mul_Mulx_Sub_S_S([ValueSource("_F_Add_Div_Mul_Mulx_Sub_S_S_")] uint opcodes,
-                                               [ValueSource("_1S_F_")] ulong a,
-                                               [ValueSource("_1S_F_")] ulong b)
+        public void F_Abd_Add_Div_Mul_Mulx_Nmul_Sub_S_S([ValueSource("_F_Abd_Add_Div_Mul_Mulx_Nmul_Sub_S_S_")] uint opcodes,
+                                                        [ValueSource("_1S_F_")] ulong a,
+                                                        [ValueSource("_1S_F_")] ulong b)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> v0 = MakeVectorE0E1(z, z);
@@ -1331,9 +1356,9 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Add_Div_Mul_Mulx_Sub_S_D([ValueSource("_F_Add_Div_Mul_Mulx_Sub_S_D_")] uint opcodes,
-                                               [ValueSource("_1D_F_")] ulong a,
-                                               [ValueSource("_1D_F_")] ulong b)
+        public void F_Abd_Add_Div_Mul_Mulx_Nmul_Sub_S_D([ValueSource("_F_Abd_Add_Div_Mul_Mulx_Nmul_Sub_S_D_")] uint opcodes,
+                                                        [ValueSource("_1D_F_")] ulong a,
+                                                        [ValueSource("_1D_F_")] ulong b)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> v0 = MakeVectorE1(z);
@@ -1351,14 +1376,14 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Add_Div_Mul_Mulx_Sub_P_V_2S_4S([ValueSource("_F_Add_Div_Mul_Mulx_Sub_P_V_2S_4S_")] uint opcodes,
-                                                     [Values(0u)]     uint rd,
-                                                     [Values(1u, 0u)] uint rn,
-                                                     [Values(2u, 0u)] uint rm,
-                                                     [ValueSource("_2S_F_")] ulong z,
-                                                     [ValueSource("_2S_F_")] ulong a,
-                                                     [ValueSource("_2S_F_")] ulong b,
-                                                     [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
+        public void F_Abd_Add_Div_Mul_Mulx_Sub_P_V_2S_4S([ValueSource("_F_Abd_Add_Div_Mul_Mulx_Sub_P_V_2S_4S_")] uint opcodes,
+                                                         [Values(0u)]     uint rd,
+                                                         [Values(1u, 0u)] uint rn,
+                                                         [Values(2u, 0u)] uint rm,
+                                                         [ValueSource("_2S_F_")] ulong z,
+                                                         [ValueSource("_2S_F_")] ulong a,
+                                                         [ValueSource("_2S_F_")] ulong b,
+                                                         [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
@@ -1378,13 +1403,13 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
-        public void F_Add_Div_Mul_Mulx_Sub_P_V_2D([ValueSource("_F_Add_Div_Mul_Mulx_Sub_P_V_2D_")] uint opcodes,
-                                                  [Values(0u)]     uint rd,
-                                                  [Values(1u, 0u)] uint rn,
-                                                  [Values(2u, 0u)] uint rm,
-                                                  [ValueSource("_1D_F_")] ulong z,
-                                                  [ValueSource("_1D_F_")] ulong a,
-                                                  [ValueSource("_1D_F_")] ulong b)
+        public void F_Abd_Add_Div_Mul_Mulx_Sub_P_V_2D([ValueSource("_F_Abd_Add_Div_Mul_Mulx_Sub_P_V_2D_")] uint opcodes,
+                                                      [Values(0u)]     uint rd,
+                                                      [Values(1u, 0u)] uint rn,
+                                                      [Values(2u, 0u)] uint rm,
+                                                      [ValueSource("_1D_F_")] ulong z,
+                                                      [ValueSource("_1D_F_")] ulong a,
+                                                      [ValueSource("_1D_F_")] ulong b)
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
 
@@ -1527,10 +1552,10 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit] // Fused.
-        public void F_Madd_Msub_S_S([ValueSource("_F_Madd_Msub_S_S_")] uint opcodes,
-                                    [ValueSource("_1S_F_")] ulong a,
-                                    [ValueSource("_1S_F_")] ulong b,
-                                    [ValueSource("_1S_F_")] ulong c)
+        public void F_Madd_Msub_Nmadd_Nmsub_S_S([ValueSource("_F_Madd_Msub_Nmadd_Nmsub_S_S_")] uint opcodes,
+                                                [ValueSource("_1S_F_")] ulong a,
+                                                [ValueSource("_1S_F_")] ulong b,
+                                                [ValueSource("_1S_F_")] ulong c)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> v0 = MakeVectorE0E1(z, z);
@@ -1549,10 +1574,10 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit] // Fused.
-        public void F_Madd_Msub_S_D([ValueSource("_F_Madd_Msub_S_D_")] uint opcodes,
-                                    [ValueSource("_1D_F_")] ulong a,
-                                    [ValueSource("_1D_F_")] ulong b,
-                                    [ValueSource("_1D_F_")] ulong c)
+        public void F_Madd_Msub_Nmadd_Nmsub_S_D([ValueSource("_F_Madd_Msub_Nmadd_Nmsub_S_D_")] uint opcodes,
+                                                [ValueSource("_1D_F_")] ulong a,
+                                                [ValueSource("_1D_F_")] ulong b,
+                                                [ValueSource("_1D_F_")] ulong c)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
             Vector128<float> v0 = MakeVectorE1(z);
@@ -2411,15 +2436,15 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise]
-        public void S_Max_Min_P_V([ValueSource("_S_Max_Min_P_V_")] uint opcodes,
-                                  [Values(0u)]     uint rd,
-                                  [Values(1u, 0u)] uint rn,
-                                  [Values(2u, 0u)] uint rm,
-                                  [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                  [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                  [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
-                                  [Values(0b00u, 0b01u, 0b10u)] uint size, // Q0: <8B,  4H, 2S>
-                                  [Values(0b0u, 0b1u)] uint q)             // Q1: <16B, 8H, 4S>
+        public void SU_Max_Min_P_V([ValueSource("_SU_Max_Min_P_V_")] uint opcodes,
+                                   [Values(0u)]     uint rd,
+                                   [Values(1u, 0u)] uint rn,
+                                   [Values(2u, 0u)] uint rm,
+                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                                   [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
+                                   [Values(0b00u, 0b01u, 0b10u)] uint size, // Q0: <8B,  4H, 2S>
+                                   [Values(0b0u, 0b1u)] uint q)             // Q1: <16B, 8H, 4S>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((size & 3) << 22);
@@ -2434,90 +2459,46 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("SMLAL{2} <Vd>.<Ta>, <Vn>.<Tb>, <Vm>.<Tb>")]
-        public void Smlal_V_8B8H_4H4S_2S2D([Values(0u)]     uint rd,
-                                           [Values(1u, 0u)] uint rn,
-                                           [Values(2u, 0u)] uint rm,
-                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
-                                           [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B8H, 4H4S, 2S2D>
+        [Test, Pairwise]
+        public void SU_Mlal_Mlsl_Mull_V_8B8H_4H4S_2S2D([ValueSource("_SU_Mlal_Mlsl_Mull_V_8B8H_4H4S_2S2D_")] uint opcodes,
+                                                       [Values(0u)]     uint rd,
+                                                       [Values(1u, 0u)] uint rn,
+                                                       [Values(2u, 0u)] uint rm,
+                                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                                                       [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
+                                                       [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B8H, 4H4S, 2S2D>
         {
-            uint opcode = 0x0E208000; // SMLAL V0.8H, V0.8B, V0.8B
-            opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
+            opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((size & 3) << 22);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
             Vector128<float> v1 = MakeVectorE0(a);
             Vector128<float> v2 = MakeVectorE0(b);
 
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
 
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("SMLAL{2} <Vd>.<Ta>, <Vn>.<Tb>, <Vm>.<Tb>")]
-        public void Smlal_V_16B8H_8H4S_4S2D([Values(0u)]     uint rd,
-                                            [Values(1u, 0u)] uint rn,
-                                            [Values(2u, 0u)] uint rm,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
-                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
+        [Test, Pairwise]
+        public void SU_Mlal_Mlsl_Mull_V_16B8H_8H4S_4S2D([ValueSource("_SU_Mlal_Mlsl_Mull_V_16B8H_8H4S_4S2D_")] uint opcodes,
+                                                        [Values(0u)]     uint rd,
+                                                        [Values(1u, 0u)] uint rn,
+                                                        [Values(2u, 0u)] uint rm,
+                                                        [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                                        [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                                                        [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
+                                                        [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
         {
-            uint opcode = 0x4E208000; // SMLAL2 V0.8H, V0.16B, V0.16B
-            opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
+            opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((size & 3) << 22);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
             Vector128<float> v1 = MakeVectorE1(a);
             Vector128<float> v2 = MakeVectorE1(b);
 
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("SMLSL{2} <Vd>.<Ta>, <Vn>.<Tb>, <Vm>.<Tb>")]
-        public void Smlsl_V_8B8H_4H4S_2S2D([Values(0u)]     uint rd,
-                                           [Values(1u, 0u)] uint rn,
-                                           [Values(2u, 0u)] uint rm,
-                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
-                                           [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B8H, 4H4S, 2S2D>
-        {
-            uint opcode = 0x0E20A000; // SMLSL V0.8H, V0.8B, V0.8B
-            opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
-
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
-            Vector128<float> v2 = MakeVectorE0(b);
-
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("SMLSL{2} <Vd>.<Ta>, <Vn>.<Tb>, <Vm>.<Tb>")]
-        public void Smlsl_V_16B8H_8H4S_4S2D([Values(0u)]     uint rd,
-                                            [Values(1u, 0u)] uint rn,
-                                            [Values(2u, 0u)] uint rm,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
-                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
-        {
-            uint opcode = 0x4E20A000; // SMLSL2 V0.8H, V0.16B, V0.16B
-            opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
-
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE1(a);
-            Vector128<float> v2 = MakeVectorE1(b);
-
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
 
             CompareAgainstUnicorn();
         }
@@ -3105,9 +3086,9 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b);
+            Vector128<float> v0 = MakeVectorE0E1(z, ~z);
+            Vector128<float> v1 = MakeVectorE0E1(a, ~a);
+            Vector128<float> v2 = MakeVectorE0E1(b, ~b);
 
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 
@@ -3149,9 +3130,9 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b);
+            Vector128<float> v0 = MakeVectorE0E1(z, ~z);
+            Vector128<float> v1 = MakeVectorE0E1(a, ~a);
+            Vector128<float> v2 = MakeVectorE0E1(b, ~b);
 
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 
@@ -3510,118 +3491,6 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise]
-        public void U_Max_Min_P_V([ValueSource("_U_Max_Min_P_V_")] uint opcodes,
-                                  [Values(0u)]     uint rd,
-                                  [Values(1u, 0u)] uint rn,
-                                  [Values(2u, 0u)] uint rm,
-                                  [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                  [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                  [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
-                                  [Values(0b00u, 0b01u, 0b10u)] uint size, // Q0: <8B,  4H, 2S>
-                                  [Values(0b0u, 0b1u)] uint q)             // Q1: <16B, 8H, 4S>
-        {
-            opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcodes |= ((size & 3) << 22);
-            opcodes |= ((q & 1) << 30);
-
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * q);
-
-            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("UMLAL{2} <Vd>.<Ta>, <Vn>.<Tb>, <Vm>.<Tb>")]
-        public void Umlal_V_8B8H_4H4S_2S2D([Values(0u)]     uint rd,
-                                           [Values(1u, 0u)] uint rn,
-                                           [Values(2u, 0u)] uint rm,
-                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
-                                           [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B8H, 4H4S, 2S2D>
-        {
-            uint opcode = 0x2E208000; // UMLAL V0.8H, V0.8B, V0.8B
-            opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
-
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
-            Vector128<float> v2 = MakeVectorE0(b);
-
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("UMLAL{2} <Vd>.<Ta>, <Vn>.<Tb>, <Vm>.<Tb>")]
-        public void Umlal_V_16B8H_8H4S_4S2D([Values(0u)]     uint rd,
-                                            [Values(1u, 0u)] uint rn,
-                                            [Values(2u, 0u)] uint rm,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
-                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
-        {
-            uint opcode = 0x6E208000; // UMLAL2 V0.8H, V0.16B, V0.16B
-            opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
-
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE1(a);
-            Vector128<float> v2 = MakeVectorE1(b);
-
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("UMLSL{2} <Vd>.<Ta>, <Vn>.<Tb>, <Vm>.<Tb>")]
-        public void Umlsl_V_8B8H_4H4S_2S2D([Values(0u)]     uint rd,
-                                           [Values(1u, 0u)] uint rn,
-                                           [Values(2u, 0u)] uint rm,
-                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                           [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
-                                           [Values(0b00u, 0b01u, 0b10u)] uint size) // <8B8H, 4H4S, 2S2D>
-        {
-            uint opcode = 0x2E20A000; // UMLSL V0.8H, V0.8B, V0.8B
-            opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
-
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
-            Vector128<float> v2 = MakeVectorE0(b);
-
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
-
-            CompareAgainstUnicorn();
-        }
-
-        [Test, Pairwise, Description("UMLSL{2} <Vd>.<Ta>, <Vn>.<Tb>, <Vm>.<Tb>")]
-        public void Umlsl_V_16B8H_8H4S_4S2D([Values(0u)]     uint rd,
-                                            [Values(1u, 0u)] uint rn,
-                                            [Values(2u, 0u)] uint rm,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                                            [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong b,
-                                            [Values(0b00u, 0b01u, 0b10u)] uint size) // <16B8H, 8H4S, 4S2D>
-        {
-            uint opcode = 0x6E20A000; // UMLSL2 V0.8H, V0.16B, V0.16B
-            opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= ((size & 3) << 22);
-
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE1(a);
-            Vector128<float> v2 = MakeVectorE1(b);
-
-            SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
-
-            CompareAgainstUnicorn();
-        }
-
         [Test, Pairwise, Description("UQADD <V><d>, <V><n>, <V><m>")]
         public void Uqadd_S_B_H_S_D([Values(0u)]     uint rd,
                                     [Values(1u, 0u)] uint rn,
@@ -3921,9 +3790,9 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b);
+            Vector128<float> v0 = MakeVectorE0E1(z, ~z);
+            Vector128<float> v1 = MakeVectorE0E1(a, ~a);
+            Vector128<float> v2 = MakeVectorE0E1(b, ~b);
 
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 
@@ -3965,9 +3834,9 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b);
+            Vector128<float> v0 = MakeVectorE0E1(z, ~z);
+            Vector128<float> v1 = MakeVectorE0E1(a, ~a);
+            Vector128<float> v2 = MakeVectorE0E1(b, ~b);
 
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 
@@ -4009,9 +3878,9 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b);
+            Vector128<float> v0 = MakeVectorE0E1(z, ~z);
+            Vector128<float> v1 = MakeVectorE0E1(a, ~a);
+            Vector128<float> v2 = MakeVectorE0E1(b, ~b);
 
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 
@@ -4053,9 +3922,9 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b);
+            Vector128<float> v0 = MakeVectorE0E1(z, ~z);
+            Vector128<float> v1 = MakeVectorE0E1(a, ~a);
+            Vector128<float> v2 = MakeVectorE0E1(b, ~b);
 
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 

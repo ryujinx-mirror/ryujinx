@@ -73,7 +73,8 @@ namespace Ryujinx.Tests.Cpu
         }
 #endregion
 
-        private const int RndCnt = 2;
+        private const int RndCnt      = 2;
+        private const int RndCntIndex = 2;
 
         [Test, Pairwise]
         public void Mla_Mls_Mul_Ve_4H_8H([ValueSource("_Mla_Mls_Mul_Ve_4H_8H_")] uint opcodes,
@@ -83,7 +84,7 @@ namespace Ryujinx.Tests.Cpu
                                          [ValueSource("_4H_")] [Random(RndCnt)] ulong z,
                                          [ValueSource("_4H_")] [Random(RndCnt)] ulong a,
                                          [ValueSource("_4H_")] [Random(RndCnt)] ulong b,
-                                         [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint index,
+                                         [Values(0u, 7u)] [Random(1u, 6u, RndCntIndex)] uint index,
                                          [Values(0b0u, 0b1u)] uint q) // <4H, 8H>
         {
             uint h = (index >> 2) & 1;
@@ -138,7 +139,7 @@ namespace Ryujinx.Tests.Cpu
                                                    [ValueSource("_4H_")] [Random(RndCnt)] ulong z,
                                                    [ValueSource("_4H_")] [Random(RndCnt)] ulong a,
                                                    [ValueSource("_4H_")] [Random(RndCnt)] ulong b,
-                                                   [Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u)] uint index,
+                                                   [Values(0u, 7u)] [Random(1u, 6u, RndCntIndex)] uint index,
                                                    [Values(0b0u, 0b1u)] uint q) // <4H4S, 8H4S>
         {
             uint h = (index >> 2) & 1;

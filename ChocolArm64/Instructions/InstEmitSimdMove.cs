@@ -220,44 +220,36 @@ namespace ChocolArm64.Instructions
 
         public static void Fmov_Ftoi(ILEmitterCtx context)
         {
-            OpCodeSimdCvt64 op = (OpCodeSimdCvt64)context.CurrOp;
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
-            EmitVectorExtractZx(context, op.Rn, 0, 3);
-
-            EmitIntZeroUpperIfNeeded(context);
+            EmitVectorExtractZx(context, op.Rn, 0, op.Size + 2);
 
             context.EmitStintzr(op.Rd);
         }
 
         public static void Fmov_Ftoi1(ILEmitterCtx context)
         {
-            OpCodeSimdCvt64 op = (OpCodeSimdCvt64)context.CurrOp;
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
             EmitVectorExtractZx(context, op.Rn, 1, 3);
-
-            EmitIntZeroUpperIfNeeded(context);
 
             context.EmitStintzr(op.Rd);
         }
 
         public static void Fmov_Itof(ILEmitterCtx context)
         {
-            OpCodeSimdCvt64 op = (OpCodeSimdCvt64)context.CurrOp;
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
             context.EmitLdintzr(op.Rn);
 
-            EmitIntZeroUpperIfNeeded(context);
-
-            EmitScalarSet(context, op.Rd, 3);
+            EmitScalarSet(context, op.Rd, op.Size + 2);
         }
 
         public static void Fmov_Itof1(ILEmitterCtx context)
         {
-            OpCodeSimdCvt64 op = (OpCodeSimdCvt64)context.CurrOp;
+            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
             context.EmitLdintzr(op.Rn);
-
-            EmitIntZeroUpperIfNeeded(context);
 
             EmitVectorInsert(context, op.Rd, 1, 3);
         }
@@ -280,7 +272,7 @@ namespace ChocolArm64.Instructions
             EmitScalarSet(context, op.Rd, op.Size + 2);
         }
 
-        public static void Fmov_V(ILEmitterCtx context)
+        public static void Fmov_Vi(ILEmitterCtx context)
         {
             OpCodeSimdImm64 op = (OpCodeSimdImm64)context.CurrOp;
 
@@ -347,7 +339,11 @@ namespace ChocolArm64.Instructions
 
             EmitVectorExtractSx(context, op.Rn, op.DstIndex, op.Size);
 
-            EmitIntZeroUpperIfNeeded(context);
+            if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                context.Emit(OpCodes.Conv_U4);
+                context.Emit(OpCodes.Conv_U8);
+            }
 
             context.EmitStintzr(op.Rd);
         }
@@ -542,16 +538,6 @@ namespace ChocolArm64.Instructions
         public static void Zip2_V(ILEmitterCtx context)
         {
             EmitVectorZip(context, part: 1);
-        }
-
-        private static void EmitIntZeroUpperIfNeeded(ILEmitterCtx context)
-        {
-            if (context.CurrOp.RegisterSize == RegisterSize.Int32 ||
-                context.CurrOp.RegisterSize == RegisterSize.Simd64)
-            {
-                context.Emit(OpCodes.Conv_U4);
-                context.Emit(OpCodes.Conv_U8);
-            }
         }
 
         private static void EmitMoviMvni(ILEmitterCtx context, bool not)

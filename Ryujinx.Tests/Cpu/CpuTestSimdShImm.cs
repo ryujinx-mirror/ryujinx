@@ -212,6 +212,51 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
+        private static uint[] _Shl_Sli_S_D_()
+        {
+            return new uint[]
+            {
+                0x5F405400u, // SHL D0, D0, #0
+                //0x7F405400u  // SLI D0, D0, #0
+            };
+        }
+
+        private static uint[] _Shl_Sli_V_8B_16B_()
+        {
+            return new uint[]
+            {
+                0x0F085400u, // SHL V0.8B, V0.8B, #0
+                0x2F085400u  // SLI V0.8B, V0.8B, #0
+            };
+        }
+
+        private static uint[] _Shl_Sli_V_4H_8H_()
+        {
+            return new uint[]
+            {
+                0x0F105400u, // SHL V0.4H, V0.4H, #0
+                0x2F105400u  // SLI V0.4H, V0.4H, #0
+            };
+        }
+
+        private static uint[] _Shl_Sli_V_2S_4S_()
+        {
+            return new uint[]
+            {
+                0x0F205400u, // SHL V0.2S, V0.2S, #0
+                0x2F205400u  // SLI V0.2S, V0.2S, #0
+            };
+        }
+
+        private static uint[] _Shl_Sli_V_2D_()
+        {
+            return new uint[]
+            {
+                0x4F405400u, // SHL V0.2D, V0.2D, #0
+                0x6F405400u  // SLI V0.2D, V0.2D, #0
+            };
+        }
+
         private static uint[] _SU_Shll_V_8B8H_16B8H_()
         {
             return new uint[]
@@ -516,113 +561,113 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn(fpTolerances: FpTolerances.UpToOneUlpsD); // unsigned
         }
 
-        [Test, Pairwise, Description("SHL <V><d>, <V><n>, #<shift>")]
-        public void Shl_S_D([Values(0u)]     uint rd,
-                            [Values(1u, 0u)] uint rn,
-                            [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
-                            [ValueSource("_1D_")] [Random(RndCnt)] ulong a,
-                            [Values(0u, 63u)] [Random(1u, 62u, RndCntShift)] uint shift)
+        [Test, Pairwise]
+        public void Shl_Sli_S_D([ValueSource("_Shl_Sli_S_D_")] uint opcodes,
+                                [Values(0u)]     uint rd,
+                                [Values(1u, 0u)] uint rn,
+                                [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                                [ValueSource("_1D_")] [Random(RndCnt)] ulong a,
+                                [Values(0u, 63u)] [Random(1u, 62u, RndCntShift)] uint shift)
         {
             uint immHb = (64 + shift) & 0x7F;
 
-            uint opcode = 0x5F405400; // SHL D0, D0, #0
-            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= (immHb << 16);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (immHb << 16);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
             Vector128<float> v1 = MakeVectorE0(a);
 
-            SingleOpcode(opcode, v0: v0, v1: v1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("SHL <Vd>.<T>, <Vn>.<T>, #<shift>")]
-        public void Shl_V_8B_16B([Values(0u)]     uint rd,
-                                 [Values(1u, 0u)] uint rn,
-                                 [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
-                                 [ValueSource("_8B_")] [Random(RndCnt)] ulong a,
-                                 [Values(0u, 7u)] [Random(1u, 6u, RndCntShift)] uint shift,
-                                 [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
+        [Test, Pairwise]
+        public void Shl_Sli_V_8B_16B([ValueSource("_Shl_Sli_V_8B_16B_")] uint opcodes,
+                                     [Values(0u)]     uint rd,
+                                     [Values(1u, 0u)] uint rn,
+                                     [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
+                                     [ValueSource("_8B_")] [Random(RndCnt)] ulong a,
+                                     [Values(0u, 7u)] [Random(1u, 6u, RndCntShift)] uint shift,
+                                     [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             uint immHb = (8 + shift) & 0x7F;
 
-            uint opcode = 0x0F085400; // SHL V0.8B, V0.8B, #0
-            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= (immHb << 16);
-            opcode |= ((q & 1) << 30);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (immHb << 16);
+            opcodes |= ((q & 1) << 30);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
             Vector128<float> v1 = MakeVectorE0E1(a, a * q);
 
-            SingleOpcode(opcode, v0: v0, v1: v1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("SHL <Vd>.<T>, <Vn>.<T>, #<shift>")]
-        public void Shl_V_4H_8H([Values(0u)]     uint rd,
-                                [Values(1u, 0u)] uint rn,
-                                [ValueSource("_4H_")] [Random(RndCnt)] ulong z,
-                                [ValueSource("_4H_")] [Random(RndCnt)] ulong a,
-                                [Values(0u, 15u)] [Random(1u, 14u, RndCntShift)] uint shift,
-                                [Values(0b0u, 0b1u)] uint q) // <4H, 8H>
+        [Test, Pairwise]
+        public void Shl_Sli_V_4H_8H([ValueSource("_Shl_Sli_V_4H_8H_")] uint opcodes,
+                                    [Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [ValueSource("_4H_")] [Random(RndCnt)] ulong z,
+                                    [ValueSource("_4H_")] [Random(RndCnt)] ulong a,
+                                    [Values(0u, 15u)] [Random(1u, 14u, RndCntShift)] uint shift,
+                                    [Values(0b0u, 0b1u)] uint q) // <4H, 8H>
         {
             uint immHb = (16 + shift) & 0x7F;
 
-            uint opcode = 0x0F105400; // SHL V0.4H, V0.4H, #0
-            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= (immHb << 16);
-            opcode |= ((q & 1) << 30);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (immHb << 16);
+            opcodes |= ((q & 1) << 30);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
             Vector128<float> v1 = MakeVectorE0E1(a, a * q);
 
-            SingleOpcode(opcode, v0: v0, v1: v1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("SHL <Vd>.<T>, <Vn>.<T>, #<shift>")]
-        public void Shl_V_2S_4S([Values(0u)]     uint rd,
-                                [Values(1u, 0u)] uint rn,
-                                [ValueSource("_2S_")] [Random(RndCnt)] ulong z,
-                                [ValueSource("_2S_")] [Random(RndCnt)] ulong a,
-                                [Values(0u, 31u)] [Random(1u, 30u, RndCntShift)] uint shift,
-                                [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
+        [Test, Pairwise]
+        public void Shl_Sli_V_2S_4S([ValueSource("_Shl_Sli_V_2S_4S_")] uint opcodes,
+                                    [Values(0u)]     uint rd,
+                                    [Values(1u, 0u)] uint rn,
+                                    [ValueSource("_2S_")] [Random(RndCnt)] ulong z,
+                                    [ValueSource("_2S_")] [Random(RndCnt)] ulong a,
+                                    [Values(0u, 31u)] [Random(1u, 30u, RndCntShift)] uint shift,
+                                    [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
             uint immHb = (32 + shift) & 0x7F;
 
-            uint opcode = 0x0F205400; // SHL V0.2S, V0.2S, #0
-            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= (immHb << 16);
-            opcode |= ((q & 1) << 30);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (immHb << 16);
+            opcodes |= ((q & 1) << 30);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
             Vector128<float> v1 = MakeVectorE0E1(a, a * q);
 
-            SingleOpcode(opcode, v0: v0, v1: v1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("SHL <Vd>.<T>, <Vn>.<T>, #<shift>")]
-        public void Shl_V_2D([Values(0u)]     uint rd,
-                             [Values(1u, 0u)] uint rn,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong a,
-                             [Values(0u, 63u)] [Random(1u, 62u, RndCntShift)] uint shift)
+        [Test, Pairwise]
+        public void Shl_Sli_V_2D([ValueSource("_Shl_Sli_V_2D_")] uint opcodes,
+                                 [Values(0u)]     uint rd,
+                                 [Values(1u, 0u)] uint rn,
+                                 [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                                 [ValueSource("_1D_")] [Random(RndCnt)] ulong a,
+                                 [Values(0u, 63u)] [Random(1u, 62u, RndCntShift)] uint shift)
         {
             uint immHb = (64 + shift) & 0x7F;
 
-            uint opcode = 0x4F405400; // SHL V0.2D, V0.2D, #0
-            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
-            opcode |= (immHb << 16);
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= (immHb << 16);
 
             Vector128<float> v0 = MakeVectorE0E1(z, z);
             Vector128<float> v1 = MakeVectorE0E1(a, a);
 
-            SingleOpcode(opcode, v0: v0, v1: v1);
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }

@@ -618,6 +618,18 @@ namespace Ryujinx.Tests.Cpu
                 yield return rnd4;
             }
         }
+
+        private static uint[] _W_()
+        {
+            return new uint[] { 0x00000000u, 0x7FFFFFFFu,
+                                0x80000000u, 0xFFFFFFFFu };
+        }
+
+        private static ulong[] _X_()
+        {
+            return new ulong[] { 0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
+                                 0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul };
+        }
 #endregion
 
 #region "ValueSource (Opcodes)"
@@ -877,6 +889,70 @@ namespace Ryujinx.Tests.Cpu
             };
         }
 
+        private static uint[] _F_Mov_Ftoi_SW_()
+        {
+            return new uint[]
+            {
+                0x1E260000u // FMOV W0, S0
+            };
+        }
+
+        private static uint[] _F_Mov_Ftoi_DX_()
+        {
+            return new uint[]
+            {
+                0x9E660000u // FMOV X0, D0
+            };
+        }
+
+        private static uint[] _F_Mov_Ftoi1_DX_()
+        {
+            return new uint[]
+            {
+                0x9EAE0000u // FMOV X0, V0.D[1]
+            };
+        }
+
+        private static uint[] _F_Mov_Itof_WS_()
+        {
+            return new uint[]
+            {
+                0x1E270000u // FMOV S0, W0
+            };
+        }
+
+        private static uint[] _F_Mov_Itof_XD_()
+        {
+            return new uint[]
+            {
+                0x9E670000u // FMOV D0, X0
+            };
+        }
+
+        private static uint[] _F_Mov_Itof1_XD_()
+        {
+            return new uint[]
+            {
+                0x9EAF0000u // FMOV V0.D[1], X0
+            };
+        }
+
+        private static uint[] _F_Mov_S_S_()
+        {
+            return new uint[]
+            {
+                0x1E204020u // FMOV S0, S1
+            };
+        }
+
+        private static uint[] _F_Mov_S_D_()
+        {
+            return new uint[]
+            {
+                0x1E604020u // FMOV D0, D1
+            };
+        }
+
         private static uint[] _F_Recpe_Rsqrte_S_S_()
         {
             return new uint[]
@@ -994,6 +1070,24 @@ namespace Ryujinx.Tests.Cpu
             {
                 0x6EE19800u, // FRINTI V0.2D, V0.2D
                 0x6E619800u  // FRINTX V0.2D, V0.2D
+            };
+        }
+
+        private static uint[] _SU_Addl_V_V_8BH_4HS_()
+        {
+            return new uint[]
+            {
+                0x0E303800u, // SADDLV H0, V0.8B
+                0x2E303800u  // UADDLV H0, V0.8B
+            };
+        }
+
+        private static uint[] _SU_Addl_V_V_16BH_8HS_4SD_()
+        {
+            return new uint[]
+            {
+                0x4E303800u, // SADDLV H0, V0.16B
+                0x6E303800u  // UADDLV H0, V0.16B
             };
         }
 
@@ -2025,6 +2119,132 @@ namespace Ryujinx.Tests.Cpu
         }
 
         [Test, Pairwise] [Explicit]
+        public void F_Mov_Ftoi_SW([ValueSource("_F_Mov_Ftoi_SW_")] uint opcodes,
+                                  [Values(0u, 31u)] uint rd,
+                                  [Values(1u)]      uint rn,
+                                  [ValueSource("_1S_F_")] ulong a)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            ulong x0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
+            uint w31 = TestContext.CurrentContext.Random.NextUInt();
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, x0: x0, x31: w31, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Mov_Ftoi_DX([ValueSource("_F_Mov_Ftoi_DX_")] uint opcodes,
+                                  [Values(0u, 31u)] uint rd,
+                                  [Values(1u)]      uint rn,
+                                  [ValueSource("_1D_F_")] ulong a)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            ulong x31 = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, x31: x31, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Mov_Ftoi1_DX([ValueSource("_F_Mov_Ftoi1_DX_")] uint opcodes,
+                                   [Values(0u, 31u)] uint rd,
+                                   [Values(1u)]      uint rn,
+                                   [ValueSource("_1D_F_")] ulong a)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            ulong x31 = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v1 = MakeVectorE1(a);
+
+            SingleOpcode(opcodes, x31: x31, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Mov_Itof_WS([ValueSource("_F_Mov_Itof_WS_")] uint opcodes,
+                                  [Values(0u)]      uint rd,
+                                  [Values(1u, 31u)] uint rn,
+                                  [ValueSource("_W_")] [Random(RndCnt)] uint wn)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            uint  w31 = TestContext.CurrentContext.Random.NextUInt();
+            ulong z   = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+
+            SingleOpcode(opcodes, x1: wn, x31: w31, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Mov_Itof_XD([ValueSource("_F_Mov_Itof_XD_")] uint opcodes,
+                                  [Values(0u)]      uint rd,
+                                  [Values(1u, 31u)] uint rn,
+                                  [ValueSource("_X_")] [Random(RndCnt)] ulong xn)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            ulong x31 = TestContext.CurrentContext.Random.NextULong();
+            ulong z   = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE1(z);
+
+            SingleOpcode(opcodes, x1: xn, x31: x31, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Mov_Itof1_XD([ValueSource("_F_Mov_Itof1_XD_")] uint opcodes,
+                                   [Values(0u)]      uint rd,
+                                   [Values(1u, 31u)] uint rn,
+                                   [ValueSource("_X_")] [Random(RndCnt)] ulong xn)
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+
+            ulong x31 = TestContext.CurrentContext.Random.NextULong();
+            ulong z   = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0(z);
+
+            SingleOpcode(opcodes, x1: xn, x31: x31, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Mov_S_S([ValueSource("_F_Mov_S_S_")] uint opcodes,
+                              [ValueSource("_1S_F_")] ulong a)
+        {
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Mov_S_D([ValueSource("_F_Mov_S_D_")] uint opcodes,
+                              [ValueSource("_1D_F_")] ulong a)
+        {
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE1(z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
         public void F_Recpe_Rsqrte_S_S([ValueSource("_F_Recpe_Rsqrte_S_S_")] uint opcodes,
                                        [ValueSource("_1S_F_")] ulong a,
                                        [Values(RMode.Rn)] RMode rMode)
@@ -2555,6 +2775,44 @@ namespace Ryujinx.Tests.Cpu
             Vector128<float> v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void SU_Addl_V_V_8BH_4HS([ValueSource("_SU_Addl_V_V_8BH_4HS_")] uint opcodes,
+                                        [Values(0u)]     uint rd,
+                                        [Values(1u, 0u)] uint rn,
+                                        [ValueSource("_8B4H_")] [Random(RndCnt)] ulong z,
+                                        [ValueSource("_8B4H_")] [Random(RndCnt)] ulong a,
+                                        [Values(0b00u, 0b01u)] uint size) // <8BH, 4HS>
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((size & 3) << 22);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise]
+        public void SU_Addl_V_V_16BH_8HS_4SD([ValueSource("_SU_Addl_V_V_16BH_8HS_4SD_")] uint opcodes,
+                                             [Values(0u)]     uint rd,
+                                             [Values(1u, 0u)] uint rn,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong z,
+                                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
+                                             [Values(0b00u, 0b01u, 0b10u)] uint size) // <16BH, 8HS, 4SD>
+        {
+            opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcodes |= ((size & 3) << 22);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1);
 
             CompareAgainstUnicorn();
         }

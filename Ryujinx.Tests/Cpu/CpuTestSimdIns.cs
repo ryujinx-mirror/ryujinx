@@ -70,7 +70,7 @@ namespace Ryujinx.Tests.Cpu
         private const int RndCnt      = 2;
         private const int RndCntIndex = 2;
 
-        [Test, Pairwise, Description("DUP <Vd>.<T>, <R><n>")]
+        [Test, Pairwise, Description("DUP <Vd>.<T>, W<n>")]
         public void Dup_Gp_W([Values(0u)]      uint rd,
                              [Values(1u, 31u)] uint rn,
                              [ValueSource("_W_")] [Random(RndCnt)] uint wn,
@@ -92,7 +92,7 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("DUP <Vd>.<T>, <R><n>")]
+        [Test, Pairwise, Description("DUP <Vd>.<T>, X<n>")]
         public void Dup_Gp_X([Values(0u)]      uint rd,
                              [Values(1u, 31u)] uint rn,
                              [ValueSource("_X_")] [Random(RndCnt)] ulong xn)
@@ -150,7 +150,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Test, Pairwise, Description("DUP S0, V1.S[<index>]")]
         public void Dup_S_S([ValueSource("_2S_")] [Random(RndCnt)] ulong a,
-                            [Range(0u, 3u)] uint index)
+                            [Values(0u, 1u, 2u, 3u)] uint index)
         {
             const int size = 2;
 
@@ -170,7 +170,7 @@ namespace Ryujinx.Tests.Cpu
 
         [Test, Pairwise, Description("DUP D0, V1.D[<index>]")]
         public void Dup_S_D([ValueSource("_1D_")] [Random(RndCnt)] ulong a,
-                            [Range(0u, 1u)] uint index)
+                            [Values(0u, 1u)] uint index)
         {
             const int size = 3;
 
@@ -243,7 +243,7 @@ namespace Ryujinx.Tests.Cpu
                                 [Values(1u, 0u)] uint rn,
                                 [ValueSource("_2S_")] [Random(RndCnt)] ulong z,
                                 [ValueSource("_2S_")] [Random(RndCnt)] ulong a,
-                                [Range(0u, 3u)] uint index,
+                                [Values(0u, 1u, 2u, 3u)] uint index,
                                 [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
             const int size = 2;
@@ -268,7 +268,7 @@ namespace Ryujinx.Tests.Cpu
                              [Values(1u, 0u)] uint rn,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
                              [ValueSource("_1D_")] [Random(RndCnt)] ulong a,
-                             [Range(0u, 1u)] uint index,
+                             [Values(0u, 1u)] uint index,
                              [Values(0b1u)] uint q) // <2D>
         {
             const int size = 3;
@@ -288,13 +288,206 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("SMOV <Wd>, <Vn>.<Ts>[<index>]")]
-        public void Smov_S_W([Values(0u, 31u)] uint rd,
-                             [Values(1u)]      uint rn,
-                             [ValueSource("_8B4H_")] [Random(RndCnt)] ulong a,
-                             [Values(0, 1)] int size, // <B, H>
-                             [Values(0u, 1u, 2u, 3u)] uint index)
+        [Test, Pairwise, Description("INS <Vd>.B[<index>], W<n>")]
+        public void Ins_Gp_WB([Values(0u)]      uint rd,
+                              [Values(1u, 31u)] uint rn,
+                              [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
+                              [ValueSource("_W_")] [Random(RndCnt)] uint wn,
+                              [Values(0u, 15u)] [Random(1u, 14u, RndCntIndex)] uint index)
         {
+            const int size = 0;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x4E001C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+
+            SingleOpcode(opcode, x1: wn, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("INS <Vd>.H[<index>], W<n>")]
+        public void Ins_Gp_WH([Values(0u)]      uint rd,
+                              [Values(1u, 31u)] uint rn,
+                              [ValueSource("_4H_")] [Random(RndCnt)] ulong z,
+                              [ValueSource("_W_")] [Random(RndCnt)] uint wn,
+                              [Values(0u, 7u)] [Random(1u, 6u, RndCntIndex)] uint index)
+        {
+            const int size = 1;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x4E001C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+
+            SingleOpcode(opcode, x1: wn, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("INS <Vd>.S[<index>], W<n>")]
+        public void Ins_Gp_WS([Values(0u)]      uint rd,
+                              [Values(1u, 31u)] uint rn,
+                              [ValueSource("_2S_")] [Random(RndCnt)] ulong z,
+                              [ValueSource("_W_")] [Random(RndCnt)] uint wn,
+                              [Values(0u, 1u, 2u, 3u)] uint index)
+        {
+            const int size = 2;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x4E001C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+
+            SingleOpcode(opcode, x1: wn, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("INS <Vd>.D[<index>], X<n>")]
+        public void Ins_Gp_XD([Values(0u)]      uint rd,
+                              [Values(1u, 31u)] uint rn,
+                              [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                              [ValueSource("_X_")] [Random(RndCnt)] ulong xn,
+                              [Values(0u, 1u)] uint index)
+        {
+            const int size = 3;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x4E001C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+
+            SingleOpcode(opcode, x1: xn, v0: v0);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("INS <Vd>.B[<index1>], <Vn>.B[<index2>]")]
+        public void Ins_V_BB([Values(0u)]     uint rd,
+                             [Values(1u, 0u)] uint rn,
+                             [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
+                             [ValueSource("_8B_")] [Random(RndCnt)] ulong a,
+                             [Values(0u, 15u)] [Random(1u, 14u, RndCntIndex)] uint dstIndex,
+                             [Values(0u, 15u)] [Random(1u, 14u, RndCntIndex)] uint srcIndex)
+        {
+            const int size = 0;
+
+            uint imm5 = (dstIndex << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm4 = (srcIndex << size) & 0xFu;
+
+            uint opcode = 0x6E000400; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+            opcode |= (imm4 << 11);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("INS <Vd>.H[<index1>], <Vn>.H[<index2>]")]
+        public void Ins_V_HH([Values(0u)]     uint rd,
+                             [Values(1u, 0u)] uint rn,
+                             [ValueSource("_4H_")] [Random(RndCnt)] ulong z,
+                             [ValueSource("_4H_")] [Random(RndCnt)] ulong a,
+                             [Values(0u, 7u)] [Random(1u, 6u, RndCntIndex)] uint dstIndex,
+                             [Values(0u, 7u)] [Random(1u, 6u, RndCntIndex)] uint srcIndex)
+        {
+            const int size = 1;
+
+            uint imm5 = (dstIndex << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm4 = (srcIndex << size) & 0xFu;
+
+            uint opcode = 0x6E000400; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+            opcode |= (imm4 << 11);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("INS <Vd>.S[<index1>], <Vn>.S[<index2>]")]
+        public void Ins_V_SS([Values(0u)]     uint rd,
+                             [Values(1u, 0u)] uint rn,
+                             [ValueSource("_2S_")] [Random(RndCnt)] ulong z,
+                             [ValueSource("_2S_")] [Random(RndCnt)] ulong a,
+                             [Values(0u, 1u, 2u, 3u)] uint dstIndex,
+                             [Values(0u, 1u, 2u, 3u)] uint srcIndex)
+        {
+            const int size = 2;
+
+            uint imm5 = (dstIndex << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm4 = (srcIndex << size) & 0xFu;
+
+            uint opcode = 0x6E000400; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+            opcode |= (imm4 << 11);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("INS <Vd>.D[<index1>], <Vn>.D[<index2>]")]
+        public void Ins_V_DD([Values(0u)]     uint rd,
+                             [Values(1u, 0u)] uint rn,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong z,
+                             [ValueSource("_1D_")] [Random(RndCnt)] ulong a,
+                             [Values(0u, 1u)] uint dstIndex,
+                             [Values(0u, 1u)] uint srcIndex)
+        {
+            const int size = 3;
+
+            uint imm5 = (dstIndex << (size + 1) | 1u << size) & 0x1Fu;
+            uint imm4 = (srcIndex << size) & 0xFu;
+
+            uint opcode = 0x6E000400; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+            opcode |= (imm4 << 11);
+
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, v0: v0, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("SMOV <Wd>, <Vn>.B[<index>]")]
+        public void Smov_S_BW([Values(0u, 31u)] uint rd,
+                              [Values(1u)]      uint rn,
+                              [ValueSource("_8B_")] [Random(RndCnt)] ulong a,
+                              [Values(0u, 15u)] [Random(1u, 14u, RndCntIndex)] uint index)
+        {
+            const int size = 0;
+
             uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
 
             uint opcode = 0x0E002C00; // RESERVED
@@ -303,20 +496,44 @@ namespace Ryujinx.Tests.Cpu
 
             ulong x0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
             uint w31 = TestContext.CurrentContext.Random.NextUInt();
-            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, x0: x0, x31: w31, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("SMOV <Xd>, <Vn>.<Ts>[<index>]")]
-        public void Smov_S_X([Values(0u, 31u)] uint rd,
-                             [Values(1u)]      uint rn,
-                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                             [Values(0, 1, 2)] int size, // <B, H, S>
-                             [Values(0u, 1u)] uint index)
+        [Test, Pairwise, Description("SMOV <Wd>, <Vn>.H[<index>]")]
+        public void Smov_S_HW([Values(0u, 31u)] uint rd,
+                              [Values(1u)]      uint rn,
+                              [ValueSource("_4H_")] [Random(RndCnt)] ulong a,
+                              [Values(0u, 7u)] [Random(1u, 6u, RndCntIndex)] uint index)
         {
+            const int size = 1;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x0E002C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+
+            ulong x0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
+            uint w31 = TestContext.CurrentContext.Random.NextUInt();
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, x0: x0, x31: w31, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("SMOV <Xd>, <Vn>.B[<index>]")]
+        public void Smov_S_BX([Values(0u, 31u)] uint rd,
+                              [Values(1u)]      uint rn,
+                              [ValueSource("_8B_")] [Random(RndCnt)] ulong a,
+                              [Values(0u, 15u)] [Random(1u, 14u, RndCntIndex)] uint index)
+        {
+            const int size = 0;
+
             uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
 
             uint opcode = 0x4E002C00; // RESERVED
@@ -324,20 +541,65 @@ namespace Ryujinx.Tests.Cpu
             opcode |= (imm5 << 16);
 
             ulong x31 = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, x31: x31, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("UMOV <Wd>, <Vn>.<Ts>[<index>]")]
-        public void Umov_S_W([Values(0u, 31u)] uint rd,
-                             [Values(1u)]      uint rn,
-                             [ValueSource("_8B4H2S_")] [Random(RndCnt)] ulong a,
-                             [Values(0, 1, 2)] int size, // <B, H, S>
-                             [Values(0u, 1u)] uint index)
+        [Test, Pairwise, Description("SMOV <Xd>, <Vn>.H[<index>]")]
+        public void Smov_S_HX([Values(0u, 31u)] uint rd,
+                              [Values(1u)]      uint rn,
+                              [ValueSource("_4H_")] [Random(RndCnt)] ulong a,
+                              [Values(0u, 7u)] [Random(1u, 6u, RndCntIndex)] uint index)
         {
+            const int size = 1;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x4E002C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+
+            ulong x31 = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, x31: x31, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("SMOV <Xd>, <Vn>.S[<index>]")]
+        public void Smov_S_SX([Values(0u, 31u)] uint rd,
+                              [Values(1u)]      uint rn,
+                              [ValueSource("_2S_")] [Random(RndCnt)] ulong a,
+                              [Values(0u, 1u, 2u, 3u)] uint index)
+        {
+            const int size = 2;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x4E002C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+
+            ulong x31 = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, x31: x31, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("UMOV <Wd>, <Vn>.B[<index>]")]
+        public void Umov_S_BW([Values(0u, 31u)] uint rd,
+                              [Values(1u)]      uint rn,
+                              [ValueSource("_8B_")] [Random(RndCnt)] ulong a,
+                              [Values(0u, 15u)] [Random(1u, 14u, RndCntIndex)] uint index)
+        {
+            const int size = 0;
+
             uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
 
             uint opcode = 0x0E003C00; // RESERVED
@@ -346,20 +608,67 @@ namespace Ryujinx.Tests.Cpu
 
             ulong x0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
             uint w31 = TestContext.CurrentContext.Random.NextUInt();
-            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, x0: x0, x31: w31, v1: v1);
 
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("UMOV <Xd>, <Vn>.<Ts>[<index>]")]
-        public void Umov_S_X([Values(0u, 31u)] uint rd,
-                             [Values(1u)]      uint rn,
-                             [ValueSource("_1D_")] [Random(RndCnt)] ulong a,
-                             [Values(3)] int size, // <D>
-                             [Values(0u)] uint index)
+        [Test, Pairwise, Description("UMOV <Wd>, <Vn>.H[<index>]")]
+        public void Umov_S_HW([Values(0u, 31u)] uint rd,
+                              [Values(1u)]      uint rn,
+                              [ValueSource("_4H_")] [Random(RndCnt)] ulong a,
+                              [Values(0u, 7u)] [Random(1u, 6u, RndCntIndex)] uint index)
         {
+            const int size = 1;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x0E003C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+
+            ulong x0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
+            uint w31 = TestContext.CurrentContext.Random.NextUInt();
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, x0: x0, x31: w31, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("UMOV <Wd>, <Vn>.S[<index>]")]
+        public void Umov_S_SW([Values(0u, 31u)] uint rd,
+                              [Values(1u)]      uint rn,
+                              [ValueSource("_2S_")] [Random(RndCnt)] ulong a,
+                              [Values(0u, 1u, 2u, 3u)] uint index)
+        {
+            const int size = 2;
+
+            uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
+
+            uint opcode = 0x0E003C00; // RESERVED
+            opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
+            opcode |= (imm5 << 16);
+
+            ulong x0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
+            uint w31 = TestContext.CurrentContext.Random.NextUInt();
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
+
+            SingleOpcode(opcode, x0: x0, x31: w31, v1: v1);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise, Description("UMOV <Xd>, <Vn>.D[<index>]")]
+        public void Umov_S_DX([Values(0u, 31u)] uint rd,
+                              [Values(1u)]      uint rn,
+                              [ValueSource("_1D_")] [Random(RndCnt)] ulong a,
+                              [Values(0u, 1u)] uint index)
+        {
+            const int size = 3;
+
             uint imm5 = (index << (size + 1) | 1u << size) & 0x1Fu;
 
             uint opcode = 0x4E003C00; // RESERVED
@@ -367,7 +676,7 @@ namespace Ryujinx.Tests.Cpu
             opcode |= (imm5 << 16);
 
             ulong x31 = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, x31: x31, v1: v1);
 

@@ -115,6 +115,22 @@ namespace Ryujinx.Tests.Cpu
                 0x1E620430u  // FCCMPE D1, D2, #0, EQ
             };
         }
+
+        private static uint[] _F_Csel_S_S_()
+        {
+            return new uint[]
+            {
+                0x1E220C20u // FCSEL S0, S1, S2, EQ
+            };
+        }
+
+        private static uint[] _F_Csel_S_D_()
+        {
+            return new uint[]
+            {
+                0x1E620C20u // FCSEL D0, D1, D2, EQ
+            };
+        }
 #endregion
 
         private const int RndCnt     = 2;
@@ -172,6 +188,48 @@ namespace Ryujinx.Tests.Cpu
             SingleOpcode(opcodes, v1: v1, v2: v2, overflow: v, carry: c, zero: z, negative: n);
 
             CompareAgainstUnicorn(fpsrMask: Fpsr.Ioc);
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Csel_S_S([ValueSource("_F_Csel_S_S_")] uint opcodes,
+                               [ValueSource("_1S_F_")] ulong a,
+                               [ValueSource("_1S_F_")] ulong b,
+                               [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u,             // <EQ, NE, CS/HS, CC/LO,
+                                       0b0100u, 0b0101u, 0b0110u, 0b0111u,             //  MI, PL, VS, VC,
+                                       0b1000u, 0b1001u, 0b1010u, 0b1011u,             //  HI, LS, GE, LT,
+                                       0b1100u, 0b1101u, 0b1110u, 0b1111u)] uint cond) //  GT, LE, AL, NV>
+        {
+            opcodes |= ((cond & 15) << 12);
+
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v2 = MakeVectorE0(b);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
+        }
+
+        [Test, Pairwise] [Explicit]
+        public void F_Csel_S_D([ValueSource("_F_Csel_S_D_")] uint opcodes,
+                               [ValueSource("_1D_F_")] ulong a,
+                               [ValueSource("_1D_F_")] ulong b,
+                               [Values(0b0000u, 0b0001u, 0b0010u, 0b0011u,             // <EQ, NE, CS/HS, CC/LO,
+                                       0b0100u, 0b0101u, 0b0110u, 0b0111u,             //  MI, PL, VS, VC,
+                                       0b1000u, 0b1001u, 0b1010u, 0b1011u,             //  HI, LS, GE, LT,
+                                       0b1100u, 0b1101u, 0b1110u, 0b1111u)] uint cond) //  GT, LE, AL, NV>
+        {
+            opcodes |= ((cond & 15) << 12);
+
+            ulong z = TestContext.CurrentContext.Random.NextULong();
+            Vector128<float> v0 = MakeVectorE1(z);
+            Vector128<float> v1 = MakeVectorE0(a);
+            Vector128<float> v2 = MakeVectorE0(b);
+
+            SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
+
+            CompareAgainstUnicorn();
         }
 #endif
     }
