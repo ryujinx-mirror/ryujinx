@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long Write(ServiceCtx context)
         {
-            //TODO: Error conditions.
+            // TODO: Error conditions.
             long writePosition = context.RequestData.ReadInt64();
 
             (long position, long size) = context.Request.GetBufferType0x21();
@@ -57,7 +57,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long Read(ServiceCtx context)
         {
-            //TODO: Error conditions.
+            // TODO: Error conditions.
             long readPosition = context.RequestData.ReadInt64();
 
             (long position, long size) = context.Request.GetBufferType0x22();

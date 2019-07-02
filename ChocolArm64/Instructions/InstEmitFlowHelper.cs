@@ -90,10 +90,10 @@ namespace ChocolArm64.Instructions
 
                 if (isJump)
                 {
-                    //The tail prefix allows the JIT to jump to the next function,
-                    //while releasing the stack space used by the current one.
-                    //This is ideal for BR ARM instructions, which are
-                    //basically indirect tail calls.
+                    // The tail prefix allows the JIT to jump to the next function,
+                    // while releasing the stack space used by the current one.
+                    // This is ideal for BR ARM instructions, which are
+                    // basically indirect tail calls.
                     context.Emit(OpCodes.Tailcall);
                 }
 
@@ -114,10 +114,10 @@ namespace ChocolArm64.Instructions
 
         private static void EmitContinueOrReturnCheck(ILEmitterCtx context)
         {
-            //Note: The return value of the called method will be placed
-            //at the Stack, the return value is always a Int64 with the
-            //return address of the function. We check if the address is
-            //correct, if it isn't we keep returning until we reach the dispatcher.
+            // Note: The return value of the called method will be placed
+            // at the Stack, the return value is always a Int64 with the
+            // return address of the function. We check if the address is
+            // correct, if it isn't we keep returning until we reach the dispatcher.
             if (context.CurrBlock.Next != null)
             {
                 context.Emit(OpCodes.Dup);

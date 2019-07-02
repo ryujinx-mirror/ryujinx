@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 using Ryujinx.Graphics.Shader.Instructions;
 
 namespace Ryujinx.Graphics.Shader.Decoders

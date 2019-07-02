@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 namespace Ryujinx.Tests.Unicorn.Native
 {
     public enum ArmRegister
@@ -265,26 +266,26 @@ namespace Ryujinx.Tests.Unicorn.Native
         V30,
         V31,
 
-        //> pseudo registers
+        // > pseudo registers
         PC,            // program counter register
 
         CPACR_EL1,
         ESR,
 
-        //> thread registers
+        // > thread registers
         TPIDR_EL0,
         TPIDRRO_EL0,
         TPIDR_EL1,
 
         PSTATE,        // PSTATE pseudoregister
 
-        //> floating point control and status registers
+        // > floating point control and status registers
         FPCR,
         FPSR,
 
         ENDING,        // <-- mark the end of the list of registers
 
-        //> alias registers
+        // > alias registers
 
         IP0 =   X16,
         IP1 =   X17,

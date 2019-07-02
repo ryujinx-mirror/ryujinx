@@ -254,7 +254,7 @@ namespace Ryujinx.Graphics.VDec
                 }
             }
 
-            //Copy chroma data from both channels with interleaving.
+            // Copy chroma data from both channels with interleaving.
             for (int y = 0; y < halfHeight; y++)
             {
                 int src = y * halfSrcWidth;

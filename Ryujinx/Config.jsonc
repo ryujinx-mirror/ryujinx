@@ -4,19 +4,19 @@
     // Dump shaders in local directory (e.g. `C:\ShaderDumps`)
     "graphics_shaders_dump_path": "",
 
-    // Enable print debug logs
+    // Enable printing debug logs
     "logging_enable_debug": false,
 
-    // Enable print stubbed calls logs
+    // Enable printing stubbed calls logs
     "logging_enable_stub": true,
 
-    // Enable print informations logs
+    // Enable printing information logs
     "logging_enable_info": true,
 
-    // Enable print warning logs
+    // Enable printing warning logs
     "logging_enable_warn": true,
 
-    // Enable print error logs
+    // Enable printing error logs
     "logging_enable_error": true,
 
     // Enable printing guest logs
@@ -38,8 +38,8 @@
     // Enable or disable Docked Mode
     "docked_mode": false,
 
-    // Enable or disable Discord Rich Presense
-    "enable_discord_intergration": true,
+    // Enable or disable Discord Rich Presence
+    "enable_discord_integration": true,
 
     // Enable or disable Game Vsync
     "enable_vsync": true,

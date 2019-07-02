@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long PopLaunchParameter(ServiceCtx context)
         {
-            //Only the first 0x18 bytes of the Data seems to be actually used.
+            // Only the first 0x18 bytes of the Data seems to be actually used.
             MakeObject(context, new IStorage(StorageHelper.MakeLaunchParams()));
 
             return 0;
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public long GetDisplayVersion(ServiceCtx context)
         {
-            //FIXME: Need to check correct version on a switch.
+            // FIXME: Need to check correct version on a switch.
             context.ResponseData.Write(1L);
             context.ResponseData.Write(0L);
 

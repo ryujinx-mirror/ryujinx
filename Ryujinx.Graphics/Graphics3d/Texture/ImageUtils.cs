@@ -67,7 +67,7 @@ namespace Ryujinx.Graphics.Texture
             { GalTextureFormat.D32Fx24S8,  GalImageFormat.D32S8                                   | Float        },
             { GalTextureFormat.D16,        GalImageFormat.D16               | Unorm                              },
 
-            //Compressed formats
+            // Compressed formats
             { GalTextureFormat.BptcSfloat,  GalImageFormat.BptcSfloat                  | Float        },
             { GalTextureFormat.BptcUfloat,  GalImageFormat.BptcUfloat                  | Float        },
             { GalTextureFormat.BptcUnorm,   GalImageFormat.BptcUnorm   | Unorm                 | Srgb },
@@ -248,7 +248,7 @@ namespace Ryujinx.Graphics.Texture
 
             int bytesPerPixel = desc.BytesPerPixel;
 
-            //Note: Each row of the texture needs to be aligned to 4 bytes.
+            // Note: Each row of the texture needs to be aligned to 4 bytes.
             int pitch = (width * bytesPerPixel + 3) & ~3;
 
 

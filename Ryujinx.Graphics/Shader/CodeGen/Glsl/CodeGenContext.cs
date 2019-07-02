@@ -18,7 +18,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         private int _level;
 
-        private string _identation;
+        private string _indentation;
 
         public CodeGenContext(ShaderConfig config)
         {
@@ -39,7 +39,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         public void AppendLine(string str)
         {
-            _sb.AppendLine(_identation + str);
+            _sb.AppendLine(_indentation + str);
         }
 
         public string GetCode()
@@ -53,7 +53,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             _level++;
 
-            UpdateIdentation();
+            UpdateIndentation();
         }
 
         public void LeaveScope(string suffix = "")
@@ -65,26 +65,26 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             _level--;
 
-            UpdateIdentation();
+            UpdateIndentation();
 
             AppendLine("}" + suffix);
         }
 
-        private void UpdateIdentation()
+        private void UpdateIndentation()
         {
-            _identation = GetIdentation(_level);
+            _indentation = GetIndentation(_level);
         }
 
-        private static string GetIdentation(int level)
+        private static string GetIndentation(int level)
         {
-            string identation = string.Empty;
+            string indentation = string.Empty;
 
             for (int index = 0; index < level; index++)
             {
-                identation += Tab;
+                indentation += Tab;
             }
 
-            return identation;
+            return indentation;
         }
     }
 }

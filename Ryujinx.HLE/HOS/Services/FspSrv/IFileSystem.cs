@@ -306,7 +306,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             try
             {
-                LibHac.Fs.DirectoryEntryType entryType = _provider.GetEntryType(name);
+                DirectoryEntryType entryType = _provider.GetEntryType(name);
 
                 context.ResponseData.Write((int)entryType);
             }

@@ -33,13 +33,13 @@ namespace Ryujinx.Graphics
                     Buffer.BlockCopy(data, src, output, dst, copyCount * entrySize);
                 }
 
-                //0 1 2 -> 0 1 2.
+                // 0 1 2 -> 0 1 2.
                 AssignIndex(0, 0, 3);
 
-                //2 3 -> 3 4.
+                // 2 3 -> 3 4.
                 AssignIndex(2, 3, 2);
 
-                //0 -> 5.
+                // 0 -> 5.
                 AssignIndex(0, 5);
             }
 
@@ -65,13 +65,13 @@ namespace Ryujinx.Graphics
                     Buffer.BlockCopy(data, src, output, dst, copyCount * entrySize);
                 }
 
-                //-2 -1 0 -> 0 1 2.
+                // -2 -1 0 -> 0 1 2.
                 AssignIndex(-2, 0, 3);
 
-                //0 1 -> 3 4.
+                // 0 1 -> 3 4.
                 AssignIndex(0, 3, 2);
 
-                //-2 -> 5.
+                // -2 -> 5.
                 AssignIndex(-2, 5);
             }
 

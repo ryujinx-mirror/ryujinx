@@ -12,7 +12,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
             if (exponent == 0x1f)
             {
-                //NaN or Infinity.
+                // NaN or Infinity.
                 mantissa <<= 13;
                 exponent   = 0xff;
             }
@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             {
                 if (exponent == 0)
                 {
-                    //Denormal.
+                    // Denormal.
                     int e = -1;
                     int m = mantissa;
 

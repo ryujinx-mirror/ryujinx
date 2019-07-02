@@ -128,9 +128,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
 
                 if (address == 0)
                 {
-                    //When the address is zero, we need to allocate
-                    //our own backing memory for the NvMap.
-                    //TODO: Is this allocation inside the transfer memory?
+                    // When the address is zero, we need to allocate
+                    // our own backing memory for the NvMap.
+                    // TODO: Is this allocation inside the transfer memory?
                     result = NvResult.OutOfMemory;
                 }
 
@@ -208,8 +208,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvMap
                 case NvMapHandleParam.Kind:  args.Result = map.Kind;   break;
                 case NvMapHandleParam.Compr: args.Result = 0;          break;
 
-                //Note: Base is not supported and returns an error.
-                //Any other value also returns an error.
+                // Note: Base is not supported and returns an error.
+                // Any other value also returns an error.
                 default: return NvResult.InvalidInput;
             }
 

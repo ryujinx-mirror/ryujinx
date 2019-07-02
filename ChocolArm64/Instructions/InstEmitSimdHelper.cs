@@ -1298,8 +1298,8 @@ namespace ChocolArm64.Instructions
         {
             if (Optimizations.UseSse41 && size == 0)
             {
-                //If the type is float, we can perform insertion and
-                //zero the upper bits with a single instruction (INSERTPS);
+                // If the type is float, we can perform insertion and
+                // zero the upper bits with a single instruction (INSERTPS);
                 context.EmitLdvec(reg);
 
                 VectorHelper.EmitCall(context, nameof(VectorHelper.Sse41VectorInsertScalarSingle));

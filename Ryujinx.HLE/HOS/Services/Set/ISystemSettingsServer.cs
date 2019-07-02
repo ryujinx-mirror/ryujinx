@@ -62,7 +62,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
             const string version    = "3.0.0";
             const string build      = "NintendoSDK Firmware for NX 3.0.0-10.0";
 
-            //http://switchbrew.org/index.php?title=System_Version_Title
+            // http://switchbrew.org/index.php?title=System_Version_Title
             using (MemoryStream ms = new MemoryStream(0x100))
             {
                 BinaryWriter writer = new BinaryWriter(ms);
@@ -177,7 +177,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
             long   titleId     = 0x0100000000000809;
             string contentPath = device.System.ContentManager.GetInstalledContentPath(titleId, StorageId.NandSystem, ContentType.Data);
 
-            if(string.IsNullOrWhiteSpace(contentPath))
+            if (string.IsNullOrWhiteSpace(contentPath))
             {
                 return null;
             }

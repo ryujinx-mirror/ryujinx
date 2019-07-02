@@ -124,10 +124,10 @@ namespace Ryujinx.Audio
 
                 if (ReleasedCount > 0)
                 {
-                    //If we signal, then we also need to have released buffers available
-                    //to return when GetReleasedBuffers is called.
-                    //If playback needs to be re-started due to all buffers being processed,
-                    //then OpenAL zeros the counts (ReleasedCount), so we keep it on the queue.
+                    // If we signal, then we also need to have released buffers available
+                    // to return when GetReleasedBuffers is called.
+                    // If playback needs to be re-started due to all buffers being processed,
+                    // then OpenAL zeros the counts (ReleasedCount), so we keep it on the queue.
                     while (ReleasedCount-- > 0 && QueuedTagsQueue.TryDequeue(out long Tag))
                     {
                         AL.SourceUnqueueBuffers(SourceId, 1);
@@ -209,7 +209,7 @@ namespace Ryujinx.Audio
                     }
                 }
 
-                //If it's not slept it will waste cycles.
+                // If it's not slept it will waste cycles.
                 Thread.Sleep(10);
             }
             while (KeepPolling);

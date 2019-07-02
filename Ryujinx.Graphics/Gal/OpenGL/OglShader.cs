@@ -115,7 +115,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             data[1] = flipY;
             data[2] = BitConverter.Int32BitsToSingle(instance);
 
-            //Invalidate buffer
+            // Invalidate buffer
             GL.BufferData(BufferTarget.UniformBuffer, ExtraDataSize * sizeof(float), IntPtr.Zero, BufferUsageHint.StreamDraw);
 
             GL.BufferSubData(BufferTarget.UniformBuffer, IntPtr.Zero, ExtraDataSize * sizeof(float), (IntPtr)data);
@@ -228,9 +228,9 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
                         if (blockIndex < 0)
                         {
-                            //This may be fine, the compiler may optimize away unused uniform buffers,
-                            //and in this case the above call would return -1 as the buffer has been
-                            //optimized away.
+                            // This may be fine, the compiler may optimize away unused uniform buffers,
+                            // and in this case the above call would return -1 as the buffer has been
+                            // optimized away.
                             continue;
                         }
 

@@ -546,7 +546,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                             _position += 2;
                             // FIXME: GNU c++flit returns this but that is not what is supposed to be returned.
                             return new NameType("half");
-                            //return new NameType("decimal16");
+                            // return new NameType("decimal16");
                         case 'i':
                             _position += 2;
                             return new NameType("char32_t");
@@ -560,7 +560,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                             _position += 2;
                             // FIXME: GNU c++flit returns this but that is not what is supposed to be returned.
                             return new NameType("decltype(nullptr)");
-                            //return new NameType("std::nullptr_t");
+                            // return new NameType("std::nullptr_t");
                         case 't':
                         case 'T':
                             _position += 2;
@@ -1314,7 +1314,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
             if (result != null)
             {
                 // TODO: ABI Tags
-                //throw new Exception("ABI Tags not implemented");
+                // throw new Exception("ABI Tags not implemented");
             }
             return result;
         }
@@ -2909,7 +2909,7 @@ namespace Ryujinx.HLE.HOS.Diagnostics.Demangler
                     }
                 } while (!ConsumeIf("E"));
             }
-            // ::= sr <unresolved-type> [tempate-args] <base-unresolved-name>     # T::x / decltype(p)::x
+            // ::= sr <unresolved-type> [template-args] <base-unresolved-name>     # T::x / decltype(p)::x
             else
             {
                 result = ParseUnresolvedType();

@@ -31,8 +31,8 @@ namespace ChocolArm64.Instructions
 
             context.EmitPrivateCall(typeof(CpuThreadState), mthdName);
 
-            //Check if the thread should still be running, if it isn't then we return 0
-            //to force a return to the dispatcher and then exit the thread.
+            // Check if the thread should still be running, if it isn't then we return 0
+            // to force a return to the dispatcher and then exit the thread.
             context.EmitLdarg(TranslatedSub.StateArgIdx);
 
             context.EmitCallPropGet(typeof(CpuThreadState), nameof(CpuThreadState.Running));

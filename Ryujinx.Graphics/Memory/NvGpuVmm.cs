@@ -146,8 +146,8 @@ namespace Ryujinx.Graphics.Memory
 
         private long GetFreePosition(long size, long align = 1, long start = 1L << 32)
         {
-            //Note: Address 0 is not considered valid by the driver,
-            //when 0 is returned it's considered a mapping error.
+            // Note: Address 0 is not considered valid by the driver,
+            // when 0 is returned it's considered a mapping error.
             long position = start;
             long freeSize = 0;
 

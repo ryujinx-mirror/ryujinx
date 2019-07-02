@@ -30,14 +30,14 @@ namespace ChocolArm64.Decoders
                 switch (op | (modeLow << 1))
                 {
                     case 0:
-                        //64-bits Immediate.
-                        //Transform abcd efgh into abcd efgh abcd efgh ...
+                        // 64-bits Immediate.
+                        // Transform abcd efgh into abcd efgh abcd efgh ...
                         imm = (long)((ulong)imm * 0x0101010101010101);
                         break;
 
                     case 1:
-                        //64-bits Immediate.
-                        //Transform abcd efgh into aaaa aaaa bbbb bbbb ...
+                        // 64-bits Immediate.
+                        // Transform abcd efgh into aaaa aaaa bbbb bbbb ...
                         imm = (imm & 0xf0) >> 4 | (imm & 0x0f) << 4;
                         imm = (imm & 0xcc) >> 2 | (imm & 0x33) << 2;
                         imm = (imm & 0xaa) >> 1 | (imm & 0x55) << 1;
@@ -52,29 +52,29 @@ namespace ChocolArm64.Decoders
 
                     case 2:
                     case 3:
-                        //Floating point Immediate.
+                        // Floating point Immediate.
                         imm = DecoderHelper.DecodeImm8Float(imm, Size);
                         break;
                 }
             }
             else if ((modeHigh & 0b110) == 0b100)
             {
-                //16-bits shifted Immediate.
+                // 16-bits shifted Immediate.
                 Size = 1; imm <<= (modeHigh & 1) << 3;
             }
             else if ((modeHigh & 0b100) == 0b000)
             {
-                //32-bits shifted Immediate.
+                // 32-bits shifted Immediate.
                 Size = 2; imm <<= modeHigh << 3;
             }
             else if ((modeHigh & 0b111) == 0b110)
             {
-                //32-bits shifted Immediate (fill with ones).
+                // 32-bits shifted Immediate (fill with ones).
                 Size = 2; imm = ShlOnes(imm, 8 << modeLow);
             }
             else
             {
-                //8 bits without shift.
+                // 8 bits without shift.
                 Size = 0;
             }
 

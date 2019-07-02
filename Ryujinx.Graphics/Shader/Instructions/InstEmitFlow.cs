@@ -19,8 +19,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             OpCodeExit op = (OpCodeExit)context.CurrOp;
 
-            //TODO: Figure out how this is supposed to work in the
-            //presence of other condition codes.
+            // TODO: Figure out how this is supposed to work in the
+            // presence of other condition codes.
             if (op.Condition == Condition.Always)
             {
                 context.Return();
@@ -54,8 +54,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (op.Targets.Count == 1)
             {
-                //If we have only one target, then the SSY is basically
-                //a branch, we can produce better codegen for this case.
+                // If we have only one target, then the SSY is basically
+                // a branch, we can produce better codegen for this case.
                 OpCodeSsy opSsy = op.Targets.Keys.First();
 
                 EmitBranch(context, opSsy.GetAbsoluteAddress());
@@ -79,8 +79,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         private static void EmitBranch(EmitterContext context, ulong address)
         {
-            //If we're branching to the next instruction, then the branch
-            //is useless and we can ignore it.
+            // If we're branching to the next instruction, then the branch
+            // is useless and we can ignore it.
             if (address == context.CurrOp.Address + 8)
             {
                 return;

@@ -1014,7 +1014,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                 context.Request.PtrBuff[1].Position,
                 context.Request.PtrBuff[1].Size);
 
-            //Todo: Read all handles and values from buffer.
+            // TODO: Read all handles and values from buffer.
 
             Logger.PrintStub(LogClass.ServiceHid, new {
                 appletResourceUserId,
@@ -1137,7 +1137,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             long counter0             = context.RequestData.ReadInt64();
             long counter1             = context.RequestData.ReadInt64();
 
-            // Todo: Determine if array<nn::sf::NativeHandle> is a buffer or not...
+            // TODO: Determine if array<nn::sf::NativeHandle> is a buffer or not...
 
             Logger.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, counter0, counter1 });
 

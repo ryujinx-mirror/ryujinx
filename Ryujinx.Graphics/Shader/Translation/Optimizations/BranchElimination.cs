@@ -19,13 +19,13 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         private static bool IsRedundantBranch(Operation current, BasicBlock nextBlock)
         {
-            //Here we check that:
-            //- The current block ends with a branch.
-            //- The next block only contains a branch.
-            //- The branch on the next block is unconditional.
-            //- Both branches are jumping to the same location.
-            //In this case, the branch on the current block can be removed,
-            //as the next block is going to jump to the same place anyway.
+            // Here we check that:
+            // - The current block ends with a branch.
+            // - The next block only contains a branch.
+            // - The branch on the next block is unconditional.
+            // - Both branches are jumping to the same location.
+            // In this case, the branch on the current block can be removed,
+            // as the next block is going to jump to the same place anyway.
             if (nextBlock == null)
             {
                 return false;

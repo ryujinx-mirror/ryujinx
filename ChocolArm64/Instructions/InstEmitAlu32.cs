@@ -87,7 +87,7 @@ namespace ChocolArm64.Instructions
             {
                 if (op.SetFlags)
                 {
-                    //TODO: Load SPSR etc.
+                    // TODO: Load SPSR etc.
 
                     context.EmitLdflg((int)PState.TBit);
 

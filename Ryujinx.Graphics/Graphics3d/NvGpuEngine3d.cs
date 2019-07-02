@@ -67,8 +67,8 @@ namespace Ryujinx.Graphics.Graphics3d
                 _constBuffers[index] = new ConstBuffer[18];
             }
 
-            //Ensure that all components are enabled by default.
-            //FIXME: Is this correct?
+            // Ensure that all components are enabled by default.
+            // FIXME: Is this correct?
             WriteRegister(NvGpuEngine3dReg.ColorMaskN, 0x1111);
 
             WriteRegister(NvGpuEngine3dReg.FrameBufferSrgb, 1);
@@ -333,12 +333,12 @@ namespace Ryujinx.Graphics.Graphics3d
 
             if (vpAEnable)
             {
-                //Note: The maxwell supports 2 vertex programs, usually
-                //only VP B is used, but in some cases VP A is also used.
-                //In this case, it seems to function as an extra vertex
-                //shader stage.
-                //The graphics abstraction layer has a special overload for this
-                //case, which should merge the two shaders into one vertex shader.
+                // Note: The maxwell supports 2 vertex programs, usually
+                // only VP B is used, but in some cases VP A is also used.
+                // In this case, it seems to function as an extra vertex
+                // shader stage.
+                // The graphics abstraction layer has a special overload for this
+                // case, which should merge the two shaders into one vertex shader.
                 int vpAOffset = ReadRegister(NvGpuEngine3dReg.ShaderNOffset);
                 int vpBOffset = ReadRegister(NvGpuEngine3dReg.ShaderNOffset + 0x10);
 
@@ -360,7 +360,7 @@ namespace Ryujinx.Graphics.Graphics3d
                 int control = ReadRegister(NvGpuEngine3dReg.ShaderNControl + index * 0x10);
                 int offset  = ReadRegister(NvGpuEngine3dReg.ShaderNOffset  + index * 0x10);
 
-                //Note: Vertex Program (B) is always enabled.
+                // Note: Vertex Program (B) is always enabled.
                 bool enable = (control & 1) != 0 || index == 1;
 
                 if (!enable)
@@ -405,7 +405,7 @@ namespace Ryujinx.Graphics.Graphics3d
 
             GalFrontFace frontFace = (GalFrontFace)ReadRegister(NvGpuEngine3dReg.FrontFace);
 
-            //Flipping breaks facing. Flipping front facing too fixes it
+            // Flipping breaks facing. Flipping front facing too fixes it
             if (signX != signY)
             {
                 switch (frontFace)
@@ -574,8 +574,8 @@ namespace Ryujinx.Graphics.Graphics3d
                 }
                 else
                 {
-                    //It seems that even when independent blend is disabled, the first IBlend enable
-                    //register is still set to indicate whenever blend is enabled or not (?).
+                    // It seems that even when independent blend is disabled, the first IBlend enable
+                    // register is still set to indicate whenever blend is enabled or not (?).
                     state.Blends[index].Enabled = ReadRegisterBool(NvGpuEngine3dReg.IBlendNEnable);
 
                     if (state.Blends[index].Enabled)
@@ -632,8 +632,8 @@ namespace Ryujinx.Graphics.Graphics3d
 
         private void SetRenderTargets()
         {
-            //Commercial games do not seem to
-            //bool SeparateFragData = ReadRegisterBool(NvGpuEngine3dReg.RTSeparateFragData);
+            // Commercial games do not seem to
+            // bool SeparateFragData = ReadRegisterBool(NvGpuEngine3dReg.RTSeparateFragData);
 
             uint control = (uint)(ReadRegister(NvGpuEngine3dReg.RtControl));
 
@@ -711,8 +711,8 @@ namespace Ryujinx.Graphics.Graphics3d
         {
             if (textureHandle == 0)
             {
-                //FIXME: Some games like puyo puyo will use handles with the value 0.
-                //This is a bug, most likely caused by sync issues.
+                // FIXME: Some games like puyo puyo will use handles with the value 0.
+                // This is a bug, most likely caused by sync issues.
                 return (0, default(GalImage), default(GalTextureSampler));
             }
 
@@ -751,7 +751,7 @@ namespace Ryujinx.Graphics.Graphics3d
             {
                 Profile.End(Profiles.GPU.Engine3d.UploadTexture);
 
-                //FIXME: Shouldn't ignore invalid addresses.
+                // FIXME: Shouldn't ignore invalid addresses.
                 return (0, default(GalImage), default(GalTextureSampler));
             }
 
@@ -910,8 +910,8 @@ namespace Ryujinx.Graphics.Graphics3d
                 // Check vertex array is enabled to avoid out of bounds exception when reading bytes
                 bool enable = (ReadRegister(NvGpuEngine3dReg.VertexArrayNControl + arrayIndex * 4) & 0x1000) != 0;
 
-                //Note: 16 is the maximum size of an attribute,
-                //having a component size of 32-bits with 4 elements (a vec4).
+                // Note: 16 is the maximum size of an attribute,
+                // having a component size of 32-bits with 4 elements (a vec4).
                 if (enable)
                 {
                     byte[] data = vmm.ReadBytes(vbPosition + offset, 16);
@@ -954,7 +954,7 @@ namespace Ryujinx.Graphics.Graphics3d
 
                 if (vbPosition > vbEndPos)
                 {
-                    //Instance is invalid, ignore the draw call
+                    // Instance is invalid, ignore the draw call
                     continue;
                 }
 
@@ -1057,14 +1057,14 @@ namespace Ryujinx.Graphics.Graphics3d
 
                 long iboKey = vmm.GetPhysicalAddress(indexPosition);
 
-                //Quad primitive types were deprecated on OpenGL 3.x,
-                //they are converted to a triangles index buffer on IB creation,
-                //so we should use the triangles type here too.
+                // Quad primitive types were deprecated on OpenGL 3.x,
+                // they are converted to a triangles index buffer on IB creation,
+                // so we should use the triangles type here too.
                 if (primType == GalPrimitiveType.Quads || primType == GalPrimitiveType.QuadStrip)
                 {
-                    //Note: We assume that index first points to the first
-                    //vertex of a quad, if it points to the middle of a
-                    //quad (First % 4 != 0 for Quads) then it will not work properly.
+                    // Note: We assume that index first points to the first
+                    // vertex of a quad, if it points to the middle of a
+                    // quad (First % 4 != 0 for Quads) then it will not work properly.
                     if (primType == GalPrimitiveType.Quads)
                     {
                         indexFirst = QuadHelper.ConvertSizeQuadsToTris(indexFirst);
@@ -1084,14 +1084,14 @@ namespace Ryujinx.Graphics.Graphics3d
                 int vertexFirst = ReadRegister(NvGpuEngine3dReg.VertexArrayFirst);
                 int vertexCount = ReadRegister(NvGpuEngine3dReg.VertexArrayCount);
 
-                //Quad primitive types were deprecated on OpenGL 3.x,
-                //they are converted to a triangles index buffer on IB creation,
-                //so we should use the triangles type here too.
+                // Quad primitive types were deprecated on OpenGL 3.x,
+                // they are converted to a triangles index buffer on IB creation,
+                // so we should use the triangles type here too.
                 if (primType == GalPrimitiveType.Quads || primType == GalPrimitiveType.QuadStrip)
                 {
-                    //Note: We assume that index first points to the first
-                    //vertex of a quad, if it points to the middle of a
-                    //quad (First % 4 != 0 for Quads) then it will not work properly.
+                    // Note: We assume that index first points to the first
+                    // vertex of a quad, if it points to the middle of a
+                    // quad (First % 4 != 0 for Quads) then it will not work properly.
                     if (primType == GalPrimitiveType.Quads)
                     {
                         vertexFirst = QuadHelper.ConvertSizeQuadsToTris(vertexFirst);
@@ -1111,7 +1111,7 @@ namespace Ryujinx.Graphics.Graphics3d
             // Reset pipeline for host OpenGL calls
             _gpu.Renderer.Pipeline.Unbind(state);
 
-            //Is the GPU really clearing those registers after draw?
+            // Is the GPU really clearing those registers after draw?
             WriteRegister(NvGpuEngine3dReg.IndexBatchFirst, 0);
             WriteRegister(NvGpuEngine3dReg.IndexBatchCount, 0);
         }
@@ -1140,7 +1140,7 @@ namespace Ryujinx.Graphics.Graphics3d
 
                 case QueryMode.WriteCounterAndTimestamp:
                 {
-                    //TODO: Implement counters.
+                    // TODO: Implement counters.
                     long counter = 1;
 
                     long timestamp = PerformanceCounter.ElapsedMilliseconds;

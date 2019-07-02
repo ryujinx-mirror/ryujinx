@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public bool InvertPredicate { get; protected set; }
 
-        //When inverted, the always true predicate == always false.
+        // When inverted, the always true predicate == always false.
         public bool NeverExecute => Predicate.Index == RegisterConsts.PredicateTrueIndex && InvertPredicate;
 
         public OpCode(InstEmitter emitter, ulong address, long opCode)

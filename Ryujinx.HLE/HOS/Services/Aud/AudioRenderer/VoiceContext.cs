@@ -46,7 +46,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
         {
             if (_acquired && !newState)
             {
-                //Release.
+                // Release.
                 Reset();
             }
 
@@ -124,9 +124,9 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         private void UpdateBuffer(MemoryManager memory)
         {
-            //TODO: Implement conversion for formats other
-            //than interleaved stereo (2 channels).
-            //As of now, it assumes that HostChannelsCount == 2.
+            // TODO: Implement conversion for formats other
+            // than interleaved stereo (2 channels).
+            // As of now, it assumes that HostChannelsCount == 2.
             WaveBuffer wb = WaveBuffers[_bufferIndex];
 
             if (wb.Position == 0)
@@ -173,9 +173,9 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
             if (SampleRate != AudioConsts.HostSampleRate)
             {
-                //TODO: We should keep the frames being discarded (see the 4 below)
-                //on a buffer and include it on the next samples buffer, to allow
-                //the resampler to do seamless interpolation between wave buffers.
+                // TODO: We should keep the frames being discarded (see the 4 below)
+                // on a buffer and include it on the next samples buffer, to allow
+                // the resampler to do seamless interpolation between wave buffers.
                 int samplesCount = _samples.Length / AudioConsts.HostChannelsCount;
 
                 samplesCount = Math.Max(samplesCount - 4, 0);

@@ -133,9 +133,9 @@ namespace Ryujinx.HLE.HOS.Ipc
 
                 int pad0 = (int)GetPadSize16(cmdPtr + 8 + handleData.Length);
 
-                //Apparently, padding after Raw Data is 16 bytes, however when there is
-                //padding before Raw Data too, we need to subtract the size of this padding.
-                //This is the weirdest padding I've seen so far...
+                // Apparently, padding after Raw Data is 16 bytes, however when there is
+                // padding before Raw Data too, we need to subtract the size of this padding.
+                // This is the weirdest padding I've seen so far...
                 int pad1 = 0x10 - pad0;
 
                 dataLength = (dataLength + pad0 + pad1) / 4;

@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Gal
 
                 ulong instruction = 0;
 
-                //Dump until a NOP instruction is found
+                // Dump until a NOP instruction is found
                 while ((instruction >> 48 & 0xfff8) != 0x50b0)
                 {
                     uint word0 = (uint)memory.ReadInt32(position + 0x50 + offset + 0);
@@ -46,8 +46,8 @@ namespace Ryujinx.Graphics.Gal
 
                     instruction = word0 | (ulong)word1 << 32;
 
-                    //Zero instructions (other kind of NOP) stop immediatly,
-                    //this is to avoid two rows of zeroes
+                    // Zero instructions (other kind of NOP) stop immediately,
+                    // this is to avoid two rows of zeroes
                     if (instruction == 0)
                     {
                         break;
@@ -59,7 +59,7 @@ namespace Ryujinx.Graphics.Gal
                     offset += 8;
                 }
 
-                //Align to meet nvdisasm requeriments
+                // Align to meet nvdisasm requirements
                 while (offset % 0x20 != 0)
                 {
                     fullWriter.Write(0);

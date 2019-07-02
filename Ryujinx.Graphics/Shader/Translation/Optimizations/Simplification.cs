@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             {
                 case Instruction.Add:
                 case Instruction.BitwiseExclusiveOr:
-                    TryEliminateBinaryOpComutative(operation, 0);
+                    TryEliminateBinaryOpCommutative(operation, 0);
                     break;
 
                 case Instruction.BitwiseAnd:
@@ -34,7 +34,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     break;
 
                 case Instruction.Multiply:
-                    TryEliminateBinaryOpComutative(operation, 1);
+                    TryEliminateBinaryOpCommutative(operation, 1);
                     break;
 
                 case Instruction.ShiftLeft:
@@ -48,9 +48,9 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         private static void TryEliminateBitwiseAnd(Operation operation)
         {
-            //Try to recognize and optimize those 3 patterns (in order):
-            //x & 0xFFFFFFFF == x,          0xFFFFFFFF & y == y,
-            //x & 0x00000000 == 0x00000000, 0x00000000 & y == 0x00000000
+            // Try to recognize and optimize those 3 patterns (in order):
+            // x & 0xFFFFFFFF == x,          0xFFFFFFFF & y == y,
+            // x & 0x00000000 == 0x00000000, 0x00000000 & y == 0x00000000
             Operand x = operation.GetSource(0);
             Operand y = operation.GetSource(1);
 
@@ -70,9 +70,9 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         private static void TryEliminateBitwiseOr(Operation operation)
         {
-            //Try to recognize and optimize those 3 patterns (in order):
-            //x | 0x00000000 == x,          0x00000000 | y == y,
-            //x | 0xFFFFFFFF == 0xFFFFFFFF, 0xFFFFFFFF | y == 0xFFFFFFFF
+            // Try to recognize and optimize those 3 patterns (in order):
+            // x | 0x00000000 == x,          0x00000000 | y == y,
+            // x | 0xFFFFFFFF == 0xFFFFFFFF, 0xFFFFFFFF | y == 0xFFFFFFFF
             Operand x = operation.GetSource(0);
             Operand y = operation.GetSource(1);
 
@@ -101,7 +101,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             }
         }
 
-        private static void TryEliminateBinaryOpComutative(Operation operation, int comparand)
+        private static void TryEliminateBinaryOpCommutative(Operation operation, int comparand)
         {
             Operand x = operation.GetSource(0);
             Operand y = operation.GetSource(1);
@@ -125,8 +125,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 return;
             }
 
-            //The condition is constant, we can turn it into a copy, and select
-            //the source based on the condition value.
+            // The condition is constant, we can turn it into a copy, and select
+            // the source based on the condition value.
             int srcIndex = cond.Value != 0 ? 1 : 2;
 
             Operand source = operation.GetSource(srcIndex);

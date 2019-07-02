@@ -1,3 +1,4 @@
+using Ryujinx.Tests.Unicorn.Native;
 using System;
 using System.Diagnostics.Contracts;
 using System.Runtime.Intrinsics;
@@ -31,38 +32,38 @@ namespace Ryujinx.Tests.Unicorn
 
         public ulong LR
         {
-            get { return GetRegister(Native.ArmRegister.LR); }
-            set { SetRegister(Native.ArmRegister.LR, value); }
+            get { return GetRegister(ArmRegister.LR); }
+            set { SetRegister(ArmRegister.LR, value); }
         }
 
         public ulong SP
         {
-            get { return GetRegister(Native.ArmRegister.SP); }
-            set { SetRegister(Native.ArmRegister.SP, value); }
+            get { return GetRegister(ArmRegister.SP); }
+            set { SetRegister(ArmRegister.SP, value); }
         }
 
         public ulong PC
         {
-            get { return GetRegister(Native.ArmRegister.PC); }
-            set { SetRegister(Native.ArmRegister.PC, value); }
+            get { return GetRegister(ArmRegister.PC); }
+            set { SetRegister(ArmRegister.PC, value); }
         }
 
         public uint Pstate
         {
-            get { return (uint)GetRegister(Native.ArmRegister.PSTATE); }
-            set { SetRegister(Native.ArmRegister.PSTATE, (uint)value); }
+            get { return (uint)GetRegister(ArmRegister.PSTATE); }
+            set { SetRegister(ArmRegister.PSTATE, (uint)value); }
         }
 
         public int Fpcr
         {
-            get { return (int)GetRegister(Native.ArmRegister.FPCR); }
-            set { SetRegister(Native.ArmRegister.FPCR, (uint)value); }
+            get { return (int)GetRegister(ArmRegister.FPCR); }
+            set { SetRegister(ArmRegister.FPCR, (uint)value); }
         }
 
         public int Fpsr
         {
-            get { return (int)GetRegister(Native.ArmRegister.FPSR); }
-            set { SetRegister(Native.ArmRegister.FPSR, (uint)value); }
+            get { return (int)GetRegister(ArmRegister.FPSR); }
+            set { SetRegister(ArmRegister.FPSR, (uint)value); }
         }
 
         public bool OverflowFlag
@@ -91,18 +92,18 @@ namespace Ryujinx.Tests.Unicorn
 
         public UnicornAArch64()
         {
-            Native.Interface.Checked(Native.Interface.uc_open((uint)Native.UnicornArch.UC_ARCH_ARM64, (uint)Native.UnicornMode.UC_MODE_LITTLE_ENDIAN, out uc));
-            SetRegister(Native.ArmRegister.CPACR_EL1, 0x00300000);
+            Interface.Checked(Interface.uc_open((uint)UnicornArch.UC_ARCH_ARM64, (uint)UnicornMode.UC_MODE_LITTLE_ENDIAN, out uc));
+            SetRegister(ArmRegister.CPACR_EL1, 0x00300000);
         }
 
         ~UnicornAArch64()
         {
-            Native.Interface.Checked(Native.Interface.uc_close(uc));
+            Interface.Checked(Interface.uc_close(uc));
         }
 
         public void RunForCount(ulong count)
         {
-            Native.Interface.Checked(Native.Interface.uc_emu_start(uc, this.PC, 0xFFFFFFFFFFFFFFFFu, 0, count));
+            Interface.Checked(Interface.uc_emu_start(uc, PC, 0xFFFFFFFFFFFFFFFFu, 0, count));
         }
 
         public void Step()
@@ -110,94 +111,94 @@ namespace Ryujinx.Tests.Unicorn
             RunForCount(1);
         }
 
-        internal static Native.ArmRegister[] X_registers = new Native.ArmRegister[31]
+        internal static ArmRegister[] X_registers = new ArmRegister[31]
         {
-            Native.ArmRegister.X0,
-            Native.ArmRegister.X1,
-            Native.ArmRegister.X2,
-            Native.ArmRegister.X3,
-            Native.ArmRegister.X4,
-            Native.ArmRegister.X5,
-            Native.ArmRegister.X6,
-            Native.ArmRegister.X7,
-            Native.ArmRegister.X8,
-            Native.ArmRegister.X9,
-            Native.ArmRegister.X10,
-            Native.ArmRegister.X11,
-            Native.ArmRegister.X12,
-            Native.ArmRegister.X13,
-            Native.ArmRegister.X14,
-            Native.ArmRegister.X15,
-            Native.ArmRegister.X16,
-            Native.ArmRegister.X17,
-            Native.ArmRegister.X18,
-            Native.ArmRegister.X19,
-            Native.ArmRegister.X20,
-            Native.ArmRegister.X21,
-            Native.ArmRegister.X22,
-            Native.ArmRegister.X23,
-            Native.ArmRegister.X24,
-            Native.ArmRegister.X25,
-            Native.ArmRegister.X26,
-            Native.ArmRegister.X27,
-            Native.ArmRegister.X28,
-            Native.ArmRegister.X29,
-            Native.ArmRegister.X30,
+            ArmRegister.X0,
+            ArmRegister.X1,
+            ArmRegister.X2,
+            ArmRegister.X3,
+            ArmRegister.X4,
+            ArmRegister.X5,
+            ArmRegister.X6,
+            ArmRegister.X7,
+            ArmRegister.X8,
+            ArmRegister.X9,
+            ArmRegister.X10,
+            ArmRegister.X11,
+            ArmRegister.X12,
+            ArmRegister.X13,
+            ArmRegister.X14,
+            ArmRegister.X15,
+            ArmRegister.X16,
+            ArmRegister.X17,
+            ArmRegister.X18,
+            ArmRegister.X19,
+            ArmRegister.X20,
+            ArmRegister.X21,
+            ArmRegister.X22,
+            ArmRegister.X23,
+            ArmRegister.X24,
+            ArmRegister.X25,
+            ArmRegister.X26,
+            ArmRegister.X27,
+            ArmRegister.X28,
+            ArmRegister.X29,
+            ArmRegister.X30,
         };
 
-        internal static Native.ArmRegister[] Q_registers = new Native.ArmRegister[32]
+        internal static ArmRegister[] Q_registers = new ArmRegister[32]
         {
-            Native.ArmRegister.Q0,
-            Native.ArmRegister.Q1,
-            Native.ArmRegister.Q2,
-            Native.ArmRegister.Q3,
-            Native.ArmRegister.Q4,
-            Native.ArmRegister.Q5,
-            Native.ArmRegister.Q6,
-            Native.ArmRegister.Q7,
-            Native.ArmRegister.Q8,
-            Native.ArmRegister.Q9,
-            Native.ArmRegister.Q10,
-            Native.ArmRegister.Q11,
-            Native.ArmRegister.Q12,
-            Native.ArmRegister.Q13,
-            Native.ArmRegister.Q14,
-            Native.ArmRegister.Q15,
-            Native.ArmRegister.Q16,
-            Native.ArmRegister.Q17,
-            Native.ArmRegister.Q18,
-            Native.ArmRegister.Q19,
-            Native.ArmRegister.Q20,
-            Native.ArmRegister.Q21,
-            Native.ArmRegister.Q22,
-            Native.ArmRegister.Q23,
-            Native.ArmRegister.Q24,
-            Native.ArmRegister.Q25,
-            Native.ArmRegister.Q26,
-            Native.ArmRegister.Q27,
-            Native.ArmRegister.Q28,
-            Native.ArmRegister.Q29,
-            Native.ArmRegister.Q30,
-            Native.ArmRegister.Q31,
+            ArmRegister.Q0,
+            ArmRegister.Q1,
+            ArmRegister.Q2,
+            ArmRegister.Q3,
+            ArmRegister.Q4,
+            ArmRegister.Q5,
+            ArmRegister.Q6,
+            ArmRegister.Q7,
+            ArmRegister.Q8,
+            ArmRegister.Q9,
+            ArmRegister.Q10,
+            ArmRegister.Q11,
+            ArmRegister.Q12,
+            ArmRegister.Q13,
+            ArmRegister.Q14,
+            ArmRegister.Q15,
+            ArmRegister.Q16,
+            ArmRegister.Q17,
+            ArmRegister.Q18,
+            ArmRegister.Q19,
+            ArmRegister.Q20,
+            ArmRegister.Q21,
+            ArmRegister.Q22,
+            ArmRegister.Q23,
+            ArmRegister.Q24,
+            ArmRegister.Q25,
+            ArmRegister.Q26,
+            ArmRegister.Q27,
+            ArmRegister.Q28,
+            ArmRegister.Q29,
+            ArmRegister.Q30,
+            ArmRegister.Q31,
         };
 
-        internal ulong GetRegister(Native.ArmRegister register)
+        internal ulong GetRegister(ArmRegister register)
         {
             byte[] value_bytes = new byte[8];
-            Native.Interface.Checked(Native.Interface.uc_reg_read(uc, (int)register, value_bytes));
+            Interface.Checked(Interface.uc_reg_read(uc, (int)register, value_bytes));
             return (ulong)BitConverter.ToInt64(value_bytes, 0);
         }
 
-        internal void SetRegister(Native.ArmRegister register, ulong value)
+        internal void SetRegister(ArmRegister register, ulong value)
         {
             byte[] value_bytes = BitConverter.GetBytes(value);
-            Native.Interface.Checked(Native.Interface.uc_reg_write(uc, (int)register, value_bytes));
+            Interface.Checked(Interface.uc_reg_write(uc, (int)register, value_bytes));
         }
 
-        internal Vector128<float> GetVector(Native.ArmRegister register)
+        internal Vector128<float> GetVector(ArmRegister register)
         {
             byte[] value_bytes = new byte[16];
-            Native.Interface.Checked(Native.Interface.uc_reg_read(uc, (int)register, value_bytes));
+            Interface.Checked(Interface.uc_reg_read(uc, (int)register, value_bytes));
             unsafe
             {
                 fixed (byte* p = &value_bytes[0])
@@ -207,7 +208,7 @@ namespace Ryujinx.Tests.Unicorn
             }
         }
 
-        internal void SetVector(Native.ArmRegister register, Vector128<float> value)
+        internal void SetVector(ArmRegister register, Vector128<float> value)
         {
             byte[] value_bytes = new byte[16];
             unsafe
@@ -217,7 +218,7 @@ namespace Ryujinx.Tests.Unicorn
                     Sse.Store((float*)p, value);
                 }
             }
-            Native.Interface.Checked(Native.Interface.uc_reg_write(uc, (int)register, value_bytes));
+            Interface.Checked(Interface.uc_reg_write(uc, (int)register, value_bytes));
         }
 
         public ulong GetX(int index)
@@ -251,7 +252,7 @@ namespace Ryujinx.Tests.Unicorn
         public byte[] MemoryRead(ulong address, ulong size)
         {
             byte[] value = new byte[size];
-            Native.Interface.Checked(Native.Interface.uc_mem_read(uc, address, value, size));
+            Interface.Checked(Interface.uc_mem_read(uc, address, value, size));
             return value;
         }
 
@@ -262,7 +263,7 @@ namespace Ryujinx.Tests.Unicorn
 
         public void MemoryWrite(ulong address, byte[] value)
         {
-            Native.Interface.Checked(Native.Interface.uc_mem_write(uc, address, value, (ulong)value.Length));
+            Interface.Checked(Interface.uc_mem_write(uc, address, value, (ulong)value.Length));
         }
 
         public void MemoryWrite8 (ulong address, byte value)   { MemoryWrite(address, new byte[]{value}); }
@@ -275,23 +276,23 @@ namespace Ryujinx.Tests.Unicorn
 
         public void MemoryMap(ulong address, ulong size, MemoryPermission permissions)
         {
-            Native.Interface.Checked(Native.Interface.uc_mem_map(uc, address, size, (uint)permissions));
+            Interface.Checked(Interface.uc_mem_map(uc, address, size, (uint)permissions));
         }
 
         public void MemoryUnmap(ulong address, ulong size)
         {
-            Native.Interface.Checked(Native.Interface.uc_mem_unmap(uc, address, size));
+            Interface.Checked(Interface.uc_mem_unmap(uc, address, size));
         }
 
         public void MemoryProtect(ulong address, ulong size, MemoryPermission permissions)
         {
-            Native.Interface.Checked(Native.Interface.uc_mem_protect(uc, address, size, (uint)permissions));
+            Interface.Checked(Interface.uc_mem_protect(uc, address, size, (uint)permissions));
         }
 
         public void DumpMemoryInformation()
         {
-            Native.Interface.Checked(Native.Interface.uc_mem_regions(uc, out IntPtr regions_raw, out uint length));
-            Native.Interface.MarshalArrayOf<Native.UnicornMemoryRegion>(regions_raw, (int)length, out var regions);
+            Interface.Checked(Interface.uc_mem_regions(uc, out IntPtr regions_raw, out uint length));
+            Interface.MarshalArrayOf<UnicornMemoryRegion>(regions_raw, (int)length, out var regions);
             foreach (var region in regions)
             {
                 Console.WriteLine("region: begin {0:X16} end {1:X16} perms {2:X8}", region.begin, region.end, region.perms);
@@ -302,7 +303,7 @@ namespace Ryujinx.Tests.Unicorn
         {
             try
             {
-                Native.Interface.uc_version(out uint major, out uint minor);
+                Interface.uc_version(out uint major, out uint minor);
                 return true;
             }
             catch (DllNotFoundException)

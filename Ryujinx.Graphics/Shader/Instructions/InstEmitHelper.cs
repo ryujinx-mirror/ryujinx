@@ -53,7 +53,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else if (floatType == FPType.FP64)
             {
-                //TODO.
+                // TODO.
             }
 
             throw new ArgumentException($"Invalid floating point type \"{floatType}\".");

@@ -16,11 +16,11 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 {
     class IAudioRenderer : IpcService, IDisposable
     {
-        //This is the amount of samples that are going to be appended
-        //each time that RequestUpdateAudioRenderer is called. Ideally,
-        //this value shouldn't be neither too small (to avoid the player
-        //starving due to running out of samples) or too large (to avoid
-        //high latency).
+        // This is the amount of samples that are going to be appended
+        // each time that RequestUpdateAudioRenderer is called. Ideally,
+        // this value shouldn't be neither too small (to avoid the player
+        // starving due to running out of samples) or too large (to avoid
+        // high latency).
         private const int MixBufferSamplesCount = 960;
 
         private Dictionary<int, ServiceProcessRequest> _commands;

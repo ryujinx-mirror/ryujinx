@@ -19,7 +19,7 @@ namespace Ryujinx.Common
 
         public T Allocate()
         {
-            var instance = _firstItem;
+            T instance = _firstItem;
 
             if (instance == null || instance != Interlocked.CompareExchange(ref _firstItem, null, instance))
             {
@@ -31,11 +31,11 @@ namespace Ryujinx.Common
 
         private T AllocateInternal()
         {
-            var items = _items;
+            T[] items = _items;
 
             for (int i = 0; i < items.Length; i++)
             {
-                var instance = items[i];
+                T instance = items[i];
 
                 if (instance != null && instance == Interlocked.CompareExchange(ref items[i], null, instance))
                 {
@@ -60,7 +60,7 @@ namespace Ryujinx.Common
 
         private void ReleaseInternal(T obj)
         {
-            var items = _items;
+            T[] items = _items;
 
             for (int i = 0; i < items.Length; i++)
             {

@@ -51,7 +51,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             while (workQueue.TryDequeue(out Block currBlock))
             {
-                //Check if the current block is inside another block.
+                // Check if the current block is inside another block.
                 if (BinarySearch(blocks, currBlock.Address, out int nBlkIndex))
                 {
                     Block nBlock = blocks[nBlkIndex];
@@ -68,7 +68,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     continue;
                 }
 
-                //If we have a block after the current one, set the limit address.
+                // If we have a block after the current one, set the limit address.
                 ulong limitAddress = ulong.MaxValue;
 
                 if (nBlkIndex != blocks.Count)
@@ -96,10 +96,10 @@ namespace Ryujinx.Graphics.Shader.Decoders
                         GetBlock(ssyOp.GetAbsoluteAddress());
                     }
 
-                    //Set child blocks. "Branch" is the block the branch instruction
-                    //points to (when taken), "Next" is the block at the next address,
-                    //executed when the branch is not taken. For Unconditional Branches
-                    //or end of program, Next is null.
+                    // Set child blocks. "Branch" is the block the branch instruction
+                    // points to (when taken), "Next" is the block at the next address,
+                    // executed when the branch is not taken. For Unconditional Branches
+                    // or end of program, Next is null.
                     OpCode lastOp = currBlock.GetLastOp();
 
                     if (lastOp is OpCodeBranch op)
@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     }
                 }
 
-                //Insert the new block on the list (sorted by address).
+                // Insert the new block on the list (sorted by address).
                 if (blocks.Count != 0)
                 {
                     Block nBlock = blocks[nBlkIndex];
@@ -187,7 +187,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     break;
                 }
 
-                //Ignore scheduling instructions, which are written every 32 bytes.
+                // Ignore scheduling instructions, which are written every 32 bytes.
                 if (((address - startAddress) & 0x1f) == 0)
                 {
                     address += 8;
@@ -208,7 +208,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
                 if (emitter == null)
                 {
-                    //TODO: Warning, illegal encoding.
+                    // TODO: Warning, illegal encoding.
                     continue;
                 }
 

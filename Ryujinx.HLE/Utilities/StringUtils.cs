@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.Utilities
 
         public static byte[] HexToBytes(string hexString)
         {
-            //Ignore last charactor if HexLength % 2 != 0.
+            // Ignore last character if HexLength % 2 != 0.
             int bytesInHex = hexString.Length / 2;
 
             byte[] output = new byte[bytesInHex];

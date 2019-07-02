@@ -33,7 +33,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             while (node != null)
             {
-                //We reached a child block, visit the nodes inside.
+                // We reached a child block, visit the nodes inside.
                 while (node is AstBlock childBlock)
                 {
                     Block = childBlock;
@@ -43,7 +43,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     BlockEntered?.Invoke(this, new BlockVisitationEventArgs(Block));
                 }
 
-                //Node may be null, if the block is empty.
+                // Node may be null, if the block is empty.
                 if (node != null)
                 {
                     IAstNode next = Next(node);
@@ -53,7 +53,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     node = next;
                 }
 
-                //We reached the end of the list, go up on tree to the parent blocks.
+                // We reached the end of the list, go up on tree to the parent blocks.
                 while (node == null && Block.Type != AstBlockType.Main)
                 {
                     BlockLeft?.Invoke(this, new BlockVisitationEventArgs(Block));

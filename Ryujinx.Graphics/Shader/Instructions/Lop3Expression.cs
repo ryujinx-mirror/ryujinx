@@ -16,11 +16,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             Operand expr = null;
 
-            //Handle some simple cases, or cases where
-            //the KMap would yield poor results (like XORs).
+            // Handle some simple cases, or cases where
+            // the KMap would yield poor results (like XORs).
             if (imm == 0x96 || imm == 0x69)
             {
-                //XOR (0x96) and XNOR (0x69).
+                // XOR (0x96) and XNOR (0x69).
                 if (imm == 0x69)
                 {
                     srcA = context.BitwiseNot(srcA);
@@ -33,18 +33,18 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else if (imm == 0)
             {
-                //Always false.
+                // Always false.
                 return Const(IrConsts.False);
             }
             else if (imm == 0xff)
             {
-                //Always true.
+                // Always true.
                 return Const(IrConsts.True);
             }
 
             int map;
 
-            //Encode into gray code.
+            // Encode into gray code.
             map  = ((imm >> 0) & 1) << 0;
             map |= ((imm >> 1) & 1) << 4;
             map |= ((imm >> 2) & 1) << 1;
@@ -54,7 +54,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             map |= ((imm >> 6) & 1) << 2;
             map |= ((imm >> 7) & 1) << 6;
 
-            //Solve KMap, get sum of products.
+            // Solve KMap, get sum of products.
             int visited = 0;
 
             for (int index = 0; index < 8 && visited != 0xff; index++)
@@ -76,7 +76,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                 }
 
-                //The mask should wrap, if we are on the high row, shift to low etc.
+                // The mask should wrap, if we are on the high row, shift to low etc.
                 int mask2 = (index & 4) != 0 ? mask >> 4 : mask << 4;
 
                 if ((map & mask2) == mask2)

@@ -69,10 +69,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                 AstAssignment assignment;
 
-                //If all the sources are bool, it's better to use short-circuiting
-                //logical operations, rather than forcing a cast to int and doing
-                //a bitwise operation with the value, as it is likely to be used as
-                //a bool in the end.
+                // If all the sources are bool, it's better to use short-circuiting
+                // logical operations, rather than forcing a cast to int and doing
+                // a bitwise operation with the value, as it is likely to be used as
+                // a bool in the end.
                 if (IsBitwiseInst(inst) && AreAllSourceTypesEqual(sources, VariableType.Bool))
                 {
                     inst = GetLogicalFromBitwiseInst(inst);

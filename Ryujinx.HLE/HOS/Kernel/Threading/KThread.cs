@@ -276,7 +276,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public void Exit()
         {
-            //TODO: Debug event.
+            // TODO: Debug event.
 
             if (Owner != null)
             {
@@ -352,7 +352,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (DynamicPriority < KScheduler.PrioritiesCount)
             {
-                //Move current thread to the end of the queue.
+                // Move current thread to the end of the queue.
                 _schedulingData.Reschedule(DynamicPriority, CurrentCore, this);
             }
 
@@ -383,7 +383,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (DynamicPriority < KScheduler.PrioritiesCount)
             {
-                //Move current thread to the end of the queue.
+                // Move current thread to the end of the queue.
                 _schedulingData.Reschedule(prio, core, this);
 
                 Func<KThread, bool> predicate = x => x.DynamicPriority == prio;
@@ -407,8 +407,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                         }
                     }
 
-                    //If the candidate was scheduled after the current thread, then it's not worth it,
-                    //unless the priority is higher than the current one.
+                    // If the candidate was scheduled after the current thread, then it's not worth it,
+                    // unless the priority is higher than the current one.
                     if (nextThreadOnCurrentQueue.LastScheduledTime >= thread.LastScheduledTime ||
                         nextThreadOnCurrentQueue.DynamicPriority    <  thread.DynamicPriority)
                     {
@@ -524,7 +524,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             {
                 if (pause)
                 {
-                    //Pause, the force pause flag should be clear (thread is NOT paused).
+                    // Pause, the force pause flag should be clear (thread is NOT paused).
                     if ((_forcePauseFlags & ThreadSchedState.ThreadPauseFlag) == 0)
                     {
                         _forcePauseFlags |= ThreadSchedState.ThreadPauseFlag;
@@ -538,7 +538,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 }
                 else
                 {
-                    //Unpause, the force pause flag should be set (thread is paused).
+                    // Unpause, the force pause flag should be set (thread is paused).
                     if ((_forcePauseFlags & ThreadSchedState.ThreadPauseFlag) != 0)
                     {
                         ThreadSchedState oldForcePauseFlags = _forcePauseFlags;
@@ -604,7 +604,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             bool useOverride = _affinityOverrideCount != 0;
 
-            //The value -3 is "do not change the preferred core".
+            // The value -3 is "do not change the preferred core".
             if (newCore == -3)
             {
                 newCore = useOverride ? _preferredCoreOverride : PreferredCore;
@@ -766,7 +766,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             do
             {
-                //Skip all threads that are not waiting for this mutex.
+                // Skip all threads that are not waiting for this mutex.
                 while (currentNode != null && currentNode.Value.MutexAddress != mutexAddress)
                 {
                     currentNode = currentNode.Next;
@@ -785,12 +785,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                 if (newMutexOwner != null)
                 {
-                    //New owner was already selected, re-insert on new owner list.
+                    // New owner was already selected, re-insert on new owner list.
                     newMutexOwner.AddToMutexWaitersList(currentNode.Value);
                 }
                 else
                 {
-                    //New owner not selected yet, use current thread.
+                    // New owner not selected yet, use current thread.
                     newMutexOwner = currentNode.Value;
                 }
 
@@ -812,9 +812,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         private void UpdatePriorityInheritance()
         {
-            //If any of the threads waiting for the mutex has
-            //higher priority than the current thread, then
-            //the current thread inherits that priority.
+            // If any of the threads waiting for the mutex has
+            // higher priority than the current thread, then
+            // the current thread inherits that priority.
             int highestPriority = BasePriority;
 
             if (_mutexWaiters.First != null)
@@ -837,7 +837,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                 if (MutexOwner != null)
                 {
-                    //Remove and re-insert to ensure proper sorting based on new priority.
+                    // Remove and re-insert to ensure proper sorting based on new priority.
                     MutexOwner._mutexWaiters.Remove(_mutexWaiterNode);
 
                     MutexOwner.AddToMutexWaitersList(this);
@@ -877,7 +877,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (oldFlags == ThreadSchedState.Running)
             {
-                //Was running, now it's stopped.
+                // Was running, now it's stopped.
                 if (CurrentCore >= 0)
                 {
                     _schedulingData.Unschedule(DynamicPriority, CurrentCore, this);
@@ -893,7 +893,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             }
             else if (SchedFlags == ThreadSchedState.Running)
             {
-                //Was stopped, now it's running.
+                // Was stopped, now it's running.
                 if (CurrentCore >= 0)
                 {
                     _schedulingData.Schedule(DynamicPriority, CurrentCore, this);
@@ -918,7 +918,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 return;
             }
 
-            //Remove thread from the old priority queues.
+            // Remove thread from the old priority queues.
             if (CurrentCore >= 0)
             {
                 _schedulingData.Unschedule(oldPriority, CurrentCore, this);
@@ -932,7 +932,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 }
             }
 
-            //Add thread to the new priority queues.
+            // Add thread to the new priority queues.
             KThread currentThread = _scheduler.GetCurrentThread();
 
             if (CurrentCore >= 0)
@@ -965,7 +965,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 return;
             }
 
-            //Remove thread from the old priority queues.
+            // Remove thread from the old priority queues.
             for (int core = 0; core < KScheduler.CpuCoresCount; core++)
             {
                 if (((oldAffinityMask >> core) & 1) != 0)
@@ -981,7 +981,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 }
             }
 
-            //Add thread to the new priority queues.
+            // Add thread to the new priority queues.
             for (int core = 0; core < KScheduler.CpuCoresCount; core++)
             {
                 if (((AffinityMask >> core) & 1) != 0)
@@ -1069,7 +1069,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             System.CriticalSection.Enter();
 
-            //Wake up all threads that may be waiting for a mutex being held by this thread.
+            // Wake up all threads that may be waiting for a mutex being held by this thread.
             foreach (KThread thread in _mutexWaiters)
             {
                 thread.MutexOwner             = null;

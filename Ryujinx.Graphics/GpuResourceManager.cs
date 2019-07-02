@@ -109,7 +109,7 @@ namespace Ryujinx.Graphics
             {
                 if (oldType == ImageType.ColorBuffer || oldType == ImageType.ZetaBuffer)
                 {
-                    //Avoid data destruction
+                    // Avoid data destruction
                     MemoryRegionModified(vmm, position, size, NvGpuBufferType.Texture);
 
                     skipCheck = true;

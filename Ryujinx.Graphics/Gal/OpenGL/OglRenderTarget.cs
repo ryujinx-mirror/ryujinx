@@ -77,11 +77,11 @@ namespace Ryujinx.Graphics.Gal.OpenGL
         private int _cropRight;
         private int _cropBottom;
 
-        //This framebuffer is used to attach guest rendertargets,
-        //think of it as a dummy OpenGL VAO
+        // This framebuffer is used to attach guest rendertargets,
+        // think of it as a dummy OpenGL VAO
         private int _dummyFrameBuffer;
 
-        //These framebuffers are used to blit images
+        // These framebuffers are used to blit images
         private int _srcFb;
         private int _dstFb;
 
@@ -109,8 +109,8 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
         private void TextureDeletionHandler(object sender, int handle)
         {
-            //Texture was deleted, the handle is no longer valid, so
-            //reset all uses of this handle on a render target.
+            // Texture was deleted, the handle is no longer valid, so
+            // reset all uses of this handle on a render target.
             for (int attachment = 0; attachment < RenderTargetsCount; attachment++)
             {
                 if (_colorHandles[attachment] == handle)
@@ -484,7 +484,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
 
             GL.BindBuffer(BufferTarget.PixelPackBuffer, _copyPbo);
 
-            //The buffer should be large enough to hold the largest texture.
+            // The buffer should be large enough to hold the largest texture.
             int bufferSize = Math.Max(ImageUtils.GetSize(oldImage),
                                       ImageUtils.GetSize(newImage));
 

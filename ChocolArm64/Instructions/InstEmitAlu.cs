@@ -151,7 +151,7 @@ namespace ChocolArm64.Instructions
 
         public static void Extr(ILEmitterCtx context)
         {
-            //TODO: Ensure that the Shift is valid for the Is64Bits.
+            // TODO: Ensure that the Shift is valid for the Is64Bits.
             OpCodeAluRs64 op = (OpCodeAluRs64)context.CurrOp;
 
             context.EmitLdintzr(op.Rm);
@@ -309,7 +309,7 @@ namespace ChocolArm64.Instructions
 
         private static void EmitDiv(ILEmitterCtx context, OpCode ilOp)
         {
-            //If Rm == 0, Rd = 0 (division by zero).
+            // If Rm == 0, Rd = 0 (division by zero).
             context.EmitLdc_I(0);
 
             EmitAluLoadRm(context);
@@ -323,7 +323,7 @@ namespace ChocolArm64.Instructions
 
             if (ilOp == OpCodes.Div)
             {
-                //If Rn == INT_MIN && Rm == -1, Rd = INT_MIN (overflow).
+                // If Rn == INT_MIN && Rm == -1, Rd = INT_MIN (overflow).
                 long intMin = 1L << (context.CurrOp.GetBitsCount() - 1);
 
                 context.EmitLdc_I(intMin);
@@ -381,10 +381,10 @@ namespace ChocolArm64.Instructions
 
             context.Emit(OpCodes.And);
 
-            //Note: Only 32-bits shift values are valid, so when the value is 64-bits
-            //we need to cast it to a 32-bits integer. This is fine because we
-            //AND the value and only keep the lower 5 or 6 bits anyway -- it
-            //could very well fit on a byte.
+            // Note: Only 32-bits shift values are valid, so when the value is 64-bits
+            // we need to cast it to a 32-bits integer. This is fine because we
+            // AND the value and only keep the lower 5 or 6 bits anyway -- it
+            // could very well fit on a byte.
             if (context.CurrOp.RegisterSize != RegisterSize.Int32)
             {
                 context.Emit(OpCodes.Conv_I4);

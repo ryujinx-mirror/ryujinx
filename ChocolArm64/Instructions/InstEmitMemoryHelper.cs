@@ -40,7 +40,7 @@ namespace ChocolArm64.Instructions
 
         private static void EmitReadCall(ILEmitterCtx context, Extension ext, int size)
         {
-            //Save the address into a temp.
+            // Save the address into a temp.
             context.EmitStint(_tempIntAddress);
 
             bool isSimd = IsSimd(context);
@@ -99,7 +99,7 @@ namespace ChocolArm64.Instructions
         {
             bool isSimd = IsSimd(context);
 
-            //Save the value into a temp.
+            // Save the value into a temp.
             if (isSimd)
             {
                 context.EmitStvec(_tempVecValue);
@@ -109,7 +109,7 @@ namespace ChocolArm64.Instructions
                 context.EmitStint(_tempIntValue);
             }
 
-            //Save the address into a temp.
+            // Save the address into a temp.
             context.EmitStint(_tempIntAddress);
 
             if (size < 0 || size > (isSimd ? 4 : 3))

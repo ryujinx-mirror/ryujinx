@@ -207,7 +207,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                 signaledThreads.Enqueue(thread);
 
-                //If the count is <= 0, we should signal all threads waiting.
+                // If the count is <= 0, we should signal all threads waiting.
                 if (count >= 1 && --count == 0)
                 {
                     break;
@@ -234,7 +234,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             {
                 if (!KernelTransfer.UserToKernelInt32(_system, address, out mutexValue))
                 {
-                    //Invalid address.
+                    // Invalid address.
                     requester.SignaledObj   = null;
                     requester.ObjSyncResult = KernelResult.InvalidMemState;
 
@@ -243,12 +243,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                 if (mutexValue != 0)
                 {
-                    //Update value to indicate there is a mutex waiter now.
+                    // Update value to indicate there is a mutex waiter now.
                     newMutexValue = mutexValue | HasListenersMask;
                 }
                 else
                 {
-                    //No thread owning the mutex, assign to requesting thread.
+                    // No thread owning the mutex, assign to requesting thread.
                     newMutexValue = requester.ThreadHandleForUserMutex;
                 }
             }
@@ -256,7 +256,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (mutexValue == 0)
             {
-                //We now own the mutex.
+                // We now own the mutex.
                 requester.SignaledObj   = null;
                 requester.ObjSyncResult = KernelResult.Success;
 
@@ -271,12 +271,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (mutexOwner != null)
             {
-                //Mutex already belongs to another thread, wait for it.
+                // Mutex already belongs to another thread, wait for it.
                 mutexOwner.AddMutexWaiter(requester);
             }
             else
             {
-                //Invalid mutex owner.
+                // Invalid mutex owner.
                 requester.SignaledObj   = null;
                 requester.ObjSyncResult = KernelResult.InvalidHandle;
 
@@ -513,9 +513,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             int offset;
 
-            //The value is decremented if the number of threads waiting is less
-            //or equal to the Count of threads to be signaled, or Count is zero
-            //or negative. It is incremented if there are no threads waiting.
+            // The value is decremented if the number of threads waiting is less
+            // or equal to the Count of threads to be signaled, or Count is zero
+            // or negative. It is incremented if there are no threads waiting.
             int waitingCount = 0;
 
             foreach (KThread thread in ArbiterThreads.Where(x => x.MutexAddress == address))
@@ -572,7 +572,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             {
                 signaledThreads.Enqueue(thread);
 
-                //If the count is <= 0, we should signal all threads waiting.
+                // If the count is <= 0, we should signal all threads waiting.
                 if (count >= 1 && --count == 0)
                 {
                     break;

@@ -583,9 +583,9 @@ namespace ChocolArm64.Instructions
         {
             if (Sse41.IsSupported)
             {
-                //Note: The if/else if is necessary to enable the JIT to
-                //produce a single INSERTPS instruction instead of the
-                //jump table fallback.
+                // Note: The if/else if is necessary to enable the JIT to
+                // produce a single INSERTPS instruction instead of the
+                // jump table fallback.
                 if (index == 0)
                 {
                     return Sse41.Insert(vector, value, 0x00);
@@ -628,7 +628,7 @@ namespace ChocolArm64.Instructions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector128<float> Sse41VectorInsertScalarSingle(float value, Vector128<float> vector)
         {
-            //Note: 0b1110 is the mask to zero the upper bits.
+            // Note: 0b1110 is the mask to zero the upper bits.
             return Sse41.Insert(vector, value, 0b1110);
         }
 

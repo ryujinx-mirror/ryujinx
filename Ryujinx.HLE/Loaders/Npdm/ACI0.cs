@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
 
             TitleId = reader.ReadInt64();
 
-            //Reserved.
+            // Reserved.
             stream.Seek(8, SeekOrigin.Current);
 
             int fsAccessHeaderOffset       = reader.ReadInt32();

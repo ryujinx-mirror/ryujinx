@@ -16,8 +16,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         private object _countIncLock;
 
-        //TODO: Remove that, we need it for now to allow HLE
-        //SM implementation to work with the new IPC system.
+        // TODO: Remove that, we need it for now to allow HLE
+        // SM implementation to work with the new IPC system.
         public IpcService Service { get; set; }
 
         public KClientPort(Horizon system, KPort parent, int maxSessions) : base(system)

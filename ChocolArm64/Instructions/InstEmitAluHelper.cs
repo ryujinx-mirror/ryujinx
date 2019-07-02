@@ -10,7 +10,7 @@ namespace ChocolArm64.Instructions
     {
         public static void EmitAdcsCCheck(ILEmitterCtx context)
         {
-            //C = (Rd == Rn && CIn) || Rd < Rn
+            // C = (Rd == Rn && CIn) || Rd < Rn
             context.EmitSttmp();
             context.EmitLdtmp();
             context.EmitLdtmp();
@@ -35,7 +35,7 @@ namespace ChocolArm64.Instructions
 
         public static void EmitAddsCCheck(ILEmitterCtx context)
         {
-            //C = Rd < Rn
+            // C = Rd < Rn
             context.Emit(OpCodes.Dup);
 
             EmitAluLoadRn(context);
@@ -47,7 +47,7 @@ namespace ChocolArm64.Instructions
 
         public static void EmitAddsVCheck(ILEmitterCtx context)
         {
-            //V = (Rd ^ Rn) & ~(Rn ^ Rm) < 0
+            // V = (Rd ^ Rn) & ~(Rn ^ Rm) < 0
             context.Emit(OpCodes.Dup);
 
             EmitAluLoadRn(context);
@@ -69,7 +69,7 @@ namespace ChocolArm64.Instructions
 
         public static void EmitSbcsCCheck(ILEmitterCtx context)
         {
-            //C = (Rn == Rm && CIn) || Rn > Rm
+            // C = (Rn == Rm && CIn) || Rn > Rm
             EmitAluLoadOpers(context);
 
             context.Emit(OpCodes.Ceq);
@@ -88,7 +88,7 @@ namespace ChocolArm64.Instructions
 
         public static void EmitSubsCCheck(ILEmitterCtx context)
         {
-            //C = Rn == Rm || Rn > Rm = !(Rn < Rm)
+            // C = Rn == Rm || Rn > Rm = !(Rn < Rm)
             EmitAluLoadOpers(context);
 
             context.Emit(OpCodes.Clt_Un);
@@ -102,7 +102,7 @@ namespace ChocolArm64.Instructions
 
         public static void EmitSubsVCheck(ILEmitterCtx context)
         {
-            //V = (Rd ^ Rn) & (Rn ^ Rm) < 0
+            // V = (Rd ^ Rn) & (Rn ^ Rm) < 0
             context.Emit(OpCodes.Dup);
 
             EmitAluLoadRn(context);
@@ -170,7 +170,7 @@ namespace ChocolArm64.Instructions
         {
             switch (context.CurrOp)
             {
-                //ARM32.
+                // ARM32.
                 case OpCode32AluImm op:
                     context.EmitLdc_I4(op.Imm);
 
@@ -190,7 +190,7 @@ namespace ChocolArm64.Instructions
                     context.EmitLdc_I4(op.Imm);
                     break;
 
-                //ARM64.
+                // ARM64.
                 case IOpCodeAluImm64 op:
                     context.EmitLdc_I(op.Imm);
                     break;
@@ -245,7 +245,7 @@ namespace ChocolArm64.Instructions
             context.EmitStflg((int)PState.NBit);
         }
 
-        //ARM32 helpers.
+        // ARM32 helpers.
         private static void EmitLoadRmShiftedByImmediate(ILEmitterCtx context, OpCode32AluRsImm op, bool setCarry)
         {
             int shift = op.Imm;
@@ -432,7 +432,7 @@ namespace ChocolArm64.Instructions
 
         private static void EmitRrxC(ILEmitterCtx context, bool setCarry)
         {
-            //Rotate right by 1 with carry.
+            // Rotate right by 1 with carry.
             if (setCarry)
             {
                 context.Emit(OpCodes.Dup);

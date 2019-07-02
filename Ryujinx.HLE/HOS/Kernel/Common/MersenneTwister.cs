@@ -34,16 +34,16 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
             if (range == -1)
             {
-                //Increment would cause a overflow, special case.
+                // Increment would cause a overflow, special case.
                 return GenRandomNumber(2, 2, 32, 0xffffffffu, 0xffffffffu);
             }
 
             range++;
 
-            //This is log2(Range) plus one.
+            // This is log2(Range) plus one.
             int nextRangeLog2 = 64 - BitUtils.CountLeadingZeros64(range);
 
-            //If Range is already power of 2, subtract one to use log2(Range) directly.
+            // If Range is already power of 2, subtract one to use log2(Range) directly.
             int rangeLog2 = nextRangeLog2 - (BitUtils.IsPowerOfTwo64(range) ? 1 : 0);
 
             int parts       = rangeLog2 > 32 ? 2 : 1;

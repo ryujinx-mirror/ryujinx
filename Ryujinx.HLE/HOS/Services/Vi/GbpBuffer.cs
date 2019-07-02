@@ -150,7 +150,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
 
             if (Header.IntsCount != 0x51)
             {
-                throw new System.NotImplementedException($"Unexpected Graphic Buffer ints count (expected 0x51, found 0x{Header.IntsCount:x}");
+                throw new NotImplementedException($"Unexpected Graphic Buffer ints count (expected 0x51, found 0x{Header.IntsCount:x}");
             }
 
             Buffer = reader.ReadStruct<NvGraphicBuffer>();

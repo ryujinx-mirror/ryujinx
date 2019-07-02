@@ -17,7 +17,7 @@ namespace Ryujinx.Profiler
         private static ProfilerSettings _settings;
 
         [Conditional("USE_PROFILING")]
-        public static void Initalize()
+        public static void Initialize()
         {
             var config = ProfilerConfiguration.Load(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ProfilerConfig.jsonc"));
 
@@ -70,11 +70,11 @@ namespace Ryujinx.Profiler
         }
 
         [Conditional("USE_PROFILING")]
-        public static void RegisterFlagReciever(Action<TimingFlag> reciever)
+        public static void RegisterFlagReceiver(Action<TimingFlag> receiver)
         {
             if (!ProfilingEnabled())
                 return;
-            _profileInstance.RegisterFlagReciever(reciever);
+            _profileInstance.RegisterFlagReceiver(receiver);
         }
 
         [Conditional("USE_PROFILING")]

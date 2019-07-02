@@ -68,8 +68,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                     if (hasThreadExecuting)
                     {
-                        //If this is not the thread that is currently executing, we need
-                        //to request an interrupt to allow safely starting another thread.
+                        // If this is not the thread that is currently executing, we need
+                        // to request an interrupt to allow safely starting another thread.
                         if (!currentThread.Context.IsCurrentThread())
                         {
                             currentThread.Context.RequestInterrupt();
@@ -80,8 +80,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                         CoreManager.Reset(currentThread.Context.Work);
                     }
 
-                    //Advance current core and try picking a thread,
-                    //keep advancing if it is null.
+                    // Advance current core and try picking a thread,
+                    // keep advancing if it is null.
                     for (int core = 0; core < 4; core++)
                     {
                         _currentCore = (_currentCore + 1) % CpuCoresCount;
@@ -100,8 +100,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                         }
                     }
 
-                    //If nothing was running before, then we are on a "external"
-                    //HLE thread, we don't need to wait.
+                    // If nothing was running before, then we are on a "external"
+                    // HLE thread, we don't need to wait.
                     if (!hasThreadExecuting)
                     {
                         return;
@@ -114,9 +114,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         private void PreemptCurrentThread()
         {
-            //Preempts current thread every 10 milliseconds on a round-robin fashion,
-            //when multi core scheduling is disabled, to try ensuring that all threads
-            //gets a chance to run.
+            // Preempts current thread every 10 milliseconds on a round-robin fashion,
+            // when multi core scheduling is disabled, to try ensuring that all threads
+            // gets a chance to run.
             while (_keepPreempting)
             {
                 lock (CoreContexts)

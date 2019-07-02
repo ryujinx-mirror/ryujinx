@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
-                //...
+                // ...
             };
         }
     }

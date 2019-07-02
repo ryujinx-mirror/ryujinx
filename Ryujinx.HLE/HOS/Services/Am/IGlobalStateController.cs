@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
-                //...
+                // ...
             };
         }
     }

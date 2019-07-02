@@ -131,7 +131,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                     }
                 }
 
-                if(_locationEntries.ContainsKey(storageId) && _locationEntries[storageId]?.Count == 0)
+                if (_locationEntries.ContainsKey(storageId) && _locationEntries[storageId]?.Count == 0)
                 {
                     _locationEntries.Remove(storageId);
                 }

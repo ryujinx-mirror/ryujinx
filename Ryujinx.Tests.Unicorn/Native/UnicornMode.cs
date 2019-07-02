@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 namespace Ryujinx.Tests.Unicorn.Native
 {
     public enum UnicornMode

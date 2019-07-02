@@ -81,7 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
             MemoryHelper.FillWithZeros(context.Memory, recBuffPtr, 0x60);
 
-            //Add only the default display to buffer
+            // Add only the default display to buffer
             context.Memory.WriteBytes(recBuffPtr, Encoding.ASCII.GetBytes("Default"));
             context.Memory.WriteInt64(recBuffPtr + 0x40, 0x1L);
             context.Memory.WriteInt64(recBuffPtr + 0x48, 0x1L);
@@ -186,14 +186,14 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
             if (!convertedScalingMode.HasValue)
             {
-                //Scaling mode out of the range of valid values.
+                // Scaling mode out of the range of valid values.
                 return MakeError(ErrorModule.Vi, 1);
             }
 
             if (scalingMode != SrcScalingMode.ScaleToWindow &&
                 scalingMode != SrcScalingMode.PreserveAspectRatio)
             {
-                //Invalid scaling mode specified.
+                // Invalid scaling mode specified.
                 return MakeError(ErrorModule.Vi, 6);
             }
 
@@ -239,7 +239,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             {
                 BinaryWriter writer = new BinaryWriter(ms);
 
-                //flat_binder_object (size is 0x28)
+                // flat_binder_object (size is 0x28)
                 writer.Write(2); //Type (BINDER_TYPE_WEAK_BINDER)
                 writer.Write(0); //Flags
                 writer.Write((int)(id >> 0));

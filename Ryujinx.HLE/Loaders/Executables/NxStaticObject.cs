@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.Loaders.Executables
             DataOffset = dataMemOffset;
             BssSize    = bssSize;
 
-            //Text segment
+            // Text segment
             input.Seek(textOffset, SeekOrigin.Begin);
 
             Text = reader.ReadBytes(textSize);
@@ -85,7 +85,7 @@ namespace Ryujinx.HLE.Loaders.Executables
                 Text = Lz4.Decompress(Text, textDecSize);
             }
 
-            //Read-only data segment
+            // Read-only data segment
             input.Seek(roOffset, SeekOrigin.Begin);
 
             Ro = reader.ReadBytes(roSize);
@@ -95,7 +95,7 @@ namespace Ryujinx.HLE.Loaders.Executables
                 Ro = Lz4.Decompress(Ro, roDecSize);
             }
 
-            //Data segment
+            // Data segment
             input.Seek(dataOffset, SeekOrigin.Begin);
 
             Data = reader.ReadBytes(dataSize);

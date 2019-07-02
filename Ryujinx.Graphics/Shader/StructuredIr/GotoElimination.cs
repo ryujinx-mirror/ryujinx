@@ -8,8 +8,8 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 {
     static class GotoElimination
     {
-        //This is a modified version of the algorithm presented on the paper
-        //"Taming Control Flow: A Structured Approach to Eliminating Goto Statements".
+        // This is a modified version of the algorithm presented on the paper
+        // "Taming Control Flow: A Structured Approach to Eliminating Goto Statements".
         public static void Eliminate(GotoStatement[] gotos)
         {
             for (int index = gotos.Length - 1; index >= 0; index--)
@@ -43,10 +43,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                     if (Previous(stmt.Goto) is AstBlock elseBlock && elseBlock.Type == AstBlockType.Else)
                     {
-                        //It's possible that the label was enclosed inside an else block,
-                        //in this case we need to update the block and level.
-                        //We also need to set the IsLoop for the case when the label is
-                        //now before the goto, due to the newly introduced else block.
+                        // It's possible that the label was enclosed inside an else block,
+                        // in this case we need to update the block and level.
+                        // We also need to set the IsLoop for the case when the label is
+                        // now before the goto, due to the newly introduced else block.
                         lBlock = ParentBlock(stmt.Label);
 
                         lLevel = Level(lBlock);
@@ -97,7 +97,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         private static bool DirectlyRelated(AstBlock lBlock, AstBlock rBlock, int lLevel, int rLevel)
         {
-            //If the levels are equal, they can be either siblings or indirectly related.
+            // If the levels are equal, they can be either siblings or indirectly related.
             if (lLevel == rLevel)
             {
                 return false;
@@ -171,9 +171,9 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             AstBlock block = origin;
 
-            //Check if a loop is enclosing the goto, and the block that is
-            //directly related to the label is above the loop block.
-            //In that case, we need to introduce a break to get out of the loop.
+            // Check if a loop is enclosing the goto, and the block that is
+            // directly related to the label is above the loop block.
+            // In that case, we need to introduce a break to get out of the loop.
             AstBlock loopBlock = origin;
 
             int loopLevel = gLevel;
@@ -199,7 +199,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 }
             }
 
-            //Insert ifs to skip the parts that shouldn't be executed due to the goto.
+            // Insert ifs to skip the parts that shouldn't be executed due to the goto.
             bool tryInsertElse = stmt.IsUnconditional && origin.Type == AstBlockType.If;
 
             while (gLevel > lLevel)
@@ -210,10 +210,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                 AstBlock child = block;
 
-                //We can't move the goto in the middle of a if and a else block, in
-                //this case we need to move it after the else.
-                //IsLoop may need to be updated if the label is inside the else, as
-                //introducing a loop is the only way to ensure the else will be executed.
+                // We can't move the goto in the middle of a if and a else block, in
+                // this case we need to move it after the else.
+                // IsLoop may need to be updated if the label is inside the else, as
+                // introducing a loop is the only way to ensure the else will be executed.
                 if (Next(child) is AstBlock elseBlock && elseBlock.Type == AstBlockType.Else)
                 {
                     child = elseBlock;
@@ -256,7 +256,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                 if (child.Type == AstBlockType.If)
                 {
-                    //Modify the if condition to allow it to be entered by the goto.
+                    // Modify the if condition to allow it to be entered by the goto.
                     if (!ContainsCondComb(child.Condition, Instruction.LogicalOr, stmt.Condition))
                     {
                         child.OrCondition(stmt.Condition);
@@ -264,7 +264,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 }
                 else if (child.Type == AstBlockType.Else)
                 {
-                    //Modify the matching if condition to force the else to be entered by the goto.
+                    // Modify the matching if condition to force the else to be entered by the goto.
                     if (!(Previous(child) is AstBlock ifBlock) || ifBlock.Type != AstBlockType.If)
                     {
                         throw new InvalidOperationException("Found an else without a matching if.");
@@ -309,14 +309,14 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         {
             if (block.Type == AstBlockType.DoWhile && first == block.First)
             {
-                //We only need to insert the continue if we're not at the end of the loop,
-                //or if our condition is different from the loop condition.
+                // We only need to insert the continue if we're not at the end of the loop,
+                // or if our condition is different from the loop condition.
                 if (Next(stmt.Goto) != null || block.Condition != stmt.Condition)
                 {
                     EncloseSingleInst(stmt, Instruction.LoopContinue);
                 }
 
-                //Modify the do-while condition to allow it to continue.
+                // Modify the do-while condition to allow it to continue.
                 if (!ContainsCondComb(block.Condition, Instruction.LogicalOr, stmt.Condition))
                 {
                     block.OrCondition(stmt.Condition);
@@ -356,10 +356,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 cond = InverseCond(cond);
             }
 
-            //Do a quick check, if we are enclosing a single block,
-            //and the block type/condition matches the one we're going
-            //to create, then we don't need a new block, we can just
-            //return the old one.
+            // Do a quick check, if we are enclosing a single block,
+            // and the block type/condition matches the one we're going
+            // to create, then we don't need a new block, we can just
+            // return the old one.
             bool hasSingleNode = Next(first) == last;
 
             if (hasSingleNode && BlockMatches(first, type, cond))

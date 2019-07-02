@@ -18,7 +18,7 @@ namespace Ryujinx.Profiler.UI
                 float barHeight   = (LineHeight - LinePadding) / 3.0f;
 
                 // Get max values
-                var maxInstant = maxAverage = maxTotal = 0;
+                long maxInstant = maxAverage = maxTotal = 0;
                 foreach (KeyValuePair<ProfileConfig, TimingInfo> kvp in _sortedProfileData)
                 {
                     maxInstant = Math.Max(maxInstant, kvp.Value.Instant);

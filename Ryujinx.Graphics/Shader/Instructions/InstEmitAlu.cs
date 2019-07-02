@@ -36,7 +36,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             context.Copy(GetDest(context), res);
 
-            //TODO: CC, X, corner cases
+            // TODO: CC, X, corner cases
         }
 
         public static void Iadd(EmitterContext context)
@@ -60,7 +60,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (op.Extended)
             {
-                //Add carry, or subtract borrow.
+                // Add carry, or subtract borrow.
                 res = context.IAdd(res, isSubtraction
                     ? context.BitwiseNot(GetCF(context))
                     : context.BitwiseAnd(GetCF(context), Const(1)));
@@ -102,7 +102,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 }
                 else
                 {
-                    //TODO: Warning.
+                    // TODO: Warning.
                 }
 
                 return src;
@@ -126,7 +126,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 }
                 else
                 {
-                    //TODO: Warning.
+                    // TODO: Warning.
                 }
             }
 
@@ -134,7 +134,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             context.Copy(GetDest(context), res);
 
-            //TODO: CC, X, corner cases
+            // TODO: CC, X, corner cases
         }
 
         public static void Imnmx(EmitterContext context)
@@ -162,7 +162,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             SetZnFlags(context, dest, op.SetCondCode);
 
-            //TODO: X flags.
+            // TODO: X flags.
         }
 
         public static void Iscadd(EmitterContext context)
@@ -193,7 +193,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             context.Copy(GetDest(context), res);
 
-            //TODO: CC, X
+            // TODO: CC, X
         }
 
         public static void Iset(EmitterContext context)
@@ -225,7 +225,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 context.Copy(dest, res);
             }
 
-            //TODO: CC, X
+            // TODO: CC, X
         }
 
         public static void Isetp(EmitterContext context)
@@ -330,10 +330,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Rro(EmitterContext context)
         {
-            //This is the range reduction operator,
-            //we translate it as a simple move, as it
-            //should be always followed by a matching
-            //MUFU instruction.
+            // This is the range reduction operator,
+            // we translate it as a simple move, as it
+            // should be always followed by a matching
+            // MUFU instruction.
             OpCodeAlu op = (OpCodeAlu)context.CurrOp;
 
             bool negateB   = op.RawOpCode.Extract(45);
@@ -363,13 +363,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (!isMasked)
             {
-                //Clamped shift value.
+                // Clamped shift value.
                 Operand isLessThan32 = context.ICompareLessUnsigned(srcB, Const(32));
 
                 res = context.ConditionalSelect(isLessThan32, res, Const(0));
             }
 
-            //TODO: X, CC
+            // TODO: X, CC
 
             context.Copy(GetDest(context), res);
         }
@@ -401,7 +401,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (!isMasked)
             {
-                //Clamped shift value.
+                // Clamped shift value.
                 Operand resShiftBy32;
 
                 if (isSigned)
@@ -418,7 +418,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 res = context.ConditionalSelect(isLessThan32, res, resShiftBy32);
             }
 
-            //TODO: X, CC
+            // TODO: X, CC
 
             context.Copy(GetDest(context), res);
         }
@@ -454,7 +454,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             Operand srcB = GetSrcB(context);
             Operand srcC = GetSrcC(context);
 
-            //XMAD immediates are 16-bits unsigned integers.
+            // XMAD immediates are 16-bits unsigned integers.
             if (srcB.Type == OperandType.Constant)
             {
                 srcB = Const(srcB.Value & 0xffff);
@@ -541,12 +541,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (extended)
             {
-                //Add with carry.
+                // Add with carry.
                 res = context.IAdd(res, context.BitwiseAnd(GetCF(context), Const(1)));
             }
             else
             {
-                //Add (no carry in).
+                // Add (no carry in).
                 res = context.IAdd(res, srcC);
             }
 
@@ -654,12 +654,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (!extended || isSubtraction)
             {
-                //C = d < a
+                // C = d < a
                 context.Copy(GetCF(context), context.ICompareLessUnsigned(res, srcA));
             }
             else
             {
-                //C = (d == a && CIn) || d < a
+                // C = (d == a && CIn) || d < a
                 Operand tempC0 = context.ICompareEqual       (res, srcA);
                 Operand tempC1 = context.ICompareLessUnsigned(res, srcA);
 
@@ -668,7 +668,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 context.Copy(GetCF(context), context.BitwiseOr(tempC0, tempC1));
             }
 
-            //V = (d ^ a) & ~(a ^ b) < 0
+            // V = (d ^ a) & ~(a ^ b) < 0
             Operand tempV0 = context.BitwiseExclusiveOr(res,  srcA);
             Operand tempV1 = context.BitwiseExclusiveOr(srcA, srcB);
 

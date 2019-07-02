@@ -204,10 +204,10 @@ namespace Ryujinx.Graphics.Graphics3d
                 dstBlitX + dstBlitW,
                 dstBlitY + dstBlitH);
 
-            //Do a guest side copy aswell. This is necessary when
-            //the texture is modified by the guest, however it doesn't
-            //work when resources that the gpu can write to are copied,
-            //like framebuffers.
+            // Do a guest side copy as well. This is necessary when
+            // the texture is modified by the guest, however it doesn't
+            // work when resources that the gpu can write to are copied,
+            // like framebuffers.
 
             // FIXME: SUPPORT MULTILAYER CORRECTLY HERE (this will cause weird stuffs on the first layer)
             ImageUtils.CopyTexture(

@@ -146,7 +146,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 context.Copy(dest, res);
             }
 
-            //TODO: CC, X
+            // TODO: CC, X
         }
 
         public static void Fsetp(EmitterContext context)

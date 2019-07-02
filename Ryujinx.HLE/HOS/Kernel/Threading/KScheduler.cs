@@ -55,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             KThread selectedThread = scheduledThreads.FirstOrDefault(x => x.DynamicPriority == prio);
 
-            //Yield priority queue.
+            // Yield priority queue.
             if (selectedThread != null)
             {
                 SchedulingData.Reschedule(prio, core, selectedThread);
@@ -82,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                         }
                     }
 
-                    //If the candidate was scheduled after the current thread, then it's not worth it.
+                    // If the candidate was scheduled after the current thread, then it's not worth it.
                     if (selectedThread == null || selectedThread.LastScheduledTime >= thread.LastScheduledTime)
                     {
                         yield return thread;
@@ -90,8 +90,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 }
             }
 
-            //Select candidate threads that could run on this core.
-            //Only take into account threads that are not yet selected.
+            // Select candidate threads that could run on this core.
+            // Only take into account threads that are not yet selected.
             KThread dst = SuitableCandidates().FirstOrDefault(x => x.DynamicPriority == prio);
 
             if (dst != null)
@@ -101,8 +101,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 selectedThread = dst;
             }
 
-            //If the priority of the currently selected thread is lower than preemption priority,
-            //then allow threads with lower priorities to be selected aswell.
+            // If the priority of the currently selected thread is lower than preemption priority,
+            // then allow threads with lower priorities to be selected aswell.
             if (selectedThread != null && selectedThread.DynamicPriority > prio)
             {
                 Func<KThread, bool> predicate = x => x.DynamicPriority >= selectedThread.DynamicPriority;
@@ -131,8 +131,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             for (int core = 0; core < CpuCoresCount; core++)
             {
-                //If the core is not idle (there's already a thread running on it),
-                //then we don't need to attempt load balancing.
+                // If the core is not idle (there's already a thread running on it),
+                // then we don't need to attempt load balancing.
                 if (SchedulingData.ScheduledThreads(core).Any())
                 {
                     continue;
@@ -144,8 +144,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                 KThread dst = null;
 
-                //Select candidate threads that could run on this core.
-                //Give preference to threads that are not yet selected.
+                // Select candidate threads that could run on this core.
+                // Give preference to threads that are not yet selected.
                 foreach (KThread thread in SchedulingData.SuggestedThreads(core))
                 {
                     if (thread.CurrentCore < 0 || thread != CoreContexts[thread.CurrentCore].SelectedThread)
@@ -158,11 +158,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     srcCoresHighestPrioThreads[srcCoresHighestPrioThreadsCount++] = thread.CurrentCore;
                 }
 
-                //Not yet selected candidate found.
+                // Not yet selected candidate found.
                 if (dst != null)
                 {
-                    //Priorities < 2 are used for the kernel message dispatching
-                    //threads, we should skip load balancing entirely.
+                    // Priorities < 2 are used for the kernel message dispatching
+                    // threads, we should skip load balancing entirely.
                     if (dst.DynamicPriority >= 2)
                     {
                         SchedulingData.TransferToCore(dst.DynamicPriority, core, dst);
@@ -173,8 +173,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     continue;
                 }
 
-                //All candiates are already selected, choose the best one
-                //(the first one that doesn't make the source core idle if moved).
+                // All candidates are already selected, choose the best one
+                // (the first one that doesn't make the source core idle if moved).
                 for (int index = 0; index < srcCoresHighestPrioThreadsCount; index++)
                 {
                     int srcCore = srcCoresHighestPrioThreads[index];
@@ -183,8 +183,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                     if (src != null)
                     {
-                        //Run the second thread on the queue on the source core,
-                        //move the first one to the current core.
+                        // Run the second thread on the queue on the source core,
+                        // move the first one to the current core.
                         KThread origSelectedCoreSrc = CoreContexts[srcCore].SelectedThread;
 
                         CoreContexts[srcCore].SelectThread(src);

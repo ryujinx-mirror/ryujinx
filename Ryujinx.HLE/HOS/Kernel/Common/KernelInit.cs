@@ -114,9 +114,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
             nvServicesRg = new KMemoryArrangeRegion(nvServicesRgEnd - nvServicesRgSize, nvServicesRgSize);
             appletRg     = new KMemoryArrangeRegion(nvServicesRgEnd, appletRgSize);
 
-            //Note: There is an extra region used by the kernel, however
-            //since we are doing HLE we are not going to use that memory, so give all
-            //the remaining memory space to services.
+            // Note: There is an extra region used by the kernel, however
+            // since we are doing HLE we are not going to use that memory, so give all
+            // the remaining memory space to services.
             ulong serviceRgSize = nvServicesRg.Address - DramMemoryMap.SlabHeapEnd;
 
             serviceRg = new KMemoryArrangeRegion(DramMemoryMap.SlabHeapEnd, serviceRgSize);

@@ -50,12 +50,12 @@ namespace ChocolArm64.Memory
             AddressSpaceBits = addressSpaceBits;
             AddressSpaceSize = 1L << addressSpaceBits;
 
-            //When flat page table is requested, we use a single
-            //array for the mappings of the entire address space.
-            //This has better performance, but also high memory usage.
-            //The multi level page table uses 9 bits per level, so
-            //the memory usage is lower, but the performance is also
-            //lower, since each address translation requires multiple reads.
+            // When flat page table is requested, we use a single
+            // array for the mappings of the entire address space.
+            // This has better performance, but also high memory usage.
+            // The multi level page table uses 9 bits per level, so
+            // the memory usage is lower, but the performance is also
+            // lower, since each address translation requires multiple reads.
             if (useFlatPageTable)
             {
                 PtLevelBits = addressSpaceBits - PageBits;
@@ -237,13 +237,13 @@ namespace ChocolArm64.Memory
 
                 if (nextPtr == IntPtr.Zero)
                 {
-                    //Entry does not yet exist, allocate a new one.
+                    // Entry does not yet exist, allocate a new one.
                     IntPtr newPtr = Allocate((ulong)(PtLevelSize * IntPtr.Size));
 
-                    //Try to swap the current pointer (should be zero), with the allocated one.
+                    // Try to swap the current pointer (should be zero), with the allocated one.
                     nextPtr = Interlocked.Exchange(ref *ptePtr, newPtr);
 
-                    //If the old pointer is not null, then another thread already has set it.
+                    // If the old pointer is not null, then another thread already has set it.
                     if (nextPtr != IntPtr.Zero)
                     {
                         Free(newPtr);
@@ -533,7 +533,7 @@ namespace ChocolArm64.Memory
 
         private void AbortWithAlignmentFault(long position)
         {
-            //TODO: Abort mode and exception support on the CPU.
+            // TODO: Abort mode and exception support on the CPU.
             throw new InvalidOperationException($"Tried to compare exchange a misaligned address 0x{position:X16}.");
         }
 
@@ -726,7 +726,7 @@ namespace ChocolArm64.Memory
 
         public void ReadBytes(long position, byte[] data, int startIndex, int size)
         {
-            //Note: This will be moved later.
+            // Note: This will be moved later.
             long endAddr = position + size;
 
             if ((ulong)size > int.MaxValue)
@@ -924,7 +924,7 @@ namespace ChocolArm64.Memory
 
         public void WriteBytes(long position, byte[] data, int startIndex, int size)
         {
-            //Note: This will be moved later.
+            // Note: This will be moved later.
             long endAddr = position + size;
 
             if ((ulong)endAddr < (ulong)position)
@@ -954,7 +954,7 @@ namespace ChocolArm64.Memory
 
         public void CopyBytes(long src, long dst, long size)
         {
-            //Note: This will be moved later.
+            // Note: This will be moved later.
             if (IsContiguous(src, size) &&
                 IsContiguous(dst, size))
             {

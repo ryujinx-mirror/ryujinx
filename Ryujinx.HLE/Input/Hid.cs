@@ -19,7 +19,7 @@ namespace Ryujinx.HLE.Input
             device.Memory.FillWithZeros(hidPosition, Horizon.HidSize);
         }
 
-        public void InitilizePrimaryController(HidControllerType controllerType)
+        public void InitializePrimaryController(HidControllerType controllerType)
         {
             HidControllerId controllerId = controllerType == HidControllerType.Handheld ?
                 HidControllerId.ControllerHandheld : HidControllerId.ControllerPlayer1;
@@ -39,7 +39,7 @@ namespace Ryujinx.HLE.Input
             PrimaryController.Connect(controllerId);
         }
 
-        public void InitilizeKeyboard()
+        public void InitializeKeyboard()
         {
             _device.Memory.FillWithZeros(HidPosition + HidKeyboardOffset, HidKeyboardSize);
         }

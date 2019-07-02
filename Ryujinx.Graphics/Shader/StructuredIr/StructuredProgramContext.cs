@@ -65,8 +65,8 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         private void LookForDoWhileStatements(BasicBlock block)
         {
-            //Check if we have any predecessor whose index is greater than the
-            //current block, this indicates a loop.
+            // Check if we have any predecessor whose index is greater than the
+            // current block, this indicates a loop.
             bool done = false;
 
             foreach (BasicBlock predecessor in block.Predecessors.OrderByDescending(x => x.Index))
@@ -146,9 +146,9 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         {
             AddNode(gotoTempAsg);
 
-            //For block 0, we don't need to add the extra "reset" at the beggining,
-            //because it is already the first node to be executed on the shader,
-            //so it is reset to false by the "local" assignment anyway.
+            // For block 0, we don't need to add the extra "reset" at the beginning,
+            // because it is already the first node to be executed on the shader,
+            // so it is reset to false by the "local" assignment anyway.
             if (block.Index != 0)
             {
                 Info.MainBlock.AddFirst(Assign(gotoTempAsg.Destination, Const(IrConsts.False)));

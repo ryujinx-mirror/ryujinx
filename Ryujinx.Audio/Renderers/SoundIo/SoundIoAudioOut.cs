@@ -138,7 +138,7 @@ namespace Ryujinx.Audio
         public void AppendBuffer<T>(int trackId, long bufferTag, T[] buffer)
             where T : struct
         {
-            if(m_TrackPool.TryGet(trackId, out SoundIoAudioTrack track))
+            if (m_TrackPool.TryGet(trackId, out SoundIoAudioTrack track))
             {
                 track.AppendBuffer(bufferTag, buffer);
             }
@@ -201,12 +201,12 @@ namespace Ryujinx.Audio
         {
             SoundIODevice defaultAudioDevice = audioContext.GetOutputDevice(audioContext.DefaultOutputDeviceIndex);
 
-            if(!defaultAudioDevice.IsRaw)
+            if (!defaultAudioDevice.IsRaw)
             {
                 return defaultAudioDevice;
             }
 
-            for(var i = 0; i < audioContext.BackendCount; i++)
+            for (int i = 0; i < audioContext.BackendCount; i++)
             {
                 SoundIODevice audioDevice = audioContext.GetOutputDevice(i);
 
@@ -242,26 +242,26 @@ namespace Ryujinx.Audio
                 context.Connect();
                 context.FlushEvents();
 
-                if(backendDisconnected)
+                if (backendDisconnected)
                 {
                     return false;
                 }
 
-                if(context.OutputDeviceCount == 0)
+                if (context.OutputDeviceCount == 0)
                 {
                     return false;
                 }
 
                 device = FindNonRawDefaultAudioDevice(context);
 
-                if(device == null || backendDisconnected)
+                if (device == null || backendDisconnected)
                 {
                     return false;
                 }
 
                 stream = device.CreateOutStream();
 
-                if(stream == null || backendDisconnected)
+                if (stream == null || backendDisconnected)
                 {
                     return false;
                 }
@@ -274,12 +274,12 @@ namespace Ryujinx.Audio
             }
             finally
             {
-                if(stream != null)
+                if (stream != null)
                 {
                     stream.Dispose();
                 }
 
-                if(context != null)
+                if (context != null)
                 {
                     context.Dispose();
                 }

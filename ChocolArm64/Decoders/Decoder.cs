@@ -29,12 +29,12 @@ namespace ChocolArm64.Decoders
 
             if (IsBranch(lastOp) && !IsCall(lastOp) && lastOp is IOpCodeBImm op)
             {
-                //It's possible that the branch on this block lands on the middle of the block.
-                //This is more common on tight loops. In this case, we can improve the codegen
-                //a bit by changing the CFG and either making the branch point to the same block
-                //(which indicates that the block is a loop that jumps back to the start), and the
-                //other possible case is a jump somewhere on the middle of the block, which is
-                //also a loop, but in this case we need to split the block in half.
+                // It's possible that the branch on this block lands on the middle of the block.
+                // This is more common on tight loops. In this case, we can improve the codegen
+                // a bit by changing the CFG and either making the branch point to the same block
+                // (which indicates that the block is a loop that jumps back to the start), and the
+                // other possible case is a jump somewhere on the middle of the block, which is
+                // also a loop, but in this case we need to split the block in half.
                 if ((ulong)op.Imm == address)
                 {
                     block.Branch = block;
@@ -79,7 +79,7 @@ namespace ChocolArm64.Decoders
 
             while (workQueue.TryDequeue(out Block currBlock))
             {
-                //Check if the current block is inside another block.
+                // Check if the current block is inside another block.
                 if (BinarySearch(blocks, currBlock.Address, out int nBlkIndex))
                 {
                     Block nBlock = blocks[nBlkIndex];
@@ -96,7 +96,7 @@ namespace ChocolArm64.Decoders
                     continue;
                 }
 
-                //If we have a block after the current one, set the limit address.
+                // If we have a block after the current one, set the limit address.
                 ulong limitAddress = ulong.MaxValue;
 
                 if (nBlkIndex != blocks.Count)
@@ -119,10 +119,10 @@ namespace ChocolArm64.Decoders
 
                 if (currBlock.OpCodes.Count != 0)
                 {
-                    //Set child blocks. "Branch" is the block the branch instruction
-                    //points to (when taken), "Next" is the block at the next address,
-                    //executed when the branch is not taken. For Unconditional Branches
-                    //(except BL/BLR that are sub calls) or end of executable, Next is null.
+                    // Set child blocks. "Branch" is the block the branch instruction
+                    // points to (when taken), "Next" is the block at the next address,
+                    // executed when the branch is not taken. For Unconditional Branches
+                    // (except BL/BLR that are sub calls) or end of executable, Next is null.
                     OpCode64 lastOp = currBlock.GetLastOp();
 
                     bool isCall = IsCall(lastOp);
@@ -138,7 +138,7 @@ namespace ChocolArm64.Decoders
                     }
                 }
 
-                //Insert the new block on the list (sorted by address).
+                // Insert the new block on the list (sorted by address).
                 if (blocks.Count != 0)
                 {
                     Block nBlock = blocks[nBlkIndex];
@@ -236,25 +236,25 @@ namespace ChocolArm64.Decoders
                 return false;
             }
 
-            //Note: On ARM32, most instructions have conditional execution,
-            //so there's no "Always" (unconditional) branch like on ARM64.
-            //We need to check if the condition is "Always" instead.
+            // Note: On ARM32, most instructions have conditional execution,
+            // so there's no "Always" (unconditional) branch like on ARM64.
+            // We need to check if the condition is "Always" instead.
             return IsAarch32Branch(op) && op.Cond >= Condition.Al;
         }
 
         private static bool IsAarch32Branch(OpCode64 opCode)
         {
-            //Note: On ARM32, most ALU operations can write to R15 (PC),
-            //so we must consider such operations as a branch in potential aswell.
+            // Note: On ARM32, most ALU operations can write to R15 (PC),
+            // so we must consider such operations as a branch in potential as well.
             if (opCode is IOpCode32Alu opAlu && opAlu.Rd == RegisterAlias.Aarch32Pc)
             {
                 return true;
             }
 
-            //Same thing for memory operations. We have the cases where PC is a target
-            //register (Rt == 15 or (mask & (1 << 15)) != 0), and cases where there is
-            //a write back to PC (wback == true && Rn == 15), however the later may
-            //be "undefined" depending on the CPU, so compilers should not produce that.
+            // Same thing for memory operations. We have the cases where PC is a target
+            // register (Rt == 15 or (mask & (1 << 15)) != 0), and cases where there is
+            // a write back to PC (wback == true && Rn == 15), however the later may
+            // be "undefined" depending on the CPU, so compilers should not produce that.
             if (opCode is IOpCode32Mem || opCode is IOpCode32MemMult)
             {
                 int rt, rn;
@@ -268,8 +268,8 @@ namespace ChocolArm64.Decoders
                     wBack  = opMem.WBack;
                     isLoad = opMem.IsLoad;
 
-                    //For the dual load, we also need to take into account the
-                    //case were Rt2 == 15 (PC).
+                    // For the dual load, we also need to take into account the
+                    // case were Rt2 == 15 (PC).
                     if (rt == 14 && opMem.Emitter == InstEmit32.Ldrd)
                     {
                         rt = RegisterAlias.Aarch32Pc;
@@ -296,14 +296,14 @@ namespace ChocolArm64.Decoders
                 }
             }
 
-            //Explicit branch instructions.
+            // Explicit branch instructions.
             return opCode is IOpCode32BImm ||
                    opCode is IOpCode32BReg;
         }
 
         private static bool IsCall(OpCode64 opCode)
         {
-            //TODO (CQ): ARM32 support.
+            // TODO (CQ): ARM32 support.
             return opCode.Emitter == InstEmit.Bl ||
                    opCode.Emitter == InstEmit.Blr;
         }

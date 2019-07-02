@@ -4,7 +4,6 @@ using OpenTK.Input;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.HLE;
 using Ryujinx.HLE.Input;
-using Ryujinx.Profiler;
 using Ryujinx.Profiler.UI;
 using System;
 using System.Threading;
@@ -97,7 +96,7 @@ namespace Ryujinx
                 {
                     RenderFrame();
 
-                    //Queue max. 1 vsync
+                    // Queue max. 1 vsync
                     ticks = Math.Min(ticks - ticksPerFrame, ticksPerFrame);
                 }
             }
@@ -113,7 +112,7 @@ namespace Ryujinx
 
             Context.MakeCurrent(null);
 
-            //OpenTK doesn't like sleeps in its thread, to avoid this a renderer thread is created
+            // OpenTK doesn't like sleeps in its thread, to avoid this a renderer thread is created
             _renderThread = new Thread(RenderLoop);
 
             _renderThread.Start();
@@ -134,7 +133,7 @@ namespace Ryujinx
                     }
                 }
 
-                //Polling becomes expensive if it's not slept
+                // Polling becomes expensive if it's not slept
                 Thread.Sleep(1);
             }
         }
@@ -152,7 +151,7 @@ namespace Ryujinx
             int rightJoystickDx = 0;
             int rightJoystickDy = 0;
 
-            //Keyboard Input
+            // Keyboard Input
             if (_keyboard.HasValue)
             {
                 KeyboardState keyboard = _keyboard.Value;
@@ -186,7 +185,7 @@ namespace Ryujinx
             
             currentButton |= Configuration.Instance.GamepadControls.GetButtons();
 
-            //Keyboard has priority stick-wise
+            // Keyboard has priority stick-wise
             if (leftJoystickDx == 0 && leftJoystickDy == 0)
             {
                 (leftJoystickDx, leftJoystickDy) = Configuration.Instance.GamepadControls.GetLeftStick();
@@ -213,8 +212,8 @@ namespace Ryujinx
 
             bool hasTouch = false;
 
-            //Get screen touch position from left mouse click
-            //OpenTK always captures mouse events, even if out of focus, so check if window is focused.
+            // Get screen touch position from left mouse click
+            // OpenTK always captures mouse events, even if out of focus, so check if window is focused.
             if (Focused && _mouse?.LeftButton == ButtonState.Pressed)
             {
                 MouseState mouse = _mouse.Value;
@@ -253,7 +252,7 @@ namespace Ryujinx
                         X = mX,
                         Y = mY,
 
-                        //Placeholder values till more data is acquired
+                        // Placeholder values till more data is acquired
                         DiameterX = 10,
                         DiameterY = 10,
                         Angle     = 90

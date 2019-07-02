@@ -93,7 +93,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
                 throw new NotImplementedException($"{fdData.Name} {cmd:x4}");
             }
 
-            //TODO: Verify if the error codes needs to be translated.
+            // TODO: Verify if the error codes needs to be translated.
             context.ResponseData.Write(result);
 
             return 0;
@@ -127,7 +127,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             int fd      = context.RequestData.ReadInt32();
             int eventId = context.RequestData.ReadInt32();
 
-            //TODO: Use Fd/EventId, different channels have different events.
+            // TODO: Use Fd/EventId, different channels have different events.
             if (context.Process.HandleTable.GenerateHandle(_event.ReadableEvent, out int handle) != KernelResult.Success)
             {
                 throw new InvalidOperationException("Out of handles!");

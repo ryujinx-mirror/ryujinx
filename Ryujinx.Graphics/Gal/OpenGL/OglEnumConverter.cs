@@ -275,7 +275,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
             else
             {
-                //Fallback to non-mirrored clamps
+                // Fallback to non-mirrored clamps
                 switch (wrap)
                 {
                     case GalTextureWrap.MirrorClampToEdge:   return TextureWrapMode.ClampToEdge;
@@ -291,7 +291,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             GalTextureFilter    minFilter,
             GalTextureMipFilter mipFilter)
         {
-            //TODO: Mip (needs mipmap support first).
+            // TODO: Mip (needs mipmap support first).
             switch (minFilter)
             {
                 case GalTextureFilter.Nearest: return TextureMinFilter.Nearest;

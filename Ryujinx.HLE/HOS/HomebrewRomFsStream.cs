@@ -53,7 +53,7 @@ namespace Ryujinx.HLE.HOS
                 offset += _positionOffset;
             }
 
-           return _baseStream.Seek(offset, origin);
+            return _baseStream.Seek(offset, origin);
         }
 
         public override void SetLength(long value)

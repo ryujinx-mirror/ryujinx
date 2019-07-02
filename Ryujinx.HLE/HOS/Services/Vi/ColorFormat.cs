@@ -1,4 +1,5 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Android
+﻿// ReSharper disable InconsistentNaming
+namespace Ryujinx.HLE.HOS.Services.Android
 {
     class ColorShift
     {

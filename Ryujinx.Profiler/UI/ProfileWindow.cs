@@ -98,7 +98,7 @@ namespace Ryujinx.Profiler.UI
         private readonly object _profileDataLock = new object();
 
         public ProfileWindow()
-                               // Graphigs mode enables 2xAA
+                               // Graphics mode enables 2xAA
             : base(1280, 720, new GraphicsMode(new ColorFormat(8, 8, 8, 8), 1, 1, 2))
         {
             Title    = "Profiler";
@@ -108,7 +108,7 @@ namespace Ryujinx.Profiler.UI
             if (Profile.UpdateRate <= 0)
             {
                 // Perform step regardless of flag type
-                Profile.RegisterFlagReciever((t) =>
+                Profile.RegisterFlagReceiver((t) =>
                 {
                     if (!_paused)
                     {
@@ -146,7 +146,7 @@ namespace Ryujinx.Profiler.UI
         {
             GL.ClearColor(Color.Black);
             _fontService = new FontService();
-            _fontService.InitalizeTextures();
+            _fontService.InitializeTextures();
             _fontService.UpdateScreenHeight(Height);
 
             _buttons = new ProfileButton[(int)ButtonIndex.Count];

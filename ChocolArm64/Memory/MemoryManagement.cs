@@ -96,9 +96,9 @@ namespace ChocolArm64.Memory
             IntPtr[]  addresses,
             out ulong count)
         {
-            //This is only supported on windows, but returning
-            //false (failed) is also valid for platforms without
-            //write tracking support on the OS.
+            // This is only supported on windows, but returning
+            // false (failed) is also valid for platforms without
+            // write tracking support on the OS.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return MemoryManagementWindows.GetModifiedPages(address, size, addresses, out count);

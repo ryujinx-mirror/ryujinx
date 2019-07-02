@@ -207,7 +207,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             }
             else
             {
-                //TODO: Use KHR_texture_compression_astc_hdr when available
+                // TODO: Use KHR_texture_compression_astc_hdr when available
                 if (IsAstc(image.Format))
                 {
                     int textureBlockWidth  = ImageUtils.GetBlockWidth(image.Format);

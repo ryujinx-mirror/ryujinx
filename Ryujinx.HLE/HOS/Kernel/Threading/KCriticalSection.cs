@@ -57,17 +57,17 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                                 if (currentHleThread == null)
                                 {
-                                    //Nothing is running, we can perform the context switch immediately.
+                                    // Nothing is running, we can perform the context switch immediately.
                                     coreContext.ContextSwitch();
                                 }
                                 else if (currentHleThread.IsCurrentThread())
                                 {
-                                    //Thread running on the current core, context switch will block.
+                                    // Thread running on the current core, context switch will block.
                                     doContextSwitch = true;
                                 }
                                 else
                                 {
-                                    //Thread running on another core, request a interrupt.
+                                    // Thread running on another core, request a interrupt.
                                     currentHleThread.RequestInterrupt();
                                 }
                             }

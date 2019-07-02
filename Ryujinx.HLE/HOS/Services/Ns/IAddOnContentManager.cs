@@ -32,8 +32,8 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         {
             Logger.PrintStub(LogClass.ServiceNs);
 
-            //TODO: This is supposed to write a u32 array aswell.
-            //It's unknown what it contains.
+            // TODO: This is supposed to write a u32 array aswell.
+            // It's unknown what it contains.
             context.ResponseData.Write(0);
 
             return 0;

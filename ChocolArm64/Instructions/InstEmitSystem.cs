@@ -11,12 +11,12 @@ namespace ChocolArm64.Instructions
     {
         public static void Hint(ILEmitterCtx context)
         {
-            //Execute as no-op.
+            // Execute as no-op.
         }
 
         public static void Isb(ILEmitterCtx context)
         {
-            //Execute as no-op.
+            // Execute as no-op.
         }
 
         public static void Mrs(ILEmitterCtx context)
@@ -85,21 +85,21 @@ namespace ChocolArm64.Instructions
 
         public static void Nop(ILEmitterCtx context)
         {
-            //Do nothing.
+            // Do nothing.
         }
 
         public static void Sys(ILEmitterCtx context)
         {
-            //This instruction is used to do some operations on the CPU like cache invalidation,
-            //address translation and the like.
-            //We treat it as no-op here since we don't have any cache being emulated anyway.
+            // This instruction is used to do some operations on the CPU like cache invalidation,
+            // address translation and the like.
+            // We treat it as no-op here since we don't have any cache being emulated anyway.
             OpCodeSystem64 op = (OpCodeSystem64)context.CurrOp;
 
             switch (GetPackedId(op))
             {
                 case 0b11_011_0111_0100_001:
                 {
-                    //DC ZVA
+                    // DC ZVA
                     for (int offs = 0; offs < (4 << CpuThreadState.DczSizeLog2); offs += 8)
                     {
                         context.EmitLdintzr(op.Rt);
@@ -115,7 +115,7 @@ namespace ChocolArm64.Instructions
                     break;
                 }
 
-                //No-op
+                // No-op
                 case 0b11_011_0111_1110_001: //DC CIVAC
                     break;
             }

@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.Loaders.Compression
                 int encCount = (token >> 0) & 0xf;
                 int litCount = (token >> 4) & 0xf;
 
-                //Copy literal chunck
+                // Copy literal chunk
                 litCount = GetLength(litCount);
 
                 Buffer.BlockCopy(cmp, cmpPos, dec, decPos, litCount);
@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.Loaders.Compression
                     break;
                 }
 
-                //Copy compressed chunck
+                // Copy compressed chunk
                 int back = cmp[cmpPos++] << 0 |
                            cmp[cmpPos++] << 8;
 

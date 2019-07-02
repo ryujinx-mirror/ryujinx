@@ -7,8 +7,8 @@ namespace Ryujinx.Graphics.Graphics3d
         private const int MacrosCount    = 0x80;
         private const int MacroIndexMask = MacrosCount - 1;
 
-        //Note: The size of the macro memory is unknown, we just make
-        //a guess here and use 256kb as the size. Increase if needed.
+        // Note: The size of the macro memory is unknown, we just make
+        // a guess here and use 256kb as the size. Increase if needed.
         private const int MmeWords = 256 * 256;
 
         private NvGpu _gpu;

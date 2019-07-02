@@ -65,7 +65,7 @@ namespace Ryujinx.Graphics.Texture
 
         public void ChangeBitDepth(byte[] depth)
         {
-            for(int i = 0; i< 4; i++)
+            for (int i = 0; i< 4; i++)
             {
                 int value = ChangeBitDepth(GetComponent(i), _bitDepth[i], depth[i]);
 

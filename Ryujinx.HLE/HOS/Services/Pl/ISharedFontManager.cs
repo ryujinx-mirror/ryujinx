@@ -29,8 +29,8 @@ namespace Ryujinx.HLE.HOS.Services.Pl
         {
             SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
 
-            //We don't need to do anything here because we do lazy initialization
-            //on SharedFontManager (the font is loaded when necessary).
+            // We don't need to do anything here because we do lazy initialization
+            // on SharedFontManager (the font is loaded when necessary).
             return 0;
         }
 
@@ -38,8 +38,8 @@ namespace Ryujinx.HLE.HOS.Services.Pl
         {
             SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
 
-            //1 (true) indicates that the font is already loaded.
-            //All fonts are already loaded.
+            // 1 (true) indicates that the font is already loaded.
+            // All fonts are already loaded.
             context.ResponseData.Write(1);
 
             return 0;

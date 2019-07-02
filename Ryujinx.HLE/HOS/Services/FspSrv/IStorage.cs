@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             {
                 IpcBuffDesc buffDesc = context.Request.ReceiveBuff[0];
 
-                //Use smaller length to avoid overflows.
+                // Use smaller length to avoid overflows.
                 if (size > buffDesc.Size)
                 {
                     size = buffDesc.Size;

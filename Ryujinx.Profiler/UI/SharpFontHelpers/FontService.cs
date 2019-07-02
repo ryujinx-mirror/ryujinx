@@ -36,7 +36,7 @@ namespace Ryujinx.Profiler.UI.SharpFontHelpers
 
         private string GetFontPath()
         {
-            string fontFolder = System.Environment.GetFolderPath(Environment.SpecialFolder.Fonts);
+            string fontFolder = Environment.GetFolderPath(Environment.SpecialFolder.Fonts);
 
             // Only uses Arial, add more fonts here if wanted
             string path = Path.Combine(fontFolder, "arial.ttf");
@@ -48,7 +48,7 @@ namespace Ryujinx.Profiler.UI.SharpFontHelpers
             throw new Exception($"Profiler exception. Required font Courier New or Arial not installed to {fontFolder}");
         }
 
-        public void InitalizeTextures()
+        public void InitializeTextures()
         {
             // Create and init some vars
             uint[] rawCharacterSheet = new uint[SheetWidth * SheetHeight];
@@ -66,7 +66,7 @@ namespace Ryujinx.Profiler.UI.SharpFontHelpers
             // Update raw data for each character
             for (int i = 0; i < 94; i++)
             {
-                var surface = RenderSurface((char)(i + 33), font, out var xBearing, out var yBearing, out var advance);
+                var surface = RenderSurface((char)(i + 33), font, out float xBearing, out float yBearing, out float advance);
 
                 characters[i] = UpdateTexture(surface, ref rawCharacterSheet, ref x, ref y, ref lineOffset);
                 characters[i].BearingX = xBearing;
@@ -217,7 +217,7 @@ namespace Ryujinx.Profiler.UI.SharpFontHelpers
                 lineOffset = 0;
             }
 
-            // Update lineoffset
+            // Update lineOffset
             if (lineOffset < height)
             {
                 lineOffset = height + 1;

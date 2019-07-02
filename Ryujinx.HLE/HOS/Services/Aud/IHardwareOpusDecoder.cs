@@ -37,8 +37,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
         {
             long result = DecodeInterleaved(context);
 
-            //TODO: Figure out what this value is.
-            //According to switchbrew, it is now used.
+            // TODO: Figure out what this value is.
+            // According to switchbrew, it is now used.
             context.ResponseData.Write(0L);
 
             return result;

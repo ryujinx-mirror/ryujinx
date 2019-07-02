@@ -82,8 +82,8 @@ namespace Ryujinx.Graphics.Graphics3d
 
             while (Step(vmm, mme));
 
-            //Due to the delay slot, we still need to execute
-            //one more instruction before we actually exit.
+            // Due to the delay slot, we still need to execute
+            // one more instruction before we actually exit.
             Step(vmm, mme);
         }
 
@@ -108,14 +108,14 @@ namespace Ryujinx.Graphics.Graphics3d
 
             if ((_opCode & 7) < 7)
             {
-                //Operation produces a value.
+                // Operation produces a value.
                 AssignmentOperation asgOp = (AssignmentOperation)((_opCode >> 4) & 7);
 
                 int result = GetAluResult();
 
                 switch (asgOp)
                 {
-                    //Fetch parameter and ignore result.
+                    // Fetch parameter and ignore result.
                     case AssignmentOperation.IgnoreAndFetch:
                     {
                         SetDstGpr(FetchParam());
@@ -123,7 +123,7 @@ namespace Ryujinx.Graphics.Graphics3d
                         break;
                     }
 
-                    //Move result.
+                    // Move result.
                     case AssignmentOperation.Move:
                     {
                         SetDstGpr(result);
@@ -131,7 +131,7 @@ namespace Ryujinx.Graphics.Graphics3d
                         break;
                     }
 
-                    //Move result and use as Method Address.
+                    // Move result and use as Method Address.
                     case AssignmentOperation.MoveAndSetMaddr:
                     {
                         SetDstGpr(result);
@@ -141,7 +141,7 @@ namespace Ryujinx.Graphics.Graphics3d
                         break;
                     }
 
-                    //Fetch parameter and send result.
+                    // Fetch parameter and send result.
                     case AssignmentOperation.FetchAndSend:
                     {
                         SetDstGpr(FetchParam());
@@ -151,7 +151,7 @@ namespace Ryujinx.Graphics.Graphics3d
                         break;
                     }
 
-                    //Move and send result.
+                    // Move and send result.
                     case AssignmentOperation.MoveAndSend:
                     {
                         SetDstGpr(result);
@@ -161,7 +161,7 @@ namespace Ryujinx.Graphics.Graphics3d
                         break;
                     }
 
-                    //Fetch parameter and use result as Method Address.
+                    // Fetch parameter and use result as Method Address.
                     case AssignmentOperation.FetchAndSetMaddr:
                     {
                         SetDstGpr(FetchParam());
@@ -171,7 +171,7 @@ namespace Ryujinx.Graphics.Graphics3d
                         break;
                     }
 
-                    //Move result and use as Method Address, then fetch and send paramter.
+                    // Move result and use as Method Address, then fetch and send parameter.
                     case AssignmentOperation.MoveAndSetMaddrThenFetchAndSend:
                     {
                         SetDstGpr(result);
@@ -183,7 +183,7 @@ namespace Ryujinx.Graphics.Graphics3d
                         break;
                     }
 
-                    //Move result and use as Method Address, then send bits 17:12 of result.
+                    // Move result and use as Method Address, then send bits 17:12 of result.
                     case AssignmentOperation.MoveAndSetMaddrThenSendHigh:
                     {
                         SetDstGpr(result);
@@ -198,7 +198,7 @@ namespace Ryujinx.Graphics.Graphics3d
             }
             else
             {
-                //Branch.
+                // Branch.
                 bool onNotZero = ((_opCode >> 4) & 1) != 0;
 
                 bool taken = onNotZero
@@ -355,7 +355,7 @@ namespace Ryujinx.Graphics.Graphics3d
 
         private int GetImm()
         {
-            //Note: The immediate is signed, the sign-extension is intended here.
+            // Note: The immediate is signed, the sign-extension is intended here.
             return _opCode >> 14;
         }
 

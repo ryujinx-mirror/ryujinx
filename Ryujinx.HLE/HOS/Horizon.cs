@@ -156,8 +156,8 @@ namespace Ryujinx.HLE.HOS
 
             AutoObjectNames = new ConcurrentDictionary<string, KAutoObject>();
 
-            //Note: This is not really correct, but with HLE of services, the only memory
-            //region used that is used is Application, so we can use the other ones for anything.
+            // Note: This is not really correct, but with HLE of services, the only memory
+            // region used that is used is Application, so we can use the other ones for anything.
             KMemoryRegionManager region = MemoryRegions[(int)MemoryRegion.NvServices];
 
             ulong hidPa  = region.Address;
@@ -660,7 +660,7 @@ namespace Ryujinx.HLE.HOS
         {
             if (disposing)
             {
-                //Force all threads to exit.
+                // Force all threads to exit.
                 lock (Processes)
                 {
                     foreach (KProcess process in Processes.Values)
@@ -669,8 +669,8 @@ namespace Ryujinx.HLE.HOS
                     }
                 }
 
-                //It's only safe to release resources once all threads
-                //have exited.
+                // It's only safe to release resources once all threads
+                // have exited.
                 ThreadCounter.Signal();
                 ThreadCounter.Wait();
 

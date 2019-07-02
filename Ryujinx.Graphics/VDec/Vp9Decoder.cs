@@ -287,7 +287,7 @@ namespace Ryujinx.Graphics.VDec
 
             bool showFrame = !isFrameIntra;
 
-            //Write compressed header.
+            // Write compressed header.
             byte[] compressedHeaderData;
 
             using (MemoryStream compressedHeader = new MemoryStream())
@@ -437,7 +437,7 @@ namespace Ryujinx.Graphics.VDec
                 compressedHeaderData = compressedHeader.ToArray();
             }
 
-            //Write uncompressed header.
+            // Write uncompressed header.
             using (MemoryStream encodedHeader = new MemoryStream())
             {
                 VpxBitStreamWriter writer = new VpxBitStreamWriter(encodedHeader);
@@ -460,8 +460,8 @@ namespace Ryujinx.Graphics.VDec
 
                     _cachedRefFrames.Clear();
 
-                    //On key frames, all frame slots are set to the current frame,
-                    //so the value of the selected slot doesn't really matter.
+                    // On key frames, all frame slots are set to the current frame,
+                    // so the value of the selected slot doesn't really matter.
                     GetNewFrameSlot(keys.CurrKey);
                 }
                 else
@@ -593,8 +593,8 @@ namespace Ryujinx.Graphics.VDec
 
                 int tileColsLog2IncMask = (1 << tileColsLog2Diff) - 1;
 
-                //If it's less than the maximum, we need to add an extra 0 on the bitstream
-                //to indicate that it should stop reading.
+                // If it's less than the maximum, we need to add an extra 0 on the bitstream
+                // to indicate that it should stop reading.
                 if (header.TileColsLog2 < maxTileColsLog2)
                 {
                     writer.WriteU(tileColsLog2IncMask << 1, tileColsLog2Diff + 1);
@@ -653,8 +653,8 @@ namespace Ryujinx.Graphics.VDec
                 return node.Value;
             }
 
-            //Reference frame was lost.
-            //What we should do in this case?
+            // Reference frame was lost.
+            // What we should do in this case?
             return 0;
         }
 
@@ -668,8 +668,8 @@ namespace Ryujinx.Graphics.VDec
 
         private void WriteCoefProbabilityUpdate(VpxRangeEncoder writer, int txMode, byte[] New, byte[] old)
         {
-            //Note: There's 1 byte added on each packet for alignment,
-            //this byte is ignored when doing updates.
+            // Note: There's 1 byte added on each packet for alignment,
+            // this byte is ignored when doing updates.
             const int blockBytes = 2 * 2 * 6 * 6 * 4;
 
             bool NeedsUpdate(int baseIndex)

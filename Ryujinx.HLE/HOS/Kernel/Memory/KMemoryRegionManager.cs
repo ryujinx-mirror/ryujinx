@@ -126,21 +126,21 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                 ulong blockPagesCount = bestFitBlockSize / KMemoryManager.PageSize;
 
-                //Check if this is the best fit for this page size.
-                //If so, try allocating as much requested pages as possible.
+                // Check if this is the best fit for this page size.
+                // If so, try allocating as much requested pages as possible.
                 while (blockPagesCount <= pagesCount)
                 {
                     ulong address = AllocatePagesForOrder(blockIndex, backwards, bestFitBlockSize);
 
-                    //The address being zero means that no free space was found on that order,
-                    //just give up and try with the next one.
+                    // The address being zero means that no free space was found on that order,
+                    // just give up and try with the next one.
                     if (address == 0)
                     {
                         break;
                     }
 
-                    //Add new allocated page(s) to the pages list.
-                    //If an error occurs, then free all allocated pages and fail.
+                    // Add new allocated page(s) to the pages list.
+                    // If an error occurs, then free all allocated pages and fail.
                     KernelResult result = pageList.AddRange(address, blockPagesCount);
 
                     if (result != KernelResult.Success)
@@ -159,13 +159,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 }
             }
 
-            //Success case, all requested pages were allocated successfully.
+            // Success case, all requested pages were allocated successfully.
             if (pagesCount == 0)
             {
                 return KernelResult.Success;
             }
 
-            //Error case, free allocated pages and return out of memory.
+            // Error case, free allocated pages and return out of memory.
             foreach (KPageNode pageNode in pageList)
             {
                 FreePages(pageNode.Address, pageNode.PagesCount);
@@ -321,8 +321,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             if (address != 0)
             {
-                //If we are using a larger order than best fit, then we should
-                //split it into smaller blocks.
+                // If we are using a larger order than best fit, then we should
+                // split it into smaller blocks.
                 ulong firstFreeBlockSize = 1UL << block.Order;
 
                 if (firstFreeBlockSize > bestFitBlockSize)
@@ -416,7 +416,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 }
             }
 
-            //Free inside aligned region.
+            // Free inside aligned region.
             ulong baseAddress = addressRounded;
 
             while (baseAddress < endAddrTruncated)
@@ -430,7 +430,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             int nextBlockIndex = blockIndex - 1;
 
-            //Free region between Address and aligned region start.
+            // Free region between Address and aligned region start.
             baseAddress = addressRounded;
 
             for (blockIndex = nextBlockIndex; blockIndex >= 0; blockIndex--)
@@ -445,7 +445,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 }
             }
 
-            //Free region between aligned region end and End Address.
+            // Free region between aligned region end and End Address.
             baseAddress = endAddrTruncated;
 
             for (blockIndex = nextBlockIndex; blockIndex >= 0; blockIndex--)

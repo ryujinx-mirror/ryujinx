@@ -36,7 +36,7 @@
 
         public override void Connect(HidControllerId controllerId)
         {
-            if(HidControllerType != HidControllerType.NpadLeft && HidControllerType != HidControllerType.NpadRight)
+            if (HidControllerType != HidControllerType.NpadLeft && HidControllerType != HidControllerType.NpadRight)
             {
                 _isHalf = false;
             }

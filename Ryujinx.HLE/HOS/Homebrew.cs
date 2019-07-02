@@ -7,26 +7,26 @@ namespace Ryujinx.HLE.HOS
     {
         public const string TemporaryNroSuffix = ".ryu_tmp.nro";
 
-        //http://switchbrew.org/index.php?title=Homebrew_ABI
+        // http://switchbrew.org/index.php?title=Homebrew_ABI
         public static void WriteHbAbiData(MemoryManager memory, long position, int mainThreadHandle, string switchPath)
         {
-            //MainThreadHandle.
+            // MainThreadHandle.
             WriteConfigEntry(memory, ref position, 1, 0, mainThreadHandle);
 
-            //NextLoadPath.
+            // NextLoadPath.
             WriteConfigEntry(memory, ref position, 2, 0, position + 0x200, position + 0x400);
 
-            //Argv.
+            // Argv.
             long argvPosition = position + 0xC00;
 
             memory.WriteBytes(argvPosition, Encoding.ASCII.GetBytes(switchPath + "\0"));
 
             WriteConfigEntry(memory, ref position, 5, 0, 0, argvPosition);
 
-            //AppletType.
+            // AppletType.
             WriteConfigEntry(memory, ref position, 7);
 
-            //EndOfList.
+            // EndOfList.
             WriteConfigEntry(memory, ref position, 0);
         }
 

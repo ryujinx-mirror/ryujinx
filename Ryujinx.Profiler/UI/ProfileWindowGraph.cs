@@ -7,8 +7,8 @@ namespace Ryujinx.Profiler.UI
 {
     public partial class ProfileWindow
     {
-        // Colour index equal to timing flag type as int
-        private Color[] _timingFlagColours = new[]
+        // Color index equal to timing flag type as int
+        private Color[] _timingFlagColors = new[]
         {
             new Color(150, 25, 25, 50), // FrameSwap   = 0
             new Color(25, 25, 150, 50), // SystemFrame = 1
@@ -62,7 +62,7 @@ namespace Ryujinx.Profiler.UI
                         if (prevType != timingFlag.FlagType)
                         {
                             prevType = timingFlag.FlagType;
-                            GL.Color4(_timingFlagColours[(int)prevType]);
+                            GL.Color4(_timingFlagColors[(int)prevType]);
                         }
 
                         int x = (int)(graphRight - ((graphPositionTicks - timingFlag.Timestamp) / timeWidthTicks) * width);

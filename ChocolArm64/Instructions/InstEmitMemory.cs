@@ -192,7 +192,7 @@ namespace ChocolArm64.Instructions
 
                     if (!op.PostIdx)
                     {
-                        //Pre-indexing.
+                        // Pre-indexing.
                         context.EmitLdc_I(op.Imm);
 
                         context.Emit(OpCodes.Add);
@@ -213,7 +213,7 @@ namespace ChocolArm64.Instructions
                     break;
             }
 
-            //Save address to Scratch var since the register value may change.
+            // Save address to Scratch var since the register value may change.
             context.Emit(OpCodes.Dup);
 
             context.EmitSttmp();
@@ -221,8 +221,8 @@ namespace ChocolArm64.Instructions
 
         private static void EmitWBackIfNeeded(ILEmitterCtx context)
         {
-            //Check whenever the current OpCode has post-indexed write back, if so write it.
-            //Note: AOpCodeMemPair inherits from AOpCodeMemImm, so this works for both.
+            // Check whenever the current OpCode has post-indexed write back, if so write it.
+            // Note: AOpCodeMemPair inherits from AOpCodeMemImm, so this works for both.
             if (context.CurrOp is OpCodeMemImm64 op && op.WBack)
             {
                 context.EmitLdtmp();

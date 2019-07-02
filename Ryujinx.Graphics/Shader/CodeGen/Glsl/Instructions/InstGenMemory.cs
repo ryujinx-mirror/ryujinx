@@ -69,8 +69,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 arrayIndexElem = pCount++;
             }
 
-            //The sampler 1D shadow overload expects a
-            //dummy value on the middle of the vector, who knows why...
+            // The sampler 1D shadow overload expects a
+            // dummy value on the middle of the vector, who knows why...
             bool hasDummy1DShadowElem = texOp.Type == (TextureType.Texture1D | TextureType.Shadow);
 
             if (hasDummy1DShadowElem)
@@ -83,8 +83,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 pCount++;
             }
 
-            //On textureGather*, the comparison value is
-            //always specified as an extra argument.
+            // On textureGather*, the comparison value is
+            // always specified as an extra argument.
             bool hasExtraCompareArg = isShadow && isGather;
 
             if (pCount == 5)
@@ -199,8 +199,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                Append(Src(VariableType.F32));
             }
 
-            //textureGather* optional extra component index,
-            //not needed for shadow samplers.
+            // textureGather* optional extra component index,
+            // not needed for shadow samplers.
             if (isGather && !isShadow)
             {
                Append(Src(VariableType.S32));

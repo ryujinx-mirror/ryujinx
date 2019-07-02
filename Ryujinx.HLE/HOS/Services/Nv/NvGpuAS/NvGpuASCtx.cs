@@ -50,25 +50,25 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
         {
             long mapEnd = position + size;
 
-            //Check if size is valid (0 is also not allowed).
+            // Check if size is valid (0 is also not allowed).
             if ((ulong)mapEnd <= (ulong)position)
             {
                 return false;
             }
 
-            //Check if address is page aligned.
+            // Check if address is page aligned.
             if ((position & NvGpuVmm.PageMask) != 0)
             {
                 return false;
             }
 
-            //Check if region is reserved.
+            // Check if region is reserved.
             if (BinarySearch(_reservations, position) == null)
             {
                 return false;
             }
 
-            //Check for overlap with already mapped buffers.
+            // Check for overlap with already mapped buffers.
             Range map = BinarySearchLt(_maps, mapEnd);
 
             if (map != null && map.End > (ulong)position)

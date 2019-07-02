@@ -208,8 +208,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl
                 {
                     syncpt.AddWaiter(args.Thresh, waitEvent);
 
-                    //Note: Negative (> INT_MAX) timeouts aren't valid on .NET,
-                    //in this case we just use the maximum timeout possible.
+                    // Note: Negative (> INT_MAX) timeouts aren't valid on .NET,
+                    // in this case we just use the maximum timeout possible.
                     int timeout = args.Timeout;
 
                     if (timeout < -1)

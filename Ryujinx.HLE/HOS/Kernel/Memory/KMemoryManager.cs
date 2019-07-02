@@ -23,8 +23,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         private const int KMemoryBlockSize = 0x40;
 
-        //We need 2 blocks for the case where a big block
-        //needs to be split in 2, plus one block that will be the new one inserted.
+        // We need 2 blocks for the case where a big block
+        // needs to be split in 2, plus one block that will be the new one inserted.
         private const int MaxBlocksNeededForInsertion = 2;
 
         private LinkedList<KMemoryBlock> _blocks;
@@ -215,13 +215,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             if (CodeRegionStart - baseAddress >= addrSpaceEnd - CodeRegionEnd)
             {
-                //Has more space before the start of the code region.
+                // Has more space before the start of the code region.
                 mapBaseAddress   = baseAddress;
                 mapAvailableSize = CodeRegionStart - baseAddress;
             }
             else
             {
-                //Has more space after the end of the code region.
+                // Has more space after the end of the code region.
                 mapBaseAddress   = CodeRegionEnd;
                 mapAvailableSize = addrSpaceEnd - CodeRegionEnd;
             }
@@ -250,8 +250,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 tlsIoRegion.AslrOffset = GetRandomValue(0, aslrMaxOffset >> 21) << 21;
             }
 
-            //Regions are sorted based on ASLR offset.
-            //When ASLR is disabled, the order is Map, Heap, NewMap and TlsIo.
+            // Regions are sorted based on ASLR offset.
+            // When ASLR is disabled, the order is Map, Heap, NewMap and TlsIo.
             aliasRegion.Start = mapBaseAddress    + aliasRegion.AslrOffset;
             aliasRegion.End   = aliasRegion.Start + aliasRegion.Size;
             heapRegion.Start  = mapBaseAddress    + heapRegion.AslrOffset;
@@ -336,8 +336,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         private KernelResult InitializeBlocks(ulong addrSpaceStart, ulong addrSpaceEnd)
         {
-            //First insertion will always need only a single block,
-            //because there's nothing else to split.
+            // First insertion will always need only a single block,
+            // because there's nothing else to split.
             if (!_blockAllocator.CanAllocate(1))
             {
                 return KernelResult.OutOfResource;
@@ -466,13 +466,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         public KernelResult MapNormalMemory(long address, long size, MemoryPermission permission)
         {
-            //TODO.
+            // TODO.
             return KernelResult.Success;
         }
 
         public KernelResult MapIoMemory(long address, long size, MemoryPermission permission)
         {
-            //TODO.
+            // TODO.
             return KernelResult.Success;
         }
 
@@ -696,7 +696,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                         return result;
                     }
 
-                    //TODO: Missing some checks here.
+                    // TODO: Missing some checks here.
 
                     if (!_blockAllocator.CanAllocate(MaxBlocksNeededForInsertion * 2))
                     {
@@ -730,7 +730,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             if (currentHeapSize <= size)
             {
-                //Expand.
+                // Expand.
                 ulong diffSize = size - currentHeapSize;
 
                 lock (_blocks)
@@ -800,7 +800,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             }
             else
             {
-                //Shrink.
+                // Shrink.
                 ulong freeAddr = HeapRegionStart + size;
                 ulong diffSize = currentHeapSize - size;
 
@@ -1147,7 +1147,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     out _,
                     out MemoryAttribute attribute))
                 {
-                    //TODO: Missing checks.
+                    // TODO: Missing checks.
 
                     if (!_blockAllocator.CanAllocate(MaxBlocksNeededForInsertion))
                     {
@@ -1225,8 +1225,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                 {
                     MemoryState newState = oldState;
 
-                    //If writing into the code region is allowed, then we need
-                    //to change it to mutable.
+                    // If writing into the code region is allowed, then we need
+                    // to change it to mutable.
                     if ((permission & MemoryPermission.Write) != 0)
                     {
                         if (oldState == MemoryState.CodeStatic)
@@ -1362,8 +1362,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             lock (_blocks)
             {
-                //Scan, ensure that the region can be unmapped (all blocks are heap or
-                //already unmapped), fill pages list for freeing memory.
+                // Scan, ensure that the region can be unmapped (all blocks are heap or
+                // already unmapped), fill pages list for freeing memory.
                 ulong heapMappedSize = 0;
 
                 KPageList pageList = new KPageList();
@@ -1400,7 +1400,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
                     return KernelResult.OutOfResource;
                 }
 
-                //Try to unmap all the heap mapped memory inside range.
+                // Try to unmap all the heap mapped memory inside range.
                 KernelResult result = KernelResult.Success;
 
                 foreach (KMemoryInfo info in IterateOverRange(address, endAddr))
@@ -1416,7 +1416,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                         if (result != KernelResult.Success)
                         {
-                            //If we failed to unmap, we need to remap everything back again.
+                            // If we failed to unmap, we need to remap everything back again.
                             MapPhysicalMemory(pageList, address, blockAddress + blockSize);
 
                             break;
@@ -1508,7 +1508,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             MemoryAttribute  attributeMask,
             MemoryAttribute  attributeExpected)
         {
-            //Client -> server.
+            // Client -> server.
             return CopyDataFromOrToCurrentProcess(
                 size,
                 src,
@@ -1531,7 +1531,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             MemoryAttribute  attributeExpected,
             ulong            src)
         {
-            //Server -> client.
+            // Server -> client.
             return CopyDataFromOrToCurrentProcess(
                 size,
                 dst,
@@ -1731,7 +1731,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                 foreach (KMemoryInfo info in IterateOverRange(address, endAddrRounded))
                 {
-                    //Check if the block state matches what we expect.
+                    // Check if the block state matches what we expect.
                     if ((info.State      & stateMask)     != stateMask  ||
                         (info.Permission & permission)    != permission ||
                         (info.Attribute  & attributeMask) != MemoryAttribute.None)
@@ -1830,12 +1830,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             ulong unusedSizeAfter;
 
-            //When the start address is unaligned, we can't safely map the
-            //first page as it would expose other undesirable information on the
-            //target process. So, instead we allocate new pages, copy the data
-            //inside the range, and then clear the remaining space.
-            //The same also holds for the last page, if the end address
-            //(address + size) is also not aligned.
+            // When the start address is unaligned, we can't safely map the
+            // first page as it would expose other undesirable information on the
+            // target process. So, instead we allocate new pages, copy the data
+            // inside the range, and then clear the remaining space.
+            // The same also holds for the last page, if the end address
+            // (address + size) is also not aligned.
             if (copyData)
             {
                 ulong unusedSizeBefore = address - addressTruncated;
@@ -1883,7 +1883,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
             if (endAddrTruncated != endAddrRounded)
             {
-                //End is also not aligned...
+                // End is also not aligned...
                 dstLastPagePa = AllocateSinglePage(region, aslrDisabled);
 
                 if (dstLastPagePa == 0)
@@ -1980,9 +1980,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                 for (int unit = MappingUnitSizes.Length - 1; unit >= 0 && va == 0; unit--)
                 {
-                    int alignemnt = MappingUnitSizes[unit];
+                    int alignment = MappingUnitSizes[unit];
 
-                    va = AllocateVa(AliasRegionStart, regionPagesCount, neededPagesCount, alignemnt);
+                    va = AllocateVa(AliasRegionStart, regionPagesCount, neededPagesCount, alignment);
                 }
 
                 if (va == 0)
@@ -2109,7 +2109,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             {
                 foreach (KMemoryInfo info in IterateOverRange(address, endAddrTruncated))
                 {
-                    //Check if the block state matches what we expect.
+                    // Check if the block state matches what we expect.
                     if ((info.State      & stateMask)     != stateMask ||
                         (info.Attribute  & attributeMask) != MemoryAttribute.IpcMapped)
                     {
@@ -2331,7 +2331,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             {
                 info = node.Value.GetInfo();
 
-                //Check if the block state matches what we expect.
+                // Check if the block state matches what we expect.
                 if ( firstState                             != info.State                             ||
                      firstPermission                        != info.Permission                        ||
                     (info.Attribute  & attributeMask)       != attributeExpected                      ||
@@ -2367,7 +2367,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             foreach (KMemoryInfo info in IterateOverRange(address, address + size))
             {
-                //Check if the block state matches what we expect.
+                // Check if the block state matches what we expect.
                 if ((info.State      & stateMask)      != stateExpected      ||
                     (info.Permission & permissionMask) != permissionExpected ||
                     (info.Attribute  & attributeMask)  != attributeExpected)
@@ -2404,9 +2404,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             MemoryPermission newPermission,
             MemoryAttribute  newAttribute)
         {
-            //Insert new block on the list only on areas where the state
-            //of the block matches the state specified on the old* state
-            //arguments, otherwise leave it as is.
+            // Insert new block on the list only on areas where the state
+            // of the block matches the state specified on the old* state
+            // arguments, otherwise leave it as is.
             int oldCount = _blocks.Count;
 
             oldAttribute |= MemoryAttribute.IpcAndDeviceMapped;
@@ -2451,7 +2451,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     newNode.Value.SetState(newPermission, newState, newAttribute);
 
-                    MergeEqualStateNeighbours(newNode);
+                    MergeEqualStateNeighbors(newNode);
                 }
 
                 if (currEndAddr - 1 >= endAddr - 1)
@@ -2472,8 +2472,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             MemoryPermission permission = MemoryPermission.None,
             MemoryAttribute  attribute  = MemoryAttribute.None)
         {
-            //Inserts new block at the list, replacing and spliting
-            //existing blocks as needed.
+            // Inserts new block at the list, replacing and splitting
+            // existing blocks as needed.
             int oldCount = _blocks.Count;
 
             ulong endAddr = baseAddress + pagesCount * PageSize;
@@ -2505,7 +2505,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     newNode.Value.SetState(permission, state, attribute);
 
-                    MergeEqualStateNeighbours(newNode);
+                    MergeEqualStateNeighbors(newNode);
                 }
 
                 if (currEndAddr - 1 >= endAddr - 1)
@@ -2537,9 +2537,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             BlockMutator     blockMutate,
             MemoryPermission permission = MemoryPermission.None)
         {
-            //Inserts new block at the list, replacing and spliting
-            //existing blocks as needed, then calling the callback
-            //function on the new block.
+            // Inserts new block at the list, replacing and splitting
+            // existing blocks as needed, then calling the callback
+            // function on the new block.
             int oldCount = _blocks.Count;
 
             ulong endAddr = baseAddress + pagesCount * PageSize;
@@ -2573,7 +2573,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
                     blockMutate(newBlock, permission);
 
-                    MergeEqualStateNeighbours(newNode);
+                    MergeEqualStateNeighbors(newNode);
                 }
 
                 if (currEndAddr - 1 >= endAddr - 1)
@@ -2587,7 +2587,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
             _blockAllocator.Count += _blocks.Count - oldCount;
         }
 
-        private void MergeEqualStateNeighbours(LinkedListNode<KMemoryBlock> node)
+        private void MergeEqualStateNeighbors(LinkedListNode<KMemoryBlock> node)
         {
             KMemoryBlock block = node.Value;
 

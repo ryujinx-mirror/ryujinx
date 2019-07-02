@@ -216,7 +216,7 @@ namespace Ryujinx.UI.Input
                 case ControllerInputId.LTrigger: return gpState.Triggers.Left  >= TriggerThreshold;
                 case ControllerInputId.RTrigger: return gpState.Triggers.Right >= TriggerThreshold;
 
-                //Using thumbsticks as buttons is not common, but it would be nice not to ignore them
+                // Using thumbsticks as buttons is not common, but it would be nice not to ignore them
                 case ControllerInputId.LJoystick:
                     return gpState.ThumbSticks.Left.X >= Deadzone ||
                            gpState.ThumbSticks.Left.Y >= Deadzone;

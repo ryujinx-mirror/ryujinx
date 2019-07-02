@@ -36,7 +36,7 @@ namespace ChocolArm64
         static OpCodeTable()
         {
 #region "OpCode Table (AArch32)"
-            //Integer
+            // Integer
             SetA32("<<<<0010100xxxxxxxxxxxxxxxxxxxxx", InstEmit32.Add,           typeof(OpCode32AluImm));
             SetA32("<<<<0000100xxxxxxxxxxxxxxxx0xxxx", InstEmit32.Add,           typeof(OpCode32AluRsImm));
             SetA32("<<<<1010xxxxxxxxxxxxxxxxxxxxxxxx", InstEmit32.B,             typeof(OpCode32BImm));
@@ -66,7 +66,7 @@ namespace ChocolArm64
 #endregion
 
 #region "OpCode Table (AArch64)"
-            //Integer
+            // Integer
             SetA64("x0011010000xxxxx000000xxxxxxxxxx", InstEmit.Adc,             typeof(OpCodeAluRs64));
             SetA64("x0111010000xxxxx000000xxxxxxxxxx", InstEmit.Adcs,            typeof(OpCodeAluRs64));
             SetA64("x00100010xxxxxxxxxxxxxxxxxxxxxxx", InstEmit.Add,             typeof(OpCodeAluImm64));
@@ -217,7 +217,7 @@ namespace ChocolArm64
             SetA64("10011011101xxxxx1xxxxxxxxxxxxxxx", InstEmit.Umsubl,          typeof(OpCodeMul64));
             SetA64("10011011110xxxxx0xxxxxxxxxxxxxxx", InstEmit.Umulh,           typeof(OpCodeMul64));
 
-            //Vector
+            // Vector
             SetA64("0101111011100000101110xxxxxxxxxx", InstEmit.Abs_S,           typeof(OpCodeSimd64));
             SetA64("0>001110<<100000101110xxxxxxxxxx", InstEmit.Abs_V,           typeof(OpCodeSimd64));
             SetA64("01011110111xxxxx100001xxxxxxxxxx", InstEmit.Add_S,           typeof(OpCodeSimdReg64));
@@ -656,12 +656,12 @@ namespace ChocolArm64
 
             for (int index = 0; index < encoding.Length; index++, bit--)
             {
-                //Note: < and > are used on special encodings.
-                //The < means that we should never have ALL bits with the '<' set.
-                //So, when the encoding has <<, it means that 00, 01, and 10 are valid,
-                //but not 11. <<< is 000, 001, ..., 110 but NOT 111, and so on...
-                //For >, the invalid value is zero. So, for >> 01, 10 and 11 are valid,
-                //but 00 isn't.
+                // Note: < and > are used on special encodings.
+                // The < means that we should never have ALL bits with the '<' set.
+                // So, when the encoding has <<, it means that 00, 01, and 10 are valid,
+                // but not 11. <<< is 000, 001, ..., 110 but NOT 111, and so on...
+                // For >, the invalid value is zero. So, for >> 01, 10 and 11 are valid,
+                // but 00 isn't.
                 char chr = encoding[index];
 
                 if (chr == '1')

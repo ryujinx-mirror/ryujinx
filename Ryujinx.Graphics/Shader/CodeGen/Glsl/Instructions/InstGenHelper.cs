@@ -112,13 +112,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
         public static bool NeedsParenthesis(IAstNode node, Instruction pInst, InstInfo pInfo, bool isLhs)
         {
-            //If the node isn't a operation, then it can only be a operand,
-            //and those never needs to be surrounded in parenthesis.
+            // If the node isn't a operation, then it can only be a operand,
+            // and those never needs to be surrounded in parenthesis.
             if (!(node is AstOperation operation))
             {
-                //This is sort of a special case, if this is a negative constant,
-                //and it is consumed by a unary operation, we need to put on the parenthesis,
-                //as in GLSL a sequence like --2 or ~-1 is not valid.
+                // This is sort of a special case, if this is a negative constant,
+                // and it is consumed by a unary operation, we need to put on the parenthesis,
+                // as in GLSL a sequence like --2 or ~-1 is not valid.
                 if (IsNegativeConst(node) && pInfo.Type == InstType.OpUnary)
                 {
                     return true;

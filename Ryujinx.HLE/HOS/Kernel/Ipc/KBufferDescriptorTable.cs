@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 ulong clientAddrTruncated = BitUtils.AlignDown(desc.ClientAddress, KMemoryManager.PageSize);
                 ulong clientAddrRounded   = BitUtils.AlignUp  (desc.ClientAddress, KMemoryManager.PageSize);
 
-                //Check if address is not aligned, in this case we need to perform 2 copies.
+                // Check if address is not aligned, in this case we need to perform 2 copies.
                 if (clientAddrTruncated != clientAddrRounded)
                 {
                     ulong copySize = clientAddrRounded - desc.ClientAddress;

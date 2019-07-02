@@ -13,7 +13,7 @@ namespace ChocolArm64.Instructions
 
             if (op.Pos < op.Shift)
             {
-                //BFI.
+                // BFI.
                 context.EmitLdintzr(op.Rn);
 
                 int shift = op.GetBitsCount() - op.Shift;
@@ -39,7 +39,7 @@ namespace ChocolArm64.Instructions
             }
             else
             {
-                //BFXIL.
+                // BFXIL.
                 context.EmitLdintzr(op.Rn);
 
                 context.EmitLsr(op.Shift);

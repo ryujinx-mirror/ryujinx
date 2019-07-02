@@ -64,8 +64,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
 
             lock (asCtx)
             {
-                //Note: When the fixed offset flag is not set,
-                //the Offset field holds the alignment size instead.
+                // Note: When the fixed offset flag is not set,
+                // the Offset field holds the alignment size instead.
                 if ((args.Flags & FlagFixedOffset) != 0)
                 {
                     args.Offset = asCtx.Vmm.ReserveFixed(args.Offset, (long)size);
@@ -218,8 +218,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvGpuAS
 
             lock (asCtx)
             {
-                //Note: When the fixed offset flag is not set,
-                //the Offset field holds the alignment size instead.
+                // Note: When the fixed offset flag is not set,
+                // the Offset field holds the alignment size instead.
                 bool vaAllocated = (args.Flags & FlagFixedOffset) == 0;
 
                 if (!vaAllocated)

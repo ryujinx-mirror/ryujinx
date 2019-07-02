@@ -108,7 +108,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
             long position = context.Request.PtrBuff[0].Position;
             long size     = context.Request.PtrBuff[0].Size;
 
-            //Todo: Write the buffer content.
+            // TODO: Write the buffer content.
 
             Logger.PrintStub(LogClass.ServiceFriend, new { UserId = uuid.ToString(), unknown0 });
 

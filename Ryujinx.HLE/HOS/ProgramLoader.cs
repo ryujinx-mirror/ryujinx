@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS
 
             if (AslrEnabled)
             {
-                //TODO: Randomization.
+                // TODO: Randomization.
 
                 mmuFlags |= 0x20;
             }

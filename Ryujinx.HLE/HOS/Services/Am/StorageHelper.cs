@@ -8,7 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         public static byte[] MakeLaunchParams()
         {
-            //Size needs to be at least 0x88 bytes otherwise application errors.
+            // Size needs to be at least 0x88 bytes otherwise application errors.
             using (MemoryStream ms = new MemoryStream())
             {
                 BinaryWriter writer = new BinaryWriter(ms);

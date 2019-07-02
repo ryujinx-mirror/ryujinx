@@ -96,7 +96,7 @@ namespace Ryujinx.Graphics.Gal.OpenGL
             _rasterizer   = rasterizer;
             _shader       = shader;
 
-            //These values match OpenGL's defaults
+            // These values match OpenGL's defaults
             _old = new GalPipelineState
             {
                 FrontFace = GalFrontFace.Ccw,
@@ -564,14 +564,14 @@ namespace Ryujinx.Graphics.Gal.OpenGL
                 {
                     _vaoHandle = GL.GenVertexArray();
 
-                    //Vertex arrays shouldn't be used anywhere else in OpenGL's backend
-                    //if you want to use it, move this line out of the if
+                    // Vertex arrays shouldn't be used anywhere else in OpenGL's backend
+                    // if you want to use it, move this line out of the if
                     GL.BindVertexArray(_vaoHandle);
                 }
 
                 foreach (GalVertexAttrib attrib in binding.Attribs)
                 {
-                    //Skip uninitialized attributes.
+                    // Skip uninitialized attributes.
                     if (attrib.Size == 0)
                     {
                         continue;

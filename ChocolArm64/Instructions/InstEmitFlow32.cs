@@ -66,8 +66,8 @@ namespace ChocolArm64.Instructions
 
             context.EmitStint(GetBankedRegisterAlias(context.Mode, RegisterAlias.Aarch32Lr));
 
-            //If x is true, then this is a branch with link and exchange.
-            //In this case we need to swap the mode between Arm <-> Thumb.
+            // If x is true, then this is a branch with link and exchange.
+            // In this case we need to swap the mode between Arm <-> Thumb.
             if (x)
             {
                 context.EmitLdc_I4(isThumb ? 0 : 1);

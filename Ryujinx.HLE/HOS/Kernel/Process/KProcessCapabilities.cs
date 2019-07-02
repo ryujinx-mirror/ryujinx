@@ -131,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             int codeMask = 1 << (32 - BitUtils.CountLeadingZeros32(code + 1));
 
-            //Check if the property was already set.
+            // Check if the property was already set.
             if (((mask0 & codeMask) & 0x1e008) != 0)
             {
                 return KernelResult.InvalidCombination;
@@ -223,7 +223,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                 case 0x800:
                 {
-                    //TODO: GIC distributor check.
+                    // TODO: GIC distributor check.
                     int irq0 = (cap >> 12) & 0x3ff;
                     int irq1 = (cap >> 22) & 0x3ff;
 
@@ -256,7 +256,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                 case 0x4000:
                 {
-                    //Note: This check is bugged on kernel too, we are just replicating the bug here.
+                    // Note: This check is bugged on kernel too, we are just replicating the bug here.
                     if ((KernelReleaseVersion >> 17) != 0 || cap < 0x80000)
                     {
                         return KernelResult.ReservedValue;

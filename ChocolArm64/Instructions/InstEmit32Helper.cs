@@ -24,7 +24,7 @@ namespace ChocolArm64.Instructions
             }
             else
             {
-                context.EmitLdint(InstEmit32Helper.GetRegisterAlias(context.Mode, register));
+                context.EmitLdint(GetRegisterAlias(context.Mode, register));
             }
         }
 

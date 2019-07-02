@@ -175,7 +175,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult SetThreadPriority(int handle, int priority)
         {
-            //TODO: NPDM check.
+            // TODO: NPDM check.
 
             KThread thread = _process.HandleTable.GetKThread(handle);
 

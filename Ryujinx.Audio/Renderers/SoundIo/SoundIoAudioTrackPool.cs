@@ -140,7 +140,7 @@ namespace Ryujinx.Audio.SoundIo
         }
 
         /// <summary>
-        /// Attempers to get a <see cref="SoundIoAudioTrack"/> from the pool
+        /// Attempts to get a <see cref="SoundIoAudioTrack"/> from the pool
         /// </summary>
         /// <param name="track">The track retrieved from the pool</param>
         /// <returns>True if retrieve was successful</returns>

@@ -65,12 +65,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (extended)
             {
-                //When the operation is extended, it means we are doing
-                //the operation on a long word with any number of bits,
-                //so we need to AND the zero flag from result with the
-                //previous result when extended is specified, to ensure
-                //we have ZF set only if all words are zero, and not just
-                //the last one.
+                // When the operation is extended, it means we are doing
+                // the operation on a long word with any number of bits,
+                // so we need to AND the zero flag from result with the
+                // previous result when extended is specified, to ensure
+                // we have ZF set only if all words are zero, and not just
+                // the last one.
                 Operand oldZF = GetZF(context);
 
                 Operand res = context.BitwiseAnd(context.ICompareEqual(dest, Const(0)), oldZF);

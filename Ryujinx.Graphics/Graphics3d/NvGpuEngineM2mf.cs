@@ -56,7 +56,7 @@ namespace Ryujinx.Graphics.Graphics3d
         {
             Profile.Begin(Profiles.GPU.EngineM2mf.Execute);
 
-            //TODO: Some registers and copy modes are still not implemented.
+            // TODO: Some registers and copy modes are still not implemented.
             int control = methCall.Argument;
 
             bool srcLinear = ((control >> 7) & 1) != 0;

@@ -350,7 +350,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         private KernelResult ParseProcessInfo(ProcessCreationInfo creationInfo)
         {
-            //Ensure that the current kernel version is equal or above to the minimum required.
+            // Ensure that the current kernel version is equal or above to the minimum required.
             uint requiredKernelVersionMajor =  (uint)Capabilities.KernelReleaseVersion >> 19;
             uint requiredKernelVersionMinor = ((uint)Capabilities.KernelReleaseVersion >> 15) & 0xf;
 
@@ -429,7 +429,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             if (_freeTlsPages.Count > 0)
             {
-                //If we have free TLS pages available, just use the first one.
+                // If we have free TLS pages available, just use the first one.
                 KTlsPageInfo pageInfo = _freeTlsPages.Values.First();
 
                 if (!pageInfo.TryGetFreePage(out address))
@@ -448,7 +448,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
             else
             {
-                //Otherwise, we need to create a new one.
+                // Otherwise, we need to create a new one.
                 result = AllocateTlsPage(out KTlsPageInfo pageInfo);
 
                 if (result == KernelResult.Success)
@@ -522,7 +522,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             if (_fullTlsPages.TryGetValue(tlsPageAddr, out pageInfo))
             {
-                //TLS page was full, free slot and move to free pages tree.
+                // TLS page was full, free slot and move to free pages tree.
                 _fullTlsPages.Remove(tlsPageAddr);
 
                 _freeTlsPages.Add(tlsPageAddr, pageInfo);
@@ -538,8 +538,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                 if (pageInfo.IsEmpty())
                 {
-                    //TLS page is now empty, we should ensure it is removed
-                    //from all trees, and free the memory it was using.
+                    // TLS page is now empty, we should ensure it is removed
+                    // from all trees, and free the memory it was using.
                     _freeTlsPages.Remove(tlsPageAddr);
 
                     System.CriticalSection.Leave();
@@ -574,7 +574,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         private void GenerateRandomEntropy()
         {
-            //TODO.
+            // TODO.
         }
 
         public KernelResult Start(int mainThreadPriority, ulong stackSize)
@@ -603,9 +603,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                 ulong neededSize = stackSizeRounded + _imageSize;
 
-                //Check if the needed size for the code and the stack will fit on the
-                //memory usage capacity of this Process. Also check for possible overflow
-                //on the above addition.
+                // Check if the needed size for the code and the stack will fit on the
+                // memory usage capacity of this Process. Also check for possible overflow
+                // on the above addition.
                 if (neededSize > _memoryUsageCapacity ||
                     neededSize < stackSizeRounded)
                 {
@@ -742,10 +742,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                 SetState(newState);
 
-                //TODO: We can't call KThread.Start from a non-guest thread.
-                //We will need to make some changes to allow the creation of
-                //dummy threads that will be used to initialize the current
-                //thread on KCoreContext so that GetCurrentThread doesn't fail.
+                // TODO: We can't call KThread.Start from a non-guest thread.
+                // We will need to make some changes to allow the creation of
+                // dummy threads that will be used to initialize the current
+                // thread on KCoreContext so that GetCurrentThread doesn't fail.
                 /* Result = MainThread.Start();
 
                 if (Result != KernelResult.Success)
@@ -935,7 +935,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             if (shallTerminate)
             {
-                //UnpauseAndTerminateAllThreadsExcept(System.Scheduler.GetCurrentThread());
+                // UnpauseAndTerminateAllThreadsExcept(System.Scheduler.GetCurrentThread());
 
                 HandleTable.Destroy();
 
@@ -948,12 +948,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         private void UnpauseAndTerminateAllThreadsExcept(KThread thread)
         {
-            //TODO.
+            // TODO.
         }
 
         private void SignalExitForDebugEvent()
         {
-            //TODO: Debug events.
+            // TODO: Debug events.
         }
 
         private void SignalExit()

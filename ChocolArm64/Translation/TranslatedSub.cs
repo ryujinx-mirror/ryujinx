@@ -10,9 +10,9 @@ namespace ChocolArm64.Translation
 
     class TranslatedSub
     {
-        //This is the minimum amount of calls needed for the method
-        //to be retranslated with higher quality code. It's only worth
-        //doing that for hot code.
+        // This is the minimum amount of calls needed for the method
+        // to be retranslated with higher quality code. It's only worth
+        // doing that for hot code.
         private const int MinCallCountForOpt = 30;
 
         public ArmSubroutine Delegate { get; private set; }
@@ -32,7 +32,7 @@ namespace ChocolArm64.Translation
 
         public TranslatedSub(DynamicMethod method, TranslationTier tier, bool rejit)
         {
-            Method = method ?? throw new ArgumentNullException(nameof(method));;
+            Method = method ?? throw new ArgumentNullException(nameof(method));
             Tier   = tier;
             _rejit = rejit;
         }
@@ -74,7 +74,7 @@ namespace ChocolArm64.Translation
 
         public bool Rejit()
         {
-           if (!_rejit)
+            if (!_rejit)
             {
                 return false;
             }
@@ -84,7 +84,7 @@ namespace ChocolArm64.Translation
                 return false;
             }
 
-            //Only return true once, so that it is added to the queue only once.
+            // Only return true once, so that it is added to the queue only once.
             _rejit = false;
 
             return true;

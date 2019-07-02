@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Threading;
+﻿using System.Threading;
 using OpenTK;
 using OpenTK.Input;
 using Ryujinx.Common;

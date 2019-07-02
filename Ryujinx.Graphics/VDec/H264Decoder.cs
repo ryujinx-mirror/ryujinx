@@ -89,7 +89,7 @@ namespace Ryujinx.Graphics.VDec
             {
                 H264BitStreamWriter writer = new H264BitStreamWriter(data);
 
-                //Sequence Parameter Set.
+                // Sequence Parameter Set.
                 writer.WriteU(1, 24);
                 writer.WriteU(0, 1);
                 writer.WriteU(3, 2);
@@ -145,7 +145,7 @@ namespace Ryujinx.Graphics.VDec
 
                 writer.End();
 
-                //Picture Parameter Set.
+                // Picture Parameter Set.
                 writer.WriteU(1, 24);
                 writer.WriteU(0, 1);
                 writer.WriteU(3, 2);
@@ -196,7 +196,7 @@ namespace Ryujinx.Graphics.VDec
             }
         }
 
-        //ZigZag LUTs from libavcodec.
+        // ZigZag LUTs from libavcodec.
         private static readonly byte[] ZigZagDirect = new byte[]
         {
             0,   1,  8, 16,  9,  2,  3, 10,

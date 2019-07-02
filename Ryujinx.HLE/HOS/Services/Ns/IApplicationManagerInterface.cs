@@ -1,5 +1,4 @@
 ﻿using LibHac;
-using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using System;
 using System.Collections.Generic;

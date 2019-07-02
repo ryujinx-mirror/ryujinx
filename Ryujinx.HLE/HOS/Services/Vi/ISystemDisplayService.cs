@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         public static long GetDisplayMode(ServiceCtx context)
         {
-            //TODO: De-hardcode resolution.
+            // TODO: De-hardcode resolution.
             context.ResponseData.Write(1280);
             context.ResponseData.Write(720);
             context.ResponseData.Write(60.0f);

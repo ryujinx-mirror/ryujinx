@@ -32,12 +32,12 @@ namespace Ryujinx
             Configuration.Load(Path.Combine(ApplicationDirectory, "Config.jsonc"));
             Configuration.Configure(device);
 
-            Profile.Initalize();
+            Profile.Initialize();
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.ProcessExit        += CurrentDomain_ProcessExit;
 
-            if (device.System.State.DiscordIntergrationEnabled == true)
+            if (device.System.State.DiscordIntegrationEnabled == true)
             {
                 DiscordClient   = new DiscordRpcClient("568815339807309834");
                 DiscordPresence = new RichPresence
@@ -108,7 +108,7 @@ namespace Ryujinx
                 Logger.PrintWarning(LogClass.Application, "Please specify the folder with the NSOs/IStorage or a NSO/NRO.");
             }
 
-            if (device.System.State.DiscordIntergrationEnabled == true)
+            if (device.System.State.DiscordIntegrationEnabled == true)
             {
                 if (File.ReadAllLines(Path.Combine(ApplicationDirectory, "RPsupported.dat")).Contains(device.System.TitleID))
                 {

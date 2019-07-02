@@ -33,12 +33,12 @@ namespace Ryujinx.HLE.Loaders.Npdm
                 throw new InvalidNpdmException("ACID Stream doesn't contain ACID section!");
             }
 
-            //Size field used with the above signature (?).
+            // Size field used with the above signature (?).
             Unknown1 = reader.ReadInt32();
 
             reader.ReadInt32();
 
-            //Bit0 must be 1 on retail, on devunit 0 is also allowed. Bit1 is unknown.
+            // Bit0 must be 1 on retail, on devunit 0 is also allowed. Bit1 is unknown.
             Flags = reader.ReadInt32();
 
             TitleIdRangeMin = reader.ReadInt64();

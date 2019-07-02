@@ -23,7 +23,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
             Inst = inst;
             Dest = dest;
 
-            //The array may be modified externally, so we store a copy.
+            // The array may be modified externally, so we store a copy.
             _sources = (Operand[])sources.Clone();
 
             for (int index = 0; index < _sources.Length; index++)

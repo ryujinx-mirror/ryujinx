@@ -443,7 +443,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             TextureProperty property = (TextureProperty)op.RawOpCode.Extract(22, 6);
 
-            //TODO: Validate and use property.
+            // TODO: Validate and use property.
             Instruction inst = Instruction.TextureSize;
 
             TextureType type = TextureType.Texture2D;

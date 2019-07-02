@@ -69,14 +69,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
                 context.Device.Gpu.PushCommandBuffer(vmm, cmdBufData);
             }
 
-            //TODO: Relocation, waitchecks, etc.
+            // TODO: Relocation, waitchecks, etc.
 
             return NvResult.Success;
         }
 
         private static int GetSyncpoint(ServiceCtx context)
         {
-            //TODO
+            // TODO
             long inputPosition  = context.Request.GetBufferType0x21().Position;
             long outputPosition = context.Request.GetBufferType0x22().Position;
 

@@ -158,7 +158,7 @@ namespace Ryujinx.Graphics.Shader
                     }
                 }
 
-                //Depth register is always two registers after the last color output.
+                // Depth register is always two registers after the last color output.
                 return count + 1;
             }
         }

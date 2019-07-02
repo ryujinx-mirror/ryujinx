@@ -15,11 +15,11 @@ namespace Ryujinx.HLE.Loaders.Npdm
 
             BinaryReader reader = new BinaryReader(stream);
 
-            int byteReaded = 0;
+            int bytesRead = 0;
 
             Dictionary<string, bool> services = new Dictionary<string, bool>();
 
-            while (byteReaded != size)
+            while (bytesRead != size)
             {
                 byte controlByte = reader.ReadByte();
 
@@ -33,7 +33,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
 
                 services[Encoding.ASCII.GetString(reader.ReadBytes(length))] = registerAllowed;
 
-                byteReaded += length + 1;
+                bytesRead += length + 1;
             }
 
             Services = new ReadOnlyDictionary<string, bool>(services);

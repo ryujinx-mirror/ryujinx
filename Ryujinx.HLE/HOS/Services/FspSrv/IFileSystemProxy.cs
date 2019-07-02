@@ -312,7 +312,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         private void ImportTitleKeysFromNsp(LibHac.Fs.IFileSystem nsp, Keyset keySet)
         {
-            foreach (LibHac.Fs.DirectoryEntry ticketEntry in nsp.EnumerateEntries("*.tik"))
+            foreach (DirectoryEntry ticketEntry in nsp.EnumerateEntries("*.tik"))
             {
                 Ticket ticket = new Ticket(nsp.OpenFile(ticketEntry.FullPath, OpenMode.Read).AsStream());
 

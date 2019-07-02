@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Ryujinx.Profiler
+﻿namespace Ryujinx.Profiler
 {
     public class ProfilerSettings
     {

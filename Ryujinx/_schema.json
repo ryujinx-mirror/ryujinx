@@ -393,11 +393,11 @@
         false
       ]
     },
-    "enable_discord_intergration": {
-      "$id": "#/properties/enable_discord_intergration",
+    "enable_discord_integration": {
+      "$id": "#/properties/enable_discord_integration",
       "type": "boolean",
-      "title": "Enable Discord Rich Presense",
-      "description": "Enable or disable Discord Rich Presense",
+      "title": "Enable Discord Rich Presence",
+      "description": "Enable or disable Discord Rich Presence",
       "default": true,
       "examples": [
         true,

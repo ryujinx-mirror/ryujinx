@@ -1,7 +1,5 @@
 ﻿using Ryujinx.HLE.HOS.Ipc;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Pm
 {

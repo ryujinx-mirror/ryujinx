@@ -104,12 +104,12 @@ namespace Ryujinx.Graphics
                 }
                 else
                 {
-                    int sumissionMode = (word >> 29) & 7;
+                    int submissionMode = (word >> 29) & 7;
 
-                    switch (sumissionMode)
+                    switch (submissionMode)
                     {
                         case 1:
-                            //Incrementing.
+                            // Incrementing.
                             SetNonImmediateState(word);
 
                             _state.NonIncrementing = false;
@@ -118,7 +118,7 @@ namespace Ryujinx.Graphics
                             break;
 
                         case 3:
-                            //Non-incrementing.
+                            // Non-incrementing.
                             SetNonImmediateState(word);
 
                             _state.NonIncrementing = true;
@@ -127,7 +127,7 @@ namespace Ryujinx.Graphics
                             break;
 
                         case 4:
-                            //Immediate.
+                            // Immediate.
                             _state.Method          = (word >> 0)  & 0x1fff;
                             _state.SubChannel      = (word >> 13) & 7;
                             _state.NonIncrementing = true;
@@ -138,7 +138,7 @@ namespace Ryujinx.Graphics
                             break;
 
                         case 5:
-                            //Increment-once.
+                            // Increment-once.
                             SetNonImmediateState(word);
 
                             _state.NonIncrementing = false;

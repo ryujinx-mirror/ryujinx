@@ -151,10 +151,10 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 }
             }
 
-            //For functions returning output values, the first registers
-            //are used to hold pointers where the value will be stored,
-            //so they can't be used to pass argument and we must
-            //skip them.
+            // For functions returning output values, the first registers
+            // are used to hold pointers where the value will be stored,
+            // so they can't be used to pass argument and we must
+            // skip them.
             int byRefArgsCount = 0;
 
             for (int index = 0; index < methodArgs.Length; index++)
@@ -165,7 +165,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 }
             }
 
-            //Print all the arguments for debugging purposes.
+            // Print all the arguments for debugging purposes.
             int inputArgsCount = methodArgs.Length - byRefArgsCount;
 
             generator.Emit(OpCodes.Ldc_I4_S, inputArgsCount);
@@ -200,7 +200,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             generator.Emit(OpCodes.Call, printArgsMethod);
 
-            //Call the SVC function handler.
+            // Call the SVC function handler.
             generator.Emit(OpCodes.Ldarg_0);
 
             List<LocalBuilder> locals = new List<LocalBuilder>();
@@ -239,7 +239,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
             Type retType = methodInfo.ReturnType;
 
-            //Print result code.
+            // Print result code.
             if (retType == typeof(KernelResult))
             {
                 MethodInfo printResultMethod = typeof(SvcTable).GetMethod(nameof(PrintResult), staticNonPublic);
@@ -249,7 +249,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 generator.Emit(OpCodes.Call, printResultMethod);
             }
 
-            //Save return value into register X0 (when the method has a return value).
+            // Save return value into register X0 (when the method has a return value).
             if (retType != typeof(void))
             {
                 CheckIfTypeIsSupported(retType, svcName);
@@ -275,7 +275,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 generator.Emit(OpCodes.Stfld, GetStateFieldX(outRegIndex++));
             }
 
-            //Zero out the remaining unused registers.
+            // Zero out the remaining unused registers.
             while (outRegIndex < SvcFuncMaxArguments)
             {
                 generator.Emit(OpCodes.Ldarg_1);

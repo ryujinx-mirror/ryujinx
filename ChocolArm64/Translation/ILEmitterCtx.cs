@@ -56,10 +56,10 @@ namespace ChocolArm64.Translation
         private OpCode64 _optOpLastCompare;
         private OpCode64 _optOpLastFlagSet;
 
-        //This is the index of the temporary register, used to store temporary
-        //values needed by some functions, since IL doesn't have a swap instruction.
-        //You can use any value here as long it doesn't conflict with the indices
-        //for the other registers. Any value >= 64 or < 0 will do.
+        // This is the index of the temporary register, used to store temporary
+        // values needed by some functions, since IL doesn't have a swap instruction.
+        // You can use any value here as long it doesn't conflict with the indices
+        // for the other registers. Any value >= 64 or < 0 will do.
         private const int ReservedLocalsCount = 64;
 
         private const int RorTmpIndex      = ReservedLocalsCount + 0;
@@ -69,7 +69,7 @@ namespace ChocolArm64.Translation
         private const int IntGpTmp2Index   = ReservedLocalsCount + 4;
         private const int UserIntTempStart = ReservedLocalsCount + 5;
 
-        //Vectors are part of another "set" of locals.
+        // Vectors are part of another "set" of locals.
         private const int VecGpTmp1Index   = ReservedLocalsCount + 0;
         private const int VecGpTmp2Index   = ReservedLocalsCount + 1;
         private const int VecGpTmp3Index   = ReservedLocalsCount + 2;
@@ -139,10 +139,10 @@ namespace ChocolArm64.Translation
 
         public void ResetBlockStateForPredicatedOp()
         {
-            //Check if this is a predicated instruction that modifies flags,
-            //in this case the value of the flags is unknown as we don't know
-            //in advance if the instruction is going to be executed or not.
-            //So, we reset the block state to prevent an invalid optimization.
+            // Check if this is a predicated instruction that modifies flags,
+            // in this case the value of the flags is unknown as we don't know
+            // in advance if the instruction is going to be executed or not.
+            // So, we reset the block state to prevent an invalid optimization.
             if (CurrOp == _optOpLastFlagSet)
             {
                 ResetBlockState();
@@ -167,8 +167,8 @@ namespace ChocolArm64.Translation
 
         public bool TryOptEmitSubroutineCall()
         {
-            //Calls should always have a next block, unless
-            //we're translating a single basic block.
+            // Calls should always have a next block, unless
+            // we're translating a single basic block.
             if (_currBlock.Next == null)
             {
                 return false;
@@ -239,15 +239,15 @@ namespace ChocolArm64.Translation
                                                                     && cond != Condition.GtUn
                                                                     && cond != Condition.LeUn)
                 {
-                    //There are several limitations that needs to be taken into account for CMN comparisons:
-                    //- The unsigned comparisons are not valid, as they depend on the
-                    //carry flag value, and they will have different values for addition and
-                    //subtraction. For addition, it's carry, and for subtraction, it's borrow.
-                    //So, we need to make sure we're not doing a unsigned compare for the CMN case.
-                    //- We can only do the optimization for the immediate variants,
-                    //because when the second operand value is exactly INT_MIN, we can't
-                    //negate the value as theres no positive counterpart.
-                    //Such invalid values can't be encoded on the immediate encodings.
+                    // There are several limitations that needs to be taken into account for CMN comparisons:
+                    // - The unsigned comparisons are not valid, as they depend on the
+                    // carry flag value, and they will have different values for addition and
+                    // subtraction. For addition, it's carry, and for subtraction, it's borrow.
+                    // So, we need to make sure we're not doing a unsigned compare for the CMN case.
+                    // - We can only do the optimization for the immediate variants,
+                    // because when the second operand value is exactly INT_MIN, we can't
+                    // negate the value as theres no positive counterpart.
+                    // Such invalid values can't be encoded on the immediate encodings.
                     if (_optOpLastCompare is IOpCodeAluImm64 op)
                     {
                         Ldloc(CmpOptTmp1Index, RegisterType.Int, _optOpLastCompare.RegisterSize);
@@ -513,11 +513,11 @@ namespace ChocolArm64.Translation
         public void EmitLdflg(int index) => Ldloc(index, RegisterType.Flag);
         public void EmitStflg(int index)
         {
-            //Set this only if any of the NZCV flag bits were modified.
-            //This is used to ensure that when emiting a direct IL branch
-            //instruction for compare + branch sequences, we're not expecting
-            //to use comparison values from an old instruction, when in fact
-            //the flags were already overwritten by another instruction further along.
+            // Set this only if any of the NZCV flag bits were modified.
+            // This is used to ensure that when emiting a direct IL branch
+            // instruction for compare + branch sequences, we're not expecting
+            // to use comparison values from an old instruction, when in fact
+            // the flags were already overwritten by another instruction further along.
             if (index >= (int)PState.VBit)
             {
                 _optOpLastFlagSet = CurrOp;

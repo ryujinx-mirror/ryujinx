@@ -30,22 +30,22 @@ namespace ChocolArm64.Memory
             return ptr;
         }
 
-        public static bool Reprotect(IntPtr address, ulong size, Memory.MemoryProtection protection)
+        public static bool Reprotect(IntPtr address, ulong size, MemoryProtection protection)
         {
             MmapProts prot = GetProtection(protection);
 
             return Syscall.mprotect(address, size, prot) == 0;
         }
 
-        private static MmapProts GetProtection(Memory.MemoryProtection protection)
+        private static MmapProts GetProtection(MemoryProtection protection)
         {
             switch (protection)
             {
-                case Memory.MemoryProtection.None:           return MmapProts.PROT_NONE;
-                case Memory.MemoryProtection.Read:           return MmapProts.PROT_READ;
-                case Memory.MemoryProtection.ReadAndWrite:   return MmapProts.PROT_READ | MmapProts.PROT_WRITE;
-                case Memory.MemoryProtection.ReadAndExecute: return MmapProts.PROT_READ | MmapProts.PROT_EXEC;
-                case Memory.MemoryProtection.Execute:        return MmapProts.PROT_EXEC;
+                case MemoryProtection.None:           return MmapProts.PROT_NONE;
+                case MemoryProtection.Read:           return MmapProts.PROT_READ;
+                case MemoryProtection.ReadAndWrite:   return MmapProts.PROT_READ | MmapProts.PROT_WRITE;
+                case MemoryProtection.ReadAndExecute: return MmapProts.PROT_READ | MmapProts.PROT_EXEC;
+                case MemoryProtection.Execute:        return MmapProts.PROT_EXEC;
 
                 default: throw new ArgumentException($"Invalid permission \"{protection}\".");
             }

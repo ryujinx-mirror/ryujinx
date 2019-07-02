@@ -10,7 +10,7 @@ namespace ChocolArm64.Decoders
         {
             uint pc = GetPc();
 
-            //When the codition is never, the instruction is BLX to Thumb mode.
+            // When the condition is never, the instruction is BLX to Thumb mode.
             if (Cond != Condition.Nv)
             {
                 pc &= ~3u;

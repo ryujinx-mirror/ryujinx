@@ -102,9 +102,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         public static string GetConstantBufferName(IAstNode slot, string offsetExpr, GalShaderType shaderType)
         {
-            //Non-constant slots are not supported.
-            //It is expected that upstream stages are never going to generate non-constant
-            //slot access.
+            // Non-constant slots are not supported.
+            // It is expected that upstream stages are never going to generate non-constant
+            // slot access.
             AstOperand operand = (AstOperand)slot;
 
             string ubName = GetUbName(shaderType, operand.Value);
@@ -157,7 +157,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 }
                 else if (_builtInAttributes.TryGetValue(value & ~3, out BuiltInAttribute builtInAttr))
                 {
-                    //TODO: There must be a better way to handle this...
+                    // TODO: There must be a better way to handle this...
                     if (shaderType == GalShaderType.Fragment)
                     {
                         switch (value & ~3)
@@ -180,14 +180,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 }
             }
 
-            //TODO: Warn about unknown built-in attribute.
+            // TODO: Warn about unknown built-in attribute.
 
             return isOutAttr ? "// bad_attr0x" + value.ToString("X") : "0.0";
         }
 
         public static string GetUbName(GalShaderType shaderType, int slot)
         {
-            string ubName = OperandManager.GetShaderStagePrefix(shaderType);
+            string ubName = GetShaderStagePrefix(shaderType);
 
             ubName += "_" + DefaultNames.UniformNamePrefix + slot;
 

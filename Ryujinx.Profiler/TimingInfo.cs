@@ -107,7 +107,7 @@ namespace Ryujinx.Profiler
                 _timestamps.Add(_currentTimestamp);
             }
 
-            var delta  = _currentTimestamp.EndTime - _currentTimestamp.BeginTime;
+            long delta = _currentTimestamp.EndTime - _currentTimestamp.BeginTime;
             TotalTime += delta;
             Instant   += delta;
 

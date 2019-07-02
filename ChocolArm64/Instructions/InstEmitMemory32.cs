@@ -137,15 +137,15 @@ namespace ChocolArm64.Instructions
 
                     EmitWriteCall(context, WordSizeLog2);
 
-                    //Note: If Rn is also specified on the register list,
-                    //and Rn is the first register on this list, then the
-                    //value that is written to memory is the unmodified value,
-                    //before the write back. If it is on the list, but it's
-                    //not the first one, then the value written to memory
-                    //varies between CPUs.
+                    // Note: If Rn is also specified on the register list,
+                    // and Rn is the first register on this list, then the
+                    // value that is written to memory is the unmodified value,
+                    // before the write back. If it is on the list, but it's
+                    // not the first one, then the value written to memory
+                    // varies between CPUs.
                     if (offset == 0 && op.PostOffset != 0)
                     {
-                        //Emit write back after the first write.
+                        // Emit write back after the first write.
                         EmitLoadFromRegister(context, op.Rn);
 
                         context.EmitLdc_I4(op.PostOffset);
@@ -233,7 +233,7 @@ namespace ChocolArm64.Instructions
 
                     context.Emit(OpCodes.Brtrue_S, lblBigEndian);
 
-                    //Little endian mode.
+                    // Little endian mode.
                     context.Emit(OpCodes.Conv_U4);
 
                     EmitStoreToRegister(context, op.Rt);
@@ -246,7 +246,7 @@ namespace ChocolArm64.Instructions
 
                     context.Emit(OpCodes.Br_S, lblEnd);
 
-                    //Big endian mode.
+                    // Big endian mode.
                     context.MarkLabel(lblBigEndian);
 
                     context.EmitLsr(32);
@@ -288,7 +288,7 @@ namespace ChocolArm64.Instructions
 
                     context.Emit(OpCodes.Brtrue_S, lblBigEndian);
 
-                    //Little endian mode.
+                    // Little endian mode.
                     EmitLoadFromRegister(context, op.Rt | 1);
 
                     context.Emit(OpCodes.Conv_U8);
@@ -299,7 +299,7 @@ namespace ChocolArm64.Instructions
 
                     context.Emit(OpCodes.Br_S, lblEnd);
 
-                    //Big endian mode.
+                    // Big endian mode.
                     context.MarkLabel(lblBigEndian);
 
                     context.EmitLsl(32);

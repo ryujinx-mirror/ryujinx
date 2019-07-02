@@ -71,7 +71,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (op.Size > IntegerSize.B64)
             {
-                //TODO: Warning.
+                // TODO: Warning.
             }
 
             bool isSmallInt = op.Size < IntegerSize.B32;
@@ -121,7 +121,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (!(emit || cut))
             {
-                //TODO: Warning.
+                // TODO: Warning.
             }
 
             if (emit)

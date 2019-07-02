@@ -83,9 +83,9 @@ namespace Ryujinx
         public bool DockedMode { get; private set; }
 
         /// <summary>
-        /// Enables or disables Discord Rich Presense
+        /// Enables or disables Discord Rich Presence
         /// </summary>
-        public bool EnableDiscordIntergration { get; private set; }
+        public bool EnableDiscordIntegration { get; private set; }
 
         /// <summary>
         /// Enables or disables Vertical Sync
@@ -220,7 +220,7 @@ namespace Ryujinx
                 }
             }
 
-            device.System.State.DiscordIntergrationEnabled = Instance.EnableDiscordIntergration;
+            device.System.State.DiscordIntegrationEnabled = Instance.EnableDiscordIntegration;
 
             device.EnableDeviceVsync = Instance.EnableVsync;
 
@@ -246,7 +246,7 @@ namespace Ryujinx
 
             ServiceConfiguration.IgnoreMissingServices = Instance.IgnoreMissingServices;
 
-            if(Instance.GamepadControls.Enabled)
+            if (Instance.GamepadControls.Enabled)
             {
                 if (GamePad.GetName(Instance.GamepadControls.Index) == "Unmapped Controller")
                 {
@@ -254,8 +254,8 @@ namespace Ryujinx
                 }
             }
 
-            device.Hid.InitilizePrimaryController(Instance.ControllerType);
-            device.Hid.InitilizeKeyboard();
+            device.Hid.InitializePrimaryController(Instance.ControllerType);
+            device.Hid.InitializeKeyboard();
         }
 
         private class ConfigurationEnumFormatter<T> : IJsonFormatter<T>
@@ -274,10 +274,10 @@ namespace Ryujinx
                     return default(T);
                 }
 
-                var enumName = formatterResolver.GetFormatterWithVerify<string>()
-                                                .Deserialize(ref reader, formatterResolver);
+                string enumName = formatterResolver.GetFormatterWithVerify<string>()
+                                                   .Deserialize(ref reader, formatterResolver);
 
-                if(Enum.TryParse<T>(enumName, out T result))
+                if (Enum.TryParse<T>(enumName, out T result))
                 {
                     return result;
                 }

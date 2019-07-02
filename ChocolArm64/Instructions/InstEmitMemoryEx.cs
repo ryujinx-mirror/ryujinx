@@ -89,10 +89,10 @@ namespace ChocolArm64.Instructions
 
             if (pair)
             {
-                //Exclusive loads should be atomic. For pairwise loads, we need to
-                //read all the data at once. For a 32-bits pairwise load, we do a
-                //simple 64-bits load, for a 128-bits load, we need to call a special
-                //method to read 128-bits atomically.
+                // Exclusive loads should be atomic. For pairwise loads, we need to
+                // read all the data at once. For a 32-bits pairwise load, we do a
+                // simple 64-bits load, for a 128-bits load, we need to call a special
+                // method to read 128-bits atomically.
                 if (op.Size == 2)
                 {
                     context.EmitLdtmp();
@@ -101,7 +101,7 @@ namespace ChocolArm64.Instructions
 
                     context.Emit(OpCodes.Dup);
 
-                    //Mask low half.
+                    // Mask low half.
                     context.Emit(OpCodes.Conv_U4);
 
                     if (exclusive)
@@ -111,7 +111,7 @@ namespace ChocolArm64.Instructions
 
                     context.EmitStintzr(op.Rt);
 
-                    //Shift high half.
+                    // Shift high half.
                     context.EmitLsr(32);
                     context.Emit(OpCodes.Conv_U4);
 
@@ -131,7 +131,7 @@ namespace ChocolArm64.Instructions
 
                     context.Emit(OpCodes.Dup);
 
-                    //Load low part of the vector.
+                    // Load low part of the vector.
                     context.EmitLdc_I4(0);
                     context.EmitLdc_I4(3);
 
@@ -144,7 +144,7 @@ namespace ChocolArm64.Instructions
 
                     context.EmitStintzr(op.Rt);
 
-                    //Load high part of the vector.
+                    // Load high part of the vector.
                     context.EmitLdc_I4(1);
                     context.EmitLdc_I4(3);
 
@@ -164,7 +164,7 @@ namespace ChocolArm64.Instructions
             }
             else
             {
-                //8, 16, 32 or 64-bits (non-pairwise) load.
+                // 8, 16, 32 or 64-bits (non-pairwise) load.
                 context.EmitLdtmp();
 
                 EmitReadZxCall(context, op.Size);
@@ -180,7 +180,7 @@ namespace ChocolArm64.Instructions
 
         public static void Pfrm(ILEmitterCtx context)
         {
-            //Memory Prefetch, execute as no-op.
+            // Memory Prefetch, execute as no-op.
         }
 
         public static void Stlr(ILEmitterCtx context)  => EmitStr(context, AccessType.Ordered);
@@ -223,13 +223,13 @@ namespace ChocolArm64.Instructions
 
                 context.Emit(OpCodes.Brtrue_S, lblEx);
 
-                //Address check failed, set error right away and do not store anything.
+                // Address check failed, set error right away and do not store anything.
                 context.EmitLdc_I4(1);
                 context.EmitStintzr(op.Rs);
 
                 context.Emit(OpCodes.Br, lblEnd);
 
-                //Address check passsed.
+                // Address check passed.
                 context.MarkLabel(lblEx);
 
                 context.EmitLdarg(TranslatedSub.MemoryArgIdx);
@@ -241,7 +241,7 @@ namespace ChocolArm64.Instructions
 
                 void EmitCast()
                 {
-                    //The input should be always int64.
+                    // The input should be always int64.
                     switch (op.Size)
                     {
                         case 0: context.Emit(OpCodes.Conv_U1); break;
@@ -293,10 +293,10 @@ namespace ChocolArm64.Instructions
                     }
                 }
 
-                //The value returned is a bool, true if the values compared
-                //were equal and the new value was written, false otherwise.
-                //We need to invert this result, as on ARM 1 indicates failure,
-                //and 0 success on those instructions.
+                // The value returned is a bool, true if the values compared
+                // were equal and the new value was written, false otherwise.
+                // We need to invert this result, as on ARM 1 indicates failure,
+                // and 0 success on those instructions.
                 context.EmitLdc_I4(1);
 
                 context.Emit(OpCodes.Xor);
@@ -305,7 +305,7 @@ namespace ChocolArm64.Instructions
 
                 context.EmitStintzr(op.Rs);
 
-                //Only clear the exclusive monitor if the store was successful (Rs = false).
+                // Only clear the exclusive monitor if the store was successful (Rs = false).
                 context.Emit(OpCodes.Brtrue_S, lblEnd);
 
                 Clrex(context);
@@ -341,9 +341,9 @@ namespace ChocolArm64.Instructions
 
         private static void EmitBarrier(ILEmitterCtx context)
         {
-            //Note: This barrier is most likely not necessary, and probably
-            //doesn't make any difference since we need to do a ton of stuff
-            //(software MMU emulation) to read or write anything anyway.
+            // Note: This barrier is most likely not necessary, and probably
+            // doesn't make any difference since we need to do a ton of stuff
+            // (software MMU emulation) to read or write anything anyway.
             context.EmitCall(typeof(Thread), nameof(Thread.MemoryBarrier));
         }
     }

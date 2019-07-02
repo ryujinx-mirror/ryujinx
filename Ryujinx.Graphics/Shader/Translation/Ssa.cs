@@ -86,7 +86,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             Queue<BasicBlock> dfPhiBlocks = new Queue<BasicBlock>();
 
-            //First pass, get all defs and locals uses.
+            // First pass, get all defs and locals uses.
             for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
             {
                 Operand[] localDefs = new Operand[RegisterConsts.TotalCount];
@@ -157,7 +157,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 }
             }
 
-            //Second pass, rename variables with definitions on different blocks.
+            // Second pass, rename variables with definitions on different blocks.
             for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
             {
                 Operand[] localDefs = new Operand[RegisterConsts.TotalCount];
@@ -251,10 +251,10 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private static Operand InsertPhi(DefMap[] globalDefs, BasicBlock block, Register reg)
         {
-            //This block has a Phi that has not been materialized yet, but that
-            //would define a new version of the variable we're looking for. We need
-            //to materialize the Phi, add all the block/operand pairs into the Phi, and
-            //then use the definition from that Phi.
+            // This block has a Phi that has not been materialized yet, but that
+            // would define a new version of the variable we're looking for. We need
+            // to materialize the Phi, add all the block/operand pairs into the Phi, and
+            // then use the definition from that Phi.
             Operand local = Local();
 
             PhiNode phi = new PhiNode(local);

@@ -327,7 +327,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
             uint offset;
 
-            //Copy handles.
+            // Copy handles.
             if (clientHeader.HasHandles)
             {
                 if (clientHeader.MoveHandlesCount != 0)
@@ -399,7 +399,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 offset = 2;
             }
 
-            //Copy pointer/receive list buffers.
+            // Copy pointer/receive list buffers.
             uint recvListDstOffset = 0;
 
             for (int index = 0; index < clientHeader.PointerBuffersCount; index++)
@@ -455,7 +455,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 offset += 2;
             }
 
-            //Copy send, receive and exchange buffers.
+            // Copy send, receive and exchange buffers.
             uint totalBuffersCount =
                 clientHeader.SendBuffersCount    +
                 clientHeader.ReceiveBuffersCount +
@@ -551,7 +551,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 offset += 3;
             }
 
-            //Copy raw data.
+            // Copy raw data.
             if (clientHeader.RawDataSizeInWords != 0)
             {
                 ulong copySrc = clientMsg.Address + offset * 4;
@@ -683,13 +683,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 return KernelResult.InvalidCombination;
             }
 
-            //Read receive list.
+            // Read receive list.
             ulong[] receiveList = GetReceiveList(
                 clientMsg,
                 clientHeader.ReceiveListType,
                 clientHeader.ReceiveListOffset);
 
-            //Copy receive and exchange buffers.
+            // Copy receive and exchange buffers.
             clientResult = request.BufferDescriptorTable.CopyBuffersToClient(clientProcess.MemoryManager);
 
             if (clientResult != KernelResult.Success)
@@ -699,11 +699,11 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 return serverResult;
             }
 
-            //Copy header.
+            // Copy header.
             System.Device.Memory.WriteUInt32((long)clientMsg.DramAddress + 0, serverHeader.Word0);
             System.Device.Memory.WriteUInt32((long)clientMsg.DramAddress + 4, serverHeader.Word1);
 
-            //Copy handles.
+            // Copy handles.
             uint offset;
 
             if (serverHeader.HasHandles)
@@ -763,7 +763,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 offset = 2;
             }
 
-            //Copy pointer/receive list buffers.
+            // Copy pointer/receive list buffers.
             uint recvListDstOffset = 0;
 
             for (int index = 0; index < serverHeader.PointerBuffersCount; index++)
@@ -811,7 +811,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 offset += 2;
             }
 
-            //Set send, receive and exchange buffer descriptors to zero.
+            // Set send, receive and exchange buffer descriptors to zero.
             uint totalBuffersCount =
                 serverHeader.SendBuffersCount    +
                 serverHeader.ReceiveBuffersCount +
@@ -828,7 +828,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 offset += 3;
             }
 
-            //Copy raw data.
+            // Copy raw data.
             if (serverHeader.RawDataSizeInWords != 0)
             {
                 ulong copyDst = clientMsg.Address + offset * 4;
@@ -861,7 +861,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                 }
             }
 
-            //Unmap buffers from server.
+            // Unmap buffers from server.
             clientResult = request.BufferDescriptorTable.UnmapServerBuffers(serverProcess.MemoryManager);
 
             if (clientResult != KernelResult.Success)
@@ -1125,9 +1125,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
                     continue;
                 }
 
-                //Client sessions can only be disconnected on async requests (because
-                //the client would be otherwise blocked waiting for the response), so
-                //we only need to handle the async case here.
+                // Client sessions can only be disconnected on async requests (because
+                // the client would be otherwise blocked waiting for the response), so
+                // we only need to handle the async case here.
                 if (request.AsyncEvent != null)
                 {
                     SendResultToAsyncRequestClient(request, KernelResult.PortRemoteClosed);
@@ -1204,7 +1204,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         private void WakeClientThread(KSessionRequest request, KernelResult result)
         {
-            //Wait client thread waiting for a response for the given request.
+            // Wait client thread waiting for a response for the given request.
             if (request.AsyncEvent != null)
             {
                 SendResultToAsyncRequestClient(request, result);
@@ -1237,7 +1237,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Ipc
 
         private void WakeServerThreads(KernelResult result)
         {
-            //Wake all server threads waiting for requests.
+            // Wake all server threads waiting for requests.
             System.CriticalSection.Enter();
 
             foreach (KThread thread in WaitingThreads)

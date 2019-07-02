@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
                 { 21, GetPopFromGeneralChannelEvent }
             };
 
-            //ToDo: Signal this Event somewhere in future.
+            // TODO: Signal this Event somewhere in future.
             _channelEvent = new KEvent(system);
         }
 

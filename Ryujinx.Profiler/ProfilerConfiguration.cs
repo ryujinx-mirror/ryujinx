@@ -1,9 +1,6 @@
 ﻿using OpenTK.Input;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 using Utf8Json;
 using Utf8Json.Resolvers;
 
@@ -58,7 +55,7 @@ namespace Ryujinx.Profiler
                     return default(T);
                 }
 
-                var enumName = formatterResolver.GetFormatterWithVerify<string>()
+                string enumName = formatterResolver.GetFormatterWithVerify<string>()
                     .Deserialize(ref reader, formatterResolver);
 
                 if (Enum.TryParse<T>(enumName, out T result))

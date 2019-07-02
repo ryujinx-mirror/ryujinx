@@ -96,7 +96,7 @@ namespace ChocolArm64.Instructions
 
             if (op.Replicate)
             {
-                //Only loads uses the replicate mode.
+                // Only loads uses the replicate mode.
                 if (!isLoad)
                 {
                     throw new InvalidOperationException();

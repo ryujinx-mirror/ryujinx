@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             _systemEvent = new KEvent(system);
 
-            //TODO: We shouldn't be signaling this here.
+            // TODO: We shouldn't be signaling this here.
             _systemEvent.ReadableEvent.Signal();
         }
 

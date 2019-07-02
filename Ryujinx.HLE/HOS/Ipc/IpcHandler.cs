@@ -72,7 +72,7 @@ namespace Ryujinx.HLE.HOS.Ipc
                             break;
                         }
 
-                        //TODO: Whats the difference between IpcDuplicateSession/Ex?
+                        // TODO: Whats the difference between IpcDuplicateSession/Ex?
                         case 2:
                         case 4:
                         {
@@ -95,7 +95,7 @@ namespace Ryujinx.HLE.HOS.Ipc
                 }
                 else if (request.Type == IpcMessageType.CloseSession)
                 {
-                    //TODO
+                    // TODO
                 }
                 else
                 {

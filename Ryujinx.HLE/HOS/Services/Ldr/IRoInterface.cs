@@ -523,7 +523,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
                 NrrInfo info;
                 result = ParseNrr(out info, context, nrrAddress, nrrSize);
 
-                if(result == 0)
+                if (result == 0)
                 {
                     if (_nrrInfos.Count >= MaxNrr)
                     {

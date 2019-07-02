@@ -28,7 +28,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             if (addressB != 0)
             {
-                //Dual vertex shader.
+                // Dual vertex shader.
                 Operation[] shaderOpsB = DecodeShader(memory, addressB, config.Type);
 
                 shaderOps = Combine(shaderOps, shaderOpsB);
@@ -86,10 +86,10 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     if (op is OpCodeSync opSync)
                     {
-                        //If the instruction is a SYNC instruction with only one
-                        //possible target address, then the instruction is basically
-                        //just a simple branch, we can generate code similar to branch
-                        //instructions, with the condition check on the branch itself.
+                        // If the instruction is a SYNC instruction with only one
+                        // possible target address, then the instruction is basically
+                        // just a simple branch, we can generate code similar to branch
+                        // instructions, with the condition check on the branch itself.
                         skipPredicateCheck |= opSync.Targets.Count < 2;
                     }
 
@@ -136,15 +136,15 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private static Operation[] Combine(Operation[] a, Operation[] b)
         {
-            //Here we combine two shaders.
-            //For shader A:
-            //- All user attribute stores on shader A are turned into copies to a
-            //temporary variable. It's assumed that shader B will consume them.
-            //- All return instructions are turned into branch instructions, the
-            //branch target being the start of the shader B code.
-            //For shader B:
-            //- All user attribute loads on shader B are turned into copies from a
-            //temporary variable, as long that attribute is written by shader A.
+            // Here we combine two shaders.
+            // For shader A:
+            // - All user attribute stores on shader A are turned into copies to a
+            // temporary variable. It's assumed that shader B will consume them.
+            // - All return instructions are turned into branch instructions, the
+            // branch target being the start of the shader B code.
+            // For shader B:
+            // - All user attribute loads on shader B are turned into copies from a
+            // temporary variable, as long that attribute is written by shader A.
             List<Operation> output = new List<Operation>(a.Length + b.Length);
 
             Operand[] temps = new Operand[AttributeConsts.UserAttributesCount * 4];

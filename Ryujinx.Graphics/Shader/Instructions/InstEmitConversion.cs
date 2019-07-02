@@ -47,7 +47,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             WriteFP(context, dstType, srcB);
 
-            //TODO: CC.
+            // TODO: CC.
         }
 
         public static void F2I(EmitterContext context)
@@ -88,7 +88,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             srcB = context.FPConvertToS32(srcB);
 
-            //TODO: S/U64, conversion overflow handling.
+            // TODO: S/U64, conversion overflow handling.
             if (intType != IntegerType.S32)
             {
                 int min = GetIntMin(intType);
@@ -103,7 +103,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             context.Copy(dest, srcB);
 
-            //TODO: CC.
+            // TODO: CC.
         }
 
         public static void I2F(EmitterContext context)
@@ -137,7 +137,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             WriteFP(context, dstType, srcB);
 
-            //TODO: CC.
+            // TODO: CC.
         }
 
         public static void I2I(EmitterContext context)
@@ -149,7 +149,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (srcType == IntegerType.U64 || dstType == IntegerType.U64)
             {
-                //TODO: Warning. This instruction doesn't support 64-bits integers
+                // TODO: Warning. This instruction doesn't support 64-bits integers
             }
 
             bool srcIsSmallInt = srcType <= IntegerType.U16;
@@ -189,7 +189,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             context.Copy(GetDest(context), srcB);
 
-            //TODO: CC.
+            // TODO: CC.
         }
 
         private static void WriteFP(EmitterContext context, FPType type, Operand srcB)
@@ -206,7 +206,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else
             {
-                //TODO.
+                // TODO.
             }
         }
     }

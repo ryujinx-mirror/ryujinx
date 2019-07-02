@@ -161,7 +161,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                     process = thread.Owner;
                 }
 
-                //TODO: KDebugEvent.
+                // TODO: KDebugEvent.
             }
 
             pid = process?.Pid ?? 0;
@@ -549,10 +549,10 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
                 switch (id)
                 {
-                    //Memory region capacity.
+                    // Memory region capacity.
                     case 0: value = (long)region.Size; break;
 
-                    //Memory region free space.
+                    // Memory region free space.
                     case 1:
                     {
                         ulong freePagesCount = region.GetFreePages();

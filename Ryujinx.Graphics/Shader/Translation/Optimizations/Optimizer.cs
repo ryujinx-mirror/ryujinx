@@ -81,8 +81,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         private static void PropagateCopy(Operation copyOp)
         {
-            //Propagate copy source operand to all uses of
-            //the destination operand.
+            // Propagate copy source operand to all uses of
+            // the destination operand.
             Operand dest = copyOp.Dest;
             Operand src  = copyOp.GetSource(0);
 
@@ -102,8 +102,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         private static bool PropagatePack(Operation packOp)
         {
-            //Propagate pack source operands to uses by unpack
-            //instruction. The source depends on the unpack instruction.
+            // Propagate pack source operands to uses by unpack
+            // instruction. The source depends on the unpack instruction.
             bool modified = false;
 
             Operand dest = packOp.Dest;
@@ -132,8 +132,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         private static void RemoveNode(BasicBlock block, LinkedListNode<INode> llNode)
         {
-            //Remove a node from the nodes list, and also remove itself
-            //from all the use lists on the operands that this node uses.
+            // Remove a node from the nodes list, and also remove itself
+            // from all the use lists on the operands that this node uses.
             block.Operations.Remove(llNode);
 
             Queue<INode> nodes = new Queue<INode>();

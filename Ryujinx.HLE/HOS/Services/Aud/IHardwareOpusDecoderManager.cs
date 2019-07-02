@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         public long GetWorkBufferSize(ServiceCtx context)
         {
-            //Note: The sample rate is ignored because it is fixed to 48KHz.
+            // Note: The sample rate is ignored because it is fixed to 48KHz.
             int sampleRate    = context.RequestData.ReadInt32();
             int channelsCount = context.RequestData.ReadInt32();
 

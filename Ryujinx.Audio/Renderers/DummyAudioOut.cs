@@ -32,7 +32,7 @@ namespace Ryujinx.Audio
         {
             int trackId;
 
-            if(!m_TrackIds.TryDequeue(out trackId))
+            if (!m_TrackIds.TryDequeue(out trackId))
             {
                 trackId = ++lastTrackId;
             }
@@ -57,7 +57,7 @@ namespace Ryujinx.Audio
         {
             m_Buffers.Enqueue(bufferTag);
 
-            if(m_ReleaseCallbacks.TryGetValue(trackID, out var callback))
+            if (m_ReleaseCallbacks.TryGetValue(trackID, out var callback))
             {
                 callback?.Invoke();
             }

@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             _system.CriticalSection.Enter();
 
-            //Check if objects are already signaled before waiting.
+            // Check if objects are already signaled before waiting.
             for (int index = 0; index < syncObjs.Length; index++)
             {
                 if (!syncObjs[index].IsSignaled())

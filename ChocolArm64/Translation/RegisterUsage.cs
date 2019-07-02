@@ -153,7 +153,7 @@ namespace ChocolArm64.Translation
 
         public static long ClearCallerSavedIntRegs(long mask, ExecutionMode mode)
         {
-            //TODO: ARM32 support.
+            // TODO: ARM32 support.
             if (mode == ExecutionMode.Aarch64)
             {
                 mask &= ~(CallerSavedIntRegistersMask | PStateNzcvFlagsMask);
@@ -164,7 +164,7 @@ namespace ChocolArm64.Translation
 
         public static long ClearCallerSavedVecRegs(long mask, ExecutionMode mode)
         {
-            //TODO: ARM32 support.
+            // TODO: ARM32 support.
             if (mode == ExecutionMode.Aarch64)
             {
                 mask &= ~CallerSavedVecRegistersMask;
