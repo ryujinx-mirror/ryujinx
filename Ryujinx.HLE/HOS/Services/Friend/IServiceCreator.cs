@@ -1,3 +1,4 @@
+using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
@@ -10,9 +11,11 @@ namespace Ryujinx.HLE.HOS.Services.Friend
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
+        private FriendServicePermissionLevel _permissionLevel;
+
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IServiceCreator()
+        public IServiceCreator(FriendServicePermissionLevel permissionLevel)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
@@ -20,35 +23,37 @@ namespace Ryujinx.HLE.HOS.Services.Friend
                 { 1, CreateNotificationService         }, // 2.0.0+
                 { 2, CreateDaemonSuspendSessionService }, // 4.0.0+
             };
+
+            _permissionLevel = permissionLevel;
         }
 
         // CreateFriendService() -> object<nn::friends::detail::ipc::IFriendService>
-        public static long CreateFriendService(ServiceCtx context)
+        public long CreateFriendService(ServiceCtx context)
         {
-            MakeObject(context, new IFriendService());
+            MakeObject(context, new IFriendService(_permissionLevel));
 
             return 0;
         }
 
         // CreateNotificationService(nn::account::Uid) -> object<nn::friends::detail::ipc::INotificationService>
-        public static long CreateNotificationService(ServiceCtx context)
+        public long CreateNotificationService(ServiceCtx context)
         {
-            UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
+            UInt128 userId = context.RequestData.ReadStruct<UInt128>();
 
             if (userId.IsNull)
             {
-                return MakeError(ErrorModule.Friends, FriendErr.InvalidArgument);
+                return MakeError(ErrorModule.Friends, FriendError.InvalidArgument);
             }
 
-            MakeObject(context, new INotificationService(userId));
+            MakeObject(context, new INotificationService(context, userId, _permissionLevel));
 
             return 0;
         }
 
         // CreateDaemonSuspendSessionService() -> object<nn::friends::detail::ipc::IDaemonSuspendSessionService>
-        public static long CreateDaemonSuspendSessionService(ServiceCtx context)
+        public long CreateDaemonSuspendSessionService(ServiceCtx context)
         {
-            MakeObject(context, new IDaemonSuspendSessionService());
+            MakeObject(context, new IDaemonSuspendSessionService(_permissionLevel));
 
             return 0;
         }

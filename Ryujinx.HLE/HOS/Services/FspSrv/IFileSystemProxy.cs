@@ -1,6 +1,7 @@
 using LibHac;
 using LibHac.Fs;
 using LibHac.Fs.NcaUtils;
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Ipc;
@@ -234,9 +235,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             long titleId = context.RequestData.ReadInt64();
 
-            UInt128 userId = new UInt128(
-                context.RequestData.ReadInt64(), 
-                context.RequestData.ReadInt64());
+            UInt128 userId = context.RequestData.ReadStruct<UInt128>();
 
             long            saveId       = context.RequestData.ReadInt64();
             SaveDataType    saveDataType = (SaveDataType)context.RequestData.ReadByte();

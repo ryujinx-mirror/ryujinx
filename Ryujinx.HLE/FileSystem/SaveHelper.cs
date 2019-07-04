@@ -32,7 +32,7 @@ namespace Ryujinx.HLE.FileSystem
                 currentTitleId = context.Process.TitleId;
             }
 
-            string saveAccount = saveMetaData.UserId.IsZero() ? "savecommon" : saveMetaData.UserId.ToString();
+            string saveAccount = saveMetaData.UserId.IsNull ? "savecommon" : saveMetaData.UserId.ToString();
 
             string savePath = Path.Combine(baseSavePath,
                 saveMetaData.SaveId.ToString("x16"),

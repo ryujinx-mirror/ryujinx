@@ -100,10 +100,19 @@ namespace Ryujinx.HLE.HOS.Services
                     return new IeTicketService();
 
                 case "friend:a":
-                    return new Friend.IServiceCreator();
+                    return new Friend.IServiceCreator(Friend.FriendServicePermissionLevel.Admin);
 
                 case "friend:u":
-                    return new Friend.IServiceCreator();
+                    return new Friend.IServiceCreator(Friend.FriendServicePermissionLevel.User);
+
+                case "friend:v":
+                    return new Friend.IServiceCreator(Friend.FriendServicePermissionLevel.Overlay);
+
+                case "friend:m":
+                    return new Friend.IServiceCreator(Friend.FriendServicePermissionLevel.Manager);
+
+                case "friend:s":
+                    return new Friend.IServiceCreator(Friend.FriendServicePermissionLevel.System);
 
                 case "fsp-srv":
                     return new IFileSystemProxy();
