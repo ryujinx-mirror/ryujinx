@@ -95,5 +95,31 @@ namespace Ryujinx.HLE.Utilities
                 return Encoding.UTF8.GetString(ms.ToArray());
             }
         }
+
+        public static unsafe int CompareCStr(char* s1, char* s2)
+        {
+            int s1Index = 0;
+            int s2Index = 0;
+
+            while (s1[s1Index] != 0 && s2[s2Index] != 0 && s1[s1Index] == s2[s2Index])
+            {
+                s1Index += 1;
+                s2Index += 1;
+            }
+
+            return s2[s2Index] - s1[s1Index];
+        }
+
+        public static unsafe int LengthCstr(char* s)
+        {
+            int i = 0;
+
+            while (s[i] != '\0')
+            {
+                i++;
+            }
+
+            return i;
+        }
     }
 }
