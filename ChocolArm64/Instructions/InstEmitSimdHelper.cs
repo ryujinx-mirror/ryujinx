@@ -823,15 +823,29 @@ namespace ChocolArm64.Instructions
 
         public static void EmitVectorAcrossVectorOpSx(ILEmitterCtx context, Action emit)
         {
-            EmitVectorAcrossVectorOp(context, emit, true);
+            EmitVectorAcrossVectorOp(context, emit, signed: true, isLong: false);
         }
 
         public static void EmitVectorAcrossVectorOpZx(ILEmitterCtx context, Action emit)
         {
-            EmitVectorAcrossVectorOp(context, emit, false);
+            EmitVectorAcrossVectorOp(context, emit, signed: false, isLong: false);
         }
 
-        public static void EmitVectorAcrossVectorOp(ILEmitterCtx context, Action emit, bool signed)
+        public static void EmitVectorLongAcrossVectorOpSx(ILEmitterCtx context, Action emit)
+        {
+            EmitVectorAcrossVectorOp(context, emit, signed: true, isLong: true);
+        }
+
+        public static void EmitVectorLongAcrossVectorOpZx(ILEmitterCtx context, Action emit)
+        {
+            EmitVectorAcrossVectorOp(context, emit, signed: false, isLong: true);
+        }
+
+        public static void EmitVectorAcrossVectorOp(
+            ILEmitterCtx context,
+            Action emit,
+            bool signed,
+            bool isLong)
         {
             OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
 
@@ -847,7 +861,7 @@ namespace ChocolArm64.Instructions
                 emit();
             }
 
-            EmitScalarSet(context, op.Rd, op.Size);
+            EmitScalarSet(context, op.Rd, isLong ? op.Size + 1 : op.Size);
         }
 
         public static void EmitVectorPairwiseOpF(ILEmitterCtx context, Action emit)

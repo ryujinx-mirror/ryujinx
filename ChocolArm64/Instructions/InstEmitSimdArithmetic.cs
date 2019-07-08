@@ -2206,6 +2206,11 @@ namespace ChocolArm64.Instructions
             EmitAddLongPairwise(context, signed: true, accumulate: false);
         }
 
+        public static void Saddlv_V(ILEmitterCtx context)
+        {
+            EmitVectorLongAcrossVectorOpSx(context, () => context.Emit(OpCodes.Add));
+        }
+
         public static void Saddw_V(ILEmitterCtx context)
         {
             if (Optimizations.UseSse41)
@@ -3041,21 +3046,7 @@ namespace ChocolArm64.Instructions
 
         public static void Uaddlv_V(ILEmitterCtx context)
         {
-            OpCodeSimd64 op = (OpCodeSimd64)context.CurrOp;
-
-            int bytes = op.GetBitsCount() >> 3;
-            int elems = bytes >> op.Size;
-
-            EmitVectorExtractZx(context, op.Rn, 0, op.Size);
-
-            for (int index = 1; index < elems; index++)
-            {
-                EmitVectorExtractZx(context, op.Rn, index, op.Size);
-
-                context.Emit(OpCodes.Add);
-            }
-
-            EmitScalarSet(context, op.Rd, op.Size + 1);
+            EmitVectorLongAcrossVectorOpZx(context, () => context.Emit(OpCodes.Add));
         }
 
         public static void Uaddw_V(ILEmitterCtx context)

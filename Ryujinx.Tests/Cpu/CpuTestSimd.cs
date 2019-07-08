@@ -117,6 +117,12 @@ namespace Ryujinx.Tests.Cpu
                                  0x8000000080000000ul, 0xFFFFFFFFFFFFFFFFul };
         }
 
+        private static ulong[] _4H_()
+        {
+            return new ulong[] { 0x0000000000000000ul, 0x7FFF7FFF7FFF7FFFul,
+                                 0x8000800080008000ul, 0xFFFFFFFFFFFFFFFFul };
+        }
+
         private static ulong[] _4H2S1D_()
         {
             return new ulong[] { 0x0000000000000000ul, 0x7FFF7FFF7FFF7FFFul,
@@ -155,73 +161,16 @@ namespace Ryujinx.Tests.Cpu
                                  0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul };
         }
 
-        private static IEnumerable<ulong> _GenLeadingSigns8B_()
+        private static uint[] _W_()
         {
-            for (int cnt = 0; cnt <= 7; cnt++)
-            {
-                ulong rnd1 = GenLeadingSignsMinus8(cnt);
-                ulong rnd2 = GenLeadingSignsPlus8(cnt);
-
-                yield return (rnd1 << 56) | (rnd1 << 48) | (rnd1 << 40) | (rnd1 << 32) |
-                             (rnd1 << 24) | (rnd1 << 16) | (rnd1 << 08) | rnd1;
-                yield return (rnd2 << 56) | (rnd2 << 48) | (rnd2 << 40) | (rnd2 << 32) |
-                             (rnd2 << 24) | (rnd2 << 16) | (rnd2 << 08) | rnd2;
-            }
+            return new uint[] { 0x00000000u, 0x7FFFFFFFu,
+                                0x80000000u, 0xFFFFFFFFu };
         }
 
-        private static IEnumerable<ulong> _GenLeadingSigns4H_()
+        private static ulong[] _X_()
         {
-            for (int cnt = 0; cnt <= 15; cnt++)
-            {
-                ulong rnd1 = GenLeadingSignsMinus16(cnt);
-                ulong rnd2 = GenLeadingSignsPlus16(cnt);
-
-                yield return (rnd1 << 48) | (rnd1 << 32) | (rnd1 << 16) | rnd1;
-                yield return (rnd2 << 48) | (rnd2 << 32) | (rnd2 << 16) | rnd2;
-            }
-        }
-
-        private static IEnumerable<ulong> _GenLeadingSigns2S_()
-        {
-            for (int cnt = 0; cnt <= 31; cnt++)
-            {
-                ulong rnd1 = GenLeadingSignsMinus32(cnt);
-                ulong rnd2 = GenLeadingSignsPlus32(cnt);
-
-                yield return (rnd1 << 32) | rnd1;
-                yield return (rnd2 << 32) | rnd2;
-            }
-        }
-
-        private static IEnumerable<ulong> _GenLeadingZeros8B_()
-        {
-            for (int cnt = 0; cnt <= 8; cnt++)
-            {
-                ulong rnd = GenLeadingZeros8(cnt);
-
-                yield return (rnd << 56) | (rnd << 48) | (rnd << 40) | (rnd << 32) |
-                             (rnd << 24) | (rnd << 16) | (rnd << 08) | rnd;
-            }
-        }
-
-        private static IEnumerable<ulong> _GenLeadingZeros4H_()
-        {
-            for (int cnt = 0; cnt <= 16; cnt++)
-            {
-                ulong rnd = GenLeadingZeros16(cnt);
-
-                yield return (rnd << 48) | (rnd << 32) | (rnd << 16) | rnd;
-            }
-        }
-
-        private static IEnumerable<ulong> _GenLeadingZeros2S_()
-        {
-            for (int cnt = 0; cnt <= 32; cnt++)
-            {
-                ulong rnd = GenLeadingZeros32(cnt);
-
-                yield return (rnd << 32) | rnd;
-            }
+            return new ulong[] { 0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
+                                 0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul };
         }
 
         private static IEnumerable<ulong> _1H_F_()
@@ -619,16 +568,82 @@ namespace Ryujinx.Tests.Cpu
             }
         }
 
-        private static uint[] _W_()
+        private static IEnumerable<ulong> _GenLeadingSigns8B_()
         {
-            return new uint[] { 0x00000000u, 0x7FFFFFFFu,
-                                0x80000000u, 0xFFFFFFFFu };
+            for (int cnt = 0; cnt <= 7; cnt++)
+            {
+                ulong rnd1 = GenLeadingSignsMinus8(cnt);
+                ulong rnd2 = GenLeadingSignsPlus8(cnt);
+
+                yield return (rnd1 << 56) | (rnd1 << 48) | (rnd1 << 40) | (rnd1 << 32) |
+                             (rnd1 << 24) | (rnd1 << 16) | (rnd1 << 08) | rnd1;
+                yield return (rnd2 << 56) | (rnd2 << 48) | (rnd2 << 40) | (rnd2 << 32) |
+                             (rnd2 << 24) | (rnd2 << 16) | (rnd2 << 08) | rnd2;
+            }
         }
 
-        private static ulong[] _X_()
+        private static IEnumerable<ulong> _GenLeadingSigns4H_()
         {
-            return new ulong[] { 0x0000000000000000ul, 0x7FFFFFFFFFFFFFFFul,
-                                 0x8000000000000000ul, 0xFFFFFFFFFFFFFFFFul };
+            for (int cnt = 0; cnt <= 15; cnt++)
+            {
+                ulong rnd1 = GenLeadingSignsMinus16(cnt);
+                ulong rnd2 = GenLeadingSignsPlus16(cnt);
+
+                yield return (rnd1 << 48) | (rnd1 << 32) | (rnd1 << 16) | rnd1;
+                yield return (rnd2 << 48) | (rnd2 << 32) | (rnd2 << 16) | rnd2;
+            }
+        }
+
+        private static IEnumerable<ulong> _GenLeadingSigns2S_()
+        {
+            for (int cnt = 0; cnt <= 31; cnt++)
+            {
+                ulong rnd1 = GenLeadingSignsMinus32(cnt);
+                ulong rnd2 = GenLeadingSignsPlus32(cnt);
+
+                yield return (rnd1 << 32) | rnd1;
+                yield return (rnd2 << 32) | rnd2;
+            }
+        }
+
+        private static IEnumerable<ulong> _GenLeadingZeros8B_()
+        {
+            for (int cnt = 0; cnt <= 8; cnt++)
+            {
+                ulong rnd = GenLeadingZeros8(cnt);
+
+                yield return (rnd << 56) | (rnd << 48) | (rnd << 40) | (rnd << 32) |
+                             (rnd << 24) | (rnd << 16) | (rnd << 08) | rnd;
+            }
+        }
+
+        private static IEnumerable<ulong> _GenLeadingZeros4H_()
+        {
+            for (int cnt = 0; cnt <= 16; cnt++)
+            {
+                ulong rnd = GenLeadingZeros16(cnt);
+
+                yield return (rnd << 48) | (rnd << 32) | (rnd << 16) | rnd;
+            }
+        }
+
+        private static IEnumerable<ulong> _GenLeadingZeros2S_()
+        {
+            for (int cnt = 0; cnt <= 32; cnt++)
+            {
+                ulong rnd = GenLeadingZeros32(cnt);
+
+                yield return (rnd << 32) | rnd;
+            }
+        }
+
+        private static IEnumerable<ulong> _GenPopCnt8B_()
+        {
+            for (ulong cnt = 0ul; cnt <= 255ul; cnt++)
+            {
+                yield return (cnt << 56) | (cnt << 48) | (cnt << 40) | (cnt << 32) |
+                             (cnt << 24) | (cnt << 16) | (cnt << 08) | cnt;
+            }
         }
 #endregion
 
@@ -1264,7 +1279,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CLS <Vd>.<T>, <Vn>.<T>")]
         public void Cls_V_8B_16B([Values(0u)]     uint rd,
                                  [Values(1u, 0u)] uint rn,
-                                 [ValueSource("_GenLeadingSigns8B_")] [Random(RndCnt)] ulong z,
+                                 [ValueSource("_8B_")]                [Random(RndCnt)] ulong z,
                                  [ValueSource("_GenLeadingSigns8B_")] [Random(RndCnt)] ulong a,
                                  [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
@@ -1283,7 +1298,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CLS <Vd>.<T>, <Vn>.<T>")]
         public void Cls_V_4H_8H([Values(0u)]     uint rd,
                                 [Values(1u, 0u)] uint rn,
-                                [ValueSource("_GenLeadingSigns4H_")] [Random(RndCnt)] ulong z,
+                                [ValueSource("_4H_")]                [Random(RndCnt)] ulong z,
                                 [ValueSource("_GenLeadingSigns4H_")] [Random(RndCnt)] ulong a,
                                 [Values(0b0u, 0b1u)] uint q) // <4H, 8H>
         {
@@ -1302,7 +1317,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CLS <Vd>.<T>, <Vn>.<T>")]
         public void Cls_V_2S_4S([Values(0u)]     uint rd,
                                 [Values(1u, 0u)] uint rn,
-                                [ValueSource("_GenLeadingSigns2S_")] [Random(RndCnt)] ulong z,
+                                [ValueSource("_2S_")]                [Random(RndCnt)] ulong z,
                                 [ValueSource("_GenLeadingSigns2S_")] [Random(RndCnt)] ulong a,
                                 [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
@@ -1321,7 +1336,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
         public void Clz_V_8B_16B([Values(0u)]     uint rd,
                                  [Values(1u, 0u)] uint rn,
-                                 [ValueSource("_GenLeadingZeros8B_")] [Random(RndCnt)] ulong z,
+                                 [ValueSource("_8B_")]                [Random(RndCnt)] ulong z,
                                  [ValueSource("_GenLeadingZeros8B_")] [Random(RndCnt)] ulong a,
                                  [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
@@ -1340,7 +1355,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
         public void Clz_V_4H_8H([Values(0u)]     uint rd,
                                 [Values(1u, 0u)] uint rn,
-                                [ValueSource("_GenLeadingZeros4H_")] [Random(RndCnt)] ulong z,
+                                [ValueSource("_4H_")]                [Random(RndCnt)] ulong z,
                                 [ValueSource("_GenLeadingZeros4H_")] [Random(RndCnt)] ulong a,
                                 [Values(0b0u, 0b1u)] uint q) // <4H, 8H>
         {
@@ -1359,7 +1374,7 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CLZ <Vd>.<T>, <Vn>.<T>")]
         public void Clz_V_2S_4S([Values(0u)]     uint rd,
                                 [Values(1u, 0u)] uint rn,
-                                [ValueSource("_GenLeadingZeros2S_")] [Random(RndCnt)] ulong z,
+                                [ValueSource("_2S_")]                [Random(RndCnt)] ulong z,
                                 [ValueSource("_GenLeadingZeros2S_")] [Random(RndCnt)] ulong a,
                                 [Values(0b0u, 0b1u)] uint q) // <2S, 4S>
         {
@@ -1653,8 +1668,8 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CNT <Vd>.<T>, <Vn>.<T>")]
         public void Cnt_V_8B([Values(0u)]     uint rd,
                              [Values(1u, 0u)] uint rn,
-                             [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
-                             [ValueSource("_8B_")] [Random(RndCnt)] ulong a)
+                             [ValueSource("_8B_")]          [Random(RndCnt)] ulong z,
+                             [ValueSource("_GenPopCnt8B_")] [Random(RndCnt)] ulong a)
         {
             uint opcode = 0x0E205800; // CNT V0.8B, V0.8B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
@@ -1670,8 +1685,8 @@ namespace Ryujinx.Tests.Cpu
         [Test, Pairwise, Description("CNT <Vd>.<T>, <Vn>.<T>")]
         public void Cnt_V_16B([Values(0u)]     uint rd,
                               [Values(1u, 0u)] uint rn,
-                              [ValueSource("_8B_")] [Random(RndCnt)] ulong z,
-                              [ValueSource("_8B_")] [Random(RndCnt)] ulong a)
+                              [ValueSource("_8B_")]          [Random(RndCnt)] ulong z,
+                              [ValueSource("_GenPopCnt8B_")] [Random(RndCnt)] ulong a)
         {
             uint opcode = 0x4E205800; // CNT V0.16B, V0.16B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
