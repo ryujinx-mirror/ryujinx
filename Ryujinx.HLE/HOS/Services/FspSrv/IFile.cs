@@ -1,3 +1,4 @@
+using LibHac;
 using LibHac.Fs;
 using Ryujinx.HLE.HOS.Ipc;
 using System;
@@ -13,11 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         private LibHac.Fs.IFile _baseFile;
 
-        public event EventHandler<EventArgs> Disposed;
-
-        public string Path { get; private set; }
-
-        public IFile(LibHac.Fs.IFile baseFile, string path)
+        public IFile(LibHac.Fs.IFile baseFile)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
@@ -29,7 +26,6 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             };
 
             _baseFile = baseFile;
-            Path      = PathTools.Normalize(path);
         }
 
         // Read(u32 readOption, u64 offset, u64 size) -> (u64 out_size, buffer<u8, 0x46, 0> out_buf)
@@ -44,8 +40,16 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             long size   = context.RequestData.ReadInt64();
 
             byte[] data = new byte[size];
+            int readSize;
 
-            int readSize = _baseFile.Read(data, offset, readOption);
+            try
+            {
+                readSize = _baseFile.Read(data, offset, readOption);
+            }
+            catch (HorizonResultException ex)
+            {
+                return ex.ResultValue.Value;
+            }
 
             context.Memory.WriteBytes(position, data);
 
@@ -67,7 +71,14 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             byte[] data = context.Memory.ReadBytes(position, size);
 
-            _baseFile.Write(data, offset, writeOption);
+            try
+            {
+                _baseFile.Write(data, offset, writeOption);
+            }
+            catch (HorizonResultException ex)
+            {
+                return ex.ResultValue.Value;
+            }
 
             return 0;
         }
@@ -75,7 +86,14 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // Flush()
         public long Flush(ServiceCtx context)
         {
-            _baseFile.Flush();
+            try
+            {
+                _baseFile.Flush();
+            }
+            catch (HorizonResultException ex)
+            {
+                return ex.ResultValue.Value;
+            }
 
             return 0;
         }
@@ -83,9 +101,16 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // SetSize(u64 size)
         public long SetSize(ServiceCtx context)
         {
-            long size = context.RequestData.ReadInt64();
+            try
+            {
+                long size = context.RequestData.ReadInt64();
 
-            _baseFile.SetSize(size);
+                _baseFile.SetSize(size);
+            }
+            catch (HorizonResultException ex)
+            {
+                return ex.ResultValue.Value;
+            }
 
             return 0;
         }
@@ -93,7 +118,14 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // GetSize() -> u64 fileSize
         public long GetSize(ServiceCtx context)
         {
-            context.ResponseData.Write(_baseFile.GetSize());
+            try
+            {
+                context.ResponseData.Write(_baseFile.GetSize());
+            }
+            catch (HorizonResultException ex)
+            {
+                return ex.ResultValue.Value;
+            }
 
             return 0;
         }
@@ -105,11 +137,9 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing && _baseFile != null)
+            if (disposing)
             {
-                _baseFile.Dispose();
-
-                Disposed?.Invoke(this, EventArgs.Empty);
+                _baseFile?.Dispose();
             }
         }
     }

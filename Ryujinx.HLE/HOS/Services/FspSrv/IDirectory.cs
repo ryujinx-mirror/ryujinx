@@ -1,11 +1,11 @@
+using LibHac;
 using Ryujinx.HLE.HOS.Ipc;
-using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
-    class IDirectory : IpcService, IDisposable
+    class IDirectory : IpcService
     {
         private const int DirectoryEntrySize = 0x310;
 
@@ -15,11 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         private IEnumerator<LibHac.Fs.DirectoryEntry> _enumerator;
 
-        public event EventHandler<EventArgs> Disposed;
-
-        public string Path { get; }
-
-        private LibHac.Fs.IDirectory _provider;
+        private LibHac.Fs.IDirectory _baseDirectory;
 
         public IDirectory(LibHac.Fs.IDirectory directory)
         {
@@ -29,9 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 { 1, GetEntryCount }
             };
 
-            _provider = directory;
-
-            Path = directory.FullPath;
+            _baseDirectory = directory;
 
             _enumerator = directory.Read().GetEnumerator();
         }
@@ -45,13 +39,20 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             int maxReadCount = (int)(bufferLen / DirectoryEntrySize);
             int readCount    = 0;
 
-            while (readCount < maxReadCount && _enumerator.MoveNext())
+            try
             {
-                long position = bufferPosition + readCount * DirectoryEntrySize;
+                while (readCount < maxReadCount && _enumerator.MoveNext())
+                {
+                    long position = bufferPosition + readCount * DirectoryEntrySize;
 
-                WriteDirectoryEntry(context, position, _enumerator.Current);
+                    WriteDirectoryEntry(context, position, _enumerator.Current);
 
-                readCount++;
+                    readCount++;
+                }
+            }
+            catch (HorizonResultException ex)
+            {
+                return ex.ResultValue.Value;
             }
 
             context.ResponseData.Write((long)readCount);
@@ -78,22 +79,16 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // GetEntryCount() -> u64
         public long GetEntryCount(ServiceCtx context)
         {
-            context.ResponseData.Write((long)_provider.GetEntryCount());
+            try
+            {
+                context.ResponseData.Write((long)_baseDirectory.GetEntryCount());
+            }
+            catch (HorizonResultException ex)
+            {
+                return ex.ResultValue.Value;
+            }
 
             return 0;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                Disposed?.Invoke(this, EventArgs.Empty);
-            }
         }
     }
 }

@@ -127,17 +127,13 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // OpenSaveDataFileSystem(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> saveDataFs
         public long OpenSaveDataFileSystem(ServiceCtx context)
         {
-            LoadSaveDataFileSystem(context);
-
-            return 0;
+            return LoadSaveDataFileSystem(context);
         }
 
         // OpenSaveDataFileSystemBySystemSaveDataId(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> systemSaveDataFs
         public long OpenSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
         {
-            LoadSaveDataFileSystem(context);
-
-            return 0;
+            return LoadSaveDataFileSystem(context);
         }
 
         // OpenDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage> dataStorage
@@ -179,11 +175,18 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
                     if (File.Exists(ncaPath))
                     {
-                        LibHac.Fs.IStorage ncaStorage   = new LocalStorage(ncaPath, FileAccess.Read, FileMode.Open);
-                        Nca                nca          = new Nca(context.Device.System.KeySet, ncaStorage);
-                        LibHac.Fs.IStorage romfsStorage = nca.OpenStorage(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
+                        try
+                        {
+                            LibHac.Fs.IStorage ncaStorage   = new LocalStorage(ncaPath, FileAccess.Read, FileMode.Open);
+                            Nca                nca          = new Nca(context.Device.System.KeySet, ncaStorage);
+                            LibHac.Fs.IStorage romfsStorage = nca.OpenStorage(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
 
-                        MakeObject(context, new IStorage(romfsStorage));
+                            MakeObject(context, new IStorage(romfsStorage));
+                        }
+                        catch (HorizonResultException ex)
+                        {
+                            return ex.ResultValue.Value;
+                        }
 
                         return 0;
                     }
@@ -230,7 +233,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
-        public void LoadSaveDataFileSystem(ServiceCtx context)
+        public long LoadSaveDataFileSystem(ServiceCtx context)
         {
             SaveSpaceId saveSpaceId = (SaveSpaceId)context.RequestData.ReadInt64();
 
@@ -242,39 +245,62 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             SaveDataType    saveDataType = (SaveDataType)context.RequestData.ReadByte();
             SaveInfo        saveInfo     = new SaveInfo(titleId, saveId, saveDataType, userId, saveSpaceId);
             string          savePath     = context.Device.FileSystem.GetGameSavePath(saveInfo, context);
-            LocalFileSystem fileSystem   = new LocalFileSystem(savePath);
 
-            DirectorySaveDataFileSystem saveFileSystem = new DirectorySaveDataFileSystem(fileSystem);
+            try
+            {
+                LocalFileSystem             fileSystem     = new LocalFileSystem(savePath);
+                DirectorySaveDataFileSystem saveFileSystem = new DirectorySaveDataFileSystem(fileSystem);
 
-            MakeObject(context, new IFileSystem(saveFileSystem));
+                MakeObject(context, new IFileSystem(saveFileSystem));
+            }
+            catch (HorizonResultException ex)
+            {
+                return ex.ResultValue.Value;
+            }
+
+            return 0;
         }
 
         private long OpenNsp(ServiceCtx context, string pfsPath)
         {
-            LocalStorage        storage = new LocalStorage(pfsPath, FileAccess.Read, FileMode.Open);
-            PartitionFileSystem nsp     = new PartitionFileSystem(storage);
+            try
+            {
+                LocalStorage        storage = new LocalStorage(pfsPath, FileAccess.Read, FileMode.Open);
+                PartitionFileSystem nsp     = new PartitionFileSystem(storage);
 
-            ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
-            
-            IFileSystem nspFileSystem = new IFileSystem(nsp);
+                ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
+                
+                IFileSystem nspFileSystem = new IFileSystem(nsp);
 
-            MakeObject(context, nspFileSystem);
+                MakeObject(context, nspFileSystem);
+            }
+            catch (HorizonResultException ex)
+            {
+                return ex.ResultValue.Value;
+            }
 
             return 0;
         }
 
         private long OpenNcaFs(ServiceCtx context, string ncaPath, LibHac.Fs.IStorage ncaStorage)
         {
-            Nca nca = new Nca(context.Device.System.KeySet, ncaStorage);
-
-            if (!nca.SectionExists(NcaSectionType.Data))
+            try
             {
-                return MakeError(ErrorModule.Fs, FsErr.PartitionNotFound);
+                Nca nca = new Nca(context.Device.System.KeySet, ncaStorage);
+
+                if (!nca.SectionExists(NcaSectionType.Data))
+                {
+                    return MakeError(ErrorModule.Fs, FsErr.PartitionNotFound);
+                }
+
+                LibHac.Fs.IFileSystem fileSystem = nca.OpenFileSystem(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
+
+                MakeObject(context, new IFileSystem(fileSystem));
             }
-
-            LibHac.Fs.IFileSystem fileSystem = nca.OpenFileSystem(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
-
-            MakeObject(context, new IFileSystem(fileSystem));
+            catch (HorizonResultException ex)
+            {
+                return ex.ResultValue.Value;
+            }
 
             return 0;
         }
@@ -295,15 +321,22 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                     FileMode.Open,
                     FileAccess.Read);
 
-                PartitionFileSystem nsp = new PartitionFileSystem(pfsFile.AsStorage());
-
-                ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
-                
-                string filename = fullPath.Replace(archivePath.FullName, string.Empty).TrimStart('\\');
-
-                if (nsp.FileExists(filename))
+                try
                 {
-                    return OpenNcaFs(context, fullPath, nsp.OpenFile(filename, OpenMode.Read).AsStorage());
+                    PartitionFileSystem nsp = new PartitionFileSystem(pfsFile.AsStorage());
+
+                    ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
+                    
+                    string filename = fullPath.Replace(archivePath.FullName, string.Empty).TrimStart('\\');
+
+                    if (nsp.FileExists(filename))
+                    {
+                        return OpenNcaFs(context, fullPath, nsp.OpenFile(filename, OpenMode.Read).AsStorage());
+                    }
+                }
+                catch (HorizonResultException ex)
+                {
+                    return ex.ResultValue.Value;
                 }
             }
 

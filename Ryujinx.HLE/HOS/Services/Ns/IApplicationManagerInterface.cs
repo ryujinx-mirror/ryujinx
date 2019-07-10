@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             position += isbn.Length;
 
             context.Memory.WriteByte(position++, nacp.StartupUserAccount);
-            context.Memory.WriteByte(position++, nacp.TouchScreenUsageMode);
+            context.Memory.WriteByte(position++, nacp.UserAccountSwitchLock);
             context.Memory.WriteByte(position++, nacp.AocRegistrationType);
 
             context.Memory.WriteInt32(position, nacp.AttributeFlag);

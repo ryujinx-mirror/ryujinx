@@ -47,7 +47,7 @@
 
   <ItemGroup>
     <PackageReference Include="Concentus" Version="1.1.7" />
-    <PackageReference Include="LibHac" Version="0.4.1" />
+    <PackageReference Include="LibHac" Version="0.5.0" />
     <PackageReference Include="TimeZoneConverter.Posix" Version="2.1.0" />
   </ItemGroup>
 

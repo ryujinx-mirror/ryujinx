@@ -1,3 +1,4 @@
+using LibHac;
 using Ryujinx.HLE.HOS.Ipc;
 using System.Collections.Generic;
 
@@ -40,7 +41,14 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
                 byte[] data = new byte[size];
 
-                _baseStorage.Read(data, offset);
+                try
+                {
+                    _baseStorage.Read(data, offset);
+                }
+                catch (HorizonResultException ex)
+                {
+                    return ex.ResultValue.Value;
+                }
 
                 context.Memory.WriteBytes(buffDesc.Position, data);
             }
@@ -51,7 +59,14 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // GetSize() -> u64 size
         public long GetSize(ServiceCtx context)
         {
-            context.ResponseData.Write(_baseStorage.GetSize());
+            try
+            {
+                context.ResponseData.Write(_baseStorage.GetSize());
+            }
+            catch (HorizonResultException ex)
+            {
+                return ex.ResultValue.Value;
+            }
 
             return 0;
         }
