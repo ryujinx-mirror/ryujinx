@@ -8,9 +8,10 @@ using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Bsd
 {
+    [Service("bsd:s", true)]
+    [Service("bsd:u", false)]
     class IClient : IpcService
     {
-
         private static Dictionary<WsaError, LinuxError> _errorMap = new Dictionary<WsaError, LinuxError>
         {
             // WSAEINTR
@@ -95,15 +96,15 @@ namespace Ryujinx.HLE.HOS.Services.Bsd
             {0, 0}
         };
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private bool _isPrivileged;
 
         private List<BsdSocket> _sockets = new List<BsdSocket>();
 
-        public IClient(bool isPrivileged)
+        private Dictionary<int, ServiceProcessRequest> _commands;
+
+        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+
+        public IClient(ServiceCtx context, bool isPrivileged)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

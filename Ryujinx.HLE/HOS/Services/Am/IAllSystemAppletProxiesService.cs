@@ -3,13 +3,14 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Am
 {
+    [Service("appletAE")]
     class IAllSystemAppletProxiesService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IAllSystemAppletProxiesService()
+        public IAllSystemAppletProxiesService(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

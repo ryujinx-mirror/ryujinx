@@ -95,6 +95,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
         }
     }
 
+    [Service("ldr:ro")]
     class IRoInterface : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
@@ -112,7 +113,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
 
         private bool _isInitialized;
 
-        public IRoInterface()
+        public IRoInterface(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

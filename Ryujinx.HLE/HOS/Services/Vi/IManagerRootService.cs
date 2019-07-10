@@ -3,13 +3,14 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Vi
 {
+    [Service("vi:m")]
     class IManagerRootService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IManagerRootService()
+        public IManagerRootService(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

@@ -6,11 +6,16 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 
 namespace Ryujinx.HLE.HOS.Services.Sm
 {
+    [Service("sm:")]
     class IUserInterface : IpcService
     {
+        private Dictionary<string, Type> _services;
+
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
@@ -19,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
         private bool _isInitialized;
 
-        public IUserInterface()
+        public IUserInterface(ServiceCtx context = null)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
@@ -30,6 +35,11 @@ namespace Ryujinx.HLE.HOS.Services.Sm
             };
 
             _registeredServices = new ConcurrentDictionary<string, KPort>();
+
+            _services = Assembly.GetExecutingAssembly().GetTypes()
+                .SelectMany(type => type.GetCustomAttributes(typeof(ServiceAttribute), true)
+                .Select(service => (((ServiceAttribute)service).Name, type)))
+                .ToDictionary(service => service.Name, service => service.type);
         }
 
         public static void InitializePort(Horizon system)
@@ -75,7 +85,26 @@ namespace Ryujinx.HLE.HOS.Services.Sm
             }
             else
             {
-                session.ClientSession.Service = ServiceFactory.MakeService(context.Device.System, name);
+                if (_services.TryGetValue(name, out Type type))
+                {
+                    ServiceAttribute serviceAttribute = (ServiceAttribute)type.GetCustomAttributes(typeof(ServiceAttribute)).First(service => ((ServiceAttribute)service).Name == name);
+
+                    session.ClientSession.Service = serviceAttribute.Parameter != null ? (IpcService)Activator.CreateInstance(type, context, serviceAttribute.Parameter)
+                                                                                       : (IpcService)Activator.CreateInstance(type, context);
+                }
+                else
+                {
+                    if (ServiceConfiguration.IgnoreMissingServices)
+                    {
+                        Logger.PrintWarning(LogClass.Service, $"Missing service {name} ignored");
+
+                        session.ClientSession.Service = new DummyService(name);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException(name);
+                    }
+                }
             }
 
             if (context.Process.HandleTable.GenerateHandle(session.ClientSession, out int handle) != KernelResult.Success)

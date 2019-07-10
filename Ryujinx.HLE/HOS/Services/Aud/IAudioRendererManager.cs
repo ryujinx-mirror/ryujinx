@@ -9,6 +9,7 @@ using static Ryujinx.HLE.HOS.ErrorCode;
 
 namespace Ryujinx.HLE.HOS.Services.Aud
 {
+    [Service("audren:u")]
     class IAudioRendererManager : IpcService
     {
         private const int Rev0Magic = ('R' << 0)  |
@@ -24,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IAudioRendererManager()
+        public IAudioRendererManager(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 
 namespace Ryujinx.HLE.HOS.Services.Spl
 {
+    [Service("csrng")]
     class IRandomInterface : IpcService, IDisposable
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
@@ -13,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.Spl
 
         private RNGCryptoServiceProvider _rng;
 
-        public IRandomInterface()
+        public IRandomInterface(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

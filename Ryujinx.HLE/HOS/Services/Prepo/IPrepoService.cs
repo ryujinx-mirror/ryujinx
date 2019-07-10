@@ -4,13 +4,15 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Prepo
 {
+    [Service("prepo:a")]
+    [Service("prepo:u")]
     class IPrepoService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IPrepoService()
+        public IPrepoService(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

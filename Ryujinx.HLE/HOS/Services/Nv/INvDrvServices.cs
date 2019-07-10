@@ -14,6 +14,8 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Nv
 {
+    [Service("nvdrv")]
+    [Service("nvdrv:a")]
     class INvDrvServices : IpcService
     {
         private delegate int IoctlProcessor(ServiceCtx context, int cmd);
@@ -38,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
         private KEvent _event;
 
-        public INvDrvServices(Horizon system)
+        public INvDrvServices(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>()
             {
@@ -53,7 +55,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
                 { 13, FinishInitialize       }
             };
 
-            _event = new KEvent(system);
+            _event = new KEvent(context.Device.System);
         }
 
         static INvDrvServices()

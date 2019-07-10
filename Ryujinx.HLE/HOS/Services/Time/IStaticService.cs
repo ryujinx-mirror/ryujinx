@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Time
 {
+    [Service("time:a")]
+    [Service("time:s")]
+    [Service("time:u")]
     class IStaticService : IpcService
     {
         private int _timeSharedMemoryNativeHandle = 0;
@@ -15,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
         private static readonly DateTime StartupDate = DateTime.UtcNow;
 
-        public IStaticService()
+        public IStaticService(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

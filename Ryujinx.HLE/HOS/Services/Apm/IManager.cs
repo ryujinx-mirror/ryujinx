@@ -3,13 +3,15 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Apm
 {
+    [Service("apm")]
+    [Service("apm:p")]
     class IManager : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IManager()
+        public IManager(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

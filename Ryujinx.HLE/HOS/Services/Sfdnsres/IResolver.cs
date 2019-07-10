@@ -10,13 +10,14 @@ using static Ryujinx.HLE.HOS.ErrorCode;
 
 namespace Ryujinx.HLE.HOS.Services.Sfdnsres
 {
+    [Service("sfdnsres")]
     class IResolver : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IResolver()
+        public IResolver(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

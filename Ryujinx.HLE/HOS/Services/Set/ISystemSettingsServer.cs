@@ -11,13 +11,14 @@ using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Set
 {
+    [Service("set:sys")]
     class ISystemSettingsServer : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public ISystemSettingsServer()
+        public ISystemSettingsServer(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

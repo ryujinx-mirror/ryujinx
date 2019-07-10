@@ -11,6 +11,7 @@ using static Ryujinx.HLE.HOS.ErrorCode;
 
 namespace Ryujinx.HLE.HOS.Services.Aud
 {
+    [Service("audout:u")]
     class IAudioOutManager : IpcService
     {
         private const string DefaultAudioOutput = "DeviceOut";
@@ -23,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IAudioOutManager()
+        public IAudioOutManager(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

@@ -3,13 +3,14 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Nifm
 {
+    [Service("nifm:u")]
     class IStaticService : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IStaticService()
+        public IStaticService(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

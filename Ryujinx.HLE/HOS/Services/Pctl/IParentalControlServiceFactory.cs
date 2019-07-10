@@ -3,13 +3,17 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Pctl
 {
+    [Service("pctl")]
+    [Service("pctl:a")]
+    [Service("pctl:r")]
+    [Service("pctl:s")]
     class IParentalControlServiceFactory : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IParentalControlServiceFactory()
+        public IParentalControlServiceFactory(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

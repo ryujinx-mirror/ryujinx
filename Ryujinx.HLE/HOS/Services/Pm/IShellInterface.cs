@@ -3,13 +3,14 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Pm
 {
+    [Service("pm:shell")]
     class IShellInterface : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IShellInterface()
+        public IShellInterface(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

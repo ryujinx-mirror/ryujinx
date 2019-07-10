@@ -8,6 +8,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
 {
+    [Service("hid")]
     class IHidServer : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
@@ -40,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IHidServer(Horizon system)
+        public IHidServer(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
@@ -149,9 +150,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
                 { 1001, GetNpadCommunicationMode                      }
             };
 
-            _npadStyleSetUpdateEvent     = new KEvent(system);
-            _xpadIdEvent                 = new KEvent(system);
-            _palmaOperationCompleteEvent = new KEvent(system);
+            _npadStyleSetUpdateEvent     = new KEvent(context.Device.System);
+            _xpadIdEvent                 = new KEvent(context.Device.System);
+            _palmaOperationCompleteEvent = new KEvent(context.Device.System);
 
             _npadJoyHoldType            = HidNpadJoyHoldType.Vertical;
             _npadStyleSet               = HidNpadStyle.FullKey | HidNpadStyle.Dual | HidNpadStyle.Left | HidNpadStyle.Right | HidNpadStyle.Handheld;

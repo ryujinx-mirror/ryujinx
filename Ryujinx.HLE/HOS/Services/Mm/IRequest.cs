@@ -4,13 +4,14 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Mm
 {
+    [Service("mm:u")]
     class IRequest : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IRequest()
+        public IRequest(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>()
             {

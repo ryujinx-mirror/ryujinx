@@ -3,13 +3,14 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 {
+    [Service("nfp:user")]
     class IUserManager : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IUserManager()
+        public IUserManager(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

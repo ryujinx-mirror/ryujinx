@@ -11,6 +11,8 @@ using static Ryujinx.HLE.HOS.ErrorCode;
 
 namespace Ryujinx.HLE.HOS.Services.Acc
 {
+    [Service("acc:u0")]
+    [Service("acc:u1")]
     class IAccountService : IpcService
     {
         private bool _userRegistrationRequestPermitted = false;
@@ -21,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IAccountService()
+        public IAccountService(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

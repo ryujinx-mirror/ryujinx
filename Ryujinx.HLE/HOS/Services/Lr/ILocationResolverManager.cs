@@ -4,13 +4,14 @@ using Ryujinx.HLE.FileSystem;
 
 namespace Ryujinx.HLE.HOS.Services.Lr
 {
+    [Service("lr")]
     class ILocationResolverManager : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public ILocationResolverManager()
+        public ILocationResolverManager(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

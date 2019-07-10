@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Psm
 {
+    [Service("psm")]
     class IPsmServer : IpcService
     {
         enum ChargerType
@@ -17,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IPsmServer()
+        public IPsmServer(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

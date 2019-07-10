@@ -6,13 +6,14 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Pl
 {
+    [Service("pl:u")]
     class ISharedFontManager : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public ISharedFontManager()
+        public ISharedFontManager(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

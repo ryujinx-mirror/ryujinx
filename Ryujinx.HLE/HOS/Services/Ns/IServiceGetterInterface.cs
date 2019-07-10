@@ -3,13 +3,15 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Ns
 {
+    [Service("ns:am2")]
+    [Service("ns:ec")]
     class IServiceGetterInterface : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IServiceGetterInterface()
+        public IServiceGetterInterface(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
@@ -19,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
         public long GetApplicationManagerInterface(ServiceCtx context)
         {
-            MakeObject(context, new IApplicationManagerInterface());
+            MakeObject(context, new IApplicationManagerInterface(context));
 
             return 0;
         }

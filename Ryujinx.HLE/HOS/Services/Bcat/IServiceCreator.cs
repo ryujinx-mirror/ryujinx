@@ -3,13 +3,17 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Bcat
 {
+    [Service("bcat:a")]
+    [Service("bcat:m")]
+    [Service("bcat:u")]
+    [Service("bcat:s")]
     class IServiceCreator : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IServiceCreator()
+        public IServiceCreator(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

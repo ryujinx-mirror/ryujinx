@@ -7,6 +7,7 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Hid.Irs
 {
+    [Service("irs")]
     class IIrSensorServer : IpcService
     {
         private int _irsensorSharedMemoryHandle = 0;
@@ -15,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IIrSensorServer()
+        public IIrSensorServer(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

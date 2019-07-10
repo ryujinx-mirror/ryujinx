@@ -15,13 +15,14 @@ using static Ryujinx.HLE.Utilities.StringUtils;
 
 namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
+    [Service("fsp-srv")]
     class IFileSystemProxy : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IFileSystemProxy()
+        public IFileSystemProxy(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {

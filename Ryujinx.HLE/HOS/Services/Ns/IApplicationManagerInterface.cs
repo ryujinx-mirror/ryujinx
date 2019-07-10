@@ -6,13 +6,14 @@ using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Ns
 {
+    [Service("ns:am")]
     class IApplicationManagerInterface : IpcService
     {
         private Dictionary<int, ServiceProcessRequest> _commands;
 
         public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
-        public IApplicationManagerInterface()
+        public IApplicationManagerInterface(ServiceCtx context)
         {
             _commands = new Dictionary<int, ServiceProcessRequest>
             {
