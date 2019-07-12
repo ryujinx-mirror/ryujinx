@@ -1,33 +1,19 @@
 using LibHac;
 using LibHac.Fs;
-using Ryujinx.HLE.HOS.Ipc;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
     class IFile : IpcService, IDisposable
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private LibHac.Fs.IFile _baseFile;
 
         public IFile(LibHac.Fs.IFile baseFile)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, Read    },
-                { 1, Write   },
-                { 2, Flush   },
-                { 3, SetSize },
-                { 4, GetSize }
-            };
-
             _baseFile = baseFile;
         }
 
+        [Command(0)]
         // Read(u32 readOption, u64 offset, u64 size) -> (u64 out_size, buffer<u8, 0x46, 0> out_buf)
         public long Read(ServiceCtx context)
         {
@@ -58,6 +44,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(1)]
         // Write(u32 writeOption, u64 offset, u64 size, buffer<u8, 0x45, 0>)
         public long Write(ServiceCtx context)
         {
@@ -83,6 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(2)]
         // Flush()
         public long Flush(ServiceCtx context)
         {
@@ -98,6 +86,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(3)]
         // SetSize(u64 size)
         public long SetSize(ServiceCtx context)
         {
@@ -115,6 +104,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(4)]
         // GetSize() -> u64 fileSize
         public long GetSize(ServiceCtx context)
         {

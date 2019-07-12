@@ -1,25 +1,14 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Ns
 {
     [Service("aoc:u")]
     class IAddOnContentManager : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IAddOnContentManager(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IAddOnContentManager(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 2, CountAddOnContent },
-                { 3, ListAddOnContent  }
-            };
-        }
-
+        [Command(2)]
+        // CountAddOnContent(u64, pid) -> u32
         public static long CountAddOnContent(ServiceCtx context)
         {
             context.ResponseData.Write(0);
@@ -29,6 +18,8 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return 0;
         }
 
+        [Command(3)]
+        // ListAddOnContent(u32, u32, u64, pid) -> (u32, buffer<u32, 6>)
         public static long ListAddOnContent(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNs);

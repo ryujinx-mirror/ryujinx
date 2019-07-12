@@ -20,25 +20,13 @@ namespace Ryujinx.HLE.HOS.Services.Friend
         private KEvent _notificationEvent;
         private int    _notificationEventHandle = 0;
 
-
         private LinkedList<NotificationInfo> _notifications;
 
         private bool _hasNewFriendRequest;
         private bool _hasFriendListUpdate;
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         public INotificationService(ServiceCtx context, UInt128 userId, FriendServicePermissionLevel permissionLevel)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, GetEvent }, // 2.0.0+
-                { 1, Clear    }, // 2.0.0+
-                { 2, Pop      }, // 2.0.0+
-            };
-
             _userId            = userId;
             _permissionLevel   = permissionLevel;
             _notifications     = new LinkedList<NotificationInfo>();
@@ -50,6 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
             NotificationEventHandler.Instance.RegisterNotificationService(this);
         }
 
+        [Command(0)] //2.0.0+
         // nn::friends::detail::ipc::INotificationService::GetEvent() -> handle<copy>
         public long GetEvent(ServiceCtx context)
         {
@@ -66,6 +55,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
             return 0;
         }
 
+        [Command(1)] //2.0.0+
         // nn::friends::detail::ipc::INotificationService::Clear()
         public long Clear(ServiceCtx context)
         {
@@ -80,6 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
             return 0;
         }
 
+        [Command(2)] // 2.0.0+
         // nn::friends::detail::ipc::INotificationService::Pop() -> nn::friends::detail::ipc::SizedNotificationInfo
         public long Pop(ServiceCtx context)
         {

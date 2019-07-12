@@ -1,31 +1,13 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Mm
 {
     [Service("mm:u")]
     class IRequest : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IRequest(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IRequest(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>()
-            {
-                { 0, InitializeOld },
-                { 1, FinalizeOld   },
-                { 2, SetAndWaitOld },
-                { 3, GetOld        },
-                { 4, Initialize    },
-                { 5, Finalize      },
-                { 6, SetAndWait    },
-                { 7, Get           }
-            };
-        }
-
+        [Command(0)]
         // InitializeOld(u32, u32, u32)
         public long InitializeOld(ServiceCtx context)
         {
@@ -38,6 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return 0;
         }
 
+        [Command(1)]
         // FinalizeOld(u32)
         public long FinalizeOld(ServiceCtx context)
         {
@@ -48,6 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return 0;
         }
 
+        [Command(2)]
         // SetAndWaitOld(u32, u32, u32)
         public long SetAndWaitOld(ServiceCtx context)
         {
@@ -59,6 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return 0;
         }
 
+        [Command(3)]
         // GetOld(u32) -> u32
         public long GetOld(ServiceCtx context)
         {
@@ -71,6 +56,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return 0;
         }
 
+        [Command(4)]
         // Initialize()
         public long Initialize(ServiceCtx context)
         {
@@ -79,6 +65,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return 0;
         }
 
+        [Command(5)]
         // Finalize(u32)
         public long Finalize(ServiceCtx context)
         {
@@ -89,6 +76,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return 0;
         }
 
+        [Command(6)]
         // SetAndWait(u32, u32, u32)
         public long SetAndWait(ServiceCtx context)
         {
@@ -101,6 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
             return 0;
         }
 
+        [Command(7)]
         // Get(u32) -> u32
         public long Get(ServiceCtx context)
         {

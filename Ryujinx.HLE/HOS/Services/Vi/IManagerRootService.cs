@@ -1,23 +1,12 @@
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
-
 namespace Ryujinx.HLE.HOS.Services.Vi
 {
     [Service("vi:m")]
     class IManagerRootService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IManagerRootService(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IManagerRootService(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 2, GetDisplayService }
-            };
-        }
-
+        [Command(2)]
+        // GetDisplayService(u32) -> object<nn::visrv::sf::IApplicationDisplayService>
         public long GetDisplayService(ServiceCtx context)
         {
             int serviceType = context.RequestData.ReadInt32();

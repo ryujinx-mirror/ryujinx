@@ -1,24 +1,13 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Apm
 {
     class ISession : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public ISession() { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public ISession()
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, SetPerformanceConfiguration },
-                { 1, GetPerformanceConfiguration }
-            };
-        }
-
+        [Command(0)]
+        // SetPerformanceConfiguration(nn::apm::PerformanceMode, nn::apm::PerformanceConfiguration)
         public long SetPerformanceConfiguration(ServiceCtx context)
         {
             PerformanceMode          perfMode   = (PerformanceMode)context.RequestData.ReadInt32();
@@ -27,6 +16,8 @@ namespace Ryujinx.HLE.HOS.Services.Apm
             return 0;
         }
 
+        [Command(1)]
+        // GetPerformanceConfiguration(nn::apm::PerformanceMode) -> nn::apm::PerformanceConfiguration
         public long GetPerformanceConfiguration(ServiceCtx context)
         {
             PerformanceMode perfMode = (PerformanceMode)context.RequestData.ReadInt32();

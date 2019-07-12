@@ -1,29 +1,18 @@
-using Ryujinx.HLE.HOS.Ipc;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Time
 {
     class ISteadyClock : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private ulong _testOffset;
 
         public ISteadyClock()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, GetCurrentTimePoint },
-                { 1, GetTestOffset       },
-                { 2, SetTestOffset       }
-            };
-
             _testOffset = 0;
         }
 
+        [Command(0)]
+        // GetCurrentTimePoint() -> nn::time::SteadyClockTimePoint
         public long GetCurrentTimePoint(ServiceCtx context)
         {
             context.ResponseData.Write((long)(System.Diagnostics.Process.GetCurrentProcess().StartTime - DateTime.Now).TotalSeconds);
@@ -36,6 +25,8 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(1)]
+        // GetTestOffset() -> nn::TimeSpanType
         public long GetTestOffset(ServiceCtx context)
         {
             context.ResponseData.Write(_testOffset);
@@ -43,6 +34,8 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(2)]
+        // SetTestOffset(nn::TimeSpanType)
         public long SetTestOffset(ServiceCtx context)
         {
             _testOffset = context.RequestData.ReadUInt64();

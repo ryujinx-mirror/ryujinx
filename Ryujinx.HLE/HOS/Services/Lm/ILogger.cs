@@ -1,6 +1,4 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -8,21 +6,12 @@ namespace Ryujinx.HLE.HOS.Services.Lm
 {
     class ILogger : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public ILogger() { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public ILogger()
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, Log }
-            };
-        }
-
+        [Command(0)]
+        // Log(buffer<unknown, 0x21>)
         public long Log(ServiceCtx context)
         {
-
             (long bufPos, long bufSize) = context.Request.GetBufferType0x21();
             byte[] logBuffer = context.Memory.ReadBytes(bufPos, bufSize);
 

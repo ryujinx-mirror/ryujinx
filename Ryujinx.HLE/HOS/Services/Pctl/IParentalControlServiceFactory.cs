@@ -1,6 +1,3 @@
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
-
 namespace Ryujinx.HLE.HOS.Services.Pctl
 {
     [Service("pctl")]
@@ -9,19 +6,10 @@ namespace Ryujinx.HLE.HOS.Services.Pctl
     [Service("pctl:s")]
     class IParentalControlServiceFactory : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IParentalControlServiceFactory(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IParentalControlServiceFactory(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, CreateService                  },
-                { 1, CreateServiceWithoutInitialize }
-            };
-        }
-
+        [Command(0)]
+        // CreateService(u64, pid) -> object<nn::pctl::detail::ipc::IParentalControlService>
         public long CreateService(ServiceCtx context)
         {
             MakeObject(context, new IParentalControlService());
@@ -29,6 +17,8 @@ namespace Ryujinx.HLE.HOS.Services.Pctl
             return 0;
         }
 
+        [Command(1)] // 4.0.0+
+        // CreateServiceWithoutInitialize(u64, pid) -> object<nn::pctl::detail::ipc::IParentalControlService>
         public long CreateServiceWithoutInitialize(ServiceCtx context)
         {
             MakeObject(context, new IParentalControlService(false));

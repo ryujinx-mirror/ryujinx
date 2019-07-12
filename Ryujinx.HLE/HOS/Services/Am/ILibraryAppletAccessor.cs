@@ -3,32 +3,20 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Am
 {
     class ILibraryAppletAccessor : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private KEvent _stateChangedEvent;
 
         public ILibraryAppletAccessor(Horizon system)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,   GetAppletStateChangedEvent },
-                { 10,  Start                      },
-                { 30,  GetResult                  },
-                { 100, PushInData                 },
-                { 101, PopOutData                 }
-            };
-
             _stateChangedEvent = new KEvent(system);
         }
 
+        [Command(0)]
+        // GetAppletStateChangedEvent() -> handle<copy>
         public long GetAppletStateChangedEvent(ServiceCtx context)
         {
             _stateChangedEvent.ReadableEvent.Signal();
@@ -45,6 +33,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(10)]
+        // Start()
         public long Start(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
@@ -52,6 +42,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(30)]
+        // GetResult()
         public long GetResult(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
@@ -59,6 +51,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(100)]
+        // PushInData(object<nn::am::service::IStorage>)
         public long PushInData(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
@@ -66,6 +60,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(101)]
+        // PopOutData() -> object<nn::am::service::IStorage>
         public long PopOutData(ServiceCtx context)
         {
             MakeObject(context, new IStorage(StorageHelper.MakeLaunchParams()));

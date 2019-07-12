@@ -1,24 +1,12 @@
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
-
 namespace Ryujinx.HLE.HOS.Services.Aud
 {
     [Service("hwopus")]
     class IHardwareOpusDecoderManager : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IHardwareOpusDecoderManager(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IHardwareOpusDecoderManager(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, Initialize        },
-                { 1, GetWorkBufferSize }
-            };
-        }
-
+        [Command(0)]
+        // Initialize(bytes<8, 4>, u32, handle<copy>) -> object<nn::codec::detail::IHardwareOpusDecoder>
         public long Initialize(ServiceCtx context)
         {
             int sampleRate    = context.RequestData.ReadInt32();
@@ -29,6 +17,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(1)]
+        // GetWorkBufferSize(bytes<8, 4>) -> u32
         public long GetWorkBufferSize(ServiceCtx context)
         {
             // Note: The sample rate is ignored because it is fixed to 48KHz.

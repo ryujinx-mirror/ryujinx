@@ -1,27 +1,18 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Vi
 {
     class IManagerDisplayService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
+        private static IApplicationDisplayService _applicationDisplayService;
 
         public IManagerDisplayService(IApplicationDisplayService applicationDisplayService)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 2010, CreateManagedLayer                         },
-                { 2011, DestroyManagedLayer                        },
-                { 2012, applicationDisplayService.CreateStrayLayer },
-                { 6000, AddToLayerStack                            },
-                { 6002, SetLayerVisibility                         }
-            };
+            _applicationDisplayService = applicationDisplayService;
         }
 
+        [Command(2010)]
+        // CreateManagedLayer(u32, u64, nn::applet::AppletResourceUserId) -> u64
         public static long CreateManagedLayer(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceVi);
@@ -31,6 +22,8 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(2011)]
+        // DestroyManagedLayer(u64)
         public long DestroyManagedLayer(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceVi);
@@ -38,6 +31,17 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(2012)] // 7.0.0+
+        // CreateStrayLayer(u32, u64) -> (u64, u64, buffer<bytes, 6>)
+        public static long CreateStrayLayer(ServiceCtx context)
+        {
+            Logger.PrintStub(LogClass.ServiceVi);
+
+            return _applicationDisplayService.CreateStrayLayer(context);
+        }
+
+        [Command(6000)]
+        // AddToLayerStack(u32, u64)
         public static long AddToLayerStack(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceVi);
@@ -45,6 +49,8 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(6002)]
+        // SetLayerVisibility(b8, u64)
         public static long SetLayerVisibility(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceVi);

@@ -1,27 +1,13 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Am
 {
     class IAudioController : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IAudioController() { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IAudioController()
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, SetExpectedMasterVolume              },
-                { 1, GetMainAppletExpectedMasterVolume    },
-                { 2, GetLibraryAppletExpectedMasterVolume },
-                { 3, ChangeMainAppletMasterVolume         },
-                { 4, SetTransparentVolumeRate             }
-            };
-        }
-
+        [Command(0)]
+        // SetExpectedMasterVolume(f32, f32)
         public long SetExpectedMasterVolume(ServiceCtx context)
         {
             float appletVolume        = context.RequestData.ReadSingle();
@@ -32,6 +18,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(1)]
+        // GetMainAppletExpectedMasterVolume() -> f32
         public long GetMainAppletExpectedMasterVolume(ServiceCtx context)
         {
             context.ResponseData.Write(1f);
@@ -41,6 +29,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(2)]
+        // GetLibraryAppletExpectedMasterVolume() -> f32
         public long GetLibraryAppletExpectedMasterVolume(ServiceCtx context)
         {
             context.ResponseData.Write(1f);
@@ -50,6 +40,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(3)]
+        // ChangeMainAppletMasterVolume(f32, u64)
         public long ChangeMainAppletMasterVolume(ServiceCtx context)
         {
             float unknown0 = context.RequestData.ReadSingle();
@@ -60,6 +52,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(4)]
+        // SetTransparentVolumeRate(f32)
         public long SetTransparentVolumeRate(ServiceCtx context)
         {
             float unknown0 = context.RequestData.ReadSingle();

@@ -98,10 +98,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
     [Service("ldr:ro")]
     class IRoInterface : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private const int MaxNrr = 0x40;
         private const int MaxNro = 0x40;
 
@@ -115,15 +111,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
 
         public IRoInterface(ServiceCtx context)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, LoadNro    },
-                { 1, UnloadNro  },
-                { 2, LoadNrr    },
-                { 3, UnloadNrr  },
-                { 4, Initialize }
-            };
-
             _nrrInfos = new List<NrrInfo>(MaxNrr);
             _nroInfos = new List<NroInfo>(MaxNro);
         }
@@ -448,6 +435,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             return MakeError(ErrorModule.Loader, LoaderErr.BadNroAddress);
         }
 
+        [Command(0)]
         // LoadNro(u64, u64, u64, u64, u64, pid) -> u64
         public long LoadNro(ServiceCtx context)
         {
@@ -485,6 +473,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             return result;
         }
 
+        [Command(1)]
         // UnloadNro(u64, u64, pid)
         public long UnloadNro(ServiceCtx context)
         {
@@ -508,6 +497,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             return result;
         }
 
+        [Command(2)]
         // LoadNrr(u64, u64, u64, pid)
         public long LoadNrr(ServiceCtx context)
         {
@@ -540,6 +530,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             return result;
         }
 
+        [Command(3)]
         // UnloadNrr(u64, u64, pid)
         public long UnloadNrr(ServiceCtx context)
         {
@@ -563,6 +554,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             return result;
         }
 
+        [Command(4)]
         // Initialize(u64, pid, KObject)
         public long Initialize(ServiceCtx context)
         {

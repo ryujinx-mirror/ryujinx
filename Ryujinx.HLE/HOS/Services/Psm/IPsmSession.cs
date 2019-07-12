@@ -2,34 +2,21 @@
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Psm
 {
     class IPsmSession : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private KEvent _stateChangeEvent;
         private int    _stateChangeEventHandle;
 
         public IPsmSession(Horizon system)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, BindStateChangeEvent                     },
-                { 1, UnbindStateChangeEvent                   },
-                { 2, SetChargerTypeChangeEventEnabled         },
-                { 3, SetPowerSupplyChangeEventEnabled         },
-                { 4, SetBatteryVoltageStateChangeEventEnabled }
-            };
-
             _stateChangeEvent       = new KEvent(system);
             _stateChangeEventHandle = -1;
         }
 
+        [Command(0)]
         // BindStateChangeEvent() -> KObject
         public long BindStateChangeEvent(ServiceCtx context)
         {
@@ -50,6 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
             return 0;
         }
 
+        [Command(1)]
         // UnbindStateChangeEvent()
         public long UnbindStateChangeEvent(ServiceCtx context)
         {
@@ -64,6 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
             return 0;
         }
 
+        [Command(2)]
         // SetChargerTypeChangeEventEnabled(u8)
         public long SetChargerTypeChangeEventEnabled(ServiceCtx context)
         {
@@ -74,6 +63,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
             return 0;
         }
 
+        [Command(3)]
         // SetPowerSupplyChangeEventEnabled(u8)
         public long SetPowerSupplyChangeEventEnabled(ServiceCtx context)
         {
@@ -84,6 +74,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
             return 0;
         }
 
+        [Command(4)]
         // SetBatteryVoltageStateChangeEventEnabled(u8)
         public long SetBatteryVoltageStateChangeEventEnabled(ServiceCtx context)
         {

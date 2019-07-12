@@ -1,5 +1,4 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -13,25 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
     [Service("sfdnsres")]
     class IResolver : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IResolver(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,  SetDnsAddressesPrivate },
-                { 1,  GetDnsAddressesPrivate },
-                { 2,  GetHostByName          },
-                { 3,  GetHostByAddress       },
-                { 4,  GetHostStringError     },
-                { 5,  GetGaiStringError      },
-                { 8,  RequestCancelHandle    },
-                { 9,  CancelSocketCall       },
-                { 11, ClearDnsAddresses      }
-            };
-        }
+        public IResolver(ServiceCtx context) { }
 
         private long SerializeHostEnt(ServiceCtx context, IPHostEntry hostEntry, List<IPAddress> addresses = null)
         {
@@ -159,6 +140,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             return result;
         }
 
+        [Command(0)]
         // SetDnsAddressesPrivate(u32, buffer<unknown, 5, 0>)
         public long SetDnsAddressesPrivate(ServiceCtx context)
         {
@@ -172,6 +154,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             return MakeError(ErrorModule.Os, 1023);
         }
 
+        [Command(1)]
         // GetDnsAddressPrivate(u32) -> buffer<unknown, 6, 0>
         public long GetDnsAddressesPrivate(ServiceCtx context)
         {
@@ -183,6 +166,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             return MakeError(ErrorModule.Os, 1023);
         }
 
+        [Command(2)]
         // GetHostByName(u8, u32, u64, pid, buffer<unknown, 5, 0>) -> (u32, u32, u32, buffer<unknown, 6, 0>)
         public long GetHostByName(ServiceCtx context)
         {
@@ -262,6 +246,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             return 0;
         }
 
+        [Command(3)]
         // GetHostByAddr(u32, u32, u32, u64, pid, buffer<unknown, 5, 0>) -> (u32, u32, u32, buffer<unknown, 6, 0>)
         public long GetHostByAddress(ServiceCtx context)
         {
@@ -331,6 +316,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             return 0;
         }
 
+        [Command(4)]
         // GetHostStringError(u32) -> buffer<unknown, 6, 0>
         public long GetHostStringError(ServiceCtx context)
         {
@@ -347,6 +333,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             return resultCode;
         }
 
+        [Command(5)]
         // GetGaiStringError(u32) -> buffer<unknown, 6, 0>
         public long GetGaiStringError(ServiceCtx context)
         {
@@ -363,6 +350,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             return resultCode;
         }
 
+        [Command(8)]
         // RequestCancelHandle(u64, pid) -> u32
         public long RequestCancelHandle(ServiceCtx context)
         {
@@ -375,6 +363,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             return 0;
         }
 
+        [Command(9)]
         // CancelSocketCall(u32, u64, pid)
         public long CancelSocketCall(ServiceCtx context)
         {
@@ -386,6 +375,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             return 0;
         }
 
+        [Command(11)]
         // ClearDnsAddresses(u32)
         public long ClearDnsAddresses(ServiceCtx context)
         {

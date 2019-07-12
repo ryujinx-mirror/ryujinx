@@ -1,7 +1,6 @@
 using ChocolArm64.Memory;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
-using System.Collections.Generic;
 using System;
 using System.IO;
 using System.Text;
@@ -13,45 +12,26 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 {
     class IApplicationDisplayService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private IdDictionary _displays;
 
         public IApplicationDisplayService()
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 100,  GetRelayService                      },
-                { 101,  GetSystemDisplayService              },
-                { 102,  GetManagerDisplayService             },
-                { 103,  GetIndirectDisplayTransactionService },
-                { 1000, ListDisplays                         },
-                { 1010, OpenDisplay                          },
-                { 1020, CloseDisplay                         },
-                { 1102, GetDisplayResolution                 },
-                { 2020, OpenLayer                            },
-                { 2021, CloseLayer                           },
-                { 2030, CreateStrayLayer                     },
-                { 2031, DestroyStrayLayer                    },
-                { 2101, SetLayerScalingMode                  },
-                { 2102, ConvertScalingMode                   },
-                { 5202, GetDisplayVSyncEvent                 }
-            };
-
             _displays = new IdDictionary();
         }
 
+        [Command(100)]
+        // GetRelayService() -> object<nns::hosbinder::IHOSBinderDriver>
         public long GetRelayService(ServiceCtx context)
         {
-            MakeObject(context, new IhosBinderDriver(
+            MakeObject(context, new IHOSBinderDriver(
                 context.Device.System,
                 context.Device.Gpu.Renderer));
 
             return 0;
         }
 
+        [Command(101)]
+        // GetSystemDisplayService() -> object<nn::visrv::sf::ISystemDisplayService>
         public long GetSystemDisplayService(ServiceCtx context)
         {
             MakeObject(context, new ISystemDisplayService(this));
@@ -59,6 +39,8 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(102)]
+        // GetManagerDisplayService() -> object<nn::visrv::sf::IManagerDisplayService>
         public long GetManagerDisplayService(ServiceCtx context)
         {
             MakeObject(context, new IManagerDisplayService(this));
@@ -66,15 +48,19 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(103)] // 2.0.0+
+        // GetIndirectDisplayTransactionService() -> object<nns::hosbinder::IHOSBinderDriver>
         public long GetIndirectDisplayTransactionService(ServiceCtx context)
         {
-            MakeObject(context, new IhosBinderDriver(
+            MakeObject(context, new IHOSBinderDriver(
                 context.Device.System,
                 context.Device.Gpu.Renderer));
 
             return 0;
         }
 
+        [Command(1000)]
+        // ListDisplays() -> (u64, buffer<nn::vi::DisplayInfo, 6>)
         public long ListDisplays(ServiceCtx context)
         {
             long recBuffPtr = context.Request.ReceiveBuff[0].Position;
@@ -93,6 +79,8 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(1010)]
+        // OpenDisplay(nn::vi::DisplayName) -> u64
         public long OpenDisplay(ServiceCtx context)
         {
             string name = GetDisplayName(context);
@@ -104,6 +92,8 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(1020)]
+        // CloseDisplay(u64)
         public long CloseDisplay(ServiceCtx context)
         {
             int displayId = context.RequestData.ReadInt32();
@@ -113,6 +103,8 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(1102)]
+        // GetDisplayResolution(u64) -> (u64, u64)
         public long GetDisplayResolution(ServiceCtx context)
         {
             long displayId = context.RequestData.ReadInt32();
@@ -123,6 +115,8 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(2020)]
+        // OpenLayer(nn::vi::DisplayName, u64, nn::applet::AppletResourceUserId, pid) -> (u64, buffer<bytes, 6>)
         public long OpenLayer(ServiceCtx context)
         {
             long layerId = context.RequestData.ReadInt64();
@@ -139,6 +133,8 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(2021)]
+        // CloseLayer(u64)
         public long CloseLayer(ServiceCtx context)
         {
             long layerId = context.RequestData.ReadInt64();
@@ -146,6 +142,8 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(2030)]
+        // CreateStrayLayer(u32, u64) -> (u64, u64, buffer<bytes, 6>)
         public long CreateStrayLayer(ServiceCtx context)
         {
             long layerFlags = context.RequestData.ReadInt64();
@@ -165,11 +163,15 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(2031)]
+        // DestroyStrayLayer(u64)
         public long DestroyStrayLayer(ServiceCtx context)
         {
             return 0;
         }
 
+        [Command(2101)]
+        // SetLayerScalingMode(u32, u64)
         public long SetLayerScalingMode(ServiceCtx context)
         {
             int  scalingMode = context.RequestData.ReadInt32();
@@ -178,6 +180,8 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return 0;
         }
 
+        [Command(2102)] // 5.0.0+
+        // ConvertScalingMode(unknown) -> unknown
         public long ConvertScalingMode(ServiceCtx context)
         {
             SrcScalingMode scalingMode = (SrcScalingMode)context.RequestData.ReadInt32();
@@ -216,6 +220,8 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             return null;
         }
 
+        [Command(5202)]
+        // GetDisplayVsyncEvent(u64) -> handle<copy>
         public long GetDisplayVSyncEvent(ServiceCtx context)
         {
             string name = GetDisplayName(context);

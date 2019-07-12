@@ -1,9 +1,7 @@
 using ChocolArm64.Memory;
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Utilities;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -12,29 +10,17 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 {
     class IProfile : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private UserProfile _profile;
-
-        private Stream _profilePictureStream;
+        private Stream      _profilePictureStream;
 
         public IProfile(UserProfile profile)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,  Get          },
-                { 1,  GetBase      },
-                { 10, GetImageSize },
-                { 11, LoadImage    }
-            };
-
-            _profile = profile;
-
+            _profile              = profile;
             _profilePictureStream = Assembly.GetCallingAssembly().GetManifestResourceStream("Ryujinx.HLE.RyujinxProfileImage.jpg");
         }
 
+        [Command(0)]
+        // Get() -> (nn::account::profile::ProfileBase, buffer<nn::account::profile::UserData, 0x1a>)
         public long Get(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAcc);
@@ -50,6 +36,8 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return GetBase(context);
         }
 
+        [Command(1)]
+        // GetBase() -> nn::account::profile::ProfileBase
         public long GetBase(ServiceCtx context)
         {
             _profile.UserId.Write(context.ResponseData);
@@ -63,6 +51,17 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        [Command(10)]
+        // GetImageSize() -> u32
+        private long GetImageSize(ServiceCtx context)
+        {
+            context.ResponseData.Write(_profilePictureStream.Length);
+
+            return 0;
+        }
+
+        [Command(11)]
+        // LoadImage() -> (u32, buffer<bytes, 6>)
         private long LoadImage(ServiceCtx context)
         {
             long bufferPosition = context.Request.ReceiveBuff[0].Position;
@@ -74,13 +73,6 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
             context.Memory.WriteBytes(bufferPosition, profilePictureData);
 
-            context.ResponseData.Write(_profilePictureStream.Length);
-
-            return 0;
-        }
-
-        private long GetImageSize(ServiceCtx context)
-        {
             context.ResponseData.Write(_profilePictureStream.Length);
 
             return 0;

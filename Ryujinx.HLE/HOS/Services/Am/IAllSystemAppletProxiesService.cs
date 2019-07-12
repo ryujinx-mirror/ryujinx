@@ -1,23 +1,12 @@
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
-
 namespace Ryujinx.HLE.HOS.Services.Am
 {
     [Service("appletAE")]
     class IAllSystemAppletProxiesService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IAllSystemAppletProxiesService(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IAllSystemAppletProxiesService(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 100, OpenSystemAppletProxy }
-            };
-        }
-
+        [Command(100)]
+        // OpenSystemAppletProxy(u64, pid, handle<copy>) -> object<nn::am::service::ISystemAppletProxy>
         public long OpenSystemAppletProxy(ServiceCtx context)
         {
             MakeObject(context, new ISystemAppletProxy());

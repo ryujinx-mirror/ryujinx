@@ -1,24 +1,13 @@
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
-
 namespace Ryujinx.HLE.HOS.Services.Ns
 {
     [Service("ns:am2")]
     [Service("ns:ec")]
     class IServiceGetterInterface : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IServiceGetterInterface(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IServiceGetterInterface(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 7996, GetApplicationManagerInterface }
-            };
-        }
-
+        [Command(7996)]
+        // GetApplicationManagerInterface() -> object<nn::ns::detail::IApplicationManagerInterface>
         public long GetApplicationManagerInterface(ServiceCtx context)
         {
             MakeObject(context, new IApplicationManagerInterface(context));

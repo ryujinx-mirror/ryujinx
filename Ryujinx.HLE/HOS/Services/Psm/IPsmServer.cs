@@ -1,6 +1,4 @@
 ﻿using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Psm
 {
@@ -14,20 +12,9 @@ namespace Ryujinx.HLE.HOS.Services.Psm
             UsbC
         }
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IPsmServer(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IPsmServer(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, GetBatteryChargePercentage },
-                { 1, GetChargerType             },
-                { 7, OpenSession                }
-            };
-        }
-
+        [Command(0)]
         // GetBatteryChargePercentage() -> u32
         public static long GetBatteryChargePercentage(ServiceCtx context)
         {
@@ -40,6 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
             return 0;
         }
 
+        [Command(1)]
         // GetChargerType() -> u32
         public static long GetChargerType(ServiceCtx context)
         {
@@ -52,6 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
             return 0;
         }
 
+        [Command(7)]
         // OpenSession() -> IPsmSession
         public long OpenSession(ServiceCtx context)
         {

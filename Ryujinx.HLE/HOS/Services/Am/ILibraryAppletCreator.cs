@@ -1,23 +1,11 @@
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
-
 namespace Ryujinx.HLE.HOS.Services.Am
 {
     class ILibraryAppletCreator : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public ILibraryAppletCreator() { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public ILibraryAppletCreator()
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,  CreateLibraryApplet },
-                { 10, CreateStorage       }
-            };
-        }
-
+        [Command(0)]
+        // CreateLibraryApplet(u32, u32) -> object<nn::am::service::ILibraryAppletAccessor>
         public long CreateLibraryApplet(ServiceCtx context)
         {
             MakeObject(context, new ILibraryAppletAccessor(context.Device.System));
@@ -25,6 +13,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(10)]
+        // CreateStorage(u64) -> object<nn::am::service::IStorage>
         public long CreateStorage(ServiceCtx context)
         {
             long size = context.RequestData.ReadInt64();

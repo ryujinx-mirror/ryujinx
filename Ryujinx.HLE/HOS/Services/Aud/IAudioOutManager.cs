@@ -1,10 +1,8 @@
 using ChocolArm64.Memory;
 using Ryujinx.Audio;
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Aud.AudioOut;
-using System.Collections.Generic;
 using System.Text;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
@@ -14,27 +12,14 @@ namespace Ryujinx.HLE.HOS.Services.Aud
     [Service("audout:u")]
     class IAudioOutManager : IpcService
     {
-        private const string DefaultAudioOutput = "DeviceOut";
+        private const string DefaultAudioOutput   = "DeviceOut";
+        private const int    DefaultSampleRate    = 48000;
+        private const int    DefaultChannelsCount = 2;
 
-        private const int DefaultSampleRate = 48000;
+        public IAudioOutManager(ServiceCtx context) { }
 
-        private const int DefaultChannelsCount = 2;
-
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IAudioOutManager(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, ListAudioOuts     },
-                { 1, OpenAudioOut      },
-                { 2, ListAudioOutsAuto },
-                { 3, OpenAudioOutAuto  }
-            };
-        }
-
+        [Command(0)]
+        // ListAudioOuts() -> (u32 count, buffer<bytes, 6>)
         public long ListAudioOuts(ServiceCtx context)
         {
             return ListAudioOutsImpl(
@@ -43,6 +28,9 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                 context.Request.ReceiveBuff[0].Size);
         }
 
+        [Command(1)]
+        // OpenAudioOut(u32 sample_rate, u16 unused, u16 channel_count, nn::applet::AppletResourceUserId, pid, handle<copy, process>, buffer<bytes, 5> name_in)
+        // -> (u32 sample_rate, u32 channel_count, u32 pcm_format, u32, object<nn::audio::detail::IAudioOut>, buffer<bytes, 6> name_out)
         public long OpenAudioOut(ServiceCtx context)
         {
             return OpenAudioOutImpl(
@@ -53,6 +41,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                 context.Request.ReceiveBuff[0].Size);
         }
 
+        [Command(2)] // 3.0.0+
+        // ListAudioOutsAuto() -> (u32 count, buffer<bytes, 0x22>)
         public long ListAudioOutsAuto(ServiceCtx context)
         {
             (long recvPosition, long recvSize) = context.Request.GetBufferType0x22();
@@ -60,6 +50,9 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return ListAudioOutsImpl(context, recvPosition, recvSize);
         }
 
+        [Command(3)] // 3.0.0+
+        // OpenAudioOutAuto(u32 sample_rate, u16 unused, u16 channel_count, nn::applet::AppletResourceUserId, pid, handle<copy, process>, buffer<bytes, 0x21>)
+        // -> (u32 sample_rate, u32 channel_count, u32 pcm_format, u32, object<nn::audio::detail::IAudioOut>, buffer<bytes, 0x22> name_out)
         public long OpenAudioOutAuto(ServiceCtx context)
         {
             (long sendPosition, long sendSize) = context.Request.GetBufferType0x21();

@@ -1,7 +1,5 @@
 ﻿using LibHac;
-using Ryujinx.HLE.HOS.Ipc;
 using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Ns
@@ -9,18 +7,10 @@ namespace Ryujinx.HLE.HOS.Services.Ns
     [Service("ns:am")]
     class IApplicationManagerInterface : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IApplicationManagerInterface(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IApplicationManagerInterface(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 400, GetApplicationControlData }
-            };
-        }
-
+        [Command(400)]
+        // GetApplicationControlData(unknown<0x10>) -> (unknown<4>, buffer<unknown, 6>)
         public long GetApplicationControlData(ServiceCtx context)
         {
             long position = context.Request.ReceiveBuff[0].Position;

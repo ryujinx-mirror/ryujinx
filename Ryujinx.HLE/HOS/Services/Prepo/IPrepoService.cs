@@ -1,6 +1,4 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Prepo
 {
@@ -8,18 +6,10 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
     [Service("prepo:u")]
     class IPrepoService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IPrepoService(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IPrepoService(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 10101, SaveReportWithUser }
-            };
-        }
-
+        [Command(10101)]
+        // SaveReportWithUser(nn::account::Uid, u64, pid, buffer<u8, 9>, buffer<bytes, 5>)
         public static long SaveReportWithUser(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServicePrepo);

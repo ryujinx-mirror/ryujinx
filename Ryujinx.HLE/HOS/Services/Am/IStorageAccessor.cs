@@ -1,29 +1,18 @@
-using Ryujinx.HLE.HOS.Ipc;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Am
 {
     class IStorageAccessor : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private IStorage _storage;
 
         public IStorageAccessor(IStorage storage)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,  GetSize },
-                { 10, Write   },
-                { 11, Read    }
-            };
-
             _storage = storage;
         }
 
+        [Command(0)]
+        // GetSize() -> u64
         public long GetSize(ServiceCtx context)
         {
             context.ResponseData.Write((long)_storage.Data.Length);
@@ -31,6 +20,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(10)]
+        // Write(u64, buffer<bytes, 0x21>)
         public long Write(ServiceCtx context)
         {
             // TODO: Error conditions.
@@ -55,6 +46,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(11)]
+        // Read(u64) -> buffer<bytes, 0x22>
         public long Read(ServiceCtx context)
         {
             // TODO: Error conditions.

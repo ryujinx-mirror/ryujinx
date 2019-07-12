@@ -1,6 +1,3 @@
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
-
 namespace Ryujinx.HLE.HOS.Services.Bcat
 {
     [Service("bcat:a")]
@@ -9,19 +6,10 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
     [Service("bcat:s")]
     class IServiceCreator : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IServiceCreator(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IServiceCreator(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, CreateBcatService                 },
-                { 1, CreateDeliveryCacheStorageService }
-            };
-        }
-
+        [Command(0)]
+        // CreateBcatService(u64, pid) -> object<nn::bcat::detail::ipc::IBcatService>
         public long CreateBcatService(ServiceCtx context)
         {
             long id = context.RequestData.ReadInt64();
@@ -31,6 +19,8 @@ namespace Ryujinx.HLE.HOS.Services.Bcat
             return 0;
         }
 
+        [Command(1)]
+        // CreateDeliveryCacheStorageService(u64, pid) -> object<nn::bcat::detail::ipc::IDeliveryCacheStorageService>
         public long CreateDeliveryCacheStorageService(ServiceCtx context)
         {
             long id = context.RequestData.ReadInt64();

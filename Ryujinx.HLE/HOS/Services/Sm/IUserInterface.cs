@@ -16,24 +16,12 @@ namespace Ryujinx.HLE.HOS.Services.Sm
     {
         private Dictionary<string, Type> _services;
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private ConcurrentDictionary<string, KPort> _registeredServices;
 
         private bool _isInitialized;
 
         public IUserInterface(ServiceCtx context = null)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, Initialize        },
-                { 1, GetService        },
-                { 2, RegisterService   },
-                { 3, UnregisterService }
-            };
-
             _registeredServices = new ConcurrentDictionary<string, KPort>();
 
             _services = Assembly.GetExecutingAssembly().GetTypes()
@@ -51,6 +39,8 @@ namespace Ryujinx.HLE.HOS.Services.Sm
             port.ClientPort.Service = new IUserInterface();
         }
 
+        [Command(0)]
+        // Initialize(pid, u64 reserved)
         public long Initialize(ServiceCtx context)
         {
             _isInitialized = true;
@@ -58,6 +48,8 @@ namespace Ryujinx.HLE.HOS.Services.Sm
             return 0;
         }
 
+        [Command(1)]
+        // GetService(ServiceName name) -> handle<move, session>
         public long GetService(ServiceCtx context)
         {
             if (!_isInitialized)
@@ -117,6 +109,8 @@ namespace Ryujinx.HLE.HOS.Services.Sm
             return 0;
         }
 
+        [Command(2)]
+        // RegisterService(ServiceName name, u8, u32 maxHandles) -> handle<move, port>
         public long RegisterService(ServiceCtx context)
         {
             if (!_isInitialized)
@@ -158,6 +152,8 @@ namespace Ryujinx.HLE.HOS.Services.Sm
             return 0;
         }
 
+        [Command(3)]
+        // UnregisterService(ServiceName name)
         public long UnregisterService(ServiceCtx context)
         {
             if (!_isInitialized)

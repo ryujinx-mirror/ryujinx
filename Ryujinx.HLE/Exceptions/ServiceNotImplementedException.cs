@@ -63,13 +63,13 @@ namespace Ryujinx.HLE.Exceptions
                 var ipcCommands = ipcService.Commands;
 
                 // Find the handler for the method called
-                var ipcHandler   = ipcCommands.FirstOrDefault(x => x.Value.Method == callingMethod);
+                var ipcHandler   = ipcCommands.FirstOrDefault(x => x.Value as MethodBase == callingMethod);
                 var ipcCommandId = ipcHandler.Key;
                 var ipcMethod    = ipcHandler.Value;
 
                 if (ipcMethod != null)
                 {
-                    sb.AppendLine($"Service Command: {ipcService.GetType().FullName}: {ipcCommandId} ({ipcMethod.Method.Name})");
+                    sb.AppendLine($"Service Command: {ipcService.GetType().FullName}: {ipcCommandId} ({ipcMethod.Name})");
                     sb.AppendLine();
                 }
             }

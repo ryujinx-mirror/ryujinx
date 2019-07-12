@@ -1,31 +1,13 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Am
 {
     class IApplicationFunctions : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IApplicationFunctions() { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IApplicationFunctions()
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 1,  PopLaunchParameter          },
-                { 20, EnsureSaveData              },
-                { 21, GetDesiredLanguage          },
-                { 22, SetTerminateResult          },
-                { 23, GetDisplayVersion           },
-                { 40, NotifyRunning               },
-                { 50, GetPseudoDeviceId           },
-                { 66, InitializeGamePlayRecording },
-                { 67, SetGamePlayRecordingState   }
-            };
-        }
-
+        [Command(1)]
+        // PopLaunchParameter(u32) -> object<nn::am::service::IStorage>
         public long PopLaunchParameter(ServiceCtx context)
         {
             // Only the first 0x18 bytes of the Data seems to be actually used.
@@ -34,6 +16,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(20)]
+        // EnsureSaveData(nn::account::Uid) -> u64
         public long EnsureSaveData(ServiceCtx context)
         {
             long uIdLow  = context.RequestData.ReadInt64();
@@ -46,6 +30,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(21)]
+        // GetDesiredLanguage() -> nn::settings::LanguageCode
         public long GetDesiredLanguage(ServiceCtx context)
         {
             context.ResponseData.Write(context.Device.System.State.DesiredLanguageCode);
@@ -53,6 +39,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(22)]
+        // SetTerminateResult(u32)
         public long SetTerminateResult(ServiceCtx context)
         {
             int errorCode = context.RequestData.ReadInt32();
@@ -72,6 +60,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return $"{(2000 + module):d4}-{description:d4}";
         }
 
+        [Command(23)]
+        // GetDisplayVersion() -> nn::oe::DisplayVersion
         public long GetDisplayVersion(ServiceCtx context)
         {
             // FIXME: Need to check correct version on a switch.
@@ -81,6 +71,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(40)]
+        // NotifyRunning() -> b8
         public long NotifyRunning(ServiceCtx context)
         {
             context.ResponseData.Write(1);
@@ -88,6 +80,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(50)] // 2.0.0+
+        // GetPseudoDeviceId() -> nn::util::Uuid
         public long GetPseudoDeviceId(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
@@ -98,6 +92,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(66)] // 3.0.0+
+        // InitializeGamePlayRecording(u64, handle<copy>)
         public long InitializeGamePlayRecording(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
@@ -105,6 +101,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(67)] // 3.0.0+
+        // SetGamePlayRecordingState(u32)
         public long SetGamePlayRecordingState(ServiceCtx context)
         {
             int state = context.RequestData.ReadInt32();

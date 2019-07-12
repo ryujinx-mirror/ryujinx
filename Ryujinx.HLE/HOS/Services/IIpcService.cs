@@ -1,10 +1,10 @@
-using Ryujinx.HLE.HOS.Ipc;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Ryujinx.HLE.HOS.Services
 {
     interface IIpcService
     {
-        IReadOnlyDictionary<int, ServiceProcessRequest> Commands { get; }
+        IReadOnlyDictionary<int, MethodInfo> Commands { get; }
     }
 }

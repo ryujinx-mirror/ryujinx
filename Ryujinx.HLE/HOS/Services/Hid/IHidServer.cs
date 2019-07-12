@@ -4,15 +4,12 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.Input;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
 {
     [Service("hid")]
     class IHidServer : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
         private KEvent _npadStyleSetUpdateEvent;
         private KEvent _xpadIdEvent;
         private KEvent _palmaOperationCompleteEvent;
@@ -39,117 +36,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         private HidAccelerometerParameters _accelerometerParams;
         private HidVibrationValue          _vibrationValue;
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         public IHidServer(ServiceCtx context)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,    CreateAppletResource                          },
-                { 1,    ActivateDebugPad                              },
-                { 11,   ActivateTouchScreen                           },
-                { 21,   ActivateMouse                                 },
-                { 31,   ActivateKeyboard                              },
-                { 40,   AcquireXpadIdEventHandle                      },
-                { 41,   ReleaseXpadIdEventHandle                      },
-                { 51,   ActivateXpad                                  },
-                { 55,   GetXpadIds                                    },
-                { 56,   ActivateJoyXpad                               },
-                { 58,   GetJoyXpadLifoHandle                          },
-                { 59,   GetJoyXpadIds                                 },
-                { 60,   ActivateSixAxisSensor                         },
-                { 61,   DeactivateSixAxisSensor                       },
-                { 62,   GetSixAxisSensorLifoHandle                    },
-                { 63,   ActivateJoySixAxisSensor                      },
-                { 64,   DeactivateJoySixAxisSensor                    },
-                { 65,   GetJoySixAxisSensorLifoHandle                 },
-                { 66,   StartSixAxisSensor                            },
-                { 67,   StopSixAxisSensor                             },
-                { 68,   IsSixAxisSensorFusionEnabled                  },
-                { 69,   EnableSixAxisSensorFusion                     },
-                { 70,   SetSixAxisSensorFusionParameters              },
-                { 71,   GetSixAxisSensorFusionParameters              },
-                { 72,   ResetSixAxisSensorFusionParameters            },
-                { 73,   SetAccelerometerParameters                    },
-                { 74,   GetAccelerometerParameters                    },
-                { 75,   ResetAccelerometerParameters                  },
-                { 76,   SetAccelerometerPlayMode                      },
-                { 77,   GetAccelerometerPlayMode                      },
-                { 78,   ResetAccelerometerPlayMode                    },
-                { 79,   SetGyroscopeZeroDriftMode                     },
-                { 80,   GetGyroscopeZeroDriftMode                     },
-                { 81,   ResetGyroscopeZeroDriftMode                   },
-                { 82,   IsSixAxisSensorAtRest                         },
-                { 91,   ActivateGesture                               },
-                { 100,  SetSupportedNpadStyleSet                      },
-                { 101,  GetSupportedNpadStyleSet                      },
-                { 102,  SetSupportedNpadIdType                        },
-                { 103,  ActivateNpad                                  },
-                { 104,  DeactivateNpad                                },
-                { 106,  AcquireNpadStyleSetUpdateEventHandle          },
-                { 107,  DisconnectNpad                                },
-                { 108,  GetPlayerLedPattern                           },
-                { 109,  ActivateNpadWithRevision                      },
-                { 120,  SetNpadJoyHoldType                            },
-                { 121,  GetNpadJoyHoldType                            },
-                { 122,  SetNpadJoyAssignmentModeSingleByDefault       },
-                { 123,  SetNpadJoyAssignmentModeSingle                },
-                { 124,  SetNpadJoyAssignmentModeDual                  },
-                { 125,  MergeSingleJoyAsDualJoy                       },
-                { 126,  StartLrAssignmentMode                         },
-                { 127,  StopLrAssignmentMode                          },
-                { 128,  SetNpadHandheldActivationMode                 },
-                { 129,  GetNpadHandheldActivationMode                 },
-                { 130,  SwapNpadAssignment                            },
-                { 131,  IsUnintendedHomeButtonInputProtectionEnabled  },
-                { 132,  EnableUnintendedHomeButtonInputProtection     },
-                { 133,  SetNpadJoyAssignmentModeSingleWithDestination },
-                { 200,  GetVibrationDeviceInfo                        },
-                { 201,  SendVibrationValue                            },
-                { 202,  GetActualVibrationValue                       },
-                { 203,  CreateActiveVibrationDeviceList               },
-                { 204,  PermitVibration                               },
-                { 205,  IsVibrationPermitted                          },
-                { 206,  SendVibrationValues                           },
-                { 207,  SendVibrationGcErmCommand                     },
-                { 208,  GetActualVibrationGcErmCommand                },
-                { 209,  BeginPermitVibrationSession                   },
-                { 210,  EndPermitVibrationSession                     },
-                { 300,  ActivateConsoleSixAxisSensor                  },
-                { 301,  StartConsoleSixAxisSensor                     },
-                { 302,  StopConsoleSixAxisSensor                      },
-                { 303,  ActivateSevenSixAxisSensor                    },
-                { 304,  StartSevenSixAxisSensor                       },
-                { 305,  StopSevenSixAxisSensor                        },
-                { 306,  InitializeSevenSixAxisSensor                  },
-                { 307,  FinalizeSevenSixAxisSensor                    },
-                { 308,  SetSevenSixAxisSensorFusionStrength           },
-                { 309,  GetSevenSixAxisSensorFusionStrength           },
-                { 400,  IsUsbFullKeyControllerEnabled                 },
-                { 401,  EnableUsbFullKeyController                    },
-                { 402,  IsUsbFullKeyControllerConnected               },
-                { 403,  HasBattery                                    },
-                { 404,  HasLeftRightBattery                           },
-                { 405,  GetNpadInterfaceType                          },
-                { 406,  GetNpadLeftRightInterfaceType                 },
-                { 500,  GetPalmaConnectionHandle                      },
-                { 501,  InitializePalma                               },
-                { 502,  AcquirePalmaOperationCompleteEvent            },
-                { 503,  GetPalmaOperationInfo                         },
-                { 504,  PlayPalmaActivity                             },
-                { 505,  SetPalmaFrModeType                            },
-                { 506,  ReadPalmaStep                                 },
-                { 507,  EnablePalmaStep                               },
-                { 508,  SuspendPalmaStep                              },
-                { 509,  ResetPalmaStep                                },
-                { 510,  ReadPalmaApplicationSection                   },
-                { 511,  WritePalmaApplicationSection                  },
-                { 512,  ReadPalmaUniqueCode                           },
-                { 513,  SetPalmaUniqueCodeInvalid                     },
-                { 1000, SetNpadCommunicationMode                      },
-                { 1001, GetNpadCommunicationMode                      }
-            };
-
             _npadStyleSetUpdateEvent     = new KEvent(context.Device.System);
             _xpadIdEvent                 = new KEvent(context.Device.System);
             _palmaOperationCompleteEvent = new KEvent(context.Device.System);
@@ -168,6 +56,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             _xpadIdEvent.ReadableEvent.Signal();
         }
 
+        [Command(0)]
         // CreateAppletResource(nn::applet::AppletResourceUserId) -> object<nn::hid::IAppletResource>
         public long CreateAppletResource(ServiceCtx context)
         {
@@ -178,6 +67,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(1)]
         // ActivateDebugPad(nn::applet::AppletResourceUserId)
         public long ActivateDebugPad(ServiceCtx context)
         {
@@ -188,6 +78,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(11)]
         // ActivateTouchScreen(nn::applet::AppletResourceUserId)
         public long ActivateTouchScreen(ServiceCtx context)
         {
@@ -198,6 +89,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(21)]
         // ActivateMouse(nn::applet::AppletResourceUserId)
         public long ActivateMouse(ServiceCtx context)
         {
@@ -208,6 +100,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(31)]
         // ActivateKeyboard(nn::applet::AppletResourceUserId)
         public long ActivateKeyboard(ServiceCtx context)
         {
@@ -218,6 +111,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(40)]
         // AcquireXpadIdEventHandle(ulong XpadId) -> nn::sf::NativeHandle
         public long AcquireXpadIdEventHandle(ServiceCtx context)
         {
@@ -235,6 +129,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(41)]
         // ReleaseXpadIdEventHandle(ulong XpadId)
         public long ReleaseXpadIdEventHandle(ServiceCtx context)
         {
@@ -247,6 +142,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(51)]
         // ActivateXpad(nn::hid::BasicXpadId, nn::applet::AppletResourceUserId)
         public long ActivateXpad(ServiceCtx context)
         {
@@ -258,6 +154,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(55)]
         // GetXpadIds() -> long IdsCount, buffer<array<nn::hid::BasicXpadId>, type: 0xa>
         public long GetXpadIds(ServiceCtx context)
         {
@@ -269,6 +166,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(56)]
         // ActivateJoyXpad(nn::hid::JoyXpadId)
         public long ActivateJoyXpad(ServiceCtx context)
         {
@@ -279,6 +177,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(58)]
         // GetJoyXpadLifoHandle(nn::hid::JoyXpadId) -> nn::sf::NativeHandle
         public long GetJoyXpadLifoHandle(ServiceCtx context)
         {
@@ -293,6 +192,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(59)]
         // GetJoyXpadIds() -> long IdsCount, buffer<array<nn::hid::JoyXpadId>, type: 0xa>
         public long GetJoyXpadIds(ServiceCtx context)
         {
@@ -304,6 +204,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(60)]
         // ActivateSixAxisSensor(nn::hid::BasicXpadId)
         public long ActivateSixAxisSensor(ServiceCtx context)
         {
@@ -314,6 +215,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(61)]
         // DeactivateSixAxisSensor(nn::hid::BasicXpadId)
         public long DeactivateSixAxisSensor(ServiceCtx context)
         {
@@ -324,6 +226,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(62)]
         // GetSixAxisSensorLifoHandle(nn::hid::BasicXpadId) -> nn::sf::NativeHandle
         public long GetSixAxisSensorLifoHandle(ServiceCtx context)
         {
@@ -338,6 +241,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(63)]
         // ActivateJoySixAxisSensor(nn::hid::JoyXpadId)
         public long ActivateJoySixAxisSensor(ServiceCtx context)
         {
@@ -348,6 +252,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(64)]
         // DeactivateJoySixAxisSensor(nn::hid::JoyXpadId)
         public long DeactivateJoySixAxisSensor(ServiceCtx context)
         {
@@ -358,6 +263,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(65)]
         // GetJoySixAxisSensorLifoHandle(nn::hid::JoyXpadId) -> nn::sf::NativeHandle
         public long GetJoySixAxisSensorLifoHandle(ServiceCtx context)
         {
@@ -372,6 +278,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(66)]
         // StartSixAxisSensor(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
         public long StartSixAxisSensor(ServiceCtx context)
         {
@@ -383,6 +290,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(67)]
         // StopSixAxisSensor(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
         public long StopSixAxisSensor(ServiceCtx context)
         {
@@ -394,6 +302,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(68)]
         // IsSixAxisSensorFusionEnabled(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId) -> bool IsEnabled
         public long IsSixAxisSensorFusionEnabled(ServiceCtx context)
         {
@@ -407,6 +316,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(69)]
         // EnableSixAxisSensorFusion(bool Enabled, nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
         public long EnableSixAxisSensorFusion(ServiceCtx context)
         {
@@ -419,6 +329,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(70)]
         // SetSixAxisSensorFusionParameters(nn::hid::SixAxisSensorHandle, float RevisePower, float ReviseRange, nn::applet::AppletResourceUserId)
         public long SetSixAxisSensorFusionParameters(ServiceCtx context)
         {
@@ -437,6 +348,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(71)]
         // GetSixAxisSensorFusionParameters(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId) -> float RevisePower, float ReviseRange)
         public long GetSixAxisSensorFusionParameters(ServiceCtx context)
         {
@@ -451,6 +363,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(72)]
         // ResetSixAxisSensorFusionParameters(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
         public long ResetSixAxisSensorFusionParameters(ServiceCtx context)
         {
@@ -465,6 +378,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(73)]
         // SetAccelerometerParameters(nn::hid::SixAxisSensorHandle, float X, float Y, nn::applet::AppletResourceUserId)
         public long SetAccelerometerParameters(ServiceCtx context)
         {
@@ -483,6 +397,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(74)]
         // GetAccelerometerParameters(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId) -> float X, float Y
         public long GetAccelerometerParameters(ServiceCtx context)
         {
@@ -497,6 +412,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(75)]
         // ResetAccelerometerParameters(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
         public long ResetAccelerometerParameters(ServiceCtx context)
         {
@@ -511,6 +427,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(76)]
         // SetAccelerometerPlayMode(nn::hid::SixAxisSensorHandle, uint PlayMode, nn::applet::AppletResourceUserId)
         public long SetAccelerometerPlayMode(ServiceCtx context)
         {
@@ -523,6 +440,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(77)]
         // GetAccelerometerPlayMode(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId) -> uint PlayMode
         public long GetAccelerometerPlayMode(ServiceCtx context)
         {
@@ -536,6 +454,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(78)]
         // ResetAccelerometerPlayMode(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
         public long ResetAccelerometerPlayMode(ServiceCtx context)
         {
@@ -549,6 +468,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(79)]
         // SetGyroscopeZeroDriftMode(nn::hid::SixAxisSensorHandle, uint GyroscopeZeroDriftMode, nn::applet::AppletResourceUserId)
         public long SetGyroscopeZeroDriftMode(ServiceCtx context)
         {
@@ -561,6 +481,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(80)]
         // GetGyroscopeZeroDriftMode(nn::applet::AppletResourceUserId, nn::hid::SixAxisSensorHandle) -> int GyroscopeZeroDriftMode
         public long GetGyroscopeZeroDriftMode(ServiceCtx context)
         {
@@ -574,6 +495,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(81)]
         // ResetGyroscopeZeroDriftMode(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId)
         public long ResetGyroscopeZeroDriftMode(ServiceCtx context)
         {
@@ -587,6 +509,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(82)]
         // IsSixAxisSensorAtRest(nn::hid::SixAxisSensorHandle, nn::applet::AppletResourceUserId) -> bool IsAsRest
         public long IsSixAxisSensorAtRest(ServiceCtx context)
         {
@@ -602,6 +525,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(91)]
         // ActivateGesture(nn::applet::AppletResourceUserId, int Unknown0)
         public long ActivateGesture(ServiceCtx context)
         {
@@ -613,7 +537,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
-
+        [Command(100)]
         // SetSupportedNpadStyleSet(nn::applet::AppletResourceUserId, nn::hid::NpadStyleTag)
         public long SetSupportedNpadStyleSet(ServiceCtx context)
         {
@@ -628,6 +552,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(101)]
         // GetSupportedNpadStyleSet(nn::applet::AppletResourceUserId) -> uint nn::hid::NpadStyleTag
         public long GetSupportedNpadStyleSet(ServiceCtx context)
         {
@@ -640,6 +565,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(102)]
         // SetSupportedNpadIdType(nn::applet::AppletResourceUserId, array<NpadIdType, 9>)
         public long SetSupportedNpadIdType(ServiceCtx context)
         {
@@ -651,6 +577,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(103)]
         // ActivateNpad(nn::applet::AppletResourceUserId)
         public long ActivateNpad(ServiceCtx context)
         {
@@ -661,6 +588,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(104)]
         // DeactivateNpad(nn::applet::AppletResourceUserId)
         public long DeactivateNpad(ServiceCtx context)
         {
@@ -671,6 +599,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(106)]
         // AcquireNpadStyleSetUpdateEventHandle(nn::applet::AppletResourceUserId, uint, ulong) -> nn::sf::NativeHandle
         public long AcquireNpadStyleSetUpdateEventHandle(ServiceCtx context)
         {
@@ -690,6 +619,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(107)]
         // DisconnectNpad(nn::applet::AppletResourceUserId, uint NpadIdType)
         public long DisconnectNpad(ServiceCtx context)
         {
@@ -701,6 +631,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(108)]
         // GetPlayerLedPattern(uint NpadId) -> ulong LedPattern
         public long GetPlayerLedPattern(ServiceCtx context)
         {
@@ -715,6 +646,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(109)] // 5.0.0+
         // ActivateNpadWithRevision(nn::applet::AppletResourceUserId, int Unknown)
         public long ActivateNpadWithRevision(ServiceCtx context)
         {
@@ -726,6 +658,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(120)]
         // SetNpadJoyHoldType(nn::applet::AppletResourceUserId, long NpadJoyHoldType)
         public long SetNpadJoyHoldType(ServiceCtx context)
         {
@@ -737,6 +670,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(121)]
         // GetNpadJoyHoldType(nn::applet::AppletResourceUserId) -> long NpadJoyHoldType
         public long GetNpadJoyHoldType(ServiceCtx context)
         {
@@ -749,6 +683,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(122)]
         // SetNpadJoyAssignmentModeSingleByDefault(uint HidControllerId, nn::applet::AppletResourceUserId)
         public long SetNpadJoyAssignmentModeSingleByDefault(ServiceCtx context)
         {
@@ -762,6 +697,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(123)]
         // SetNpadJoyAssignmentModeSingle(uint HidControllerId, nn::applet::AppletResourceUserId, long HidNpadJoyDeviceType)
         public long SetNpadJoyAssignmentModeSingle(ServiceCtx context)
         {
@@ -776,6 +712,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(124)]
         // SetNpadJoyAssignmentModeDual(uint HidControllerId, nn::applet::AppletResourceUserId)
         public long SetNpadJoyAssignmentModeDual(ServiceCtx context)
         {
@@ -789,6 +726,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(125)]
         // MergeSingleJoyAsDualJoy(uint SingleJoyId0, uint SingleJoyId1, nn::applet::AppletResourceUserId)
         public long MergeSingleJoyAsDualJoy(ServiceCtx context)
         {
@@ -801,6 +739,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(126)]
         // StartLrAssignmentMode(nn::applet::AppletResourceUserId)
         public long StartLrAssignmentMode(ServiceCtx context)
         {
@@ -811,6 +750,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(127)]
         // StopLrAssignmentMode(nn::applet::AppletResourceUserId)
         public long StopLrAssignmentMode(ServiceCtx context)
         {
@@ -821,6 +761,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(128)]
         // SetNpadHandheldActivationMode(nn::applet::AppletResourceUserId, long HidNpadHandheldActivationMode)
         public long SetNpadHandheldActivationMode(ServiceCtx context)
         {
@@ -832,6 +773,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(129)]
         // GetNpadHandheldActivationMode(nn::applet::AppletResourceUserId) -> long HidNpadHandheldActivationMode
         public long GetNpadHandheldActivationMode(ServiceCtx context)
         {
@@ -844,6 +786,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(130)]
         // SwapNpadAssignment(uint OldNpadAssignment, uint NewNpadAssignment, nn::applet::AppletResourceUserId)
         public long SwapNpadAssignment(ServiceCtx context)
         {
@@ -856,6 +799,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(131)]
         // IsUnintendedHomeButtonInputProtectionEnabled(uint Unknown0, nn::applet::AppletResourceUserId) ->  bool IsEnabled
         public long IsUnintendedHomeButtonInputProtectionEnabled(ServiceCtx context)
         {
@@ -869,6 +813,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(132)]
         // EnableUnintendedHomeButtonInputProtection(bool Enable, uint Unknown0, nn::applet::AppletResourceUserId)
         public long EnableUnintendedHomeButtonInputProtection(ServiceCtx context)
         {
@@ -881,6 +826,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(133)] // 5.0.0+
         // SetNpadJoyAssignmentModeSingleWithDestination(uint HidControllerId, long HidNpadJoyDeviceType, nn::applet::AppletResourceUserId) -> bool Unknown0, uint Unknown1
         public long SetNpadJoyAssignmentModeSingleWithDestination(ServiceCtx context)
         {
@@ -905,6 +851,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(200)]
         // GetVibrationDeviceInfo(nn::hid::VibrationDeviceHandle) -> nn::hid::VibrationDeviceInfo
         public long GetVibrationDeviceInfo(ServiceCtx context)
         {
@@ -924,6 +871,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(201)]
         // SendVibrationValue(nn::hid::VibrationDeviceHandle, nn::hid::VibrationValue, nn::applet::AppletResourceUserId)
         public long SendVibrationValue(ServiceCtx context)
         {
@@ -951,6 +899,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(202)]
         // GetActualVibrationValue(nn::hid::VibrationDeviceHandle, nn::applet::AppletResourceUserId) -> nn::hid::VibrationValue
         public long GetActualVibrationValue(ServiceCtx context)
         {
@@ -974,6 +923,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(203)]
         // CreateActiveVibrationDeviceList() -> object<nn::hid::IActiveVibrationDeviceList>
         public long CreateActiveVibrationDeviceList(ServiceCtx context)
         {
@@ -982,6 +932,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(204)]
         // PermitVibration(bool Enable)
         public long PermitVibration(ServiceCtx context)
         {
@@ -992,6 +943,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(205)]
         // IsVibrationPermitted() -> bool IsEnabled
         public long IsVibrationPermitted(ServiceCtx context)
         {
@@ -1002,6 +954,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(206)]
         // SendVibrationValues(nn::applet::AppletResourceUserId, buffer<array<nn::hid::VibrationDeviceHandle>, type: 9>, buffer<array<nn::hid::VibrationValue>, type: 9>)
         public long SendVibrationValues(ServiceCtx context)
         {
@@ -1026,6 +979,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(207)] // 4.0.0+
         // SendVibrationGcErmCommand(nn::hid::VibrationDeviceHandle, nn::hid::VibrationGcErmCommand, nn::applet::AppletResourceUserId)
         public long SendVibrationGcErmCommand(ServiceCtx context)
         {
@@ -1038,6 +992,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(208)] // 4.0.0+
         // GetActualVibrationGcErmCommand(nn::hid::VibrationDeviceHandle, nn::applet::AppletResourceUserId) -> nn::hid::VibrationGcErmCommand
         public long GetActualVibrationGcErmCommand(ServiceCtx context)
         {
@@ -1051,6 +1006,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(209)] // 4.0.0+
         // BeginPermitVibrationSession(nn::applet::AppletResourceUserId)
         public long BeginPermitVibrationSession(ServiceCtx context)
         {
@@ -1061,6 +1017,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(210)] // 4.0.0+
         // EndPermitVibrationSession()
         public long EndPermitVibrationSession(ServiceCtx context)
         {
@@ -1069,6 +1026,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(300)]
         // ActivateConsoleSixAxisSensor(nn::applet::AppletResourceUserId)
         public long ActivateConsoleSixAxisSensor(ServiceCtx context)
         {
@@ -1079,6 +1037,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(301)]
         // StartConsoleSixAxisSensor(nn::hid::ConsoleSixAxisSensorHandle, nn::applet::AppletResourceUserId)
         public long StartConsoleSixAxisSensor(ServiceCtx context)
         {
@@ -1090,6 +1049,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(302)]
         // StopConsoleSixAxisSensor(nn::hid::ConsoleSixAxisSensorHandle, nn::applet::AppletResourceUserId)
         public long StopConsoleSixAxisSensor(ServiceCtx context)
         {
@@ -1101,6 +1061,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(303)] // 5.0.0+
         // ActivateSevenSixAxisSensor(nn::applet::AppletResourceUserId)
         public long ActivateSevenSixAxisSensor(ServiceCtx context)
         {
@@ -1111,6 +1072,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(304)] // 5.0.0+
         // StartSevenSixAxisSensor(nn::applet::AppletResourceUserId)
         public long StartSevenSixAxisSensor(ServiceCtx context)
         {
@@ -1121,6 +1083,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(305)] // 5.0.0+
         // StopSevenSixAxisSensor(nn::applet::AppletResourceUserId)
         public long StopSevenSixAxisSensor(ServiceCtx context)
         {
@@ -1131,6 +1094,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(306)] // 5.0.0+
         // InitializeSevenSixAxisSensor(array<nn::sf::NativeHandle>, ulong Counter0, array<nn::sf::NativeHandle>, ulong Counter1, nn::applet::AppletResourceUserId)
         public long InitializeSevenSixAxisSensor(ServiceCtx context)
         {
@@ -1145,6 +1109,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(307)] // 5.0.0+
         // FinalizeSevenSixAxisSensor(nn::applet::AppletResourceUserId)
         public long FinalizeSevenSixAxisSensor(ServiceCtx context)
         {
@@ -1155,6 +1120,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(308)] // 5.0.0+
         // SetSevenSixAxisSensorFusionStrength(float Strength, nn::applet::AppletResourceUserId)
         public long SetSevenSixAxisSensorFusionStrength(ServiceCtx context)
         {
@@ -1166,6 +1132,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(309)] // 5.0.0+
         // GetSevenSixAxisSensorFusionStrength(nn::applet::AppletResourceUserId) -> float Strength
         public long GetSevenSixAxisSensorFusionStrength(ServiceCtx context)
         {
@@ -1178,6 +1145,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(400)]
         // IsUsbFullKeyControllerEnabled() -> bool IsEnabled
         public long IsUsbFullKeyControllerEnabled(ServiceCtx context)
         {
@@ -1188,6 +1156,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(401)]
         // EnableUsbFullKeyController(bool Enable)
         public long EnableUsbFullKeyController(ServiceCtx context)
         {
@@ -1198,6 +1167,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(402)]
         // IsUsbFullKeyControllerConnected(uint Unknown0) -> bool Connected
         public long IsUsbFullKeyControllerConnected(ServiceCtx context)
         {
@@ -1210,6 +1180,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(403)] // 4.0.0+
         // HasBattery(uint NpadId) -> bool HasBattery
         public long HasBattery(ServiceCtx context)
         {
@@ -1222,6 +1193,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(404)] // 4.0.0+
         // HasLeftRightBattery(uint NpadId) -> bool HasLeftBattery, bool HasRightBattery
         public long HasLeftRightBattery(ServiceCtx context)
         {
@@ -1235,6 +1207,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(405)] // 4.0.0+
         // GetNpadInterfaceType(uint NpadId) -> uchar InterfaceType
         public long GetNpadInterfaceType(ServiceCtx context)
         {
@@ -1247,6 +1220,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(406)] // 4.0.0+
         // GetNpadLeftRightInterfaceType(uint NpadId) -> uchar LeftInterfaceType, uchar RightInterfaceType
         public long GetNpadLeftRightInterfaceType(ServiceCtx context)
         {
@@ -1260,6 +1234,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(500)] // 5.0.0+
         // GetPalmaConnectionHandle(uint Unknown0, nn::applet::AppletResourceUserId) -> nn::hid::PalmaConnectionHandle
         public long GetPalmaConnectionHandle(ServiceCtx context)
         {
@@ -1275,6 +1250,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(501)] // 5.0.0+
         // InitializePalma(nn::hid::PalmaConnectionHandle)
         public long InitializePalma(ServiceCtx context)
         {
@@ -1287,6 +1263,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(502)] // 5.0.0+
         // AcquirePalmaOperationCompleteEvent(nn::hid::PalmaConnectionHandle) -> nn::sf::NativeHandle
         public long AcquirePalmaOperationCompleteEvent(ServiceCtx context)
         {
@@ -1304,6 +1281,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(503)] // 5.0.0+
         // GetPalmaOperationInfo(nn::hid::PalmaConnectionHandle) -> long Unknown0, buffer<Unknown>
         public long GetPalmaOperationInfo(ServiceCtx context)
         {
@@ -1318,6 +1296,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(504)] // 5.0.0+
         // PlayPalmaActivity(nn::hid::PalmaConnectionHandle, ulong Unknown0)
         public long PlayPalmaActivity(ServiceCtx context)
         {
@@ -1331,6 +1310,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(505)] // 5.0.0+
         // SetPalmaFrModeType(nn::hid::PalmaConnectionHandle, ulong FrModeType)
         public long SetPalmaFrModeType(ServiceCtx context)
         {
@@ -1344,6 +1324,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(506)] // 5.0.0+
         // ReadPalmaStep(nn::hid::PalmaConnectionHandle)
         public long ReadPalmaStep(ServiceCtx context)
         {
@@ -1354,6 +1335,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(507)] // 5.0.0+
         // EnablePalmaStep(nn::hid::PalmaConnectionHandle, bool Enable)
         public long EnablePalmaStep(ServiceCtx context)
         {
@@ -1367,18 +1349,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
-        // SuspendPalmaStep(nn::hid::PalmaConnectionHandle)
-        public long SuspendPalmaStep(ServiceCtx context)
-        {
-            int palmaConnectionHandle = context.RequestData.ReadInt32();
-
-            Logger.PrintStub(LogClass.ServiceHid, new { palmaConnectionHandle });
-
-            _palmaOperationCompleteEvent.ReadableEvent.Signal();
-
-            return 0;
-        }
-
+        [Command(508)] // 5.0.0+
         // ResetPalmaStep(nn::hid::PalmaConnectionHandle)
         public long ResetPalmaStep(ServiceCtx context)
         {
@@ -1391,6 +1362,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(509)] // 5.0.0+
         // ReadPalmaApplicationSection(nn::hid::PalmaConnectionHandle, ulong Unknown0, ulong Unknown1)
         public long ReadPalmaApplicationSection(ServiceCtx context)
         {
@@ -1403,6 +1375,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(510)] // 5.0.0+
         // WritePalmaApplicationSection(nn::hid::PalmaConnectionHandle, ulong Unknown0, ulong Unknown1, nn::hid::PalmaApplicationSectionAccessBuffer)
         public long WritePalmaApplicationSection(ServiceCtx context)
         {
@@ -1418,6 +1391,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(511)] // 5.0.0+
         // ReadPalmaUniqueCode(nn::hid::PalmaConnectionHandle)
         public long ReadPalmaUniqueCode(ServiceCtx context)
         {
@@ -1428,6 +1402,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(512)] // 5.0.0+
         // SetPalmaUniqueCodeInvalid(nn::hid::PalmaConnectionHandle)
         public long SetPalmaUniqueCodeInvalid(ServiceCtx context)
         {
@@ -1438,6 +1413,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(1000)]
         // SetNpadCommunicationMode(long CommunicationMode, nn::applet::AppletResourceUserId)
         public long SetNpadCommunicationMode(ServiceCtx context)
         {
@@ -1449,6 +1425,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return 0;
         }
 
+        [Command(1001)]
         // GetNpadCommunicationMode() -> long CommunicationMode
         public long GetNpadCommunicationMode(ServiceCtx context)
         {

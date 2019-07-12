@@ -1,7 +1,5 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -13,19 +11,10 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 {
     class IGeneralService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IGeneralService() { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IGeneralService()
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 4, CreateRequest        },
-                { 12, GetCurrentIpAddress }
-            };
-        }
-
+        [Command(4)]
+        // CreateRequest(u32) -> object<nn::nifm::detail::IRequest>
         public long CreateRequest(ServiceCtx context)
         {
             int unknown = context.RequestData.ReadInt32();
@@ -37,6 +26,8 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
             return 0;
         }
 
+        [Command(12)]
+        // GetCurrentIpAddress() -> nn::nifm::IpV4Address
         public long GetCurrentIpAddress(ServiceCtx context)
         {
             if (!NetworkInterface.GetIsNetworkAvailable())

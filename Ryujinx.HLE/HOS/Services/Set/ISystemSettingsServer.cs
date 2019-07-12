@@ -2,10 +2,8 @@ using LibHac.Fs;
 using LibHac.Fs.NcaUtils;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.SystemState;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -14,28 +12,16 @@ namespace Ryujinx.HLE.HOS.Services.Set
     [Service("set:sys")]
     class ISystemSettingsServer : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public ISystemSettingsServer(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public ISystemSettingsServer(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 3,  GetFirmwareVersion  },
-                { 4,  GetFirmwareVersion2  },
-                { 23, GetColorSetId        },
-                { 24, SetColorSetId        },
-                { 38, GetSettingsItemValue }
-            };
-        }
-
+        [Command(3)]
         // GetFirmwareVersion() -> buffer<nn::settings::system::FirmwareVersion, 0x1a, 0x100>
         public static long GetFirmwareVersion(ServiceCtx context)
         {
             return GetFirmwareVersion2(context);
         }
 
+        [Command(4)]
         // GetFirmwareVersion2() -> buffer<nn::settings::system::FirmwareVersion, 0x1a, 0x100>
         public static long GetFirmwareVersion2(ServiceCtx context)
         {
@@ -95,6 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
             return 0;
         }
 
+        [Command(23)]
         // GetColorSetId() -> i32
         public static long GetColorSetId(ServiceCtx context)
         {
@@ -103,6 +90,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
             return 0;
         }
 
+        [Command(24)]
         // GetColorSetId() -> i32
         public static long SetColorSetId(ServiceCtx context)
         {
@@ -113,6 +101,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
             return 0;
         }
 
+        [Command(38)]
         // GetSettingsItemValue(buffer<nn::settings::SettingsName, 0x19, 0x48>, buffer<nn::settings::SettingsItemKey, 0x19, 0x48>) -> (u64, buffer<unknown, 6, 0>)
         public static long GetSettingsItemValue(ServiceCtx context)
         {

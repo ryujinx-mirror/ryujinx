@@ -1,5 +1,4 @@
-﻿using Ryujinx.Common.Logging;
-using Ryujinx.HLE.Exceptions;
+﻿using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
@@ -18,42 +17,9 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
         private List<Device> _devices = new List<Device>();
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IUser() { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IUser()
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,  Initialize                    },
-                { 1,  Finalize                      },
-                { 2,  ListDevices                   },
-                { 3,  StartDetection                },
-                { 4,  StopDetection                 },
-                { 5,  Mount                         },
-                { 6,  Unmount                       },
-                { 7,  OpenApplicationArea           },
-                { 8,  GetApplicationArea            },
-                { 9,  SetApplicationArea            },
-                { 10, Flush                         },
-                { 11, Restore                       },
-                { 12, CreateApplicationArea         },
-                { 13, GetTagInfo                    },
-                { 14, GetRegisterInfo               },
-                { 15, GetCommonInfo                 },
-                { 16, GetModelInfo                  },
-                { 17, AttachActivateEvent           },
-                { 18, AttachDeactivateEvent         },
-                { 19, GetState                      },
-                { 20, GetDeviceState                },
-                { 21, GetNpadId                     },
-                { 22, GetApplicationAreaSize        },
-                { 23, AttachAvailabilityChangeEvent }, // 3.0.0+
-                { 24, RecreateApplicationArea       }, // 3.0.0+
-            };
-        }
-
+        [Command(0)]
         // Initialize(u64, u64, pid, buffer<unknown, 5>)
         public long Initialize(ServiceCtx context)
         {
@@ -87,6 +53,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return 0;
         }
 
+        [Command(1)]
         // Finalize()
         public long Finalize(ServiceCtx context)
         {
@@ -101,6 +68,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return 0;
         }
 
+        [Command(2)]
         // ListDevices() -> (u32, buffer<unknown, 0xa>)
         public long ListDevices(ServiceCtx context)
         {
@@ -127,90 +95,105 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return 0;
         }
 
+        [Command(3)]
         // StartDetection(bytes<8, 4>)
         public long StartDetection(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(4)]
         // StopDetection(bytes<8, 4>)
         public long StopDetection(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(5)]
         // Mount(bytes<8, 4>, u32, u32)
         public long Mount(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(6)]
         // Unmount(bytes<8, 4>)
         public long Unmount(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(7)]
         // OpenApplicationArea(bytes<8, 4>, u32)
         public long OpenApplicationArea(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(8)]
         // GetApplicationArea(bytes<8, 4>) -> (u32, buffer<unknown, 6>)
         public long GetApplicationArea(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(9)]
         // SetApplicationArea(bytes<8, 4>, buffer<unknown, 5>)
         public long SetApplicationArea(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(10)]
         // Flush(bytes<8, 4>)
         public long Flush(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(11)]
         // Restore(bytes<8, 4>)
         public long Restore(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(12)]
         // CreateApplicationArea(bytes<8, 4>, u32, buffer<unknown, 5>)
         public long CreateApplicationArea(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(13)]
         // GetTagInfo(bytes<8, 4>) -> buffer<unknown<0x58>, 0x1a>
         public long GetTagInfo(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(14)]
         // GetRegisterInfo(bytes<8, 4>) -> buffer<unknown<0x100>, 0x1a>
         public long GetRegisterInfo(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(15)]
         // GetCommonInfo(bytes<8, 4>) -> buffer<unknown<0x40>, 0x1a>
         public long GetCommonInfo(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(16)]
         // GetModelInfo(bytes<8, 4>) -> buffer<unknown<0x40>, 0x1a>
         public long GetModelInfo(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(17)]
         // AttachActivateEvent(bytes<8, 4>) -> handle<copy>
         public long AttachActivateEvent(ServiceCtx context)
         {
@@ -239,6 +222,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ErrorCode.MakeError(ErrorModule.Nfp, NfpError.DeviceNotFound);
         }
 
+        [Command(18)]
         // AttachDeactivateEvent(bytes<8, 4>) -> handle<copy>
         public long AttachDeactivateEvent(ServiceCtx context)
         {
@@ -267,6 +251,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ErrorCode.MakeError(ErrorModule.Nfp, NfpError.DeviceNotFound);
         }
 
+        [Command(19)]
         // GetState() -> u32
         public long GetState(ServiceCtx context)
         {
@@ -275,6 +260,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return 0;
         }
 
+        [Command(20)]
         // GetDeviceState(bytes<8, 4>) -> u32
         public long GetDeviceState(ServiceCtx context)
         {
@@ -295,6 +281,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ErrorCode.MakeError(ErrorModule.Nfp, NfpError.DeviceNotFound);
         }
 
+        [Command(21)]
         // GetNpadId(bytes<8, 4>) -> u32
         public long GetNpadId(ServiceCtx context)
         {
@@ -313,12 +300,14 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return ErrorCode.MakeError(ErrorModule.Nfp, NfpError.DeviceNotFound);
         }
 
+        [Command(22)]
         // GetApplicationAreaSize(bytes<8, 4>) -> u32
         public long GetApplicationAreaSize(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
+        [Command(23)] // 3.0.0+
         // AttachAvailabilityChangeEvent() -> handle<copy>
         public long AttachAvailabilityChangeEvent(ServiceCtx context)
         {
@@ -337,6 +326,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             return 0;
         }
 
+        [Command(24)] // 3.0.0+
         // RecreateApplicationArea(bytes<8, 4>, u32, buffer<unknown, 5>)
         public long RecreateApplicationArea(ServiceCtx context)
         {

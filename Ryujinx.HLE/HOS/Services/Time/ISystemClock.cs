@@ -1,38 +1,20 @@
-using Ryujinx.HLE.HOS.Ipc;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Time
 {
     class ISystemClock : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         private SystemClockType _clockType;
-
-        private DateTime _systemClockContextEpoch;
-
-        private long _systemClockTimePoint;
-
-        private byte[] _systemClockContextEnding;
-
-        private long _timeOffset;
+        private DateTime        _systemClockContextEpoch;
+        private long            _systemClockTimePoint;
+        private byte[]          _systemClockContextEnding;
+        private long            _timeOffset;
 
         public ISystemClock(SystemClockType clockType)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, GetCurrentTime        },
-                { 1, SetCurrentTime        },
-                { 2, GetSystemClockContext },
-                { 3, SetSystemClockContext }
-            };
-
-            _clockType           = clockType;
+            _clockType                = clockType;
             _systemClockContextEpoch  = System.Diagnostics.Process.GetCurrentProcess().StartTime;
             _systemClockContextEnding = new byte[0x10];
             _timeOffset               = 0;
@@ -46,6 +28,8 @@ namespace Ryujinx.HLE.HOS.Services.Time
             _systemClockTimePoint = (long)(_systemClockContextEpoch - Epoch).TotalSeconds;
         }
 
+        [Command(0)]
+        // GetCurrentTime() -> nn::time::PosixTime
         public long GetCurrentTime(ServiceCtx context)
         {
             DateTime currentTime = DateTime.Now;
@@ -61,6 +45,8 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(1)]
+        // SetCurrentTime(nn::time::PosixTime)
         public long SetCurrentTime(ServiceCtx context)
         {
             DateTime currentTime = DateTime.Now;
@@ -76,6 +62,8 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(2)]
+        // GetSystemClockContext() -> nn::time::SystemClockContext
         public long GetSystemClockContext(ServiceCtx context)
         {
             context.ResponseData.Write((long)(_systemClockContextEpoch - Epoch).TotalSeconds);
@@ -92,6 +80,8 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(3)]
+        // SetSystemClockContext(nn::time::SystemClockContext)
         public long SetSystemClockContext(ServiceCtx context)
         {
             long newSystemClockEpoch     = context.RequestData.ReadInt64();

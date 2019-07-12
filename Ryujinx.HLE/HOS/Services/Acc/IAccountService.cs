@@ -1,6 +1,5 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Services.Arp;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Utilities;
@@ -19,40 +18,9 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
         private ApplicationLaunchProperty _applicationLaunchProperty;
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IAccountService(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IAccountService(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,   GetUserCount                         },
-                { 1,   GetUserExistence                     },
-                { 2,   ListAllUsers                         },
-                { 3,   ListOpenUsers                        },
-                { 4,   GetLastOpenedUser                    },
-                { 5,   GetProfile                           },
-              //{ 6,   GetProfileDigest                     }, // 3.0.0+
-                { 50,  IsUserRegistrationRequestPermitted   },
-                { 51,  TrySelectUserWithoutInteraction      },
-              //{ 60,  ListOpenContextStoredUsers           }, // 5.0.0-5.1.0
-              //{ 99,  DebugActivateOpenContextRetention    }, // 6.0.0+
-                { 100, InitializeApplicationInfo            },
-                { 101, GetBaasAccountManagerForApplication  },
-              //{ 102, AuthenticateApplicationAsync         },
-              //{ 103, CheckNetworkServiceAvailabilityAsync }, // 4.0.0+
-                { 110, StoreSaveDataThumbnail               },
-                { 111, ClearSaveDataThumbnail               },
-              //{ 120, CreateGuestLoginRequest              },
-              //{ 130, LoadOpenContext                      }, // 6.0.0+
-              //{ 131, ListOpenContextStoredUsers           }, // 6.0.0+
-                { 140, InitializeApplicationInfo            }, // 6.0.0+
-              //{ 141, ListQualifiedUsers                   }, // 6.0.0+
-                { 150, IsUserAccountSwitchLocked            }, // 6.0.0+
-            };
-        }
-
+        [Command(0)]
         // GetUserCount() -> i32
         public long GetUserCount(ServiceCtx context)
         {
@@ -61,6 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        [Command(1)]
         // GetUserExistence(nn::account::Uid) -> bool
         public long GetUserExistence(ServiceCtx context)
         {
@@ -76,12 +45,14 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        [Command(2)]
         // ListAllUsers() -> array<nn::account::Uid, 0xa>
         public long ListAllUsers(ServiceCtx context)
         {
             return WriteUserList(context, context.Device.System.State.Account.GetAllUsers());
         }
 
+        [Command(3)]
         // ListOpenUsers() -> array<nn::account::Uid, 0xa>
         public long ListOpenUsers(ServiceCtx context)
         {
@@ -116,6 +87,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        [Command(4)]
         // GetLastOpenedUser() -> nn::account::Uid
         public long GetLastOpenedUser(ServiceCtx context)
         {
@@ -124,6 +96,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        [Command(5)]
         // GetProfile(nn::account::Uid) -> object<nn::account::profile::IProfile>
         public long GetProfile(ServiceCtx context)
         {
@@ -144,6 +117,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        [Command(50)]
         // IsUserRegistrationRequestPermitted(u64, pid) -> bool
         public long IsUserRegistrationRequestPermitted(ServiceCtx context)
         {
@@ -153,6 +127,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        [Command(51)]
         // TrySelectUserWithoutInteraction(bool) -> nn::account::Uid
         public long TrySelectUserWithoutInteraction(ServiceCtx context)
         {
@@ -180,6 +155,8 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        [Command(100)]
+        [Command(140)] // 6.0.0+
         // InitializeApplicationInfo(u64, pid)
         // Both calls (100, 140) use the same submethod, maybe there's something different further along when arp:r is called?
         public long InitializeApplicationInfo(ServiceCtx context)
@@ -225,6 +202,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        [Command(101)]
         // GetBaasAccountManagerForApplication(nn::account::Uid) -> object<nn::account::baas::IManagerForApplication>
         public long GetBaasAccountManagerForApplication(ServiceCtx context)
         {
@@ -248,6 +226,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        [Command(110)]
         // StoreSaveDataThumbnail(nn::account::Uid, buffer<bytes, 5>)
         public long StoreSaveDataThumbnail(ServiceCtx context)
         {
@@ -285,6 +264,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        [Command(111)]
         // ClearSaveDataThumbnail(nn::account::Uid)
         public long ClearSaveDataThumbnail(ServiceCtx context)
         {
@@ -307,6 +287,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             return 0;
         }
 
+        [Command(150)] // 6.0.0+
         // IsUserAccountSwitchLocked() -> bool
         public long IsUserAccountSwitchLocked(ServiceCtx context)
         {

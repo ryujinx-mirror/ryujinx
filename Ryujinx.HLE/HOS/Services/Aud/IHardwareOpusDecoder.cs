@@ -1,6 +1,4 @@
 using Concentus.Structs;
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
 
@@ -10,10 +8,6 @@ namespace Ryujinx.HLE.HOS.Services.Aud
     {
         private const int FixedSampleRate = 48000;
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private int _sampleRate;
         private int _channelsCount;
 
@@ -21,29 +15,14 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         public IHardwareOpusDecoder(int sampleRate, int channelsCount)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, DecodeInterleaved         },
-                { 4, DecodeInterleavedWithPerf }
-            };
-
             _sampleRate    = sampleRate;
             _channelsCount = channelsCount;
 
             _decoder = new OpusDecoder(FixedSampleRate, channelsCount);
         }
 
-        public long DecodeInterleavedWithPerf(ServiceCtx context)
-        {
-            long result = DecodeInterleaved(context);
-
-            // TODO: Figure out what this value is.
-            // According to switchbrew, it is now used.
-            context.ResponseData.Write(0L);
-
-            return result;
-        }
-
+        [Command(0)]
+        // DecodeInterleaved(buffer<unknown, 5>) -> (u32, u32, buffer<unknown, 6>)
         public long DecodeInterleaved(ServiceCtx context)
         {
             long inPosition = context.Request.SendBuff[0].Position;
@@ -86,6 +65,19 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             context.ResponseData.Write(samples);
 
             return 0;
+        }
+
+        [Command(4)]
+        // DecodeInterleavedWithPerf(buffer<unknown, 5>) -> (u32, u32, u64, buffer<unknown, 0x46>)
+        public long DecodeInterleavedWithPerf(ServiceCtx context)
+        {
+            long result = DecodeInterleaved(context);
+
+            // TODO: Figure out what this value is.
+            // According to switchbrew, it is now used.
+            context.ResponseData.Write(0L);
+
+            return result;
         }
     }
 }

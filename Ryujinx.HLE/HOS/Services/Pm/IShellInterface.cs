@@ -1,23 +1,11 @@
-﻿using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
-
-namespace Ryujinx.HLE.HOS.Services.Pm
+﻿namespace Ryujinx.HLE.HOS.Services.Pm
 {
     [Service("pm:shell")]
     class IShellInterface : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IShellInterface(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IShellInterface(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 6, GetApplicationPid }
-            };
-        }
-
+        [Command(6)]
         // GetApplicationPid() -> u64
         public long GetApplicationPid(ServiceCtx context)
         {

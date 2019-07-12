@@ -1,7 +1,5 @@
 using Ryujinx.Common;
-using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.Utilities;
-using System.Collections.Generic;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
 
@@ -16,22 +14,12 @@ namespace Ryujinx.HLE.HOS.Services.Friend
     {
         private FriendServicePermissionLevel _permissionLevel;
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         public IServiceCreator(ServiceCtx context, FriendServicePermissionLevel permissionLevel)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, CreateFriendService               },
-                { 1, CreateNotificationService         }, // 2.0.0+
-                { 2, CreateDaemonSuspendSessionService }, // 4.0.0+
-            };
-
             _permissionLevel = permissionLevel;
         }
 
+        [Command(0)]
         // CreateFriendService() -> object<nn::friends::detail::ipc::IFriendService>
         public long CreateFriendService(ServiceCtx context)
         {
@@ -40,6 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
             return 0;
         }
 
+        [Command(1)] // 2.0.0+
         // CreateNotificationService(nn::account::Uid) -> object<nn::friends::detail::ipc::INotificationService>
         public long CreateNotificationService(ServiceCtx context)
         {
@@ -55,6 +44,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
             return 0;
         }
 
+        [Command(2)] // 4.0.0+
         // CreateDaemonSuspendSessionService() -> object<nn::friends::detail::ipc::IDaemonSuspendSessionService>
         public long CreateDaemonSuspendSessionService(ServiceCtx context)
         {

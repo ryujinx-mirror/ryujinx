@@ -1,5 +1,4 @@
 using LibHac;
-using Ryujinx.HLE.HOS.Ipc;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,27 +8,17 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
     {
         private const int DirectoryEntrySize = 0x310;
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private IEnumerator<LibHac.Fs.DirectoryEntry> _enumerator;
 
         private LibHac.Fs.IDirectory _baseDirectory;
 
         public IDirectory(LibHac.Fs.IDirectory directory)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, Read          },
-                { 1, GetEntryCount }
-            };
-
             _baseDirectory = directory;
-
-            _enumerator = directory.Read().GetEnumerator();
+            _enumerator    = directory.Read().GetEnumerator();
         }
 
+        [Command(0)]
         // Read() -> (u64 count, buffer<nn::fssrv::sf::IDirectoryEntry, 6, 0> entries)
         public long Read(ServiceCtx context)
         {
@@ -76,6 +65,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             context.Memory.WriteInt64(position + 0x308, entry.Size);
         }
 
+        [Command(1)]
         // GetEntryCount() -> u64
         public long GetEntryCount(ServiceCtx context)
         {

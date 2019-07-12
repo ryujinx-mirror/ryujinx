@@ -3,7 +3,6 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
-using System.Collections.Generic;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
 
@@ -11,29 +10,15 @@ namespace Ryujinx.HLE.HOS.Services.Am
 {
     class ICommonStateGetter : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private KEvent _displayResolutionChangeEvent;
 
         public ICommonStateGetter(Horizon system)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,  GetEventHandle                          },
-                { 1,  ReceiveMessage                          },
-                { 5,  GetOperationMode                        },
-                { 6,  GetPerformanceMode                      },
-                { 8,  GetBootMode                             },
-                { 9,  GetCurrentFocusState                    },
-                { 60, GetDefaultDisplayResolution             },
-                { 61, GetDefaultDisplayResolutionChangeEvent  }
-            };
-
             _displayResolutionChangeEvent = new KEvent(system);
         }
 
+        [Command(0)]
+        // GetEventHandle() -> handle<copy>
         public long GetEventHandle(ServiceCtx context)
         {
             KEvent Event = context.Device.System.AppletState.MessageEvent;
@@ -48,6 +33,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(1)]
+        // ReceiveMessage() -> nn::am::AppletMessage
         public long ReceiveMessage(ServiceCtx context)
         {
             if (!context.Device.System.AppletState.TryDequeueMessage(out MessageInfo message))
@@ -60,6 +47,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(5)]
+        // GetOperationMode() -> u8
         public long GetOperationMode(ServiceCtx context)
         {
             OperationMode mode = context.Device.System.State.DockedMode
@@ -71,6 +60,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(6)]
+        // GetPerformanceMode() -> u32
         public long GetPerformanceMode(ServiceCtx context)
         {
             Apm.PerformanceMode mode = context.Device.System.State.DockedMode
@@ -82,6 +73,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(8)]
+        // GetBootMode() -> u8
         public long GetBootMode(ServiceCtx context)
         {
             context.ResponseData.Write((byte)0); //Unknown value.
@@ -91,6 +84,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(9)]
+        // GetCurrentFocusState() -> u8
         public long GetCurrentFocusState(ServiceCtx context)
         {
             context.ResponseData.Write((byte)context.Device.System.AppletState.FocusState);
@@ -98,6 +93,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(60)] // 3.0.0+
+        // GetDefaultDisplayResolution() -> (u32, u32)
         public long GetDefaultDisplayResolution(ServiceCtx context)
         {
             context.ResponseData.Write(1280);
@@ -106,6 +103,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
             return 0;
         }
 
+        [Command(61)] // 3.0.0+
+        // GetDefaultDisplayResolutionChangeEvent() -> handle<copy>
         public long GetDefaultDisplayResolutionChangeEvent(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_displayResolutionChangeEvent.ReadableEvent, out int handle) != KernelResult.Success)

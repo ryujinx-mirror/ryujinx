@@ -1,10 +1,8 @@
 using ChocolArm64.Memory;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
 using System;
-using System.Collections.Generic;
 using System.Text;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
@@ -13,28 +11,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
 {
     class ITimeZoneService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public ITimeZoneService() { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public ITimeZoneService()
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,   GetDeviceLocationName               },
-                { 1,   SetDeviceLocationName               },
-                { 2,   GetTotalLocationNameCount           },
-                { 3,   LoadLocationNameList                },
-                { 4,   LoadTimeZoneRule                    },
-              //{ 5,   GetTimeZoneRuleVersion              }, // 2.0.0+
-              //{ 6,   GetDeviceLocationNameAndUpdatedTime }, // 5.0.0+
-                { 100, ToCalendarTime                      },
-                { 101, ToCalendarTimeWithMyRule            },
-                { 201, ToPosixTime                         },
-                { 202, ToPosixTimeWithMyRule               }
-            };
-        }
-
+        [Command(0)]
         // GetDeviceLocationName() -> nn::time::LocationName
         public long GetDeviceLocationName(ServiceCtx context)
         {
@@ -57,6 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(1)]
         // SetDeviceLocationName(nn::time::LocationName)
         public long SetDeviceLocationName(ServiceCtx context)
         {
@@ -65,6 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return TimeZoneManager.Instance.SetDeviceLocationName(locationName);
         }
 
+        [Command(2)]
         // GetTotalLocationNameCount() -> u32
         public long GetTotalLocationNameCount(ServiceCtx context)
         {
@@ -73,6 +54,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(3)]
         // LoadLocationNameList(u32 index) -> (u32 outCount, buffer<nn::time::LocationName, 6>)
         public long LoadLocationNameList(ServiceCtx context)
         {
@@ -108,6 +90,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return errorCode;
         }
 
+        [Command(4)]
         // LoadTimeZoneRule(nn::time::LocationName locationName) -> buffer<nn::time::TimeZoneRule, 0x16>
         public long LoadTimeZoneRule(ServiceCtx context)
         {
@@ -136,6 +119,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return resultCode;
         }
 
+        [Command(100)]
         // ToCalendarTime(nn::time::PosixTime time, buffer<nn::time::TimeZoneRule, 0x15> rules) -> (nn::time::CalendarTime, nn::time::sf::CalendarAdditionalInfo)
         public long ToCalendarTime(ServiceCtx context)
         {
@@ -163,6 +147,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return resultCode;
         }
 
+        [Command(101)]
         // ToCalendarTimeWithMyRule(nn::time::PosixTime) -> (nn::time::CalendarTime, nn::time::sf::CalendarAdditionalInfo)
         public long ToCalendarTimeWithMyRule(ServiceCtx context)
         {
@@ -178,6 +163,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return resultCode;
         }
 
+        [Command(201)]
         // ToPosixTime(nn::time::CalendarTime calendarTime, buffer<nn::time::TimeZoneRule, 0x15> rules) -> (u32 outCount, buffer<nn::time::PosixTime, 0xa>)
         public long ToPosixTime(ServiceCtx context)
         {
@@ -210,6 +196,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return resultCode;
         }
 
+        [Command(202)]
         // ToPosixTimeWithMyRule(nn::time::CalendarTime calendarTime) -> (u32 outCount, buffer<nn::time::PosixTime, 0xa>)
         public long ToPosixTimeWithMyRule(ServiceCtx context)
         {

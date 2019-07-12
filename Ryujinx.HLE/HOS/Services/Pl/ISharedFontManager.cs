@@ -2,30 +2,16 @@ using Ryujinx.HLE.HOS.Font;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Pl
 {
     [Service("pl:u")]
     class ISharedFontManager : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public ISharedFontManager(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public ISharedFontManager(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, RequestLoad                    },
-                { 1, GetLoadState                   },
-                { 2, GetFontSize                    },
-                { 3, GetSharedMemoryAddressOffset   },
-                { 4, GetSharedMemoryNativeHandle    },
-                { 5, GetSharedFontInOrderOfPriority }
-            };
-        }
-
+        [Command(0)]
+        // RequestLoad(u32)
         public long RequestLoad(ServiceCtx context)
         {
             SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
@@ -35,6 +21,8 @@ namespace Ryujinx.HLE.HOS.Services.Pl
             return 0;
         }
 
+        [Command(1)]
+        // GetLoadState(u32) -> u32
         public long GetLoadState(ServiceCtx context)
         {
             SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
@@ -46,6 +34,8 @@ namespace Ryujinx.HLE.HOS.Services.Pl
             return 0;
         }
 
+        [Command(2)]
+        // GetFontSize(u32) -> u32
         public long GetFontSize(ServiceCtx context)
         {
             SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
@@ -55,6 +45,8 @@ namespace Ryujinx.HLE.HOS.Services.Pl
             return 0;
         }
 
+        [Command(3)]
+        // GetSharedMemoryAddressOffset(u32) -> u32
         public long GetSharedMemoryAddressOffset(ServiceCtx context)
         {
             SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
@@ -64,6 +56,8 @@ namespace Ryujinx.HLE.HOS.Services.Pl
             return 0;
         }
 
+        [Command(4)]
+        // GetSharedMemoryNativeHandle() -> handle<copy>
         public long GetSharedMemoryNativeHandle(ServiceCtx context)
         {
             context.Device.System.Font.EnsureInitialized(context.Device.System.ContentManager);
@@ -78,6 +72,8 @@ namespace Ryujinx.HLE.HOS.Services.Pl
             return 0;
         }
 
+        [Command(5)]
+        // GetSharedFontInOrderOfPriority(bytes<8, 1>) -> (u8, u32, buffer<unknown, 6>, buffer<unknown, 6>, buffer<unknown, 6>)
         public long GetSharedFontInOrderOfPriority(ServiceCtx context)
         {
             long languageCode = context.RequestData.ReadInt64();

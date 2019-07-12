@@ -20,10 +20,6 @@ namespace Ryujinx.HLE.HOS.Services.Nv
     {
         private delegate int IoctlProcessor(ServiceCtx context, int cmd);
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private static Dictionary<string, IoctlProcessor> _ioctlProcessors =
                    new Dictionary<string, IoctlProcessor>()
         {
@@ -42,19 +38,6 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
         public INvDrvServices(ServiceCtx context)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>()
-            {
-                { 0,  Open                   },
-                { 1,  Ioctl                  },
-                { 2,  Close                  },
-                { 3,  Initialize             },
-                { 4,  QueryEvent             },
-                { 8,  SetClientPid           },
-                { 9,  DumpGraphicsMemoryInfo },
-                { 11, Ioctl                  },
-                { 13, FinishInitialize       }
-            };
-
             _event = new KEvent(context.Device.System);
         }
 
@@ -63,6 +46,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             Fds = new GlobalStateTable();
         }
 
+        [Command(0)]
+        // Open(buffer<bytes, 5> path) -> (u32 fd, u32 error_code)
         public long Open(ServiceCtx context)
         {
             long namePtr = context.Request.SendBuff[0].Position;
@@ -77,6 +62,10 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return 0;
         }
 
+        [Command(1)]
+        // Ioctl(u32 fd, u32 rq_id, buffer<bytes, 0x21>) -> (u32 error_code, buffer<bytes, 0x22>)
+        [Command(11)] // 3.0.0+
+        // Ioctl2(u32, u32, buffer<bytes, 0x21>, buffer<bytes, 0x21>) -> (u32, buffer<bytes, 0x22>)
         public long Ioctl(ServiceCtx context)
         {
             int fd  = context.RequestData.ReadInt32();
@@ -101,6 +90,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return 0;
         }
 
+        [Command(2)]
+        // Close(u32 fd) -> u32 error_code
         public long Close(ServiceCtx context)
         {
             int fd = context.RequestData.ReadInt32();
@@ -112,6 +103,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return 0;
         }
 
+        [Command(3)]
+        // Initialize(u32 transfer_memory_size, handle<copy, process> current_process, handle<copy, transfer_memory> transfer_memory) -> u32 error_code
         public long Initialize(ServiceCtx context)
         {
             long transferMemSize   = context.RequestData.ReadInt64();
@@ -124,6 +117,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return 0;
         }
 
+        [Command(4)]
+        // QueryEvent(u32 fd, u32 event_id) -> (u32, handle<copy, event>)
         public long QueryEvent(ServiceCtx context)
         {
             int fd      = context.RequestData.ReadInt32();
@@ -142,6 +137,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return 0;
         }
 
+        [Command(8)]
+        // SetClientPID(u64, pid) -> u32 error_code
         public long SetClientPid(ServiceCtx context)
         {
             long pid = context.RequestData.ReadInt64();
@@ -151,6 +148,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return 0;
         }
 
+        [Command(9)]
+        // DumpGraphicsMemoryInfo()
         public long DumpGraphicsMemoryInfo(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNv);
@@ -158,6 +157,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return 0;
         }
 
+        [Command(13)]
+        // FinishInitialize(unknown<8>)
         public long FinishInitialize(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNv);

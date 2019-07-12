@@ -1,6 +1,4 @@
-﻿using Ryujinx.HLE.HOS.Ipc;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Security.Cryptography;
 
 namespace Ryujinx.HLE.HOS.Services.Spl
@@ -8,22 +6,15 @@ namespace Ryujinx.HLE.HOS.Services.Spl
     [Service("csrng")]
     class IRandomInterface : IpcService, IDisposable
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private RNGCryptoServiceProvider _rng;
 
         public IRandomInterface(ServiceCtx context)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, GetRandomBytes }
-            };
-
             _rng = new RNGCryptoServiceProvider();
         }
 
+        [Command(0)]
+        // GetRandomBytes() -> buffer<unknown, 6>
         public long GetRandomBytes(ServiceCtx context)
         {
             byte[] randomBytes = new byte[context.Request.ReceiveBuff[0].Size];

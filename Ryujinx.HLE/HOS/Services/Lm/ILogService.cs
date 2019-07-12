@@ -1,23 +1,12 @@
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
-
 namespace Ryujinx.HLE.HOS.Services.Lm
 {
     [Service("lm")]
     class ILogService : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public ILogService(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public ILogService(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, Initialize }
-            };
-        }
-
+        [Command(0)]
+        // Initialize(u64, pid) -> object<nn::lm::ILogger>
         public long Initialize(ServiceCtx context)
         {
             MakeObject(context, new ILogger());

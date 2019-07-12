@@ -7,12 +7,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Ryujinx.Profiler;
+using System.Reflection;
+using System.Linq;
 
 namespace Ryujinx.HLE.HOS.Services
 {
     abstract class IpcService : IIpcService
     {
-        public abstract IReadOnlyDictionary<int, ServiceProcessRequest> Commands { get; }
+        public IReadOnlyDictionary<int, MethodInfo> Commands { get; }
 
         private IdDictionary _domainObjects;
 
@@ -22,6 +24,13 @@ namespace Ryujinx.HLE.HOS.Services
 
         public IpcService()
         {
+            Commands = Assembly.GetExecutingAssembly().GetTypes()
+                .Where(type => type == GetType())
+                .SelectMany(type => type.GetMethods(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public))
+                .SelectMany(methodInfo => methodInfo.GetCustomAttributes(typeof(CommandAttribute))
+                .Select(command => (((CommandAttribute)command).Id, methodInfo)))
+                .ToDictionary(command => command.Id, command => command.methodInfo);
+
             _domainObjects = new IdDictionary();
 
             _selfId = -1;
@@ -90,7 +99,7 @@ namespace Ryujinx.HLE.HOS.Services
             long sfciMagic =      context.RequestData.ReadInt64();
             int  commandId = (int)context.RequestData.ReadInt64();
 
-            bool serviceExists = service.Commands.TryGetValue(commandId, out ServiceProcessRequest processRequest);
+            bool serviceExists = service.Commands.TryGetValue(commandId, out MethodInfo processRequest);
 
             if (ServiceConfiguration.IgnoreMissingServices || serviceExists)
             {
@@ -100,19 +109,23 @@ namespace Ryujinx.HLE.HOS.Services
 
                 if (serviceExists)
                 {
-                    Logger.PrintDebug(LogClass.KernelIpc, $"{service.GetType().Name}: {processRequest.Method.Name}");
+                    Logger.PrintDebug(LogClass.KernelIpc, $"{service.GetType().Name}: {processRequest.Name}");
 
                     ProfileConfig profile = Profiles.ServiceCall;
-                    profile.SessionGroup  = service.GetType().Name;
-                    profile.SessionItem   = processRequest.Method.Name;
+
+                    profile.SessionGroup = service.GetType().Name;
+                    profile.SessionItem  = processRequest.Name;
 
                     Profile.Begin(profile);
-                    result = processRequest(context);
+
+                    result = (long)processRequest.Invoke(service, new object[] { context });
+
                     Profile.End(profile);
                 }
                 else
                 {
                     string serviceName;
+
                     DummyService dummyService = service as DummyService;
 
                     serviceName = (dummyService == null) ? service.GetType().FullName : dummyService.ServiceName;

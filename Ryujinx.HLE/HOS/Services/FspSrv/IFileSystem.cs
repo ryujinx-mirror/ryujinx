@@ -1,7 +1,5 @@
 using LibHac;
 using LibHac.Fs;
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
 using static Ryujinx.HLE.Utilities.StringUtils;
@@ -10,36 +8,14 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
     class IFileSystem : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private LibHac.Fs.IFileSystem _fileSystem;
 
         public IFileSystem(LibHac.Fs.IFileSystem provider)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,  CreateFile                 },
-                { 1,  DeleteFile                 },
-                { 2,  CreateDirectory            },
-                { 3,  DeleteDirectory            },
-                { 4,  DeleteDirectoryRecursively },
-                { 5,  RenameFile                 },
-                { 6,  RenameDirectory            },
-                { 7,  GetEntryType               },
-                { 8,  OpenFile                   },
-                { 9,  OpenDirectory              },
-                { 10, Commit                     },
-                { 11, GetFreeSpaceSize           },
-                { 12, GetTotalSpaceSize          },
-                { 13, CleanDirectoryRecursively  },
-                { 14, GetFileTimeStampRaw        }
-            };
-
             _fileSystem = provider;
         }
 
+        [Command(0)]
         // CreateFile(u32 createOption, u64 size, buffer<bytes<0x301>, 0x19, 0x301> path)
         public long CreateFile(ServiceCtx context)
         {
@@ -62,6 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(1)]
         // DeleteFile(buffer<bytes<0x301>, 0x19, 0x301> path)
         public long DeleteFile(ServiceCtx context)
         {
@@ -79,6 +56,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(2)]
         // CreateDirectory(buffer<bytes<0x301>, 0x19, 0x301> path)
         public long CreateDirectory(ServiceCtx context)
         {
@@ -96,6 +74,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(3)]
         // DeleteDirectory(buffer<bytes<0x301>, 0x19, 0x301> path)
         public long DeleteDirectory(ServiceCtx context)
         {
@@ -113,6 +92,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(4)]
         // DeleteDirectoryRecursively(buffer<bytes<0x301>, 0x19, 0x301> path)
         public long DeleteDirectoryRecursively(ServiceCtx context)
         {
@@ -130,6 +110,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(5)]
         // RenameFile(buffer<bytes<0x301>, 0x19, 0x301> oldPath, buffer<bytes<0x301>, 0x19, 0x301> newPath)
         public long RenameFile(ServiceCtx context)
         {
@@ -148,6 +129,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(6)]
         // RenameDirectory(buffer<bytes<0x301>, 0x19, 0x301> oldPath, buffer<bytes<0x301>, 0x19, 0x301> newPath)
         public long RenameDirectory(ServiceCtx context)
         {
@@ -166,6 +148,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(7)]
         // GetEntryType(buffer<bytes<0x301>, 0x19, 0x301> path) -> nn::fssrv::sf::DirectoryEntryType
         public long GetEntryType(ServiceCtx context)
         {
@@ -192,6 +175,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(8)]
         // OpenFile(u32 mode, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IFile> file
         public long OpenFile(ServiceCtx context)
         {
@@ -215,6 +199,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(9)]
         // OpenDirectory(u32 filter_flags, buffer<bytes<0x301>, 0x19, 0x301> path) -> object<nn::fssrv::sf::IDirectory> directory
         public long OpenDirectory(ServiceCtx context)
         {
@@ -238,6 +223,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(10)]
         // Commit()
         public long Commit(ServiceCtx context)
         {
@@ -253,6 +239,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(11)]
         // GetFreeSpaceSize(buffer<bytes<0x301>, 0x19, 0x301> path) -> u64 totalFreeSpace
         public long GetFreeSpaceSize(ServiceCtx context)
         {
@@ -270,6 +257,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(12)]
         // GetTotalSpaceSize(buffer<bytes<0x301>, 0x19, 0x301> path) -> u64 totalSize
         public long GetTotalSpaceSize(ServiceCtx context)
         {
@@ -287,6 +275,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(13)]
         // CleanDirectoryRecursively(buffer<bytes<0x301>, 0x19, 0x301> path)
         public long CleanDirectoryRecursively(ServiceCtx context)
         {
@@ -304,6 +293,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(14)]
         // GetFileTimeStampRaw(buffer<bytes<0x301>, 0x19, 0x301> path) -> bytes<0x20> timestamp
         public long GetFileTimeStampRaw(ServiceCtx context)
         {

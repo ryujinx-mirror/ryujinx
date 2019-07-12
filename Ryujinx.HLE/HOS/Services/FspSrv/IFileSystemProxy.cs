@@ -4,9 +4,7 @@ using LibHac.Fs.NcaUtils;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.Utilities;
-using System.Collections.Generic;
 using System.IO;
 
 using static Ryujinx.HLE.FileSystem.VirtualFileSystem;
@@ -18,34 +16,16 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
     [Service("fsp-srv")]
     class IFileSystemProxy : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IFileSystemProxy(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IFileSystemProxy(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 1,    Initialize                               },
-                { 8,    OpenFileSystemWithId                     },
-                { 11,   OpenBisFileSystem                        },
-                { 18,   OpenSdCardFileSystem                     },
-                { 51,   OpenSaveDataFileSystem                   },
-                { 52,   OpenSaveDataFileSystemBySystemSaveDataId },
-                { 200,  OpenDataStorageByCurrentProcess          },
-                { 202,  OpenDataStorageByDataId                  },
-                { 203,  OpenPatchDataStorageByCurrentProcess     },
-                { 1005, GetGlobalAccessLogMode                   },
-                { 1006, OutputAccessLogToSdCard                  }
-            };
-        }
-
+        [Command(1)]
         // Initialize(u64, pid)
         public long Initialize(ServiceCtx context)
         {
             return 0;
         }
 
+        [Command(8)]
         // OpenFileSystemWithId(nn::fssrv::sf::FileSystemType filesystem_type, nn::ApplicationId tid, buffer<bytes<0x301>, 0x19, 0x301> path) 
         // -> object<nn::fssrv::sf::IFileSystem> contentFs
         public long OpenFileSystemWithId(ServiceCtx context)
@@ -80,6 +60,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return MakeError(ErrorModule.Fs, FsErr.InvalidInput);
         }
 
+        [Command(11)]
         // OpenBisFileSystem(nn::fssrv::sf::Partition partitionID, buffer<bytes<0x301>, 0x19, 0x301>) -> object<nn::fssrv::sf::IFileSystem> Bis
         public long OpenBisFileSystem(ServiceCtx context)
         {
@@ -112,6 +93,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(18)]
         // OpenSdCardFileSystem() -> object<nn::fssrv::sf::IFileSystem>
         public long OpenSdCardFileSystem(ServiceCtx context)
         {
@@ -124,18 +106,21 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(51)]
         // OpenSaveDataFileSystem(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> saveDataFs
         public long OpenSaveDataFileSystem(ServiceCtx context)
         {
             return LoadSaveDataFileSystem(context);
         }
 
+        [Command(52)]
         // OpenSaveDataFileSystemBySystemSaveDataId(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> systemSaveDataFs
         public long OpenSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
         {
             return LoadSaveDataFileSystem(context);
         }
 
+        [Command(200)]
         // OpenDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage> dataStorage
         public long OpenDataStorageByCurrentProcess(ServiceCtx context)
         {
@@ -144,6 +129,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(202)]
         // OpenDataStorageByDataId(u8 storageId, nn::ApplicationId tid) -> object<nn::fssrv::sf::IStorage> dataStorage
         public long OpenDataStorageByDataId(ServiceCtx context)
         {
@@ -204,6 +190,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             throw new FileNotFoundException($"System archive with titleid {titleId:x16} was not found on Storage {storageId}. Found in {installedStorage}.");
         }
 
+        [Command(203)]
         // OpenPatchDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage>
         public long OpenPatchDataStorageByCurrentProcess(ServiceCtx context)
         {
@@ -212,6 +199,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(1005)]
         // GetGlobalAccessLogMode() -> u32 logMode
         public long GetGlobalAccessLogMode(ServiceCtx context)
         {
@@ -222,6 +210,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(1006)]
         // OutputAccessLogToSdCard(buffer<bytes, 5> log_text)
         public long OutputAccessLogToSdCard(ServiceCtx context)
         {

@@ -4,42 +4,24 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.SystemState;
 using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Aud
 {
     class IAudioDevice : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private KEvent _systemEvent;
 
         public IAudioDevice(Horizon system)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,  ListAudioDeviceName            },
-                { 1,  SetAudioDeviceOutputVolume     },
-                { 3,  GetActiveAudioDeviceName       },
-                { 4,  QueryAudioDeviceSystemEvent    },
-                { 5,  GetActiveChannelCount          },
-                { 6,  ListAudioDeviceNameAuto        },
-                { 7,  SetAudioDeviceOutputVolumeAuto },
-                { 8,  GetAudioDeviceOutputVolumeAuto },
-                { 10, GetActiveAudioDeviceNameAuto   },
-                { 11, QueryAudioDeviceInputEvent     },
-                { 12, QueryAudioDeviceOutputEvent    }
-            };
-
             _systemEvent = new KEvent(system);
 
             // TODO: We shouldn't be signaling this here.
             _systemEvent.ReadableEvent.Signal();
         }
 
+        [Command(0)]
+        // ListAudioDeviceName() -> (u32, buffer<bytes, 6>)
         public long ListAudioDeviceName(ServiceCtx context)
         {
             string[] deviceNames = SystemStateMgr.AudioOutputs;
@@ -70,6 +52,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(1)]
+        // SetAudioDeviceOutputVolume(u32, buffer<bytes, 5>)
         public long SetAudioDeviceOutputVolume(ServiceCtx context)
         {
             float volume = context.RequestData.ReadSingle();
@@ -86,6 +70,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(3)]
+        // GetActiveAudioDeviceName() -> buffer<bytes, 6>
         public long GetActiveAudioDeviceName(ServiceCtx context)
         {
             string name = context.Device.System.State.ActiveAudioOutput;
@@ -107,6 +93,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(4)]
+        // QueryAudioDeviceSystemEvent() -> handle<copy, event>
         public long QueryAudioDeviceSystemEvent(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_systemEvent.ReadableEvent, out int handle) != KernelResult.Success)
@@ -121,6 +109,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(5)]
+        // GetActiveChannelCount() -> u32
         public long GetActiveChannelCount(ServiceCtx context)
         {
             context.ResponseData.Write(2);
@@ -130,6 +120,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(6)]
+        // ListAudioDeviceNameAuto() -> (u32, buffer<bytes, 0x22>)
         public long ListAudioDeviceNameAuto(ServiceCtx context)
         {
             string[] deviceNames = SystemStateMgr.AudioOutputs;
@@ -159,6 +151,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(7)]
+        // SetAudioDeviceOutputVolumeAuto(u32, buffer<bytes, 0x21>)
         public long SetAudioDeviceOutputVolumeAuto(ServiceCtx context)
         {
             float volume = context.RequestData.ReadSingle();
@@ -174,6 +168,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(8)]
+        // GetAudioDeviceOutputVolumeAuto(buffer<bytes, 0x21>) -> u32
         public long GetAudioDeviceOutputVolumeAuto(ServiceCtx context)
         {
             context.ResponseData.Write(1f);
@@ -183,6 +179,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(10)]
+        // GetActiveAudioDeviceNameAuto() -> buffer<bytes, 0x22>
         public long GetActiveAudioDeviceNameAuto(ServiceCtx context)
         {
             string name = context.Device.System.State.ActiveAudioOutput;
@@ -203,6 +201,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(11)]
+        // QueryAudioDeviceInputEvent() -> handle<copy, event>
         public long QueryAudioDeviceInputEvent(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_systemEvent.ReadableEvent, out int handle) != KernelResult.Success)
@@ -217,6 +217,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(12)]
+        // QueryAudioDeviceOutputEvent() -> handle<copy, event>
         public long QueryAudioDeviceOutputEvent(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_systemEvent.ReadableEvent, out int handle) != KernelResult.Success)

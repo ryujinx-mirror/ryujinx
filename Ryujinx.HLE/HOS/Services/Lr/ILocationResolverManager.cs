@@ -1,24 +1,13 @@
-﻿using System.Collections.Generic;
-using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.FileSystem;
+﻿using Ryujinx.HLE.FileSystem;
 
 namespace Ryujinx.HLE.HOS.Services.Lr
 {
     [Service("lr")]
     class ILocationResolverManager : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public ILocationResolverManager(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public ILocationResolverManager(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, OpenLocationResolver }
-            };
-        }
-
+        [Command(0)]
         // OpenLocationResolver()
         private long OpenLocationResolver(ServiceCtx context)
         {

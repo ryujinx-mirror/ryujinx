@@ -1,9 +1,7 @@
 using Ryujinx.Audio;
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Services.Aud.AudioRenderer;
 using Ryujinx.HLE.Utilities;
-using System.Collections.Generic;
 
 using static Ryujinx.HLE.HOS.ErrorCode;
 
@@ -21,21 +19,11 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         public const int RevMagic = Rev0Magic + (Rev << 24);
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IAudioRendererManager(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IAudioRendererManager(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, OpenAudioRenderer                     },
-                { 1, GetAudioRendererWorkBufferSize        },
-                { 2, GetAudioDeviceService                 },
-                { 4, GetAudioDeviceServiceWithRevisionInfo }
-            };
-        }
-
+        [Command(0)]
+        // OpenAudioRenderer(nn::audio::detail::AudioRendererParameterInternal, u64, nn::applet::AppletResourceUserId, pid, handle<copy>, handle<copy>)
+        // -> object<nn::audio::detail::IAudioRenderer>
         public long OpenAudioRenderer(ServiceCtx context)
         {
             IAalOutput audioOut = context.Device.AudioOut;
@@ -51,6 +39,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(1)]
+        // GetWorkBufferSize(nn::audio::detail::AudioRendererParameterInternal) -> u64
         public long GetAudioRendererWorkBufferSize(ServiceCtx context)
         {
             AudioRendererParameter Params = GetAudioRendererParameter(context);
@@ -178,6 +168,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return result / 8;
         }
 
+        [Command(2)]
         // GetAudioDeviceService(nn::applet::AppletResourceUserId) -> object<nn::audio::detail::IAudioDevice>
         public long GetAudioDeviceService(ServiceCtx context)
         {
@@ -188,6 +179,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             return 0;
         }
 
+        [Command(4)] // 4.0.0+
         // GetAudioDeviceServiceWithRevisionInfo(nn::applet::AppletResourceUserId, u32) -> object<nn::audio::detail::IAudioDevice>
         private long GetAudioDeviceServiceWithRevisionInfo(ServiceCtx context)
         {

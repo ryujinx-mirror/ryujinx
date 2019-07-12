@@ -1,24 +1,13 @@
-using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
-
 namespace Ryujinx.HLE.HOS.Services.Apm
 {
     [Service("apm")]
     [Service("apm:p")]
     class IManager : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
+        public IManager(ServiceCtx context) { }
 
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
-        public IManager(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, OpenSession }
-            };
-        }
-
+        [Command(0)]
+        // OpenSession() -> object<nn::apm::ISession>
         public long OpenSession(ServiceCtx context)
         {
             MakeObject(context, new ISession());

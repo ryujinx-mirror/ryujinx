@@ -1,28 +1,18 @@
 using LibHac;
 using Ryujinx.HLE.HOS.Ipc;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.FspSrv
 {
     class IStorage : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private LibHac.Fs.IStorage _baseStorage;
 
         public IStorage(LibHac.Fs.IStorage baseStorage)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, Read    },
-                { 4, GetSize }
-            };
-
             _baseStorage = baseStorage;
         }
 
+        [Command(0)]
         // Read(u64 offset, u64 length) -> buffer<u8, 0x46, 0> buffer
         public long Read(ServiceCtx context)
         {
@@ -56,6 +46,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return 0;
         }
 
+        [Command(4)]
         // GetSize() -> u64 size
         public long GetSize(ServiceCtx context)
         {

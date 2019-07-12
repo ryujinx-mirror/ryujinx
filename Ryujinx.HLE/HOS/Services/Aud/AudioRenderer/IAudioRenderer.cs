@@ -7,7 +7,6 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.Utilities;
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -22,10 +21,6 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
         // starving due to running out of samples) or too large (to avoid
         // high latency).
         private const int MixBufferSamplesCount = 960;
-
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
 
         private KEvent _updateEvent;
 
@@ -49,18 +44,6 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             IAalOutput             audioOut,
             AudioRendererParameter Params)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0, GetSampleRate              },
-                { 1, GetSampleCount             },
-                { 2, GetMixBufferCount          },
-                { 3, GetState                   },
-                { 4, RequestUpdateAudioRenderer },
-                { 5, StartAudioRenderer         },
-                { 6, StopAudioRenderer          },
-                { 7, QuerySystemEvent           }
-            };
-
             _updateEvent = new KEvent(system);
 
             _memory   = memory;
@@ -81,7 +64,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             _playState = PlayState.Stopped;
         }
 
-        //  GetSampleRate() -> u32
+        [Command(0)]
+        // GetSampleRate() -> u32
         public long GetSampleRate(ServiceCtx context)
         {
             context.ResponseData.Write(_params.SampleRate);
@@ -89,7 +73,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             return 0;
         }
 
-        //  GetSampleCount() -> u32
+        [Command(1)]
+        // GetSampleCount() -> u32
         public long GetSampleCount(ServiceCtx context)
         {
             context.ResponseData.Write(_params.SampleCount);
@@ -97,6 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             return 0;
         }
 
+        [Command(2)]
         // GetMixBufferCount() -> u32
         public long GetMixBufferCount(ServiceCtx context)
         {
@@ -105,6 +91,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             return 0;
         }
 
+        [Command(3)]
         // GetState() -> u32
         private long GetState(ServiceCtx context)
         {
@@ -141,6 +128,9 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             _audioOut.Start(_track);
         }
 
+        [Command(4)]
+        // RequestUpdateAudioRenderer(buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 5>)
+        // -> (buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 6>, buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 6>)
         public long RequestUpdateAudioRenderer(ServiceCtx context)
         {
             long outputPosition = context.Request.ReceiveBuff[0].Position;
@@ -247,6 +237,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             return 0;
         }
 
+        [Command(5)]
+        // Start()
         public long StartAudioRenderer(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAudio);
@@ -256,6 +248,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             return 0;
         }
 
+        [Command(6)]
+        // Stop()
         public long StopAudioRenderer(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAudio);
@@ -265,6 +259,8 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
             return 0;
         }
 
+        [Command(7)]
+        // QuerySystemEvent() -> handle<copy, event>
         public long QuerySystemEvent(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_updateEvent.ReadableEvent, out int handle) != KernelResult.Success)

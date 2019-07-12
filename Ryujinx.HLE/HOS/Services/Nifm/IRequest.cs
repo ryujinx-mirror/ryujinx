@@ -3,35 +3,22 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Nifm
 {
     class IRequest : IpcService
     {
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private KEvent _event0;
         private KEvent _event1;
 
         public IRequest(Horizon system)
         {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,  GetRequestState                 },
-                { 1,  GetResult                       },
-                { 2,  GetSystemEventReadableHandles   },
-                { 3,  Cancel                          },
-                { 4,  Submit                          },
-                { 11, SetConnectionConfirmationOption }
-            };
-
             _event0 = new KEvent(system);
             _event1 = new KEvent(system);
         }
 
+        [Command(0)]
+        // GetRequestState() -> u32
         public long GetRequestState(ServiceCtx context)
         {
             context.ResponseData.Write(1);
@@ -41,6 +28,8 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
             return 0;
         }
 
+        [Command(1)]
+        // GetResult()
         public long GetResult(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNifm);
@@ -48,6 +37,8 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
             return 0;
         }
 
+        [Command(2)]
+        // GetSystemEventReadableHandles() -> (handle<copy>, handle<copy>)
         public long GetSystemEventReadableHandles(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_event0.ReadableEvent, out int handle0) != KernelResult.Success)
@@ -65,6 +56,8 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
             return 0;
         }
 
+        [Command(3)]
+        // Cancel()
         public long Cancel(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNifm);
@@ -72,6 +65,8 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
             return 0;
         }
 
+        [Command(4)]
+        // Submit()
         public long Submit(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNifm);
@@ -79,6 +74,8 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
             return 0;
         }
 
+        [Command(11)]
+        // SetConnectionConfirmationOption(i8)
         public long SetConnectionConfirmationOption(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNifm);

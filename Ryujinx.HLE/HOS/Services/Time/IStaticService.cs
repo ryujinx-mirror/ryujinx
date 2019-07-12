@@ -1,7 +1,6 @@
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using System;
-using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Time
 {
@@ -12,39 +11,11 @@ namespace Ryujinx.HLE.HOS.Services.Time
     {
         private int _timeSharedMemoryNativeHandle = 0;
 
-        private Dictionary<int, ServiceProcessRequest> _commands;
-
-        public override IReadOnlyDictionary<int, ServiceProcessRequest> Commands => _commands;
-
         private static readonly DateTime StartupDate = DateTime.UtcNow;
 
-        public IStaticService(ServiceCtx context)
-        {
-            _commands = new Dictionary<int, ServiceProcessRequest>
-            {
-                { 0,   GetStandardUserSystemClock                               },
-                { 1,   GetStandardNetworkSystemClock                            },
-                { 2,   GetStandardSteadyClock                                   },
-                { 3,   GetTimeZoneService                                       },
-                { 4,   GetStandardLocalSystemClock                              },
-              //{ 5,   GetEphemeralNetworkSystemClock                           }, // 4.0.0+
-                { 20,  GetSharedMemoryNativeHandle                              }, // 6.0.0+
-              //{ 30,  GetStandardNetworkClockOperationEventReadableHandle      }, // 6.0.0+
-              //{ 31,  GetEphemeralNetworkClockOperationEventReadableHandle     }, // 6.0.0+
-              //{ 50,  SetStandardSteadyClockInternalOffset                     }, // 4.0.0+
-              //{ 100, IsStandardUserSystemClockAutomaticCorrectionEnabled      },
-              //{ 101, SetStandardUserSystemClockAutomaticCorrectionEnabled     },
-              //{ 102, GetStandardUserSystemClockInitialYear                    }, // 5.0.0+
-              //{ 200, IsStandardNetworkSystemClockAccuracySufficient           }, // 3.0.0+
-              //{ 201, GetStandardUserSystemClockAutomaticCorrectionUpdatedTime }, // 6.0.0+
-                { 300, CalculateMonotonicSystemClockBaseTimePoint               }, // 4.0.0+
-              //{ 400, GetClockSnapshot                                         }, // 4.0.0+
-              //{ 401, GetClockSnapshotFromSystemClockContext                   }, // 4.0.0+
-              //{ 500, CalculateStandardUserSystemClockDifferenceByUser         }, // 4.0.0+
-              //{ 501, CalculateSpanBetween                                     }, // 4.0.0+
-            };
-        }
+        public IStaticService(ServiceCtx context) { }
 
+        [Command(0)]
         // GetStandardUserSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public long GetStandardUserSystemClock(ServiceCtx context)
         {
@@ -53,6 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(1)]
         // GetStandardNetworkSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public long GetStandardNetworkSystemClock(ServiceCtx context)
         {
@@ -61,6 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(2)]
         // GetStandardSteadyClock() -> object<nn::timesrv::detail::service::ISteadyClock>
         public long GetStandardSteadyClock(ServiceCtx context)
         {
@@ -69,6 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(3)]
         // GetTimeZoneService() -> object<nn::timesrv::detail::service::ITimeZoneService>
         public long GetTimeZoneService(ServiceCtx context)
         {
@@ -77,6 +51,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(4)]
         // GetStandardLocalSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public long GetStandardLocalSystemClock(ServiceCtx context)
         {
@@ -85,6 +60,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(20)] // 6.0.0+
         // GetSharedMemoryNativeHandle() -> handle<copy>
         public long GetSharedMemoryNativeHandle(ServiceCtx context)
         {
@@ -101,6 +77,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(300)] // 4.0.0+
         // CalculateMonotonicSystemClockBaseTimePoint(nn::time::SystemClockContext) -> u64
         public long CalculateMonotonicSystemClockBaseTimePoint(ServiceCtx context)
         {
