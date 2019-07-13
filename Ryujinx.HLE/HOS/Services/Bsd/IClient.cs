@@ -484,7 +484,6 @@ namespace Ryujinx.HLE.HOS.Services.Bsd
             SocketFlags socketFlags = (SocketFlags)context.RequestData.ReadInt32();
 
             (long receivePosition,     long receiveLength)   = context.Request.GetBufferType0x22();
-            (long sockAddrInPosition,  long sockAddrInSize)  = context.Request.GetBufferType0x21();
             (long sockAddrOutPosition, long sockAddrOutSize) = context.Request.GetBufferType0x22(1);
 
             LinuxError errno  = LinuxError.EBADF;
@@ -502,7 +501,7 @@ namespace Ryujinx.HLE.HOS.Services.Bsd
                 }
 
                 byte[]   receivedBuffer = new byte[receiveLength];
-                EndPoint endPoint       = ParseSockAddr(context, sockAddrInPosition, sockAddrInSize);
+                EndPoint endPoint       = new IPEndPoint(IPAddress.Any, 0);
 
                 try
                 {
