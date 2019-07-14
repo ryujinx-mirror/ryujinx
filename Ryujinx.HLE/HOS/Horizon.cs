@@ -9,6 +9,7 @@ using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Sm;
+using Ryujinx.HLE.HOS.Services.Time.Clock;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Npdm;
@@ -195,6 +196,11 @@ namespace Ryujinx.HLE.HOS
             LoadKeySet();
 
             ContentManager = new ContentManager(device);
+
+            // NOTE: Now we set the default internal offset of the steady clock like Nintendo does... even if it's strange this is accurate.
+            // TODO: use bpc:r and set:sys (and set external clock source id from settings)
+            DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            SteadyClockCore.Instance.SetInternalOffset(new TimeSpanType(((ulong)(DateTime.Now.ToUniversalTime() - UnixEpoch).TotalSeconds) * 1000000000));
         }
 
         public void LoadCart(string exeFsDir, string romFsFile = null)

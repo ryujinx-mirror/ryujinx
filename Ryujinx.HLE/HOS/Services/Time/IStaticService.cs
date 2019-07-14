@@ -1,25 +1,31 @@
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.HLE.HOS.Services.Time.Clock;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Time
 {
-    [Service("time:a")]
-    [Service("time:s")]
-    [Service("time:u")]
+    [Service("time:a", TimePermissions.Applet)]
+    [Service("time:s", TimePermissions.System)]
+    [Service("time:u", TimePermissions.User)]
     class IStaticService : IpcService
     {
+        private TimePermissions _permissions;
+
         private int _timeSharedMemoryNativeHandle = 0;
 
         private static readonly DateTime StartupDate = DateTime.UtcNow;
 
-        public IStaticService(ServiceCtx context) { }
+        public IStaticService(ServiceCtx context, TimePermissions permissions)
+        {
+            _permissions = permissions;
+        }
 
         [Command(0)]
         // GetStandardUserSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public ResultCode GetStandardUserSystemClock(ServiceCtx context)
         {
-            MakeObject(context, new ISystemClock(SystemClockType.User));
+            MakeObject(context, new ISystemClock(StandardUserSystemClockCore.Instance, (_permissions & TimePermissions.UserSystemClockWritableMask) != 0));
 
             return ResultCode.Success;
         }
@@ -28,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetStandardNetworkSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public ResultCode GetStandardNetworkSystemClock(ServiceCtx context)
         {
-            MakeObject(context, new ISystemClock(SystemClockType.Network));
+            MakeObject(context, new ISystemClock(StandardNetworkSystemClockCore.Instance, (_permissions & TimePermissions.NetworkSystemClockWritableMask) != 0));
 
             return ResultCode.Success;
         }
@@ -55,7 +61,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetStandardLocalSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public ResultCode GetStandardLocalSystemClock(ServiceCtx context)
         {
-            MakeObject(context, new ISystemClock(SystemClockType.Local));
+            MakeObject(context, new ISystemClock(StandardLocalSystemClockCore.Instance, (_permissions & TimePermissions.LocalSystemClockWritableMask) != 0));
 
             return ResultCode.Success;
         }
@@ -77,10 +83,34 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
+        [Command(100)]
+        // IsStandardUserSystemClockAutomaticCorrectionEnabled() -> bool
+        public ResultCode IsStandardUserSystemClockAutomaticCorrectionEnabled(ServiceCtx context)
+        {
+            context.ResponseData.Write(StandardUserSystemClockCore.Instance.IsAutomaticCorrectionEnabled());
+
+            return ResultCode.Success;
+        }
+
+        [Command(101)]
+        // SetStandardUserSystemClockAutomaticCorrectionEnabled(b8)
+        public ResultCode SetStandardUserSystemClockAutomaticCorrectionEnabled(ServiceCtx context)
+        {
+            if ((_permissions & TimePermissions.UserSystemClockWritableMask) == 0)
+            {
+                return ResultCode.PermissionDenied;
+            }
+
+            bool autoCorrectionEnabled = context.RequestData.ReadBoolean();
+
+            return StandardUserSystemClockCore.Instance.SetAutomaticCorrectionEnabled(context.Thread, autoCorrectionEnabled);
+        }
+
         [Command(300)] // 4.0.0+
         // CalculateMonotonicSystemClockBaseTimePoint(nn::time::SystemClockContext) -> u64
         public ResultCode CalculateMonotonicSystemClockBaseTimePoint(ServiceCtx context)
         {
+            // TODO: reimplement this
             long timeOffset              = (long)(DateTime.UtcNow - StartupDate).TotalSeconds;
             long systemClockContextEpoch = context.RequestData.ReadInt64();
 

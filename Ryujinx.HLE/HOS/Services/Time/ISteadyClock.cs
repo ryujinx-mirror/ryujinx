@@ -1,26 +1,17 @@
-using System;
+using Ryujinx.Common;
+using Ryujinx.HLE.HOS.Services.Time.Clock;
 
 namespace Ryujinx.HLE.HOS.Services.Time
 {
     class ISteadyClock : IpcService
     {
-        private ulong _testOffset;
-
-        public ISteadyClock()
-        {
-            _testOffset = 0;
-        }
-
         [Command(0)]
         // GetCurrentTimePoint() -> nn::time::SteadyClockTimePoint
         public ResultCode GetCurrentTimePoint(ServiceCtx context)
         {
-            context.ResponseData.Write((long)(System.Diagnostics.Process.GetCurrentProcess().StartTime - DateTime.Now).TotalSeconds);
+            SteadyClockTimePoint currentTimePoint = SteadyClockCore.Instance.GetCurrentTimePoint(context.Thread);
 
-            for (int i = 0; i < 0x10; i++)
-            {
-                context.ResponseData.Write((byte)0);
-            }
+            context.ResponseData.WriteStruct(currentTimePoint);
 
             return ResultCode.Success;
         }
@@ -29,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetTestOffset() -> nn::TimeSpanType
         public ResultCode GetTestOffset(ServiceCtx context)
         {
-            context.ResponseData.Write(_testOffset);
+            context.ResponseData.WriteStruct(SteadyClockCore.Instance.GetTestOffset());
 
             return ResultCode.Success;
         }
@@ -38,7 +29,29 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // SetTestOffset(nn::TimeSpanType)
         public ResultCode SetTestOffset(ServiceCtx context)
         {
-            _testOffset = context.RequestData.ReadUInt64();
+            TimeSpanType testOffset = context.RequestData.ReadStruct<TimeSpanType>();
+
+            SteadyClockCore.Instance.SetTestOffset(testOffset);
+
+            return 0;
+        }
+
+        [Command(200)] // 3.0.0+
+        // GetInternalOffset() -> nn::TimeSpanType
+        public ResultCode GetInternalOffset(ServiceCtx context)
+        {
+            context.ResponseData.WriteStruct(SteadyClockCore.Instance.GetInternalOffset());
+
+            return ResultCode.Success;
+        }
+
+        [Command(201)] // 3.0.0-3.0.2
+        // SetInternalOffset(nn::TimeSpanType)
+        public ResultCode SetInternalOffset(ServiceCtx context)
+        {
+            TimeSpanType internalOffset = context.RequestData.ReadStruct<TimeSpanType>();
+
+            SteadyClockCore.Instance.SetInternalOffset(internalOffset);
 
             return ResultCode.Success;
         }
