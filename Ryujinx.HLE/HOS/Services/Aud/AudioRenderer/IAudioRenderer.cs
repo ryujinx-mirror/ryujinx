@@ -93,7 +93,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         [Command(3)]
         // GetState() -> u32
-        private ResultCode GetState(ServiceCtx context)
+        public ResultCode GetState(ServiceCtx context)
         {
             context.ResponseData.Write((int)_playState);
 

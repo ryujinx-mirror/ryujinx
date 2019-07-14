@@ -179,7 +179,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         [Command(4)] // 4.0.0+
         // GetAudioDeviceServiceWithRevisionInfo(nn::applet::AppletResourceUserId, u32) -> object<nn::audio::detail::IAudioDevice>
-        private ResultCode GetAudioDeviceServiceWithRevisionInfo(ServiceCtx context)
+        public ResultCode GetAudioDeviceServiceWithRevisionInfo(ServiceCtx context)
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
             int  revisionInfo         = context.RequestData.ReadInt32();

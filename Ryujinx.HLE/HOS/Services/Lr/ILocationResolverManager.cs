@@ -9,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Services.Lr
 
         [Command(0)]
         // OpenLocationResolver()
-        private ResultCode OpenLocationResolver(ServiceCtx context)
+        public ResultCode OpenLocationResolver(ServiceCtx context)
         {
             StorageId storageId = (StorageId)context.RequestData.ReadByte();
 
