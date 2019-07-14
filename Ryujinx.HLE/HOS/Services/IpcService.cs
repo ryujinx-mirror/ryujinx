@@ -26,7 +26,7 @@ namespace Ryujinx.HLE.HOS.Services
         {
             Commands = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(type => type == GetType())
-                .SelectMany(type => type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public))
+                .SelectMany(type => type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public))
                 .SelectMany(methodInfo => methodInfo.GetCustomAttributes(typeof(CommandAttribute))
                 .Select(command => (((CommandAttribute)command).Id, methodInfo)))
                 .ToDictionary(command => command.Id, command => command.methodInfo);
