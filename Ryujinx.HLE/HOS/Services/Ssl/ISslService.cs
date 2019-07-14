@@ -9,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
 
         [Command(0)]
         // CreateContext(nn::ssl::sf::SslVersion, u64, pid) -> object<nn::ssl::sf::ISslContext>
-        public long CreateContext(ServiceCtx context)
+        public ResultCode CreateContext(ServiceCtx context)
         {
             int  sslVersion = context.RequestData.ReadInt32();
             long unknown    = context.RequestData.ReadInt64();
@@ -18,18 +18,18 @@ namespace Ryujinx.HLE.HOS.Services.Ssl
 
             MakeObject(context, new ISslContext());
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(5)]
         // SetInterfaceVersion(u32)
-        public long SetInterfaceVersion(ServiceCtx context)
+        public ResultCode SetInterfaceVersion(ServiceCtx context)
         {
             int version = context.RequestData.ReadInt32();
 
             Logger.PrintStub(LogClass.ServiceSsl, new { version });
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

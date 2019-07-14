@@ -10,7 +10,6 @@ using TimeZoneConverter.Posix;
 using TimeZoneConverter;
 
 using static Ryujinx.HLE.HOS.Services.Time.TimeZoneRule;
-using static Ryujinx.HLE.HOS.ErrorCode;
 
 namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 {
@@ -138,9 +137,9 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             return _deviceLocationName;
         }
 
-        public uint SetDeviceLocationName(string locationName)
+        public ResultCode SetDeviceLocationName(string locationName)
         {
-            uint resultCode = LoadTimeZoneRules(out TimeZoneRule rules, locationName);
+            ResultCode resultCode = LoadTimeZoneRules(out TimeZoneRule rules, locationName);
 
             if (resultCode == 0)
             {
@@ -151,7 +150,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             return resultCode;
         }
 
-        public uint LoadLocationNameList(uint index, out string[] outLocationNameArray, uint maxLength)
+        public ResultCode LoadLocationNameList(uint index, out string[] outLocationNameArray, uint maxLength)
         {
             List<string> locationNameList = new List<string>();
 
@@ -169,7 +168,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 {
                     outLocationNameArray = new string[0];
 
-                    return MakeError(ErrorModule.Time, TimeError.LocationNameTooLong);
+                    return ResultCode.LocationNameTooLong;
                 }
 
                 locationNameList.Add(locationName);
@@ -177,7 +176,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
             outLocationNameArray = locationNameList.ToArray();
 
-            return 0;
+            return ResultCode.Success;
         }
 
         public uint GetTotalLocationNameCount()
@@ -195,7 +194,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             return !string.IsNullOrEmpty(GetTimeZoneBinaryTitleContentPath());
         }
 
-        internal uint LoadTimeZoneRules(out TimeZoneRule outRules, string locationName)
+        internal ResultCode LoadTimeZoneRules(out TimeZoneRule outRules, string locationName)
         {
             outRules = new TimeZoneRule
             {
@@ -207,7 +206,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
             if (!IsLocationNameValid(locationName))
             {
-                return MakeError(ErrorModule.Time, TimeError.TimeZoneNotFound);
+                return ResultCode.TimeZoneNotFound;
             }
 
             if (!HasTimeZoneBinaryTitle())
@@ -222,7 +221,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
                     if (!TimeZone.ParsePosixName(posixRule, out outRules))
                     {
-                        return MakeError(ErrorModule.Time, TimeError.TimeZoneConversionFailed);
+                        return ResultCode.TimeZoneConversionFailed;
                     }
 
                     return 0;
@@ -231,7 +230,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 {
                     Logger.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {locationName})");
 
-                    return MakeError(ErrorModule.Time, TimeError.TimeZoneNotFound);
+                    return ResultCode.TimeZoneNotFound;
                 }
             }
             else
@@ -244,7 +243,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
                     if (!TimeZone.LoadTimeZoneRules(out outRules, tzIfStream))
                     {
-                        return MakeError(ErrorModule.Time, TimeError.TimeZoneConversionFailed);
+                        return ResultCode.TimeZoneConversionFailed;
                     }
                 }
 
@@ -252,38 +251,38 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             }
         }
 
-        internal uint ToCalendarTimeWithMyRules(long time, out CalendarInfo calendar)
+        internal ResultCode ToCalendarTimeWithMyRules(long time, out CalendarInfo calendar)
         {
             return ToCalendarTime(_myRules, time, out calendar);
         }
 
-        internal static uint ToCalendarTime(TimeZoneRule rules, long time, out CalendarInfo calendar)
+        internal static ResultCode ToCalendarTime(TimeZoneRule rules, long time, out CalendarInfo calendar)
         {
-            int error = TimeZone.ToCalendarTime(rules, time, out calendar);
+            ResultCode error = TimeZone.ToCalendarTime(rules, time, out calendar);
 
-            if (error != 0)
+            if (error != ResultCode.Success)
             {
-                return MakeError(ErrorModule.Time, error);
+                return error;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
-        internal uint ToPosixTimeWithMyRules(CalendarTime calendarTime, out long posixTime)
+        internal ResultCode ToPosixTimeWithMyRules(CalendarTime calendarTime, out long posixTime)
         {
             return ToPosixTime(_myRules, calendarTime, out posixTime);
         }
 
-        internal static uint ToPosixTime(TimeZoneRule rules, CalendarTime calendarTime, out long posixTime)
+        internal static ResultCode ToPosixTime(TimeZoneRule rules, CalendarTime calendarTime, out long posixTime)
         {
-            int error = TimeZone.ToPosixTime(rules, calendarTime, out posixTime);
+            ResultCode error = TimeZone.ToPosixTime(rules, calendarTime, out posixTime);
 
-            if (error != 0)
+            if (error != ResultCode.Success)
             {
-                return MakeError(ErrorModule.Time, error);
+                return error;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

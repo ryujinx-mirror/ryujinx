@@ -3,7 +3,6 @@ using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using System.Text;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
 using static Ryujinx.HLE.Utilities.StringUtils;
 
 namespace Ryujinx.HLE.HOS.Services.Lr
@@ -19,199 +18,199 @@ namespace Ryujinx.HLE.HOS.Services.Lr
 
         [Command(0)]
         // ResolveProgramPath()
-        public long ResolveProgramPath(ServiceCtx context)
+        public ResultCode ResolveProgramPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             if (ResolvePath(context, titleId, ContentType.Program))
             {
-                return 0;
+                return ResultCode.Success;
             }
             else
             {
-                return MakeError(ErrorModule.Lr, LrErr.ProgramLocationEntryNotFound);
+                return ResultCode.ProgramLocationEntryNotFound;
             }
         }
 
         [Command(1)]
         // RedirectProgramPath()
-        public long RedirectProgramPath(ServiceCtx context)
+        public ResultCode RedirectProgramPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             RedirectPath(context, titleId, 0, ContentType.Program);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // ResolveApplicationControlPath()
-        public long ResolveApplicationControlPath(ServiceCtx context)
+        public ResultCode ResolveApplicationControlPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             if (ResolvePath(context, titleId, ContentType.Control))
             {
-                return 0;
+                return ResultCode.Success;
             }
             else
             {
-                return MakeError(ErrorModule.Lr, LrErr.AccessDenied);
+                return ResultCode.AccessDenied;
             }
         }
 
         [Command(3)]
         // ResolveApplicationHtmlDocumentPath()
-        public long ResolveApplicationHtmlDocumentPath(ServiceCtx context)
+        public ResultCode ResolveApplicationHtmlDocumentPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             if (ResolvePath(context, titleId, ContentType.Manual))
             {
-                return 0;
+                return ResultCode.Success;
             }
             else
             {
-                return MakeError(ErrorModule.Lr, LrErr.AccessDenied);
+                return ResultCode.AccessDenied;
             }
         }
 
         [Command(4)]
         // ResolveDataPath()
-        public long ResolveDataPath(ServiceCtx context)
+        public ResultCode ResolveDataPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             if (ResolvePath(context, titleId, ContentType.Data) || ResolvePath(context, titleId, ContentType.PublicData))
             {
-                return 0;
+                return ResultCode.Success;
             }
             else
             {
-                return MakeError(ErrorModule.Lr, LrErr.AccessDenied);
+                return ResultCode.AccessDenied;
             }
         }
 
         [Command(5)]
         // RedirectApplicationControlPath()
-        public long RedirectApplicationControlPath(ServiceCtx context)
+        public ResultCode RedirectApplicationControlPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             RedirectPath(context, titleId, 1, ContentType.Control);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(6)]
         // RedirectApplicationHtmlDocumentPath()
-        public long RedirectApplicationHtmlDocumentPath(ServiceCtx context)
+        public ResultCode RedirectApplicationHtmlDocumentPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             RedirectPath(context, titleId, 1, ContentType.Manual);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(7)]
         // ResolveApplicationLegalInformationPath()
-        public long ResolveApplicationLegalInformationPath(ServiceCtx context)
+        public ResultCode ResolveApplicationLegalInformationPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             if (ResolvePath(context, titleId, ContentType.Manual))
             {
-                return 0;
+                return ResultCode.Success;
             }
             else
             {
-                return MakeError(ErrorModule.Lr, LrErr.AccessDenied);
+                return ResultCode.AccessDenied;
             }
         }
 
         [Command(8)]
         // RedirectApplicationLegalInformationPath()
-        public long RedirectApplicationLegalInformationPath(ServiceCtx context)
+        public ResultCode RedirectApplicationLegalInformationPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             RedirectPath(context, titleId, 1, ContentType.Manual);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(9)]
         // Refresh()
-        public long Refresh(ServiceCtx context)
+        public ResultCode Refresh(ServiceCtx context)
         {
             context.Device.System.ContentManager.RefreshEntries(_storageId, 1);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(10)]
         // SetProgramNcaPath2()
-        public long SetProgramNcaPath2(ServiceCtx context)
+        public ResultCode SetProgramNcaPath2(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             RedirectPath(context, titleId, 1, ContentType.Program);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(11)]
         // ClearLocationResolver2()
-        public long ClearLocationResolver2(ServiceCtx context)
+        public ResultCode ClearLocationResolver2(ServiceCtx context)
         {
             context.Device.System.ContentManager.RefreshEntries(_storageId, 1);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(12)]
         // DeleteProgramNcaPath()
-        public long DeleteProgramNcaPath(ServiceCtx context)
+        public ResultCode DeleteProgramNcaPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             DeleteContentPath(context, titleId, ContentType.Program);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(13)]
         // DeleteControlNcaPath()
-        public long DeleteControlNcaPath(ServiceCtx context)
+        public ResultCode DeleteControlNcaPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             DeleteContentPath(context, titleId, ContentType.Control);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(14)]
         // DeleteDocHtmlNcaPath()
-        public long DeleteDocHtmlNcaPath(ServiceCtx context)
+        public ResultCode DeleteDocHtmlNcaPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             DeleteContentPath(context, titleId, ContentType.Manual);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(15)]
         // DeleteInfoHtmlNcaPath()
-        public long DeleteInfoHtmlNcaPath(ServiceCtx context)
+        public ResultCode DeleteInfoHtmlNcaPath(ServiceCtx context)
         {
             long titleId = context.RequestData.ReadInt64();
 
             DeleteContentPath(context, titleId, ContentType.Manual);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private void RedirectPath(ServiceCtx context, long titleId, int flag, ContentType contentType)

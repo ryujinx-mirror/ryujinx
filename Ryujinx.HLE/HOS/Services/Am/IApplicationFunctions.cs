@@ -8,17 +8,17 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         [Command(1)]
         // PopLaunchParameter(u32) -> object<nn::am::service::IStorage>
-        public long PopLaunchParameter(ServiceCtx context)
+        public ResultCode PopLaunchParameter(ServiceCtx context)
         {
             // Only the first 0x18 bytes of the Data seems to be actually used.
             MakeObject(context, new IStorage(StorageHelper.MakeLaunchParams()));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(20)]
         // EnsureSaveData(nn::account::Uid) -> u64
-        public long EnsureSaveData(ServiceCtx context)
+        public ResultCode EnsureSaveData(ServiceCtx context)
         {
             long uIdLow  = context.RequestData.ReadInt64();
             long uIdHigh = context.RequestData.ReadInt64();
@@ -27,21 +27,21 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             context.ResponseData.Write(0L);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(21)]
         // GetDesiredLanguage() -> nn::settings::LanguageCode
-        public long GetDesiredLanguage(ServiceCtx context)
+        public ResultCode GetDesiredLanguage(ServiceCtx context)
         {
             context.ResponseData.Write(context.Device.System.State.DesiredLanguageCode);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(22)]
         // SetTerminateResult(u32)
-        public long SetTerminateResult(ServiceCtx context)
+        public ResultCode SetTerminateResult(ServiceCtx context)
         {
             int errorCode = context.RequestData.ReadInt32();
 
@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             Logger.PrintInfo(LogClass.ServiceAm, $"Result = 0x{errorCode:x8} ({result}).");
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private string GetFormattedErrorCode(int errorCode)
@@ -62,54 +62,54 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         [Command(23)]
         // GetDisplayVersion() -> nn::oe::DisplayVersion
-        public long GetDisplayVersion(ServiceCtx context)
+        public ResultCode GetDisplayVersion(ServiceCtx context)
         {
             // FIXME: Need to check correct version on a switch.
             context.ResponseData.Write(1L);
             context.ResponseData.Write(0L);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(40)]
         // NotifyRunning() -> b8
-        public long NotifyRunning(ServiceCtx context)
+        public ResultCode NotifyRunning(ServiceCtx context)
         {
             context.ResponseData.Write(1);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(50)] // 2.0.0+
         // GetPseudoDeviceId() -> nn::util::Uuid
-        public long GetPseudoDeviceId(ServiceCtx context)
+        public ResultCode GetPseudoDeviceId(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
 
             context.ResponseData.Write(0L);
             context.ResponseData.Write(0L);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(66)] // 3.0.0+
         // InitializeGamePlayRecording(u64, handle<copy>)
-        public long InitializeGamePlayRecording(ServiceCtx context)
+        public ResultCode InitializeGamePlayRecording(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(67)] // 3.0.0+
         // SetGamePlayRecordingState(u32)
-        public long SetGamePlayRecordingState(ServiceCtx context)
+        public ResultCode SetGamePlayRecordingState(ServiceCtx context)
         {
             int state = context.RequestData.ReadInt32();
 
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

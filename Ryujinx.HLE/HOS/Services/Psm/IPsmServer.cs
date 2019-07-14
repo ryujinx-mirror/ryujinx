@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Psm
 
         [Command(0)]
         // GetBatteryChargePercentage() -> u32
-        public static long GetBatteryChargePercentage(ServiceCtx context)
+        public static ResultCode GetBatteryChargePercentage(ServiceCtx context)
         {
             int chargePercentage = 100;
 
@@ -24,12 +24,12 @@ namespace Ryujinx.HLE.HOS.Services.Psm
 
             Logger.PrintStub(LogClass.ServicePsm, new { chargePercentage });
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetChargerType() -> u32
-        public static long GetChargerType(ServiceCtx context)
+        public static ResultCode GetChargerType(ServiceCtx context)
         {
             ChargerType chargerType = ChargerType.ChargerOrDock;
 
@@ -37,16 +37,16 @@ namespace Ryujinx.HLE.HOS.Services.Psm
 
             Logger.PrintStub(LogClass.ServicePsm, new { chargerType });
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(7)]
         // OpenSession() -> IPsmSession
-        public long OpenSession(ServiceCtx context)
+        public ResultCode OpenSession(ServiceCtx context)
         {
             MakeObject(context, new IPsmSession(context.Device.System));
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

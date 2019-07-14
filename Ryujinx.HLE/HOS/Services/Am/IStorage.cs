@@ -11,11 +11,11 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         [Command(0)]
         // Open() -> object<nn::am::service::IStorageAccessor>
-        public long Open(ServiceCtx context)
+        public ResultCode Open(ServiceCtx context)
         {
             MakeObject(context, new IStorageAccessor(this));
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

@@ -10,11 +10,11 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
 
         [Command(10101)]
         // SaveReportWithUser(nn::account::Uid, u64, pid, buffer<u8, 9>, buffer<bytes, 5>)
-        public static long SaveReportWithUser(ServiceCtx context)
+        public static ResultCode SaveReportWithUser(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServicePrepo);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

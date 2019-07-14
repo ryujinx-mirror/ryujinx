@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         [Command(0)]
         // ListAudioDeviceName() -> (u32, buffer<bytes, 6>)
-        public long ListAudioDeviceName(ServiceCtx context)
+        public ResultCode ListAudioDeviceName(ServiceCtx context)
         {
             string[] deviceNames = SystemStateMgr.AudioOutputs;
 
@@ -49,12 +49,12 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                 position += buffer.Length;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // SetAudioDeviceOutputVolume(u32, buffer<bytes, 5>)
-        public long SetAudioDeviceOutputVolume(ServiceCtx context)
+        public ResultCode SetAudioDeviceOutputVolume(ServiceCtx context)
         {
             float volume = context.RequestData.ReadSingle();
 
@@ -67,12 +67,12 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             Logger.PrintStub(LogClass.ServiceAudio);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // GetActiveAudioDeviceName() -> buffer<bytes, 6>
-        public long GetActiveAudioDeviceName(ServiceCtx context)
+        public ResultCode GetActiveAudioDeviceName(ServiceCtx context)
         {
             string name = context.Device.System.State.ActiveAudioOutput;
 
@@ -90,12 +90,12 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                 Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // QueryAudioDeviceSystemEvent() -> handle<copy, event>
-        public long QueryAudioDeviceSystemEvent(ServiceCtx context)
+        public ResultCode QueryAudioDeviceSystemEvent(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_systemEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
@@ -106,23 +106,23 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             Logger.PrintStub(LogClass.ServiceAudio);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(5)]
         // GetActiveChannelCount() -> u32
-        public long GetActiveChannelCount(ServiceCtx context)
+        public ResultCode GetActiveChannelCount(ServiceCtx context)
         {
             context.ResponseData.Write(2);
 
             Logger.PrintStub(LogClass.ServiceAudio);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(6)]
         // ListAudioDeviceNameAuto() -> (u32, buffer<bytes, 0x22>)
-        public long ListAudioDeviceNameAuto(ServiceCtx context)
+        public ResultCode ListAudioDeviceNameAuto(ServiceCtx context)
         {
             string[] deviceNames = SystemStateMgr.AudioOutputs;
 
@@ -148,12 +148,12 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                 position += buffer.Length;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(7)]
         // SetAudioDeviceOutputVolumeAuto(u32, buffer<bytes, 0x21>)
-        public long SetAudioDeviceOutputVolumeAuto(ServiceCtx context)
+        public ResultCode SetAudioDeviceOutputVolumeAuto(ServiceCtx context)
         {
             float volume = context.RequestData.ReadSingle();
 
@@ -165,23 +165,23 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             Logger.PrintStub(LogClass.ServiceAudio);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(8)]
         // GetAudioDeviceOutputVolumeAuto(buffer<bytes, 0x21>) -> u32
-        public long GetAudioDeviceOutputVolumeAuto(ServiceCtx context)
+        public ResultCode GetAudioDeviceOutputVolumeAuto(ServiceCtx context)
         {
             context.ResponseData.Write(1f);
 
             Logger.PrintStub(LogClass.ServiceAudio);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(10)]
         // GetActiveAudioDeviceNameAuto() -> buffer<bytes, 0x22>
-        public long GetActiveAudioDeviceNameAuto(ServiceCtx context)
+        public ResultCode GetActiveAudioDeviceNameAuto(ServiceCtx context)
         {
             string name = context.Device.System.State.ActiveAudioOutput;
 
@@ -198,12 +198,12 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                 Logger.PrintError(LogClass.ServiceAudio, $"Output buffer size {size} too small!");
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(11)]
         // QueryAudioDeviceInputEvent() -> handle<copy, event>
-        public long QueryAudioDeviceInputEvent(ServiceCtx context)
+        public ResultCode QueryAudioDeviceInputEvent(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_systemEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
@@ -214,12 +214,12 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             Logger.PrintStub(LogClass.ServiceAudio);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(12)]
         // QueryAudioDeviceOutputEvent() -> handle<copy, event>
-        public long QueryAudioDeviceOutputEvent(ServiceCtx context)
+        public ResultCode QueryAudioDeviceOutputEvent(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_systemEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
@@ -230,7 +230,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             Logger.PrintStub(LogClass.ServiceAudio);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

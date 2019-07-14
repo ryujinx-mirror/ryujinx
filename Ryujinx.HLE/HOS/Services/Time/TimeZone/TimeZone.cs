@@ -1237,7 +1237,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             }
         }
 
-        private static int CreateCalendarTime(long time, int gmtOffset, out CalendarTimeInternal calendarTime, out CalendarAdditionalInfo calendarAdditionalInfo)
+        private static ResultCode CreateCalendarTime(long time, int gmtOffset, out CalendarTimeInternal calendarTime, out CalendarAdditionalInfo calendarAdditionalInfo)
         {
             long year             = EpochYear;
             long timeDays         = time / SecondsPerDay;
@@ -1263,7 +1263,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
                 if (IncrementOverflow64(ref newYear, delta))
                 {
-                    return TimeError.OutOfRange;
+                    return ResultCode.OutOfRange;
                 }
 
                 long leapDays = GetLeapDays(newYear - 1) - GetLeapDays(year - 1);
@@ -1290,7 +1290,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             {
                 if (IncrementOverflow64(ref year, -1))
                 {
-                    return TimeError.OutOfRange;
+                    return ResultCode.OutOfRange;
                 }
 
                 dayOfYear += YearLengths[IsLeap((int)year)];
@@ -1302,7 +1302,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
                 if (IncrementOverflow64(ref year, 1))
                 {
-                    return TimeError.OutOfRange;
+                    return ResultCode.OutOfRange;
                 }
             }
 
@@ -1340,7 +1340,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             return 0;
         }
 
-        private static int ToCalendarTimeInternal(TimeZoneRule rules, long time, out CalendarTimeInternal calendarTime, out CalendarAdditionalInfo calendarAdditionalInfo)
+        private static ResultCode ToCalendarTimeInternal(TimeZoneRule rules, long time, out CalendarTimeInternal calendarTime, out CalendarAdditionalInfo calendarAdditionalInfo)
         {
             calendarTime           = new CalendarTimeInternal();
             calendarAdditionalInfo = new CalendarAdditionalInfo()
@@ -1348,7 +1348,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 TimezoneName = new char[8]
             };
 
-            int result;
+            ResultCode result;
 
             if ((rules.GoAhead && time < rules.Ats[0]) || (rules.GoBack && time > rules.Ats[rules.TimeCount - 1]))
             {
@@ -1382,7 +1382,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
                 if (newTime < rules.Ats[0] && newTime > rules.Ats[rules.TimeCount - 1])
                 {
-                    return TimeError.TimeNotFound;
+                    return ResultCode.TimeNotFound;
                 }
 
                 result = ToCalendarTimeInternal(rules, newTime, out calendarTime, out calendarAdditionalInfo);
@@ -1400,7 +1400,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                     calendarTime.Year += years;
                 }
 
-                return 0;
+                return ResultCode.Success;
             }
 
             int ttiIndex;
@@ -1453,7 +1453,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             return result;
         }
 
-        private static int ToPosixTimeInternal(TimeZoneRule rules, CalendarTimeInternal calendarTime, out long posixTime)
+        private static ResultCode ToPosixTimeInternal(TimeZoneRule rules, CalendarTimeInternal calendarTime, out long posixTime)
         {
             posixTime = 0;
 
@@ -1462,7 +1462,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
             if (NormalizeOverflow32(ref hour, ref minute, MinutesPerHour))
             {
-                return TimeError.Overflow;
+                return ResultCode.Overflow;
             }
 
             calendarTime.Minute = (sbyte)minute;
@@ -1470,7 +1470,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             int day = calendarTime.Day;
             if (NormalizeOverflow32(ref day, ref hour, HoursPerDays))
             {
-                return TimeError.Overflow;
+                return ResultCode.Overflow;
             }
 
             calendarTime.Day  = (sbyte)day;
@@ -1481,21 +1481,21 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
             if (NormalizeOverflow64(ref year, ref month, MonthsPerYear))
             {
-                return TimeError.Overflow;
+                return ResultCode.Overflow;
             }
 
             calendarTime.Month = (sbyte)month;
 
             if (IncrementOverflow64(ref year, YearBase))
             {
-                return TimeError.Overflow;
+                return ResultCode.Overflow;
             }
 
             while (day <= 0)
             {
                 if (IncrementOverflow64(ref year, -1))
                 {
-                    return TimeError.Overflow;
+                    return ResultCode.Overflow;
                 }
 
                 long li = year;
@@ -1521,7 +1521,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
                 if (IncrementOverflow64(ref year, 1))
                 {
-                    return TimeError.Overflow;
+                    return ResultCode.Overflow;
                 }
             }
 
@@ -1542,7 +1542,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                     calendarTime.Month = 0;
                     if (IncrementOverflow64(ref year, 1))
                     {
-                        return TimeError.Overflow;
+                        return ResultCode.Overflow;
                     }
                 }
             }
@@ -1551,7 +1551,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
             if (IncrementOverflow64(ref year, -YearBase))
             {
-                return TimeError.Overflow;
+                return ResultCode.Overflow;
             }
 
             calendarTime.Year = year;
@@ -1567,7 +1567,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 int second = calendarTime.Second;
                 if (IncrementOverflow32(ref second, 1 - SecondsPerMinute))
                 {
-                    return TimeError.Overflow;
+                    return ResultCode.Overflow;
                 }
 
                 savedSeconds = second;
@@ -1597,7 +1597,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
                 int direction;
 
-                int result = ToCalendarTimeInternal(rules, pivot, out CalendarTimeInternal candidateCalendarTime, out _);
+                ResultCode result = ToCalendarTimeInternal(rules, pivot, out CalendarTimeInternal candidateCalendarTime, out _);
                 if (result != 0)
                 {
                     if (pivot > 0)
@@ -1620,7 +1620,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
                     if ((timeResult < pivot) != (savedSeconds < 0))
                     {
-                        return TimeError.Overflow;
+                        return ResultCode.Overflow;
                     }
 
                     posixTime = timeResult;
@@ -1632,7 +1632,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                     {
                         if (pivot == long.MaxValue)
                         {
-                            return TimeError.TimeNotFound;
+                            return ResultCode.TimeNotFound;
                         }
 
                         pivot += 1;
@@ -1642,7 +1642,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                     {
                         if (pivot == long.MinValue)
                         {
-                            return TimeError.TimeNotFound;
+                            return ResultCode.TimeNotFound;
                         }
 
                         pivot -= 1;
@@ -1651,7 +1651,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
                     if (low > high)
                     {
-                        return TimeError.TimeNotFound;
+                        return ResultCode.TimeNotFound;
                     }
 
                     if (direction > 0)
@@ -1665,12 +1665,12 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 }
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
-        internal static int ToCalendarTime(TimeZoneRule rules, long time, out CalendarInfo calendar)
+        internal static ResultCode ToCalendarTime(TimeZoneRule rules, long time, out CalendarInfo calendar)
         {
-            int result = ToCalendarTimeInternal(rules, time, out CalendarTimeInternal calendarTime, out CalendarAdditionalInfo calendarAdditionalInfo);
+            ResultCode result = ToCalendarTimeInternal(rules, time, out CalendarTimeInternal calendarTime, out CalendarAdditionalInfo calendarAdditionalInfo);
 
             calendar = new CalendarInfo()
             {
@@ -1689,7 +1689,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             return result;
         }
 
-        internal static int ToPosixTime(TimeZoneRule rules, CalendarTime calendarTime, out long posixTime)
+        internal static ResultCode ToPosixTime(TimeZoneRule rules, CalendarTime calendarTime, out long posixTime)
         {
             CalendarTimeInternal calendarTimeInternal = new CalendarTimeInternal()
             {

@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Spl
 
         [Command(0)]
         // GetRandomBytes() -> buffer<unknown, 6>
-        public long GetRandomBytes(ServiceCtx context)
+        public ResultCode GetRandomBytes(ServiceCtx context)
         {
             byte[] randomBytes = new byte[context.Request.ReceiveBuff[0].Size];
 
@@ -23,7 +23,7 @@ namespace Ryujinx.HLE.HOS.Services.Spl
 
             context.Memory.WriteBytes(context.Request.ReceiveBuff[0].Position, randomBytes);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         public void Dispose()

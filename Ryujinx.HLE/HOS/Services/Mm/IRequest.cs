@@ -9,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
 
         [Command(0)]
         // InitializeOld(u32, u32, u32)
-        public long InitializeOld(ServiceCtx context)
+        public ResultCode InitializeOld(ServiceCtx context)
         {
             int unknown0 = context.RequestData.ReadInt32();
             int unknown1 = context.RequestData.ReadInt32();
@@ -17,35 +17,35 @@ namespace Ryujinx.HLE.HOS.Services.Mm
 
             Logger.PrintStub(LogClass.ServiceMm, new { unknown0, unknown1, unknown2 });
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // FinalizeOld(u32)
-        public long FinalizeOld(ServiceCtx context)
+        public ResultCode FinalizeOld(ServiceCtx context)
         {
             context.Device.Gpu.UninitializeVideoDecoder();
 
             Logger.PrintStub(LogClass.ServiceMm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // SetAndWaitOld(u32, u32, u32)
-        public long SetAndWaitOld(ServiceCtx context)
+        public ResultCode SetAndWaitOld(ServiceCtx context)
         {
             int unknown0 = context.RequestData.ReadInt32();
             int unknown1 = context.RequestData.ReadInt32();
             int unknown2 = context.RequestData.ReadInt32();
 
             Logger.PrintStub(LogClass.ServiceMm, new { unknown0, unknown1, unknown2 });
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // GetOld(u32) -> u32
-        public long GetOld(ServiceCtx context)
+        public ResultCode GetOld(ServiceCtx context)
         {
             int unknown0 = context.RequestData.ReadInt32();
 
@@ -53,32 +53,32 @@ namespace Ryujinx.HLE.HOS.Services.Mm
 
             context.ResponseData.Write(0);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // Initialize()
-        public long Initialize(ServiceCtx context)
+        public ResultCode Initialize(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceMm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(5)]
         // Finalize(u32)
-        public long Finalize(ServiceCtx context)
+        public ResultCode Finalize(ServiceCtx context)
         {
             context.Device.Gpu.UninitializeVideoDecoder();
 
             Logger.PrintStub(LogClass.ServiceMm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(6)]
         // SetAndWait(u32, u32, u32)
-        public long SetAndWait(ServiceCtx context)
+        public ResultCode SetAndWait(ServiceCtx context)
         {
             int unknown0 = context.RequestData.ReadInt32();
             int unknown1 = context.RequestData.ReadInt32();
@@ -86,12 +86,12 @@ namespace Ryujinx.HLE.HOS.Services.Mm
 
             Logger.PrintStub(LogClass.ServiceMm, new { unknown0, unknown1, unknown2 });
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(7)]
         // Get(u32) -> u32
-        public long Get(ServiceCtx context)
+        public ResultCode Get(ServiceCtx context)
         {
             int unknown0 = context.RequestData.ReadInt32();
 
@@ -99,7 +99,7 @@ namespace Ryujinx.HLE.HOS.Services.Mm
 
             context.ResponseData.Write(0);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

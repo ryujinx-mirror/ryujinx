@@ -12,18 +12,18 @@ namespace Ryujinx.HLE.HOS.Services.Pl
 
         [Command(0)]
         // RequestLoad(u32)
-        public long RequestLoad(ServiceCtx context)
+        public ResultCode RequestLoad(ServiceCtx context)
         {
             SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
 
             // We don't need to do anything here because we do lazy initialization
             // on SharedFontManager (the font is loaded when necessary).
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetLoadState(u32) -> u32
-        public long GetLoadState(ServiceCtx context)
+        public ResultCode GetLoadState(ServiceCtx context)
         {
             SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
 
@@ -31,34 +31,34 @@ namespace Ryujinx.HLE.HOS.Services.Pl
             // All fonts are already loaded.
             context.ResponseData.Write(1);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // GetFontSize(u32) -> u32
-        public long GetFontSize(ServiceCtx context)
+        public ResultCode GetFontSize(ServiceCtx context)
         {
             SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
 
             context.ResponseData.Write(context.Device.System.Font.GetFontSize(fontType));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // GetSharedMemoryAddressOffset(u32) -> u32
-        public long GetSharedMemoryAddressOffset(ServiceCtx context)
+        public ResultCode GetSharedMemoryAddressOffset(ServiceCtx context)
         {
             SharedFontType fontType = (SharedFontType)context.RequestData.ReadInt32();
 
             context.ResponseData.Write(context.Device.System.Font.GetSharedMemoryAddressOffset(fontType));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // GetSharedMemoryNativeHandle() -> handle<copy>
-        public long GetSharedMemoryNativeHandle(ServiceCtx context)
+        public ResultCode GetSharedMemoryNativeHandle(ServiceCtx context)
         {
             context.Device.System.Font.EnsureInitialized(context.Device.System.ContentManager);
 
@@ -69,12 +69,12 @@ namespace Ryujinx.HLE.HOS.Services.Pl
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(5)]
         // GetSharedFontInOrderOfPriority(bytes<8, 1>) -> (u8, u32, buffer<unknown, 6>, buffer<unknown, 6>, buffer<unknown, 6>)
-        public long GetSharedFontInOrderOfPriority(ServiceCtx context)
+        public ResultCode GetSharedFontInOrderOfPriority(ServiceCtx context)
         {
             long languageCode = context.RequestData.ReadInt64();
             int  loadedCount  = 0;
@@ -94,7 +94,7 @@ namespace Ryujinx.HLE.HOS.Services.Pl
             context.ResponseData.Write(loadedCount);
             context.ResponseData.Write((int)SharedFontType.Count);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private bool AddFontToOrderOfPriorityList(ServiceCtx context, SharedFontType fontType, int offset)

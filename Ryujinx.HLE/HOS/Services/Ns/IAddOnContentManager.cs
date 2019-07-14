@@ -9,18 +9,18 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
         [Command(2)]
         // CountAddOnContent(u64, pid) -> u32
-        public static long CountAddOnContent(ServiceCtx context)
+        public static ResultCode CountAddOnContent(ServiceCtx context)
         {
             context.ResponseData.Write(0);
 
             Logger.PrintStub(LogClass.ServiceNs);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // ListAddOnContent(u32, u32, u64, pid) -> (u32, buffer<u32, 6>)
-        public static long ListAddOnContent(ServiceCtx context)
+        public static ResultCode ListAddOnContent(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNs);
 
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             // It's unknown what it contains.
             context.ResponseData.Write(0);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

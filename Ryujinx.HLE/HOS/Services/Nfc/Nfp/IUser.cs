@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
         [Command(0)]
         // Initialize(u64, u64, pid, buffer<unknown, 5>)
-        public long Initialize(ServiceCtx context)
+        public ResultCode Initialize(ServiceCtx context)
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
             long mcuVersionData       = context.RequestData.ReadInt64();
@@ -50,12 +50,12 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             _state = State.Initialized;
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // Finalize()
-        public long Finalize(ServiceCtx context)
+        public ResultCode Finalize(ServiceCtx context)
         {
             // TODO: Call StopDetection() and Unmount() when they will be implemented.
             //       Remove the instance of nn::nfc::server::Manager when it will be implemented.
@@ -65,16 +65,16 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             _state = State.NonInitialized;
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // ListDevices() -> (u32, buffer<unknown, 0xa>)
-        public long ListDevices(ServiceCtx context)
+        public ResultCode ListDevices(ServiceCtx context)
         {
             if (context.Request.RecvListBuff.Count == 0)
             {
-                return ErrorCode.MakeError(ErrorModule.Nfp, NfpError.DevicesBufferIsNull);
+                return ResultCode.DevicesBufferIsNull;
             }
 
             long outputPosition = context.Request.RecvListBuff[0].Position;
@@ -82,7 +82,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             if (_devices.Count == 0)
             {
-                return ErrorCode.MakeError(ErrorModule.Nfp, NfpError.DeviceNotFound);
+                return ResultCode.DeviceNotFound;
             }
 
             for (int i = 0; i < _devices.Count; i++)
@@ -92,110 +92,110 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             context.ResponseData.Write(_devices.Count);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // StartDetection(bytes<8, 4>)
-        public long StartDetection(ServiceCtx context)
+        public ResultCode StartDetection(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(4)]
         // StopDetection(bytes<8, 4>)
-        public long StopDetection(ServiceCtx context)
+        public ResultCode StopDetection(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(5)]
         // Mount(bytes<8, 4>, u32, u32)
-        public long Mount(ServiceCtx context)
+        public ResultCode Mount(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(6)]
         // Unmount(bytes<8, 4>)
-        public long Unmount(ServiceCtx context)
+        public ResultCode Unmount(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(7)]
         // OpenApplicationArea(bytes<8, 4>, u32)
-        public long OpenApplicationArea(ServiceCtx context)
+        public ResultCode OpenApplicationArea(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(8)]
         // GetApplicationArea(bytes<8, 4>) -> (u32, buffer<unknown, 6>)
-        public long GetApplicationArea(ServiceCtx context)
+        public ResultCode GetApplicationArea(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(9)]
         // SetApplicationArea(bytes<8, 4>, buffer<unknown, 5>)
-        public long SetApplicationArea(ServiceCtx context)
+        public ResultCode SetApplicationArea(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(10)]
         // Flush(bytes<8, 4>)
-        public long Flush(ServiceCtx context)
+        public ResultCode Flush(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(11)]
         // Restore(bytes<8, 4>)
-        public long Restore(ServiceCtx context)
+        public ResultCode Restore(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(12)]
         // CreateApplicationArea(bytes<8, 4>, u32, buffer<unknown, 5>)
-        public long CreateApplicationArea(ServiceCtx context)
+        public ResultCode CreateApplicationArea(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(13)]
         // GetTagInfo(bytes<8, 4>) -> buffer<unknown<0x58>, 0x1a>
-        public long GetTagInfo(ServiceCtx context)
+        public ResultCode GetTagInfo(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(14)]
         // GetRegisterInfo(bytes<8, 4>) -> buffer<unknown<0x100>, 0x1a>
-        public long GetRegisterInfo(ServiceCtx context)
+        public ResultCode GetRegisterInfo(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(15)]
         // GetCommonInfo(bytes<8, 4>) -> buffer<unknown<0x40>, 0x1a>
-        public long GetCommonInfo(ServiceCtx context)
+        public ResultCode GetCommonInfo(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(16)]
         // GetModelInfo(bytes<8, 4>) -> buffer<unknown<0x40>, 0x1a>
-        public long GetModelInfo(ServiceCtx context)
+        public ResultCode GetModelInfo(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(17)]
         // AttachActivateEvent(bytes<8, 4>) -> handle<copy>
-        public long AttachActivateEvent(ServiceCtx context)
+        public ResultCode AttachActivateEvent(ServiceCtx context)
         {
             uint deviceHandle = context.RequestData.ReadUInt32();
 
@@ -215,16 +215,16 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
                     context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_devices[i].ActivateEventHandle);
 
-                    return 0;
+                    return ResultCode.Success;
                 }
             }
 
-            return ErrorCode.MakeError(ErrorModule.Nfp, NfpError.DeviceNotFound);
+            return ResultCode.DeviceNotFound;
         }
 
         [Command(18)]
         // AttachDeactivateEvent(bytes<8, 4>) -> handle<copy>
-        public long AttachDeactivateEvent(ServiceCtx context)
+        public ResultCode AttachDeactivateEvent(ServiceCtx context)
         {
             uint deviceHandle = context.RequestData.ReadUInt32();
 
@@ -244,25 +244,25 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
                     context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_devices[i].DeactivateEventHandle);
 
-                    return 0;
+                    return ResultCode.Success;
                 }
             }
 
-            return ErrorCode.MakeError(ErrorModule.Nfp, NfpError.DeviceNotFound);
+            return ResultCode.DeviceNotFound;
         }
 
         [Command(19)]
         // GetState() -> u32
-        public long GetState(ServiceCtx context)
+        public ResultCode GetState(ServiceCtx context)
         {
             context.ResponseData.Write((int)_state);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(20)]
         // GetDeviceState(bytes<8, 4>) -> u32
-        public long GetDeviceState(ServiceCtx context)
+        public ResultCode GetDeviceState(ServiceCtx context)
         {
             uint deviceHandle = context.RequestData.ReadUInt32();
 
@@ -272,18 +272,18 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 {
                     context.ResponseData.Write((uint)_devices[i].State);
 
-                    return 0;
+                    return ResultCode.Success;
                 }
             }
 
             context.ResponseData.Write((uint)DeviceState.Unavailable);
 
-            return ErrorCode.MakeError(ErrorModule.Nfp, NfpError.DeviceNotFound);
+            return ResultCode.DeviceNotFound;
         }
 
         [Command(21)]
         // GetNpadId(bytes<8, 4>) -> u32
-        public long GetNpadId(ServiceCtx context)
+        public ResultCode GetNpadId(ServiceCtx context)
         {
             uint deviceHandle = context.RequestData.ReadUInt32();
 
@@ -293,23 +293,23 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 {
                     context.ResponseData.Write((uint)HidUtils.GetNpadIdTypeFromIndex(_devices[i].Handle));
 
-                    return 0;
+                    return ResultCode.Success;
                 }
             }
 
-            return ErrorCode.MakeError(ErrorModule.Nfp, NfpError.DeviceNotFound);
+            return ResultCode.DeviceNotFound;
         }
 
         [Command(22)]
         // GetApplicationAreaSize(bytes<8, 4>) -> u32
-        public long GetApplicationAreaSize(ServiceCtx context)
+        public ResultCode GetApplicationAreaSize(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }
 
         [Command(23)] // 3.0.0+
         // AttachAvailabilityChangeEvent() -> handle<copy>
-        public long AttachAvailabilityChangeEvent(ServiceCtx context)
+        public ResultCode AttachAvailabilityChangeEvent(ServiceCtx context)
         {
             if (_availabilityChangeEventHandle == 0)
             {
@@ -323,12 +323,12 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_availabilityChangeEventHandle);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(24)] // 3.0.0+
         // RecreateApplicationArea(bytes<8, 4>, u32, buffer<unknown, 5>)
-        public long RecreateApplicationArea(ServiceCtx context)
+        public ResultCode RecreateApplicationArea(ServiceCtx context)
         {
             throw new ServiceNotImplementedException(context);
         }

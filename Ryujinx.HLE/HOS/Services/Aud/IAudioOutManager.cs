@@ -5,8 +5,6 @@ using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Aud.AudioOut;
 using System.Text;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
-
 namespace Ryujinx.HLE.HOS.Services.Aud
 {
     [Service("audout:u")]
@@ -20,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         [Command(0)]
         // ListAudioOuts() -> (u32 count, buffer<bytes, 6>)
-        public long ListAudioOuts(ServiceCtx context)
+        public ResultCode ListAudioOuts(ServiceCtx context)
         {
             return ListAudioOutsImpl(
                 context,
@@ -31,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
         [Command(1)]
         // OpenAudioOut(u32 sample_rate, u16 unused, u16 channel_count, nn::applet::AppletResourceUserId, pid, handle<copy, process>, buffer<bytes, 5> name_in)
         // -> (u32 sample_rate, u32 channel_count, u32 pcm_format, u32, object<nn::audio::detail::IAudioOut>, buffer<bytes, 6> name_out)
-        public long OpenAudioOut(ServiceCtx context)
+        public ResultCode OpenAudioOut(ServiceCtx context)
         {
             return OpenAudioOutImpl(
                 context,
@@ -43,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         [Command(2)] // 3.0.0+
         // ListAudioOutsAuto() -> (u32 count, buffer<bytes, 0x22>)
-        public long ListAudioOutsAuto(ServiceCtx context)
+        public ResultCode ListAudioOutsAuto(ServiceCtx context)
         {
             (long recvPosition, long recvSize) = context.Request.GetBufferType0x22();
 
@@ -53,7 +51,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
         [Command(3)] // 3.0.0+
         // OpenAudioOutAuto(u32 sample_rate, u16 unused, u16 channel_count, nn::applet::AppletResourceUserId, pid, handle<copy, process>, buffer<bytes, 0x21>)
         // -> (u32 sample_rate, u32 channel_count, u32 pcm_format, u32, object<nn::audio::detail::IAudioOut>, buffer<bytes, 0x22> name_out)
-        public long OpenAudioOutAuto(ServiceCtx context)
+        public ResultCode OpenAudioOutAuto(ServiceCtx context)
         {
             (long sendPosition, long sendSize) = context.Request.GetBufferType0x21();
             (long recvPosition, long recvSize) = context.Request.GetBufferType0x22();
@@ -66,7 +64,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                 recvSize);
         }
 
-        private long ListAudioOutsImpl(ServiceCtx context, long position, long size)
+        private ResultCode ListAudioOutsImpl(ServiceCtx context, long position, long size)
         {
             int nameCount = 0;
 
@@ -85,10 +83,10 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             context.ResponseData.Write(nameCount);
 
-            return 0;
+            return ResultCode.Success;
         }
 
-        private long OpenAudioOutImpl(ServiceCtx context, long sendPosition, long sendSize, long receivePosition, long receiveSize)
+        private ResultCode OpenAudioOutImpl(ServiceCtx context, long sendPosition, long sendSize, long receivePosition, long receiveSize)
         {
             string deviceName = MemoryHelper.ReadAsciiString(
                 context.Memory,
@@ -104,7 +102,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             {
                 Logger.PrintWarning(LogClass.Audio, "Invalid device name!");
 
-                return MakeError(ErrorModule.Audio, AudErr.DeviceNotFound);
+                return ResultCode.DeviceNotFound;
             }
 
             byte[] deviceNameBuffer = Encoding.ASCII.GetBytes(deviceName + "\0");
@@ -130,7 +128,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             {
                 Logger.PrintWarning(LogClass.Audio, "Invalid sample rate!");
 
-                return MakeError(ErrorModule.Audio, AudErr.UnsupportedSampleRate);
+                return ResultCode.UnsupportedSampleRate;
             }
 
             channels = (ushort)channels;
@@ -158,7 +156,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             context.ResponseData.Write((int)SampleFormat.PcmInt16);
             context.ResponseData.Write((int)PlaybackState.Stopped);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

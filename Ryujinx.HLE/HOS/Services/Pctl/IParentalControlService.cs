@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl
 
         [Command(1)] // 4.0.0+
         // Initialize()
-        public long Initialize(ServiceCtx context)
+        public ResultCode Initialize(ServiceCtx context)
         {
             if (_needInitialize && !_initialized)
             {
@@ -26,16 +26,16 @@ namespace Ryujinx.HLE.HOS.Services.Pctl
                 Logger.PrintWarning(LogClass.ServicePctl, "Service is already initialized!");
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1001)]
         // CheckFreeCommunicationPermission()
-        public long CheckFreeCommunicationPermission(ServiceCtx context)
+        public ResultCode CheckFreeCommunicationPermission(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServicePctl);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

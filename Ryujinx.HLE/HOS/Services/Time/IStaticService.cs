@@ -17,52 +17,52 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
         [Command(0)]
         // GetStandardUserSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
-        public long GetStandardUserSystemClock(ServiceCtx context)
+        public ResultCode GetStandardUserSystemClock(ServiceCtx context)
         {
             MakeObject(context, new ISystemClock(SystemClockType.User));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetStandardNetworkSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
-        public long GetStandardNetworkSystemClock(ServiceCtx context)
+        public ResultCode GetStandardNetworkSystemClock(ServiceCtx context)
         {
             MakeObject(context, new ISystemClock(SystemClockType.Network));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // GetStandardSteadyClock() -> object<nn::timesrv::detail::service::ISteadyClock>
-        public long GetStandardSteadyClock(ServiceCtx context)
+        public ResultCode GetStandardSteadyClock(ServiceCtx context)
         {
             MakeObject(context, new ISteadyClock());
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // GetTimeZoneService() -> object<nn::timesrv::detail::service::ITimeZoneService>
-        public long GetTimeZoneService(ServiceCtx context)
+        public ResultCode GetTimeZoneService(ServiceCtx context)
         {
             MakeObject(context, new ITimeZoneService());
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // GetStandardLocalSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
-        public long GetStandardLocalSystemClock(ServiceCtx context)
+        public ResultCode GetStandardLocalSystemClock(ServiceCtx context)
         {
             MakeObject(context, new ISystemClock(SystemClockType.Local));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(20)] // 6.0.0+
         // GetSharedMemoryNativeHandle() -> handle<copy>
-        public long GetSharedMemoryNativeHandle(ServiceCtx context)
+        public ResultCode GetSharedMemoryNativeHandle(ServiceCtx context)
         {
             if (_timeSharedMemoryNativeHandle == 0)
             {
@@ -74,20 +74,19 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_timeSharedMemoryNativeHandle);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(300)] // 4.0.0+
         // CalculateMonotonicSystemClockBaseTimePoint(nn::time::SystemClockContext) -> u64
-        public long CalculateMonotonicSystemClockBaseTimePoint(ServiceCtx context)
+        public ResultCode CalculateMonotonicSystemClockBaseTimePoint(ServiceCtx context)
         {
             long timeOffset              = (long)(DateTime.UtcNow - StartupDate).TotalSeconds;
             long systemClockContextEpoch = context.RequestData.ReadInt64();
 
             context.ResponseData.Write(timeOffset + systemClockContextEpoch);
 
-            return 0;
+            return ResultCode.Success;
         }
-
     }
 }

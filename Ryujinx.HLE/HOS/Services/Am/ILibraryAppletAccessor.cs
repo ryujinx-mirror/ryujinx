@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         [Command(0)]
         // GetAppletStateChangedEvent() -> handle<copy>
-        public long GetAppletStateChangedEvent(ServiceCtx context)
+        public ResultCode GetAppletStateChangedEvent(ServiceCtx context)
         {
             _stateChangedEvent.ReadableEvent.Signal();
 
@@ -30,43 +30,43 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(10)]
         // Start()
-        public long Start(ServiceCtx context)
+        public ResultCode Start(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(30)]
         // GetResult()
-        public long GetResult(ServiceCtx context)
+        public ResultCode GetResult(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(100)]
         // PushInData(object<nn::am::service::IStorage>)
-        public long PushInData(ServiceCtx context)
+        public ResultCode PushInData(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(101)]
         // PopOutData() -> object<nn::am::service::IStorage>
-        public long PopOutData(ServiceCtx context)
+        public ResultCode PopOutData(ServiceCtx context)
         {
             MakeObject(context, new IStorage(StorageHelper.MakeLaunchParams()));
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

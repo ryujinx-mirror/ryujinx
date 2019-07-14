@@ -16,14 +16,14 @@ namespace Ryujinx.HLE.HOS.Services.Set
 
         [Command(3)]
         // GetFirmwareVersion() -> buffer<nn::settings::system::FirmwareVersion, 0x1a, 0x100>
-        public static long GetFirmwareVersion(ServiceCtx context)
+        public ResultCode GetFirmwareVersion(ServiceCtx context)
         {
             return GetFirmwareVersion2(context);
         }
 
         [Command(4)]
         // GetFirmwareVersion2() -> buffer<nn::settings::system::FirmwareVersion, 0x1a, 0x100>
-        public static long GetFirmwareVersion2(ServiceCtx context)
+        public ResultCode GetFirmwareVersion2(ServiceCtx context)
         {
             long replyPos  = context.Request.RecvListBuff[0].Position;
             long replySize = context.Request.RecvListBuff[0].Size;
@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
             {
                 context.Memory.WriteBytes(replyPos, firmwareData);
 
-                return 0;
+                return ResultCode.Success;
             }
 
             const byte majorFwVersion = 0x03;
@@ -78,32 +78,32 @@ namespace Ryujinx.HLE.HOS.Services.Set
                 context.Memory.WriteBytes(replyPos, ms.ToArray());
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(23)]
         // GetColorSetId() -> i32
-        public static long GetColorSetId(ServiceCtx context)
+        public ResultCode GetColorSetId(ServiceCtx context)
         {
             context.ResponseData.Write((int)context.Device.System.State.ThemeColor);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(24)]
         // GetColorSetId() -> i32
-        public static long SetColorSetId(ServiceCtx context)
+        public ResultCode SetColorSetId(ServiceCtx context)
         {
             int colorSetId = context.RequestData.ReadInt32();
 
             context.Device.System.State.ThemeColor = (ColorSet)colorSetId;
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(38)]
         // GetSettingsItemValue(buffer<nn::settings::SettingsName, 0x19, 0x48>, buffer<nn::settings::SettingsItemKey, 0x19, 0x48>) -> (u64, buffer<unknown, 6, 0>)
-        public static long GetSettingsItemValue(ServiceCtx context)
+        public ResultCode GetSettingsItemValue(ServiceCtx context)
         {
             long classPos  = context.Request.PtrBuff[0].Position;
             long classSize = context.Request.PtrBuff[0].Size;
@@ -159,10 +159,10 @@ namespace Ryujinx.HLE.HOS.Services.Set
                 Logger.PrintError(LogClass.ServiceSet, $"{askedSetting} not found!");
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
-        public static byte[] GetFirmwareData(Switch device)
+        public byte[] GetFirmwareData(Switch device)
         {
             long   titleId     = 0x0100000000000809;
             string contentPath = device.System.ContentManager.GetInstalledContentPath(titleId, StorageId.NandSystem, ContentType.Data);

@@ -8,17 +8,17 @@ namespace Ryujinx.HLE.HOS.Services.Apm
 
         [Command(0)]
         // SetPerformanceConfiguration(nn::apm::PerformanceMode, nn::apm::PerformanceConfiguration)
-        public long SetPerformanceConfiguration(ServiceCtx context)
+        public ResultCode SetPerformanceConfiguration(ServiceCtx context)
         {
             PerformanceMode          perfMode   = (PerformanceMode)context.RequestData.ReadInt32();
             PerformanceConfiguration perfConfig = (PerformanceConfiguration)context.RequestData.ReadInt32();
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetPerformanceConfiguration(nn::apm::PerformanceMode) -> nn::apm::PerformanceConfiguration
-        public long GetPerformanceConfiguration(ServiceCtx context)
+        public ResultCode GetPerformanceConfiguration(ServiceCtx context)
         {
             PerformanceMode perfMode = (PerformanceMode)context.RequestData.ReadInt32();
 
@@ -26,7 +26,7 @@ namespace Ryujinx.HLE.HOS.Services.Apm
 
             Logger.PrintStub(LogClass.ServiceApm);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

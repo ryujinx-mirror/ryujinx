@@ -5,8 +5,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
-
 namespace Ryujinx.HLE.HOS.Services.Sfdnsres
 {
     [Service("sfdnsres")]
@@ -142,7 +140,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
 
         [Command(0)]
         // SetDnsAddressesPrivate(u32, buffer<unknown, 5, 0>)
-        public long SetDnsAddressesPrivate(ServiceCtx context)
+        public ResultCode SetDnsAddressesPrivate(ServiceCtx context)
         {
             uint unknown0       = context.RequestData.ReadUInt32();
             long bufferPosition = context.Request.SendBuff[0].Position;
@@ -151,24 +149,24 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             // TODO: This is stubbed in 2.0.0+, reverse 1.0.0 version for the sake completeness.
             Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
 
-            return MakeError(ErrorModule.Os, 1023);
+            return ResultCode.NotAllocated;
         }
 
         [Command(1)]
         // GetDnsAddressPrivate(u32) -> buffer<unknown, 6, 0>
-        public long GetDnsAddressesPrivate(ServiceCtx context)
+        public ResultCode GetDnsAddressesPrivate(ServiceCtx context)
         {
             uint unknown0 = context.RequestData.ReadUInt32();
 
             // TODO: This is stubbed in 2.0.0+, reverse 1.0.0 version for the sake completeness.
             Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
 
-            return MakeError(ErrorModule.Os, 1023);
+            return ResultCode.NotAllocated;
         }
 
         [Command(2)]
         // GetHostByName(u8, u32, u64, pid, buffer<unknown, 5, 0>) -> (u32, u32, u32, buffer<unknown, 6, 0>)
-        public long GetHostByName(ServiceCtx context)
+        public ResultCode GetHostByName(ServiceCtx context)
         {
             byte[] rawName = context.Memory.ReadBytes(context.Request.SendBuff[0].Position, context.Request.SendBuff[0].Size);
             string name    = Encoding.ASCII.GetString(rawName).TrimEnd('\0');
@@ -243,12 +241,12 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             context.ResponseData.Write((int)errno);
             context.ResponseData.Write(serializedSize);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // GetHostByAddr(u32, u32, u32, u64, pid, buffer<unknown, 5, 0>) -> (u32, u32, u32, buffer<unknown, 6, 0>)
-        public long GetHostByAddress(ServiceCtx context)
+        public ResultCode GetHostByAddress(ServiceCtx context)
         {
             byte[] rawIp = context.Memory.ReadBytes(context.Request.SendBuff[0].Position, context.Request.SendBuff[0].Size);
 
@@ -313,14 +311,14 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
             context.ResponseData.Write((int)errno);
             context.ResponseData.Write(serializedSize);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // GetHostStringError(u32) -> buffer<unknown, 6, 0>
-        public long GetHostStringError(ServiceCtx context)
+        public ResultCode GetHostStringError(ServiceCtx context)
         {
-            long       resultCode  = MakeError(ErrorModule.Os, 1023);
+            ResultCode resultCode  = ResultCode.NotAllocated;
             NetDbError errorCode   = (NetDbError)context.RequestData.ReadInt32();
             string     errorString = GetHostStringErrorFromErrorCode(errorCode);
 
@@ -335,11 +333,11 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
 
         [Command(5)]
         // GetGaiStringError(u32) -> buffer<unknown, 6, 0>
-        public long GetGaiStringError(ServiceCtx context)
+        public ResultCode GetGaiStringError(ServiceCtx context)
         {
-            long     resultCode  = MakeError(ErrorModule.Os, 1023);
-            GaiError errorCode   = (GaiError)context.RequestData.ReadInt32();
-            string   errorString = GetGaiStringErrorFromErrorCode(errorCode);
+            ResultCode resultCode  = ResultCode.NotAllocated;
+            GaiError   errorCode   = (GaiError)context.RequestData.ReadInt32();
+            string     errorString = GetGaiStringErrorFromErrorCode(errorCode);
 
             if (errorString.Length + 1 <= context.Request.ReceiveBuff[0].Size)
             {
@@ -352,7 +350,7 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
 
         [Command(8)]
         // RequestCancelHandle(u64, pid) -> u32
-        public long RequestCancelHandle(ServiceCtx context)
+        public ResultCode RequestCancelHandle(ServiceCtx context)
         {
             ulong unknown0 = context.RequestData.ReadUInt64();
 
@@ -360,30 +358,30 @@ namespace Ryujinx.HLE.HOS.Services.Sfdnsres
 
             Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(9)]
         // CancelSocketCall(u32, u64, pid)
-        public long CancelSocketCall(ServiceCtx context)
+        public ResultCode CancelSocketCall(ServiceCtx context)
         {
             uint  unknown0 = context.RequestData.ReadUInt32();
             ulong unknown1 = context.RequestData.ReadUInt64();
 
             Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0, unknown1 });
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(11)]
         // ClearDnsAddresses(u32)
-        public long ClearDnsAddresses(ServiceCtx context)
+        public ResultCode ClearDnsAddresses(ServiceCtx context)
         {
             uint unknown0 = context.RequestData.ReadUInt32();
 
             Logger.PrintStub(LogClass.ServiceSfdnsres, new { unknown0 });
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

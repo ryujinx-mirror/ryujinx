@@ -6,8 +6,6 @@ using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
-
 namespace Ryujinx.HLE.HOS.Services.Friend
 {
     class INotificationService : IpcService, IDisposable
@@ -40,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 
         [Command(0)] //2.0.0+
         // nn::friends::detail::ipc::INotificationService::GetEvent() -> handle<copy>
-        public long GetEvent(ServiceCtx context)
+        public ResultCode GetEvent(ServiceCtx context)
         {
             if (_notificationEventHandle == 0)
             {
@@ -52,12 +50,12 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_notificationEventHandle);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)] //2.0.0+
         // nn::friends::detail::ipc::INotificationService::Clear()
-        public long Clear(ServiceCtx context)
+        public ResultCode Clear(ServiceCtx context)
         {
             lock (_lock)
             {
@@ -67,12 +65,12 @@ namespace Ryujinx.HLE.HOS.Services.Friend
                 _notifications.Clear();
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)] // 2.0.0+
         // nn::friends::detail::ipc::INotificationService::Pop() -> nn::friends::detail::ipc::SizedNotificationInfo
-        public long Pop(ServiceCtx context)
+        public ResultCode Pop(ServiceCtx context)
         {
             lock (_lock)
             {
@@ -92,11 +90,11 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 
                     context.ResponseData.WriteStruct(notificationInfo);
 
-                    return 0;
+                    return ResultCode.Success;
                 }
             }
 
-            return MakeError(ErrorModule.Friends, FriendError.NotificationQueueEmpty);
+            return ResultCode.NotificationQueueEmpty;
         }
 
         public void SignalFriendListUpdate(UInt128 targetId)

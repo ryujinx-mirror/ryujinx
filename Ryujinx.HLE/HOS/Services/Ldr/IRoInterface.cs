@@ -12,8 +12,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
-
 namespace Ryujinx.HLE.HOS.Services.Ldr
 {
     [StructLayout(LayoutKind.Explicit, Size = 0x350)]
@@ -115,17 +113,17 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             _nroInfos = new List<NroInfo>(MaxNro);
         }
 
-        private long ParseNrr(out NrrInfo nrrInfo, ServiceCtx context, long nrrAddress, long nrrSize)
+        private ResultCode ParseNrr(out NrrInfo nrrInfo, ServiceCtx context, long nrrAddress, long nrrSize)
         {
             nrrInfo = null;
 
             if (nrrSize == 0 || nrrAddress + nrrSize <= nrrAddress || (nrrSize & 0xFFF) != 0)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.BadSize);
+                return ResultCode.BadSize;
             }
             else if ((nrrAddress & 0xFFF) != 0)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.UnalignedAddress);
+                return ResultCode.UnalignedAddress;
             }
 
             StructReader reader = new StructReader(context.Memory, nrrAddress);
@@ -133,11 +131,11 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
 
             if (header.Magic != NrrMagic)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.InvalidNrr);
+                return ResultCode.InvalidNrr;
             }
             else if (header.NrrSize != nrrSize)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.BadSize);
+                return ResultCode.BadSize;
             }
 
             List<byte[]> hashes = new List<byte[]>();
@@ -149,7 +147,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
 
             nrrInfo = new NrrInfo(nrrAddress, header, hashes);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         public bool IsNroHashPresent(byte[] nroHash)
@@ -181,25 +179,25 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             return false;
         }
 
-        public long ParseNro(out NroInfo res, ServiceCtx context, ulong nroAddress, ulong nroSize, ulong bssAddress, ulong bssSize)
+        public ResultCode ParseNro(out NroInfo res, ServiceCtx context, ulong nroAddress, ulong nroSize, ulong bssAddress, ulong bssSize)
         {
             res = null;
 
             if (_nroInfos.Count >= MaxNro)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.MaxNro);
+                return ResultCode.MaxNro;
             }
             else if (nroSize == 0 || nroAddress + nroSize <= nroAddress || (nroSize & 0xFFF) != 0)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.BadSize);
+                return ResultCode.BadSize;
             }
             else if (bssSize != 0 && bssAddress + bssSize <= bssAddress)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.BadSize);
+                return ResultCode.BadSize;
             }
             else if ((nroAddress & 0xFFF) != 0)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.UnalignedAddress);
+                return ResultCode.UnalignedAddress;
             }
 
             uint magic       = context.Memory.ReadUInt32((long)nroAddress + 0x10);
@@ -207,7 +205,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
 
             if (magic != NroMagic || nroSize != nroFileSize)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.InvalidNro);
+                return ResultCode.InvalidNro;
             }
 
             byte[] nroData = context.Memory.ReadBytes((long)nroAddress, (long)nroSize);
@@ -222,12 +220,12 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
 
             if (!IsNroHashPresent(nroHash))
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.NroHashNotPresent);
+                return ResultCode.NroHashNotPresent;
             }
 
             if (IsNroLoaded(nroHash))
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.NroAlreadyLoaded);
+                return ResultCode.NroAlreadyLoaded;
             }
 
             stream.Position = 0;
@@ -238,7 +236,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             if ((executable.Text.Length & 0xFFF) != 0 || (executable.Ro.Length & 0xFFF) != 0 ||
                 (executable.Data.Length & 0xFFF) != 0 || (executable.BssSize & 0xFFF)   != 0)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.InvalidNro);
+                return ResultCode.InvalidNro;
             }
 
             // check if everything is contiguous.
@@ -246,13 +244,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
                 executable.DataOffset != executable.RoOffset   + executable.Ro.Length   ||
                 nroFileSize           != executable.DataOffset + executable.Data.Length)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.InvalidNro);
+                return ResultCode.InvalidNro;
             }
 
             // finally check the bss size match.
             if ((ulong)executable.BssSize != bssSize)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.InvalidNro);
+                return ResultCode.InvalidNro;
             }
 
             int totalSize = executable.Text.Length + executable.Ro.Length + executable.Data.Length + executable.BssSize;
@@ -266,10 +264,10 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
                 bssSize,
                 (ulong)totalSize);
 
-            return 0;
+            return ResultCode.Success;
         }
 
-        private long MapNro(ServiceCtx context, NroInfo info, out ulong nroMappedAddress)
+        private ResultCode MapNro(ServiceCtx context, NroInfo info, out ulong nroMappedAddress)
         {
             nroMappedAddress = 0;
 
@@ -281,7 +279,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             {
                 if (targetAddress + info.TotalSize >= memMgr.AddrSpaceEnd)
                 {
-                    return MakeError(ErrorModule.Loader, LoaderErr.InvalidMemoryState);
+                    return ResultCode.InvalidMemoryState;
                 }
 
                 KMemoryInfo memInfo = memMgr.QueryMemory(targetAddress);
@@ -302,7 +300,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
 
             if (result != KernelResult.Success)
             {
-                return MakeError(ErrorModule.Loader, LoaderErr.InvalidMemoryState);
+                return ResultCode.InvalidMemoryState;
             }
 
             ulong bssTargetAddress = targetAddress + info.NroSize;
@@ -315,7 +313,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
                 {
                     memMgr.UnmapProcessCodeMemory(targetAddress, info.NroAddress, info.NroSize);
 
-                    return MakeError(ErrorModule.Loader, LoaderErr.InvalidMemoryState);
+                    return ResultCode.InvalidMemoryState;
                 }
             }
 
@@ -330,13 +328,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
                     memMgr.UnmapProcessCodeMemory(bssTargetAddress, info.BssAddress, info.BssSize);
                 }
 
-                return 0;
+                return ResultCode.Success;
             }
 
             info.NroMappedAddress = targetAddress;
             nroMappedAddress      = targetAddress;
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private KernelResult LoadNroIntoMemory(KProcess process, IExecutable relocatableObject, ulong baseAddress)
@@ -374,7 +372,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             return process.MemoryManager.SetProcessMemoryPermission(dataStart, bssEnd - dataStart, MemoryPermission.ReadAndWrite);
         }
 
-        private long RemoveNrrInfo(long nrrAddress)
+        private ResultCode RemoveNrrInfo(long nrrAddress)
         {
             foreach (NrrInfo info in _nrrInfos)
             {
@@ -382,14 +380,14 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
                 {
                     _nrrInfos.Remove(info);
 
-                    return 0;
+                    return ResultCode.Success;
                 }
             }
 
-            return MakeError(ErrorModule.Loader, LoaderErr.BadNrrAddress);
+            return ResultCode.BadNrrAddress;
         }
 
-        private long RemoveNroInfo(ServiceCtx context, ulong nroMappedAddress)
+        private ResultCode RemoveNroInfo(ServiceCtx context, ulong nroMappedAddress)
         {
             foreach (NroInfo info in _nroInfos)
             {
@@ -428,18 +426,18 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
                         }
                     }
 
-                    return (long)result;
+                    return (ResultCode)result;
                 }
             }
 
-            return MakeError(ErrorModule.Loader, LoaderErr.BadNroAddress);
+            return ResultCode.BadNroAddress;
         }
 
         [Command(0)]
         // LoadNro(u64, u64, u64, u64, u64, pid) -> u64
-        public long LoadNro(ServiceCtx context)
+        public ResultCode LoadNro(ServiceCtx context)
         {
-            long result = MakeError(ErrorModule.Loader, LoaderErr.BadInitialization);
+            ResultCode result = ResultCode.BadInitialization;
 
             // Zero
             context.RequestData.ReadUInt64();
@@ -475,9 +473,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
 
         [Command(1)]
         // UnloadNro(u64, u64, pid)
-        public long UnloadNro(ServiceCtx context)
+        public ResultCode UnloadNro(ServiceCtx context)
         {
-            long result = MakeError(ErrorModule.Loader, LoaderErr.BadInitialization);
+            ResultCode result = ResultCode.BadInitialization;
 
             // Zero
             context.RequestData.ReadUInt64();
@@ -488,7 +486,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             {
                 if ((nroMappedAddress & 0xFFF) != 0)
                 {
-                    return MakeError(ErrorModule.Loader, LoaderErr.UnalignedAddress);
+                    return ResultCode.UnalignedAddress;
                 }
 
                 result = RemoveNroInfo(context, nroMappedAddress);
@@ -499,9 +497,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
 
         [Command(2)]
         // LoadNrr(u64, u64, u64, pid)
-        public long LoadNrr(ServiceCtx context)
+        public ResultCode LoadNrr(ServiceCtx context)
         {
-            long result = MakeError(ErrorModule.Loader, LoaderErr.BadInitialization);
+            ResultCode result = ResultCode.BadInitialization;
 
             // Zero
             context.RequestData.ReadUInt64();
@@ -518,7 +516,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
                 {
                     if (_nrrInfos.Count >= MaxNrr)
                     {
-                        result = MakeError(ErrorModule.Loader, LoaderErr.MaxNrr);
+                        result = ResultCode.MaxNrr;
                     }
                     else
                     {
@@ -532,9 +530,9 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
 
         [Command(3)]
         // UnloadNrr(u64, u64, pid)
-        public long UnloadNrr(ServiceCtx context)
+        public ResultCode UnloadNrr(ServiceCtx context)
         {
-            long result = MakeError(ErrorModule.Loader, LoaderErr.BadInitialization);
+            ResultCode result = ResultCode.BadInitialization;
 
             // Zero
             context.RequestData.ReadUInt64();
@@ -545,7 +543,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
             {
                 if ((nrrHeapAddress & 0xFFF) != 0)
                 {
-                    return MakeError(ErrorModule.Loader, LoaderErr.UnalignedAddress);
+                    return ResultCode.UnalignedAddress;
                 }
 
                 result = RemoveNrrInfo(nrrHeapAddress);
@@ -556,12 +554,12 @@ namespace Ryujinx.HLE.HOS.Services.Ldr
 
         [Command(4)]
         // Initialize(u64, pid, KObject)
-        public long Initialize(ServiceCtx context)
+        public ResultCode Initialize(ServiceCtx context)
         {
             // TODO: we actually ignore the pid and process handle receive, we will need to use them when we will have multi process support.
             _isInitialized = true;
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

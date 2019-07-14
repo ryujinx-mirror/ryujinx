@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         [Command(0)]
         // TransactParcel(s32, u32, u32, buffer<unknown, 5, 0>) -> buffer<unknown, 6, 0>
-        public long TransactParcel(ServiceCtx context)
+        public ResultCode TransactParcel(ServiceCtx context)
         {
             int id   = context.RequestData.ReadInt32();
             int code = context.RequestData.ReadInt32();
@@ -36,23 +36,23 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
             data = Parcel.GetParcelData(data);
 
-            return _flinger.ProcessParcelRequest(context, data, code);
+            return (ResultCode)_flinger.ProcessParcelRequest(context, data, code);
         }
 
         [Command(1)]
         // AdjustRefcount(s32, s32, s32)
-        public long AdjustRefcount(ServiceCtx context)
+        public ResultCode AdjustRefcount(ServiceCtx context)
         {
             int id     = context.RequestData.ReadInt32();
             int addVal = context.RequestData.ReadInt32();
             int type   = context.RequestData.ReadInt32();
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // GetNativeHandle(s32, s32) -> handle<copy>
-        public long GetNativeHandle(ServiceCtx context)
+        public ResultCode GetNativeHandle(ServiceCtx context)
         {
             int  id  = context.RequestData.ReadInt32();
             uint unk = context.RequestData.ReadUInt32();
@@ -64,12 +64,12 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
             context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)] // 3.0.0+
         // TransactParcelAuto(s32, u32, u32, buffer<unknown, 21, 0>) -> buffer<unknown, 22, 0>
-        public long TransactParcelAuto(ServiceCtx context)
+        public ResultCode TransactParcelAuto(ServiceCtx context)
         {
             int id = context.RequestData.ReadInt32();
             int code = context.RequestData.ReadInt32();
@@ -80,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
             data = Parcel.GetParcelData(data);
 
-            return _flinger.ProcessParcelRequest(context, data, code);
+            return (ResultCode)_flinger.ProcessParcelRequest(context, data, code);
         }
 
         public void Dispose()

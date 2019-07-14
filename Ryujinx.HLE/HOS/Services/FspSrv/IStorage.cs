@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         [Command(0)]
         // Read(u64 offset, u64 length) -> buffer<u8, 0x46, 0> buffer
-        public long Read(ServiceCtx context)
+        public ResultCode Read(ServiceCtx context)
         {
             long offset = context.RequestData.ReadInt64();
             long size   = context.RequestData.ReadInt64();
@@ -37,18 +37,18 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 }
                 catch (HorizonResultException ex)
                 {
-                    return ex.ResultValue.Value;
+                    return (ResultCode)ex.ResultValue.Value;
                 }
 
                 context.Memory.WriteBytes(buffDesc.Position, data);
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // GetSize() -> u64 size
-        public long GetSize(ServiceCtx context)
+        public ResultCode GetSize(ServiceCtx context)
         {
             try
             {
@@ -56,10 +56,10 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
             catch (HorizonResultException ex)
             {
-                return ex.ResultValue.Value;
+                return (ResultCode)ex.ResultValue.Value;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

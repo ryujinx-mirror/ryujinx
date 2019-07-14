@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         [Command(0)]
         // Read(u32 readOption, u64 offset, u64 size) -> (u64 out_size, buffer<u8, 0x46, 0> out_buf)
-        public long Read(ServiceCtx context)
+        public ResultCode Read(ServiceCtx context)
         {
             long position = context.Request.ReceiveBuff[0].Position;
 
@@ -34,19 +34,19 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
             catch (HorizonResultException ex)
             {
-                return ex.ResultValue.Value;
+                return (ResultCode)ex.ResultValue.Value;
             }
 
             context.Memory.WriteBytes(position, data);
 
             context.ResponseData.Write((long)readSize);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // Write(u32 writeOption, u64 offset, u64 size, buffer<u8, 0x45, 0>)
-        public long Write(ServiceCtx context)
+        public ResultCode Write(ServiceCtx context)
         {
             long position = context.Request.SendBuff[0].Position;
 
@@ -64,15 +64,15 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
             catch (HorizonResultException ex)
             {
-                return ex.ResultValue.Value;
+                return (ResultCode)ex.ResultValue.Value;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // Flush()
-        public long Flush(ServiceCtx context)
+        public ResultCode Flush(ServiceCtx context)
         {
             try
             {
@@ -80,15 +80,15 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
             catch (HorizonResultException ex)
             {
-                return ex.ResultValue.Value;
+                return (ResultCode)ex.ResultValue.Value;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // SetSize(u64 size)
-        public long SetSize(ServiceCtx context)
+        public ResultCode SetSize(ServiceCtx context)
         {
             try
             {
@@ -98,15 +98,15 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
             catch (HorizonResultException ex)
             {
-                return ex.ResultValue.Value;
+                return (ResultCode)ex.ResultValue.Value;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // GetSize() -> u64 fileSize
-        public long GetSize(ServiceCtx context)
+        public ResultCode GetSize(ServiceCtx context)
         {
             try
             {
@@ -114,10 +114,10 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
             catch (HorizonResultException ex)
             {
-                return ex.ResultValue.Value;
+                return (ResultCode)ex.ResultValue.Value;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         public void Dispose()

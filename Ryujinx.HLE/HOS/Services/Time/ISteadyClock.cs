@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
         [Command(0)]
         // GetCurrentTimePoint() -> nn::time::SteadyClockTimePoint
-        public long GetCurrentTimePoint(ServiceCtx context)
+        public ResultCode GetCurrentTimePoint(ServiceCtx context)
         {
             context.ResponseData.Write((long)(System.Diagnostics.Process.GetCurrentProcess().StartTime - DateTime.Now).TotalSeconds);
 
@@ -22,25 +22,25 @@ namespace Ryujinx.HLE.HOS.Services.Time
                 context.ResponseData.Write((byte)0);
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetTestOffset() -> nn::TimeSpanType
-        public long GetTestOffset(ServiceCtx context)
+        public ResultCode GetTestOffset(ServiceCtx context)
         {
             context.ResponseData.Write(_testOffset);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // SetTestOffset(nn::TimeSpanType)
-        public long SetTestOffset(ServiceCtx context)
+        public ResultCode SetTestOffset(ServiceCtx context)
         {
             _testOffset = context.RequestData.ReadUInt64();
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

@@ -19,27 +19,27 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 
         [Command(0)]
         // GetRequestState() -> u32
-        public long GetRequestState(ServiceCtx context)
+        public ResultCode GetRequestState(ServiceCtx context)
         {
             context.ResponseData.Write(1);
 
             Logger.PrintStub(LogClass.ServiceNifm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetResult()
-        public long GetResult(ServiceCtx context)
+        public ResultCode GetResult(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNifm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // GetSystemEventReadableHandles() -> (handle<copy>, handle<copy>)
-        public long GetSystemEventReadableHandles(ServiceCtx context)
+        public ResultCode GetSystemEventReadableHandles(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_event0.ReadableEvent, out int handle0) != KernelResult.Success)
             {
@@ -53,34 +53,34 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle0, handle1);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // Cancel()
-        public long Cancel(ServiceCtx context)
+        public ResultCode Cancel(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNifm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // Submit()
-        public long Submit(ServiceCtx context)
+        public ResultCode Submit(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNifm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(11)]
         // SetConnectionConfirmationOption(i8)
-        public long SetConnectionConfirmationOption(ServiceCtx context)
+        public ResultCode SetConnectionConfirmationOption(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNifm);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

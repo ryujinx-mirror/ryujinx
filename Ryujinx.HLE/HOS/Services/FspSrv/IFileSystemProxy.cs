@@ -8,7 +8,6 @@ using Ryujinx.HLE.Utilities;
 using System.IO;
 
 using static Ryujinx.HLE.FileSystem.VirtualFileSystem;
-using static Ryujinx.HLE.HOS.ErrorCode;
 using static Ryujinx.HLE.Utilities.StringUtils;
 
 namespace Ryujinx.HLE.HOS.Services.FspSrv
@@ -20,15 +19,15 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         [Command(1)]
         // Initialize(u64, pid)
-        public long Initialize(ServiceCtx context)
+        public ResultCode Initialize(ServiceCtx context)
         {
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(8)]
         // OpenFileSystemWithId(nn::fssrv::sf::FileSystemType filesystem_type, nn::ApplicationId tid, buffer<bytes<0x301>, 0x19, 0x301> path) 
         // -> object<nn::fssrv::sf::IFileSystem> contentFs
-        public long OpenFileSystemWithId(ServiceCtx context)
+        public ResultCode OpenFileSystemWithId(ServiceCtx context)
         {
             FileSystemType fileSystemType = (FileSystemType)context.RequestData.ReadInt32();
             long           titleId        = context.RequestData.ReadInt64();
@@ -42,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                     return OpenFileSystemFromInternalFile(context, fullPath);
                 }
 
-                return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
+                return ResultCode.PathDoesNotExist;
             }
 
             FileStream fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
@@ -57,12 +56,12 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 return OpenNsp(context, fullPath);
             }
 
-            return MakeError(ErrorModule.Fs, FsErr.InvalidInput);
+            return ResultCode.InvalidInput;
         }
 
         [Command(11)]
         // OpenBisFileSystem(nn::fssrv::sf::Partition partitionID, buffer<bytes<0x301>, 0x19, 0x301>) -> object<nn::fssrv::sf::IFileSystem> Bis
-        public long OpenBisFileSystem(ServiceCtx context)
+        public ResultCode OpenBisFileSystem(ServiceCtx context)
         {
             int    bisPartitionId   = context.RequestData.ReadInt32();
             string partitionString  = ReadUtf8String(context);
@@ -81,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                     bisPartitionPath = UserNandPath;
                     break;
                 default:
-                    return MakeError(ErrorModule.Fs, FsErr.InvalidInput);
+                    return ResultCode.InvalidInput;
             }
 
             string fullPath = context.Device.FileSystem.GetFullPartitionPath(bisPartitionPath);
@@ -90,12 +89,12 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             MakeObject(context, new IFileSystem(fileSystem));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(18)]
         // OpenSdCardFileSystem() -> object<nn::fssrv::sf::IFileSystem>
-        public long OpenSdCardFileSystem(ServiceCtx context)
+        public ResultCode OpenSdCardFileSystem(ServiceCtx context)
         {
             string sdCardPath = context.Device.FileSystem.GetSdCardPath();
 
@@ -103,26 +102,26 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             MakeObject(context, new IFileSystem(fileSystem));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(51)]
         // OpenSaveDataFileSystem(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> saveDataFs
-        public long OpenSaveDataFileSystem(ServiceCtx context)
+        public ResultCode OpenSaveDataFileSystem(ServiceCtx context)
         {
             return LoadSaveDataFileSystem(context);
         }
 
         [Command(52)]
         // OpenSaveDataFileSystemBySystemSaveDataId(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> systemSaveDataFs
-        public long OpenSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
+        public ResultCode OpenSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
         {
             return LoadSaveDataFileSystem(context);
         }
 
         [Command(200)]
         // OpenDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage> dataStorage
-        public long OpenDataStorageByCurrentProcess(ServiceCtx context)
+        public ResultCode OpenDataStorageByCurrentProcess(ServiceCtx context)
         {
             MakeObject(context, new IStorage(context.Device.FileSystem.RomFs.AsStorage()));
 
@@ -131,7 +130,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         [Command(202)]
         // OpenDataStorageByDataId(u8 storageId, nn::ApplicationId tid) -> object<nn::fssrv::sf::IStorage> dataStorage
-        public long OpenDataStorageByDataId(ServiceCtx context)
+        public ResultCode OpenDataStorageByDataId(ServiceCtx context)
         {
             StorageId storageId = (StorageId)context.RequestData.ReadByte();
             byte[]    padding   = context.RequestData.ReadBytes(7);
@@ -171,10 +170,10 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                         }
                         catch (HorizonResultException ex)
                         {
-                            return ex.ResultValue.Value;
+                            return (ResultCode)ex.ResultValue.Value;
                         }
 
-                        return 0;
+                        return ResultCode.Success;
                     }
                     else
                     { 
@@ -192,37 +191,37 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         [Command(203)]
         // OpenPatchDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage>
-        public long OpenPatchDataStorageByCurrentProcess(ServiceCtx context)
+        public ResultCode OpenPatchDataStorageByCurrentProcess(ServiceCtx context)
         {
             MakeObject(context, new IStorage(context.Device.FileSystem.RomFs.AsStorage()));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1005)]
         // GetGlobalAccessLogMode() -> u32 logMode
-        public long GetGlobalAccessLogMode(ServiceCtx context)
+        public ResultCode GetGlobalAccessLogMode(ServiceCtx context)
         {
             int mode = context.Device.System.GlobalAccessLogMode;
 
             context.ResponseData.Write(mode);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1006)]
         // OutputAccessLogToSdCard(buffer<bytes, 5> log_text)
-        public long OutputAccessLogToSdCard(ServiceCtx context)
+        public ResultCode OutputAccessLogToSdCard(ServiceCtx context)
         {
             string message = ReadUtf8StringSend(context);
 
             // FS ends each line with a newline. Remove it because Ryujinx logging adds its own newline
             Logger.PrintAccessLog(LogClass.ServiceFs, message.TrimEnd('\n'));
 
-            return 0;
+            return ResultCode.Success;
         }
 
-        public long LoadSaveDataFileSystem(ServiceCtx context)
+        public ResultCode LoadSaveDataFileSystem(ServiceCtx context)
         {
             SaveSpaceId saveSpaceId = (SaveSpaceId)context.RequestData.ReadInt64();
 
@@ -244,13 +243,13 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
             catch (HorizonResultException ex)
             {
-                return ex.ResultValue.Value;
+                return (ResultCode)ex.ResultValue.Value;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
-        private long OpenNsp(ServiceCtx context, string pfsPath)
+        private ResultCode OpenNsp(ServiceCtx context, string pfsPath)
         {
             try
             {
@@ -265,13 +264,13 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
             catch (HorizonResultException ex)
             {
-                return ex.ResultValue.Value;
+                return (ResultCode)ex.ResultValue.Value;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
-        private long OpenNcaFs(ServiceCtx context, string ncaPath, LibHac.Fs.IStorage ncaStorage)
+        private ResultCode OpenNcaFs(ServiceCtx context, string ncaPath, LibHac.Fs.IStorage ncaStorage)
         {
             try
             {
@@ -279,7 +278,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
                 if (!nca.SectionExists(NcaSectionType.Data))
                 {
-                    return MakeError(ErrorModule.Fs, FsErr.PartitionNotFound);
+                    return ResultCode.PartitionNotFound;
                 }
 
                 LibHac.Fs.IFileSystem fileSystem = nca.OpenFileSystem(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
@@ -288,13 +287,13 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
             catch (HorizonResultException ex)
             {
-                return ex.ResultValue.Value;
+                return (ResultCode)ex.ResultValue.Value;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
-        private long OpenFileSystemFromInternalFile(ServiceCtx context, string fullPath)
+        private ResultCode OpenFileSystemFromInternalFile(ServiceCtx context, string fullPath)
         {
             DirectoryInfo archivePath = new DirectoryInfo(fullPath).Parent;
 
@@ -325,11 +324,11 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
                 }
                 catch (HorizonResultException ex)
                 {
-                    return ex.ResultValue.Value;
+                    return (ResultCode)ex.ResultValue.Value;
                 }
             }
 
-            return MakeError(ErrorModule.Fs, FsErr.PathDoesNotExist);
+            return ResultCode.PathDoesNotExist;
         }
 
         private void ImportTitleKeysFromNsp(LibHac.Fs.IFileSystem nsp, Keyset keySet)

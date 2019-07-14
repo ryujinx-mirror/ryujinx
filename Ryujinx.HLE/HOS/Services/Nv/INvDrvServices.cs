@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
         [Command(0)]
         // Open(buffer<bytes, 5> path) -> (u32 fd, u32 error_code)
-        public long Open(ServiceCtx context)
+        public ResultCode Open(ServiceCtx context)
         {
             long namePtr = context.Request.SendBuff[0].Position;
 
@@ -59,14 +59,14 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             context.ResponseData.Write(fd);
             context.ResponseData.Write(0);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // Ioctl(u32 fd, u32 rq_id, buffer<bytes, 0x21>) -> (u32 error_code, buffer<bytes, 0x22>)
         [Command(11)] // 3.0.0+
         // Ioctl2(u32, u32, buffer<bytes, 0x21>, buffer<bytes, 0x21>) -> (u32, buffer<bytes, 0x22>)
-        public long Ioctl(ServiceCtx context)
+        public ResultCode Ioctl(ServiceCtx context)
         {
             int fd  = context.RequestData.ReadInt32();
             int cmd = context.RequestData.ReadInt32();
@@ -87,12 +87,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             // TODO: Verify if the error codes needs to be translated.
             context.ResponseData.Write(result);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // Close(u32 fd) -> u32 error_code
-        public long Close(ServiceCtx context)
+        public ResultCode Close(ServiceCtx context)
         {
             int fd = context.RequestData.ReadInt32();
 
@@ -100,12 +100,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             context.ResponseData.Write(0);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // Initialize(u32 transfer_memory_size, handle<copy, process> current_process, handle<copy, transfer_memory> transfer_memory) -> u32 error_code
-        public long Initialize(ServiceCtx context)
+        public ResultCode Initialize(ServiceCtx context)
         {
             long transferMemSize   = context.RequestData.ReadInt64();
             int  transferMemHandle = context.Request.HandleDesc.ToCopy[0];
@@ -114,12 +114,12 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             context.ResponseData.Write(0);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // QueryEvent(u32 fd, u32 event_id) -> (u32, handle<copy, event>)
-        public long QueryEvent(ServiceCtx context)
+        public ResultCode QueryEvent(ServiceCtx context)
         {
             int fd      = context.RequestData.ReadInt32();
             int eventId = context.RequestData.ReadInt32();
@@ -134,36 +134,36 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             context.ResponseData.Write(0);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(8)]
         // SetClientPID(u64, pid) -> u32 error_code
-        public long SetClientPid(ServiceCtx context)
+        public ResultCode SetClientPid(ServiceCtx context)
         {
             long pid = context.RequestData.ReadInt64();
 
             context.ResponseData.Write(0);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(9)]
         // DumpGraphicsMemoryInfo()
-        public long DumpGraphicsMemoryInfo(ServiceCtx context)
+        public ResultCode DumpGraphicsMemoryInfo(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNv);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(13)]
         // FinishInitialize(unknown<8>)
-        public long FinishInitialize(ServiceCtx context)
+        public ResultCode FinishInitialize(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNv);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private static int ProcessIoctlNvGpuAS(ServiceCtx context, int cmd)

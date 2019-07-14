@@ -8,22 +8,22 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         [Command(1)]
         // GetAppletResourceUserId() -> nn::applet::AppletResourceUserId
-        public long GetAppletResourceUserId(ServiceCtx context)
+        public ResultCode GetAppletResourceUserId(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
 
             context.ResponseData.Write(0L);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(10)]
         // AcquireForegroundRights()
-        public long AcquireForegroundRights(ServiceCtx context)
+        public ResultCode AcquireForegroundRights(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

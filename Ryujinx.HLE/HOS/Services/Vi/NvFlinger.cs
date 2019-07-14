@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
 {
     class NvFlinger : IDisposable
     {
-        private delegate long ServiceProcessParcel(ServiceCtx context, BinaryReader parcelReader);
+        private delegate ResultCode ServiceProcessParcel(ServiceCtx context, BinaryReader parcelReader);
 
         private Dictionary<(string, int), ServiceProcessParcel> _commands;
 
@@ -152,7 +152,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
             _waitBufferFree = new AutoResetEvent(false);
         }
 
-        public long ProcessParcelRequest(ServiceCtx context, byte[] parcelData, int code)
+        public ResultCode ProcessParcelRequest(ServiceCtx context, byte[] parcelData, int code)
         {
             using (MemoryStream ms = new MemoryStream(parcelData))
             {
@@ -186,7 +186,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
             }
         }
 
-        private long GbpRequestBuffer(ServiceCtx context, BinaryReader parcelReader)
+        private ResultCode GbpRequestBuffer(ServiceCtx context, BinaryReader parcelReader)
         {
             int slot = parcelReader.ReadInt32();
 
@@ -210,7 +210,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
             }
         }
 
-        private long GbpDequeueBuffer(ServiceCtx context, BinaryReader parcelReader)
+        private ResultCode GbpDequeueBuffer(ServiceCtx context, BinaryReader parcelReader)
         {
             // TODO: Errors.
             int format        = parcelReader.ReadInt32();
@@ -224,7 +224,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
             return MakeReplyParcel(context, slot, 1, 0x24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         }
 
-        private long GbpQueueBuffer(ServiceCtx context, BinaryReader parcelReader)
+        private ResultCode GbpQueueBuffer(ServiceCtx context, BinaryReader parcelReader)
         {
             context.Device.Statistics.RecordGameFrameTime();
 
@@ -252,12 +252,12 @@ namespace Ryujinx.HLE.HOS.Services.Android
             return MakeReplyParcel(context, 1280, 720, 0, 0, 0);
         }
 
-        private long GbpDetachBuffer(ServiceCtx context, BinaryReader parcelReader)
+        private ResultCode GbpDetachBuffer(ServiceCtx context, BinaryReader parcelReader)
         {
             return MakeReplyParcel(context, 0);
         }
 
-        private long GbpCancelBuffer(ServiceCtx context, BinaryReader parcelReader)
+        private ResultCode GbpCancelBuffer(ServiceCtx context, BinaryReader parcelReader)
         {
             // TODO: Errors.
             int slot = parcelReader.ReadInt32();
@@ -271,22 +271,22 @@ namespace Ryujinx.HLE.HOS.Services.Android
             return MakeReplyParcel(context, 0);
         }
 
-        private long GbpQuery(ServiceCtx context, BinaryReader parcelReader)
+        private ResultCode GbpQuery(ServiceCtx context, BinaryReader parcelReader)
         {
             return MakeReplyParcel(context, 0, 0);
         }
 
-        private long GbpConnect(ServiceCtx context, BinaryReader parcelReader)
+        private ResultCode GbpConnect(ServiceCtx context, BinaryReader parcelReader)
         {
             return MakeReplyParcel(context, 1280, 720, 0, 0, 0);
         }
 
-        private long GbpDisconnect(ServiceCtx context, BinaryReader parcelReader)
+        private ResultCode GbpDisconnect(ServiceCtx context, BinaryReader parcelReader)
         {
             return MakeReplyParcel(context, 0);
         }
 
-        private long GbpPreallocBuffer(ServiceCtx context, BinaryReader parcelReader)
+        private ResultCode GbpPreallocBuffer(ServiceCtx context, BinaryReader parcelReader)
         {
             int slot = parcelReader.ReadInt32();
 
@@ -325,7 +325,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
             }
         }
 
-        private long MakeReplyParcel(ServiceCtx context, params int[] ints)
+        private ResultCode MakeReplyParcel(ServiceCtx context, params int[] ints)
         {
             using (MemoryStream ms = new MemoryStream())
             {
@@ -340,7 +340,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
             }
         }
 
-        private long MakeReplyParcel(ServiceCtx context, byte[] data)
+        private ResultCode MakeReplyParcel(ServiceCtx context, byte[] data)
         {
             (long replyPos, long replySize) = context.Request.GetBufferType0x22();
 
@@ -348,7 +348,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
 
             context.Memory.WriteBytes(replyPos, reply);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private GalImageFormat ConvertColorFormat(ColorFormat colorFormat)

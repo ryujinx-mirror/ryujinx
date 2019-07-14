@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.HOS.Services.Lm
 
         [Command(0)]
         // Log(buffer<unknown, 0x21>)
-        public long Log(ServiceCtx context)
+        public ResultCode Log(ServiceCtx context)
         {
             (long bufPos, long bufSize) = context.Request.GetBufferType0x21();
             byte[] logBuffer = context.Memory.ReadBytes(bufPos, bufSize);
@@ -80,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Services.Lm
                 Logger.PrintGuest(LogClass.ServiceLm, text);
             }
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

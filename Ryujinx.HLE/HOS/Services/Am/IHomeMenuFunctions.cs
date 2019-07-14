@@ -18,16 +18,16 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         [Command(10)]
         // RequestToGetForeground()
-        public long RequestToGetForeground(ServiceCtx context)
+        public ResultCode RequestToGetForeground(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(21)]
         // GetPopFromGeneralChannelEvent() -> handle<copy>
-        public long GetPopFromGeneralChannelEvent(ServiceCtx context)
+        public ResultCode GetPopFromGeneralChannelEvent(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_channelEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

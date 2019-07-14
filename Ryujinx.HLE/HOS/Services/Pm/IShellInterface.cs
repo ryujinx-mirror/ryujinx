@@ -7,7 +7,7 @@
 
         [Command(6)]
         // GetApplicationPid() -> u64
-        public long GetApplicationPid(ServiceCtx context)
+        public ResultCode GetApplicationPid(ServiceCtx context)
         {
             // FIXME: This is wrong but needed to make hb loader works
             // TODO: Change this when we will have a way to process via a PM like interface.
@@ -15,7 +15,7 @@
 
             context.ResponseData.Write(pid);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

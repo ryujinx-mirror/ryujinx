@@ -8,11 +8,11 @@ namespace Ryujinx.HLE.HOS.Services.Apm
 
         [Command(0)]
         // OpenSession() -> object<nn::apm::ISession>
-        public long OpenSession(ServiceCtx context)
+        public ResultCode OpenSession(ServiceCtx context)
         {
             MakeObject(context, new ISession());
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

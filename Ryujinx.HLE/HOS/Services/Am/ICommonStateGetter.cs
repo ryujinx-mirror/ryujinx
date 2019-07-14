@@ -4,8 +4,6 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
-
 namespace Ryujinx.HLE.HOS.Services.Am
 {
     class ICommonStateGetter : IpcService
@@ -19,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         [Command(0)]
         // GetEventHandle() -> handle<copy>
-        public long GetEventHandle(ServiceCtx context)
+        public ResultCode GetEventHandle(ServiceCtx context)
         {
             KEvent Event = context.Device.System.AppletState.MessageEvent;
 
@@ -30,26 +28,26 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // ReceiveMessage() -> nn::am::AppletMessage
-        public long ReceiveMessage(ServiceCtx context)
+        public ResultCode ReceiveMessage(ServiceCtx context)
         {
             if (!context.Device.System.AppletState.TryDequeueMessage(out MessageInfo message))
             {
-                return MakeError(ErrorModule.Am, AmErr.NoMessages);
+                return ResultCode.NoMessages;
             }
 
             context.ResponseData.Write((int)message);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(5)]
         // GetOperationMode() -> u8
-        public long GetOperationMode(ServiceCtx context)
+        public ResultCode GetOperationMode(ServiceCtx context)
         {
             OperationMode mode = context.Device.System.State.DockedMode
                 ? OperationMode.Docked
@@ -57,12 +55,12 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             context.ResponseData.Write((byte)mode);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(6)]
         // GetPerformanceMode() -> u32
-        public long GetPerformanceMode(ServiceCtx context)
+        public ResultCode GetPerformanceMode(ServiceCtx context)
         {
             Apm.PerformanceMode mode = context.Device.System.State.DockedMode
                 ? Apm.PerformanceMode.Docked
@@ -70,42 +68,42 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             context.ResponseData.Write((int)mode);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(8)]
         // GetBootMode() -> u8
-        public long GetBootMode(ServiceCtx context)
+        public ResultCode GetBootMode(ServiceCtx context)
         {
             context.ResponseData.Write((byte)0); //Unknown value.
 
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(9)]
         // GetCurrentFocusState() -> u8
-        public long GetCurrentFocusState(ServiceCtx context)
+        public ResultCode GetCurrentFocusState(ServiceCtx context)
         {
             context.ResponseData.Write((byte)context.Device.System.AppletState.FocusState);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(60)] // 3.0.0+
         // GetDefaultDisplayResolution() -> (u32, u32)
-        public long GetDefaultDisplayResolution(ServiceCtx context)
+        public ResultCode GetDefaultDisplayResolution(ServiceCtx context)
         {
             context.ResponseData.Write(1280);
             context.ResponseData.Write(720);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(61)] // 3.0.0+
         // GetDefaultDisplayResolutionChangeEvent() -> handle<copy>
-        public long GetDefaultDisplayResolutionChangeEvent(ServiceCtx context)
+        public ResultCode GetDefaultDisplayResolutionChangeEvent(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_displayResolutionChangeEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
@@ -116,7 +114,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

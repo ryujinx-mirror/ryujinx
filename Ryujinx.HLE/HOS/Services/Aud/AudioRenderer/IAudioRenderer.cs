@@ -66,40 +66,40 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         [Command(0)]
         // GetSampleRate() -> u32
-        public long GetSampleRate(ServiceCtx context)
+        public ResultCode GetSampleRate(ServiceCtx context)
         {
             context.ResponseData.Write(_params.SampleRate);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetSampleCount() -> u32
-        public long GetSampleCount(ServiceCtx context)
+        public ResultCode GetSampleCount(ServiceCtx context)
         {
             context.ResponseData.Write(_params.SampleCount);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // GetMixBufferCount() -> u32
-        public long GetMixBufferCount(ServiceCtx context)
+        public ResultCode GetMixBufferCount(ServiceCtx context)
         {
             context.ResponseData.Write(_params.MixCount);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // GetState() -> u32
-        private long GetState(ServiceCtx context)
+        private ResultCode GetState(ServiceCtx context)
         {
             context.ResponseData.Write((int)_playState);
 
             Logger.PrintStub(LogClass.ServiceAudio, new { State = Enum.GetName(typeof(PlayState), _playState) });
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private void AudioCallback()
@@ -131,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
         [Command(4)]
         // RequestUpdateAudioRenderer(buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 5>)
         // -> (buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 6>, buffer<nn::audio::detail::AudioRendererUpdateDataHeader, 6>)
-        public long RequestUpdateAudioRenderer(ServiceCtx context)
+        public ResultCode RequestUpdateAudioRenderer(ServiceCtx context)
         {
             long outputPosition = context.Request.ReceiveBuff[0].Position;
             long outputSize     = context.Request.ReceiveBuff[0].Size;
@@ -234,34 +234,34 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
                 writer.Write(voice.OutStatus);
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(5)]
         // Start()
-        public long StartAudioRenderer(ServiceCtx context)
+        public ResultCode StartAudioRenderer(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAudio);
 
             _playState = PlayState.Playing;
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(6)]
         // Stop()
-        public long StopAudioRenderer(ServiceCtx context)
+        public ResultCode StopAudioRenderer(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAudio);
 
             _playState = PlayState.Stopped;
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(7)]
         // QuerySystemEvent() -> handle<copy, event>
-        public long QuerySystemEvent(ServiceCtx context)
+        public ResultCode QuerySystemEvent(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_updateEvent.ReadableEvent, out int handle) != KernelResult.Success)
             {
@@ -270,7 +270,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private AdpcmDecoderContext GetAdpcmDecoderContext(long position, long size)

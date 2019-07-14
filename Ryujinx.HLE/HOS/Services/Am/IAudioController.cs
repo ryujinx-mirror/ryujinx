@@ -8,59 +8,59 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         [Command(0)]
         // SetExpectedMasterVolume(f32, f32)
-        public long SetExpectedMasterVolume(ServiceCtx context)
+        public ResultCode SetExpectedMasterVolume(ServiceCtx context)
         {
             float appletVolume        = context.RequestData.ReadSingle();
             float libraryAppletVolume = context.RequestData.ReadSingle();
 
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetMainAppletExpectedMasterVolume() -> f32
-        public long GetMainAppletExpectedMasterVolume(ServiceCtx context)
+        public ResultCode GetMainAppletExpectedMasterVolume(ServiceCtx context)
         {
             context.ResponseData.Write(1f);
 
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // GetLibraryAppletExpectedMasterVolume() -> f32
-        public long GetLibraryAppletExpectedMasterVolume(ServiceCtx context)
+        public ResultCode GetLibraryAppletExpectedMasterVolume(ServiceCtx context)
         {
             context.ResponseData.Write(1f);
 
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // ChangeMainAppletMasterVolume(f32, u64)
-        public long ChangeMainAppletMasterVolume(ServiceCtx context)
+        public ResultCode ChangeMainAppletMasterVolume(ServiceCtx context)
         {
             float unknown0 = context.RequestData.ReadSingle();
             long  unknown1 = context.RequestData.ReadInt64();
 
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // SetTransparentVolumeRate(f32)
-        public long SetTransparentVolumeRate(ServiceCtx context)
+        public ResultCode SetTransparentVolumeRate(ServiceCtx context)
         {
             float unknown0 = context.RequestData.ReadSingle();
 
             Logger.PrintStub(LogClass.ServiceAm);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

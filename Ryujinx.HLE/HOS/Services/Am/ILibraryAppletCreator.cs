@@ -6,22 +6,22 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         [Command(0)]
         // CreateLibraryApplet(u32, u32) -> object<nn::am::service::ILibraryAppletAccessor>
-        public long CreateLibraryApplet(ServiceCtx context)
+        public ResultCode CreateLibraryApplet(ServiceCtx context)
         {
             MakeObject(context, new ILibraryAppletAccessor(context.Device.System));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(10)]
         // CreateStorage(u64) -> object<nn::am::service::IStorage>
-        public long CreateStorage(ServiceCtx context)
+        public ResultCode CreateStorage(ServiceCtx context)
         {
             long size = context.RequestData.ReadInt64();
 
             MakeObject(context, new IStorage(new byte[size]));
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

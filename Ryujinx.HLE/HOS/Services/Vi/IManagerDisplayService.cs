@@ -13,27 +13,27 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         [Command(2010)]
         // CreateManagedLayer(u32, u64, nn::applet::AppletResourceUserId) -> u64
-        public static long CreateManagedLayer(ServiceCtx context)
+        public ResultCode CreateManagedLayer(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceVi);
 
             context.ResponseData.Write(0L); //LayerId
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2011)]
         // DestroyManagedLayer(u64)
-        public long DestroyManagedLayer(ServiceCtx context)
+        public ResultCode DestroyManagedLayer(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceVi);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2012)] // 7.0.0+
         // CreateStrayLayer(u32, u64) -> (u64, u64, buffer<bytes, 6>)
-        public static long CreateStrayLayer(ServiceCtx context)
+        public ResultCode CreateStrayLayer(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceVi);
 
@@ -42,20 +42,20 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         [Command(6000)]
         // AddToLayerStack(u32, u64)
-        public static long AddToLayerStack(ServiceCtx context)
+        public ResultCode AddToLayerStack(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceVi);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(6002)]
         // SetLayerVisibility(b8, u64)
-        public static long SetLayerVisibility(ServiceCtx context)
+        public ResultCode SetLayerVisibility(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceVi);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

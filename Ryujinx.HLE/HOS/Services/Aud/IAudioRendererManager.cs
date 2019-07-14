@@ -3,8 +3,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Aud.AudioRenderer;
 using Ryujinx.HLE.Utilities;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
-
 namespace Ryujinx.HLE.HOS.Services.Aud
 {
     [Service("audren:u")]
@@ -24,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
         [Command(0)]
         // OpenAudioRenderer(nn::audio::detail::AudioRendererParameterInternal, u64, nn::applet::AppletResourceUserId, pid, handle<copy>, handle<copy>)
         // -> object<nn::audio::detail::IAudioRenderer>
-        public long OpenAudioRenderer(ServiceCtx context)
+        public ResultCode OpenAudioRenderer(ServiceCtx context)
         {
             IAalOutput audioOut = context.Device.AudioOut;
 
@@ -36,12 +34,12 @@ namespace Ryujinx.HLE.HOS.Services.Aud
                 audioOut,
                 Params));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetWorkBufferSize(nn::audio::detail::AudioRendererParameterInternal) -> u64
-        public long GetAudioRendererWorkBufferSize(ServiceCtx context)
+        public ResultCode GetAudioRendererWorkBufferSize(ServiceCtx context)
         {
             AudioRendererParameter Params = GetAudioRendererParameter(context);
 
@@ -111,7 +109,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
                 Logger.PrintDebug(LogClass.ServiceAudio, $"WorkBufferSize is 0x{size:x16}.");
 
-                return 0;
+                return ResultCode.Success;
             }
             else
             {
@@ -119,7 +117,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
                 Logger.PrintWarning(LogClass.ServiceAudio, $"Library Revision 0x{Params.Revision:x8} is not supported!");
 
-                return MakeError(ErrorModule.Audio, AudErr.UnsupportedRevision);
+                return ResultCode.UnsupportedRevision;
             }
         }
 
@@ -170,18 +168,18 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         [Command(2)]
         // GetAudioDeviceService(nn::applet::AppletResourceUserId) -> object<nn::audio::detail::IAudioDevice>
-        public long GetAudioDeviceService(ServiceCtx context)
+        public ResultCode GetAudioDeviceService(ServiceCtx context)
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
 
             MakeObject(context, new IAudioDevice(context.Device.System));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)] // 4.0.0+
         // GetAudioDeviceServiceWithRevisionInfo(nn::applet::AppletResourceUserId, u32) -> object<nn::audio::detail::IAudioDevice>
-        private long GetAudioDeviceServiceWithRevisionInfo(ServiceCtx context)
+        private ResultCode GetAudioDeviceServiceWithRevisionInfo(ServiceCtx context)
         {
             long appletResourceUserId = context.RequestData.ReadInt64();
             int  revisionInfo         = context.RequestData.ReadInt32();

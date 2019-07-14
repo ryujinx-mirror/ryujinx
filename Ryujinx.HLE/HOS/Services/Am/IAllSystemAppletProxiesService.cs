@@ -7,11 +7,11 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         [Command(100)]
         // OpenSystemAppletProxy(u64, pid, handle<copy>) -> object<nn::am::service::ISystemAppletProxy>
-        public long OpenSystemAppletProxy(ServiceCtx context)
+        public ResultCode OpenSystemAppletProxy(ServiceCtx context)
         {
             MakeObject(context, new ISystemAppletProxy());
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

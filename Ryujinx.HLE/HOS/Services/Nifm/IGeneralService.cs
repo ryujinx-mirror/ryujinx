@@ -5,8 +5,6 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
-
 namespace Ryujinx.HLE.HOS.Services.Nifm
 {
     class IGeneralService : IpcService
@@ -15,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 
         [Command(4)]
         // CreateRequest(u32) -> object<nn::nifm::detail::IRequest>
-        public long CreateRequest(ServiceCtx context)
+        public ResultCode CreateRequest(ServiceCtx context)
         {
             int unknown = context.RequestData.ReadInt32();
 
@@ -23,16 +21,16 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 
             Logger.PrintStub(LogClass.ServiceNifm);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(12)]
         // GetCurrentIpAddress() -> nn::nifm::IpV4Address
-        public long GetCurrentIpAddress(ServiceCtx context)
+        public ResultCode GetCurrentIpAddress(ServiceCtx context)
         {
             if (!NetworkInterface.GetIsNetworkAvailable())
             {
-                return MakeError(ErrorModule.Nifm, NifmErr.NoInternetConnection);
+                return ResultCode.NoInternetConnection;
             }
 
             IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
@@ -43,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 
             Logger.PrintInfo(LogClass.ServiceNifm, $"Console's local IP is \"{address}\".");
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

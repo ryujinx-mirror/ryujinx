@@ -8,11 +8,11 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
         [Command(7996)]
         // GetApplicationManagerInterface() -> object<nn::ns::detail::IApplicationManagerInterface>
-        public long GetApplicationManagerInterface(ServiceCtx context)
+        public ResultCode GetApplicationManagerInterface(ServiceCtx context)
         {
             MakeObject(context, new IApplicationManagerInterface(context));
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

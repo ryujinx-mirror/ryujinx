@@ -17,16 +17,16 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
         [Command(0)]
         // CheckAvailability()
-        public long CheckAvailability(ServiceCtx context)
+        public ResultCode CheckAvailability(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAcc);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetAccountId() -> nn::account::NetworkServiceAccountId
-        public long GetAccountId(ServiceCtx context)
+        public ResultCode GetAccountId(ServiceCtx context)
         {
             long networkServiceAccountId = 0xcafe;
 
@@ -34,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
             context.ResponseData.Write(networkServiceAccountId);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

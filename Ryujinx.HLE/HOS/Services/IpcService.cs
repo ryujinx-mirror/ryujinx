@@ -103,7 +103,7 @@ namespace Ryujinx.HLE.HOS.Services
 
             if (ServiceConfiguration.IgnoreMissingServices || serviceExists)
             {
-                long result = 0;
+                ResultCode result = ResultCode.Success;
 
                 context.ResponseData.BaseStream.Seek(_isDomain ? 0x20 : 0x10, SeekOrigin.Begin);
 
@@ -118,7 +118,7 @@ namespace Ryujinx.HLE.HOS.Services
 
                     Profile.Begin(profile);
 
-                    result = (long)processRequest.Invoke(service, new object[] { context });
+                    result = (ResultCode)processRequest.Invoke(service, new object[] { context });
 
                     Profile.End(profile);
                 }
@@ -148,7 +148,7 @@ namespace Ryujinx.HLE.HOS.Services
                 context.ResponseData.BaseStream.Seek(_isDomain ? 0x10 : 0, SeekOrigin.Begin);
 
                 context.ResponseData.Write(IpcMagic.Sfco);
-                context.ResponseData.Write(result);
+                context.ResponseData.Write((long)result);
             }
             else
             {

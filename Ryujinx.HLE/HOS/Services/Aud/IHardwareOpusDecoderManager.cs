@@ -7,19 +7,19 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         [Command(0)]
         // Initialize(bytes<8, 4>, u32, handle<copy>) -> object<nn::codec::detail::IHardwareOpusDecoder>
-        public long Initialize(ServiceCtx context)
+        public ResultCode Initialize(ServiceCtx context)
         {
             int sampleRate    = context.RequestData.ReadInt32();
             int channelsCount = context.RequestData.ReadInt32();
 
             MakeObject(context, new IHardwareOpusDecoder(sampleRate, channelsCount));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetWorkBufferSize(bytes<8, 4>) -> u32
-        public long GetWorkBufferSize(ServiceCtx context)
+        public ResultCode GetWorkBufferSize(ServiceCtx context)
         {
             // Note: The sample rate is ignored because it is fixed to 48KHz.
             int sampleRate    = context.RequestData.ReadInt32();
@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             context.ResponseData.Write(GetOpusDecoderSize(channelsCount));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private static int GetOpusDecoderSize(int channelsCount)

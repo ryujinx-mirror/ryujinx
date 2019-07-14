@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         [Command(0)]
         // Read() -> (u64 count, buffer<nn::fssrv::sf::IDirectoryEntry, 6, 0> entries)
-        public long Read(ServiceCtx context)
+        public ResultCode Read(ServiceCtx context)
         {
             long bufferPosition = context.Request.ReceiveBuff[0].Position;
             long bufferLen      = context.Request.ReceiveBuff[0].Size;
@@ -41,12 +41,12 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
             catch (HorizonResultException ex)
             {
-                return ex.ResultValue.Value;
+                return (ResultCode)ex.ResultValue.Value;
             }
 
             context.ResponseData.Write((long)readCount);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private void WriteDirectoryEntry(ServiceCtx context, long position, LibHac.Fs.DirectoryEntry entry)
@@ -67,7 +67,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
         [Command(1)]
         // GetEntryCount() -> u64
-        public long GetEntryCount(ServiceCtx context)
+        public ResultCode GetEntryCount(ServiceCtx context)
         {
             try
             {
@@ -75,10 +75,10 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             }
             catch (HorizonResultException ex)
             {
-                return ex.ResultValue.Value;
+                return (ResultCode)ex.ResultValue.Value;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

@@ -30,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
         [Command(0)]
         // GetCurrentTime() -> nn::time::PosixTime
-        public long GetCurrentTime(ServiceCtx context)
+        public ResultCode GetCurrentTime(ServiceCtx context)
         {
             DateTime currentTime = DateTime.Now;
 
@@ -42,12 +42,12 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
             context.ResponseData.Write((long)((currentTime - Epoch).TotalSeconds) + _timeOffset);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // SetCurrentTime(nn::time::PosixTime)
-        public long SetCurrentTime(ServiceCtx context)
+        public ResultCode SetCurrentTime(ServiceCtx context)
         {
             DateTime currentTime = DateTime.Now;
 
@@ -59,12 +59,12 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
             _timeOffset = (context.RequestData.ReadInt64() - (long)(currentTime - Epoch).TotalSeconds);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // GetSystemClockContext() -> nn::time::SystemClockContext
-        public long GetSystemClockContext(ServiceCtx context)
+        public ResultCode GetSystemClockContext(ServiceCtx context)
         {
             context.ResponseData.Write((long)(_systemClockContextEpoch - Epoch).TotalSeconds);
 
@@ -77,12 +77,12 @@ namespace Ryujinx.HLE.HOS.Services.Time
                 context.ResponseData.Write(_systemClockContextEnding[i]);
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // SetSystemClockContext(nn::time::SystemClockContext)
-        public long SetSystemClockContext(ServiceCtx context)
+        public ResultCode SetSystemClockContext(ServiceCtx context)
         {
             long newSystemClockEpoch     = context.RequestData.ReadInt64();
             long newSystemClockTimePoint = context.RequestData.ReadInt64();
@@ -91,7 +91,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             _systemClockTimePoint        = newSystemClockTimePoint;
             _systemClockContextEnding    = context.RequestData.ReadBytes(0x10);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
         [Command(0)]
         // Get() -> (nn::account::profile::ProfileBase, buffer<nn::account::profile::UserData, 0x1a>)
-        public long Get(ServiceCtx context)
+        public ResultCode Get(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceAcc);
 
@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
         [Command(1)]
         // GetBase() -> nn::account::profile::ProfileBase
-        public long GetBase(ServiceCtx context)
+        public ResultCode GetBase(ServiceCtx context)
         {
             _profile.UserId.Write(context.ResponseData);
 
@@ -48,21 +48,21 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
             context.ResponseData.Write(username);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(10)]
         // GetImageSize() -> u32
-        private long GetImageSize(ServiceCtx context)
+        private ResultCode GetImageSize(ServiceCtx context)
         {
             context.ResponseData.Write(_profilePictureStream.Length);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(11)]
         // LoadImage() -> (u32, buffer<bytes, 6>)
-        private long LoadImage(ServiceCtx context)
+        private ResultCode LoadImage(ServiceCtx context)
         {
             long bufferPosition = context.Request.ReceiveBuff[0].Position;
             long bufferLen      = context.Request.ReceiveBuff[0].Size;
@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
             context.ResponseData.Write(_profilePictureStream.Length);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

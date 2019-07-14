@@ -7,11 +7,11 @@
 
         [Command(0)]
         // CreateUserInterface() -> object<nn::nfp::detail::IUser>
-        public long GetUserInterface(ServiceCtx context)
+        public ResultCode GetUserInterface(ServiceCtx context)
         {
             MakeObject(context, new IUser());
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

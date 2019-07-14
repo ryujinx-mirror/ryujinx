@@ -6,11 +6,11 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         [Command(0)]
         // ActivateVibrationDevice(nn::hid::VibrationDeviceHandle)
-        public long ActivateVibrationDevice(ServiceCtx context)
+        public ResultCode ActivateVibrationDevice(ServiceCtx context)
         {
             int vibrationDeviceHandle = context.RequestData.ReadInt32();
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

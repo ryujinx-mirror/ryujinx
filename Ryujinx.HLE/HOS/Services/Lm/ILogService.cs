@@ -7,11 +7,11 @@ namespace Ryujinx.HLE.HOS.Services.Lm
 
         [Command(0)]
         // Initialize(u64, pid) -> object<nn::lm::ILogger>
-        public long Initialize(ServiceCtx context)
+        public ResultCode Initialize(ServiceCtx context)
         {
             MakeObject(context, new ILogger());
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

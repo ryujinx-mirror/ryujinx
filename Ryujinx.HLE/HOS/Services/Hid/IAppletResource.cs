@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
         [Command(0)]
         // GetSharedMemoryHandle() -> handle<copy>
-        public long GetSharedMemoryHandle(ServiceCtx context)
+        public ResultCode GetSharedMemoryHandle(ServiceCtx context)
         {
             if (context.Process.HandleTable.GenerateHandle(_hidSharedMem, out int handle) != KernelResult.Success)
             {
@@ -25,7 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

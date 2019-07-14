@@ -5,8 +5,6 @@ using Ryujinx.HLE.Utilities;
 using System.IO;
 using System.Runtime.InteropServices;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
-
 namespace Ryujinx.HLE.HOS.Services.Friend
 {
     class IFriendService : IpcService
@@ -21,7 +19,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
         [Command(10100)]
         // nn::friends::GetFriendListIds(int offset, nn::account::Uid userUUID, nn::friends::detail::ipc::SizedFriendFilter friendFilter, ulong pidPlaceHolder, pid) 
         // -> int outCount, array<nn::account::NetworkServiceAccountId, 0xa>
-        public long GetFriendListIds(ServiceCtx context)
+        public ResultCode GetFriendListIds(ServiceCtx context)
         {
             int offset = context.RequestData.ReadInt32();
 
@@ -36,7 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 
             if (uuid.IsNull)
             {
-                return MakeError(ErrorModule.Friends, FriendError.InvalidArgument);
+                return ResultCode.InvalidArgument;
             }
 
             // There are no friends online, so we return 0 because the nn::account::NetworkServiceAccountId array is empty.
@@ -54,13 +52,13 @@ namespace Ryujinx.HLE.HOS.Services.Friend
                 filter.PresenceGroupId,
             });
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(10101)]
         // nn::friends::GetFriendList(int offset, nn::account::Uid userUUID, nn::friends::detail::ipc::SizedFriendFilter friendFilter, ulong pidPlaceHolder, pid) 
         // -> int outCount, array<nn::friends::detail::FriendImpl, 0x6>
-        public long GetFriendList(ServiceCtx context)
+        public ResultCode GetFriendList(ServiceCtx context)
         {
             int offset = context.RequestData.ReadInt32();
 
@@ -75,7 +73,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 
             if (uuid.IsNull)
             {
-                return MakeError(ErrorModule.Friends, FriendError.InvalidArgument);
+                return ResultCode.InvalidArgument;
             }
 
             // There are no friends online, so we return 0 because the nn::account::NetworkServiceAccountId array is empty.
@@ -92,18 +90,18 @@ namespace Ryujinx.HLE.HOS.Services.Friend
                 filter.PresenceGroupId,
             });
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(10600)]
         // nn::friends::DeclareOpenOnlinePlaySession(nn::account::Uid)
-        public long DeclareOpenOnlinePlaySession(ServiceCtx context)
+        public ResultCode DeclareOpenOnlinePlaySession(ServiceCtx context)
         {
             UInt128 uuid = context.RequestData.ReadStruct<UInt128>();
 
             if (uuid.IsNull)
             {
-                return MakeError(ErrorModule.Friends, FriendError.InvalidArgument);
+                return ResultCode.InvalidArgument;
             }
 
             if (context.Device.System.State.Account.TryGetUser(uuid, out UserProfile profile))
@@ -113,18 +111,18 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 
             Logger.PrintStub(LogClass.ServiceFriend, new { UserId = uuid.ToString(), profile.OnlinePlayState });
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(10601)]
         // nn::friends::DeclareCloseOnlinePlaySession(nn::account::Uid)
-        public long DeclareCloseOnlinePlaySession(ServiceCtx context)
+        public ResultCode DeclareCloseOnlinePlaySession(ServiceCtx context)
         {
             UInt128 uuid = context.RequestData.ReadStruct<UInt128>();
 
             if (uuid.IsNull)
             {
-                return MakeError(ErrorModule.Friends, FriendError.InvalidArgument);
+                return ResultCode.InvalidArgument;
             }
 
             if (context.Device.System.State.Account.TryGetUser(uuid, out UserProfile profile))
@@ -134,12 +132,12 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 
             Logger.PrintStub(LogClass.ServiceFriend, new { UserId = uuid.ToString(), profile.OnlinePlayState });
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(10610)]
         // nn::friends::UpdateUserPresence(nn::account::Uid, u64, pid, buffer<nn::friends::detail::UserPresenceImpl, 0x19>)
-        public long UpdateUserPresence(ServiceCtx context)
+        public ResultCode UpdateUserPresence(ServiceCtx context)
         {
             UInt128 uuid = context.RequestData.ReadStruct<UInt128>();
 
@@ -153,7 +151,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 
             if (uuid.IsNull)
             {
-                return MakeError(ErrorModule.Friends, FriendError.InvalidArgument);
+                return ResultCode.InvalidArgument;
             }
 
             int elementCount = bufferContent.Length / Marshal.SizeOf<UserPresence>();
@@ -165,7 +163,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend
                 Logger.PrintStub(LogClass.ServiceFriend, new { UserId = uuid.ToString(), userPresenceInputArray });
             }
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

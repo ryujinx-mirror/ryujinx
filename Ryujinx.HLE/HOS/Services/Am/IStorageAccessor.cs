@@ -13,16 +13,16 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         [Command(0)]
         // GetSize() -> u64
-        public long GetSize(ServiceCtx context)
+        public ResultCode GetSize(ServiceCtx context)
         {
             context.ResponseData.Write((long)_storage.Data.Length);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(10)]
         // Write(u64, buffer<bytes, 0x21>)
-        public long Write(ServiceCtx context)
+        public ResultCode Write(ServiceCtx context)
         {
             // TODO: Error conditions.
             long writePosition = context.RequestData.ReadInt64();
@@ -43,12 +43,12 @@ namespace Ryujinx.HLE.HOS.Services.Am
                 Buffer.BlockCopy(data, 0, _storage.Data, (int)writePosition, (int)size);
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(11)]
         // Read(u64) -> buffer<bytes, 0x22>
-        public long Read(ServiceCtx context)
+        public ResultCode Read(ServiceCtx context)
         {
             // TODO: Error conditions.
             long readPosition = context.RequestData.ReadInt64();
@@ -70,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
             context.Memory.WriteBytes(position, data);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

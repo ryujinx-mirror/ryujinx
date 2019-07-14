@@ -6,8 +6,6 @@ using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
-
 namespace Ryujinx.HLE.HOS.Services.Acc
 {
     [Service("acc:u0")]
@@ -22,48 +20,48 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
         [Command(0)]
         // GetUserCount() -> i32
-        public long GetUserCount(ServiceCtx context)
+        public ResultCode GetUserCount(ServiceCtx context)
         {
             context.ResponseData.Write(context.Device.System.State.Account.GetUserCount());
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetUserExistence(nn::account::Uid) -> bool
-        public long GetUserExistence(ServiceCtx context)
+        public ResultCode GetUserExistence(ServiceCtx context)
         {
             UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
 
             if (userId.IsNull)
             {
-                return MakeError(ErrorModule.Account, AccErr.NullArgument);
+                return ResultCode.NullArgument;
             }
 
             context.ResponseData.Write(context.Device.System.State.Account.TryGetUser(userId, out _));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // ListAllUsers() -> array<nn::account::Uid, 0xa>
-        public long ListAllUsers(ServiceCtx context)
+        public ResultCode ListAllUsers(ServiceCtx context)
         {
             return WriteUserList(context, context.Device.System.State.Account.GetAllUsers());
         }
 
         [Command(3)]
         // ListOpenUsers() -> array<nn::account::Uid, 0xa>
-        public long ListOpenUsers(ServiceCtx context)
+        public ResultCode ListOpenUsers(ServiceCtx context)
         {
             return WriteUserList(context, context.Device.System.State.Account.GetOpenedUsers());
         }
 
-        private long WriteUserList(ServiceCtx context, IEnumerable<UserProfile> profiles)
+        private ResultCode WriteUserList(ServiceCtx context, IEnumerable<UserProfile> profiles)
         {
             if (context.Request.RecvListBuff.Count == 0)
             {
-                return MakeError(ErrorModule.Account, AccErr.InvalidInputBuffer);
+                return ResultCode.InvalidInputBuffer;
             }
 
             long outputPosition = context.Request.RecvListBuff[0].Position;
@@ -84,21 +82,21 @@ namespace Ryujinx.HLE.HOS.Services.Acc
                 offset += 0x10;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // GetLastOpenedUser() -> nn::account::Uid
-        public long GetLastOpenedUser(ServiceCtx context)
+        public ResultCode GetLastOpenedUser(ServiceCtx context)
         {
             context.Device.System.State.Account.LastOpenedUser.UserId.Write(context.ResponseData);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(5)]
         // GetProfile(nn::account::Uid) -> object<nn::account::profile::IProfile>
-        public long GetProfile(ServiceCtx context)
+        public ResultCode GetProfile(ServiceCtx context)
         {
             UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
 
@@ -106,7 +104,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             {
                 Logger.PrintWarning(LogClass.ServiceAcc, $"User 0x{userId} not found!");
 
-                return MakeError(ErrorModule.Account, AccErr.UserNotFound);
+                return ResultCode.UserNotFound;
             }
 
             MakeObject(context, new IProfile(userProfile));
@@ -114,22 +112,22 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             // Doesn't occur in our case.
             // return MakeError(ErrorModule.Account, AccErr.NullObject);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(50)]
         // IsUserRegistrationRequestPermitted(u64, pid) -> bool
-        public long IsUserRegistrationRequestPermitted(ServiceCtx context)
+        public ResultCode IsUserRegistrationRequestPermitted(ServiceCtx context)
         {
             // The u64 argument seems to be unused by account.
             context.ResponseData.Write(_userRegistrationRequestPermitted);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(51)]
         // TrySelectUserWithoutInteraction(bool) -> nn::account::Uid
-        public long TrySelectUserWithoutInteraction(ServiceCtx context)
+        public ResultCode TrySelectUserWithoutInteraction(ServiceCtx context)
         {
             if (context.Device.System.State.Account.GetUserCount() != 1)
             {
@@ -152,18 +150,18 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             // As we returned an invalid UserId if there is more than one user earlier, now we can return only the first one.
             context.Device.System.State.Account.GetFirst().UserId.Write(context.ResponseData);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(100)]
         [Command(140)] // 6.0.0+
         // InitializeApplicationInfo(u64, pid)
         // Both calls (100, 140) use the same submethod, maybe there's something different further along when arp:r is called?
-        public long InitializeApplicationInfo(ServiceCtx context)
+        public ResultCode InitializeApplicationInfo(ServiceCtx context)
         {
             if (_applicationLaunchProperty != null)
             {
-                return MakeError(ErrorModule.Account, AccErr.ApplicationLaunchPropertyAlreadyInit);
+                return ResultCode.ApplicationLaunchPropertyAlreadyInit;
             }
 
             // The u64 argument seems to be unused by account.
@@ -183,7 +181,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
                     UpdateGameStorageId = 0x00;
                 }
 
-                return MakeError(ErrorModule.Account, AccErr.InvalidArgument);
+                return ResultCode.InvalidArgument;
             }
             else
             */
@@ -199,52 +197,52 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
             Logger.PrintStub(LogClass.ServiceAcc, new { unknown });
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(101)]
         // GetBaasAccountManagerForApplication(nn::account::Uid) -> object<nn::account::baas::IManagerForApplication>
-        public long GetBaasAccountManagerForApplication(ServiceCtx context)
+        public ResultCode GetBaasAccountManagerForApplication(ServiceCtx context)
         {
             UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
 
             if (userId.IsNull)
             {
-                return MakeError(ErrorModule.Account, AccErr.NullArgument);
+                return ResultCode.NullArgument;
             }
 
             if (_applicationLaunchProperty == null)
             {
-                return MakeError(ErrorModule.Account, AccErr.InvalidArgument);
+                return ResultCode.InvalidArgument;
             }
 
             MakeObject(context, new IManagerForApplication(userId, _applicationLaunchProperty));
 
             // Doesn't occur in our case.
-            // return MakeError(ErrorModule.Account, AccErr.NullObject);
+            // return ResultCode.NullObject;
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(110)]
         // StoreSaveDataThumbnail(nn::account::Uid, buffer<bytes, 5>)
-        public long StoreSaveDataThumbnail(ServiceCtx context)
+        public ResultCode StoreSaveDataThumbnail(ServiceCtx context)
         {
             if (_applicationLaunchProperty == null)
             {
-                return MakeError(ErrorModule.Account, AccErr.InvalidArgument);
+                return ResultCode.InvalidArgument;
             }
 
             UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
 
             if (userId.IsNull)
             {
-                return MakeError(ErrorModule.Account, AccErr.NullArgument);
+                return ResultCode.NullArgument;
             }
 
             if (context.Request.SendBuff.Count == 0)
             {
-                return MakeError(ErrorModule.Account, AccErr.InvalidInputBuffer);
+                return ResultCode.InvalidInputBuffer;
             }
 
             long inputPosition = context.Request.SendBuff[0].Position;
@@ -252,7 +250,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
             if (inputSize != 0x24000)
             {
-                return MakeError(ErrorModule.Account, AccErr.InvalidInputBufferSize);
+                return ResultCode.InvalidInputBufferSize;
             }
 
             byte[] thumbnailBuffer = context.Memory.ReadBytes(inputPosition, inputSize);
@@ -261,41 +259,41 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
             Logger.PrintStub(LogClass.ServiceAcc);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(111)]
         // ClearSaveDataThumbnail(nn::account::Uid)
-        public long ClearSaveDataThumbnail(ServiceCtx context)
+        public ResultCode ClearSaveDataThumbnail(ServiceCtx context)
         {
             if (_applicationLaunchProperty == null)
             {
-                return MakeError(ErrorModule.Account, AccErr.InvalidArgument);
+                return ResultCode.InvalidArgument;
             }
 
             UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
 
             if (userId.IsNull)
             {
-                return MakeError(ErrorModule.Account, AccErr.NullArgument);
+                return ResultCode.NullArgument;
             }
 
             // TODO: Clear the Thumbnail somewhere, in save data 0x8000000000000010 ?
 
             Logger.PrintStub(LogClass.ServiceAcc);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(150)] // 6.0.0+
         // IsUserAccountSwitchLocked() -> bool
-        public long IsUserAccountSwitchLocked(ServiceCtx context)
+        public ResultCode IsUserAccountSwitchLocked(ServiceCtx context)
         {
             // TODO : Validate the following check.
             /*
             if (_applicationLaunchProperty != null)
             {
-                return MakeError(ErrorModule.Account, AccErr.ApplicationLaunchPropertyAlreadyInit);
+                return ResultCode.ApplicationLaunchPropertyAlreadyInit;
             }
             */
 
@@ -306,7 +304,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
 
             Logger.PrintStub(LogClass.ServiceAcc);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

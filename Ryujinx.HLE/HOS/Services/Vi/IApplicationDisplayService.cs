@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using System.Text;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
 using static Ryujinx.HLE.HOS.Services.Android.Parcel;
 
 namespace Ryujinx.HLE.HOS.Services.Vi
@@ -21,47 +20,47 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         [Command(100)]
         // GetRelayService() -> object<nns::hosbinder::IHOSBinderDriver>
-        public long GetRelayService(ServiceCtx context)
+        public ResultCode GetRelayService(ServiceCtx context)
         {
             MakeObject(context, new IHOSBinderDriver(
                 context.Device.System,
                 context.Device.Gpu.Renderer));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(101)]
         // GetSystemDisplayService() -> object<nn::visrv::sf::ISystemDisplayService>
-        public long GetSystemDisplayService(ServiceCtx context)
+        public ResultCode GetSystemDisplayService(ServiceCtx context)
         {
             MakeObject(context, new ISystemDisplayService(this));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(102)]
         // GetManagerDisplayService() -> object<nn::visrv::sf::IManagerDisplayService>
-        public long GetManagerDisplayService(ServiceCtx context)
+        public ResultCode GetManagerDisplayService(ServiceCtx context)
         {
             MakeObject(context, new IManagerDisplayService(this));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(103)] // 2.0.0+
         // GetIndirectDisplayTransactionService() -> object<nns::hosbinder::IHOSBinderDriver>
-        public long GetIndirectDisplayTransactionService(ServiceCtx context)
+        public ResultCode GetIndirectDisplayTransactionService(ServiceCtx context)
         {
             MakeObject(context, new IHOSBinderDriver(
                 context.Device.System,
                 context.Device.Gpu.Renderer));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1000)]
         // ListDisplays() -> (u64, buffer<nn::vi::DisplayInfo, 6>)
-        public long ListDisplays(ServiceCtx context)
+        public ResultCode ListDisplays(ServiceCtx context)
         {
             long recBuffPtr = context.Request.ReceiveBuff[0].Position;
 
@@ -76,12 +75,12 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
             context.ResponseData.Write(1L);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1010)]
         // OpenDisplay(nn::vi::DisplayName) -> u64
-        public long OpenDisplay(ServiceCtx context)
+        public ResultCode OpenDisplay(ServiceCtx context)
         {
             string name = GetDisplayName(context);
 
@@ -89,35 +88,35 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
             context.ResponseData.Write(displayId);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1020)]
         // CloseDisplay(u64)
-        public long CloseDisplay(ServiceCtx context)
+        public ResultCode CloseDisplay(ServiceCtx context)
         {
             int displayId = context.RequestData.ReadInt32();
 
             _displays.Delete(displayId);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1102)]
         // GetDisplayResolution(u64) -> (u64, u64)
-        public long GetDisplayResolution(ServiceCtx context)
+        public ResultCode GetDisplayResolution(ServiceCtx context)
         {
             long displayId = context.RequestData.ReadInt32();
 
             context.ResponseData.Write(1280);
             context.ResponseData.Write(720);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2020)]
         // OpenLayer(nn::vi::DisplayName, u64, nn::applet::AppletResourceUserId, pid) -> (u64, buffer<bytes, 6>)
-        public long OpenLayer(ServiceCtx context)
+        public ResultCode OpenLayer(ServiceCtx context)
         {
             long layerId = context.RequestData.ReadInt64();
             long userId  = context.RequestData.ReadInt64();
@@ -130,21 +129,21 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
             context.ResponseData.Write((long)parcel.Length);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2021)]
         // CloseLayer(u64)
-        public long CloseLayer(ServiceCtx context)
+        public ResultCode CloseLayer(ServiceCtx context)
         {
             long layerId = context.RequestData.ReadInt64();
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2030)]
         // CreateStrayLayer(u32, u64) -> (u64, u64, buffer<bytes, 6>)
-        public long CreateStrayLayer(ServiceCtx context)
+        public ResultCode CreateStrayLayer(ServiceCtx context)
         {
             long layerFlags = context.RequestData.ReadInt64();
             long displayId  = context.RequestData.ReadInt64();
@@ -160,29 +159,29 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             context.ResponseData.Write(0L);
             context.ResponseData.Write((long)parcel.Length);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2031)]
         // DestroyStrayLayer(u64)
-        public long DestroyStrayLayer(ServiceCtx context)
+        public ResultCode DestroyStrayLayer(ServiceCtx context)
         {
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2101)]
         // SetLayerScalingMode(u32, u64)
-        public long SetLayerScalingMode(ServiceCtx context)
+        public ResultCode SetLayerScalingMode(ServiceCtx context)
         {
             int  scalingMode = context.RequestData.ReadInt32();
             long unknown     = context.RequestData.ReadInt64();
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2102)] // 5.0.0+
         // ConvertScalingMode(unknown) -> unknown
-        public long ConvertScalingMode(ServiceCtx context)
+        public ResultCode ConvertScalingMode(ServiceCtx context)
         {
             SrcScalingMode scalingMode = (SrcScalingMode)context.RequestData.ReadInt32();
 
@@ -191,19 +190,19 @@ namespace Ryujinx.HLE.HOS.Services.Vi
             if (!convertedScalingMode.HasValue)
             {
                 // Scaling mode out of the range of valid values.
-                return MakeError(ErrorModule.Vi, 1);
+                return ResultCode.InvalidArguments;
             }
 
             if (scalingMode != SrcScalingMode.ScaleToWindow &&
                 scalingMode != SrcScalingMode.PreserveAspectRatio)
             {
                 // Invalid scaling mode specified.
-                return MakeError(ErrorModule.Vi, 6);
+                return ResultCode.InvalidScalingMode;
             }
 
             context.ResponseData.Write((ulong)convertedScalingMode);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private DstScalingMode? ConvertScalingMode(SrcScalingMode source)
@@ -222,7 +221,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
         [Command(5202)]
         // GetDisplayVsyncEvent(u64) -> handle<copy>
-        public long GetDisplayVSyncEvent(ServiceCtx context)
+        public ResultCode GetDisplayVSyncEvent(ServiceCtx context)
         {
             string name = GetDisplayName(context);
 
@@ -233,7 +232,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private byte[] MakeIGraphicsBufferProducer(long basePtr)

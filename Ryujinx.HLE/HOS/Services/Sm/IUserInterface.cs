@@ -41,27 +41,27 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
         [Command(0)]
         // Initialize(pid, u64 reserved)
-        public long Initialize(ServiceCtx context)
+        public ResultCode Initialize(ServiceCtx context)
         {
             _isInitialized = true;
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetService(ServiceName name) -> handle<move, session>
-        public long GetService(ServiceCtx context)
+        public ResultCode GetService(ServiceCtx context)
         {
             if (!_isInitialized)
             {
-                return ErrorCode.MakeError(ErrorModule.Sm, SmErr.NotInitialized);
+                return ResultCode.NotInitialized;
             }
 
             string name = ReadName(context);
 
             if (name == string.Empty)
             {
-                return ErrorCode.MakeError(ErrorModule.Sm, SmErr.InvalidName);
+                return ResultCode.InvalidName;
             }
 
             KSession session = new KSession(context.Device.System);
@@ -106,16 +106,16 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)]
         // RegisterService(ServiceName name, u8, u32 maxHandles) -> handle<move, port>
-        public long RegisterService(ServiceCtx context)
+        public ResultCode RegisterService(ServiceCtx context)
         {
             if (!_isInitialized)
             {
-                return ErrorCode.MakeError(ErrorModule.Sm, SmErr.NotInitialized);
+                return ResultCode.NotInitialized;
             }
 
             long namePosition = context.RequestData.BaseStream.Position;
@@ -130,7 +130,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             if (name == string.Empty)
             {
-                return ErrorCode.MakeError(ErrorModule.Sm, SmErr.InvalidName);
+                return ResultCode.InvalidName;
             }
 
             Logger.PrintInfo(LogClass.ServiceSm, $"Register \"{name}\".");
@@ -139,7 +139,7 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             if (!_registeredServices.TryAdd(name, port))
             {
-                return ErrorCode.MakeError(ErrorModule.Sm, SmErr.AlreadyRegistered);
+                return ResultCode.AlreadyRegistered;
             }
 
             if (context.Process.HandleTable.GenerateHandle(port.ServerPort, out int handle) != KernelResult.Success)
@@ -149,16 +149,16 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             context.Response.HandleDesc = IpcHandleDesc.MakeMove(handle);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // UnregisterService(ServiceName name)
-        public long UnregisterService(ServiceCtx context)
+        public ResultCode UnregisterService(ServiceCtx context)
         {
             if (!_isInitialized)
             {
-                return ErrorCode.MakeError(ErrorModule.Sm, SmErr.NotInitialized);
+                return ResultCode.NotInitialized;
             }
 
             long namePosition = context.RequestData.BaseStream.Position;
@@ -173,15 +173,15 @@ namespace Ryujinx.HLE.HOS.Services.Sm
 
             if (name == string.Empty)
             {
-                return ErrorCode.MakeError(ErrorModule.Sm, SmErr.InvalidName);
+                return ResultCode.InvalidName;
             }
 
             if (!_registeredServices.TryRemove(name, out _))
             {
-                return ErrorCode.MakeError(ErrorModule.Sm, SmErr.NotRegistered);
+                return ResultCode.NotRegistered;
             }
 
-            return 0;
+            return ResultCode.Success;
         }
 
         private static string ReadName(ServiceCtx context)

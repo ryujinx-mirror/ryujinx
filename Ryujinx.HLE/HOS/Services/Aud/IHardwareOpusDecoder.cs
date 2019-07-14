@@ -1,7 +1,5 @@
 using Concentus.Structs;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
-
 namespace Ryujinx.HLE.HOS.Services.Aud
 {
     class IHardwareOpusDecoder : IpcService
@@ -23,14 +21,14 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
         [Command(0)]
         // DecodeInterleaved(buffer<unknown, 5>) -> (u32, u32, buffer<unknown, 6>)
-        public long DecodeInterleaved(ServiceCtx context)
+        public ResultCode DecodeInterleaved(ServiceCtx context)
         {
             long inPosition = context.Request.SendBuff[0].Position;
             long inSize     = context.Request.SendBuff[0].Size;
 
             if (inSize < 8)
             {
-                return MakeError(ErrorModule.Audio, AudErr.OpusInvalidInput);
+                return ResultCode.OpusInvalidInput;
             }
 
             long outPosition = context.Request.ReceiveBuff[0].Position;
@@ -45,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud
 
             if ((uint)processed > (ulong)inSize)
             {
-                return MakeError(ErrorModule.Audio, AudErr.OpusInvalidInput);
+                return ResultCode.OpusInvalidInput;
             }
 
             short[] pcm = new short[outSize / 2];
@@ -64,14 +62,14 @@ namespace Ryujinx.HLE.HOS.Services.Aud
             context.ResponseData.Write(processed);
             context.ResponseData.Write(samples);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(4)]
         // DecodeInterleavedWithPerf(buffer<unknown, 5>) -> (u32, u32, u64, buffer<unknown, 0x46>)
-        public long DecodeInterleavedWithPerf(ServiceCtx context)
+        public ResultCode DecodeInterleavedWithPerf(ServiceCtx context)
         {
-            long result = DecodeInterleaved(context);
+            ResultCode result = DecodeInterleaved(context);
 
             // TODO: Figure out what this value is.
             // According to switchbrew, it is now used.

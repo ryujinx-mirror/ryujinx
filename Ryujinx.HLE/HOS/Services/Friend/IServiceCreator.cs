@@ -1,8 +1,6 @@
 using Ryujinx.Common;
 using Ryujinx.HLE.Utilities;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
-
 namespace Ryujinx.HLE.HOS.Services.Friend
 {
     [Service("friend:a", FriendServicePermissionLevel.Admin)]
@@ -21,36 +19,36 @@ namespace Ryujinx.HLE.HOS.Services.Friend
 
         [Command(0)]
         // CreateFriendService() -> object<nn::friends::detail::ipc::IFriendService>
-        public long CreateFriendService(ServiceCtx context)
+        public ResultCode CreateFriendService(ServiceCtx context)
         {
             MakeObject(context, new IFriendService(_permissionLevel));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)] // 2.0.0+
         // CreateNotificationService(nn::account::Uid) -> object<nn::friends::detail::ipc::INotificationService>
-        public long CreateNotificationService(ServiceCtx context)
+        public ResultCode CreateNotificationService(ServiceCtx context)
         {
             UInt128 userId = context.RequestData.ReadStruct<UInt128>();
 
             if (userId.IsNull)
             {
-                return MakeError(ErrorModule.Friends, FriendError.InvalidArgument);
+                return ResultCode.InvalidArgument;
             }
 
             MakeObject(context, new INotificationService(context, userId, _permissionLevel));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(2)] // 4.0.0+
         // CreateDaemonSuspendSessionService() -> object<nn::friends::detail::ipc::IDaemonSuspendSessionService>
-        public long CreateDaemonSuspendSessionService(ServiceCtx context)
+        public ResultCode CreateDaemonSuspendSessionService(ServiceCtx context)
         {
             MakeObject(context, new IDaemonSuspendSessionService(_permissionLevel));
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

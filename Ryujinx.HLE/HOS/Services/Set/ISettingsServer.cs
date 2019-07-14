@@ -2,8 +2,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.SystemState;
 using System;
 
-using static Ryujinx.HLE.HOS.ErrorCode;
-
 namespace Ryujinx.HLE.HOS.Services.Set
 {
     [Service("set")]
@@ -13,16 +11,16 @@ namespace Ryujinx.HLE.HOS.Services.Set
 
         [Command(0)]
         // GetLanguageCode() -> nn::settings::LanguageCode
-        public static long GetLanguageCode(ServiceCtx context)
+        public ResultCode GetLanguageCode(ServiceCtx context)
         {
             context.ResponseData.Write(context.Device.System.State.DesiredLanguageCode);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(1)]
         // GetAvailableLanguageCodes() -> (u32, buffer<nn::settings::LanguageCode, 0xa>)
-        public static long GetAvailableLanguageCodes(ServiceCtx context)
+        public ResultCode GetAvailableLanguageCodes(ServiceCtx context)
         {
             return GetAvailableLanguagesCodesImpl(
                     context,
@@ -33,32 +31,32 @@ namespace Ryujinx.HLE.HOS.Services.Set
 
         [Command(2)] // 4.0.0+
         // MakeLanguageCode(nn::settings::Language language_index) -> nn::settings::LanguageCode
-        public static long MakeLanguageCode(ServiceCtx context)
+        public ResultCode MakeLanguageCode(ServiceCtx context)
         {
             int languageIndex = context.RequestData.ReadInt32();
 
             if ((uint)languageIndex >= (uint)SystemStateMgr.LanguageCodes.Length)
             {
-                return MakeError(ErrorModule.Settings, SettingsError.LanguageOutOfRange);
+                return ResultCode.LanguageOutOfRange;
             }
 
             context.ResponseData.Write(SystemStateMgr.GetLanguageCode(languageIndex));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(3)]
         // GetAvailableLanguageCodeCount() -> u32
-        public static long GetAvailableLanguageCodeCount(ServiceCtx context)
+        public ResultCode GetAvailableLanguageCodeCount(ServiceCtx context)
         {
             context.ResponseData.Write(Math.Min(SystemStateMgr.LanguageCodes.Length, 0xF));
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(5)]
         // GetAvailableLanguageCodes2() -> (u32, buffer<nn::settings::LanguageCode, 6>)
-        public static long GetAvailableLanguageCodes2(ServiceCtx context)
+        public ResultCode GetAvailableLanguageCodes2(ServiceCtx context)
         {
             return GetAvailableLanguagesCodesImpl(
                     context,
@@ -69,25 +67,25 @@ namespace Ryujinx.HLE.HOS.Services.Set
 
         [Command(6)]
         // GetAvailableLanguageCodeCount2() -> u32
-        public static long GetAvailableLanguageCodeCount2(ServiceCtx context)
+        public ResultCode GetAvailableLanguageCodeCount2(ServiceCtx context)
         {
             context.ResponseData.Write(SystemStateMgr.LanguageCodes.Length);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(8)] // 5.0.0+
         // GetQuestFlag() -> bool
-        public static long GetQuestFlag(ServiceCtx context)
+        public ResultCode GetQuestFlag(ServiceCtx context)
         {
             context.ResponseData.Write(false);
 
             Logger.PrintStub(LogClass.ServiceSet);
 
-            return 0;
+            return ResultCode.Success;
         }
 
-        public static long GetAvailableLanguagesCodesImpl(ServiceCtx context, long position, long size, int maxSize)
+        public ResultCode GetAvailableLanguagesCodesImpl(ServiceCtx context, long position, long size, int maxSize)
         {
             int count = (int)(size / 8);
 
@@ -105,7 +103,7 @@ namespace Ryujinx.HLE.HOS.Services.Set
 
             context.ResponseData.Write(count);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }

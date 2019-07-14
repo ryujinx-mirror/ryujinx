@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
         [Command(400)]
         // GetApplicationControlData(unknown<0x10>) -> (unknown<4>, buffer<unknown, 6>)
-        public long GetApplicationControlData(ServiceCtx context)
+        public ResultCode GetApplicationControlData(ServiceCtx context)
         {
             long position = context.Request.ReceiveBuff[0].Position;
 
@@ -189,7 +189,6 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             context.Memory.WriteBytes(position, reserved03);
             position += reserved03.Length;
 
-
             for (int i = 0; i < 16; i++)
             {
                 ulong value = 0;
@@ -207,7 +206,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             context.Memory.WriteByte(position++, nacp.RepairFlag);
             context.Memory.WriteByte(position++, nacp.ProgramIndex);
 
-            return 0;
+            return ResultCode.Success;
         }
     }
 }
