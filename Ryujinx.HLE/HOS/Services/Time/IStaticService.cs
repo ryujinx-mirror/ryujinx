@@ -106,6 +106,15 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return StandardUserSystemClockCore.Instance.SetAutomaticCorrectionEnabled(context.Thread, autoCorrectionEnabled);
         }
 
+        [Command(200)] // 3.0.0+
+        // IsStandardNetworkSystemClockAccuracySufficient() -> bool
+        public ResultCode IsStandardNetworkSystemClockAccuracySufficient(ServiceCtx context)
+        {
+            context.ResponseData.Write(StandardNetworkSystemClockCore.Instance.IsStandardNetworkSystemClockAccuracySufficient(context.Thread));
+
+            return ResultCode.Success;
+        }
+
         [Command(300)] // 4.0.0+
         // CalculateMonotonicSystemClockBaseTimePoint(nn::time::SystemClockContext) -> u64
         public ResultCode CalculateMonotonicSystemClockBaseTimePoint(ServiceCtx context)

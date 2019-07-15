@@ -197,10 +197,17 @@ namespace Ryujinx.HLE.HOS
 
             ContentManager = new ContentManager(device);
 
-            // NOTE: Now we set the default internal offset of the steady clock like Nintendo does... even if it's strange this is accurate.
-            // TODO: use bpc:r and set:sys (and set external clock source id from settings)
-            DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            SteadyClockCore.Instance.SetInternalOffset(new TimeSpanType(((ulong)(DateTime.Now.ToUniversalTime() - UnixEpoch).TotalSeconds) * 1000000000));
+            // TODO: use set:sys (and set external clock source id from settings)
+            // TODO: use "time!standard_steady_clock_rtc_update_interval_minutes" and implement a worker thread to be accurate.
+            SteadyClockCore.Instance.ConfigureSetupValue();
+
+            if (Services.Set.NxSettings.Settings.TryGetValue("time!standard_network_clock_sufficient_accuracy_minutes", out object standardNetworkClockSufficientAccuracyMinutes))
+            {
+                TimeSpanType standardNetworkClockSufficientAccuracy = new TimeSpanType((int)standardNetworkClockSufficientAccuracyMinutes * 60000000000);
+
+                StandardNetworkSystemClockCore.Instance.SetStandardNetworkClockSufficientAccuracy(standardNetworkClockSufficientAccuracy);
+            }
+
         }
 
         public void LoadCart(string exeFsDir, string romFsFile = null)

@@ -1,4 +1,5 @@
-﻿using Ryujinx.HLE.HOS.Kernel.Threading;
+﻿using System;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Time.Clock
 {
@@ -6,6 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
     {
         private SteadyClockCore    _steadyClockCore;
         private SystemClockContext _context;
+        private TimeSpanType       _standardNetworkClockSufficientAccuracy;
 
         private static StandardNetworkSystemClockCore instance;
 
@@ -27,7 +29,8 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
             _steadyClockCore = steadyClockCore;
             _context         = new SystemClockContext();
 
-            _context.SteadyTimePoint.ClockSourceId = steadyClockCore.GetClockSourceId();
+            _context.SteadyTimePoint.ClockSourceId  = steadyClockCore.GetClockSourceId();
+            _standardNetworkClockSufficientAccuracy = new TimeSpanType(0);
         }
 
         public override ResultCode Flush(SystemClockContext context)
@@ -54,6 +57,26 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
             _context = context;
 
             return ResultCode.Success;
+        }
+
+        public bool IsStandardNetworkSystemClockAccuracySufficient(KThread thread)
+        {
+            SteadyClockCore      steadyClockCore  = GetSteadyClockCore();
+            SteadyClockTimePoint currentTimePoint = steadyClockCore.GetCurrentTimePoint(thread);
+
+            bool isStandardNetworkClockSufficientAccuracy = false;
+
+            if (_context.SteadyTimePoint.GetSpanBetween(currentTimePoint, out long outSpan) == ResultCode.Success)
+            {
+                isStandardNetworkClockSufficientAccuracy = outSpan * 1000000000 < _standardNetworkClockSufficientAccuracy.NanoSeconds;
+            }
+
+            return isStandardNetworkClockSufficientAccuracy;
+        }
+
+        public void SetStandardNetworkClockSufficientAccuracy(TimeSpanType standardNetworkClockSufficientAccuracy)
+        {
+            _standardNetworkClockSufficientAccuracy = standardNetworkClockSufficientAccuracy;
         }
     }
 }

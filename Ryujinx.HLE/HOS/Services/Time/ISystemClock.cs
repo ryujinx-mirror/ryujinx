@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
                 if (currentTimePoint.ClockSourceId == clockContext.SteadyTimePoint.ClockSourceId)
                 {
-                    ulong posixTime = clockContext.Offset + currentTimePoint.TimePoint;
+                    long posixTime = clockContext.Offset + currentTimePoint.TimePoint;
 
                     context.ResponseData.Write(posixTime);
 
@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
                 return ResultCode.PermissionDenied;
             }
 
-            ulong                posixTime        = context.RequestData.ReadUInt64();
+            long                 posixTime        = context.RequestData.ReadInt64();
             SteadyClockCore      steadyClockCore  = _clockCore.GetSteadyClockCore();
             SteadyClockTimePoint currentTimePoint = steadyClockCore.GetCurrentTimePoint(context.Thread);
 

@@ -36,6 +36,38 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return 0;
         }
 
+        [Command(100)] // 2.0.0+
+        // GetRtcValue() -> u64
+        public ResultCode GetRtcValue(ServiceCtx context)
+        {
+            ResultCode result = SteadyClockCore.Instance.GetRtcValue(out ulong rtcValue);
+
+            if (result == ResultCode.Success)
+            {
+                context.ResponseData.Write(rtcValue);
+            }
+
+            return result;
+        }
+
+        [Command(101)] // 2.0.0+
+        // IsRtcResetDetected() -> bool
+        public ResultCode IsRtcResetDetected(ServiceCtx context)
+        {
+            context.ResponseData.Write(SteadyClockCore.Instance.IsRtcResetDetected());
+
+            return ResultCode.Success;
+        }
+
+        [Command(102)] // 2.0.0+
+        // GetSetupResultValue() -> u32
+        public ResultCode GetSetupResultValue(ServiceCtx context)
+        {
+            context.ResponseData.Write((uint)SteadyClockCore.Instance.GetSetupResultCode());
+
+            return ResultCode.Success;
+        }
+
         [Command(200)] // 3.0.0+
         // GetInternalOffset() -> nn::TimeSpanType
         public ResultCode GetInternalOffset(ServiceCtx context)
