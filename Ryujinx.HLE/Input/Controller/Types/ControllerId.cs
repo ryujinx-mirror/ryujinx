@@ -1,6 +1,6 @@
 namespace Ryujinx.HLE.Input
 {
-    public enum HidControllerId
+    public enum ControllerId
     {
         ControllerPlayer1  = 0,
         ControllerPlayer2  = 1,

@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Irs
                 return ResultCode.NpadIdOutOfRange;
             }
 
-            HidControllerId irCameraHandle = HidUtils.GetIndexFromNpadIdType(npadIdType);
+            ControllerId irCameraHandle = HidUtils.GetIndexFromNpadIdType(npadIdType);
 
             context.ResponseData.Write((int)irCameraHandle);
 

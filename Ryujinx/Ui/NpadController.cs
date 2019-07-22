@@ -107,7 +107,7 @@ namespace Ryujinx.UI.Input
             Enabled = enabled;
         }
 
-        public HidControllerButtons GetButtons()
+        public ControllerButtons GetButtons()
         {
             if (!Enabled)
             {
@@ -116,25 +116,25 @@ namespace Ryujinx.UI.Input
 
             GamePadState gpState = GamePad.GetState(Index);
 
-            HidControllerButtons buttons = 0;
+            ControllerButtons buttons = 0;
 
-            if (IsPressed(gpState, LeftJoycon.DPadUp))       buttons |= HidControllerButtons.DpadUp;
-            if (IsPressed(gpState, LeftJoycon.DPadDown))     buttons |= HidControllerButtons.DpadDown;
-            if (IsPressed(gpState, LeftJoycon.DPadLeft))     buttons |= HidControllerButtons.DpadLeft;
-            if (IsPressed(gpState, LeftJoycon.DPadRight))    buttons |= HidControllerButtons.DPadRight;
-            if (IsPressed(gpState, LeftJoycon.StickButton))  buttons |= HidControllerButtons.StickLeft;
-            if (IsPressed(gpState, LeftJoycon.ButtonMinus))  buttons |= HidControllerButtons.Minus;
-            if (IsPressed(gpState, LeftJoycon.ButtonL))      buttons |= HidControllerButtons.L;
-            if (IsPressed(gpState, LeftJoycon.ButtonZl))     buttons |= HidControllerButtons.Zl;
+            if (IsPressed(gpState, LeftJoycon.DPadUp))       buttons |= ControllerButtons.DpadUp;
+            if (IsPressed(gpState, LeftJoycon.DPadDown))     buttons |= ControllerButtons.DpadDown;
+            if (IsPressed(gpState, LeftJoycon.DPadLeft))     buttons |= ControllerButtons.DpadLeft;
+            if (IsPressed(gpState, LeftJoycon.DPadRight))    buttons |= ControllerButtons.DPadRight;
+            if (IsPressed(gpState, LeftJoycon.StickButton))  buttons |= ControllerButtons.StickLeft;
+            if (IsPressed(gpState, LeftJoycon.ButtonMinus))  buttons |= ControllerButtons.Minus;
+            if (IsPressed(gpState, LeftJoycon.ButtonL))      buttons |= ControllerButtons.L;
+            if (IsPressed(gpState, LeftJoycon.ButtonZl))     buttons |= ControllerButtons.Zl;
 
-            if (IsPressed(gpState, RightJoycon.ButtonA))     buttons |= HidControllerButtons.A;
-            if (IsPressed(gpState, RightJoycon.ButtonB))     buttons |= HidControllerButtons.B;
-            if (IsPressed(gpState, RightJoycon.ButtonX))     buttons |= HidControllerButtons.X;
-            if (IsPressed(gpState, RightJoycon.ButtonY))     buttons |= HidControllerButtons.Y;
-            if (IsPressed(gpState, RightJoycon.StickButton)) buttons |= HidControllerButtons.StickRight;
-            if (IsPressed(gpState, RightJoycon.ButtonPlus))  buttons |= HidControllerButtons.Plus;
-            if (IsPressed(gpState, RightJoycon.ButtonR))     buttons |= HidControllerButtons.R;
-            if (IsPressed(gpState, RightJoycon.ButtonZr))    buttons |= HidControllerButtons.Zr;
+            if (IsPressed(gpState, RightJoycon.ButtonA))     buttons |= ControllerButtons.A;
+            if (IsPressed(gpState, RightJoycon.ButtonB))     buttons |= ControllerButtons.B;
+            if (IsPressed(gpState, RightJoycon.ButtonX))     buttons |= ControllerButtons.X;
+            if (IsPressed(gpState, RightJoycon.ButtonY))     buttons |= ControllerButtons.Y;
+            if (IsPressed(gpState, RightJoycon.StickButton)) buttons |= ControllerButtons.StickRight;
+            if (IsPressed(gpState, RightJoycon.ButtonPlus))  buttons |= ControllerButtons.Plus;
+            if (IsPressed(gpState, RightJoycon.ButtonR))     buttons |= ControllerButtons.R;
+            if (IsPressed(gpState, RightJoycon.ButtonZr))    buttons |= ControllerButtons.Zr;
 
             return buttons;
         }

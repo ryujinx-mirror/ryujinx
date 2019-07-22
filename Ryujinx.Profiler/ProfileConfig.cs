@@ -105,6 +105,21 @@ namespace Ryujinx.Profiler
             };
         }
 
+        public static class Input
+        {
+            public static ProfileConfig ControllerInput = new ProfileConfig
+            {
+                Category     = "Input",
+                SessionGroup = "ControllerInput"
+            };
+
+            public static ProfileConfig TouchInput = new ProfileConfig
+            {
+                Category     = "Input",
+                SessionGroup = "TouchInput"
+            };
+        }
+
         public static class GPU
         {
             public static class Engine2d

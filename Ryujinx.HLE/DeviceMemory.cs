@@ -1,5 +1,6 @@
 using ChocolArm64.Memory;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE
 {
@@ -96,6 +97,11 @@ namespace Ryujinx.HLE
         public unsafe void WriteUInt64(long position, ulong value)
         {
             *((ulong*)(_ramPtr + position)) = value;
+        }
+
+        public unsafe void WriteStruct<T>(long position, T value)
+        {
+            Marshal.StructureToPtr(value, (IntPtr)(_ramPtr + position), false);
         }
 
         public void FillWithZeros(long position, int size)

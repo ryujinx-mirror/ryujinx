@@ -3,7 +3,7 @@ using System;
 namespace Ryujinx.HLE.Input
 {
     [Flags]
-    public enum HidControllerType
+    public enum ControllerStatus : int
     {
         ProController = 1 << 0,
         Handheld      = 1 << 1,

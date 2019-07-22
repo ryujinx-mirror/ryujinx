@@ -1,6 +1,6 @@
 namespace Ryujinx.HLE.Input
 {
-    public struct HidKeyboard
+    public struct Keyboard
     {
         public int   Modifier;
         public int[] Keys;

@@ -120,7 +120,7 @@ namespace Ryujinx
         /// <summary>
         ///  The primary controller's type
         /// </summary>
-        public HidControllerType ControllerType { get; private set; }
+        public ControllerStatus ControllerType { get; private set; }
 
         /// <summary>
         /// Enable or disable keyboard support (Independent from controllers binding)
@@ -135,7 +135,7 @@ namespace Ryujinx
         /// <summary>
         /// Controller control bindings
         /// </summary>
-        public NpadController GamepadControls { get; private set; }
+        public UI.Input.NpadController GamepadControls { get; private set; }
 
         /// <summary>
         /// Loads a configuration file from disk

@@ -1,6 +1,6 @@
 namespace Ryujinx.HLE.Input
 {
-    public struct HidTouchPoint
+    public struct TouchPoint
     {
         public int X;
         public int Y;

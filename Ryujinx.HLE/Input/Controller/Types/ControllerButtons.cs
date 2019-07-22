@@ -3,7 +3,7 @@ using System;
 namespace Ryujinx.HLE.Input
 {
     [Flags]
-    public enum HidControllerButtons
+    public enum ControllerButtons : long
     {
         A           = 1 << 0,
         B           = 1 << 1,

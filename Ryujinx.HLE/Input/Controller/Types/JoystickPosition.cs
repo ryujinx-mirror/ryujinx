@@ -1,6 +1,6 @@
 namespace Ryujinx.HLE.Input
 {
-    public struct HidJoystickPosition
+    public struct JoystickPosition
     {
         public int Dx;
         public int Dy;

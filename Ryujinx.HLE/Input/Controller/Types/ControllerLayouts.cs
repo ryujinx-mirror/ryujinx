@@ -1,6 +1,6 @@
 namespace Ryujinx.HLE.Input
 {
-    public enum HidControllerLayouts
+    public enum ControllerLayouts
     {
         ProController  = 0,
         HandheldJoined = 1,
