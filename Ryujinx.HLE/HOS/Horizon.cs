@@ -199,7 +199,7 @@ namespace Ryujinx.HLE.HOS
 
             // TODO: use set:sys (and set external clock source id from settings)
             // TODO: use "time!standard_steady_clock_rtc_update_interval_minutes" and implement a worker thread to be accurate.
-            SteadyClockCore.Instance.ConfigureSetupValue();
+            StandardSteadyClockCore.Instance.ConfigureSetupValue();
 
             if (Services.Set.NxSettings.Settings.TryGetValue("time!standard_network_clock_sufficient_accuracy_minutes", out object standardNetworkClockSufficientAccuracyMinutes))
             {

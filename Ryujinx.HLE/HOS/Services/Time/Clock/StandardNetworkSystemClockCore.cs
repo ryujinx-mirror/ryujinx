@@ -1,60 +1,34 @@
-﻿using System;
-using Ryujinx.HLE.HOS.Kernel.Threading;
+﻿using Ryujinx.HLE.HOS.Kernel.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Time.Clock
 {
     class StandardNetworkSystemClockCore : SystemClockCore
     {
-        private SteadyClockCore    _steadyClockCore;
-        private SystemClockContext _context;
         private TimeSpanType       _standardNetworkClockSufficientAccuracy;
 
-        private static StandardNetworkSystemClockCore instance;
+        private static StandardNetworkSystemClockCore _instance;
 
         public static StandardNetworkSystemClockCore Instance
         {
             get
             {
-                if (instance == null)
+                if (_instance == null)
                 {
-                    instance = new StandardNetworkSystemClockCore(SteadyClockCore.Instance);
+                    _instance = new StandardNetworkSystemClockCore(StandardSteadyClockCore.Instance);
                 }
 
-                return instance;
+                return _instance;
             }
         }
 
-        public StandardNetworkSystemClockCore(SteadyClockCore steadyClockCore)
+        public StandardNetworkSystemClockCore(StandardSteadyClockCore steadyClockCore) : base(steadyClockCore)
         {
-            _steadyClockCore = steadyClockCore;
-            _context         = new SystemClockContext();
-
-            _context.SteadyTimePoint.ClockSourceId  = steadyClockCore.GetClockSourceId();
             _standardNetworkClockSufficientAccuracy = new TimeSpanType(0);
         }
 
         public override ResultCode Flush(SystemClockContext context)
         {
             // TODO: set:sys SetNetworkSystemClockContext
-
-            return ResultCode.Success;
-        }
-
-        public override SteadyClockCore GetSteadyClockCore()
-        {
-            return _steadyClockCore;
-        }
-
-        public override ResultCode GetSystemClockContext(KThread thread, out SystemClockContext context)
-        {
-            context = _context;
-
-            return ResultCode.Success;
-        }
-
-        public override ResultCode SetSystemClockContext(SystemClockContext context)
-        {
-            _context = context;
 
             return ResultCode.Success;
         }
@@ -66,7 +40,9 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 
             bool isStandardNetworkClockSufficientAccuracy = false;
 
-            if (_context.SteadyTimePoint.GetSpanBetween(currentTimePoint, out long outSpan) == ResultCode.Success)
+            ResultCode result = GetSystemClockContext(thread, out SystemClockContext context);
+
+            if (result == ResultCode.Success && context.SteadyTimePoint.GetSpanBetween(currentTimePoint, out long outSpan) == ResultCode.Success)
             {
                 isStandardNetworkClockSufficientAccuracy = outSpan * 1000000000 < _standardNetworkClockSufficientAccuracy.NanoSeconds;
             }

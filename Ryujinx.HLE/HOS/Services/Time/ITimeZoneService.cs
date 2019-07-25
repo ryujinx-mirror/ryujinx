@@ -56,7 +56,6 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // LoadLocationNameList(u32 index) -> (u32 outCount, buffer<nn::time::LocationName, 6>)
         public ResultCode LoadLocationNameList(ServiceCtx context)
         {
-            // TODO: fix logic to use index
             uint index          = context.RequestData.ReadUInt32();
             long bufferPosition = context.Request.ReceiveBuff[0].Position;
             long bufferSize     = context.Request.ReceiveBuff[0].Size;

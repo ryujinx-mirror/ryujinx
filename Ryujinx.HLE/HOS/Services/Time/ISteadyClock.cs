@@ -9,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetCurrentTimePoint() -> nn::time::SteadyClockTimePoint
         public ResultCode GetCurrentTimePoint(ServiceCtx context)
         {
-            SteadyClockTimePoint currentTimePoint = SteadyClockCore.Instance.GetCurrentTimePoint(context.Thread);
+            SteadyClockTimePoint currentTimePoint = StandardSteadyClockCore.Instance.GetCurrentTimePoint(context.Thread);
 
             context.ResponseData.WriteStruct(currentTimePoint);
 
@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetTestOffset() -> nn::TimeSpanType
         public ResultCode GetTestOffset(ServiceCtx context)
         {
-            context.ResponseData.WriteStruct(SteadyClockCore.Instance.GetTestOffset());
+            context.ResponseData.WriteStruct(StandardSteadyClockCore.Instance.GetTestOffset());
 
             return ResultCode.Success;
         }
@@ -31,7 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         {
             TimeSpanType testOffset = context.RequestData.ReadStruct<TimeSpanType>();
 
-            SteadyClockCore.Instance.SetTestOffset(testOffset);
+            StandardSteadyClockCore.Instance.SetTestOffset(testOffset);
 
             return 0;
         }
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetRtcValue() -> u64
         public ResultCode GetRtcValue(ServiceCtx context)
         {
-            ResultCode result = SteadyClockCore.Instance.GetRtcValue(out ulong rtcValue);
+            ResultCode result = StandardSteadyClockCore.Instance.GetRtcValue(out ulong rtcValue);
 
             if (result == ResultCode.Success)
             {
@@ -54,7 +54,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // IsRtcResetDetected() -> bool
         public ResultCode IsRtcResetDetected(ServiceCtx context)
         {
-            context.ResponseData.Write(SteadyClockCore.Instance.IsRtcResetDetected());
+            context.ResponseData.Write(StandardSteadyClockCore.Instance.IsRtcResetDetected());
 
             return ResultCode.Success;
         }
@@ -63,7 +63,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetSetupResultValue() -> u32
         public ResultCode GetSetupResultValue(ServiceCtx context)
         {
-            context.ResponseData.Write((uint)SteadyClockCore.Instance.GetSetupResultCode());
+            context.ResponseData.Write((uint)StandardSteadyClockCore.Instance.GetSetupResultValue());
 
             return ResultCode.Success;
         }
@@ -72,7 +72,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetInternalOffset() -> nn::TimeSpanType
         public ResultCode GetInternalOffset(ServiceCtx context)
         {
-            context.ResponseData.WriteStruct(SteadyClockCore.Instance.GetInternalOffset());
+            context.ResponseData.WriteStruct(StandardSteadyClockCore.Instance.GetInternalOffset());
 
             return ResultCode.Success;
         }
@@ -83,7 +83,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         {
             TimeSpanType internalOffset = context.RequestData.ReadStruct<TimeSpanType>();
 
-            SteadyClockCore.Instance.SetInternalOffset(internalOffset);
+            StandardSteadyClockCore.Instance.SetInternalOffset(internalOffset);
 
             return ResultCode.Success;
         }

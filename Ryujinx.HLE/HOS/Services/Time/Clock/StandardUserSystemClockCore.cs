@@ -8,22 +8,22 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
         private StandardNetworkSystemClockCore _networkSystemClockCore;
         private bool                           _autoCorrectionEnabled;
 
-        private static StandardUserSystemClockCore instance;
+        private static StandardUserSystemClockCore _instance;
 
         public static StandardUserSystemClockCore Instance
         {
             get
             {
-                if (instance == null)
+                if (_instance == null)
                 {
-                    instance = new StandardUserSystemClockCore(StandardLocalSystemClockCore.Instance, StandardNetworkSystemClockCore.Instance);
+                    _instance = new StandardUserSystemClockCore(StandardLocalSystemClockCore.Instance, StandardNetworkSystemClockCore.Instance);
                 }
 
-                return instance;
+                return _instance;
             }
         }
 
-        public StandardUserSystemClockCore(StandardLocalSystemClockCore localSystemClockCore, StandardNetworkSystemClockCore networkSystemClockCore)
+        public StandardUserSystemClockCore(StandardLocalSystemClockCore localSystemClockCore, StandardNetworkSystemClockCore networkSystemClockCore) : base(localSystemClockCore.GetSteadyClockCore())
         {
             _localSystemClockCore   = localSystemClockCore;
             _networkSystemClockCore = networkSystemClockCore;
@@ -33,11 +33,6 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
         public override ResultCode Flush(SystemClockContext context)
         {
             return ResultCode.NotImplemented;
-        }
-
-        public override SteadyClockCore GetSteadyClockCore()
-        {
-            return _localSystemClockCore.GetSteadyClockCore();
         }
 
         public override ResultCode GetSystemClockContext(KThread thread, out SystemClockContext context)

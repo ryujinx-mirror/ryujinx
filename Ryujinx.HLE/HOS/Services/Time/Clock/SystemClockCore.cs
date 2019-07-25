@@ -4,11 +4,35 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 {
     abstract class SystemClockCore
     {
-        public abstract SteadyClockCore GetSteadyClockCore();
+        private SteadyClockCore    _steadyClockCore;
+        private SystemClockContext _context;
 
-        public abstract ResultCode GetSystemClockContext(KThread thread, out SystemClockContext context);
+        public SystemClockCore(SteadyClockCore steadyClockCore)
+        {
+            _steadyClockCore = steadyClockCore;
+            _context         = new SystemClockContext();
 
-        public abstract ResultCode SetSystemClockContext(SystemClockContext context);
+            _context.SteadyTimePoint.ClockSourceId = steadyClockCore.GetClockSourceId();
+        }
+
+        public virtual SteadyClockCore GetSteadyClockCore()
+        {
+            return _steadyClockCore;
+        }
+
+        public virtual ResultCode GetSystemClockContext(KThread thread, out SystemClockContext context)
+        {
+            context = _context;
+
+            return ResultCode.Success;
+        }
+
+        public virtual ResultCode SetSystemClockContext(SystemClockContext context)
+        {
+            _context = context;
+
+            return ResultCode.Success;
+        }
 
         public abstract ResultCode Flush(SystemClockContext context);
 
