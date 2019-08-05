@@ -183,17 +183,17 @@ namespace Ryujinx
                 };
             }
             
-            currentButton |= Configuration.Instance.GamepadControls.GetButtons();
+            currentButton |= Configuration.Instance.JoystickControls.GetButtons();
 
             // Keyboard has priority stick-wise
             if (leftJoystickDx == 0 && leftJoystickDy == 0)
             {
-                (leftJoystickDx, leftJoystickDy) = Configuration.Instance.GamepadControls.GetLeftStick();
+                (leftJoystickDx, leftJoystickDy) = Configuration.Instance.JoystickControls.GetLeftStick();
             }
 
             if (rightJoystickDx == 0 && rightJoystickDy == 0)
             {
-                (rightJoystickDx, rightJoystickDy) = Configuration.Instance.GamepadControls.GetRightStick();
+                (rightJoystickDx, rightJoystickDy) = Configuration.Instance.JoystickControls.GetRightStick();
             }
 
             leftJoystick = new JoystickPosition

@@ -85,7 +85,7 @@
     - `button_r` *(string)*
     - `button_zr` *(string)*
 
-- `gamepad_controls` *(object)* :
+- `joystick_controls` *(object)* :
   - `enabled` *(bool)*
     Whether or not to enable Controller Support.
   - `index` *(int)*
@@ -117,27 +117,27 @@
     - `button_r` *(string)*
     - `button_zr` *(string)*
   
-### Default Mapping
+### Default Mapping.
    #### Controller
      - Left Joycon:
-       - Analog Stick = Left Analog Stick
-	   - DPad Up = DPad Up
-	   - DPad Down = DPad Down
-	   - DPad Left = DPad Left
-	   - DPad Right = DPad Right
-	   - Minus = Select / Back / Share
-	   - L = Left Shoulder Button
-	   - ZL = Left Trigger
+       - Analog Stick = Axis 0
+	   - DPad Up = DPad Up #Hat0 Up
+	   - DPad Down = DPad Down #Hat0 Down
+	   - DPad Left = DPad Left #Hat0 Left
+	   - DPad Right = DPad Right #Hat0 Right
+	   - Minus = Button 10
+	   - L = Button 6
+	   - ZL = Button 8
 	 
      - Right Joycon:
-	   - Analog Stick = Right Analog Stick
-	   - A = B / Circle
-	   - B = A / Cross
-	   - X = Y / Triangle
-	   - Y = X / Square
-	   - Plus = Start / Options
-	   - R = Right Shoulder Button
-	   - ZR = Right Trigger
+	   - Analog Stick = Axis 2
+	   - A = Button 0
+	   - B = Button 1
+	   - X = Button 3
+	   - Y = Button 4
+	   - Plus = Button 11
+	   - R = Button 7
+	   - ZR = Button 9
 
    #### Keyboard
      - Left Joycon:
@@ -168,25 +168,10 @@
 	   - R = U
 	   - ZR = O
   
-### Valid Button Mappings
-  - A = The A / Cross Button
-  - B = The B / Circle Button
-  - X = The X / Square Button
-  - Y = The Y / Triangle Button
-  - LStick = The Left Analog Stick when Pressed Down
-  - RStick = The Right Analog Stick when Pressed Down
-  - Start = The Start / Options Button
-  - Back = The Select / Back / Share Button
-  - RShoulder = The Right Shoulder Button
-  - LShoulder = The Left Shoulder Button
-  - RTrigger = The Right Trigger
-  - LTrigger = The Left Trigger
-  - DPadUp = Up on the DPad
-  - DPadDown = Down on the DPad
-  - DPadLeft = Left on the DPad
-  - DpadRight = Right on the DPad
-- Valid Joystick Mappings
-  - LJoystick = The Left Analog Stick
-  - RJoystick = The Right Analog Stick
+### Valid Button Mappings.
+  - Button# = A button on the controller. # should not exceed the max # of buttons detected on your controller.
+  - Axis# = An analog axis on the controller. It can be a stick control, or a motion control axis.
+  - Hat# = A Point of View (POV), Hat or Directional Pad control on the controller.
 
-  On more obscure / weird controllers this can vary, so if this list doesn't work, trial and error will.
+  Button configuration and controller capabilities differ from one controller to another. Please use a
+  configuration tool to find out the actual button configuration of your controller.

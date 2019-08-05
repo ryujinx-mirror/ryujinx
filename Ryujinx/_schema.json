@@ -24,7 +24,7 @@
     "controller_type",
     "enable_keyboard",
     "keyboard_controls",
-    "gamepad_controls"
+    "joystick_controls"
   ],
   "definitions": {
     "key": {
@@ -181,24 +181,45 @@
     "input": {
       "type": "string",
       "enum": [
-        "DPadUp",
-        "DPadDown",
-        "DPadLeft",
-        "DPadRight",
-        "LStick",
-        "RStick",
-        "LShoulder",
-        "RShoulder",
-        "LTrigger",
-        "RTrigger",
-        "LJoystick",
-        "RJoystick",
-        "A",
-        "B",
-        "X",
-        "Y",
-        "Start",
-        "Back"
+        "Button0",
+        "Button1",
+        "Button2",
+        "Button3",
+        "Button4",
+        "Button5",
+        "Button6",
+        "Button7",
+        "Button8",
+        "Button9",
+        "Button10",
+        "Button11",
+        "Button12",
+        "Button13",
+        "Button14",
+        "Button15",
+        "Button16",
+        "Button17",
+        "Button18",
+        "Button19",
+        "Button20",
+        "Axis0",
+        "Axis1",
+        "Axis2",
+        "Axis3",
+        "Axis4",
+        "Axis5",
+        "Hat0Up",
+        "Hat0Down",
+        "Hat0Left",
+        "Hat0Right",
+        "Hat1Up",
+        "Hat1Down",
+        "Hat1Left",
+        "Hat1Right",
+        "Hat2Up",
+        "Hat2Down",
+        "Hat2Left",
+        "Hat2Right"
       ]
     }
   },
@@ -717,19 +738,19 @@
         }
       }
     },
-    "gamepad_controls": {
-      "$id": "#/properties/gamepad_controls",
+    "joystick_controls": {
+      "$id": "#/properties/joystick_controls",
       "type": "object",
-      "title": "GamePad Controls",
+      "title": "Joystick Controls",
       "required": [
         "left_joycon",
         "right_joycon"
       ],
       "properties": {
         "enable": {
-          "$id": "#/properties/gamepad_controls/properties/enable",
+          "$id": "#/properties/joystick_controls/properties/enable",
           "type": "boolean",
-          "title": "Gamepad Enable",
+          "title": "Joystick Enable",
           "description": "Enables or disables controller support",
           "default": true,
           "examples": [
@@ -738,9 +759,9 @@
           ]
         },
         "index": {
-          "$id": "#/properties/gamepad_controls/properties/index",
+          "$id": "#/properties/joystick_controls/properties/index",
           "type": "integer",
-          "title": "Gamepad Index",
+          "title": "Joystick Index",
           "description": "Controller Device Index",
           "default": 0,
           "minimum": 0,
@@ -751,9 +772,9 @@
           ]
         },
         "deadzone": {
-          "$id": "#/properties/gamepad_controls/properties/deadzone",
+          "$id": "#/properties/joystick_controls/properties/deadzone",
           "type": "number",
-          "title": "Gamepad Deadzone",
+          "title": "Joystick Deadzone",
           "description": "Controller Analog Stick Deadzone",
           "default": 0.05,
           "minimum": -32768.0,
@@ -763,7 +784,7 @@
           ]
         },
         "trigger_threshold": {
-          "$id": "#/properties/gamepad_controls/properties/trigger_threshold",
+          "$id": "#/properties/joystick_controls/properties/trigger_threshold",
           "type": "number",
           "title": "Controller Trigger Threshold",
           "description": "The value of how pressed down each trigger has to be in order to register a button press",
@@ -775,7 +796,7 @@
           ]
         },
         "left_joycon": {
-          "$id": "#/properties/gamepad_controls/properties/left_joycon",
+          "$id": "#/properties/joystick_controls/properties/left_joycon",
           "type": "object",
           "title": "Left JoyCon Controls",
           "required": [
@@ -791,63 +812,63 @@
           ],
           "properties": {
             "stick": {
-              "$id": "#/properties/gamepad_controls/properties/left_joycon/properties/stick",
+              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/stick",
               "$ref": "#/definitions/input",
               "title": "Stick",
-              "default": "LJoystick"
+              "default": "Axis0"
             },
             "stick_button": {
-              "$id": "#/properties/gamepad_controls/properties/left_joycon/properties/stick_button",
+              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/stick_button",
               "$ref": "#/definitions/input",
               "title": "Stick Button",
-              "default": "LStick"
+              "default": "Button13"
             },
             "dpad_up": {
-              "$id": "#/properties/gamepad_controls/properties/left_joycon/properties/dpad_up",
+              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/dpad_up",
               "$ref": "#/definitions/input",
               "title": "Dpad Up",
-              "default": "DPadUp"
+              "default": "Hat0Up"
             },
             "dpad_down": {
-              "$id": "#/properties/gamepad_controls/properties/left_joycon/properties/dpad_down",
+              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/dpad_down",
               "$ref": "#/definitions/input",
               "title": "Dpad Down",
-              "default": "DPadDown"
+              "default": "Hat0Down"
             },
             "dpad_left": {
-              "$id": "#/properties/gamepad_controls/properties/left_joycon/properties/dpad_left",
+              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/dpad_left",
               "$ref": "#/definitions/input",
               "title": "Dpad Left",
-              "default": "DPadLeft"
+              "default": "Hat0Left"
             },
             "dpad_right": {
-              "$id": "#/properties/gamepad_controls/properties/left_joycon/properties/dpad_right",
+              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/dpad_right",
               "$ref": "#/definitions/input",
               "title": "Dpad Right",
-              "default": "DPadRight"
+              "default": "Hat0Right"
             },
             "button_minus": {
-              "$id": "#/properties/gamepad_controls/properties/left_joycon/properties/button_minus",
+              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/button_minus",
               "$ref": "#/definitions/input",
               "title": "Button Minus",
-              "default": "Back"
+              "default": "Button10"
             },
             "button_l": {
-              "$id": "#/properties/gamepad_controls/properties/left_joycon/properties/button_l",
+              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/button_l",
               "$ref": "#/definitions/input",
               "title": "Button L",
-              "default": "LShoulder"
+              "default": "Button6"
             },
             "button_zl": {
-              "$id": "#/properties/gamepad_controls/properties/left_joycon/properties/button_zl",
+              "$id": "#/properties/joystick_controls/properties/left_joycon/properties/button_zl",
               "$ref": "#/definitions/input",
               "title": "Button ZL",
-              "default": "LTrigger"
+              "default": "Button8"
             }
           }
         },
         "right_joycon": {
-          "$id": "#/properties/gamepad_controls/properties/right_joycon",
+          "$id": "#/properties/joystick_controls/properties/right_joycon",
           "type": "object",
           "title": "Right JoyCon Controls",
           "required": [
@@ -863,58 +884,58 @@
           ],
           "properties": {
             "stick": {
-              "$id": "#/properties/gamepad_controls/properties/right_joycon/properties/stick",
+              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/stick",
               "$ref": "#/definitions/input",
               "title": "Stick",
-              "default": "RJoystick"
+              "default": "Axis2"
             },
             "stick_button": {
-              "$id": "#/properties/gamepad_controls/properties/right_joycon/properties/stick_button",
+              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/stick_button",
               "$ref": "#/definitions/input",
               "title": "Stick Button",
-              "default": "RStick"
+              "default": "Button14"
             },
             "button_a": {
-              "$id": "#/properties/gamepad_controls/properties/right_joycon/properties/button_a",
+              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_a",
               "$ref": "#/definitions/input",
               "title": "Button A",
-              "default": "B"
+              "default": "Button0"
             },
             "button_b": {
-              "$id": "#/properties/gamepad_controls/properties/right_joycon/properties/button_b",
+              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_b",
               "$ref": "#/definitions/input",
               "title": "Button B",
-              "default": "A"
+              "default": "Button1"
             },
             "button_x": {
-              "$id": "#/properties/gamepad_controls/properties/right_joycon/properties/button_x",
+              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_x",
               "$ref": "#/definitions/input",
               "title": "Button X",
-              "default": "Y"
+              "default": "Button3"
             },
             "button_y": {
-              "$id": "#/properties/gamepad_controls/properties/right_joycon/properties/button_y",
+              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_y",
               "$ref": "#/definitions/input",
               "title": "Button Y",
-              "default": "X"
+              "default": "Button4"
             },
             "button_plus": {
-              "$id": "#/properties/gamepad_controls/properties/right_joycon/properties/button_plus",
+              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_plus",
               "$ref": "#/definitions/input",
               "title": "Button Plus",
-              "default": "Start"
+              "default": "Button11"
             },
             "button_r": {
-              "$id": "#/properties/gamepad_controls/properties/right_joycon/properties/button_r",
+              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_r",
               "$ref": "#/definitions/input",
               "title": "Button R",
-              "default": "RShoulder"
+              "default": "Button7"
             },
             "button_zr": {
-              "$id": "#/properties/gamepad_controls/properties/right_joycon/properties/button_zr",
+              "$id": "#/properties/joystick_controls/properties/right_joycon/properties/button_zr",
               "$ref": "#/definitions/input",
               "title": "Button ZR",
-              "default": "RTrigger"
+              "default": "Button9"
             }
           }
         }

@@ -135,7 +135,7 @@ namespace Ryujinx
         /// <summary>
         /// Controller control bindings
         /// </summary>
-        public UI.Input.NpadController GamepadControls { get; private set; }
+        public UI.Input.NpadController JoystickControls { get; private set; }
 
         /// <summary>
         /// Loads a configuration file from disk
@@ -246,11 +246,11 @@ namespace Ryujinx
 
             ServiceConfiguration.IgnoreMissingServices = Instance.IgnoreMissingServices;
 
-            if (Instance.GamepadControls.Enabled)
+            if (Instance.JoystickControls.Enabled)
             {
-                if (GamePad.GetName(Instance.GamepadControls.Index) == "Unmapped Controller")
+                if (!Joystick.GetState(Instance.JoystickControls.Index).IsConnected)
                 {
-                    Instance.GamepadControls.SetEnabled(false);
+                    Instance.JoystickControls.SetEnabled(false);
                 }
             }
 

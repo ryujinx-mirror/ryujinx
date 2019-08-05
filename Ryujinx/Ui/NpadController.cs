@@ -7,43 +7,64 @@ namespace Ryujinx.UI.Input
 {
     public enum ControllerInputId
     {
-        Invalid,
-        LStick,
-        RStick,
-        LShoulder,
-        RShoulder,
-        LTrigger,
-        RTrigger,
-        LJoystick,
-        RJoystick,
-        DPadUp,
-        DPadDown,
-        DPadLeft,
-        DPadRight,
-        Start,
-        Back,
-        A,
-        B,
-        X,
-        Y
+        Button0,
+        Button1,
+        Button2,
+        Button3,
+        Button4,
+        Button5,
+        Button6,
+        Button7,
+        Button8,
+        Button9,
+        Button10,
+        Button11,
+        Button12,
+        Button13,
+        Button14,
+        Button15,
+        Button16,
+        Button17,
+        Button18,
+        Button19,
+        Button20,
+        Axis0,
+        Axis1,
+        Axis2,
+        Axis3,
+        Axis4,
+        Axis5,
+        Hat0Up,
+        Hat0Down,
+        Hat0Left,
+        Hat0Right,
+        Hat1Up,
+        Hat1Down,
+        Hat1Left,
+        Hat1Right,
+        Hat2Up,
+        Hat2Down,
+        Hat2Left,
+        Hat2Right,
     }
 
     public struct NpadControllerLeft
     {
         public ControllerInputId Stick;
         public ControllerInputId StickButton;
+        public ControllerInputId ButtonMinus;
+        public ControllerInputId ButtonL;
+        public ControllerInputId ButtonZl;
         public ControllerInputId DPadUp;
         public ControllerInputId DPadDown;
         public ControllerInputId DPadLeft;
         public ControllerInputId DPadRight;
-        public ControllerInputId ButtonMinus;
-        public ControllerInputId ButtonL;
-        public ControllerInputId ButtonZl;
     }
 
     public struct NpadControllerRight
     {
         public ControllerInputId Stick;
+        public ControllerInputId StickY;
         public ControllerInputId StickButton;
         public ControllerInputId ButtonA;
         public ControllerInputId ButtonB;
@@ -114,29 +135,58 @@ namespace Ryujinx.UI.Input
                 return 0;
             }
 
-            GamePadState gpState = GamePad.GetState(Index);
+            JoystickState joystickState = Joystick.GetState(Index);
 
             ControllerButtons buttons = 0;
 
-            if (IsPressed(gpState, LeftJoycon.DPadUp))       buttons |= ControllerButtons.DpadUp;
-            if (IsPressed(gpState, LeftJoycon.DPadDown))     buttons |= ControllerButtons.DpadDown;
-            if (IsPressed(gpState, LeftJoycon.DPadLeft))     buttons |= ControllerButtons.DpadLeft;
-            if (IsPressed(gpState, LeftJoycon.DPadRight))    buttons |= ControllerButtons.DPadRight;
-            if (IsPressed(gpState, LeftJoycon.StickButton))  buttons |= ControllerButtons.StickLeft;
-            if (IsPressed(gpState, LeftJoycon.ButtonMinus))  buttons |= ControllerButtons.Minus;
-            if (IsPressed(gpState, LeftJoycon.ButtonL))      buttons |= ControllerButtons.L;
-            if (IsPressed(gpState, LeftJoycon.ButtonZl))     buttons |= ControllerButtons.Zl;
+            if (IsActivated(joystickState, LeftJoycon.DPadUp))       buttons |= ControllerButtons.DpadUp;
+            if (IsActivated(joystickState, LeftJoycon.DPadDown))     buttons |= ControllerButtons.DpadDown;
+            if (IsActivated(joystickState, LeftJoycon.DPadLeft))     buttons |= ControllerButtons.DpadLeft;
+            if (IsActivated(joystickState, LeftJoycon.DPadRight))    buttons |= ControllerButtons.DPadRight;
+            if (IsActivated(joystickState, LeftJoycon.StickButton))  buttons |= ControllerButtons.StickLeft;
+            if (IsActivated(joystickState, LeftJoycon.ButtonMinus))  buttons |= ControllerButtons.Minus;
+            if (IsActivated(joystickState, LeftJoycon.ButtonL))      buttons |= ControllerButtons.L;
+            if (IsActivated(joystickState, LeftJoycon.ButtonZl))     buttons |= ControllerButtons.Zl;
 
-            if (IsPressed(gpState, RightJoycon.ButtonA))     buttons |= ControllerButtons.A;
-            if (IsPressed(gpState, RightJoycon.ButtonB))     buttons |= ControllerButtons.B;
-            if (IsPressed(gpState, RightJoycon.ButtonX))     buttons |= ControllerButtons.X;
-            if (IsPressed(gpState, RightJoycon.ButtonY))     buttons |= ControllerButtons.Y;
-            if (IsPressed(gpState, RightJoycon.StickButton)) buttons |= ControllerButtons.StickRight;
-            if (IsPressed(gpState, RightJoycon.ButtonPlus))  buttons |= ControllerButtons.Plus;
-            if (IsPressed(gpState, RightJoycon.ButtonR))     buttons |= ControllerButtons.R;
-            if (IsPressed(gpState, RightJoycon.ButtonZr))    buttons |= ControllerButtons.Zr;
+            if (IsActivated(joystickState, RightJoycon.ButtonA))     buttons |= ControllerButtons.A;
+            if (IsActivated(joystickState, RightJoycon.ButtonB))     buttons |= ControllerButtons.B;
+            if (IsActivated(joystickState, RightJoycon.ButtonX))     buttons |= ControllerButtons.X;
+            if (IsActivated(joystickState, RightJoycon.ButtonY))     buttons |= ControllerButtons.Y;
+            if (IsActivated(joystickState, RightJoycon.StickButton)) buttons |= ControllerButtons.StickRight;
+            if (IsActivated(joystickState, RightJoycon.ButtonPlus))  buttons |= ControllerButtons.Plus;
+            if (IsActivated(joystickState, RightJoycon.ButtonR))     buttons |= ControllerButtons.R;
+            if (IsActivated(joystickState, RightJoycon.ButtonZr))    buttons |= ControllerButtons.Zr;
 
             return buttons;
+        }
+
+        private bool IsActivated(JoystickState joystickState,ControllerInputId controllerInputId)
+        {
+            if (controllerInputId <= ControllerInputId.Button20)
+            {
+                return joystickState.IsButtonDown((int)controllerInputId);
+            }
+            else if (controllerInputId <= ControllerInputId.Axis5)
+            {
+                int axis = controllerInputId - ControllerInputId.Axis0;
+
+                return Math.Abs(joystickState.GetAxis(axis)) > Deadzone;
+            }
+            else if (controllerInputId <= ControllerInputId.Hat2Right)
+            {
+                int hat = (controllerInputId - ControllerInputId.Hat0Up) / 4;
+
+                int baseHatId = (int)ControllerInputId.Hat0Up + (hat * 4);
+
+                JoystickHatState hatState = joystickState.GetHat((JoystickHat)hat);
+
+                if (hatState.IsUp    && ((int)controllerInputId % baseHatId == 0)) return true;
+                if (hatState.IsDown  && ((int)controllerInputId % baseHatId == 1)) return true;
+                if (hatState.IsLeft  && ((int)controllerInputId % baseHatId == 2)) return true;
+                if (hatState.IsRight && ((int)controllerInputId % baseHatId == 3)) return true;
+            }
+
+            return false;
         }
 
         public (short, short) GetLeftStick()
@@ -159,21 +209,21 @@ namespace Ryujinx.UI.Input
             return GetStick(RightJoycon.Stick);
         }
 
-        private (short, short) GetStick(ControllerInputId joystick)
+        private (short, short) GetStick(ControllerInputId stickInputId)
         {
-            GamePadState gpState = GamePad.GetState(Index);
-
-            switch (joystick)
+            if (stickInputId < ControllerInputId.Axis0 || stickInputId > ControllerInputId.Axis5)
             {
-                case ControllerInputId.LJoystick:
-                    return ApplyDeadzone(gpState.ThumbSticks.Left);
-
-                case ControllerInputId.RJoystick:
-                    return ApplyDeadzone(gpState.ThumbSticks.Right);
-
-                default:
-                    return (0, 0);
+                return (0, 0);
             }
+
+            JoystickState jsState = Joystick.GetState(Index);
+
+            int xAxis = stickInputId - ControllerInputId.Axis0;
+
+            float xValue = jsState.GetAxis(xAxis);
+            float yValue = 0 - jsState.GetAxis(xAxis + 1); // Invert Y-axis
+
+            return ApplyDeadzone(new Vector2(xValue, yValue));
         }
 
         private (short, short) ApplyDeadzone(Vector2 axis)
@@ -191,42 +241,6 @@ namespace Ryujinx.UI.Input
             else
             {
                 return (short)(value * short.MaxValue);
-            }
-        }
-
-        private bool IsPressed(GamePadState gpState, ControllerInputId button)
-        {
-            switch (button)
-            {
-                case ControllerInputId.A:         return gpState.Buttons.A             == ButtonState.Pressed;
-                case ControllerInputId.B:         return gpState.Buttons.B             == ButtonState.Pressed;
-                case ControllerInputId.X:         return gpState.Buttons.X             == ButtonState.Pressed;
-                case ControllerInputId.Y:         return gpState.Buttons.Y             == ButtonState.Pressed;
-                case ControllerInputId.LStick:    return gpState.Buttons.LeftStick     == ButtonState.Pressed;
-                case ControllerInputId.RStick:    return gpState.Buttons.RightStick    == ButtonState.Pressed;
-                case ControllerInputId.LShoulder: return gpState.Buttons.LeftShoulder  == ButtonState.Pressed;
-                case ControllerInputId.RShoulder: return gpState.Buttons.RightShoulder == ButtonState.Pressed;
-                case ControllerInputId.DPadUp:    return gpState.DPad.Up               == ButtonState.Pressed;
-                case ControllerInputId.DPadDown:  return gpState.DPad.Down             == ButtonState.Pressed;
-                case ControllerInputId.DPadLeft:  return gpState.DPad.Left             == ButtonState.Pressed;
-                case ControllerInputId.DPadRight: return gpState.DPad.Right            == ButtonState.Pressed;
-                case ControllerInputId.Start:     return gpState.Buttons.Start         == ButtonState.Pressed;
-                case ControllerInputId.Back:      return gpState.Buttons.Back          == ButtonState.Pressed;
-
-                case ControllerInputId.LTrigger: return gpState.Triggers.Left  >= TriggerThreshold;
-                case ControllerInputId.RTrigger: return gpState.Triggers.Right >= TriggerThreshold;
-
-                // Using thumbsticks as buttons is not common, but it would be nice not to ignore them
-                case ControllerInputId.LJoystick:
-                    return gpState.ThumbSticks.Left.X >= Deadzone ||
-                           gpState.ThumbSticks.Left.Y >= Deadzone;
-
-                case ControllerInputId.RJoystick:
-                    return gpState.ThumbSticks.Right.X >= Deadzone ||
-                           gpState.ThumbSticks.Right.Y >= Deadzone;
-
-                default:
-                    return false;
             }
         }
     }

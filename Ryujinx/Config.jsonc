@@ -107,7 +107,7 @@
     },
 
     // Controller Controls
-    "gamepad_controls": {
+    "joystick_controls": {
         // Whether or not to enable Controller support
         "enabled": true,
 
@@ -122,28 +122,28 @@
 
         // Left JoyCon Controller Bindings
         "left_joycon": {
-            "stick": "LJoystick",
-            "stick_button": "LStick",
-            "dpad_up": "DPadUp",
-            "dpad_down": "DPadDown",
-            "dpad_left": "DPadLeft",
-            "dpad_right": "DPadRight",
-            "button_minus": "Back",
-            "button_l": "LShoulder",
-            "button_zl": "LTrigger"
+            "stick": "Axis0",
+            "stick_button": "Button13",
+            "dpad_up": "Hat0Up",
+            "dpad_down": "Hat0Down",
+            "dpad_left": "Hat0Left",
+            "dpad_right": "Hat0Right",
+            "button_minus": "Button10",
+            "button_l": "Button6",
+            "button_zl": "Button8"
         },
 
         // Right JoyCon Controller Bindings
         "right_joycon": {
-            "stick": "RJoystick",
-            "stick_button": "RStick",
-            "button_a": "B",
-            "button_b": "A",
-            "button_x": "Y",
-            "button_y": "X",
-            "button_plus": "Start",
-            "button_r": "RShoulder",
-            "button_zr": "RTrigger"
+            "stick": "Axis2",
+            "stick_button": "Button14",
+            "button_a": "Button0",
+            "button_b": "Button1",
+            "button_x": "Button3",
+            "button_y": "Button4",
+            "button_plus": "Button11",
+            "button_r": "Button7",
+            "button_zr": "Button9"
         }
     }
 }
