@@ -1,6 +1,6 @@
 namespace Ryujinx.Tests.Unicorn.Native
 {
-    public enum UnicornArch
+    public enum UnicornArch : uint
     {
         UC_ARCH_ARM = 1,    // ARM architecture (including Thumb, Thumb-2)
         UC_ARCH_ARM64,      // ARM-64, also called AArch64

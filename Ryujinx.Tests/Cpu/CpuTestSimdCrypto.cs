@@ -1,10 +1,8 @@
 // https://www.intel.com/content/dam/doc/white-paper/advanced-encryption-standard-new-instructions-set-paper.pdf
 
-using ChocolArm64.State;
+using ARMeilleure.State;
 
 using NUnit.Framework;
-
-using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Tests.Cpu
 {
@@ -23,20 +21,20 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x4E285800; // AESD V0.16B, V0.16B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(roundKeyL ^ valueL, roundKeyH ^ valueH);
-            Vector128<float> v1 = MakeVectorE0E1(roundKeyL,          roundKeyH);
+            V128 v0 = MakeVectorE0E1(roundKeyL ^ valueL, roundKeyH ^ valueH);
+            V128 v1 = MakeVectorE0E1(roundKeyL,          roundKeyH);
 
-            CpuThreadState threadState = SingleOpcode(opcode, v0: v0, v1: v1);
+            ExecutionContext context = SingleOpcode(opcode, v0: v0, v1: v1);
 
             Assert.Multiple(() =>
             {
-                Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(resultL));
-                Assert.That(GetVectorE1(threadState.V0), Is.EqualTo(resultH));
+                Assert.That(GetVectorE0(context.GetV(0)), Is.EqualTo(resultL));
+                Assert.That(GetVectorE1(context.GetV(0)), Is.EqualTo(resultH));
             });
             Assert.Multiple(() =>
             {
-                Assert.That(GetVectorE0(threadState.V1), Is.EqualTo(roundKeyL));
-                Assert.That(GetVectorE1(threadState.V1), Is.EqualTo(roundKeyH));
+                Assert.That(GetVectorE0(context.GetV(1)), Is.EqualTo(roundKeyL));
+                Assert.That(GetVectorE1(context.GetV(1)), Is.EqualTo(roundKeyH));
             });
 
             CompareAgainstUnicorn();
@@ -55,20 +53,20 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x4E284800; // AESE V0.16B, V0.16B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(roundKeyL ^ valueL, roundKeyH ^ valueH);
-            Vector128<float> v1 = MakeVectorE0E1(roundKeyL,          roundKeyH);
+            V128 v0 = MakeVectorE0E1(roundKeyL ^ valueL, roundKeyH ^ valueH);
+            V128 v1 = MakeVectorE0E1(roundKeyL,          roundKeyH);
 
-            CpuThreadState threadState = SingleOpcode(opcode, v0: v0, v1: v1);
+            ExecutionContext context = SingleOpcode(opcode, v0: v0, v1: v1);
 
             Assert.Multiple(() =>
             {
-                Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(resultL));
-                Assert.That(GetVectorE1(threadState.V0), Is.EqualTo(resultH));
+                Assert.That(GetVectorE0(context.GetV(0)), Is.EqualTo(resultL));
+                Assert.That(GetVectorE1(context.GetV(0)), Is.EqualTo(resultH));
             });
             Assert.Multiple(() =>
             {
-                Assert.That(GetVectorE0(threadState.V1), Is.EqualTo(roundKeyL));
-                Assert.That(GetVectorE1(threadState.V1), Is.EqualTo(roundKeyH));
+                Assert.That(GetVectorE0(context.GetV(1)), Is.EqualTo(roundKeyL));
+                Assert.That(GetVectorE1(context.GetV(1)), Is.EqualTo(roundKeyH));
             });
 
             CompareAgainstUnicorn();
@@ -85,24 +83,24 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x4E287800; // AESIMC V0.16B, V0.16B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v = MakeVectorE0E1(valueL, valueH);
+            V128 v = MakeVectorE0E1(valueL, valueH);
 
-            CpuThreadState threadState = SingleOpcode(
+            ExecutionContext context = SingleOpcode(
                 opcode,
-                v0: rn == 0u ? v : default(Vector128<float>),
-                v1: rn == 1u ? v : default(Vector128<float>));
+                v0: rn == 0u ? v : default(V128),
+                v1: rn == 1u ? v : default(V128));
 
             Assert.Multiple(() =>
             {
-                Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(resultL));
-                Assert.That(GetVectorE1(threadState.V0), Is.EqualTo(resultH));
+                Assert.That(GetVectorE0(context.GetV(0)), Is.EqualTo(resultL));
+                Assert.That(GetVectorE1(context.GetV(0)), Is.EqualTo(resultH));
             });
             if (rn == 1u)
             {
                 Assert.Multiple(() =>
                 {
-                    Assert.That(GetVectorE0(threadState.V1), Is.EqualTo(valueL));
-                    Assert.That(GetVectorE1(threadState.V1), Is.EqualTo(valueH));
+                    Assert.That(GetVectorE0(context.GetV(1)), Is.EqualTo(valueL));
+                    Assert.That(GetVectorE1(context.GetV(1)), Is.EqualTo(valueH));
                 });
             }
 
@@ -120,24 +118,24 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x4E286800; // AESMC V0.16B, V0.16B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v = MakeVectorE0E1(valueL, valueH);
+            V128 v = MakeVectorE0E1(valueL, valueH);
 
-            CpuThreadState threadState = SingleOpcode(
+            ExecutionContext context = SingleOpcode(
                 opcode,
-                v0: rn == 0u ? v : default(Vector128<float>),
-                v1: rn == 1u ? v : default(Vector128<float>));
+                v0: rn == 0u ? v : default(V128),
+                v1: rn == 1u ? v : default(V128));
 
             Assert.Multiple(() =>
             {
-                Assert.That(GetVectorE0(threadState.V0), Is.EqualTo(resultL));
-                Assert.That(GetVectorE1(threadState.V0), Is.EqualTo(resultH));
+                Assert.That(GetVectorE0(context.GetV(0)), Is.EqualTo(resultL));
+                Assert.That(GetVectorE1(context.GetV(0)), Is.EqualTo(resultH));
             });
             if (rn == 1u)
             {
                 Assert.Multiple(() =>
                 {
-                    Assert.That(GetVectorE0(threadState.V1), Is.EqualTo(valueL));
-                    Assert.That(GetVectorE1(threadState.V1), Is.EqualTo(valueH));
+                    Assert.That(GetVectorE0(context.GetV(1)), Is.EqualTo(valueL));
+                    Assert.That(GetVectorE1(context.GetV(1)), Is.EqualTo(valueH));
                 });
             }
 

@@ -1,5 +1,5 @@
-using ChocolArm64.Memory;
-using ChocolArm64.State;
+using ARMeilleure.Memory;
+using ARMeilleure.State;
 using Ryujinx.HLE.HOS.Diagnostics.Demangler;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.Loaders.Elf;
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             _images = new List<Image>();
         }
 
-        public string GetGuestStackTrace(CpuThreadState threadState)
+        public string GetGuestStackTrace(IExecutionContext context)
         {
             EnsureLoaded();
 
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
 
             // TODO: ARM32.
-            long framePointer = (long)threadState.X29;
+            long framePointer = (long)context.GetX(29);
 
             trace.AppendLine($"Process: {_owner.Name}, PID: {_owner.Pid}");
 
@@ -218,7 +218,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
         }
 
-        private void LoadMod0Symbols(MemoryManager memory, long textOffset)
+        private void LoadMod0Symbols(IMemoryManager memory, long textOffset)
         {
             long mod0Offset = textOffset + memory.ReadUInt32(textOffset + 4);
 
@@ -288,7 +288,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
         }
 
-        private ElfSymbol GetSymbol(MemoryManager memory, long address, long strTblAddr)
+        private ElfSymbol GetSymbol(IMemoryManager memory, long address, long strTblAddr)
         {
             int  nameIndex = memory.ReadInt32(address + 0);
             int  info      = memory.ReadByte (address + 4);

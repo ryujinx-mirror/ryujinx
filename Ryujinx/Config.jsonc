@@ -21,7 +21,7 @@
 
     // Enable printing guest logs
     "logging_enable_guest": true,
-    
+
     // Enable printing FS access logs. fs_global_access_log_mode must be 2 or 3
     "logging_enable_fs_access_log": false,
 
@@ -53,8 +53,8 @@
     // Sets the "GlobalAccessLogMode". Possible modes are 0-3
     "fs_global_access_log_mode": 0,
 
-    // Enable or disable aggressive CPU optimizations
-    "enable_aggressive_cpu_opts": true,
+    // Use old ChocolArm64 ARM emulator
+    "enable_legacy_jit": false,
 
     // Enable or disable ignoring missing services, this may cause instability
     "ignore_missing_services": false,

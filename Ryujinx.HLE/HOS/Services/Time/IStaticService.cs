@@ -141,7 +141,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
             if (currentTimePoint.ClockSourceId == otherContext.SteadyTimePoint.ClockSourceId)
             {
-                TimeSpanType ticksTimeSpan = TimeSpanType.FromTicks(context.Thread.Context.ThreadState.CntpctEl0, context.Thread.Context.ThreadState.CntfrqEl0);
+                TimeSpanType ticksTimeSpan = TimeSpanType.FromTicks(context.Thread.Context.CntpctEl0, context.Thread.Context.CntfrqEl0);
                 long         baseTimePoint = otherContext.Offset + currentTimePoint.TimePoint - ticksTimeSpan.ToSeconds();
 
                 context.ResponseData.Write(baseTimePoint);

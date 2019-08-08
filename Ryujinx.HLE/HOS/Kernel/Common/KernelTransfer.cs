@@ -1,5 +1,5 @@
 using Ryujinx.HLE.HOS.Kernel.Process;
-using ChocolArm64.Memory;
+using ARMeilleure.Memory;
 
 namespace Ryujinx.HLE.HOS.Kernel.Common
 {

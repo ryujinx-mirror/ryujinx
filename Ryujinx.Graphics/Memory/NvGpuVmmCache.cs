@@ -1,4 +1,4 @@
-using ChocolArm64.Memory;
+using ARMeilleure.Memory;
 using System.Collections.Concurrent;
 
 namespace Ryujinx.Graphics.Memory
@@ -12,9 +12,9 @@ namespace Ryujinx.Graphics.Memory
 
         private ConcurrentDictionary<long, int>[] _cachedPages;
 
-        private MemoryManager _memory;
+        private IMemoryManager _memory;
 
-        public NvGpuVmmCache(MemoryManager memory)
+        public NvGpuVmmCache(IMemoryManager memory)
         {
             _memory = memory;
 

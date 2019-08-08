@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <RuntimeIdentifiers>win10-x64;osx-x64;linux-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
 
@@ -30,12 +30,11 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
     <PackageReference Include="NUnit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
-    <PackageReference Include="System.Runtime.Intrinsics.Experimental" Version="4.5.0-rc1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ChocolArm64\ChocolArm64.csproj" />
     <ProjectReference Include="..\Ryujinx.Tests.Unicorn\Ryujinx.Tests.Unicorn.csproj" />
+    <ProjectReference Include="..\ARMeilleure\ARMeilleure.csproj" />
   </ItemGroup>
 
   <Target Name="CopyUnicorn" AfterTargets="Build">

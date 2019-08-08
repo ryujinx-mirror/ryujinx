@@ -1,15 +1,15 @@
-using ChocolArm64.Memory;
+using ARMeilleure.Memory;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.Utilities
 {
     class StructReader
     {
-        private MemoryManager _memory;
+        private IMemoryManager _memory;
 
         public long Position { get; private set; }
 
-        public StructReader(MemoryManager memory, long position)
+        public StructReader(IMemoryManager memory, long position)
         {
             _memory  = memory;
             Position = position;

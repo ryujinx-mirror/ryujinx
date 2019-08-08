@@ -1,9 +1,10 @@
 #define SimdRegElemF
 
+using ARMeilleure.State;
+
 using NUnit.Framework;
 
 using System.Collections.Generic;
-using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Tests.Cpu
 {
@@ -230,9 +231,9 @@ namespace Ryujinx.Tests.Cpu
 
             opcodes |= (l << 21) | (h << 11);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
+            V128 v2 = MakeVectorE0E1(b, b * h);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -255,9 +256,9 @@ namespace Ryujinx.Tests.Cpu
 
             opcodes |= h << 11;
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
+            V128 v2 = MakeVectorE0E1(b, b * h);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -287,9 +288,9 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= (l << 21) | (h << 11);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
+            V128 v2 = MakeVectorE0E1(b, b * h);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -316,9 +317,9 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= h << 11;
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
+            V128 v2 = MakeVectorE0E1(b, b * h);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -342,9 +343,9 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= (l << 21) | (h << 11);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
+            V128 v2 = MakeVectorE0E1(b, b * h);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -367,9 +368,9 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= h << 11;
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
-            Vector128<float> v1 = MakeVectorE0(a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
+            V128 v0 = MakeVectorE1(z);
+            V128 v1 = MakeVectorE0(a);
+            V128 v2 = MakeVectorE0E1(b, b * h);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -399,9 +400,9 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= (l << 21) | (h << 11);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
+            V128 v2 = MakeVectorE0E1(b, b * h);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -428,9 +429,9 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= h << 11;
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
+            V128 v2 = MakeVectorE0E1(b, b * h);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 

@@ -1,9 +1,10 @@
 #define SimdImm
 
+using ARMeilleure.State;
+
 using NUnit.Framework;
 
 using System.Collections.Generic;
-using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Tests.Cpu
 {
@@ -203,7 +204,7 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((amount & 1) << 13);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            V128 v0 = MakeVectorE0E1(z, z);
 
             SingleOpcode(opcodes, v0: v0);
 
@@ -224,7 +225,7 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((amount & 3) << 13);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            V128 v0 = MakeVectorE0E1(z, z);
 
             SingleOpcode(opcodes, v0: v0);
 
@@ -241,7 +242,7 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= (abc << 16) | (defgh << 5);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
+            V128 v0 = MakeVectorE1(z);
 
             SingleOpcode(opcodes, v0: v0);
 
@@ -288,7 +289,7 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((q & 1) << 30);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(q == 0u ? z : 0ul);
+            V128 v0 = MakeVectorE1(q == 0u ? z : 0ul);
 
             SingleOpcode(opcodes, v0: v0);
 
@@ -309,7 +310,7 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((q & 1) << 30);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(q == 0u ? z : 0ul);
+            V128 v0 = MakeVectorE1(q == 0u ? z : 0ul);
 
             SingleOpcode(opcodes, v0: v0);
 
@@ -330,7 +331,7 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((q & 1) << 30);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(q == 0u ? z : 0ul);
+            V128 v0 = MakeVectorE1(q == 0u ? z : 0ul);
 
             SingleOpcode(opcodes, v0: v0);
 
@@ -351,7 +352,7 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((q & 1) << 30);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(q == 0u ? z : 0ul);
+            V128 v0 = MakeVectorE1(q == 0u ? z : 0ul);
 
             SingleOpcode(opcodes, v0: v0);
 
@@ -370,7 +371,7 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= (abc << 16) | (defgh << 5);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
+            V128 v0 = MakeVectorE1(z);
 
             SingleOpcode(opcodes, v0: v0);
 

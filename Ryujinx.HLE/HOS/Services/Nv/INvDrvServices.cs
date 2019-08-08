@@ -1,4 +1,4 @@
-using ChocolArm64.Memory;
+using ARMeilleure.Memory;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;

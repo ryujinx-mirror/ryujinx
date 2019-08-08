@@ -58,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             if (CurrentThread != null)
             {
-                _coreManager.Reset(CurrentThread.Context.Work);
+                _coreManager.Reset(CurrentThread.HostThread);
             }
 
             CurrentThread = SelectedThread;
@@ -70,9 +70,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 CurrentThread.TotalTimeRunning += currentTime - CurrentThread.LastScheduledTime;
                 CurrentThread.LastScheduledTime = currentTime;
 
-                _coreManager.Set(CurrentThread.Context.Work);
+                _coreManager.Set(CurrentThread.HostThread);
 
-                CurrentThread.Context.Execute();
+                CurrentThread.Execute();
             }
         }
     }

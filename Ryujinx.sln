@@ -28,7 +28,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Common", "Ryujinx.C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Profiler", "Ryujinx.Profiler\Ryujinx.Profiler.csproj", "{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{464D8AB7-B056-4A99-B207-B8DCFB47AAA9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARMeilleure", "ARMeilleure\ARMeilleure.csproj", "{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -129,10 +129,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{EBB55AEA-C7D7-4DEB-BF96-FA1789E225E9} = {464D8AB7-B056-4A99-B207-B8DCFB47AAA9}
-		{D8F72938-78EF-4E8C-BAFE-531C9C3C8F15} = {464D8AB7-B056-4A99-B207-B8DCFB47AAA9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {110169B3-3328-4730-8AB0-BA05BEF75C1A}

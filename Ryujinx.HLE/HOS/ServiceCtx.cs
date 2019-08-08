@@ -1,4 +1,4 @@
-using ChocolArm64.Memory;
+using ARMeilleure.Memory;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS
     {
         public Switch         Device       { get; }
         public KProcess       Process      { get; }
-        public MemoryManager  Memory       { get; }
+        public IMemoryManager Memory       { get; }
         public KThread        Thread       { get; }
         public KClientSession Session      { get; }
         public IpcMessage     Request      { get; }
@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS
         public ServiceCtx(
             Switch         device,
             KProcess       process,
-            MemoryManager  memory,
+            IMemoryManager memory,
             KThread        thread,
             KClientSession session,
             IpcMessage     request,

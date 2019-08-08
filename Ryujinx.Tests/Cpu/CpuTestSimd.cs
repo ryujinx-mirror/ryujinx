@@ -1,10 +1,11 @@
 #define Simd
 
+using ARMeilleure.State;
+
 using NUnit.Framework;
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Tests.Cpu
 {
@@ -1175,8 +1176,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x5EE0B800; // ABS D0, D0
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1194,8 +1195,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1213,8 +1214,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1230,8 +1231,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x5EF1B800; // ADDP D0, V0.2D
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1249,8 +1250,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -1268,8 +1269,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -1287,8 +1288,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1306,8 +1307,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1325,8 +1326,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1344,8 +1345,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1363,8 +1364,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1382,8 +1383,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1399,8 +1400,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x5EE09800; // CMEQ D0, D0, #0
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1418,8 +1419,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1437,8 +1438,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1454,8 +1455,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x7EE08800; // CMGE D0, D0, #0
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1473,8 +1474,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1492,8 +1493,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1509,8 +1510,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x5EE08800; // CMGT D0, D0, #0
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1528,8 +1529,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1547,8 +1548,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1564,8 +1565,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x7EE09800; // CMLE D0, D0, #0
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1583,8 +1584,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1602,8 +1603,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1619,8 +1620,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x5EE0A800; // CMLT D0, D0, #0
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1638,8 +1639,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1657,8 +1658,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1674,8 +1675,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x0E205800; // CNT V0.8B, V0.8B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1691,8 +1692,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x4E205800; // CNT V0.16B, V0.16B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -1704,8 +1705,8 @@ namespace Ryujinx.Tests.Cpu
                                              [ValueSource("_1S_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -1722,8 +1723,8 @@ namespace Ryujinx.Tests.Cpu
                                              [ValueSource("_1D_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE1(z);
+            V128 v1 = MakeVectorE0(a);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -1746,8 +1747,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -1768,8 +1769,8 @@ namespace Ryujinx.Tests.Cpu
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -1786,8 +1787,8 @@ namespace Ryujinx.Tests.Cpu
                                   [ValueSource("_2S_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -1804,8 +1805,8 @@ namespace Ryujinx.Tests.Cpu
                                   [ValueSource("_1D_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE1(z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -1822,8 +1823,8 @@ namespace Ryujinx.Tests.Cpu
                                         [ValueSource("_1S_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -1839,8 +1840,8 @@ namespace Ryujinx.Tests.Cpu
                                         [ValueSource("_1D_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE1(z);
+            V128 v1 = MakeVectorE0(a);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -1862,8 +1863,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -1883,8 +1884,8 @@ namespace Ryujinx.Tests.Cpu
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -1899,7 +1900,7 @@ namespace Ryujinx.Tests.Cpu
         public void F_Cmp_Cmpe_S_S([ValueSource("_F_Cmp_Cmpe_S_S_")] uint opcodes,
                                    [ValueSource("_1S_F_")] ulong a)
         {
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v1 = MakeVectorE0(a);
 
             bool v = TestContext.CurrentContext.Random.NextBool();
             bool c = TestContext.CurrentContext.Random.NextBool();
@@ -1915,7 +1916,7 @@ namespace Ryujinx.Tests.Cpu
         public void F_Cmp_Cmpe_S_D([ValueSource("_F_Cmp_Cmpe_S_D_")] uint opcodes,
                                    [ValueSource("_1D_F_")] ulong a)
         {
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v1 = MakeVectorE0(a);
 
             bool v = TestContext.CurrentContext.Random.NextBool();
             bool c = TestContext.CurrentContext.Random.NextBool();
@@ -1932,8 +1933,8 @@ namespace Ryujinx.Tests.Cpu
                                [ValueSource("_1S_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE1(z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -1945,8 +1946,8 @@ namespace Ryujinx.Tests.Cpu
                                [ValueSource("_1D_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -1958,8 +1959,8 @@ namespace Ryujinx.Tests.Cpu
                                [ValueSource("_1S_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -1971,8 +1972,8 @@ namespace Ryujinx.Tests.Cpu
                                [ValueSource("_1H_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -1984,8 +1985,8 @@ namespace Ryujinx.Tests.Cpu
                                     [ValueSource("_1S_F_W_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -1997,8 +1998,8 @@ namespace Ryujinx.Tests.Cpu
                                     [ValueSource("_1D_F_X_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE1(z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2016,8 +2017,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2033,8 +2034,8 @@ namespace Ryujinx.Tests.Cpu
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2053,8 +2054,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -2079,8 +2080,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2099,8 +2100,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -2125,8 +2126,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2143,7 +2144,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong x0 = (ulong)TestContext.CurrentContext.Random.NextUInt() << 32;
             uint w31 = TestContext.CurrentContext.Random.NextUInt();
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, x0: x0, x31: w31, v1: v1);
 
@@ -2159,7 +2160,7 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
             ulong x31 = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, x31: x31, v1: v1);
 
@@ -2175,7 +2176,7 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
             ulong x31 = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v1 = MakeVectorE1(a);
+            V128 v1 = MakeVectorE1(a);
 
             SingleOpcode(opcodes, x31: x31, v1: v1);
 
@@ -2192,7 +2193,7 @@ namespace Ryujinx.Tests.Cpu
 
             uint  w31 = TestContext.CurrentContext.Random.NextUInt();
             ulong z   = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            V128 v0 = MakeVectorE0E1(z, z);
 
             SingleOpcode(opcodes, x1: wn, x31: w31, v0: v0);
 
@@ -2209,7 +2210,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong x31 = TestContext.CurrentContext.Random.NextULong();
             ulong z   = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
+            V128 v0 = MakeVectorE1(z);
 
             SingleOpcode(opcodes, x1: xn, x31: x31, v0: v0);
 
@@ -2226,7 +2227,7 @@ namespace Ryujinx.Tests.Cpu
 
             ulong x31 = TestContext.CurrentContext.Random.NextULong();
             ulong z   = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0(z);
+            V128 v0 = MakeVectorE0(z);
 
             SingleOpcode(opcodes, x1: xn, x31: x31, v0: v0);
 
@@ -2238,8 +2239,8 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource("_1S_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2251,8 +2252,8 @@ namespace Ryujinx.Tests.Cpu
                               [ValueSource("_1D_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE1(z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2265,8 +2266,8 @@ namespace Ryujinx.Tests.Cpu
                                        [Values(RMode.Rn)] RMode rMode)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -2285,8 +2286,8 @@ namespace Ryujinx.Tests.Cpu
                                        [Values(RMode.Rn)] RMode rMode)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE1(z);
+            V128 v1 = MakeVectorE0(a);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -2311,8 +2312,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -2335,8 +2336,8 @@ namespace Ryujinx.Tests.Cpu
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             int rnd = (int)TestContext.CurrentContext.Random.NextUInt();
 
@@ -2354,8 +2355,8 @@ namespace Ryujinx.Tests.Cpu
                                      [ValueSource("_1S_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2367,8 +2368,8 @@ namespace Ryujinx.Tests.Cpu
                                      [ValueSource("_1D_F_")] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE1(z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2386,8 +2387,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2403,8 +2404,8 @@ namespace Ryujinx.Tests.Cpu
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2417,8 +2418,8 @@ namespace Ryujinx.Tests.Cpu
                                   [Values] RMode rMode)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             int fpcr = (int)rMode << (int)Fpcr.RMode;
 
@@ -2433,8 +2434,8 @@ namespace Ryujinx.Tests.Cpu
                                   [Values] RMode rMode)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE1(z);
+            V128 v1 = MakeVectorE0(a);
 
             int fpcr = (int)rMode << (int)Fpcr.RMode;
 
@@ -2455,8 +2456,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             int fpcr = (int)rMode << (int)Fpcr.RMode;
 
@@ -2475,8 +2476,8 @@ namespace Ryujinx.Tests.Cpu
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             int fpcr = (int)rMode << (int)Fpcr.RMode;
 
@@ -2494,8 +2495,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x7EE0B800; // NEG D0, D0
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2513,8 +2514,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2532,8 +2533,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2549,8 +2550,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x2E205800; // NOT V0.8B, V0.8B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2566,8 +2567,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x6E205800; // NOT V0.16B, V0.16B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2583,8 +2584,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x2E605800; // RBIT V0.8B, V0.8B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2600,8 +2601,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x6E605800; // RBIT V0.16B, V0.16B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2617,8 +2618,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x0E201800; // REV16 V0.8B, V0.8B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2634,8 +2635,8 @@ namespace Ryujinx.Tests.Cpu
             uint opcode = 0x4E201800; // REV16 V0.16B, V0.16B
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2653,8 +2654,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2672,8 +2673,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2691,8 +2692,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2710,8 +2711,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2729,8 +2730,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2748,8 +2749,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2767,8 +2768,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2786,8 +2787,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2805,8 +2806,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2824,8 +2825,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2837,8 +2838,8 @@ namespace Ryujinx.Tests.Cpu
                                  [ValueSource("_1S_")] [Random(RndCnt)] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2850,8 +2851,8 @@ namespace Ryujinx.Tests.Cpu
                                  [ValueSource("_1D_")] [Random(RndCnt)] ulong a)
         {
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE1(z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2869,8 +2870,8 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2886,8 +2887,8 @@ namespace Ryujinx.Tests.Cpu
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2903,8 +2904,8 @@ namespace Ryujinx.Tests.Cpu
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z0, z1);
-            Vector128<float> v1 = MakeVectorE0E1(a0, a1);
+            V128 v0 = MakeVectorE0E1(z0, z1);
+            V128 v1 = MakeVectorE0E1(a0, a1);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2920,8 +2921,8 @@ namespace Ryujinx.Tests.Cpu
         {
             opcodes |= ((rn & 31) << 5) | ((rd & 31) << 0);
 
-            Vector128<float> v0 = MakeVectorE0E1(z0, z1);
-            Vector128<float> v1 = MakeVectorE0E1(a0, a1);
+            V128 v0 = MakeVectorE0E1(z0, z1);
+            V128 v1 = MakeVectorE0E1(a0, a1);
 
             SingleOpcode(opcodes, v0: v0, v1: v1);
 
@@ -2941,8 +2942,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((size & 3) << 22);
             opcode |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2960,8 +2961,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2979,8 +2980,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -2998,8 +2999,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3017,8 +3018,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3036,8 +3037,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3055,8 +3056,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3074,8 +3075,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3093,8 +3094,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3112,8 +3113,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3131,8 +3132,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3150,8 +3151,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3169,8 +3170,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3188,8 +3189,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3207,8 +3208,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3226,8 +3227,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3245,8 +3246,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3264,8 +3265,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3283,8 +3284,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3302,8 +3303,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3321,8 +3322,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3340,8 +3341,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3359,8 +3360,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3378,8 +3379,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3397,8 +3398,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3416,8 +3417,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3435,8 +3436,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 
@@ -3454,8 +3455,8 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= ((size & 3) << 22);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
 
             SingleOpcode(opcode, v0: v0, v1: v1);
 

@@ -1,4 +1,4 @@
-using ChocolArm64.Memory;
+using ARMeilleure.Memory;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
@@ -106,7 +106,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             string locationName = Encoding.ASCII.GetString(context.RequestData.ReadBytes(0x24)).TrimEnd('\0');
 
             ResultCode resultCode = TimeZoneManager.Instance.LoadTimeZoneRules(out TimeZoneRule rules, locationName);
-            
+
             // Write TimeZoneRule if success
             if (resultCode == 0)
             {

@@ -1,9 +1,10 @@
 #define SimdTbl
 
+using ARMeilleure.State;
+
 using NUnit.Framework;
 
 using System.Collections.Generic;
-using System.Runtime.Intrinsics;
 
 namespace Ryujinx.Tests.Cpu
 {
@@ -146,9 +147,9 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((q & 1) << 30);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(table0, table0);
-            Vector128<float> v2 = MakeVectorE0E1(indexes, q == 1u ? indexes : 0ul);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(table0, table0);
+            V128 v2 = MakeVectorE0E1(indexes, q == 1u ? indexes : 0ul);
 
             SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
 
@@ -169,10 +170,10 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((q & 1) << 30);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(table0, table0);
-            Vector128<float> v2 = MakeVectorE0E1(table1, table1);
-            Vector128<float> v3 = MakeVectorE0E1(indexes, q == 1u ? indexes : 0ul);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(table0, table0);
+            V128 v2 = MakeVectorE0E1(table1, table1);
+            V128 v3 = MakeVectorE0E1(indexes, q == 1u ? indexes : 0ul);
 
             SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, v3: v3);
 
@@ -193,10 +194,10 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((q & 1) << 30);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v30 = MakeVectorE0E1(z, z);
-            Vector128<float> v31 = MakeVectorE0E1(table0, table0);
-            Vector128<float> v0  = MakeVectorE0E1(table1, table1);
-            Vector128<float> v1  = MakeVectorE0E1(indexes, indexes);
+            V128 v30 = MakeVectorE0E1(z, z);
+            V128 v31 = MakeVectorE0E1(table0, table0);
+            V128 v0  = MakeVectorE0E1(table1, table1);
+            V128 v1  = MakeVectorE0E1(indexes, indexes);
 
             SingleOpcode(opcodes, v0: v0, v1: v1, v30: v30, v31: v31);
 
@@ -218,11 +219,11 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((q & 1) << 30);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(table0, table0);
-            Vector128<float> v2 = MakeVectorE0E1(table1, table1);
-            Vector128<float> v3 = MakeVectorE0E1(table2, table2);
-            Vector128<float> v4 = MakeVectorE0E1(indexes, q == 1u ? indexes : 0ul);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(table0, table0);
+            V128 v2 = MakeVectorE0E1(table1, table1);
+            V128 v3 = MakeVectorE0E1(table2, table2);
+            V128 v4 = MakeVectorE0E1(indexes, q == 1u ? indexes : 0ul);
 
             SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, v3: v3, v4: v4);
 
@@ -244,11 +245,11 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((q & 1) << 30);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v30 = MakeVectorE0E1(z, z);
-            Vector128<float> v31 = MakeVectorE0E1(table0, table0);
-            Vector128<float> v0  = MakeVectorE0E1(table1, table1);
-            Vector128<float> v1  = MakeVectorE0E1(table2, table2);
-            Vector128<float> v2  = MakeVectorE0E1(indexes, indexes);
+            V128 v30 = MakeVectorE0E1(z, z);
+            V128 v31 = MakeVectorE0E1(table0, table0);
+            V128 v0  = MakeVectorE0E1(table1, table1);
+            V128 v1  = MakeVectorE0E1(table2, table2);
+            V128 v2  = MakeVectorE0E1(indexes, indexes);
 
             SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, v30: v30, v31: v31);
 
@@ -271,12 +272,12 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((q & 1) << 30);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(table0, table0);
-            Vector128<float> v2 = MakeVectorE0E1(table1, table1);
-            Vector128<float> v3 = MakeVectorE0E1(table2, table2);
-            Vector128<float> v4 = MakeVectorE0E1(table3, table3);
-            Vector128<float> v5 = MakeVectorE0E1(indexes, q == 1u ? indexes : 0ul);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(table0, table0);
+            V128 v2 = MakeVectorE0E1(table1, table1);
+            V128 v3 = MakeVectorE0E1(table2, table2);
+            V128 v4 = MakeVectorE0E1(table3, table3);
+            V128 v5 = MakeVectorE0E1(indexes, q == 1u ? indexes : 0ul);
 
             SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, v3: v3, v4: v4, v5: v5);
 
@@ -299,12 +300,12 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((q & 1) << 30);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v30 = MakeVectorE0E1(z, z);
-            Vector128<float> v31 = MakeVectorE0E1(table0, table0);
-            Vector128<float> v0  = MakeVectorE0E1(table1, table1);
-            Vector128<float> v1  = MakeVectorE0E1(table2, table2);
-            Vector128<float> v2  = MakeVectorE0E1(table3, table3);
-            Vector128<float> v3  = MakeVectorE0E1(indexes, indexes);
+            V128 v30 = MakeVectorE0E1(z, z);
+            V128 v31 = MakeVectorE0E1(table0, table0);
+            V128 v0  = MakeVectorE0E1(table1, table1);
+            V128 v1  = MakeVectorE0E1(table2, table2);
+            V128 v2  = MakeVectorE0E1(table3, table3);
+            V128 v3  = MakeVectorE0E1(indexes, indexes);
 
             SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2, v3: v3, v30: v30, v31: v31);
 

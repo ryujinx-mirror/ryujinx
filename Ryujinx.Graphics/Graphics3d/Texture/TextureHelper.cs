@@ -1,4 +1,4 @@
-using ChocolArm64.Memory;
+using ARMeilleure.Memory;
 using Ryujinx.Common;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Texture
             }
         }
 
-        public static (MemoryManager Memory, long Position) GetMemoryAndPosition(
+        public static (IMemoryManager Memory, long Position) GetMemoryAndPosition(
             IMemory memory,
             long    position)
         {
@@ -47,7 +47,7 @@ namespace Ryujinx.Graphics.Texture
                 return (vmm.Memory, vmm.GetPhysicalAddress(position));
             }
 
-            return ((MemoryManager)memory, position);
+            return ((IMemoryManager)memory, position);
         }
     }
 }

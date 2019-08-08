@@ -1,4 +1,4 @@
-using ChocolArm64.Memory;
+using ARMeilleure.Memory;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Ipc
         public static KernelResult IpcCall(
             Switch         device,
             KProcess       process,
-            MemoryManager  memory,
+            IMemoryManager memory,
             KThread        thread,
             KClientSession session,
             IpcMessage     request,

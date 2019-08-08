@@ -203,7 +203,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             {
                 for (int core = 0; core < CpuCoresCount; core++)
                 {
-                    if (CoreContexts[core].CurrentThread?.Context.IsCurrentThread() ?? false)
+                    if (CoreContexts[core].CurrentThread?.IsCurrentHostThread() ?? false)
                     {
                         return CoreContexts[core].CurrentThread;
                     }

@@ -1,4 +1,4 @@
-using ChocolArm64.State;
+using ARMeilleure.State;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using System;
@@ -14,7 +14,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         private static Dictionary<int, string> _svcFuncs64;
 
-        private static Action<SvcHandler, CpuThreadState>[] _svcTable64;
+        private static Action<SvcHandler, IExecutionContext>[] _svcTable64;
 
         static SvcTable()
         {
@@ -77,10 +77,10 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 { 0x78, nameof(SvcHandler.UnmapProcessCodeMemory64)        }
             };
 
-            _svcTable64 = new Action<SvcHandler, CpuThreadState>[0x80];
+            _svcTable64 = new Action<SvcHandler, IExecutionContext>[0x80];
         }
 
-        public static Action<SvcHandler, CpuThreadState> GetSvcFunc(int svcId)
+        public static Action<SvcHandler, IExecutionContext> GetSvcFunc(int svcId)
         {
             if (_svcTable64[svcId] != null)
             {
@@ -95,9 +95,9 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return null;
         }
 
-        private static Action<SvcHandler, CpuThreadState> GenerateMethod(string svcName)
+        private static Action<SvcHandler, IExecutionContext> GenerateMethod(string svcName)
         {
-            Type[] argTypes = new Type[] { typeof(SvcHandler), typeof(CpuThreadState) };
+            Type[] argTypes = new Type[] { typeof(SvcHandler), typeof(IExecutionContext) };
 
             DynamicMethod method = new DynamicMethod(svcName, null, argTypes);
 
@@ -183,7 +183,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 generator.Emit(OpCodes.Conv_I);
 
                 generator.Emit(OpCodes.Ldarg_1);
-                generator.Emit(OpCodes.Ldfld, GetStateFieldX(byRefArgsCount + index));
+                generator.Emit(OpCodes.Ldc_I4, byRefArgsCount + index);
+
+                MethodInfo info = typeof(IExecutionContext).GetMethod(nameof(IExecutionContext.GetX));
+
+                generator.Emit(OpCodes.Call, info);
 
                 generator.Emit(OpCodes.Box, typeof(ulong));
 
@@ -227,7 +231,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 else
                 {
                     generator.Emit(OpCodes.Ldarg_1);
-                    generator.Emit(OpCodes.Ldfld, GetStateFieldX(byRefArgsCount + index));
+                    generator.Emit(OpCodes.Ldc_I4, byRefArgsCount + index);
+
+                    MethodInfo info = typeof(IExecutionContext).GetMethod(nameof(IExecutionContext.GetX));
+
+                    generator.Emit(OpCodes.Call, info);
 
                     ConvertToArgType(argType);
                 }
@@ -258,51 +266,44 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
                 generator.Emit(OpCodes.Stloc, tempLocal);
                 generator.Emit(OpCodes.Ldarg_1);
+                generator.Emit(OpCodes.Ldc_I4, outRegIndex++);
                 generator.Emit(OpCodes.Ldloc, tempLocal);
 
                 ConvertToFieldType(retType);
 
-                generator.Emit(OpCodes.Stfld, GetStateFieldX(outRegIndex++));
+                MethodInfo info = typeof(IExecutionContext).GetMethod(nameof(IExecutionContext.SetX));
+
+                generator.Emit(OpCodes.Call, info);
             }
 
             for (int index = 0; index < locals.Count; index++)
             {
                 generator.Emit(OpCodes.Ldarg_1);
+                generator.Emit(OpCodes.Ldc_I4, outRegIndex++);
                 generator.Emit(OpCodes.Ldloc, locals[index]);
 
                 ConvertToFieldType(locals[index].LocalType);
 
-                generator.Emit(OpCodes.Stfld, GetStateFieldX(outRegIndex++));
+                MethodInfo info = typeof(IExecutionContext).GetMethod(nameof(IExecutionContext.SetX));
+
+                generator.Emit(OpCodes.Call, info);
             }
 
             // Zero out the remaining unused registers.
             while (outRegIndex < SvcFuncMaxArguments)
             {
                 generator.Emit(OpCodes.Ldarg_1);
+                generator.Emit(OpCodes.Ldc_I4, outRegIndex++);
                 generator.Emit(OpCodes.Ldc_I8, 0L);
-                generator.Emit(OpCodes.Stfld, GetStateFieldX(outRegIndex++));
+
+                MethodInfo info = typeof(IExecutionContext).GetMethod(nameof(IExecutionContext.SetX));
+
+                generator.Emit(OpCodes.Call, info);
             }
 
             generator.Emit(OpCodes.Ret);
 
-            return (Action<SvcHandler, CpuThreadState>)method.CreateDelegate(typeof(Action<SvcHandler, CpuThreadState>));
-        }
-
-        private static FieldInfo GetStateFieldX(int index)
-        {
-            switch (index)
-            {
-                case 0: return typeof(CpuThreadState).GetField(nameof(CpuThreadState.X0));
-                case 1: return typeof(CpuThreadState).GetField(nameof(CpuThreadState.X1));
-                case 2: return typeof(CpuThreadState).GetField(nameof(CpuThreadState.X2));
-                case 3: return typeof(CpuThreadState).GetField(nameof(CpuThreadState.X3));
-                case 4: return typeof(CpuThreadState).GetField(nameof(CpuThreadState.X4));
-                case 5: return typeof(CpuThreadState).GetField(nameof(CpuThreadState.X5));
-                case 6: return typeof(CpuThreadState).GetField(nameof(CpuThreadState.X6));
-                case 7: return typeof(CpuThreadState).GetField(nameof(CpuThreadState.X7));
-            }
-
-            throw new ArgumentOutOfRangeException(nameof(index));
+            return (Action<SvcHandler, IExecutionContext>)method.CreateDelegate(typeof(Action<SvcHandler, IExecutionContext>));
         }
 
         private static void CheckIfTypeIsSupported(Type type, string svcName)

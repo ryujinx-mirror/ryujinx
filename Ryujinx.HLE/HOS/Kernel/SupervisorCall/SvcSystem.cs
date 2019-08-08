@@ -1,4 +1,4 @@
-using ChocolArm64.Memory;
+using ARMeilleure.Memory;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
@@ -138,7 +138,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public ulong GetSystemTick64()
         {
-            return _system.Scheduler.GetCurrentThread().Context.ThreadState.CntpctEl0;
+            return _system.Scheduler.GetCurrentThread().Context.CntpctEl0;
         }
 
         public KernelResult GetProcessId64(int handle, out long pid)

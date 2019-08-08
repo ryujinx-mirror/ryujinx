@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
                 ClockSourceId = GetClockSourceId()
             };
 
-            TimeSpanType ticksTimeSpan = TimeSpanType.FromTicks(thread.Context.ThreadState.CntpctEl0, thread.Context.ThreadState.CntfrqEl0);
+            TimeSpanType ticksTimeSpan = TimeSpanType.FromTicks(thread.Context.CntpctEl0, thread.Context.CntfrqEl0);
 
             result.TimePoint = _setupValue + ticksTimeSpan.ToSeconds();
 

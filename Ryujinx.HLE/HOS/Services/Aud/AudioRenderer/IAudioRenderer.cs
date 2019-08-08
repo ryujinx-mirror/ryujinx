@@ -1,4 +1,4 @@
-using ChocolArm64.Memory;
+using ARMeilleure.Memory;
 using Ryujinx.Audio;
 using Ryujinx.Audio.Adpcm;
 using Ryujinx.Common.Logging;
@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         private KEvent _updateEvent;
 
-        private MemoryManager _memory;
+        private IMemoryManager _memory;
 
         private IAalOutput _audioOut;
 
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Aud.AudioRenderer
 
         public IAudioRenderer(
             Horizon                system,
-            MemoryManager          memory,
+            IMemoryManager         memory,
             IAalOutput             audioOut,
             AudioRendererParameter Params)
         {

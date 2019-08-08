@@ -1,8 +1,8 @@
 #define SimdRegElem
 
-using NUnit.Framework;
+using ARMeilleure.State;
 
-using System.Runtime.Intrinsics;
+using NUnit.Framework;
 
 namespace Ryujinx.Tests.Cpu
 {
@@ -95,9 +95,9 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= (l << 21) | (m << 20) | (h << 11);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
+            V128 v2 = MakeVectorE0E1(b, b * h);
 
             SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
 
@@ -122,9 +122,9 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= (l << 21) | (h << 11);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a * q);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a * q);
+            V128 v2 = MakeVectorE0E1(b, b * h);
 
             SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
 
@@ -150,9 +150,9 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= (l << 21) | (m << 20) | (h << 11);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
+            V128 v2 = MakeVectorE0E1(b, b * h);
 
             SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
 
@@ -177,9 +177,9 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= (l << 21) | (h << 11);
             opcodes |= ((q & 1) << 30);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
-            Vector128<float> v2 = MakeVectorE0E1(b, b * h);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(q == 0u ? a : 0ul, q == 1u ? a : 0ul);
+            V128 v2 = MakeVectorE0E1(b, b * h);
 
             SingleOpcode(opcodes, v0: v0, v1: v1, v2: v2);
 

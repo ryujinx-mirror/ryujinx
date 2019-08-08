@@ -1,7 +1,7 @@
 // ReSharper disable InconsistentNaming
 namespace Ryujinx.Tests.Unicorn.Native
 {
-    public enum UnicornMode
+    public enum UnicornMode : uint
     {
         UC_MODE_LITTLE_ENDIAN = 0,    // little-endian mode (default mode)
         UC_MODE_BIG_ENDIAN = 1 << 30, // big-endian mode

@@ -1,8 +1,8 @@
 #define SimdExt
 
-using NUnit.Framework;
+using ARMeilleure.State;
 
-using System.Runtime.Intrinsics;
+using NUnit.Framework;
 
 namespace Ryujinx.Tests.Cpu
 {
@@ -37,9 +37,9 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= (imm4 << 11);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0(a);
-            Vector128<float> v2 = MakeVectorE0(b);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0(a);
+            V128 v2 = MakeVectorE0(b);
 
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 
@@ -61,9 +61,9 @@ namespace Ryujinx.Tests.Cpu
             opcode |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcode |= (imm4 << 11);
 
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
-            Vector128<float> v1 = MakeVectorE0E1(a, a);
-            Vector128<float> v2 = MakeVectorE0E1(b, b);
+            V128 v0 = MakeVectorE0E1(z, z);
+            V128 v1 = MakeVectorE0E1(a, a);
+            V128 v2 = MakeVectorE0E1(b, b);
 
             SingleOpcode(opcode, v0: v0, v1: v1, v2: v2);
 

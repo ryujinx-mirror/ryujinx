@@ -31,8 +31,8 @@ namespace ChocolArm64.Instructions
             {
                 case 0b11_011_0000_0000_001: propName = nameof(CpuThreadState.CtrEl0);    break;
                 case 0b11_011_0000_0000_111: propName = nameof(CpuThreadState.DczidEl0);  break;
-                case 0b11_011_0100_0100_000: propName = nameof(CpuThreadState.Fpcr);      break;
-                case 0b11_011_0100_0100_001: propName = nameof(CpuThreadState.Fpsr);      break;
+                case 0b11_011_0100_0100_000: propName = nameof(CpuThreadState.CFpcr);     break;
+                case 0b11_011_0100_0100_001: propName = nameof(CpuThreadState.CFpsr);     break;
                 case 0b11_011_1101_0000_010: propName = nameof(CpuThreadState.TpidrEl0);  break;
                 case 0b11_011_1101_0000_011: propName = nameof(CpuThreadState.Tpidr);     break;
                 case 0b11_011_1110_0000_000: propName = nameof(CpuThreadState.CntfrqEl0); break;
@@ -65,8 +65,8 @@ namespace ChocolArm64.Instructions
 
             switch (GetPackedId(op))
             {
-                case 0b11_011_0100_0100_000: propName = nameof(CpuThreadState.Fpcr);     break;
-                case 0b11_011_0100_0100_001: propName = nameof(CpuThreadState.Fpsr);     break;
+                case 0b11_011_0100_0100_000: propName = nameof(CpuThreadState.CFpcr);    break;
+                case 0b11_011_0100_0100_001: propName = nameof(CpuThreadState.CFpsr);    break;
                 case 0b11_011_1101_0000_010: propName = nameof(CpuThreadState.TpidrEl0); break;
 
                 default: throw new NotImplementedException($"Unknown MSR at {op.Position:x16}");

@@ -1,4 +1,4 @@
-using ChocolArm64.Memory;
+using ARMeilleure.Memory;
 using Ryujinx.Graphics.Gal;
 using System;
 
@@ -23,7 +23,7 @@ namespace Ryujinx.Graphics.Memory
         private const int PtLvl0Bit = PtPageBits + PtLvl1Bits;
         private const int PtLvl1Bit = PtPageBits;
 
-        public MemoryManager Memory { get; private set; }
+        public IMemoryManager Memory { get; private set; }
 
         private NvGpuVmmCache _cache;
 
@@ -32,7 +32,7 @@ namespace Ryujinx.Graphics.Memory
 
         private long[][] _pageTable;
 
-        public NvGpuVmm(MemoryManager memory)
+        public NvGpuVmm(IMemoryManager memory)
         {
             Memory = memory;
 

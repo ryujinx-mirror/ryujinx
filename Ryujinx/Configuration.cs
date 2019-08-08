@@ -1,3 +1,4 @@
+using ARMeilleure;
 using LibHac.Fs;
 using OpenTK.Input;
 using Ryujinx.Common;
@@ -108,9 +109,9 @@ namespace Ryujinx
         public int FsGlobalAccessLogMode { get; private set; }
 
         /// <summary>
-        /// Enable or Disable aggressive CPU optimizations
+        /// Use old ChocolArm64 ARM emulator
         /// </summary>
-        public bool EnableAggressiveCpuOpts { get; private set; }
+        public bool EnableLegacyJit { get; private set; }
 
         /// <summary>
         /// Enable or disable ignoring missing services
@@ -239,10 +240,7 @@ namespace Ryujinx
 
             device.System.GlobalAccessLogMode = Instance.FsGlobalAccessLogMode;
 
-            if (Instance.EnableAggressiveCpuOpts)
-            {
-                Optimizations.AssumeStrictAbiCompliance = true;
-            }
+            device.System.UseLegacyJit = Instance.EnableLegacyJit;
 
             ServiceConfiguration.IgnoreMissingServices = Instance.IgnoreMissingServices;
 

@@ -4,24 +4,24 @@ namespace Ryujinx.Tests.Unicorn
 {
     public class IndexedProperty<TIndex, TValue>
     {
-        readonly Action<TIndex, TValue> SetAction;
-        readonly Func<TIndex, TValue> GetFunc;
+        private Func<TIndex, TValue>   _getFunc;
+        private Action<TIndex, TValue> _setAction;
 
         public IndexedProperty(Func<TIndex, TValue> getFunc, Action<TIndex, TValue> setAction)
         {
-            GetFunc   = getFunc;
-            SetAction = setAction;
+            _getFunc   = getFunc;
+            _setAction = setAction;
         }
 
-        public TValue this[TIndex i]
+        public TValue this[TIndex index]
         {
             get
             {
-                return GetFunc(i);
+                return _getFunc(index);
             }
             set
             {
-                SetAction(i, value);
+                _setAction(index, value);
             }
         }
     }

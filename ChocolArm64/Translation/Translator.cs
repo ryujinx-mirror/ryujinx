@@ -9,7 +9,7 @@ using System.Threading;
 
 namespace ChocolArm64.Translation
 {
-    public class Translator
+    public class Translator : ARMeilleure.Translation.ITranslator
     {
         private MemoryManager _memory;
 
@@ -38,24 +38,18 @@ namespace ChocolArm64.Translation
             _queue = new TranslatorQueue();
         }
 
-        internal void ExecuteSubroutine(CpuThread thread, long position)
+        public void Execute(ARMeilleure.State.IExecutionContext ctx, ulong address)
         {
+            CpuThreadState state = (CpuThreadState)ctx;
+
+            long position = (long)address;
+
             if (Interlocked.Increment(ref _threadCount) == 1)
             {
                 _backgroundTranslator = new Thread(TranslateQueuedSubs);
                 _backgroundTranslator.Start();
             }
 
-            ExecuteSubroutine(thread.ThreadState, position);
-
-            if (Interlocked.Decrement(ref _threadCount) == 0)
-            {
-                _queue.ForceSignal();
-            }
-        }
-
-        private void ExecuteSubroutine(CpuThreadState state, long position)
-        {
             state.CurrentTranslator = this;
 
             do
@@ -75,6 +69,11 @@ namespace ChocolArm64.Translation
             while (position != 0 && state.Running);
 
             state.CurrentTranslator = null;
+
+            if (Interlocked.Decrement(ref _threadCount) == 0)
+            {
+                _queue.ForceSignal();
+            }
         }
 
         internal ArmSubroutine GetOrTranslateSubroutine(CpuThreadState state, long position, CallType cs)

@@ -82,7 +82,7 @@ namespace ChocolArm64.Instructions
     {
         public static float FPConvert(ushort valueBits, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat16_32.FPConvert: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat16_32.FPConvert: state.Fpcr = 0x{state.CFpcr:X8}");
 
             double real = valueBits.FPUnpackCv(out FpType type, out bool sign, state);
 
@@ -322,13 +322,13 @@ namespace ChocolArm64.Instructions
         {
             int enable = (int)exc + 8;
 
-            if ((state.Fpcr & (1 << enable)) != 0)
+            if ((state.CFpcr & (1 << enable)) != 0)
             {
                 throw new NotImplementedException("Floating-point trap handling.");
             }
             else
             {
-                state.Fpsr |= 1 << (int)exc;
+                state.CFpsr |= 1 << (int)exc;
             }
         }
     }
@@ -337,7 +337,7 @@ namespace ChocolArm64.Instructions
     {
         public static ushort FPConvert(float value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32_16.FPConvert: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32_16.FPConvert: state.Fpcr = 0x{state.CFpcr:X8}");
 
             double real = value.FPUnpackCv(out FpType type, out bool sign, out uint valueBits, state);
 
@@ -609,13 +609,13 @@ namespace ChocolArm64.Instructions
         {
             int enable = (int)exc + 8;
 
-            if ((state.Fpcr & (1 << enable)) != 0)
+            if ((state.CFpcr & (1 << enable)) != 0)
             {
                 throw new NotImplementedException("Floating-point trap handling.");
             }
             else
             {
-                state.Fpsr |= 1 << (int)exc;
+                state.CFpsr |= 1 << (int)exc;
             }
         }
     }
@@ -624,7 +624,7 @@ namespace ChocolArm64.Instructions
     {
         public static float FPAdd(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPAdd: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPAdd: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
@@ -672,7 +672,7 @@ namespace ChocolArm64.Instructions
 
         public static int FPCompare(float value1, float value2, bool signalNaNs, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPCompare: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPCompare: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out _, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out _, state);
@@ -709,7 +709,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPCompareEQ(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPCompareEQ: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPCompareEQ: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out _, out _, state);
             value2 = value2.FPUnpack(out FpType type2, out _, out _, state);
@@ -735,7 +735,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPCompareGE(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPCompareGE: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPCompareGE: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out _, out _, state);
             value2 = value2.FPUnpack(out FpType type2, out _, out _, state);
@@ -758,7 +758,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPCompareGT(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPCompareGT: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPCompareGT: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out _, out _, state);
             value2 = value2.FPUnpack(out FpType type2, out _, out _, state);
@@ -782,7 +782,7 @@ namespace ChocolArm64.Instructions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float FPCompareLE(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPCompareLE: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPCompareLE: state.Fpcr = 0x{state.CFpcr:X8}");
 
             return FPCompareGE(value2, value1, state);
         }
@@ -790,14 +790,14 @@ namespace ChocolArm64.Instructions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float FPCompareLT(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPCompareLT: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPCompareLT: state.Fpcr = 0x{state.CFpcr:X8}");
 
             return FPCompareGT(value2, value1, state);
         }
 
         public static float FPDiv(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPDiv: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPDiv: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
@@ -846,7 +846,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPMax(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMax: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPMax: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
@@ -899,7 +899,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPMaxNum(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMaxNum: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPMaxNum: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1.FPUnpack(out FpType type1, out _, out _, state);
             value2.FPUnpack(out FpType type2, out _, out _, state);
@@ -918,7 +918,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPMin(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMin: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPMin: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
@@ -971,7 +971,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPMinNum(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMinNum: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPMinNum: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1.FPUnpack(out FpType type1, out _, out _, state);
             value2.FPUnpack(out FpType type2, out _, out _, state);
@@ -990,7 +990,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPMul(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMul: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPMul: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
@@ -1038,7 +1038,7 @@ namespace ChocolArm64.Instructions
             float value2,
             CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMulAdd: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPMulAdd: state.Fpcr = 0x{state.CFpcr:X8}");
 
             valueA = valueA.FPUnpack(out FpType typeA, out bool signA, out uint addend, state);
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1,    state);
@@ -1108,7 +1108,7 @@ namespace ChocolArm64.Instructions
             float value2,
             CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMulSub: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPMulSub: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPNeg();
 
@@ -1117,7 +1117,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPMulX(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPMulX: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPMulX: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
@@ -1159,7 +1159,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPRecipEstimate(float value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPRecipEstimate: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPRecipEstimate: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value.FPUnpack(out FpType type, out bool sign, out uint op, state);
 
@@ -1248,7 +1248,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPRecipStepFused(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPRecipStepFused: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPRecipStepFused: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPNeg();
 
@@ -1291,7 +1291,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPRecpX(float value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPRecpX: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPRecpX: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value.FPUnpack(out FpType type, out bool sign, out uint op, state);
 
@@ -1315,7 +1315,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPRSqrtEstimate(float value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPRSqrtEstimate: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPRSqrtEstimate: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value.FPUnpack(out FpType type, out bool sign, out uint op, state);
 
@@ -1380,7 +1380,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPRSqrtStepFused(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPRSqrtStepFused: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPRSqrtStepFused: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPNeg();
 
@@ -1423,7 +1423,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPSqrt(float value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPSqrt: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPSqrt: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value = value.FPUnpack(out FpType type, out bool sign, out uint op, state);
 
@@ -1464,7 +1464,7 @@ namespace ChocolArm64.Instructions
 
         public static float FPSub(float value1, float value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat32.FPSub: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat32.FPSub: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out uint op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out uint op2, state);
@@ -1693,13 +1693,13 @@ namespace ChocolArm64.Instructions
         {
             int enable = (int)exc + 8;
 
-            if ((state.Fpcr & (1 << enable)) != 0)
+            if ((state.CFpcr & (1 << enable)) != 0)
             {
                 throw new NotImplementedException("Floating-point trap handling.");
             }
             else
             {
-                state.Fpsr |= 1 << (int)exc;
+                state.CFpsr |= 1 << (int)exc;
             }
         }
     }
@@ -1708,7 +1708,7 @@ namespace ChocolArm64.Instructions
     {
         public static double FPAdd(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPAdd: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPAdd: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
@@ -1756,7 +1756,7 @@ namespace ChocolArm64.Instructions
 
         public static int FPCompare(double value1, double value2, bool signalNaNs, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPCompare: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPCompare: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out _, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out _, state);
@@ -1793,7 +1793,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPCompareEQ(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPCompareEQ: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPCompareEQ: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out _, out _, state);
             value2 = value2.FPUnpack(out FpType type2, out _, out _, state);
@@ -1819,7 +1819,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPCompareGE(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPCompareGE: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPCompareGE: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out _, out _, state);
             value2 = value2.FPUnpack(out FpType type2, out _, out _, state);
@@ -1842,7 +1842,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPCompareGT(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPCompareGT: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPCompareGT: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out _, out _, state);
             value2 = value2.FPUnpack(out FpType type2, out _, out _, state);
@@ -1866,7 +1866,7 @@ namespace ChocolArm64.Instructions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double FPCompareLE(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPCompareLE: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPCompareLE: state.Fpcr = 0x{state.CFpcr:X8}");
 
             return FPCompareGE(value2, value1, state);
         }
@@ -1874,14 +1874,14 @@ namespace ChocolArm64.Instructions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double FPCompareLT(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPCompareLT: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPCompareLT: state.Fpcr = 0x{state.CFpcr:X8}");
 
             return FPCompareGT(value2, value1, state);
         }
 
         public static double FPDiv(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPDiv: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPDiv: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
@@ -1930,7 +1930,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPMax(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMax: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPMax: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
@@ -1983,7 +1983,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPMaxNum(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMaxNum: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPMaxNum: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1.FPUnpack(out FpType type1, out _, out _, state);
             value2.FPUnpack(out FpType type2, out _, out _, state);
@@ -2002,7 +2002,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPMin(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMin: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPMin: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
@@ -2055,7 +2055,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPMinNum(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMinNum: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPMinNum: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1.FPUnpack(out FpType type1, out _, out _, state);
             value2.FPUnpack(out FpType type2, out _, out _, state);
@@ -2074,7 +2074,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPMul(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMul: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPMul: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
@@ -2122,7 +2122,7 @@ namespace ChocolArm64.Instructions
             double value2,
             CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMulAdd: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPMulAdd: state.Fpcr = 0x{state.CFpcr:X8}");
 
             valueA = valueA.FPUnpack(out FpType typeA, out bool signA, out ulong addend, state);
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1,    state);
@@ -2192,7 +2192,7 @@ namespace ChocolArm64.Instructions
             double value2,
             CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMulSub: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPMulSub: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPNeg();
 
@@ -2201,7 +2201,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPMulX(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPMulX: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPMulX: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
@@ -2243,7 +2243,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPRecipEstimate(double value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPRecipEstimate: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPRecipEstimate: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value.FPUnpack(out FpType type, out bool sign, out ulong op, state);
 
@@ -2332,7 +2332,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPRecipStepFused(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPRecipStepFused: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPRecipStepFused: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPNeg();
 
@@ -2375,7 +2375,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPRecpX(double value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPRecpX: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPRecpX: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value.FPUnpack(out FpType type, out bool sign, out ulong op, state);
 
@@ -2399,7 +2399,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPRSqrtEstimate(double value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPRSqrtEstimate: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPRSqrtEstimate: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value.FPUnpack(out FpType type, out bool sign, out ulong op, state);
 
@@ -2464,7 +2464,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPRSqrtStepFused(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPRSqrtStepFused: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPRSqrtStepFused: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPNeg();
 
@@ -2507,7 +2507,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPSqrt(double value, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPSqrt: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPSqrt: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value = value.FPUnpack(out FpType type, out bool sign, out ulong op, state);
 
@@ -2548,7 +2548,7 @@ namespace ChocolArm64.Instructions
 
         public static double FPSub(double value1, double value2, CpuThreadState state)
         {
-            Debug.WriteLineIf(state.Fpcr != 0, $"SoftFloat64.FPSub: state.Fpcr = 0x{state.Fpcr:X8}");
+            Debug.WriteLineIf(state.CFpcr != 0, $"SoftFloat64.FPSub: state.Fpcr = 0x{state.CFpcr:X8}");
 
             value1 = value1.FPUnpack(out FpType type1, out bool sign1, out ulong op1, state);
             value2 = value2.FPUnpack(out FpType type2, out bool sign2, out ulong op2, state);
@@ -2777,13 +2777,13 @@ namespace ChocolArm64.Instructions
         {
             int enable = (int)exc + 8;
 
-            if ((state.Fpcr & (1 << enable)) != 0)
+            if ((state.CFpcr & (1 << enable)) != 0)
             {
                 throw new NotImplementedException("Floating-point trap handling.");
             }
             else
             {
-                state.Fpsr |= 1 << (int)exc;
+                state.CFpsr |= 1 << (int)exc;
             }
         }
     }

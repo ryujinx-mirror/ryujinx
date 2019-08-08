@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <RuntimeIdentifiers>win10-x64;osx-x64;linux-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
     <Configurations>Debug;Release;Profile Debug;Profile Release</Configurations>
   </PropertyGroup>
 
@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Ryujinx.Profiler\Ryujinx.Profiler.csproj" />
+    <ProjectReference Include="..\ARMeilleure\ARMeilleure.csproj" />
   </ItemGroup>
 
 </Project>

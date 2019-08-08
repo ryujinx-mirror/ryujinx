@@ -83,7 +83,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult SendSyncRequest64(int handle)
         {
-            return SendSyncRequest((ulong)_system.Scheduler.GetCurrentThread().Context.ThreadState.Tpidr, 0x100, handle);
+            return SendSyncRequest((ulong)_system.Scheduler.GetCurrentThread().Context.Tpidr, 0x100, handle);
         }
 
         public KernelResult SendSyncRequestWithUserBuffer64(ulong messagePtr, ulong size, int handle)

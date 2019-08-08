@@ -1,8 +1,8 @@
 #define SimdFmov
 
-using NUnit.Framework;
+using ARMeilleure.State;
 
-using System.Runtime.Intrinsics;
+using NUnit.Framework;
 
 namespace Ryujinx.Tests.Cpu
 {
@@ -36,7 +36,7 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((imm8 & 0xFFu) << 13);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE0E1(z, z);
+            V128 v0 = MakeVectorE0E1(z, z);
 
             SingleOpcode(opcodes, v0: v0);
 
@@ -50,7 +50,7 @@ namespace Ryujinx.Tests.Cpu
             opcodes |= ((imm8 & 0xFFu) << 13);
 
             ulong z = TestContext.CurrentContext.Random.NextULong();
-            Vector128<float> v0 = MakeVectorE1(z);
+            V128 v0 = MakeVectorE1(z);
 
             SingleOpcode(opcodes, v0: v0);
 

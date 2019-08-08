@@ -36,12 +36,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     {
                         KCoreContext coreContext = CoreContexts[core];
 
-                        if (coreContext.ContextSwitchNeeded && (coreContext.CurrentThread?.Context.IsCurrentThread() ?? false))
+                        if (coreContext.ContextSwitchNeeded && (coreContext.CurrentThread?.IsCurrentHostThread() ?? false))
                         {
                             coreContext.ContextSwitch();
                         }
 
-                        if (coreContext.CurrentThread?.Context.IsCurrentThread() ?? false)
+                        if (coreContext.CurrentThread?.IsCurrentHostThread() ?? false)
                         {
                             selectedCount++;
                         }
@@ -70,14 +70,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                     {
                         // If this is not the thread that is currently executing, we need
                         // to request an interrupt to allow safely starting another thread.
-                        if (!currentThread.Context.IsCurrentThread())
+                        if (!currentThread.IsCurrentHostThread())
                         {
                             currentThread.Context.RequestInterrupt();
 
                             return;
                         }
 
-                        CoreManager.Reset(currentThread.Context.Work);
+                        CoreManager.Reset(currentThread.HostThread);
                     }
 
                     // Advance current core and try picking a thread,
@@ -92,9 +92,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                         if (coreContext.CurrentThread != null)
                         {
-                            CoreManager.Set(coreContext.CurrentThread.Context.Work);
+                            CoreManager.Set(coreContext.CurrentThread.HostThread);
 
-                            coreContext.CurrentThread.Context.Execute();
+                            coreContext.CurrentThread.Execute();
 
                             break;
                         }
@@ -134,14 +134,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public void ExitThread(KThread thread)
         {
-            thread.Context.StopExecution();
+            thread.Context.Running = false;
 
-            CoreManager.Exit(thread.Context.Work);
+            CoreManager.Exit(thread.HostThread);
         }
 
         public void RemoveThread(KThread thread)
         {
-            CoreManager.RemoveThread(thread.Context.Work);
+            CoreManager.RemoveThread(thread.HostThread);
         }
     }
 }

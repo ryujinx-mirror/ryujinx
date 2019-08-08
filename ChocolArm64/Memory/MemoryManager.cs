@@ -11,7 +11,7 @@ using static ChocolArm64.Memory.MemoryManagement;
 
 namespace ChocolArm64.Memory
 {
-    public unsafe class MemoryManager : IMemory, IDisposable
+    public unsafe class MemoryManager : ARMeilleure.Memory.IMemoryManager
     {
         public const int PageBits = 12;
         public const int PageSize = 1 << PageBits;
@@ -880,7 +880,7 @@ namespace ChocolArm64.Memory
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteVector128(long position, Vector128<float> value)
+        public void WriteVector128Internal(long position, Vector128<float> value)
         {
             if (Sse.IsSupported && (position & 15) == 0)
             {
@@ -891,6 +891,12 @@ namespace ChocolArm64.Memory
                 WriteUInt64(position + 0, VectorHelper.VectorExtractIntZx(value, 0, 3));
                 WriteUInt64(position + 8, VectorHelper.VectorExtractIntZx(value, 1, 3));
             }
+        }
+
+        public void WriteVector128(long position, ARMeilleure.State.V128 value)
+        {
+            WriteUInt64(position + 0, value.GetUInt64(0));
+            WriteUInt64(position + 8, value.GetUInt64(1));
         }
 
         public void WriteBytes(long position, byte[] data)

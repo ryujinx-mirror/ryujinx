@@ -1,4 +1,4 @@
-using ChocolArm64;
+using ARMeilleure;
 using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Kernel.Threading
@@ -53,14 +53,14 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
                             if (coreContext.ContextSwitchNeeded)
                             {
-                                CpuThread currentHleThread = coreContext.CurrentThread?.Context;
+                                KThread currentThread = coreContext.CurrentThread;
 
-                                if (currentHleThread == null)
+                                if (currentThread == null)
                                 {
                                     // Nothing is running, we can perform the context switch immediately.
                                     coreContext.ContextSwitch();
                                 }
-                                else if (currentHleThread.IsCurrentThread())
+                                else if (currentThread.IsCurrentHostThread())
                                 {
                                     // Thread running on the current core, context switch will block.
                                     doContextSwitch = true;
@@ -68,7 +68,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                                 else
                                 {
                                     // Thread running on another core, request a interrupt.
-                                    currentHleThread.RequestInterrupt();
+                                    currentThread.Context.RequestInterrupt();
                                 }
                             }
                         }

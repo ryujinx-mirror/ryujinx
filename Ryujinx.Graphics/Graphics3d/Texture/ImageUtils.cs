@@ -1,4 +1,4 @@
-﻿using ChocolArm64.Memory;
+﻿using ARMeilleure.Memory;
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
@@ -229,7 +229,7 @@ namespace Ryujinx.Graphics.Texture
 
         public static byte[] ReadTexture(IMemory memory, GalImage image, long position)
         {
-            MemoryManager cpuMemory;
+            IMemoryManager cpuMemory;
 
             if (memory is NvGpuVmm vmm)
             {
@@ -237,7 +237,7 @@ namespace Ryujinx.Graphics.Texture
             }
             else
             {
-                cpuMemory = (MemoryManager)memory;
+                cpuMemory = (IMemoryManager)memory;
             }
 
             ISwizzle swizzle = TextureHelper.GetSwizzle(image);
@@ -250,7 +250,6 @@ namespace Ryujinx.Graphics.Texture
 
             // Note: Each row of the texture needs to be aligned to 4 bytes.
             int pitch = (width * bytesPerPixel + 3) & ~3;
-
 
             int dataLayerSize = height * pitch * depth;
             byte[] data = new byte[dataLayerSize * image.LayerCount];

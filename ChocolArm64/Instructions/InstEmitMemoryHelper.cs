@@ -462,11 +462,11 @@ namespace ChocolArm64.Instructions
 
             switch (size)
             {
-                case 0: fallbackMethodName = nameof(MemoryManager.WriteVector8);   break;
-                case 1: fallbackMethodName = nameof(MemoryManager.WriteVector16);  break;
-                case 2: fallbackMethodName = nameof(MemoryManager.WriteVector32);  break;
-                case 3: fallbackMethodName = nameof(MemoryManager.WriteVector64);  break;
-                case 4: fallbackMethodName = nameof(MemoryManager.WriteVector128); break;
+                case 0: fallbackMethodName = nameof(MemoryManager.WriteVector8);           break;
+                case 1: fallbackMethodName = nameof(MemoryManager.WriteVector16);          break;
+                case 2: fallbackMethodName = nameof(MemoryManager.WriteVector32);          break;
+                case 3: fallbackMethodName = nameof(MemoryManager.WriteVector64);          break;
+                case 4: fallbackMethodName = nameof(MemoryManager.WriteVector128Internal); break;
             }
 
             context.EmitCall(typeof(MemoryManager), fallbackMethodName);
