@@ -37,7 +37,7 @@ namespace Ryujinx
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.ProcessExit        += CurrentDomain_ProcessExit;
 
-            if (device.System.State.DiscordIntegrationEnabled == true)
+            if (device.System.State.DiscordIntegrationEnabled)
             {
                 DiscordClient   = new DiscordRpcClient("568815339807309834");
                 DiscordPresence = new RichPresence
@@ -108,15 +108,33 @@ namespace Ryujinx
                 Logger.PrintWarning(LogClass.Application, "Please specify the folder with the NSOs/IStorage or a NSO/NRO.");
             }
 
-            if (device.System.State.DiscordIntegrationEnabled == true)
+            if (device.System.State.DiscordIntegrationEnabled)
             {
                 if (File.ReadAllLines(Path.Combine(ApplicationDirectory, "RPsupported.dat")).Contains(device.System.TitleID))
                 {
                     DiscordPresence.Assets.LargeImageKey = device.System.TitleID;
                 }
 
-                DiscordPresence.Details               = $"Playing {device.System.TitleName}";
-                DiscordPresence.State                 = device.System.TitleID.ToUpper();
+                string state = device.System.TitleID;
+
+                if (state == null)
+                {
+                    state = "Ryujinx";
+                }
+                else
+                {
+                    state = state.ToUpper();
+                }
+
+                string details = "Idling";
+
+                if (device.System.TitleName != null)
+                {
+                    details = $"Playing {device.System.TitleName}";
+                }
+
+                DiscordPresence.Details               = details;
+                DiscordPresence.State                 = state;
                 DiscordPresence.Assets.LargeImageText = device.System.TitleName;
                 DiscordPresence.Assets.SmallImageKey  = "ryujinx";
                 DiscordPresence.Assets.SmallImageText = "Ryujinx is an emulator for the Nintendo Switch";
