@@ -10,6 +10,8 @@ namespace Ryujinx.HLE.HOS.Services.Am
     {
         private KEvent _displayResolutionChangeEvent;
 
+        private Apm.CpuBoostMode _cpuBoostMode = Apm.CpuBoostMode.Disabled;
+
         public ICommonStateGetter(Horizon system)
         {
             _displayResolutionChangeEvent = new KEvent(system);
@@ -113,6 +115,25 @@ namespace Ryujinx.HLE.HOS.Services.Am
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
             Logger.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
+
+        [Command(66)] // 6.0.0+
+        // SetCpuBoostMode(u32 cpu_boost_mode)
+        public ResultCode SetCpuBoostMode(ServiceCtx context)
+        {
+            uint cpuBoostMode = context.RequestData.ReadUInt32();
+
+            if (cpuBoostMode > 1)
+            {
+                return ResultCode.CpuBoostModeInvalid;
+            }
+
+            _cpuBoostMode = (Apm.CpuBoostMode)cpuBoostMode;
+
+            // NOTE: There is a condition variable after the assignment, probably waiting something with apm:sys service (SetCpuBoostMode call?).
+            //       Since we will probably never support CPU boost things, it's not needed to implement more.
 
             return ResultCode.Success;
         }
