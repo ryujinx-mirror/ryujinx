@@ -180,6 +180,7 @@ namespace Ryujinx.Graphics.Texture
                 case GalSurfaceFormat.Rgba32Float:    return GalImageFormat.Rgba32    | Float;
                 case GalSurfaceFormat.Rgba32Uint:     return GalImageFormat.Rgba32    | Uint;
                 case GalSurfaceFormat.Rgba16Float:    return GalImageFormat.Rgba16    | Float;
+                case GalSurfaceFormat.Rgba16Uint:     return GalImageFormat.Rgba16    | Uint;
                 case GalSurfaceFormat.Rgba16Unorm:    return GalImageFormat.Rgba16    | Unorm;
                 case GalSurfaceFormat.Rg32Float:      return GalImageFormat.Rg32      | Float;
                 case GalSurfaceFormat.Rg32Sint:       return GalImageFormat.Rg32      | Sint;
