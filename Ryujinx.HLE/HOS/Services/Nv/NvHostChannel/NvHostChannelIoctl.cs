@@ -25,6 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
                 case 0x0001: return Submit           (context);
                 case 0x0002: return GetSyncpoint     (context);
                 case 0x0003: return GetWaitBase      (context);
+                case 0x0007: return SetSubmitTimeout (context);
                 case 0x0009: return MapBuffer        (context);
                 case 0x000a: return UnmapBuffer      (context);
                 case 0x4714: return SetUserData      (context);
@@ -37,6 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
                 case 0x480d: return SetPriority      (context);
                 case 0x481a: return AllocGpfifoEx2   (context);
                 case 0x481b: return KickoffPbWithAttr(context);
+                case 0x481d: return SetTimeslice     (context);
             }
 
             throw new NotImplementedException(cmd.ToString("x8"));
@@ -99,6 +101,19 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
             args.Value = 0;
 
             MemoryHelper.Write(context.Memory, outputPosition, args);
+
+            return NvResult.Success;
+        }
+
+        private static int SetSubmitTimeout(ServiceCtx context)
+        {
+            long inputPosition = context.Request.GetBufferType0x21().Position;
+
+            GetChannel(context).SubmitTimeout = context.Memory.ReadInt32(inputPosition);
+
+            // TODO: Handle the timeout in the submit method.
+
+            Logger.PrintStub(LogClass.ServiceNv);
 
             return NvResult.Success;
         }
@@ -200,6 +215,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
 
             GetChannel(context).Timeout = context.Memory.ReadInt32(inputPosition);
 
+            Logger.PrintStub(LogClass.ServiceNv);
+
             return NvResult.Success;
         }
 
@@ -259,10 +276,26 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
 
         private static int SetPriority(ServiceCtx context)
         {
-            long inputPosition  = context.Request.GetBufferType0x21().Position;
-            long outputPosition = context.Request.GetBufferType0x22().Position;
+            long inputPosition = context.Request.GetBufferType0x21().Position;
+
+            switch ((NvChannelPriority)context.Memory.ReadInt32(inputPosition))
+            {
+                case NvChannelPriority.Low:
+                    GetChannel(context).Timeslice = 1300; // Timeslice low priority in micro-seconds
+                    break;
+                case NvChannelPriority.Medium:
+                    GetChannel(context).Timeslice = 2600; // Timeslice medium priority in micro-seconds
+                    break;
+                case NvChannelPriority.High:
+                    GetChannel(context).Timeslice = 5200; // Timeslice high priority in micro-seconds
+                    break;
+                default:
+                    return NvResult.InvalidInput;
+            }
 
             Logger.PrintStub(LogClass.ServiceNv);
+
+            // TODO: disable and preempt channel when GPU scheduler will be implemented.
 
             return NvResult.Success;
         }
@@ -297,6 +330,25 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvHostChannel
             args.SyncptValue = 0;
 
             MemoryHelper.Write(context.Memory, outputPosition, args);
+
+            return NvResult.Success;
+        }
+
+        private static int SetTimeslice(ServiceCtx context)
+        {
+            long inputPosition = context.Request.GetBufferType0x21().Position;
+            int  timeslice     = context.Memory.ReadInt32(inputPosition);
+
+            if (timeslice < 1000 || timeslice > 50000)
+            {
+                return NvResult.InvalidInput;
+            }
+
+            GetChannel(context).Timeslice = timeslice; // in micro-seconds
+
+            Logger.PrintStub(LogClass.ServiceNv);
+
+            // TODO: disable and preempt channel when GPU scheduler will be implemented.
 
             return NvResult.Success;
         }
