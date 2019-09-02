@@ -10,7 +10,7 @@ using System.Threading;
 
 using Stopwatch = System.Diagnostics.Stopwatch;
 
-namespace Ryujinx
+namespace Ryujinx.UI
 {
     public class GlScreen : GameWindow
     {

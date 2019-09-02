@@ -4,8 +4,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
     {
         public string Name { get; private set; }
 
-        public int  Category { get; private set; }
-        public long TitleId  { get; private set; }
+        public int   Category { get; private set; }
+        public ulong TitleId  { get; private set; }
 
         public ulong CodeAddress    { get; private set; }
         public int   CodePagesCount { get; private set; }
@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         public ProcessCreationInfo(
             string name,
             int    category,
-            long   titleId,
+            ulong  titleId,
             ulong  codeAddress,
             int    codePagesCount,
             int    mmuFlags,

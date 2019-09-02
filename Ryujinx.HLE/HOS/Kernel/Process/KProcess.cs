@@ -60,8 +60,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public KProcessCapabilities Capabilities { get; private set; }
 
-        public long TitleId { get; private set; }
-        public long Pid     { get; private set; }
+        public ulong TitleId { get; private set; }
+        public long  Pid     { get; private set; }
 
         private long  _creationTimestamp;
         private ulong _entrypoint;

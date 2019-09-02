@@ -285,7 +285,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
                             break;
 
-                        case 18: value = process.TitleId; break;
+                        case 18: value = (long)process.TitleId; break;
 
                         case 20: value = (long)process.UserExceptionContextAddress; break;
 

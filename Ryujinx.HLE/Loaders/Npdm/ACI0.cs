@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
     {
         private const int Aci0Magic = 'A' << 0 | 'C' << 8 | 'I' << 16 | '0' << 24;
 
-        public long TitleId { get; private set; }
+        public ulong TitleId { get; set; }
 
         public int   FsVersion            { get; private set; }
         public ulong FsPermissionsBitmask { get; private set; }
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
 
             stream.Seek(0xc, SeekOrigin.Current);
 
-            TitleId = reader.ReadInt64();
+            TitleId = reader.ReadUInt64();
 
             // Reserved.
             stream.Seek(8, SeekOrigin.Current);

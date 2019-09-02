@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.Loaders.Executables
     {
         public string Name { get; private set; }
 
-        public long TitleId { get; private set; }
+        public ulong TitleId { get; private set; }
 
         public int ProcessCategory { get; private set; }
 
@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.Loaders.Executables
 
             Name = ReadString(reader, 12);
 
-            TitleId = reader.ReadInt64();
+            TitleId = reader.ReadUInt64();
 
             ProcessCategory = reader.ReadInt32();
 

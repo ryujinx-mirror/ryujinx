@@ -94,7 +94,7 @@ namespace Ryujinx.HLE.HOS
 
         internal KEvent VsyncEvent { get; private set; }
 
-        internal Keyset KeySet { get; private set; }
+        public Keyset KeySet { get; private set; }
 
         private bool _hasStarted;
 
@@ -453,9 +453,7 @@ namespace Ryujinx.HLE.HOS
                 Nacp controlData = new Nacp(controlFile.AsStream());
 
                 TitleName = CurrentTitle = controlData.Descriptions[(int)State.DesiredTitleLanguage].Title;
-                TitleID = metaData.Aci0.TitleId.ToString("x16");
-
-                CurrentTitle = controlData.Descriptions[(int)State.DesiredTitleLanguage].Title;
+                TitleID   = metaData.Aci0.TitleId.ToString("x16");
 
                 if (string.IsNullOrWhiteSpace(CurrentTitle))
                 {
@@ -551,17 +549,50 @@ namespace Ryujinx.HLE.HOS
                         if (asetVersion == 0)
                         {
                             ulong iconOffset = reader.ReadUInt64();
-                            ulong iconSize = reader.ReadUInt64();
+                            ulong iconSize   = reader.ReadUInt64();
 
                             ulong nacpOffset = reader.ReadUInt64();
-                            ulong nacpSize = reader.ReadUInt64();
+                            ulong nacpSize   = reader.ReadUInt64();
 
                             ulong romfsOffset = reader.ReadUInt64();
-                            ulong romfsSize = reader.ReadUInt64();
+                            ulong romfsSize   = reader.ReadUInt64();
 
                             if (romfsSize != 0)
                             {
                                 Device.FileSystem.SetRomFs(new HomebrewRomFsStream(input, obj.FileSize + (long)romfsOffset));
+                            }
+
+                            if (nacpSize != 0)
+                            {
+                                input.Seek(obj.FileSize + (long)nacpOffset, SeekOrigin.Begin);
+                                using (MemoryStream stream = new MemoryStream(reader.ReadBytes((int)nacpSize)))
+                                {
+                                    ControlData = new Nacp(stream);
+                                }
+
+                                metaData.TitleName = ControlData.Descriptions[(int)State.DesiredTitleLanguage].Title;
+
+                                if (string.IsNullOrWhiteSpace(metaData.TitleName))
+                                {
+                                    metaData.TitleName = ControlData.Descriptions.ToList().Find(x => !string.IsNullOrWhiteSpace(x.Title)).Title;
+                                }
+
+                                metaData.Aci0.TitleId = ControlData.PresenceGroupId;
+
+                                if (metaData.Aci0.TitleId == 0)
+                                {
+                                    metaData.Aci0.TitleId = ControlData.SaveDataOwnerId;
+                                }
+
+                                if (metaData.Aci0.TitleId == 0)
+                                {
+                                    metaData.Aci0.TitleId = ControlData.AddOnContentBaseId - 0x1000;
+                                }
+
+                                if (metaData.Aci0.TitleId.ToString("x16") == "fffffffffffff000")
+                                {
+                                    metaData.Aci0.TitleId = 0000000000000000;
+                                }
                             }
                         }
                         else
@@ -578,8 +609,8 @@ namespace Ryujinx.HLE.HOS
 
             ContentManager.LoadEntries();
 
-            TitleID = CurrentTitle = metaData.Aci0.TitleId.ToString("x16");
-            TitleName = metaData.TitleName;
+            TitleName = CurrentTitle = metaData.TitleName;
+            TitleID   = metaData.Aci0.TitleId.ToString("x16");
 
             ProgramLoader.LoadStaticObjects(this, metaData, new IExecutable[] { staticObject });
         }
@@ -687,7 +718,9 @@ namespace Ryujinx.HLE.HOS
                 // It's only safe to release resources once all threads
                 // have exited.
                 ThreadCounter.Signal();
-                ThreadCounter.Wait();
+                //ThreadCounter.Wait(); // FIXME: Uncomment this
+                // BODY: Right now, guest processes don't exit properly because the logic waits for them to exit.
+                // BODY: However, this doesn't happen when you close the main window so we need to find a way to make them exit gracefully
 
                 Scheduler.Dispose();
 

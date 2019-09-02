@@ -1,75 +1,28 @@
 {
-    "$schema": "./_schema.json",
-
-    // Dump shaders in local directory (e.g. `C:\ShaderDumps`)
     "graphics_shaders_dump_path": "",
-
-    // Enable printing debug logs
     "logging_enable_debug": false,
-
-    // Enable printing stubbed calls logs
     "logging_enable_stub": true,
-
-    // Enable printing information logs
     "logging_enable_info": true,
-
-    // Enable printing warning logs
     "logging_enable_warn": true,
-
-    // Enable printing error logs
     "logging_enable_error": true,
-
-    // Enable printing guest logs
     "logging_enable_guest": true,
-
-    // Enable printing FS access logs. fs_global_access_log_mode must be 2 or 3
     "logging_enable_fs_access_log": false,
-
-    // Filtered log classes, in a JSON array, eg. `[ "Loader", "ServiceFs" ]`
     "logging_filtered_classes": [ ],
-
-    // Enable file logging
     "enable_file_log": true,
-
-    // Change System Language
-    // System Language list: https://gist.github.com/HorrorTroll/b6e4a88d774c3c9b3bdf54d79a7ca43b
     "system_language": "AmericanEnglish",
-
-    // Enable or disable Docked Mode
     "docked_mode": false,
-
-    // Enable or disable Discord Rich Presence
     "enable_discord_integration": true,
-
-    // Enable or disable Game Vsync
     "enable_vsync": true,
-
-    // Enable or disable Multi-core scheduling of threads
     "enable_multicore_scheduling": true,
-
-    // Enable integrity checks on Switch content files
     "enable_fs_integrity_checks": true,
-
-    // Sets the "GlobalAccessLogMode". Possible modes are 0-3
-    "fs_global_access_log_mode": 0,
-
-    // Use old ChocolArm64 ARM emulator
     "enable_legacy_jit": false,
-
-    // Enable or disable ignoring missing services, this may cause instability
     "ignore_missing_services": false,
-
-    // The primary controller's type
-    // Supported Values: Handheld, ProController, NpadPair, NpadLeft, NpadRight
     "controller_type": "Handheld",
-
-    // Enable or disable "direct keyboard access (HID) support" (Provides games access to your keyboard as a text entry device).
-    "enable_keyboard": false,
-
-    // Keyboard Controls
-    // https://github.com/opentk/opentk/blob/master/src/OpenTK/Input/Key.cs
+    "gui_columns": [ true, true, true, true, true, true, true, true, true ],
+    "game_dirs": [],
+    "enable_custom_theme": false,
+    "custom_theme_path": "",
     "keyboard_controls": {
-        // Left JoyCon Keyboard Bindings
         "left_joycon": {
             "stick_up": "W",
             "stick_down": "S",
@@ -84,8 +37,6 @@
             "button_l": "E",
             "button_zl": "Q"
         },
-
-        // Right JoyCon Keyboard Bindings
         "right_joycon": {
             "stick_up": "I",
             "stick_down": "K",
@@ -100,27 +51,15 @@
             "button_r": "U",
             "button_zr": "O"
         },
-
         "hotkeys": {
             "toggle_vsync": "Tab"
         }
     },
-
-    // Controller Controls
-    "joystick_controls": {
-        // Whether or not to enable Controller support
+        "joystick_controls": {
         "enabled": true,
-
-        // Controller Device Index
         "index": 0,
-
-        // Controller Analog Stick Deadzone
         "deadzone": 0.05,
-
-        // The value of how pressed down each trigger has to be in order to register a button press
         "trigger_threshold": 0.5,
-
-        // Left JoyCon Controller Bindings
         "left_joycon": {
             "stick": "Axis0",
             "stick_button": "Button13",
@@ -132,8 +71,6 @@
             "button_l": "Button6",
             "button_zl": "Button8"
         },
-
-        // Right JoyCon Controller Bindings
         "right_joycon": {
             "stick": "Axis2",
             "stick_button": "Button14",

@@ -10,7 +10,7 @@ namespace Ryujinx.HLE.FileSystem
         public static string GetSavePath(SaveInfo saveMetaData, ServiceCtx context)
         {
             string baseSavePath   = NandPath;
-            long   currentTitleId = saveMetaData.TitleId;
+            ulong  currentTitleId = saveMetaData.TitleId;
 
             switch (saveMetaData.SaveSpaceId)
             {

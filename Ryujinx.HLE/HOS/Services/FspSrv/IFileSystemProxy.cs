@@ -225,7 +225,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         {
             SaveSpaceId saveSpaceId = (SaveSpaceId)context.RequestData.ReadInt64();
 
-            long titleId = context.RequestData.ReadInt64();
+            ulong titleId = context.RequestData.ReadUInt64();
 
             UInt128 userId = context.RequestData.ReadStruct<UInt128>();
 

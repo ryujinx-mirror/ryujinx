@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Ryujinx.HLE.FileSystem
 {
-    class VirtualFileSystem : IDisposable
+    public class VirtualFileSystem : IDisposable
     {
         public const string BasePath   = "RyuFs";
         public const string NandPath   = "nand";
@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.FileSystem
 
         public string GetSystemPath() => MakeDirAndGetFullPath(SystemPath);
 
-        public string GetGameSavePath(SaveInfo save, ServiceCtx context)
+        internal string GetGameSavePath(SaveInfo save, ServiceCtx context)
         {
             return MakeDirAndGetFullPath(SaveHelper.GetSavePath(save, context));
         }

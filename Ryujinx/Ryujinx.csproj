@@ -19,7 +19,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Ui\AboutWindow.glade" />
+    <EmbeddedResource Include="Ui\assets\ryujinxNCAIcon.png" />
+    <EmbeddedResource Include="Ui\assets\ryujinxNROIcon.png" />
+    <EmbeddedResource Include="Ui\assets\ryujinxNSOIcon.png" />
+    <EmbeddedResource Include="Ui\assets\ryujinxNSPIcon.png" />
+    <EmbeddedResource Include="Ui\assets\ryujinxXCIIcon.png" />
+    <EmbeddedResource Include="Ui\assets\DiscordLogo.png" />
+    <EmbeddedResource Include="Ui\assets\GitHubLogo.png" />
+    <EmbeddedResource Include="Ui\assets\JoyCon.png" />
+    <EmbeddedResource Include="Ui\assets\PatreonLogo.png" />
+    <EmbeddedResource Include="Ui\assets\RyujinxIcon.png" />
+    <EmbeddedResource Include="Ui\assets\TwitterLogo.png" />
+    <EmbeddedResource Include="Ui\MainWindow.glade" />
+    <EmbeddedResource Include="Ui\SwitchSettings.glade" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DiscordRichPresence" Version="1.0.108" />
+    <PackageReference Include="GtkSharp" Version="3.22.24.37" />
+    <PackageReference Include="GtkSharp.Dependencies" Version="1.0.1" />
+    <PackageReference Include="JsonPrettyPrinter" Version="1.0.1.1" />
     <PackageReference Include="OpenTK.NetStandard" Version="1.0.4" />
   </ItemGroup>
 
@@ -33,7 +53,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Config.jsonc">
+    <None Update="Config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Theme.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="RPsupported.dat">

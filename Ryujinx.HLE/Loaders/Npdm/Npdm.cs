@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.Loaders.Npdm
         public int    PersonalMmHeapSize  { get; private set; }
         public int    ProcessCategory     { get; private set; }
         public int    MainThreadStackSize { get; private set; }
-        public string TitleName           { get; private set; }
+        public string TitleName           { get;         set; }
         public byte[] ProductCode         { get; private set; }
 
         public Aci0 Aci0 { get; private set; }

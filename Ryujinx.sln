@@ -28,7 +28,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Common", "Ryujinx.C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Profiler", "Ryujinx.Profiler\Ryujinx.Profiler.csproj", "{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARMeilleure", "ARMeilleure\ARMeilleure.csproj", "{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ARMeilleure", "ARMeilleure\ARMeilleure.csproj", "{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -126,6 +126,14 @@ Global
 		{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}.Profile Release|Any CPU.Build.0 = Profile Release|Any CPU
 		{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}.Profile Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}.Profile Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}.Profile Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}.Profile Release|Any CPU.Build.0 = Release|Any CPU
+		{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
