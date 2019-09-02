@@ -109,14 +109,21 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // OpenSaveDataFileSystem(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> saveDataFs
         public ResultCode OpenSaveDataFileSystem(ServiceCtx context)
         {
-            return LoadSaveDataFileSystem(context);
+            return LoadSaveDataFileSystem(context, false);
         }
 
         [Command(52)]
         // OpenSaveDataFileSystemBySystemSaveDataId(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> systemSaveDataFs
         public ResultCode OpenSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
         {
-            return LoadSaveDataFileSystem(context);
+            return LoadSaveDataFileSystem(context, false);
+        }
+
+        [Command(53)]
+        // OpenReadOnlySaveDataFileSystem(u8 save_data_space_id, nn::fssrv::sf::SaveStruct save_struct) -> object<nn::fssrv::sf::IFileSystem>
+        public ResultCode OpenReadOnlySaveDataFileSystem(ServiceCtx context)
+        {
+            return LoadSaveDataFileSystem(context, true);
         }
 
         [Command(200)]
@@ -221,7 +228,7 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             return ResultCode.Success;
         }
 
-        public ResultCode LoadSaveDataFileSystem(ServiceCtx context)
+        public ResultCode LoadSaveDataFileSystem(ServiceCtx context, bool readOnly)
         {
             SaveSpaceId saveSpaceId = (SaveSpaceId)context.RequestData.ReadInt64();
 
@@ -236,8 +243,13 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             try
             {
-                LocalFileSystem             fileSystem     = new LocalFileSystem(savePath);
-                DirectorySaveDataFileSystem saveFileSystem = new DirectorySaveDataFileSystem(fileSystem);
+                LocalFileSystem       fileSystem     = new LocalFileSystem(savePath);
+                LibHac.Fs.IFileSystem saveFileSystem = new DirectorySaveDataFileSystem(fileSystem);
+
+                if (readOnly)
+                {
+                    saveFileSystem = new ReadOnlyFileSystem(saveFileSystem);
+                }
 
                 MakeObject(context, new IFileSystem(saveFileSystem));
             }
