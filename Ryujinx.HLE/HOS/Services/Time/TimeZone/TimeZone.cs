@@ -197,6 +197,11 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
         {
             num = 0;
 
+            if (namePosition >= name.Length)
+            {
+                return false;
+            }
+
             char c = name[namePosition];
 
             if (!char.IsDigit(c))
@@ -212,7 +217,12 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                     return false;
                 }
 
-                c = name[++namePosition];
+                if (++namePosition >= name.Length)
+                {
+                    return false;
+                }
+
+                c = name[namePosition];
             }
             while (char.IsDigit(c));
 
@@ -237,6 +247,12 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             }
 
             seconds = num * SecondsPerHour;
+
+            if (namePosition >= name.Length)
+            {
+                return false;
+            }
+
             if (name[namePosition] == ':')
             {
                 namePosition++;
@@ -247,6 +263,12 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 }
 
                 seconds += num * SecondsPerMinute;
+
+                if (namePosition >= name.Length)
+                {
+                    return false;
+                }
+
                 if (name[namePosition] == ':')
                 {
                     namePosition++;
@@ -266,6 +288,11 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
         {
             bool isNegative = false;
 
+            if (namePosition >= name.Length)
+            {
+                return false;
+            }
+
             if (name[namePosition] == '-')
             {
                 isNegative = true;
@@ -274,6 +301,11 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             else if (name[namePosition] == '+')
             {
                 namePosition++;
+            }
+
+            if (namePosition >= name.Length)
+            {
+                return false;
             }
 
             bool isValid = GetSeconds(name, ref namePosition, out offset);
