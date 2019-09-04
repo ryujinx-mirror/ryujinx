@@ -7,19 +7,45 @@ using System.Net.Sockets;
 
 namespace Ryujinx.HLE.HOS.Services.Nifm
 {
-    class IGeneralService : IpcService
+    class IGeneralService : IpcService, IDisposable
     {
-        public IGeneralService() { }
+        private GeneralServiceDetail _generalServiceDetail;
+
+        public IGeneralService()
+        {
+            _generalServiceDetail = new GeneralServiceDetail
+            {
+                ClientId                     = GeneralServiceManager.Count,
+                IsAnyInternetRequestAccepted = true // NOTE: Why not accept any internet request?
+            };
+
+            GeneralServiceManager.Add(_generalServiceDetail);
+        }
+
+        [Command(1)]
+        // GetClientId() -> buffer<nn::nifm::ClientId, 0x1a, 4>
+        public ResultCode GetClientId(ServiceCtx context)
+        {
+            long position = context.Request.RecvListBuff[0].Position;
+            long size     = context.Request.RecvListBuff[0].Size;
+
+            context.Memory.WriteInt32(position, _generalServiceDetail.ClientId);
+
+            return ResultCode.Success;
+        }
 
         [Command(4)]
-        // CreateRequest(u32) -> object<nn::nifm::detail::IRequest>
+        // CreateRequest(u32 version) -> object<nn::nifm::detail::IRequest>
         public ResultCode CreateRequest(ServiceCtx context)
         {
-            int unknown = context.RequestData.ReadInt32();
+            uint version = context.RequestData.ReadUInt32();
 
-            MakeObject(context, new IRequest(context.Device.System));
+            MakeObject(context, new IRequest(context.Device.System, version));
 
-            Logger.PrintStub(LogClass.ServiceNifm);
+            // Doesn't occur in our case.
+            // return ResultCode.ObjectIsNull;
+
+            Logger.PrintStub(LogClass.ServiceNifm, new { version });
 
             return ResultCode.Success;
         }
@@ -42,6 +68,25 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
             Logger.PrintInfo(LogClass.ServiceNifm, $"Console's local IP is \"{address}\".");
 
             return ResultCode.Success;
+        }
+
+        [Command(21)]
+        // IsAnyInternetRequestAccepted(buffer<nn::nifm::ClientId, 0x19, 4>) -> bool
+        public ResultCode IsAnyInternetRequestAccepted(ServiceCtx context)
+        {
+            long position = context.Request.PtrBuff[0].Position;
+            long size     = context.Request.PtrBuff[0].Size;
+
+            int clientId = context.Memory.ReadInt32(position);
+
+            context.ResponseData.Write(GeneralServiceManager.Get(clientId).IsAnyInternetRequestAccepted);
+
+            return ResultCode.Success;
+        }
+
+        public void Dispose()
+        {
+            GeneralServiceManager.Remove(_generalServiceDetail.ClientId);
         }
     }
 }

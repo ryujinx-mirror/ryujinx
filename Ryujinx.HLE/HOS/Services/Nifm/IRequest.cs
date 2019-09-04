@@ -11,10 +11,14 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
         private KEvent _event0;
         private KEvent _event1;
 
-        public IRequest(Horizon system)
+        private uint _version;
+
+        public IRequest(Horizon system, uint version)
         {
             _event0 = new KEvent(system);
             _event1 = new KEvent(system);
+
+            _version = version;
         }
 
         [Command(0)]

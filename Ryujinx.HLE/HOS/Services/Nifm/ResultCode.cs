@@ -7,6 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm
 
         Success = 0,
 
-        NoInternetConnection = (300 << ErrorCodeShift) | ModuleId
+        NoInternetConnection = (300 << ErrorCodeShift) | ModuleId,
+        ObjectIsNull         = (350 << ErrorCodeShift) | ModuleId
     }
 }

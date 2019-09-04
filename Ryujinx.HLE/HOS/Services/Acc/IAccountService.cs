@@ -110,7 +110,7 @@ namespace Ryujinx.HLE.HOS.Services.Acc
             MakeObject(context, new IProfile(userProfile));
 
             // Doesn't occur in our case.
-            // return MakeError(ErrorModule.Account, AccErr.NullObject);
+            // return ResultCode.NullObject;
 
             return ResultCode.Success;
         }
