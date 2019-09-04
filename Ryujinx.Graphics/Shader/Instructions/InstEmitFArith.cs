@@ -158,9 +158,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
             bool absoluteA = op.RawOpCode.Extract(7);
             bool negateA   = op.RawOpCode.Extract(43);
             bool absoluteB = op.RawOpCode.Extract(44);
+            bool negateB   = op.RawOpCode.Extract(6);
 
-            Operand srcA = context.FPAbsNeg  (GetSrcA(context), absoluteA, negateA);
-            Operand srcB = context.FPAbsolute(GetSrcB(context), absoluteB);
+            Operand srcA = context.FPAbsNeg(GetSrcA(context), absoluteA, negateA);
+            Operand srcB = context.FPAbsNeg(GetSrcB(context), absoluteB, negateB);
 
             Operand p0Res = GetFPComparison(context, cmpOp, srcA, srcB);
 
