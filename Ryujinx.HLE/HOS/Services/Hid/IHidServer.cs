@@ -1413,6 +1413,27 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return ResultCode.Success;
         }
 
+        [Command(522)] // 5.1.0+
+        // SetIsPalmaAllConnectable(nn::applet::AppletResourceUserId, bool, pid)
+        public ResultCode SetIsPalmaAllConnectable(ServiceCtx context)
+        {
+            long appletResourceUserId = context.RequestData.ReadInt64();
+            long unknownBool          = context.RequestData.ReadInt64();
+
+            Logger.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, unknownBool });
+
+            return ResultCode.Success;
+        }
+
+        [Command(525)] // 5.1.0+
+        // SetPalmaBoostMode(bool)
+        public ResultCode SetPalmaBoostMode(ServiceCtx context)
+        {
+            // NOTE: Stubbed in system module.
+
+            return ResultCode.Success;
+        }
+
         [Command(1000)]
         // SetNpadCommunicationMode(long CommunicationMode, nn::applet::AppletResourceUserId)
         public ResultCode SetNpadCommunicationMode(ServiceCtx context)
