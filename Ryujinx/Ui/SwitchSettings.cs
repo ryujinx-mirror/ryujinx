@@ -91,7 +91,7 @@ namespace Ryujinx.UI
 
             builder.Autoconnect(this);
 
-            _settingsWin.Icon       = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.RyujinxIcon.png");
+            _settingsWin.Icon       = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.ryujinxIcon.png");
             _controllerImage.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.JoyCon.png", 500, 500);
 
             //Bind Events

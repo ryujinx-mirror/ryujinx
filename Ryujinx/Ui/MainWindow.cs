@@ -98,7 +98,7 @@ namespace Ryujinx.UI
 
             DeleteEvent += Window_Close;
 
-            _mainWin.Icon            = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.RyujinxIcon.png");
+            _mainWin.Icon            = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.ryujinxIcon.png");
             _stopEmulation.Sensitive = false;
 
             if (SwitchSettings.SwitchConfig.GuiColumns[0]) { _iconToggle.Active       = true; }
@@ -160,7 +160,7 @@ namespace Ryujinx.UI
             MessageDialog errorDialog = new MessageDialog(null, DialogFlags.Modal, MessageType.Error, ButtonsType.Ok, errorMessage)
             {
                 Title          = "Ryujinx - Error",
-                Icon           = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.RyujinxIcon.png"),
+                Icon           = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.ryujinxIcon.png"),
                 WindowPosition = WindowPosition.Center
             };
             errorDialog.SetSizeRequest(100, 20);
