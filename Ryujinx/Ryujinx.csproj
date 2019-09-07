@@ -29,7 +29,7 @@
     <EmbeddedResource Include="Ui\assets\GitHubLogo.png" />
     <EmbeddedResource Include="Ui\assets\JoyCon.png" />
     <EmbeddedResource Include="Ui\assets\PatreonLogo.png" />
-    <EmbeddedResource Include="Ui\assets\RyujinxIcon.png" />
+    <EmbeddedResource Include="Ui\assets\ryujinxIcon.png" />
     <EmbeddedResource Include="Ui\assets\TwitterLogo.png" />
     <EmbeddedResource Include="Ui\MainWindow.glade" />
     <EmbeddedResource Include="Ui\SwitchSettings.glade" />
