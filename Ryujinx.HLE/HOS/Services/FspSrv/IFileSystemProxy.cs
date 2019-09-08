@@ -1,10 +1,8 @@
 using LibHac;
 using LibHac.Fs;
 using LibHac.Fs.NcaUtils;
-using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.Utilities;
 using System.IO;
 
 using static Ryujinx.HLE.FileSystem.VirtualFileSystem;
@@ -38,7 +36,14 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             {
                 if (fullPath.Contains("."))
                 {
-                    return OpenFileSystemFromInternalFile(context, fullPath);
+                    ResultCode result = FileSystemHelper.OpenFileSystemFromInternalFile(context, fullPath, out IFileSystem fileSystem);
+
+                    if (result == ResultCode.Success)
+                    {
+                        MakeObject(context, fileSystem);
+                    }
+
+                    return result;
                 }
 
                 return ResultCode.PathDoesNotExist;
@@ -49,11 +54,25 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
 
             if (extension == ".nca")
             {
-                return OpenNcaFs(context, fullPath, fileStream.AsStorage());
+                ResultCode result = FileSystemHelper.OpenNcaFs(context, fullPath, fileStream.AsStorage(), out IFileSystem fileSystem);
+
+                if (result == ResultCode.Success)
+                {
+                    MakeObject(context, fileSystem);
+                }
+
+                return result;
             }
             else if (extension == ".nsp")
             {
-                return OpenNsp(context, fullPath);
+                ResultCode result = FileSystemHelper.OpenNsp(context, fullPath, out IFileSystem fileSystem);
+
+                if (result == ResultCode.Success)
+                {
+                    MakeObject(context, fileSystem);
+                }
+
+                return result;
             }
 
             return ResultCode.InvalidInput;
@@ -109,21 +128,42 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
         // OpenSaveDataFileSystem(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> saveDataFs
         public ResultCode OpenSaveDataFileSystem(ServiceCtx context)
         {
-            return LoadSaveDataFileSystem(context, false);
+            ResultCode result = FileSystemHelper.LoadSaveDataFileSystem(context, false, out IFileSystem fileSystem);
+
+            if (result == ResultCode.Success)
+            {
+                MakeObject(context, fileSystem);
+            }
+
+            return result;
         }
 
         [Command(52)]
         // OpenSaveDataFileSystemBySystemSaveDataId(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> systemSaveDataFs
         public ResultCode OpenSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
         {
-            return LoadSaveDataFileSystem(context, false);
+            ResultCode result = FileSystemHelper.LoadSaveDataFileSystem(context, false, out IFileSystem fileSystem);
+
+            if (result == ResultCode.Success)
+            {
+                MakeObject(context, fileSystem);
+            }
+
+            return result;
         }
 
         [Command(53)]
         // OpenReadOnlySaveDataFileSystem(u8 save_data_space_id, nn::fssrv::sf::SaveStruct save_struct) -> object<nn::fssrv::sf::IFileSystem>
         public ResultCode OpenReadOnlySaveDataFileSystem(ServiceCtx context)
         {
-            return LoadSaveDataFileSystem(context, true);
+            ResultCode result = FileSystemHelper.LoadSaveDataFileSystem(context, true, out IFileSystem fileSystem);
+
+            if (result == ResultCode.Success)
+            {
+                MakeObject(context, fileSystem);
+            }
+
+            return result;
         }
 
         [Command(200)]
@@ -226,134 +266,6 @@ namespace Ryujinx.HLE.HOS.Services.FspSrv
             Logger.PrintAccessLog(LogClass.ServiceFs, message.TrimEnd('\n'));
 
             return ResultCode.Success;
-        }
-
-        public ResultCode LoadSaveDataFileSystem(ServiceCtx context, bool readOnly)
-        {
-            SaveSpaceId saveSpaceId = (SaveSpaceId)context.RequestData.ReadInt64();
-
-            ulong titleId = context.RequestData.ReadUInt64();
-
-            UInt128 userId = context.RequestData.ReadStruct<UInt128>();
-
-            long            saveId       = context.RequestData.ReadInt64();
-            SaveDataType    saveDataType = (SaveDataType)context.RequestData.ReadByte();
-            SaveInfo        saveInfo     = new SaveInfo(titleId, saveId, saveDataType, userId, saveSpaceId);
-            string          savePath     = context.Device.FileSystem.GetGameSavePath(saveInfo, context);
-
-            try
-            {
-                LocalFileSystem       fileSystem     = new LocalFileSystem(savePath);
-                LibHac.Fs.IFileSystem saveFileSystem = new DirectorySaveDataFileSystem(fileSystem);
-
-                if (readOnly)
-                {
-                    saveFileSystem = new ReadOnlyFileSystem(saveFileSystem);
-                }
-
-                MakeObject(context, new IFileSystem(saveFileSystem));
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
-        }
-
-        private ResultCode OpenNsp(ServiceCtx context, string pfsPath)
-        {
-            try
-            {
-                LocalStorage        storage = new LocalStorage(pfsPath, FileAccess.Read, FileMode.Open);
-                PartitionFileSystem nsp     = new PartitionFileSystem(storage);
-
-                ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
-                
-                IFileSystem nspFileSystem = new IFileSystem(nsp);
-
-                MakeObject(context, nspFileSystem);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
-        }
-
-        private ResultCode OpenNcaFs(ServiceCtx context, string ncaPath, LibHac.Fs.IStorage ncaStorage)
-        {
-            try
-            {
-                Nca nca = new Nca(context.Device.System.KeySet, ncaStorage);
-
-                if (!nca.SectionExists(NcaSectionType.Data))
-                {
-                    return ResultCode.PartitionNotFound;
-                }
-
-                LibHac.Fs.IFileSystem fileSystem = nca.OpenFileSystem(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
-
-                MakeObject(context, new IFileSystem(fileSystem));
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
-        }
-
-        private ResultCode OpenFileSystemFromInternalFile(ServiceCtx context, string fullPath)
-        {
-            DirectoryInfo archivePath = new DirectoryInfo(fullPath).Parent;
-
-            while (string.IsNullOrWhiteSpace(archivePath.Extension))
-            {
-                archivePath = archivePath.Parent;
-            }
-
-            if (archivePath.Extension == ".nsp" && File.Exists(archivePath.FullName))
-            {
-                FileStream pfsFile = new FileStream(
-                    archivePath.FullName.TrimEnd(Path.DirectorySeparatorChar),
-                    FileMode.Open,
-                    FileAccess.Read);
-
-                try
-                {
-                    PartitionFileSystem nsp = new PartitionFileSystem(pfsFile.AsStorage());
-
-                    ImportTitleKeysFromNsp(nsp, context.Device.System.KeySet);
-                    
-                    string filename = fullPath.Replace(archivePath.FullName, string.Empty).TrimStart('\\');
-
-                    if (nsp.FileExists(filename))
-                    {
-                        return OpenNcaFs(context, fullPath, nsp.OpenFile(filename, OpenMode.Read).AsStorage());
-                    }
-                }
-                catch (HorizonResultException ex)
-                {
-                    return (ResultCode)ex.ResultValue.Value;
-                }
-            }
-
-            return ResultCode.PathDoesNotExist;
-        }
-
-        private void ImportTitleKeysFromNsp(LibHac.Fs.IFileSystem nsp, Keyset keySet)
-        {
-            foreach (DirectoryEntry ticketEntry in nsp.EnumerateEntries("*.tik"))
-            {
-                Ticket ticket = new Ticket(nsp.OpenFile(ticketEntry.FullPath, OpenMode.Read).AsStream());
-
-                if (!keySet.TitleKeys.ContainsKey(ticket.RightsId))
-                {
-                    keySet.TitleKeys.Add(ticket.RightsId, ticket.GetTitleKey(keySet));
-                }
-            }
         }
     }
 }

@@ -54,20 +54,48 @@ namespace Ryujinx.HLE.FileSystem
             return fullPath;
         }
 
-        public string GetSdCardPath() => MakeDirAndGetFullPath(SdCardPath);
+        public string GetSdCardPath() => MakeFullPath(SdCardPath);
 
-        public string GetNandPath() => MakeDirAndGetFullPath(NandPath);
+        public string GetNandPath() => MakeFullPath(NandPath);
 
-        public string GetSystemPath() => MakeDirAndGetFullPath(SystemPath);
+        public string GetSystemPath() => MakeFullPath(SystemPath);
 
-        internal string GetGameSavePath(SaveInfo save, ServiceCtx context)
+        internal string GetSavePath(ServiceCtx context, SaveInfo saveInfo, bool isDirectory = true)
         {
-            return MakeDirAndGetFullPath(SaveHelper.GetSavePath(save, context));
+            string saveUserPath   = "";
+            string baseSavePath   = NandPath;
+            ulong  currentTitleId = saveInfo.TitleId;
+
+            switch (saveInfo.SaveSpaceId)
+            {
+                case SaveSpaceId.NandUser:   baseSavePath = UserNandPath;                         break;
+                case SaveSpaceId.NandSystem: baseSavePath = SystemNandPath;                       break;
+                case SaveSpaceId.SdCard:     baseSavePath = Path.Combine(SdCardPath, "Nintendo"); break;
+            }
+
+            baseSavePath = Path.Combine(baseSavePath, "save");
+
+            if (saveInfo.TitleId == 0 && saveInfo.SaveDataType == SaveDataType.SaveData)
+            {
+                currentTitleId = context.Process.TitleId;
+            }
+
+            if (saveInfo.SaveSpaceId == SaveSpaceId.NandUser)
+            {
+                saveUserPath = saveInfo.UserId.IsNull ? "savecommon" : saveInfo.UserId.ToString();
+            }
+
+            string savePath = Path.Combine(baseSavePath,
+                saveInfo.SaveId.ToString("x16"),
+                saveUserPath,
+                saveInfo.SaveDataType == SaveDataType.SaveData ? currentTitleId.ToString("x16") : string.Empty);
+
+            return MakeFullPath(savePath, isDirectory);
         }
 
         public string GetFullPartitionPath(string partitionPath)
         {
-            return MakeDirAndGetFullPath(partitionPath);
+            return MakeFullPath(partitionPath);
         }
 
         public string SwitchPathToSystemPath(string switchPath)
@@ -79,7 +107,7 @@ namespace Ryujinx.HLE.FileSystem
                 return null;
             }
 
-            return GetFullPath(MakeDirAndGetFullPath(parts[0]), parts[1]);
+            return GetFullPath(MakeFullPath(parts[0]), parts[1]);
         }
 
         public string SystemPathToSwitchPath(string systemPath)
@@ -104,37 +132,40 @@ namespace Ryujinx.HLE.FileSystem
             return null;
         }
 
-        private string MakeDirAndGetFullPath(string dir)
+        private string MakeFullPath(string path, bool isDirectory = true)
         {
             // Handles Common Switch Content Paths
-            switch (dir)
+            switch (path)
             {
                 case ContentPath.SdCard:
                 case "@Sdcard":
-                    dir = SdCardPath;
+                    path = SdCardPath;
                     break;
                 case ContentPath.User:
-                    dir = UserNandPath;
+                    path = UserNandPath;
                     break;
                 case ContentPath.System:
-                    dir = SystemNandPath;
+                    path = SystemNandPath;
                     break;
                 case ContentPath.SdCardContent:
-                    dir = Path.Combine(SdCardPath, "Nintendo", "Contents");
+                    path = Path.Combine(SdCardPath, "Nintendo", "Contents");
                     break;
                 case ContentPath.UserContent:
-                    dir = Path.Combine(UserNandPath, "Contents");
+                    path = Path.Combine(UserNandPath, "Contents");
                     break;
                 case ContentPath.SystemContent:
-                    dir = Path.Combine(SystemNandPath, "Contents");
+                    path = Path.Combine(SystemNandPath, "Contents");
                     break;
             }
 
-            string fullPath = Path.Combine(GetBasePath(), dir);
+            string fullPath = Path.Combine(GetBasePath(), path);
 
-            if (!Directory.Exists(fullPath))
+            if (isDirectory)
             {
-                Directory.CreateDirectory(fullPath);
+                if (!Directory.Exists(fullPath))
+                {
+                    Directory.CreateDirectory(fullPath);
+                }
             }
 
             return fullPath;

@@ -1,45 +1,44 @@
-﻿using Ryujinx.HLE.HOS;
+﻿using LibHac.Fs;
+using Ryujinx.HLE.HOS;
 using System.IO;
-
-using static Ryujinx.HLE.FileSystem.VirtualFileSystem;
 
 namespace Ryujinx.HLE.FileSystem
 {
     static class SaveHelper
     {
-        public static string GetSavePath(SaveInfo saveMetaData, ServiceCtx context)
+        public static IFileSystem OpenSystemSaveData(ServiceCtx context, ulong saveId)
         {
-            string baseSavePath   = NandPath;
-            ulong  currentTitleId = saveMetaData.TitleId;
+            SaveInfo saveInfo = new SaveInfo(0, (long)saveId, SaveDataType.SystemSaveData, SaveSpaceId.NandSystem);
+            string   savePath = context.Device.FileSystem.GetSavePath(context, saveInfo, false);
 
-            switch (saveMetaData.SaveSpaceId)
+            if (File.Exists(savePath))
             {
-                case SaveSpaceId.NandUser:
-                    baseSavePath = UserNandPath;
-                    break;
-                case SaveSpaceId.NandSystem:
-                    baseSavePath = SystemNandPath;
-                    break;
-                case SaveSpaceId.SdCard:
-                    baseSavePath = Path.Combine(SdCardPath, "Nintendo");
-                    break;
+                string tempDirectoryPath = $"{savePath}_temp";
+
+                Directory.CreateDirectory(tempDirectoryPath);
+
+                IFileSystem outputFolder = new LocalFileSystem(tempDirectoryPath);
+
+                using (LocalStorage systemSaveData = new LocalStorage(savePath, FileAccess.Read, FileMode.Open))
+                {
+                    IFileSystem saveFs = new LibHac.Fs.Save.SaveDataFileSystem(context.Device.System.KeySet, systemSaveData, IntegrityCheckLevel.None, false);
+
+                    saveFs.CopyFileSystem(outputFolder);
+                }
+
+                File.Delete(savePath);
+
+                Directory.Move(tempDirectoryPath, savePath);
+            }
+            else
+            {
+                if (!Directory.Exists(savePath))
+                {
+                    Directory.CreateDirectory(savePath);
+                }
             }
 
-            baseSavePath = Path.Combine(baseSavePath, "save");
-
-            if (saveMetaData.TitleId == 0 && saveMetaData.SaveDataType == SaveDataType.SaveData)
-            {
-                currentTitleId = context.Process.TitleId;
-            }
-
-            string saveAccount = saveMetaData.UserId.IsNull ? "savecommon" : saveMetaData.UserId.ToString();
-
-            string savePath = Path.Combine(baseSavePath,
-                saveMetaData.SaveId.ToString("x16"),
-                saveAccount,
-                saveMetaData.SaveDataType == SaveDataType.SaveData ? currentTitleId.ToString("x16") : string.Empty);
-
-            return savePath;
+            return new LocalFileSystem(savePath);
         }
     }
 }
