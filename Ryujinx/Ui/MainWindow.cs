@@ -131,8 +131,6 @@ namespace Ryujinx.UI
 
                 UpdateGameTable();
                 // Temporary code section end
-
-                LoadApplication(args[0]);
             }
             else
             {
@@ -202,7 +200,7 @@ namespace Ryujinx.UI
             StyleContext.AddProviderForScreen(Gdk.Screen.Default, cssProvider, 800);
         }
 
-        private void LoadApplication(string path)
+        internal void LoadApplication(string path)
         {
             if (_gameLoaded)
             {

@@ -30,6 +30,11 @@ namespace Ryujinx
             gtkApplication.AddWindow(mainWindow);
             mainWindow.Show();
 
+            if (args.Length == 1)
+            {
+                mainWindow.LoadApplication(args[0]);
+            }
+
             Application.Run();
         }
 
