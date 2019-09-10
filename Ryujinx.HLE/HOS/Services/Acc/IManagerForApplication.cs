@@ -1,5 +1,5 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Services.Arp;
+using Ryujinx.HLE.HOS.Services.Glue;
 using Ryujinx.HLE.Utilities;
 
 namespace Ryujinx.HLE.HOS.Services.Acc
