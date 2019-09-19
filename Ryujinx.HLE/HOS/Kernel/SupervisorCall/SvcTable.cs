@@ -165,40 +165,48 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 }
             }
 
+            BindingFlags staticNonPublic = BindingFlags.NonPublic | BindingFlags.Static;
+
             // Print all the arguments for debugging purposes.
             int inputArgsCount = methodArgs.Length - byRefArgsCount;
 
-            generator.Emit(OpCodes.Ldc_I4_S, inputArgsCount);
-
-            generator.Emit(OpCodes.Newarr, typeof(object));
-
-            string argsFormat = svcName;
-
-            for (int index = 0; index < inputArgsCount; index++)
+            if (inputArgsCount != 0)
             {
-                argsFormat += $" {methodArgs[index].Name}: 0x{{{index}:X8}},";
+                generator.Emit(OpCodes.Ldc_I4, inputArgsCount);
 
-                generator.Emit(OpCodes.Dup);
-                generator.Emit(OpCodes.Ldc_I4_S, index);
-                generator.Emit(OpCodes.Conv_I);
+                generator.Emit(OpCodes.Newarr, typeof(object));
 
-                generator.Emit(OpCodes.Ldarg_1);
-                generator.Emit(OpCodes.Ldc_I4, byRefArgsCount + index);
+                string argsFormat = svcName;
 
-                MethodInfo info = typeof(IExecutionContext).GetMethod(nameof(IExecutionContext.GetX));
+                for (int index = 0; index < inputArgsCount; index++)
+                {
+                    argsFormat += $" {methodArgs[index].Name}: 0x{{{index}:X8}},";
 
-                generator.Emit(OpCodes.Call, info);
+                    generator.Emit(OpCodes.Dup);
+                    generator.Emit(OpCodes.Ldc_I4, index);
 
-                generator.Emit(OpCodes.Box, typeof(ulong));
+                    generator.Emit(OpCodes.Ldarg_1);
+                    generator.Emit(OpCodes.Ldc_I4, byRefArgsCount + index);
 
-                generator.Emit(OpCodes.Stelem_Ref);
+                    MethodInfo info = typeof(IExecutionContext).GetMethod(nameof(IExecutionContext.GetX));
+
+                    generator.Emit(OpCodes.Call, info);
+
+                    generator.Emit(OpCodes.Box, typeof(ulong));
+
+                    generator.Emit(OpCodes.Stelem_Ref);
+                }
+
+                argsFormat = argsFormat.Substring(0, argsFormat.Length - 1);
+
+                generator.Emit(OpCodes.Ldstr, argsFormat);
             }
+            else
+            {
+                generator.Emit(OpCodes.Ldnull);
 
-            argsFormat = argsFormat.Substring(0, argsFormat.Length - 1);
-
-            generator.Emit(OpCodes.Ldstr, argsFormat);
-
-            BindingFlags staticNonPublic = BindingFlags.NonPublic | BindingFlags.Static;
+                generator.Emit(OpCodes.Ldstr, svcName);
+            }
 
             MethodInfo printArgsMethod = typeof(SvcTable).GetMethod(nameof(PrintArguments), staticNonPublic);
 
@@ -226,7 +234,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                         throw new InvalidOperationException($"Method \"{svcName}\" has a invalid ref type \"{argType.Name}\".");
                     }
 
-                    generator.Emit(OpCodes.Ldloca_S, (byte)local.LocalIndex);
+                    generator.Emit(OpCodes.Ldloca, local);
                 }
                 else
                 {
@@ -325,6 +333,18 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             throw new InvalidSvcException($"Method \"{svcName}\" has a invalid ref type \"{type.Name}\".");
         }
 
+        private static void PrintArguments(object[] argValues, string formatOrSvcName)
+        {
+            if (argValues != null)
+            {
+                Logger.PrintDebug(LogClass.KernelSvc, string.Format(formatOrSvcName, argValues));
+            }
+            else
+            {
+                Logger.PrintDebug(LogClass.KernelSvc, formatOrSvcName);
+            }
+        }
+
         private static void PrintResult(KernelResult result, string svcName)
         {
             if (result != KernelResult.Success   &&
@@ -338,11 +358,6 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             {
                 Logger.PrintDebug(LogClass.KernelSvc, $"{svcName} returned result {result}.");
             }
-        }
-
-        private static void PrintArguments(object[] argValues, string format)
-        {
-            Logger.PrintDebug(LogClass.KernelSvc, string.Format(format, argValues));
         }
     }
 }

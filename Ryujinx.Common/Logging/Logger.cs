@@ -39,6 +39,11 @@ namespace Ryujinx.Common.Logging
             m_Time = Stopwatch.StartNew();
         }
 
+        public static void RestartTime()
+        {
+            m_Time.Restart();
+        }
+
         public static void AddTarget(ILogTarget target)
         {
             m_LogTargets.Add(target);
