@@ -85,7 +85,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
             int maxSize = _samples.Length - _offset;
 
-            int size = maxSamples * AudioConsts.HostChannelsCount;
+            int size = maxSamples * AudioRendererConsts.HostChannelsCount;
 
             if (size > maxSize)
             {
@@ -96,7 +96,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
             Array.Copy(_samples, _offset, output, 0, size);
 
-            samplesCount = size / AudioConsts.HostChannelsCount;
+            samplesCount = size / AudioRendererConsts.HostChannelsCount;
 
             _outStatus.PlayedSamplesCount += samplesCount;
 
@@ -140,7 +140,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
             {
                 int samplesCount = (int)(wb.Size / (sizeof(short) * ChannelsCount));
 
-                _samples = new int[samplesCount * AudioConsts.HostChannelsCount];
+                _samples = new int[samplesCount * AudioRendererConsts.HostChannelsCount];
 
                 if (ChannelsCount == 1)
                 {
@@ -171,19 +171,19 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
                 throw new InvalidOperationException();
             }
 
-            if (SampleRate != AudioConsts.HostSampleRate)
+            if (SampleRate != AudioRendererConsts.HostSampleRate)
             {
                 // TODO: We should keep the frames being discarded (see the 4 below)
                 // on a buffer and include it on the next samples buffer, to allow
                 // the resampler to do seamless interpolation between wave buffers.
-                int samplesCount = _samples.Length / AudioConsts.HostChannelsCount;
+                int samplesCount = _samples.Length / AudioRendererConsts.HostChannelsCount;
 
                 samplesCount = Math.Max(samplesCount - 4, 0);
 
                 _samples = Resampler.Resample2Ch(
                     _samples,
                     SampleRate,
-                    AudioConsts.HostSampleRate,
+                    AudioRendererConsts.HostSampleRate,
                     samplesCount,
                     ref _resamplerFracPart);
             }

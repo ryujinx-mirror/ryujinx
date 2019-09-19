@@ -51,8 +51,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
             _params   = Params;
 
             _track = audioOut.OpenTrack(
-                AudioConsts.HostSampleRate,
-                AudioConsts.HostChannelsCount,
+                AudioRendererConsts.HostSampleRate,
+                AudioRendererConsts.HostChannelsCount,
                 AudioCallback);
 
             _memoryPools = CreateArray<MemoryPoolContext>(Params.EffectCount + Params.VoiceCount * 4);
@@ -86,7 +86,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
         // GetMixBufferCount() -> u32
         public ResultCode GetMixBufferCount(ServiceCtx context)
         {
-            context.ResponseData.Write(_params.MixCount);
+            context.ResponseData.Write(_params.SubMixCount);
 
             return ResultCode.Success;
         }
@@ -144,6 +144,10 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
             StructWriter writer = new StructWriter(context.Memory, outputPosition);
 
             UpdateDataHeader inputHeader = reader.Read<UpdateDataHeader>();
+
+            BehaviorInfo behaviorInfo = new BehaviorInfo();
+
+            behaviorInfo.SetUserLibRevision(inputHeader.Revision);
 
             reader.Read<BehaviorIn>(inputHeader.BehaviorSize);
 
@@ -207,20 +211,27 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
             int updateHeaderSize = Marshal.SizeOf<UpdateDataHeader>();
 
-            outputHeader.Revision               = IAudioRendererManager.RevMagic;
+            outputHeader.Revision               = AudioRendererConsts.RevMagic;
             outputHeader.BehaviorSize           = 0xb0;
             outputHeader.MemoryPoolSize         = (_params.EffectCount + _params.VoiceCount * 4) * 0x10;
             outputHeader.VoiceSize              = _params.VoiceCount  * 0x10;
             outputHeader.EffectSize             = _params.EffectCount * 0x10;
             outputHeader.SinkSize               = _params.SinkCount   * 0x20;
             outputHeader.PerformanceManagerSize = 0x10;
-            outputHeader.TotalSize              = updateHeaderSize             +
-                                                  outputHeader.BehaviorSize    +
-                                                  outputHeader.MemoryPoolSize +
-                                                  outputHeader.VoiceSize      +
-                                                  outputHeader.EffectSize     +
-                                                  outputHeader.SinkSize       +
-                                                  outputHeader.PerformanceManagerSize;
+
+            if (behaviorInfo.IsElapsedFrameCountSupported())
+            {
+                outputHeader.ElapsedFrameCountInfoSize = 0x10;
+            }
+
+            outputHeader.TotalSize = updateHeaderSize                    +
+                                     outputHeader.BehaviorSize           +
+                                     outputHeader.MemoryPoolSize         +
+                                     outputHeader.VoiceSize              +
+                                     outputHeader.EffectSize             +
+                                     outputHeader.SinkSize               +
+                                     outputHeader.PerformanceManagerSize +
+                                     outputHeader.ElapsedFrameCountInfoSize;
 
             writer.Write(outputHeader);
 
@@ -305,7 +316,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
         private void AppendMixedBuffer(long tag)
         {
-            int[] mixBuffer = new int[MixBufferSamplesCount * AudioConsts.HostChannelsCount];
+            int[] mixBuffer = new int[MixBufferSamplesCount * AudioRendererConsts.HostChannelsCount];
 
             foreach (VoiceContext voice in _voices)
             {

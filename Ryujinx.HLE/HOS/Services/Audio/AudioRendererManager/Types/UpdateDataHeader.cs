@@ -12,7 +12,7 @@
         public int SinkSize;
         public int PerformanceManagerSize;
         public int Unknown24;
-        public int Unknown28;
+        public int ElapsedFrameCountInfoSize;
         public int Unknown2C;
         public int Unknown30;
         public int Unknown34;

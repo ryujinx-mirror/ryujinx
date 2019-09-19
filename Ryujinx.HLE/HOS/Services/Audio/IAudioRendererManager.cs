@@ -1,22 +1,13 @@
 using Ryujinx.Audio;
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager;
-using Ryujinx.HLE.Utilities;
 
 namespace Ryujinx.HLE.HOS.Services.Audio
 {
     [Service("audren:u")]
     class IAudioRendererManager : IpcService
     {
-        private const int Rev0Magic = ('R' << 0)  |
-                                      ('E' << 8)  |
-                                      ('V' << 16) |
-                                      ('0' << 24);
-
-        private const int Rev = 5;
-
-        public const int RevMagic = Rev0Magic + (Rev << 24);
-
         public IAudioRendererManager(ServiceCtx context) { }
 
         [Command(0)]
@@ -41,69 +32,57 @@ namespace Ryujinx.HLE.HOS.Services.Audio
         // GetWorkBufferSize(nn::audio::detail::AudioRendererParameterInternal) -> u64
         public ResultCode GetAudioRendererWorkBufferSize(ServiceCtx context)
         {
-            AudioRendererParameter Params = GetAudioRendererParameter(context);
+            AudioRendererParameter parameters = GetAudioRendererParameter(context);
 
-            int revision = (Params.Revision - Rev0Magic) >> 24;
-
-            if (revision <= Rev)
+            if (AudioRendererCommon.CheckValidRevision(parameters))
             {
-                bool isSplitterSupported                  = revision >= 3;
-                bool isVariadicCommandBufferSizeSupported = revision >= 5;
-                
+                BehaviorInfo behaviorInfo = new BehaviorInfo();
+
+                behaviorInfo.SetUserLibRevision(parameters.Revision);
+
                 long size;
 
-                size  = IntUtils.AlignUp(Params.Unknown8 * 4, 64);
-                size += Params.MixCount * 0x400;
-                size += (Params.MixCount + 1) * 0x940;
-                size += Params.VoiceCount * 0x3F0;
-                size += IntUtils.AlignUp((Params.MixCount + 1) * 8, 16);
-                size += IntUtils.AlignUp(Params.VoiceCount * 8, 16);
-                size += IntUtils.AlignUp(
-                    ((Params.SinkCount + Params.MixCount) * 0x3C0 + Params.SampleCount * 4) *
-                    (Params.Unknown8 + 6), 64);
-                size += (Params.SinkCount + Params.MixCount) * 0x2C0;
-                size += (Params.EffectCount + Params.VoiceCount * 4) * 0x30 + 0x50;
+                int totalMixCount = parameters.SubMixCount + 1;
 
-                if (isSplitterSupported)
+                size = BitUtils.AlignUp(parameters.MixBufferCount * 4, AudioRendererConsts.BufferAlignment) +
+                       parameters.SubMixCount * 0x400 +
+                       totalMixCount          * 0x940 +
+                       parameters.VoiceCount  * 0x3F0 +
+                       BitUtils.AlignUp(totalMixCount * 8, 16) +
+                       BitUtils.AlignUp(parameters.VoiceCount * 8, 16) +
+                       BitUtils.AlignUp(((parameters.SinkCount + parameters.SubMixCount) * 0x3C0 + parameters.SampleCount * 4) *
+                                         (parameters.MixBufferCount + 6), AudioRendererConsts.BufferAlignment) +
+                       (parameters.SinkCount + parameters.SubMixCount) * 0x2C0 +
+                       (parameters.EffectCount + parameters.VoiceCount * 4) * 0x30 + 
+                       0x50;
+
+                if (behaviorInfo.IsSplitterSupported())
                 {
-                    size += IntUtils.AlignUp((
-                        NodeStatesGetWorkBufferSize(Params.MixCount + 1) +
-                        EdgeMatrixGetWorkBufferSize(Params.MixCount + 1)), 16);
-
-                    size += Params.SplitterDestinationDataCount * 0xE0;
-                    size += Params.SplitterCount * 0x20;
-                    size += IntUtils.AlignUp(Params.SplitterDestinationDataCount * 4, 16);
+                    size += BitUtils.AlignUp(NodeStates.GetWorkBufferSize(totalMixCount) + EdgeMatrix.GetWorkBufferSize(totalMixCount), 16);
                 }
 
-                size = Params.EffectCount * 0x4C0 +
-                       Params.SinkCount * 0x170 +
-                       Params.VoiceCount * 0x100 +
-                       IntUtils.AlignUp(size, 64) + 0x40;
+                size = parameters.SinkCount                            * 0x170 +
+                       (parameters.SinkCount + parameters.SubMixCount) * 0x280 +
+                       parameters.EffectCount                          * 0x4C0 +
+                       ((size + SplitterContext.CalcWorkBufferSize(behaviorInfo, parameters) + 0x30 * parameters.EffectCount + (4 * parameters.VoiceCount) + 0x8F) & ~0x3FL) +
+                       ((parameters.VoiceCount << 8) | 0x40);
 
-                if (Params.PerformanceManagerCount >= 1)
+                if (parameters.PerformanceManagerCount >= 1)
                 {
-                    size += (((Params.EffectCount +
-                               Params.SinkCount +
-                               Params.VoiceCount +
-                               Params.MixCount + 1) * 16 + 0x658) *
-                               (Params.PerformanceManagerCount + 1) + 0x13F) & ~0x3FL;
+                    size += (PerformanceManager.GetRequiredBufferSizeForPerformanceMetricsPerFrame(behaviorInfo, parameters) * 
+                            (parameters.PerformanceManagerCount + 1) + 0xFF) & ~0x3FL;
                 }
 
-                if (isVariadicCommandBufferSizeSupported)
+                if (behaviorInfo.IsVariadicCommandBufferSizeSupported())
                 {
-                    size += Params.EffectCount * 0x840 + 
-                            Params.MixCount * 0x5A38 +
-                            Params.SinkCount * 0x148 +
-                            Params.SplitterDestinationDataCount * 0x540 +
-                            Params.VoiceCount * (Params.SplitterCount * 0x68 + 0x2E0) +
-                            ((Params.VoiceCount + Params.MixCount + Params.EffectCount + Params.SinkCount + 0x65) << 6) + 0x3F8 + 0x7E;
+                    size += CommandGenerator.CalculateCommandBufferSize(parameters) + 0x7E;
                 }
                 else
                 {
                     size += 0x1807E;
                 }
 
-                size = size & ~0xFFFL;
+                size = BitUtils.AlignUp(size, 0x1000);
 
                 context.ResponseData.Write(size);
 
@@ -115,7 +94,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             {
                 context.ResponseData.Write(0L);
 
-                Logger.PrintWarning(LogClass.ServiceAudio, $"Library Revision 0x{Params.Revision:x8} is not supported!");
+                Logger.PrintWarning(LogClass.ServiceAudio, $"Library Revision REV{AudioRendererCommon.GetRevisionVersion(parameters.Revision)} is not supported!");
 
                 return ResultCode.UnsupportedRevision;
             }
@@ -127,8 +106,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             {
                 SampleRate                   = context.RequestData.ReadInt32(),
                 SampleCount                  = context.RequestData.ReadInt32(),
-                Unknown8                     = context.RequestData.ReadInt32(),
-                MixCount                     = context.RequestData.ReadInt32(),
+                MixBufferCount               = context.RequestData.ReadInt32(),
+                SubMixCount                  = context.RequestData.ReadInt32(),
                 VoiceCount                   = context.RequestData.ReadInt32(),
                 SinkCount                    = context.RequestData.ReadInt32(),
                 EffectCount                  = context.RequestData.ReadInt32(),
@@ -141,30 +120,6 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             };
 
             return Params;
-        }
-
-        private static int NodeStatesGetWorkBufferSize(int value)
-        {
-            int result = IntUtils.AlignUp(value, 64);
-
-            if (result < 0)
-            {
-                result |= 7;
-            }
-
-            return 4 * (value * value) + 0x12 * value + 2 * (result / 8);
-        }
-
-        private static int EdgeMatrixGetWorkBufferSize(int value)
-        {
-            int result = IntUtils.AlignUp(value * value, 64);
-
-            if (result < 0)
-            {
-                result |= 7;
-            }
-
-            return result / 8;
         }
 
         [Command(2)]

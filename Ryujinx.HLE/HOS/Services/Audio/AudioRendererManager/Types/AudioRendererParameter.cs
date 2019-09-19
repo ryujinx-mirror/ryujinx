@@ -7,8 +7,8 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
     {
         public int SampleRate;
         public int SampleCount;
-        public int Unknown8;
-        public int MixCount;
+        public int MixBufferCount;
+        public int SubMixCount;
         public int VoiceCount;
         public int SinkCount;
         public int EffectCount;
