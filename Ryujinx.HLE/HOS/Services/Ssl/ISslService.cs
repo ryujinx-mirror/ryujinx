@@ -1,4 +1,5 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Services.Ssl.SslService;
 
 namespace Ryujinx.HLE.HOS.Services.Ssl
 {

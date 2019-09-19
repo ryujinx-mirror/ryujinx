@@ -1,3 +1,5 @@
+using Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory;
+
 namespace Ryujinx.HLE.HOS.Services.Pctl
 {
     [Service("pctl")]

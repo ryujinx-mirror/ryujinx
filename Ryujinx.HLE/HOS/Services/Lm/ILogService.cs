@@ -1,3 +1,5 @@
+using Ryujinx.HLE.HOS.Services.Lm.LogService;
+
 namespace Ryujinx.HLE.HOS.Services.Lm
 {
     [Service("lm")]

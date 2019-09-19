@@ -1,5 +1,5 @@
 using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.HLE.HOS.Services.Am;
+using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
 using System.Collections.Concurrent;
 
 namespace Ryujinx.HLE.HOS.SystemState

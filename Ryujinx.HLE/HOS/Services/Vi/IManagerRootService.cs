@@ -1,3 +1,5 @@
+using Ryujinx.HLE.HOS.Services.Vi.RootService;
+
 namespace Ryujinx.HLE.HOS.Services.Vi
 {
     [Service("vi:m")]

@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Ryujinx.Common;
+using Ryujinx.HLE.Utilities;
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using Ryujinx.Common;
-using Ryujinx.HLE.Utilities;
-using static Ryujinx.HLE.HOS.Services.Time.TimeZoneRule;
+
+using static Ryujinx.HLE.HOS.Services.Time.TimeZone.TimeZoneRule;
 
 namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 {
@@ -238,9 +239,8 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
         {
             seconds = 0;
 
-            int num;
 
-            bool isValid = GetNum(name, ref namePosition, out num, 0, HoursPerDays * DaysPerWekk - 1);
+            bool isValid = GetNum(name, ref namePosition, out int num, 0, HoursPerDays * DaysPerWekk - 1);
             if (!isValid)
             {
                 return false;

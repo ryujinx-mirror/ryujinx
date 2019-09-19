@@ -1,3 +1,5 @@
+using Ryujinx.HLE.HOS.Services.Nifm.StaticService;
+
 namespace Ryujinx.HLE.HOS.Services.Nifm
 {
     [Service("nifm:a")] // Max sessions: 2

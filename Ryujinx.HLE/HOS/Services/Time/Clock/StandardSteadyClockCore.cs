@@ -1,5 +1,5 @@
 ﻿using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.HLE.HOS.Services.Bpc;
+using Ryujinx.HLE.HOS.Services.Pcv.Bpc;
 
 namespace Ryujinx.HLE.HOS.Services.Time.Clock
 {

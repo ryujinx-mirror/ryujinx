@@ -1,6 +1,5 @@
 ﻿using ARMeilleure.Memory;
 using Ryujinx.Common;
-using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -9,91 +8,12 @@ using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
 namespace Ryujinx.HLE.HOS.Services.Ldr
 {
-    [StructLayout(LayoutKind.Explicit, Size = 0x350)]
-    unsafe struct NrrHeader
-    {
-        [FieldOffset(0)]
-        public uint  Magic;
-
-        [FieldOffset(0x10)]
-        public ulong TitleIdMask;
-
-        [FieldOffset(0x18)]
-        public ulong TitleIdPattern;
-
-        [FieldOffset(0x30)]
-        public fixed byte Modulus[0x100];
-
-        [FieldOffset(0x130)]
-        public fixed byte FixedKeySignature[0x100];
-
-        [FieldOffset(0x230)]
-        public fixed byte NrrSignature[0x100];
-
-        [FieldOffset(0x330)]
-        public ulong TitleIdMin;
-
-        [FieldOffset(0x338)]
-        public uint  NrrSize;
-
-        [FieldOffset(0x340)]
-        public uint HashOffset;
-
-        [FieldOffset(0x344)]
-        public uint HashCount;
-    }
-
-    class NrrInfo
-    {
-        public NrrHeader    Header     { get; private set; }
-        public List<byte[]> Hashes     { get; private set; }
-        public long         NrrAddress { get; private set; }
-
-        public NrrInfo(long nrrAddress, NrrHeader header, List<byte[]> hashes)
-        {
-            NrrAddress = nrrAddress;
-            Header     = header;
-            Hashes     = hashes;
-        }
-    }
-
-    class NroInfo
-    {
-        public NxRelocatableObject Executable { get; private set; }
-
-        public byte[] Hash             { get; private set; }
-        public ulong  NroAddress       { get; private set; }
-        public ulong  NroSize          { get; private set; }
-        public ulong  BssAddress       { get; private set; }
-        public ulong  BssSize          { get; private set; }
-        public ulong  TotalSize        { get; private set; }
-        public ulong  NroMappedAddress { get; set; }
-
-        public NroInfo(
-            NxRelocatableObject executable,
-            byte[]              hash,
-            ulong               nroAddress,
-            ulong               nroSize,
-            ulong               bssAddress,
-            ulong               bssSize,
-            ulong               totalSize)
-        {
-            Executable = executable;
-            Hash       = hash;
-            NroAddress = nroAddress;
-            NroSize    = nroSize;
-            BssAddress = bssAddress;
-            BssSize    = bssSize;
-            TotalSize  = totalSize;
-        }
-    }
-
     [Service("ldr:ro")]
+    [Service("ro:1")] // 7.0.0+
     class IRoInterface : IpcService
     {
         private const int MaxNrr = 0x40;

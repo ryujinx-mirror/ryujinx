@@ -1,4 +1,5 @@
-using Ryujinx.HLE.HOS.Services.Glue;
+using Ryujinx.HLE.HOS.Services.Bcat.ServiceCreator;
+using Ryujinx.HLE.HOS.Services.Arp;
 
 namespace Ryujinx.HLE.HOS.Services.Bcat
 {

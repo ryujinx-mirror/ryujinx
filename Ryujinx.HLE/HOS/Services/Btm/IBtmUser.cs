@@ -1,6 +1,8 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Btm
+﻿using Ryujinx.HLE.HOS.Services.Btm.BtmUser;
+
+namespace Ryujinx.HLE.HOS.Services.Btm
 {
-    [Service("btm:u")]
+    [Service("btm:u")] // 5.0.0+
     class IBtmUser : IpcService
     {
         public IBtmUser(ServiceCtx context) { }

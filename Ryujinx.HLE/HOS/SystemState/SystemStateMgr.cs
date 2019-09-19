@@ -1,4 +1,4 @@
-using Ryujinx.HLE.HOS.Services.Acc;
+using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.Utilities;
 using System;
 

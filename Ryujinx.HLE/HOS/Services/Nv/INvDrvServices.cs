@@ -4,11 +4,11 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.HLE.HOS.Services.Nv.NvGpuAS;
-using Ryujinx.HLE.HOS.Services.Nv.NvGpuGpu;
-using Ryujinx.HLE.HOS.Services.Nv.NvHostChannel;
-using Ryujinx.HLE.HOS.Services.Nv.NvHostCtrl;
-using Ryujinx.HLE.HOS.Services.Nv.NvMap;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvGpuAS;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvGpuGpu;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap;
 using System;
 using System.Collections.Generic;
 

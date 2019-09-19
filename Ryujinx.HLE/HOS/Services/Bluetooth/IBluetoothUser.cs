@@ -1,5 +1,6 @@
 ﻿using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Services.Set;
+using Ryujinx.HLE.HOS.Services.Bluetooth.BluetoothDriver;
+using Ryujinx.HLE.HOS.Services.Settings;
 
 namespace Ryujinx.HLE.HOS.Services.Bluetooth
 {

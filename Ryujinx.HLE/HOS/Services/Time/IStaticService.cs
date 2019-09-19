@@ -3,6 +3,7 @@ using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
+using Ryujinx.HLE.HOS.Services.Time.StaticService;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
 using System;
 using System.Diagnostics;
@@ -14,6 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
     [Service("time:a", TimePermissions.Applet)]
     [Service("time:s", TimePermissions.System)]
     [Service("time:u", TimePermissions.User)]
+    [Service("time:p", TimePermissions.System)] // 9.0.0+ - TODO: Fix the permission.
     class IStaticService : IpcService
     {
         private TimePermissions _permissions;
