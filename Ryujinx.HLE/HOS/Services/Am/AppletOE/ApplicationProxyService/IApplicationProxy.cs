@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService
         // GetApplicationFunctions() -> object<nn::am::service::IApplicationFunctions>
         public ResultCode GetApplicationFunctions(ServiceCtx context)
         {
-            MakeObject(context, new IApplicationFunctions());
+            MakeObject(context, new IApplicationFunctions(context.Device.System));
 
             return ResultCode.Success;
         }

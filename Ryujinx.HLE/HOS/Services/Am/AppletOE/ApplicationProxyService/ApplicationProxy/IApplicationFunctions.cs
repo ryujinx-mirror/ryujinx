@@ -1,12 +1,21 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.Storage;
+using System;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy
 {
     class IApplicationFunctions : IpcService
     {
-        public IApplicationFunctions() { }
+        private KEvent _gpuErrorDetectedSystemEvent;
+
+        public IApplicationFunctions(Horizon system)
+        {
+            _gpuErrorDetectedSystemEvent = new KEvent(system);
+        }
 
         [Command(1)]
         // PopLaunchParameter(u32) -> object<nn::am::service::IStorage>
@@ -110,6 +119,24 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             int state = context.RequestData.ReadInt32();
 
             Logger.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
+
+        [Command(130)] // 8.0.0+
+        // GetGpuErrorDetectedSystemEvent() -> handle<copy>
+        public ResultCode GetGpuErrorDetectedSystemEvent(ServiceCtx context)
+        {
+            if (context.Process.HandleTable.GenerateHandle(_gpuErrorDetectedSystemEvent.ReadableEvent, out int gpuErrorDetectedSystemEventHandle) != KernelResult.Success)
+            {
+                throw new InvalidOperationException("Out of handles!");
+            }
+
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(gpuErrorDetectedSystemEventHandle);
+
+            // NOTE: This is used by "sdk" NSO during applet-application initialization. 
+            //       A seperate thread is setup where event-waiting is handled. 
+            //       When the Event is signaled, official sw will assert.
 
             return ResultCode.Success;
         }

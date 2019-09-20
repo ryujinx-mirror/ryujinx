@@ -1,4 +1,3 @@
-using Ryujinx.HLE.HOS.Services.Am.AppletAE;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService;
 
 namespace Ryujinx.HLE.HOS.Services.Am
