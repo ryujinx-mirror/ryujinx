@@ -61,11 +61,17 @@ namespace ARMeilleure.Instructions
 
     delegate V128 _V128_U64(ulong a1);
     delegate V128 _V128_V128(V128 a1);
+    delegate V128 _V128_V128_S32_V128(V128 a1, int a2, V128 a3);
+    delegate V128 _V128_V128_S32_V128_V128(V128 a1, int a2, V128 a3, V128 a4);
+    delegate V128 _V128_V128_S32_V128_V128_V128(V128 a1, int a2, V128 a3, V128 a4, V128 a5);
+    delegate V128 _V128_V128_S32_V128_V128_V128_V128(V128 a1, int a2, V128 a3, V128 a4, V128 a5, V128 a6);
     delegate V128 _V128_V128_U32_V128(V128 a1, uint a2, V128 a3);
     delegate V128 _V128_V128_V128(V128 a1, V128 a2);
+    delegate V128 _V128_V128_V128_S32_V128(V128 a1, V128 a2, int a3, V128 a4);
+    delegate V128 _V128_V128_V128_S32_V128_V128(V128 a1, V128 a2, int a3, V128 a4, V128 a5);
+    delegate V128 _V128_V128_V128_S32_V128_V128_V128(V128 a1, V128 a2, int a3, V128 a4, V128 a5, V128 a6);
+    delegate V128 _V128_V128_V128_S32_V128_V128_V128_V128(V128 a1, V128 a2, int a3, V128 a4, V128 a5, V128 a6, V128 a7);
     delegate V128 _V128_V128_V128_V128(V128 a1, V128 a2, V128 a3);
-    delegate V128 _V128_V128_V128_V128_V128(V128 a1, V128 a2, V128 a3, V128 a4);
-    delegate V128 _V128_V128_V128_V128_V128_V128(V128 a1, V128 a2, V128 a3, V128 a4, V128 a5);
 
     delegate void _Void();
     delegate void _Void_U64(ulong a1);

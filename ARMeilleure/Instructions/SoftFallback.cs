@@ -837,49 +837,55 @@ namespace ARMeilleure.Instructions
 #endregion
 
 #region "Table"
-        public static V128 Tbl1_V64(V128 vector, V128 tb0)
+        public static V128 Tbl1(V128 vector, int bytes, V128 tb0)
         {
-            return Tbl(vector, 8, tb0);
+            return TblOrTbx(default, vector, bytes, tb0);
         }
 
-        public static V128 Tbl1_V128(V128 vector, V128 tb0)
+        public static V128 Tbl2(V128 vector, int bytes, V128 tb0, V128 tb1)
         {
-            return Tbl(vector, 16, tb0);
+            return TblOrTbx(default, vector, bytes, tb0, tb1);
         }
 
-        public static V128 Tbl2_V64(V128 vector, V128 tb0, V128 tb1)
+        public static V128 Tbl3(V128 vector, int bytes, V128 tb0, V128 tb1, V128 tb2)
         {
-            return Tbl(vector, 8, tb0, tb1);
+            return TblOrTbx(default, vector, bytes, tb0, tb1, tb2);
         }
 
-        public static V128 Tbl2_V128(V128 vector, V128 tb0, V128 tb1)
+        public static V128 Tbl4(V128 vector, int bytes, V128 tb0, V128 tb1, V128 tb2, V128 tb3)
         {
-            return Tbl(vector, 16, tb0, tb1);
+            return TblOrTbx(default, vector, bytes, tb0, tb1, tb2, tb3);
         }
 
-        public static V128 Tbl3_V64(V128 vector, V128 tb0, V128 tb1, V128 tb2)
+        public static V128 Tbx1(V128 dest, V128 vector, int bytes, V128 tb0)
         {
-            return Tbl(vector, 8, tb0, tb1, tb2);
+            return TblOrTbx(dest, vector, bytes, tb0);
         }
 
-        public static V128 Tbl3_V128(V128 vector, V128 tb0, V128 tb1, V128 tb2)
+        public static V128 Tbx2(V128 dest, V128 vector, int bytes, V128 tb0, V128 tb1)
         {
-            return Tbl(vector, 16, tb0, tb1, tb2);
+            return TblOrTbx(dest, vector, bytes, tb0, tb1);
         }
 
-        public static V128 Tbl4_V64(V128 vector, V128 tb0, V128 tb1, V128 tb2, V128 tb3)
+        public static V128 Tbx3(V128 dest, V128 vector, int bytes, V128 tb0, V128 tb1, V128 tb2)
         {
-            return Tbl(vector, 8, tb0, tb1, tb2, tb3);
+            return TblOrTbx(dest, vector, bytes, tb0, tb1, tb2);
         }
 
-        public static V128 Tbl4_V128(V128 vector, V128 tb0, V128 tb1, V128 tb2, V128 tb3)
+        public static V128 Tbx4(V128 dest, V128 vector, int bytes, V128 tb0, V128 tb1, V128 tb2, V128 tb3)
         {
-            return Tbl(vector, 16, tb0, tb1, tb2, tb3);
+            return TblOrTbx(dest, vector, bytes, tb0, tb1, tb2, tb3);
         }
 
-        private static V128 Tbl(V128 vector, int bytes, params V128[] tb)
+        private static V128 TblOrTbx(V128 dest, V128 vector, int bytes, params V128[] tb)
         {
-            byte[] res   = new byte[16];
+            byte[] res = new byte[16];
+
+            if (dest != default)
+            {
+                Buffer.BlockCopy(dest.ToArray(), 0, res, 0, bytes);
+            }
+
             byte[] table = new byte[tb.Length * 16];
 
             for (byte index = 0; index < tb.Length; index++)

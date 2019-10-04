@@ -2,6 +2,7 @@ using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System;
+using System.Collections.Generic;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
@@ -384,79 +385,12 @@ namespace ARMeilleure.Instructions
 
         public static void Tbl_V(ArmEmitterContext context)
         {
-            OpCodeSimdTbl op = (OpCodeSimdTbl)context.CurrOp;
+            EmitTableVectorLookup(context, isTbl: true);
+        }
 
-            if (Optimizations.UseSsse3)
-            {
-                Operand n = GetVec(op.Rn);
-                Operand m = GetVec(op.Rm);
-
-                Operand mask = X86GetAllElements(context, 0x0F0F0F0F0F0F0F0FL);
-
-                Operand mMask = context.AddIntrinsic(Intrinsic.X86Pcmpgtb, m, mask);
-
-                mMask = context.AddIntrinsic(Intrinsic.X86Por, mMask, m);
-
-                Operand res = context.AddIntrinsic(Intrinsic.X86Pshufb, n, mMask);
-
-                for (int index = 1; index < op.Size; index++)
-                {
-                    Operand ni = GetVec((op.Rn + index) & 0x1f);
-
-                    Operand indexMask = X86GetAllElements(context, 0x1010101010101010L * index);
-
-                    Operand mMinusMask = context.AddIntrinsic(Intrinsic.X86Psubb, m, indexMask);
-
-                    Operand mMask2 = context.AddIntrinsic(Intrinsic.X86Pcmpgtb, mMinusMask, mask);
-
-                    mMask2 = context.AddIntrinsic(Intrinsic.X86Por, mMask2, mMinusMask);
-
-                    Operand res2 = context.AddIntrinsic(Intrinsic.X86Pshufb, ni, mMask2);
-
-                    res = context.AddIntrinsic(Intrinsic.X86Por, res, res2);
-                }
-
-                if (op.RegisterSize == RegisterSize.Simd64)
-                {
-                    res = context.VectorZeroUpper64(res);
-                }
-
-                context.Copy(GetVec(op.Rd), res);
-            }
-            else
-            {
-                Operand[] args = new Operand[1 + op.Size];
-
-                args[0] = GetVec(op.Rm);
-
-                for (int index = 0; index < op.Size; index++)
-                {
-                    args[1 + index] = GetVec((op.Rn + index) & 0x1f);
-                }
-
-                Delegate dlg = null;
-
-                switch (op.Size)
-                {
-                    case 1: dlg = op.RegisterSize == RegisterSize.Simd64
-                        ? (Delegate)new _V128_V128_V128(SoftFallback.Tbl1_V64)
-                        : (Delegate)new _V128_V128_V128(SoftFallback.Tbl1_V128); break;
-
-                    case 2: dlg = op.RegisterSize == RegisterSize.Simd64
-                        ? (Delegate)new _V128_V128_V128_V128(SoftFallback.Tbl2_V64)
-                        : (Delegate)new _V128_V128_V128_V128(SoftFallback.Tbl2_V128); break;
-
-                    case 3: dlg = op.RegisterSize == RegisterSize.Simd64
-                        ? (Delegate)new _V128_V128_V128_V128_V128(SoftFallback.Tbl3_V64)
-                        : (Delegate)new _V128_V128_V128_V128_V128(SoftFallback.Tbl3_V128); break;
-
-                    case 4: dlg = op.RegisterSize == RegisterSize.Simd64
-                        ? (Delegate)new _V128_V128_V128_V128_V128_V128(SoftFallback.Tbl4_V64)
-                        : (Delegate)new _V128_V128_V128_V128_V128_V128(SoftFallback.Tbl4_V128); break;
-                }
-
-                context.Copy(GetVec(op.Rd), context.Call(dlg, args));
-            }
+        public static void Tbx_V(ArmEmitterContext context)
+        {
+            EmitTableVectorLookup(context, isTbl: false);
         }
 
         public static void Trn1_V(ArmEmitterContext context)
@@ -575,6 +509,116 @@ namespace ARMeilleure.Instructions
             }
 
             context.Copy(GetVec(op.Rd), mask);
+        }
+
+        private static void EmitTableVectorLookup(ArmEmitterContext context, bool isTbl)
+        {
+            OpCodeSimdTbl op = (OpCodeSimdTbl)context.CurrOp;
+
+            if (Optimizations.UseSsse3)
+            {
+                Operand d = GetVec(op.Rd);
+                Operand m = GetVec(op.Rm);
+
+                Operand res;
+
+                Operand mask = X86GetAllElements(context, 0x0F0F0F0F0F0F0F0FL);
+
+                // Fast path for single register table.
+                {
+                    Operand n = GetVec(op.Rn);
+
+                    Operand mMask = context.AddIntrinsic(Intrinsic.X86Pcmpgtb, m, mask);
+                            mMask = context.AddIntrinsic(Intrinsic.X86Por, mMask, m);
+
+                    res = context.AddIntrinsic(Intrinsic.X86Pshufb, n, mMask);
+                }
+
+                for (int index = 1; index < op.Size; index++)
+                {
+                    Operand ni = GetVec((op.Rn + index) & 0x1F);
+
+                    Operand idxMask = X86GetAllElements(context, 0x1010101010101010L * index);
+
+                    Operand mSubMask = context.AddIntrinsic(Intrinsic.X86Psubb, m, idxMask);
+
+                    Operand mMask = context.AddIntrinsic(Intrinsic.X86Pcmpgtb, mSubMask, mask);
+                            mMask = context.AddIntrinsic(Intrinsic.X86Por, mMask, mSubMask);
+
+                    Operand res2 = context.AddIntrinsic(Intrinsic.X86Pshufb, ni, mMask);
+
+                    res = context.AddIntrinsic(Intrinsic.X86Por, res, res2);
+                }
+
+                if (!isTbl)
+                {
+                    Operand idxMask  = X86GetAllElements(context, (0x1010101010101010L * op.Size) - 0x0101010101010101L);
+                    Operand zeroMask = context.VectorZero();
+
+                    Operand mPosMask = context.AddIntrinsic(Intrinsic.X86Pcmpgtb, m, idxMask);
+                    Operand mNegMask = context.AddIntrinsic(Intrinsic.X86Pcmpgtb, zeroMask, m);
+
+                    Operand mMask = context.AddIntrinsic(Intrinsic.X86Por, mPosMask, mNegMask);
+
+                    Operand dMask = context.AddIntrinsic(Intrinsic.X86Pand, d, mMask);
+
+                    res = context.AddIntrinsic(Intrinsic.X86Por, res, dMask);
+                }
+
+                if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(d, res);
+            }
+            else
+            {
+                Operand d = GetVec(op.Rd);
+
+                List<Operand> args = new List<Operand>();
+
+                if (!isTbl)
+                {
+                    args.Add(d);
+                }
+
+                args.Add(GetVec(op.Rm));
+
+                args.Add(Const(op.RegisterSize == RegisterSize.Simd64 ? 8 : 16));
+
+                for (int index = 0; index < op.Size; index++)
+                {
+                    args.Add(GetVec((op.Rn + index) & 0x1F));
+                }
+
+                Delegate dlg = null;
+
+                switch (op.Size)
+                {
+                    case 1: dlg = isTbl
+                        ? (Delegate)new _V128_V128_S32_V128     (SoftFallback.Tbl1)
+                        : (Delegate)new _V128_V128_V128_S32_V128(SoftFallback.Tbx1);
+                        break;
+
+                    case 2: dlg = isTbl
+                        ? (Delegate)new _V128_V128_S32_V128_V128     (SoftFallback.Tbl2)
+                        : (Delegate)new _V128_V128_V128_S32_V128_V128(SoftFallback.Tbx2);
+                        break;
+
+                    case 3: dlg = isTbl
+                        ? (Delegate)new _V128_V128_S32_V128_V128_V128     (SoftFallback.Tbl3)
+                        : (Delegate)new _V128_V128_V128_S32_V128_V128_V128(SoftFallback.Tbx3);
+                        break;
+
+                    case 4: dlg = isTbl
+                        ? (Delegate)new _V128_V128_S32_V128_V128_V128_V128     (SoftFallback.Tbl4)
+                        : (Delegate)new _V128_V128_V128_S32_V128_V128_V128_V128(SoftFallback.Tbx4);
+                        break;
+                }
+
+                context.Copy(d, context.Call(dlg, args.ToArray()));
+            }
         }
 
         private static void EmitVectorTranspose(ArmEmitterContext context, int part)

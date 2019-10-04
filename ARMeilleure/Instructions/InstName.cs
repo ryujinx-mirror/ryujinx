@@ -375,6 +375,7 @@ namespace ARMeilleure.Instructions
         Suqadd_S,
         Suqadd_V,
         Tbl_V,
+        Tbx_V,
         Trn1_V,
         Trn2_V,
         Uaba_V,

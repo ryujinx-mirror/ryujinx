@@ -518,6 +518,7 @@ namespace ARMeilleure.Decoders
             SetA64("01011110xx100000001110xxxxxxxxxx", InstName.Suqadd_S,        InstEmit.Suqadd_S,        typeof(OpCodeSimd));
             SetA64("0>001110<<100000001110xxxxxxxxxx", InstName.Suqadd_V,        InstEmit.Suqadd_V,        typeof(OpCodeSimd));
             SetA64("0x001110000xxxxx0xx000xxxxxxxxxx", InstName.Tbl_V,           InstEmit.Tbl_V,           typeof(OpCodeSimdTbl));
+            SetA64("0x001110000xxxxx0xx100xxxxxxxxxx", InstName.Tbx_V,           InstEmit.Tbx_V,           typeof(OpCodeSimdTbl));
             SetA64("0>001110<<0xxxxx001010xxxxxxxxxx", InstName.Trn1_V,          InstEmit.Trn1_V,          typeof(OpCodeSimdReg));
             SetA64("0>001110<<0xxxxx011010xxxxxxxxxx", InstName.Trn2_V,          InstEmit.Trn2_V,          typeof(OpCodeSimdReg));
             SetA64("0x101110<<1xxxxx011111xxxxxxxxxx", InstName.Uaba_V,          InstEmit.Uaba_V,          typeof(OpCodeSimdReg));

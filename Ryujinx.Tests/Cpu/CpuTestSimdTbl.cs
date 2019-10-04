@@ -98,55 +98,60 @@ namespace Ryujinx.Tests.Cpu
 #endregion
 
 #region "ValueSource (Opcodes)"
-        private static uint[] _SingleRegTbl_V_8B_16B_()
+        private static uint[] _SingleRegisterTable_V_8B_16B_()
         {
             return new uint[]
             {
                 0x0E000000u, // TBL V0.8B, { V0.16B }, V0.8B
+                0x0E001000u  // TBX V0.8B, { V0.16B }, V0.8B
             };
         }
 
-        private static uint[] _TwoRegTbl_V_8B_16B_()
+        private static uint[] _TwoRegisterTable_V_8B_16B_()
         {
             return new uint[]
             {
                 0x0E002000u, // TBL V0.8B, { V0.16B, V1.16B }, V0.8B
+                0x0E003000u  // TBX V0.8B, { V0.16B, V1.16B }, V0.8B
             };
         }
 
-        private static uint[] _ThreeRegTbl_V_8B_16B_()
+        private static uint[] _ThreeRegisterTable_V_8B_16B_()
         {
             return new uint[]
             {
                 0x0E004000u, // TBL V0.8B, { V0.16B, V1.16B, V2.16B }, V0.8B
+                0x0E005000u  // TBX V0.8B, { V0.16B, V1.16B, V2.16B }, V0.8B
             };
         }
 
-        private static uint[] _FourRegTbl_V_8B_16B_()
+        private static uint[] _FourRegisterTable_V_8B_16B_()
         {
             return new uint[]
             {
                 0x0E006000u, // TBL V0.8B, { V0.16B, V1.16B, V2.16B, V3.16B }, V0.8B
+                0x0E006000u  // TBX V0.8B, { V0.16B, V1.16B, V2.16B, V3.16B }, V0.8B
             };
         }
 #endregion
 
+        private const int RndCntDest = 2;
         private const int RndCntTbls = 2;
         private const int RndCntIdxs = 2;
 
-        [Test, Pairwise, Description("TBL <Vd>.<Ta>, { <Vn>.16B }, <Vm>.<Ta>")]
-        public void SingleRegTbl_V_8B_16B([ValueSource("_SingleRegTbl_V_8B_16B_")] uint opcodes,
-                                          [Values(0u)] uint rd,
-                                          [Values(1u)] uint rn,
-                                          [Values(2u)] uint rm,
-                                          [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                          [ValueSource("_GenIdxsForTbl1_")] ulong indexes,
-                                          [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
+        [Test, Pairwise]
+        public void SingleRegisterTable_V_8B_16B([ValueSource("_SingleRegisterTable_V_8B_16B_")] uint opcodes,
+                                                 [Values(0u)] uint rd,
+                                                 [Values(1u)] uint rn,
+                                                 [Values(2u)] uint rm,
+                                                 [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
+                                                 [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
+                                                 [ValueSource("_GenIdxsForTbl1_")] ulong indexes,
+                                                 [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            ulong z = TestContext.CurrentContext.Random.NextULong();
             V128 v0 = MakeVectorE0E1(z, z);
             V128 v1 = MakeVectorE0E1(table0, table0);
             V128 v2 = MakeVectorE0E1(indexes, q == 1u ? indexes : 0ul);
@@ -156,20 +161,20 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("TBL <Vd>.<Ta>, { <Vn>.16B, <Vn+1>.16B }, <Vm>.<Ta>")]
-        public void TwoRegTbl_V_8B_16B([ValueSource("_TwoRegTbl_V_8B_16B_")] uint opcodes,
-                                       [Values(0u)] uint rd,
-                                       [Values(1u)] uint rn,
-                                       [Values(3u)] uint rm,
-                                       [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                       [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
-                                       [ValueSource("_GenIdxsForTbl2_")] ulong indexes,
-                                       [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
+        [Test, Pairwise]
+        public void TwoRegisterTable_V_8B_16B([ValueSource("_TwoRegisterTable_V_8B_16B_")] uint opcodes,
+                                              [Values(0u)] uint rd,
+                                              [Values(1u)] uint rn,
+                                              [Values(3u)] uint rm,
+                                              [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
+                                              [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
+                                              [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
+                                              [ValueSource("_GenIdxsForTbl2_")] ulong indexes,
+                                              [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            ulong z = TestContext.CurrentContext.Random.NextULong();
             V128 v0 = MakeVectorE0E1(z, z);
             V128 v1 = MakeVectorE0E1(table0, table0);
             V128 v2 = MakeVectorE0E1(table1, table1);
@@ -180,20 +185,20 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("TBL <Vd>.<Ta>, { <Vn>.16B, <Vn+1>.16B }, <Vm>.<Ta>")]
-        public void Mod_TwoRegTbl_V_8B_16B([ValueSource("_TwoRegTbl_V_8B_16B_")] uint opcodes,
-                                           [Values(30u, 1u)] uint rd,
-                                           [Values(31u)]     uint rn,
-                                           [Values(1u, 30u)] uint rm,
-                                           [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                           [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
-                                           [ValueSource("_GenIdxsForTbl2_")] ulong indexes,
-                                           [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
+        [Test, Pairwise]
+        public void Mod_TwoRegisterTable_V_8B_16B([ValueSource("_TwoRegisterTable_V_8B_16B_")] uint opcodes,
+                                                  [Values(30u, 1u)] uint rd,
+                                                  [Values(31u)]     uint rn,
+                                                  [Values(1u, 30u)] uint rm,
+                                                  [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
+                                                  [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
+                                                  [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
+                                                  [ValueSource("_GenIdxsForTbl2_")] ulong indexes,
+                                                  [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            ulong z = TestContext.CurrentContext.Random.NextULong();
             V128 v30 = MakeVectorE0E1(z, z);
             V128 v31 = MakeVectorE0E1(table0, table0);
             V128 v0  = MakeVectorE0E1(table1, table1);
@@ -204,21 +209,21 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("TBL <Vd>.<Ta>, { <Vn>.16B, <Vn+1>.16B, <Vn+2>.16B }, <Vm>.<Ta>")]
-        public void ThreeRegTbl_V_8B_16B([ValueSource("_ThreeRegTbl_V_8B_16B_")] uint opcodes,
-                                         [Values(0u)] uint rd,
-                                         [Values(1u)] uint rn,
-                                         [Values(4u)] uint rm,
-                                         [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                         [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
-                                         [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table2,
-                                         [ValueSource("_GenIdxsForTbl3_")] ulong indexes,
-                                         [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
+        [Test, Pairwise]
+        public void ThreeRegisterTable_V_8B_16B([ValueSource("_ThreeRegisterTable_V_8B_16B_")] uint opcodes,
+                                                [Values(0u)] uint rd,
+                                                [Values(1u)] uint rn,
+                                                [Values(4u)] uint rm,
+                                                [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
+                                                [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
+                                                [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
+                                                [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table2,
+                                                [ValueSource("_GenIdxsForTbl3_")] ulong indexes,
+                                                [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            ulong z = TestContext.CurrentContext.Random.NextULong();
             V128 v0 = MakeVectorE0E1(z, z);
             V128 v1 = MakeVectorE0E1(table0, table0);
             V128 v2 = MakeVectorE0E1(table1, table1);
@@ -230,21 +235,21 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("TBL <Vd>.<Ta>, { <Vn>.16B, <Vn+1>.16B, <Vn+2>.16B }, <Vm>.<Ta>")]
-        public void Mod_ThreeRegTbl_V_8B_16B([ValueSource("_ThreeRegTbl_V_8B_16B_")] uint opcodes,
-                                             [Values(30u, 2u)] uint rd,
-                                             [Values(31u)]     uint rn,
-                                             [Values(2u, 30u)] uint rm,
-                                             [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                             [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
-                                             [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table2,
-                                             [ValueSource("_GenIdxsForTbl3_")] ulong indexes,
-                                             [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
+        [Test, Pairwise]
+        public void Mod_ThreeRegisterTable_V_8B_16B([ValueSource("_ThreeRegisterTable_V_8B_16B_")] uint opcodes,
+                                                    [Values(30u, 2u)] uint rd,
+                                                    [Values(31u)]     uint rn,
+                                                    [Values(2u, 30u)] uint rm,
+                                                    [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
+                                                    [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
+                                                    [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
+                                                    [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table2,
+                                                    [ValueSource("_GenIdxsForTbl3_")] ulong indexes,
+                                                    [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            ulong z = TestContext.CurrentContext.Random.NextULong();
             V128 v30 = MakeVectorE0E1(z, z);
             V128 v31 = MakeVectorE0E1(table0, table0);
             V128 v0  = MakeVectorE0E1(table1, table1);
@@ -256,22 +261,22 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("TBL <Vd>.<Ta>, { <Vn>.16B, <Vn+1>.16B, <Vn+2>.16B, <Vn+3>.16B }, <Vm>.<Ta>")]
-        public void FourRegTbl_V_8B_16B([ValueSource("_FourRegTbl_V_8B_16B_")] uint opcodes,
-                                        [Values(0u)] uint rd,
-                                        [Values(1u)] uint rn,
-                                        [Values(5u)] uint rm,
-                                        [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                        [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
-                                        [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table2,
-                                        [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table3,
-                                        [ValueSource("_GenIdxsForTbl4_")] ulong indexes,
-                                        [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
+        [Test, Pairwise]
+        public void FourRegisterTable_V_8B_16B([ValueSource("_FourRegisterTable_V_8B_16B_")] uint opcodes,
+                                               [Values(0u)] uint rd,
+                                               [Values(1u)] uint rn,
+                                               [Values(5u)] uint rm,
+                                               [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
+                                               [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
+                                               [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
+                                               [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table2,
+                                               [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table3,
+                                               [ValueSource("_GenIdxsForTbl4_")] ulong indexes,
+                                               [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            ulong z = TestContext.CurrentContext.Random.NextULong();
             V128 v0 = MakeVectorE0E1(z, z);
             V128 v1 = MakeVectorE0E1(table0, table0);
             V128 v2 = MakeVectorE0E1(table1, table1);
@@ -284,22 +289,22 @@ namespace Ryujinx.Tests.Cpu
             CompareAgainstUnicorn();
         }
 
-        [Test, Pairwise, Description("TBL <Vd>.<Ta>, { <Vn>.16B, <Vn+1>.16B, <Vn+2>.16B, <Vn+3>.16B }, <Vm>.<Ta>")]
-        public void Mod_FourRegTbl_V_8B_16B([ValueSource("_FourRegTbl_V_8B_16B_")] uint opcodes,
-                                            [Values(30u, 3u)] uint rd,
-                                            [Values(31u)]     uint rn,
-                                            [Values(3u, 30u)] uint rm,
-                                            [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
-                                            [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
-                                            [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table2,
-                                            [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table3,
-                                            [ValueSource("_GenIdxsForTbl4_")] ulong indexes,
-                                            [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
+        [Test, Pairwise]
+        public void Mod_FourRegisterTable_V_8B_16B([ValueSource("_FourRegisterTable_V_8B_16B_")] uint opcodes,
+                                                   [Values(30u, 3u)] uint rd,
+                                                   [Values(31u)]     uint rn,
+                                                   [Values(3u, 30u)] uint rm,
+                                                   [ValueSource("_8B_")] [Random(RndCntDest)] ulong z,
+                                                   [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table0,
+                                                   [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table1,
+                                                   [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table2,
+                                                   [ValueSource("_8B_")] [Random(RndCntTbls)] ulong table3,
+                                                   [ValueSource("_GenIdxsForTbl4_")] ulong indexes,
+                                                   [Values(0b0u, 0b1u)] uint q) // <8B, 16B>
         {
             opcodes |= ((rm & 31) << 16) | ((rn & 31) << 5) | ((rd & 31) << 0);
             opcodes |= ((q & 1) << 30);
 
-            ulong z = TestContext.CurrentContext.Random.NextULong();
             V128 v30 = MakeVectorE0E1(z, z);
             V128 v31 = MakeVectorE0E1(table0, table0);
             V128 v0  = MakeVectorE0E1(table1, table1);
