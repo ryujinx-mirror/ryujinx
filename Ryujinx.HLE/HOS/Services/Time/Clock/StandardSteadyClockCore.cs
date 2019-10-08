@@ -1,48 +1,29 @@
 ﻿using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.HLE.HOS.Services.Pcv.Bpc;
 
 namespace Ryujinx.HLE.HOS.Services.Time.Clock
 {
     class StandardSteadyClockCore : SteadyClockCore
     {
-        private long         _setupValue;
-        private ResultCode   _setupResultCode;
-        private bool         _isRtcResetDetected;
+        private TimeSpanType _setupValue;
         private TimeSpanType _testOffset;
         private TimeSpanType _internalOffset;
+        private TimeSpanType _cachedRawTimePoint;
 
-        private static StandardSteadyClockCore _instance;
-
-        public static StandardSteadyClockCore Instance
+        public StandardSteadyClockCore()
         {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new StandardSteadyClockCore();
-                }
-
-                return _instance;
-            }
-        }
-
-        private StandardSteadyClockCore()
-        {
-            _testOffset     = new TimeSpanType(0);
-            _internalOffset = new TimeSpanType(0);
+            _setupValue         = TimeSpanType.Zero;
+            _testOffset         = TimeSpanType.Zero;
+            _internalOffset     = TimeSpanType.Zero;
+            _cachedRawTimePoint = TimeSpanType.Zero;
         }
 
         public override SteadyClockTimePoint GetTimePoint(KThread thread)
         {
             SteadyClockTimePoint result = new SteadyClockTimePoint
             {
-                TimePoint     = 0,
+                TimePoint     = GetCurrentRawTimePoint(thread).ToSeconds(),
                 ClockSourceId = GetClockSourceId()
             };
-
-            TimeSpanType ticksTimeSpan = TimeSpanType.FromTicks(thread.Context.CntpctEl0, thread.Context.CntfrqEl0);
-
-            result.TimePoint = _setupValue + ticksTimeSpan.ToSeconds();
 
             return result;
         }
@@ -57,16 +38,6 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
             _testOffset = testOffset;
         }
 
-        public override ResultCode GetRtcValue(out ulong rtcValue)
-        {
-            return (ResultCode)IRtcManager.GetExternalRtcValue(out rtcValue);
-        }
-
-        public bool IsRtcResetDetected()
-        {
-            return _isRtcResetDetected;
-        }
-
         public override TimeSpanType GetInternalOffset()
         {
             return _internalOffset;
@@ -77,31 +48,35 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
             _internalOffset = internalOffset;
         }
 
-        public override ResultCode GetSetupResultValue()
+        public override TimeSpanType GetCurrentRawTimePoint(KThread thread)
         {
-            return _setupResultCode;
-        }
+            TimeSpanType ticksTimeSpan;
 
-        public void ConfigureSetupValue()
-        {
-            int retry = 0;
-
-            ResultCode result = ResultCode.Success;
-
-            while (retry < 20)
+            // As this may be called before the guest code, we support passing a null thread to make this api usable.
+            if (thread == null)
             {
-                result = (ResultCode)IRtcManager.GetExternalRtcValue(out ulong rtcValue);
-
-                if (result == ResultCode.Success)
-                {
-                    _setupValue = (long)rtcValue;
-                    break;
-                }
-
-                retry++;
+                ticksTimeSpan = TimeSpanType.FromSeconds(0);
+            }
+            else
+            {
+                ticksTimeSpan = TimeSpanType.FromTicks(thread.Context.CntpctEl0, thread.Context.CntfrqEl0);
             }
 
-            _setupResultCode = result;
+            TimeSpanType rawTimePoint = new TimeSpanType(_setupValue.NanoSeconds + ticksTimeSpan.NanoSeconds);
+
+            if (rawTimePoint.NanoSeconds < _cachedRawTimePoint.NanoSeconds)
+            {
+                rawTimePoint.NanoSeconds = _cachedRawTimePoint.NanoSeconds;
+            }
+
+            _cachedRawTimePoint = rawTimePoint;
+
+            return rawTimePoint;
+        }
+
+        public void SetSetupValue(TimeSpanType setupValue)
+        {
+            _setupValue = setupValue;
         }
     }
 }

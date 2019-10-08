@@ -1,4 +1,5 @@
 ﻿using Ryujinx.HLE.HOS.Kernel.Threading;
+using System;
 
 namespace Ryujinx.HLE.HOS.Services.Time.Clock
 {
@@ -7,35 +8,25 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
         private StandardLocalSystemClockCore   _localSystemClockCore;
         private StandardNetworkSystemClockCore _networkSystemClockCore;
         private bool                           _autoCorrectionEnabled;
-
-        private static StandardUserSystemClockCore _instance;
-
-        public static StandardUserSystemClockCore Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new StandardUserSystemClockCore(StandardLocalSystemClockCore.Instance, StandardNetworkSystemClockCore.Instance);
-                }
-
-                return _instance;
-            }
-        }
+        private SteadyClockTimePoint           _autoCorrectionTime;
+        private KEvent                         _autoCorrectionEvent;
 
         public StandardUserSystemClockCore(StandardLocalSystemClockCore localSystemClockCore, StandardNetworkSystemClockCore networkSystemClockCore) : base(localSystemClockCore.GetSteadyClockCore())
         {
             _localSystemClockCore   = localSystemClockCore;
             _networkSystemClockCore = networkSystemClockCore;
             _autoCorrectionEnabled  = false;
+            _autoCorrectionTime     = SteadyClockTimePoint.GetRandom();
+            _autoCorrectionEvent    = null;
         }
 
-        public override ResultCode Flush(SystemClockContext context)
+        protected override ResultCode Flush(SystemClockContext context)
         {
-            return ResultCode.NotImplemented;
+            // As UserSystemClock isn't a real system clock, this shouldn't happens.
+            throw new NotImplementedException();
         }
 
-        public override ResultCode GetSystemClockContext(KThread thread, out SystemClockContext context)
+        public override ResultCode GetClockContext(KThread thread, out SystemClockContext context)
         {
             ResultCode result = ApplyAutomaticCorrection(thread, false);
 
@@ -43,13 +34,13 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 
             if (result == ResultCode.Success)
             {
-                return _localSystemClockCore.GetSystemClockContext(thread, out context);
+                return _localSystemClockCore.GetClockContext(thread, out context);
             }
 
             return result;
         }
 
-        public override ResultCode SetSystemClockContext(SystemClockContext context)
+        public override ResultCode SetClockContext(SystemClockContext context)
         {
             return ResultCode.NotImplemented;
         }
@@ -60,15 +51,20 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 
             if (_autoCorrectionEnabled != autoCorrectionEnabled && _networkSystemClockCore.IsClockSetup(thread))
             {
-                result = _networkSystemClockCore.GetSystemClockContext(thread, out SystemClockContext context);
+                result = _networkSystemClockCore.GetClockContext(thread, out SystemClockContext context);
 
                 if (result == ResultCode.Success)
                 {
-                    _localSystemClockCore.SetSystemClockContext(context);
+                    _localSystemClockCore.SetClockContext(context);
                 }
             }
 
             return result;
+        }
+
+        internal void CreateAutomaticCorrectionEvent(Horizon system)
+        {
+            _autoCorrectionEvent = new KEvent(system);
         }
 
         public ResultCode SetAutomaticCorrectionEnabled(KThread thread, bool autoCorrectionEnabled)
@@ -86,6 +82,26 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
         public bool IsAutomaticCorrectionEnabled()
         {
             return _autoCorrectionEnabled;
+        }
+
+        public KReadableEvent GetAutomaticCorrectionReadableEvent()
+        {
+            return _autoCorrectionEvent.ReadableEvent;
+        }
+
+        public void SetAutomaticCorrectionUpdatedTime(SteadyClockTimePoint steadyClockTimePoint)
+        {
+            _autoCorrectionTime = steadyClockTimePoint;
+        }
+
+        public SteadyClockTimePoint GetAutomaticCorrectionUpdatedTime()
+        {
+            return _autoCorrectionTime;
+        }
+
+        public void SignalAutomaticCorrectionEvent()
+        {
+            _autoCorrectionEvent.WritableEvent.Signal();
         }
     }
 }

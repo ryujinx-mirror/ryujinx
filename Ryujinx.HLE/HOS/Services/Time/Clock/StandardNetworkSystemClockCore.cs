@@ -6,31 +6,9 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
     {
         private TimeSpanType _standardNetworkClockSufficientAccuracy;
 
-        private static StandardNetworkSystemClockCore _instance;
-
-        public static StandardNetworkSystemClockCore Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new StandardNetworkSystemClockCore(StandardSteadyClockCore.Instance);
-                }
-
-                return _instance;
-            }
-        }
-
         public StandardNetworkSystemClockCore(StandardSteadyClockCore steadyClockCore) : base(steadyClockCore)
         {
             _standardNetworkClockSufficientAccuracy = new TimeSpanType(0);
-        }
-
-        public override ResultCode Flush(SystemClockContext context)
-        {
-            // TODO: set:sys SetNetworkSystemClockContext
-
-            return ResultCode.Success;
         }
 
         public bool IsStandardNetworkSystemClockAccuracySufficient(KThread thread)
@@ -40,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 
             bool isStandardNetworkClockSufficientAccuracy = false;
 
-            ResultCode result = GetSystemClockContext(thread, out SystemClockContext context);
+            ResultCode result = GetClockContext(thread, out SystemClockContext context);
 
             if (result == ResultCode.Success && context.SteadyTimePoint.GetSpanBetween(currentTimePoint, out long outSpan) == ResultCode.Success)
             {

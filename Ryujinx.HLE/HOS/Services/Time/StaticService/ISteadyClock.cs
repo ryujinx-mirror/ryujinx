@@ -5,42 +5,78 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
 {
     class ISteadyClock : IpcService
     {
+        private SteadyClockCore _steadyClock;
+        private bool            _writePermission;
+        private bool            _bypassUninitializedClock;
+
+        public ISteadyClock(SteadyClockCore steadyClock, bool writePermission, bool bypassUninitializedClock)
+        {
+            _steadyClock              = steadyClock;
+            _writePermission          = writePermission;
+            _bypassUninitializedClock = bypassUninitializedClock;
+        }
+
         [Command(0)]
         // GetCurrentTimePoint() -> nn::time::SteadyClockTimePoint
         public ResultCode GetCurrentTimePoint(ServiceCtx context)
         {
-            SteadyClockTimePoint currentTimePoint = StandardSteadyClockCore.Instance.GetCurrentTimePoint(context.Thread);
+            if (!_bypassUninitializedClock && !_steadyClock.IsInitialized())
+            {
+                return ResultCode.UninitializedClock;
+            }
+
+            SteadyClockTimePoint currentTimePoint = _steadyClock.GetCurrentTimePoint(context.Thread);
 
             context.ResponseData.WriteStruct(currentTimePoint);
 
             return ResultCode.Success;
         }
 
-        [Command(1)]
+        [Command(2)]
         // GetTestOffset() -> nn::TimeSpanType
         public ResultCode GetTestOffset(ServiceCtx context)
         {
-            context.ResponseData.WriteStruct(StandardSteadyClockCore.Instance.GetTestOffset());
+            if (!_bypassUninitializedClock && !_steadyClock.IsInitialized())
+            {
+                return ResultCode.UninitializedClock;
+            }
+
+            context.ResponseData.WriteStruct(_steadyClock.GetTestOffset());
 
             return ResultCode.Success;
         }
 
-        [Command(2)]
+        [Command(3)]
         // SetTestOffset(nn::TimeSpanType)
         public ResultCode SetTestOffset(ServiceCtx context)
         {
+            if (!_writePermission)
+            {
+                return ResultCode.PermissionDenied;
+            }
+
+            if (!_bypassUninitializedClock && !_steadyClock.IsInitialized())
+            {
+                return ResultCode.UninitializedClock;
+            }
+
             TimeSpanType testOffset = context.RequestData.ReadStruct<TimeSpanType>();
 
-            StandardSteadyClockCore.Instance.SetTestOffset(testOffset);
+            _steadyClock.SetTestOffset(testOffset);
 
-            return 0;
+            return ResultCode.Success;
         }
 
         [Command(100)] // 2.0.0+
         // GetRtcValue() -> u64
         public ResultCode GetRtcValue(ServiceCtx context)
         {
-            ResultCode result = StandardSteadyClockCore.Instance.GetRtcValue(out ulong rtcValue);
+            if (!_bypassUninitializedClock && !_steadyClock.IsInitialized())
+            {
+                return ResultCode.UninitializedClock;
+            }
+
+            ResultCode result = _steadyClock.GetRtcValue(out ulong rtcValue);
 
             if (result == ResultCode.Success)
             {
@@ -54,7 +90,12 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
         // IsRtcResetDetected() -> bool
         public ResultCode IsRtcResetDetected(ServiceCtx context)
         {
-            context.ResponseData.Write(StandardSteadyClockCore.Instance.IsRtcResetDetected());
+            if (!_bypassUninitializedClock && !_steadyClock.IsInitialized())
+            {
+                return ResultCode.UninitializedClock;
+            }
+
+            context.ResponseData.Write(_steadyClock.IsRtcResetDetected());
 
             return ResultCode.Success;
         }
@@ -63,7 +104,12 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
         // GetSetupResultValue() -> u32
         public ResultCode GetSetupResultValue(ServiceCtx context)
         {
-            context.ResponseData.Write((uint)StandardSteadyClockCore.Instance.GetSetupResultValue());
+            if (!_bypassUninitializedClock && !_steadyClock.IsInitialized())
+            {
+                return ResultCode.UninitializedClock;
+            }
+
+            context.ResponseData.Write((uint)_steadyClock.GetSetupResultValue());
 
             return ResultCode.Success;
         }
@@ -72,7 +118,12 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
         // GetInternalOffset() -> nn::TimeSpanType
         public ResultCode GetInternalOffset(ServiceCtx context)
         {
-            context.ResponseData.WriteStruct(StandardSteadyClockCore.Instance.GetInternalOffset());
+            if (!_bypassUninitializedClock && !_steadyClock.IsInitialized())
+            {
+                return ResultCode.UninitializedClock;
+            }
+
+            context.ResponseData.WriteStruct(_steadyClock.GetInternalOffset());
 
             return ResultCode.Success;
         }
@@ -81,9 +132,19 @@ namespace Ryujinx.HLE.HOS.Services.Time.StaticService
         // SetInternalOffset(nn::TimeSpanType)
         public ResultCode SetInternalOffset(ServiceCtx context)
         {
+            if (!_writePermission)
+            {
+                return ResultCode.PermissionDenied;
+            }
+
+            if (!_bypassUninitializedClock && !_steadyClock.IsInitialized())
+            {
+                return ResultCode.UninitializedClock;
+            }
+
             TimeSpanType internalOffset = context.RequestData.ReadStruct<TimeSpanType>();
 
-            StandardSteadyClockCore.Instance.SetInternalOffset(internalOffset);
+            _steadyClock.SetInternalOffset(internalOffset);
 
             return ResultCode.Success;
         }

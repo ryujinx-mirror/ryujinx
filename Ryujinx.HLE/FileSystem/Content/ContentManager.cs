@@ -1,6 +1,6 @@
 ﻿using LibHac.Fs;
 using LibHac.Fs.NcaUtils;
-using Ryujinx.HLE.HOS.Services.Time.TimeZone;
+using Ryujinx.HLE.HOS.Services.Time;
 using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
@@ -143,7 +143,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                 }
             }
 
-            TimeZoneManager.Instance.Initialize(_device);
+            TimeManager.Instance.InitializeTimeZone(_device);
         }
 
         public void ClearEntry(long titleId, ContentType contentType, StorageId storageId)

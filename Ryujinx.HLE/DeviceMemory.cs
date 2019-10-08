@@ -59,6 +59,11 @@ namespace Ryujinx.HLE
             return *((ulong*)(_ramPtr + position));
         }
 
+        public unsafe T ReadStruct<T>(long position)
+        {
+            return Marshal.PtrToStructure<T>((IntPtr)(_ramPtr + position));
+        }
+
         public void WriteSByte(long position, sbyte value)
         {
             WriteByte(position, (byte)value);

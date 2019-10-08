@@ -12,28 +12,30 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Time
 {
-    [Service("time:a", TimePermissions.Applet)]
     [Service("time:s", TimePermissions.System)]
-    [Service("time:u", TimePermissions.User)]
-    [Service("time:p", TimePermissions.System)] // 9.0.0+ - TODO: Fix the permission.
-    class IStaticService : IpcService
+    [Service("time:su", TimePermissions.SystemUpdate)]
+    class IStaticServiceForPsc : IpcService
     {
+        private TimeManager     _timeManager;
         private TimePermissions _permissions;
 
         private int _timeSharedMemoryNativeHandle = 0;
 
-        private static readonly DateTime StartupDate = DateTime.UtcNow;
+        public IStaticServiceForPsc(ServiceCtx context, TimePermissions permissions) : this(TimeManager.Instance, permissions) {}
 
-        public IStaticService(ServiceCtx context, TimePermissions permissions)
+        public IStaticServiceForPsc(TimeManager manager, TimePermissions permissions)
         {
             _permissions = permissions;
+            _timeManager = manager;
         }
 
         [Command(0)]
         // GetStandardUserSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public ResultCode GetStandardUserSystemClock(ServiceCtx context)
         {
-            MakeObject(context, new ISystemClock(StandardUserSystemClockCore.Instance, (_permissions & TimePermissions.UserSystemClockWritableMask) != 0));
+            MakeObject(context, new ISystemClock(_timeManager.StandardUserSystemClock,
+                (_permissions & TimePermissions.UserSystemClockWritableMask) != 0,
+                (_permissions & TimePermissions.BypassUninitialized) != 0));
 
             return ResultCode.Success;
         }
@@ -42,7 +44,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetStandardNetworkSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public ResultCode GetStandardNetworkSystemClock(ServiceCtx context)
         {
-            MakeObject(context, new ISystemClock(StandardNetworkSystemClockCore.Instance, (_permissions & TimePermissions.NetworkSystemClockWritableMask) != 0));
+            MakeObject(context, new ISystemClock(_timeManager.StandardNetworkSystemClock,
+                (_permissions & TimePermissions.NetworkSystemClockWritableMask) != 0,
+                (_permissions & TimePermissions.BypassUninitialized) != 0));
 
             return ResultCode.Success;
         }
@@ -51,7 +55,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetStandardSteadyClock() -> object<nn::timesrv::detail::service::ISteadyClock>
         public ResultCode GetStandardSteadyClock(ServiceCtx context)
         {
-            MakeObject(context, new ISteadyClock());
+            MakeObject(context, new ISteadyClock(_timeManager.StandardSteadyClock,
+                (_permissions & TimePermissions.SteadyClockWritableMask) != 0,
+                (_permissions & TimePermissions.BypassUninitialized) != 0));
 
             return ResultCode.Success;
         }
@@ -60,7 +66,8 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetTimeZoneService() -> object<nn::timesrv::detail::service::ITimeZoneService>
         public ResultCode GetTimeZoneService(ServiceCtx context)
         {
-            MakeObject(context, new ITimeZoneService());
+            MakeObject(context, new ITimeZoneServiceForPsc(_timeManager.TimeZone.Manager,
+                (_permissions & TimePermissions.TimeZoneWritableMask) != 0));
 
             return ResultCode.Success;
         }
@@ -69,7 +76,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetStandardLocalSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public ResultCode GetStandardLocalSystemClock(ServiceCtx context)
         {
-            MakeObject(context, new ISystemClock(StandardLocalSystemClockCore.Instance, (_permissions & TimePermissions.LocalSystemClockWritableMask) != 0));
+            MakeObject(context, new ISystemClock(_timeManager.StandardLocalSystemClock,
+                (_permissions & TimePermissions.LocalSystemClockWritableMask) != 0,
+                (_permissions & TimePermissions.BypassUninitialized) != 0));
 
             return ResultCode.Success;
         }
@@ -78,7 +87,9 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // GetEphemeralNetworkSystemClock() -> object<nn::timesrv::detail::service::ISystemClock>
         public ResultCode GetEphemeralNetworkSystemClock(ServiceCtx context)
         {
-            MakeObject(context, new ISystemClock(StandardNetworkSystemClockCore.Instance, false));
+            MakeObject(context, new ISystemClock(_timeManager.StandardNetworkSystemClock,
+                (_permissions & TimePermissions.NetworkSystemClockWritableMask) != 0,
+                (_permissions & TimePermissions.BypassUninitialized) != 0));
 
             return ResultCode.Success;
         }
@@ -89,7 +100,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
         {
             if (_timeSharedMemoryNativeHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(context.Device.System.TimeSharedMem, out _timeSharedMemoryNativeHandle) != KernelResult.Success)
+                if (context.Process.HandleTable.GenerateHandle(_timeManager.SharedMemory.GetSharedMemory(), out _timeSharedMemoryNativeHandle) != KernelResult.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }
@@ -100,11 +111,34 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return ResultCode.Success;
         }
 
+        [Command(50)] // 4.0.0+
+        // SetStandardSteadyClockInternalOffset(nn::TimeSpanType internal_offset)
+        public ResultCode SetStandardSteadyClockInternalOffset(ServiceCtx context)
+        {
+            // This is only implemented in glue's StaticService.
+            return ResultCode.NotImplemented;
+        }
+
+        [Command(51)] // 9.0.0+
+        // GetStandardSteadyClockRtcValue() -> u64
+        public ResultCode GetStandardSteadyClockRtcValue(ServiceCtx context)
+        {
+            // This is only implemented in glue's StaticService.
+            return ResultCode.NotImplemented;
+        }
+
         [Command(100)]
         // IsStandardUserSystemClockAutomaticCorrectionEnabled() -> bool
         public ResultCode IsStandardUserSystemClockAutomaticCorrectionEnabled(ServiceCtx context)
         {
-            context.ResponseData.Write(StandardUserSystemClockCore.Instance.IsAutomaticCorrectionEnabled());
+            StandardUserSystemClockCore userClock = _timeManager.StandardUserSystemClock;
+
+            if (!userClock.IsInitialized())
+            {
+                return ResultCode.UninitializedClock;
+            }
+
+            context.ResponseData.Write(userClock.IsAutomaticCorrectionEnabled());
 
             return ResultCode.Success;
         }
@@ -113,6 +147,14 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // SetStandardUserSystemClockAutomaticCorrectionEnabled(b8)
         public ResultCode SetStandardUserSystemClockAutomaticCorrectionEnabled(ServiceCtx context)
         {
+            SteadyClockCore             steadyClock = _timeManager.StandardSteadyClock;
+            StandardUserSystemClockCore userClock   = _timeManager.StandardUserSystemClock;
+
+            if (!userClock.IsInitialized() || !steadyClock.IsInitialized())
+            {
+                return ResultCode.UninitializedClock;
+            }
+
             if ((_permissions & TimePermissions.UserSystemClockWritableMask) == 0)
             {
                 return ResultCode.PermissionDenied;
@@ -120,14 +162,50 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
             bool autoCorrectionEnabled = context.RequestData.ReadBoolean();
 
-            return StandardUserSystemClockCore.Instance.SetAutomaticCorrectionEnabled(context.Thread, autoCorrectionEnabled);
+            ResultCode result = userClock.SetAutomaticCorrectionEnabled(context.Thread, autoCorrectionEnabled);
+
+            if (result == ResultCode.Success)
+            {
+                _timeManager.SharedMemory.SetAutomaticCorrectionEnabled(autoCorrectionEnabled);
+
+                SteadyClockTimePoint currentTimePoint = userClock.GetSteadyClockCore().GetCurrentTimePoint(context.Thread);
+
+                userClock.SetAutomaticCorrectionUpdatedTime(currentTimePoint);
+                userClock.SignalAutomaticCorrectionEvent();
+            }
+
+            return result;
+        }
+
+        [Command(102)] // 5.0.0+
+        // GetStandardUserSystemClockInitialYear() -> u32
+        public ResultCode GetStandardUserSystemClockInitialYear(ServiceCtx context)
+        {
+            // This is only implemented in glue's StaticService.
+            return ResultCode.NotImplemented;
         }
 
         [Command(200)] // 3.0.0+
         // IsStandardNetworkSystemClockAccuracySufficient() -> bool
         public ResultCode IsStandardNetworkSystemClockAccuracySufficient(ServiceCtx context)
         {
-            context.ResponseData.Write(StandardNetworkSystemClockCore.Instance.IsStandardNetworkSystemClockAccuracySufficient(context.Thread));
+            context.ResponseData.Write(_timeManager.StandardNetworkSystemClock.IsStandardNetworkSystemClockAccuracySufficient(context.Thread));
+
+            return ResultCode.Success;
+        }
+
+        [Command(201)] // 6.0.0+
+        // GetStandardUserSystemClockAutomaticCorrectionUpdatedTime() -> nn::time::SteadyClockTimePoint
+        public ResultCode GetStandardUserSystemClockAutomaticCorrectionUpdatedTime(ServiceCtx context)
+        {
+            StandardUserSystemClockCore userClock = _timeManager.StandardUserSystemClock;
+
+            if (!userClock.IsInitialized())
+            {
+                return ResultCode.UninitializedClock;
+            }
+
+            context.ResponseData.WriteStruct(userClock.GetAutomaticCorrectionUpdatedTime());
 
             return ResultCode.Success;
         }
@@ -136,8 +214,15 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // CalculateMonotonicSystemClockBaseTimePoint(nn::time::SystemClockContext) -> s64
         public ResultCode CalculateMonotonicSystemClockBaseTimePoint(ServiceCtx context)
         {
+            SteadyClockCore steadyClock = _timeManager.StandardSteadyClock;
+
+            if (!steadyClock.IsInitialized())
+            {
+                return ResultCode.UninitializedClock;
+            }
+
             SystemClockContext   otherContext     = context.RequestData.ReadStruct<SystemClockContext>();
-            SteadyClockTimePoint currentTimePoint = StandardSteadyClockCore.Instance.GetCurrentTimePoint(context.Thread);
+            SteadyClockTimePoint currentTimePoint = steadyClock.GetCurrentTimePoint(context.Thread);
 
             ResultCode result = ResultCode.TimeMismatch;
 
@@ -148,7 +233,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
 
                 context.ResponseData.Write(baseTimePoint);
 
-                result = 0;
+                result = ResultCode.Success;
             }
 
             return result;
@@ -160,11 +245,11 @@ namespace Ryujinx.HLE.HOS.Services.Time
         {
             byte type = context.RequestData.ReadByte();
 
-            ResultCode result = StandardUserSystemClockCore.Instance.GetSystemClockContext(context.Thread, out SystemClockContext userContext);
+            ResultCode result = _timeManager.StandardUserSystemClock.GetClockContext(context.Thread, out SystemClockContext userContext);
 
             if (result == ResultCode.Success)
             {
-                result = StandardNetworkSystemClockCore.Instance.GetSystemClockContext(context.Thread, out SystemClockContext networkContext);
+                result = _timeManager.StandardNetworkSystemClock.GetClockContext(context.Thread, out SystemClockContext networkContext);
 
                 if (result == ResultCode.Success)
                 {
@@ -205,7 +290,6 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // CalculateStandardUserSystemClockDifferenceByUser(buffer<nn::time::sf::ClockSnapshot, 0x19>, buffer<nn::time::sf::ClockSnapshot, 0x19>) -> nn::TimeSpanType
         public ResultCode CalculateStandardUserSystemClockDifferenceByUser(ServiceCtx context)
         {
-
             ClockSnapshot clockSnapshotA = ReadClockSnapshotFromBuffer(context, context.Request.ExchangeBuff[0]);
             ClockSnapshot clockSnapshotB = ReadClockSnapshotFromBuffer(context, context.Request.ExchangeBuff[1]);
             TimeSpanType  difference     = TimeSpanType.FromSeconds(clockSnapshotB.UserContext.Offset - clockSnapshotA.UserContext.Offset);
@@ -259,25 +343,32 @@ namespace Ryujinx.HLE.HOS.Services.Time
         {
             clockSnapshot = new ClockSnapshot();
 
-            SteadyClockCore      steadyClockCore  = StandardSteadyClockCore.Instance;
+            SteadyClockCore      steadyClockCore  = _timeManager.StandardSteadyClock;
             SteadyClockTimePoint currentTimePoint = steadyClockCore.GetCurrentTimePoint(thread);
 
-            clockSnapshot.IsAutomaticCorrectionEnabled = StandardUserSystemClockCore.Instance.IsAutomaticCorrectionEnabled();
+            clockSnapshot.IsAutomaticCorrectionEnabled = _timeManager.StandardUserSystemClock.IsAutomaticCorrectionEnabled();
             clockSnapshot.UserContext                  = userContext;
             clockSnapshot.NetworkContext               = networkContext;
 
-            char[] tzName       = TimeZoneManager.Instance.GetDeviceLocationName().ToCharArray();
+            ResultCode result = _timeManager.TimeZone.Manager.GetDeviceLocationName(out string deviceLocationName);
+
+            if (result != ResultCode.Success)
+            {
+                return result;
+            }
+
+            char[] tzName       = deviceLocationName.ToCharArray();
             char[] locationName = new char[0x24];
 
             Array.Copy(tzName, locationName, tzName.Length);
 
             clockSnapshot.LocationName = locationName;
 
-            ResultCode result = ClockSnapshot.GetCurrentTime(out clockSnapshot.UserTime, currentTimePoint, clockSnapshot.UserContext);
+            result = ClockSnapshot.GetCurrentTime(out clockSnapshot.UserTime, currentTimePoint, clockSnapshot.UserContext);
 
             if (result == ResultCode.Success)
             {
-                result = TimeZoneManager.Instance.ToCalendarTimeWithMyRules(clockSnapshot.UserTime, out CalendarInfo userCalendarInfo);
+                result = _timeManager.TimeZone.Manager.ToCalendarTimeWithMyRules(clockSnapshot.UserTime, out CalendarInfo userCalendarInfo);
 
                 if (result == ResultCode.Success)
                 {
@@ -289,7 +380,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
                         clockSnapshot.NetworkTime = 0;
                     }
 
-                    result = TimeZoneManager.Instance.ToCalendarTimeWithMyRules(clockSnapshot.NetworkTime, out CalendarInfo networkCalendarInfo);
+                    result = _timeManager.TimeZone.Manager.ToCalendarTimeWithMyRules(clockSnapshot.NetworkTime, out CalendarInfo networkCalendarInfo);
 
                     if (result == ResultCode.Success)
                     {

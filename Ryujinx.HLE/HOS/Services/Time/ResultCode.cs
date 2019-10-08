@@ -9,6 +9,7 @@
 
         PermissionDenied         = (1   << ErrorCodeShift) | ModuleId,
         TimeMismatch             = (102 << ErrorCodeShift) | ModuleId,
+        UninitializedClock       = (103 << ErrorCodeShift) | ModuleId,
         TimeNotFound             = (200 << ErrorCodeShift) | ModuleId,
         Overflow                 = (201 << ErrorCodeShift) | ModuleId,
         LocationNameTooLong      = (801 << ErrorCodeShift) | ModuleId,

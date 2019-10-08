@@ -8,12 +8,14 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.Services.Pcv.Bpc;
 using Ryujinx.HLE.HOS.Services.Settings;
 using Ryujinx.HLE.HOS.Services.Sm;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Npdm;
+using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -22,7 +24,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 
-using NxStaticObject = Ryujinx.HLE.Loaders.Executables.NxStaticObject;
+using TimeServiceManager = Ryujinx.HLE.HOS.Services.Time.TimeManager;
+using NxStaticObject     = Ryujinx.HLE.Loaders.Executables.NxStaticObject;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -87,8 +90,6 @@ namespace Ryujinx.HLE.HOS
         internal KSharedMemory HidSharedMem  { get; private set; }
         internal KSharedMemory FontSharedMem { get; private set; }
         internal KSharedMemory IirsSharedMem { get; private set; }
-        internal KSharedMemory TimeSharedMem { get; private set; }
-
         internal SharedFontManager Font { get; private set; }
 
         internal ContentManager ContentManager { get; private set; }
@@ -184,7 +185,10 @@ namespace Ryujinx.HLE.HOS
             HidSharedMem  = new KSharedMemory(this, hidPageList,  0, 0, MemoryPermission.Read);
             FontSharedMem = new KSharedMemory(this, fontPageList, 0, 0, MemoryPermission.Read);
             IirsSharedMem = new KSharedMemory(this, iirsPageList, 0, 0, MemoryPermission.Read);
-            TimeSharedMem = new KSharedMemory(this, timePageList, 0, 0, MemoryPermission.Read);
+
+            KSharedMemory timeSharedMemory = new KSharedMemory(this, timePageList, 0, 0, MemoryPermission.Read);
+
+            TimeServiceManager.Instance.Initialize(device, this, timeSharedMemory, (long)(timePa - DramMemoryMap.DramBase), TimeSize);
 
             AppletState = new AppletStateMgr(this);
 
@@ -200,17 +204,30 @@ namespace Ryujinx.HLE.HOS
 
             ContentManager = new ContentManager(device);
 
-            // TODO: use set:sys (and set external clock source id from settings)
+            // TODO: use set:sys (and get external clock source id from settings)
             // TODO: use "time!standard_steady_clock_rtc_update_interval_minutes" and implement a worker thread to be accurate.
-            StandardSteadyClockCore.Instance.ConfigureSetupValue();
+            UInt128 clockSourceId = new UInt128(Guid.NewGuid().ToByteArray());
+            IRtcManager.GetExternalRtcValue(out ulong rtcValue);
+
+            // We assume the rtc is system time.
+            TimeSpanType systemTime = TimeSpanType.FromSeconds((long)rtcValue);
+
+            // First init the standard steady clock
+            TimeServiceManager.Instance.SetupStandardSteadyClock(null, clockSourceId, systemTime, TimeSpanType.Zero, TimeSpanType.Zero, false);
+            TimeServiceManager.Instance.SetupStandardLocalSystemClock(null, new SystemClockContext(), systemTime.ToSeconds());
 
             if (NxSettings.Settings.TryGetValue("time!standard_network_clock_sufficient_accuracy_minutes", out object standardNetworkClockSufficientAccuracyMinutes))
             {
                 TimeSpanType standardNetworkClockSufficientAccuracy = new TimeSpanType((int)standardNetworkClockSufficientAccuracyMinutes * 60000000000);
 
-                StandardNetworkSystemClockCore.Instance.SetStandardNetworkClockSufficientAccuracy(standardNetworkClockSufficientAccuracy);
+                TimeServiceManager.Instance.SetupStandardNetworkSystemClock(new SystemClockContext(), standardNetworkClockSufficientAccuracy);
             }
 
+            TimeServiceManager.Instance.SetupStandardUserSystemClock(null, false, SteadyClockTimePoint.GetRandom());
+
+            // FIXME: TimeZone shoud be init here but it's actually done in ContentManager
+
+            TimeServiceManager.Instance.SetupEphemeralNetworkSystemClock();
         }
 
         public void LoadCart(string exeFsDir, string romFsFile = null)

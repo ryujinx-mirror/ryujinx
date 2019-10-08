@@ -4,22 +4,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
 {
     class TickBasedSteadyClockCore : SteadyClockCore
     {
-        private static TickBasedSteadyClockCore _instance;
-
-        public static TickBasedSteadyClockCore Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new TickBasedSteadyClockCore();
-                }
-
-                return _instance;
-            }
-        }
-
-        private TickBasedSteadyClockCore() {}
+        public TickBasedSteadyClockCore() {}
 
         public override SteadyClockTimePoint GetTimePoint(KThread thread)
         {
@@ -29,7 +14,17 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
                 ClockSourceId = GetClockSourceId()
             };
 
-            TimeSpanType ticksTimeSpan = TimeSpanType.FromTicks(thread.Context.CntpctEl0, thread.Context.CntfrqEl0);
+            TimeSpanType ticksTimeSpan;
+
+            // As this may be called before the guest code, we support passing a null thread to make this api usable.
+            if (thread == null)
+            {
+                ticksTimeSpan = TimeSpanType.FromSeconds(0);
+            }
+            else
+            {
+                ticksTimeSpan = TimeSpanType.FromTicks(thread.Context.CntpctEl0, thread.Context.CntfrqEl0);
+            }
 
             result.TimePoint = ticksTimeSpan.ToSeconds();
 

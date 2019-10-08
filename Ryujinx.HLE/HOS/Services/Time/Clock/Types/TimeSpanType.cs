@@ -7,6 +7,8 @@ namespace Ryujinx.HLE.HOS.Services.Time.Clock
     {
         private const long NanoSecondsPerSecond = 1000000000;
 
+        public static readonly TimeSpanType Zero = new TimeSpanType(0);
+
         public long NanoSeconds;
 
         public TimeSpanType(long nanoSeconds)

@@ -1,50 +1,28 @@
-﻿using LibHac.Fs;
-using LibHac.Fs.NcaUtils;
-using Ryujinx.Common.Logging;
-using Ryujinx.HLE.FileSystem;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using Ryujinx.HLE.HOS.Services.Time.Clock;
+using Ryujinx.HLE.Utilities;
 using System.IO;
-using TimeZoneConverter;
-using TimeZoneConverter.Posix;
-
 using static Ryujinx.HLE.HOS.Services.Time.TimeZone.TimeZoneRule;
 
 namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 {
-    public sealed class TimeZoneManager
+    class TimeZoneManager
     {
-        private const long TimeZoneBinaryTitleId = 0x010000000000080E;
+        private bool                 _isInitialized;
+        private TimeZoneRule         _myRules;
+        private string               _deviceLocationName;
+        private UInt128              _timeZoneRuleVersion;
+        private uint                 _totalLocationNameCount;
+        private SteadyClockTimePoint _timeZoneUpdateTimePoint;
+        private object               _lock;
 
-        private static TimeZoneManager instance;
-
-        private static object instanceLock = new object();
-
-        private Switch       _device;
-        private TimeZoneRule _myRules;
-        private string       _deviceLocationName;
-        private string[]     _locationNameCache;
-
-        public static TimeZoneManager Instance
+        public TimeZoneManager()
         {
-            get
-            {
-                lock (instanceLock)
-                {
-                    if (instance == null)
-                    {
-                        instance = new TimeZoneManager();
-                    }
+            _isInitialized       = false;
+            _deviceLocationName  = "UTC";
+            _timeZoneRuleVersion = new UInt128();
+            _lock                = new object();
 
-                    return instance;
-                }
-            }
-        }
-
-        TimeZoneManager()
-        {
-            // Empty rules (UTC)
+            // Empty rules
             _myRules = new TimeZoneRule
             {
                 Ats   = new long[TzMaxTimes],
@@ -53,236 +31,237 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 Chars = new char[TzCharsArraySize]
             };
 
-            _deviceLocationName = "UTC";
+            _timeZoneUpdateTimePoint = SteadyClockTimePoint.GetRandom();
         }
 
-        internal void Initialize(Switch device)
+        public bool IsInitialized()
         {
-            _device = device;
+            bool res;
 
-            InitializeLocationNameCache();
-        }
-
-        private void InitializeLocationNameCache()
-        {
-            if (HasTimeZoneBinaryTitle())
+            lock (_lock)
             {
-                using (IStorage ncaFileStream = new LocalStorage(_device.FileSystem.SwitchPathToSystemPath(GetTimeZoneBinaryTitleContentPath()), FileAccess.Read, FileMode.Open))
+                res = _isInitialized;
+            }
+
+            return res;
+        }
+
+        public void MarkInitialized()
+        {
+            lock (_lock)
+            {
+                _isInitialized = true;
+            }
+        }
+
+        public ResultCode GetDeviceLocationName(out string deviceLocationName)
+        {
+            ResultCode result = ResultCode.UninitializedClock;
+
+            deviceLocationName = null;
+
+            lock (_lock)
+            {
+                if (_isInitialized)
                 {
-                    Nca         nca              = new Nca(_device.System.KeySet, ncaFileStream);
-                    IFileSystem romfs            = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
-                    Stream      binaryListStream = romfs.OpenFile("binaryList.txt", OpenMode.Read).AsStream();
-
-                    StreamReader reader = new StreamReader(binaryListStream);
-
-                    List<string> locationNameList = new List<string>();
-
-                    string locationName;
-                    while ((locationName = reader.ReadLine()) != null)
-                    {
-                        locationNameList.Add(locationName);
-                    }
-
-                    _locationNameCache = locationNameList.ToArray();
+                    deviceLocationName = _deviceLocationName;
+                    result             = ResultCode.Success;
                 }
             }
-            else
-            {
-                ReadOnlyCollection<TimeZoneInfo> timeZoneInfos = TimeZoneInfo.GetSystemTimeZones();
-                _locationNameCache = new string[timeZoneInfos.Count];
 
-                int i = 0;
-
-                foreach (TimeZoneInfo timeZoneInfo in timeZoneInfos)
-                {
-                    bool needConversion = TZConvert.TryWindowsToIana(timeZoneInfo.Id, out string convertedName);
-                    if (needConversion)
-                    {
-                        _locationNameCache[i] = convertedName;
-                    }
-                    else
-                    {
-                        _locationNameCache[i] = timeZoneInfo.Id;
-                    }
-                    i++;
-                }
-
-                // As we aren't using the system archive, "UTC" might not exist on the host system.
-                // Load from C# TimeZone APIs UTC id.
-                string utcId             = TimeZoneInfo.Utc.Id;
-                bool   utcNeedConversion = TZConvert.TryWindowsToIana(utcId, out string utcConvertedName);
-                if (utcNeedConversion)
-                {
-                    utcId = utcConvertedName;
-                }
-
-                _deviceLocationName = utcId;
-            }
+            return result;
         }
 
-        private bool IsLocationNameValid(string locationName)
+        public ResultCode SetDeviceLocationNameWithTimeZoneRule(string locationName, Stream timeZoneBinaryStream)
         {
-            foreach (string cachedLocationName in _locationNameCache)
+            ResultCode result = ResultCode.TimeZoneConversionFailed;
+
+            lock (_lock)
             {
-                if (cachedLocationName.Equals(locationName))
+                bool timeZoneConversionSuccess = TimeZone.ParseTimeZoneBinary(out TimeZoneRule rules, timeZoneBinaryStream);
+
+                if (timeZoneConversionSuccess)
                 {
-                    return true;
+                    _deviceLocationName = locationName;
+                    _myRules            = rules;
+                    result              = ResultCode.Success;
                 }
             }
-            return false;
+
+            return result;
         }
 
-        public string GetDeviceLocationName()
+        public void SetTotalLocationNameCount(uint totalLocationNameCount)
         {
-            return _deviceLocationName;
-        }
-
-        public ResultCode SetDeviceLocationName(string locationName)
-        {
-            ResultCode resultCode = LoadTimeZoneRules(out TimeZoneRule rules, locationName);
-
-            if (resultCode == 0)
+            lock (_lock)
             {
-                _myRules            = rules;
-                _deviceLocationName = locationName;
+                _totalLocationNameCount = totalLocationNameCount;
             }
-
-            return resultCode;
         }
 
-        public ResultCode LoadLocationNameList(uint index, out string[] outLocationNameArray, uint maxLength)
+        public ResultCode GetTotalLocationNameCount(out uint totalLocationNameCount)
         {
-            List<string> locationNameList = new List<string>();
+            ResultCode result = ResultCode.UninitializedClock;
 
-            for (int i = 0; i < _locationNameCache.Length && i < maxLength; i++)
+            totalLocationNameCount = 0;
+
+            lock (_lock)
             {
-                if (i < index)
+                if (_isInitialized)
                 {
-                    continue;
-                }
-
-                string locationName = _locationNameCache[i];
-
-                // If the location name is too long, error out.
-                if (locationName.Length > 0x24)
-                {
-                    outLocationNameArray = new string[0];
-
-                    return ResultCode.LocationNameTooLong;
-                }
-
-                locationNameList.Add(locationName);
-            }
-
-            outLocationNameArray = locationNameList.ToArray();
-
-            return ResultCode.Success;
-        }
-
-        public uint GetTotalLocationNameCount()
-        {
-            return (uint)_locationNameCache.Length;
-        }
-
-        public string GetTimeZoneBinaryTitleContentPath()
-        {
-            return _device.System.ContentManager.GetInstalledContentPath(TimeZoneBinaryTitleId, StorageId.NandSystem, ContentType.Data);
-        }
-
-        public bool HasTimeZoneBinaryTitle()
-        {
-            return !string.IsNullOrEmpty(GetTimeZoneBinaryTitleContentPath());
-        }
-
-        internal ResultCode LoadTimeZoneRules(out TimeZoneRule outRules, string locationName)
-        {
-            outRules = new TimeZoneRule
-            {
-                Ats   = new long[TzMaxTimes],
-                Types = new byte[TzMaxTimes],
-                Ttis  = new TimeTypeInfo[TzMaxTypes],
-                Chars = new char[TzCharsArraySize]
-            };
-
-            if (!IsLocationNameValid(locationName))
-            {
-                return ResultCode.TimeZoneNotFound;
-            }
-
-            if (!HasTimeZoneBinaryTitle())
-            {
-                // If the user doesn't have the system archives, we generate a POSIX rule string and parse it to generate a incomplete TimeZoneRule
-                // TODO: As for now not having system archives is fine, we should enforce the usage of system archives later.
-                Logger.PrintWarning(LogClass.ServiceTime, "TimeZoneBinary system archive not found! Time conversions will not be accurate!");
-                try
-                {
-                    TimeZoneInfo info      = TZConvert.GetTimeZoneInfo(locationName);
-                    string       posixRule = PosixTimeZone.FromTimeZoneInfo(info);
-
-                    if (!TimeZone.ParsePosixName(posixRule, out outRules))
-                    {
-                        return ResultCode.TimeZoneConversionFailed;
-                    }
-
-                    return 0;
-                }
-                catch (TimeZoneNotFoundException)
-                {
-                    Logger.PrintWarning(LogClass.ServiceTime, $"Timezone not found for string: {locationName})");
-
-                    return ResultCode.TimeZoneNotFound;
+                    totalLocationNameCount = _totalLocationNameCount;
+                    result                 = ResultCode.Success;
                 }
             }
-            else
+
+            return result;
+        }
+
+        public ResultCode SetUpdatedTime(SteadyClockTimePoint timeZoneUpdatedTimePoint, bool bypassUninitialized = false)
+        {
+            ResultCode result = ResultCode.UninitializedClock;
+
+            lock (_lock)
             {
-                using (IStorage ncaFileStream = new LocalStorage(_device.FileSystem.SwitchPathToSystemPath(GetTimeZoneBinaryTitleContentPath()), FileAccess.Read, FileMode.Open))
+                if (_isInitialized || bypassUninitialized)
                 {
-                    Nca         nca        = new Nca(_device.System.KeySet, ncaFileStream);
-                    IFileSystem romfs      = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
-                    Stream      tzIfStream = romfs.OpenFile($"zoneinfo/{locationName}", OpenMode.Read).AsStream();
-
-                    if (!TimeZone.LoadTimeZoneRules(out outRules, tzIfStream))
-                    {
-                        return ResultCode.TimeZoneConversionFailed;
-                    }
+                    _timeZoneUpdateTimePoint = timeZoneUpdatedTimePoint;
+                    result                   = ResultCode.Success;
                 }
-
-                return 0;
             }
+
+            return result;
         }
 
-        internal ResultCode ToCalendarTimeWithMyRules(long time, out CalendarInfo calendar)
+        public ResultCode GetUpdatedTime(out SteadyClockTimePoint timeZoneUpdatedTimePoint)
         {
-            return ToCalendarTime(_myRules, time, out calendar);
-        }
+            ResultCode result;
 
-        internal static ResultCode ToCalendarTime(TimeZoneRule rules, long time, out CalendarInfo calendar)
-        {
-            ResultCode error = TimeZone.ToCalendarTime(rules, time, out calendar);
-
-            if (error != ResultCode.Success)
+            lock (_lock)
             {
-                return error;
+                if (_isInitialized)
+                {
+                    timeZoneUpdatedTimePoint = _timeZoneUpdateTimePoint;
+                    result                   = ResultCode.Success;
+                }
+                else
+                {
+                    timeZoneUpdatedTimePoint = SteadyClockTimePoint.GetRandom();
+                    result                   = ResultCode.UninitializedClock;
+                }
             }
 
-            return ResultCode.Success;
+            return result;
         }
 
-        internal ResultCode ToPosixTimeWithMyRules(CalendarTime calendarTime, out long posixTime)
+        public ResultCode ParseTimeZoneRuleBinary(out TimeZoneRule outRules, Stream timeZoneBinaryStream)
         {
-            return ToPosixTime(_myRules, calendarTime, out posixTime);
-        }
+            ResultCode result = ResultCode.Success;
 
-        internal static ResultCode ToPosixTime(TimeZoneRule rules, CalendarTime calendarTime, out long posixTime)
-        {
-            ResultCode error = TimeZone.ToPosixTime(rules, calendarTime, out posixTime);
-
-            if (error != ResultCode.Success)
+            lock (_lock)
             {
-                return error;
+                bool timeZoneConversionSuccess = TimeZone.ParseTimeZoneBinary(out outRules, timeZoneBinaryStream);
+
+                if (!timeZoneConversionSuccess)
+                {
+                    result = ResultCode.TimeZoneConversionFailed;
+                }
             }
 
-            return ResultCode.Success;
+            return result;
+        }
+
+        public void SetTimeZoneRuleVersion(UInt128 timeZoneRuleVersion)
+        {
+            lock (_lock)
+            {
+                _timeZoneRuleVersion = timeZoneRuleVersion;
+            }
+        }
+
+        public ResultCode GetTimeZoneRuleVersion(out UInt128 timeZoneRuleVersion)
+        {
+            ResultCode result;
+
+            lock (_lock)
+            {
+                if (_isInitialized)
+                {
+                    timeZoneRuleVersion = _timeZoneRuleVersion;
+                    result              = ResultCode.Success;
+                }
+                else
+                {
+                    timeZoneRuleVersion = new UInt128();
+                    result              = ResultCode.UninitializedClock;
+                }
+            }
+
+            return result;
+        }
+
+        public ResultCode ToCalendarTimeWithMyRules(long time, out CalendarInfo calendar)
+        {
+            ResultCode result;
+
+            lock (_lock)
+            {
+                if (_isInitialized)
+                {
+                    result = ToCalendarTime(_myRules, time, out calendar);
+                }
+                else
+                {
+                    calendar = new CalendarInfo();
+                    result   = ResultCode.UninitializedClock;
+                }
+            }
+
+            return result;
+        }
+
+        public ResultCode ToCalendarTime(TimeZoneRule rules, long time, out CalendarInfo calendar)
+        {
+            ResultCode result;
+
+            lock (_lock)
+            {
+                result = TimeZone.ToCalendarTime(rules, time, out calendar);
+            }
+
+            return result;
+        }
+
+        public ResultCode ToPosixTimeWithMyRules(CalendarTime calendarTime, out long posixTime)
+        {
+            ResultCode result;
+
+            lock (_lock)
+            {
+                if (_isInitialized)
+                {
+                    result = ToPosixTime(_myRules, calendarTime, out posixTime);
+                }
+                else
+                {
+                    posixTime = 0;
+                    result    = ResultCode.UninitializedClock;
+                }
+            }
+
+            return result;
+        }
+
+        public ResultCode ToPosixTime(TimeZoneRule rules, CalendarTime calendarTime, out long posixTime)
+        {
+            ResultCode result;
+
+            lock (_lock)
+            {
+                result = TimeZone.ToPosixTime(rules, calendarTime, out posixTime);
+            }
+
+            return result;
         }
     }
 }
