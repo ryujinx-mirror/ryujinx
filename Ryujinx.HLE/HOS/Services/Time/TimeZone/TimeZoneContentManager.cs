@@ -34,12 +34,14 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
             SteadyClockTimePoint timeZoneUpdatedTimePoint = timeManager.StandardSteadyClock.GetCurrentTimePoint(null);
 
-            ResultCode result = GetTimeZoneBinary("UTC", out Stream timeZoneBinaryStream);
+            ResultCode result = GetTimeZoneBinary("UTC", out Stream timeZoneBinaryStream, out LocalStorage ncaFile);
 
             if (result == ResultCode.Success)
             {
                 // TODO: Read TimeZoneVersion from sysarchive.
                 timeManager.SetupTimeZoneManager("UTC", timeZoneUpdatedTimePoint, (uint)_locationNameCache.Length, new UInt128(), timeZoneBinaryStream);
+
+                ncaFile.Dispose();
             }
             else
             {
@@ -94,11 +96,13 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
         public ResultCode SetDeviceLocationName(string locationName)
         {
-            ResultCode result = GetTimeZoneBinary(locationName, out Stream timeZoneBinaryStream);
+            ResultCode result = GetTimeZoneBinary(locationName, out Stream timeZoneBinaryStream, out LocalStorage ncaFile);
 
             if (result == ResultCode.Success)
             {
                 result = Manager.SetDeviceLocationNameWithTimeZoneRule(locationName, timeZoneBinaryStream);
+
+                ncaFile.Dispose();
             }
 
             return result;
@@ -143,22 +147,22 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             return !string.IsNullOrEmpty(GetTimeZoneBinaryTitleContentPath());
         }
 
-        internal ResultCode GetTimeZoneBinary(string locationName, out Stream timeZoneBinaryStream)
+        internal ResultCode GetTimeZoneBinary(string locationName, out Stream timeZoneBinaryStream, out LocalStorage ncaFile)
         {
             timeZoneBinaryStream = null;
+            ncaFile              = null;
 
             if (!IsLocationNameValid(locationName))
             {
                 return ResultCode.TimeZoneNotFound;
             }
 
-            using (IStorage ncaFileStream = new LocalStorage(_device.FileSystem.SwitchPathToSystemPath(GetTimeZoneBinaryTitleContentPath()), FileAccess.Read, FileMode.Open))
-            {
-                Nca         nca   = new Nca(_device.System.KeySet, ncaFileStream);
-                IFileSystem romfs = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
+            ncaFile = new LocalStorage(_device.FileSystem.SwitchPathToSystemPath(GetTimeZoneBinaryTitleContentPath()), FileAccess.Read, FileMode.Open);
 
-                timeZoneBinaryStream = romfs.OpenFile($"zoneinfo/{locationName}", OpenMode.Read).AsStream();
-            }
+            Nca         nca   = new Nca(_device.System.KeySet, ncaFile);
+            IFileSystem romfs = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
+
+            timeZoneBinaryStream = romfs.OpenFile($"/zoneinfo/{locationName}", OpenMode.Read).AsStream();
 
             return ResultCode.Success;
         }
@@ -178,11 +182,13 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 throw new InvalidSystemResourceException($"TimeZoneBinary system title not found! Please provide it. (See https://github.com/Ryujinx/Ryujinx#requirements for more informations)");
             }
 
-            ResultCode result = GetTimeZoneBinary(locationName, out Stream timeZoneBinaryStream);
+            ResultCode result = GetTimeZoneBinary(locationName, out Stream timeZoneBinaryStream, out LocalStorage ncaFile);
 
             if (result == ResultCode.Success)
             {
                 result = Manager.ParseTimeZoneRuleBinary(out outRules, timeZoneBinaryStream);
+
+                ncaFile.Dispose();
             }
 
             return result;
