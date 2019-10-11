@@ -96,6 +96,7 @@ namespace Ryujinx.HLE.HOS.Ipc
                 else if (request.Type == IpcMessageType.CloseSession)
                 {
                     // TODO
+                    return KernelResult.PortRemoteClosed;
                 }
                 else
                 {
