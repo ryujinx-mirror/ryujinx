@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Ryujinx.Audio
@@ -8,17 +9,18 @@ namespace Ryujinx.Audio
     /// </summary>
     public class DummyAudioOut : IAalOutput
     {
-        private int lastTrackId = 1;
+        private int   _lastTrackId = 1;
+        private float _volume      = 1.0f;
 
-        private ConcurrentQueue<int> m_TrackIds;
-        private ConcurrentQueue<long> m_Buffers;
-        private ConcurrentDictionary<int, ReleaseCallback> m_ReleaseCallbacks;
+        private ConcurrentQueue<int> _trackIds;
+        private ConcurrentQueue<long> _buffers;
+        private ConcurrentDictionary<int, ReleaseCallback> _releaseCallbacks;
 
         public DummyAudioOut()
         {
-            m_Buffers          = new ConcurrentQueue<long>();
-            m_TrackIds         = new ConcurrentQueue<int>();
-            m_ReleaseCallbacks = new ConcurrentDictionary<int, ReleaseCallback>();
+            _buffers          = new ConcurrentQueue<long>();
+            _trackIds         = new ConcurrentQueue<int>();
+            _releaseCallbacks = new ConcurrentDictionary<int, ReleaseCallback>();
         }
 
         /// <summary>
@@ -30,38 +32,23 @@ namespace Ryujinx.Audio
 
         public int OpenTrack(int sampleRate, int channels, ReleaseCallback callback)
         {
-            int trackId;
-
-            if (!m_TrackIds.TryDequeue(out trackId))
+            if (!_trackIds.TryDequeue(out int trackId))
             {
-                trackId = ++lastTrackId;
+                trackId = ++_lastTrackId;
             }
 
-            m_ReleaseCallbacks[trackId] = callback;
+            _releaseCallbacks[trackId] = callback;
 
             return trackId;
         }
 
         public void CloseTrack(int trackId)
         {
-            m_TrackIds.Enqueue(trackId);
-            m_ReleaseCallbacks.Remove(trackId, out _);
+            _trackIds.Enqueue(trackId);
+            _releaseCallbacks.Remove(trackId, out _);
         }
 
-        public void Start(int trackId) { }
-
-        public void Stop(int trackId) { }
-
-        public void AppendBuffer<T>(int trackID, long bufferTag, T[] buffer)
-            where T : struct
-        {
-            m_Buffers.Enqueue(bufferTag);
-
-            if (m_ReleaseCallbacks.TryGetValue(trackID, out var callback))
-            {
-                callback?.Invoke();
-            }
-        }
+        public bool ContainsBuffer(int trackID, long bufferTag) => false;
 
         public long[] GetReleasedBuffers(int trackId, int maxCount)
         {
@@ -69,7 +56,7 @@ namespace Ryujinx.Audio
 
             for (int i = 0; i < maxCount; i++)
             {
-                if (!m_Buffers.TryDequeue(out long tag))
+                if (!_buffers.TryDequeue(out long tag))
                 {
                     break;
                 }
@@ -80,11 +67,30 @@ namespace Ryujinx.Audio
             return bufferTags.ToArray();
         }
 
-        public bool ContainsBuffer(int trackID, long bufferTag) => false;
+        public void AppendBuffer<T>(int trackID, long bufferTag, T[] buffer) where T : struct
+        {
+            _buffers.Enqueue(bufferTag);
+
+            if (_releaseCallbacks.TryGetValue(trackID, out var callback))
+            {
+                callback?.Invoke();
+            }
+        }
+
+        public void Start(int trackId) { }
+
+        public void Stop(int trackId) { }
+
+        public float GetVolume() => _volume;
+
+        public void SetVolume(float volume)
+        {
+            _volume = volume;
+        }
 
         public void Dispose()
         {
-            m_Buffers.Clear();
+            _buffers.Clear();
         }
     }
 }

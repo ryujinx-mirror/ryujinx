@@ -1,5 +1,6 @@
 ﻿using Ryujinx.Audio.SoundIo;
 using SoundIOSharp;
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Audio
@@ -15,22 +16,32 @@ namespace Ryujinx.Audio
         private const int MaximumTracks = 256;
 
         /// <summary>
+        /// The volume of audio renderer
+        /// </summary>
+        private float _volume = 1.0f;
+
+        /// <summary>
+        /// True if the volume of audio renderer have changed
+        /// </summary>
+        private bool _volumeChanged;
+
+        /// <summary>
         /// The <see cref="SoundIO"/> audio context
         /// </summary>
-        private SoundIO m_AudioContext;
+        private SoundIO _audioContext;
 
         /// <summary>
         /// The <see cref="SoundIODevice"/> audio device
         /// </summary>
-        private SoundIODevice m_AudioDevice;
+        private SoundIODevice _audioDevice;
 
         /// <summary>
         /// An object pool containing <see cref="SoundIoAudioTrack"/> objects
         /// </summary>
-        private SoundIoAudioTrackPool m_TrackPool;
+        private SoundIoAudioTrackPool _trackPool;
 
         /// <summary>
-        /// True if SoundIO is supported on the device.
+        /// True if SoundIO is supported on the device
         /// </summary>
         public static bool IsSupported
         {
@@ -45,27 +56,13 @@ namespace Ryujinx.Audio
         /// </summary>
         public SoundIoAudioOut()
         {
-            m_AudioContext = new SoundIO();
+            _audioContext = new SoundIO();
 
-            m_AudioContext.Connect();
-            m_AudioContext.FlushEvents();
+            _audioContext.Connect();
+            _audioContext.FlushEvents();
 
-            m_AudioDevice = FindNonRawDefaultAudioDevice(m_AudioContext, true);
-            m_TrackPool = new SoundIoAudioTrackPool(m_AudioContext, m_AudioDevice, MaximumTracks);
-        }
-
-        /// <summary>
-        /// Gets the current playback state of the specified track
-        /// </summary>
-        /// <param name="trackId">The track to retrieve the playback state for</param>
-        public PlaybackState GetState(int trackId)
-        {
-            if (m_TrackPool.TryGet(trackId, out SoundIoAudioTrack track))
-            {
-                return track.State;
-            }
-
-            return PlaybackState.Stopped;
+            _audioDevice = FindNonRawDefaultAudioDevice(_audioContext, true);
+            _trackPool   = new SoundIoAudioTrackPool(_audioContext, _audioDevice, MaximumTracks);
         }
 
         /// <summary>
@@ -77,7 +74,7 @@ namespace Ryujinx.Audio
         /// <returns>The created track's Track ID</returns>
         public int OpenTrack(int sampleRate, int channels, ReleaseCallback callback)
         {
-            if (!m_TrackPool.TryGet(out SoundIoAudioTrack track))
+            if (!_trackPool.TryGet(out SoundIoAudioTrack track))
             {
                 return -1;
             }
@@ -94,53 +91,13 @@ namespace Ryujinx.Audio
         /// <param name="trackId">The ID of the track to close</param>
         public void CloseTrack(int trackId)
         {
-            if (m_TrackPool.TryGet(trackId, out SoundIoAudioTrack track))
+            if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
             {
                 // Close and dispose of the track
                 track.Close();
 
                 // Recycle the track back into the pool
-                m_TrackPool.Put(track);
-            }
-        }
-
-        /// <summary>
-        /// Starts playback
-        /// </summary>
-        /// <param name="trackId">The ID of the track to start playback on</param>
-        public void Start(int trackId)
-        {
-            if (m_TrackPool.TryGet(trackId, out SoundIoAudioTrack track))
-            {
-                track.Start();
-            }
-        }
-
-        /// <summary>
-        /// Stops playback
-        /// </summary>
-        /// <param name="trackId">The ID of the track to stop playback on</param>
-        public void Stop(int trackId)
-        {
-            if (m_TrackPool.TryGet(trackId, out SoundIoAudioTrack track))
-            {
-                track.Stop();
-            }
-        }
-
-        /// <summary>
-        /// Appends an audio buffer to the specified track
-        /// </summary>
-        /// <typeparam name="T">The sample type of the buffer</typeparam>
-        /// <param name="trackId">The track to append the buffer to</param>
-        /// <param name="bufferTag">The internal tag of the buffer</param>
-        /// <param name="buffer">The buffer to append to the track</param>
-        public void AppendBuffer<T>(int trackId, long bufferTag, T[] buffer)
-            where T : struct
-        {
-            if (m_TrackPool.TryGet(trackId, out SoundIoAudioTrack track))
-            {
-                track.AppendBuffer(bufferTag, buffer);
+                _trackPool.Put(track);
             }
         }
 
@@ -151,7 +108,7 @@ namespace Ryujinx.Audio
         /// <param name="bufferTag">The buffer tag to check</param>
         public bool ContainsBuffer(int trackId, long bufferTag)
         {
-            if (m_TrackPool.TryGet(trackId, out SoundIoAudioTrack track))
+            if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
             {
                 return track.ContainsBuffer(bufferTag);
             }
@@ -167,7 +124,7 @@ namespace Ryujinx.Audio
         /// <returns>Buffers released by the specified track</returns>
         public long[] GetReleasedBuffers(int trackId, int maxCount)
         {
-            if (m_TrackPool.TryGet(trackId, out SoundIoAudioTrack track))
+            if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
             {
                 List<long> bufferTags = new List<long>();
 
@@ -183,13 +140,91 @@ namespace Ryujinx.Audio
         }
 
         /// <summary>
+        /// Appends an audio buffer to the specified track
+        /// </summary>
+        /// <typeparam name="T">The sample type of the buffer</typeparam>
+        /// <param name="trackId">The track to append the buffer to</param>
+        /// <param name="bufferTag">The internal tag of the buffer</param>
+        /// <param name="buffer">The buffer to append to the track</param>
+        public void AppendBuffer<T>(int trackId, long bufferTag, T[] buffer) where T : struct
+        {
+            if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
+            {
+                if (_volumeChanged)
+                {
+                    track.AudioStream.SetVolume(_volume);
+
+                    _volumeChanged = false;
+                }
+                    
+                track.AppendBuffer(bufferTag, buffer);
+            }
+        }
+
+        /// <summary>
+        /// Starts playback
+        /// </summary>
+        /// <param name="trackId">The ID of the track to start playback on</param>
+        public void Start(int trackId)
+        {
+            if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
+            {
+                track.Start();
+            }
+        }
+
+        /// <summary>
+        /// Stops playback
+        /// </summary>
+        /// <param name="trackId">The ID of the track to stop playback on</param>
+        public void Stop(int trackId)
+        {
+            if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
+            {
+                track.Stop();
+            }
+        }
+
+        /// <summary>
+        /// Get playback volume
+        /// </summary>
+        public float GetVolume() => _volume;
+
+        /// <summary>
+        /// Set playback volume
+        /// </summary>
+        /// <param name="volume">The volume of the playback</param>
+        public void SetVolume(float volume)
+        {
+            if (!_volumeChanged)
+            {
+                _volume        = volume;
+                _volumeChanged = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current playback state of the specified track
+        /// </summary>
+        /// <param name="trackId">The track to retrieve the playback state for</param>
+        public PlaybackState GetState(int trackId)
+        {
+            if (_trackPool.TryGet(trackId, out SoundIoAudioTrack track))
+            {
+                return track.State;
+            }
+
+            return PlaybackState.Stopped;
+        }
+
+        /// <summary>
         /// Releases the unmanaged resources used by the <see cref="SoundIoAudioOut" />
         /// </summary>
         public void Dispose()
         {
-            m_TrackPool.Dispose();
-            m_AudioContext.Disconnect();
-            m_AudioContext.Dispose();
+            _trackPool.Dispose();
+            _audioContext.Disconnect();
+            _audioContext.Dispose();
         }
 
         /// <summary>

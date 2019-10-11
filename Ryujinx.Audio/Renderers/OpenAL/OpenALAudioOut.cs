@@ -2,7 +2,6 @@ using OpenTK.Audio;
 using OpenTK.Audio.OpenAL;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -13,174 +12,43 @@ namespace Ryujinx.Audio
     /// </summary>
     public class OpenALAudioOut : IAalOutput, IDisposable
     {
+        /// <summary>
+        /// The maximum amount of tracks we can issue simultaneously
+        /// </summary>
         private const int MaxTracks = 256;
 
-        private const int MaxReleased = 32;
-
-        private AudioContext Context;
-
-        private class Track : IDisposable
-        {
-            public int SourceId { get; private set; }
-
-            public int SampleRate { get; private set; }
-
-            public ALFormat Format { get; private set; }
-
-            private ReleaseCallback Callback;
-
-            public PlaybackState State { get; set; }
-
-            private ConcurrentDictionary<long, int> Buffers;
-
-            private Queue<long> QueuedTagsQueue;
-
-            private Queue<long> ReleasedTagsQueue;
-
-            private bool Disposed;
-
-            public Track(int SampleRate, ALFormat Format, ReleaseCallback Callback)
-            {
-                this.SampleRate = SampleRate;
-                this.Format     = Format;
-                this.Callback   = Callback;
-
-                State = PlaybackState.Stopped;
-
-                SourceId = AL.GenSource();
-
-                Buffers = new ConcurrentDictionary<long, int>();
-
-                QueuedTagsQueue = new Queue<long>();
-
-                ReleasedTagsQueue = new Queue<long>();
-            }
-
-            public bool ContainsBuffer(long Tag)
-            {
-                foreach (long QueuedTag in QueuedTagsQueue)
-                {
-                    if (QueuedTag == Tag)
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-
-            public long[] GetReleasedBuffers(int Count)
-            {
-                AL.GetSource(SourceId, ALGetSourcei.BuffersProcessed, out int ReleasedCount);
-
-                ReleasedCount += ReleasedTagsQueue.Count;
-
-                if (Count > ReleasedCount)
-                {
-                    Count = ReleasedCount;
-                }
-
-                List<long> Tags = new List<long>();
-
-                while (Count-- > 0 && ReleasedTagsQueue.TryDequeue(out long Tag))
-                {
-                    Tags.Add(Tag);
-                }
-
-                while (Count-- > 0 && QueuedTagsQueue.TryDequeue(out long Tag))
-                {
-                    AL.SourceUnqueueBuffers(SourceId, 1);
-
-                    Tags.Add(Tag);
-                }
-
-                return Tags.ToArray();
-            }
-
-            public int AppendBuffer(long Tag)
-            {
-                if (Disposed)
-                {
-                    throw new ObjectDisposedException(nameof(Track));
-                }
-
-                int Id = AL.GenBuffer();
-
-                Buffers.AddOrUpdate(Tag, Id, (Key, OldId) =>
-                {
-                    AL.DeleteBuffer(OldId);
-
-                    return Id;
-                });
-
-                QueuedTagsQueue.Enqueue(Tag);
-
-                return Id;
-            }
-
-            public void CallReleaseCallbackIfNeeded()
-            {
-                AL.GetSource(SourceId, ALGetSourcei.BuffersProcessed, out int ReleasedCount);
-
-                if (ReleasedCount > 0)
-                {
-                    // If we signal, then we also need to have released buffers available
-                    // to return when GetReleasedBuffers is called.
-                    // If playback needs to be re-started due to all buffers being processed,
-                    // then OpenAL zeros the counts (ReleasedCount), so we keep it on the queue.
-                    while (ReleasedCount-- > 0 && QueuedTagsQueue.TryDequeue(out long Tag))
-                    {
-                        AL.SourceUnqueueBuffers(SourceId, 1);
-
-                        ReleasedTagsQueue.Enqueue(Tag);
-                    }
-
-                    Callback();
-                }
-            }
-
-            public void Dispose()
-            {
-                Dispose(true);
-            }
-
-            protected virtual void Dispose(bool Disposing)
-            {
-                if (Disposing && !Disposed)
-                {
-                    Disposed = true;
-
-                    AL.DeleteSource(SourceId);
-
-                    foreach (int Id in Buffers.Values)
-                    {
-                        AL.DeleteBuffer(Id);
-                    }
-                }
-            }
-        }
-
-        private ConcurrentDictionary<int, Track> Tracks;
-
-        private Thread AudioPollerThread;
-
-        private bool KeepPolling;
-
-        public OpenALAudioOut()
-        {
-            Context = new AudioContext();
-
-            Tracks = new ConcurrentDictionary<int, Track>();
-
-            KeepPolling = true;
-
-            AudioPollerThread = new Thread(AudioPollerWork);
-
-            AudioPollerThread.Start();
-        }
+        /// <summary>
+        /// The <see cref="OpenTK.Audio"/> audio context
+        /// </summary>
+        private AudioContext _context;
 
         /// <summary>
-        /// True if OpenAL is supported on the device.
+        /// An object pool containing <see cref="OpenALAudioTrack"/> objects
+        /// </summary>
+        private ConcurrentDictionary<int, OpenALAudioTrack> _tracks;
+
+        /// <summary>
+        /// True if the thread need to keep polling
+        /// </summary>
+        private bool _keepPolling;
+
+        /// <summary>
+        /// The poller thread audio context
+        /// </summary>
+        private Thread _audioPollerThread;
+
+        /// <summary>
+        /// The volume of audio renderer
+        /// </summary>
+        private float _volume = 1.0f;
+
+        /// <summary>
+        /// True if the volume of audio renderer have changed
+        /// </summary>
+        private bool _volumeChanged;
+
+        /// <summary>
+        /// True if OpenAL is supported on the device
         /// </summary>
         public static bool IsSupported
         {
@@ -197,157 +65,232 @@ namespace Ryujinx.Audio
             }
         }
 
+        public OpenALAudioOut()
+        {
+            _context           = new AudioContext();
+            _tracks            = new ConcurrentDictionary<int, OpenALAudioTrack>();
+            _keepPolling       = true;
+            _audioPollerThread = new Thread(AudioPollerWork);
+
+            _audioPollerThread.Start();
+        }
+
         private void AudioPollerWork()
         {
             do
             {
-                foreach (Track Td in Tracks.Values)
+                foreach (OpenALAudioTrack track in _tracks.Values)
                 {
-                    lock (Td)
+                    lock (track)
                     {
-                        Td.CallReleaseCallbackIfNeeded();
+                        track.CallReleaseCallbackIfNeeded();
                     }
                 }
 
                 // If it's not slept it will waste cycles.
                 Thread.Sleep(10);
             }
-            while (KeepPolling);
+            while (_keepPolling);
 
-            foreach (Track Td in Tracks.Values)
+            foreach (OpenALAudioTrack track in _tracks.Values)
             {
-                Td.Dispose();
+                track.Dispose();
             }
 
-            Tracks.Clear();
+            _tracks.Clear();
         }
 
-        public int OpenTrack(int SampleRate, int Channels, ReleaseCallback Callback)
+        /// <summary>
+        /// Creates a new audio track with the specified parameters
+        /// </summary>
+        /// <param name="sampleRate">The requested sample rate</param>
+        /// <param name="channels">The requested channels</param>
+        /// <param name="callback">A <see cref="ReleaseCallback" /> that represents the delegate to invoke when a buffer has been released by the audio track</param>
+        public int OpenTrack(int sampleRate, int channels, ReleaseCallback callback)
         {
-            Track Td = new Track(SampleRate, GetALFormat(Channels), Callback);
+            OpenALAudioTrack track = new OpenALAudioTrack(sampleRate, GetALFormat(channels), callback);
 
-            for (int Id = 0; Id < MaxTracks; Id++)
+            for (int id = 0; id < MaxTracks; id++)
             {
-                if (Tracks.TryAdd(Id, Td))
+                if (_tracks.TryAdd(id, track))
                 {
-                    return Id;
+                    return id;
                 }
             }
 
             return -1;
         }
 
-        private ALFormat GetALFormat(int Channels)
+        private ALFormat GetALFormat(int channels)
         {
-            switch (Channels)
+            switch (channels)
             {
                 case 1: return ALFormat.Mono16;
                 case 2: return ALFormat.Stereo16;
                 case 6: return ALFormat.Multi51Chn16Ext;
             }
 
-            throw new ArgumentOutOfRangeException(nameof(Channels));
+            throw new ArgumentOutOfRangeException(nameof(channels));
         }
 
-        public void CloseTrack(int Track)
+        /// <summary>
+        /// Stops playback and closes the track specified by <paramref name="trackId"/>
+        /// </summary>
+        /// <param name="trackId">The ID of the track to close</param>
+        public void CloseTrack(int trackId)
         {
-            if (Tracks.TryRemove(Track, out Track Td))
+            if (_tracks.TryRemove(trackId, out OpenALAudioTrack track))
             {
-                lock (Td)
+                lock (track)
                 {
-                    Td.Dispose();
+                    track.Dispose();
                 }
             }
         }
 
-        public bool ContainsBuffer(int Track, long Tag)
+        /// <summary>
+        /// Returns a value indicating whether the specified buffer is currently reserved by the specified track
+        /// </summary>
+        /// <param name="trackId">The track to check</param>
+        /// <param name="bufferTag">The buffer tag to check</param>
+        public bool ContainsBuffer(int trackId, long bufferTag)
         {
-            if (Tracks.TryGetValue(Track, out Track Td))
+            if (_tracks.TryGetValue(trackId, out OpenALAudioTrack track))
             {
-                lock (Td)
+                lock (track)
                 {
-                    return Td.ContainsBuffer(Tag);
+                    return track.ContainsBuffer(bufferTag);
                 }
             }
 
             return false;
         }
 
-        public long[] GetReleasedBuffers(int Track, int MaxCount)
+        /// <summary>
+        /// Gets a list of buffer tags the specified track is no longer reserving
+        /// </summary>
+        /// <param name="trackId">The track to retrieve buffer tags from</param>
+        /// <param name="maxCount">The maximum amount of buffer tags to retrieve</param>
+        /// <returns>Buffers released by the specified track</returns>
+        public long[] GetReleasedBuffers(int trackId, int maxCount)
         {
-            if (Tracks.TryGetValue(Track, out Track Td))
+            if (_tracks.TryGetValue(trackId, out OpenALAudioTrack track))
             {
-                lock (Td)
+                lock (track)
                 {
-                    return Td.GetReleasedBuffers(MaxCount);
+                    return track.GetReleasedBuffers(maxCount);
                 }
             }
 
             return null;
         }
 
-        public void AppendBuffer<T>(int Track, long Tag, T[] Buffer) where T : struct
+        /// <summary>
+        /// Appends an audio buffer to the specified track
+        /// </summary>
+        /// <typeparam name="T">The sample type of the buffer</typeparam>
+        /// <param name="trackId">The track to append the buffer to</param>
+        /// <param name="bufferTag">The internal tag of the buffer</param>
+        /// <param name="buffer">The buffer to append to the track</param>
+        public void AppendBuffer<T>(int trackId, long bufferTag, T[] buffer) where T : struct
         {
-            if (Tracks.TryGetValue(Track, out Track Td))
+            if (_tracks.TryGetValue(trackId, out OpenALAudioTrack track))
             {
-                lock (Td)
+                lock (track)
                 {
-                    int BufferId = Td.AppendBuffer(Tag);
+                    int bufferId = track.AppendBuffer(bufferTag);
 
-                    int Size = Buffer.Length * Marshal.SizeOf<T>();
+                    int size = buffer.Length * Marshal.SizeOf<T>();
 
-                    AL.BufferData<T>(BufferId, Td.Format, Buffer, Size, Td.SampleRate);
+                    AL.BufferData(bufferId, track.Format, buffer, size, track.SampleRate);
 
-                    AL.SourceQueueBuffer(Td.SourceId, BufferId);
+                    AL.SourceQueueBuffer(track.SourceId, bufferId);
 
-                    StartPlaybackIfNeeded(Td);
+                    StartPlaybackIfNeeded(track);
                 }
             }
         }
 
-        public void Start(int Track)
+        /// <summary>
+        /// Starts playback
+        /// </summary>
+        /// <param name="trackId">The ID of the track to start playback on</param>
+        public void Start(int trackId)
         {
-            if (Tracks.TryGetValue(Track, out Track Td))
+            if (_tracks.TryGetValue(trackId, out OpenALAudioTrack track))
             {
-                lock (Td)
+                lock (track)
                 {
-                    Td.State = PlaybackState.Playing;
+                    track.State = PlaybackState.Playing;
 
-                    StartPlaybackIfNeeded(Td);
+                    StartPlaybackIfNeeded(track);
                 }
             }
         }
 
-        private void StartPlaybackIfNeeded(Track Td)
+        private void StartPlaybackIfNeeded(OpenALAudioTrack track)
         {
-            AL.GetSource(Td.SourceId, ALGetSourcei.SourceState, out int StateInt);
+            AL.GetSource(track.SourceId, ALGetSourcei.SourceState, out int stateInt);
 
-            ALSourceState State = (ALSourceState)StateInt;
+            ALSourceState State = (ALSourceState)stateInt;
 
-            if (State != ALSourceState.Playing && Td.State == PlaybackState.Playing)
+            if (State != ALSourceState.Playing && track.State == PlaybackState.Playing)
             {
-                AL.SourcePlay(Td.SourceId);
+                if (_volumeChanged)
+                {
+                    AL.Source(track.SourceId, ALSourcef.Gain, _volume);
+
+                    _volumeChanged = false;
+                }
+
+                AL.SourcePlay(track.SourceId);
             }
         }
 
-        public void Stop(int Track)
+        /// <summary>
+        /// Stops playback
+        /// </summary>
+        /// <param name="trackId">The ID of the track to stop playback on</param>
+        public void Stop(int trackId)
         {
-            if (Tracks.TryGetValue(Track, out Track Td))
+            if (_tracks.TryGetValue(trackId, out OpenALAudioTrack track))
             {
-                lock (Td)
+                lock (track)
                 {
-                    Td.State = PlaybackState.Stopped;
+                    track.State = PlaybackState.Stopped;
 
-                    AL.SourceStop(Td.SourceId);
+                    AL.SourceStop(track.SourceId);
                 }
             }
         }
 
-        public PlaybackState GetState(int Track)
+        /// <summary>
+        /// Get playback volume
+        /// </summary>
+        public float GetVolume() => _volume;
+
+        /// <summary>
+        /// Set playback volume
+        /// </summary>
+        /// <param name="volume">The volume of the playback</param>
+        public void SetVolume(float volume)
         {
-            if (Tracks.TryGetValue(Track, out Track Td))
+            if (!_volumeChanged)
             {
-                return Td.State;
+                _volume        = volume;
+                _volumeChanged = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current playback state of the specified track
+        /// </summary>
+        /// <param name="trackId">The track to retrieve the playback state for</param>
+        public PlaybackState GetState(int trackId)
+        {
+            if (_tracks.TryGetValue(trackId, out OpenALAudioTrack track))
+            {
+                return track.State;
             }
 
             return PlaybackState.Stopped;
@@ -358,11 +301,11 @@ namespace Ryujinx.Audio
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool Disposing)
+        protected virtual void Dispose(bool disposing)
         {
-            if (Disposing)
+            if (disposing)
             {
-                KeepPolling = false;
+                _keepPolling = false;
             }
         }
     }

@@ -15,7 +15,12 @@ namespace Ryujinx.Audio
         void AppendBuffer<T>(int trackId, long bufferTag, T[] buffer)  where T : struct;
 
         void Start(int trackId);
+
         void Stop(int trackId);
+
+        float GetVolume();
+
+        void SetVolume(float volume);
 
         PlaybackState GetState(int trackId);
     }
