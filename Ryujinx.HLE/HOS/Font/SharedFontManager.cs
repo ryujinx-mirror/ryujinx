@@ -1,9 +1,9 @@
 using LibHac.Fs;
 using LibHac.Fs.NcaUtils;
+using Ryujinx.Common;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.Resource;
-using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 using System.IO;
 using static Ryujinx.HLE.Utilities.FontUtils;

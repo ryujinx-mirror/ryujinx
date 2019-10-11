@@ -1,4 +1,5 @@
-﻿using Ryujinx.Common.Logging;
+﻿using Ryujinx.Common;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 using System.Net;
