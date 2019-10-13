@@ -2,7 +2,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Input;
 using Ryujinx.Configuration;
-using Ryujinx.Graphics.Gal;
+using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE;
 using Ryujinx.HLE.Input;
 using Ryujinx.Profiler.UI;
@@ -23,7 +23,7 @@ namespace Ryujinx.Ui
 
         private Switch _device;
 
-        private IGalRenderer _renderer;
+        private Renderer _renderer;
 
         private HotkeyButtons _prevHotkeyButtons = 0;
 
@@ -45,7 +45,7 @@ namespace Ryujinx.Ui
         private ProfileWindowManager _profileWindow;
 #endif
 
-        public GlScreen(Switch device, IGalRenderer renderer)
+        public GlScreen(Switch device, Renderer renderer)
             : base(1280, 720,
             new GraphicsMode(), "Ryujinx", 0,
             DisplayDevice.Default, 3, 3,
@@ -59,7 +59,7 @@ namespace Ryujinx.Ui
             Location = new Point(
                 (DisplayDevice.Default.Width  / 2) - (Width  / 2),
                 (DisplayDevice.Default.Height / 2) - (Height / 2));
-            
+
 #if USE_PROFILING
             // Start profile window, it will handle itself from there
             _profileWindow = new ProfileWindowManager();
@@ -69,6 +69,8 @@ namespace Ryujinx.Ui
         private void RenderLoop()
         {
             MakeCurrent();
+
+            _renderer.InitializeCounters();
 
             Stopwatch chrono = new Stopwatch();
 
@@ -85,13 +87,11 @@ namespace Ryujinx.Ui
                     _device.ProcessFrame();
                 }
 
-                _renderer.RunActions();
-
                 if (_resizeEvent)
                 {
                     _resizeEvent = false;
 
-                    _renderer.RenderTarget.SetWindowSize(Width, Height);
+                    // TODO: Resize
                 }
 
                 ticks += chrono.ElapsedTicks;
@@ -113,8 +113,6 @@ namespace Ryujinx.Ui
             VSync = VSyncMode.Off;
 
             Visible = true;
-
-            _renderer.RenderTarget.SetWindowSize(Width, Height);
 
             Context.MakeCurrent(null);
 
@@ -188,7 +186,7 @@ namespace Ryujinx.Ui
                     Keys     = new int[0x8]
                 };
             }
-            
+
             currentButton |= _primaryController.GetButtons();
 
             // Keyboard has priority stick-wise
@@ -296,7 +294,7 @@ namespace Ryujinx.Ui
 
         private new void RenderFrame()
         {
-            _renderer.RenderTarget.Render();
+            _renderer.Window.Present();
 
             _device.Statistics.RecordSystemFrameTime();
 

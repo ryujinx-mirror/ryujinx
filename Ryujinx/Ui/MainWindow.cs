@@ -3,8 +3,7 @@ using JsonPrettyPrinterPlus;
 using Ryujinx.Audio;
 using Ryujinx.Common.Logging;
 using Ryujinx.Configuration;
-using Ryujinx.Graphics.Gal;
-using Ryujinx.Graphics.Gal.OpenGL;
+using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.Profiler;
 using System;
@@ -25,7 +24,7 @@ namespace Ryujinx.Ui
     {
         private static HLE.Switch _device;
 
-        private static IGalRenderer _renderer;
+        private static Renderer _renderer;
 
         private static IAalOutput _audioOut;
 
@@ -74,12 +73,12 @@ namespace Ryujinx.Ui
             _gameTable.ButtonReleaseEvent += Row_Clicked;
 
             bool continueWithStartup = Migration.PromptIfMigrationNeededForStartup(this, out bool migrationNeeded);
-            if (!continueWithStartup)          
+            if (!continueWithStartup)
             {
                 End();
             }
 
-            _renderer = new OglRenderer();
+            _renderer = new Renderer();
 
             _audioOut = InitializeAudioEngine();
 
@@ -231,7 +230,7 @@ namespace Ryujinx.Ui
                 Logger.RestartTime();
 
                 // TODO: Move this somewhere else + reloadable?
-                GraphicsConfig.ShadersDumpPath = ConfigurationState.Instance.Graphics.ShadersDumpPath;
+                Ryujinx.Graphics.Gpu.GraphicsConfig.ShadersDumpPath = ConfigurationState.Instance.Graphics.ShadersDumpPath;
 
                 if (Directory.Exists(path))
                 {
@@ -406,11 +405,11 @@ namespace Ryujinx.Ui
         /// <returns>An <see cref="IAalOutput"/> supported by this machine</returns>
         private static IAalOutput InitializeAudioEngine()
         {
-            if (SoundIoAudioOut.IsSupported)
+            /*if (SoundIoAudioOut.IsSupported)
             {
                 return new SoundIoAudioOut();
             }
-            else if (OpenALAudioOut.IsSupported)
+            else*/ if (OpenALAudioOut.IsSupported)
             {
                 return new OpenALAudioOut();
             }
@@ -452,7 +451,7 @@ namespace Ryujinx.Ui
             IJsonFormatterResolver resolver = CompositeResolver.Create(new[] { StandardResolver.AllowPrivateSnakeCase });
 
             ApplicationMetadata appMetadata;
-            
+
             using (Stream stream = File.OpenRead(metadataPath))
             {
                 appMetadata = JsonSerializer.Deserialize<ApplicationMetadata>(stream, resolver);

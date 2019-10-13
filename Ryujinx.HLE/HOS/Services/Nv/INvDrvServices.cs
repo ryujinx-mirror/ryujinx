@@ -102,7 +102,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
                 byte[] outputData = new byte[outputDataSize];
 
-                context.Memory.ReadBytes(inputDataPosition, outputData, 0, (int)inputDataSize);
+                byte[] temp = context.Memory.ReadBytes(inputDataPosition, inputDataSize);
+
+                Buffer.BlockCopy(temp, 0, outputData, 0, temp.Length);
 
                 arguments = new Span<byte>(outputData);
             }

@@ -355,12 +355,9 @@ namespace ARMeilleure.Instructions
             }
             while (bit < context.Memory.AddressSpaceBits);
 
-            if (!context.Memory.HasWriteWatchSupport)
-            {
-                Operand hasFlagSet = context.BitwiseAnd(pte, Const((long)MemoryManager.PteFlagsMask));
+            Operand hasFlagSet = context.BitwiseAnd(pte, Const((long)MemoryManager.PteFlagsMask));
 
-                context.BranchIfTrue(lblFallbackPath, hasFlagSet);
-            }
+            context.BranchIfTrue(lblFallbackPath, hasFlagSet);
 
             Operand pageOffset = context.BitwiseAnd(address, Const(address.Type, MemoryManager.PageMask));
 

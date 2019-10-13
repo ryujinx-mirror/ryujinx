@@ -1,5 +1,6 @@
 using ARMeilleure.State;
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -28,8 +29,6 @@ namespace ARMeilleure.Memory
         internal int PtLevelBits { get; }
         internal int PtLevelSize { get; }
         internal int PtLevelMask { get; }
-
-        public bool HasWriteWatchSupport => MemoryManagement.HasWriteWatchSupport;
 
         public int  AddressSpaceBits { get; }
         public long AddressSpaceSize { get; }
@@ -254,119 +253,57 @@ namespace ARMeilleure.Memory
             return ptePtr;
         }
 
-        public bool IsRegionModified(long position, long size)
+        public unsafe (ulong, ulong)[] GetModifiedRanges(ulong address, ulong size)
         {
-            if (!HasWriteWatchSupport)
+            List<(ulong, ulong)> ranges = new List<(ulong, ulong)>();
+
+            ulong endAddress = (address + size + PageMask) & ~(ulong)PageMask;
+
+            address &= ~(ulong)PageMask;
+
+            ulong currAddr = address;
+            ulong currSize = 0;
+
+            while (address < endAddress)
             {
-                return IsRegionModifiedFallback(position, size);
-            }
-
-            IntPtr address = Translate(position);
-
-            IntPtr baseAddr     = address;
-            IntPtr expectedAddr = address;
-
-            long pendingPages = 0;
-
-            long pages = size / PageSize;
-
-            bool modified = false;
-
-            bool IsAnyPageModified()
-            {
-                IntPtr pendingSize = new IntPtr(pendingPages * PageSize);
-
-                IntPtr[] addresses = new IntPtr[pendingPages];
-
-                bool result = GetModifiedPages(baseAddr, pendingSize, addresses, out ulong count);
-
-                if (result)
+                if (IsValidPosition((long)address))
                 {
-                    return count != 0;
-                }
-                else
-                {
-                    return true;
-                }
-            }
-
-            while (pages-- > 0)
-            {
-                if (address != expectedAddr)
-                {
-                    modified |= IsAnyPageModified();
-
-                    baseAddr = address;
-
-                    pendingPages = 0;
-                }
-
-                expectedAddr = address + PageSize;
-
-                pendingPages++;
-
-                if (pages == 0)
-                {
-                    break;
-                }
-
-                position += PageSize;
-
-                address = Translate(position);
-            }
-
-            if (pendingPages != 0)
-            {
-                modified |= IsAnyPageModified();
-            }
-
-            return modified;
-        }
-
-        private unsafe bool IsRegionModifiedFallback(long position, long size)
-        {
-            long endAddr = (position + size + PageMask) & ~PageMask;
-
-            bool modified = false;
-
-            while ((ulong)position < (ulong)endAddr)
-            {
-                if (IsValidPosition(position))
-                {
-                    byte* ptr = ((byte**)_pageTable)[position >> PageBits];
+                    byte* ptr = ((byte**)_pageTable)[address >> PageBits];
 
                     ulong ptrUlong = (ulong)ptr;
 
                     if ((ptrUlong & PteFlagNotModified) == 0)
                     {
-                        modified = true;
+                        // Modified.
+                        currSize += PageSize;
 
-                        SetPtEntryFlag(position, PteFlagNotModified);
+                        SetPtEntryFlag((long)address, PteFlagNotModified);
+                    }
+                    else
+                    {
+                        if (currSize != 0)
+                        {
+                            ranges.Add((currAddr, currSize));
+                        }
+
+                        currAddr = address + PageSize;
+                        currSize = 0;
                     }
                 }
                 else
                 {
-                    modified = true;
+                    currSize += PageSize;
                 }
 
-                position += PageSize;
+                address += PageSize;
             }
 
-            return modified;
-        }
-
-        public bool TryGetHostAddress(long position, long size, out IntPtr ptr)
-        {
-            if (IsContiguous(position, size))
+            if (currSize != 0)
             {
-                ptr = (IntPtr)Translate(position);
-
-                return true;
+                ranges.Add((currAddr, currSize));
             }
 
-            ptr = IntPtr.Zero;
-
-            return false;
+            return ranges.ToArray();
         }
 
         private bool IsContiguous(long position, long size)
@@ -612,41 +549,6 @@ namespace ARMeilleure.Memory
             return data;
         }
 
-        public void ReadBytes(long position, byte[] data, int startIndex, int size)
-        {
-            // Note: This will be moved later.
-            long endAddr = position + size;
-
-            if ((ulong)size > int.MaxValue)
-            {
-                throw new ArgumentOutOfRangeException(nameof(size));
-            }
-
-            if ((ulong)endAddr < (ulong)position)
-            {
-                throw new ArgumentOutOfRangeException(nameof(position));
-            }
-
-            int offset = startIndex;
-
-            while ((ulong)position < (ulong)endAddr)
-            {
-                long pageLimit = (position + PageSize) & ~(long)PageMask;
-
-                if ((ulong)pageLimit > (ulong)endAddr)
-                {
-                    pageLimit = endAddr;
-                }
-
-                int copySize = (int)(pageLimit - position);
-
-                Marshal.Copy(Translate(position), data, offset, copySize);
-
-                position += copySize;
-                offset   += copySize;
-            }
-        }
-
         public void WriteSByte(long position, sbyte value)
         {
             WriteByte(position, (byte)value);
@@ -743,53 +645,6 @@ namespace ARMeilleure.Memory
 
                 position += copySize;
                 offset   += copySize;
-            }
-        }
-
-        public void WriteBytes(long position, byte[] data, int startIndex, int size)
-        {
-            // Note: This will be moved later.
-            long endAddr = position + size;
-
-            if ((ulong)endAddr < (ulong)position)
-            {
-                throw new ArgumentOutOfRangeException(nameof(position));
-            }
-
-            int offset = startIndex;
-
-            while ((ulong)position < (ulong)endAddr)
-            {
-                long pageLimit = (position + PageSize) & ~(long)PageMask;
-
-                if ((ulong)pageLimit > (ulong)endAddr)
-                {
-                    pageLimit = endAddr;
-                }
-
-                int copySize = (int)(pageLimit - position);
-
-                Marshal.Copy(data, offset, Translate(position), copySize);
-
-                position += copySize;
-                offset   += copySize;
-            }
-        }
-
-        public void CopyBytes(long src, long dst, long size)
-        {
-            // Note: This will be moved later.
-            if (IsContiguous(src, size) &&
-                IsContiguous(dst, size))
-            {
-                byte* srcPtr = (byte*)Translate(src);
-                byte* dstPtr = (byte*)Translate(dst);
-
-                Buffer.MemoryCopy(srcPtr, dstPtr, size, size);
-            }
-            else
-            {
-                WriteBytes(dst, ReadBytes(src, size));
             }
         }
 

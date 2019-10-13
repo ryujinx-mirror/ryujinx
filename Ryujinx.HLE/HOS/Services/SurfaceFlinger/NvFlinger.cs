@@ -1,6 +1,5 @@
 using Ryujinx.Common.Logging;
-using Ryujinx.Graphics.Gal;
-using Ryujinx.Graphics.Memory;
+using Ryujinx.Graphics.GAL;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap;
@@ -23,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         private KEvent _binderEvent;
 
-        private IGalRenderer _renderer;
+        private IRenderer _renderer;
 
         private const int BufferQueueCount = 0x40;
         private const int BufferQueueMask  = BufferQueueCount - 1;
@@ -34,7 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         private bool _disposed;
 
-        public NvFlinger(IGalRenderer renderer, KEvent binderEvent)
+        public NvFlinger(IRenderer renderer, KEvent binderEvent)
         {
             _commands = new Dictionary<(string, int), ServiceProcessParcel>
             {
@@ -256,20 +255,20 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             return ResultCode.Success;
         }
 
-        private GalImageFormat ConvertColorFormat(ColorFormat colorFormat)
+        private Format ConvertColorFormat(ColorFormat colorFormat)
         {
             switch (colorFormat)
             {
                 case ColorFormat.A8B8G8R8:
-                    return GalImageFormat.Rgba8  | GalImageFormat.Unorm;
+                    return Format.R8G8B8A8Unorm;
                 case ColorFormat.X8B8G8R8:
-                    return GalImageFormat.Rgbx8  | GalImageFormat.Unorm;
+                    return Format.R8G8B8A8Unorm;
                 case ColorFormat.R5G6B5:
-                    return GalImageFormat.Bgr565 | GalImageFormat.Unorm;
+                    return Format.R5G6B5Unorm;
                 case ColorFormat.A8R8G8B8:
-                    return GalImageFormat.Bgra8  | GalImageFormat.Unorm;
+                    return Format.B8G8R8A8Unorm;
                 case ColorFormat.A4B4G4R4:
-                    return GalImageFormat.Rgba4  | GalImageFormat.Unorm;
+                    return Format.R4G4B4A4Unorm;
                 default:
                     throw new NotImplementedException($"Color Format \"{colorFormat}\" not implemented!");
             }
@@ -292,7 +291,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             NvMapHandle map = NvMapDeviceFile.GetMapFromHandle(context.Process, nvMapHandle);
 
-            long fbAddr = map.Address + bufferOffset;
+            ulong fbAddr = (ulong)(map.Address + bufferOffset);
 
             _bufferQueue[slot].State = BufferState.Acquired;
 
@@ -301,39 +300,42 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             bool flipX = _bufferQueue[slot].Transform.HasFlag(HalTransform.FlipX);
             bool flipY = _bufferQueue[slot].Transform.HasFlag(HalTransform.FlipY);
 
-            GalImageFormat imageFormat = ConvertColorFormat(_bufferQueue[slot].Data.Buffer.Surfaces[0].ColorFormat);
+            Format format = ConvertColorFormat(_bufferQueue[slot].Data.Buffer.Surfaces[0].ColorFormat);
 
-            int BlockHeight = 1 << _bufferQueue[slot].Data.Buffer.Surfaces[0].BlockHeightLog2;
+            int bytesPerPixel =
+                format == Format.R5G6B5Unorm ||
+                format == Format.R4G4B4A4Unorm ? 2 : 4;
+
+            int gobBlocksInY = 1 << _bufferQueue[slot].Data.Buffer.Surfaces[0].BlockHeightLog2;
 
             // Note: Rotation is being ignored.
 
-            int top    = crop.Top;
-            int left   = crop.Left;
-            int right  = crop.Right;
-            int bottom = crop.Bottom;
+            ITexture texture = context.Device.Gpu.GetTexture(
+                fbAddr,
+                fbWidth,
+                fbHeight,
+                0,
+                false,
+                gobBlocksInY,
+                format,
+                bytesPerPixel);
 
-            NvGpuVmm vmm = NvHostAsGpuDeviceFile.GetAddressSpaceContext(context.Process).Vmm;
+            _renderer.Window.RegisterTextureReleaseCallback(ReleaseBuffer);
 
-            _renderer.QueueAction(() =>
-            {
-                if (!_renderer.Texture.TryGetImage(fbAddr, out GalImage image))
-                {
-                    image = new GalImage(
-                        fbWidth,
-                        fbHeight, 1, 1, 1, BlockHeight, 1,
-                        GalMemoryLayout.BlockLinear,
-                        imageFormat,
-                        GalTextureTarget.TwoD);
-                }
+            ImageCrop imageCrop = new ImageCrop(
+                crop.Left,
+                crop.Right,
+                crop.Top,
+                crop.Bottom,
+                flipX,
+                flipY);
 
-                context.Device.Gpu.ResourceManager.ClearPbCache();
-                context.Device.Gpu.ResourceManager.SendTexture(vmm, fbAddr, image);
+            _renderer.Window.QueueTexture(texture, imageCrop, slot);
+        }
 
-                _renderer.RenderTarget.SetTransform(flipX, flipY, top, left, right, bottom);
-                _renderer.RenderTarget.Present(fbAddr);
-
-                ReleaseBuffer(slot);
-            });
+        private void ReleaseBuffer(object context)
+        {
+            ReleaseBuffer((int)context);
         }
 
         private void ReleaseBuffer(int slot)

@@ -1,16 +1,12 @@
-﻿using ARMeilleure.Memory;
-using Ryujinx.Graphics.Memory;
+﻿using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
 {
     class AddressSpaceContext
     {
-        public NvGpuVmm Vmm { get; private set; }
-
         private class Range
         {
             public ulong Start { get; private set; }
@@ -42,9 +38,45 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
         private SortedList<long, Range> _maps;
         private SortedList<long, Range> _reservations;
 
-        public AddressSpaceContext(KProcess process)
+        public MemoryManager Gmm { get; }
+
+        private class MemoryProxy : IPhysicalMemory
         {
-            Vmm = new NvGpuVmm(process.CpuMemory);
+            private ARMeilleure.Memory.MemoryManager _cpuMemory;
+
+            public MemoryProxy(ARMeilleure.Memory.MemoryManager cpuMemory)
+            {
+                _cpuMemory = cpuMemory;
+            }
+
+            public Span<byte> Read(ulong address, ulong size)
+            {
+                return _cpuMemory.ReadBytes((long)address, (long)size);
+            }
+
+            public void Write(ulong address, Span<byte> data)
+            {
+                _cpuMemory.WriteBytes((long)address, data.ToArray());
+            }
+
+            public (ulong, ulong)[] GetModifiedRanges(ulong address, ulong size)
+            {
+                return _cpuMemory.GetModifiedRanges(address, size);
+            }
+
+            public int GetPageSize()
+            {
+                return 4096;
+            }
+        }
+
+        public AddressSpaceContext(ServiceCtx context)
+        {
+            Gmm = context.Device.Gpu.MemoryManager;
+
+            var memoryProxy = new MemoryProxy(context.Process.CpuMemory);
+
+            context.Device.Gpu.SetVmm(memoryProxy);
 
             _maps         = new SortedList<long, Range>();
             _reservations = new SortedList<long, Range>();
@@ -61,7 +93,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
             }
 
             // Check if address is page aligned.
-            if ((position & NvGpuVmm.PageMask) != 0)
+            if ((position & (long)MemoryManager.PageMask) != 0)
             {
                 return false;
             }

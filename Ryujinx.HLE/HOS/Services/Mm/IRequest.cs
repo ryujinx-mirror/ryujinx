@@ -24,8 +24,6 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         // FinalizeOld(u32)
         public ResultCode FinalizeOld(ServiceCtx context)
         {
-            context.Device.Gpu.UninitializeVideoDecoder();
-
             Logger.PrintStub(LogClass.ServiceMm);
 
             return ResultCode.Success;
@@ -69,8 +67,6 @@ namespace Ryujinx.HLE.HOS.Services.Mm
         // Finalize(u32)
         public ResultCode Finalize(ServiceCtx context)
         {
-            context.Device.Gpu.UninitializeVideoDecoder();
-
             Logger.PrintStub(LogClass.ServiceMm);
 
             return ResultCode.Success;

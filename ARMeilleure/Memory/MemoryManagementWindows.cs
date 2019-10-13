@@ -36,12 +36,6 @@ namespace ARMeilleure.Memory
             WriteCombineModifierflag = 0x400
         }
 
-        private enum WriteWatchFlags : uint
-        {
-            None  = 0,
-            Reset = 1
-        }
-
         [DllImport("kernel32.dll")]
         private static extern IntPtr VirtualAlloc(
             IntPtr           lpAddress,
@@ -61,15 +55,6 @@ namespace ARMeilleure.Memory
             IntPtr         lpAddress,
             IntPtr         dwSize,
             AllocationType dwFreeType);
-
-        [DllImport("kernel32.dll")]
-        private static extern int GetWriteWatch(
-            WriteWatchFlags dwFlags,
-            IntPtr          lpBaseAddress,
-            IntPtr          dwRegionSize,
-            IntPtr[]        lpAddresses,
-            ref ulong       lpdwCount,
-            out uint        lpdwGranularity);
 
         public static IntPtr Allocate(IntPtr size)
         {
@@ -129,28 +114,6 @@ namespace ARMeilleure.Memory
         public static bool Free(IntPtr address)
         {
             return VirtualFree(address, IntPtr.Zero, AllocationType.Release);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool GetModifiedPages(
-            IntPtr    address,
-            IntPtr    size,
-            IntPtr[]  addresses,
-            out ulong count)
-        {
-            ulong pagesCount = (ulong)addresses.Length;
-
-            int result = GetWriteWatch(
-                WriteWatchFlags.Reset,
-                address,
-                size,
-                addresses,
-                ref pagesCount,
-                out uint granularity);
-
-            count = pagesCount;
-
-            return result == 0;
         }
     }
 }

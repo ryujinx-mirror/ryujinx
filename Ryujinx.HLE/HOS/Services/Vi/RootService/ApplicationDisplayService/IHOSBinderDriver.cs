@@ -1,4 +1,4 @@
-using Ryujinx.Graphics.Gal;
+using Ryujinx.Graphics.GAL;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
 
         private NvFlinger _flinger;
 
-        public IHOSBinderDriver(Horizon system, IGalRenderer renderer)
+        public IHOSBinderDriver(Horizon system, IRenderer renderer)
         {
             _binderEvent = new KEvent(system);
 

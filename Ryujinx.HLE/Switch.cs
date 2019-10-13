@@ -1,8 +1,8 @@
 using LibHac.FsSystem;
 using Ryujinx.Audio;
 using Ryujinx.Configuration;
-using Ryujinx.Graphics;
-using Ryujinx.Graphics.Gal;
+using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services;
@@ -19,7 +19,7 @@ namespace Ryujinx.HLE
 
         internal DeviceMemory Memory { get; private set; }
 
-        internal NvGpu Gpu { get; private set; }
+        internal GpuContext Gpu { get; private set; }
 
         public VirtualFileSystem FileSystem { get; private set; }
 
@@ -35,7 +35,7 @@ namespace Ryujinx.HLE
 
         public event EventHandler Finish;
 
-        public Switch(IGalRenderer renderer, IAalOutput audioOut)
+        public Switch(IRenderer renderer, IAalOutput audioOut)
         {
             if (renderer == null)
             {
@@ -51,7 +51,7 @@ namespace Ryujinx.HLE
 
             Memory = new DeviceMemory();
 
-            Gpu = new NvGpu(renderer);
+            Gpu = new GpuContext(renderer);
 
             FileSystem = new VirtualFileSystem();
 
@@ -114,12 +114,12 @@ namespace Ryujinx.HLE
 
         public bool WaitFifo()
         {
-            return Gpu.Pusher.WaitForCommands();
+            return Gpu.DmaPusher.WaitForCommands();
         }
 
         public void ProcessFrame()
         {
-            Gpu.Pusher.DispatchCalls();
+            Gpu.DmaPusher.DispatchCalls();
         }
 
         internal void Unload()

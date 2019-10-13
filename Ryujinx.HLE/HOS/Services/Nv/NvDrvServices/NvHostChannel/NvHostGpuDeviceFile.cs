@@ -27,7 +27,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
                 switch (command.Number)
                 {
                     case 0x1b:
-                        result = CallIoctlMethod<SubmitGpfifoArguments, long>(SubmitGpfifoEx, arguments, inlineInBuffer);
+                        result = CallIoctlMethod<SubmitGpfifoArguments, ulong>(SubmitGpfifoEx, arguments, inlineInBuffer);
                         break;
                 }
             }
@@ -70,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
             return NvInternalResult.Success;
         }
 
-        private NvInternalResult SubmitGpfifoEx(ref SubmitGpfifoArguments arguments, Span<long> inlineData)
+        private NvInternalResult SubmitGpfifoEx(ref SubmitGpfifoArguments arguments, Span<ulong> inlineData)
         {
             return SubmitGpfifo(ref arguments, inlineData);
         }

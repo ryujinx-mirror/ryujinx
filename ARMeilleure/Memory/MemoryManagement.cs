@@ -6,8 +6,6 @@ namespace ARMeilleure.Memory
 {
     public static class MemoryManagement
     {
-        public static bool HasWriteWatchSupport => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-
         public static IntPtr Allocate(ulong size)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -86,28 +84,6 @@ namespace ARMeilleure.Memory
             else
             {
                 throw new PlatformNotSupportedException();
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool GetModifiedPages(
-            IntPtr    address,
-            IntPtr    size,
-            IntPtr[]  addresses,
-            out ulong count)
-        {
-            // This is only supported on windows, but returning
-            // false (failed) is also valid for platforms without
-            // write tracking support on the OS.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return MemoryManagementWindows.GetModifiedPages(address, size, addresses, out count);
-            }
-            else
-            {
-                count = 0;
-
-                return false;
             }
         }
     }
