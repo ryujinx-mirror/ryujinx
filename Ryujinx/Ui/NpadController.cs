@@ -170,7 +170,7 @@ namespace Ryujinx.UI.Input
             {
                 int axis = controllerInputId - ControllerInputId.Axis0;
 
-                return Math.Abs(joystickState.GetAxis(axis)) > Deadzone;
+                return joystickState.GetAxis(axis) > TriggerThreshold;
             }
             else if (controllerInputId <= ControllerInputId.Hat2Right)
             {
