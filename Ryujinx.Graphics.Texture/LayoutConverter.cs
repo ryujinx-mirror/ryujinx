@@ -108,11 +108,8 @@ namespace Ryujinx.Graphics.Texture
         {
             int outOffs = 0;
 
-            int w = width;
-            int h = height;
-
-            w = BitUtils.DivRoundUp(w, blockWidth);
-            h = BitUtils.DivRoundUp(h, blockHeight);
+            int w = BitUtils.DivRoundUp(width,  blockWidth);
+            int h = BitUtils.DivRoundUp(height, blockHeight);
 
             int outStride = BitUtils.AlignUp(w * bytesPerPixel, AlignmentSize);
 

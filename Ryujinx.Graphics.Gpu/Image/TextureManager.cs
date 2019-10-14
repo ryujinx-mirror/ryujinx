@@ -245,9 +245,20 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             FormatInfo formatInfo = copyTexture.Format.Convert();
 
+            int width;
+
+            if (copyTexture.LinearLayout)
+            {
+                width = copyTexture.Stride / formatInfo.BytesPerPixel;
+            }
+            else
+            {
+                width = copyTexture.Width;
+            }
+
             TextureInfo info = new TextureInfo(
                 address,
-                copyTexture.Width,
+                width,
                 copyTexture.Height,
                 copyTexture.Depth,
                 1,
