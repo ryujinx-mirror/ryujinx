@@ -210,7 +210,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             OpCode op = context.CurrOp;
 
-            bool saturate = op.RawOpCode.Extract(op is OpCodeAluImm32 ? 52 : 32);
+            bool saturate = op.RawOpCode.Extract(op is IOpCodeReg ? 32 : 52);
 
             Operand[] srcA = GetHalfSrcA(context);
             Operand[] srcB = GetHalfSrcB(context);
