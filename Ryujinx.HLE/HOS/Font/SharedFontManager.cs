@@ -1,11 +1,12 @@
 using LibHac.Fs;
 using LibHac.Fs.NcaUtils;
 using Ryujinx.Common;
+using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
-using Ryujinx.HLE.Resource;
 using System.Collections.Generic;
 using System.IO;
+
 using static Ryujinx.HLE.Utilities.FontUtils;
 
 namespace Ryujinx.HLE.HOS.Font

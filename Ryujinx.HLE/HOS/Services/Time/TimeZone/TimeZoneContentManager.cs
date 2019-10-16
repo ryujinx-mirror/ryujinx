@@ -1,9 +1,9 @@
 ﻿using LibHac.Fs;
 using LibHac.Fs.NcaUtils;
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
-using Ryujinx.HLE.Resource;
 using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 using System.IO;
