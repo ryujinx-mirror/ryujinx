@@ -1,15 +1,15 @@
-﻿using LibHac.Fs.NcaUtils;
+﻿using LibHac.FsSystem.NcaUtils;
 
 namespace Ryujinx.HLE.FileSystem.Content
 {
     public struct LocationEntry
     {
-        public string      ContentPath { get; private set; }
-        public int         Flag        { get; private set; }
-        public long        TitleId     { get; private set; }
-        public ContentType ContentType { get; private set; }
+        public string         ContentPath { get; private set; }
+        public int            Flag        { get; private set; }
+        public long           TitleId     { get; private set; }
+        public NcaContentType ContentType { get; private set; }
 
-        public LocationEntry(string contentPath, int flag, long titleId, ContentType contentType)
+        public LocationEntry(string contentPath, int flag, long titleId, NcaContentType contentType)
         {
             ContentPath = contentPath;
             Flag        = flag;

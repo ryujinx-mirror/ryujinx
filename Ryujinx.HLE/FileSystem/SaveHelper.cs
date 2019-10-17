@@ -1,4 +1,5 @@
 ﻿using LibHac.Fs;
+using LibHac.FsSystem;
 using Ryujinx.HLE.HOS;
 using System.IO;
 
@@ -21,9 +22,9 @@ namespace Ryujinx.HLE.FileSystem
 
                 using (LocalStorage systemSaveData = new LocalStorage(savePath, FileAccess.Read, FileMode.Open))
                 {
-                    IFileSystem saveFs = new LibHac.Fs.Save.SaveDataFileSystem(context.Device.System.KeySet, systemSaveData, IntegrityCheckLevel.None, false);
+                    IFileSystem saveFs = new LibHac.FsSystem.Save.SaveDataFileSystem(context.Device.System.KeySet, systemSaveData, IntegrityCheckLevel.None, false);
 
-                    saveFs.CopyFileSystem(outputFolder);
+                    saveFs.CopyDirectory(outputFolder, "/", "/");
                 }
 
                 File.Delete(savePath);

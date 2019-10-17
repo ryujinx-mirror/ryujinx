@@ -1,6 +1,8 @@
 ﻿using LibHac;
 using LibHac.Fs;
-using LibHac.Fs.NcaUtils;
+using LibHac.FsSystem;
+using LibHac.FsSystem.NcaUtils;
+using LibHac.Spl;
 using Ryujinx.Common.Logging;
 using System;
 using System.Collections.Generic;
@@ -8,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+
 using SystemState = Ryujinx.HLE.HOS.SystemState;
 
 namespace Ryujinx.UI
@@ -115,8 +118,9 @@ namespace Ryujinx.UI
                             }
 
                             // Creates NACP class from the NACP file
-                            IFile controlNacp = controlFs.OpenFile("/control.nacp", OpenMode.Read);
-                            Nacp  controlData = new Nacp(controlNacp.AsStream());
+                            controlFs.OpenFile(out IFile controlNacpFile, "/control.nacp", OpenMode.Read).ThrowIfFailure();
+
+                            Nacp controlData = new Nacp(controlNacpFile.AsStream());
 
                             // Get the title name, title ID, developer name and version number from the NACP
                             version = controlData.DisplayVersion;
@@ -150,7 +154,8 @@ namespace Ryujinx.UI
                             // Read the icon from the ControlFS and store it as a byte array
                             try
                             {
-                                IFile icon = controlFs.OpenFile($"/icon_{DesiredTitleLanguage}.dat", OpenMode.Read);
+                                controlFs.OpenFile(out IFile icon, $"/icon_{DesiredTitleLanguage}.dat", OpenMode.Read).ThrowIfFailure();
+
                                 using (MemoryStream stream = new MemoryStream())
                                 {
                                     icon.AsStream().CopyTo(stream);
@@ -159,15 +164,15 @@ namespace Ryujinx.UI
                             }
                             catch (HorizonResultException)
                             {
-                                IDirectory controlDir = controlFs.OpenDirectory("./", OpenDirectoryMode.All);
-                                foreach (DirectoryEntry entry in controlDir.Read())
+                                foreach (DirectoryEntryEx entry in controlFs.EnumerateEntries("/", "*"))
                                 {
                                     if (entry.Name == "control.nacp")
                                     {
                                         continue;
                                     }
 
-                                    IFile icon = controlFs.OpenFile(entry.FullPath, OpenMode.Read);
+                                    controlFs.OpenFile(out IFile icon, entry.FullPath, OpenMode.Read).ThrowIfFailure();
+
                                     using (MemoryStream stream = new MemoryStream())
                                     {
                                         icon.AsStream().CopyTo(stream);
@@ -346,21 +351,26 @@ namespace Ryujinx.UI
             Nca controlNca = null;
 
             // Add keys to keyset if needed
-            foreach (DirectoryEntry ticketEntry in Pfs.EnumerateEntries("*.tik"))
+            foreach (DirectoryEntryEx ticketEntry in Pfs.EnumerateEntries("/", "*.tik"))
             {
-                Ticket ticket = new Ticket(Pfs.OpenFile(ticketEntry.FullPath, OpenMode.Read).AsStream());
+                Result result = Pfs.OpenFile(out IFile ticketFile, ticketEntry.FullPath, OpenMode.Read);
 
-                if (!KeySet.TitleKeys.ContainsKey(ticket.RightsId))
+                if (result.IsSuccess())
                 {
-                    KeySet.TitleKeys.Add(ticket.RightsId, ticket.GetTitleKey(KeySet));
+                    Ticket ticket = new Ticket(ticketFile.AsStream());
+
+                    KeySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(KeySet)));
                 }
             }
 
             // Find the Control NCA and store it in variable called controlNca
-            foreach (DirectoryEntry fileEntry in Pfs.EnumerateEntries("*.nca"))
+            foreach (DirectoryEntryEx fileEntry in Pfs.EnumerateEntries("/", "*.nca"))
             {
-                Nca nca = new Nca(KeySet, Pfs.OpenFile(fileEntry.FullPath, OpenMode.Read).AsStorage());
-                if (nca.Header.ContentType == ContentType.Control)
+                Pfs.OpenFile(out IFile ncaFile, fileEntry.FullPath, OpenMode.Read).ThrowIfFailure();
+
+                Nca nca = new Nca(KeySet, ncaFile.AsStorage());
+
+                if (nca.Header.ContentType == NcaContentType.Control)
                 {
                     controlNca = nca;
                 }

@@ -1,21 +1,17 @@
 using LibHac;
-using System.Collections.Generic;
-using System.Text;
+using LibHac.Fs;
+using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 {
     class IDirectory : IpcService
     {
-        private const int DirectoryEntrySize = 0x310;
-
-        private IEnumerator<LibHac.Fs.DirectoryEntry> _enumerator;
-
         private LibHac.Fs.IDirectory _baseDirectory;
 
         public IDirectory(LibHac.Fs.IDirectory directory)
         {
             _baseDirectory = directory;
-            _enumerator    = directory.Read().GetEnumerator();
         }
 
         [Command(0)]
@@ -25,60 +21,26 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             long bufferPosition = context.Request.ReceiveBuff[0].Position;
             long bufferLen      = context.Request.ReceiveBuff[0].Size;
 
-            int maxReadCount = (int)(bufferLen / DirectoryEntrySize);
-            int readCount    = 0;
+            byte[]               entriesBytes = new byte[bufferLen];
+            Span<DirectoryEntry> entries      = MemoryMarshal.Cast<byte, DirectoryEntry>(entriesBytes);
 
-            try
-            {
-                while (readCount < maxReadCount && _enumerator.MoveNext())
-                {
-                    long position = bufferPosition + readCount * DirectoryEntrySize;
+            Result result = _baseDirectory.Read(out long entriesRead, entries);
 
-                    WriteDirectoryEntry(context, position, _enumerator.Current);
+            context.Memory.WriteBytes(bufferPosition, entriesBytes);
+            context.ResponseData.Write(entriesRead);
 
-                    readCount++;
-                }
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            context.ResponseData.Write((long)readCount);
-
-            return ResultCode.Success;
-        }
-
-        private void WriteDirectoryEntry(ServiceCtx context, long position, LibHac.Fs.DirectoryEntry entry)
-        {
-            for (int offset = 0; offset < 0x300; offset += 8)
-            {
-                context.Memory.WriteInt64(position + offset, 0);
-            }
-
-            byte[] nameBuffer = Encoding.UTF8.GetBytes(entry.Name);
-
-            context.Memory.WriteBytes(position, nameBuffer);
-
-            context.Memory.WriteInt32(position + 0x300, (int)entry.Attributes);
-            context.Memory.WriteInt32(position + 0x304, (byte)entry.Type);
-            context.Memory.WriteInt64(position + 0x308, entry.Size);
+            return (ResultCode)result.Value;
         }
 
         [Command(1)]
         // GetEntryCount() -> u64
         public ResultCode GetEntryCount(ServiceCtx context)
         {
-            try
-            {
-                context.ResponseData.Write((long)_baseDirectory.GetEntryCount());
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
+            Result result = _baseDirectory.GetEntryCount(out long entryCount);
 
-            return ResultCode.Success;
+            context.ResponseData.Write(entryCount);
+
+            return (ResultCode)result.Value;
         }
     }
 }

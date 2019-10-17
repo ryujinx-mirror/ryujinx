@@ -26,22 +26,14 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             long size   = context.RequestData.ReadInt64();
 
             byte[] data = new byte[size];
-            int readSize;
 
-            try
-            {
-                readSize = _baseFile.Read(data, offset, readOption);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
+            Result result = _baseFile.Read(out long bytesRead, offset, data, readOption);
 
             context.Memory.WriteBytes(position, data);
 
-            context.ResponseData.Write((long)readSize);
+            context.ResponseData.Write(bytesRead);
 
-            return ResultCode.Success;
+            return (ResultCode)result.Value;
         }
 
         [Command(1)]
@@ -58,66 +50,34 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             byte[] data = context.Memory.ReadBytes(position, size);
 
-            try
-            {
-                _baseFile.Write(data, offset, writeOption);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
+            return (ResultCode)_baseFile.Write(offset, data, writeOption).Value;
         }
 
         [Command(2)]
         // Flush()
         public ResultCode Flush(ServiceCtx context)
         {
-            try
-            {
-                _baseFile.Flush();
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
+            return (ResultCode)_baseFile.Flush().Value;
         }
 
         [Command(3)]
         // SetSize(u64 size)
         public ResultCode SetSize(ServiceCtx context)
         {
-            try
-            {
-                long size = context.RequestData.ReadInt64();
+            long size = context.RequestData.ReadInt64();
 
-                _baseFile.SetSize(size);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
+            return (ResultCode)_baseFile.SetSize(size).Value;
         }
 
         [Command(4)]
         // GetSize() -> u64 fileSize
         public ResultCode GetSize(ServiceCtx context)
         {
-            try
-            {
-                context.ResponseData.Write(_baseFile.GetSize());
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
+            Result result = _baseFile.GetSize(out long size);
 
-            return ResultCode.Success;
+            context.ResponseData.Write(size);
+
+            return (ResultCode)result.Value;
         }
 
         public void Dispose()

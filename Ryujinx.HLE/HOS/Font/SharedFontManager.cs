@@ -1,5 +1,6 @@
 using LibHac.Fs;
-using LibHac.Fs.NcaUtils;
+using LibHac.FsSystem;
+using LibHac.FsSystem.NcaUtils;
 using Ryujinx.Common;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.FileSystem;
@@ -55,7 +56,7 @@ namespace Ryujinx.HLE.HOS.Font
                     if (contentManager.TryGetFontTitle(name, out long fontTitle) &&
                         contentManager.TryGetFontFilename(name, out string fontFilename))
                     {
-                        string contentPath = contentManager.GetInstalledContentPath(fontTitle, StorageId.NandSystem, ContentType.Data);
+                        string contentPath = contentManager.GetInstalledContentPath(fontTitle, StorageId.NandSystem, NcaContentType.Data);
                         string fontPath    = _device.FileSystem.SwitchPathToSystemPath(contentPath);
 
                         if (!string.IsNullOrWhiteSpace(fontPath))
@@ -66,9 +67,10 @@ namespace Ryujinx.HLE.HOS.Font
                             {
                                 Nca         nca          = new Nca(_device.System.KeySet, ncaFileStream);
                                 IFileSystem romfs        = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
-                                Stream      fontFile     = romfs.OpenFile(fontFilename, OpenMode.Read).AsStream();
 
-                                data = DecryptFont(fontFile);
+                                romfs.OpenFile(out IFile fontFile, "/" + fontFilename, OpenMode.Read).ThrowIfFailure();
+
+                                data = DecryptFont(fontFile.AsStream());
                             }
                                 
                             FontInfo info = new FontInfo((int)fontOffset, data.Length);

@@ -1,5 +1,7 @@
+using LibHac;
 using LibHac.Fs;
-using LibHac.Fs.NcaUtils;
+using LibHac.FsSystem;
+using LibHac.FsSystem.NcaUtils;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.SystemState;
@@ -165,7 +167,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         public byte[] GetFirmwareData(Switch device)
         {
             long   titleId     = 0x0100000000000809;
-            string contentPath = device.System.ContentManager.GetInstalledContentPath(titleId, StorageId.NandSystem, ContentType.Data);
+            string contentPath = device.System.ContentManager.GetInstalledContentPath(titleId, StorageId.NandSystem, NcaContentType.Data);
 
             if (string.IsNullOrWhiteSpace(contentPath))
             {
@@ -185,11 +187,25 @@ namespace Ryujinx.HLE.HOS.Services.Settings
 
                 IFileSystem firmwareRomFs = firmwareContent.OpenFileSystem(NcaSectionType.Data, device.System.FsIntegrityCheckLevel);
 
-                IFile firmwareFile = firmwareRomFs.OpenFile("/file", OpenMode.Read);
+                Result result = firmwareRomFs.OpenFile(out IFile firmwareFile, "/file", OpenMode.Read);
+                if (result.IsFailure())
+                {
+                    return null;
+                }
 
-                byte[] data = new byte[firmwareFile.GetSize()];
+                result = firmwareFile.GetSize(out long fileSize);
+                if (result.IsFailure())
+                {
+                    return null;
+                }
 
-                firmwareFile.Read(data, 0);
+                byte[] data = new byte[fileSize];
+
+                result = firmwareFile.Read(out _, 0, data);
+                if (result.IsFailure())
+                {
+                    return null;
+                }
 
                 return data;
             }

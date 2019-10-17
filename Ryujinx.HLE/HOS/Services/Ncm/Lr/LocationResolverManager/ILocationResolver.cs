@@ -1,4 +1,4 @@
-﻿using LibHac.Fs.NcaUtils;
+﻿using LibHac.FsSystem.NcaUtils;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using System.Text;
@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            if (ResolvePath(context, titleId, ContentType.Program))
+            if (ResolvePath(context, titleId, NcaContentType.Program))
             {
                 return ResultCode.Success;
             }
@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            RedirectPath(context, titleId, 0, ContentType.Program);
+            RedirectPath(context, titleId, 0, NcaContentType.Program);
 
             return ResultCode.Success;
         }
@@ -49,7 +49,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            if (ResolvePath(context, titleId, ContentType.Control))
+            if (ResolvePath(context, titleId, NcaContentType.Control))
             {
                 return ResultCode.Success;
             }
@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            if (ResolvePath(context, titleId, ContentType.Manual))
+            if (ResolvePath(context, titleId, NcaContentType.Manual))
             {
                 return ResultCode.Success;
             }
@@ -81,7 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            if (ResolvePath(context, titleId, ContentType.Data) || ResolvePath(context, titleId, ContentType.PublicData))
+            if (ResolvePath(context, titleId, NcaContentType.Data) || ResolvePath(context, titleId, NcaContentType.PublicData))
             {
                 return ResultCode.Success;
             }
@@ -97,7 +97,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            RedirectPath(context, titleId, 1, ContentType.Control);
+            RedirectPath(context, titleId, 1, NcaContentType.Control);
 
             return ResultCode.Success;
         }
@@ -108,7 +108,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            RedirectPath(context, titleId, 1, ContentType.Manual);
+            RedirectPath(context, titleId, 1, NcaContentType.Manual);
 
             return ResultCode.Success;
         }
@@ -119,7 +119,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            if (ResolvePath(context, titleId, ContentType.Manual))
+            if (ResolvePath(context, titleId, NcaContentType.Manual))
             {
                 return ResultCode.Success;
             }
@@ -135,7 +135,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            RedirectPath(context, titleId, 1, ContentType.Manual);
+            RedirectPath(context, titleId, 1, NcaContentType.Manual);
 
             return ResultCode.Success;
         }
@@ -155,7 +155,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            RedirectPath(context, titleId, 1, ContentType.Program);
+            RedirectPath(context, titleId, 1, NcaContentType.Program);
 
             return ResultCode.Success;
         }
@@ -175,7 +175,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            DeleteContentPath(context, titleId, ContentType.Program);
+            DeleteContentPath(context, titleId, NcaContentType.Program);
 
             return ResultCode.Success;
         }
@@ -186,7 +186,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            DeleteContentPath(context, titleId, ContentType.Control);
+            DeleteContentPath(context, titleId, NcaContentType.Control);
 
             return ResultCode.Success;
         }
@@ -197,7 +197,7 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            DeleteContentPath(context, titleId, ContentType.Manual);
+            DeleteContentPath(context, titleId, NcaContentType.Manual);
 
             return ResultCode.Success;
         }
@@ -208,12 +208,12 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
         {
             long titleId = context.RequestData.ReadInt64();
 
-            DeleteContentPath(context, titleId, ContentType.Manual);
+            DeleteContentPath(context, titleId, NcaContentType.Manual);
 
             return ResultCode.Success;
         }
 
-        private void RedirectPath(ServiceCtx context, long titleId, int flag, ContentType contentType)
+        private void RedirectPath(ServiceCtx context, long titleId, int flag, NcaContentType contentType)
         {
             string        contentPath = ReadUtf8String(context);
             LocationEntry newLocation = new LocationEntry(contentPath, flag, titleId, contentType);
@@ -221,10 +221,10 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             context.Device.System.ContentManager.RedirectLocation(newLocation, _storageId);
         }
 
-        private bool ResolvePath(ServiceCtx context, long titleId,ContentType contentType)
+        private bool ResolvePath(ServiceCtx context, long titleId, NcaContentType contentType)
         {
             ContentManager contentManager = context.Device.System.ContentManager;
-            string         contentPath    = contentManager.GetInstalledContentPath(titleId, _storageId, ContentType.Program);
+            string         contentPath    = contentManager.GetInstalledContentPath(titleId, _storageId, NcaContentType.Program);
 
             if (!string.IsNullOrWhiteSpace(contentPath))
             {
@@ -243,12 +243,12 @@ namespace Ryujinx.HLE.HOS.Services.Ncm.Lr.LocationResolverManager
             return true;
         }
 
-        private void DeleteContentPath(ServiceCtx context, long titleId, ContentType contentType)
+        private void DeleteContentPath(ServiceCtx context, long titleId, NcaContentType contentType)
         {
             ContentManager contentManager = context.Device.System.ContentManager;
-            string         contentPath    = contentManager.GetInstalledContentPath(titleId, _storageId, ContentType.Manual);
+            string         contentPath    = contentManager.GetInstalledContentPath(titleId, _storageId, NcaContentType.Manual);
 
-            contentManager.ClearEntry(titleId, ContentType.Manual, _storageId);
+            contentManager.ClearEntry(titleId, NcaContentType.Manual, _storageId);
         }
     }
 }

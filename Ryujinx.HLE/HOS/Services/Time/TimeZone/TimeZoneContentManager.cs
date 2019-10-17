@@ -1,5 +1,7 @@
-﻿using LibHac.Fs;
-using LibHac.Fs.NcaUtils;
+﻿using LibHac;
+using LibHac.Fs;
+using LibHac.FsSystem;
+using LibHac.FsSystem.NcaUtils;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.FileSystem;
@@ -58,9 +60,10 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 {
                     Nca         nca              = new Nca(_device.System.KeySet, ncaFileStream);
                     IFileSystem romfs            = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
-                    Stream      binaryListStream = romfs.OpenFile("binaryList.txt", OpenMode.Read).AsStream();
 
-                    StreamReader reader = new StreamReader(binaryListStream);
+                    romfs.OpenFile(out IFile binaryListFile, "/binaryList.txt", OpenMode.Read).ThrowIfFailure();
+
+                    StreamReader reader = new StreamReader(binaryListFile.AsStream());
 
                     List<string> locationNameList = new List<string>();
 
@@ -139,7 +142,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
 
         public string GetTimeZoneBinaryTitleContentPath()
         {
-            return _device.System.ContentManager.GetInstalledContentPath(TimeZoneBinaryTitleId, StorageId.NandSystem, ContentType.Data);
+            return _device.System.ContentManager.GetInstalledContentPath(TimeZoneBinaryTitleId, StorageId.NandSystem, NcaContentType.Data);
         }
 
         public bool HasTimeZoneBinaryTitle()
@@ -162,9 +165,11 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             Nca         nca   = new Nca(_device.System.KeySet, ncaFile);
             IFileSystem romfs = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
 
-            timeZoneBinaryStream = romfs.OpenFile($"/zoneinfo/{locationName}", OpenMode.Read).AsStream();
+            Result result = romfs.OpenFile(out IFile timeZoneBinaryFile, $"/zoneinfo/{locationName}", OpenMode.Read);
 
-            return ResultCode.Success;
+            timeZoneBinaryStream = timeZoneBinaryFile.AsStream();
+
+            return (ResultCode)result.Value;
         }
 
         internal ResultCode LoadTimeZoneRule(out TimeZoneRule outRules, string locationName)

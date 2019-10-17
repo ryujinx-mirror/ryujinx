@@ -25,16 +25,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             long size = context.RequestData.ReadInt64();
 
-            try
-            {
-                _fileSystem.CreateFile(name, size, createOption);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
+            return (ResultCode)_fileSystem.CreateFile(name, size, createOption).Value;
         }
 
         [Command(1)]
@@ -43,16 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             string name = ReadUtf8String(context);
 
-            try
-            {
-                _fileSystem.DeleteFile(name);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
+            return (ResultCode)_fileSystem.DeleteFile(name).Value;
         }
 
         [Command(2)]
@@ -61,16 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             string name = ReadUtf8String(context);
 
-            try
-            {
-                _fileSystem.CreateDirectory(name);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
+            return (ResultCode)_fileSystem.CreateDirectory(name).Value;
         }
 
         [Command(3)]
@@ -79,16 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             string name = ReadUtf8String(context);
 
-            try
-            {
-                _fileSystem.DeleteDirectory(name);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
+            return (ResultCode)_fileSystem.DeleteDirectory(name).Value;
         }
 
         [Command(4)]
@@ -97,16 +61,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             string name = ReadUtf8String(context);
 
-            try
-            {
-                _fileSystem.DeleteDirectoryRecursively(name);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
+            return (ResultCode)_fileSystem.DeleteDirectoryRecursively(name).Value;
         }
 
         [Command(5)]
@@ -116,16 +71,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             string oldName = ReadUtf8String(context, 0);
             string newName = ReadUtf8String(context, 1);
 
-            try
-            {
-                _fileSystem.RenameFile(oldName, newName);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
+            return (ResultCode)_fileSystem.RenameFile(oldName, newName).Value;
         }
 
         [Command(6)]
@@ -135,16 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             string oldName = ReadUtf8String(context, 0);
             string newName = ReadUtf8String(context, 1);
 
-            try
-            {
-                _fileSystem.RenameDirectory(oldName, newName);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
+            return (ResultCode)_fileSystem.RenameDirectory(oldName, newName).Value;
         }
 
         [Command(7)]
@@ -153,25 +90,11 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             string name = ReadUtf8String(context);
 
-            try
-            {
-                DirectoryEntryType entryType = _fileSystem.GetEntryType(name);
+            Result result = _fileSystem.GetEntryType(out DirectoryEntryType entryType, name);
 
-                if (entryType == DirectoryEntryType.Directory || entryType == DirectoryEntryType.File)
-                {
-                    context.ResponseData.Write((int)entryType);
-                }
-                else
-                {
-                    return ResultCode.PathDoesNotExist;
-                }
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
+            context.ResponseData.Write((int)entryType);
 
-            return ResultCode.Success;
+            return (ResultCode)result.Value;
         }
 
         [Command(8)]
@@ -182,20 +105,16 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             string name = ReadUtf8String(context);
 
-            try
-            {
-                LibHac.Fs.IFile file = _fileSystem.OpenFile(name, mode);
+            Result result = _fileSystem.OpenFile(out LibHac.Fs.IFile file, name, mode);
 
+            if (result.IsSuccess())
+            {
                 IFile fileInterface = new IFile(file);
 
                 MakeObject(context, fileInterface);
             }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
 
-            return ResultCode.Success;
+            return (ResultCode)result.Value;
         }
 
         [Command(9)]
@@ -206,36 +125,23 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 
             string name = ReadUtf8String(context);
 
-            try
-            {
-                LibHac.Fs.IDirectory dir = _fileSystem.OpenDirectory(name, mode);
+            Result result = _fileSystem.OpenDirectory(out LibHac.Fs.IDirectory dir, name, mode);
 
+            if (result.IsSuccess())
+            {
                 IDirectory dirInterface = new IDirectory(dir);
 
                 MakeObject(context, dirInterface);
             }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
 
-            return ResultCode.Success;
+            return (ResultCode)result.Value;
         }
 
         [Command(10)]
         // Commit()
         public ResultCode Commit(ServiceCtx context)
         {
-            try
-            {
-                _fileSystem.Commit();
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
+            return (ResultCode)_fileSystem.Commit().Value;
         }
 
         [Command(11)]
@@ -244,16 +150,11 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             string name = ReadUtf8String(context);
 
-            try
-            {
-                context.ResponseData.Write(_fileSystem.GetFreeSpaceSize(name));
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
+            Result result = _fileSystem.GetFreeSpaceSize(out long size, name);
 
-            return ResultCode.Success;
+            context.ResponseData.Write(size);
+
+            return (ResultCode)result.Value;
         }
 
         [Command(12)]
@@ -262,16 +163,11 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             string name = ReadUtf8String(context);
 
-            try
-            {
-                context.ResponseData.Write(_fileSystem.GetTotalSpaceSize(name));
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
+            Result result = _fileSystem.GetTotalSpaceSize(out long size, name);
 
-            return ResultCode.Success;
+            context.ResponseData.Write(size);
+
+            return (ResultCode)result.Value;
         }
 
         [Command(13)]
@@ -280,16 +176,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             string name = ReadUtf8String(context);
 
-            try
-            {
-                _fileSystem.CleanDirectoryRecursively(name);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
+            return (ResultCode)_fileSystem.CleanDirectoryRecursively(name).Value;
         }
 
         [Command(14)]
@@ -298,27 +185,20 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
         {
             string name = ReadUtf8String(context);
 
-            try
-            {
-                FileTimeStampRaw timestamp = _fileSystem.GetFileTimeStampRaw(name);
+            Result result = _fileSystem.GetFileTimeStampRaw(out FileTimeStampRaw timestamp, name);
 
-                context.ResponseData.Write(timestamp.Created);
-                context.ResponseData.Write(timestamp.Modified);
-                context.ResponseData.Write(timestamp.Accessed);
+            context.ResponseData.Write(timestamp.Created);
+            context.ResponseData.Write(timestamp.Modified);
+            context.ResponseData.Write(timestamp.Accessed);
 
-                byte[] data = new byte[8];
+            byte[] data = new byte[8];
 
-                // is valid?
-                data[0] = 1;
+            // is valid?
+            data[0] = 1;
 
-                context.ResponseData.Write(data);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
+            context.ResponseData.Write(data);
 
-            return ResultCode.Success;
+            return (ResultCode)result.Value;
         }
     }
 }

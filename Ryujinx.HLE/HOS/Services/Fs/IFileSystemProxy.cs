@@ -1,6 +1,8 @@
 using LibHac;
 using LibHac.Fs;
-using LibHac.Fs.NcaUtils;
+using LibHac.FsService;
+using LibHac.FsSystem;
+using LibHac.FsSystem.NcaUtils;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy;
@@ -14,7 +16,12 @@ namespace Ryujinx.HLE.HOS.Services.Fs
     [Service("fsp-srv")]
     class IFileSystemProxy : IpcService
     {
-        public IFileSystemProxy(ServiceCtx context) { }
+        private LibHac.FsService.IFileSystemProxy _baseFileSystemProxy;
+
+        public IFileSystemProxy(ServiceCtx context)
+        {
+            _baseFileSystemProxy = context.Device.System.FsServer.CreateFileSystemProxyService();
+        }
 
         [Command(1)]
         // Initialize(u64, pid)
@@ -125,6 +132,23 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             return ResultCode.Success;
         }
 
+        [Command(30)]
+        // OpenGameCardStorage(u32, u32) -> object<nn::fssrv::sf::IStorage>
+        public ResultCode OpenGameCardStorage(ServiceCtx context)
+        {
+            GameCardHandle       handle      = new GameCardHandle(context.RequestData.ReadInt32());
+            GameCardPartitionRaw partitionId = (GameCardPartitionRaw)context.RequestData.ReadInt32();
+
+            Result result = _baseFileSystemProxy.OpenGameCardStorage(out LibHac.Fs.IStorage storage, handle, partitionId);
+
+            if (result.IsSuccess())
+            {
+                MakeObject(context, new FileSystemProxy.IStorage(storage));
+            }
+
+            return (ResultCode)result.Value;
+        }
+
         [Command(51)]
         // OpenSaveDataFileSystem(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> saveDataFs
         public ResultCode OpenSaveDataFileSystem(ServiceCtx context)
@@ -184,14 +208,14 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             byte[]    padding   = context.RequestData.ReadBytes(7);
             long      titleId   = context.RequestData.ReadInt64();
 
-            ContentType contentType = ContentType.Data;
+            NcaContentType contentType = NcaContentType.Data;
 
             StorageId installedStorage =
                 context.Device.System.ContentManager.GetInstalledStorage(titleId, contentType, storageId);
 
             if (installedStorage == StorageId.None)
             {
-                contentType = ContentType.PublicData;
+                contentType = NcaContentType.PublicData;
 
                 installedStorage =
                     context.Device.System.ContentManager.GetInstalledStorage(titleId, contentType, storageId);
@@ -244,6 +268,20 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             MakeObject(context, new FileSystemProxy.IStorage(context.Device.FileSystem.RomFs.AsStorage()));
 
             return ResultCode.Success;
+        }
+
+        [Command(400)]
+        // OpenDataStorageByCurrentProcess() -> object<nn::fssrv::sf::IStorage> dataStorage
+        public ResultCode OpenDeviceOperator(ServiceCtx context)
+        {
+            Result result = _baseFileSystemProxy.OpenDeviceOperator(out LibHac.FsService.IDeviceOperator deviceOperator);
+
+            if (result.IsSuccess())
+            {
+                MakeObject(context, new IDeviceOperator(deviceOperator));
+            }
+
+            return (ResultCode)result.Value;
         }
 
         [Command(1005)]

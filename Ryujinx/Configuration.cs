@@ -1,5 +1,5 @@
 using JsonPrettyPrinterPlus;
-using LibHac.Fs;
+using LibHac.FsSystem;
 using OpenTK.Input;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
