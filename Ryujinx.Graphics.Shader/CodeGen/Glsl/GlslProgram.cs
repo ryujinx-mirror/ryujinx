@@ -5,6 +5,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         public BufferDescriptor[]  CBufferDescriptors { get; }
         public BufferDescriptor[]  SBufferDescriptors { get; }
         public TextureDescriptor[] TextureDescriptors { get; }
+        public TextureDescriptor[] ImageDescriptors   { get; }
 
         public string Code { get; }
 
@@ -12,11 +13,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             BufferDescriptor[]  cBufferDescriptors,
             BufferDescriptor[]  sBufferDescriptors,
             TextureDescriptor[] textureDescriptors,
+            TextureDescriptor[] imageDescriptors,
             string              code)
         {
             CBufferDescriptors = cBufferDescriptors;
             SBufferDescriptors = sBufferDescriptors;
             TextureDescriptors = textureDescriptors;
+            ImageDescriptors   = imageDescriptors;
             Code               = code;
         }
     }

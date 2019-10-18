@@ -26,7 +26,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     clearColor.Blue,
                     clearColor.Alpha);
 
-                _context.Renderer.GraphicsPipeline.ClearRenderTargetColor(
+                _context.Renderer.Pipeline.ClearRenderTargetColor(
                     index,
                     componentMask,
                     color);
@@ -44,7 +44,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     stencilMask = _context.State.GetStencilTestState().FrontMask;
                 }
 
-                _context.Renderer.GraphicsPipeline.ClearRenderTargetDepthStencil(
+                _context.Renderer.Pipeline.ClearRenderTargetDepthStencil(
                     depthValue,
                     clearDepth,
                     stencilValue,

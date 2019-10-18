@@ -6,8 +6,7 @@ namespace Ryujinx.Graphics.GAL
 {
     public interface IRenderer
     {
-        IComputePipeline  ComputePipeline  { get; }
-        IGraphicsPipeline GraphicsPipeline { get; }
+        IPipeline Pipeline { get; }
 
         IWindow Window { get; }
 

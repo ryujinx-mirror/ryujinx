@@ -9,8 +9,6 @@ namespace Ryujinx.Graphics.Gpu.Image
 {
     class TexturePool : Pool<Texture>
     {
-        private TextureManager _textureManager;
-
         public LinkedListNode<TexturePool> CacheNode { get; set; }
 
         private struct TextureContainer
@@ -20,13 +18,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         public TexturePool(
-            GpuContext     context,
-            TextureManager textureManager,
-            ulong          address,
-            int            maximumId) : base(context, address, maximumId)
-        {
-            _textureManager = textureManager;
-        }
+            GpuContext context,
+            ulong      address,
+            int        maximumId) : base(context, address, maximumId) { }
 
         public override Texture Get(int id)
         {
@@ -56,7 +50,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     return null;
                 }
 
-                texture = _textureManager.FindOrCreateTexture(info, TextureSearchFlags.Sampler);
+                texture = Context.Methods.TextureManager.FindOrCreateTexture(info, TextureSearchFlags.Sampler);
 
                 texture.IncrementReferenceCount();
 

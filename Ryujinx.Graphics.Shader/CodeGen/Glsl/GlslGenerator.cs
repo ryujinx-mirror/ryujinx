@@ -21,6 +21,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 context.CBufferDescriptors.ToArray(),
                 context.SBufferDescriptors.ToArray(),
                 context.TextureDescriptors.ToArray(),
+                context.ImageDescriptors.ToArray(),
                 context.GetCode());
         }
 

@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.Shader
     {
         public string Name { get; }
 
-        public TextureTarget Target { get; }
+        public SamplerType Type { get; }
 
         public int HandleIndex { get; }
 
@@ -13,10 +13,10 @@ namespace Ryujinx.Graphics.Shader
         public int CbufSlot   { get; }
         public int CbufOffset { get; }
 
-        public TextureDescriptor(string name, TextureTarget target, int hIndex)
+        public TextureDescriptor(string name, SamplerType type, int hIndex)
         {
             Name        = name;
-            Target      = target;
+            Type        = type;
             HandleIndex = hIndex;
 
             IsBindless = false;
@@ -25,10 +25,10 @@ namespace Ryujinx.Graphics.Shader
             CbufOffset = 0;
         }
 
-        public TextureDescriptor(string name, TextureTarget target, int cbufSlot, int cbufOffset)
+        public TextureDescriptor(string name, SamplerType type, int cbufSlot, int cbufOffset)
         {
             Name        = name;
-            Target      = target;
+            Type        = type;
             HandleIndex = 0;
 
             IsBindless = true;

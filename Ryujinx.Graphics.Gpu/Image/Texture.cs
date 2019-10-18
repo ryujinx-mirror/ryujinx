@@ -217,8 +217,6 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             ulong rangeSize = (EndAddress - Address + pageMask) & ~pageMask;
 
-            _context.Methods.InvalidateRange(rangeAddress, rangeSize);
-
             Span<byte> data = _context.PhysicalMemory.Read(Address, Size);
 
             if (_info.IsLinear)
@@ -681,11 +679,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         public bool OverlapsWith(ulong address, ulong size)
         {
             return Address < address + size && address < EndAddress;
-        }
-
-        public void Invalidate()
-        {
-            // _hasData = false;
         }
 
         public void IncrementReferenceCount()

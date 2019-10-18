@@ -4,20 +4,20 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 {
     class AstTextureOperation : AstOperation
     {
-        public TextureTarget Target { get; }
-        public TextureFlags  Flags  { get; }
+        public SamplerType  Type  { get; }
+        public TextureFlags Flags { get; }
 
         public int Handle { get; }
 
         public AstTextureOperation(
             Instruction       inst,
-            TextureTarget     target,
+            SamplerType       type,
             TextureFlags      flags,
             int               handle,
             int               compMask,
             params IAstNode[] sources) : base(inst, compMask, sources)
         {
-            Target = target;
+            Type = type;
             Flags  = flags;
             Handle = handle;
         }

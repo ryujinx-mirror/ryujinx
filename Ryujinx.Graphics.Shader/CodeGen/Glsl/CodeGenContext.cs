@@ -12,6 +12,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         public List<BufferDescriptor>  CBufferDescriptors { get; }
         public List<BufferDescriptor>  SBufferDescriptors { get; }
         public List<TextureDescriptor> TextureDescriptors { get; }
+        public List<TextureDescriptor> ImageDescriptors   { get; }
 
         public OperandManager OperandManager { get; }
 
@@ -28,6 +29,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             CBufferDescriptors = new List<BufferDescriptor>();
             SBufferDescriptors = new List<BufferDescriptor>();
             TextureDescriptors = new List<TextureDescriptor>();
+            ImageDescriptors   = new List<TextureDescriptor>();
 
             OperandManager = new OperandManager();
 

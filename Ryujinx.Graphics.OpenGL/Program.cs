@@ -6,8 +6,17 @@ namespace Ryujinx.Graphics.OpenGL
 {
     class Program : IProgram
     {
-        private const int StageShift   = 5;
-        private const int SbStageShift = 4;
+        private const int ShaderStages = 6;
+
+        private const int UbStageShift  = 5;
+        private const int SbStageShift  = 4;
+        private const int TexStageShift = 5;
+        private const int ImgStageShift = 3;
+
+        private const int UbsPerStage  = 1 << UbStageShift;
+        private const int SbsPerStage  = 1 << SbStageShift;
+        private const int TexsPerStage = 1 << TexStageShift;
+        private const int ImgsPerStage = 1 << ImgStageShift;
 
         public int Handle { get; private set; }
 
@@ -16,12 +25,14 @@ namespace Ryujinx.Graphics.OpenGL
         private int[] _ubBindingPoints;
         private int[] _sbBindingPoints;
         private int[] _textureUnits;
+        private int[] _imageUnits;
 
         public Program(IShader[] shaders)
         {
-            _ubBindingPoints = new int[32 * 6];
-            _sbBindingPoints = new int[16 * 6];
-            _textureUnits    = new int[32 * 6];
+            _ubBindingPoints = new int[UbsPerStage  * ShaderStages];
+            _sbBindingPoints = new int[SbsPerStage  * ShaderStages];
+            _textureUnits    = new int[TexsPerStage * ShaderStages];
+            _imageUnits      = new int[ImgsPerStage * ShaderStages];
 
             for (int index = 0; index < _ubBindingPoints.Length; index++)
             {
@@ -36,6 +47,11 @@ namespace Ryujinx.Graphics.OpenGL
             for (int index = 0; index < _textureUnits.Length; index++)
             {
                 _textureUnits[index] = -1;
+            }
+
+            for (int index = 0; index < _imageUnits.Length; index++)
+            {
+                _imageUnits[index] = -1;
             }
 
             Handle = GL.CreateProgram();
@@ -79,7 +95,7 @@ namespace Ryujinx.Graphics.OpenGL
 
                     GL.UniformBlockBinding(Handle, location, ubBindingPoint);
 
-                    int bpIndex = (int)shader.Stage << StageShift | descriptor.Slot;
+                    int bpIndex = (int)shader.Stage << UbStageShift | descriptor.Slot;
 
                     _ubBindingPoints[bpIndex] = ubBindingPoint;
 
@@ -117,7 +133,27 @@ namespace Ryujinx.Graphics.OpenGL
 
                     GL.Uniform1(location, textureUnit);
 
-                    int uIndex = (int)shader.Stage << StageShift | samplerIndex++;
+                    int uIndex = (int)shader.Stage << TexStageShift | samplerIndex++;
+
+                    _textureUnits[uIndex] = textureUnit;
+
+                    textureUnit++;
+                }
+
+                int imageIndex = 0;
+
+                foreach (TextureDescriptor descriptor in shader.Info.Images)
+                {
+                    int location = GL.GetUniformLocation(Handle, descriptor.Name);
+
+                    if (location < 0)
+                    {
+                        continue;
+                    }
+
+                    GL.Uniform1(location, textureUnit);
+
+                    int uIndex = (int)shader.Stage << ImgStageShift | imageIndex++;
 
                     _textureUnits[uIndex] = textureUnit;
 
@@ -133,7 +169,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public int GetUniformBufferBindingPoint(ShaderStage stage, int index)
         {
-            return _ubBindingPoints[(int)stage << StageShift | index];
+            return _ubBindingPoints[(int)stage << UbStageShift | index];
         }
 
         public int GetStorageBufferBindingPoint(ShaderStage stage, int index)
@@ -143,7 +179,12 @@ namespace Ryujinx.Graphics.OpenGL
 
         public int GetTextureUnit(ShaderStage stage, int index)
         {
-            return _textureUnits[(int)stage << StageShift | index];
+            return _textureUnits[(int)stage << TexStageShift | index];
+        }
+
+        public int GetImageUnit(ShaderStage stage, int index)
+        {
+            return _textureUnits[(int)stage << ImgStageShift | index];
         }
 
         private void CheckProgramLink()

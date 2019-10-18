@@ -10,6 +10,96 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static partial class InstEmit
     {
+        public static void Sust(EmitterContext context)
+        {
+            OpCodeImage op = (OpCodeImage)context.CurrOp;
+
+            int raIndex = op.Ra.Index;
+            int rbIndex = op.Rb.Index;
+
+            Operand Ra()
+            {
+                if (raIndex > RegisterConsts.RegisterZeroIndex)
+                {
+                    return Const(0);
+                }
+
+                return context.Copy(Register(raIndex++, RegisterType.Gpr));
+            }
+
+            Operand Rb()
+            {
+                if (rbIndex > RegisterConsts.RegisterZeroIndex)
+                {
+                    return Const(0);
+                }
+
+                return context.Copy(Register(rbIndex++, RegisterType.Gpr));
+            }
+
+            bool isArray = op.Dimensions == ImageDimensions.Image1DArray ||
+                           op.Dimensions == ImageDimensions.Image2DArray;
+
+            Operand arrayIndex = isArray ? Ra() : null;
+
+            List<Operand> sourcesList = new List<Operand>();
+
+            if (op.IsBindless)
+            {
+                sourcesList.Add(context.Copy(Register(op.Rc)));
+            }
+
+            SamplerType type = GetSamplerType(op.Dimensions);
+
+            int coordsCount = type.GetDimensions();
+
+            for (int index = 0; index < coordsCount; index++)
+            {
+                sourcesList.Add(Ra());
+            }
+
+            if (isArray)
+            {
+                sourcesList.Add(arrayIndex);
+
+                type |= SamplerType.Array;
+            }
+
+            if (op.UseComponents)
+            {
+                int componentMask = (int)op.Components;
+
+                for (int compMask = componentMask, compIndex = 0; compMask != 0; compMask >>= 1, compIndex++)
+                {
+                    if ((compMask & 1) != 0)
+                    {
+                        sourcesList.Add(Rb());
+                    }
+                }
+            }
+            else
+            {
+                // TODO.
+            }
+
+            Operand[] sources = sourcesList.ToArray();
+
+            int handle = !op.IsBindless ? op.Immediate : 0;
+
+            TextureFlags flags = op.IsBindless ? TextureFlags.Bindless : TextureFlags.None;
+
+            TextureOperation operation = new TextureOperation(
+                Instruction.ImageStore,
+                type,
+                flags,
+                handle,
+                0,
+                null,
+                sources);
+
+            context.Add(operation);
+        }
+
         public static void Tex(EmitterContext context)
         {
             Tex(context, TextureFlags.None);
@@ -74,15 +164,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 }
             }
 
-            TextureTarget  type;
+            SamplerType  type;
             TextureFlags flags;
 
             if (op is OpCodeTexs texsOp)
             {
-                type  = GetTextureType (texsOp.Target);
-                flags = GetTextureFlags(texsOp.Target);
+                type  = GetSamplerType (texsOp.Target);
+                flags = GetSamplerFlags(texsOp.Target);
 
-                if ((type & TextureTarget.Array) != 0)
+                if ((type & SamplerType.Array) != 0)
                 {
                     Operand arrayIndex = Ra();
 
@@ -91,7 +181,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                     sourcesList.Add(arrayIndex);
 
-                    if ((type & TextureTarget.Shadow) != 0)
+                    if ((type & SamplerType.Shadow) != 0)
                     {
                         sourcesList.Add(Rb());
                     }
@@ -149,8 +239,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else if (op is OpCodeTlds tldsOp)
             {
-                type  = GetTextureType (tldsOp.Target);
-                flags = GetTextureFlags(tldsOp.Target) | TextureFlags.IntCoords;
+                type  = GetSamplerType (tldsOp.Target);
+                flags = GetSamplerFlags(tldsOp.Target) | TextureFlags.IntCoords;
 
                 switch (tldsOp.Target)
                 {
@@ -217,14 +307,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     sourcesList.Add(Ra());
                 }
 
-                type  = TextureTarget.Texture2D;
+                type  = SamplerType.Texture2D;
                 flags = TextureFlags.Gather;
 
                 if (tld4sOp.HasDepthCompare)
                 {
                     sourcesList.Add(Rb());
 
-                    type |= TextureTarget.Shadow;
+                    type |= SamplerType.Shadow;
                 }
 
                 if (tld4sOp.HasOffset)
@@ -338,7 +428,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             List<Operand> sourcesList = new List<Operand>();
 
-            TextureTarget type = GetTextureType(op.Dimensions);
+            SamplerType type = GetSamplerType(op.Dimensions);
 
             TextureFlags flags = TextureFlags.Gather;
 
@@ -353,7 +443,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 sourcesList.Add(arrayIndex);
 
-                type |= TextureTarget.Array;
+                type |= SamplerType.Array;
             }
 
             Operand[] packedOffs = new Operand[2];
@@ -365,7 +455,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 sourcesList.Add(Rb());
 
-                type |= TextureTarget.Shadow;
+                type |= SamplerType.Shadow;
             }
 
             if (op.Offset != TextureGatherOffset.None)
@@ -446,7 +536,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             // TODO: Validate and use property.
             Instruction inst = Instruction.TextureSize;
 
-            TextureTarget type = TextureTarget.Texture2D;
+            SamplerType type = SamplerType.Texture2D;
 
             TextureFlags flags = bindless ? TextureFlags.Bindless : TextureFlags.None;
 
@@ -551,7 +641,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 sourcesList.Add(Rb());
             }
 
-            TextureTarget type = GetTextureType(op.Dimensions);
+            SamplerType type = GetSamplerType(op.Dimensions);
 
             int coordsCount = type.GetDimensions();
 
@@ -564,7 +654,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 sourcesList.Add(arrayIndex);
 
-                type |= TextureTarget.Array;
+                type |= SamplerType.Array;
             }
 
             bool hasLod = op.LodMode > TextureLodMode.LodZero;
@@ -577,7 +667,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 sourcesList.Add(Rb());
 
-                type |= TextureTarget.Shadow;
+                type |= SamplerType.Shadow;
             }
 
             if ((op.LodMode == TextureLodMode.LodZero  ||
@@ -611,7 +701,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 sourcesList.Add(Rb());
 
-                type |= TextureTarget.Multisample;
+                type |= SamplerType.Multisample;
             }
 
             Operand[] sources = sourcesList.ToArray();
@@ -650,83 +740,109 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
         }
 
-        private static TextureTarget GetTextureType(TextureDimensions dimensions)
+        private static SamplerType GetSamplerType(ImageDimensions target)
+        {
+            switch (target)
+            {
+                case ImageDimensions.Image1D:
+                    return SamplerType.Texture1D;
+
+                case ImageDimensions.ImageBuffer:
+                    return SamplerType.TextureBuffer;
+
+                case ImageDimensions.Image1DArray:
+                    return SamplerType.Texture1D | SamplerType.Array;
+
+                case ImageDimensions.Image2D:
+                    return SamplerType.Texture2D;
+
+                case ImageDimensions.Image2DArray:
+                    return SamplerType.Texture2D | SamplerType.Array;
+
+                case ImageDimensions.Image3D:
+                    return SamplerType.Texture3D;
+            }
+
+            throw new ArgumentException($"Invalid image target \"{target}\".");
+        }
+
+        private static SamplerType GetSamplerType(TextureDimensions dimensions)
         {
             switch (dimensions)
             {
-                case TextureDimensions.Texture1D:   return TextureTarget.Texture1D;
-                case TextureDimensions.Texture2D:   return TextureTarget.Texture2D;
-                case TextureDimensions.Texture3D:   return TextureTarget.Texture3D;
-                case TextureDimensions.TextureCube: return TextureTarget.TextureCube;
+                case TextureDimensions.Texture1D:   return SamplerType.Texture1D;
+                case TextureDimensions.Texture2D:   return SamplerType.Texture2D;
+                case TextureDimensions.Texture3D:   return SamplerType.Texture3D;
+                case TextureDimensions.TextureCube: return SamplerType.TextureCube;
             }
 
             throw new ArgumentException($"Invalid texture dimensions \"{dimensions}\".");
         }
 
-        private static TextureTarget GetTextureType(Decoders.TextureTarget type)
+        private static SamplerType GetSamplerType(Decoders.TextureTarget type)
         {
             switch (type)
             {
                 case Decoders.TextureTarget.Texture1DLodZero:
-                    return TextureTarget.Texture1D;
+                    return SamplerType.Texture1D;
 
                 case Decoders.TextureTarget.Texture2D:
                 case Decoders.TextureTarget.Texture2DLodZero:
                 case Decoders.TextureTarget.Texture2DLodLevel:
-                    return TextureTarget.Texture2D;
+                    return SamplerType.Texture2D;
 
                 case Decoders.TextureTarget.Texture2DDepthCompare:
                 case Decoders.TextureTarget.Texture2DLodLevelDepthCompare:
                 case Decoders.TextureTarget.Texture2DLodZeroDepthCompare:
-                    return TextureTarget.Texture2D | TextureTarget.Shadow;
+                    return SamplerType.Texture2D | SamplerType.Shadow;
 
                 case Decoders.TextureTarget.Texture2DArray:
                 case Decoders.TextureTarget.Texture2DArrayLodZero:
-                    return TextureTarget.Texture2D | TextureTarget.Array;
+                    return SamplerType.Texture2D | SamplerType.Array;
 
                 case Decoders.TextureTarget.Texture2DArrayLodZeroDepthCompare:
-                    return TextureTarget.Texture2D | TextureTarget.Array | TextureTarget.Shadow;
+                    return SamplerType.Texture2D | SamplerType.Array | SamplerType.Shadow;
 
                 case Decoders.TextureTarget.Texture3D:
                 case Decoders.TextureTarget.Texture3DLodZero:
-                    return TextureTarget.Texture3D;
+                    return SamplerType.Texture3D;
 
                 case Decoders.TextureTarget.TextureCube:
                 case Decoders.TextureTarget.TextureCubeLodLevel:
-                    return TextureTarget.TextureCube;
+                    return SamplerType.TextureCube;
             }
 
             throw new ArgumentException($"Invalid texture type \"{type}\".");
         }
 
-        private static TextureTarget GetTextureType(TexelLoadTarget type)
+        private static SamplerType GetSamplerType(TexelLoadTarget type)
         {
             switch (type)
             {
                 case TexelLoadTarget.Texture1DLodZero:
                 case TexelLoadTarget.Texture1DLodLevel:
-                    return TextureTarget.Texture1D;
+                    return SamplerType.Texture1D;
 
                 case TexelLoadTarget.Texture2DLodZero:
                 case TexelLoadTarget.Texture2DLodZeroOffset:
                 case TexelLoadTarget.Texture2DLodLevel:
                 case TexelLoadTarget.Texture2DLodLevelOffset:
-                    return TextureTarget.Texture2D;
+                    return SamplerType.Texture2D;
 
                 case TexelLoadTarget.Texture2DLodZeroMultisample:
-                    return TextureTarget.Texture2D | TextureTarget.Multisample;
+                    return SamplerType.Texture2D | SamplerType.Multisample;
 
                 case TexelLoadTarget.Texture3DLodZero:
-                    return TextureTarget.Texture3D;
+                    return SamplerType.Texture3D;
 
                 case TexelLoadTarget.Texture2DArrayLodZero:
-                    return TextureTarget.Texture2D | TextureTarget.Array;
+                    return SamplerType.Texture2D | SamplerType.Array;
             }
 
             throw new ArgumentException($"Invalid texture type \"{type}\".");
         }
 
-        private static TextureFlags GetTextureFlags(Decoders.TextureTarget type)
+        private static TextureFlags GetSamplerFlags(Decoders.TextureTarget type)
         {
             switch (type)
             {
@@ -752,7 +868,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             throw new ArgumentException($"Invalid texture type \"{type}\".");
         }
 
-        private static TextureFlags GetTextureFlags(TexelLoadTarget type)
+        private static TextureFlags GetSamplerFlags(TexelLoadTarget type)
         {
             switch (type)
             {

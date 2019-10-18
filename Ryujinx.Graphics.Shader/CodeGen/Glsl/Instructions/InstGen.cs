@@ -87,6 +87,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             {
                 switch (inst)
                 {
+                    case Instruction.ImageStore:
+                        return InstGenMemory.ImageStore(context, operation);
+
                     case Instruction.LoadAttribute:
                         return InstGenMemory.LoadAttribute(context, operation);
 

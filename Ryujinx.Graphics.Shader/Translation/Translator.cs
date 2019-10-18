@@ -81,6 +81,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 program.CBufferDescriptors,
                 program.SBufferDescriptors,
                 program.TextureDescriptors,
+                program.ImageDescriptors,
                 sInfo.InterpolationQualifiers,
                 sInfo.UsesInstanceId);
 

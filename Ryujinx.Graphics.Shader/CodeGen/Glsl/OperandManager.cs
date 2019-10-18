@@ -241,6 +241,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return GetShaderStagePrefix(stage) + "_" + DefaultNames.SamplerNamePrefix + suffix;
         }
 
+        public static string GetImageName(ShaderStage stage, AstTextureOperation texOp)
+        {
+            string suffix = texOp.Handle.ToString();
+
+            return GetShaderStagePrefix(stage) + "_" + DefaultNames.ImageNamePrefix + suffix;
+        }
+
         public static string GetShaderStagePrefix(ShaderStage stage)
         {
             int index = (int)stage;

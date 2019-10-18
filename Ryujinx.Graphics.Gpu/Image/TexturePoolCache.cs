@@ -6,15 +6,13 @@ namespace Ryujinx.Graphics.Gpu.Image
     {
         private const int MaxCapacity = 4;
 
-        private GpuContext     _context;
-        private TextureManager _textureManager;
+        private GpuContext _context;
 
         private LinkedList<TexturePool> _pools;
 
-        public TexturePoolCache(GpuContext context, TextureManager textureManager)
+        public TexturePoolCache(GpuContext context)
         {
-            _context        = context;
-            _textureManager = textureManager;
+            _context = context;
 
             _pools = new LinkedList<TexturePool>();
         }
@@ -42,7 +40,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             // If not found, create a new one.
-            pool = new TexturePool(_context, _textureManager, address, maximumId);
+            pool = new TexturePool(_context, address, maximumId);
 
             pool.CacheNode = _pools.AddLast(pool);
 

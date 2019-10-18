@@ -9,6 +9,80 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 {
     static class InstGenMemory
     {
+        public static string ImageStore(CodeGenContext context, AstOperation operation)
+        {
+            AstTextureOperation texOp = (AstTextureOperation)operation;
+
+            bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
+
+            bool isArray = (texOp.Type & SamplerType.Array) != 0;
+
+            string texCall = "imageStore";
+
+            string imageName = OperandManager.GetImageName(context.Config.Stage, texOp);
+
+            texCall += "(" + imageName;
+
+            int coordsCount = texOp.Type.GetDimensions();
+
+            int pCount = coordsCount;
+
+            int arrayIndexElem = -1;
+
+            if (isArray)
+            {
+                arrayIndexElem = pCount++;
+            }
+
+            int srcIndex = isBindless ? 1 : 0;
+
+            string Src(VariableType type)
+            {
+                return GetSoureExpr(context, texOp.GetSource(srcIndex++), type);
+            }
+
+            void Append(string str)
+            {
+                texCall += ", " + str;
+            }
+
+            if (pCount > 1)
+            {
+                string[] elems = new string[pCount];
+
+                for (int index = 0; index < pCount; index++)
+                {
+                    elems[index] = Src(VariableType.S32);
+                }
+
+                Append("ivec" + pCount + "(" + string.Join(", ", elems) + ")");
+            }
+            else
+            {
+                Append(Src(VariableType.S32));
+            }
+
+            string[] cElems = new string[4];
+
+            for (int index = 0; index < 4; index++)
+            {
+                if (srcIndex < texOp.SourcesCount)
+                {
+                    cElems[index] = Src(VariableType.F32);
+                }
+                else
+                {
+                    cElems[index] = NumberFormatter.FormatFloat(0);
+                }
+            }
+
+            Append("vec4(" + string.Join(", ", cElems) + ")");
+
+            texCall += ")";
+
+            return texCall;
+        }
+
         public static string LoadAttribute(CodeGenContext context, AstOperation operation)
         {
             IAstNode src1 = operation.GetSource(0);
@@ -98,9 +172,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             bool hasOffset   = (texOp.Flags & TextureFlags.Offset)    != 0;
             bool hasOffsets  = (texOp.Flags & TextureFlags.Offsets)   != 0;
 
-            bool isArray       = (texOp.Target & TextureTarget.Array)       != 0;
-            bool isMultisample = (texOp.Target & TextureTarget.Multisample) != 0;
-            bool isShadow      = (texOp.Target & TextureTarget.Shadow)      != 0;
+            bool isArray       = (texOp.Type & SamplerType.Array)       != 0;
+            bool isMultisample = (texOp.Type & SamplerType.Multisample) != 0;
+            bool isShadow      = (texOp.Type & SamplerType.Shadow)      != 0;
 
             // This combination is valid, but not available on GLSL.
             // For now, ignore the LOD level and do a normal sample.
@@ -134,7 +208,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             texCall += "(" + samplerName;
 
-            int coordsCount = texOp.Target.GetDimensions();
+            int coordsCount = texOp.Type.GetDimensions();
 
             int pCount = coordsCount;
 
@@ -147,7 +221,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             // The sampler 1D shadow overload expects a
             // dummy value on the middle of the vector, who knows why...
-            bool hasDummy1DShadowElem = texOp.Target == (TextureTarget.Texture1D | TextureTarget.Shadow);
+            bool hasDummy1DShadowElem = texOp.Type == (SamplerType.Texture1D | SamplerType.Shadow);
 
             if (hasDummy1DShadowElem)
             {

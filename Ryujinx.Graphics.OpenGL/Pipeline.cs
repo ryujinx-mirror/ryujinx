@@ -4,12 +4,13 @@ using Ryujinx.Graphics.GAL.Blend;
 using Ryujinx.Graphics.GAL.Color;
 using Ryujinx.Graphics.GAL.DepthStencil;
 using Ryujinx.Graphics.GAL.InputAssembler;
+using Ryujinx.Graphics.OpenGL.Formats;
 using Ryujinx.Graphics.Shader;
 using System;
 
 namespace Ryujinx.Graphics.OpenGL
 {
-    class GraphicsPipeline : IGraphicsPipeline
+    class Pipeline : IPipeline
     {
         private Program _program;
 
@@ -33,7 +34,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         private uint[] _componentMasks;
 
-        internal GraphicsPipeline()
+        internal Pipeline()
         {
             _clipOrigin = ClipOrigin.LowerLeft;
         }
@@ -60,6 +61,29 @@ namespace Ryujinx.Graphics.OpenGL
                 (BlendingFactorDest)blend.AlphaDstFactor.Convert());
 
             GL.Enable(IndexedEnableCap.Blend, index);
+        }
+
+        public void BindImage(int index, ShaderStage stage, ITexture texture)
+        {
+            int unit = _program.GetImageUnit(stage, index);
+
+            if (unit != -1 && texture != null)
+            {
+                TextureView view = (TextureView)texture;
+
+                FormatInfo formatInfo = FormatTable.GetFormatInfo(view.Format);
+
+                SizedInternalFormat format = (SizedInternalFormat)formatInfo.PixelInternalFormat;
+
+                GL.BindImageTexture(
+                    unit,
+                    view.Handle,
+                    0,
+                    true,
+                    0,
+                    TextureAccess.ReadWrite,
+                    format);
+            }
         }
 
         public void BindIndexBuffer(BufferRange buffer, IndexType type)
@@ -107,53 +131,48 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void BindStorageBuffers(int index, ShaderStage stage, BufferRange[] buffers)
+        public void BindStorageBuffer(int index, ShaderStage stage, BufferRange buffer)
         {
-            BindBuffers(index, stage, buffers, isStorage: true);
+            BindBuffer(index, stage, buffer, isStorage: true);
         }
 
-        public void BindUniformBuffers(int index, ShaderStage stage, BufferRange[] buffers)
+        public void BindUniformBuffer(int index, ShaderStage stage, BufferRange buffer)
         {
-            BindBuffers(index, stage, buffers, isStorage: false);
+            BindBuffer(index, stage, buffer, isStorage: false);
         }
 
-        private void BindBuffers(int index, ShaderStage stage, BufferRange[] buffers, bool isStorage)
+        private void BindBuffer(int index, ShaderStage stage, BufferRange buffer, bool isStorage)
         {
-            for (int bufferIndex = 0; bufferIndex < buffers.Length; bufferIndex++, index++)
+            int bindingPoint = isStorage
+                ? _program.GetStorageBufferBindingPoint(stage, index)
+                : _program.GetUniformBufferBindingPoint(stage, index);
+
+            if (bindingPoint == -1)
             {
-                int bindingPoint = isStorage
-                    ? _program.GetStorageBufferBindingPoint(stage, index)
-                    : _program.GetUniformBufferBindingPoint(stage, index);
-
-                if (bindingPoint == -1)
-                {
-                    continue;
-                }
-
-                BufferRange buffer = buffers[bufferIndex];
-
-                BufferRangeTarget target = isStorage
-                    ? BufferRangeTarget.ShaderStorageBuffer
-                    : BufferRangeTarget.UniformBuffer;
-
-                if (buffer.Buffer == null)
-                {
-                    GL.BindBufferRange(target, bindingPoint, 0, IntPtr.Zero, 0);
-
-                    continue;
-                }
-
-                int bufferHandle = ((Buffer)buffer.Buffer).Handle;
-
-                IntPtr bufferOffset = (IntPtr)buffer.Offset;
-
-                GL.BindBufferRange(
-                    target,
-                    bindingPoint,
-                    bufferHandle,
-                    bufferOffset,
-                    buffer.Size);
+                return;
             }
+
+            BufferRangeTarget target = isStorage
+                ? BufferRangeTarget.ShaderStorageBuffer
+                : BufferRangeTarget.UniformBuffer;
+
+            if (buffer.Buffer == null)
+            {
+                GL.BindBufferRange(target, bindingPoint, 0, IntPtr.Zero, 0);
+
+                return;
+            }
+
+            int bufferHandle = ((Buffer)buffer.Buffer).Handle;
+
+            IntPtr bufferOffset = (IntPtr)buffer.Offset;
+
+            GL.BindBufferRange(
+                target,
+                bindingPoint,
+                bufferHandle,
+                bufferOffset,
+                buffer.Size);
         }
 
         public void BindVertexAttribs(VertexAttribDescriptor[] vertexAttribs)
@@ -262,6 +281,11 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 GL.DepthMask(_depthMask);
             }
+        }
+
+        public void Dispatch(int groupsX, int groupsY, int groupsZ)
+        {
+            GL.DispatchCompute(groupsX, groupsY, groupsZ);
         }
 
         public void Draw(int vertexCount, int instanceCount, int firstVertex, int firstInstance)
@@ -801,6 +825,16 @@ namespace Ryujinx.Graphics.OpenGL
             GL.DepthRangeArray(first, viewports.Length, depthRangeArray);
 
             SetOrigin(flipY ? ClipOrigin.UpperLeft : ClipOrigin.LowerLeft);
+        }
+
+        public void TextureBarrier()
+        {
+            GL.MemoryBarrier(MemoryBarrierFlags.TextureFetchBarrierBit);
+        }
+
+        public void TextureBarrierTiled()
+        {
+            GL.MemoryBarrier(MemoryBarrierFlags.TextureFetchBarrierBit);
         }
 
         private void SetOrigin(ClipOrigin origin)

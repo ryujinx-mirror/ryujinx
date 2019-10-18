@@ -272,7 +272,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 BufferRange buffer = GetBufferRange(bounds.Address, bounds.Size);
 
-                _context.Renderer.ComputePipeline.SetStorageBuffer(index, buffer);
+                _context.Renderer.Pipeline.BindStorageBuffer(index, ShaderStage.Compute, buffer);
             }
 
             enableMask = _cpUniformBuffers.EnableMask;
@@ -293,7 +293,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 BufferRange buffer = GetBufferRange(bounds.Address, bounds.Size);
 
-                _context.Renderer.ComputePipeline.SetUniformBuffer(index, buffer);
+                _context.Renderer.Pipeline.BindUniformBuffer(index, ShaderStage.Compute, buffer);
 
                 if (index == 0)
                 {
@@ -312,6 +312,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     buffer.Buffer.SetData(buffer.Offset, data);
                 }
             }
+
+            // Force rebind after doing compute work.
+            _rebind = true;
         }
 
         public void CommitBindings()
@@ -324,7 +327,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 {
                     BufferRange buffer = GetBufferRange(_indexBuffer.Address, _indexBuffer.Size);
 
-                    _context.Renderer.GraphicsPipeline.BindIndexBuffer(buffer, _indexBuffer.Type);
+                    _context.Renderer.Pipeline.BindIndexBuffer(buffer, _indexBuffer.Type);
                 }
             }
             else if (_indexBuffer.Address != 0)
@@ -352,7 +355,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     vertexBuffers[index] = new VertexBufferDescriptor(buffer, vb.Stride, vb.Divisor);
                 }
 
-                _context.Renderer.GraphicsPipeline.BindVertexBuffers(vertexBuffers);
+                _context.Renderer.Pipeline.BindVertexBuffers(vertexBuffers);
             }
             else
             {
@@ -445,15 +448,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             BufferRange buffer = GetBufferRange(bounds.Address, bounds.Size);
 
-            BufferRange[] buffers = new BufferRange[] { buffer };
-
             if (isStorage)
             {
-                _context.Renderer.GraphicsPipeline.BindStorageBuffers(index, stage, buffers);
+                _context.Renderer.Pipeline.BindStorageBuffer(index, stage, buffer);
             }
             else
             {
-                _context.Renderer.GraphicsPipeline.BindUniformBuffers(index, stage, buffers);
+                _context.Renderer.Pipeline.BindUniformBuffer(index, stage, buffer);
             }
 
             if (!isStorage && index == 0)

@@ -8,8 +8,7 @@ namespace Ryujinx.Graphics.OpenGL
 {
     public class Renderer : IRenderer
     {
-        public IComputePipeline  ComputePipeline  { get; }
-        public IGraphicsPipeline GraphicsPipeline { get; }
+        public IPipeline Pipeline { get; }
 
         private Counters _counters;
 
@@ -21,8 +20,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public Renderer()
         {
-            ComputePipeline  = new ComputePipeline(this);
-            GraphicsPipeline = new GraphicsPipeline();
+            Pipeline = new Pipeline();
 
             _counters = new Counters();
 

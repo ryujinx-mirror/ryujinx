@@ -107,7 +107,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
             ShaderProgram program;
 
             const TranslationFlags flags =
-                TranslationFlags.Compute |
+                TranslationFlags.Compute   |
+                TranslationFlags.DebugMode |
                 TranslationFlags.Unspecialized;
 
             TranslationConfig translationConfig = new TranslationConfig(0x10000, _dumper.CurrentDumpIndex, flags);

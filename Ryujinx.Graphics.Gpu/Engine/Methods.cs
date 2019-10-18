@@ -21,6 +21,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private BufferManager  _bufferManager;
         private TextureManager _textureManager;
 
+        public BufferManager  BufferManager  => _bufferManager;
         public TextureManager TextureManager => _textureManager;
 
         private bool _isAnyVbInstanced;
@@ -33,7 +34,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _shaderCache = new ShaderCache(_context);
 
             _bufferManager  = new BufferManager(context);
-            _textureManager = new TextureManager(context, _bufferManager);
+            _textureManager = new TextureManager(context);
 
             RegisterCallbacks();
         }
@@ -61,7 +62,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.State.RegisterUniformBufferBind3Callback(UniformBufferBind3);
             _context.State.RegisterUniformBufferBind4Callback(UniformBufferBind4);
 
-            _context.State.RegisterCallback(MethodOffset.InvalidateTextures, InvalidateTextures);
+            _context.State.RegisterCallback(MethodOffset.TextureBarrier,      TextureBarrier);
+            _context.State.RegisterCallback(MethodOffset.InvalidateTextures,  InvalidateTextures);
+            _context.State.RegisterCallback(MethodOffset.TextureBarrierTiled, TextureBarrierTiled);
+
 
             _context.State.RegisterCallback(MethodOffset.ResetCounter, ResetCounter);
 
@@ -153,18 +157,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private void CommitBindings()
         {
             _bufferManager.CommitBindings();
-            _textureManager.CommitBindings();
-        }
-
-        public void InvalidateRange(ulong address, ulong size)
-        {
-            _bufferManager.InvalidateRange(address, size);
-            _textureManager.InvalidateRange(address, size);
-        }
-
-        public void InvalidateTextureRange(ulong address, ulong size)
-        {
-            _textureManager.InvalidateRange(address, size);
+            _textureManager.CommitGraphicsBindings();
         }
 
         private void UpdateRenderTargetGroupState()
@@ -272,7 +265,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private void UpdateDepthTestState()
         {
-            _context.Renderer.GraphicsPipeline.SetDepthTest(new DepthTestDescriptor(
+            _context.Renderer.Pipeline.SetDepthTest(new DepthTestDescriptor(
                 _context.State.GetDepthTestEnable().IsTrue(),
                 _context.State.GetDepthWriteEnable().IsTrue(),
                 _context.State.GetDepthTestFunc()));
@@ -305,7 +298,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     extents.DepthFar);
             }
 
-            _context.Renderer.GraphicsPipeline.SetViewports(0, viewports);
+            _context.Renderer.Pipeline.SetViewports(0, viewports);
         }
 
         private void UpdateDepthBiasState()
@@ -322,7 +315,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             enables |= (polygonOffset.LineEnable.IsTrue()  ? PolygonModeMask.Line  : 0);
             enables |= (polygonOffset.FillEnable.IsTrue()  ? PolygonModeMask.Fill  : 0);
 
-            _context.Renderer.GraphicsPipeline.SetDepthBias(enables, factor, units, clamp);
+            _context.Renderer.Pipeline.SetDepthBias(enables, factor, units, clamp);
         }
 
         private void UpdateStencilTestState()
@@ -360,7 +353,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 backMask     = test.FrontMask;
             }
 
-            _context.Renderer.GraphicsPipeline.SetStencilTest(new StencilTestDescriptor(
+            _context.Renderer.Pipeline.SetStencilTest(new StencilTestDescriptor(
                 test.Enable.IsTrue(),
                 test.FrontFunc,
                 test.FrontSFail,
@@ -382,16 +375,16 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             PoolState samplerPool = _context.State.GetSamplerPoolState();
 
-            _textureManager.SetSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId);
+            _textureManager.SetGraphicsSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId);
         }
 
         private void UpdateTexturePoolState()
         {
             PoolState texturePool = _context.State.GetTexturePoolState();
 
-            _textureManager.SetTexturePool(texturePool.Address.Pack(), texturePool.MaximumId);
+            _textureManager.SetGraphicsTexturePool(texturePool.Address.Pack(), texturePool.MaximumId);
 
-            _textureManager.SetTextureBufferIndex(_context.State.GetTextureBufferIndex());
+            _textureManager.SetGraphicsTextureBufferIndex(_context.State.GetTextureBufferIndex());
         }
 
         private void UpdateInputAssemblerGroupState()
@@ -439,14 +432,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     format);
             }
 
-            _context.Renderer.GraphicsPipeline.BindVertexAttribs(vertexAttribs);
+            _context.Renderer.Pipeline.BindVertexAttribs(vertexAttribs);
         }
 
         private void UpdatePrimitiveRestartState()
         {
             PrimitiveRestartState primitiveRestart = _context.State.Get<PrimitiveRestartState>(MethodOffset.PrimitiveRestartState);
 
-            _context.Renderer.GraphicsPipeline.SetPrimitiveRestart(
+            _context.Renderer.Pipeline.SetPrimitiveRestart(
                 primitiveRestart.Enable,
                 primitiveRestart.Index);
         }
@@ -593,9 +586,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             FaceState face = _context.State.GetFaceState();
 
-            _context.Renderer.GraphicsPipeline.SetFaceCulling(face.CullEnable.IsTrue(), face.CullFace);
+            _context.Renderer.Pipeline.SetFaceCulling(face.CullEnable.IsTrue(), face.CullFace);
 
-            _context.Renderer.GraphicsPipeline.SetFrontFace(face.FrontFace);
+            _context.Renderer.Pipeline.SetFrontFace(face.FrontFace);
         }
 
         private void UpdateRtColorMask()
@@ -616,7 +609,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 componentMasks[index] = componentMask;
             }
 
-            _context.Renderer.GraphicsPipeline.SetRenderTargetColorMasks(componentMasks);
+            _context.Renderer.Pipeline.SetRenderTargetColorMasks(componentMasks);
         }
 
         private void UpdateBlendState()
@@ -638,7 +631,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     blend.AlphaSrcFactor,
                     blend.AlphaDstFactor);
 
-                _context.Renderer.GraphicsPipeline.BindBlendState(index, descriptor);
+                _context.Renderer.Pipeline.BindBlendState(index, descriptor);
             }
         }
 
@@ -696,12 +689,25 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 {
                     var descriptor = info.Textures[index];
 
-                    Target target = GetTarget(descriptor.Target);
+                    Target target = GetTarget(descriptor.Type);
 
                     textureBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
                 }
 
-                _textureManager.BindTextures(stage, textureBindings);
+                _textureManager.SetGraphicsTextures(stage, textureBindings);
+
+                var imageBindings = new TextureBindingInfo[info.Images.Count];
+
+                for (int index = 0; index < info.Images.Count; index++)
+                {
+                    var descriptor = info.Images[index];
+
+                    Target target = GetTarget(descriptor.Type);
+
+                    imageBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
+                }
+
+                _textureManager.SetGraphicsImages(stage, imageBindings);
 
                 uint sbEnableMask = 0;
                 uint ubEnableMask = 0;
@@ -734,40 +740,43 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 _bufferManager.SetGraphicsUniformBufferEnableMask(stage, ubEnableMask);
             }
 
-            _context.Renderer.GraphicsPipeline.BindProgram(gs.Interface);
+            _context.Renderer.Pipeline.BindProgram(gs.Interface);
         }
 
-        private static Target GetTarget(Shader.TextureTarget target)
+        private static Target GetTarget(SamplerType type)
         {
-            target &= ~Shader.TextureTarget.Shadow;
+            type &= ~SamplerType.Shadow;
 
-            switch (target)
+            switch (type)
             {
-                case Shader.TextureTarget.Texture1D:
+                case SamplerType.Texture1D:
                     return Target.Texture1D;
 
-                case Shader.TextureTarget.Texture1D | Shader.TextureTarget.Array:
+                case SamplerType.TextureBuffer:
+                    return Target.TextureBuffer;
+
+                case SamplerType.Texture1D | SamplerType.Array:
                     return Target.Texture1DArray;
 
-                case Shader.TextureTarget.Texture2D:
+                case SamplerType.Texture2D:
                     return Target.Texture2D;
 
-                case Shader.TextureTarget.Texture2D | Shader.TextureTarget.Array:
+                case SamplerType.Texture2D | SamplerType.Array:
                     return Target.Texture2DArray;
 
-                case Shader.TextureTarget.Texture2D | Shader.TextureTarget.Multisample:
+                case SamplerType.Texture2D | SamplerType.Multisample:
                     return Target.Texture2DMultisample;
 
-                case Shader.TextureTarget.Texture2D | Shader.TextureTarget.Multisample | Shader.TextureTarget.Array:
+                case SamplerType.Texture2D | SamplerType.Multisample | SamplerType.Array:
                     return Target.Texture2DMultisampleArray;
 
-                case Shader.TextureTarget.Texture3D:
+                case SamplerType.Texture3D:
                     return Target.Texture3D;
 
-                case Shader.TextureTarget.TextureCube:
+                case SamplerType.TextureCube:
                     return Target.Cubemap;
 
-                case Shader.TextureTarget.TextureCube | Shader.TextureTarget.Array:
+                case SamplerType.TextureCube | SamplerType.Array:
                     return Target.CubemapArray;
             }
 
@@ -776,9 +785,19 @@ namespace Ryujinx.Graphics.Gpu.Engine
             return Target.Texture2D;
         }
 
+        private void TextureBarrier(int argument)
+        {
+            _context.Renderer.Pipeline.TextureBarrier();
+        }
+
         private void InvalidateTextures(int argument)
         {
             _textureManager.Flush();
+        }
+
+        private void TextureBarrierTiled(int argument)
+        {
+            _context.Renderer.Pipeline.TextureBarrierTiled();
         }
     }
 }

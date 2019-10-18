@@ -48,6 +48,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.ExponentB2,               InstType.CallUnary,      "exp2");
             Add(Instruction.Floor,                    InstType.CallUnary,      "floor");
             Add(Instruction.FusedMultiplyAdd,         InstType.CallTernary,    "fma");
+            Add(Instruction.ImageLoad,                InstType.Special);
+            Add(Instruction.ImageStore,               InstType.Special);
             Add(Instruction.IsNan,                    InstType.CallUnary,      "isnan");
             Add(Instruction.LoadAttribute,            InstType.Special);
             Add(Instruction.LoadConstant,             InstType.Special);

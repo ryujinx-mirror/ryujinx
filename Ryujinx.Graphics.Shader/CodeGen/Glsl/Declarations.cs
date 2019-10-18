@@ -88,6 +88,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 context.AppendLine();
             }
 
+            if (info.Images.Count != 0)
+            {
+                DeclareImages(context, info);
+
+                context.AppendLine();
+            }
+
             if (context.Config.Stage != ShaderStage.Compute)
             {
                 if (info.IAttributes.Count != 0)
@@ -204,7 +211,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     continue;
                 }
 
-                string samplerTypeName = GetSamplerTypeName(texOp.Target);
+                string samplerTypeName = GetSamplerTypeName(texOp.Type);
 
                 context.AppendLine("uniform " + samplerTypeName + " " + samplerName + ";");
             }
@@ -221,14 +228,44 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 {
                     AstOperand operand = texOp.GetSource(0) as AstOperand;
 
-                    desc = new TextureDescriptor(samplerName, texOp.Target, operand.CbufSlot, operand.CbufOffset);
+                    desc = new TextureDescriptor(samplerName, texOp.Type, operand.CbufSlot, operand.CbufOffset);
                 }
                 else
                 {
-                    desc = new TextureDescriptor(samplerName, texOp.Target, texOp.Handle);
+                    desc = new TextureDescriptor(samplerName, texOp.Type, texOp.Handle);
                 }
 
                 context.TextureDescriptors.Add(desc);
+            }
+        }
+
+        private static void DeclareImages(CodeGenContext context, StructuredProgramInfo info)
+        {
+            Dictionary<string, AstTextureOperation> images = new Dictionary<string, AstTextureOperation>();
+
+            foreach (AstTextureOperation texOp in info.Images.OrderBy(x => x.Handle))
+            {
+                string imageName = OperandManager.GetImageName(context.Config.Stage, texOp);
+
+                if (!images.TryAdd(imageName, texOp))
+                {
+                    continue;
+                }
+
+                string imageTypeName = GetImageTypeName(texOp.Type);
+
+                context.AppendLine("writeonly uniform " + imageTypeName + " " + imageName + ";");
+            }
+
+            foreach (KeyValuePair<string, AstTextureOperation> kv in images)
+            {
+                string imageName = kv.Key;
+
+                AstTextureOperation texOp = kv.Value;
+
+                TextureDescriptor desc = new TextureDescriptor(imageName, texOp.Type, texOp.Handle);
+
+                context.ImageDescriptors.Add(desc);
             }
         }
 
@@ -284,33 +321,62 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        private static string GetSamplerTypeName(TextureTarget type)
+        private static string GetSamplerTypeName(SamplerType type)
         {
             string typeName;
 
-            switch (type & TextureTarget.Mask)
+            switch (type & SamplerType.Mask)
             {
-                case TextureTarget.Texture1D:   typeName = "sampler1D";   break;
-                case TextureTarget.Texture2D:   typeName = "sampler2D";   break;
-                case TextureTarget.Texture3D:   typeName = "sampler3D";   break;
-                case TextureTarget.TextureCube: typeName = "samplerCube"; break;
+                case SamplerType.Texture1D:     typeName = "sampler1D";     break;
+                case SamplerType.TextureBuffer: typeName = "samplerBuffer"; break;
+                case SamplerType.Texture2D:     typeName = "sampler2D";     break;
+                case SamplerType.Texture3D:     typeName = "sampler3D";     break;
+                case SamplerType.TextureCube:   typeName = "samplerCube";   break;
 
                 default: throw new ArgumentException($"Invalid sampler type \"{type}\".");
             }
 
-            if ((type & TextureTarget.Multisample) != 0)
+            if ((type & SamplerType.Multisample) != 0)
             {
                 typeName += "MS";
             }
 
-            if ((type & TextureTarget.Array) != 0)
+            if ((type & SamplerType.Array) != 0)
             {
                 typeName += "Array";
             }
 
-            if ((type & TextureTarget.Shadow) != 0)
+            if ((type & SamplerType.Shadow) != 0)
             {
                 typeName += "Shadow";
+            }
+
+            return typeName;
+        }
+
+        private static string GetImageTypeName(SamplerType type)
+        {
+            string typeName;
+
+            switch (type & SamplerType.Mask)
+            {
+                case SamplerType.Texture1D:     typeName = "image1D";     break;
+                case SamplerType.TextureBuffer: typeName = "imageBuffer"; break;
+                case SamplerType.Texture2D:     typeName = "image2D";     break;
+                case SamplerType.Texture3D:     typeName = "image3D";     break;
+                case SamplerType.TextureCube:   typeName = "imageCube";   break;
+
+                default: throw new ArgumentException($"Invalid sampler type \"{type}\".");
+            }
+
+            if ((type & SamplerType.Multisample) != 0)
+            {
+                typeName += "MS";
+            }
+
+            if ((type & SamplerType.Array) != 0)
+            {
+                typeName += "Array";
             }
 
             return typeName;

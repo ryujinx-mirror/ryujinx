@@ -51,6 +51,19 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 sources[index] = context.GetOperandUse(operation.GetSource(index));
             }
 
+            int componentMask = 1 << operation.ComponentIndex;
+
+            AstTextureOperation GetAstTextureOperation(TextureOperation texOp)
+            {
+                return new AstTextureOperation(
+                    inst,
+                    texOp.Type,
+                    texOp.Flags,
+                    texOp.Handle,
+                    componentMask,
+                    sources);
+            }
+
             if (operation.Dest != null)
             {
                 AstOperand dest = context.GetOperandDef(operation.Dest);
@@ -108,21 +121,20 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     dest.VarType = InstructionInfo.GetDestVarType(inst);
                 }
 
-                int componentMask = 1 << operation.ComponentIndex;
-
                 IAstNode source;
 
                 if (operation is TextureOperation texOp)
                 {
-                    AstTextureOperation astTexOp = new AstTextureOperation(
-                        inst,
-                        texOp.Target,
-                        texOp.Flags,
-                        texOp.Handle,
-                        componentMask,
-                        sources);
+                    AstTextureOperation astTexOp = GetAstTextureOperation(texOp);
 
-                    context.Info.Samplers.Add(astTexOp);
+                    if (texOp.Inst == Instruction.ImageLoad)
+                    {
+                        context.Info.Images.Add(astTexOp);
+                    }
+                    else
+                    {
+                        context.Info.Samplers.Add(astTexOp);
+                    }
 
                     source = astTexOp;
                 }
@@ -142,6 +154,14 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             else if (operation.Inst == Instruction.Comment)
             {
                 context.AddNode(new AstComment(((CommentNode)operation).Comment));
+            }
+            else if (operation is TextureOperation texOp)
+            {
+                AstTextureOperation astTexOp = GetAstTextureOperation(texOp);
+
+                context.Info.Images.Add(astTexOp);
+
+                context.AddNode(astTexOp);
             }
             else
             {

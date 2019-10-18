@@ -45,6 +45,8 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         ExponentB2,
         Floor,
         FusedMultiplyAdd,
+        ImageLoad,
+        ImageStore,
         IsNan,
         LoadAttribute,
         LoadConstant,

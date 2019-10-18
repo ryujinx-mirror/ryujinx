@@ -61,7 +61,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 int firstVertex = _context.State.GetBaseVertex();
 
-                _context.Renderer.GraphicsPipeline.DrawIndexed(
+                _context.Renderer.Pipeline.DrawIndexed(
                     _indexCount,
                     1,
                     _firstIndex,
@@ -72,7 +72,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             {
                 VertexBufferDrawState drawState = _context.State.GetVertexBufferDrawState();
 
-                _context.Renderer.GraphicsPipeline.Draw(
+                _context.Renderer.Pipeline.Draw(
                     drawState.Count,
                     1,
                     drawState.First,
@@ -84,7 +84,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             PrimitiveType type = (PrimitiveType)(argument & 0xffff);
 
-            _context.Renderer.GraphicsPipeline.SetPrimitiveTopology(type.Convert());
+            _context.Renderer.Pipeline.SetPrimitiveTopology(type.Convert());
 
             PrimitiveType = type;
 
@@ -112,7 +112,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 if (_instancedIndexed)
                 {
-                    _context.Renderer.GraphicsPipeline.DrawIndexed(
+                    _context.Renderer.Pipeline.DrawIndexed(
                         _instancedIndexCount,
                         _instanceIndex + 1,
                         _instancedFirstIndex,
@@ -121,7 +121,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 }
                 else
                 {
-                    _context.Renderer.GraphicsPipeline.Draw(
+                    _context.Renderer.Pipeline.Draw(
                         _instancedDrawStateCount,
                         _instanceIndex + 1,
                         _instancedDrawStateFirst,

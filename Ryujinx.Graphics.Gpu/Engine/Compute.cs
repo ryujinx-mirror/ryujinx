@@ -1,3 +1,5 @@
+using Ryujinx.Graphics.GAL.Texture;
+using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 using System;
@@ -23,9 +25,45 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 dispatchParams.UnpackBlockSizeY(),
                 dispatchParams.UnpackBlockSizeZ());
 
-            _context.Renderer.ComputePipeline.SetProgram(cs.Interface);
+            _context.Renderer.Pipeline.BindProgram(cs.Interface);
+
+            PoolState samplerPool = _context.State.GetSamplerPoolState();
+
+            _textureManager.SetComputeSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId);
+
+            PoolState texturePool = _context.State.GetTexturePoolState();
+
+            _textureManager.SetComputeTexturePool(texturePool.Address.Pack(), texturePool.MaximumId);
+
+            _textureManager.SetComputeTextureBufferIndex(_context.State.GetTextureBufferIndex());
 
             ShaderProgramInfo info = cs.Shader.Info;
+
+            var textureBindings = new TextureBindingInfo[info.Textures.Count];
+
+            for (int index = 0; index < info.Textures.Count; index++)
+            {
+                var descriptor = info.Textures[index];
+
+                Target target = GetTarget(descriptor.Type);
+
+                textureBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
+            }
+
+            _textureManager.SetComputeTextures(textureBindings);
+
+            var imageBindings = new TextureBindingInfo[info.Images.Count];
+
+            for (int index = 0; index < info.Images.Count; index++)
+            {
+                var descriptor = info.Images[index];
+
+                Target target = GetTarget(descriptor.Type);
+
+                imageBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
+            }
+
+            _textureManager.SetComputeImages(imageBindings);
 
             uint sbEnableMask = 0;
             uint ubEnableMask = dispatchParams.UnpackUniformBuffersEnableMask();
@@ -73,8 +111,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _bufferManager.SetComputeUniformBufferEnableMask(ubEnableMask);
 
             _bufferManager.CommitComputeBindings();
+            _textureManager.CommitComputeBindings();
 
-            _context.Renderer.ComputePipeline.Dispatch(
+            _context.Renderer.Pipeline.Dispatch(
                 dispatchParams.UnpackGridSizeX(),
                 dispatchParams.UnpackGridSizeY(),
                 dispatchParams.UnpackGridSizeZ());

@@ -19,6 +19,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         public bool UsesInstanceId { get; set; }
 
         public HashSet<AstTextureOperation> Samplers { get; }
+        public HashSet<AstTextureOperation> Images   { get; }
 
         public StructuredProgramInfo(AstBlock mainBlock)
         {
@@ -35,6 +36,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             InterpolationQualifiers = new InterpolationQualifier[32];
 
             Samplers = new HashSet<AstTextureOperation>();
+            Images   = new HashSet<AstTextureOperation>();
         }
     }
 }

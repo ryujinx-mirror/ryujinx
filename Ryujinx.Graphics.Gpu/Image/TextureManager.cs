@@ -4,7 +4,6 @@ using Ryujinx.Graphics.GAL.Texture;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Gpu.State;
-using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Texture;
 using System;
 
@@ -12,15 +11,10 @@ namespace Ryujinx.Graphics.Gpu.Image
 {
     class TextureManager
     {
-        private GpuContext    _context;
-        private BufferManager _bufferManager;
+        private GpuContext _context;
 
-        private SamplerPool _samplerPool;
-
-        private ulong _texturePoolAddress;
-        private int   _texturePoolMaximumId;
-
-        private TexturePoolCache _texturePoolCache;
+        private TextureBindingsManager _cpBindingsManager;
+        private TextureBindingsManager _gpBindingsManager;
 
         private Texture[] _rtColors;
         private Texture   _rtColor3D;
@@ -35,24 +29,12 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private AutoDeleteCache _cache;
 
-        private TextureBindingInfo[][] _bindings;
-
-        private struct TextureStatePerStage
+        public TextureManager(GpuContext context)
         {
-            public ITexture Texture;
-            public ISampler Sampler;
-        }
+            _context = context;
 
-        private TextureStatePerStage[][] _textureState;
-
-        private int _textureBufferIndex;
-
-        public TextureManager(GpuContext context, BufferManager bufferManager)
-        {
-            _context       = context;
-            _bufferManager = bufferManager;
-
-            _texturePoolCache = new TexturePoolCache(context, this);
+            _cpBindingsManager = new TextureBindingsManager(context, isCompute: true);
+            _gpBindingsManager = new TextureBindingsManager(context, isCompute: false);
 
             _rtColors = new Texture[Constants.TotalRenderTargets];
 
@@ -61,47 +43,56 @@ namespace Ryujinx.Graphics.Gpu.Image
             _textures = new RangeList<Texture>();
 
             _cache = new AutoDeleteCache();
-
-            _bindings = new TextureBindingInfo[Constants.TotalShaderStages][];
-
-            _textureState = new TextureStatePerStage[Constants.TotalShaderStages][];
         }
 
-        public void BindTextures(int stage, TextureBindingInfo[] bindings)
+        public void SetComputeTextures(TextureBindingInfo[] bindings)
         {
-            _bindings[stage] = bindings;
-
-            _textureState[stage] = new TextureStatePerStage[bindings.Length];
+            _cpBindingsManager.SetTextures(0, bindings);
         }
 
-        public void SetTextureBufferIndex(int index)
+        public void SetGraphicsTextures(int stage, TextureBindingInfo[] bindings)
         {
-            _textureBufferIndex = index;
+            _gpBindingsManager.SetTextures(stage, bindings);
         }
 
-        public void SetSamplerPool(ulong gpuVa, int maximumId)
+        public void SetComputeImages(TextureBindingInfo[] bindings)
         {
-            ulong address = _context.MemoryManager.Translate(gpuVa);
-
-            if (_samplerPool != null)
-            {
-                if (_samplerPool.Address == address)
-                {
-                    return;
-                }
-
-                _samplerPool.Dispose();
-            }
-
-            _samplerPool = new SamplerPool(_context, address, maximumId);
+            _cpBindingsManager.SetImages(0, bindings);
         }
 
-        public void SetTexturePool(ulong gpuVa, int maximumId)
+        public void SetGraphicsImages(int stage, TextureBindingInfo[] bindings)
         {
-            ulong address = _context.MemoryManager.Translate(gpuVa);
+            _gpBindingsManager.SetImages(stage, bindings);
+        }
 
-            _texturePoolAddress   = address;
-            _texturePoolMaximumId = maximumId;
+        public void SetComputeTextureBufferIndex(int index)
+        {
+            _cpBindingsManager.SetTextureBufferIndex(index);
+        }
+
+        public void SetGraphicsTextureBufferIndex(int index)
+        {
+            _gpBindingsManager.SetTextureBufferIndex(index);
+        }
+
+        public void SetComputeSamplerPool(ulong gpuVa, int maximumId)
+        {
+            _cpBindingsManager.SetSamplerPool(gpuVa, maximumId);
+        }
+
+        public void SetGraphicsSamplerPool(ulong gpuVa, int maximumId)
+        {
+            _gpBindingsManager.SetSamplerPool(gpuVa, maximumId);
+        }
+
+        public void SetComputeTexturePool(ulong gpuVa, int maximumId)
+        {
+            _cpBindingsManager.SetTexturePool(gpuVa, maximumId);
+        }
+
+        public void SetGraphicsTexturePool(ulong gpuVa, int maximumId)
+        {
+            _gpBindingsManager.SetTexturePool(gpuVa, maximumId);
         }
 
         public void SetRenderTargetColor(int index, Texture color)
@@ -121,59 +112,22 @@ namespace Ryujinx.Graphics.Gpu.Image
             _rtDepthStencil = depthStencil;
         }
 
-        public void CommitBindings()
+        public void CommitComputeBindings()
         {
-            UpdateTextures();
-            UpdateRenderTargets();
+            // Evert time we switch between graphics and compute work,
+            // we must rebind everything.
+            // Since compute work happens less often, we always do that
+            // before and after the compute dispatch.
+            _cpBindingsManager.Rebind();
+            _cpBindingsManager.CommitBindings();
+            _gpBindingsManager.Rebind();
         }
 
-        private void UpdateTextures()
+        public void CommitGraphicsBindings()
         {
-            TexturePool texturePool = _texturePoolCache.FindOrCreate(
-                _texturePoolAddress,
-                _texturePoolMaximumId);
+            _gpBindingsManager.CommitBindings();
 
-            for (ShaderStage stage = ShaderStage.Vertex; stage <= ShaderStage.Fragment; stage++)
-            {
-                int stageIndex = (int)stage - 1;
-
-                if (_bindings[stageIndex] == null)
-                {
-                    continue;
-                }
-
-                for (int index = 0; index < _bindings[stageIndex].Length; index++)
-                {
-                    TextureBindingInfo binding = _bindings[stageIndex][index];
-
-                    int packedId = ReadPackedId(stageIndex, binding.Handle);
-
-                    int textureId = (packedId >> 0)  & 0xfffff;
-                    int samplerId = (packedId >> 20) & 0xfff;
-
-                    Texture texture = texturePool.Get(textureId);
-
-                    ITexture hostTexture = texture?.GetTargetTexture(binding.Target);
-
-                    if (_textureState[stageIndex][index].Texture != hostTexture)
-                    {
-                        _textureState[stageIndex][index].Texture = hostTexture;
-
-                        _context.Renderer.GraphicsPipeline.BindTexture(index, stage, hostTexture);
-                    }
-
-                    Sampler sampler = _samplerPool.Get(samplerId);
-
-                    ISampler hostSampler = sampler?.HostSampler;
-
-                    if (_textureState[stageIndex][index].Sampler != hostSampler)
-                    {
-                        _textureState[stageIndex][index].Sampler = hostSampler;
-
-                        _context.Renderer.GraphicsPipeline.BindSampler(index, stage, hostSampler);
-                    }
-                }
-            }
+            UpdateRenderTargets();
         }
 
         private void UpdateRenderTargets()
@@ -203,7 +157,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (anyChanged)
                 {
-                    _context.Renderer.GraphicsPipeline.SetRenderTargets(_rtHostColors, _rtHostDs);
+                    _context.Renderer.Pipeline.SetRenderTargets(_rtHostColors, _rtHostDs);
                 }
             }
             else
@@ -217,18 +171,9 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (anyChanged)
                 {
-                    _context.Renderer.GraphicsPipeline.SetRenderTargets(_rtColor3D.HostTexture, _rtHostDs);
+                    _context.Renderer.Pipeline.SetRenderTargets(_rtColor3D.HostTexture, _rtHostDs);
                 }
             }
-        }
-
-        private int ReadPackedId(int stage, int wordOffset)
-        {
-            ulong address = _bufferManager.GetGraphicsUniformBufferAddress(stage, _textureBufferIndex);
-
-            address += (uint)wordOffset * 4;
-
-            return BitConverter.ToInt32(_context.PhysicalMemory.Read(address, 4));
         }
 
         public Texture FindOrCreateTexture(CopyTexture copyTexture)
@@ -643,20 +588,6 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             return ts[0];
-        }
-
-        public void InvalidateRange(ulong address, ulong size)
-        {
-            Texture[] overlaps = _textures.FindOverlaps(address, size);
-
-            foreach (Texture overlap in overlaps)
-            {
-                overlap.Invalidate();
-            }
-
-            _samplerPool?.InvalidateRange(address, size);
-
-            _texturePoolCache.InvalidateRange(address, size);
         }
 
         public void Flush()

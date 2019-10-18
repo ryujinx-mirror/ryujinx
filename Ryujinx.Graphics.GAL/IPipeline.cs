@@ -6,19 +6,21 @@ using Ryujinx.Graphics.Shader;
 
 namespace Ryujinx.Graphics.GAL
 {
-    public interface IGraphicsPipeline
+    public interface IPipeline
     {
         void BindBlendState(int index, BlendDescriptor blend);
 
         void BindIndexBuffer(BufferRange buffer, IndexType type);
+
+        void BindImage(int index, ShaderStage stage, ITexture texture);
 
         void BindProgram(IProgram program);
 
         void BindSampler(int index, ShaderStage stage, ISampler sampler);
         void BindTexture(int index, ShaderStage stage, ITexture texture);
 
-        void BindStorageBuffers(int index, ShaderStage stage, BufferRange[] buffers);
-        void BindUniformBuffers(int index, ShaderStage stage, BufferRange[] buffers);
+        void BindStorageBuffer(int index, ShaderStage stage, BufferRange buffer);
+        void BindUniformBuffer(int index, ShaderStage stage, BufferRange buffer);
 
         void BindVertexAttribs(VertexAttribDescriptor[] vertexAttribs);
         void BindVertexBuffers(VertexBufferDescriptor[] vertexBuffers);
@@ -33,6 +35,8 @@ namespace Ryujinx.Graphics.GAL
             int   stencilValue,
             int   stencilMask);
 
+        void Dispatch(int groupsX, int groupsY, int groupsZ);
+
         void Draw(int vertexCount, int instanceCount, int firstVertex, int firstInstance);
         void DrawIndexed(
             int indexCount,
@@ -40,8 +44,6 @@ namespace Ryujinx.Graphics.GAL
             int firstIndex,
             int firstVertex,
             int firstInstance);
-        void DrawIndirect       (BufferRange buffer, ulong offset, int drawCount, int stride);
-        void DrawIndexedIndirect(BufferRange buffer, ulong offset, int drawCount, int stride);
 
         void SetBlendColor(ColorF color);
 
@@ -65,5 +67,8 @@ namespace Ryujinx.Graphics.GAL
         void SetStencilTest(StencilTestDescriptor stencilTest);
 
         void SetViewports(int first, Viewport[] viewports);
+
+        void TextureBarrier();
+        void TextureBarrierTiled();
     }
 }
