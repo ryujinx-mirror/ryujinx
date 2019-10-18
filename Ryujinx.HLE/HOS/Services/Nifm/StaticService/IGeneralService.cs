@@ -1,5 +1,7 @@
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Nifm.StaticService.GeneralService;
+using Ryujinx.HLE.HOS.Services.Nifm.StaticService.Types;
 using System;
 using System.Linq;
 using System.Net;
@@ -67,6 +69,27 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             context.ResponseData.Write(BitConverter.ToUInt32(address.GetAddressBytes()));
 
             Logger.PrintInfo(LogClass.ServiceNifm, $"Console's local IP is \"{address}\".");
+
+            return ResultCode.Success;
+        }
+
+        [Command(18)]
+        // GetInternetConnectionStatus() -> nn::nifm::detail::sf::InternetConnectionStatus
+        public ResultCode GetInternetConnectionStatus(ServiceCtx context)
+        {
+            if (!NetworkInterface.GetIsNetworkAvailable())
+            {
+                return ResultCode.NoInternetConnection;
+            }
+
+            InternetConnectionStatus internetConnectionStatus = new InternetConnectionStatus
+            {
+                Type         = InternetConnectionType.WiFi,
+                WifiStrength = 3,
+                State        = InternetConnectionState.Connected,
+            };
+
+            context.ResponseData.WriteStruct(internetConnectionStatus);
 
             return ResultCode.Success;
         }

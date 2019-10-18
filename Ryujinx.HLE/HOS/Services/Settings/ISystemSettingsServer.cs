@@ -103,6 +103,50 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
 
+        [Command(37)]
+        // GetSettingsItemValueSize(buffer<nn::settings::SettingsName, 0x19>, buffer<nn::settings::SettingsItemKey, 0x19>) -> u64
+        public ResultCode GetSettingsItemValueSize(ServiceCtx context)
+        {
+            long classPos  = context.Request.PtrBuff[0].Position;
+            long classSize = context.Request.PtrBuff[0].Size;
+
+            long namePos  = context.Request.PtrBuff[1].Position;
+            long nameSize = context.Request.PtrBuff[1].Size;
+
+            byte[] Class = context.Memory.ReadBytes(classPos, classSize);
+            byte[] name  = context.Memory.ReadBytes(namePos, nameSize);
+
+            string askedSetting = Encoding.ASCII.GetString(Class).Trim('\0') + "!" + Encoding.ASCII.GetString(name).Trim('\0');
+
+            NxSettings.Settings.TryGetValue(askedSetting, out object nxSetting);
+
+            if (nxSetting != null)
+            {
+                ulong settingSize;
+
+                if (nxSetting is string stringValue)
+                {
+                    settingSize = (ulong)stringValue.Length + 1;
+                }
+                else if (nxSetting is int)
+                {
+                    settingSize = sizeof(int);
+                }
+                else if (nxSetting is bool)
+                {
+                    settingSize = 1;
+                }
+                else
+                {
+                    throw new NotImplementedException(nxSetting.GetType().Name);
+                }
+
+                context.ResponseData.Write(settingSize);
+            }
+
+            return ResultCode.Success;
+        }
+
         [Command(38)]
         // GetSettingsItemValue(buffer<nn::settings::SettingsName, 0x19, 0x48>, buffer<nn::settings::SettingsItemKey, 0x19, 0x48>) -> (u64, buffer<unknown, 6, 0>)
         public ResultCode GetSettingsItemValue(ServiceCtx context)
