@@ -231,7 +231,16 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
                     if (!methodArgs[index].IsOut)
                     {
-                        throw new InvalidOperationException($"Method \"{svcName}\" has a invalid ref type \"{argType.Name}\".");
+                        generator.Emit(OpCodes.Ldarg_1);
+                        generator.Emit(OpCodes.Ldc_I4, index);
+
+                        MethodInfo info = typeof(IExecutionContext).GetMethod(nameof(IExecutionContext.GetX));
+
+                        generator.Emit(OpCodes.Call, info);
+
+                        ConvertToArgType(argType);
+
+                        generator.Emit(OpCodes.Stloc, local);
                     }
 
                     generator.Emit(OpCodes.Ldloca, local);
