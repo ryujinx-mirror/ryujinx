@@ -22,6 +22,11 @@ namespace ARMeilleure.Instructions
             13L << 56 | 12L << 48 | 09L << 40 | 08L << 32 | 05L << 24 | 04L << 16 | 01L << 8 | 00L << 0,
             11L << 56 | 10L << 48 | 09L << 40 | 08L << 32 | 03L << 24 | 02L << 16 | 01L << 8 | 00L << 0
         };
+
+        private static readonly long[] _masks_SliSri = new long[] // Replication masks.
+        {
+            0x0101010101010101L, 0x0001000100010001L, 0x0000000100000001L, 0x0000000000000001L
+        };
 #endregion
 
         public static void Rshrn_V(ArmEmitterContext context)
@@ -66,7 +71,7 @@ namespace ARMeilleure.Instructions
 
                 res = context.AddIntrinsic(movInst, dLow, res);
 
-                context.Copy(GetVec(op.Rd), res);
+                context.Copy(d, res);
             }
             else
             {
@@ -106,7 +111,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                EmitVectorUnaryOpZx(context, (op1) =>  context.ShiftLeft(op1, Const(shift)));
+                EmitVectorUnaryOpZx(context, (op1) => context.ShiftLeft(op1, Const(shift)));
             }
         }
 
@@ -149,8 +154,6 @@ namespace ARMeilleure.Instructions
 
                 int shift = GetImmShr(op);
 
-                long roundConst = 1L << (shift - 1);
-
                 Operand d = GetVec(op.Rd);
                 Operand n = GetVec(op.Rn);
 
@@ -170,7 +173,7 @@ namespace ARMeilleure.Instructions
 
                 res = context.AddIntrinsic(movInst, dLow, res);
 
-                context.Copy(GetVec(op.Rd), res);
+                context.Copy(d, res);
             }
             else
             {
@@ -178,34 +181,14 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public static void Sli_S(ArmEmitterContext context)
+        {
+            EmitSli(context, scalar: true);
+        }
+
         public static void Sli_V(ArmEmitterContext context)
         {
-            OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
-
-            Operand res = context.VectorZero();
-
-            int elems = op.GetBytesCount() >> op.Size;
-
-            int shift = GetImmShl(op);
-
-            ulong mask = shift != 0 ? ulong.MaxValue >> (64 - shift) : 0;
-
-            for (int index = 0; index < elems; index++)
-            {
-                Operand ne = EmitVectorExtractZx(context, op.Rn, index, op.Size);
-
-                Operand neShifted = context.ShiftLeft(ne, Const(shift));
-
-                Operand de = EmitVectorExtractZx(context, op.Rd, index, op.Size);
-
-                Operand deMasked = context.BitwiseAnd(de, Const(mask));
-
-                Operand e = context.BitwiseOr(neShifted, deMasked);
-
-                res = EmitVectorInsert(context, res, e, index, op.Size);
-            }
-
-            context.Copy(GetVec(op.Rd), res);
+            EmitSli(context, scalar: false);
         }
 
         public static void Sqrshl_V(ArmEmitterContext context)
@@ -288,6 +271,16 @@ namespace ARMeilleure.Instructions
         public static void Sqshrun_V(ArmEmitterContext context)
         {
             EmitShrImmSaturatingNarrowOp(context, ShrImmSaturatingNarrowFlags.VectorSxZx);
+        }
+
+        public static void Sri_S(ArmEmitterContext context)
+        {
+            EmitSri(context, scalar: true);
+        }
+
+        public static void Sri_V(ArmEmitterContext context)
+        {
+            EmitSri(context, scalar: false);
         }
 
         public static void Srshl_V(ArmEmitterContext context)
@@ -395,7 +388,7 @@ namespace ARMeilleure.Instructions
                     res = context.VectorZeroUpper64(res);
                 }
 
-                context.Copy(GetVec(op.Rd), res);
+                context.Copy(d, res);
             }
             else
             {
@@ -690,7 +683,7 @@ namespace ARMeilleure.Instructions
                     res = context.VectorZeroUpper64(res);
                 }
 
-                context.Copy(GetVec(op.Rd), res);
+                context.Copy(d, res);
             }
             else
             {
@@ -1052,6 +1045,117 @@ namespace ARMeilleure.Instructions
             }
 
             context.Copy(GetVec(op.Rd), res);
+        }
+
+        private static void EmitSli(ArmEmitterContext context, bool scalar)
+        {
+            OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+            int shift = GetImmShl(op);
+
+            ulong mask = shift != 0 ? ulong.MaxValue >> (64 - shift) : 0UL;
+
+            if (Optimizations.UseSse2 && op.Size > 0)
+            {
+                Operand d = GetVec(op.Rd);
+                Operand n = GetVec(op.Rn);
+
+                Intrinsic sllInst = X86PsllInstruction[op.Size];
+
+                Operand nShifted = context.AddIntrinsic(sllInst, n, Const(shift));
+
+                Operand dMask = X86GetAllElements(context, (long)mask * _masks_SliSri[op.Size]);
+
+                Operand dMasked = context.AddIntrinsic(Intrinsic.X86Pand, d, dMask);
+
+                Operand res = context.AddIntrinsic(Intrinsic.X86Por, nShifted, dMasked);
+
+                if ((op.RegisterSize == RegisterSize.Simd64) || scalar)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(d, res);
+            }
+            else
+            {
+                Operand res = context.VectorZero();
+
+                int elems = !scalar ? op.GetBytesCount() >> op.Size : 1;
+
+                for (int index = 0; index < elems; index++)
+                {
+                    Operand ne = EmitVectorExtractZx(context, op.Rn, index, op.Size);
+
+                    Operand neShifted = context.ShiftLeft(ne, Const(shift));
+
+                    Operand de = EmitVectorExtractZx(context, op.Rd, index, op.Size);
+
+                    Operand deMasked = context.BitwiseAnd(de, Const(mask));
+
+                    Operand e = context.BitwiseOr(neShifted, deMasked);
+
+                    res = EmitVectorInsert(context, res, e, index, op.Size);
+                }
+
+                context.Copy(GetVec(op.Rd), res);
+            }
+        }
+
+        private static void EmitSri(ArmEmitterContext context, bool scalar)
+        {
+            OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
+
+            int shift = GetImmShr(op);
+            int eSize = 8 << op.Size;
+
+            ulong mask = (ulong.MaxValue << (eSize - shift)) & (ulong.MaxValue >> (64 - eSize));
+
+            if (Optimizations.UseSse2 && op.Size > 0)
+            {
+                Operand d = GetVec(op.Rd);
+                Operand n = GetVec(op.Rn);
+
+                Intrinsic srlInst = X86PsrlInstruction[op.Size];
+
+                Operand nShifted = context.AddIntrinsic(srlInst, n, Const(shift));
+
+                Operand dMask = X86GetAllElements(context, (long)mask * _masks_SliSri[op.Size]);
+
+                Operand dMasked = context.AddIntrinsic(Intrinsic.X86Pand, d, dMask);
+
+                Operand res = context.AddIntrinsic(Intrinsic.X86Por, nShifted, dMasked);
+
+                if ((op.RegisterSize == RegisterSize.Simd64) || scalar)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(d, res);
+            }
+            else
+            {
+                Operand res = context.VectorZero();
+
+                int elems = !scalar ? op.GetBytesCount() >> op.Size : 1;
+
+                for (int index = 0; index < elems; index++)
+                {
+                    Operand ne = EmitVectorExtractZx(context, op.Rn, index, op.Size);
+
+                    Operand neShifted = shift != 64 ? context.ShiftRightUI(ne, Const(shift)) : Const(0UL);
+
+                    Operand de = EmitVectorExtractZx(context, op.Rd, index, op.Size);
+
+                    Operand deMasked = context.BitwiseAnd(de, Const(mask));
+
+                    Operand e = context.BitwiseOr(neShifted, deMasked);
+
+                    res = EmitVectorInsert(context, res, e, index, op.Size);
+                }
+
+                context.Copy(GetVec(op.Rd), res);
+            }
         }
     }
 }
