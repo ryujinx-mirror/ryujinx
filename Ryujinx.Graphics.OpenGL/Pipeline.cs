@@ -906,12 +906,15 @@ namespace Ryujinx.Graphics.OpenGL
 
         private void RestoreComponentMask(int index)
         {
-            GL.ColorMask(
-                index,
-                (_componentMasks[index] & 1u) != 0,
-                (_componentMasks[index] & 2u) != 0,
-                (_componentMasks[index] & 4u) != 0,
-                (_componentMasks[index] & 8u) != 0);
+            if (_componentMasks != null)
+            {
+                GL.ColorMask(
+                    index,
+                    (_componentMasks[index] & 1u) != 0,
+                    (_componentMasks[index] & 2u) != 0,
+                    (_componentMasks[index] & 4u) != 0,
+                    (_componentMasks[index] & 8u) != 0);
+            }
         }
 
         public void RebindProgram()

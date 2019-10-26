@@ -7,7 +7,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
     {
         private void Clear(int argument)
         {
-            UpdateState();
+            UpdateRenderTargetStateIfNeeded();
+
+            _textureManager.CommitGraphicsBindings();
 
             bool clearDepth   = (argument & 1) != 0;
             bool clearStencil = (argument & 2) != 0;
@@ -18,7 +20,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (componentMask != 0)
             {
-                ClearColors clearColor = _context.State.GetClearColors();
+                var clearColor = _context.State.Get<ClearColors>(MethodOffset.ClearColors);
 
                 ColorF color = new ColorF(
                     clearColor.Red,
@@ -26,22 +28,19 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     clearColor.Blue,
                     clearColor.Alpha);
 
-                _context.Renderer.Pipeline.ClearRenderTargetColor(
-                    index,
-                    componentMask,
-                    color);
+                _context.Renderer.Pipeline.ClearRenderTargetColor(index, componentMask, color);
             }
 
             if (clearDepth || clearStencil)
             {
-                float depthValue   = _context.State.GetClearDepthValue();
-                int   stencilValue = _context.State.GetClearStencilValue();
+                float depthValue   = _context.State.Get<float>(MethodOffset.ClearDepthValue);
+                int   stencilValue = _context.State.Get<int>  (MethodOffset.ClearStencilValue);
 
                 int stencilMask = 0;
 
                 if (clearStencil)
                 {
-                    stencilMask = _context.State.GetStencilTestState().FrontMask;
+                    stencilMask = _context.State.Get<StencilTestState>(MethodOffset.StencilTestState).FrontMask;
                 }
 
                 _context.Renderer.Pipeline.ClearRenderTargetDepthStencil(

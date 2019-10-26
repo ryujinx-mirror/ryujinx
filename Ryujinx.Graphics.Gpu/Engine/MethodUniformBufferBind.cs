@@ -4,27 +4,27 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
-        private void UniformBufferBind0(int argument)
+        private void UniformBufferBindVertex(int argument)
         {
             UniformBufferBind(argument, ShaderType.Vertex);
         }
 
-        private void UniformBufferBind1(int argument)
+        private void UniformBufferBindTessControl(int argument)
         {
             UniformBufferBind(argument, ShaderType.TessellationControl);
         }
 
-        private void UniformBufferBind2(int argument)
+        private void UniformBufferBindTessEvaluation(int argument)
         {
             UniformBufferBind(argument, ShaderType.TessellationEvaluation);
         }
 
-        private void UniformBufferBind3(int argument)
+        private void UniformBufferBindGeometry(int argument)
         {
             UniformBufferBind(argument, ShaderType.Geometry);
         }
 
-        private void UniformBufferBind4(int argument)
+        private void UniformBufferBindFragment(int argument)
         {
             UniformBufferBind(argument, ShaderType.Fragment);
         }
@@ -37,7 +37,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (enable)
             {
-                UniformBufferState uniformBuffer = _context.State.GetUniformBufferState();
+                var uniformBuffer = _context.State.Get<UniformBufferState>(MethodOffset.UniformBufferState);
 
                 ulong address = uniformBuffer.Address.Pack();
 

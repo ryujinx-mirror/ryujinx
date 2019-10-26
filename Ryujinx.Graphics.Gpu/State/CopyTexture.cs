@@ -3,7 +3,7 @@ namespace Ryujinx.Graphics.Gpu.State
     struct CopyTexture
     {
         public RtFormat     Format;
-        public bool         LinearLayout;
+        public Boolean32    LinearLayout;
         public MemoryLayout MemoryLayout;
         public int          Depth;
         public int          Layer;

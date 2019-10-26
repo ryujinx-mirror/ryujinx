@@ -116,9 +116,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             ulong address = TranslateAndCreateBuffer(gpuVa, size);
 
-            _gpStorageBuffers[stage].Bind(index, address, size);
+            if (_gpStorageBuffers[stage].Buffers[index].Address != address ||
+                _gpStorageBuffers[stage].Buffers[index].Size    != size)
+            {
+                _gpStorageBuffersDirty = true;
+            }
 
-            _gpStorageBuffersDirty = true;
+            _gpStorageBuffers[stage].Bind(index, address, size);
         }
 
         public void SetComputeUniformBuffer(int index, ulong gpuVa, ulong size)

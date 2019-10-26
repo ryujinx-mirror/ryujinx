@@ -10,6 +10,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         void Write(ulong address, Span<byte> data);
 
-        (ulong, ulong)[] GetModifiedRanges(ulong address, ulong size);
+        (ulong, ulong)[] GetModifiedRanges(ulong address, ulong size, ResourceName name);
     }
 }

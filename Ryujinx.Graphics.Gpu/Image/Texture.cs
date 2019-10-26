@@ -202,7 +202,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             _sequenceNumber = _context.SequenceNumber;
 
-            bool modified = _context.PhysicalMemory.GetModifiedRanges(Address, Size).Length != 0;
+            bool modified = _context.PhysicalMemory.GetModifiedRanges(Address, Size, ResourceName.Texture).Length != 0;
 
             if (!modified && _hasData)
             {

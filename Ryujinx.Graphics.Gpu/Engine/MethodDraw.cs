@@ -39,12 +39,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     _instancedIndexed = _drawIndexed;
 
                     _instancedFirstIndex    = _firstIndex;
-                    _instancedFirstVertex   = _context.State.GetBaseVertex();
-                    _instancedFirstInstance = _context.State.GetBaseInstance();
+                    _instancedFirstVertex   = _context.State.Get<int>(MethodOffset.FirstVertex);
+                    _instancedFirstInstance = _context.State.Get<int>(MethodOffset.FirstInstance);
 
                     _instancedIndexCount = _indexCount;
 
-                    VertexBufferDrawState drawState = _context.State.GetVertexBufferDrawState();
+                    var drawState = _context.State.Get<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState);
 
                     _instancedDrawStateFirst = drawState.First;
                     _instancedDrawStateCount = drawState.Count;
@@ -53,13 +53,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 return;
             }
 
-            int firstInstance = _context.State.GetBaseInstance();
+            int firstInstance = _context.State.Get<int>(MethodOffset.FirstInstance);
 
             if (_drawIndexed)
             {
                 _drawIndexed = false;
 
-                int firstVertex = _context.State.GetBaseVertex();
+                int firstVertex = _context.State.Get<int>(MethodOffset.FirstVertex);
 
                 _context.Renderer.Pipeline.DrawIndexed(
                     _indexCount,
@@ -70,7 +70,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
             else
             {
-                VertexBufferDrawState drawState = _context.State.GetVertexBufferDrawState();
+                var drawState = _context.State.Get<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState);
 
                 _context.Renderer.Pipeline.Draw(
                     drawState.Count,
@@ -98,7 +98,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
-        private void SetIndexCount(int argument)
+        private void SetIndexBufferCount(int argument)
         {
             _drawIndexed = true;
         }

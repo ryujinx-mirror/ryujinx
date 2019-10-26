@@ -69,7 +69,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 return;
             }
 
-            (ulong, ulong)[] modifiedRanges = _context.PhysicalMemory.GetModifiedRanges(address, size);
+            (ulong, ulong)[] modifiedRanges = _context.PhysicalMemory.GetModifiedRanges(address, size, ResourceName.Buffer);
 
             for (int index = 0; index < modifiedRanges.Length; index++)
             {

@@ -7,8 +7,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
     {
         private void CopyTexture(int argument)
         {
-            CopyTexture dstCopyTexture = _context.State.GetCopyDstTexture();
-            CopyTexture srcCopyTexture = _context.State.GetCopySrcTexture();
+            var dstCopyTexture = _context.State.Get<CopyTexture>(MethodOffset.CopyDstTexture);
+            var srcCopyTexture = _context.State.Get<CopyTexture>(MethodOffset.CopySrcTexture);
 
             Image.Texture srcTexture = _textureManager.FindOrCreateTexture(srcCopyTexture);
 
@@ -32,9 +32,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 return;
             }
 
-            CopyTextureControl control = _context.State.GetCopyTextureControl();
+            var control = _context.State.Get<CopyTextureControl>(MethodOffset.CopyTextureControl);
 
-            CopyRegion region = _context.State.GetCopyRegion();
+            var region = _context.State.Get<CopyRegion>(MethodOffset.CopyRegion);
 
             int srcX1 = (int)(region.SrcXF >> 32);
             int srcY1 = (int)(region.SrcYF >> 32);

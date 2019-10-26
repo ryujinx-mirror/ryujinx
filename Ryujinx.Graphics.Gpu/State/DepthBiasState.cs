@@ -2,8 +2,8 @@ namespace Ryujinx.Graphics.Gpu.State
 {
     struct DepthBiasState
     {
-        public Bool PointEnable;
-        public Bool LineEnable;
-        public Bool FillEnable;
+        public Boolean32 PointEnable;
+        public Boolean32 LineEnable;
+        public Boolean32 FillEnable;
     }
 }

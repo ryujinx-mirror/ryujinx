@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
     {
         private void UniformBufferUpdate(int argument)
         {
-            UniformBufferState uniformBuffer = _context.State.GetUniformBufferState();
+            var uniformBuffer = _context.State.Get<UniformBufferState>(MethodOffset.UniformBufferState);
 
             _context.MemoryAccessor.Write(uniformBuffer.Address.Pack() + (uint)uniformBuffer.Offset, argument);
 

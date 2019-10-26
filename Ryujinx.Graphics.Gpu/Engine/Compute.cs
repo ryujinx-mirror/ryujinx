@@ -27,15 +27,15 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             _context.Renderer.Pipeline.BindProgram(cs.Interface);
 
-            PoolState samplerPool = _context.State.GetSamplerPoolState();
+            var samplerPool = _context.State.Get<PoolState>(MethodOffset.SamplerPoolState);
 
             _textureManager.SetComputeSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId);
 
-            PoolState texturePool = _context.State.GetTexturePoolState();
+            var texturePool = _context.State.Get<PoolState>(MethodOffset.TexturePoolState);
 
             _textureManager.SetComputeTexturePool(texturePool.Address.Pack(), texturePool.MaximumId);
 
-            _textureManager.SetComputeTextureBufferIndex(_context.State.GetTextureBufferIndex());
+            _textureManager.SetComputeTextureBufferIndex(_context.State.Get<int>(MethodOffset.TextureBufferIndex));
 
             ShaderProgramInfo info = cs.Shader.Info;
 
@@ -117,6 +117,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 dispatchParams.UnpackGridSizeX(),
                 dispatchParams.UnpackGridSizeY(),
                 dispatchParams.UnpackGridSizeZ());
+
+            UpdateShaderState();
         }
     }
 }

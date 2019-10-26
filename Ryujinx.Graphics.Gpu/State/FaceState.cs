@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.Gpu.State
 {
     struct FaceState
     {
-        public Bool      CullEnable;
+        public Boolean32 CullEnable;
         public FrontFace FrontFace;
         public Face      CullFace;
     }

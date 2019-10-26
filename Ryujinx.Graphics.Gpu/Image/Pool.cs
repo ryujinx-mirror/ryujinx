@@ -1,3 +1,4 @@
+using Ryujinx.Graphics.Gpu.Memory;
 using System;
 
 namespace Ryujinx.Graphics.Gpu.Image
@@ -31,7 +32,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         public void SynchronizeMemory()
         {
-            (ulong, ulong)[] modifiedRanges = Context.PhysicalMemory.GetModifiedRanges(Address, Size);
+            (ulong, ulong)[] modifiedRanges = Context.PhysicalMemory.GetModifiedRanges(Address, Size, ResourceName.TexturePool);
 
             for (int index = 0; index < modifiedRanges.Length; index++)
             {

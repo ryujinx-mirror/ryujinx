@@ -6,6 +6,5 @@ namespace Ryujinx.Graphics.Shader.Decoders
         Green = 1 << 1,
         Blue  = 1 << 2,
         Alpha = 1 << 3
-
     }
 }

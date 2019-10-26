@@ -25,7 +25,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private void ReportSemaphore()
         {
-            ReportState state = _context.State.GetReportState();
+            var state = _context.State.Get<ReportState>(MethodOffset.ReportState);
 
             _context.MemoryAccessor.Write(state.Address.Pack(), state.Payload);
 
@@ -78,7 +78,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             Span<byte> data = MemoryMarshal.Cast<CounterData, byte>(counterDataSpan);
 
-            ReportState state = _context.State.GetReportState();
+            var state = _context.State.Get<ReportState>(MethodOffset.ReportState);
 
             _context.MemoryAccessor.Write(state.Address.Pack(), data);
         }

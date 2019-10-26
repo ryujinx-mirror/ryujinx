@@ -114,7 +114,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         public void CommitComputeBindings()
         {
-            // Evert time we switch between graphics and compute work,
+            // Every time we switch between graphics and compute work,
             // we must rebind everything.
             // Since compute work happens less often, we always do that
             // before and after the compute dispatch.

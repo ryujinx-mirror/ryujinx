@@ -8,6 +8,8 @@ namespace Ryujinx.Graphics.Gpu.State
         D32Float          = 0xa,
         D16Unorm          = 0x13,
         D24UnormS8Uint    = 0x14,
+        D24Unorm          = 0x15,
+        S8UintD24Unorm    = 0x16,
         S8Uint            = 0x17,
         D32FloatS8Uint    = 0x19,
         R32G32B32A32Float = 0xc0,
@@ -74,6 +76,8 @@ namespace Ryujinx.Graphics.Gpu.State
                 case RtFormat.D32Float:             return new FormatInfo(Format.D32Float,          1, 1, 4);
                 case RtFormat.D16Unorm:             return new FormatInfo(Format.D16Unorm,          1, 1, 2);
                 case RtFormat.D24UnormS8Uint:       return new FormatInfo(Format.D24UnormS8Uint,    1, 1, 4);
+                case RtFormat.D24Unorm:             return new FormatInfo(Format.D24UnormS8Uint,    1, 1, 4);
+                case RtFormat.S8UintD24Unorm:       return new FormatInfo(Format.D24UnormS8Uint,    1, 1, 4);
                 case RtFormat.S8Uint:               return new FormatInfo(Format.S8Uint,            1, 1, 1);
                 case RtFormat.D32FloatS8Uint:       return new FormatInfo(Format.D32FloatS8Uint,    1, 1, 8);
                 case RtFormat.R32G32B32A32Float:    return new FormatInfo(Format.R32G32B32A32Float, 1, 1, 16);

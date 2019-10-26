@@ -1,6 +1,4 @@
-﻿using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.Gpu.Image;
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.State
@@ -17,12 +15,15 @@ namespace Ryujinx.Graphics.Gpu.State
         {
             public MethodCallback Callback;
 
-            public StateWriteFlags WriteFlag;
+            public MethodOffset BaseOffset;
+
+            public int Stride;
+            public int Count;
+
+            public bool Modified;
         }
 
         private Register[] _registers;
-
-        public StateWriteFlags StateWriteFlags { get; set; }
 
         public GpuState()
         {
@@ -30,26 +31,38 @@ namespace Ryujinx.Graphics.Gpu.State
 
             _registers = new Register[RegistersCount];
 
-            StateWriteFlags = StateWriteFlags.Any;
+            for (int index = 0; index < _registers.Length; index++)
+            {
+                _registers[index].BaseOffset = (MethodOffset)index;
+                _registers[index].Stride     = 1;
+                _registers[index].Count      = 1;
+                _registers[index].Modified   = true;
+            }
+
+            foreach (var item in GpuStateTable.Table)
+            {
+                int totalRegs = item.Size * item.Count;
+
+                for (int regOffset = 0; regOffset < totalRegs; regOffset++)
+                {
+                    int index = (int)item.Offset + regOffset;
+
+                    _registers[index].BaseOffset = item.Offset;
+                    _registers[index].Stride     = item.Size;
+                    _registers[index].Count      = item.Count;
+                }
+            }
 
             InitializeDefaultState();
-            InitializeStateWatchers();
         }
-
-        public bool ExitEarly;
 
         public void CallMethod(MethodParams meth)
         {
-            if (ExitEarly)
-            {
-                return;
-            }
-
             Register register = _registers[meth.Method];
 
             if (_backingMemory[meth.Method] != meth.Argument)
             {
-                StateWriteFlags |= register.WriteFlag;
+                _registers[(int)register.BaseOffset].Modified = true;
             }
 
             _backingMemory[meth.Method] = meth.Argument;
@@ -67,262 +80,9 @@ namespace Ryujinx.Graphics.Gpu.State
             return _backingMemory[offset];
         }
 
-        public void RegisterCopyBufferCallback(MethodCallback callback)
-        {
-            RegisterCallback(0xc0, callback);
-        }
-
-        public void RegisterCopyTextureCallback(MethodCallback callback)
-        {
-            RegisterCallback(0x237, callback);
-        }
-
-        public void RegisterDrawEndCallback(MethodCallback callback)
-        {
-            RegisterCallback(0x585, callback);
-        }
-
-        public void RegisterDrawBeginCallback(MethodCallback callback)
-        {
-            RegisterCallback(0x586, callback);
-        }
-
-        public void RegisterSetIndexCountCallback(MethodCallback callback)
-        {
-            RegisterCallback(0x5f8, callback);
-        }
-
-        public void RegisterClearCallback(MethodCallback callback)
-        {
-            RegisterCallback(0x674, callback);
-        }
-
-        public void RegisterReportCallback(MethodCallback callback)
-        {
-            RegisterCallback(0x6c3, callback);
-        }
-
-        public void RegisterUniformBufferUpdateCallback(MethodCallback callback)
-        {
-            for (int index = 0; index < 16; index++)
-            {
-                RegisterCallback(0x8e4 + index, callback);
-            }
-        }
-
-        public void RegisterUniformBufferBind0Callback(MethodCallback callback)
-        {
-            RegisterCallback(0x904, callback);
-        }
-
-        public void RegisterUniformBufferBind1Callback(MethodCallback callback)
-        {
-            RegisterCallback(0x90c, callback);
-        }
-
-        public void RegisterUniformBufferBind2Callback(MethodCallback callback)
-        {
-            RegisterCallback(0x914, callback);
-        }
-
-        public void RegisterUniformBufferBind3Callback(MethodCallback callback)
-        {
-            RegisterCallback(0x91c, callback);
-        }
-
-        public void RegisterUniformBufferBind4Callback(MethodCallback callback)
-        {
-            RegisterCallback(0x924, callback);
-        }
-
-        public CopyTexture GetCopyDstTexture()
-        {
-            return Get<CopyTexture>(MethodOffset.CopyDstTexture);
-        }
-
-        public CopyTexture GetCopySrcTexture()
-        {
-            return Get<CopyTexture>(MethodOffset.CopySrcTexture);
-        }
-
-        public RtColorState GetRtColorState(int index)
-        {
-            return Get<RtColorState>(MethodOffset.RtColorState + 16 * index);
-        }
-
-        public CopyTextureControl GetCopyTextureControl()
-        {
-            return Get<CopyTextureControl>(MethodOffset.CopyTextureControl);
-        }
-
-        public CopyRegion GetCopyRegion()
-        {
-            return Get<CopyRegion>(MethodOffset.CopyRegion);
-        }
-
-        public ViewportTransform GetViewportTransform(int index)
-        {
-            return Get<ViewportTransform>(MethodOffset.ViewportTransform + 8 * index);
-        }
-
-        public ViewportExtents GetViewportExtents(int index)
-        {
-            return Get<ViewportExtents>(MethodOffset.ViewportExtents + 4 * index);
-        }
-
-        public VertexBufferDrawState GetVertexBufferDrawState()
-        {
-            return Get<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState);
-        }
-
-        public ClearColors GetClearColors()
-        {
-            return Get<ClearColors>(MethodOffset.ClearColors);
-        }
-
-        public float GetClearDepthValue()
-        {
-            return Get<float>(MethodOffset.ClearDepthValue);
-        }
-
-        public int GetClearStencilValue()
-        {
-            return _backingMemory[(int)MethodOffset.ClearStencilValue];
-        }
-
-        public StencilBackMasks GetStencilBackMasks()
-        {
-            return Get<StencilBackMasks>(MethodOffset.StencilBackMasks);
-        }
-
-        public RtDepthStencilState GetRtDepthStencilState()
-        {
-            return Get<RtDepthStencilState>(MethodOffset.RtDepthStencilState);
-        }
-
-        public VertexAttribState GetVertexAttribState(int index)
-        {
-            return Get<VertexAttribState>(MethodOffset.VertexAttribState + index);
-        }
-
-        public Size3D GetRtDepthStencilSize()
-        {
-            return Get<Size3D>(MethodOffset.RtDepthStencilSize);
-        }
-
-        public Bool GetDepthTestEnable()
-        {
-            return Get<Bool>(MethodOffset.DepthTestEnable);
-        }
-
-        public CompareOp GetDepthTestFunc()
-        {
-            return Get<CompareOp>(MethodOffset.DepthTestFunc);
-        }
-
-        public Bool GetDepthWriteEnable()
-        {
-            return Get<Bool>(MethodOffset.DepthWriteEnable);
-        }
-
-        public Bool GetBlendEnable(int index)
-        {
-            return Get<Bool>(MethodOffset.BlendEnable + index);
-        }
-
-        public StencilTestState GetStencilTestState()
-        {
-            return Get<StencilTestState>(MethodOffset.StencilTestState);
-        }
-
-        public int GetBaseVertex()
-        {
-            return _backingMemory[(int)MethodOffset.FirstVertex];
-        }
-
-        public int GetBaseInstance()
-        {
-            return _backingMemory[(int)MethodOffset.FirstInstance];
-        }
-
-        public PoolState GetSamplerPoolState()
-        {
-            return Get<PoolState>(MethodOffset.SamplerPoolState);
-        }
-
-        public PoolState GetTexturePoolState()
-        {
-            return Get<PoolState>(MethodOffset.TexturePoolState);
-        }
-
-        public StencilBackTestState GetStencilBackTestState()
-        {
-            return Get<StencilBackTestState>(MethodOffset.StencilBackTestState);
-        }
-
-        public TextureMsaaMode GetRtMsaaMode()
-        {
-            return Get<TextureMsaaMode>(MethodOffset.RtMsaaMode);
-        }
-
-        public GpuVa GetShaderBaseAddress()
-        {
-            return Get<GpuVa>(MethodOffset.ShaderBaseAddress);
-        }
-
-        public PrimitiveRestartState GetPrimitiveRestartState()
-        {
-            return Get<PrimitiveRestartState>(MethodOffset.PrimitiveRestartState);
-        }
-
-        public IndexBufferState GetIndexBufferState()
-        {
-            return Get<IndexBufferState>(MethodOffset.IndexBufferState);
-        }
-
-        public FaceState GetFaceState()
-        {
-            return Get<FaceState>(MethodOffset.FaceState);
-        }
-
-        public ReportState GetReportState()
-        {
-            return Get<ReportState>(MethodOffset.ReportState);
-        }
-
-        public VertexBufferState GetVertexBufferState(int index)
-        {
-            return Get<VertexBufferState>(MethodOffset.VertexBufferState + 4 * index);
-        }
-
-        public BlendState GetBlendState(int index)
-        {
-            return Get<BlendState>(MethodOffset.BlendState + 8 * index);
-        }
-
-        public GpuVa GetVertexBufferEndAddress(int index)
-        {
-            return Get<GpuVa>(MethodOffset.VertexBufferEndAddress + 2 * index);
-        }
-
-        public ShaderState GetShaderState(int index)
-        {
-            return Get<ShaderState>(MethodOffset.ShaderState + 16 * index);
-        }
-
-        public UniformBufferState GetUniformBufferState()
-        {
-            return Get<UniformBufferState>(MethodOffset.UniformBufferState);
-        }
-
         public void SetUniformBufferOffset(int offset)
         {
             _backingMemory[(int)MethodOffset.UniformBufferState + 3] = offset;
-        }
-
-        public int GetTextureBufferIndex()
-        {
-            return _backingMemory[(int)MethodOffset.TextureBufferIndex];
         }
 
         private void InitializeDefaultState()
@@ -341,69 +101,11 @@ namespace Ryujinx.Graphics.Gpu.State
             _backingMemory[(int)MethodOffset.RtColorMask] = 0x1111;
         }
 
-        private void InitializeStateWatchers()
+        public void RegisterCallback(MethodOffset offset, int count, MethodCallback callback)
         {
-            SetWriteStateFlag(MethodOffset.RtColorState, StateWriteFlags.RtColorState, 16 * 8);
-
-            SetWriteStateFlag(MethodOffset.ViewportTransform, StateWriteFlags.ViewportTransform, 8 * 8);
-            SetWriteStateFlag(MethodOffset.ViewportExtents,   StateWriteFlags.ViewportTransform, 4 * 8);
-
-            SetWriteStateFlag<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState, StateWriteFlags.VertexBufferState);
-
-            SetWriteStateFlag<DepthBiasState>(MethodOffset.DepthBiasState, StateWriteFlags.DepthBiasState);
-
-            SetWriteStateFlag(MethodOffset.DepthBiasFactor, StateWriteFlags.DepthBiasState, 1);
-            SetWriteStateFlag(MethodOffset.DepthBiasUnits,  StateWriteFlags.DepthBiasState, 1);
-            SetWriteStateFlag(MethodOffset.DepthBiasClamp,  StateWriteFlags.DepthBiasState, 1);
-
-            SetWriteStateFlag<RtDepthStencilState>(MethodOffset.RtDepthStencilState, StateWriteFlags.RtDepthStencilState);
-            SetWriteStateFlag<Size3D>             (MethodOffset.RtDepthStencilSize,  StateWriteFlags.RtDepthStencilState);
-
-            SetWriteStateFlag(MethodOffset.DepthTestEnable,  StateWriteFlags.DepthTestState, 1);
-            SetWriteStateFlag(MethodOffset.DepthWriteEnable, StateWriteFlags.DepthTestState, 1);
-            SetWriteStateFlag(MethodOffset.DepthTestFunc,    StateWriteFlags.DepthTestState, 1);
-
-            SetWriteStateFlag(MethodOffset.VertexAttribState, StateWriteFlags.VertexAttribState, 16);
-
-            SetWriteStateFlag<StencilBackMasks>    (MethodOffset.StencilBackMasks,     StateWriteFlags.StencilTestState);
-            SetWriteStateFlag<StencilTestState>    (MethodOffset.StencilTestState,     StateWriteFlags.StencilTestState);
-            SetWriteStateFlag<StencilBackTestState>(MethodOffset.StencilBackTestState, StateWriteFlags.StencilTestState);
-
-            SetWriteStateFlag<PoolState>(MethodOffset.SamplerPoolState, StateWriteFlags.SamplerPoolState);
-            SetWriteStateFlag<PoolState>(MethodOffset.TexturePoolState, StateWriteFlags.TexturePoolState);
-
-            SetWriteStateFlag<ShaderState>(MethodOffset.ShaderBaseAddress, StateWriteFlags.ShaderState);
-
-            SetWriteStateFlag<PrimitiveRestartState>(MethodOffset.PrimitiveRestartState, StateWriteFlags.PrimitiveRestartState);
-
-            SetWriteStateFlag<IndexBufferState>(MethodOffset.IndexBufferState, StateWriteFlags.IndexBufferState);
-
-            SetWriteStateFlag<FaceState>(MethodOffset.FaceState, StateWriteFlags.FaceState);
-
-            SetWriteStateFlag<RtColorMask>(MethodOffset.RtColorMask, StateWriteFlags.RtColorMask);
-
-            SetWriteStateFlag(MethodOffset.VertexBufferInstanced,  StateWriteFlags.VertexBufferState, 16);
-            SetWriteStateFlag(MethodOffset.VertexBufferState,      StateWriteFlags.VertexBufferState, 4 * 16);
-            SetWriteStateFlag(MethodOffset.VertexBufferEndAddress, StateWriteFlags.VertexBufferState, 2 * 16);
-
-            SetWriteStateFlag(MethodOffset.BlendEnable, StateWriteFlags.BlendState, 8);
-            SetWriteStateFlag(MethodOffset.BlendState,  StateWriteFlags.BlendState, 8 * 8);
-
-            SetWriteStateFlag(MethodOffset.ShaderState, StateWriteFlags.ShaderState, 16 * 6);
-
-            SetWriteStateFlag(MethodOffset.TextureBufferIndex, StateWriteFlags.TexturePoolState, 1);
-        }
-
-        private void SetWriteStateFlag<T>(MethodOffset offset, StateWriteFlags flag)
-        {
-            SetWriteStateFlag(offset, flag, Marshal.SizeOf<T>());
-        }
-
-        private void SetWriteStateFlag(MethodOffset offset, StateWriteFlags flag, int size)
-        {
-            for (int index = 0; index < size; index++)
+            for (int index = 0; index < count; index++)
             {
-                _registers[(int)offset + index].WriteFlag = flag;
+                _registers[(int)offset + index].Callback = callback;
             }
         }
 
@@ -412,9 +114,37 @@ namespace Ryujinx.Graphics.Gpu.State
             _registers[(int)offset].Callback = callback;
         }
 
-        private void RegisterCallback(int offset, MethodCallback callback)
+        public bool QueryModified(params MethodOffset[] offsets)
         {
-            _registers[offset].Callback = callback;
+            bool modified = false;
+
+            for (int index = 0; index < offsets.Length; index++)
+            {
+                modified |= QueryModified(offsets[index]);
+            }
+
+            return modified;
+        }
+
+        public bool QueryModified(MethodOffset offset)
+        {
+            bool modified = _registers[(int)offset].Modified;
+
+            _registers[(int)offset].Modified = false;
+
+            return modified;
+        }
+
+        public T Get<T>(MethodOffset offset, int index) where T : struct
+        {
+            Register register = _registers[(int)offset];
+
+            if ((uint)index >= register.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            return Get<T>(offset + index * register.Stride);
         }
 
         public T Get<T>(MethodOffset offset) where T : struct

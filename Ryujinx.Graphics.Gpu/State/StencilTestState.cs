@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Gpu.State
 {
     struct StencilTestState
     {
-        public Bool      Enable;
+        public Boolean32 Enable;
         public StencilOp FrontSFail;
         public StencilOp FrontDpFail;
         public StencilOp FrontDpPass;

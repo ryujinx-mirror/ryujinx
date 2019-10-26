@@ -14,8 +14,6 @@ namespace ARMeilleure.Memory
         public const int PageSize = 1 << PageBits;
         public const int PageMask = PageSize - 1;
 
-        private const long PteFlagNotModified = 1;
-
         internal const long PteFlagsMask = 7;
 
         public IntPtr Ram { get; private set; }
@@ -106,6 +104,11 @@ namespace ARMeilleure.Memory
                 ptr = (byte*)ptrUlong;
             }
 
+            if (ptr == null)
+            {
+                return IntPtr.Zero;
+            }
+
             return new IntPtr(ptr + (position & PageMask));
         }
 
@@ -122,10 +125,7 @@ namespace ARMeilleure.Memory
 
             if ((ptrUlong & PteFlagsMask) != 0)
             {
-                if ((ptrUlong & PteFlagNotModified) != 0)
-                {
-                    ClearPtEntryFlag(position, PteFlagNotModified);
-                }
+                ClearPtEntryFlag(position, PteFlagsMask);
 
                 ptrUlong &= ~(ulong)PteFlagsMask;
 
@@ -253,8 +253,10 @@ namespace ARMeilleure.Memory
             return ptePtr;
         }
 
-        public unsafe (ulong, ulong)[] GetModifiedRanges(ulong address, ulong size)
+        public unsafe (ulong, ulong)[] GetModifiedRanges(ulong address, ulong size, int id)
         {
+            ulong idMask = 1UL << id;
+
             List<(ulong, ulong)> ranges = new List<(ulong, ulong)>();
 
             ulong endAddress = (address + size + PageMask) & ~(ulong)PageMask;
@@ -272,12 +274,12 @@ namespace ARMeilleure.Memory
 
                     ulong ptrUlong = (ulong)ptr;
 
-                    if ((ptrUlong & PteFlagNotModified) == 0)
+                    if ((ptrUlong & idMask) == 0)
                     {
                         // Modified.
                         currSize += PageSize;
 
-                        SetPtEntryFlag((long)address, PteFlagNotModified);
+                        SetPtEntryFlag((long)address, (long)idMask);
                     }
                     else
                     {

@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         private const int PtLvl0Bits = 14;
         private const int PtLvl1Bits = 14;
-        private const int PtPageBits = 12;
+        public  const int PtPageBits = 12;
 
         private const ulong PtLvl0Size = 1UL << PtLvl0Bits;
         private const ulong PtLvl1Size = 1UL << PtLvl1Bits;

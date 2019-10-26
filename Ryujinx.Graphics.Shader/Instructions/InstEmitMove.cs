@@ -27,6 +27,20 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             switch (sysReg)
             {
+                case SystemRegister.ThreadId:
+                {
+                    Operand tidX = Attribute(AttributeConsts.ThreadIdX);
+                    Operand tidY = Attribute(AttributeConsts.ThreadIdY);
+                    Operand tidZ = Attribute(AttributeConsts.ThreadIdZ);
+
+                    tidY = context.ShiftLeft(tidY, Const(16));
+                    tidZ = context.ShiftLeft(tidZ, Const(26));
+
+                    src = context.BitwiseOr(tidX, context.BitwiseOr(tidY, tidZ));
+
+                    break;
+                }
+
                 case SystemRegister.ThreadIdX: src = Attribute(AttributeConsts.ThreadIdX); break;
                 case SystemRegister.ThreadIdY: src = Attribute(AttributeConsts.ThreadIdY); break;
                 case SystemRegister.ThreadIdZ: src = Attribute(AttributeConsts.ThreadIdZ); break;

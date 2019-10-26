@@ -9,10 +9,5 @@ namespace Ryujinx.Graphics.Gpu.State
         {
             return Low | ((ulong)High << 32);
         }
-
-        public bool IsNullPtr()
-        {
-            return (Low | High) == 0;
-        }
     }
 }
