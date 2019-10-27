@@ -9,6 +9,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         private IBuffer _buffer;
 
+        public IBuffer HostBuffer => _buffer;
+
         public ulong Address { get; }
         public ulong Size    { get; }
 
@@ -84,6 +86,15 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public void CopyTo(Buffer destination, int dstOffset)
         {
             _buffer.CopyTo(destination._buffer, 0, dstOffset, (int)Size);
+        }
+
+        public void Flush(ulong address, ulong size)
+        {
+            int offset = (int)(address - Address);
+
+            byte[] data = _buffer.GetData(offset, (int)size);
+
+            _context.PhysicalMemory.Write(address, data);
         }
 
         public void Invalidate()

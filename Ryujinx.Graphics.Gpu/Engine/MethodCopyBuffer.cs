@@ -69,10 +69,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
             {
                 // Buffer to buffer copy.
                 _bufferManager.CopyBuffer(cbp.SrcAddress, cbp.DstAddress, (uint)size);
-
-                Span<byte> data = _context.MemoryAccessor.Read(cbp.SrcAddress.Pack(), (uint)size);
-
-                _context.MemoryAccessor.Write(cbp.DstAddress.Pack(), data);
             }
         }
     }

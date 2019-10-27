@@ -484,17 +484,27 @@ namespace Ryujinx.Graphics.Gpu.Memory
             ulong srcAddress = TranslateAndCreateBuffer(srcVa.Pack(), size);
             ulong dstAddress = TranslateAndCreateBuffer(dstVa.Pack(), size);
 
-            BufferRange srcBuffer = GetBufferRange(srcAddress, size);
-            BufferRange dstBuffer = GetBufferRange(dstAddress, size);
+            Buffer srcBuffer = GetBuffer(srcAddress, size);
+            Buffer dstBuffer = GetBuffer(dstAddress, size);
 
-            srcBuffer.Buffer.CopyTo(
-                dstBuffer.Buffer,
-                srcBuffer.Offset,
-                dstBuffer.Offset,
+            int srcOffset = (int)(srcAddress - srcBuffer.Address);
+            int dstOffset = (int)(dstAddress - dstBuffer.Address);
+
+            srcBuffer.HostBuffer.CopyTo(
+                dstBuffer.HostBuffer,
+                srcOffset,
+                dstOffset,
                 (int)size);
+
+            dstBuffer.Flush(dstAddress, size);
         }
 
         private BufferRange GetBufferRange(ulong address, ulong size)
+        {
+            return GetBuffer(address, size).GetRange(address, size);
+        }
+
+        private Buffer GetBuffer(ulong address, ulong size)
         {
             Buffer buffer;
 
@@ -509,7 +519,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 buffer = _buffers.FindFirstOverlap(address, 1);
             }
 
-            return buffer.GetRange(address, size);
+            return buffer;
         }
 
         private void SynchronizeBufferRange(ulong address, ulong size)
@@ -519,16 +529,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 Buffer buffer = _buffers.FindFirstOverlap(address, size);
 
                 buffer.SynchronizeMemory(address, size);
-            }
-        }
-
-        public void InvalidateRange(ulong address, ulong size)
-        {
-            Buffer[] overlappingBuffers = _buffers.FindOverlaps(address, size);
-
-            foreach (Buffer buffer in overlappingBuffers)
-            {
-                buffer.Invalidate();
             }
         }
     }
