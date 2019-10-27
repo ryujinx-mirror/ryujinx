@@ -54,7 +54,8 @@ namespace Ryujinx.Graphics.Texture.Astc
             int        blockDepth,
             int        width,
             int        height,
-            int        depth)
+            int        depth,
+            int        levels)
         {
             using (MemoryStream inputStream = new MemoryStream(data.ToArray()))
             {
@@ -75,23 +76,28 @@ namespace Ryujinx.Graphics.Texture.Astc
                 {
                     int blockIndex = 0;
 
-                    for (int j = 0; j < height; j += blockHeight)
+                    int mipOffset = 0;
+
+                    for (int l = 0; l < levels; l++)
                     {
-                        for (int i = 0; i < width; i += blockWidth)
+                        for (int j = 0; j < height; j += blockHeight)
+                        for (int i = 0; i < width;  i += blockWidth)
                         {
                             int[] decompressedData = new int[144];
 
                             DecompressBlock(binReader.ReadBytes(0x10), decompressedData, blockWidth, blockHeight);
 
-                            int decompressedWidth = Math.Min(blockWidth, width - i);
+                            int decompressedWidth  = Math.Min(blockWidth,  width  - i);
                             int decompressedHeight = Math.Min(blockHeight, height - j);
-                            int baseOffsets = (j * width + i) * 4;
+
+                            int baseOffset = mipOffset + (j * width + i) * 4;
 
                             for (int jj = 0; jj < decompressedHeight; jj++)
                             {
-                                outputStream.Seek(baseOffsets + jj * width * 4, SeekOrigin.Begin);
+                                outputStream.Seek(baseOffset + jj * width * 4, SeekOrigin.Begin);
 
                                 byte[] outputBuffer = new byte[decompressedData.Length * sizeof(int)];
+
                                 Buffer.BlockCopy(decompressedData, 0, outputBuffer, 0, outputBuffer.Length);
 
                                 outputStream.Write(outputBuffer, jj * blockWidth * 4, decompressedWidth * 4);
@@ -99,6 +105,11 @@ namespace Ryujinx.Graphics.Texture.Astc
 
                             blockIndex++;
                         }
+
+                        mipOffset += width * height * 4;
+
+                        width  = Math.Max(1, width  >> 1);
+                        height = Math.Max(1, height >> 1);
                     }
 
                     return outputStream.ToArray();

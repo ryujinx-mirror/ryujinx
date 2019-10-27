@@ -29,6 +29,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 switch (op.RoundingMode)
                 {
+                    case RoundingMode.ToNearest:
+                        srcB = context.FPRound(srcB);
+                        break;
+
                     case RoundingMode.TowardsNegativeInfinity:
                         srcB = context.FPFloor(srcB);
                         break;

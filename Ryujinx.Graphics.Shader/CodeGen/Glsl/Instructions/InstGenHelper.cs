@@ -74,6 +74,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.Negate,                   InstType.OpUnary,        "-",               0);
             Add(Instruction.ReciprocalSquareRoot,     InstType.CallUnary,      "inversesqrt");
             Add(Instruction.Return,                   InstType.OpNullary,      "return");
+            Add(Instruction.Round,                    InstType.CallUnary,      "roundEven");
             Add(Instruction.Sine,                     InstType.CallUnary,      "sin");
             Add(Instruction.SquareRoot,               InstType.CallUnary,      "sqrt");
             Add(Instruction.StoreLocal,               InstType.Special);

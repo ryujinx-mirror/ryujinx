@@ -250,17 +250,15 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (!_context.Capabilities.SupportsAstcCompression && _info.FormatInfo.Format.IsAstc())
             {
-                int blockWidth  = _info.FormatInfo.BlockWidth;
-                int blockHeight = _info.FormatInfo.BlockHeight;
-
                 data = AstcDecoder.DecodeToRgba8(
                     data,
-                    blockWidth,
-                    blockHeight,
+                    _info.FormatInfo.BlockWidth,
+                    _info.FormatInfo.BlockHeight,
                     1,
                     _info.Width,
                     _info.Height,
-                    _depth);
+                    _depth,
+                    _info.Levels);
             }
 
             HostTexture.SetData(data);

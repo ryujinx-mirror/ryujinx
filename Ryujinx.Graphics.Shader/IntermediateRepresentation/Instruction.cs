@@ -71,6 +71,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         PackHalf2x16,
         ReciprocalSquareRoot,
         Return,
+        Round,
         ShiftLeft,
         ShiftRightS32,
         ShiftRightU32,

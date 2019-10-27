@@ -10,7 +10,7 @@ namespace Ryujinx.ShaderTools
         {
             if (args.Length == 1 || args.Length == 2)
             {
-                TranslationFlags flags = TranslationFlags.None;
+                TranslationFlags flags = TranslationFlags.DebugMode;
 
                 if (args.Length == 2 && args[0] == "--compute")
                 {

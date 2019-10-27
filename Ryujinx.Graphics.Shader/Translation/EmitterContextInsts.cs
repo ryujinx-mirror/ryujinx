@@ -171,6 +171,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.FP | Instruction.Floor, Local(), a);
         }
 
+        public static Operand FPFusedMultiplyAdd(this EmitterContext context, Operand a, Operand b, Operand c)
+        {
+            return context.Add(Instruction.FusedMultiplyAdd, Local(), a, b, c);
+        }
+
         public static Operand FPLogarithmB2(this EmitterContext context, Operand a)
         {
             return context.Add(Instruction.FP | Instruction.LogarithmB2, Local(), a);
@@ -189,11 +194,6 @@ namespace Ryujinx.Graphics.Shader.Translation
         public static Operand FPMultiply(this EmitterContext context, Operand a, Operand b)
         {
             return context.Add(Instruction.FP | Instruction.Multiply, Local(), a, b);
-        }
-
-        public static Operand FPFusedMultiplyAdd(this EmitterContext context, Operand a, Operand b, Operand c)
-        {
-            return context.Add(Instruction.FusedMultiplyAdd, Local(), a, b, c);
         }
 
         public static Operand FPNegate(this EmitterContext context, Operand a, bool neg)
@@ -219,6 +219,11 @@ namespace Ryujinx.Graphics.Shader.Translation
         public static Operand FPReciprocalSquareRoot(this EmitterContext context, Operand a)
         {
             return context.Add(Instruction.FP | Instruction.ReciprocalSquareRoot, Local(), a);
+        }
+
+        public static Operand FPRound(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.FP | Instruction.Round, Local(), a);
         }
 
         public static Operand FPSaturate(this EmitterContext context, Operand a, bool sat)
