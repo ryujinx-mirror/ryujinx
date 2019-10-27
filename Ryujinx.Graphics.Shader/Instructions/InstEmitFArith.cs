@@ -87,7 +87,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             IOpCodeFArith op = (IOpCodeFArith)context.CurrOp;
 
-            bool negateB = !(op is OpCodeFArithImm32) && op.RawOpCode.Extract(48);
+            bool isImm32 = op is OpCodeFArithImm32;
+
+            bool negateB = !isImm32 && op.RawOpCode.Extract(48);
 
             Operand srcA = GetSrcA(context);
 
@@ -109,7 +111,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand dest = GetDest(context);
 
-            context.Copy(dest, context.FPSaturate(context.FPMultiply(srcA, srcB), op.Saturate));
+            bool saturate = isImm32 ? op.RawOpCode.Extract(55) : op.Saturate;
+
+            context.Copy(dest, context.FPSaturate(context.FPMultiply(srcA, srcB), saturate));
 
             SetFPZnFlags(context, dest, op.SetCondCode);
         }
