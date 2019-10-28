@@ -1,3 +1,4 @@
+using ARMeilleure.Memory;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Arp;
 using Ryujinx.HLE.Utilities;
@@ -62,6 +63,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
 
             long outputPosition = context.Request.RecvListBuff[0].Position;
             long outputSize     = context.Request.RecvListBuff[0].Size;
+
+            MemoryHelper.FillWithZeros(context.Memory, outputPosition, (int)outputSize);
 
             ulong offset = 0;
 
