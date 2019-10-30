@@ -29,16 +29,6 @@ namespace Ryujinx.Graphics.OpenGL
                 0);
         }
 
-        public void AttachColor(int index, TextureView color, int layer)
-        {
-            GL.FramebufferTextureLayer(
-                FramebufferTarget.Framebuffer,
-                FramebufferAttachment.ColorAttachment0 + index,
-                color?.Handle ?? 0,
-                0,
-                layer);
-        }
-
         public void AttachDepthStencil(TextureView depthStencil)
         {
             // Detach the last depth/stencil buffer if there is any.

@@ -697,28 +697,6 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void SetRenderTargets(ITexture color3D, ITexture depthStencil)
-        {
-            EnsureFramebuffer();
-
-            TextureView color = (TextureView)color3D;
-
-            for (int index = 0; index < color.DepthOrLayers; index++)
-            {
-                _framebuffer.AttachColor(index, color, index);
-            }
-
-            TextureView depthStencilView = (TextureView)depthStencil;
-
-            _framebuffer.AttachDepthStencil(depthStencilView);
-
-            _framebuffer.SetDrawBuffers(color.DepthOrLayers);
-
-            _hasDepthBuffer = depthStencil != null && depthStencilView.Format != Format.S8Uint;
-
-            UpdateDepthTest();
-        }
-
         public void SetRenderTargets(ITexture[] colors, ITexture depthStencil)
         {
             EnsureFramebuffer();

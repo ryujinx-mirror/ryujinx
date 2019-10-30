@@ -22,8 +22,11 @@ namespace Ryujinx.Graphics.Texture
             int gobBlocksInZ,
             int gobBlocksInTileX)
         {
+            bool is3D = depth > 1;
+
             int layerSize = 0;
 
+            int[] allOffsets = new int[levels * layers * depth];
             int[] mipOffsets = new int[levels];
 
             int mipGobBlocksInY = gobBlocksInY;
@@ -55,6 +58,25 @@ namespace Ryujinx.Graphics.Texture
 
                 int robSize = widthInGobs * mipGobBlocksInY * mipGobBlocksInZ * GobSize;
 
+                if (is3D)
+                {
+                    int gobSize = mipGobBlocksInY * GobSize;
+
+                    int sliceSize = totalBlocksOfGobsInY * widthInGobs * gobSize;
+
+                    int baseOffset = layerSize;
+
+                    int mask = gobBlocksInZ - 1;
+
+                    for (int z = 0; z < d; z++)
+                    {
+                        int zLow  = z &  mask;
+                        int zHigh = z & ~mask;
+
+                        allOffsets[z * levels + level] = baseOffset + zLow * gobSize + zHigh * sliceSize;
+                    }
+                }
+
                 mipOffsets[level] = layerSize;
 
                 layerSize += totalBlocksOfGobsInZ * totalBlocksOfGobsInY * robSize;
@@ -68,16 +90,17 @@ namespace Ryujinx.Graphics.Texture
                 gobBlocksInY,
                 gobBlocksInZ);
 
-            int[] allOffsets = new int[levels * layers];
-
-            for (int layer = 0; layer < layers; layer++)
+            if (!is3D)
             {
-                int baseIndex  = layer * levels;
-                int baseOffset = layer * layerSize;
-
-                for (int level = 0; level < levels; level++)
+                for (int layer = 0; layer < layers; layer++)
                 {
-                    allOffsets[baseIndex + level] = baseOffset + mipOffsets[level];
+                    int baseIndex  = layer * levels;
+                    int baseOffset = layer * layerSize;
+
+                    for (int level = 0; level < levels; level++)
+                    {
+                        allOffsets[baseIndex + level] = baseOffset + mipOffsets[level];
+                    }
                 }
             }
 

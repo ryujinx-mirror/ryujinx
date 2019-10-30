@@ -227,39 +227,28 @@ namespace Ryujinx.Graphics.Gpu.Engine
             int samplesInX = msaaMode.SamplesInX();
             int samplesInY = msaaMode.SamplesInY();
 
-            Image.Texture color3D = Get3DRenderTarget(samplesInX, samplesInY);
-
-            if (color3D == null)
+            for (int index = 0; index < Constants.TotalRenderTargets; index++)
             {
-                for (int index = 0; index < Constants.TotalRenderTargets; index++)
+                var colorState = _context.State.Get<RtColorState>(MethodOffset.RtColorState, index);
+
+                if (!IsRtEnabled(colorState))
                 {
-                    var colorState = _context.State.Get<RtColorState>(MethodOffset.RtColorState, index);
+                    _textureManager.SetRenderTargetColor(index, null);
 
-                    if (!IsRtEnabled(colorState))
-                    {
-                        _textureManager.SetRenderTargetColor(index, null);
-
-                        continue;
-                    }
-
-                    Image.Texture color = _textureManager.FindOrCreateTexture(
-                        colorState,
-                        samplesInX,
-                        samplesInY);
-
-                    _textureManager.SetRenderTargetColor(index, color);
-
-                    if (color != null)
-                    {
-                        color.Modified = true;
-                    }
+                    continue;
                 }
-            }
-            else
-            {
-                _textureManager.SetRenderTargetColor3D(color3D);
 
-                color3D.Modified = true;
+                Image.Texture color = _textureManager.FindOrCreateTexture(
+                    colorState,
+                    samplesInX,
+                    samplesInY);
+
+                _textureManager.SetRenderTargetColor(index, color);
+
+                if (color != null)
+                {
+                    color.Modified = true;
+                }
             }
 
             bool dsEnable = _context.State.Get<Boolean32>(MethodOffset.RtDepthStencilEnable);
@@ -284,45 +273,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
             {
                 depthStencil.Modified = true;
             }
-        }
-
-        private Image.Texture Get3DRenderTarget(int samplesInX, int samplesInY)
-        {
-            var colorState0 = _context.State.Get<RtColorState>(MethodOffset.RtColorState, 0);
-
-            if (!IsRtEnabled(colorState0) || !colorState0.MemoryLayout.UnpackIsTarget3D() || colorState0.Depth != 1)
-            {
-                return null;
-            }
-
-            int slices = 1;
-            int unused = 0;
-
-            for (int index = 1; index < Constants.TotalRenderTargets; index++)
-            {
-                var colorState = _context.State.Get<RtColorState>(MethodOffset.RtColorState, index);
-
-                if (!IsRtEnabled(colorState))
-                {
-                    unused++;
-
-                    continue;
-                }
-
-                if (colorState.MemoryLayout.UnpackIsTarget3D() && colorState.Depth == 1)
-                {
-                    slices++;
-                }
-            }
-
-            if (slices + unused == Constants.TotalRenderTargets)
-            {
-                colorState0.Depth = slices;
-
-                return _textureManager.FindOrCreateTexture(colorState0, samplesInX, samplesInY);
-            }
-
-            return null;
         }
 
         private static bool IsRtEnabled(RtColorState colorState)

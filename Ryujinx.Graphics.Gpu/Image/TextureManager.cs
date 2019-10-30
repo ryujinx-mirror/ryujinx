@@ -17,13 +17,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         private TextureBindingsManager _gpBindingsManager;
 
         private Texture[] _rtColors;
-        private Texture   _rtColor3D;
-
-        private Texture _rtDepthStencil;
+        private Texture   _rtDepthStencil;
 
         private ITexture[] _rtHostColors;
-
-        private ITexture _rtHostDs;
+        private ITexture   _rtHostDs;
 
         private RangeList<Texture> _textures;
 
@@ -98,13 +95,6 @@ namespace Ryujinx.Graphics.Gpu.Image
         public void SetRenderTargetColor(int index, Texture color)
         {
             _rtColors[index] = color;
-
-            _rtColor3D = null;
-        }
-
-        public void SetRenderTargetColor3D(Texture color)
-        {
-            _rtColor3D = color;
         }
 
         public void SetRenderTargetDepthStencil(Texture depthStencil)
@@ -141,38 +131,21 @@ namespace Ryujinx.Graphics.Gpu.Image
                 anyChanged = true;
             }
 
-            if (_rtColor3D == null)
+            for (int index = 0; index < _rtColors.Length; index++)
             {
-                for (int index = 0; index < _rtColors.Length; index++)
-                {
-                    ITexture hostTexture = _rtColors[index]?.HostTexture;
+                ITexture hostTexture = _rtColors[index]?.HostTexture;
 
-                    if (_rtHostColors[index] != hostTexture)
-                    {
-                        _rtHostColors[index] = hostTexture;
-
-                        anyChanged = true;
-                    }
-                }
-
-                if (anyChanged)
+                if (_rtHostColors[index] != hostTexture)
                 {
-                    _context.Renderer.Pipeline.SetRenderTargets(_rtHostColors, _rtHostDs);
-                }
-            }
-            else
-            {
-                if (_rtHostColors[0] != _rtColor3D.HostTexture)
-                {
-                    _rtHostColors[0] = _rtColor3D.HostTexture;
+                    _rtHostColors[index] = hostTexture;
 
                     anyChanged = true;
                 }
+            }
 
-                if (anyChanged)
-                {
-                    _context.Renderer.Pipeline.SetRenderTargets(_rtColor3D.HostTexture, _rtHostDs);
-                }
+            if (anyChanged)
+            {
+                _context.Renderer.Pipeline.SetRenderTargets(_rtHostColors, _rtHostDs);
             }
         }
 
@@ -447,9 +420,27 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                         ITexture newView = texture.HostTexture.CreateView(createInfo, firstLayer, firstLevel);
 
-                        overlap.HostTexture.CopyTo(newView);
+                        overlap.HostTexture.CopyTo(newView, 0, 0);
 
                         overlap.ReplaceView(texture, overlapInfo, newView);
+                    }
+                }
+
+                // If the texture is a 3D texture, we need to additionally copy any slice
+                // of the 3D texture to the newly created 3D texture.
+                if (info.Target == Target.Texture3D)
+                {
+                    foreach (Texture overlap in overlaps)
+                    {
+                        if (texture.IsViewCompatible(
+                            overlap.Info,
+                            overlap.Size,
+                            isCopy: true,
+                            out int firstLayer,
+                            out int firstLevel))
+                        {
+                            overlap.HostTexture.CopyTo(texture.HostTexture, firstLayer, firstLevel);
+                        }
                     }
                 }
             }

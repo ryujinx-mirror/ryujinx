@@ -137,11 +137,11 @@ namespace Ryujinx.Graphics.OpenGL
             return _parent.GetHashCode();
         }
 
-        public void CopyTo(ITexture destination)
+        public void CopyTo(ITexture destination, int firstLayer, int firstLevel)
         {
             TextureView destinationView = (TextureView)destination;
 
-            TextureCopyUnscaled.Copy(this, destinationView, 0, 0);
+            TextureCopyUnscaled.Copy(this, destinationView, firstLayer, firstLevel);
 
             int width  = Math.Min(Width,  destinationView.Width);
             int height = Math.Min(Height, destinationView.Height);

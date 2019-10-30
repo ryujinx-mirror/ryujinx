@@ -61,7 +61,6 @@ namespace Ryujinx.Graphics.GAL
 
         void SetRenderTargetColorMasks(uint[] componentMask);
 
-        void SetRenderTargets(ITexture color3D, ITexture depthStencil);
         void SetRenderTargets(ITexture[] colors, ITexture depthStencil);
 
         void SetStencilTest(StencilTestDescriptor stencilTest);

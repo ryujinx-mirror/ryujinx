@@ -6,6 +6,7 @@ using Ryujinx.Graphics.Texture;
 using Ryujinx.Graphics.Texture.Astc;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -116,6 +117,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             _views.Remove(texture);
 
             texture._viewStorage = null;
+
+            DeleteIfNotUsed();
         }
 
         public void ChangeSize(int width, int height, int depthOrLayers)
@@ -187,7 +190,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 ITexture newStorage = _context.Renderer.CreateTexture(createInfo);
 
-                HostTexture.CopyTo(newStorage);
+                HostTexture.CopyTo(newStorage, 0, 0);
 
                 ReplaceStorage(newStorage);
             }
@@ -413,7 +416,21 @@ namespace Ryujinx.Graphics.Gpu.Image
                    _info.SamplesInY == info.SamplesInY;
         }
 
-        public bool IsViewCompatible(TextureInfo info, ulong size, out int firstLayer, out int firstLevel)
+        public bool IsViewCompatible(
+            TextureInfo info,
+            ulong       size,
+            out int     firstLayer,
+            out int     firstLevel)
+        {
+            return IsViewCompatible(info, size, isCopy: false, out firstLayer, out firstLevel);
+        }
+
+        public bool IsViewCompatible(
+            TextureInfo info,
+            ulong       size,
+            bool        isCopy,
+            out int     firstLayer,
+            out int     firstLevel)
         {
             // Out of range.
             if (info.Address < Address || info.Address + size > EndAddress)
@@ -441,12 +458,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return false;
             }
 
-            if (!ViewSizeMatches(info, firstLevel))
+            if (!ViewSizeMatches(info, firstLevel, isCopy))
             {
                 return false;
             }
 
-            if (!ViewTargetCompatible(info))
+            if (!ViewTargetCompatible(info, isCopy))
             {
                 return false;
             }
@@ -496,18 +513,24 @@ namespace Ryujinx.Graphics.Gpu.Image
             return TextureCompatibility.FormatCompatible(_info.FormatInfo, info.FormatInfo);
         }
 
-        private bool ViewSizeMatches(TextureInfo info, int level)
+        private bool ViewSizeMatches(TextureInfo info, int level, bool isCopy)
         {
             Size size = GetAlignedSize(_info, level);
 
             Size otherSize = GetAlignedSize(info);
 
-            return size.Width  == otherSize.Width  &&
-                   size.Height == otherSize.Height &&
-                   size.Depth  == otherSize.Depth;
+            // For copies, we can copy a subset of the 3D texture slices,
+            // so the depth may be different in this case.
+            if (!isCopy && info.Target == Target.Texture3D && size.Depth != otherSize.Depth)
+            {
+                return false;
+            }
+
+            return size.Width  == otherSize.Width &&
+                   size.Height == otherSize.Height;
         }
 
-        private bool ViewTargetCompatible(TextureInfo info)
+        private bool ViewTargetCompatible(TextureInfo info, bool isCopy)
         {
             switch (_info.Target)
             {
@@ -534,7 +557,8 @@ namespace Ryujinx.Graphics.Gpu.Image
                            info.Target == Target.Texture2DMultisampleArray;
 
                 case Target.Texture3D:
-                    return info.Target == Target.Texture3D;
+                    return info.Target == Target.Texture3D ||
+                          (info.Target == Target.Texture2D && isCopy);
             }
 
             return false;
@@ -686,7 +710,9 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         public void DecrementReferenceCount()
         {
-            if (--_referenceCount == 0)
+            int newRefCount = --_referenceCount;
+
+            if (newRefCount == 0)
             {
                 if (_viewStorage != this)
                 {
@@ -694,7 +720,21 @@ namespace Ryujinx.Graphics.Gpu.Image
                 }
 
                 _context.Methods.TextureManager.RemoveTextureFromCache(this);
+            }
 
+            Debug.Assert(newRefCount >= 0);
+
+            DeleteIfNotUsed();
+        }
+
+        private void DeleteIfNotUsed()
+        {
+            // We can delete the texture as long it is not being used
+            // in any cache (the reference count is 0 in this case), and
+            // also all views that may be created from this texture were
+            // already deleted (views count is 0).
+            if (_referenceCount == 0 && _views.Count == 0)
+            {
                 DisposeTextures();
             }
         }
