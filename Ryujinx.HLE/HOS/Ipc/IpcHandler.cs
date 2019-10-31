@@ -67,7 +67,7 @@ namespace Ryujinx.HLE.HOS.Ipc
 
                         case 3:
                         {
-                            request = FillResponse(response, 0, 0x500);
+                            request = FillResponse(response, 0, 0x1000);
 
                             break;
                         }
