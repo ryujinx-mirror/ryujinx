@@ -39,7 +39,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         protected int RawType;
 
-        public bool IsFp16 { get; }
+        public bool IsFp16 { get; protected set; }
 
         public OpCodeTextureScalar(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {

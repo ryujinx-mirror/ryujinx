@@ -1,5 +1,6 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Ryujinx.Graphics.Shader.Translation.Optimizations
@@ -59,7 +60,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                                 modified = true;
                             }
-                            else if (operation.Inst == Instruction.PackHalf2x16 && PropagatePack(operation))
+                            else if ((operation.Inst == Instruction.PackHalf2x16 && PropagatePack(operation)) ||
+                                     (operation.Inst == Instruction.ShuffleXor   && MatchDdxOrDdy(operation)))
                             {
                                 if (operation.Dest.UseOps.Count == 0)
                                 {
@@ -130,6 +132,84 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                     modified = true;
                 }
+            }
+
+            return modified;
+        }
+
+        public static bool MatchDdxOrDdy(Operation operation)
+        {
+            // It's assumed that "operation.Inst" is ShuffleXor,
+            // that should be checked before calling this method.
+            Debug.Assert(operation.Inst == Instruction.ShuffleXor);
+
+            bool modified = false;
+
+            Operand src2 = operation.GetSource(1);
+            Operand src3 = operation.GetSource(2);
+
+            if (src2.Type != OperandType.Constant || (src2.Value != 1 && src2.Value != 2))
+            {
+                return false;
+            }
+
+            if (src3.Type != OperandType.Constant || src3.Value != 0x1c03)
+            {
+                return false;
+            }
+
+            bool isDdy = src2.Value == 2;
+            bool isDdx = !isDdy;
+
+            // We can replace any use by a FSWZADD with DDX/DDY, when
+            // the following conditions are true:
+            // - The mask should be 0b10100101 for DDY, or 0b10011001 for DDX.
+            // - The first source operand must be the shuffle output.
+            // - The second source operand must be the shuffle first source operand.
+            INode[] uses = operation.Dest.UseOps.ToArray();
+
+            foreach (INode use in uses)
+            {
+                if (!(use is Operation test))
+                {
+                    continue;
+                }
+
+                if (!(use is Operation useOp) || useOp.Inst != Instruction.SwizzleAdd)
+                {
+                    continue;
+                }
+
+                Operand fswzaddSrc1 = useOp.GetSource(0);
+                Operand fswzaddSrc2 = useOp.GetSource(1);
+                Operand fswzaddSrc3 = useOp.GetSource(2);
+
+                if (fswzaddSrc1 != operation.Dest)
+                {
+                    continue;
+                }
+
+                if (fswzaddSrc2 != operation.GetSource(0))
+                {
+                    continue;
+                }
+
+                if (fswzaddSrc3.Type != OperandType.Constant)
+                {
+                    continue;
+                }
+
+                int mask = fswzaddSrc3.Value;
+
+                if ((isDdx && mask != 0b10011001) ||
+                    (isDdy && mask != 0b10100101))
+                {
+                    continue;
+                }
+
+                useOp.TurnInto(isDdx ? Instruction.Ddx : Instruction.Ddy, fswzaddSrc2);
+
+                modified = true;
             }
 
             return modified;

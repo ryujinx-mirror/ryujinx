@@ -27,6 +27,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             //  Inst                                  Destination type     Source 1 type        Source 2 type        Source 3 type        Source 4 type
             Add(Instruction.Absolute,                 VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.Add,                      VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
+            Add(Instruction.BitCount,                 VariableType.Int,    VariableType.Int);
             Add(Instruction.BitfieldExtractS32,       VariableType.S32,    VariableType.S32,    VariableType.S32,    VariableType.S32);
             Add(Instruction.BitfieldExtractU32,       VariableType.U32,    VariableType.U32,    VariableType.S32,    VariableType.S32);
             Add(Instruction.BitfieldInsert,           VariableType.Int,    VariableType.Int,    VariableType.Int,    VariableType.S32,    VariableType.S32);
@@ -55,8 +56,12 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.ConvertS32ToFP,           VariableType.F32,    VariableType.S32);
             Add(Instruction.ConvertU32ToFP,           VariableType.F32,    VariableType.U32);
             Add(Instruction.Cosine,                   VariableType.Scalar, VariableType.Scalar);
+            Add(Instruction.Ddx,                      VariableType.F32,    VariableType.F32);
+            Add(Instruction.Ddy,                      VariableType.F32,    VariableType.F32);
             Add(Instruction.Divide,                   VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.ExponentB2,               VariableType.Scalar, VariableType.Scalar);
+            Add(Instruction.FindFirstSetS32,          VariableType.S32,    VariableType.S32);
+            Add(Instruction.FindFirstSetU32,          VariableType.S32,    VariableType.U32);
             Add(Instruction.Floor,                    VariableType.F32,    VariableType.F32);
             Add(Instruction.FusedMultiplyAdd,         VariableType.F32,    VariableType.F32,    VariableType.F32,    VariableType.F32);
             Add(Instruction.ImageLoad,                VariableType.F32);
@@ -75,6 +80,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.ShiftLeft,                VariableType.Int,    VariableType.Int,    VariableType.Int);
             Add(Instruction.ShiftRightS32,            VariableType.S32,    VariableType.S32,    VariableType.Int);
             Add(Instruction.ShiftRightU32,            VariableType.U32,    VariableType.U32,    VariableType.Int);
+            Add(Instruction.Shuffle,                  VariableType.F32,    VariableType.F32,    VariableType.U32,    VariableType.U32);
+            Add(Instruction.ShuffleDown,              VariableType.F32,    VariableType.F32,    VariableType.U32,    VariableType.U32);
+            Add(Instruction.ShuffleUp,                VariableType.F32,    VariableType.F32,    VariableType.U32,    VariableType.U32);
+            Add(Instruction.ShuffleXor,               VariableType.F32,    VariableType.F32,    VariableType.U32,    VariableType.U32);
             Add(Instruction.Maximum,                  VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.MaximumU32,               VariableType.U32,    VariableType.U32,    VariableType.U32);
             Add(Instruction.Minimum,                  VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
@@ -90,6 +99,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.StoreLocal,               VariableType.None,   VariableType.S32,    VariableType.F32);
             Add(Instruction.StoreStorage,             VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.F32);
             Add(Instruction.Subtract,                 VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
+            Add(Instruction.SwizzleAdd,               VariableType.F32,    VariableType.F32,    VariableType.F32,    VariableType.S32);
             Add(Instruction.TextureSample,            VariableType.F32);
             Add(Instruction.TextureSize,              VariableType.S32,    VariableType.S32,    VariableType.S32);
             Add(Instruction.Truncate,                 VariableType.F32,    VariableType.F32);

@@ -180,6 +180,22 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Copy(Register(op.Predicate0), p1Res);
         }
 
+        public static void Fswzadd(EmitterContext context)
+        {
+            OpCodeAlu op = (OpCodeAlu)context.CurrOp;
+
+            int mask = op.RawOpCode.Extract(28, 8);
+
+            Operand srcA = GetSrcA(context);
+            Operand srcB = GetSrcB(context);
+
+            Operand dest = GetDest(context);
+
+            context.Copy(dest, context.FPSwizzleAdd(srcA, srcB, mask));
+
+            SetFPZnFlags(context, dest, op.SetCondCode);
+        }
+
         public static void Hadd2(EmitterContext context)
         {
             Hadd2Hmul2Impl(context, isAdd: true);

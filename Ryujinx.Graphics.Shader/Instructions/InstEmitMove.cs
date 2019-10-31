@@ -27,6 +27,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             switch (sysReg)
             {
+                // TODO: Use value from Y direction GPU register.
+                case SystemRegister.YDirection: src = ConstF(1); break;
+
                 case SystemRegister.ThreadId:
                 {
                     Operand tidX = Attribute(AttributeConsts.ThreadIdX);
@@ -64,6 +67,38 @@ namespace Ryujinx.Graphics.Shader.Instructions
             Operand srcB = GetSrcB(context);
 
             Operand res = context.ConditionalSelect(pred, srcA, srcB);
+
+            context.Copy(GetDest(context), res);
+        }
+
+        public static void Shfl(EmitterContext context)
+        {
+            OpCodeShuffle op = (OpCodeShuffle)context.CurrOp;
+
+            Operand pred = Register(op.Predicate48);
+
+            Operand srcA = GetSrcA(context);
+
+            Operand srcB = op.IsBImmediate ? Const(op.ImmediateB) : Register(op.Rb);
+            Operand srcC = op.IsCImmediate ? Const(op.ImmediateC) : Register(op.Rc);
+
+            Operand res = null;
+
+            switch (op.ShuffleType)
+            {
+                case ShuffleType.Indexed:
+                    res = context.Shuffle(srcA, srcB, srcC);
+                    break;
+                case ShuffleType.Up:
+                    res = context.ShuffleUp(srcA, srcB, srcC);
+                    break;
+                case ShuffleType.Down:
+                    res = context.ShuffleDown(srcA, srcB, srcC);
+                    break;
+                case ShuffleType.Butterfly:
+                    res = context.ShuffleXor(srcA, srcB, srcC);
+                    break;
+            }
 
             context.Copy(GetDest(context), res);
         }

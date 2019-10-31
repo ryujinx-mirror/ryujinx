@@ -164,13 +164,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         {
             AstTextureOperation texOp = (AstTextureOperation)operation;
 
-            bool isBindless  = (texOp.Flags & TextureFlags.Bindless)  != 0;
-            bool isGather    = (texOp.Flags & TextureFlags.Gather)    != 0;
-            bool intCoords   = (texOp.Flags & TextureFlags.IntCoords) != 0;
-            bool hasLodBias  = (texOp.Flags & TextureFlags.LodBias)   != 0;
-            bool hasLodLevel = (texOp.Flags & TextureFlags.LodLevel)  != 0;
-            bool hasOffset   = (texOp.Flags & TextureFlags.Offset)    != 0;
-            bool hasOffsets  = (texOp.Flags & TextureFlags.Offsets)   != 0;
+            bool isBindless     = (texOp.Flags & TextureFlags.Bindless)    != 0;
+            bool isGather       = (texOp.Flags & TextureFlags.Gather)      != 0;
+            bool hasDerivatives = (texOp.Flags & TextureFlags.Derivatives) != 0;
+            bool intCoords      = (texOp.Flags & TextureFlags.IntCoords)   != 0;
+            bool hasLodBias     = (texOp.Flags & TextureFlags.LodBias)     != 0;
+            bool hasLodLevel    = (texOp.Flags & TextureFlags.LodLevel)    != 0;
+            bool hasOffset      = (texOp.Flags & TextureFlags.Offset)      != 0;
+            bool hasOffsets     = (texOp.Flags & TextureFlags.Offsets)     != 0;
 
             bool isArray       = (texOp.Type & SamplerType.Array)       != 0;
             bool isMultisample = (texOp.Type & SamplerType.Multisample) != 0;
@@ -189,6 +190,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             if (isGather)
             {
                 texCall += "Gather";
+            }
+            else if (hasDerivatives)
+            {
+                texCall += "Grad";
             }
             else if (hasLodLevel && !intCoords)
             {
@@ -296,6 +301,31 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             }
 
             Append(AssemblePVector(pCount));
+
+            string AssembleDerivativesVector(int count)
+            {
+                if (count > 1)
+                {
+                    string[] elems = new string[count];
+
+                    for (int index = 0; index < count; index++)
+                    {
+                        elems[index] = Src(VariableType.F32);
+                    }
+
+                    return "vec" + count + "(" + string.Join(", ", elems) + ")";
+                }
+                else
+                {
+                    return Src(VariableType.F32);
+                }
+            }
+
+            if (hasDerivatives)
+            {
+                Append(AssembleDerivativesVector(coordsCount)); // dPdx
+                Append(AssembleDerivativesVector(coordsCount)); // dPdy
+            }
 
             if (hasExtraCompareArg)
             {

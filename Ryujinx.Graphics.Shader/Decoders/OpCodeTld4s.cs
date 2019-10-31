@@ -16,6 +16,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             GatherCompIndex = opCode.Extract(52, 2);
 
+            IsFp16 = opCode.Extract(55);
+
             ComponentMask = Rd1.IsRZ ? 3 : 0xf;
         }
     }

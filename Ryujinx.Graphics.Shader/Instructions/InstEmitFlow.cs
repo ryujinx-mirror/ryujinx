@@ -15,6 +15,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
             EmitBranch(context, context.CurrBlock.Branch.Address);
         }
 
+        public static void Brk(EmitterContext context)
+        {
+            EmitBrkOrSync(context);
+        }
+
         public static void Exit(EmitterContext context)
         {
             OpCodeExit op = (OpCodeExit)context.CurrOp;
@@ -32,7 +37,22 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Discard();
         }
 
+        public static void Pbk(EmitterContext context)
+        {
+            EmitPbkOrSsy(context);
+        }
+
         public static void Ssy(EmitterContext context)
+        {
+            EmitPbkOrSsy(context);
+        }
+
+        public static void Sync(EmitterContext context)
+        {
+            EmitBrkOrSync(context);
+        }
+
+        private static void EmitPbkOrSsy(EmitterContext context)
         {
             OpCodeSsy op = (OpCodeSsy)context.CurrOp;
 
@@ -48,7 +68,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
         }
 
-        public static void Sync(EmitterContext context)
+        private static void EmitBrkOrSync(EmitterContext context)
         {
             OpCodeSync op = (OpCodeSync)context.CurrOp;
 

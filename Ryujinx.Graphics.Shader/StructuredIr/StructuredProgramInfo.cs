@@ -18,6 +18,8 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         public bool UsesInstanceId { get; set; }
 
+        public HelperFunctionsMask HelperFunctionsMask { get; set; }
+
         public HashSet<AstTextureOperation> Samplers { get; }
         public HashSet<AstTextureOperation> Images   { get; }
 

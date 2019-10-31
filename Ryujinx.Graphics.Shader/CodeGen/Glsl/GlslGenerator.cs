@@ -33,6 +33,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             Declarations.DeclareLocals(context, info);
 
+            // Some games will leave some elements of gl_Position uninitialized,
+            // in those cases, the elements will contain undefined values according
+            // to the spec, but on NVIDIA they seems to be always initialized to (0, 0, 0, 1),
+            // so we do explicit initialization to avoid UB on non-NVIDIA gpus.
+            if (context.Config.Stage == ShaderStage.Vertex)
+            {
+                context.AppendLine("gl_Position = vec4(0.0, 0.0, 0.0, 1.0);");
+            }
+
             // Ensure that unused attributes are set, otherwise the downstream
             // compiler may eliminate them.
             // (Not needed for fragment shader as it is the last stage).

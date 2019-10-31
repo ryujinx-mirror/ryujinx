@@ -80,7 +80,12 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 
         public void TurnIntoCopy(Operand source)
         {
-            Inst = Instruction.Copy;
+            TurnInto(Instruction.Copy, source);
+        }
+
+        public void TurnInto(Instruction newInst, Operand source)
+        {
+            Inst = newInst;
 
             foreach (Operand oldSrc in _sources)
             {

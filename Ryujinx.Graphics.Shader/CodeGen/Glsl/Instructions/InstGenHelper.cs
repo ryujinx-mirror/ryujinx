@@ -15,6 +15,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             Add(Instruction.Absolute,                 InstType.CallUnary,      "abs");
             Add(Instruction.Add,                      InstType.OpBinaryCom,    "+",               2);
+            Add(Instruction.BitCount,                 InstType.CallUnary,      "bitCount");
             Add(Instruction.BitfieldExtractS32,       InstType.CallTernary,    "bitfieldExtract");
             Add(Instruction.BitfieldExtractU32,       InstType.CallTernary,    "bitfieldExtract");
             Add(Instruction.BitfieldInsert,           InstType.CallQuaternary, "bitfieldInsert");
@@ -41,11 +42,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.ConvertS32ToFP,           InstType.CallUnary,      "float");
             Add(Instruction.ConvertU32ToFP,           InstType.CallUnary,      "float");
             Add(Instruction.Cosine,                   InstType.CallUnary,      "cos");
+            Add(Instruction.Ddx,                      InstType.CallUnary,      "dFdx");
+            Add(Instruction.Ddy,                      InstType.CallUnary,      "dFdy");
             Add(Instruction.Discard,                  InstType.OpNullary,      "discard");
             Add(Instruction.Divide,                   InstType.OpBinary,       "/",               1);
             Add(Instruction.EmitVertex,               InstType.CallNullary,    "EmitVertex");
             Add(Instruction.EndPrimitive,             InstType.CallNullary,    "EndPrimitive");
             Add(Instruction.ExponentB2,               InstType.CallUnary,      "exp2");
+            Add(Instruction.FindFirstSetS32,          InstType.CallUnary,      "findMSB");
+            Add(Instruction.FindFirstSetU32,          InstType.CallUnary,      "findMSB");
             Add(Instruction.Floor,                    InstType.CallUnary,      "floor");
             Add(Instruction.FusedMultiplyAdd,         InstType.CallTernary,    "fma");
             Add(Instruction.ImageLoad,                InstType.Special);
@@ -66,6 +71,10 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.ShiftLeft,                InstType.OpBinary,       "<<",              3);
             Add(Instruction.ShiftRightS32,            InstType.OpBinary,       ">>",              3);
             Add(Instruction.ShiftRightU32,            InstType.OpBinary,       ">>",              3);
+            Add(Instruction.Shuffle,                  InstType.CallTernary,    HelperFunctionNames.Shuffle);
+            Add(Instruction.ShuffleDown,              InstType.CallTernary,    HelperFunctionNames.ShuffleDown);
+            Add(Instruction.ShuffleUp,                InstType.CallTernary,    HelperFunctionNames.ShuffleUp);
+            Add(Instruction.ShuffleXor,               InstType.CallTernary,    HelperFunctionNames.ShuffleXor);
             Add(Instruction.Maximum,                  InstType.CallBinary,     "max");
             Add(Instruction.MaximumU32,               InstType.CallBinary,     "max");
             Add(Instruction.Minimum,                  InstType.CallBinary,     "min");
@@ -80,6 +89,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.StoreLocal,               InstType.Special);
             Add(Instruction.StoreStorage,             InstType.Special);
             Add(Instruction.Subtract,                 InstType.OpBinary,       "-",               2);
+            Add(Instruction.SwizzleAdd,               InstType.CallTernary,    HelperFunctionNames.SwizzleAdd);
             Add(Instruction.TextureSample,            InstType.Special);
             Add(Instruction.TextureSize,              InstType.Special);
             Add(Instruction.Truncate,                 InstType.CallUnary,      "trunc");

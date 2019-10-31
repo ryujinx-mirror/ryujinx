@@ -179,6 +179,28 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                 context.AddNode(new AstOperation(inst, sources));
             }
+
+            // Those instructions needs to be emulated by using helper functions,
+            // because they are NVIDIA specific. Those flags helps the backend to
+            // decide which helper functions are needed on the final generated code.
+            switch (operation.Inst)
+            {
+                case Instruction.Shuffle:
+                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.Shuffle;
+                    break;
+                case Instruction.ShuffleDown:
+                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.ShuffleDown;
+                    break;
+                case Instruction.ShuffleUp:
+                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.ShuffleUp;
+                    break;
+                case Instruction.ShuffleXor:
+                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.ShuffleXor;
+                    break;
+                case Instruction.SwizzleAdd:
+                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.SwizzleAdd;
+                    break;
+            }
         }
 
         private static VariableType GetVarTypeFromUses(Operand dest)

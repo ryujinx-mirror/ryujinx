@@ -15,6 +15,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Predicate = new Register(RegisterConsts.PredicateTrueIndex, RegisterType.Predicate);
 
             InvertPredicate = false;
+
+            PushTarget = true;
         }
     }
 }

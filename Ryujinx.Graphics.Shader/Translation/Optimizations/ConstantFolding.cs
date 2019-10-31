@@ -21,6 +21,10 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     EvaluateBinary(operation, (x, y) => x + y);
                     break;
 
+                case Instruction.BitCount:
+                    EvaluateUnary(operation, (x) => BitCount(x));
+                    break;
+
                 case Instruction.BitwiseAnd:
                     EvaluateBinary(operation, (x, y) => x & y);
                     break;
@@ -206,6 +210,21 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             }
 
             return true;
+        }
+
+        private static int BitCount(int value)
+        {
+            int count = 0;
+
+            for (int bit = 0; bit < 32; bit++)
+            {
+                if (value.Extract(bit))
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         private static void BitfieldExtractS32(Operation operation)

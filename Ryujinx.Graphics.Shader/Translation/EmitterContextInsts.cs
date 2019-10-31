@@ -6,6 +6,11 @@ namespace Ryujinx.Graphics.Shader.Translation
 {
     static class EmitterContextInsts
     {
+        public static Operand BitCount(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.BitCount, Local(), a);
+        }
+
         public static Operand BitfieldExtractS32(this EmitterContext context, Operand a, Operand b, Operand c)
         {
             return context.Add(Instruction.BitfieldExtractS32, Local(), a, b, c);
@@ -104,6 +109,16 @@ namespace Ryujinx.Graphics.Shader.Translation
         public static Operand EndPrimitive(this EmitterContext context)
         {
             return context.Add(Instruction.EndPrimitive);
+        }
+
+        public static Operand FindFirstSetS32(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.FindFirstSetS32, Local(), a);
+        }
+
+        public static Operand FindFirstSetU32(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.FindFirstSetU32, Local(), a);
         }
 
         public static Operand FPAbsNeg(this EmitterContext context, Operand a, bool abs, bool neg)
@@ -254,6 +269,11 @@ namespace Ryujinx.Graphics.Shader.Translation
         public static Operand FPTruncate(this EmitterContext context, Operand a)
         {
             return context.Add(Instruction.Truncate, Local(), a);
+        }
+
+        public static Operand FPSwizzleAdd(this EmitterContext context, Operand a, Operand b, int mask)
+        {
+            return context.Add(Instruction.SwizzleAdd, Local(), a, b, Const(mask));
         }
 
         public static Operand IAbsNeg(this EmitterContext context, Operand a, bool abs, bool neg)
@@ -416,6 +436,26 @@ namespace Ryujinx.Graphics.Shader.Translation
         public static Operand ShiftRightU32(this EmitterContext context, Operand a, Operand b)
         {
             return context.Add(Instruction.ShiftRightU32, Local(), a, b);
+        }
+
+        public static Operand Shuffle(this EmitterContext context, Operand a, Operand b, Operand c)
+        {
+            return context.Add(Instruction.Shuffle, Local(), a, b, c);
+        }
+
+        public static Operand ShuffleDown(this EmitterContext context, Operand a, Operand b, Operand c)
+        {
+            return context.Add(Instruction.ShuffleDown, Local(), a, b, c);
+        }
+
+        public static Operand ShuffleUp(this EmitterContext context, Operand a, Operand b, Operand c)
+        {
+            return context.Add(Instruction.ShuffleUp, Local(), a, b, c);
+        }
+
+        public static Operand ShuffleXor(this EmitterContext context, Operand a, Operand b, Operand c)
+        {
+            return context.Add(Instruction.ShuffleXor, Local(), a, b, c);
         }
 
         public static Operand StoreGlobal(this EmitterContext context, Operand a, Operand b)

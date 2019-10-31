@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 {
     class CodeGenContext
     {
-        private const string Tab = "    ";
+        public const string Tab = "    ";
 
         public ShaderConfig Config { get; }
 
@@ -89,6 +89,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
 
             return indentation;
+        }
+
+        public string GetTabString()
+        {
+            return Tab;
         }
     }
 }

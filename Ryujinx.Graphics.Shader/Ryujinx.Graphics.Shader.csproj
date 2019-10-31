@@ -1,5 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\Shuffle.glsl" />
+    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\ShuffleDown.glsl" />
+    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\ShuffleUp.glsl" />
+    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\ShuffleXor.glsl" />
+    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\SwizzleAdd.glsl" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ryujinx.Common\Ryujinx.Common.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
   </PropertyGroup>

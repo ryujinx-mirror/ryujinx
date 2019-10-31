@@ -1,3 +1,4 @@
+using Ryujinx.Common;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation;
@@ -15,6 +16,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         public static void Declare(CodeGenContext context, StructuredProgramInfo info)
         {
             context.AppendLine("#version 420 core");
+            context.AppendLine("#extension GL_ARB_shader_ballot : enable");
             context.AppendLine("#extension GL_ARB_shader_storage_buffer_object : enable");
 
             if (context.Config.Stage == ShaderStage.Compute)
@@ -130,6 +132,31 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     $"local_size_y = {localSizeY}, " +
                     $"local_size_z = {localSizeZ}) in;");
                 context.AppendLine();
+            }
+
+            if ((info.HelperFunctionsMask & HelperFunctionsMask.Shuffle) != 0)
+            {
+                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/Shuffle.glsl");
+            }
+
+            if ((info.HelperFunctionsMask & HelperFunctionsMask.ShuffleDown) != 0)
+            {
+                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/ShuffleDown.glsl");
+            }
+
+            if ((info.HelperFunctionsMask & HelperFunctionsMask.ShuffleUp) != 0)
+            {
+                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/ShuffleUp.glsl");
+            }
+
+            if ((info.HelperFunctionsMask & HelperFunctionsMask.ShuffleXor) != 0)
+            {
+                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/ShuffleXor.glsl");
+            }
+
+            if ((info.HelperFunctionsMask & HelperFunctionsMask.SwizzleAdd) != 0)
+            {
+                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/SwizzleAdd.glsl");
             }
         }
 
@@ -319,6 +346,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             {
                 context.AppendLine($"layout (location = {attr}) out vec4 {DefaultNames.OAttributePrefix}{attr};");
             }
+        }
+
+        private static void AppendHelperFunction(CodeGenContext context, string filename)
+        {
+            string code = EmbeddedResources.ReadAllText(filename);
+
+            context.AppendLine(code.Replace("\t", CodeGenContext.Tab));
+            context.AppendLine();
         }
 
         private static string GetSamplerTypeName(SamplerType type)

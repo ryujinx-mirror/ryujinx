@@ -241,7 +241,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         private static bool IsBranch(OpCode opCode)
         {
-            return (opCode is OpCodeBranch && opCode.Emitter != InstEmit.Ssy) ||
+            return (opCode is OpCodeBranch opBranch && !opBranch.PushTarget) ||
                     opCode is OpCodeSync ||
                     opCode is OpCodeExit;
         }

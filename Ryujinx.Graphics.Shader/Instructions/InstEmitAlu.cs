@@ -39,6 +39,23 @@ namespace Ryujinx.Graphics.Shader.Instructions
             // TODO: CC, X, corner cases
         }
 
+        public static void Bfi(EmitterContext context)
+        {
+            OpCodeAlu op = (OpCodeAlu)context.CurrOp;
+
+            Operand srcA = GetSrcA(context);
+            Operand srcB = GetSrcB(context);
+            Operand srcC = GetSrcC(context);
+
+            Operand position = context.BitwiseAnd(srcB, Const(0xff));
+
+            Operand size = context.BitfieldExtractU32(srcB, Const(8), Const(8));
+
+            Operand res = context.BitfieldInsert(srcC, srcA, position, size);
+
+            context.Copy(GetDest(context), res);
+        }
+
         public static void Csetp(EmitterContext context)
         {
             OpCodePsetp op = (OpCodePsetp)context.CurrOp;
@@ -56,6 +73,28 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             context.Copy(Register(op.Predicate3), p0Res);
             context.Copy(Register(op.Predicate0), p1Res);
+        }
+
+        public static void Flo(EmitterContext context)
+        {
+            OpCodeAlu op = (OpCodeAlu)context.CurrOp;
+
+            bool invert     = op.RawOpCode.Extract(40);
+            bool countZeros = op.RawOpCode.Extract(41);
+            bool isSigned   = op.RawOpCode.Extract(48);
+
+            Operand srcB = context.BitwiseNot(GetSrcB(context), invert);
+
+            Operand res = isSigned
+                ? context.FindFirstSetS32(srcB)
+                : context.FindFirstSetU32(srcB);
+
+            if (countZeros)
+            {
+                res = context.BitwiseExclusiveOr(res, Const(31));
+            }
+
+            context.Copy(GetDest(context), res);
         }
 
         public static void Iadd(EmitterContext context)
