@@ -1073,10 +1073,7 @@ namespace ARMeilleure.Instructions
                 }
                 else
                 {
-                    // TODO: When available, use: T MathF.FusedMultiplyAdd(T, T, T);
-                    // https://github.com/dotnet/corefx/issues/31903
-
-                    result = valueA + (value1 * value2);
+                    result = MathF.FusedMultiplyAdd(value1, value2, valueA);
 
                     if ((context.Fpcr & FPCR.Fz) != 0 && float.IsSubnormal(result))
                     {
@@ -1256,10 +1253,7 @@ namespace ARMeilleure.Instructions
                 }
                 else
                 {
-                    // TODO: When available, use: T MathF.FusedMultiplyAdd(T, T, T);
-                    // https://github.com/dotnet/corefx/issues/31903
-
-                    result = 2f + (value1 * value2);
+                    result = MathF.FusedMultiplyAdd(value1, value2, 2f);
 
                     if ((context.Fpcr & FPCR.Fz) != 0 && float.IsSubnormal(result))
                     {
@@ -1388,10 +1382,7 @@ namespace ARMeilleure.Instructions
                 }
                 else
                 {
-                    // TODO: When available, use: T MathF.FusedMultiplyAdd(T, T, T);
-                    // https://github.com/dotnet/corefx/issues/31903
-
-                    result = (3f + (value1 * value2)) / 2f;
+                    result = MathF.FusedMultiplyAdd(value1, value2, 3f) / 2f;
 
                     if ((context.Fpcr & FPCR.Fz) != 0 && float.IsSubnormal(result))
                     {
@@ -2142,10 +2133,7 @@ namespace ARMeilleure.Instructions
                 }
                 else
                 {
-                    // TODO: When available, use: T Math.FusedMultiplyAdd(T, T, T);
-                    // https://github.com/dotnet/corefx/issues/31903
-
-                    result = valueA + (value1 * value2);
+                    result = Math.FusedMultiplyAdd(value1, value2, valueA);
 
                     if ((context.Fpcr & FPCR.Fz) != 0 && double.IsSubnormal(result))
                     {
@@ -2323,10 +2311,7 @@ namespace ARMeilleure.Instructions
                 }
                 else
                 {
-                    // TODO: When available, use: T Math.FusedMultiplyAdd(T, T, T);
-                    // https://github.com/dotnet/corefx/issues/31903
-
-                    result = 2d + (value1 * value2);
+                    result = Math.FusedMultiplyAdd(value1, value2, 2d);
 
                     if ((context.Fpcr & FPCR.Fz) != 0 && double.IsSubnormal(result))
                     {
@@ -2455,10 +2440,7 @@ namespace ARMeilleure.Instructions
                 }
                 else
                 {
-                    // TODO: When available, use: T Math.FusedMultiplyAdd(T, T, T);
-                    // https://github.com/dotnet/corefx/issues/31903
-
-                    result = (3d + (value1 * value2)) / 2d;
+                    result = Math.FusedMultiplyAdd(value1, value2, 3d) / 2d;
 
                     if ((context.Fpcr & FPCR.Fz) != 0 && double.IsSubnormal(result))
                     {

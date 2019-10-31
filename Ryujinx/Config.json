@@ -15,7 +15,6 @@
     "enable_vsync": true,
     "enable_multicore_scheduling": true,
     "enable_fs_integrity_checks": true,
-    "enable_legacy_jit": false,
     "ignore_missing_services": false,
     "controller_type": "Handheld",
     "gui_columns": [ true, true, true, true, true, true, true, true, true ],

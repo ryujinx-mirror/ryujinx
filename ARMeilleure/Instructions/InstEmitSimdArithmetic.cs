@@ -1033,14 +1033,13 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        public static void Fnmadd_S(ArmEmitterContext context)
+        public static void Fnmadd_S(ArmEmitterContext context) // Fused.
         {
             OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
 
             int sizeF = op.Size & 1;
 
-            OperandType type = sizeF != 0 ? OperandType.FP64
-                                          : OperandType.FP32;
+            OperandType type = sizeF != 0 ? OperandType.FP64 : OperandType.FP32;
 
             Operand ne = context.VectorExtract(type, GetVec(op.Rn), 0);
             Operand me = context.VectorExtract(type, GetVec(op.Rm), 0);
@@ -1051,14 +1050,13 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVec(op.Rd), context.VectorInsert(context.VectorZero(), res, 0));
         }
 
-        public static void Fnmsub_S(ArmEmitterContext context)
+        public static void Fnmsub_S(ArmEmitterContext context) // Fused.
         {
             OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
 
             int sizeF = op.Size & 1;
 
-            OperandType type = sizeF != 0 ? OperandType.FP64
-                                          : OperandType.FP32;
+            OperandType type = sizeF != 0 ? OperandType.FP64 : OperandType.FP32;
 
             Operand ne = context.VectorExtract(type, GetVec(op.Rn), 0);
             Operand me = context.VectorExtract(type, GetVec(op.Rm), 0);

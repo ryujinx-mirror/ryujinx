@@ -65,7 +65,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
             _outStatus.VoiceDropsCount        = 0;
         }
 
-        public int[] GetBufferData(IMemoryManager memory, int maxSamples, out int samplesCount)
+        public int[] GetBufferData(MemoryManager memory, int maxSamples, out int samplesCount)
         {
             if (!Playing)
             {
@@ -122,7 +122,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
             return output;
         }
 
-        private void UpdateBuffer(IMemoryManager memory)
+        private void UpdateBuffer(MemoryManager memory)
         {
             // TODO: Implement conversion for formats other
             // than interleaved stereo (2 channels).

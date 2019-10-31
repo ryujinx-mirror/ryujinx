@@ -78,9 +78,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public bool IsPaused { get; private set; }
 
-        public IMemoryManager CpuMemory { get; private set; }
+        public MemoryManager CpuMemory { get; private set; }
 
-        public ITranslator Translator { get; private set; }
+        public Translator Translator { get; private set; }
 
         private SvcHandler _svcHandler;
 
@@ -791,7 +791,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
         }
 
-        public void SubscribeThreadEventHandlers(IExecutionContext context)
+        public void SubscribeThreadEventHandlers(ARMeilleure.State.ExecutionContext context)
         {
             context.Interrupt      += InterruptHandler;
             context.SupervisorCall += _svcHandler.SvcCall;
@@ -1022,18 +1022,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             bool useFlatPageTable = memRegion == MemoryRegion.Application;
 
-            if (_system.UseLegacyJit)
-            {
-                CpuMemory = new ChocolArm64.Memory.MemoryManager(_system.Device.Memory.RamPointer, addrSpaceBits, useFlatPageTable);
+            CpuMemory = new MemoryManager(_system.Device.Memory.RamPointer, addrSpaceBits, useFlatPageTable);
 
-                Translator = new ChocolArm64.Translation.Translator((ChocolArm64.Memory.MemoryManager)CpuMemory);
-            }
-            else
-            {
-                CpuMemory = new MemoryManager(_system.Device.Memory.RamPointer, addrSpaceBits, useFlatPageTable);
-
-                Translator = new Translator((MemoryManager)CpuMemory);
-            }
+            Translator = new Translator(CpuMemory);
 
             MemoryManager = new KMemoryManager(_system, CpuMemory);
         }

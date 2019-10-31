@@ -1,9 +1,9 @@
 
 <h1>
-    <img src="https://i.imgur.com/G6Mleco.png"> Ryujinx 
+    <img src="https://i.imgur.com/G6Mleco.png"> Ryujinx
     <a href="https://ci.appveyor.com/project/gdkchan/ryujinx" target="_blank">
         <img src="https://ci.appveyor.com/api/projects/status/ssg4jwu6ve3k594s?svg=true">
-    </a> 
+    </a>
     <a href="https://discord.gg/N2FmfVc">
         <img src="https://img.shields.io/discord/410208534861447168.svg">
     </a>
@@ -21,12 +21,12 @@
 
 ## Usage
 
-To run this emulator, you need the [.NET Core 2.1 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet-core).  
+To run this emulator, you need the [.NET Core 3.0 (or higher) SDK](https://dotnet.microsoft.com/download/dotnet-core).
 
-If you use a pre-built version, you can use the graphical interface to run your games and homebrew.  
+If you use a pre-built version, you can use the graphical interface to run your games and homebrew.
 
-If you build it yourself you will need to:  
-Run `dotnet run -c Release -- path\to\homebrew.nro` inside the Ryujinx project folder to run homebrew apps.  
+If you build it yourself you will need to:
+Run `dotnet run -c Release -- path\to\homebrew.nro` inside the Ryujinx project folder to run homebrew apps.
 Run `dotnet run -c Release -- path\to\game.nsp/xci` to run official games.
 
 Every file related to Ryujinx is stored in the `RyuFs` folder. Located in `C:\Users\USERNAME\AppData\Roaming\` for Windows, `/home/USERNAME/.config` for Linux or `/Users/USERNAME/Library/Application Support/` for macOS. It can also be accessed by clicking `Open Ryujinx Folder` under the File menu in the GUI.
@@ -39,48 +39,46 @@ The latest automatic build for Windows, macOS, and Linux can be found on the [Of
 
 ## Requirements
 
- - **Switch Keys**  
- 
-   Everything on the Switch is encrypted, so if you want to run anything other than homebrew, you have to dump encryption keys from your console. To get more information please take a look at our [Keys Documentation](KEYS.md) *(Outdated)*
-   
- - **FFmpeg Dependencies**  
- 
+ - **Switch Keys**
+
+   Everything on the Switch is encrypted, so if you want to run anything other than homebrew, you have to dump encryption keys from your console. To get more information please take a look at our [Keys Documentation](KEYS.md) *(Outdated)*.
+
+ - **FFmpeg Dependencies**
+
    Ryujinx has a basic implementation of `NVDEC`, a video decoder used by the Switch's GPU. Many games include videos that use it, so you need to download [Zeranoe's FFmpeg Builds](http://ffmpeg.zeranoe.com/builds/) for **Shared** linking and your computer's operating system. When it's done, extract the contents of the `bin` folder directly into your Ryujinx folder.
-   
- - **System Titles**  
- 
+
+ - **System Titles**
+
    Some of our System Module implementations, like `time`, require [System Data Archives](https://switchbrew.org/wiki/Title_list#System_Data_Archives). You can install them by mounting your nand partition using [HacDiskMount](https://switchtools.sshnuke.net/) and copying the content to `RyuFs/nand/system`.
-   
+
  - **Executables**
- 
+
    Ryujinx is able to run both official games and homebrew.
-   
+
    Homebrew is available on many websites, such as the [Switch Appstore](https://www.switchbru.com/appstore/).
-   
+
    A hacked Switch is needed to dump games, which you can learn how to do [here](https://nh-server.github.io/switch-guide/). Once you've hacked your Switch, you need to dump your own games with [NxDumpTool](https://github.com/DarkMatterCore/nxdumptool) to get an XCI dump or [SwitchSDTool](https://github.com/CaitSith2/SwitchSDTool) to get an NSP dump.
 
 ## Features
 
- - **Audio**  
- 
+ - **Audio**
+
    Everything for audio is partially supported. We currently use a C# wrapper for [libsoundio](http://libsound.io/), and we support [OpenAL](https://openal.org/downloads/OpenAL11CoreSDK.zip) (installation needed) too as a fallback. Our current Opus implementation is pretty incomplete.
 
-- **CPU**  
+- **CPU**
 
-  The CPU emulator, ARMeilleure, emulates an ARMv8 CPU, and currently only has support for the new 64-bit ARMv8 instructions (with a few instructions still missing). It translates the ARM code to a custom IR, performs a few optimizations, and turns that into x86 code. To handle that, we use our own JIT called ARMeilleure, which uses the custom IR and compiles the code to x86.  
-  
-  ChocolArm is the old ARM emulator which worked by translating the ARM code to .NET IL. The runtime JIT then compiles that to the platform CPU code. On .NET Core, the JIT is called RyuJIT, hence the project name, Ryujinx. It is being replaced by ARMeilleure, but can still be enabled inside the configuration menu.
+  The CPU emulator, ARMeilleure, emulates an ARMv8 CPU, and currently only has support for the new 64-bit ARMv8 instructions (with a few instructions still missing). It translates the ARM code to a custom IR, performs a few optimizations, and turns that into x86 code. To handle that, we use our own JIT called ARMeilleure, which uses the custom IR and compiles the code to x86.
 
-- **GPU**  
+- **GPU**
 
   The GPU emulator emulates the Switch's Maxwell GPU using the OpenGL API (version 4.2 minimum) through a custom build of OpenTK.
-  
-- **Input**  
+
+- **Input**
 
    We currently have support for keyboard, mouse, touch input, JoyCon input support emulated through the keyboard, and some controllers too. You can set up everything inside the configuration menu.
-  
-- **Configuration**  
- 
+
+- **Configuration**
+
    The emulator has settings for dumping shaders, enabling or disabling some logging, remapping controllers, and more. You can configure all of them through the graphical interface or manually through the config file, `Config.json`.
 
    For more information [you can go here](CONFIG.md) *(Outdated)*.

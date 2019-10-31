@@ -1,10 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
     <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
     <Configurations>Debug;Release;Profile Debug;Profile Release</Configurations>
-    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -27,6 +26,11 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
 
+  <!-- Due to Concentus. -->
+  <PropertyGroup>
+    <NoWarn>NU1605</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="Homebrew.npdm" />
     <None Remove="RyujinxProfileImage.jpg" />
@@ -43,13 +47,11 @@
     <ProjectReference Include="..\Ryujinx.Graphics\Ryujinx.Graphics.csproj" />
     <ProjectReference Include="..\Ryujinx.Profiler\Ryujinx.Profiler.csproj" />
     <ProjectReference Include="..\ARMeilleure\ARMeilleure.csproj" />
-    <ProjectReference Include="..\ChocolArm64\ChocolArm64.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Concentus" Version="1.1.7" />
     <PackageReference Include="LibHac" Version="0.6.0" />
-    <PackageReference Include="System.Runtime.Intrinsics.Experimental" Version="4.5.0-rc1" />
     <PackageReference Include="TimeZoneConverter.Posix" Version="2.1.0" />
   </ItemGroup>
 

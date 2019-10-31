@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
     <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
     <OutputType>Exe</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -16,6 +16,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile Debug|AnyCPU'">
     <DefineConstants>TRACE;USE_PROFILING</DefineConstants>
     <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <!-- Due to GtkSharp. -->
+  <PropertyGroup>
+    <EmbeddedResourceUseDependentUponConvention>false</EmbeddedResourceUseDependentUponConvention>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,7 +41,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DiscordRichPresence" Version="1.0.108" />
+    <PackageReference Include="DiscordRichPresence" Version="1.0.121" />
     <PackageReference Include="GtkSharp" Version="3.22.24.37" />
     <PackageReference Include="GtkSharp.Dependencies" Version="1.0.1" />
     <PackageReference Include="JsonPrettyPrinter" Version="1.0.1.1" />

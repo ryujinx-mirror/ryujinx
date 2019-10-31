@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Texture
             }
         }
 
-        public static (IMemoryManager Memory, long Position) GetMemoryAndPosition(
+        public static (MemoryManager Memory, long Position) GetMemoryAndPosition(
             IMemory memory,
             long    position)
         {
@@ -47,7 +47,7 @@ namespace Ryujinx.Graphics.Texture
                 return (vmm.Memory, vmm.GetPhysicalAddress(position));
             }
 
-            return ((IMemoryManager)memory, position);
+            return ((MemoryManager)memory, position);
         }
     }
 }

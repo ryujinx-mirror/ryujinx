@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
         private KEvent _updateEvent;
 
-        private IMemoryManager _memory;
+        private MemoryManager _memory;
 
         private IAalOutput _audioOut;
 
@@ -40,7 +40,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
         public IAudioRenderer(
             Horizon                system,
-            IMemoryManager         memory,
+            MemoryManager          memory,
             IAalOutput             audioOut,
             AudioRendererParameter Params)
         {

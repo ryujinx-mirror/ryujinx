@@ -20,7 +20,6 @@
     "enable_multicore_scheduling",
     "enable_fs_integrity_checks",
     "fs_global_access_log_mode",
-    "enable_legacy_jit",
     "controller_type",
     "enable_keyboard",
     "keyboard_controls",
@@ -470,17 +469,6 @@
         1,
         2,
         3
-      ]
-    },
-    "enable_legacy_jit": {
-      "$id": "#/properties/enable_legacy_jit",
-      "type": "boolean",
-      "title": "Enable legacy JIT",
-      "description": "Use old ChocolArm64 ARM emulator",
-      "default": false,
-      "examples": [
-        true,
-        false
       ]
     },
     "ignore_missing_services": {

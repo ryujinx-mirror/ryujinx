@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace ARMeilleure.State
 {
-    public class ExecutionContext : IExecutionContext
+    public class ExecutionContext
     {
         private const int MinCountForCheck = 40000;
 

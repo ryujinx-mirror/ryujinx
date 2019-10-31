@@ -37,7 +37,6 @@ namespace Ryujinx.UI
         [GUI] CheckButton  _vSyncToggle;
         [GUI] CheckButton  _multiSchedToggle;
         [GUI] CheckButton  _fsicToggle;
-        [GUI] CheckButton  _legacyJitToggle;
         [GUI] CheckButton  _ignoreToggle;
         [GUI] CheckButton  _directKeyboardAccess;
         [GUI] ComboBoxText _systemLanguageSelect;
@@ -134,7 +133,6 @@ namespace Ryujinx.UI
             if (SwitchConfig.EnableVsync)               { _vSyncToggle.Click();          }
             if (SwitchConfig.EnableMulticoreScheduling) { _multiSchedToggle.Click();     }
             if (SwitchConfig.EnableFsIntegrityChecks)   { _fsicToggle.Click();           }
-            if (SwitchConfig.EnableLegacyJit)           { _legacyJitToggle.Click();      }
             if (SwitchConfig.IgnoreMissingServices)     { _ignoreToggle.Click();         }
             if (SwitchConfig.EnableKeyboard)            { _directKeyboardAccess.Click(); }
             if (SwitchConfig.EnableCustomTheme)         { _custThemeToggle.Click();      }
@@ -316,7 +314,6 @@ namespace Ryujinx.UI
             SwitchConfig.EnableVsync               = _vSyncToggle.Active;
             SwitchConfig.EnableMulticoreScheduling = _multiSchedToggle.Active;
             SwitchConfig.EnableFsIntegrityChecks   = _fsicToggle.Active;
-            SwitchConfig.EnableLegacyJit           = _legacyJitToggle.Active;
             SwitchConfig.IgnoreMissingServices     = _ignoreToggle.Active;
             SwitchConfig.EnableKeyboard            = _directKeyboardAccess.Active;
             SwitchConfig.EnableCustomTheme         = _custThemeToggle.Active;

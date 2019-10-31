@@ -115,8 +115,6 @@ namespace Ryujinx.HLE.HOS
 
         public int GlobalAccessLogMode { get; set; }
 
-        public bool UseLegacyJit { get; set; }
-
         internal long HidBaseAddress { get; private set; }
 
         internal FileSystemServer FsServer { get; private set; }

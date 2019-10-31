@@ -19,14 +19,14 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public void SvcCall(object sender, InstExceptionEventArgs e)
         {
-            Action<SvcHandler, IExecutionContext> svcFunc = SvcTable.GetSvcFunc(e.Id);
+            Action<SvcHandler, ExecutionContext> svcFunc = SvcTable.GetSvcFunc(e.Id);
 
             if (svcFunc == null)
             {
                 throw new NotImplementedException($"SVC 0x{e.Id:X4} is not implemented.");
             }
 
-            IExecutionContext context = (IExecutionContext)sender;
+            ExecutionContext context = (ExecutionContext)sender;
 
             svcFunc(this, context);
         }

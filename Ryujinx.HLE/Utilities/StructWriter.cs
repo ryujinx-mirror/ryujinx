@@ -5,11 +5,11 @@ namespace Ryujinx.HLE.Utilities
 {
     class StructWriter
     {
-        private IMemoryManager _memory;
+        private MemoryManager _memory;
 
         public long Position { get; private set; }
 
-        public StructWriter(IMemoryManager memory, long position)
+        public StructWriter(MemoryManager memory, long position)
         {
             _memory  = memory;
             Position = position;

@@ -7,7 +7,7 @@ using static ARMeilleure.Memory.MemoryManagement;
 
 namespace ARMeilleure.Memory
 {
-    public unsafe class MemoryManager : IMemoryManager
+    public unsafe class MemoryManager
     {
         public const int PageBits = 12;
         public const int PageSize = 1 << PageBits;

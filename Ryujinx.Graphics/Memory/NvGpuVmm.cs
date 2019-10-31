@@ -23,7 +23,7 @@ namespace Ryujinx.Graphics.Memory
         private const int PtLvl0Bit = PtPageBits + PtLvl1Bits;
         private const int PtLvl1Bit = PtPageBits;
 
-        public IMemoryManager Memory { get; private set; }
+        public MemoryManager Memory { get; private set; }
 
         private NvGpuVmmCache _cache;
 
@@ -32,7 +32,7 @@ namespace Ryujinx.Graphics.Memory
 
         private long[][] _pageTable;
 
-        public NvGpuVmm(IMemoryManager memory)
+        public NvGpuVmm(MemoryManager memory)
         {
             Memory = memory;
 

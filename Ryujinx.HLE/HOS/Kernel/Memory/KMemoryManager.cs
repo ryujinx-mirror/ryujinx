@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         private LinkedList<KMemoryBlock> _blocks;
 
-        private IMemoryManager _cpuMemory;
+        private MemoryManager _cpuMemory;
 
         private Horizon _system;
 
@@ -72,7 +72,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         private MersenneTwister _randomNumberGenerator;
 
-        public KMemoryManager(Horizon system, IMemoryManager cpuMemory)
+        public KMemoryManager(Horizon system, MemoryManager cpuMemory)
         {
             _system    = system;
             _cpuMemory = cpuMemory;

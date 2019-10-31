@@ -12,9 +12,9 @@ namespace Ryujinx.Graphics.Memory
 
         private ConcurrentDictionary<long, int>[] _cachedPages;
 
-        private IMemoryManager _memory;
+        private MemoryManager _memory;
 
-        public NvGpuVmmCache(IMemoryManager memory)
+        public NvGpuVmmCache(MemoryManager memory)
         {
             _memory = memory;
 

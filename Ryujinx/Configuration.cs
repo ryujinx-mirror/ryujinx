@@ -112,11 +112,6 @@ namespace Ryujinx
         public int FsGlobalAccessLogMode { get; set; }
 
         /// <summary>
-        /// Use old ChocolArm64 ARM emulator
-        /// </summary>
-        public bool EnableLegacyJit { get;  set; }
-
-        /// <summary>
         /// Enable or disable ignoring missing services
         /// </summary>
         public bool IgnoreMissingServices { get; set; }
@@ -285,13 +280,11 @@ namespace Ryujinx
 
             device.System.GlobalAccessLogMode = SwitchConfig.FsGlobalAccessLogMode;
 
-            device.System.UseLegacyJit = SwitchConfig.EnableLegacyJit;
-
             ServiceConfiguration.IgnoreMissingServices = SwitchConfig.IgnoreMissingServices;
         }
-       
-        public static void ConfigureHid(Switch device, Configuration SwitchConfig) 
-        {   
+
+        public static void ConfigureHid(Switch device, Configuration SwitchConfig)
+        {
             if (SwitchConfig.JoystickControls.Enabled)
             {
                 if (!Joystick.GetState(SwitchConfig.JoystickControls.Index).IsConnected)
