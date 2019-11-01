@@ -61,25 +61,25 @@
         "trigger_threshold": 0.5,
         "left_joycon": {
             "stick": "Axis0",
-            "stick_button": "Button13",
+            "stick_button": "Button8",
+            "button_minus": "Button6",
+            "button_l": "Button4",
+            "button_zl": "Axis2",
             "dpad_up": "Hat0Up",
             "dpad_down": "Hat0Down",
             "dpad_left": "Hat0Left",
-            "dpad_right": "Hat0Right",
-            "button_minus": "Button10",
-            "button_l": "Button6",
-            "button_zl": "Button8"
+            "dpad_right": "Hat0Right"
         },
         "right_joycon": {
-            "stick": "Axis2",
-            "stick_button": "Button14",
-            "button_a": "Button0",
-            "button_b": "Button1",
+            "stick": "Axis3",
+            "stick_button": "Button9",
+            "button_a": "Button1",
+            "button_b": "Button0",
             "button_x": "Button3",
-            "button_y": "Button4",
-            "button_plus": "Button11",
-            "button_r": "Button7",
-            "button_zr": "Button9"
+            "button_y": "Button2",
+            "button_plus": "Button7",
+            "button_r": "Button5",
+            "button_zr": "Axis5"
         }
     }
 }
