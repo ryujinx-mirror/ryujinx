@@ -91,7 +91,7 @@ namespace Ryujinx.Ui
                 {
                     _resizeEvent = false;
 
-                    // TODO: Resize
+                    _renderer.Window.SetSize(Width, Height);
                 }
 
                 ticks += chrono.ElapsedTicks;

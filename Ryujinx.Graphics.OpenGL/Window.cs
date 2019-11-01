@@ -10,8 +10,15 @@ namespace Ryujinx.Graphics.OpenGL
         private const int NativeWidth  = 1280;
         private const int NativeHeight = 720;
 
-        private int _width = 1280;
-        private int _height = 720;
+        private int _width;
+        private int _height;
+
+        private int _resizeWidth;
+        private int _resizeHeight;
+
+        private bool _sizeChanged;
+
+        private object _resizeLocker;
 
         private int _blitFramebufferHandle;
         private int _copyFramebufferHandle;
@@ -40,6 +47,11 @@ namespace Ryujinx.Graphics.OpenGL
 
         public Window()
         {
+            _width  = NativeWidth;
+            _height = NativeHeight;
+
+            _resizeLocker = new object();
+
             _textures = new Queue<PresentationTexture>();
         }
 
@@ -59,15 +71,18 @@ namespace Ryujinx.Graphics.OpenGL
 
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
+            int windowWidth  = _width;
+            int windowHeight = _height;
+
             GL.BlitFramebuffer(
                 0,
                 0,
-                1280,
-                720,
+                windowWidth,
+                windowHeight,
                 0,
                 0,
-                1280,
-                720,
+                windowWidth,
+                windowHeight,
                 ClearBufferMask.ColorBufferBit,
                 BlitFramebufferFilter.Linear);
 
@@ -184,6 +199,17 @@ namespace Ryujinx.Graphics.OpenGL
             _release = callback;
         }
 
+        public void SetSize(int width, int height)
+        {
+            lock (_resizeLocker)
+            {
+                _resizeWidth  = width;
+                _resizeHeight = height;
+
+                _sizeChanged = true;
+            }
+        }
+
         private void Release(object context)
         {
             if (_release != null)
@@ -210,24 +236,9 @@ namespace Ryujinx.Graphics.OpenGL
         {
             int handle = _copyFramebufferHandle;
 
-            if (handle == 0)
+            void GenerateAndBindTexture()
             {
-                int textureHandle = GL.GenTexture();
-
-                GL.BindTexture(TextureTarget.Texture2D, textureHandle);
-
-                GL.TexImage2D(
-                    TextureTarget.Texture2D,
-                    0,
-                    PixelInternalFormat.Rgba8,
-                    1280,
-                    720,
-                    0,
-                    PixelFormat.Rgba,
-                    PixelType.UnsignedByte,
-                    IntPtr.Zero);
-
-                handle = GL.GenFramebuffer();
+                int textureHandle = GenerateWindowTexture();
 
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, handle);
 
@@ -238,9 +249,50 @@ namespace Ryujinx.Graphics.OpenGL
                     0);
 
                 _screenTextureHandle = textureHandle;
+            }
+
+            if (handle == 0)
+            {
+                handle = GL.GenFramebuffer();
 
                 _copyFramebufferHandle = handle;
+
+                GenerateAndBindTexture();
             }
+            else if (_sizeChanged)
+            {
+                GL.DeleteTexture(_screenTextureHandle);
+
+                lock (_resizeLocker)
+                {
+                    _width  = _resizeWidth;
+                    _height = _resizeHeight;
+
+                    _sizeChanged = false;
+                }
+
+                GenerateAndBindTexture();
+            }
+
+            return handle;
+        }
+
+        private int GenerateWindowTexture()
+        {
+            int handle = GL.GenTexture();
+
+            GL.BindTexture(TextureTarget.Texture2D, handle);
+
+            GL.TexImage2D(
+                TextureTarget.Texture2D,
+                0,
+                PixelInternalFormat.Rgba8,
+                _width,
+                _height,
+                0,
+                PixelFormat.Rgba,
+                PixelType.UnsignedByte,
+                IntPtr.Zero);
 
             return handle;
         }
