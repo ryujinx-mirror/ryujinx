@@ -2,7 +2,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Memory;
 using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvGpuAS;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap;
 using System;
 using System.Collections.Generic;
@@ -290,7 +290,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
 
             int bufferOffset = _bufferQueue[slot].Data.Buffer.Surfaces[0].Offset;
 
-            NvMapHandle map = NvMapIoctl.GetNvMap(context, nvMapHandle);
+            NvMapHandle map = NvMapDeviceFile.GetMapFromHandle(context.Process, nvMapHandle);
 
             long fbAddr = map.Address + bufferOffset;
 
@@ -312,7 +312,7 @@ namespace Ryujinx.HLE.HOS.Services.Android
             int right  = crop.Right;
             int bottom = crop.Bottom;
 
-            NvGpuVmm vmm = NvGpuASIoctl.GetASCtx(context).Vmm;
+            NvGpuVmm vmm = NvHostAsGpuDeviceFile.GetAddressSpaceContext(context.Process).Vmm;
 
             _renderer.QueueAction(() =>
             {

@@ -1,104 +1,301 @@
 using ARMeilleure.Memory;
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Common;
+using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
-using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvGpuAS;
-using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvGpuGpu;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrl;
+using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostCtrlGpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap;
+using Ryujinx.HLE.HOS.Services.Nv.Types;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Ryujinx.HLE.HOS.Services.Nv
 {
     [Service("nvdrv")]
     [Service("nvdrv:a")]
+    [Service("nvdrv:s")]
+    [Service("nvdrv:t")]
     class INvDrvServices : IpcService
     {
-        private delegate int IoctlProcessor(ServiceCtx context, int cmd);
-
-        private static Dictionary<string, IoctlProcessor> _ioctlProcessors =
-                   new Dictionary<string, IoctlProcessor>()
+        private static Dictionary<string, Type> _deviceFileRegistry =
+                   new Dictionary<string, Type>()
         {
-            { "/dev/nvhost-as-gpu",   ProcessIoctlNvGpuAS       },
-            { "/dev/nvhost-ctrl",     ProcessIoctlNvHostCtrl    },
-            { "/dev/nvhost-ctrl-gpu", ProcessIoctlNvGpuGpu      },
-            { "/dev/nvhost-gpu",      ProcessIoctlNvHostChannel },
-            { "/dev/nvhost-nvdec",    ProcessIoctlNvHostChannel },
-            { "/dev/nvhost-vic",      ProcessIoctlNvHostChannel },
-            { "/dev/nvmap",           ProcessIoctlNvMap         }
+                       { "/dev/nvmap",           typeof(NvMapDeviceFile)         },
+                       { "/dev/nvhost-ctrl",     typeof(NvHostCtrlDeviceFile)    },
+                       { "/dev/nvhost-ctrl-gpu", typeof(NvHostCtrlGpuDeviceFile) },
+                       { "/dev/nvhost-as-gpu",   typeof(NvHostAsGpuDeviceFile)   },
+                       { "/dev/nvhost-gpu",      typeof(NvHostGpuDeviceFile)     },
+                     //{ "/dev/nvhost-msenc",    typeof(NvHostChannelDeviceFile) },
+                       { "/dev/nvhost-nvdec",    typeof(NvHostChannelDeviceFile) },
+                     //{ "/dev/nvhost-nvjpg",    typeof(NvHostChannelDeviceFile) },
+                       { "/dev/nvhost-vic",      typeof(NvHostChannelDeviceFile) },
+                     //{ "/dev/nvhost-display",  typeof(NvHostChannelDeviceFile) },
         };
 
-        public static GlobalStateTable Fds { get; private set; }
+        private static IdDictionary _deviceFileIdRegistry = new IdDictionary();
 
-        private KEvent _event;
+        private KProcess _owner;
 
         public INvDrvServices(ServiceCtx context)
         {
-            _event = new KEvent(context.Device.System);
+            _owner = null;
         }
 
-        static INvDrvServices()
+        private int Open(ServiceCtx context, string path)
         {
-            Fds = new GlobalStateTable();
+            if (context.Process == _owner)
+            {
+                if (_deviceFileRegistry.TryGetValue(path, out Type deviceFileClass))
+                {
+                    ConstructorInfo constructor = deviceFileClass.GetConstructor(new Type[] { typeof(ServiceCtx) });
+
+                    NvDeviceFile deviceFile = (NvDeviceFile)constructor.Invoke(new object[] { context });
+
+                    return _deviceFileIdRegistry.Add(deviceFile);
+                }
+                else
+                {
+                    Logger.PrintWarning(LogClass.ServiceNv, $"Cannot find file device \"{path}\"!");
+                }
+            }
+
+            return -1;
+        }
+
+        private NvResult GetIoctlArgument(ServiceCtx context, NvIoctl ioctlCommand, out Span<byte> arguments)
+        {
+            (long inputDataPosition,  long inputDataSize)  = context.Request.GetBufferType0x21(0);
+            (long outputDataPosition, long outputDataSize) = context.Request.GetBufferType0x22(0);
+
+            NvIoctl.Direction ioctlDirection = ioctlCommand.DirectionValue;
+            uint              ioctlSize      = ioctlCommand.Size;
+
+            bool isRead  = (ioctlDirection & NvIoctl.Direction.Read)  != 0;
+            bool isWrite = (ioctlDirection & NvIoctl.Direction.Write) != 0;
+
+            if ((isWrite && ioctlSize > outputDataSize) || (isRead && ioctlSize > inputDataSize))
+            {
+                arguments = null;
+
+                Logger.PrintWarning(LogClass.ServiceNv, "Ioctl size inconsistency found!");
+
+                return NvResult.InvalidSize;
+            }
+
+            if (isRead && isWrite)
+            {
+                if (outputDataPosition < inputDataSize)
+                {
+                    arguments = null;
+
+                    Logger.PrintWarning(LogClass.ServiceNv, "Ioctl size inconsistency found!");
+
+                    return NvResult.InvalidSize;
+                }
+
+                byte[] outputData = new byte[outputDataSize];
+
+                context.Memory.ReadBytes(inputDataPosition, outputData, 0, (int)inputDataSize);
+
+                arguments = new Span<byte>(outputData);
+            }
+            else if (isWrite)
+            {
+                byte[] outputData = new byte[outputDataSize];
+
+                arguments = new Span<byte>(outputData);
+            }
+            else
+            {
+                arguments = new Span<byte>(context.Memory.ReadBytes(inputDataPosition, inputDataSize));
+            }
+
+            return NvResult.Success;
+        }
+
+        private NvResult GetDeviceFileFromFd(int fd, out NvDeviceFile deviceFile)
+        {
+            deviceFile = null;
+
+            if (fd < 0)
+            {
+                return NvResult.InvalidParameter;
+            }
+
+            deviceFile = _deviceFileIdRegistry.GetData<NvDeviceFile>(fd);
+
+            if (deviceFile == null)
+            {
+                Logger.PrintWarning(LogClass.ServiceNv, $"Invalid file descriptor {fd}");
+
+                return NvResult.NotImplemented;
+            }
+
+            if (deviceFile.Owner.Pid != _owner.Pid)
+            {
+                return NvResult.AccessDenied;
+            }
+
+            return NvResult.Success;
+        }
+
+        private NvResult EnsureInitialized()
+        {
+            if (_owner == null)
+            {
+                Logger.PrintWarning(LogClass.ServiceNv, "INvDrvServices is not initialized!");
+
+                return NvResult.NotInitialized;
+            }
+
+            return NvResult.Success;
+        }
+
+        private static NvResult ConvertInternalErrorCode(NvInternalResult errorCode)
+        {
+            switch (errorCode)
+            {
+                case NvInternalResult.Success:
+                    return NvResult.Success;
+                case NvInternalResult.Unknown0x72:
+                    return NvResult.AlreadyAllocated;
+                case NvInternalResult.TimedOut:
+                case NvInternalResult.TryAgain:
+                case NvInternalResult.Interrupted:
+                    return NvResult.Timeout;
+                case NvInternalResult.InvalidAddress:
+                    return NvResult.InvalidAddress;
+                case NvInternalResult.NotSupported:
+                case NvInternalResult.Unknown0x18:
+                    return NvResult.NotSupported;
+                case NvInternalResult.InvalidState:
+                    return NvResult.InvalidState;
+                case NvInternalResult.ReadOnlyAttribute:
+                    return NvResult.ReadOnlyAttribute;
+                case NvInternalResult.NoSpaceLeft:
+                case NvInternalResult.FileTooBig:
+                    return NvResult.InvalidSize;
+                case NvInternalResult.FileTableOverflow:
+                case NvInternalResult.BadFileNumber:
+                    return NvResult.FileOperationFailed;
+                case NvInternalResult.InvalidInput:
+                    return NvResult.InvalidValue;
+                case NvInternalResult.NotADirectory:
+                    return NvResult.DirectoryOperationFailed;
+                case NvInternalResult.Busy:
+                    return NvResult.Busy;
+                case NvInternalResult.BadAddress:
+                    return NvResult.InvalidAddress;
+                case NvInternalResult.AccessDenied:
+                case NvInternalResult.OperationNotPermitted:
+                    return NvResult.AccessDenied;
+                case NvInternalResult.OutOfMemory:
+                    return NvResult.InsufficientMemory;
+                case NvInternalResult.DeviceNotFound:
+                    return NvResult.ModuleNotPresent;
+                case NvInternalResult.IoError:
+                    return NvResult.ResourceError;
+                default:
+                    return NvResult.IoctlFailed;
+            }
         }
 
         [Command(0)]
-        // Open(buffer<bytes, 5> path) -> (u32 fd, u32 error_code)
+        // Open(buffer<bytes, 5> path) -> (s32 fd, u32 error_code)
         public ResultCode Open(ServiceCtx context)
         {
-            long namePtr = context.Request.SendBuff[0].Position;
+            NvResult errorCode = EnsureInitialized();
+            int      fd        = -1;
 
-            string name = MemoryHelper.ReadAsciiString(context.Memory, namePtr);
+            if (errorCode == NvResult.Success)
+            {
+                long pathPtr = context.Request.SendBuff[0].Position;
 
-            int fd = Fds.Add(context.Process, new NvFd(name));
+                string path = MemoryHelper.ReadAsciiString(context.Memory, pathPtr);
+
+                fd = Open(context, path);
+
+                if (fd == -1)
+                {
+                    errorCode = NvResult.FileOperationFailed;
+                }
+            }
 
             context.ResponseData.Write(fd);
-            context.ResponseData.Write(0);
+            context.ResponseData.Write((uint)errorCode);
 
             return ResultCode.Success;
         }
 
         [Command(1)]
-        // Ioctl(u32 fd, u32 rq_id, buffer<bytes, 0x21>) -> (u32 error_code, buffer<bytes, 0x22>)
-        [Command(11)] // 3.0.0+
-        // Ioctl2(u32, u32, buffer<bytes, 0x21>, buffer<bytes, 0x21>) -> (u32, buffer<bytes, 0x22>)
+        // Ioctl(s32 fd, u32 ioctl_cmd, buffer<bytes, 0x21> in_args) -> (u32 error_code, buffer<bytes, 0x22> out_args)
         public ResultCode Ioctl(ServiceCtx context)
         {
-            int fd  = context.RequestData.ReadInt32();
-            int cmd = context.RequestData.ReadInt32();
+            NvResult errorCode = EnsureInitialized();
 
-            NvFd fdData = Fds.GetData<NvFd>(context.Process, fd);
-
-            int result = 0;
-
-            if (_ioctlProcessors.TryGetValue(fdData.Name, out IoctlProcessor process))
+            if (errorCode == NvResult.Success)
             {
-                result = process(context, cmd);
-            }
-            else if (!ServiceConfiguration.IgnoreMissingServices)
-            {
-                throw new NotImplementedException($"{fdData.Name} {cmd:x4}");
+                int     fd           = context.RequestData.ReadInt32();
+                NvIoctl ioctlCommand = context.RequestData.ReadStruct<NvIoctl>();
+
+                errorCode = GetIoctlArgument(context, ioctlCommand, out Span<byte> arguments);
+
+                if (errorCode == NvResult.Success)
+                {
+                    errorCode = GetDeviceFileFromFd(fd, out NvDeviceFile deviceFile);
+
+                    if (errorCode == NvResult.Success)
+                    {
+                        NvInternalResult internalResult = deviceFile.Ioctl(ioctlCommand, arguments);
+
+                        if (internalResult == NvInternalResult.NotImplemented)
+                        {
+                            throw new NvIoctlNotImplementedException(context, deviceFile, ioctlCommand);
+                        }
+
+                        errorCode = ConvertInternalErrorCode(internalResult);
+
+                        if (errorCode == NvResult.Success && (ioctlCommand.DirectionValue & NvIoctl.Direction.Write) != 0)
+                        {
+                            context.Memory.WriteBytes(context.Request.GetBufferType0x22(0).Position, arguments.ToArray());
+                        }
+                    }
+                }
             }
 
-            // TODO: Verify if the error codes needs to be translated.
-            context.ResponseData.Write(result);
+            context.ResponseData.Write((uint)errorCode);
 
             return ResultCode.Success;
         }
 
         [Command(2)]
-        // Close(u32 fd) -> u32 error_code
+        // Close(s32 fd) -> u32 error_code
         public ResultCode Close(ServiceCtx context)
         {
-            int fd = context.RequestData.ReadInt32();
+            NvResult errorCode = EnsureInitialized();
 
-            Fds.Delete(context.Process, fd);
+            if (errorCode == NvResult.Success)
+            {
+                int fd = context.RequestData.ReadInt32();
 
-            context.ResponseData.Write(0);
+                errorCode = GetDeviceFileFromFd(fd, out NvDeviceFile deviceFile);
+
+                if (errorCode == NvResult.Success)
+                {
+                    deviceFile.Close();
+
+                    _deviceFileIdRegistry.Delete(fd);
+                }
+            }
+
+            context.ResponseData.Write((uint)errorCode);
 
             return ResultCode.Success;
         }
@@ -110,31 +307,88 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             long transferMemSize   = context.RequestData.ReadInt64();
             int  transferMemHandle = context.Request.HandleDesc.ToCopy[0];
 
-            NvMapIoctl.InitializeNvMap(context);
+            _owner = context.Process;
 
-            context.ResponseData.Write(0);
+            context.ResponseData.Write((uint)NvResult.Success);
 
             return ResultCode.Success;
         }
 
         [Command(4)]
-        // QueryEvent(u32 fd, u32 event_id) -> (u32, handle<copy, event>)
+        // QueryEvent(s32 fd, u32 event_id) -> (u32, handle<copy, event>)
         public ResultCode QueryEvent(ServiceCtx context)
         {
-            int fd      = context.RequestData.ReadInt32();
-            int eventId = context.RequestData.ReadInt32();
+            NvResult errorCode = EnsureInitialized();
 
-            // TODO: Use Fd/EventId, different channels have different events.
-            if (context.Process.HandleTable.GenerateHandle(_event.ReadableEvent, out int handle) != KernelResult.Success)
+            if (errorCode == NvResult.Success)
             {
-                throw new InvalidOperationException("Out of handles!");
+                int  fd      = context.RequestData.ReadInt32();
+                uint eventId = context.RequestData.ReadUInt32();
+
+                errorCode = GetDeviceFileFromFd(fd, out NvDeviceFile deviceFile);
+
+                if (errorCode == NvResult.Success)
+                {
+                    NvInternalResult internalResult = deviceFile.QueryEvent(out int eventHandle, eventId);
+
+                    if (internalResult == NvInternalResult.NotImplemented)
+                    {
+                        throw new NvQueryEventNotImplementedException(context, deviceFile, eventId);
+                    }
+
+                    errorCode = ConvertInternalErrorCode(internalResult);
+
+                    if (errorCode == NvResult.Success)
+                    {
+                        context.Response.HandleDesc = IpcHandleDesc.MakeCopy(eventHandle);
+                    }
+                }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
-
-            context.ResponseData.Write(0);
+            context.ResponseData.Write((uint)errorCode);
 
             return ResultCode.Success;
+        }
+
+        [Command(5)]
+        // MapSharedMemory(s32 fd, u32 argument, handle<copy, shared_memory>) -> u32 error_code
+        public ResultCode MapSharedMemory(ServiceCtx context)
+        {
+            NvResult errorCode = EnsureInitialized();
+
+            if (errorCode == NvResult.Success)
+            {
+                int  fd                 = context.RequestData.ReadInt32();
+                uint argument           = context.RequestData.ReadUInt32();
+                int  sharedMemoryHandle = context.Request.HandleDesc.ToCopy[0];
+
+                errorCode = GetDeviceFileFromFd(fd, out NvDeviceFile deviceFile);
+
+                if (errorCode == NvResult.Success)
+                {
+                    KSharedMemory sharedMemory = context.Process.HandleTable.GetObject<KSharedMemory>(sharedMemoryHandle);
+
+                    errorCode = ConvertInternalErrorCode(deviceFile.MapSharedMemory(sharedMemory, argument));
+                }
+            }
+
+            context.ResponseData.Write((uint)errorCode);
+
+            return ResultCode.Success;
+        }
+
+        [Command(6)]
+        // GetStatus() -> (unknown<0x20>, u32 error_code)
+        public ResultCode GetStatus(ServiceCtx context)
+        {
+            throw new ServiceNotImplementedException(context);
+        }
+
+        [Command(7)]
+        // ForceSetClientPid(u64) -> u32 error_code
+        public ResultCode ForceSetClientPid(ServiceCtx context)
+        {
+            throw new ServiceNotImplementedException(context);
         }
 
         [Command(8)]
@@ -157,80 +411,111 @@ namespace Ryujinx.HLE.HOS.Services.Nv
             return ResultCode.Success;
         }
 
-        [Command(13)]
+        [Command(10)] // 3.0.0+
+        // InitializeDevtools(u32, handle<copy>) -> u32 error_code;
+        public ResultCode InitializeDevtools(ServiceCtx context)
+        {
+            throw new ServiceNotImplementedException(context);
+        }
+
+        [Command(11)] // 3.0.0+
+        // Ioctl2(s32 fd, u32 ioctl_cmd, buffer<bytes, 0x21> in_args, buffer<bytes, 0x21> inline_in_buffer) -> (u32 error_code, buffer<bytes, 0x22> out_args)
+        public ResultCode Ioctl2(ServiceCtx context)
+        {
+            NvResult errorCode = EnsureInitialized();
+
+            if (errorCode == NvResult.Success)
+            {
+                int     fd           = context.RequestData.ReadInt32();
+                NvIoctl ioctlCommand = context.RequestData.ReadStruct<NvIoctl>();
+
+                (long inlineInBufferPosition, long inlineInBufferSize) = context.Request.GetBufferType0x21(1);
+
+                errorCode = GetIoctlArgument(context, ioctlCommand, out Span<byte> arguments);
+
+                Span<byte> inlineInBuffer = new Span<byte>(context.Memory.ReadBytes(inlineInBufferPosition, inlineInBufferSize));
+
+                if (errorCode == NvResult.Success)
+                {
+                    errorCode = GetDeviceFileFromFd(fd, out NvDeviceFile deviceFile);
+
+                    if (errorCode == NvResult.Success)
+                    {
+                        NvInternalResult internalResult = deviceFile.Ioctl2(ioctlCommand, arguments, inlineInBuffer);
+
+                        if (internalResult == NvInternalResult.NotImplemented)
+                        {
+                            throw new NvIoctlNotImplementedException(context, deviceFile, ioctlCommand);
+                        }
+
+                        errorCode = ConvertInternalErrorCode(internalResult);
+
+                        if (errorCode == NvResult.Success && (ioctlCommand.DirectionValue & NvIoctl.Direction.Write) != 0)
+                        {
+                            context.Memory.WriteBytes(context.Request.GetBufferType0x22(0).Position, arguments.ToArray());
+                        }
+                    }
+                }
+            }
+
+            context.ResponseData.Write((uint)errorCode);
+
+            return ResultCode.Success;
+        }
+
+        [Command(12)] // 3.0.0+
+        // Ioctl3(s32 fd, u32 ioctl_cmd, buffer<bytes, 0x21> in_args) -> (u32 error_code, buffer<bytes, 0x22> out_args,  buffer<bytes, 0x22> inline_out_buffer)
+        public ResultCode Ioctl3(ServiceCtx context)
+        {
+            NvResult errorCode = EnsureInitialized();
+
+            if (errorCode == NvResult.Success)
+            {
+                int     fd           = context.RequestData.ReadInt32();
+                NvIoctl ioctlCommand = context.RequestData.ReadStruct<NvIoctl>();
+
+                (long inlineOutBufferPosition, long inlineOutBufferSize) = context.Request.GetBufferType0x22(1);
+
+                errorCode = GetIoctlArgument(context, ioctlCommand, out Span<byte> arguments);
+
+                Span<byte> inlineOutBuffer = new Span<byte>(context.Memory.ReadBytes(inlineOutBufferPosition, inlineOutBufferSize));
+
+                if (errorCode == NvResult.Success)
+                {
+                    errorCode = GetDeviceFileFromFd(fd, out NvDeviceFile deviceFile);
+
+                    if (errorCode == NvResult.Success)
+                    {
+                        NvInternalResult internalResult = deviceFile.Ioctl3(ioctlCommand, arguments, inlineOutBuffer);
+
+                        if (internalResult == NvInternalResult.NotImplemented)
+                        {
+                            throw new NvIoctlNotImplementedException(context, deviceFile, ioctlCommand);
+                        }
+
+                        errorCode = ConvertInternalErrorCode(internalResult);
+
+                        if (errorCode == NvResult.Success && (ioctlCommand.DirectionValue & NvIoctl.Direction.Write) != 0)
+                        {
+                            context.Memory.WriteBytes(context.Request.GetBufferType0x22(0).Position, arguments.ToArray());
+                            context.Memory.WriteBytes(inlineOutBufferPosition, inlineOutBuffer.ToArray());
+                        }
+                    }
+                }
+            }
+
+            context.ResponseData.Write((uint)errorCode);
+
+            return ResultCode.Success;
+        }
+
+        [Command(13)] // 3.0.0+
         // FinishInitialize(unknown<8>)
         public ResultCode FinishInitialize(ServiceCtx context)
         {
             Logger.PrintStub(LogClass.ServiceNv);
 
             return ResultCode.Success;
-        }
-
-        private static int ProcessIoctlNvGpuAS(ServiceCtx context, int cmd)
-        {
-            return ProcessIoctl(context, cmd, NvGpuASIoctl.ProcessIoctl);
-        }
-
-        private static int ProcessIoctlNvHostCtrl(ServiceCtx context, int cmd)
-        {
-            return ProcessIoctl(context, cmd, NvHostCtrlIoctl.ProcessIoctl);
-        }
-
-        private static int ProcessIoctlNvGpuGpu(ServiceCtx context, int cmd)
-        {
-            return ProcessIoctl(context, cmd, NvGpuGpuIoctl.ProcessIoctl);
-        }
-
-        private static int ProcessIoctlNvHostChannel(ServiceCtx context, int cmd)
-        {
-            return ProcessIoctl(context, cmd, NvHostChannelIoctl.ProcessIoctl);
-        }
-
-        private static int ProcessIoctlNvMap(ServiceCtx context, int cmd)
-        {
-            return ProcessIoctl(context, cmd, NvMapIoctl.ProcessIoctl);
-        }
-
-        private static int ProcessIoctl(ServiceCtx context, int cmd, IoctlProcessor processor)
-        {
-            if (CmdIn(cmd) && context.Request.GetBufferType0x21().Position == 0)
-            {
-                Logger.PrintError(LogClass.ServiceNv, "Input buffer is null!");
-
-                return NvResult.InvalidInput;
-            }
-
-            if (CmdOut(cmd) && context.Request.GetBufferType0x22().Position == 0)
-            {
-                Logger.PrintError(LogClass.ServiceNv, "Output buffer is null!");
-
-                return NvResult.InvalidInput;
-            }
-
-            return processor(context, cmd);
-        }
-
-        private static bool CmdIn(int cmd)
-        {
-            return ((cmd >> 30) & 1) != 0;
-        }
-
-        private static bool CmdOut(int cmd)
-        {
-            return ((cmd >> 31) & 1) != 0;
-        }
-
-        public static void UnloadProcess(KProcess process)
-        {
-            Fds.DeleteProcess(process);
-
-            NvGpuASIoctl.UnloadProcess(process);
-
-            NvHostChannelIoctl.UnloadProcess(process);
-
-            NvHostCtrlIoctl.UnloadProcess(process);
-
-            NvMapIoctl.UnloadProcess(process);
         }
     }
 }
