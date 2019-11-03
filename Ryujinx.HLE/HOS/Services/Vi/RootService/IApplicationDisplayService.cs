@@ -6,7 +6,7 @@ using System;
 using System.IO;
 using System.Text;
 
-using static Ryujinx.HLE.HOS.Services.Android.Parcel;
+using static Ryujinx.HLE.HOS.Services.SurfaceFlinger.Parcel;
 
 namespace Ryujinx.HLE.HOS.Services.Vi.RootService
 {
