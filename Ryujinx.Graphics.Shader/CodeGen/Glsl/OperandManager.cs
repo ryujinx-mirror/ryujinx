@@ -223,7 +223,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             return ubName + "_" + DefaultNames.UniformNameSuffix;
         }
 
-        public static string GetSamplerName(ShaderStage stage, AstTextureOperation texOp)
+        public static string GetSamplerName(ShaderStage stage, AstTextureOperation texOp, string indexExpr)
         {
             string suffix;
 
@@ -235,15 +235,25 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
             else
             {
-                suffix = (texOp.Handle - 8).ToString();
+                suffix = texOp.Handle.ToString();
+
+                if ((texOp.Type & SamplerType.Indexed) != 0)
+                {
+                    suffix += $"a[{indexExpr}]";
+                }
             }
 
             return GetShaderStagePrefix(stage) + "_" + DefaultNames.SamplerNamePrefix + suffix;
         }
 
-        public static string GetImageName(ShaderStage stage, AstTextureOperation texOp)
+        public static string GetImageName(ShaderStage stage, AstTextureOperation texOp, string indexExpr)
         {
             string suffix = texOp.Handle.ToString();
+
+            if ((texOp.Type & SamplerType.Indexed) != 0)
+            {
+                suffix += $"a[{indexExpr}]";
+            }
 
             return GetShaderStagePrefix(stage) + "_" + DefaultNames.ImageNamePrefix + suffix;
         }

@@ -2,10 +2,10 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 {
     class TextureOperation : Operation
     {
-        public SamplerType  Type  { get; }
-        public TextureFlags Flags { get; }
+        public SamplerType  Type  { get; private set; }
+        public TextureFlags Flags { get; private set; }
 
-        public int Handle { get; }
+        public int Handle { get; private set; }
 
         public TextureOperation(
             Instruction      inst,
@@ -18,6 +18,15 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         {
             Type   = type;
             Flags  = flags;
+            Handle = handle;
+        }
+
+        public void TurnIntoIndexed(int handle)
+        {
+            Type |= SamplerType.Indexed;
+
+            Flags &= ~TextureFlags.Bindless;
+
             Handle = handle;
         }
     }

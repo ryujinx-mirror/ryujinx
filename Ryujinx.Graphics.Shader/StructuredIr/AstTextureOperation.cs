@@ -7,19 +7,22 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         public SamplerType  Type  { get; }
         public TextureFlags Flags { get; }
 
-        public int Handle { get; }
+        public int Handle    { get; }
+        public int ArraySize { get; }
 
         public AstTextureOperation(
             Instruction       inst,
             SamplerType       type,
             TextureFlags      flags,
             int               handle,
+            int               arraySize,
             int               compMask,
             params IAstNode[] sources) : base(inst, compMask, sources)
         {
-            Type = type;
-            Flags  = flags;
-            Handle = handle;
+            Type      = type;
+            Flags     = flags;
+            Handle    = handle;
+            ArraySize = arraySize;
         }
     }
 }

@@ -60,6 +60,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     texOp.Type,
                     texOp.Flags,
                     texOp.Handle,
+                    4, // TODO: Non-hardcoded array size.
                     componentMask,
                     sources);
             }

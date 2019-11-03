@@ -670,7 +670,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private static Target GetTarget(SamplerType type)
         {
-            type &= ~SamplerType.Shadow;
+            type &= ~(SamplerType.Indexed | SamplerType.Shadow);
 
             switch (type)
             {

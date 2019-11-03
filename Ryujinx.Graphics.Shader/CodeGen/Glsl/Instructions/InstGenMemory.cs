@@ -15,11 +15,26 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
 
-            bool isArray = (texOp.Type & SamplerType.Array) != 0;
+            bool isArray   = (texOp.Type & SamplerType.Array)   != 0;
+            bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
 
             string texCall = "imageStore";
 
-            string imageName = OperandManager.GetImageName(context.Config.Stage, texOp);
+            int srcIndex = isBindless ? 1 : 0;
+
+            string Src(VariableType type)
+            {
+                return GetSoureExpr(context, texOp.GetSource(srcIndex++), type);
+            }
+
+            string indexExpr = null;
+
+            if (isIndexed)
+            {
+                indexExpr = Src(VariableType.S32);
+            }
+
+            string imageName = OperandManager.GetImageName(context.Config.Stage, texOp, indexExpr);
 
             texCall += "(" + imageName;
 
@@ -32,13 +47,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             if (isArray)
             {
                 arrayIndexElem = pCount++;
-            }
-
-            int srcIndex = isBindless ? 1 : 0;
-
-            string Src(VariableType type)
-            {
-                return GetSoureExpr(context, texOp.GetSource(srcIndex++), type);
             }
 
             void Append(string str)
@@ -174,6 +182,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             bool hasOffsets     = (texOp.Flags & TextureFlags.Offsets)     != 0;
 
             bool isArray       = (texOp.Type & SamplerType.Array)       != 0;
+            bool isIndexed     = (texOp.Type & SamplerType.Indexed)     != 0;
             bool isMultisample = (texOp.Type & SamplerType.Multisample) != 0;
             bool isShadow      = (texOp.Type & SamplerType.Shadow)      != 0;
 
@@ -209,7 +218,21 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 texCall += "Offsets";
             }
 
-            string samplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp);
+            int srcIndex = isBindless ? 1 : 0;
+
+            string Src(VariableType type)
+            {
+                return GetSoureExpr(context, texOp.GetSource(srcIndex++), type);
+            }
+
+            string indexExpr = null;
+
+            if (isIndexed)
+            {
+                indexExpr = Src(VariableType.S32);
+            }
+
+            string samplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp, indexExpr);
 
             texCall += "(" + samplerName;
 
@@ -247,13 +270,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 pCount = 4;
 
                 hasExtraCompareArg = true;
-            }
-
-            int srcIndex = isBindless ? 1 : 0;
-
-            string Src(VariableType type)
-            {
-                return GetSoureExpr(context, texOp.GetSource(srcIndex++), type);
             }
 
             void Append(string str)
@@ -395,11 +411,20 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         {
             AstTextureOperation texOp = (AstTextureOperation)operation;
 
-            bool isBindless  = (texOp.Flags & TextureFlags.Bindless) != 0;
+            bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
 
-            string samplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp);
+            bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
 
-            IAstNode src0 = operation.GetSource(isBindless ? 1 : 0);
+            string indexExpr = null;
+
+            if (isIndexed)
+            {
+                indexExpr = GetSoureExpr(context, texOp.GetSource(0), VariableType.S32);
+            }
+
+            string samplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp, indexExpr);
+
+            IAstNode src0 = operation.GetSource(isBindless || isIndexed ? 1 : 0);
 
             string src0Expr = GetSoureExpr(context, src0, GetSrcVarType(operation.Inst, 0));
 

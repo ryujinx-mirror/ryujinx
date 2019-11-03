@@ -84,6 +84,11 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 }
             }
             while (modified);
+
+            for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
+            {
+                BindlessToIndexed.RunPass(blocks[blkIndex]);
+            }
         }
 
         private static void PropagateCopy(Operation copyOp)

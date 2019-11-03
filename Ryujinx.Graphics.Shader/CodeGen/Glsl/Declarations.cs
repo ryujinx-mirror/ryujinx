@@ -231,7 +231,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             foreach (AstTextureOperation texOp in info.Samplers.OrderBy(x => x.Handle))
             {
-                string samplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp);
+                string indexExpr = NumberFormatter.FormatInt(texOp.ArraySize);
+
+                string samplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp, indexExpr);
 
                 if (!samplers.TryAdd(samplerName, texOp))
                 {
@@ -257,12 +259,25 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                     desc = new TextureDescriptor(samplerName, texOp.Type, operand.CbufSlot, operand.CbufOffset);
                 }
+                else if ((texOp.Type & SamplerType.Indexed) != 0)
+                {
+                    for (int index = 0; index < texOp.ArraySize; index++)
+                    {
+                        string indexExpr = NumberFormatter.FormatInt(index);
+
+                        string indexedSamplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp, indexExpr);
+
+                        desc = new TextureDescriptor(indexedSamplerName, texOp.Type, texOp.Handle + index * 2);
+
+                        context.TextureDescriptors.Add(desc);
+                    }
+                }
                 else
                 {
                     desc = new TextureDescriptor(samplerName, texOp.Type, texOp.Handle);
-                }
 
-                context.TextureDescriptors.Add(desc);
+                    context.TextureDescriptors.Add(desc);
+                }
             }
         }
 
@@ -272,7 +287,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             foreach (AstTextureOperation texOp in info.Images.OrderBy(x => x.Handle))
             {
-                string imageName = OperandManager.GetImageName(context.Config.Stage, texOp);
+                string indexExpr = NumberFormatter.FormatInt(texOp.ArraySize);
+
+                string imageName = OperandManager.GetImageName(context.Config.Stage, texOp, indexExpr);
 
                 if (!images.TryAdd(imageName, texOp))
                 {
@@ -290,9 +307,25 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 AstTextureOperation texOp = kv.Value;
 
-                TextureDescriptor desc = new TextureDescriptor(imageName, texOp.Type, texOp.Handle);
+                if ((texOp.Type & SamplerType.Indexed) != 0)
+                {
+                    for (int index = 0; index < texOp.ArraySize; index++)
+                    {
+                        string indexExpr = NumberFormatter.FormatInt(index);
 
-                context.ImageDescriptors.Add(desc);
+                        string indexedSamplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp, indexExpr);
+
+                        var desc = new TextureDescriptor(indexedSamplerName, texOp.Type, texOp.Handle + index * 2);
+
+                        context.TextureDescriptors.Add(desc);
+                    }
+                }
+                else
+                {
+                    var desc = new TextureDescriptor(imageName, texOp.Type, texOp.Handle);
+
+                    context.ImageDescriptors.Add(desc);
+                }
             }
         }
 
