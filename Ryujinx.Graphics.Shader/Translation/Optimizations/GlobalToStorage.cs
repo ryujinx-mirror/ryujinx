@@ -9,9 +9,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
     {
         private const int StorageDescsBaseOffset = 0x44; // In words.
 
-        private const int UbeStorageDescsBaseOffset = 0x84; // In words.
-        private const int UbeStorageMaxCount        = 14;
-
         private const int StorageDescSize = 4; // In words.
         private const int StorageMaxCount = 16;
 
@@ -22,11 +19,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             int sbStart = GetStorageBaseCbOffset(stage);
 
             int sbEnd = sbStart + StorageDescsSize;
-
-            // This one is only used on compute shaders.
-            // Compute shaders uses two separate sets of storage.
-            int ubeSbStart = UbeStorageDescsBaseOffset;
-            int ubeSbEnd   = UbeStorageDescsBaseOffset + StorageDescSize * UbeStorageMaxCount;
 
             for (LinkedListNode<INode> node = block.Operations.First; node != null; node = node.Next)
             {
@@ -43,11 +35,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     if (source.AsgOp is Operation asgOperation)
                     {
                         int storageIndex = SearchForStorageBase(asgOperation, sbStart, sbEnd);
-
-                        /*if (storageIndex < 0 && stage == ShaderStage.Compute)
-                        {
-                            storageIndex = SearchForStorageBase(asgOperation, ubeSbStart, ubeSbEnd);
-                        }*/
 
                         if (storageIndex >= 0)
                         {

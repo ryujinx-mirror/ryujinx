@@ -7,16 +7,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 {
     static class BindlessToIndexed
     {
-        private const int StorageDescsBaseOffset = 0x44; // In words.
-
-        private const int UbeStorageDescsBaseOffset = 0x84; // In words.
-        private const int UbeStorageMaxCount        = 14;
-
-        private const int StorageDescSize = 4; // In words.
-        private const int StorageMaxCount = 16;
-
-        private const int StorageDescsSize  = StorageDescSize * StorageMaxCount;
-
         public static void RunPass(BasicBlock block)
         {
             // We can turn a bindless texture access into a indexed access,
