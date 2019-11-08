@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Ryujinx.HLE.HOS.Services.Loader
+namespace Ryujinx.HLE.HOS.Services.Ro
 {
     [StructLayout(LayoutKind.Explicit, Size = 0x350)]
     unsafe struct NrrHeader
