@@ -57,7 +57,7 @@ The latest automatic build for Windows, macOS, and Linux can be found on the [Of
 
    Homebrew is available on many websites, such as the [Switch Appstore](https://www.switchbru.com/appstore/).
 
-   A hacked Switch is needed to dump games, which you can learn how to do [here](https://nh-server.github.io/switch-guide/). Once you've hacked your Switch, you need to dump your own games with [NxDumpTool](https://github.com/DarkMatterCore/nxdumptool) to get an XCI dump or [SwitchSDTool](https://github.com/CaitSith2/SwitchSDTool) to get an NSP dump.
+   A hacked Nintendo Switch is needed to dump games, which you can learn how to do [here](https://nh-server.github.io/switch-guide/). Once you have hacked your Nintendo Switch, you will need to dump your own games with [NxDumpTool](https://github.com/DarkMatterCore/nxdumptool/releases) to get an XCI or NSP dump.
 
 ## Features
 
