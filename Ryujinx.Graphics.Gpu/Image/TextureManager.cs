@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         private ITexture[] _rtHostColors;
         private ITexture   _rtHostDs;
 
-        private RangeList<Texture> _textures;
+        private ConcurrentRangeList<Texture> _textures;
 
         private AutoDeleteCache _cache;
 
@@ -37,7 +37,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             _rtHostColors = new ITexture[Constants.TotalRenderTargets];
 
-            _textures = new RangeList<Texture>();
+            _textures = new ConcurrentRangeList<Texture>();
 
             _cache = new AutoDeleteCache();
         }

@@ -2,70 +2,62 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gpu.Memory
 {
-    class RangeList<T> where T : IRange<T>
+    class ConcurrentRangeList<T> where T : IRange<T>
     {
         private List<T> _items;
 
         public int Count => _items.Count;
 
-        public RangeList()
+        public ConcurrentRangeList()
         {
             _items = new List<T>();
         }
 
         public void Add(T item)
         {
-            int index = BinarySearch(item.Address);
-
-            if (index < 0)
+            lock (_items)
             {
-                index = ~index;
-            }
+                int index = BinarySearch(item.Address);
 
-            _items.Insert(index, item);
+                if (index < 0)
+                {
+                    index = ~index;
+                }
+
+                _items.Insert(index, item);
+            }
         }
 
         public bool Remove(T item)
         {
-            int index = BinarySearch(item.Address);
-
-            if (index >= 0)
+            lock (_items)
             {
-                while (index > 0 && _items[index - 1].Address == item.Address)
-                {
-                    index--;
-                }
+                int index = BinarySearch(item.Address);
 
-                while (index < _items.Count)
+                if (index >= 0)
                 {
-                    if (_items[index].Equals(item))
+                    while (index > 0 && _items[index - 1].Address == item.Address)
                     {
-                        _items.RemoveAt(index);
-
-                        return true;
+                        index--;
                     }
 
-                    if (_items[index].Address > item.Address)
+                    while (index < _items.Count)
                     {
-                        break;
+                        if (_items[index].Equals(item))
+                        {
+                            _items.RemoveAt(index);
+
+                            return true;
+                        }
+
+                        if (_items[index].Address > item.Address)
+                        {
+                            break;
+                        }
+
+                        index++;
                     }
-
-                    index++;
                 }
-            }
-
-            return false;
-        }
-
-        public bool CanExitEarly(ulong address, ulong size)
-        {
-            int index = BinarySearch(address, size);
-
-            if (index >= 0)
-            {
-                T item = _items[index];
-
-                return address >= item.Address && address + size <= item.Address + item.Size;
             }
 
             return false;
@@ -78,14 +70,17 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         public T FindFirstOverlap(ulong address, ulong size)
         {
-            int index = BinarySearch(address, size);
-
-            if (index < 0)
+            lock (_items)
             {
-                return default(T);
-            }
+                int index = BinarySearch(address, size);
 
-            return _items[index];
+                if (index < 0)
+                {
+                    return default(T);
+                }
+
+                return _items[index];
+            }
         }
 
         public T[] FindOverlaps(T item)
@@ -118,61 +113,32 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return overlapsList.ToArray();
         }
 
-        public T[] FindOverlapsNonOverlapping(T item)
-        {
-            return FindOverlapsNonOverlapping(item.Address, item.Size);
-        }
-
-        public T[] FindOverlapsNonOverlapping(ulong address, ulong size)
-        {
-            // This is a bit faster than FindOverlaps, but only works
-            // when none of the items on the list overlaps with each other.
-            List<T> overlapsList = new List<T>();
-
-            ulong endAddress = address + size;
-
-            int index = BinarySearch(address, size);
-
-            if (index >= 0)
-            {
-                while (index > 0 && _items[index - 1].OverlapsWith(address, size))
-                {
-                    index--;
-                }
-
-                do
-                {
-                    overlapsList.Add(_items[index++]);
-                }
-                while (index < _items.Count && _items[index].OverlapsWith(address, size));
-            }
-
-            return overlapsList.ToArray();
-        }
-
         public T[] FindOverlaps(ulong address)
         {
             List<T> overlapsList = new List<T>();
 
-            int index = BinarySearch(address);
-
-            if (index >= 0)
+            lock (_items)
             {
-                while (index > 0 && _items[index - 1].Address == address)
-                {
-                    index--;
-                }
+                int index = BinarySearch(address);
 
-                while (index < _items.Count)
+                if (index >= 0)
                 {
-                    T overlap = _items[index++];
-
-                    if (overlap.Address != address)
+                    while (index > 0 && _items[index - 1].Address == address)
                     {
-                        break;
+                        index--;
                     }
 
-                    overlapsList.Add(overlap);
+                    while (index < _items.Count)
+                    {
+                        T overlap = _items[index++];
+
+                        if (overlap.Address != address)
+                        {
+                            break;
+                        }
+
+                        overlapsList.Add(overlap);
+                    }
                 }
             }
 

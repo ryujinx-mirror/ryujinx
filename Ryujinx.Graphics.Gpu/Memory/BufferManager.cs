@@ -198,7 +198,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         private void CreateBuffer(ulong address, ulong size)
         {
-            Buffer[] overlaps = _buffers.FindOverlaps(address, size);
+            Buffer[] overlaps = _buffers.FindOverlapsNonOverlapping(address, size);
 
             if (overlaps.Length != 0)
             {
