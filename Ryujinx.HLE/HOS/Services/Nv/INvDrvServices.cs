@@ -91,7 +91,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv
 
             if (isRead && isWrite)
             {
-                if (outputDataPosition < inputDataSize)
+                if (outputDataSize < inputDataSize)
                 {
                     arguments = null;
 
