@@ -1,3 +1,5 @@
+using System;
+
 namespace Ryujinx.Graphics.Shader
 {
     public class ShaderProgram
@@ -13,6 +15,11 @@ namespace Ryujinx.Graphics.Shader
             Info  = info;
             Stage = stage;
             Code  = code;
+        }
+
+        public void Prepend(string line)
+        {
+            Code = line + Environment.NewLine + Code;
         }
 
         public void Replace(string name, string value)

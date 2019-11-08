@@ -42,5 +42,13 @@ namespace Ryujinx.Graphics.Shader.Translation
         public const int CtaIdX = 0x2000010;
         public const int CtaIdY = 0x2000014;
         public const int CtaIdZ = 0x2000018;
+
+        public const int LaneId = 0x2000020;
+
+        public const int EqMask = 0x2000024;
+        public const int GeMask = 0x2000028;
+        public const int GtMask = 0x200002c;
+        public const int LeMask = 0x2000030;
+        public const int LtMask = 0x2000034;
     }
 }

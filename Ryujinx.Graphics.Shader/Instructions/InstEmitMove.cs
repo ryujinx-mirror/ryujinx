@@ -27,6 +27,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             switch (sysReg)
             {
+                case SystemRegister.LaneId: src = Attribute(AttributeConsts.LaneId); break;
+
                 // TODO: Use value from Y direction GPU register.
                 case SystemRegister.YDirection: src = ConstF(1); break;
 
@@ -50,6 +52,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 case SystemRegister.CtaIdX:    src = Attribute(AttributeConsts.CtaIdX);    break;
                 case SystemRegister.CtaIdY:    src = Attribute(AttributeConsts.CtaIdY);    break;
                 case SystemRegister.CtaIdZ:    src = Attribute(AttributeConsts.CtaIdZ);    break;
+                case SystemRegister.EqMask:    src = Attribute(AttributeConsts.EqMask);    break;
+                case SystemRegister.LtMask:    src = Attribute(AttributeConsts.LtMask);    break;
+                case SystemRegister.LeMask:    src = Attribute(AttributeConsts.LeMask);    break;
+                case SystemRegister.GtMask:    src = Attribute(AttributeConsts.GtMask);    break;
+                case SystemRegister.GeMask:    src = Attribute(AttributeConsts.GeMask);    break;
 
                 default: src = Const(0); break;
             }

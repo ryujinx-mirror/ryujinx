@@ -6,8 +6,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
     {
         private List<T> _items;
 
-        public int Count => _items.Count;
-
         public RangeList()
         {
             _items = new List<T>();
@@ -52,20 +50,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                     index++;
                 }
-            }
-
-            return false;
-        }
-
-        public bool CanExitEarly(ulong address, ulong size)
-        {
-            int index = BinarySearch(address, size);
-
-            if (index >= 0)
-            {
-                T item = _items[index];
-
-                return address >= item.Address && address + size <= item.Address + item.Size;
             }
 
             return false;

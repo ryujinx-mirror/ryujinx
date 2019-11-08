@@ -368,6 +368,19 @@ namespace Ryujinx.Graphics.Shader.Instructions
             SetZnFlags(context, dest, op.SetCondCode, op.Extended);
         }
 
+        public static void Popc(EmitterContext context)
+        {
+            OpCodeAlu op = (OpCodeAlu)context.CurrOp;
+
+            bool invert = op.RawOpCode.Extract(40);
+
+            Operand srcB = context.BitwiseNot(GetSrcB(context), invert);
+
+            Operand res = context.BitCount(srcB);
+
+            context.Copy(GetDest(context), res);
+        }
+
         public static void Psetp(EmitterContext context)
         {
             OpCodePsetp op = (OpCodePsetp)context.CurrOp;

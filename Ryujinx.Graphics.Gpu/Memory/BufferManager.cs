@@ -298,23 +298,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 BufferRange buffer = GetBufferRange(bounds.Address, bounds.Size);
 
                 _context.Renderer.Pipeline.BindUniformBuffer(index, ShaderStage.Compute, buffer);
-
-                if (index == 0)
-                {
-                    // TODO: Improve
-                    Span<byte> data = _context.PhysicalMemory.Read(bounds.Address + 0x310, 0x100);
-
-                    Span<int> words = MemoryMarshal.Cast<byte, int>(data);
-
-                    for (int offset = 0; offset < 0x40; offset += 4)
-                    {
-                        words[offset] &= 0x3f;
-                    }
-
-                    buffer = GetBufferRange(bounds.Address + 0x310, 0x100);
-
-                    buffer.Buffer.SetData(buffer.Offset, data);
-                }
             }
 
             // Force rebind after doing compute work.
@@ -459,23 +442,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
             else
             {
                 _context.Renderer.Pipeline.BindUniformBuffer(index, stage, buffer);
-            }
-
-            if (!isStorage && index == 0)
-            {
-                // TODO: Improve
-                Span<byte> data = _context.PhysicalMemory.Read(bounds.Address + 0x110, 0x100);
-
-                Span<int> words = MemoryMarshal.Cast<byte, int>(data);
-
-                for (int offset = 0; offset < 0x40; offset += 4)
-                {
-                    words[offset] &= 0x3f;
-                }
-
-                buffer = GetBufferRange(bounds.Address + 0x110, 0x100);
-
-                buffer.Buffer.SetData(buffer.Offset, data);
             }
         }
 

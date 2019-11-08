@@ -51,13 +51,19 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             { AttributeConsts.FrontFacing,         new BuiltInAttribute("gl_FrontFacing",     VariableType.Bool) },
 
             // Special.
-            { AttributeConsts.FragmentOutputDepth, new BuiltInAttribute("gl_FragDepth",           VariableType.F32) },
-            { AttributeConsts.ThreadIdX,           new BuiltInAttribute("gl_LocalInvocationID.x", VariableType.U32) },
-            { AttributeConsts.ThreadIdY,           new BuiltInAttribute("gl_LocalInvocationID.y", VariableType.U32) },
-            { AttributeConsts.ThreadIdZ,           new BuiltInAttribute("gl_LocalInvocationID.z", VariableType.U32) },
-            { AttributeConsts.CtaIdX,              new BuiltInAttribute("gl_WorkGroupID.x",       VariableType.U32) },
-            { AttributeConsts.CtaIdY,              new BuiltInAttribute("gl_WorkGroupID.y",       VariableType.U32) },
-            { AttributeConsts.CtaIdZ,              new BuiltInAttribute("gl_WorkGroupID.z",       VariableType.U32) },
+            { AttributeConsts.FragmentOutputDepth, new BuiltInAttribute("gl_FragDepth",                           VariableType.F32) },
+            { AttributeConsts.ThreadIdX,           new BuiltInAttribute("gl_LocalInvocationID.x",                 VariableType.U32) },
+            { AttributeConsts.ThreadIdY,           new BuiltInAttribute("gl_LocalInvocationID.y",                 VariableType.U32) },
+            { AttributeConsts.ThreadIdZ,           new BuiltInAttribute("gl_LocalInvocationID.z",                 VariableType.U32) },
+            { AttributeConsts.CtaIdX,              new BuiltInAttribute("gl_WorkGroupID.x",                       VariableType.U32) },
+            { AttributeConsts.CtaIdY,              new BuiltInAttribute("gl_WorkGroupID.y",                       VariableType.U32) },
+            { AttributeConsts.CtaIdZ,              new BuiltInAttribute("gl_WorkGroupID.z",                       VariableType.U32) },
+            { AttributeConsts.LaneId,              new BuiltInAttribute("gl_SubGroupInvocationARB",               VariableType.U32) },
+            { AttributeConsts.EqMask,              new BuiltInAttribute("unpackUint2x32(gl_SubGroupEqMaskARB).x", VariableType.U32) },
+            { AttributeConsts.GeMask,              new BuiltInAttribute("unpackUint2x32(gl_SubGroupGeMaskARB).x", VariableType.U32) },
+            { AttributeConsts.GtMask,              new BuiltInAttribute("unpackUint2x32(gl_SubGroupGtMaskARB).x", VariableType.U32) },
+            { AttributeConsts.LeMask,              new BuiltInAttribute("unpackUint2x32(gl_SubGroupLeMaskARB).x", VariableType.U32) },
+            { AttributeConsts.LtMask,              new BuiltInAttribute("unpackUint2x32(gl_SubGroupLtMaskARB).x", VariableType.U32) },
         };
 
         private Dictionary<AstOperand, string> _locals;
@@ -87,7 +93,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     return NumberFormatter.FormatInt(operand.Value);
 
                 case OperandType.ConstantBuffer:
-                    return GetConstantBufferName(operand, stage);
+                    return GetConstantBufferName(operand.CbufSlot, operand.CbufOffset, stage);
 
                 case OperandType.LocalVariable:
                     return _locals[operand];
@@ -99,25 +105,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             throw new ArgumentException($"Invalid operand type \"{operand.Type}\".");
         }
 
-        public static string GetConstantBufferName(AstOperand cbuf, ShaderStage stage)
+        public static string GetConstantBufferName(int slot, int offset, ShaderStage stage)
         {
-            string ubName = GetUbName(stage, cbuf.CbufSlot);
+            string ubName = GetUbName(stage, slot);
 
-            ubName += "[" + (cbuf.CbufOffset >> 2) + "]";
+            ubName += "[" + (offset >> 2) + "]";
 
-            return ubName + "." + GetSwizzleMask(cbuf.CbufOffset & 3);
-        }
-
-        public static string GetStorageBufferName(IAstNode slot, string offsetExpr, ShaderStage stage)
-        {
-            // Non-constant slots are not supported.
-            // It is expected that upstream stages are never going to generate non-constant
-            // slot access.
-            AstOperand operand = (AstOperand)slot;
-
-            string sbName = GetSbName(stage, operand.Value);
-
-            return $"{sbName}[{offsetExpr}]";
+            return ubName + "." + GetSwizzleMask(offset & 3);
         }
 
         public static string GetConstantBufferName(IAstNode slot, string offsetExpr, ShaderStage stage)
@@ -203,15 +197,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             // TODO: Warn about unknown built-in attribute.
 
             return isOutAttr ? "// bad_attr0x" + value.ToString("X") : "0.0";
-        }
-
-        public static string GetSbName(ShaderStage stage, int slot)
-        {
-            string sbName = GetShaderStagePrefix(stage);
-
-            sbName += "_" + DefaultNames.StorageNamePrefix + slot;
-
-            return sbName + "_" + DefaultNames.StorageNameSuffix;
         }
 
         public static string GetUbName(ShaderStage stage, int slot)

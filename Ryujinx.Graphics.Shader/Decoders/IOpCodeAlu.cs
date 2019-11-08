@@ -1,10 +1,7 @@
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    interface IOpCodeAlu : IOpCodeRd, IOpCodeRa
+    interface IOpCodeAlu : IOpCodeRd, IOpCodeRa, IOpCodePredicate39
     {
-        Register Predicate39 { get; }
-
-        bool InvertP     { get; }
         bool Extended    { get; }
         bool SetCondCode { get; }
         bool Saturate    { get; }

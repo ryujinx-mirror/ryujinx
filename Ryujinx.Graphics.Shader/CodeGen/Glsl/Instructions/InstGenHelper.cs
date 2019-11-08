@@ -13,8 +13,19 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         {
             _infoTbl = new InstInfo[(int)Instruction.Count];
 
+            Add(Instruction.AtomicAdd,                InstType.AtomicBinary,   "atomicAdd");
+            Add(Instruction.AtomicAnd,                InstType.AtomicBinary,   "atomicAnd");
+            Add(Instruction.AtomicCompareAndSwap,     InstType.AtomicTernary,  "atomicCompSwap");
+            Add(Instruction.AtomicMaxS32,             InstType.AtomicBinary,   "atomicMax");
+            Add(Instruction.AtomicMaxU32,             InstType.AtomicBinary,   "atomicMax");
+            Add(Instruction.AtomicMinS32,             InstType.AtomicBinary,   "atomicMin");
+            Add(Instruction.AtomicMinU32,             InstType.AtomicBinary,   "atomicMin");
+            Add(Instruction.AtomicOr,                 InstType.AtomicBinary,   "atomicOr");
+            Add(Instruction.AtomicSwap,               InstType.AtomicBinary,   "atomicExchange");
+            Add(Instruction.AtomicXor,                InstType.AtomicBinary,   "atomicXor");
             Add(Instruction.Absolute,                 InstType.CallUnary,      "abs");
             Add(Instruction.Add,                      InstType.OpBinaryCom,    "+",               2);
+            Add(Instruction.Ballot,                   InstType.CallUnary,      "ballotARB");
             Add(Instruction.BitCount,                 InstType.CallUnary,      "bitCount");
             Add(Instruction.BitfieldExtractS32,       InstType.CallTernary,    "bitfieldExtract");
             Add(Instruction.BitfieldExtractU32,       InstType.CallTernary,    "bitfieldExtract");
@@ -59,6 +70,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.LoadAttribute,            InstType.Special);
             Add(Instruction.LoadConstant,             InstType.Special);
             Add(Instruction.LoadLocal,                InstType.Special);
+            Add(Instruction.LoadShared,               InstType.Special);
             Add(Instruction.LoadStorage,              InstType.Special);
             Add(Instruction.LogarithmB2,              InstType.CallUnary,      "log2");
             Add(Instruction.LogicalAnd,               InstType.OpBinaryCom,    "&&",              9);
@@ -87,6 +99,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.Sine,                     InstType.CallUnary,      "sin");
             Add(Instruction.SquareRoot,               InstType.CallUnary,      "sqrt");
             Add(Instruction.StoreLocal,               InstType.Special);
+            Add(Instruction.StoreShared,              InstType.Special);
             Add(Instruction.StoreStorage,             InstType.Special);
             Add(Instruction.Subtract,                 InstType.OpBinary,       "-",               2);
             Add(Instruction.SwizzleAdd,               InstType.CallTernary,    HelperFunctionNames.SwizzleAdd);
@@ -94,6 +107,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.TextureSize,              InstType.Special);
             Add(Instruction.Truncate,                 InstType.CallUnary,      "trunc");
             Add(Instruction.UnpackHalf2x16,           InstType.Special);
+            Add(Instruction.VoteAll,                  InstType.CallUnary,      "allInvocationsARB");
+            Add(Instruction.VoteAllEqual,             InstType.CallUnary,      "allInvocationsEqualARB");
+            Add(Instruction.VoteAny,                  InstType.CallUnary,      "anyInvocationARB");
         }
 
         private static void Add(Instruction inst, InstType flags, string opName = null, int precedence = 0)

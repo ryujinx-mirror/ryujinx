@@ -133,7 +133,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                 if (operation.GetSource(0) == dest)
                 {
-                    operation.TurnIntoCopy(operation.ComponentIndex == 1 ? src1 : src0);
+                    operation.TurnIntoCopy(operation.Index == 1 ? src1 : src0);
 
                     modified = true;
                 }
@@ -251,7 +251,30 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
         private static bool IsUnused(INode node)
         {
-            return DestIsLocalVar(node) && node.Dest.UseOps.Count == 0;
+            return !HasSideEffects(node) && DestIsLocalVar(node) && node.Dest.UseOps.Count == 0;
+        }
+
+        private static bool HasSideEffects(INode node)
+        {
+            if (node is Operation operation)
+            {
+                switch (operation.Inst & Instruction.Mask)
+                {
+                    case Instruction.AtomicAdd:
+                    case Instruction.AtomicAnd:
+                    case Instruction.AtomicCompareAndSwap:
+                    case Instruction.AtomicMaxS32:
+                    case Instruction.AtomicMaxU32:
+                    case Instruction.AtomicMinS32:
+                    case Instruction.AtomicMinU32:
+                    case Instruction.AtomicOr:
+                    case Instruction.AtomicSwap:
+                    case Instruction.AtomicXor:
+                        return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool DestIsLocalVar(INode node)

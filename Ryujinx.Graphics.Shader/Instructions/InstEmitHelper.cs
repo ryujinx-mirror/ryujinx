@@ -240,7 +240,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static Operand GetPredicate39(EmitterContext context)
         {
-            IOpCodeAlu op = (IOpCodeAlu)context.CurrOp;
+            IOpCodePredicate39 op = (IOpCodePredicate39)context.CurrOp;
 
             Operand local = Register(op.Predicate39);
 

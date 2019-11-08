@@ -25,8 +25,19 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             _infoTbl = new InstInfo[(int)Instruction.Count];
 
             //  Inst                                  Destination type     Source 1 type        Source 2 type        Source 3 type        Source 4 type
+            Add(Instruction.AtomicAdd,                VariableType.U32,    VariableType.U32,    VariableType.U32);
+            Add(Instruction.AtomicAnd,                VariableType.U32,    VariableType.U32,    VariableType.U32);
+            Add(Instruction.AtomicCompareAndSwap,     VariableType.U32,    VariableType.U32,    VariableType.U32,    VariableType.U32);
+            Add(Instruction.AtomicMaxS32,             VariableType.S32,    VariableType.S32,    VariableType.S32);
+            Add(Instruction.AtomicMaxU32,             VariableType.U32,    VariableType.U32,    VariableType.U32);
+            Add(Instruction.AtomicMinS32,             VariableType.S32,    VariableType.S32,    VariableType.S32);
+            Add(Instruction.AtomicMinU32,             VariableType.U32,    VariableType.U32,    VariableType.U32);
+            Add(Instruction.AtomicOr,                 VariableType.U32,    VariableType.U32,    VariableType.U32);
+            Add(Instruction.AtomicSwap,               VariableType.U32,    VariableType.U32,    VariableType.U32);
+            Add(Instruction.AtomicXor,                VariableType.U32,    VariableType.U32,    VariableType.U32);
             Add(Instruction.Absolute,                 VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.Add,                      VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
+            Add(Instruction.Ballot,                   VariableType.U32,    VariableType.Bool);
             Add(Instruction.BitCount,                 VariableType.Int,    VariableType.Int);
             Add(Instruction.BitfieldExtractS32,       VariableType.S32,    VariableType.S32,    VariableType.S32,    VariableType.S32);
             Add(Instruction.BitfieldExtractU32,       VariableType.U32,    VariableType.U32,    VariableType.S32,    VariableType.S32);
@@ -69,9 +80,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.IsNan,                    VariableType.Bool,   VariableType.F32);
             Add(Instruction.LoadAttribute,            VariableType.F32,    VariableType.S32,    VariableType.S32);
             Add(Instruction.LoadConstant,             VariableType.F32,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.LoadGlobal,               VariableType.F32,    VariableType.S32,    VariableType.S32);
+            Add(Instruction.LoadGlobal,               VariableType.U32,    VariableType.S32,    VariableType.S32);
             Add(Instruction.LoadLocal,                VariableType.F32,    VariableType.S32);
-            Add(Instruction.LoadStorage,              VariableType.F32,    VariableType.S32,    VariableType.S32);
+            Add(Instruction.LoadShared,               VariableType.U32,    VariableType.S32);
+            Add(Instruction.LoadStorage,              VariableType.U32,    VariableType.S32);
             Add(Instruction.LogarithmB2,              VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.LogicalAnd,               VariableType.Bool,   VariableType.Bool,   VariableType.Bool);
             Add(Instruction.LogicalExclusiveOr,       VariableType.Bool,   VariableType.Bool,   VariableType.Bool);
@@ -95,15 +107,19 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.Round,                    VariableType.F32,    VariableType.F32);
             Add(Instruction.Sine,                     VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.SquareRoot,               VariableType.Scalar, VariableType.Scalar);
-            Add(Instruction.StoreGlobal,              VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.F32);
+            Add(Instruction.StoreGlobal,              VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.U32);
             Add(Instruction.StoreLocal,               VariableType.None,   VariableType.S32,    VariableType.F32);
-            Add(Instruction.StoreStorage,             VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.F32);
+            Add(Instruction.StoreShared,              VariableType.None,   VariableType.S32,    VariableType.U32);
+            Add(Instruction.StoreStorage,             VariableType.None,   VariableType.S32,    VariableType.U32);
             Add(Instruction.Subtract,                 VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.SwizzleAdd,               VariableType.F32,    VariableType.F32,    VariableType.F32,    VariableType.S32);
             Add(Instruction.TextureSample,            VariableType.F32);
             Add(Instruction.TextureSize,              VariableType.S32,    VariableType.S32,    VariableType.S32);
             Add(Instruction.Truncate,                 VariableType.F32,    VariableType.F32);
             Add(Instruction.UnpackHalf2x16,           VariableType.F32,    VariableType.U32);
+            Add(Instruction.VoteAll,                  VariableType.Bool,   VariableType.Bool);
+            Add(Instruction.VoteAllEqual,             VariableType.Bool,   VariableType.Bool);
+            Add(Instruction.VoteAny,                  VariableType.Bool,   VariableType.Bool);
         }
 
         private static void Add(Instruction inst, VariableType destType, params VariableType[] srcTypes)

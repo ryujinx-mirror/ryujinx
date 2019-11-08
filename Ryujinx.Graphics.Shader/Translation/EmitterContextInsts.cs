@@ -6,6 +6,61 @@ namespace Ryujinx.Graphics.Shader.Translation
 {
     static class EmitterContextInsts
     {
+        public static Operand AtomicAdd(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        {
+            return context.Add(Instruction.AtomicAdd | mr, Local(), a, b);
+        }
+
+        public static Operand AtomicAnd(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        {
+            return context.Add(Instruction.AtomicAnd | mr, Local(), a, b);
+        }
+
+        public static Operand AtomicCompareAndSwap(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
+        {
+            return context.Add(Instruction.AtomicCompareAndSwap | mr, Local(), a, b, c);
+        }
+
+        public static Operand AtomicMaxS32(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        {
+            return context.Add(Instruction.AtomicMaxS32 | mr, Local(), a, b);
+        }
+
+        public static Operand AtomicMaxU32(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        {
+            return context.Add(Instruction.AtomicMaxU32 | mr, Local(), a, b);
+        }
+
+        public static Operand AtomicMinS32(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        {
+            return context.Add(Instruction.AtomicMinS32 | mr, Local(), a, b);
+        }
+
+        public static Operand AtomicMinU32(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        {
+            return context.Add(Instruction.AtomicMinU32 | mr, Local(), a, b);
+        }
+
+        public static Operand AtomicOr(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        {
+            return context.Add(Instruction.AtomicOr | mr, Local(), a, b);
+        }
+
+        public static Operand AtomicSwap(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        {
+            return context.Add(Instruction.AtomicSwap | mr, Local(), a, b);
+        }
+
+        public static Operand AtomicXor(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        {
+            return context.Add(Instruction.AtomicXor | mr, Local(), a, b);
+        }
+
+        public static Operand Ballot(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.Ballot, Local(), a);
+        }
+
         public static Operand BitCount(this EmitterContext context, Operand a)
         {
             return context.Add(Instruction.BitCount, Local(), a);
@@ -411,6 +466,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.LoadLocal, Local(), a);
         }
 
+        public static Operand LoadShared(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.LoadShared, Local(), a);
+        }
+
         public static Operand PackHalf2x16(this EmitterContext context, Operand a, Operand b)
         {
             return context.Add(Instruction.PackHalf2x16, Local(), a, b);
@@ -468,6 +528,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.StoreLocal, null, a, b);
         }
 
+        public static Operand StoreShared(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.StoreShared, null, a, b);
+        }
+
         public static Operand UnpackHalf2x16High(this EmitterContext context, Operand a)
         {
             return UnpackHalf2x16(context, a, 1);
@@ -485,6 +550,21 @@ namespace Ryujinx.Graphics.Shader.Translation
             context.Add(new Operation(Instruction.UnpackHalf2x16, index, dest, a));
 
             return dest;
+        }
+
+        public static Operand VoteAll(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.VoteAll, Local(), a);
+        }
+
+        public static Operand VoteAllEqual(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.VoteAllEqual, Local(), a);
+        }
+
+        public static Operand VoteAny(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.VoteAny, Local(), a);
         }
     }
 }

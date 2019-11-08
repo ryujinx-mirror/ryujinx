@@ -51,8 +51,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 sources[index] = context.GetOperandUse(operation.GetSource(index));
             }
 
-            int componentMask = 1 << operation.ComponentIndex;
-
             AstTextureOperation GetAstTextureOperation(TextureOperation texOp)
             {
                 return new AstTextureOperation(
@@ -61,7 +59,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                     texOp.Flags,
                     texOp.Handle,
                     4, // TODO: Non-hardcoded array size.
-                    componentMask,
+                    texOp.Index,
                     sources);
             }
 
@@ -80,16 +78,9 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
                     context.Info.CBuffers.Add(slot.Value);
                 }
-                else if (inst == Instruction.LoadStorage)
+                else if (UsesStorage(inst))
                 {
-                    Operand slot = operation.GetSource(0);
-
-                    if (slot.Type != OperandType.Constant)
-                    {
-                        throw new InvalidOperationException("Found load or store with non-constant storage buffer slot.");
-                    }
-
-                    context.Info.SBuffers.Add(slot.Value);
+                    context.Info.SBuffers.Add(operation.Index);
                 }
 
                 AstAssignment assignment;
@@ -141,7 +132,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 }
                 else if (!isCopy)
                 {
-                    source = new AstOperation(inst, componentMask, sources);
+                    source = new AstOperation(inst, operation.Index, sources);
                 }
                 else
                 {
@@ -166,19 +157,12 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             }
             else
             {
-                if (inst == Instruction.StoreStorage)
+                if (UsesStorage(inst))
                 {
-                    Operand slot = operation.GetSource(0);
-
-                    if (slot.Type != OperandType.Constant)
-                    {
-                        throw new InvalidOperationException("Found load or store with non-constant storage buffer slot.");
-                    }
-
-                    context.Info.SBuffers.Add(slot.Value);
+                    context.Info.SBuffers.Add(operation.Index);
                 }
 
-                context.AddNode(new AstOperation(inst, sources));
+                context.AddNode(new AstOperation(inst, operation.Index, sources));
             }
 
             // Those instructions needs to be emulated by using helper functions,
@@ -186,6 +170,10 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             // decide which helper functions are needed on the final generated code.
             switch (operation.Inst)
             {
+                case Instruction.LoadGlobal:
+                case Instruction.StoreGlobal:
+                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.GlobalMemory;
+                    break;
                 case Instruction.Shuffle:
                     context.Info.HelperFunctionsMask |= HelperFunctionsMask.Shuffle;
                     break;
@@ -319,6 +307,16 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             }
 
             throw new ArgumentException($"Unexpected instruction \"{inst}\".");
+        }
+
+        private static bool UsesStorage(Instruction inst)
+        {
+            if (inst == Instruction.LoadStorage || inst == Instruction.StoreStorage)
+            {
+                return true;
+            }
+
+            return inst.IsAtomic() && (inst & Instruction.MrMask) == Instruction.MrStorage;
         }
     }
 }

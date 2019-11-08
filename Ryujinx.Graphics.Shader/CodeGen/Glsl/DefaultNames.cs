@@ -11,12 +11,18 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         public const string OAttributePrefix = "out_attr";
 
         public const string StorageNamePrefix = "s";
-        public const string StorageNameSuffix = "data";
+
+        public const string DataName = "data";
+
+        public const string BlockSuffix = "block";
 
         public const string UniformNamePrefix = "c";
         public const string UniformNameSuffix = "data";
 
-        public const string LocalMemoryName = "local_mem";
+        public const string LocalMemoryName  = "local_mem";
+        public const string SharedMemoryName = "shared_mem";
+
+        public const string GmemOffsetName  = "gmemOffset";
 
         public const string UndefinedName = "undef";
     }

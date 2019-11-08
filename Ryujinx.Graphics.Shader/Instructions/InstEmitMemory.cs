@@ -9,6 +9,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static partial class InstEmit
     {
+        private enum MemoryRegion
+        {
+            Global,
+            Local,
+            Shared
+        }
+
         public static void Ald(EmitterContext context)
         {
             OpCodeAttribute op = (OpCodeAttribute)context.CurrOp;
@@ -49,6 +56,21 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
         }
 
+        public static void Atoms(EmitterContext context)
+        {
+            OpCodeAtom op = (OpCodeAtom)context.CurrOp;
+
+            Operand mem = context.ShiftRightU32(GetSrcA(context), Const(2));
+
+            mem = context.IAdd(mem, Const(op.Offset));
+
+            Operand value = GetSrcB(context);
+
+            Operand res = EmitAtomicOp(context, Instruction.MrShared, op.AtomicOp, op.Type, mem, value);
+
+            context.Copy(GetDest(context), res);
+        }
+
         public static void Ipa(EmitterContext context)
         {
             OpCodeIpa op = (OpCodeIpa)context.CurrOp;
@@ -80,7 +102,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Ld(EmitterContext context)
         {
-            LoadLocalOrGlobal(context, isGlobal: false);
+            EmitLoad(context, MemoryRegion.Local);
         }
 
         public static void Ldc(EmitterContext context)
@@ -126,7 +148,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Ldg(EmitterContext context)
         {
-            LoadLocalOrGlobal(context, isGlobal: true);
+            EmitLoad(context, MemoryRegion.Global);
+        }
+
+        public static void Lds(EmitterContext context)
+        {
+            EmitLoad(context, MemoryRegion.Shared);
         }
 
         public static void Out(EmitterContext context)
@@ -152,17 +179,118 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
         }
 
+        public static void Red(EmitterContext context)
+        {
+            OpCodeRed op = (OpCodeRed)context.CurrOp;
+
+            Operand offset = context.IAdd(GetSrcA(context), Const(op.Offset));
+
+            Operand mem = context.ShiftRightU32(offset, Const(2));
+
+            EmitAtomicOp(context, Instruction.MrGlobal, op.AtomicOp, op.Type, mem, GetDest(context));
+        }
+
         public static void St(EmitterContext context)
         {
-            StoreLocalOrGlobal(context, isGlobal: false);
+            EmitStore(context, MemoryRegion.Local);
         }
 
         public static void Stg(EmitterContext context)
         {
-            StoreLocalOrGlobal(context, isGlobal: true);
+            EmitStore(context, MemoryRegion.Global);
         }
 
-        private static void LoadLocalOrGlobal(EmitterContext context, bool isGlobal)
+        public static void Sts(EmitterContext context)
+        {
+            EmitStore(context, MemoryRegion.Shared);
+        }
+
+        private static Operand EmitAtomicOp(
+            EmitterContext context,
+            Instruction    mr,
+            AtomicOp       op,
+            ReductionType  type,
+            Operand        mem,
+            Operand        value)
+        {
+            Operand res = null;
+
+            switch (op)
+            {
+                case AtomicOp.Add:
+                    if (type == ReductionType.S32 || type == ReductionType.U32)
+                    {
+                        res = context.AtomicAdd(mr, mem, value);
+                    }
+                    else
+                    {
+                        // Not supported or invalid.
+                    }
+                    break;
+                case AtomicOp.BitwiseAnd:
+                    if (type == ReductionType.S32 || type == ReductionType.U32)
+                    {
+                        res = context.AtomicAnd(mr, mem, value);
+                    }
+                    else
+                    {
+                        // Not supported or invalid.
+                    }
+                    break;
+                case AtomicOp.BitwiseExclusiveOr:
+                    if (type == ReductionType.S32 || type == ReductionType.U32)
+                    {
+                        res = context.AtomicXor(mr, mem, value);
+                    }
+                    else
+                    {
+                        // Not supported or invalid.
+                    }
+                    break;
+                case AtomicOp.BitwiseOr:
+                    if (type == ReductionType.S32 || type == ReductionType.U32)
+                    {
+                        res = context.AtomicOr(mr, mem, value);
+                    }
+                    else
+                    {
+                        // Not supported or invalid.
+                    }
+                    break;
+                case AtomicOp.Maximum:
+                    if (type == ReductionType.S32)
+                    {
+                        res = context.AtomicMaxS32(mr, mem, value);
+                    }
+                    else if (type == ReductionType.U32)
+                    {
+                        res = context.AtomicMaxU32(mr, mem, value);
+                    }
+                    else
+                    {
+                        // Not supported or invalid.
+                    }
+                    break;
+                case AtomicOp.Minimum:
+                    if (type == ReductionType.S32)
+                    {
+                        res = context.AtomicMinS32(mr, mem, value);
+                    }
+                    else if (type == ReductionType.U32)
+                    {
+                        res = context.AtomicMinU32(mr, mem, value);
+                    }
+                    else
+                    {
+                        // Not supported or invalid.
+                    }
+                    break;
+            }
+
+            return res;
+        }
+
+        private static void EmitLoad(EmitterContext context, MemoryRegion region)
         {
             OpCodeMemory op = (OpCodeMemory)context.CurrOp;
 
@@ -199,9 +327,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 Operand offset = context.IAdd(wordOffset, Const(index));
 
-                Operand value = isGlobal
-                    ? context.LoadGlobal(offset)
-                    : context.LoadLocal (offset);
+                Operand value = null;
+
+                switch (region)
+                {
+                    case MemoryRegion.Global: value = context.LoadGlobal(offset); break;
+                    case MemoryRegion.Local:  value = context.LoadLocal (offset); break;
+                    case MemoryRegion.Shared: value = context.LoadShared(offset); break;
+                }
 
                 if (isSmallInt)
                 {
@@ -212,7 +345,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
         }
 
-        private static void StoreLocalOrGlobal(EmitterContext context, bool isGlobal)
+        private static void EmitStore(EmitterContext context, MemoryRegion region)
         {
             OpCodeMemory op = (OpCodeMemory)context.CurrOp;
 
@@ -241,31 +374,34 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 Register rd = new Register(op.Rd.Index + index, RegisterType.Gpr);
 
-                if (rd.IsRZ)
-                {
-                    break;
-                }
-
                 Operand value = Register(rd);
 
                 Operand offset = context.IAdd(wordOffset, Const(index));
 
                 if (isSmallInt)
                 {
-                    Operand word = isGlobal
-                         ? context.LoadGlobal(offset)
-                         : context.LoadLocal (offset);
+                    Operand word = null;
+
+                    switch (region)
+                    {
+                        case MemoryRegion.Global: word = context.LoadGlobal(offset); break;
+                        case MemoryRegion.Local:  word = context.LoadLocal (offset); break;
+                        case MemoryRegion.Shared: word = context.LoadShared(offset); break;
+                    }
 
                     value = InsertSmallInt(context, op.Size, bitOffset, word, value);
                 }
 
-                if (isGlobal)
+                switch (region)
                 {
-                    context.StoreGlobal(offset, value);
+                    case MemoryRegion.Global: context.StoreGlobal(offset, value); break;
+                    case MemoryRegion.Local:  context.StoreLocal (offset, value); break;
+                    case MemoryRegion.Shared: context.StoreShared(offset, value); break;
                 }
-                else
+
+                if (rd.IsRZ)
                 {
-                    context.StoreLocal(offset, value);
+                    break;
                 }
             }
         }

@@ -16,7 +16,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         public static void Declare(CodeGenContext context, StructuredProgramInfo info)
         {
             context.AppendLine("#version 420 core");
+            context.AppendLine("#extension GL_ARB_gpu_shader_int64 : enable");
             context.AppendLine("#extension GL_ARB_shader_ballot : enable");
+            context.AppendLine("#extension GL_ARB_shader_group_vote : enable");
             context.AppendLine("#extension GL_ARB_shader_storage_buffer_object : enable");
 
             if (context.Config.Stage == ShaderStage.Compute)
@@ -66,8 +68,14 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             context.AppendLine();
 
-            context.AppendLine($"precise float {DefaultNames.LocalMemoryName}[0x100];");
+            context.AppendLine($"uint {DefaultNames.LocalMemoryName}[0x100];");
             context.AppendLine();
+
+            if (context.Config.Stage == ShaderStage.Compute)
+            {
+                context.AppendLine($"shared uint {DefaultNames.SharedMemoryName}[0x100];");
+                context.AppendLine();
+            }
 
             if (info.CBuffers.Count != 0)
             {
@@ -78,7 +86,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             if (info.SBuffers.Count != 0)
             {
-                DeclareStorage(context, info);
+                DeclareUsedStorage(context, info);
 
                 context.AppendLine();
             }
@@ -168,6 +176,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 context.AppendLine(GetVarTypeName(decl.VarType) + " " + name + ";");
             }
+
+            if ((info.HelperFunctionsMask & HelperFunctionsMask.GlobalMemory) != 0)
+            {
+                context.AppendLine($"ivec2 {DefaultNames.GmemOffsetName};");
+            }
         }
 
         private static string GetVarTypeName(VariableType type)
@@ -205,24 +218,59 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        private static void DeclareStorage(CodeGenContext context, StructuredProgramInfo info)
+        private static void DeclareAllStorage(CodeGenContext context, StructuredProgramInfo info)
         {
-            foreach (int sbufSlot in info.SBuffers.OrderBy(x => x))
+            string sbName = OperandManager.GetShaderStagePrefix(context.Config.Stage);
+
+            sbName += "_" + DefaultNames.StorageNamePrefix;
+
+            string blockName = $"{sbName}_{DefaultNames.BlockSuffix}";
+
+            context.AppendLine("layout (std430) buffer " + blockName);
+
+            context.EnterScope();
+
+            context.AppendLine("uint " + DefaultNames.DataName + "[];");
+
+            string arraySize = NumberFormatter.FormatInt(Constants.MaxShaderStorageBuffers);
+
+            context.LeaveScope($" {sbName}[{arraySize}];");
+
+            for (int sbufSlot = 0; sbufSlot < Constants.MaxShaderStorageBuffers; sbufSlot++)
             {
-                string sbName = OperandManager.GetShaderStagePrefix(context.Config.Stage);
-
-                sbName += "_" + DefaultNames.StorageNamePrefix + sbufSlot;
-
-                context.SBufferDescriptors.Add(new BufferDescriptor(sbName, sbufSlot));
-
-                context.AppendLine("layout (std430) buffer " + sbName);
-
-                context.EnterScope();
-
-                context.AppendLine("precise float " + OperandManager.GetSbName(context.Config.Stage, sbufSlot) + "[];");
-
-                context.LeaveScope(";");
+                context.SBufferDescriptors.Add(new BufferDescriptor($"{blockName}[{sbufSlot}]", sbufSlot));
             }
+        }
+
+        private static void DeclareUsedStorage(CodeGenContext context, StructuredProgramInfo info)
+        {
+            string sbName = OperandManager.GetShaderStagePrefix(context.Config.Stage);
+
+            sbName += "_" + DefaultNames.StorageNamePrefix;
+
+            string blockName = $"{sbName}_{DefaultNames.BlockSuffix}";
+
+            int maxSlot = 0;
+
+            foreach (int sbufSlot in info.SBuffers)
+            {
+                context.SBufferDescriptors.Add(new BufferDescriptor($"{blockName}[{sbufSlot}]", sbufSlot));
+
+                if (maxSlot < sbufSlot)
+                {
+                    maxSlot = sbufSlot;
+                }
+            }
+
+            context.AppendLine("layout (std430) buffer " + blockName);
+
+            context.EnterScope();
+
+            context.AppendLine("uint " + DefaultNames.DataName + "[];");
+
+            string arraySize = NumberFormatter.FormatInt(maxSlot + 1);
+
+            context.LeaveScope($" {sbName}[{arraySize}];");
         }
 
         private static void DeclareSamplers(CodeGenContext context, StructuredProgramInfo info)

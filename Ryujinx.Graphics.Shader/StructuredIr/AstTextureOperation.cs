@@ -16,8 +16,8 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             TextureFlags      flags,
             int               handle,
             int               arraySize,
-            int               compMask,
-            params IAstNode[] sources) : base(inst, compMask, sources)
+            int               index,
+            params IAstNode[] sources) : base(inst, index, sources)
         {
             Type      = type;
             Flags     = flags;

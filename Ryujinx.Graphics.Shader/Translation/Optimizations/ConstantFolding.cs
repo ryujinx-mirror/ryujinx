@@ -256,7 +256,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
         {
             int value = operation.GetSource(0).Value;
 
-            value = (value >> operation.ComponentIndex * 16) & 0xffff;
+            value = (value >> operation.Index * 16) & 0xffff;
 
             operation.TurnIntoCopy(ConstF(HalfConversion.HalfToSingle(value)));
         }

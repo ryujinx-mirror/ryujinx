@@ -8,8 +8,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         OpNullary   = Op | 0,
         OpUnary     = Op | 1,
         OpBinary    = Op | 2,
+        OpBinaryCom = Op | 2 | Commutative,
         OpTernary   = Op | 3,
-        OpBinaryCom = OpBinary | Commutative,
+
+        AtomicBinary  = CallBinary  | Atomic,
+        AtomicTernary = CallTernary | Atomic,
 
         CallNullary    = Call | 0,
         CallUnary      = Call | 1,
@@ -20,7 +23,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         Commutative = 1 << 8,
         Op          = 1 << 9,
         Call        = 1 << 10,
-        Special     = 1 << 11,
+        Atomic      = 1 << 11,
+        Special     = 1 << 12,
 
         ArityMask = 0xff
     }

@@ -16,7 +16,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 
         public int SourcesCount => _sources.Length;
 
-        public int ComponentIndex { get; }
+        public int Index { get; }
 
         public Operation(Instruction inst, Operand dest, params Operand[] sources)
         {
@@ -39,11 +39,11 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
 
         public Operation(
             Instruction      inst,
-            int              compIndex,
+            int              index,
             Operand          dest,
             params Operand[] sources) : this(inst, dest, sources)
         {
-            ComponentIndex = compIndex;
+            Index = index;
         }
 
         private Operand AssignDest(Operand dest)

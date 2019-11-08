@@ -24,22 +24,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             string srcExpr = GetSoureExpr(context, src, GetSrcVarType(operation.Inst, 0));
 
-            return $"unpackHalf2x16({srcExpr}){GetMask(operation.ComponentMask)}";
+            return $"unpackHalf2x16({srcExpr}){GetMask(operation.Index)}";
         }
 
-        private static string GetMask(int compMask)
+        private static string GetMask(int index)
         {
-            string mask = ".";
-
-            for (int index = 0; index < 2; index++)
-            {
-                if ((compMask & (1 << index)) != 0)
-                {
-                    mask += "xy".Substring(index, 1);
-                }
-            }
-
-            return mask;
+            return '.' + "xy".Substring(index, 1);
         }
     }
 }

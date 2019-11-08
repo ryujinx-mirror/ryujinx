@@ -15,25 +15,38 @@ namespace Ryujinx.Graphics.Shader.Translation
     {
         private const int HeaderSize = 0x50;
 
-        public static ShaderProgram Translate(Span<byte> code, TranslationConfig translationConfig)
+        public static Span<byte> ExtractCode(Span<byte> code, bool compute, out int headerSize)
         {
-            return Translate(code, Span<byte>.Empty, translationConfig);
+            if (compute)
+            {
+                headerSize = 0;
+            }
+            else
+            {
+                headerSize = HeaderSize;
+            }
+
+            Block[] cfg = Decoder.Decode(code, (ulong)headerSize);
+
+            ulong endAddress = 0;
+
+            foreach (Block block in cfg)
+            {
+                if (endAddress < block.EndAddress)
+                {
+                    endAddress = block.EndAddress;
+                }
+            }
+
+            return code.Slice(0, headerSize + (int)endAddress);
         }
 
-        public static ShaderProgram Translate(Span<byte> code, Span<byte> code2, TranslationConfig translationConfig)
+        public static ShaderProgram Translate(Span<byte> code, TranslationConfig translationConfig)
         {
             bool compute   = (translationConfig.Flags & TranslationFlags.Compute)   != 0;
             bool debugMode = (translationConfig.Flags & TranslationFlags.DebugMode) != 0;
 
-            Operation[] shaderOps = DecodeShader(code, compute, debugMode, out ShaderHeader header);
-
-            if (code2 != Span<byte>.Empty)
-            {
-                // Dual vertex shader.
-                Operation[] shaderOpsB = DecodeShader(code2, compute, debugMode, out header);
-
-                shaderOps = Combine(shaderOps, shaderOpsB);
-            }
+            Operation[] ops = DecodeShader(code, compute, debugMode, out ShaderHeader header);
 
             ShaderStage stage;
 
@@ -63,7 +76,29 @@ namespace Ryujinx.Graphics.Shader.Translation
                 maxOutputVertexCount,
                 outputTopology);
 
-            BasicBlock[] irBlocks = ControlFlowGraph.MakeCfg(shaderOps);
+            return Translate(ops, config);
+        }
+
+        public static ShaderProgram Translate(Span<byte> vpACode, Span<byte> vpBCode, TranslationConfig translationConfig)
+        {
+            bool debugMode = (translationConfig.Flags & TranslationFlags.DebugMode) != 0;
+
+            Operation[] vpAOps = DecodeShader(vpACode, compute: false, debugMode, out _);
+            Operation[] vpBOps = DecodeShader(vpBCode, compute: false, debugMode, out ShaderHeader header);
+
+            ShaderConfig config = new ShaderConfig(
+                header.Stage,
+                translationConfig.Flags,
+                translationConfig.MaxCBufferSize,
+                header.MaxOutputVertexCount,
+                header.OutputTopology);
+
+            return Translate(Combine(vpAOps, vpBOps), config);
+        }
+
+        private static ShaderProgram Translate(Operation[] ops, ShaderConfig config)
+        {
+            BasicBlock[] irBlocks = ControlFlowGraph.MakeCfg(ops);
 
             Dominance.FindDominators(irBlocks[0], irBlocks.Length);
 
@@ -71,7 +106,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             Ssa.Rename(irBlocks);
 
-            Optimizer.Optimize(irBlocks, stage);
+            Optimizer.Optimize(irBlocks, config.Stage);
 
             StructuredProgramInfo sInfo = StructuredProgram.MakeStructuredProgram(irBlocks, config);
 
@@ -87,12 +122,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             string glslCode = program.Code;
 
-            if (translationConfig.Version != 0)
-            {
-                glslCode = "// " + translationConfig.Version + Environment.NewLine + glslCode;
-            }
-
-            return new ShaderProgram(spInfo, stage, glslCode);
+            return new ShaderProgram(spInfo, config.Stage, glslCode);
         }
 
         private static Operation[] DecodeShader(Span<byte> code, bool compute, bool debugMode, out ShaderHeader header)

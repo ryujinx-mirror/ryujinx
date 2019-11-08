@@ -6,8 +6,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
     {
         private List<T> _items;
 
-        public int Count => _items.Count;
-
         public ConcurrentRangeList()
         {
             _items = new List<T>();

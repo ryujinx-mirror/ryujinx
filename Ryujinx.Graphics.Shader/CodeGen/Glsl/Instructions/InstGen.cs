@@ -3,6 +3,7 @@ using Ryujinx.Graphics.Shader.StructuredIr;
 using System;
 
 using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenHelper;
+using static Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions.InstGenMemory;
 using static Ryujinx.Graphics.Shader.StructuredIr.InstructionInfo;
 
 namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
@@ -31,6 +32,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             if ((info.Type & InstType.Call) != 0)
             {
+                bool atomic = (info.Type & InstType.Atomic) != 0;
+
                 int arity = (int)(info.Type & InstType.ArityMask);
 
                 string args = string.Empty;
@@ -44,10 +47,29 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     VariableType dstType = GetSrcVarType(inst, argIndex);
 
-                    args += GetSoureExpr(context, operation.GetSource(argIndex), dstType);
+                    if (argIndex == 0 && atomic)
+                    {
+                        switch (inst & Instruction.MrMask)
+                        {
+                            // TODO: Global.
+                            case Instruction.MrShared:  args += LoadShared (context, operation); break;
+                            case Instruction.MrStorage: args += LoadStorage(context, operation); break;
+                        }
+                    }
+                    else
+                    {
+                        args += GetSoureExpr(context, operation.GetSource(argIndex), dstType);
+                    }
                 }
 
-                return info.OpName + "(" + args + ")";
+                if (inst == Instruction.Ballot)
+                {
+                    return $"unpackUint2x32({info.OpName}({args})).x";
+                }
+                else
+                {
+                    return info.OpName + "(" + args + ")";
+                }
             }
             else if ((info.Type & InstType.Op) != 0)
             {
@@ -99,6 +121,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     case Instruction.LoadLocal:
                         return InstGenMemory.LoadLocal(context, operation);
 
+                    case Instruction.LoadShared:
+                        return InstGenMemory.LoadShared(context, operation);
+
                     case Instruction.LoadStorage:
                         return InstGenMemory.LoadStorage(context, operation);
 
@@ -107,6 +132,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     case Instruction.StoreLocal:
                         return InstGenMemory.StoreLocal(context, operation);
+
+                    case Instruction.StoreShared:
+                        return InstGenMemory.StoreShared(context, operation);
 
                     case Instruction.StoreStorage:
                         return InstGenMemory.StoreStorage(context, operation);

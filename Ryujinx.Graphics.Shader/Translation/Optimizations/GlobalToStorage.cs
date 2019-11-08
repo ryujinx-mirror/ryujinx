@@ -1,8 +1,6 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System.Collections.Generic;
 
-using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
-
 namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 {
     static class GlobalToStorage
@@ -27,7 +25,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     continue;
                 }
 
-                if (operation.Inst == Instruction.LoadGlobal ||
+                if (operation.Inst.IsAtomic() ||
+                    operation.Inst == Instruction.LoadGlobal ||
                     operation.Inst == Instruction.StoreGlobal)
                 {
                     Operand source = operation.GetSource(0);
@@ -51,18 +50,31 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
             Operation storageOp;
 
-            if (operation.Inst == Instruction.LoadGlobal)
+            if (operation.Inst.IsAtomic())
+            {
+                Operand[] sources = new Operand[operation.SourcesCount];
+
+                for (int index = 0; index < operation.SourcesCount; index++)
+                {
+                    sources[index] = operation.GetSource(index);
+                }
+
+                Instruction inst = (operation.Inst & ~Instruction.MrMask) | Instruction.MrStorage;
+
+                storageOp = new Operation(inst, storageIndex, operation.Dest, sources);
+            }
+            else if (operation.Inst == Instruction.LoadGlobal)
             {
                 Operand source = operation.GetSource(0);
 
-                storageOp = new Operation(Instruction.LoadStorage, operation.Dest, Const(storageIndex), source);
+                storageOp = new Operation(Instruction.LoadStorage, storageIndex, operation.Dest, source);
             }
             else
             {
                 Operand src1 = operation.GetSource(0);
                 Operand src2 = operation.GetSource(1);
 
-                storageOp = new Operation(Instruction.StoreStorage, null, Const(storageIndex), src1, src2);
+                storageOp = new Operation(Instruction.StoreStorage, storageIndex, null, src1, src2);
             }
 
             for (int index = 0; index < operation.SourcesCount; index++)
@@ -112,6 +124,11 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             }
 
             return -1;
+        }
+
+        public static int GetStorageCbOffset(ShaderStage stage, int slot)
+        {
+            return GetStorageBaseCbOffset(stage) + slot * StorageDescSize;
         }
 
         private static int GetStorageBaseCbOffset(ShaderStage stage)

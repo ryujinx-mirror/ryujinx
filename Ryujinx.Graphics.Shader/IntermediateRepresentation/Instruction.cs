@@ -7,6 +7,17 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
     {
         Absolute = 1,
         Add,
+        AtomicAdd,
+        AtomicAnd,
+        AtomicCompareAndSwap,
+        AtomicMinS32,
+        AtomicMinU32,
+        AtomicMaxS32,
+        AtomicMaxU32,
+        AtomicOr,
+        AtomicSwap,
+        AtomicXor,
+        Ballot,
         BitCount,
         BitfieldExtractS32,
         BitfieldExtractU32,
@@ -57,6 +68,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         LoadConstant,
         LoadGlobal,
         LoadLocal,
+        LoadShared,
         LoadStorage,
         LogarithmB2,
         LogicalAnd,
@@ -88,6 +100,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         SquareRoot,
         StoreGlobal,
         StoreLocal,
+        StoreShared,
         StoreStorage,
         Subtract,
         SwizzleAdd,
@@ -96,9 +109,44 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         Truncate,
         UnpackDouble2x32,
         UnpackHalf2x16,
+        VoteAll,
+        VoteAllEqual,
+        VoteAny,
 
         Count,
-        FP   = 1 << 16,
+
+        FP = 1 << 16,
+
+        MrShift = 17,
+
+        MrGlobal  = 0 << MrShift,
+        MrShared  = 1 << MrShift,
+        MrStorage = 2 << MrShift,
+        MrMask    = 3 << MrShift,
+
         Mask = 0xffff
+    }
+
+    static class InstructionExtensions
+    {
+        public static bool IsAtomic(this Instruction inst)
+        {
+            switch (inst & Instruction.Mask)
+            {
+                case Instruction.AtomicAdd:
+                case Instruction.AtomicAnd:
+                case Instruction.AtomicCompareAndSwap:
+                case Instruction.AtomicMaxS32:
+                case Instruction.AtomicMaxU32:
+                case Instruction.AtomicMinS32:
+                case Instruction.AtomicMinU32:
+                case Instruction.AtomicOr:
+                case Instruction.AtomicSwap:
+                case Instruction.AtomicXor:
+                    return true;
+            }
+
+            return false;
+        }
     }
 }
