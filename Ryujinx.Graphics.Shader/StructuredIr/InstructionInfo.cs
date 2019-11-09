@@ -81,7 +81,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.LoadAttribute,            VariableType.F32,    VariableType.S32,    VariableType.S32);
             Add(Instruction.LoadConstant,             VariableType.F32,    VariableType.S32,    VariableType.S32);
             Add(Instruction.LoadGlobal,               VariableType.U32,    VariableType.S32,    VariableType.S32);
-            Add(Instruction.LoadLocal,                VariableType.F32,    VariableType.S32);
+            Add(Instruction.LoadLocal,                VariableType.U32,    VariableType.S32);
             Add(Instruction.LoadShared,               VariableType.U32,    VariableType.S32);
             Add(Instruction.LoadStorage,              VariableType.U32,    VariableType.S32);
             Add(Instruction.LogarithmB2,              VariableType.Scalar, VariableType.Scalar);
@@ -108,7 +108,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.Sine,                     VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.SquareRoot,               VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.StoreGlobal,              VariableType.None,   VariableType.S32,    VariableType.S32,    VariableType.U32);
-            Add(Instruction.StoreLocal,               VariableType.None,   VariableType.S32,    VariableType.F32);
+            Add(Instruction.StoreLocal,               VariableType.None,   VariableType.S32,    VariableType.U32);
             Add(Instruction.StoreShared,              VariableType.None,   VariableType.S32,    VariableType.U32);
             Add(Instruction.StoreStorage,             VariableType.None,   VariableType.S32,    VariableType.U32);
             Add(Instruction.Subtract,                 VariableType.Scalar, VariableType.Scalar, VariableType.Scalar);
