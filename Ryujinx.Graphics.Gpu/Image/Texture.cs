@@ -253,7 +253,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (!_context.Capabilities.SupportsAstcCompression && _info.FormatInfo.Format.IsAstc())
             {
-                data = AstcDecoder.DecodeToRgba8(
+                if (!AstcDecoder.TryDecodeToRgba8(
                     data,
                     _info.FormatInfo.BlockWidth,
                     _info.FormatInfo.BlockHeight,
@@ -261,7 +261,13 @@ namespace Ryujinx.Graphics.Gpu.Image
                     _info.Width,
                     _info.Height,
                     _depth,
-                    _info.Levels);
+                    _info.Levels,
+                    out Span<byte> decoded))
+                {
+                    // TODO: Error.
+                }
+
+                data = decoded;
             }
 
             HostTexture.SetData(data);

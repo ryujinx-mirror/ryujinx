@@ -47,16 +47,19 @@ namespace Ryujinx.Graphics.Texture.Astc
             }
         }
 
-        public static Span<byte> DecodeToRgba8(
-            Span<byte> data,
-            int        blockWidth,
-            int        blockHeight,
-            int        blockDepth,
-            int        width,
-            int        height,
-            int        depth,
-            int        levels)
+        public static bool TryDecodeToRgba8(
+            Span<byte>     data,
+            int            blockWidth,
+            int            blockHeight,
+            int            blockDepth,
+            int            width,
+            int            height,
+            int            depth,
+            int            levels,
+            out Span<byte> decoded)
         {
+            bool success = true;
+
             using (MemoryStream inputStream = new MemoryStream(data.ToArray()))
             {
                 BinaryReader binReader = new BinaryReader(inputStream);
@@ -85,7 +88,14 @@ namespace Ryujinx.Graphics.Texture.Astc
                         {
                             int[] decompressedData = new int[144];
 
-                            DecompressBlock(binReader.ReadBytes(0x10), decompressedData, blockWidth, blockHeight);
+                            try
+                            {
+                                DecompressBlock(binReader.ReadBytes(0x10), decompressedData, blockWidth, blockHeight);
+                            }
+                            catch (Exception)
+                            {
+                                success = false;
+                            }
 
                             int decompressedWidth  = Math.Min(blockWidth,  width  - i);
                             int decompressedHeight = Math.Min(blockHeight, height - j);
@@ -112,9 +122,11 @@ namespace Ryujinx.Graphics.Texture.Astc
                         height = Math.Max(1, height >> 1);
                     }
 
-                    return outputStream.ToArray();
+                    decoded = outputStream.ToArray();
                 }
             }
+
+            return success;
         }
 
         public static bool DecompressBlock(
