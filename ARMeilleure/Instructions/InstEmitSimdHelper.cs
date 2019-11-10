@@ -1108,6 +1108,21 @@ namespace ARMeilleure.Instructions
             }
         }
 
+        public enum CmpCondition
+        {
+            // Legacy Sse.
+            Equal              = 0, // Ordered, non-signaling.
+            LessThan           = 1, // Ordered, signaling.
+            LessThanOrEqual    = 2, // Ordered, signaling.
+            NotLessThan        = 5, // Unordered, signaling.
+            NotLessThanOrEqual = 6, // Unordered, signaling.
+            OrderedQ           = 7, // Non-signaling.
+
+            // Vex.
+            GreaterThanOrEqual = 13, // Ordered, signaling.
+            GreaterThan        = 14, // Ordered, signaling.
+            OrderedS           = 23  // Signaling.
+        }
 
         [Flags]
         public enum SaturatingFlags

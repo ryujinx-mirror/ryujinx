@@ -26,7 +26,7 @@ namespace ARMeilleure.CodeGen.X86
 
         public static bool ForceLegacySse { get; set; }
 
-        public static bool SupportsVexEncoding => !ForceLegacySse && SupportsAvx;
+        public static bool SupportsVexEncoding => SupportsAvx && !ForceLegacySse;
 
         static HardwareCapabilities()
         {

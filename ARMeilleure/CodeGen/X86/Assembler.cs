@@ -94,7 +94,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.Cvtpd2ps,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f5a, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Cvtps2dq,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f5b, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Cvtps2pd,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f5a, InstructionFlags.Vex));
-            Add(X86Instruction.Cvtsd2si,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f2c, InstructionFlags.Vex | InstructionFlags.PrefixF2));
+            Add(X86Instruction.Cvtsd2si,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f2d, InstructionFlags.Vex | InstructionFlags.PrefixF2));
             Add(X86Instruction.Cvtsd2ss,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f5a, InstructionFlags.Vex | InstructionFlags.PrefixF2));
             Add(X86Instruction.Cvtsi2sd,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f2a, InstructionFlags.Vex | InstructionFlags.PrefixF2));
             Add(X86Instruction.Cvtsi2ss,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f2a, InstructionFlags.Vex | InstructionFlags.PrefixF3));

@@ -732,8 +732,7 @@ namespace ARMeilleure.Instructions
             Debug.Assert(value.Type == OperandType.I32 || value.Type == OperandType.I64);
             Debug.Assert((uint)size < 2);
 
-            OperandType type = size == 0 ? OperandType.FP32
-                                         : OperandType.FP64;
+            OperandType type = size == 0 ? OperandType.FP32 : OperandType.FP64;
 
             if (signed)
             {
@@ -837,15 +836,12 @@ namespace ARMeilleure.Instructions
 
             Operand n = GetVec(op.Rn);
 
-            const int cmpGreaterThanOrEqual = 5;
-            const int cmpOrdered            = 7;
-
             // sizeF == ((OpCodeSimdShImm64)op).Size - 2
             int sizeF = op.Size & 1;
 
             if (sizeF == 0)
             {
-                Operand nMask = context.AddIntrinsic(Intrinsic.X86Cmpps, n, n, Const(cmpOrdered));
+                Operand nMask = context.AddIntrinsic(Intrinsic.X86Cmpps, n, n, Const((int)CmpCondition.OrderedQ));
 
                 Operand nScaled = context.AddIntrinsic(Intrinsic.X86Pand, nMask, n);
 
@@ -867,7 +863,7 @@ namespace ARMeilleure.Instructions
 
                 Operand mask = X86GetAllElements(context, 0x4F000000); // 2.14748365E9f (2147483648)
 
-                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Cmpps, nRnd, mask, Const(cmpGreaterThanOrEqual));
+                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Cmpps, nRnd, mask, Const((int)CmpCondition.NotLessThan));
 
                 Operand res = context.AddIntrinsic(Intrinsic.X86Pxor, nInt, mask2);
 
@@ -884,7 +880,7 @@ namespace ARMeilleure.Instructions
             }
             else /* if (sizeF == 1) */
             {
-                Operand nMask = context.AddIntrinsic(Intrinsic.X86Cmppd, n, n, Const(cmpOrdered));
+                Operand nMask = context.AddIntrinsic(Intrinsic.X86Cmppd, n, n, Const((int)CmpCondition.OrderedQ));
 
                 Operand nScaled = context.AddIntrinsic(Intrinsic.X86Pand, nMask, n);
 
@@ -920,7 +916,7 @@ namespace ARMeilleure.Instructions
 
                 Operand mask = X86GetAllElements(context, 0x43E0000000000000L); // 9.2233720368547760E18d (9223372036854775808)
 
-                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Cmppd, nRnd, mask, Const(cmpGreaterThanOrEqual));
+                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Cmppd, nRnd, mask, Const((int)CmpCondition.NotLessThan));
 
                 Operand res = context.AddIntrinsic(Intrinsic.X86Pxor, nInt, mask2);
 
@@ -939,16 +935,12 @@ namespace ARMeilleure.Instructions
 
             Operand n = GetVec(op.Rn);
 
-            const int cmpGreaterThanOrEqual = 5;
-            const int cmpGreaterThan        = 6;
-            const int cmpOrdered            = 7;
-
             // sizeF == ((OpCodeSimdShImm)op).Size - 2
             int sizeF = op.Size & 1;
 
             if (sizeF == 0)
             {
-                Operand nMask = context.AddIntrinsic(Intrinsic.X86Cmpps, n, n, Const(cmpOrdered));
+                Operand nMask = context.AddIntrinsic(Intrinsic.X86Cmpps, n, n, Const((int)CmpCondition.OrderedQ));
 
                 Operand nScaled = context.AddIntrinsic(Intrinsic.X86Pand, nMask, n);
 
@@ -966,7 +958,7 @@ namespace ARMeilleure.Instructions
 
                 Operand nRnd = context.AddIntrinsic(Intrinsic.X86Roundps, nScaled, Const(X86GetRoundControl(roundMode)));
 
-                Operand nRndMask = context.AddIntrinsic(Intrinsic.X86Cmpps, nRnd, context.VectorZero(), Const(cmpGreaterThan));
+                Operand nRndMask = context.AddIntrinsic(Intrinsic.X86Cmpps, nRnd, context.VectorZero(), Const((int)CmpCondition.NotLessThanOrEqual));
 
                 Operand nRndMasked = context.AddIntrinsic(Intrinsic.X86Pand, nRnd, nRndMask);
 
@@ -976,13 +968,13 @@ namespace ARMeilleure.Instructions
 
                 Operand res = context.AddIntrinsic(Intrinsic.X86Subps, nRndMasked, mask);
 
-                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Cmpps, res, context.VectorZero(), Const(cmpGreaterThan));
+                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Cmpps, res, context.VectorZero(), Const((int)CmpCondition.NotLessThanOrEqual));
 
                 Operand resMasked = context.AddIntrinsic(Intrinsic.X86Pand, res, mask2);
 
                 res = context.AddIntrinsic(Intrinsic.X86Cvtps2dq, resMasked);
 
-                Operand mask3 = context.AddIntrinsic(Intrinsic.X86Cmpps, resMasked, mask, Const(cmpGreaterThanOrEqual));
+                Operand mask3 = context.AddIntrinsic(Intrinsic.X86Cmpps, resMasked, mask, Const((int)CmpCondition.NotLessThan));
 
                 res = context.AddIntrinsic(Intrinsic.X86Pxor, res, mask3);
                 res = context.AddIntrinsic(Intrinsic.X86Paddd, res, nInt);
@@ -1000,7 +992,7 @@ namespace ARMeilleure.Instructions
             }
             else /* if (sizeF == 1) */
             {
-                Operand nMask = context.AddIntrinsic(Intrinsic.X86Cmppd, n, n, Const(cmpOrdered));
+                Operand nMask = context.AddIntrinsic(Intrinsic.X86Cmppd, n, n, Const((int)CmpCondition.OrderedQ));
 
                 Operand nScaled = context.AddIntrinsic(Intrinsic.X86Pand, nMask, n);
 
@@ -1018,7 +1010,7 @@ namespace ARMeilleure.Instructions
 
                 Operand nRnd = context.AddIntrinsic(Intrinsic.X86Roundpd, nScaled, Const(X86GetRoundControl(roundMode)));
 
-                Operand nRndMask = context.AddIntrinsic(Intrinsic.X86Cmppd, nRnd, context.VectorZero(), Const(cmpGreaterThan));
+                Operand nRndMask = context.AddIntrinsic(Intrinsic.X86Cmppd, nRnd, context.VectorZero(), Const((int)CmpCondition.NotLessThanOrEqual));
 
                 Operand nRndMasked = context.AddIntrinsic(Intrinsic.X86Pand, nRnd, nRndMask);
 
@@ -1042,7 +1034,7 @@ namespace ARMeilleure.Instructions
 
                 Operand res = context.AddIntrinsic(Intrinsic.X86Subpd, nRndMasked, mask);
 
-                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Cmppd, res, context.VectorZero(), Const(cmpGreaterThan));
+                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Cmppd, res, context.VectorZero(), Const((int)CmpCondition.NotLessThanOrEqual));
 
                 Operand resMasked = context.AddIntrinsic(Intrinsic.X86Pand, res, mask2);
 
@@ -1056,7 +1048,7 @@ namespace ARMeilleure.Instructions
 
                 res = EmitVectorLongCreate(context, low, high);
 
-                Operand mask3 = context.AddIntrinsic(Intrinsic.X86Cmppd, resMasked, mask, Const(cmpGreaterThanOrEqual));
+                Operand mask3 = context.AddIntrinsic(Intrinsic.X86Cmppd, resMasked, mask, Const((int)CmpCondition.NotLessThan));
 
                 res = context.AddIntrinsic(Intrinsic.X86Pxor, res, mask3);
                 res = context.AddIntrinsic(Intrinsic.X86Paddq, res, nInt);

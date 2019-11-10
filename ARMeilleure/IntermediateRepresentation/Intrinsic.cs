@@ -26,6 +26,7 @@ namespace ARMeilleure.IntermediateRepresentation
         X86Cvtps2pd,
         X86Cvtsd2si,
         X86Cvtsd2ss,
+        X86Cvtsi2si,
         X86Cvtss2sd,
         X86Divpd,
         X86Divps,
