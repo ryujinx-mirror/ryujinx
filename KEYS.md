@@ -2,103 +2,39 @@
 
 Keys are required for decrypting most of the file formats used by the Nintendo Switch.
 
-Keysets are stored as text files. These 3 filenames are automatically read:  
-`prod.keys` - Contains common keys usedy by all Switch devices.  
-`console.keys` - Contains console-unique keys.  
-`title.keys` - Contains game-specific keys.
+ Keysets are stored as text files. These 2 filenames are automatically read:  
+* `prod.keys` - Contains common keys used by all Nintendo Switch devices.
+* `title.keys` - Contains game-specific keys.
 
 Ryujinx will first look for keys in `RyuFS/system`, and if it doesn't find any there it will look in `$HOME/.switch`.
-
-A guide to assist with dumping your own keys can be found [here](https://gist.github.com/roblabla/d8358ab058bbe3b00614740dcba4f208).
-
-## Common keys
-
-Here is a template for a key file containing the main keys Ryujinx uses to read content files.  
-Both `prod.keys` and `console.keys` use this format.
-
-```
-master_key_00                         = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-master_key_01                         = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-master_key_02                         = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-master_key_03                         = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-master_key_04                         = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-master_key_05                         = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-titlekek_source                       = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-key_area_key_application_source       = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-key_area_key_ocean_source             = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-key_area_key_system_source            = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-aes_kek_generation_source             = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-aes_key_generation_source             = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-header_kek_source                     = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-header_key_source                     = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
+To dump your `prod.keys` and `title.keys` please follow these following steps.
+1.	First off learn how to boot into RCM mode and inject payloads if you haven't already. This can be done [here](https://nh-server.github.io/switch-guide/).
+2.	Make sure you have an SD card with the latest release of [Atmosphere](https://github.com/Atmosphere-NX/Atmosphere/releases) inserted into your Nintendo Switch.
+3.	Download the latest release of [Lockpick_RCM](https://github.com/shchmue/Lockpick_RCM/releases).
+4.	Boot into RCM mode.
+5.	Inject the `Lockpick_RCM.bin` that you have downloaded at `Step 3.` using your preferred payload injector. We recommend [TegraRCMGUI](https://github.com/eliboa/TegraRcmGUI/releases) as it is easy to use and has a decent feature set.
+6.	Using the `Vol+/-` buttons to navigate and the `Power` button to select, select `Dump from SysNAND | Key generation: X` ("X" depends on your Nintendo Switch's firmware version)
+7.	The dumping process may take a while depending on how many titles you have installed.
+8.	After its completion press any button to return to the main menu of Lockpick_RCM.
+9.	Navigate to and select `Power off` if you have an SD card reader. Or you could Navigate and select `Reboot (RCM)` if you want to mount your SD card using `TegraRCMGUI > Tools > Memloader V3 > MMC - SD Card`.
+10.	You can find your keys in `sd:/switch/prod.keys` and `sd:/switch/title.keys` respectively.
+11. Copy these files and paste them in `RyuFS/system`.
+And you're done!
 
 ## Title keys
 
-Title keys are stored in the format `rights_id,key`.
+These are only used for games that are not dumped from cartridges but from games downloaded from the Nintendo eShop, these are also only used if the eShop dump does *not* have a `ticket`. If the game does have a ticket, Ryujinx will read the key directly from that ticket.
+
+Title keys are stored in the format `rights_id = key`.
 
 For example:
 
 ```
-01000000000100000000000000000003,XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-01000000000108000000000000000003,XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-01000000000108000000000000000004,XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+01000000000100000000000000000003 = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+01000000000108000000000000000003 = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+01000000000108000000000000000004 = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
-## Complete key list
-Below is a complete list of keys that are currently recognized.  
-\## represents a hexadecimal number between 00 and 1F  
-@@ represents a hexadecimal number between 00 and 03
+## Prod keys
 
-### Common keys
-
-```
-master_key_source
-keyblob_mac_key_source
-package2_key_source
-aes_kek_generation_source
-aes_key_generation_source
-key_area_key_application_source
-key_area_key_ocean_source
-key_area_key_system_source
-titlekek_source
-header_kek_source
-header_key_source
-sd_card_kek_source
-sd_card_nca_key_source
-sd_card_save_key_source
-retail_specific_aes_key_source
-per_console_key_source
-bis_kek_source
-bis_key_source_@@
-
-header_key
-xci_header_key
-eticket_rsa_kek
-
-master_key_##
-package1_key_##
-package2_key_##
-titlekek_##
-key_area_key_application_##
-key_area_key_ocean_##
-key_area_key_system_##
-keyblob_key_source_##
-keyblob_##
-```
-
-### Console-unique keys
-
-```
-secure_boot_key
-tsec_key
-device_key
-bis_key_@@
-
-keyblob_key_##
-keyblob_mac_key_##
-encrypted_keyblob_##
-
-sd_seed
-```
+These are typically used to decrypt system files and encrypted game files. These keys get changed in about every major system update, so make sure to keep your keys up-to-date if you want to play newer games!

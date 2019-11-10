@@ -41,7 +41,7 @@ The latest automatic build for Windows, macOS, and Linux can be found on the [Of
 
  - **Switch Keys**
 
-   Everything on the Switch is encrypted, so if you want to run anything other than homebrew, you have to dump encryption keys from your console. To get more information please take a look at our [Keys Documentation](KEYS.md) *(Outdated)*.
+   Everything on the Switch is encrypted, so if you want to run anything other than homebrew, you have to dump encryption keys from your console. To get more information please take a look at our [Keys Documentation](KEYS.md).
 
  - **FFmpeg Dependencies**
 
