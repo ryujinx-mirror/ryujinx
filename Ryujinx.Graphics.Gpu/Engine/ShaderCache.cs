@@ -117,7 +117,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             program = Translator.Translate(code, translationConfig);
 
-            _dumper.Dump(gpuVa, compute : true);
+            _dumper.Dump(code, compute : true, out string fullPath, out string codePath);
+
+            if (fullPath != null && codePath != null)
+            {
+                program.Prepend("// " + codePath);
+                program.Prepend("// " + fullPath);
+            }
 
             return program;
         }
@@ -144,8 +150,16 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 program = Translator.Translate(codeA, codeB, translationConfig);
 
-                _dumper.Dump(gpuVaA, compute: false);
-                _dumper.Dump(gpuVa,  compute: false);
+                _dumper.Dump(codeA, compute: false, out string fullPathA, out string codePathA);
+                _dumper.Dump(codeB, compute: false, out string fullPathB, out string codePathB);
+
+                if (fullPathA != null && fullPathB != null && codePathA != null && codePathB != null)
+                {
+                    program.Prepend("// " + codePathB);
+                    program.Prepend("// " + fullPathB);
+                    program.Prepend("// " + codePathA);
+                    program.Prepend("// " + fullPathA);
+                }
             }
             else
             {
@@ -153,7 +167,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 program = Translator.Translate(code, translationConfig);
 
-                _dumper.Dump(gpuVa, compute: false);
+                _dumper.Dump(code, compute: false, out string fullPath, out string codePath);
+
+                if (fullPath != null && codePath != null)
+                {
+                    program.Prepend("// " + codePath);
+                    program.Prepend("// " + fullPath);
+                }
             }
 
             if (program.Stage == ShaderStage.Geometry)

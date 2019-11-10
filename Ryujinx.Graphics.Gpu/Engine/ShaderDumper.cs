@@ -1,11 +1,11 @@
+using Ryujinx.Graphics.Shader.Translation;
+using System;
 using System.IO;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
     class ShaderDumper
     {
-        private const int ShaderHeaderSize = 0x50;
-
         private GpuContext _context;
 
         private string _runtimeDir;
@@ -21,67 +21,49 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _dumpIndex = 1;
         }
 
-        public void Dump(ulong gpuVa, bool compute)
+        public void Dump(Span<byte> code, bool compute, out string fullPath, out string codePath)
         {
             _dumpPath = GraphicsConfig.ShadersDumpPath;
 
             if (string.IsNullOrWhiteSpace(_dumpPath))
             {
+                fullPath = null;
+                codePath = null;
+
                 return;
             }
 
             string fileName = "Shader" + _dumpIndex.ToString("d4") + ".bin";
 
-            string fullPath = Path.Combine(FullDir(), fileName);
-            string codePath = Path.Combine(CodeDir(), fileName);
+            fullPath = Path.Combine(FullDir(), fileName);
+            codePath = Path.Combine(CodeDir(), fileName);
 
             _dumpIndex++;
 
-            ulong headerSize = compute ? 0UL : ShaderHeaderSize;
+            code = Translator.ExtractCode(code, compute, out int headerSize);
 
-            using (FileStream fullFile = File.Create(fullPath))
-            using (FileStream codeFile = File.Create(codePath))
+            using (MemoryStream stream = new MemoryStream(code.ToArray()))
             {
-                BinaryWriter fullWriter = new BinaryWriter(fullFile);
-                BinaryWriter codeWriter = new BinaryWriter(codeFile);
+                BinaryReader codeReader = new BinaryReader(stream);
 
-                for (ulong i = 0; i < headerSize; i += 4)
+                using (FileStream fullFile = File.Create(fullPath))
+                using (FileStream codeFile = File.Create(codePath))
                 {
-                    fullWriter.Write(_context.MemoryAccessor.ReadInt32(gpuVa + i));
-                }
+                    BinaryWriter fullWriter = new BinaryWriter(fullFile);
+                    BinaryWriter codeWriter = new BinaryWriter(codeFile);
 
-                ulong offset = 0;
+                    fullWriter.Write(codeReader.ReadBytes(headerSize));
 
-                ulong instruction = 0;
+                    byte[] temp = codeReader.ReadBytes(code.Length - headerSize);
 
-                // Dump until a NOP instruction is found.
-                while ((instruction >> 48 & 0xfff8) != 0x50b0)
-                {
-                    uint word0 = (uint)_context.MemoryAccessor.ReadInt32(gpuVa + headerSize + offset + 0);
-                    uint word1 = (uint)_context.MemoryAccessor.ReadInt32(gpuVa + headerSize + offset + 4);
+                    fullWriter.Write(temp);
+                    codeWriter.Write(temp);
 
-                    instruction = word0 | (ulong)word1 << 32;
-
-                    // Zero instructions (other kind of NOP) stop immediately,
-                    // this is to avoid two rows of zeroes.
-                    if (instruction == 0)
+                    // Align to meet nvdisasm requirements.
+                    while (codeFile.Length % 0x20 != 0)
                     {
-                        break;
+                        codeWriter.Write(0);
                     }
-
-                    fullWriter.Write(instruction);
-                    codeWriter.Write(instruction);
-
-                    offset += 8;
-                }
-
-                // Align to meet nvdisasm requirements.
-                while (offset % 0x20 != 0)
-                {
-                    fullWriter.Write(0);
-                    codeWriter.Write(0);
-
-                    offset += 4;
                 }
             }
         }
