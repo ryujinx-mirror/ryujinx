@@ -1,5 +1,6 @@
 using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
+using ARMeilleure.State;
 using ARMeilleure.Translation;
 using System;
 
@@ -32,6 +33,7 @@ namespace ARMeilleure.Instructions
             {
                 case 0b11_011_0000_0000_001: dlg = new _U64(NativeInterface.GetCtrEl0);    break;
                 case 0b11_011_0000_0000_111: dlg = new _U64(NativeInterface.GetDczidEl0);  break;
+                case 0b11_011_0100_0010_000: EmitGetNzcv(context);                         return;
                 case 0b11_011_0100_0100_000: dlg = new _U64(NativeInterface.GetFpcr);      break;
                 case 0b11_011_0100_0100_001: dlg = new _U64(NativeInterface.GetFpsr);      break;
                 case 0b11_011_1101_0000_010: dlg = new _U64(NativeInterface.GetTpidrEl0);  break;
@@ -53,6 +55,7 @@ namespace ARMeilleure.Instructions
 
             switch (GetPackedId(op))
             {
+                case 0b11_011_0100_0010_000: EmitSetNzcv(context);                             return;
                 case 0b11_011_0100_0100_000: dlg = new _Void_U64(NativeInterface.SetFpcr);     break;
                 case 0b11_011_0100_0100_001: dlg = new _Void_U64(NativeInterface.SetFpsr);     break;
                 case 0b11_011_1101_0000_010: dlg = new _Void_U64(NativeInterface.SetTpidrEl0); break;
@@ -109,6 +112,45 @@ namespace ARMeilleure.Instructions
             id |= op.Op0 << 14;
 
             return id;
+        }
+
+        private static void EmitGetNzcv(ArmEmitterContext context)
+        {
+            OpCodeSystem op = (OpCodeSystem)context.CurrOp;
+
+            Operand vSh = context.ShiftLeft(GetFlag(PState.VFlag), Const((int)PState.VFlag));
+            Operand cSh = context.ShiftLeft(GetFlag(PState.CFlag), Const((int)PState.CFlag));
+            Operand zSh = context.ShiftLeft(GetFlag(PState.ZFlag), Const((int)PState.ZFlag));
+            Operand nSh = context.ShiftLeft(GetFlag(PState.NFlag), Const((int)PState.NFlag));
+
+            Operand nzcvSh = context.BitwiseOr(context.BitwiseOr(nSh, zSh), context.BitwiseOr(cSh, vSh));
+
+            SetIntOrZR(context, op.Rt, nzcvSh);
+        }
+
+        private static void EmitSetNzcv(ArmEmitterContext context)
+        {
+            OpCodeSystem op = (OpCodeSystem)context.CurrOp;
+
+            Operand t = GetIntOrZR(context, op.Rt);
+                    t = context.ConvertI64ToI32(t);
+
+            Operand v = context.ShiftRightUI(t, Const((int)PState.VFlag));
+                    v = context.BitwiseAnd  (v, Const(1));
+
+            Operand c = context.ShiftRightUI(t, Const((int)PState.CFlag));
+                    c = context.BitwiseAnd  (c, Const(1));
+
+            Operand z = context.ShiftRightUI(t, Const((int)PState.ZFlag));
+                    z = context.BitwiseAnd  (z, Const(1));
+
+            Operand n = context.ShiftRightUI(t, Const((int)PState.NFlag));
+                    n = context.BitwiseAnd  (n, Const(1));
+
+            SetFlag(context, PState.VFlag, v);
+            SetFlag(context, PState.CFlag, c);
+            SetFlag(context, PState.ZFlag, z);
+            SetFlag(context, PState.NFlag, n);
         }
     }
 }
