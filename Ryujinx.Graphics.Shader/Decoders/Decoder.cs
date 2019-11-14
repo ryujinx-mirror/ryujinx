@@ -45,6 +45,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             GetBlock(0);
 
+            ulong maxAddress = (ulong)code.Length - headerSize;
+
             while (workQueue.TryDequeue(out Block currBlock))
             {
                 // Check if the current block is inside another block.
@@ -65,7 +67,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
 
                 // If we have a block after the current one, set the limit address.
-                ulong limitAddress = (ulong)code.Length - headerSize;
+                ulong limitAddress = maxAddress;
 
                 if (nBlkIndex != blocks.Count)
                 {
@@ -140,7 +142,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
 
                 // Do we have a block after the current one?
-                if (!IsExit(currBlock.GetLastOp()) && currBlock.BrIndir != null)
+                if (!IsExit(currBlock.GetLastOp()) && currBlock.BrIndir != null && currBlock.EndAddress < maxAddress)
                 {
                     bool targetVisited = visited.ContainsKey(currBlock.EndAddress);
 
