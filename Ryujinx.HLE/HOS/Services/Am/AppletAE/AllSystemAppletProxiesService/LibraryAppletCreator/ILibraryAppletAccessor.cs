@@ -1,19 +1,37 @@
 ﻿using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.HLE.HOS.Services.Am.AppletAE.Storage;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.LibraryAppletCreator
 {
     class ILibraryAppletAccessor : IpcService
     {
+        private IApplet _applet;
+
+        private AppletFifo<byte[]> _inData;
+        private AppletFifo<byte[]> _outData;
+
         private KEvent _stateChangedEvent;
 
-        public ILibraryAppletAccessor(Horizon system)
+        public ILibraryAppletAccessor(AppletId appletId, Horizon system)
         {
             _stateChangedEvent = new KEvent(system);
+
+            _applet  = AppletManager.Create(appletId, system);
+            _inData  = new AppletFifo<byte[]>();
+            _outData = new AppletFifo<byte[]>();
+            
+            _applet.AppletStateChanged += OnAppletStateChanged;
+            
+            Logger.PrintInfo(LogClass.ServiceAm, $"Applet '{appletId}' created.");
+        }
+
+        private void OnAppletStateChanged(object sender, EventArgs e)
+        {
+            _stateChangedEvent.ReadableEvent.Signal();
         }
 
         [Command(0)]
@@ -29,8 +47,6 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
 
-            Logger.PrintStub(LogClass.ServiceAm);
-
             return ResultCode.Success;
         }
 
@@ -38,25 +54,23 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // Start()
         public ResultCode Start(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAm);
-
-            return ResultCode.Success;
+            return (ResultCode)_applet.Start(_inData, _outData);
         }
 
         [Command(30)]
         // GetResult()
         public ResultCode GetResult(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAm);
-
-            return ResultCode.Success;
+            return (ResultCode)_applet.GetResult();
         }
 
         [Command(100)]
         // PushInData(object<nn::am::service::IStorage>)
         public ResultCode PushInData(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAm);
+            IStorage data = GetObject<IStorage>(context, 0);
+
+            _inData.Push(data.Data);
 
             return ResultCode.Success;
         }
@@ -65,8 +79,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // PopOutData() -> object<nn::am::service::IStorage>
         public ResultCode PopOutData(ServiceCtx context)
         {
-            MakeObject(context, new IStorage(StorageHelper.MakeLaunchParams()));
+            byte[] data = _outData.Pop();
 
+            MakeObject(context, new IStorage(data));
+            
             return ResultCode.Success;
         }
     }
