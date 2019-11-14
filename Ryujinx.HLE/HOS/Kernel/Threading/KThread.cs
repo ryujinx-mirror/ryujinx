@@ -162,6 +162,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             bool isAarch32 = (Owner.MmuFlags & 1) == 0;
 
+            Context.IsAarch32 = isAarch32;
+
             Context.SetX(0, argsPtr);
 
             if (isAarch32)

@@ -127,7 +127,7 @@ namespace Ryujinx.HLE.HOS
         {
             if (!metaData.Is64Bits)
             {
-                Logger.PrintWarning(LogClass.Loader, "32-bits application detected!");
+                Logger.PrintWarning(LogClass.Loader, "32-bits application detected.");
             }
 
             ulong argsStart = 0;
