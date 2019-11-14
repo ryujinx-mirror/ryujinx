@@ -43,9 +43,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 return block;
             }
 
-            ulong startAddress = headerSize;
-
-            GetBlock(startAddress);
+            GetBlock(0);
 
             while (workQueue.TryDequeue(out Block currBlock))
             {
@@ -67,7 +65,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
 
                 // If we have a block after the current one, set the limit address.
-                ulong limitAddress = (ulong)code.Length;
+                ulong limitAddress = (ulong)code.Length - headerSize;
 
                 if (nBlkIndex != blocks.Count)
                 {
@@ -85,13 +83,15 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     }
                 }
 
-                FillBlock(code, currBlock, limitAddress, startAddress);
+                FillBlock(code, currBlock, limitAddress, headerSize);
 
                 if (currBlock.OpCodes.Count != 0)
                 {
-                    foreach (OpCodeSsy ssyOp in currBlock.SsyOpCodes)
+                    // We should have blocks for all possible branch targets,
+                    // including those from SSY/PBK instructions.
+                    foreach (OpCodePush pushOp in currBlock.PushOpCodes)
                     {
-                        GetBlock(ssyOp.GetAbsoluteAddress());
+                        GetBlock(pushOp.GetAbsoluteAddress());
                     }
 
                     // Set child blocks. "Branch" is the block the branch instruction
@@ -100,9 +100,25 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     // or end of program, Next is null.
                     OpCode lastOp = currBlock.GetLastOp();
 
-                    if (lastOp is OpCodeBranch op)
+                    if (lastOp is OpCodeBranch opBr)
                     {
-                        currBlock.Branch = GetBlock(op.GetAbsoluteAddress());
+                        currBlock.Branch = GetBlock(opBr.GetAbsoluteAddress());
+                    }
+                    else if (lastOp is OpCodeBranchIndir opBrIndir)
+                    {
+                        // An indirect branch could go anywhere, we don't know the target.
+                        // Those instructions are usually used on a switch to jump table
+                        // compiler optimization, and in those cases the possible targets
+                        // seems to be always right after the BRX itself. We can assume
+                        // that the possible targets are all the blocks in-between the
+                        // instruction right after the BRX, and the common target that
+                        // all the "cases" should eventually jump to, acting as the
+                        // switch break.
+                        Block firstTarget = GetBlock(currBlock.EndAddress);
+
+                        firstTarget.BrIndir = opBrIndir;
+
+                        opBrIndir.PossibleTargets.Add(firstTarget);
                     }
 
                     if (!IsUnconditionalBranch(lastOp))
@@ -122,13 +138,28 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 {
                     blocks.Add(currBlock);
                 }
+
+                // Do we have a block after the current one?
+                if (!IsExit(currBlock.GetLastOp()) && currBlock.BrIndir != null)
+                {
+                    bool targetVisited = visited.ContainsKey(currBlock.EndAddress);
+
+                    Block possibleTarget = GetBlock(currBlock.EndAddress);
+
+                    currBlock.BrIndir.PossibleTargets.Add(possibleTarget);
+
+                    if (!targetVisited)
+                    {
+                        possibleTarget.BrIndir = currBlock.BrIndir;
+                    }
+                }
             }
 
-            foreach (Block ssyBlock in blocks.Where(x => x.SsyOpCodes.Count != 0))
+            foreach (Block block in blocks.Where(x => x.PushOpCodes.Count != 0))
             {
-                for (int ssyIndex = 0; ssyIndex < ssyBlock.SsyOpCodes.Count; ssyIndex++)
+                for (int pushOpIndex = 0; pushOpIndex < block.PushOpCodes.Count; pushOpIndex++)
                 {
-                    PropagateSsy(visited, ssyBlock, ssyIndex);
+                    PropagatePushOp(visited, block, pushOpIndex);
                 }
             }
 
@@ -180,21 +211,21 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             do
             {
-                if (address >= limitAddress)
+                if (address + 7 >= limitAddress)
                 {
                     break;
                 }
 
                 // Ignore scheduling instructions, which are written every 32 bytes.
-                if (((address - startAddress) & 0x1f) == 0)
+                if ((address & 0x1f) == 0)
                 {
                     address += 8;
 
                     continue;
                 }
 
-                uint word0 = BinaryPrimitives.ReadUInt32LittleEndian(code.Slice((int)address));
-                uint word1 = BinaryPrimitives.ReadUInt32LittleEndian(code.Slice((int)address + 4));
+                uint word0 = BinaryPrimitives.ReadUInt32LittleEndian(code.Slice((int)(startAddress + address)));
+                uint word1 = BinaryPrimitives.ReadUInt32LittleEndian(code.Slice((int)(startAddress + address + 4)));
 
                 ulong opAddress = address;
 
@@ -221,7 +252,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             block.EndAddress = address;
 
-            block.UpdateSsyOpCodes();
+            block.UpdatePushOps();
         }
 
         private static bool IsUnconditionalBranch(OpCode opCode)
@@ -242,8 +273,14 @@ namespace Ryujinx.Graphics.Shader.Decoders
         private static bool IsBranch(OpCode opCode)
         {
             return (opCode is OpCodeBranch opBranch && !opBranch.PushTarget) ||
-                    opCode is OpCodeSync ||
+                    opCode is OpCodeBranchIndir ||
+                    opCode is OpCodeBranchPop ||
                     opCode is OpCodeExit;
+        }
+
+        private static bool IsExit(OpCode opCode)
+        {
+            return opCode is OpCodeExit;
         }
 
         private static OpCode MakeOpCode(Type type, InstEmitter emitter, ulong address, long opCode)
@@ -282,8 +319,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
             private enum RestoreType
             {
                 None,
-                PopSsy,
-                PushSync
+                PopPushOp,
+                PushBranchOp
             }
 
             private RestoreType _restoreType;
@@ -299,45 +336,45 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 _restoreValue = 0;
             }
 
-            public PathBlockState(int oldSsyStackSize)
+            public PathBlockState(int oldStackSize)
             {
                 Block         = null;
-                _restoreType  = RestoreType.PopSsy;
-                _restoreValue = (ulong)oldSsyStackSize;
+                _restoreType  = RestoreType.PopPushOp;
+                _restoreValue = (ulong)oldStackSize;
             }
 
             public PathBlockState(ulong syncAddress)
             {
                 Block         = null;
-                _restoreType  = RestoreType.PushSync;
+                _restoreType  = RestoreType.PushBranchOp;
                 _restoreValue = syncAddress;
             }
 
-            public void RestoreStackState(Stack<ulong> ssyStack)
+            public void RestoreStackState(Stack<ulong> branchStack)
             {
-                if (_restoreType == RestoreType.PushSync)
+                if (_restoreType == RestoreType.PushBranchOp)
                 {
-                    ssyStack.Push(_restoreValue);
+                    branchStack.Push(_restoreValue);
                 }
-                else if (_restoreType == RestoreType.PopSsy)
+                else if (_restoreType == RestoreType.PopPushOp)
                 {
-                    while (ssyStack.Count > (uint)_restoreValue)
+                    while (branchStack.Count > (uint)_restoreValue)
                     {
-                        ssyStack.Pop();
+                        branchStack.Pop();
                     }
                 }
             }
         }
 
-        private static void PropagateSsy(Dictionary<ulong, Block> blocks, Block ssyBlock, int ssyIndex)
+        private static void PropagatePushOp(Dictionary<ulong, Block> blocks, Block currBlock, int pushOpIndex)
         {
-            OpCodeSsy ssyOp = ssyBlock.SsyOpCodes[ssyIndex];
+            OpCodePush pushOp = currBlock.PushOpCodes[pushOpIndex];
 
             Stack<PathBlockState> workQueue = new Stack<PathBlockState>();
 
             HashSet<Block> visited = new HashSet<Block>();
 
-            Stack<ulong> ssyStack = new Stack<ulong>();
+            Stack<ulong> branchStack = new Stack<ulong>();
 
             void Push(PathBlockState pbs)
             {
@@ -347,32 +384,32 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
             }
 
-            Push(new PathBlockState(ssyBlock));
+            Push(new PathBlockState(currBlock));
 
             while (workQueue.TryPop(out PathBlockState pbs))
             {
                 if (pbs.ReturningFromVisit)
                 {
-                    pbs.RestoreStackState(ssyStack);
+                    pbs.RestoreStackState(branchStack);
 
                     continue;
                 }
 
                 Block current = pbs.Block;
 
-                int ssyOpCodesCount = current.SsyOpCodes.Count;
+                int pushOpsCount = current.PushOpCodes.Count;
 
-                if (ssyOpCodesCount != 0)
+                if (pushOpsCount != 0)
                 {
-                    Push(new PathBlockState(ssyStack.Count));
+                    Push(new PathBlockState(branchStack.Count));
 
-                    for (int index = ssyIndex; index < ssyOpCodesCount; index++)
+                    for (int index = pushOpIndex; index < pushOpsCount; index++)
                     {
-                        ssyStack.Push(current.SsyOpCodes[index].GetAbsoluteAddress());
+                        branchStack.Push(current.PushOpCodes[index].GetAbsoluteAddress());
                     }
                 }
 
-                ssyIndex = 0;
+                pushOpIndex = 0;
 
                 if (current.Next != null)
                 {
@@ -383,17 +420,24 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 {
                     Push(new PathBlockState(current.Branch));
                 }
-                else if (current.GetLastOp() is OpCodeSync op)
+                else if (current.GetLastOp() is OpCodeBranchIndir brIndir)
                 {
-                    ulong syncAddress = ssyStack.Pop();
-
-                    if (ssyStack.Count == 0)
+                    foreach (Block possibleTarget in brIndir.PossibleTargets)
                     {
-                        ssyStack.Push(syncAddress);
+                        Push(new PathBlockState(possibleTarget));
+                    }
+                }
+                else if (current.GetLastOp() is OpCodeBranchPop op)
+                {
+                    ulong syncAddress = branchStack.Pop();
 
-                        op.Targets.Add(ssyOp, op.Targets.Count);
+                    if (branchStack.Count == 0)
+                    {
+                        branchStack.Push(syncAddress);
 
-                        ssyOp.Syncs.TryAdd(op, Local());
+                        op.Targets.Add(pushOp, op.Targets.Count);
+
+                        pushOp.PopOps.TryAdd(op, Local());
                     }
                     else
                     {

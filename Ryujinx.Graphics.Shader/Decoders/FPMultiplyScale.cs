@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    enum FmulScale
+    enum FPMultiplyScale
     {
         None      = 0,
         Divide2   = 1,

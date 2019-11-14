@@ -4,7 +4,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         RoundingMode RoundingMode { get; }
 
-        FmulScale Scale { get; }
+        FPMultiplyScale Scale { get; }
 
         bool FlushToZero { get; }
         bool AbsoluteA   { get; }

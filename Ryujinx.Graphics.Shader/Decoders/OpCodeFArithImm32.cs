@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         public RoundingMode RoundingMode => RoundingMode.ToNearest;
 
-        public FmulScale Scale => FmulScale.None;
+        public FPMultiplyScale Scale => FPMultiplyScale.None;
 
         public bool FlushToZero { get; }
         public bool AbsoluteA   { get; }

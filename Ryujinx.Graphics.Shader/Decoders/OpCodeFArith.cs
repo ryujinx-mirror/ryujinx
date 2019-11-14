@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
     {
         public RoundingMode RoundingMode { get; }
 
-        public FmulScale Scale { get; }
+        public FPMultiplyScale Scale { get; }
 
         public bool FlushToZero { get; }
         public bool AbsoluteA   { get; }
@@ -15,7 +15,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
         {
             RoundingMode = (RoundingMode)opCode.Extract(39, 2);
 
-            Scale = (FmulScale)opCode.Extract(41, 3);
+            Scale = (FPMultiplyScale)opCode.Extract(41, 3);
 
             FlushToZero = opCode.Extract(44);
             AbsoluteA   = opCode.Extract(46);

@@ -46,7 +46,12 @@ namespace Ryujinx.Graphics.Shader.Translation
             bool compute   = (translationConfig.Flags & TranslationFlags.Compute)   != 0;
             bool debugMode = (translationConfig.Flags & TranslationFlags.DebugMode) != 0;
 
-            Operation[] ops = DecodeShader(code, compute, debugMode, out ShaderHeader header);
+            Operation[] ops = DecodeShader(
+                code,
+                compute,
+                debugMode,
+                out ShaderHeader header,
+                out int size);
 
             ShaderStage stage;
 
@@ -76,15 +81,15 @@ namespace Ryujinx.Graphics.Shader.Translation
                 maxOutputVertexCount,
                 outputTopology);
 
-            return Translate(ops, config);
+            return Translate(ops, config, size);
         }
 
         public static ShaderProgram Translate(Span<byte> vpACode, Span<byte> vpBCode, TranslationConfig translationConfig)
         {
             bool debugMode = (translationConfig.Flags & TranslationFlags.DebugMode) != 0;
 
-            Operation[] vpAOps = DecodeShader(vpACode, compute: false, debugMode, out _);
-            Operation[] vpBOps = DecodeShader(vpBCode, compute: false, debugMode, out ShaderHeader header);
+            Operation[] vpAOps = DecodeShader(vpACode, compute: false, debugMode, out _, out _);
+            Operation[] vpBOps = DecodeShader(vpBCode, compute: false, debugMode, out ShaderHeader header, out int sizeB);
 
             ShaderConfig config = new ShaderConfig(
                 header.Stage,
@@ -93,10 +98,10 @@ namespace Ryujinx.Graphics.Shader.Translation
                 header.MaxOutputVertexCount,
                 header.OutputTopology);
 
-            return Translate(Combine(vpAOps, vpBOps), config);
+            return Translate(Combine(vpAOps, vpBOps), config, sizeB);
         }
 
-        private static ShaderProgram Translate(Operation[] ops, ShaderConfig config)
+        private static ShaderProgram Translate(Operation[] ops, ShaderConfig config, int size)
         {
             BasicBlock[] irBlocks = ControlFlowGraph.MakeCfg(ops);
 
@@ -122,16 +127,19 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             string glslCode = program.Code;
 
-            return new ShaderProgram(spInfo, config.Stage, glslCode);
+            return new ShaderProgram(spInfo, config.Stage, glslCode, size);
         }
 
-        private static Operation[] DecodeShader(Span<byte> code, bool compute, bool debugMode, out ShaderHeader header)
+        private static Operation[] DecodeShader(
+            Span<byte>       code,
+            bool             compute,
+            bool             debugMode,
+            out ShaderHeader header,
+            out int          size)
         {
             Block[] cfg;
 
             EmitterContext context;
-
-            ulong headerSize;
 
             if (compute)
             {
@@ -140,8 +148,6 @@ namespace Ryujinx.Graphics.Shader.Translation
                 cfg = Decoder.Decode(code, 0);
 
                 context = new EmitterContext(ShaderStage.Compute, header);
-
-                headerSize = 0;
             }
             else
             {
@@ -150,13 +156,18 @@ namespace Ryujinx.Graphics.Shader.Translation
                 cfg = Decoder.Decode(code, HeaderSize);
 
                 context = new EmitterContext(header.Stage, header);
-
-                headerSize = HeaderSize;
             }
+
+            ulong maxEndAddress = 0;
 
             for (int blkIndex = 0; blkIndex < cfg.Length; blkIndex++)
             {
                 Block block = cfg[blkIndex];
+
+                if (maxEndAddress < block.EndAddress)
+                {
+                    maxEndAddress = block.EndAddress;
+                }
 
                 context.CurrBlock = block;
 
@@ -179,7 +190,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                             instName = "???";
                         }
 
-                        string dbgComment = $"0x{(op.Address - headerSize):X6}: 0x{op.RawOpCode:X16} {instName}";
+                        string dbgComment = $"0x{op.Address:X6}: 0x{op.RawOpCode:X16} {instName}";
 
                         context.Add(new CommentNode(dbgComment));
                     }
@@ -193,13 +204,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     bool skipPredicateCheck = op.Emitter == InstEmit.Bra;
 
-                    if (op is OpCodeSync opSync)
+                    if (op is OpCodeBranchPop opBranchPop)
                     {
                         // If the instruction is a SYNC instruction with only one
                         // possible target address, then the instruction is basically
                         // just a simple branch, we can generate code similar to branch
                         // instructions, with the condition check on the branch itself.
-                        skipPredicateCheck |= opSync.Targets.Count < 2;
+                        skipPredicateCheck |= opBranchPop.Targets.Count < 2;
                     }
 
                     if (!(op.Predicate.IsPT || skipPredicateCheck))
@@ -242,6 +253,8 @@ namespace Ryujinx.Graphics.Shader.Translation
                     }
                 }
             }
+
+            size = (int)maxEndAddress + (compute ? 0 : HeaderSize);
 
             return context.GetOperations();
         }

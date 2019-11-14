@@ -11,15 +11,17 @@ namespace Ryujinx.Graphics.Shader.Decoders
         public Block Next   { get; set; }
         public Block Branch { get; set; }
 
-        public List<OpCode>    OpCodes    { get; }
-        public List<OpCodeSsy> SsyOpCodes { get; }
+        public OpCodeBranchIndir BrIndir { get; set; }
+
+        public List<OpCode>    OpCodes     { get; }
+        public List<OpCodePush> PushOpCodes { get; }
 
         public Block(ulong address)
         {
             Address = address;
 
-            OpCodes    = new List<OpCode>();
-            SsyOpCodes = new List<OpCodeSsy>();
+            OpCodes     = new List<OpCode>();
+            PushOpCodes = new List<OpCodePush>();
         }
 
         public void Split(Block rightBlock)
@@ -45,7 +47,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             rightBlock.OpCodes.AddRange(OpCodes.GetRange(splitIndex, splitCount));
 
-            rightBlock.UpdateSsyOpCodes();
+            rightBlock.UpdatePushOps();
 
             EndAddress = rightBlock.Address;
 
@@ -54,7 +56,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             OpCodes.RemoveRange(splitIndex, splitCount);
 
-            UpdateSsyOpCodes();
+            UpdatePushOps();
         }
 
         private static int BinarySearch(List<OpCode> opCodes, ulong address)
@@ -99,18 +101,18 @@ namespace Ryujinx.Graphics.Shader.Decoders
             return null;
         }
 
-        public void UpdateSsyOpCodes()
+        public void UpdatePushOps()
         {
-            SsyOpCodes.Clear();
+            PushOpCodes.Clear();
 
             for (int index = 0; index < OpCodes.Count; index++)
             {
-                if (!(OpCodes[index] is OpCodeSsy op))
+                if (!(OpCodes[index] is OpCodePush op))
                 {
                     continue;
                 }
 
-                SsyOpCodes.Add(op);
+                PushOpCodes.Add(op);
             }
         }
     }

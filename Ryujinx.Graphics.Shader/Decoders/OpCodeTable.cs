@@ -41,7 +41,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("0101001111110x", InstEmit.Bfi,     typeof(OpCodeAluRegCbuf));
             Set("0101101111110x", InstEmit.Bfi,     typeof(OpCodeAluReg));
             Set("111000100100xx", InstEmit.Bra,     typeof(OpCodeBranch));
-            Set("111000110100xx", InstEmit.Brk,     typeof(OpCodeSync));
+            Set("111000110100xx", InstEmit.Brk,     typeof(OpCodeBranchPop));
+            Set("111000100101xx", InstEmit.Brx,     typeof(OpCodeBranchIndir));
             Set("0101000010100x", InstEmit.Csetp,   typeof(OpCodePsetp));
             Set("111000110000xx", InstEmit.Exit,    typeof(OpCodeExit));
             Set("0100110010101x", InstEmit.F2F,     typeof(OpCodeFArithCbuf));
@@ -137,7 +138,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("0101110010011x", InstEmit.Mov,     typeof(OpCodeAluReg));
             Set("0101000010000x", InstEmit.Mufu,    typeof(OpCodeFArith));
             Set("1111101111100x", InstEmit.Out,     typeof(OpCode));
-            Set("111000101010xx", InstEmit.Pbk,     typeof(OpCodeSsy));
+            Set("111000101010xx", InstEmit.Pbk,     typeof(OpCodePush));
             Set("0100110000001x", InstEmit.Popc,    typeof(OpCodeAluCbuf));
             Set("0011100x00001x", InstEmit.Popc,    typeof(OpCodeAluImm));
             Set("0101110000001x", InstEmit.Popc,    typeof(OpCodeAluReg));
@@ -157,12 +158,12 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("0100110000101x", InstEmit.Shr,     typeof(OpCodeAluCbuf));
             Set("0011100x00101x", InstEmit.Shr,     typeof(OpCodeAluImm));
             Set("0101110000101x", InstEmit.Shr,     typeof(OpCodeAluReg));
-            Set("111000101001xx", InstEmit.Ssy,     typeof(OpCodeSsy));
+            Set("111000101001xx", InstEmit.Ssy,     typeof(OpCodePush));
             Set("1110111101010x", InstEmit.St,      typeof(OpCodeMemory));
             Set("1110111011011x", InstEmit.Stg,     typeof(OpCodeMemory));
             Set("1110111101011x", InstEmit.Sts,     typeof(OpCodeMemory));
             Set("11101011001xxx", InstEmit.Sust,    typeof(OpCodeImage));
-            Set("1111000011111x", InstEmit.Sync,    typeof(OpCodeSync));
+            Set("1111000011111x", InstEmit.Sync,    typeof(OpCodeBranchPop));
             Set("110000xxxx111x", InstEmit.Tex,     typeof(OpCodeTex));
             Set("1101111010111x", InstEmit.TexB,    typeof(OpCodeTexB));
             Set("1101x00xxxxxxx", InstEmit.Texs,    typeof(OpCodeTexs));

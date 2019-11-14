@@ -4,13 +4,13 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    class OpCodeSsy : OpCodeBranch
+    class OpCodePush : OpCodeBranch
     {
-        public Dictionary<OpCodeSync, Operand> Syncs { get; }
+        public Dictionary<OpCodeBranchPop, Operand> PopOps { get; }
 
-        public OpCodeSsy(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
+        public OpCodePush(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
-            Syncs = new Dictionary<OpCodeSync, Operand>();
+            PopOps = new Dictionary<OpCodeBranchPop, Operand>();
 
             Predicate = new Register(RegisterConsts.PredicateTrueIndex, RegisterType.Predicate);
 

@@ -20,6 +20,36 @@ namespace Ryujinx.Graphics.Shader.Instructions
             EmitBrkOrSync(context);
         }
 
+        public static void Brx(EmitterContext context)
+        {
+            OpCodeBranchIndir op = (OpCodeBranchIndir)context.CurrOp;
+
+            int offset = (int)op.Address + 8 + op.Offset;
+
+            Operand address = context.IAdd(Register(op.Ra), Const(offset));
+
+            // Sorting the target addresses in descending order improves the code,
+            // since it will always check the most distant targets first, then the
+            // near ones. This can be easily transformed into if/else statements.
+            IOrderedEnumerable<Block> sortedTargets = op.PossibleTargets.OrderByDescending(x => x.Address);
+
+            Block lastTarget = sortedTargets.LastOrDefault();
+
+            foreach (Block possibleTarget in sortedTargets)
+            {
+                Operand label = context.GetLabel(possibleTarget.Address);
+
+                if (possibleTarget != lastTarget)
+                {
+                    context.BranchIfTrue(label, context.ICompareEqual(address, Const((int)possibleTarget.Address)));
+                }
+                else
+                {
+                    context.Branch(label);
+                }
+            }
+        }
+
         public static void Exit(EmitterContext context)
         {
             OpCodeExit op = (OpCodeExit)context.CurrOp;
@@ -54,45 +84,45 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         private static void EmitPbkOrSsy(EmitterContext context)
         {
-            OpCodeSsy op = (OpCodeSsy)context.CurrOp;
+            OpCodePush op = (OpCodePush)context.CurrOp;
 
-            foreach (KeyValuePair<OpCodeSync, Operand> kv in op.Syncs)
+            foreach (KeyValuePair<OpCodeBranchPop, Operand> kv in op.PopOps)
             {
-                OpCodeSync opSync = kv.Key;
+                OpCodeBranchPop opSync = kv.Key;
 
                 Operand local = kv.Value;
 
-                int ssyIndex = opSync.Targets[op];
+                int pushOpIndex = opSync.Targets[op];
 
-                context.Copy(local, Const(ssyIndex));
+                context.Copy(local, Const(pushOpIndex));
             }
         }
 
         private static void EmitBrkOrSync(EmitterContext context)
         {
-            OpCodeSync op = (OpCodeSync)context.CurrOp;
+            OpCodeBranchPop op = (OpCodeBranchPop)context.CurrOp;
 
             if (op.Targets.Count == 1)
             {
-                // If we have only one target, then the SSY is basically
+                // If we have only one target, then the SSY/PBK is basically
                 // a branch, we can produce better codegen for this case.
-                OpCodeSsy opSsy = op.Targets.Keys.First();
+                OpCodePush pushOp = op.Targets.Keys.First();
 
-                EmitBranch(context, opSsy.GetAbsoluteAddress());
+                EmitBranch(context, pushOp.GetAbsoluteAddress());
             }
             else
             {
-                foreach (KeyValuePair<OpCodeSsy, int> kv in op.Targets)
+                foreach (KeyValuePair<OpCodePush, int> kv in op.Targets)
                 {
-                    OpCodeSsy opSsy = kv.Key;
+                    OpCodePush pushOp = kv.Key;
 
-                    Operand label = context.GetLabel(opSsy.GetAbsoluteAddress());
+                    Operand label = context.GetLabel(pushOp.GetAbsoluteAddress());
 
-                    Operand local = opSsy.Syncs[op];
+                    Operand local = pushOp.PopOps[op];
 
-                    int ssyIndex = kv.Value;
+                    int pushOpIndex = kv.Value;
 
-                    context.BranchIfTrue(label, context.ICompareEqual(local, Const(ssyIndex)));
+                    context.BranchIfTrue(label, context.ICompareEqual(local, Const(pushOpIndex)));
                 }
             }
         }

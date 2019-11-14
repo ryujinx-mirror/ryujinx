@@ -97,14 +97,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             switch (op.Scale)
             {
-                case FmulScale.None: break;
+                case FPMultiplyScale.None: break;
 
-                case FmulScale.Divide2:   srcA = context.FPDivide  (srcA, ConstF(2)); break;
-                case FmulScale.Divide4:   srcA = context.FPDivide  (srcA, ConstF(4)); break;
-                case FmulScale.Divide8:   srcA = context.FPDivide  (srcA, ConstF(8)); break;
-                case FmulScale.Multiply2: srcA = context.FPMultiply(srcA, ConstF(2)); break;
-                case FmulScale.Multiply4: srcA = context.FPMultiply(srcA, ConstF(4)); break;
-                case FmulScale.Multiply8: srcA = context.FPMultiply(srcA, ConstF(8)); break;
+                case FPMultiplyScale.Divide2:   srcA = context.FPDivide  (srcA, ConstF(2)); break;
+                case FPMultiplyScale.Divide4:   srcA = context.FPDivide  (srcA, ConstF(4)); break;
+                case FPMultiplyScale.Divide8:   srcA = context.FPDivide  (srcA, ConstF(8)); break;
+                case FPMultiplyScale.Multiply2: srcA = context.FPMultiply(srcA, ConstF(2)); break;
+                case FPMultiplyScale.Multiply4: srcA = context.FPMultiply(srcA, ConstF(4)); break;
+                case FPMultiplyScale.Multiply8: srcA = context.FPMultiply(srcA, ConstF(8)); break;
 
                 default: break; //TODO: Warning.
             }
