@@ -1,5 +1,6 @@
 using Ryujinx.Graphics.GAL.Texture;
 using Ryujinx.Graphics.Gpu.Image;
+using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 using System;
@@ -25,7 +26,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 dispatchParams.UnpackBlockSizeY(),
                 dispatchParams.UnpackBlockSizeZ());
 
-            _context.Renderer.Pipeline.BindProgram(cs.Interface);
+            _context.Renderer.Pipeline.BindProgram(cs.HostProgram);
 
             var samplerPool = _context.State.Get<PoolState>(MethodOffset.SamplerPoolState);
 
@@ -37,7 +38,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             _textureManager.SetComputeTextureBufferIndex(_context.State.Get<int>(MethodOffset.TextureBufferIndex));
 
-            ShaderProgramInfo info = cs.Shader.Info;
+            ShaderProgramInfo info = cs.Shader.Program.Info;
 
             var textureBindings = new TextureBindingInfo[info.Textures.Count];
 

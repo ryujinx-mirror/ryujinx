@@ -2,7 +2,7 @@ using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.IO;
 
-namespace Ryujinx.Graphics.Gpu.Engine
+namespace Ryujinx.Graphics.Gpu.Shader
 {
     class ShaderDumper
     {

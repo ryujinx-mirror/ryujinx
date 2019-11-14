@@ -5,6 +5,7 @@ using Ryujinx.Graphics.GAL.InputAssembler;
 using Ryujinx.Graphics.GAL.Texture;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.Memory;
+using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 using System;
@@ -609,11 +610,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             GraphicsShader gs = _shaderCache.GetGraphicsShader(addresses);
 
-            _vsUsesInstanceId = gs.Shader[0].Info.UsesInstanceId;
+            _vsUsesInstanceId = gs.Shader[0].Program.Info.UsesInstanceId;
 
             for (int stage = 0; stage < Constants.TotalShaderStages; stage++)
             {
-                ShaderProgramInfo info = gs.Shader[stage]?.Info;
+                ShaderProgramInfo info = gs.Shader[stage].Program?.Info;
 
                 _currentProgramInfo[stage] = info;
 
@@ -665,7 +666,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 _bufferManager.SetGraphicsUniformBufferEnableMask(stage, ubEnableMask);
             }
 
-            _context.Renderer.Pipeline.BindProgram(gs.Interface);
+            _context.Renderer.Pipeline.BindProgram(gs.HostProgram);
         }
 
         private static Target GetTarget(SamplerType type)
