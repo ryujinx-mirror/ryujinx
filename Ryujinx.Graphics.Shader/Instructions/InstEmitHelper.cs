@@ -56,7 +56,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 // TODO.
             }
 
-            throw new ArgumentException($"Invalid floating point type \"{floatType}\".");
+            // TODO: Warn about invalid floating point type.
+
+            return Const(0);
         }
 
         public static Operand GetSrcB(EmitterContext context)

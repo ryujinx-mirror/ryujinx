@@ -28,6 +28,13 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             Block[] cfg = Decoder.Decode(code, (ulong)headerSize);
 
+            if (cfg == null)
+            {
+                // TODO: Error.
+
+                return code;
+            }
+
             ulong endAddress = 0;
 
             foreach (Block block in cfg)
@@ -163,6 +170,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             if (cfg == null)
             {
+                // TODO: Error.
+
                 size = 0;
 
                 return new Operation[0];

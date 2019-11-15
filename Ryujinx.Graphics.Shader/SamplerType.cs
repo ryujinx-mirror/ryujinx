@@ -5,6 +5,7 @@ namespace Ryujinx.Graphics.Shader
     [Flags]
     public enum SamplerType
     {
+        None = 0,
         Texture1D,
         TextureBuffer,
         Texture2D,
@@ -32,7 +33,7 @@ namespace Ryujinx.Graphics.Shader
                 case SamplerType.TextureCube:   return 3;
             }
 
-            throw new ArgumentException($"Invalid texture type \"{type}\".");
+            throw new ArgumentException($"Invalid sampler type \"{type}\".");
         }
     }
 }

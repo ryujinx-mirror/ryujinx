@@ -14,6 +14,15 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             OpCodeImage op = (OpCodeImage)context.CurrOp;
 
+            SamplerType type = ConvertSamplerType(op.Dimensions);
+
+            if (type == SamplerType.None)
+            {
+                // TODO: Error, encoding is invalid.
+
+                return;
+            }
+
             int raIndex = op.Ra.Index;
             int rbIndex = op.Rb.Index;
 
@@ -48,8 +57,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 sourcesList.Add(context.Copy(Register(op.Rc)));
             }
-
-            SamplerType type = GetSamplerType(op.Dimensions);
 
             int coordsCount = type.GetDimensions();
 
@@ -169,8 +176,16 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (op is OpCodeTexs texsOp)
             {
-                type  = GetSamplerType (texsOp.Target);
-                flags = GetTextureFlags(texsOp.Target);
+                type = ConvertSamplerType(texsOp.Target);
+
+                if (type == SamplerType.None)
+                {
+                    // TODO: Error, encoding is invalid.
+
+                    return;
+                }
+
+                flags = ConvertTextureFlags(texsOp.Target);
 
                 if ((type & SamplerType.Array) != 0)
                 {
@@ -239,8 +254,16 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else if (op is OpCodeTlds tldsOp)
             {
-                type  = GetSamplerType (tldsOp.Target);
-                flags = GetTextureFlags(tldsOp.Target) | TextureFlags.IntCoords;
+                type = ConvertSamplerType (tldsOp.Target);
+
+                if (type == SamplerType.None)
+                {
+                    // TODO: Error, encoding is invalid.
+
+                    return;
+                }
+
+                flags = ConvertTextureFlags(tldsOp.Target) | TextureFlags.IntCoords;
 
                 switch (tldsOp.Target)
                 {
@@ -428,7 +451,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             List<Operand> sourcesList = new List<Operand>();
 
-            SamplerType type = GetSamplerType(op.Dimensions);
+            SamplerType type = ConvertSamplerType(op.Dimensions);
 
             TextureFlags flags = TextureFlags.Gather;
 
@@ -553,7 +576,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 sourcesList.Add(Ra());
             }
 
-            SamplerType type = GetSamplerType(op.Dimensions);
+            SamplerType type = ConvertSamplerType(op.Dimensions);
 
             int coordsCount = type.GetDimensions();
 
@@ -752,7 +775,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 sourcesList.Add(Rb());
             }
 
-            SamplerType type = GetSamplerType(op.Dimensions);
+            SamplerType type = ConvertSamplerType(op.Dimensions);
 
             int coordsCount = type.GetDimensions();
 
@@ -851,7 +874,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
         }
 
-        private static SamplerType GetSamplerType(ImageDimensions target)
+        private static SamplerType ConvertSamplerType(ImageDimensions target)
         {
             switch (target)
             {
@@ -874,12 +897,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     return SamplerType.Texture3D;
             }
 
-            // TODO: Error.
-
-            return SamplerType.Texture2D;
+            return SamplerType.None;
         }
 
-        private static SamplerType GetSamplerType(TextureDimensions dimensions)
+        private static SamplerType ConvertSamplerType(TextureDimensions dimensions)
         {
             switch (dimensions)
             {
@@ -892,7 +913,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             throw new ArgumentException($"Invalid texture dimensions \"{dimensions}\".");
         }
 
-        private static SamplerType GetSamplerType(Decoders.TextureTarget type)
+        private static SamplerType ConvertSamplerType(Decoders.TextureTarget type)
         {
             switch (type)
             {
@@ -925,12 +946,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     return SamplerType.TextureCube;
             }
 
-            // TODO: Error.
-
-            return SamplerType.Texture2D;
+            return SamplerType.None;
         }
 
-        private static SamplerType GetSamplerType(TexelLoadTarget type)
+        private static SamplerType ConvertSamplerType(TexelLoadTarget type)
         {
             switch (type)
             {
@@ -954,12 +973,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     return SamplerType.Texture2D | SamplerType.Array;
             }
 
-            // TODO: Error.
-
-            return SamplerType.Texture2D;
+            return SamplerType.None;
         }
 
-        private static TextureFlags GetTextureFlags(Decoders.TextureTarget type)
+        private static TextureFlags ConvertTextureFlags(Decoders.TextureTarget type)
         {
             switch (type)
             {
@@ -982,12 +999,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     return TextureFlags.None;
             }
 
-            // TODO: Error.
-
             return TextureFlags.None;
         }
 
-        private static TextureFlags GetTextureFlags(TexelLoadTarget type)
+        private static TextureFlags ConvertTextureFlags(TexelLoadTarget type)
         {
             switch (type)
             {
@@ -1004,8 +1019,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 case TexelLoadTarget.Texture2DLodLevelOffset:
                     return TextureFlags.LodLevel | TextureFlags.Offset;
             }
-
-            // TODO: Error.
 
             return TextureFlags.None;
         }

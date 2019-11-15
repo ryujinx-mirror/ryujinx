@@ -60,6 +60,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             IntegerType intType = (IntegerType)op.RawOpCode.Extract(8, 2);
 
+            if (intType == IntegerType.U64)
+            {
+                // TODO: Warning. This instruction supports 64-bits integers, but it is not implemented.
+
+                return;
+            }
+
             bool isSmallInt = intType <= IntegerType.U16;
 
             FPType floatType = (FPType)op.RawOpCode.Extract(10, 2);
@@ -118,6 +125,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             IntegerType srcType = (IntegerType)op.RawOpCode.Extract(10, 2);
 
+            // TODO: Handle S/U64.
+
             bool isSmallInt = srcType <= IntegerType.U16;
 
             bool isSignedInt = op.RawOpCode.Extract(13);
@@ -153,7 +162,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (srcType == IntegerType.U64 || dstType == IntegerType.U64)
             {
-                // TODO: Warning. This instruction doesn't support 64-bits integers
+                // TODO: Warning. This instruction doesn't support 64-bits integers.
+
+                return;
             }
 
             bool srcIsSmallInt = srcType <= IntegerType.U16;
