@@ -105,13 +105,16 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             BasicBlock[] irBlocks = ControlFlowGraph.MakeCfg(ops);
 
-            Dominance.FindDominators(irBlocks[0], irBlocks.Length);
+            if (irBlocks.Length > 0)
+            {
+                Dominance.FindDominators(irBlocks[0], irBlocks.Length);
 
-            Dominance.FindDominanceFrontiers(irBlocks);
+                Dominance.FindDominanceFrontiers(irBlocks);
 
-            Ssa.Rename(irBlocks);
+                Ssa.Rename(irBlocks);
 
-            Optimizer.Optimize(irBlocks, config.Stage);
+                Optimizer.Optimize(irBlocks, config.Stage);
+            }
 
             StructuredProgramInfo sInfo = StructuredProgram.MakeStructuredProgram(irBlocks, config);
 
@@ -156,6 +159,13 @@ namespace Ryujinx.Graphics.Shader.Translation
                 cfg = Decoder.Decode(code, HeaderSize);
 
                 context = new EmitterContext(header.Stage, header);
+            }
+
+            if (cfg == null)
+            {
+                size = 0;
+
+                return new Operation[0];
             }
 
             ulong maxEndAddress = 0;

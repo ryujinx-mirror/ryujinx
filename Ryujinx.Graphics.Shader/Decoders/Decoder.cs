@@ -29,6 +29,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
             Dictionary<ulong, Block> visited = new Dictionary<ulong, Block>();
 
+            ulong maxAddress = (ulong)code.Length - headerSize;
+
             Block GetBlock(ulong blkAddress)
             {
                 if (!visited.TryGetValue(blkAddress, out Block block))
@@ -44,8 +46,6 @@ namespace Ryujinx.Graphics.Shader.Decoders
             }
 
             GetBlock(0);
-
-            ulong maxAddress = (ulong)code.Length - headerSize;
 
             while (workQueue.TryDequeue(out Block currBlock))
             {
@@ -93,6 +93,11 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     // including those from SSY/PBK instructions.
                     foreach (OpCodePush pushOp in currBlock.PushOpCodes)
                     {
+                        if (pushOp.GetAbsoluteAddress() >= maxAddress)
+                        {
+                            return null;
+                        }
+
                         GetBlock(pushOp.GetAbsoluteAddress());
                     }
 
@@ -104,6 +109,11 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
                     if (lastOp is OpCodeBranch opBr)
                     {
+                        if (opBr.GetAbsoluteAddress() >= maxAddress)
+                        {
+                            return null;
+                        }
+
                         currBlock.Branch = GetBlock(opBr.GetAbsoluteAddress());
                     }
                     else if (lastOp is OpCodeBranchIndir opBrIndir)
@@ -431,11 +441,11 @@ namespace Ryujinx.Graphics.Shader.Decoders
                 }
                 else if (current.GetLastOp() is OpCodeBranchPop op)
                 {
-                    ulong syncAddress = branchStack.Pop();
+                    ulong targetAddress = branchStack.Pop();
 
                     if (branchStack.Count == 0)
                     {
-                        branchStack.Push(syncAddress);
+                        branchStack.Push(targetAddress);
 
                         op.Targets.Add(pushOp, op.Targets.Count);
 
@@ -443,8 +453,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
                     }
                     else
                     {
-                        Push(new PathBlockState(syncAddress));
-                        Push(new PathBlockState(blocks[syncAddress]));
+                        Push(new PathBlockState(targetAddress));
+                        Push(new PathBlockState(blocks[targetAddress]));
                     }
                 }
             }

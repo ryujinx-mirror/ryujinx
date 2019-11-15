@@ -170,7 +170,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             if (op is OpCodeTexs texsOp)
             {
                 type  = GetSamplerType (texsOp.Target);
-                flags = GetSamplerFlags(texsOp.Target);
+                flags = GetTextureFlags(texsOp.Target);
 
                 if ((type & SamplerType.Array) != 0)
                 {
@@ -240,7 +240,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             else if (op is OpCodeTlds tldsOp)
             {
                 type  = GetSamplerType (tldsOp.Target);
-                flags = GetSamplerFlags(tldsOp.Target) | TextureFlags.IntCoords;
+                flags = GetTextureFlags(tldsOp.Target) | TextureFlags.IntCoords;
 
                 switch (tldsOp.Target)
                 {
@@ -874,7 +874,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     return SamplerType.Texture3D;
             }
 
-            throw new ArgumentException($"Invalid image target \"{target}\".");
+            // TODO: Error.
+
+            return SamplerType.Texture2D;
         }
 
         private static SamplerType GetSamplerType(TextureDimensions dimensions)
@@ -923,7 +925,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     return SamplerType.TextureCube;
             }
 
-            throw new ArgumentException($"Invalid texture type \"{type}\".");
+            // TODO: Error.
+
+            return SamplerType.Texture2D;
         }
 
         private static SamplerType GetSamplerType(TexelLoadTarget type)
@@ -950,10 +954,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     return SamplerType.Texture2D | SamplerType.Array;
             }
 
-            throw new ArgumentException($"Invalid texture type \"{type}\".");
+            // TODO: Error.
+
+            return SamplerType.Texture2D;
         }
 
-        private static TextureFlags GetSamplerFlags(Decoders.TextureTarget type)
+        private static TextureFlags GetTextureFlags(Decoders.TextureTarget type)
         {
             switch (type)
             {
@@ -976,10 +982,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     return TextureFlags.None;
             }
 
-            throw new ArgumentException($"Invalid texture type \"{type}\".");
+            // TODO: Error.
+
+            return TextureFlags.None;
         }
 
-        private static TextureFlags GetSamplerFlags(TexelLoadTarget type)
+        private static TextureFlags GetTextureFlags(TexelLoadTarget type)
         {
             switch (type)
             {
@@ -997,7 +1005,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     return TextureFlags.LodLevel | TextureFlags.Offset;
             }
 
-            throw new ArgumentException($"Invalid texture type \"{type}\".");
+            // TODO: Error.
+
+            return TextureFlags.None;
         }
     }
 }
