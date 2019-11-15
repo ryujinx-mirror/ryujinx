@@ -4,6 +4,8 @@ using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.Storage;
+using Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService;
+using Ryujinx.HLE.Utilities;
 using System;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy
@@ -31,12 +33,11 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // EnsureSaveData(nn::account::Uid) -> u64
         public ResultCode EnsureSaveData(ServiceCtx context)
         {
-            long uIdLow  = context.RequestData.ReadInt64();
-            long uIdHigh = context.RequestData.ReadInt64();
-
-            Logger.PrintStub(LogClass.ServiceAm);
+            UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
 
             context.ResponseData.Write(0L);
+
+            Logger.PrintStub(LogClass.ServiceAm, new { userId });
 
             return ResultCode.Success;
         }
@@ -54,9 +55,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // SetTerminateResult(u32)
         public ResultCode SetTerminateResult(ServiceCtx context)
         {
-            int errorCode = context.RequestData.ReadInt32();
-
-            string result = GetFormattedErrorCode(errorCode);
+            int    errorCode = context.RequestData.ReadInt32();
+            string result    = GetFormattedErrorCode(errorCode);
 
             Logger.PrintInfo(LogClass.ServiceAm, $"Result = 0x{errorCode:x8} ({result}).");
 
@@ -95,10 +95,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // GetPseudoDeviceId() -> nn::util::Uuid
         public ResultCode GetPseudoDeviceId(ServiceCtx context)
         {
-            Logger.PrintStub(LogClass.ServiceAm);
+            context.ResponseData.Write(0L);
+            context.ResponseData.Write(0L);
 
-            context.ResponseData.Write(0L);
-            context.ResponseData.Write(0L);
+            Logger.PrintStub(LogClass.ServiceAm);
 
             return ResultCode.Success;
         }
@@ -118,9 +118,25 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         {
             int state = context.RequestData.ReadInt32();
 
-            Logger.PrintStub(LogClass.ServiceAm);
+            Logger.PrintStub(LogClass.ServiceAm, new { state });
 
             return ResultCode.Success;
+        }
+
+        [Command(110)] // 5.0.0+
+        // QueryApplicationPlayStatistics(buffer<bytes, 5> title_id_list) -> (buffer<bytes, 6> entries, s32 entries_count)
+        public ResultCode QueryApplicationPlayStatistics(ServiceCtx context)
+        {
+            // TODO: Call pdm:qry cmd 13 when IPC call between services will be implemented.
+            return (ResultCode)QueryPlayStatisticsManager.GetPlayStatistics(context);
+        }
+
+        [Command(111)] // 6.0.0+
+        // QueryApplicationPlayStatisticsByUid(nn::account::Uid, buffer<bytes, 5> title_id_list) -> (buffer<bytes, 6> entries, s32 entries_count)
+        public ResultCode QueryApplicationPlayStatisticsByUid(ServiceCtx context)
+        {
+            // TODO: Call pdm:qry cmd 16 when IPC call between services will be implemented.
+            return (ResultCode)QueryPlayStatisticsManager.GetPlayStatistics(context, true);
         }
 
         [Command(130)] // 8.0.0+

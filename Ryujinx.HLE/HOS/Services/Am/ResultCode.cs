@@ -8,6 +8,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         Success = 0,
 
         NoMessages          = (3   << ErrorCodeShift) | ModuleId,
+        ObjectInvalid       = (500 << ErrorCodeShift) | ModuleId,
         CpuBoostModeInvalid = (506 << ErrorCodeShift) | ModuleId
     }
 }
