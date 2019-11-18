@@ -24,10 +24,16 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
         // Write(u64, buffer<bytes, 0x21>)
         public ResultCode Write(ServiceCtx context)
         {
-            // TODO: Error conditions.
             long writePosition = context.RequestData.ReadInt64();
 
+            if (writePosition > _storage.Data.Length)
+            {
+                return ResultCode.OutOfBounds;
+            }
+
             (long position, long size) = context.Request.GetBufferType0x21();
+
+            size = Math.Min(size, _storage.Data.Length - writePosition);
 
             if (size > 0)
             {
@@ -50,23 +56,20 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
         // Read(u64) -> buffer<bytes, 0x22>
         public ResultCode Read(ServiceCtx context)
         {
-            // TODO: Error conditions.
             long readPosition = context.RequestData.ReadInt64();
+
+            if (readPosition > _storage.Data.Length)
+            {
+                return ResultCode.OutOfBounds;
+            }
 
             (long position, long size) = context.Request.GetBufferType0x22();
 
-            byte[] data;
+            size = Math.Min(size, _storage.Data.Length - readPosition);
 
-            if (_storage.Data.Length > size)
-            {
-                data = new byte[size];
+            byte[] data = new byte[size];
 
-                Buffer.BlockCopy(_storage.Data, 0, data, 0, (int)size);
-            }
-            else
-            {
-                data = _storage.Data;
-            }
+            Buffer.BlockCopy(_storage.Data, (int)readPosition, data, 0, (int)size);
 
             context.Memory.WriteBytes(position, data);
 

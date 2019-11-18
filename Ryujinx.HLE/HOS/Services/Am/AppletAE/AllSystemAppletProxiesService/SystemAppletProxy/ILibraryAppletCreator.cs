@@ -29,5 +29,19 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             return ResultCode.Success;
         }
+
+        [Command(11)]
+        // CreateTransferMemoryStorage(b8, u64, handle<copy>) -> object<nn::am::service::IStorage>
+        public ResultCode CreateTransferMemoryStorage(ServiceCtx context)
+        {
+            bool unknown = context.RequestData.ReadBoolean();
+            long size    = context.RequestData.ReadInt64();
+
+            // NOTE: We don't support TransferMemory for now.
+
+            MakeObject(context, new IStorage(new byte[size]));
+
+            return ResultCode.Success;
+        }
     }
 }

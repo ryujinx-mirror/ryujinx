@@ -5,11 +5,26 @@ using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
 {
-    internal class AppletFifo<T> : IEnumerable<T>
+    internal class AppletFifo<T> : IAppletFifo<T>
     {
         private ConcurrentQueue<T> _dataQueue;
 
-        public int Count => _dataQueue.Count;
+        public event EventHandler DataAvailable;
+
+        public bool IsSynchronized
+        {
+            get { return ((ICollection)_dataQueue).IsSynchronized; }
+        }
+
+        public object SyncRoot
+        {
+            get { return ((ICollection)_dataQueue).SyncRoot; }
+        }
+
+        public int Count
+        {
+            get { return _dataQueue.Count; }
+        }
 
         public AppletFifo()
         {
@@ -19,6 +34,22 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
         public void Push(T item)
         {
             _dataQueue.Enqueue(item);
+
+            DataAvailable?.Invoke(this, null);
+        }
+
+        public bool TryAdd(T item)
+        {
+            try
+            {
+                this.Push(item);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public T Pop()
@@ -34,6 +65,11 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
         public bool TryPop(out T result)
         {
             return _dataQueue.TryDequeue(out result);
+        }
+
+        public bool TryTake(out T item)
+        {
+            return this.TryPop(out item);
         }
 
         public T Peek()
@@ -64,6 +100,11 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
         public void CopyTo(T[] array, int arrayIndex)
         {
             _dataQueue.CopyTo(array, arrayIndex);
+        }
+
+        public void CopyTo(Array array, int index)
+        {
+            this.CopyTo((T[])array, index);
         }
 
         public IEnumerator<T> GetEnumerator()

@@ -9,8 +9,8 @@ namespace Ryujinx.HLE.HOS.Applets
     {
         private Horizon _system;
 
-        private AppletFifo<byte[]> _inputData;
-        private AppletFifo<byte[]> _outputData;
+        private AppletSession _normalSession;
+        private AppletSession _interactiveSession;
 
         public event EventHandler AppletStateChanged;
 
@@ -19,13 +19,14 @@ namespace Ryujinx.HLE.HOS.Applets
             _system = system;
         }
 
-        public ResultCode Start(AppletFifo<byte[]> inData, AppletFifo<byte[]> outData)
+        public ResultCode Start(AppletSession normalSession,
+                                AppletSession interactiveSession)
         {
-            _inputData  = inData;
-            _outputData = outData;
+            _normalSession      = normalSession;
+            _interactiveSession = interactiveSession;
 
             // TODO(jduncanator): Parse PlayerSelectConfig from input data
-            _outputData.Push(BuildResponse());
+            _normalSession.Push(BuildResponse());
 
             AppletStateChanged?.Invoke(this, null);
 

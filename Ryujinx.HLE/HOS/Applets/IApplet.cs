@@ -7,7 +7,9 @@ namespace Ryujinx.HLE.HOS.Applets
     {
         event EventHandler AppletStateChanged;
 
-        ResultCode Start(AppletFifo<byte[]> inData, AppletFifo<byte[]> outData);
+        ResultCode Start(AppletSession normalSession,
+                         AppletSession interactiveSession);
+
         ResultCode GetResult();
     }
 }
