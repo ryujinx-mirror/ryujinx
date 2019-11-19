@@ -210,7 +210,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 context.EnterScope();
 
-                string ubSize = "[" + NumberFormatter.FormatInt(context.Config.MaxCBufferSize / 16) + "]";
+                string ubSize = "[" + NumberFormatter.FormatInt(Constants.ConstantBufferSize / 16) + "]";
 
                 context.AppendLine("vec4 " + OperandManager.GetUbName(context.Config.Stage, cbufSlot) + ubSize + ";");
 

@@ -197,11 +197,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 TranslationFlags.DebugMode |
                 TranslationFlags.Unspecialized;
 
-            TranslationConfig translationConfig = new TranslationConfig(0x10000, _dumper.CurrentDumpIndex, flags);
-
             Span<byte> code = _context.MemoryAccessor.Read(gpuVa, MaxProgramSize);
 
-            program = Translator.Translate(code, translationConfig);
+            program = Translator.Translate(code, flags);
 
             int[] codeCached = MemoryMarshal.Cast<byte, int>(code.Slice(0, program.Size)).ToArray();
 
@@ -233,8 +231,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 TranslationFlags.DebugMode |
                 TranslationFlags.Unspecialized;
 
-            TranslationConfig translationConfig = new TranslationConfig(0x10000, _dumper.CurrentDumpIndex, flags);
-
             int[] codeCached = null;
 
             if (gpuVaA != 0)
@@ -242,7 +238,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 Span<byte> codeA = _context.MemoryAccessor.Read(gpuVaA, MaxProgramSize);
                 Span<byte> codeB = _context.MemoryAccessor.Read(gpuVa,  MaxProgramSize);
 
-                program = Translator.Translate(codeA, codeB, translationConfig);
+                program = Translator.Translate(codeA, codeB, flags);
 
                 // TODO: We should also check "codeA" into account.
                 codeCached = MemoryMarshal.Cast<byte, int>(codeB.Slice(0, program.Size)).ToArray();
@@ -262,7 +258,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 Span<byte> code = _context.MemoryAccessor.Read(gpuVa, MaxProgramSize);
 
-                program = Translator.Translate(code, translationConfig);
+                program = Translator.Translate(code, flags);
 
                 codeCached = MemoryMarshal.Cast<byte, int>(code.Slice(0, program.Size)).ToArray();
 

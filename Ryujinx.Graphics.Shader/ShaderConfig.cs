@@ -8,7 +8,6 @@ namespace Ryujinx.Graphics.Shader
 
         public TranslationFlags Flags { get; }
 
-        public int MaxCBufferSize    { get; }
         public int MaxOutputVertices { get; }
 
         public OutputTopology OutputTopology { get; }
@@ -16,13 +15,11 @@ namespace Ryujinx.Graphics.Shader
         public ShaderConfig(
             ShaderStage      stage,
             TranslationFlags flags,
-            int              maxCBufferSize,
             int              maxOutputVertices,
             OutputTopology   outputTopology)
         {
             Stage             = stage;
             Flags             = flags;
-            MaxCBufferSize    = maxCBufferSize;
             MaxOutputVertices = maxOutputVertices;
             OutputTopology    = outputTopology;
         }

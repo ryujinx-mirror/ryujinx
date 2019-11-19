@@ -48,10 +48,10 @@ namespace Ryujinx.Graphics.Shader.Translation
             return code.Slice(0, headerSize + (int)endAddress);
         }
 
-        public static ShaderProgram Translate(Span<byte> code, TranslationConfig translationConfig)
+        public static ShaderProgram Translate(Span<byte> code, TranslationFlags flags)
         {
-            bool compute   = (translationConfig.Flags & TranslationFlags.Compute)   != 0;
-            bool debugMode = (translationConfig.Flags & TranslationFlags.DebugMode) != 0;
+            bool compute   = (flags & TranslationFlags.Compute)   != 0;
+            bool debugMode = (flags & TranslationFlags.DebugMode) != 0;
 
             Operation[] ops = DecodeShader(
                 code,
@@ -83,25 +83,23 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             ShaderConfig config = new ShaderConfig(
                 stage,
-                translationConfig.Flags,
-                translationConfig.MaxCBufferSize,
+                flags,
                 maxOutputVertexCount,
                 outputTopology);
 
             return Translate(ops, config, size);
         }
 
-        public static ShaderProgram Translate(Span<byte> vpACode, Span<byte> vpBCode, TranslationConfig translationConfig)
+        public static ShaderProgram Translate(Span<byte> vpACode, Span<byte> vpBCode, TranslationFlags flags)
         {
-            bool debugMode = (translationConfig.Flags & TranslationFlags.DebugMode) != 0;
+            bool debugMode = (flags & TranslationFlags.DebugMode) != 0;
 
             Operation[] vpAOps = DecodeShader(vpACode, compute: false, debugMode, out _, out _);
             Operation[] vpBOps = DecodeShader(vpBCode, compute: false, debugMode, out ShaderHeader header, out int sizeB);
 
             ShaderConfig config = new ShaderConfig(
                 header.Stage,
-                translationConfig.Flags,
-                translationConfig.MaxCBufferSize,
+                flags,
                 header.MaxOutputVertexCount,
                 header.OutputTopology);
 

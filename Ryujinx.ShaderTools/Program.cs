@@ -19,9 +19,7 @@ namespace Ryujinx.ShaderTools
 
                 byte[] data = File.ReadAllBytes(args[args.Length - 1]);
 
-                TranslationConfig translationConfig = new TranslationConfig(0x10000, 0, flags);
-
-                string code = Translator.Translate(data, translationConfig).Code;
+                string code = Translator.Translate(data, flags).Code;
 
                 Console.WriteLine(code);
             }
