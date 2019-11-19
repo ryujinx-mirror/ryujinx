@@ -16,6 +16,38 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Copy(GetDest(context), GetSrcB(context));
         }
 
+        public static void R2p(EmitterContext context)
+        {
+            OpCodeAlu op = (OpCodeAlu)context.CurrOp;
+
+            bool isCC  = op.RawOpCode.Extract(40);
+            int  shift = op.RawOpCode.Extract(41, 2) * 8;
+
+            Operand value = GetSrcA(context);
+            Operand mask  = GetSrcB(context);
+
+            Operand Test(Operand value, int bit)
+            {
+                return context.ICompareNotEqual(context.BitwiseAnd(value, Const(1 << bit)), Const(0));
+            }
+
+            if (isCC)
+            {
+                // TODO.
+            }
+            else
+            {
+                for (int bit = 0; bit < 7; bit++)
+                {
+                    Operand pred = Register(bit, RegisterType.Predicate);
+
+                    Operand res = context.ConditionalSelect(Test(mask, bit), Test(value, bit + shift), pred);
+
+                    context.Copy(pred, res);
+                }
+            }
+        }
+
         public static void S2r(EmitterContext context)
         {
             // TODO: Better impl.

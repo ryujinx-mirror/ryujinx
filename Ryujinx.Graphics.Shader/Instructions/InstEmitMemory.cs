@@ -213,7 +213,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             Operand        mem,
             Operand        value)
         {
-            Operand res = null;
+            Operand res = Const(0);
 
             switch (op)
             {
