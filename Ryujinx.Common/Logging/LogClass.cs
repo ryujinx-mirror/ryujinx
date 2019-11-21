@@ -26,6 +26,7 @@ namespace Ryujinx.Common.Logging
         ServiceFs,
         ServiceHid,
         ServiceIrs,
+        ServiceLdn,
         ServiceLdr,
         ServiceLm,
         ServiceMm,
