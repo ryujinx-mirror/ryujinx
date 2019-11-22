@@ -5,7 +5,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
-        private void ResetCounter(int argument)
+        private void ResetCounter(GpuState state, int argument)
         {
             ResetCounterType type = (ResetCounterType)argument;
 

@@ -6,11 +6,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
-        private void CopyBuffer(int argument)
+        private void CopyBuffer(GpuState state, int argument)
         {
-            var cbp = _context.State.Get<CopyBufferParams>(MethodOffset.CopyBufferParams);
+            var cbp = state.Get<CopyBufferParams>(MethodOffset.CopyBufferParams);
 
-            var swizzle = _context.State.Get<CopyBufferSwizzle>(MethodOffset.CopyBufferSwizzle);
+            var swizzle = state.Get<CopyBufferSwizzle>(MethodOffset.CopyBufferSwizzle);
 
             bool srcLinear = (argument & (1 << 7)) != 0;
             bool dstLinear = (argument & (1 << 8)) != 0;
@@ -29,8 +29,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 int srcBpp = swizzle.UnpackSrcComponentsCount() * swizzle.UnpackComponentSize();
                 int dstBpp = swizzle.UnpackDstComponentsCount() * swizzle.UnpackComponentSize();
 
-                var dst = _context.State.Get<CopyBufferTexture>(MethodOffset.CopyBufferDstTexture);
-                var src = _context.State.Get<CopyBufferTexture>(MethodOffset.CopyBufferSrcTexture);
+                var dst = state.Get<CopyBufferTexture>(MethodOffset.CopyBufferDstTexture);
+                var src = state.Get<CopyBufferTexture>(MethodOffset.CopyBufferSrcTexture);
 
                 var srcCalculator = new OffsetCalculator(
                     src.Width,

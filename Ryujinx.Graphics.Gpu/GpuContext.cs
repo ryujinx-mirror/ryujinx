@@ -12,8 +12,6 @@ namespace Ryujinx.Graphics.Gpu
     {
         public IRenderer Renderer { get; }
 
-        internal GpuState State { get; }
-
         internal IPhysicalMemory PhysicalMemory { get; private set; }
 
         public MemoryManager MemoryManager { get; }
@@ -35,8 +33,6 @@ namespace Ryujinx.Graphics.Gpu
         public GpuContext(IRenderer renderer)
         {
             Renderer = renderer;
-
-            State = new GpuState();
 
             MemoryManager = new MemoryManager();
 

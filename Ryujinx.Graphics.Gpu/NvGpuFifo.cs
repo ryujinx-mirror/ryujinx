@@ -1,3 +1,5 @@
+using Ryujinx.Graphics.Gpu.State;
+
 namespace Ryujinx.Graphics.Gpu
 {
     class NvGpuFifo
@@ -37,13 +39,13 @@ namespace Ryujinx.Graphics.Gpu
                 _executionPending = true;
             }
 
-            public void Execute(int[] mme)
+            public void Execute(int[] mme, GpuState state)
             {
                 if (_executionPending)
                 {
                     _executionPending = false;
 
-                    _interpreter?.Execute(mme, Position, _argument);
+                    _interpreter?.Execute(mme, Position, _argument, state);
                 }
             }
 
@@ -60,7 +62,18 @@ namespace Ryujinx.Graphics.Gpu
 
         private int[] _mme;
 
-        private ClassId[] _subChannels;
+        private class SubChannel
+        {
+            public GpuState State { get; }
+            public ClassId  Class { get; set; }
+
+            public SubChannel()
+            {
+                State = new GpuState();
+            }
+        }
+
+        private SubChannel[] _subChannels;
 
         public NvGpuFifo(GpuContext context)
         {
@@ -70,14 +83,21 @@ namespace Ryujinx.Graphics.Gpu
 
             _mme = new int[MmeWords];
 
-            _subChannels = new ClassId[8];
+            _subChannels = new SubChannel[8];
+
+            for (int index = 0; index < _subChannels.Length; index++)
+            {
+                _subChannels[index] = new SubChannel();
+
+                context.Methods.RegisterCallbacks(_subChannels[index].State);
+            }
         }
 
         public void CallMethod(MethodParams meth)
         {
             if ((NvGpuFifoMeth)meth.Method == NvGpuFifoMeth.BindChannel)
             {
-                _subChannels[meth.SubChannel] = (ClassId)meth.Argument;
+                _subChannels[meth.SubChannel].Class = (ClassId)meth.Argument;
             }
             else if (meth.Method < 0x60)
             {
@@ -123,7 +143,7 @@ namespace Ryujinx.Graphics.Gpu
             }
             else if (meth.Method < 0xe00)
             {
-                _context.State.CallMethod(meth);
+                _subChannels[meth.SubChannel].State.CallMethod(meth);
             }
             else
             {
@@ -140,7 +160,7 @@ namespace Ryujinx.Graphics.Gpu
 
                 if (meth.IsLastCall)
                 {
-                    _macros[macroIndex].Execute(_mme);
+                    _macros[macroIndex].Execute(_mme, _subChannels[meth.SubChannel].State);
 
                     _context.Methods.PerformDeferredDraws();
                 }

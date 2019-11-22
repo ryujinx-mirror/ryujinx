@@ -12,9 +12,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private int _offset;
         private int _size;
 
-        public void LaunchDma(int argument)
+        public void LaunchDma(GpuState state, int argument)
         {
-            _params = _context.State.Get<Inline2MemoryParams>(MethodOffset.I2mParams);
+            _params = state.Get<Inline2MemoryParams>(MethodOffset.I2mParams);
 
             _isLinear = (argument & 1) != 0;
 
@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _size   = _params.LineLengthIn * _params.LineCount;
         }
 
-        public void LoadInlineData(int argument)
+        public void LoadInlineData(GpuState state, int argument)
         {
             if (_isLinear)
             {

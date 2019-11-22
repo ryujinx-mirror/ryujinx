@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
     {
         private ulong _runningCounter;
 
-        private void Report(int argument)
+        private void Report(GpuState state, int argument)
         {
             ReportMode mode = (ReportMode)(argument & 3);
 
@@ -18,16 +18,16 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             switch (mode)
             {
-                case ReportMode.Semaphore: ReportSemaphore();   break;
-                case ReportMode.Counter:   ReportCounter(type); break;
+                case ReportMode.Semaphore: ReportSemaphore(state);     break;
+                case ReportMode.Counter:   ReportCounter(state, type); break;
             }
         }
 
-        private void ReportSemaphore()
+        private void ReportSemaphore(GpuState state)
         {
-            var state = _context.State.Get<ReportState>(MethodOffset.ReportState);
+            var rs = state.Get<ReportState>(MethodOffset.ReportState);
 
-            _context.MemoryAccessor.Write(state.Address.Pack(), state.Payload);
+            _context.MemoryAccessor.Write(rs.Address.Pack(), rs.Payload);
 
             _context.AdvanceSequence();
         }
@@ -38,7 +38,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             public ulong Timestamp;
         }
 
-        private void ReportCounter(ReportCounterType type)
+        private void ReportCounter(GpuState state, ReportCounterType type)
         {
             CounterData counterData = new CounterData();
 
@@ -78,9 +78,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             Span<byte> data = MemoryMarshal.Cast<CounterData, byte>(counterDataSpan);
 
-            var state = _context.State.Get<ReportState>(MethodOffset.ReportState);
+            var rs = state.Get<ReportState>(MethodOffset.ReportState);
 
-            _context.MemoryAccessor.Write(state.Address.Pack(), data);
+            _context.MemoryAccessor.Write(rs.Address.Pack(), data);
         }
 
         private static ulong ConvertNanosecondsToTicks(ulong nanoseconds)

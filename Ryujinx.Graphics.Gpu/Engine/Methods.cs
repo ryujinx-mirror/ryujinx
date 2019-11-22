@@ -40,133 +40,131 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             _bufferManager  = new BufferManager(context);
             _textureManager = new TextureManager(context);
-
-            RegisterCallbacks();
         }
 
-        private void RegisterCallbacks()
+        public void RegisterCallbacks(GpuState state)
         {
-            _context.State.RegisterCallback(MethodOffset.LaunchDma,      LaunchDma);
-            _context.State.RegisterCallback(MethodOffset.LoadInlineData, LoadInlineData);
+            state.RegisterCallback(MethodOffset.LaunchDma,      LaunchDma);
+            state.RegisterCallback(MethodOffset.LoadInlineData, LoadInlineData);
 
-            _context.State.RegisterCallback(MethodOffset.Dispatch, Dispatch);
+            state.RegisterCallback(MethodOffset.Dispatch, Dispatch);
 
-            _context.State.RegisterCallback(MethodOffset.CopyBuffer,  CopyBuffer);
-            _context.State.RegisterCallback(MethodOffset.CopyTexture, CopyTexture);
+            state.RegisterCallback(MethodOffset.CopyBuffer,  CopyBuffer);
+            state.RegisterCallback(MethodOffset.CopyTexture, CopyTexture);
 
-            _context.State.RegisterCallback(MethodOffset.TextureBarrier,      TextureBarrier);
-            _context.State.RegisterCallback(MethodOffset.InvalidateTextures,  InvalidateTextures);
-            _context.State.RegisterCallback(MethodOffset.TextureBarrierTiled, TextureBarrierTiled);
+            state.RegisterCallback(MethodOffset.TextureBarrier,      TextureBarrier);
+            state.RegisterCallback(MethodOffset.InvalidateTextures,  InvalidateTextures);
+            state.RegisterCallback(MethodOffset.TextureBarrierTiled, TextureBarrierTiled);
 
-            _context.State.RegisterCallback(MethodOffset.ResetCounter, ResetCounter);
+            state.RegisterCallback(MethodOffset.ResetCounter, ResetCounter);
 
-            _context.State.RegisterCallback(MethodOffset.DrawEnd,   DrawEnd);
-            _context.State.RegisterCallback(MethodOffset.DrawBegin, DrawBegin);
+            state.RegisterCallback(MethodOffset.DrawEnd,   DrawEnd);
+            state.RegisterCallback(MethodOffset.DrawBegin, DrawBegin);
 
-            _context.State.RegisterCallback(MethodOffset.IndexBufferCount, SetIndexBufferCount);
+            state.RegisterCallback(MethodOffset.IndexBufferCount, SetIndexBufferCount);
 
-            _context.State.RegisterCallback(MethodOffset.Clear, Clear);
+            state.RegisterCallback(MethodOffset.Clear, Clear);
 
-            _context.State.RegisterCallback(MethodOffset.Report, Report);
+            state.RegisterCallback(MethodOffset.Report, Report);
 
-            _context.State.RegisterCallback(MethodOffset.UniformBufferUpdateData, 16, UniformBufferUpdate);
+            state.RegisterCallback(MethodOffset.UniformBufferUpdateData, 16, UniformBufferUpdate);
 
-            _context.State.RegisterCallback(MethodOffset.UniformBufferBindVertex,         UniformBufferBindVertex);
-            _context.State.RegisterCallback(MethodOffset.UniformBufferBindTessControl,    UniformBufferBindTessControl);
-            _context.State.RegisterCallback(MethodOffset.UniformBufferBindTessEvaluation, UniformBufferBindTessEvaluation);
-            _context.State.RegisterCallback(MethodOffset.UniformBufferBindGeometry,       UniformBufferBindGeometry);
-            _context.State.RegisterCallback(MethodOffset.UniformBufferBindFragment,       UniformBufferBindFragment);
+            state.RegisterCallback(MethodOffset.UniformBufferBindVertex,         UniformBufferBindVertex);
+            state.RegisterCallback(MethodOffset.UniformBufferBindTessControl,    UniformBufferBindTessControl);
+            state.RegisterCallback(MethodOffset.UniformBufferBindTessEvaluation, UniformBufferBindTessEvaluation);
+            state.RegisterCallback(MethodOffset.UniformBufferBindGeometry,       UniformBufferBindGeometry);
+            state.RegisterCallback(MethodOffset.UniformBufferBindFragment,       UniformBufferBindFragment);
         }
 
         public Image.Texture GetTexture(ulong address) => _textureManager.Find2(address);
 
-        private void UpdateState()
+        private void UpdateState(GpuState state)
         {
             // Shaders must be the first one to be updated if modified, because
             // some of the other state depends on information from the currently
             // bound shaders.
-            if (_context.State.QueryModified(MethodOffset.ShaderBaseAddress, MethodOffset.ShaderState))
+            if (state.QueryModified(MethodOffset.ShaderBaseAddress, MethodOffset.ShaderState))
             {
-                UpdateShaderState();
+                UpdateShaderState(state);
             }
 
-            UpdateRenderTargetStateIfNeeded();
+            UpdateRenderTargetStateIfNeeded(state);
 
-            if (_context.State.QueryModified(MethodOffset.DepthTestEnable,
+            if (state.QueryModified(MethodOffset.DepthTestEnable,
                                              MethodOffset.DepthWriteEnable,
                                              MethodOffset.DepthTestFunc))
             {
-                UpdateDepthTestState();
+                UpdateDepthTestState(state);
             }
 
-            if (_context.State.QueryModified(MethodOffset.ViewportTransform, MethodOffset.ViewportExtents))
+            if (state.QueryModified(MethodOffset.ViewportTransform, MethodOffset.ViewportExtents))
             {
-                UpdateViewportTransform();
+                UpdateViewportTransform(state);
             }
 
-            if (_context.State.QueryModified(MethodOffset.DepthBiasState,
+            if (state.QueryModified(MethodOffset.DepthBiasState,
                                              MethodOffset.DepthBiasFactor,
                                              MethodOffset.DepthBiasUnits,
                                              MethodOffset.DepthBiasClamp))
             {
-                UpdateDepthBiasState();
+                UpdateDepthBiasState(state);
             }
 
-            if (_context.State.QueryModified(MethodOffset.StencilBackMasks,
+            if (state.QueryModified(MethodOffset.StencilBackMasks,
                                              MethodOffset.StencilTestState,
                                              MethodOffset.StencilBackTestState))
             {
-                UpdateStencilTestState();
+                UpdateStencilTestState(state);
             }
 
             // Pools.
-            if (_context.State.QueryModified(MethodOffset.SamplerPoolState))
+            if (state.QueryModified(MethodOffset.SamplerPoolState))
             {
-                UpdateSamplerPoolState();
+                UpdateSamplerPoolState(state);
             }
 
-            if (_context.State.QueryModified(MethodOffset.TexturePoolState))
+            if (state.QueryModified(MethodOffset.TexturePoolState))
             {
-                UpdateTexturePoolState();
+                UpdateTexturePoolState(state);
             }
 
             // Input assembler state.
-            if (_context.State.QueryModified(MethodOffset.VertexAttribState))
+            if (state.QueryModified(MethodOffset.VertexAttribState))
             {
-                UpdateVertexAttribState();
+                UpdateVertexAttribState(state);
             }
 
-            if (_context.State.QueryModified(MethodOffset.PrimitiveRestartState))
+            if (state.QueryModified(MethodOffset.PrimitiveRestartState))
             {
-                UpdatePrimitiveRestartState();
+                UpdatePrimitiveRestartState(state);
             }
 
-            if (_context.State.QueryModified(MethodOffset.IndexBufferState))
+            if (state.QueryModified(MethodOffset.IndexBufferState))
             {
-                UpdateIndexBufferState();
+                UpdateIndexBufferState(state);
             }
 
-            if (_context.State.QueryModified(MethodOffset.VertexBufferDrawState,
+            if (state.QueryModified(MethodOffset.VertexBufferDrawState,
                                              MethodOffset.VertexBufferInstanced,
                                              MethodOffset.VertexBufferState,
                                              MethodOffset.VertexBufferEndAddress))
             {
-                UpdateVertexBufferState();
+                UpdateVertexBufferState(state);
             }
 
-            if (_context.State.QueryModified(MethodOffset.FaceState))
+            if (state.QueryModified(MethodOffset.FaceState))
             {
-                UpdateFaceState();
+                UpdateFaceState(state);
             }
 
-            if (_context.State.QueryModified(MethodOffset.RtColorMask))
+            if (state.QueryModified(MethodOffset.RtColorMask))
             {
-                UpdateRtColorMask();
+                UpdateRtColorMask(state);
             }
 
-            if (_context.State.QueryModified(MethodOffset.BlendEnable, MethodOffset.BlendState))
+            if (state.QueryModified(MethodOffset.BlendEnable, MethodOffset.BlendState))
             {
-                UpdateBlendState();
+                UpdateBlendState(state);
             }
 
             CommitBindings();
@@ -210,27 +208,27 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
-        private void UpdateRenderTargetStateIfNeeded()
+        private void UpdateRenderTargetStateIfNeeded(GpuState state)
         {
-            if (_context.State.QueryModified(MethodOffset.RtColorState,
+            if (state.QueryModified(MethodOffset.RtColorState,
                                              MethodOffset.RtDepthStencilState,
                                              MethodOffset.RtDepthStencilSize,
                                              MethodOffset.RtDepthStencilEnable))
             {
-                UpdateRenderTargetState();
+                UpdateRenderTargetState(state);
             }
         }
 
-        private void UpdateRenderTargetState()
+        private void UpdateRenderTargetState(GpuState state)
         {
-            var msaaMode = _context.State.Get<TextureMsaaMode>(MethodOffset.RtMsaaMode);
+            var msaaMode = state.Get<TextureMsaaMode>(MethodOffset.RtMsaaMode);
 
             int samplesInX = msaaMode.SamplesInX();
             int samplesInY = msaaMode.SamplesInY();
 
             for (int index = 0; index < Constants.TotalRenderTargets; index++)
             {
-                var colorState = _context.State.Get<RtColorState>(MethodOffset.RtColorState, index);
+                var colorState = state.Get<RtColorState>(MethodOffset.RtColorState, index);
 
                 if (!IsRtEnabled(colorState))
                 {
@@ -252,14 +250,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 }
             }
 
-            bool dsEnable = _context.State.Get<Boolean32>(MethodOffset.RtDepthStencilEnable);
+            bool dsEnable = state.Get<Boolean32>(MethodOffset.RtDepthStencilEnable);
 
             Image.Texture depthStencil = null;
 
             if (dsEnable)
             {
-                var dsState = _context.State.Get<RtDepthStencilState>(MethodOffset.RtDepthStencilState);
-                var dsSize  = _context.State.Get<Size3D>             (MethodOffset.RtDepthStencilSize);
+                var dsState = state.Get<RtDepthStencilState>(MethodOffset.RtDepthStencilState);
+                var dsSize  = state.Get<Size3D>             (MethodOffset.RtDepthStencilSize);
 
                 depthStencil = _textureManager.FindOrCreateTexture(
                     dsState,
@@ -282,22 +280,22 @@ namespace Ryujinx.Graphics.Gpu.Engine
             return colorState.Format != 0 && colorState.WidthOrStride != 0;
         }
 
-        private void UpdateDepthTestState()
+        private void UpdateDepthTestState(GpuState state)
         {
             _context.Renderer.Pipeline.SetDepthTest(new DepthTestDescriptor(
-                _context.State.Get<Boolean32>(MethodOffset.DepthTestEnable),
-                _context.State.Get<Boolean32>(MethodOffset.DepthWriteEnable),
-                _context.State.Get<CompareOp>(MethodOffset.DepthTestFunc)));
+                state.Get<Boolean32>(MethodOffset.DepthTestEnable),
+                state.Get<Boolean32>(MethodOffset.DepthWriteEnable),
+                state.Get<CompareOp>(MethodOffset.DepthTestFunc)));
         }
 
-        private void UpdateViewportTransform()
+        private void UpdateViewportTransform(GpuState state)
         {
             Viewport[] viewports = new Viewport[Constants.TotalViewports];
 
             for (int index = 0; index < Constants.TotalViewports; index++)
             {
-                var transform = _context.State.Get<ViewportTransform>(MethodOffset.ViewportTransform, index);
-                var extents   = _context.State.Get<ViewportExtents>  (MethodOffset.ViewportExtents,   index);
+                var transform = state.Get<ViewportTransform>(MethodOffset.ViewportTransform, index);
+                var extents   = state.Get<ViewportExtents>  (MethodOffset.ViewportExtents,   index);
 
                 float x = transform.TranslateX - MathF.Abs(transform.ScaleX);
                 float y = transform.TranslateY - MathF.Abs(transform.ScaleY);
@@ -320,13 +318,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.Renderer.Pipeline.SetViewports(0, viewports);
         }
 
-        private void UpdateDepthBiasState()
+        private void UpdateDepthBiasState(GpuState state)
         {
-            var depthBias = _context.State.Get<DepthBiasState>(MethodOffset.DepthBiasState);
+            var depthBias = state.Get<DepthBiasState>(MethodOffset.DepthBiasState);
 
-            float factor = _context.State.Get<float>(MethodOffset.DepthBiasFactor);
-            float units  = _context.State.Get<float>(MethodOffset.DepthBiasUnits);
-            float clamp  = _context.State.Get<float>(MethodOffset.DepthBiasClamp);
+            float factor = state.Get<float>(MethodOffset.DepthBiasFactor);
+            float units  = state.Get<float>(MethodOffset.DepthBiasUnits);
+            float clamp  = state.Get<float>(MethodOffset.DepthBiasClamp);
 
             PolygonModeMask enables = 0;
 
@@ -337,11 +335,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.Renderer.Pipeline.SetDepthBias(enables, factor, units, clamp);
         }
 
-        private void UpdateStencilTestState()
+        private void UpdateStencilTestState(GpuState state)
         {
-            var backMasks = _context.State.Get<StencilBackMasks>    (MethodOffset.StencilBackMasks);
-            var test      = _context.State.Get<StencilTestState>    (MethodOffset.StencilTestState);
-            var backTest  = _context.State.Get<StencilBackTestState>(MethodOffset.StencilBackTestState);
+            var backMasks = state.Get<StencilBackMasks>    (MethodOffset.StencilBackMasks);
+            var test      = state.Get<StencilTestState>    (MethodOffset.StencilTestState);
+            var backTest  = state.Get<StencilBackTestState>(MethodOffset.StencilBackTestState);
 
             CompareOp backFunc;
             StencilOp backSFail;
@@ -390,29 +388,29 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 backMask));
         }
 
-        private void UpdateSamplerPoolState()
+        private void UpdateSamplerPoolState(GpuState state)
         {
-            var samplerPool = _context.State.Get<PoolState>(MethodOffset.SamplerPoolState);
+            var samplerPool = state.Get<PoolState>(MethodOffset.SamplerPoolState);
 
             _textureManager.SetGraphicsSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId);
         }
 
-        private void UpdateTexturePoolState()
+        private void UpdateTexturePoolState(GpuState state)
         {
-            var texturePool = _context.State.Get<PoolState>(MethodOffset.TexturePoolState);
+            var texturePool = state.Get<PoolState>(MethodOffset.TexturePoolState);
 
             _textureManager.SetGraphicsTexturePool(texturePool.Address.Pack(), texturePool.MaximumId);
 
-            _textureManager.SetGraphicsTextureBufferIndex(_context.State.Get<int>(MethodOffset.TextureBufferIndex));
+            _textureManager.SetGraphicsTextureBufferIndex(state.Get<int>(MethodOffset.TextureBufferIndex));
         }
 
-        private void UpdateVertexAttribState()
+        private void UpdateVertexAttribState(GpuState state)
         {
             VertexAttribDescriptor[] vertexAttribs = new VertexAttribDescriptor[16];
 
             for (int index = 0; index < 16; index++)
             {
-                var vertexAttrib = _context.State.Get<VertexAttribState>(MethodOffset.VertexAttribState, index);
+                var vertexAttrib = state.Get<VertexAttribState>(MethodOffset.VertexAttribState, index);
 
                 if (!FormatTable.TryGetAttribFormat(vertexAttrib.UnpackFormat(), out Format format))
                 {
@@ -430,18 +428,18 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.Renderer.Pipeline.BindVertexAttribs(vertexAttribs);
         }
 
-        private void UpdatePrimitiveRestartState()
+        private void UpdatePrimitiveRestartState(GpuState state)
         {
-            PrimitiveRestartState primitiveRestart = _context.State.Get<PrimitiveRestartState>(MethodOffset.PrimitiveRestartState);
+            PrimitiveRestartState primitiveRestart = state.Get<PrimitiveRestartState>(MethodOffset.PrimitiveRestartState);
 
             _context.Renderer.Pipeline.SetPrimitiveRestart(
                 primitiveRestart.Enable,
                 primitiveRestart.Index);
         }
 
-        private void UpdateIndexBufferState()
+        private void UpdateIndexBufferState(GpuState state)
         {
-            var indexBuffer = _context.State.Get<IndexBufferState>(MethodOffset.IndexBufferState);
+            var indexBuffer = state.Get<IndexBufferState>(MethodOffset.IndexBufferState);
 
             _firstIndex = indexBuffer.First;
             _indexCount = indexBuffer.Count;
@@ -467,16 +465,16 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             // The index buffer affects the vertex buffer size calculation, we
             // need to ensure that they are updated.
-            UpdateVertexBufferState();
+            UpdateVertexBufferState(state);
         }
 
-        private void UpdateVertexBufferState()
+        private void UpdateVertexBufferState(GpuState state)
         {
             _isAnyVbInstanced = false;
 
             for (int index = 0; index < 16; index++)
             {
-                var vertexBuffer = _context.State.Get<VertexBufferState>(MethodOffset.VertexBufferState, index);
+                var vertexBuffer = state.Get<VertexBufferState>(MethodOffset.VertexBufferState, index);
 
                 if (!vertexBuffer.UnpackEnable())
                 {
@@ -485,13 +483,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     continue;
                 }
 
-                GpuVa endAddress = _context.State.Get<GpuVa>(MethodOffset.VertexBufferEndAddress, index);
+                GpuVa endAddress = state.Get<GpuVa>(MethodOffset.VertexBufferEndAddress, index);
 
                 ulong address = vertexBuffer.Address.Pack();
 
                 int stride = vertexBuffer.UnpackStride();
 
-                bool instanced = _context.State.Get<Boolean32>(MethodOffset.VertexBufferInstanced + index);
+                bool instanced = state.Get<Boolean32>(MethodOffset.VertexBufferInstanced + index);
 
                 int divisor = instanced ? vertexBuffer.Divisor : 0;
 
@@ -509,9 +507,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 {
                     // For non-indexed draws, we can guess the size from the vertex count
                     // and stride.
-                    int firstInstance = _context.State.Get<int>(MethodOffset.FirstInstance);
+                    int firstInstance = state.Get<int>(MethodOffset.FirstInstance);
 
-                    var drawState = _context.State.Get<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState);
+                    var drawState = state.Get<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState);
 
                     size = (ulong)((firstInstance + drawState.First + drawState.Count) * stride);
                 }
@@ -520,22 +518,22 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
-        private void UpdateFaceState()
+        private void UpdateFaceState(GpuState state)
         {
-            var face = _context.State.Get<FaceState>(MethodOffset.FaceState);
+            var face = state.Get<FaceState>(MethodOffset.FaceState);
 
             _context.Renderer.Pipeline.SetFaceCulling(face.CullEnable, face.CullFace);
 
             _context.Renderer.Pipeline.SetFrontFace(face.FrontFace);
         }
 
-        private void UpdateRtColorMask()
+        private void UpdateRtColorMask(GpuState state)
         {
             uint[] componentMasks = new uint[Constants.TotalRenderTargets];
 
             for (int index = 0; index < Constants.TotalRenderTargets; index++)
             {
-                var colorMask = _context.State.Get<RtColorMask>(MethodOffset.RtColorMask, index);
+                var colorMask = state.Get<RtColorMask>(MethodOffset.RtColorMask, index);
 
                 uint componentMask = 0;
 
@@ -550,15 +548,15 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.Renderer.Pipeline.SetRenderTargetColorMasks(componentMasks);
         }
 
-        private void UpdateBlendState()
+        private void UpdateBlendState(GpuState state)
         {
             BlendState[] blends = new BlendState[8];
 
             for (int index = 0; index < 8; index++)
             {
-                bool enable = _context.State.Get<Boolean32>(MethodOffset.BlendEnable, index);
+                bool enable = state.Get<Boolean32>(MethodOffset.BlendEnable, index);
 
-                var blend = _context.State.Get<BlendState>(MethodOffset.BlendState, index);
+                var blend = state.Get<BlendState>(MethodOffset.BlendState, index);
 
                 BlendDescriptor descriptor = new BlendDescriptor(
                     enable,
@@ -586,7 +584,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
-        private void UpdateShaderState()
+        private void UpdateShaderState(GpuState state)
         {
             ShaderAddresses addresses = new ShaderAddresses();
 
@@ -594,11 +592,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             Span<ulong> addressesArray = MemoryMarshal.Cast<ShaderAddresses, ulong>(addressesSpan);
 
-            ulong baseAddress = _context.State.Get<GpuVa>(MethodOffset.ShaderBaseAddress).Pack();
+            ulong baseAddress = state.Get<GpuVa>(MethodOffset.ShaderBaseAddress).Pack();
 
             for (int index = 0; index < 6; index++)
             {
-                var shader = _context.State.Get<ShaderState>(MethodOffset.ShaderState, index);
+                var shader = state.Get<ShaderState>(MethodOffset.ShaderState, index);
 
                 if (!shader.UnpackEnable() && index != 1)
                 {
@@ -711,17 +709,17 @@ namespace Ryujinx.Graphics.Gpu.Engine
             return Target.Texture2D;
         }
 
-        private void TextureBarrier(int argument)
+        private void TextureBarrier(GpuState state, int argument)
         {
             _context.Renderer.Pipeline.TextureBarrier();
         }
 
-        private void InvalidateTextures(int argument)
+        private void InvalidateTextures(GpuState state, int argument)
         {
             _textureManager.Flush();
         }
 
-        private void TextureBarrierTiled(int argument)
+        private void TextureBarrierTiled(GpuState state, int argument)
         {
             _context.Renderer.Pipeline.TextureBarrierTiled();
         }

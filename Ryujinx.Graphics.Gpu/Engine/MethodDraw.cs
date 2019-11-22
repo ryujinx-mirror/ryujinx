@@ -24,9 +24,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         public PrimitiveType PrimitiveType { get; private set; }
 
-        private void DrawEnd(int argument)
+        private void DrawEnd(GpuState state, int argument)
         {
-            UpdateState();
+            UpdateState(state);
 
             bool instanced = _vsUsesInstanceId || _isAnyVbInstanced;
 
@@ -39,12 +39,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     _instancedIndexed = _drawIndexed;
 
                     _instancedFirstIndex    = _firstIndex;
-                    _instancedFirstVertex   = _context.State.Get<int>(MethodOffset.FirstVertex);
-                    _instancedFirstInstance = _context.State.Get<int>(MethodOffset.FirstInstance);
+                    _instancedFirstVertex   = state.Get<int>(MethodOffset.FirstVertex);
+                    _instancedFirstInstance = state.Get<int>(MethodOffset.FirstInstance);
 
                     _instancedIndexCount = _indexCount;
 
-                    var drawState = _context.State.Get<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState);
+                    var drawState = state.Get<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState);
 
                     _instancedDrawStateFirst = drawState.First;
                     _instancedDrawStateCount = drawState.Count;
@@ -53,13 +53,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 return;
             }
 
-            int firstInstance = _context.State.Get<int>(MethodOffset.FirstInstance);
+            int firstInstance = state.Get<int>(MethodOffset.FirstInstance);
 
             if (_drawIndexed)
             {
                 _drawIndexed = false;
 
-                int firstVertex = _context.State.Get<int>(MethodOffset.FirstVertex);
+                int firstVertex = state.Get<int>(MethodOffset.FirstVertex);
 
                 _context.Renderer.Pipeline.DrawIndexed(
                     _indexCount,
@@ -70,7 +70,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
             else
             {
-                var drawState = _context.State.Get<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState);
+                var drawState = state.Get<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState);
 
                 _context.Renderer.Pipeline.Draw(
                     drawState.Count,
@@ -80,7 +80,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
-        private void DrawBegin(int argument)
+        private void DrawBegin(GpuState state, int argument)
         {
             PrimitiveType type = (PrimitiveType)(argument & 0xffff);
 
@@ -98,7 +98,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
-        private void SetIndexBufferCount(int argument)
+        private void SetIndexBufferCount(GpuState state, int argument)
         {
             _drawIndexed = true;
         }

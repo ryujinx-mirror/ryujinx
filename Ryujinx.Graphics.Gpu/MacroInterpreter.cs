@@ -1,4 +1,5 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.Graphics.Gpu.State;
 using System;
 using System.Collections.Generic;
 
@@ -70,7 +71,7 @@ namespace Ryujinx.Graphics.Gpu
             _gprs = new int[8];
         }
 
-        public void Execute(int[] mme, int position, int param)
+        public void Execute(int[] mme, int position, int param, GpuState state)
         {
             Reset();
 
@@ -80,11 +81,11 @@ namespace Ryujinx.Graphics.Gpu
 
             FetchOpCode(mme);
 
-            while (Step(mme));
+            while (Step(mme, state));
 
             // Due to the delay slot, we still need to execute
             // one more instruction before we actually exit.
-            Step(mme);
+            Step(mme, state);
         }
 
         private void Reset()
@@ -100,7 +101,7 @@ namespace Ryujinx.Graphics.Gpu
             _carry = false;
         }
 
-        private bool Step(int[] mme)
+        private bool Step(int[] mme, GpuState state)
         {
             int baseAddr = _pc - 1;
 
@@ -111,7 +112,7 @@ namespace Ryujinx.Graphics.Gpu
                 // Operation produces a value.
                 AssignmentOperation asgOp = (AssignmentOperation)((_opCode >> 4) & 7);
 
-                int result = GetAluResult();
+                int result = GetAluResult(state);
 
                 switch (asgOp)
                 {
@@ -146,7 +147,7 @@ namespace Ryujinx.Graphics.Gpu
                     {
                         SetDstGpr(FetchParam());
 
-                        Send(result);
+                        Send(state, result);
 
                         break;
                     }
@@ -156,7 +157,7 @@ namespace Ryujinx.Graphics.Gpu
                     {
                         SetDstGpr(result);
 
-                        Send(result);
+                        Send(state, result);
 
                         break;
                     }
@@ -178,7 +179,7 @@ namespace Ryujinx.Graphics.Gpu
 
                         SetMethAddr(result);
 
-                        Send(FetchParam());
+                        Send(state, FetchParam());
 
                         break;
                     }
@@ -190,7 +191,7 @@ namespace Ryujinx.Graphics.Gpu
 
                         SetMethAddr(result);
 
-                        Send((result >> 12) & 0x3f);
+                        Send(state, (result >> 12) & 0x3f);
 
                         break;
                     }
@@ -231,7 +232,7 @@ namespace Ryujinx.Graphics.Gpu
             _pipeOp = mme[_pc++];
         }
 
-        private int GetAluResult()
+        private int GetAluResult(GpuState state)
         {
             AluOperation op = (AluOperation)(_opCode & 7);
 
@@ -295,7 +296,7 @@ namespace Ryujinx.Graphics.Gpu
 
                 case AluOperation.ReadImmediate:
                 {
-                    return Read(GetGprA() + GetImm());
+                    return Read(state, GetGprA() + GetImm());
                 }
             }
 
@@ -398,16 +399,16 @@ namespace Ryujinx.Graphics.Gpu
             return value;
         }
 
-        private int Read(int reg)
+        private int Read(GpuState state, int reg)
         {
-            return _context.State.Read(reg);
+            return state.Read(reg);
         }
 
-        private void Send(int value)
+        private void Send(GpuState state, int value)
         {
             MethodParams meth = new MethodParams(_methAddr, value);
 
-            _context.State.CallMethod(meth);
+            state.CallMethod(meth);
 
             _methAddr += _methIncr;
         }

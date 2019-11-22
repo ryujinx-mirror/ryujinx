@@ -10,13 +10,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
-        public void Dispatch(int argument)
+        public void Dispatch(GpuState state, int argument)
         {
-            uint dispatchParamsAddress = (uint)_context.State.Get<int>(MethodOffset.DispatchParamsAddress);
+            uint dispatchParamsAddress = (uint)state.Get<int>(MethodOffset.DispatchParamsAddress);
 
             var dispatchParams = _context.MemoryAccessor.Read<ComputeParams>((ulong)dispatchParamsAddress << 8);
 
-            GpuVa shaderBaseAddress = _context.State.Get<GpuVa>(MethodOffset.ShaderBaseAddress);
+            GpuVa shaderBaseAddress = state.Get<GpuVa>(MethodOffset.ShaderBaseAddress);
 
             ulong shaderGpuVa = shaderBaseAddress.Pack() + (uint)dispatchParams.ShaderOffset;
 
@@ -28,15 +28,15 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             _context.Renderer.Pipeline.BindProgram(cs.HostProgram);
 
-            var samplerPool = _context.State.Get<PoolState>(MethodOffset.SamplerPoolState);
+            var samplerPool = state.Get<PoolState>(MethodOffset.SamplerPoolState);
 
             _textureManager.SetComputeSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId);
 
-            var texturePool = _context.State.Get<PoolState>(MethodOffset.TexturePoolState);
+            var texturePool = state.Get<PoolState>(MethodOffset.TexturePoolState);
 
             _textureManager.SetComputeTexturePool(texturePool.Address.Pack(), texturePool.MaximumId);
 
-            _textureManager.SetComputeTextureBufferIndex(_context.State.Get<int>(MethodOffset.TextureBufferIndex));
+            _textureManager.SetComputeTextureBufferIndex(state.Get<int>(MethodOffset.TextureBufferIndex));
 
             ShaderProgramInfo info = cs.Shader.Program.Info;
 
@@ -119,7 +119,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 dispatchParams.UnpackGridSizeY(),
                 dispatchParams.UnpackGridSizeZ());
 
-            UpdateShaderState();
+            UpdateShaderState(state);
         }
     }
 }

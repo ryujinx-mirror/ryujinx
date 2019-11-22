@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.Gpu.State
     {
         private const int RegistersCount = 0xe00;
 
-        public delegate void MethodCallback(int argument);
+        public delegate void MethodCallback(GpuState state, int argument);
 
         private int[] _backingMemory;
 
@@ -71,7 +71,7 @@ namespace Ryujinx.Graphics.Gpu.State
 
             if (callback != null)
             {
-                callback(meth.Argument);
+                callback(this, meth.Argument);
             }
         }
 

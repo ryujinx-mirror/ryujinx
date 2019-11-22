@@ -4,32 +4,32 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
-        private void UniformBufferBindVertex(int argument)
+        private void UniformBufferBindVertex(GpuState state, int argument)
         {
-            UniformBufferBind(argument, ShaderType.Vertex);
+            UniformBufferBind(state, argument, ShaderType.Vertex);
         }
 
-        private void UniformBufferBindTessControl(int argument)
+        private void UniformBufferBindTessControl(GpuState state, int argument)
         {
-            UniformBufferBind(argument, ShaderType.TessellationControl);
+            UniformBufferBind(state, argument, ShaderType.TessellationControl);
         }
 
-        private void UniformBufferBindTessEvaluation(int argument)
+        private void UniformBufferBindTessEvaluation(GpuState state, int argument)
         {
-            UniformBufferBind(argument, ShaderType.TessellationEvaluation);
+            UniformBufferBind(state, argument, ShaderType.TessellationEvaluation);
         }
 
-        private void UniformBufferBindGeometry(int argument)
+        private void UniformBufferBindGeometry(GpuState state, int argument)
         {
-            UniformBufferBind(argument, ShaderType.Geometry);
+            UniformBufferBind(state, argument, ShaderType.Geometry);
         }
 
-        private void UniformBufferBindFragment(int argument)
+        private void UniformBufferBindFragment(GpuState state, int argument)
         {
-            UniformBufferBind(argument, ShaderType.Fragment);
+            UniformBufferBind(state, argument, ShaderType.Fragment);
         }
 
-        private void UniformBufferBind(int argument, ShaderType type)
+        private void UniformBufferBind(GpuState state, int argument, ShaderType type)
         {
             bool enable = (argument & 1) != 0;
 
@@ -37,7 +37,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (enable)
             {
-                var uniformBuffer = _context.State.Get<UniformBufferState>(MethodOffset.UniformBufferState);
+                var uniformBuffer = state.Get<UniformBufferState>(MethodOffset.UniformBufferState);
 
                 ulong address = uniformBuffer.Address.Pack();
 
