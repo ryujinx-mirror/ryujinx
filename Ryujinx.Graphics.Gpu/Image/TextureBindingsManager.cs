@@ -33,12 +33,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private bool _rebind;
 
-        public TextureBindingsManager(GpuContext context, bool isCompute)
+        public TextureBindingsManager(GpuContext context, TexturePoolCache texturePoolCache, bool isCompute)
         {
-            _context   = context;
-            _isCompute = isCompute;
-
-            _texturePoolCache = new TexturePoolCache(context);
+            _context          = context;
+            _texturePoolCache = texturePoolCache;
+            _isCompute        = isCompute;
 
             int stages = isCompute ? 1 : Constants.TotalShaderStages;
 

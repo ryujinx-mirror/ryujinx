@@ -30,8 +30,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             _context = context;
 
-            _cpBindingsManager = new TextureBindingsManager(context, isCompute: true);
-            _gpBindingsManager = new TextureBindingsManager(context, isCompute: false);
+            TexturePoolCache texturePoolCache = new TexturePoolCache(context);
+
+            _cpBindingsManager = new TextureBindingsManager(context, texturePoolCache, isCompute: true);
+            _gpBindingsManager = new TextureBindingsManager(context, texturePoolCache, isCompute: false);
 
             _rtColors = new Texture[Constants.TotalRenderTargets];
 
