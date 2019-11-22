@@ -40,32 +40,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             ShaderProgramInfo info = cs.Shader.Program.Info;
 
-            var textureBindings = new TextureBindingInfo[info.Textures.Count];
-
-            for (int index = 0; index < info.Textures.Count; index++)
-            {
-                var descriptor = info.Textures[index];
-
-                Target target = GetTarget(descriptor.Type);
-
-                textureBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
-            }
-
-            _textureManager.SetComputeTextures(textureBindings);
-
-            var imageBindings = new TextureBindingInfo[info.Images.Count];
-
-            for (int index = 0; index < info.Images.Count; index++)
-            {
-                var descriptor = info.Images[index];
-
-                Target target = GetTarget(descriptor.Type);
-
-                imageBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
-            }
-
-            _textureManager.SetComputeImages(imageBindings);
-
             uint sbEnableMask = 0;
             uint ubEnableMask = dispatchParams.UnpackUniformBuffersEnableMask();
 
@@ -110,6 +84,32 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             _bufferManager.SetComputeStorageBufferEnableMask(sbEnableMask);
             _bufferManager.SetComputeUniformBufferEnableMask(ubEnableMask);
+
+            var textureBindings = new TextureBindingInfo[info.Textures.Count];
+
+            for (int index = 0; index < info.Textures.Count; index++)
+            {
+                var descriptor = info.Textures[index];
+
+                Target target = GetTarget(descriptor.Type);
+
+                textureBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
+            }
+
+            _textureManager.SetComputeTextures(textureBindings);
+
+            var imageBindings = new TextureBindingInfo[info.Images.Count];
+
+            for (int index = 0; index < info.Images.Count; index++)
+            {
+                var descriptor = info.Images[index];
+
+                Target target = GetTarget(descriptor.Type);
+
+                imageBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
+            }
+
+            _textureManager.SetComputeImages(imageBindings);
 
             _bufferManager.CommitComputeBindings();
             _textureManager.CommitComputeBindings();
