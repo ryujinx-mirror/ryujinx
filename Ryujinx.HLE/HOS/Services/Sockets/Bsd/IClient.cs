@@ -1,6 +1,7 @@
 ﻿using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Utilities;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -199,7 +200,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         {
             int size   = context.Memory.ReadByte(bufferPosition);
             int family = context.Memory.ReadByte(bufferPosition + 1);
-            int port   = EndianSwap.Swap16(context.Memory.ReadUInt16(bufferPosition + 2));
+            int port   = BinaryPrimitives.ReverseEndianness(context.Memory.ReadUInt16(bufferPosition + 2));
 
             byte[] rawIp = context.Memory.ReadBytes(bufferPosition + 4, 4);
 
@@ -210,7 +211,7 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         {
             context.Memory.WriteByte(bufferPosition, 0);
             context.Memory.WriteByte(bufferPosition + 1, (byte)endPoint.AddressFamily);
-            context.Memory.WriteUInt16(bufferPosition + 2, EndianSwap.Swap16((ushort)endPoint.Port));
+            context.Memory.WriteUInt16(bufferPosition + 2, BinaryPrimitives.ReverseEndianness((ushort)endPoint.Port));
             context.Memory.WriteBytes(bufferPosition + 4, endPoint.Address.GetAddressBytes());
         }
 

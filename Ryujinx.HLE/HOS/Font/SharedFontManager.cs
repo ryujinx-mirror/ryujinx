@@ -5,6 +5,7 @@ using Ryujinx.Common;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 
@@ -142,7 +143,7 @@ namespace Ryujinx.HLE.HOS.Font
             const int decMagic = 0x18029a7f;
             const int key      = 0x49621806;
 
-            int encryptedSize = EndianSwap.Swap32(size ^ key);
+            int encryptedSize = BinaryPrimitives.ReverseEndianness(size ^ key);
 
             _device.Memory.WriteInt32(position + 0, decMagic);
             _device.Memory.WriteInt32(position + 4, encryptedSize);
