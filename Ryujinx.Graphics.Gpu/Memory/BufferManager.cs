@@ -3,7 +3,6 @@ using Ryujinx.Graphics.GAL.InputAssembler;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 using System;
-using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Memory
 {
@@ -48,6 +47,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         private bool _indexBufferDirty;
         private bool _vertexBuffersDirty;
+        private uint _vertexBuffersEnableMask;
 
         private bool _rebind;
 
@@ -93,6 +93,15 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _vertexBuffers[index].Divisor = divisor;
 
             _vertexBuffersDirty = true;
+
+            if (address != 0)
+            {
+                _vertexBuffersEnableMask |= 1u << index;
+            }
+            else
+            {
+                _vertexBuffersEnableMask &= ~(1u << index);
+            }
         }
 
         public void SetComputeStorageBuffer(int index, ulong gpuVa, ulong size)
@@ -322,13 +331,15 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 SynchronizeBufferRange(_indexBuffer.Address, _indexBuffer.Size);
             }
 
+            uint vbEnableMask = _vertexBuffersEnableMask;
+
             if (_vertexBuffersDirty || _rebind)
             {
                 _vertexBuffersDirty = false;
 
                 VertexBufferDescriptor[] vertexBuffers = new VertexBufferDescriptor[Constants.TotalVertexBuffers];
 
-                for (int index = 0; index < Constants.TotalVertexBuffers; index++)
+                for (int index = 0; (vbEnableMask >> index) != 0; index++)
                 {
                     VertexBuffer vb = _vertexBuffers[index];
 
@@ -346,7 +357,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
             else
             {
-                for (int index = 0; index < Constants.TotalVertexBuffers; index++)
+                for (int index = 0; (vbEnableMask >> index) != 0; index++)
                 {
                     VertexBuffer vb = _vertexBuffers[index];
 

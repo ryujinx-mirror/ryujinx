@@ -5,6 +5,8 @@ namespace Ryujinx.Graphics.Gpu.Image
 {
     class SamplerPool : Pool<Sampler>
     {
+        private int _sequenceNumber;
+
         public SamplerPool(GpuContext context, ulong address, int maximumId) : base(context, address, maximumId) { }
 
         public override Sampler Get(int id)
@@ -14,7 +16,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return null;
             }
 
-            SynchronizeMemory();
+            if (_sequenceNumber != Context.SequenceNumber)
+            {
+                _sequenceNumber = Context.SequenceNumber;
+
+                SynchronizeMemory();
+            }
 
             Sampler sampler = Items[id];
 

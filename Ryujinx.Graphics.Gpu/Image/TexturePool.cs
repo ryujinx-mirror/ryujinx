@@ -11,11 +11,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     {
         public LinkedListNode<TexturePool> CacheNode { get; set; }
 
-        private struct TextureContainer
-        {
-            public Texture Texture0 { get; set; }
-            public Texture Texture1 { get; set; }
-        }
+        private int _sequenceNumber;
 
         public TexturePool(
             GpuContext context,
@@ -29,7 +25,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return null;
             }
 
-            SynchronizeMemory();
+            if (_sequenceNumber != Context.SequenceNumber)
+            {
+                _sequenceNumber = Context.SequenceNumber;
+
+                SynchronizeMemory();
+            }
 
             Texture texture = Items[id];
 

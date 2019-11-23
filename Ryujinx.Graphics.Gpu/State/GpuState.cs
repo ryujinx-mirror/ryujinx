@@ -114,23 +114,50 @@ namespace Ryujinx.Graphics.Gpu.State
             _registers[(int)offset].Callback = callback;
         }
 
-        public bool QueryModified(params MethodOffset[] offsets)
-        {
-            bool modified = false;
-
-            for (int index = 0; index < offsets.Length; index++)
-            {
-                modified |= QueryModified(offsets[index]);
-            }
-
-            return modified;
-        }
-
         public bool QueryModified(MethodOffset offset)
         {
             bool modified = _registers[(int)offset].Modified;
 
             _registers[(int)offset].Modified = false;
+
+            return modified;
+        }
+
+        public bool QueryModified(MethodOffset m1, MethodOffset m2)
+        {
+            bool modified = _registers[(int)m1].Modified ||
+                            _registers[(int)m2].Modified;
+
+            _registers[(int)m1].Modified = false;
+            _registers[(int)m2].Modified = false;
+
+            return modified;
+        }
+
+        public bool QueryModified(MethodOffset m1, MethodOffset m2, MethodOffset m3)
+        {
+            bool modified = _registers[(int)m1].Modified ||
+                            _registers[(int)m2].Modified ||
+                            _registers[(int)m3].Modified;
+
+            _registers[(int)m1].Modified = false;
+            _registers[(int)m2].Modified = false;
+            _registers[(int)m3].Modified = false;
+
+            return modified;
+        }
+
+        public bool QueryModified(MethodOffset m1, MethodOffset m2, MethodOffset m3, MethodOffset m4)
+        {
+            bool modified = _registers[(int)m1].Modified ||
+                            _registers[(int)m2].Modified ||
+                            _registers[(int)m3].Modified ||
+                            _registers[(int)m4].Modified;
+
+            _registers[(int)m1].Modified = false;
+            _registers[(int)m2].Modified = false;
+            _registers[(int)m3].Modified = false;
+            _registers[(int)m4].Modified = false;
 
             return modified;
         }
