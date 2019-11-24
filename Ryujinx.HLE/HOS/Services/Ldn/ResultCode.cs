@@ -11,6 +11,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn
         InvalidState    = (32 << ErrorCodeShift) | ModuleId,
         Unknown1        = (48 << ErrorCodeShift) | ModuleId,
         InvalidArgument = (96 << ErrorCodeShift) | ModuleId,
-        InvalidOjbect   = (97 << ErrorCodeShift) | ModuleId,
+        InvalidObject   = (97 << ErrorCodeShift) | ModuleId,
     }
 }
