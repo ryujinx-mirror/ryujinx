@@ -206,13 +206,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 context.CBufferDescriptors.Add(new BufferDescriptor(ubName, cbufSlot));
 
-                context.AppendLine("uniform " + ubName);
+                context.AppendLine("layout (std140) uniform " + ubName);
 
                 context.EnterScope();
 
-                string ubSize = "[" + NumberFormatter.FormatInt(Constants.ConstantBufferSize / 4) + "]";
+                string ubSize = "[" + NumberFormatter.FormatInt(Constants.ConstantBufferSize / 16) + "]";
 
-                context.AppendLine("precise float " + OperandManager.GetUbName(context.Config.Stage, cbufSlot) + ubSize + ";");
+                context.AppendLine("vec4 " + OperandManager.GetUbName(context.Config.Stage, cbufSlot) + ubSize + ";");
 
                 context.LeaveScope(";");
             }

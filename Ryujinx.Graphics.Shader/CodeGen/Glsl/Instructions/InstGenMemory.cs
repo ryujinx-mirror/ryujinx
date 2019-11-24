@@ -116,12 +116,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             offsetExpr = Enclose(offsetExpr, src2, Instruction.ShiftRightS32, isLhs: true);
 
-            // TODO: For now this is assumed to be constant
-            // (we only use constant slots right now), but we should also
-            // support non-constant values, necessary for full LDC implementation.
-            int slot = ((AstOperand)src1).Value;
-
-            return OperandManager.GetUniformBufferAccessor(slot, offsetExpr, context.Config.Stage);
+            return OperandManager.GetConstantBufferName(src1, offsetExpr, context.Config.Stage);
         }
 
         public static string LoadGlobal(CodeGenContext context, AstOperation operation)
@@ -508,7 +503,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             // restrictions.
             int ubOffset = GlobalToStorage.GetStorageCbOffset(stage, slot);
 
-            string ubName = OperandManager.GetUniformBufferAccessor(0, ubOffset, stage);
+            string ubName = OperandManager.GetConstantBufferName(0, ubOffset, stage);
 
             offsetExpr = $"{offsetExpr} - int((floatBitsToUint({ubName}) & {mask}) >> 2)";
 

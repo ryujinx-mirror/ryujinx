@@ -93,7 +93,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     return NumberFormatter.FormatInt(operand.Value);
 
                 case OperandType.ConstantBuffer:
-                    return GetUniformBufferAccessor(operand.CbufSlot, operand.CbufOffset, stage);
+                    return GetConstantBufferName(operand.CbufSlot, operand.CbufOffset, stage);
 
                 case OperandType.LocalVariable:
                     return _locals[operand];
@@ -105,16 +105,28 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             throw new ArgumentException($"Invalid operand type \"{operand.Type}\".");
         }
 
-        public static string GetUniformBufferAccessor(int slot, int offset, ShaderStage stage)
-        {
-            return GetUniformBufferAccessor(slot, NumberFormatter.FormatInt(offset), stage);
-        }
-
-        public static string GetUniformBufferAccessor(int slot, string offsetExpr, ShaderStage stage)
+        public static string GetConstantBufferName(int slot, int offset, ShaderStage stage)
         {
             string ubName = GetUbName(stage, slot);
 
-            return $"{ubName}[{offsetExpr}]";
+            ubName += "[" + (offset >> 2) + "]";
+
+            return ubName + "." + GetSwizzleMask(offset & 3);
+        }
+
+        public static string GetConstantBufferName(IAstNode slot, string offsetExpr, ShaderStage stage)
+        {
+            // Non-constant slots are not supported.
+            // It is expected that upstream stages are never going to generate non-constant
+            // slot access.
+            AstOperand operand = (AstOperand)slot;
+
+            string ubName = GetUbName(stage, operand.Value);
+
+            string index0 = "[" + offsetExpr + " >> 2]";
+            string index1 = "[" + offsetExpr + " & 3]";
+
+            return ubName + index0 + index1;
         }
 
         public static string GetOutAttributeName(AstOperand attr, ShaderStage stage)
