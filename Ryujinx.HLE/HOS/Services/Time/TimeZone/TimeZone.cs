@@ -1707,7 +1707,7 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 Time = new CalendarTime()
                 {
                     Year   = (short)calendarTime.Year,
-                    Month  = (sbyte)(calendarTime.Month + 1),
+                    Month  = calendarTime.Month,
                     Day    = calendarTime.Day,
                     Hour   = calendarTime.Hour,
                     Minute = calendarTime.Minute,
