@@ -335,18 +335,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return true;
             }
 
-            if (_info.FormatInfo.Format == Format.R8G8B8A8Srgb &&
-                 info.FormatInfo.Format == Format.R8G8B8A8Unorm && !strict)
-            {
-                return true;
-            }
-
-            if (_info.FormatInfo.Format == Format.R8G8B8A8Unorm &&
-                 info.FormatInfo.Format == Format.R8G8B8A8Srgb && !strict)
-            {
-                return true;
-            }
-
             return _info.FormatInfo.Format == info.FormatInfo.Format;
         }
 

@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         private ITexture[] _rtHostColors;
         private ITexture   _rtHostDs;
 
-        private ConcurrentRangeList<Texture> _textures;
+        private RangeList<Texture> _textures;
 
         private AutoDeleteCache _cache;
 
@@ -39,7 +39,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             _rtHostColors = new ITexture[Constants.TotalRenderTargets];
 
-            _textures = new ConcurrentRangeList<Texture>();
+            _textures = new RangeList<Texture>();
 
             _cache = new AutoDeleteCache();
         }
@@ -559,28 +559,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                 info.SwizzleG,
                 info.SwizzleB,
                 info.SwizzleA);
-        }
-
-        public Texture Find2(ulong address)
-        {
-            Texture[] ts = _textures.FindOverlaps(address, 1);
-
-            if (ts.Length == 2)
-            {
-                return ts[1];
-            }
-
-            if (ts.Length == 0)
-            {
-                ts = _textures.FindOverlaps(address - 1, 2);
-            }
-
-            if (ts.Length == 0)
-            {
-                return null;
-            }
-
-            return ts[0];
         }
 
         public void Flush()

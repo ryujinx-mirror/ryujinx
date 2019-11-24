@@ -76,8 +76,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
             state.RegisterCallback(MethodOffset.UniformBufferBindFragment,       UniformBufferBindFragment);
         }
 
-        public Image.Texture GetTexture(ulong address) => _textureManager.Find2(address);
-
         private void UpdateState(GpuState state)
         {
             // Shaders must be the first one to be updated if modified, because

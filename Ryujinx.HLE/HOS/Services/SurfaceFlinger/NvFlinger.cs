@@ -1,7 +1,7 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap;
 using System;
 using System.Collections.Generic;
@@ -295,11 +295,6 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             _bufferQueue[slot].State = BufferState.Acquired;
 
-            Rect crop = _bufferQueue[slot].Crop;
-
-            bool flipX = _bufferQueue[slot].Transform.HasFlag(HalTransform.FlipX);
-            bool flipY = _bufferQueue[slot].Transform.HasFlag(HalTransform.FlipY);
-
             Format format = ConvertColorFormat(_bufferQueue[slot].Data.Buffer.Surfaces[0].ColorFormat);
 
             int bytesPerPixel =
@@ -310,7 +305,20 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
             // Note: Rotation is being ignored.
 
-            ITexture texture = context.Device.Gpu.GetTexture(
+            Rect cropRect = _bufferQueue[slot].Crop;
+
+            bool flipX = _bufferQueue[slot].Transform.HasFlag(HalTransform.FlipX);
+            bool flipY = _bufferQueue[slot].Transform.HasFlag(HalTransform.FlipY);
+
+            ImageCrop crop = new ImageCrop(
+                cropRect.Left,
+                cropRect.Right,
+                cropRect.Top,
+                cropRect.Bottom,
+                flipX,
+                flipY);
+
+            context.Device.Gpu.Window.EnqueueFrameThreadSafe(
                 fbAddr,
                 fbWidth,
                 fbHeight,
@@ -318,24 +326,15 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 false,
                 gobBlocksInY,
                 format,
-                bytesPerPixel);
-
-            _renderer.Window.RegisterTextureReleaseCallback(ReleaseBuffer);
-
-            ImageCrop imageCrop = new ImageCrop(
-                crop.Left,
-                crop.Right,
-                crop.Top,
-                crop.Bottom,
-                flipX,
-                flipY);
-
-            _renderer.Window.QueueTexture(texture, imageCrop, slot);
+                bytesPerPixel,
+                crop,
+                ReleaseBuffer,
+                slot);
         }
 
-        private void ReleaseBuffer(object context)
+        private void ReleaseBuffer(object slot)
         {
-            ReleaseBuffer((int)context);
+            ReleaseBuffer((int)slot);
         }
 
         private void ReleaseBuffer(int slot)

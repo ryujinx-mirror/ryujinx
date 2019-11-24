@@ -1,9 +1,6 @@
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Texture;
 using Ryujinx.Graphics.Gpu.Engine;
-using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.Memory;
-using Ryujinx.Graphics.Gpu.State;
 using System;
 
 namespace Ryujinx.Graphics.Gpu
@@ -23,6 +20,8 @@ namespace Ryujinx.Graphics.Gpu
         internal NvGpuFifo Fifo { get; }
 
         public DmaPusher DmaPusher { get; }
+
+        public Window Window { get; }
 
         internal int SequenceNumber { get; private set; }
 
@@ -44,43 +43,14 @@ namespace Ryujinx.Graphics.Gpu
 
             DmaPusher = new DmaPusher(this);
 
+            Window = new Window(this);
+
             _caps = new Lazy<Capabilities>(GetCapabilities);
         }
 
         internal void AdvanceSequence()
         {
             SequenceNumber++;
-        }
-
-        public ITexture GetTexture(
-            ulong  address,
-            int    width,
-            int    height,
-            int    stride,
-            bool   isLinear,
-            int    gobBlocksInY,
-            Format format,
-            int    bytesPerPixel)
-        {
-            FormatInfo formatInfo = new FormatInfo(format, 1, 1, bytesPerPixel);
-
-            TextureInfo info = new TextureInfo(
-                address,
-                width,
-                height,
-                1,
-                1,
-                1,
-                1,
-                stride,
-                isLinear,
-                gobBlocksInY,
-                1,
-                1,
-                Target.Texture2D,
-                formatInfo);
-
-            return Methods.GetTexture(address)?.HostTexture;
         }
 
         private Capabilities GetCapabilities()
