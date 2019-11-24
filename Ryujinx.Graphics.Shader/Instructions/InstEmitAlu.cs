@@ -58,7 +58,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Csetp(EmitterContext context)
         {
-            OpCodePsetp op = (OpCodePsetp)context.CurrOp;
+            OpCodePset op = (OpCodePset)context.CurrOp;
 
             // TODO: Implement that properly
 
@@ -381,15 +381,38 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Copy(GetDest(context), res);
         }
 
+        public static void Pset(EmitterContext context)
+        {
+            OpCodePset op = (OpCodePset)context.CurrOp;
+
+            bool boolFloat = op.RawOpCode.Extract(44);
+
+            Operand srcA = context.BitwiseNot(Register(op.Predicate12), op.InvertA);
+            Operand srcB = context.BitwiseNot(Register(op.Predicate29), op.InvertB);
+            Operand srcC = context.BitwiseNot(Register(op.Predicate39), op.InvertP);
+
+            Operand res = GetPredLogicalOp(context, op.LogicalOpAB, srcA, srcB);
+
+            res = GetPredLogicalOp(context, op.LogicalOp, res, srcC);
+
+            Operand dest = GetDest(context);
+
+            if (boolFloat)
+            {
+                context.Copy(dest, context.ConditionalSelect(res, ConstF(1), Const(0)));
+            }
+            else
+            {
+                context.Copy(dest, res);
+            }
+        }
+
         public static void Psetp(EmitterContext context)
         {
-            OpCodePsetp op = (OpCodePsetp)context.CurrOp;
+            OpCodePset op = (OpCodePset)context.CurrOp;
 
-            bool invertA = op.RawOpCode.Extract(15);
-            bool invertB = op.RawOpCode.Extract(32);
-
-            Operand srcA = context.BitwiseNot(Register(op.Predicate12), invertA);
-            Operand srcB = context.BitwiseNot(Register(op.Predicate29), invertB);
+            Operand srcA = context.BitwiseNot(Register(op.Predicate12), op.InvertA);
+            Operand srcB = context.BitwiseNot(Register(op.Predicate29), op.InvertB);
 
             Operand p0Res = GetPredLogicalOp(context, op.LogicalOpAB, srcA, srcB);
 

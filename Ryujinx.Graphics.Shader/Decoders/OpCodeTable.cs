@@ -43,7 +43,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("111000100100xx", InstEmit.Bra,     typeof(OpCodeBranch));
             Set("111000110100xx", InstEmit.Brk,     typeof(OpCodeBranchPop));
             Set("111000100101xx", InstEmit.Brx,     typeof(OpCodeBranchIndir));
-            Set("0101000010100x", InstEmit.Csetp,   typeof(OpCodePsetp));
+            Set("0101000010100x", InstEmit.Csetp,   typeof(OpCodePset));
             Set("111000110000xx", InstEmit.Exit,    typeof(OpCodeExit));
             Set("0100110010101x", InstEmit.F2F,     typeof(OpCodeFArithCbuf));
             Set("0011100x10101x", InstEmit.F2F,     typeof(OpCodeFArithImm));
@@ -142,7 +142,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("0100110000001x", InstEmit.Popc,    typeof(OpCodeAluCbuf));
             Set("0011100x00001x", InstEmit.Popc,    typeof(OpCodeAluImm));
             Set("0101110000001x", InstEmit.Popc,    typeof(OpCodeAluReg));
-            Set("0101000010010x", InstEmit.Psetp,   typeof(OpCodePsetp));
+            Set("0101000010001x", InstEmit.Pset,    typeof(OpCodePset));
+            Set("0101000010010x", InstEmit.Psetp,   typeof(OpCodePset));
             Set("0100110011110x", InstEmit.R2p,     typeof(OpCodeAluCbuf));
             Set("0011100x11110x", InstEmit.R2p,     typeof(OpCodeAluImm));
             Set("0101110011110x", InstEmit.R2p,     typeof(OpCodeAluReg));
