@@ -8,12 +8,17 @@ namespace Ryujinx.Graphics.Gpu.Memory
 {
     class BufferManager
     {
+        private const int OverlapsBufferInitialCapacity = 10;
+        private const int OverlapsBufferMaxCapacity     = 10000;
+
         private const ulong BufferAlignmentSize = 0x1000;
         private const ulong BufferAlignmentMask = BufferAlignmentSize - 1;
 
         private GpuContext _context;
 
         private RangeList<Buffer> _buffers;
+
+        private Buffer[] _bufferOverlaps;
 
         private IndexBuffer _indexBuffer;
 
@@ -56,6 +61,8 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _context = context;
 
             _buffers = new RangeList<Buffer>();
+
+            _bufferOverlaps = new Buffer[OverlapsBufferInitialCapacity];
 
             _vertexBuffers = new VertexBuffer[Constants.TotalVertexBuffers];
 
@@ -207,9 +214,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         private void CreateBuffer(ulong address, ulong size)
         {
-            Buffer[] overlaps = _buffers.FindOverlapsNonOverlapping(address, size);
+            int overlapsCount = _buffers.FindOverlapsNonOverlapping(address, size, ref _bufferOverlaps);
 
-            if (overlaps.Length != 0)
+            if (overlapsCount != 0)
             {
                 // The buffer already exists. We can just return the existing buffer
                 // if the buffer we need is fully contained inside the overlapping buffer.
@@ -218,10 +225,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 // old buffer(s) to the new buffer.
                 ulong endAddress = address + size;
 
-                if (overlaps[0].Address > address || overlaps[0].EndAddress < endAddress)
+                if (_bufferOverlaps[0].Address > address || _bufferOverlaps[0].EndAddress < endAddress)
                 {
-                    foreach (Buffer buffer in overlaps)
+                    for (int index = 0; index < overlapsCount; index++)
                     {
+                        Buffer buffer = _bufferOverlaps[index];
+
                         address    = Math.Min(address,    buffer.Address);
                         endAddress = Math.Max(endAddress, buffer.EndAddress);
 
@@ -234,8 +243,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                     _buffers.Add(newBuffer);
 
-                    foreach (Buffer buffer in overlaps)
+                    for (int index = 0; index < overlapsCount; index++)
                     {
+                        Buffer buffer = _bufferOverlaps[index];
+
                         int dstOffset = (int)(buffer.Address - newBuffer.Address);
 
                         buffer.CopyTo(newBuffer, dstOffset);
@@ -252,6 +263,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 Buffer buffer = new Buffer(_context, address, size);
 
                 _buffers.Add(buffer);
+            }
+
+            ShrinkOverlapsBufferIfNeeded();
+        }
+
+        private void ShrinkOverlapsBufferIfNeeded()
+        {
+            if (_bufferOverlaps.Length > OverlapsBufferMaxCapacity)
+            {
+                Array.Resize(ref _bufferOverlaps, OverlapsBufferMaxCapacity);
             }
         }
 

@@ -1,9 +1,12 @@
+using System;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gpu.Memory
 {
     class RangeList<T> where T : IRange<T>
     {
+        private const int ArrayGrowthSize = 32;
+
         private List<T> _items;
 
         public RangeList()
@@ -72,14 +75,14 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return _items[index];
         }
 
-        public T[] FindOverlaps(T item)
+        public int FindOverlaps(T item, ref T[] output)
         {
-            return FindOverlaps(item.Address, item.Size);
+            return FindOverlaps(item.Address, item.Size, ref output);
         }
 
-        public T[] FindOverlaps(ulong address, ulong size)
+        public int FindOverlaps(ulong address, ulong size, ref T[] output)
         {
-            List<T> overlapsList = new List<T>();
+            int outputIndex = 0;
 
             ulong endAddress = address + size;
 
@@ -94,24 +97,29 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                     if (item.OverlapsWith(address, size))
                     {
-                        overlapsList.Add(item);
+                        if (outputIndex == output.Length)
+                        {
+                            Array.Resize(ref output, outputIndex + ArrayGrowthSize);
+                        }
+
+                        output[outputIndex++] = item;
                     }
                 }
             }
 
-            return overlapsList.ToArray();
+            return outputIndex;
         }
 
-        public T[] FindOverlapsNonOverlapping(T item)
+        public int FindOverlapsNonOverlapping(T item, ref T[] output)
         {
-            return FindOverlapsNonOverlapping(item.Address, item.Size);
+            return FindOverlapsNonOverlapping(item.Address, item.Size, ref output);
         }
 
-        public T[] FindOverlapsNonOverlapping(ulong address, ulong size)
+        public int FindOverlapsNonOverlapping(ulong address, ulong size, ref T[] output)
         {
             // This is a bit faster than FindOverlaps, but only works
             // when none of the items on the list overlaps with each other.
-            List<T> overlapsList = new List<T>();
+            int outputIndex = 0;
 
             ulong endAddress = address + size;
 
@@ -126,19 +134,24 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 do
                 {
-                    overlapsList.Add(_items[index++]);
+                    if (outputIndex == output.Length)
+                    {
+                        Array.Resize(ref output, outputIndex + ArrayGrowthSize);
+                    }
+
+                    output[outputIndex++] = _items[index++];
                 }
                 while (index < _items.Count && _items[index].OverlapsWith(address, size));
             }
 
-            return overlapsList.ToArray();
+            return outputIndex;
         }
 
-        public T[] FindOverlaps(ulong address)
+        public int FindOverlaps(ulong address, ref T[] output)
         {
-            List<T> overlapsList = new List<T>();
-
             int index = BinarySearch(address);
+
+            int outputIndex = 0;
 
             if (index >= 0)
             {
@@ -156,11 +169,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
                         break;
                     }
 
-                    overlapsList.Add(overlap);
+                    if (outputIndex == output.Length)
+                    {
+                        Array.Resize(ref output, outputIndex + ArrayGrowthSize);
+                    }
+
+                    output[outputIndex++] = overlap;
                 }
             }
 
-            return overlapsList.ToArray();
+            return outputIndex;
         }
 
         private int BinarySearch(ulong address)

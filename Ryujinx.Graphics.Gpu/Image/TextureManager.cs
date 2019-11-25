@@ -11,6 +11,9 @@ namespace Ryujinx.Graphics.Gpu.Image
 {
     class TextureManager
     {
+        private const int OverlapsBufferInitialCapacity = 10;
+        private const int OverlapsBufferMaxCapacity     = 10000;
+
         private GpuContext _context;
 
         private TextureBindingsManager _cpBindingsManager;
@@ -23,6 +26,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         private ITexture   _rtHostDs;
 
         private RangeList<Texture> _textures;
+
+        private Texture[] _textureOverlaps;
 
         private AutoDeleteCache _cache;
 
@@ -40,6 +45,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             _rtHostColors = new ITexture[Constants.TotalRenderTargets];
 
             _textures = new RangeList<Texture>();
+
+            _textureOverlaps = new Texture[OverlapsBufferInitialCapacity];
 
             _cache = new AutoDeleteCache();
         }
@@ -321,10 +328,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             bool isSamplerTexture = (flags & TextureSearchFlags.Sampler) != 0;
 
             // Try to find a perfect texture match, with the same address and parameters.
-            Texture[] sameAddressOverlaps = _textures.FindOverlaps(info.Address);
+            int sameAddressOverlapsCount = _textures.FindOverlaps(info.Address, ref _textureOverlaps);
 
-            foreach (Texture overlap in sameAddressOverlaps)
+            for (int index = 0; index < sameAddressOverlapsCount; index++)
             {
+                Texture overlap = _textureOverlaps[index];
+
                 if (overlap.IsPerfectMatch(info, flags))
                 {
                     if (!isSamplerTexture)
@@ -376,12 +385,14 @@ namespace Ryujinx.Graphics.Gpu.Image
             // Find view compatible matches.
             ulong size = (ulong)sizeInfo.TotalSize;
 
-            Texture[] overlaps = _textures.FindOverlaps(info.Address, size);
+            int overlapsCount = _textures.FindOverlaps(info.Address, size, ref _textureOverlaps);
 
             Texture texture = null;
 
-            foreach (Texture overlap in overlaps)
+            for (int index = 0; index < overlapsCount; index++)
             {
+                Texture overlap = _textureOverlaps[index];
+
                 if (overlap.IsViewCompatible(info, size, out int firstLayer, out int firstLevel))
                 {
                     if (!isSamplerTexture)
@@ -412,8 +423,10 @@ namespace Ryujinx.Graphics.Gpu.Image
                 // otherwise the copied data would be overwritten by a future synchronization.
                 texture.SynchronizeMemory();
 
-                foreach (Texture overlap in overlaps)
+                for (int index = 0; index < overlapsCount; index++)
                 {
+                    Texture overlap = _textureOverlaps[index];
+
                     if (texture.IsViewCompatible(overlap.Info, overlap.Size, out int firstLayer, out int firstLevel))
                     {
                         TextureInfo overlapInfo = AdjustSizes(texture, overlap.Info, firstLevel);
@@ -432,8 +445,10 @@ namespace Ryujinx.Graphics.Gpu.Image
                 // of the 3D texture to the newly created 3D texture.
                 if (info.Target == Target.Texture3D)
                 {
-                    foreach (Texture overlap in overlaps)
+                    for (int index = 0; index < overlapsCount; index++)
                     {
+                        Texture overlap = _textureOverlaps[index];
+
                         if (texture.IsViewCompatible(
                             overlap.Info,
                             overlap.Size,
@@ -456,7 +471,17 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             _textures.Add(texture);
 
+            ShrinkOverlapsBufferIfNeeded();
+
             return texture;
+        }
+
+        private void ShrinkOverlapsBufferIfNeeded()
+        {
+            if (_textureOverlaps.Length > OverlapsBufferMaxCapacity)
+            {
+                Array.Resize(ref _textureOverlaps, OverlapsBufferMaxCapacity);
+            }
         }
 
         private static TextureInfo AdjustSizes(Texture parent, TextureInfo info, int firstLevel)
