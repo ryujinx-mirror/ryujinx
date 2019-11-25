@@ -232,7 +232,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             bool saturate = op.RawOpCode.Extract(op is IOpCodeReg ? 32 : 52);
 
-            Operand[] srcA = GetHalfSrcA(context);
+            Operand[] srcA = GetHalfSrcA(context, isAdd);
             Operand[] srcB = GetHalfSrcB(context);
 
             Operand[] res = new Operand[2];
@@ -254,13 +254,17 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Copy(GetDest(context), GetHalfPacked(context, res));
         }
 
-        public static void Hsetp2(EmitterContext context)
+        public static void Hset2(EmitterContext context)
         {
             OpCodeSet op = (OpCodeSet)context.CurrOp;
 
-            bool hAnd = op.RawOpCode.Extract(53);
+            bool isRegVariant = op is IOpCodeReg;
 
-            Condition cmpOp = op is IOpCodeReg
+            bool boolFloat = isRegVariant
+                ? op.RawOpCode.Extract(49)
+                : op.RawOpCode.Extract(53);
+
+            Condition cmpOp = isRegVariant
                 ? (Condition)op.RawOpCode.Extract(35, 4)
                 : (Condition)op.RawOpCode.Extract(49, 4);
 
@@ -269,7 +273,48 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand[] res = new Operand[2];
 
+            res[0] = GetFPComparison(context, cmpOp, srcA[0], srcB[0]);
+            res[1] = GetFPComparison(context, cmpOp, srcA[1], srcB[1]);
+
             Operand pred = GetPredicate39(context);
+
+            res[0] = GetPredLogicalOp(context, op.LogicalOp, res[0], pred);
+            res[1] = GetPredLogicalOp(context, op.LogicalOp, res[1], pred);
+
+            if (boolFloat)
+            {
+                res[0] = context.ConditionalSelect(res[0], ConstF(1), Const(0));
+                res[1] = context.ConditionalSelect(res[1], ConstF(1), Const(0));
+
+                context.Copy(GetDest(context), context.PackHalf2x16(res[0], res[1]));
+            }
+            else
+            {
+                Operand low  = context.BitwiseAnd(res[0], Const(0xffff));
+                Operand high = context.ShiftLeft (res[1], Const(16));
+
+                Operand packed = context.BitwiseOr(low, high);
+
+                context.Copy(GetDest(context), packed);
+            }
+        }
+
+        public static void Hsetp2(EmitterContext context)
+        {
+            OpCodeSet op = (OpCodeSet)context.CurrOp;
+
+            bool isRegVariant = op is IOpCodeReg;
+
+            bool hAnd = isRegVariant
+                ? op.RawOpCode.Extract(49)
+                : op.RawOpCode.Extract(53);
+
+            Condition cmpOp = isRegVariant
+                ? (Condition)op.RawOpCode.Extract(35, 4)
+                : (Condition)op.RawOpCode.Extract(49, 4);
+
+            Operand[] srcA = GetHalfSrcA(context);
+            Operand[] srcB = GetHalfSrcB(context);
 
             Operand p0Res = GetFPComparison(context, cmpOp, srcA[0], srcB[0]);
             Operand p1Res = GetFPComparison(context, cmpOp, srcA[1], srcB[1]);
@@ -279,6 +324,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 p0Res = context.BitwiseAnd(p0Res, p1Res);
                 p1Res = context.BitwiseNot(p0Res);
             }
+
+            Operand pred = GetPredicate39(context);
 
             p0Res = GetPredLogicalOp(context, op.LogicalOp, p0Res, pred);
             p1Res = GetPredLogicalOp(context, op.LogicalOp, p1Res, pred);

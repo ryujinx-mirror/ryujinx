@@ -14,18 +14,16 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             OpCodeFArith op = (OpCodeFArith)context.CurrOp;
 
-            FPType srcType = (FPType)op.RawOpCode.Extract(8,  2);
-            FPType dstType = (FPType)op.RawOpCode.Extract(10, 2);
+            FPType dstType = (FPType)op.RawOpCode.Extract(8,  2);
+            FPType srcType = (FPType)op.RawOpCode.Extract(10, 2);
 
-            bool pass      = op.RawOpCode.Extract(40);
+            bool round     = op.RawOpCode.Extract(42);
             bool negateB   = op.RawOpCode.Extract(45);
             bool absoluteB = op.RawOpCode.Extract(49);
 
-            pass &= op.RoundingMode == RoundingMode.TowardsNegativeInfinity;
-
             Operand srcB = context.FPAbsNeg(GetSrcB(context, srcType), absoluteB, negateB);
 
-            if (!pass)
+            if (round)
             {
                 switch (op.RoundingMode)
                 {
@@ -84,6 +82,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             switch (op.RoundingMode)
             {
+                case RoundingMode.ToNearest:
+                    srcB = context.FPRound(srcB);
+                    break;
+
                 case RoundingMode.TowardsNegativeInfinity:
                     srcB = context.FPFloor(srcB);
                     break;
@@ -97,18 +99,12 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     break;
             }
 
+            long min = GetIntMin(intType);
+            long max = GetIntMax(intType);
+
+            srcB = context.FPClamp(srcB, ConstF(min), ConstF(max));
+
             srcB = context.FPConvertToS32(srcB);
-
-            // TODO: S/U64, conversion overflow handling.
-            if (intType != IntegerType.S32)
-            {
-                int min = GetIntMin(intType);
-                int max = GetIntMax(intType);
-
-                srcB = isSignedInt
-                    ? context.IClampS32(srcB, Const(min), Const(max))
-                    : context.IClampU32(srcB, Const(min), Const(max));
-            }
 
             Operand dest = GetDest(context);
 
@@ -194,8 +190,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     dstType |= IntegerType.S8;
                 }
 
-                int min = GetIntMin(dstType);
-                int max = GetIntMax(dstType);
+                int min = (int)GetIntMin(dstType);
+                int max = (int)GetIntMax(dstType);
 
                 srcB = dstIsSignedInt
                     ? context.IClampS32(srcB, Const(min), Const(max))

@@ -206,6 +206,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.FP | Instruction.Ceiling, Local(), a);
         }
 
+        public static Operand FPClamp(this EmitterContext context, Operand a, Operand b, Operand c)
+        {
+            return context.Add(Instruction.FP | Instruction.Clamp, Local(), a, b, c);
+        }
+
         public static Operand FPCompareEqual(this EmitterContext context, Operand a, Operand b)
         {
             return context.Add(Instruction.FP | Instruction.CompareEqual, Local(), a, b);

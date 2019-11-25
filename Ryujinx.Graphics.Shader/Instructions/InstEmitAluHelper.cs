@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static class InstEmitAluHelper
     {
-        public static int GetIntMin(IntegerType type)
+        public static long GetIntMin(IntegerType type)
         {
             switch (type)
             {
@@ -18,14 +18,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 case IntegerType.S8:  return sbyte.MinValue;
                 case IntegerType.U16: return ushort.MinValue;
                 case IntegerType.S16: return short.MinValue;
-                case IntegerType.U32: return (int)uint.MinValue;
+                case IntegerType.U32: return uint.MinValue;
                 case IntegerType.S32: return int.MinValue;
             }
 
             throw new ArgumentException($"The type \"{type}\" is not a supported int type.");
         }
 
-        public static int GetIntMax(IntegerType type)
+        public static long GetIntMax(IntegerType type)
         {
             switch (type)
             {
@@ -33,7 +33,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 case IntegerType.S8:  return sbyte.MaxValue;
                 case IntegerType.U16: return ushort.MaxValue;
                 case IntegerType.S16: return short.MaxValue;
-                case IntegerType.U32: return unchecked((int)uint.MaxValue);
+                case IntegerType.U32: return uint.MaxValue;
                 case IntegerType.S32: return int.MaxValue;
             }
 

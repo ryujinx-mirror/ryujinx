@@ -58,7 +58,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             // TODO: Warn about invalid floating point type.
 
-            return Const(0);
+            return ConstF(0);
         }
 
         public static Operand GetSrcB(EmitterContext context)
@@ -98,13 +98,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
             throw new InvalidOperationException($"Unexpected opcode type \"{context.CurrOp.GetType().Name}\".");
         }
 
-        public static Operand[] GetHalfSrcA(EmitterContext context)
+        public static Operand[] GetHalfSrcA(EmitterContext context, bool isAdd = false)
         {
             OpCode op = context.CurrOp;
 
             bool absoluteA = false, negateA = false;
 
-            if (op is IOpCodeCbuf || op is IOpCodeImm)
+            if (isAdd || op is IOpCodeCbuf || op is IOpCodeImm)
             {
                 negateA   = op.RawOpCode.Extract(43);
                 absoluteA = op.RawOpCode.Extract(44);
@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 absoluteA = op.RawOpCode.Extract(44);
             }
-            else if (op is OpCodeAluImm32 && op.Emitter == InstEmit.Hadd2)
+            else if (op is OpCodeAluImm32 && isAdd)
             {
                 negateA = op.RawOpCode.Extract(56);
             }
