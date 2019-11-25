@@ -172,9 +172,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
         private bool IsShaderDifferent(CachedShader shader, ulong gpuVa)
         {
-            for (int offset = 0; offset < shader.Code.Length; offset += 4)
+            for (int index = 0; index < shader.Code.Length; index++)
             {
-                if (_context.MemoryAccessor.ReadInt32(gpuVa + (ulong)offset) != shader.Code[offset / 4])
+                if (_context.MemoryAccessor.ReadInt32(gpuVa + (ulong)index * 4) != shader.Code[index])
                 {
                     return true;
                 }
