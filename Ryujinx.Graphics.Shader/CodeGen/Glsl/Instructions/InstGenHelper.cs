@@ -50,6 +50,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.CompareNotEqual,          InstType.OpBinaryCom,    "!=",              5);
             Add(Instruction.ConditionalSelect,        InstType.OpTernary,      "?:",              12);
             Add(Instruction.ConvertFPToS32,           InstType.CallUnary,      "int");
+            Add(Instruction.ConvertFPToU32,           InstType.CallUnary,      "uint");
             Add(Instruction.ConvertS32ToFP,           InstType.CallUnary,      "float");
             Add(Instruction.ConvertU32ToFP,           InstType.CallUnary,      "float");
             Add(Instruction.Cosine,                   InstType.CallUnary,      "cos");

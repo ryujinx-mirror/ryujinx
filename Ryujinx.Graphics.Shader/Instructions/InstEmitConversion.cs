@@ -99,12 +99,26 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     break;
             }
 
-            long min = GetIntMin(intType);
-            long max = GetIntMax(intType);
+            if (!isSignedInt)
+            {
+                // Negative float to uint cast is undefined, so we clamp
+                // the value before conversion.
+                srcB = context.FPMaximum(srcB, ConstF(0));
+            }
 
-            srcB = context.FPClamp(srcB, ConstF(min), ConstF(max));
+            srcB = isSignedInt
+                ? context.FPConvertToS32(srcB)
+                : context.FPConvertToU32(srcB);
 
-            srcB = context.FPConvertToS32(srcB);
+            if (isSmallInt)
+            {
+                int min = (int)GetIntMin(intType);
+                int max = (int)GetIntMax(intType);
+
+                srcB = isSignedInt
+                    ? context.IClampS32(srcB, Const(min), Const(max))
+                    : context.IClampU32(srcB, Const(min), Const(max));
+            }
 
             Operand dest = GetDest(context);
 

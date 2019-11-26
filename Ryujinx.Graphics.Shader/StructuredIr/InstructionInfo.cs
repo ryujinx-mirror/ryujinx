@@ -64,6 +64,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.CompareNotEqual,          VariableType.Bool,   VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.ConditionalSelect,        VariableType.Scalar, VariableType.Bool,   VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.ConvertFPToS32,           VariableType.S32,    VariableType.F32);
+            Add(Instruction.ConvertFPToU32,           VariableType.U32,    VariableType.F32);
             Add(Instruction.ConvertS32ToFP,           VariableType.F32,    VariableType.S32);
             Add(Instruction.ConvertU32ToFP,           VariableType.F32,    VariableType.U32);
             Add(Instruction.Cosine,                   VariableType.Scalar, VariableType.Scalar);

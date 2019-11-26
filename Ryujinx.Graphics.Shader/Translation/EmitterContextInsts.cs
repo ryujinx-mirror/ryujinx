@@ -206,11 +206,6 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.FP | Instruction.Ceiling, Local(), a);
         }
 
-        public static Operand FPClamp(this EmitterContext context, Operand a, Operand b, Operand c)
-        {
-            return context.Add(Instruction.FP | Instruction.Clamp, Local(), a, b, c);
-        }
-
         public static Operand FPCompareEqual(this EmitterContext context, Operand a, Operand b)
         {
             return context.Add(Instruction.FP | Instruction.CompareEqual, Local(), a, b);
@@ -224,6 +219,11 @@ namespace Ryujinx.Graphics.Shader.Translation
         public static Operand FPConvertToS32(this EmitterContext context, Operand a)
         {
             return context.Add(Instruction.ConvertFPToS32, Local(), a);
+        }
+
+        public static Operand FPConvertToU32(this EmitterContext context, Operand a)
+        {
+            return context.Add(Instruction.ConvertFPToU32, Local(), a);
         }
 
         public static Operand FPCosine(this EmitterContext context, Operand a)

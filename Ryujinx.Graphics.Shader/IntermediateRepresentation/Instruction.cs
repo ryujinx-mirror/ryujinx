@@ -46,6 +46,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         CompareNotEqual,
         ConditionalSelect,
         ConvertFPToS32,
+        ConvertFPToU32,
         ConvertS32ToFP,
         ConvertU32ToFP,
         Copy,
