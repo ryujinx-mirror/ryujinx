@@ -3,7 +3,7 @@
     enum ResultCode
     {
         ModuleId       = 22,
-        ErrorCodeShift = 22,
+        ErrorCodeShift = 9,
 
         Success = 0,
 

@@ -1,5 +1,6 @@
 ﻿using ARMeilleure.Memory;
 using Ryujinx.Common;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -265,13 +266,15 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
             int retryCount;
 
-            int addressSpacePageLimit = (int)((memMgr.GetAddrSpaceSize() - size) >> 12);
+            ulong addressSpacePageLimit = (memMgr.GetAddrSpaceSize() - size) >> 12;
 
             for (retryCount = 0; retryCount < MaxMapRetries; retryCount++)
             {
                 while (true)
                 {
-                    targetAddress = memMgr.GetAddrSpaceBaseAddr() + (ulong)(_random.Next(addressSpacePageLimit) << 12);
+                    ulong randomOffset = (ulong)(uint)_random.Next(0, (int)addressSpacePageLimit) << 12;
+
+                    targetAddress = memMgr.GetAddrSpaceBaseAddr() + randomOffset;
 
                     if (memMgr.InsideAddrSpace(targetAddress, size) && !memMgr.InsideHeapRegion(targetAddress, size) && !memMgr.InsideAliasRegion(targetAddress, size))
                     {
@@ -449,6 +452,8 @@ namespace Ryujinx.HLE.HOS.Services.Ro
 
                         if (result == ResultCode.Success)
                         {
+                            info.NroMappedAddress = nroMappedAddress;
+
                             _nroInfos.Add(info);
                         }
                     }
