@@ -4,6 +4,7 @@ using Ryujinx.Graphics.Shader.Translation;
 using System.Collections.Generic;
 using System.Linq;
 
+using static Ryujinx.Graphics.Shader.Instructions.InstEmitHelper;
 using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
 
 namespace Ryujinx.Graphics.Shader.Instructions
@@ -129,22 +130,29 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         private static void EmitBranch(EmitterContext context, ulong address)
         {
+            OpCode op = context.CurrOp;
+
             // If we're branching to the next instruction, then the branch
             // is useless and we can ignore it.
-            if (address == context.CurrOp.Address + 8)
+            if (address == op.Address + 8)
             {
                 return;
             }
 
             Operand label = context.GetLabel(address);
 
-            Operand pred = Register(context.CurrOp.Predicate);
+            Operand pred = Register(op.Predicate);
 
-            if (context.CurrOp.Predicate.IsPT)
+            if (op is OpCodeBranch opBranch && opBranch.Condition != Condition.Always)
+            {
+                pred = context.BitwiseAnd(pred, GetCondition(context, opBranch.Condition));
+            }
+
+            if (op.Predicate.IsPT)
             {
                 context.Branch(label);
             }
-            else if (context.CurrOp.InvertPredicate)
+            else if (op.InvertPredicate)
             {
                 context.BranchIfFalse(label, pred);
             }
@@ -152,6 +160,22 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 context.BranchIfTrue(label, pred);
             }
+        }
+
+        private static Operand GetCondition(EmitterContext context, Condition cond)
+        {
+            // TODO: More condition codes, figure out how they work.
+            switch (cond)
+            {
+                case Condition.Equal:
+                case Condition.EqualUnordered:
+                    return GetZF(context);
+                case Condition.NotEqual:
+                case Condition.NotEqualUnordered:
+                    return context.BitwiseNot(GetZF(context));
+            }
+
+            return Const(IrConsts.True);
         }
     }
 }

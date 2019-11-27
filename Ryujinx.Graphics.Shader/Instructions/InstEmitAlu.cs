@@ -288,7 +288,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 context.Copy(dest, res);
             }
 
-            // TODO: CC, X
+            SetZnFlags(context, res, op.SetCondCode, op.Extended);
+
+            // TODO: X
         }
 
         public static void Isetp(EmitterContext context)

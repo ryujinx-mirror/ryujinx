@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
     {
         private HashSet<BasicBlock> _loopTails;
 
-        private Stack<(AstBlock Block, int EndIndex)> _blockStack;
+        private Stack<(AstBlock Block, int CurrEndIndex, int LoopEndIndex)> _blockStack;
 
         private Dictionary<Operand, AstOperand> _localsMap;
 
@@ -22,6 +22,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         private AstBlock _currBlock;
 
         private int _currEndIndex;
+        private int _loopEndIndex;
 
         public StructuredProgramInfo Info { get; }
 
@@ -31,7 +32,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         {
             _loopTails = new HashSet<BasicBlock>();
 
-            _blockStack = new Stack<(AstBlock, int)>();
+            _blockStack = new Stack<(AstBlock, int, int)>();
 
             _localsMap = new Dictionary<Operand, AstOperand>();
 
@@ -42,6 +43,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             _currBlock = new AstBlock(AstBlockType.Main);
 
             _currEndIndex = blocksCount;
+            _loopEndIndex = blocksCount;
 
             Info = new StructuredProgramInfo(_currBlock);
 
@@ -52,7 +54,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         {
             while (_currEndIndex == block.Index)
             {
-                (_currBlock, _currEndIndex) = _blockStack.Pop();
+                (_currBlock, _currEndIndex, _loopEndIndex) = _blockStack.Pop();
             }
 
             if (_gotoTempAsgs.TryGetValue(block.Index, out AstAssignment gotoTempAsg))
@@ -107,9 +109,19 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 return;
             }
 
+            // We can only enclose the "if" when the branch lands before
+            // the end of the current block. If the current enclosing block
+            // is not a loop, then we can also do so if the branch lands
+            // right at the end of the current block. When it is a loop,
+            // this is not valid as the loop condition would be evaluated,
+            // and it could erroneously jump back to the start of the loop.
+            bool inRange =
+                block.Branch.Index <  _currEndIndex ||
+               (block.Branch.Index == _currEndIndex && block.Branch.Index < _loopEndIndex);
+
             bool isLoop = block.Branch.Index <= block.Index;
 
-            if (block.Branch.Index <= _currEndIndex && !isLoop)
+            if (inRange && !isLoop)
             {
                 NewBlock(AstBlockType.If, branchOp, block.Branch.Index);
             }
@@ -171,10 +183,15 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             AddNode(childBlock);
 
-            _blockStack.Push((_currBlock, _currEndIndex));
+            _blockStack.Push((_currBlock, _currEndIndex, _loopEndIndex));
 
             _currBlock    = childBlock;
             _currEndIndex = endIndex;
+
+            if (type == AstBlockType.DoWhile)
+            {
+                _loopEndIndex = endIndex;
+            }
         }
 
         private IAstNode GetBranchCond(AstBlockType type, Operation branchOp)

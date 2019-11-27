@@ -1,6 +1,5 @@
 using Ryujinx.Graphics.Shader.CodeGen.Glsl;
 using Ryujinx.Graphics.Shader.Decoders;
-using Ryujinx.Graphics.Shader.Instructions;
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using Ryujinx.Graphics.Shader.StructuredIr;
 using Ryujinx.Graphics.Shader.Translation.Optimizations;
@@ -219,15 +218,15 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     Operand predSkipLbl = null;
 
-                    bool skipPredicateCheck = op.Emitter == InstEmit.Bra;
+                    bool skipPredicateCheck = op is OpCodeBranch opBranch && !opBranch.PushTarget;
 
                     if (op is OpCodeBranchPop opBranchPop)
                     {
-                        // If the instruction is a SYNC instruction with only one
+                        // If the instruction is a SYNC or BRK instruction with only one
                         // possible target address, then the instruction is basically
                         // just a simple branch, we can generate code similar to branch
                         // instructions, with the condition check on the branch itself.
-                        skipPredicateCheck |= opBranchPop.Targets.Count < 2;
+                        skipPredicateCheck = opBranchPop.Targets.Count < 2;
                     }
 
                     if (!(op.Predicate.IsPT || skipPredicateCheck))
