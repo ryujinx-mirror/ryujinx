@@ -290,8 +290,8 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // CalculateStandardUserSystemClockDifferenceByUser(buffer<nn::time::sf::ClockSnapshot, 0x19>, buffer<nn::time::sf::ClockSnapshot, 0x19>) -> nn::TimeSpanType
         public ResultCode CalculateStandardUserSystemClockDifferenceByUser(ServiceCtx context)
         {
-            ClockSnapshot clockSnapshotA = ReadClockSnapshotFromBuffer(context, context.Request.ExchangeBuff[0]);
-            ClockSnapshot clockSnapshotB = ReadClockSnapshotFromBuffer(context, context.Request.ExchangeBuff[1]);
+            ClockSnapshot clockSnapshotA = ReadClockSnapshotFromBuffer(context, context.Request.PtrBuff[0]);
+            ClockSnapshot clockSnapshotB = ReadClockSnapshotFromBuffer(context, context.Request.PtrBuff[1]);
             TimeSpanType  difference     = TimeSpanType.FromSeconds(clockSnapshotB.UserContext.Offset - clockSnapshotA.UserContext.Offset);
 
             if (clockSnapshotB.UserContext.SteadyTimePoint.ClockSourceId != clockSnapshotA.UserContext.SteadyTimePoint.ClockSourceId || (clockSnapshotB.IsAutomaticCorrectionEnabled && clockSnapshotA.IsAutomaticCorrectionEnabled))
@@ -308,8 +308,8 @@ namespace Ryujinx.HLE.HOS.Services.Time
         // CalculateSpanBetween(buffer<nn::time::sf::ClockSnapshot, 0x19>, buffer<nn::time::sf::ClockSnapshot, 0x19>) -> nn::TimeSpanType
         public ResultCode CalculateSpanBetween(ServiceCtx context)
         {
-            ClockSnapshot clockSnapshotA = ReadClockSnapshotFromBuffer(context, context.Request.ExchangeBuff[0]);
-            ClockSnapshot clockSnapshotB = ReadClockSnapshotFromBuffer(context, context.Request.ExchangeBuff[1]);
+            ClockSnapshot clockSnapshotA = ReadClockSnapshotFromBuffer(context, context.Request.PtrBuff[0]);
+            ClockSnapshot clockSnapshotB = ReadClockSnapshotFromBuffer(context, context.Request.PtrBuff[1]);
 
             TimeSpanType result;
 
@@ -397,7 +397,7 @@ namespace Ryujinx.HLE.HOS.Services.Time
             return result;
         }
 
-        private ClockSnapshot ReadClockSnapshotFromBuffer(ServiceCtx context, IpcBuffDesc ipcDesc)
+        private ClockSnapshot ReadClockSnapshotFromBuffer(ServiceCtx context, IpcPtrBuffDesc ipcDesc)
         {
             Debug.Assert(ipcDesc.Size == Marshal.SizeOf<ClockSnapshot>());
 
