@@ -285,6 +285,13 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void Dispatch(int groupsX, int groupsY, int groupsZ)
         {
+            if (!_program.IsLinked)
+            {
+                return;
+            }
+
+            PrepareForDispatch();
+
             GL.DispatchCompute(groupsX, groupsY, groupsZ);
         }
 
@@ -872,6 +879,14 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
+        private void PrepareForDispatch()
+        {
+            if (_unit0Texture != null)
+            {
+                _unit0Texture.Bind(0);
+            }
+        }
+
         private void PrepareForDraw()
         {
             _vertexArray.Validate();
@@ -893,11 +908,6 @@ namespace Ryujinx.Graphics.OpenGL
                     (_componentMasks[index] & 4u) != 0,
                     (_componentMasks[index] & 8u) != 0);
             }
-        }
-
-        public void RebindProgram()
-        {
-            _program?.Bind();
         }
     }
 }
