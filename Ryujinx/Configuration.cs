@@ -7,8 +7,8 @@ using Ryujinx.HLE;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.HOS.Services;
 using Ryujinx.HLE.Input;
-using Ryujinx.UI;
-using Ryujinx.UI.Input;
+using Ryujinx.Ui;
+using Ryujinx.Ui.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -124,7 +124,7 @@ namespace Ryujinx
         /// <summary>
         /// Used to toggle columns in the GUI
         /// </summary>
-        public List<bool> GuiColumns { get; set; }
+        public GuiColumns GuiColumns { get; set; }
 
         /// <summary>
         /// A list of directories containing games to be used to load games into the games list
@@ -154,7 +154,7 @@ namespace Ryujinx
         /// <summary>
         /// Controller control bindings
         /// </summary>
-        public UI.Input.NpadController JoystickControls { get; private set; }
+        public Ui.Input.NpadController JoystickControls { get; private set; }
 
         /// <summary>
         /// Loads a configuration file from disk

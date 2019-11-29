@@ -126,13 +126,23 @@
                       <object class="GtkMenuItem" id="GUIColumns">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Select which GUI columns to enable (restart Ryujinx for these changes to take effect)</property>
+                        <property name="tooltip_text" translatable="yes">Select which GUI columns to enable</property>
                         <property name="label" translatable="yes">Enable GUI Columns</property>
                         <property name="use_underline">True</property>
                         <child type="submenu">
                           <object class="GtkMenu">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <child>
+                              <object class="GtkCheckMenuItem" id="_favToggle">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="tooltip_text" translatable="yes">Enable or Disable Favorite Games Column in the game list</property>
+                                <property name="label" translatable="yes">Enable Favorite Games Column</property>
+                                <property name="use_underline">True</property>
+                                <signal name="toggled" handler="Fav_Toggled" swapped="no"/>
+                              </object>
+                            </child>
                             <child>
                               <object class="GtkCheckMenuItem" id="_iconToggle">
                                 <property name="visible">True</property>
@@ -144,7 +154,7 @@
                               </object>
                             </child>
                             <child>
-                              <object class="GtkCheckMenuItem" id="_titleToggle">
+                              <object class="GtkCheckMenuItem" id="_appToggle">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="tooltip_text" translatable="yes">Enable or Disable Title Name/ID Column in the game list</property>
@@ -303,42 +313,102 @@
           </packing>
         </child>
         <child>
-          <object class="GtkScrolledWindow" id="_gameTableWindow">
+          <object class="GtkBox" id="MainBox">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="shadow_type">in</property>
+            <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
             <child>
-              <object class="GtkTreeView" id="_gameTable">
+              <object class="GtkScrolledWindow" id="_gameTableWindow">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="headers_clickable">False</property>
-                <property name="reorderable">True</property>
-                <property name="hover_selection">True</property>
-                <signal name="row-activated" handler="Row_Activated" swapped="no"/>
-                <child internal-child="selection">
-                  <object class="GtkTreeSelection"/>
+                <property name="shadow_type">in</property>
+                <child>
+                  <object class="GtkTreeView" id="_gameTable">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="reorderable">True</property>
+                    <property name="hover_selection">True</property>
+                    <signal name="row-activated" handler="Row_Activated" swapped="no"/>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection"/>
+                    </child>
+                  </object>
                 </child>
               </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="FooterBox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkEventBox">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <signal name="button-release-event" handler="RefreshList_Pressed" swapped="no"/>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="name">RefreshList</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="stock">gtk-refresh</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="_progressLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">2</property>
+                    <property name="margin_bottom">2</property>
+                    <property name="label" translatable="yes">0/0 Games Loaded</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLevelBar" id="_progressBar">
+                    <property name="width_request">200</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
             </child>
           </object>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
             <property name="position">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkGLArea" id="_glScreen">
-            <property name="width_request">1280</property>
-            <property name="height_request">720</property>
-            <property name="visible">True</property>
-            <property name="app_paintable">True</property>
-            <property name="can_focus">False</property>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">2</property>
           </packing>
         </child>
       </object>

@@ -7,7 +7,9 @@
     "logging_enable_error": true,
     "logging_enable_guest": true,
     "logging_enable_fs_access_log": false,
-    "logging_filtered_classes": [ ],
+    "logging_filtered_classes": [
+        
+    ],
     "enable_file_log": true,
     "system_language": "AmericanEnglish",
     "docked_mode": false,
@@ -15,12 +17,27 @@
     "enable_vsync": true,
     "enable_multicore_scheduling": true,
     "enable_fs_integrity_checks": true,
+    "fs_global_access_log_mode": 0,
     "ignore_missing_services": false,
     "controller_type": "Handheld",
-    "gui_columns": [ true, true, true, true, true, true, true, true, true ],
-    "game_dirs": [],
+    "gui_columns": {
+        "fav_column": true,
+        "icon_column": true,
+        "app_column": true,
+        "dev_column": true,
+        "version_column": true,
+        "time_played_column": true,
+        "last_played_column": true,
+        "file_ext_column": true,
+        "file_size_column": true,
+        "path_column": true
+    },
+    "game_dirs": [
+        
+    ],
     "enable_custom_theme": false,
     "custom_theme_path": "",
+    "enable_keyboard": false,
     "keyboard_controls": {
         "left_joycon": {
             "stick_up": "W",
@@ -54,7 +71,7 @@
             "toggle_vsync": "Tab"
         }
     },
-        "joystick_controls": {
+    "joystick_controls": {
         "enabled": true,
         "index": 0,
         "deadzone": 0.05,

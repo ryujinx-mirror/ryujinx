@@ -1,7 +1,7 @@
 using Gtk;
 using Ryujinx.Common.Logging;
 using Ryujinx.Profiler;
-using Ryujinx.UI;
+using Ryujinx.Ui;
 using System;
 using System.IO;
 
@@ -18,16 +18,20 @@ namespace Ryujinx
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.ProcessExit        += CurrentDomain_ProcessExit;
+            GLib.ExceptionManager.UnhandledException   += Glib_UnhandledException;
 
             Profile.Initialize();
 
             Application.Init();
 
-            Application gtkApplication = new Application("Ryujinx.Ryujinx", GLib.ApplicationFlags.None);
-            MainWindow  mainWindow     = new MainWindow(args, gtkApplication);
+            string appDataPath     = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RyuFs", "system", "prod.keys");
+            string userProfilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".switch", "prod.keys");
+            if (!File.Exists(appDataPath) && !File.Exists(userProfilePath))
+            {
+                GtkDialog.CreateErrorDialog($"Key file was not found. Please refer to `KEYS.md` for more info");
+            }
 
-            gtkApplication.Register(GLib.Cancellable.Current);
-            gtkApplication.AddWindow(mainWindow);
+            MainWindow mainWindow = new MainWindow();
             mainWindow.Show();
 
             if (args.Length == 1)
@@ -45,9 +49,21 @@ namespace Ryujinx
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            var exception = e.ExceptionObject as Exception;
+            Exception exception = e.ExceptionObject as Exception;
 
             Logger.PrintError(LogClass.Emulation, $"Unhandled exception caught: {exception}");
+
+            if (e.IsTerminating)
+            {
+                Logger.Shutdown();
+            }
+        }
+
+        private static void Glib_UnhandledException(GLib.UnhandledExceptionArgs e)
+        {
+            Exception exception = e.ExceptionObject as Exception;
+
+            Logger.PrintError(LogClass.Application, $"Unhandled exception caught: {exception}");
 
             if (e.IsTerminating)
             {

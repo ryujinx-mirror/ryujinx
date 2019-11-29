@@ -154,10 +154,10 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkLabel" id="license">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Unlicenced</property>
+                        <property name="label" translatable="yes">MIT License</property>
                         <property name="justify">center</property>
                       </object>
                       <packing>
@@ -168,7 +168,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkLabel" id="disclaimer">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Ryujinx is not affiliated with Nintendo,
@@ -523,11 +523,11 @@ Andy A (BaronKiko)</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEventBox" id="ContributersButton">
+                      <object class="GtkEventBox" id="ContributorsButton">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="valign">start</property>
-                        <signal name="button-press-event" handler="ContributersButton_Pressed" swapped="no"/>
+                        <signal name="button-press-event" handler="ContributorsButton_Pressed" swapped="no"/>
                         <child>
                           <object class="GtkLabel">
                             <property name="visible">True</property>

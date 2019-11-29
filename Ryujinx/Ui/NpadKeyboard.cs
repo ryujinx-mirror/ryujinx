@@ -1,7 +1,7 @@
 using OpenTK.Input;
 using Ryujinx.HLE.Input;
 
-namespace Ryujinx.UI.Input
+namespace Ryujinx.Ui.Input
 {
     public struct NpadKeyboardLeft
     {

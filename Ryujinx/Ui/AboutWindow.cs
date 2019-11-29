@@ -1,27 +1,22 @@
 ﻿using Gtk;
-using GUI = Gtk.Builder.ObjectAttribute;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Utf8Json;
 using Utf8Json.Resolvers;
-using System.IO;
 
-namespace Ryujinx.UI
+using GUI = Gtk.Builder.ObjectAttribute;
+
+namespace Ryujinx.Ui
 {
-    public struct Info
-    {
-        public string InstallVersion;
-        public string InstallCommit;
-        public string InstallBranch;
-    }
-
     public class AboutWindow : Window
     {
-        public static Info Information { get; private set; }
+        private static AboutInfo AboutInformation { get; set; }
 
-#pragma warning disable 649
+#pragma warning disable CS0649
+#pragma warning disable IDE0044
         [GUI] Window _aboutWin;
         [GUI] Label  _versionText;
         [GUI] Image  _ryujinxLogo;
@@ -29,7 +24,8 @@ namespace Ryujinx.UI
         [GUI] Image  _gitHubLogo;
         [GUI] Image  _discordLogo;
         [GUI] Image  _twitterLogo;
-#pragma warning restore 649
+#pragma warning restore CS0649
+#pragma warning restore IDE0044
 
         public AboutWindow() : this(new Builder("Ryujinx.Ui.AboutWindow.glade")) { }
 
@@ -37,8 +33,8 @@ namespace Ryujinx.UI
         {
             builder.Autoconnect(this);
 
-            _aboutWin.Icon      = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.ryujinxIcon.png");
-            _ryujinxLogo.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.ryujinxIcon.png", 100, 100);
+            _aboutWin.Icon      = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png");
+            _ryujinxLogo.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png"       , 100, 100);
             _patreonLogo.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.PatreonLogo.png", 30 , 30 );
             _gitHubLogo.Pixbuf  = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.GitHubLogo.png" , 30 , 30 );
             _discordLogo.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.DiscordLogo.png", 30 , 30 );
@@ -50,10 +46,10 @@ namespace Ryujinx.UI
 
                 using (Stream stream = File.OpenRead(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RyuFS", "Installer", "Config", "Config.json")))
                 {
-                    Information = JsonSerializer.Deserialize<Info>(stream, resolver);
+                    AboutInformation = JsonSerializer.Deserialize<AboutInfo>(stream, resolver);
                 }
 
-                _versionText.Text = $"Version {Information.InstallVersion} - {Information.InstallBranch} ({Information.InstallCommit})";
+                _versionText.Text = $"Version {AboutInformation.InstallVersion} - {AboutInformation.InstallBranch} ({AboutInformation.InstallCommit})";
             }
             catch
             {
@@ -61,7 +57,7 @@ namespace Ryujinx.UI
             }
         }
 
-        public void OpenUrl(string url)
+        private static void OpenUrl(string url)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -78,39 +74,39 @@ namespace Ryujinx.UI
         }
 
         //Events
-        private void RyujinxButton_Pressed(object obj, ButtonPressEventArgs args)
+        private void RyujinxButton_Pressed(object sender, ButtonPressEventArgs args)
         {
             OpenUrl("https://ryujinx.org");
         }
 
-        private void PatreonButton_Pressed(object obj, ButtonPressEventArgs args)
+        private void PatreonButton_Pressed(object sender, ButtonPressEventArgs args)
         {
             OpenUrl("https://www.patreon.com/ryujinx");
         }
 
-        private void GitHubButton_Pressed(object obj, ButtonPressEventArgs args)
+        private void GitHubButton_Pressed(object sender, ButtonPressEventArgs args)
         {
             OpenUrl("https://github.com/Ryujinx/Ryujinx");
         }
 
-        private void DiscordButton_Pressed(object obj, ButtonPressEventArgs args)
+        private void DiscordButton_Pressed(object sender, ButtonPressEventArgs args)
         {
             OpenUrl("https://discordapp.com/invite/N2FmfVc");
         }
 
-        private void TwitterButton_Pressed(object obj, ButtonPressEventArgs args)
+        private void TwitterButton_Pressed(object sender, ButtonPressEventArgs args)
         {
             OpenUrl("https://twitter.com/RyujinxEmu");
         }
 
-        private void ContributersButton_Pressed(object obj, ButtonPressEventArgs args)
+        private void ContributorsButton_Pressed(object sender, ButtonPressEventArgs args)
         {
             OpenUrl("https://github.com/Ryujinx/Ryujinx/graphs/contributors?type=a");
         }
 
-        private void CloseToggle_Activated(object obj, EventArgs args)
+        private void CloseToggle_Activated(object sender, EventArgs args)
         {
-            Destroy();
+            Dispose();
         }
     }
 }

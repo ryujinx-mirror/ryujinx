@@ -1,27 +1,29 @@
 ﻿using Gtk;
-using GUI = Gtk.Builder.ObjectAttribute;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Input;
-using Ryujinx.UI.Input;
+using Ryujinx.Ui.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Ryujinx.UI
+using GUI = Gtk.Builder.ObjectAttribute;
+
+namespace Ryujinx.Ui
 {
     public class SwitchSettings : Window
     {
         internal static Configuration SwitchConfig { get; set; }
 
-        internal HLE.Switch Device { get; set; }
+        private readonly HLE.Switch _device;
 
         private static ListStore _gameDirsBoxStore;
 
         private static bool _listeningForKeypress;
 
-#pragma warning disable 649
+#pragma warning disable CS0649
+#pragma warning disable IDE0044
         [GUI] Window       _settingsWin;
         [GUI] CheckButton  _errorLogToggle;
         [GUI] CheckButton  _warningLogToggle;
@@ -51,7 +53,7 @@ namespace Ryujinx.UI
         [GUI] ToggleButton _removeDir;
         [GUI] Entry        _logPath;
         [GUI] Entry        _graphicsShadersDumpPath;
-        [GUI] Image        _controllerImage;
+        [GUI] Image        _controller1Image;
 
         [GUI] ComboBoxText _controller1Type;
         [GUI] ToggleButton _lStickUp1;
@@ -78,67 +80,70 @@ namespace Ryujinx.UI
         [GUI] ToggleButton _plus1;
         [GUI] ToggleButton _r1;
         [GUI] ToggleButton _zR1;
-#pragma warning restore 649
+#pragma warning restore CS0649
+#pragma warning restore IDE0044
 
-        public static void ConfigureSettings(Configuration Instance) { SwitchConfig = Instance; }
+        public static void ConfigureSettings(Configuration instance) { SwitchConfig = instance; }
 
         public SwitchSettings(HLE.Switch device) : this(new Builder("Ryujinx.Ui.SwitchSettings.glade"), device) { }
 
         private SwitchSettings(Builder builder, HLE.Switch device) : base(builder.GetObject("_settingsWin").Handle)
         {
-            Device = device;
-
             builder.Autoconnect(this);
 
-            _settingsWin.Icon       = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.ryujinxIcon.png");
-            _controllerImage.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.JoyCon.png", 500, 500);
+            _device = device;
+
+            _settingsWin.Icon        = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png");
+            _controller1Image.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.JoyCon.png", 500, 500);
 
             //Bind Events
-            _lStickUp1.Clicked     += (o, args) => Button_Pressed(o, args, _lStickUp1);
-            _lStickDown1.Clicked   += (o, args) => Button_Pressed(o, args, _lStickDown1);
-            _lStickLeft1.Clicked   += (o, args) => Button_Pressed(o, args, _lStickLeft1);
-            _lStickRight1.Clicked  += (o, args) => Button_Pressed(o, args, _lStickRight1);
-            _lStickButton1.Clicked += (o, args) => Button_Pressed(o, args, _lStickButton1);
-            _dpadUp1.Clicked       += (o, args) => Button_Pressed(o, args, _dpadUp1);
-            _dpadDown1.Clicked     += (o, args) => Button_Pressed(o, args, _dpadDown1);
-            _dpadLeft1.Clicked     += (o, args) => Button_Pressed(o, args, _dpadLeft1);
-            _dpadRight1.Clicked    += (o, args) => Button_Pressed(o, args, _dpadRight1);
-            _minus1.Clicked        += (o, args) => Button_Pressed(o, args, _minus1);
-            _l1.Clicked            += (o, args) => Button_Pressed(o, args, _l1);
-            _zL1.Clicked           += (o, args) => Button_Pressed(o, args, _zL1);
-            _rStickUp1.Clicked     += (o, args) => Button_Pressed(o, args, _rStickUp1);
-            _rStickDown1.Clicked   += (o, args) => Button_Pressed(o, args, _rStickDown1);
-            _rStickLeft1.Clicked   += (o, args) => Button_Pressed(o, args, _rStickLeft1);
-            _rStickRight1.Clicked  += (o, args) => Button_Pressed(o, args, _rStickRight1);
-            _rStickButton1.Clicked += (o, args) => Button_Pressed(o, args, _rStickButton1);
-            _a1.Clicked            += (o, args) => Button_Pressed(o, args, _a1);
-            _b1.Clicked            += (o, args) => Button_Pressed(o, args, _b1);
-            _x1.Clicked            += (o, args) => Button_Pressed(o, args, _x1);
-            _y1.Clicked            += (o, args) => Button_Pressed(o, args, _y1);
-            _plus1.Clicked         += (o, args) => Button_Pressed(o, args, _plus1);
-            _r1.Clicked            += (o, args) => Button_Pressed(o, args, _r1);
-            _zR1.Clicked           += (o, args) => Button_Pressed(o, args, _zR1);
+            _lStickUp1.Clicked       += (sender, args) => Button_Pressed(sender, args, _lStickUp1);
+            _lStickDown1.Clicked     += (sender, args) => Button_Pressed(sender, args, _lStickDown1);
+            _lStickLeft1.Clicked     += (sender, args) => Button_Pressed(sender, args, _lStickLeft1);
+            _lStickRight1.Clicked    += (sender, args) => Button_Pressed(sender, args, _lStickRight1);
+            _lStickButton1.Clicked   += (sender, args) => Button_Pressed(sender, args, _lStickButton1);
+            _dpadUp1.Clicked         += (sender, args) => Button_Pressed(sender, args, _dpadUp1);
+            _dpadDown1.Clicked       += (sender, args) => Button_Pressed(sender, args, _dpadDown1);
+            _dpadLeft1.Clicked       += (sender, args) => Button_Pressed(sender, args, _dpadLeft1);
+            _dpadRight1.Clicked      += (sender, args) => Button_Pressed(sender, args, _dpadRight1);
+            _minus1.Clicked          += (sender, args) => Button_Pressed(sender, args, _minus1);
+            _l1.Clicked              += (sender, args) => Button_Pressed(sender, args, _l1);
+            _zL1.Clicked             += (sender, args) => Button_Pressed(sender, args, _zL1);
+            _rStickUp1.Clicked       += (sender, args) => Button_Pressed(sender, args, _rStickUp1);
+            _rStickDown1.Clicked     += (sender, args) => Button_Pressed(sender, args, _rStickDown1);
+            _rStickLeft1.Clicked     += (sender, args) => Button_Pressed(sender, args, _rStickLeft1);
+            _rStickRight1.Clicked    += (sender, args) => Button_Pressed(sender, args, _rStickRight1);
+            _rStickButton1.Clicked   += (sender, args) => Button_Pressed(sender, args, _rStickButton1);
+            _a1.Clicked              += (sender, args) => Button_Pressed(sender, args, _a1);
+            _b1.Clicked              += (sender, args) => Button_Pressed(sender, args, _b1);
+            _x1.Clicked              += (sender, args) => Button_Pressed(sender, args, _x1);
+            _y1.Clicked              += (sender, args) => Button_Pressed(sender, args, _y1);
+            _plus1.Clicked           += (sender, args) => Button_Pressed(sender, args, _plus1);
+            _r1.Clicked              += (sender, args) => Button_Pressed(sender, args, _r1);
+            _zR1.Clicked             += (sender, args) => Button_Pressed(sender, args, _zR1);
+            _controller1Type.Changed += (sender, args) => Controller_Changed(sender, args, _controller1Type.ActiveId, _controller1Image);
 
             //Setup Currents
-            if (SwitchConfig.EnableFileLog)             { _fileLogToggle.Click();        }
-            if (SwitchConfig.LoggingEnableError)        { _errorLogToggle.Click();       }
-            if (SwitchConfig.LoggingEnableWarn)         { _warningLogToggle.Click();     }
-            if (SwitchConfig.LoggingEnableInfo)         { _infoLogToggle.Click();        }
-            if (SwitchConfig.LoggingEnableStub)         { _stubLogToggle.Click();        }
-            if (SwitchConfig.LoggingEnableDebug)        { _debugLogToggle.Click();       }
-            if (SwitchConfig.LoggingEnableGuest)        { _guestLogToggle.Click();       }
-            if (SwitchConfig.LoggingEnableFsAccessLog)  { _fsAccessLogToggle.Click();    }
-            if (SwitchConfig.DockedMode)                { _dockedModeToggle.Click();     }
-            if (SwitchConfig.EnableDiscordIntegration)  { _discordToggle.Click();        }
-            if (SwitchConfig.EnableVsync)               { _vSyncToggle.Click();          }
-            if (SwitchConfig.EnableMulticoreScheduling) { _multiSchedToggle.Click();     }
-            if (SwitchConfig.EnableFsIntegrityChecks)   { _fsicToggle.Click();           }
-            if (SwitchConfig.IgnoreMissingServices)     { _ignoreToggle.Click();         }
-            if (SwitchConfig.EnableKeyboard)            { _directKeyboardAccess.Click(); }
-            if (SwitchConfig.EnableCustomTheme)         { _custThemeToggle.Click();      }
+            if (SwitchConfig.EnableFileLog)             _fileLogToggle.Click();
+            if (SwitchConfig.LoggingEnableError)        _errorLogToggle.Click();
+            if (SwitchConfig.LoggingEnableWarn)         _warningLogToggle.Click();
+            if (SwitchConfig.LoggingEnableInfo)         _infoLogToggle.Click();
+            if (SwitchConfig.LoggingEnableStub)         _stubLogToggle.Click();
+            if (SwitchConfig.LoggingEnableDebug)        _debugLogToggle.Click();
+            if (SwitchConfig.LoggingEnableGuest)        _guestLogToggle.Click();
+            if (SwitchConfig.LoggingEnableFsAccessLog)  _fsAccessLogToggle.Click();
+            if (SwitchConfig.DockedMode)                _dockedModeToggle.Click();
+            if (SwitchConfig.EnableDiscordIntegration)  _discordToggle.Click();
+            if (SwitchConfig.EnableVsync)               _vSyncToggle.Click();
+            if (SwitchConfig.EnableMulticoreScheduling) _multiSchedToggle.Click();
+            if (SwitchConfig.EnableFsIntegrityChecks)   _fsicToggle.Click();
+            if (SwitchConfig.IgnoreMissingServices)     _ignoreToggle.Click();
+            if (SwitchConfig.EnableKeyboard)            _directKeyboardAccess.Click();
+            if (SwitchConfig.EnableCustomTheme)         _custThemeToggle.Click();
 
             _systemLanguageSelect.SetActiveId(SwitchConfig.SystemLanguage.ToString());
             _controller1Type     .SetActiveId(SwitchConfig.ControllerType.ToString());
+            Controller_Changed(null, null, _controller1Type.ActiveId, _controller1Image);
 
             _lStickUp1.Label     = SwitchConfig.KeyboardControls.LeftJoycon.StickUp.ToString();
             _lStickDown1.Label   = SwitchConfig.KeyboardControls.LeftJoycon.StickDown.ToString();
@@ -190,7 +195,7 @@ namespace Ryujinx.UI
         }
 
         //Events
-        private void Button_Pressed(object obj, EventArgs args, ToggleButton Button)
+        private void Button_Pressed(object sender, EventArgs args, ToggleButton button)
         {
             if (_listeningForKeypress == false)
             {
@@ -198,25 +203,25 @@ namespace Ryujinx.UI
 
                 _listeningForKeypress = true;
 
-                void On_KeyPress(object Obj, KeyPressEventArgs KeyPressed)
+                void On_KeyPress(object o, KeyPressEventArgs keyPressed)
                 {
-                    string key    = KeyPressed.Event.Key.ToString();
+                    string key    = keyPressed.Event.Key.ToString();
                     string capKey = key.First().ToString().ToUpper() + key.Substring(1);
 
                     if (Enum.IsDefined(typeof(OpenTK.Input.Key), capKey))
                     {
-                        Button.Label = capKey;
+                        button.Label = capKey;
                     }
-                    else if (GdkToOpenTKInput.ContainsKey(key))
+                    else if (GdkToOpenTkInput.ContainsKey(key))
                     {
-                        Button.Label = GdkToOpenTKInput[key];
+                        button.Label = GdkToOpenTkInput[key];
                     }
                     else
                     {
-                        Button.Label = "Space";
+                        button.Label = "Space";
                     }
 
-                    Button.SetStateFlags(0, true);
+                    button.SetStateFlags(0, true);
 
                     KeyPressEvent -= On_KeyPress;
 
@@ -225,11 +230,30 @@ namespace Ryujinx.UI
             }
             else
             {
-                Button.SetStateFlags(0, true);
+                button.SetStateFlags(0, true);
             }
         }
 
-        private void AddDir_Pressed(object obj, EventArgs args)
+        private void Controller_Changed(object sender, EventArgs args, string controllerType, Image controllerImage)
+        {
+            switch (controllerType)
+            {
+                case "ProController":
+                    controllerImage.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.ProCon.png", 500, 500);
+                    break;
+                case "NpadLeft":
+                    controllerImage.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.BlueCon.png", 500, 500);
+                    break;
+                case "NpadRight":
+                    controllerImage.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.RedCon.png", 500, 500);
+                    break;
+                default:
+                    controllerImage.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.JoyCon.png", 500, 500);
+                    break;
+            }
+        }
+
+        private void AddDir_Pressed(object sender, EventArgs args)
         {
             if (Directory.Exists(_addGameDirBox.Buffer.Text))
             {
@@ -239,7 +263,7 @@ namespace Ryujinx.UI
             _addDir.SetStateFlags(0, true);
         }
 
-        private void BrowseDir_Pressed(object obj, EventArgs args)
+        private void BrowseDir_Pressed(object sender, EventArgs args)
         {
             FileChooserDialog fileChooser = new FileChooserDialog("Choose the game directory to add to the list", this, FileChooserAction.SelectFolder, "Cancel", ResponseType.Cancel, "Add", ResponseType.Accept);
 
@@ -248,12 +272,12 @@ namespace Ryujinx.UI
                 _gameDirsBoxStore.AppendValues(fileChooser.Filename);
             }
 
-            fileChooser.Destroy();
+            fileChooser.Dispose();
 
             _browseDir.SetStateFlags(0, true);
         }
 
-        private void RemoveDir_Pressed(object obj, EventArgs args)
+        private void RemoveDir_Pressed(object sender, EventArgs args)
         {
             TreeSelection selection = _gameDirsBox.Selection;
 
@@ -263,14 +287,14 @@ namespace Ryujinx.UI
             _removeDir.SetStateFlags(0, true);
         }
 
-        private void CustThemeToggle_Activated(object obj, EventArgs args)
+        private void CustThemeToggle_Activated(object sender, EventArgs args)
         {
             _custThemePath.Sensitive      = _custThemeToggle.Active;
             _custThemePathLabel.Sensitive = _custThemeToggle.Active;
             _browseThemePath.Sensitive    = _custThemeToggle.Active;
         }
 
-        private void BrowseThemeDir_Pressed(object obj, EventArgs args)
+        private void BrowseThemeDir_Pressed(object sender, EventArgs args)
         {
             FileChooserDialog fileChooser = new FileChooserDialog("Choose the theme to load", this, FileChooserAction.Open, "Cancel", ResponseType.Cancel, "Select", ResponseType.Accept);
 
@@ -282,12 +306,12 @@ namespace Ryujinx.UI
                 _custThemePath.Buffer.Text = fileChooser.Filename;
             }
 
-            fileChooser.Destroy();
+            fileChooser.Dispose();
 
             _browseThemePath.SetStateFlags(0, true);
         }
 
-        private void SaveToggle_Activated(object obj, EventArgs args)
+        private void SaveToggle_Activated(object sender, EventArgs args)
         {
             List<string> gameDirs = new List<string>();
 
@@ -358,20 +382,21 @@ namespace Ryujinx.UI
             SwitchConfig.FsGlobalAccessLogMode   = (int)_fsLogSpinAdjustment.Value;
 
             Configuration.SaveConfig(SwitchConfig, System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json"));
-            Configuration.Configure(Device, SwitchConfig);
+            Configuration.Configure(_device, SwitchConfig);
 
             MainWindow.ApplyTheme();
+#pragma warning disable CS4014
             MainWindow.UpdateGameTable();
-
-            Destroy();
+#pragma warning restore CS4014
+            Dispose();
         }
 
-        private void CloseToggle_Activated(object obj, EventArgs args)
+        private void CloseToggle_Activated(object sender, EventArgs args)
         {
-            Destroy();
+            Dispose();
         }
 
-        public readonly Dictionary<string, string> GdkToOpenTKInput = new Dictionary<string, string>()
+        public readonly Dictionary<string, string> GdkToOpenTkInput = new Dictionary<string, string>()
         {
             { "Key_0",       "Number0"        },
             { "Key_1",       "Number1"        },

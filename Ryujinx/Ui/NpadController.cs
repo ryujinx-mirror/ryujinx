@@ -3,7 +3,7 @@ using OpenTK.Input;
 using Ryujinx.HLE.Input;
 using System;
 
-namespace Ryujinx.UI.Input
+namespace Ryujinx.Ui.Input
 {
     public enum ControllerInputId
     {
@@ -64,7 +64,6 @@ namespace Ryujinx.UI.Input
     public struct NpadControllerRight
     {
         public ControllerInputId Stick;
-        public ControllerInputId StickY;
         public ControllerInputId StickButton;
         public ControllerInputId ButtonA;
         public ControllerInputId ButtonB;
