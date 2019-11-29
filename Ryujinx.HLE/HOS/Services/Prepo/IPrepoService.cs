@@ -93,93 +93,100 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
 
             sb.AppendLine($" Room: {room}");
 
-            using (MemoryStream stream = new MemoryStream(buffer))
-            using (BinaryReader reader = new BinaryReader(stream))
+            try
             {
-                byte  unknown1 = reader.ReadByte();  // Version ?
-                short unknown2 = reader.ReadInt16(); // Size ?
-
-                bool isValue = false;
-
-                string fieldStr = string.Empty;
-
-                while (stream.Position != stream.Length)
+                using (MemoryStream stream = new MemoryStream(buffer))
+                using (BinaryReader reader = new BinaryReader(stream))
                 {
-                    byte descriptor = reader.ReadByte();
+                    byte  unknown1 = reader.ReadByte();  // Version ?
+                    short unknown2 = reader.ReadInt16(); // Size ?
 
-                    if (!isValue)
+                    bool isValue = false;
+
+                    string fieldStr = string.Empty;
+
+                    while (stream.Position != stream.Length)
                     {
-                        byte[] key = reader.ReadBytes(descriptor - 0xA0);
+                        byte descriptor = reader.ReadByte();
 
-                        fieldStr = $"  Key: {Encoding.ASCII.GetString(key)}";
-
-                        isValue = true;
-                    }
-                    else
-                    {
-                        if (descriptor > 0xD0) // Int value.
+                        if (!isValue)
                         {
-                            if (descriptor - 0xD0 == 1)
-                            {
-                                fieldStr += $", Value: {BinaryPrimitives.ReverseEndianness(reader.ReadUInt16())}";
-                            }
-                            else if (descriptor - 0xD0 == 2)
-                            {
-                                fieldStr += $", Value: {BinaryPrimitives.ReverseEndianness(reader.ReadInt32())}";
-                            }
-                            else if (descriptor - 0xD0 == 4)
-                            {
-                                fieldStr += $", Value: {BinaryPrimitives.ReverseEndianness(reader.ReadInt64())}";
-                            }
-                            else
-                            {
-                                // Unknown.
-                                break;
-                            }
+                            byte[] key = reader.ReadBytes(descriptor - 0xA0);
+
+                            fieldStr = $"  Key: {Encoding.ASCII.GetString(key)}";
+
+                            isValue = true;
                         }
-                        else if (descriptor > 0xA0 && descriptor < 0xD0) // String value, max size = 0x20 bytes ?
+                        else
                         {
-                            int    size      = descriptor - 0xA0;
-                            string value     = string.Empty;
-                            byte[] rawValues = new byte[0];
-
-                            for (int i = 0; i < size; i++)
+                            if (descriptor > 0xD0) // Int value.
                             {
-                                byte chr = reader.ReadByte();
-
-                                if (chr >= 0x20 && chr < 0x7f)
+                                if (descriptor - 0xD0 == 1)
                                 {
-                                    value += (char)chr;
+                                    fieldStr += $", Value: {BinaryPrimitives.ReverseEndianness(reader.ReadUInt16())}";
+                                }
+                                else if (descriptor - 0xD0 == 2)
+                                {
+                                    fieldStr += $", Value: {BinaryPrimitives.ReverseEndianness(reader.ReadInt32())}";
+                                }
+                                else if (descriptor - 0xD0 == 4)
+                                {
+                                    fieldStr += $", Value: {BinaryPrimitives.ReverseEndianness(reader.ReadInt64())}";
                                 }
                                 else
                                 {
-                                    Array.Resize(ref rawValues, rawValues.Length + 1);
-
-                                    rawValues[rawValues.Length - 1] = chr;
+                                    // Unknown.
+                                    break;
                                 }
                             }
-
-                            if (value != string.Empty)
-                            { 
-                                fieldStr += $", Value: {value}";
-                            }
-
-                            // TODO(Ac_K): Determine why there are non-alphanumeric values sometimes.
-                            if (rawValues.Length > 0)
+                            else if (descriptor > 0xA0 && descriptor < 0xD0) // String value, max size = 0x20 bytes ?
                             {
-                                fieldStr += $", RawValue: 0x{BitConverter.ToString(rawValues).Replace("-", "")}";
+                                int    size      = descriptor - 0xA0;
+                                string value     = string.Empty;
+                                byte[] rawValues = new byte[0];
+
+                                for (int i = 0; i < size; i++)
+                                {
+                                    byte chr = reader.ReadByte();
+
+                                    if (chr >= 0x20 && chr < 0x7f)
+                                    {
+                                        value += (char)chr;
+                                    }
+                                    else
+                                    {
+                                        Array.Resize(ref rawValues, rawValues.Length + 1);
+
+                                        rawValues[rawValues.Length - 1] = chr;
+                                    }
+                                }
+
+                                if (value != string.Empty)
+                                { 
+                                    fieldStr += $", Value: {value}";
+                                }
+
+                                // TODO(Ac_K): Determine why there are non-alphanumeric values sometimes.
+                                if (rawValues.Length > 0)
+                                {
+                                    fieldStr += $", RawValue: 0x{BitConverter.ToString(rawValues).Replace("-", "")}";
+                                }
                             }
-                        }
-                        else // Byte value.
-                        {
-                            fieldStr += $", Value: {descriptor}";
-                        }
+                            else // Byte value.
+                            {
+                                fieldStr += $", Value: {descriptor}";
+                            }
 
-                        sb.AppendLine(fieldStr);
+                            sb.AppendLine(fieldStr);
 
-                        isValue = false;
+                            isValue = false;
+                        }
                     }
                 }
+            }
+            catch (Exception)
+            {
+                sb.AppendLine("  Error while parsing the report buffer.");
             }
 
             return sb.ToString();
