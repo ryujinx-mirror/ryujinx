@@ -1,4 +1,5 @@
-﻿using Ryujinx.Graphics.Shader.Translation;
+﻿using Ryujinx.Graphics.Shader;
+using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.IO;
 
@@ -19,7 +20,7 @@ namespace Ryujinx.ShaderTools
 
                 byte[] data = File.ReadAllBytes(args[args.Length - 1]);
 
-                string code = Translator.Translate(data, flags).Code;
+                string code = Translator.Translate(data, ShaderCapabilities.Default, flags).Code;
 
                 Console.WriteLine(code);
             }

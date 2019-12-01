@@ -61,7 +61,9 @@ namespace Ryujinx.Graphics.OpenGL
 
         public Capabilities GetCapabilities()
         {
-            return new Capabilities(HwCapabilities.SupportsAstcCompression);
+            return new Capabilities(
+                HwCapabilities.SupportsAstcCompression,
+                HwCapabilities.StorageBufferOffsetAlignment);
         }
 
         public ulong GetCounter(CounterType type)

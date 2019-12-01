@@ -11,14 +11,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         OpBinaryCom = Op | 2 | Commutative,
         OpTernary   = Op | 3,
 
-        AtomicBinary  = CallBinary  | Atomic,
-        AtomicTernary = CallTernary | Atomic,
-
         CallNullary    = Call | 0,
         CallUnary      = Call | 1,
         CallBinary     = Call | 2,
         CallTernary    = Call | 3,
         CallQuaternary = Call | 4,
+
+        // The atomic instructions have one extra operand,
+        // for the storage slot and offset pair.
+        AtomicBinary  = Call | Atomic | 3,
+        AtomicTernary = Call | Atomic | 4,
 
         Commutative = 1 << 8,
         Op          = 1 << 9,

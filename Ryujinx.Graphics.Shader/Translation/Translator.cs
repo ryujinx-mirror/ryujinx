@@ -47,7 +47,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             return code.Slice(0, headerSize + (int)endAddress);
         }
 
-        public static ShaderProgram Translate(Span<byte> code, TranslationFlags flags)
+        public static ShaderProgram Translate(Span<byte> code, ShaderCapabilities capabilities, TranslationFlags flags)
         {
             bool compute   = (flags & TranslationFlags.Compute)   != 0;
             bool debugMode = (flags & TranslationFlags.DebugMode) != 0;
@@ -82,6 +82,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             ShaderConfig config = new ShaderConfig(
                 stage,
+                capabilities,
                 flags,
                 maxOutputVertexCount,
                 outputTopology);
@@ -89,7 +90,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             return Translate(ops, config, size);
         }
 
-        public static ShaderProgram Translate(Span<byte> vpACode, Span<byte> vpBCode, TranslationFlags flags)
+        public static ShaderProgram Translate(Span<byte> vpACode, Span<byte> vpBCode, ShaderCapabilities capabilities, TranslationFlags flags)
         {
             bool debugMode = (flags & TranslationFlags.DebugMode) != 0;
 
@@ -98,6 +99,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             ShaderConfig config = new ShaderConfig(
                 header.Stage,
+                capabilities,
                 flags,
                 header.MaxOutputVertexCount,
                 header.OutputTopology);
@@ -107,20 +109,22 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private static ShaderProgram Translate(Operation[] ops, ShaderConfig config, int size)
         {
-            BasicBlock[] irBlocks = ControlFlowGraph.MakeCfg(ops);
+            BasicBlock[] blocks = ControlFlowGraph.MakeCfg(ops);
 
-            if (irBlocks.Length > 0)
+            if (blocks.Length > 0)
             {
-                Dominance.FindDominators(irBlocks[0], irBlocks.Length);
+                Dominance.FindDominators(blocks[0], blocks.Length);
 
-                Dominance.FindDominanceFrontiers(irBlocks);
+                Dominance.FindDominanceFrontiers(blocks);
 
-                Ssa.Rename(irBlocks);
+                Ssa.Rename(blocks);
 
-                Optimizer.Optimize(irBlocks, config.Stage);
+                Optimizer.RunPass(blocks, config);
+
+                Lowering.RunPass(blocks, config);
             }
 
-            StructuredProgramInfo sInfo = StructuredProgram.MakeStructuredProgram(irBlocks, config);
+            StructuredProgramInfo sInfo = StructuredProgram.MakeStructuredProgram(blocks, config);
 
             GlslProgram program = GlslGenerator.Generate(sInfo, config);
 

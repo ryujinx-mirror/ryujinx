@@ -86,7 +86,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             if (info.SBuffers.Count != 0)
             {
-                DeclareUsedStorage(context, info);
+                DeclareStorages(context, info);
 
                 context.AppendLine();
             }
@@ -176,11 +176,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
                 context.AppendLine(GetVarTypeName(decl.VarType) + " " + name + ";");
             }
-
-            if ((info.HelperFunctionsMask & HelperFunctionsMask.GlobalMemory) != 0)
-            {
-                context.AppendLine($"ivec2 {DefaultNames.GmemOffsetName};");
-            }
         }
 
         private static string GetVarTypeName(VariableType type)
@@ -218,31 +213,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
         }
 
-        private static void DeclareAllStorage(CodeGenContext context, StructuredProgramInfo info)
-        {
-            string sbName = OperandManager.GetShaderStagePrefix(context.Config.Stage);
-
-            sbName += "_" + DefaultNames.StorageNamePrefix;
-
-            string blockName = $"{sbName}_{DefaultNames.BlockSuffix}";
-
-            context.AppendLine("layout (std430) buffer " + blockName);
-
-            context.EnterScope();
-
-            context.AppendLine("uint " + DefaultNames.DataName + "[];");
-
-            string arraySize = NumberFormatter.FormatInt(Constants.MaxShaderStorageBuffers);
-
-            context.LeaveScope($" {sbName}[{arraySize}];");
-
-            for (int sbufSlot = 0; sbufSlot < Constants.MaxShaderStorageBuffers; sbufSlot++)
-            {
-                context.SBufferDescriptors.Add(new BufferDescriptor($"{blockName}[{sbufSlot}]", sbufSlot));
-            }
-        }
-
-        private static void DeclareUsedStorage(CodeGenContext context, StructuredProgramInfo info)
+        private static void DeclareStorages(CodeGenContext context, StructuredProgramInfo info)
         {
             string sbName = OperandManager.GetShaderStagePrefix(context.Config.Stage);
 

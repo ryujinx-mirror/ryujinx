@@ -4,9 +4,14 @@ namespace Ryujinx.Graphics.GAL
     {
         public bool SupportsAstcCompression { get; }
 
-        public Capabilities(bool supportsAstcCompression)
+        public int StorageBufferOffsetAlignment { get; }
+
+        public Capabilities(
+            bool supportsAstcCompression,
+            int  storageBufferOffsetAlignment)
         {
-            SupportsAstcCompression = supportsAstcCompression;
+            SupportsAstcCompression      = supportsAstcCompression;
+            StorageBufferOffsetAlignment = storageBufferOffsetAlignment;
         }
     }
 }

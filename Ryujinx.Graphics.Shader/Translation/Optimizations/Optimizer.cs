@@ -7,11 +7,11 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 {
     static class Optimizer
     {
-        public static void Optimize(BasicBlock[] blocks, ShaderStage stage)
+        public static void RunPass(BasicBlock[] blocks, ShaderConfig config)
         {
             for (int blkIndex = 0; blkIndex < blocks.Length; blkIndex++)
             {
-                GlobalToStorage.RunPass(blocks[blkIndex], stage);
+                GlobalToStorage.RunPass(blocks[blkIndex], config);
             }
 
             bool modified;

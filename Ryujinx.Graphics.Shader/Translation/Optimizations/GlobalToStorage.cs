@@ -1,20 +1,16 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
 using System.Collections.Generic;
 
+using static Ryujinx.Graphics.Shader.IntermediateRepresentation.OperandHelper;
+using static Ryujinx.Graphics.Shader.Translation.GlobalMemory;
+
 namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 {
     static class GlobalToStorage
     {
-        private const int StorageDescsBaseOffset = 0x44; // In words.
-
-        private const int StorageDescSize = 4; // In words.
-        private const int StorageMaxCount = 16;
-
-        private const int StorageDescsSize  = StorageDescSize * StorageMaxCount;
-
-        public static void RunPass(BasicBlock block, ShaderStage stage)
+        public static void RunPass(BasicBlock block, ShaderConfig config)
         {
-            int sbStart = GetStorageBaseCbOffset(stage);
+            int sbStart = GetStorageBaseCbOffset(config.Stage);
 
             int sbEnd = sbStart + StorageDescsSize;
 
@@ -25,9 +21,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                     continue;
                 }
 
-                if (operation.Inst.IsAtomic() ||
-                    operation.Inst == Instruction.LoadGlobal ||
-                    operation.Inst == Instruction.StoreGlobal)
+                if (UsesGlobalMemory(operation.Inst))
                 {
                     Operand source = operation.GetSource(0);
 
@@ -37,44 +31,68 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                         if (storageIndex >= 0)
                         {
-                            node = ReplaceGlobalWithStorage(node, storageIndex);
+                            node = ReplaceGlobalWithStorage(node, config, storageIndex);
                         }
                     }
                 }
             }
         }
 
-        private static LinkedListNode<INode> ReplaceGlobalWithStorage(LinkedListNode<INode> node, int storageIndex)
+        private static LinkedListNode<INode> ReplaceGlobalWithStorage(LinkedListNode<INode> node, ShaderConfig config, int storageIndex)
         {
             Operation operation = (Operation)node.Value;
 
             Operation storageOp;
 
+            Operand GetStorageOffset()
+            {
+                Operand addrLow = operation.GetSource(0);
+
+                Operand baseAddrLow  = Cbuf(0, GetStorageCbOffset(config.Stage, storageIndex));
+
+                Operand baseAddrTrunc = Local();
+
+                Operand alignMask = Const(-config.Capabilities.StorageBufferOffsetAlignment);
+
+                Operation andOp = new Operation(Instruction.BitwiseAnd, baseAddrTrunc, baseAddrLow, alignMask);
+
+                node.List.AddBefore(node, andOp);
+
+                Operand byteOffset = Local();
+                Operand wordOffset = Local();
+
+                Operation subOp = new Operation(Instruction.Subtract,      byteOffset, addrLow, baseAddrTrunc);
+                Operation shrOp = new Operation(Instruction.ShiftRightU32, wordOffset, byteOffset, Const(2));
+
+                node.List.AddBefore(node, subOp);
+                node.List.AddBefore(node, shrOp);
+
+                return wordOffset;
+            }
+
+            Operand[] sources = new Operand[operation.SourcesCount];
+
+            sources[0] = Const(storageIndex);
+            sources[1] = GetStorageOffset();
+
+            for (int index = 2; index < operation.SourcesCount; index++)
+            {
+                sources[index] = operation.GetSource(index);
+            }
+
             if (operation.Inst.IsAtomic())
             {
-                Operand[] sources = new Operand[operation.SourcesCount];
-
-                for (int index = 0; index < operation.SourcesCount; index++)
-                {
-                    sources[index] = operation.GetSource(index);
-                }
-
                 Instruction inst = (operation.Inst & ~Instruction.MrMask) | Instruction.MrStorage;
 
-                storageOp = new Operation(inst, storageIndex, operation.Dest, sources);
+                storageOp = new Operation(inst, operation.Dest, sources);
             }
             else if (operation.Inst == Instruction.LoadGlobal)
             {
-                Operand source = operation.GetSource(0);
-
-                storageOp = new Operation(Instruction.LoadStorage, storageIndex, operation.Dest, source);
+                storageOp = new Operation(Instruction.LoadStorage, operation.Dest, sources);
             }
             else
             {
-                Operand src1 = operation.GetSource(0);
-                Operand src2 = operation.GetSource(1);
-
-                storageOp = new Operation(Instruction.StoreStorage, storageIndex, null, src1, src2);
+                storageOp = new Operation(Instruction.StoreStorage, null, sources);
             }
 
             for (int index = 0; index < operation.SourcesCount; index++)
@@ -84,7 +102,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
             LinkedListNode<INode> oldNode = node;
 
-            node = node.List.AddAfter(node, storageOp);
+            node = node.List.AddBefore(node, storageOp);
 
             node.List.Remove(oldNode);
 
@@ -124,26 +142,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             }
 
             return -1;
-        }
-
-        public static int GetStorageCbOffset(ShaderStage stage, int slot)
-        {
-            return GetStorageBaseCbOffset(stage) + slot * StorageDescSize;
-        }
-
-        private static int GetStorageBaseCbOffset(ShaderStage stage)
-        {
-            switch (stage)
-            {
-                case ShaderStage.Compute:                return StorageDescsBaseOffset + 2 * StorageDescsSize;
-                case ShaderStage.Vertex:                 return StorageDescsBaseOffset;
-                case ShaderStage.TessellationControl:    return StorageDescsBaseOffset + 1 * StorageDescsSize;
-                case ShaderStage.TessellationEvaluation: return StorageDescsBaseOffset + 2 * StorageDescsSize;
-                case ShaderStage.Geometry:               return StorageDescsBaseOffset + 3 * StorageDescsSize;
-                case ShaderStage.Fragment:               return StorageDescsBaseOffset + 4 * StorageDescsSize;
-            }
-
-            return 0;
         }
     }
 }

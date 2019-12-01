@@ -6,6 +6,8 @@ namespace Ryujinx.Graphics.Shader
     {
         public ShaderStage Stage { get; }
 
+        public ShaderCapabilities Capabilities { get; }
+
         public TranslationFlags Flags { get; }
 
         public int MaxOutputVertices { get; }
@@ -13,12 +15,14 @@ namespace Ryujinx.Graphics.Shader
         public OutputTopology OutputTopology { get; }
 
         public ShaderConfig(
-            ShaderStage      stage,
-            TranslationFlags flags,
-            int              maxOutputVertices,
-            OutputTopology   outputTopology)
+            ShaderStage        stage,
+            ShaderCapabilities capabilities,
+            TranslationFlags   flags,
+            int                maxOutputVertices,
+            OutputTopology     outputTopology)
         {
             Stage             = stage;
+            Capabilities      = capabilities;
             Flags             = flags;
             MaxOutputVertices = maxOutputVertices;
             OutputTopology    = outputTopology;

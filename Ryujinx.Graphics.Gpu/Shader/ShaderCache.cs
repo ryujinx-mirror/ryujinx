@@ -199,7 +199,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             Span<byte> code = _context.MemoryAccessor.Read(gpuVa, MaxProgramSize);
 
-            program = Translator.Translate(code, flags);
+            program = Translator.Translate(code, GetShaderCapabilities(), flags);
 
             int[] codeCached = MemoryMarshal.Cast<byte, int>(code.Slice(0, program.Size)).ToArray();
 
@@ -238,7 +238,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 Span<byte> codeA = _context.MemoryAccessor.Read(gpuVaA, MaxProgramSize);
                 Span<byte> codeB = _context.MemoryAccessor.Read(gpuVa,  MaxProgramSize);
 
-                program = Translator.Translate(codeA, codeB, flags);
+                program = Translator.Translate(codeA, codeB, GetShaderCapabilities(), flags);
 
                 // TODO: We should also check "codeA" into account.
                 codeCached = MemoryMarshal.Cast<byte, int>(codeB.Slice(0, program.Size)).ToArray();
@@ -258,7 +258,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 Span<byte> code = _context.MemoryAccessor.Read(gpuVa, MaxProgramSize);
 
-                program = Translator.Translate(code, flags);
+                program = Translator.Translate(code, GetShaderCapabilities(), flags);
 
                 codeCached = MemoryMarshal.Cast<byte, int>(code.Slice(0, program.Size)).ToArray();
 
@@ -341,6 +341,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                 isFirst = false;
             }
+        }
+
+        private ShaderCapabilities GetShaderCapabilities()
+        {
+            return new ShaderCapabilities(_context.Capabilities.StorageBufferOffsetAlignment);
         }
     }
 }

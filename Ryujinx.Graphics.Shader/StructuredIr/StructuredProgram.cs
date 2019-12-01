@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.Shader.IntermediateRepresentation;
+using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
 
@@ -80,7 +81,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 }
                 else if (UsesStorage(inst))
                 {
-                    context.Info.SBuffers.Add(operation.Index);
+                    AddSBufferUse(context.Info.SBuffers, operation);
                 }
 
                 AstAssignment assignment;
@@ -159,7 +160,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             {
                 if (UsesStorage(inst))
                 {
-                    context.Info.SBuffers.Add(operation.Index);
+                    AddSBufferUse(context.Info.SBuffers, operation);
                 }
 
                 context.AddNode(new AstOperation(inst, operation.Index, sources));
@@ -170,10 +171,6 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             // decide which helper functions are needed on the final generated code.
             switch (operation.Inst)
             {
-                case Instruction.LoadGlobal:
-                case Instruction.StoreGlobal:
-                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.GlobalMemory;
-                    break;
                 case Instruction.Shuffle:
                     context.Info.HelperFunctionsMask |= HelperFunctionsMask.Shuffle;
                     break;
@@ -189,6 +186,26 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 case Instruction.SwizzleAdd:
                     context.Info.HelperFunctionsMask |= HelperFunctionsMask.SwizzleAdd;
                     break;
+            }
+        }
+
+        private static void AddSBufferUse(HashSet<int> sBuffers, Operation operation)
+        {
+            Operand slot = operation.GetSource(0);
+
+            if (slot.Type == OperandType.Constant)
+            {
+                sBuffers.Add(slot.Value);
+            }
+            else
+            {
+                // If the value is not constant, then we don't know
+                // how many storage buffers are used, so we assume
+                // all of them are used.
+                for (int index = 0; index < GlobalMemory.StorageMaxCount; index++)
+                {
+                    sBuffers.Add(index);
+                }
             }
         }
 

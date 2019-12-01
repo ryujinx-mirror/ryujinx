@@ -6,54 +6,54 @@ namespace Ryujinx.Graphics.Shader.Translation
 {
     static class EmitterContextInsts
     {
-        public static Operand AtomicAdd(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        public static Operand AtomicAdd(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicAdd | mr, Local(), a, b);
+            return context.Add(Instruction.AtomicAdd | mr, Local(), a, b, c);
         }
 
-        public static Operand AtomicAnd(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        public static Operand AtomicAnd(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicAnd | mr, Local(), a, b);
+            return context.Add(Instruction.AtomicAnd | mr, Local(), a, b, c);
         }
 
-        public static Operand AtomicCompareAndSwap(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
+        public static Operand AtomicCompareAndSwap(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c, Operand d)
         {
-            return context.Add(Instruction.AtomicCompareAndSwap | mr, Local(), a, b, c);
+            return context.Add(Instruction.AtomicCompareAndSwap | mr, Local(), a, b, c, d);
         }
 
-        public static Operand AtomicMaxS32(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        public static Operand AtomicMaxS32(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicMaxS32 | mr, Local(), a, b);
+            return context.Add(Instruction.AtomicMaxS32 | mr, Local(), a, b, c);
         }
 
-        public static Operand AtomicMaxU32(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        public static Operand AtomicMaxU32(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicMaxU32 | mr, Local(), a, b);
+            return context.Add(Instruction.AtomicMaxU32 | mr, Local(), a, b, c);
         }
 
-        public static Operand AtomicMinS32(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        public static Operand AtomicMinS32(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicMinS32 | mr, Local(), a, b);
+            return context.Add(Instruction.AtomicMinS32 | mr, Local(), a, b, c);
         }
 
-        public static Operand AtomicMinU32(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        public static Operand AtomicMinU32(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicMinU32 | mr, Local(), a, b);
+            return context.Add(Instruction.AtomicMinU32 | mr, Local(), a, b, c);
         }
 
-        public static Operand AtomicOr(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        public static Operand AtomicOr(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicOr | mr, Local(), a, b);
+            return context.Add(Instruction.AtomicOr | mr, Local(), a, b, c);
         }
 
-        public static Operand AtomicSwap(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        public static Operand AtomicSwap(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicSwap | mr, Local(), a, b);
+            return context.Add(Instruction.AtomicSwap | mr, Local(), a, b, c);
         }
 
-        public static Operand AtomicXor(this EmitterContext context, Instruction mr, Operand a, Operand b)
+        public static Operand AtomicXor(this EmitterContext context, Instruction mr, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.AtomicXor | mr, Local(), a, b);
+            return context.Add(Instruction.AtomicXor | mr, Local(), a, b, c);
         }
 
         public static Operand Ballot(this EmitterContext context, Operand a)
@@ -461,9 +461,9 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.LoadConstant, Local(), a, b);
         }
 
-        public static Operand LoadGlobal(this EmitterContext context, Operand a)
+        public static Operand LoadGlobal(this EmitterContext context, Operand a, Operand b)
         {
-            return context.Add(Instruction.LoadGlobal, Local(), a);
+            return context.Add(Instruction.LoadGlobal, Local(), a, b);
         }
 
         public static Operand LoadLocal(this EmitterContext context, Operand a)
@@ -523,9 +523,9 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.ShuffleXor, Local(), a, b, c);
         }
 
-        public static Operand StoreGlobal(this EmitterContext context, Operand a, Operand b)
+        public static Operand StoreGlobal(this EmitterContext context, Operand a, Operand b, Operand c)
         {
-            return context.Add(Instruction.StoreGlobal, null, a, b);
+            return context.Add(Instruction.StoreGlobal, null, a, b, c);
         }
 
         public static Operand StoreLocal(this EmitterContext context, Operand a, Operand b)

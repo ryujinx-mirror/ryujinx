@@ -5,9 +5,13 @@ namespace Ryujinx.Graphics.OpenGL
 {
     static class HwCapabilities
     {
-        private static Lazy<bool> _astcCompression = new Lazy<bool>(() => HasExtension("GL_KHR_texture_compression_astc_ldr"));
+        private static Lazy<bool> _supportsAstcCompression = new Lazy<bool>(() => HasExtension("GL_KHR_texture_compression_astc_ldr"));
 
-        public static bool SupportsAstcCompression => _astcCompression.Value;
+        private static Lazy<int> _storageBufferOffsetAlignment = new Lazy<int>(() => GetLimit(All.ShaderStorageBufferOffsetAlignment));
+
+        public static bool SupportsAstcCompression => _supportsAstcCompression.Value;
+
+        public static int StorageBufferOffsetAlignment => _storageBufferOffsetAlignment.Value;
 
         private static bool HasExtension(string name)
         {
@@ -22,6 +26,11 @@ namespace Ryujinx.Graphics.OpenGL
             }
 
             return false;
+        }
+
+        private static int GetLimit(All name)
+        {
+            return GL.GetInteger((GetPName)name);
         }
     }
 }

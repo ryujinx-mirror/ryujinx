@@ -1,3 +1,4 @@
+using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.InputAssembler;
 using Ryujinx.Graphics.Gpu.State;
@@ -113,10 +114,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         public void SetComputeStorageBuffer(int index, ulong gpuVa, ulong size)
         {
-            // TODO: Improve
-            size += gpuVa & 0x3fUL;
+            size += gpuVa & ((ulong)_context.Capabilities.StorageBufferOffsetAlignment - 1);
 
-            gpuVa &= ~0x3fUL;
+            gpuVa = BitUtils.AlignDown(gpuVa, _context.Capabilities.StorageBufferOffsetAlignment);
 
             ulong address = TranslateAndCreateBuffer(gpuVa, size);
 
@@ -125,10 +125,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         public void SetGraphicsStorageBuffer(int stage, int index, ulong gpuVa, ulong size)
         {
-            // TODO: Improve
-            size += gpuVa & 0x3fUL;
+            size += gpuVa & ((ulong)_context.Capabilities.StorageBufferOffsetAlignment - 1);
 
-            gpuVa &= ~0x3fUL;
+            gpuVa = BitUtils.AlignDown(gpuVa, _context.Capabilities.StorageBufferOffsetAlignment);
 
             ulong address = TranslateAndCreateBuffer(gpuVa, size);
 

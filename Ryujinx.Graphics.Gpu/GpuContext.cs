@@ -45,17 +45,12 @@ namespace Ryujinx.Graphics.Gpu
 
             Window = new Window(this);
 
-            _caps = new Lazy<Capabilities>(GetCapabilities);
+            _caps = new Lazy<Capabilities>(Renderer.GetCapabilities);
         }
 
         internal void AdvanceSequence()
         {
             SequenceNumber++;
-        }
-
-        private Capabilities GetCapabilities()
-        {
-            return Renderer.GetCapabilities();
         }
 
         public void SetVmm(IPhysicalMemory mm)

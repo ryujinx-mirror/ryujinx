@@ -49,12 +49,18 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
                     if (argIndex == 0 && atomic)
                     {
-                        switch (inst & Instruction.MrMask)
+                        Instruction memRegion = inst & Instruction.MrMask;
+
+                        switch (memRegion)
                         {
-                            // TODO: Global.
                             case Instruction.MrShared:  args += LoadShared (context, operation); break;
                             case Instruction.MrStorage: args += LoadStorage(context, operation); break;
+
+                            default: throw new InvalidOperationException($"Invalid memory region \"{memRegion}\".");
                         }
+
+                        // We use the first 2 operands above.
+                        argIndex++;
                     }
                     else
                     {
@@ -149,8 +155,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                         return InstGenPacking.UnpackHalf2x16(context, operation);
                 }
             }
-
-            return "0";
 
             throw new InvalidOperationException($"Unexpected instruction type \"{info.Type}\".");
         }

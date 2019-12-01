@@ -119,19 +119,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             return OperandManager.GetConstantBufferName(src1, offsetExpr, context.Config.Stage);
         }
 
-        public static string LoadGlobal(CodeGenContext context, AstOperation operation)
-        {
-            IAstNode src1 = operation.GetSource(0);
-            IAstNode src2 = operation.GetSource(1);
-
-            string addrLowExpr  = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
-            string addrHighExpr = GetSoureExpr(context, src2, GetSrcVarType(operation.Inst, 1));
-
-            context.AppendLine($"{DefaultNames.GmemOffsetName} = {HelperFunctionNames.GetStorageBuffer}({addrLowExpr}, {addrHighExpr});");
-
-            return GetStorageBufferAccessor($"{DefaultNames.GmemOffsetName}.x", $"{DefaultNames.GmemOffsetName}.y", context.Config.Stage);
-        }
-
         public static string LoadLocal(CodeGenContext context, AstOperation operation)
         {
             return LoadLocalOrShared(context, operation, DefaultNames.LocalMemoryName);
@@ -154,27 +141,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         public static string LoadStorage(CodeGenContext context, AstOperation operation)
         {
             IAstNode src1 = operation.GetSource(0);
-
-            string offsetExpr = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
-
-            return GetStorageBufferAccessor(operation.Index, offsetExpr, context.Config.Stage);
-        }
-
-        public static string StoreGlobal(CodeGenContext context, AstOperation operation)
-        {
-            IAstNode src1 = operation.GetSource(0);
             IAstNode src2 = operation.GetSource(1);
-            IAstNode src3 = operation.GetSource(2);
 
-            string addrLowExpr  = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
-            string addrHighExpr = GetSoureExpr(context, src2, GetSrcVarType(operation.Inst, 1));
-            string valueExpr    = GetSoureExpr(context, src3, GetSrcVarType(operation.Inst, 2));
+            string indexExpr  = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
+            string offsetExpr = GetSoureExpr(context, src2, GetSrcVarType(operation.Inst, 1));
 
-            context.AppendLine($"{DefaultNames.GmemOffsetName} = {HelperFunctionNames.GetStorageBuffer}({addrLowExpr}, {addrHighExpr});");
-
-            string sb = GetStorageBufferAccessor($"{DefaultNames.GmemOffsetName}.x", $"{DefaultNames.GmemOffsetName}.y", context.Config.Stage);
-
-            return $"{sb} = {valueExpr}";
+            return GetStorageBufferAccessor(indexExpr, offsetExpr, context.Config.Stage);
         }
 
         public static string StoreLocal(CodeGenContext context, AstOperation operation)
@@ -205,14 +177,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
         {
             IAstNode src1 = operation.GetSource(0);
             IAstNode src2 = operation.GetSource(1);
+            IAstNode src3 = operation.GetSource(2);
 
-            string offsetExpr = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
+            string indexExpr  = GetSoureExpr(context, src1, GetSrcVarType(operation.Inst, 0));
+            string offsetExpr = GetSoureExpr(context, src2, GetSrcVarType(operation.Inst, 1));
 
-            VariableType srcType = OperandManager.GetNodeDestType(src2);
+            VariableType srcType = OperandManager.GetNodeDestType(src3);
 
-            string src = TypeConversion.ReinterpretCast(context, src2, srcType, VariableType.U32);
+            string src = TypeConversion.ReinterpretCast(context, src3, srcType, VariableType.U32);
 
-            string sb = GetStorageBufferAccessor(operation.Index, offsetExpr, context.Config.Stage);
+            string sb = GetStorageBufferAccessor(indexExpr, offsetExpr, context.Config.Stage);
 
             return $"{sb} = {src}";
         }
@@ -487,27 +461,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             sbName += "_" + DefaultNames.StorageNamePrefix;
 
             return $"{sbName}[{slotExpr}].{DefaultNames.DataName}[{offsetExpr}]";
-        }
-
-        private static string GetStorageBufferAccessor(int slot, string offsetExpr, ShaderStage stage)
-        {
-            string sbName = OperandManager.GetShaderStagePrefix(stage);
-
-            sbName += "_" + DefaultNames.StorageNamePrefix;
-
-            string mask = NumberFormatter.FormatUint(~(64u - 1));
-
-            // Subtract the base address of the global memory, to get the
-            // storage buffer offset. The mask is used to keep the lower bits,
-            // since the bound storage buffer must match the host alignment
-            // restrictions.
-            int ubOffset = GlobalToStorage.GetStorageCbOffset(stage, slot);
-
-            string ubName = OperandManager.GetConstantBufferName(0, ubOffset, stage);
-
-            offsetExpr = $"{offsetExpr} - int((floatBitsToUint({ubName}) & {mask}) >> 2)";
-
-            return $"{sbName}[{NumberFormatter.FormatInt(slot)}].{DefaultNames.DataName}[{offsetExpr}]";
         }
 
         private static string GetMask(int index)
