@@ -9,11 +9,11 @@ namespace Ryujinx.HLE.HOS.Applets
 {
     internal class SoftwareKeyboardApplet : IApplet
     {
-        private const string DEFAULT_NUMB = "1";
-        private const string DEFAULT_TEXT = "Ryujinx";
+        private const string DefaultNumb = "1";
+        private const string DefaultText = "Ryujinx";
 
-        private const int STANDARD_BUFFER_SIZE    = 0x7D8;
-        private const int INTERACTIVE_BUFFER_SIZE = 0x7D4;
+        private const int StandardBufferSize    = 0x7D8;
+        private const int InteractiveBufferSize = 0x7D4;
 
         private SoftwareKeyboardState _state = SoftwareKeyboardState.Uninitialized;
 
@@ -22,7 +22,8 @@ namespace Ryujinx.HLE.HOS.Applets
 
         private SoftwareKeyboardConfig _keyboardConfig;
 
-        private string _textValue = DEFAULT_TEXT;
+        private string   _textValue = DefaultText;
+        private Encoding _encoding  = Encoding.Unicode;
 
         public event EventHandler AppletStateChanged;
 
@@ -42,6 +43,11 @@ namespace Ryujinx.HLE.HOS.Applets
 
             _keyboardConfig = ReadStruct<SoftwareKeyboardConfig>(keyboardConfig);
 
+            if (_keyboardConfig.UseUtf8)
+            {
+                _encoding = Encoding.UTF8;
+            }
+
             _state = SoftwareKeyboardState.Ready;
 
             Execute();
@@ -58,9 +64,9 @@ namespace Ryujinx.HLE.HOS.Applets
         {
             // If the keyboard type is numbers only, we swap to a default
             // text that only contains numbers.
-            if (_keyboardConfig.Type == SoftwareKeyboardType.NumbersOnly)
+            if (_keyboardConfig.Mode == KeyboardMode.NumbersOnly)
             {
-                _textValue = DEFAULT_NUMB;
+                _textValue = DefaultNumb;
             }
 
             // If the max string length is 0, we set it to a large default
@@ -70,6 +76,15 @@ namespace Ryujinx.HLE.HOS.Applets
                 _keyboardConfig.StringLengthMax = 100;
             }
 
+            // If the game requests a string with a minimum length less
+            // than our default text, repeat our default text until we meet
+            // the minimum length requirement. 
+            // This should always be done before the text truncation step.
+            while (_textValue.Length < _keyboardConfig.StringLengthMin)
+            {
+                _textValue = String.Join(" ", _textValue, _textValue);
+            }
+
             // If our default text is longer than the allowed length,
             // we truncate it.
             if (_textValue.Length > _keyboardConfig.StringLengthMax)
@@ -77,7 +92,18 @@ namespace Ryujinx.HLE.HOS.Applets
                 _textValue = _textValue.Substring(0, (int)_keyboardConfig.StringLengthMax);
             }
 
-            if (!_keyboardConfig.CheckText)
+            // Does the application want to validate the text itself?
+            if (_keyboardConfig.CheckText)
+            {
+                // The application needs to validate the response, so we
+                // submit it to the interactive output buffer, and poll it
+                // for validation. Once validated, the application will submit
+                // back a validation status, which is handled in OnInteractiveDataPushIn.
+                _state = SoftwareKeyboardState.ValidationPending;
+
+                _interactiveSession.Push(BuildResponse(_textValue, true));
+            }
+            else
             {
                 // If the application doesn't need to validate the response,
                 // we push the data to the non-interactive output buffer
@@ -87,16 +113,6 @@ namespace Ryujinx.HLE.HOS.Applets
                 _normalSession.Push(BuildResponse(_textValue, false));
 
                 AppletStateChanged?.Invoke(this, null);
-            }
-            else
-            {
-                // The application needs to validate the response, so we
-                // submit it to the interactive output buffer, and poll it
-                // for validation. Once validated, the application will submit
-                // back a validation status, which is handled in OnInteractiveDataPushIn.
-                _state = SoftwareKeyboardState.ValidationPending;
-
-                _interactiveSession.Push(BuildResponse(_textValue, true));
             }
         }
 
@@ -136,12 +152,12 @@ namespace Ryujinx.HLE.HOS.Applets
 
         private byte[] BuildResponse(string text, bool interactive)
         {
-            int bufferSize = !interactive ? STANDARD_BUFFER_SIZE : INTERACTIVE_BUFFER_SIZE;
+            int bufferSize = interactive ? InteractiveBufferSize : StandardBufferSize;
 
             using (MemoryStream stream = new MemoryStream(new byte[bufferSize]))
             using (BinaryWriter writer = new BinaryWriter(stream))
             {
-                byte[] output = Encoding.Unicode.GetBytes(text);
+                byte[] output = _encoding.GetBytes(text);
 
                 if (!interactive)
                 {

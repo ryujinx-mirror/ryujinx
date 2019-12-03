@@ -1,6 +1,9 @@
 ﻿namespace Ryujinx.HLE.HOS.Applets.SoftwareKeyboard
 {
-    internal enum SoftwareKeyboardState
+    /// <summary>
+    /// Identifies the software keyboard state.
+    /// </summary>
+    enum SoftwareKeyboardState
     {
         /// <summary>
         /// swkbd is uninitialized.
