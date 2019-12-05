@@ -64,6 +64,29 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             srcTexture.HostTexture.CopyTo(dstTexture.HostTexture, srcRegion, dstRegion, linearFilter);
 
+            // For an out of bounds copy, we must ensure that the copy wraps to the next line,
+            // so for a copy from a 64x64 texture, in the region [32, 96[, there are 32 pixels that are
+            // outside the bounds of the texture. We fill the destination with the first 32 pixels
+            // of the next line on the source texture.
+            // This can be emulated with 2 copies (the first copy handles the region inside the bounds,
+            // the second handles the region outside of the bounds).
+            // We must also extend the source texture by one line to ensure we can wrap on the last line.
+            // This is required by the (guest) OpenGL driver.
+            if (srcRegion.X2 > srcTexture.Info.Width)
+            {
+                srcCopyTexture.Height++;
+
+                srcTexture = _textureManager.FindOrCreateTexture(srcCopyTexture);
+
+                srcRegion = new Extents2D(
+                    srcRegion.X1 - srcTexture.Info.Width,
+                    srcRegion.Y1 + 1,
+                    srcRegion.X2 - srcTexture.Info.Width,
+                    srcRegion.Y2 + 1);
+
+                srcTexture.HostTexture.CopyTo(dstTexture.HostTexture, srcRegion, dstRegion, linearFilter);
+            }
+
             dstTexture.Modified = true;
         }
     }

@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.OpenGL
                 case MagFilter.Linear:  return TextureMagFilter.Linear;
             }
 
-            throw new ArgumentException($"Invalid filter \"{filter}\".");
+            return TextureMagFilter.Nearest;
         }
     }
 }

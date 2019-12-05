@@ -10,11 +10,21 @@ namespace Ryujinx.Graphics.OpenGL
         {
             switch (op)
             {
-                case BlendOp.Add:             return BlendEquationMode.FuncAdd;
-                case BlendOp.Subtract:        return BlendEquationMode.FuncSubtract;
-                case BlendOp.ReverseSubtract: return BlendEquationMode.FuncReverseSubtract;
-                case BlendOp.Minimum:         return BlendEquationMode.Min;
-                case BlendOp.Maximum:         return BlendEquationMode.Max;
+                case BlendOp.Add:
+                case BlendOp.AddGl:
+                    return BlendEquationMode.FuncAdd;
+                case BlendOp.Subtract:
+                case BlendOp.SubtractGl:
+                    return BlendEquationMode.FuncSubtract;
+                case BlendOp.ReverseSubtract:
+                case BlendOp.ReverseSubtractGl:
+                    return BlendEquationMode.FuncReverseSubtract;
+                case BlendOp.Minimum:
+                case BlendOp.MinimumGl:
+                    return BlendEquationMode.Min;
+                case BlendOp.Maximum:
+                case BlendOp.MaximumGl:
+                    return BlendEquationMode.Max;
             }
 
             return BlendEquationMode.FuncAdd;

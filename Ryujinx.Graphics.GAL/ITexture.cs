@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.GAL
 
         int GetStorageDebugId();
 
-        byte[] GetData(int face);
+        byte[] GetData();
 
         void SetData(Span<byte> data);
     }

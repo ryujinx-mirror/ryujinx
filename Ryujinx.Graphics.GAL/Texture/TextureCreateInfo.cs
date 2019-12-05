@@ -66,6 +66,11 @@ namespace Ryujinx.Graphics.GAL.Texture
             return GetMipStride(level) * GetLevelHeight(level) * GetLevelDepth(level);
         }
 
+        public int GetMipSize2D(int level)
+        {
+            return GetMipStride(level) * GetLevelHeight(level);
+        }
+
         public int GetMipStride(int level)
         {
             return BitUtils.AlignUp(GetLevelWidth(level) * BytesPerPixel, 4);

@@ -165,7 +165,29 @@ namespace Ryujinx.Graphics.OpenGL
             _renderer.TextureCopy.Copy(this, (TextureView)destination, srcRegion, dstRegion, linearFilter);
         }
 
-        public byte[] GetData(int face)
+        public byte[] GetData()
+        {
+            int size = 0;
+
+            for (int level = 0; level < _info.Levels; level++)
+            {
+                size += _info.GetMipSize(level);
+            }
+
+            byte[] data = new byte[size];
+
+            unsafe
+            {
+                fixed (byte* ptr = data)
+                {
+                    WriteTo((IntPtr)ptr);
+                }
+            }
+
+            return data;
+        }
+
+        private void WriteTo(IntPtr ptr)
         {
             TextureTarget target = Target.Convert();
 
@@ -173,28 +195,37 @@ namespace Ryujinx.Graphics.OpenGL
 
             FormatInfo format = FormatTable.GetFormatInfo(_info.Format);
 
-            int depth = _info.GetDepthOrLayers();
+            int faces = 1;
 
             if (target == TextureTarget.TextureCubeMap)
             {
-                target = TextureTarget.TextureCubeMapPositiveX + face;
+                target = TextureTarget.TextureCubeMapPositiveX;
+
+                faces = 6;
             }
 
-            if (format.IsCompressed)
+            for (int level = 0; level < _info.Levels; level++)
             {
-                byte[] data = new byte[_info.Width * _info.Height * depth * 4];
+                for (int face = 0; face < faces; face++)
+                {
+                    int faceOffset = face * _info.GetMipSize2D(level);
 
-                GL.GetTexImage(target, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data);
+                    if (format.IsCompressed)
+                    {
+                        GL.GetCompressedTexImage(target + face, level, ptr + faceOffset);
+                    }
+                    else
+                    {
+                        GL.GetTexImage(
+                            target + face,
+                            level,
+                            format.PixelFormat,
+                            format.PixelType,
+                            ptr + faceOffset);
+                    }
+                }
 
-                return data;
-            }
-            else
-            {
-                byte[] data = new byte[_info.GetMipSize(0)];
-
-                GL.GetTexImage(target, 0, format.PixelFormat, format.PixelType, data);
-
-                return data;
+                ptr += _info.GetMipSize(level);
             }
         }
 

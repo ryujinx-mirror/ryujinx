@@ -30,7 +30,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             var samplerPool = state.Get<PoolState>(MethodOffset.SamplerPoolState);
 
-            _textureManager.SetComputeSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId);
+            _textureManager.SetComputeSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId, dispatchParams.SamplerIndex);
 
             var texturePool = state.Get<PoolState>(MethodOffset.TexturePoolState);
 

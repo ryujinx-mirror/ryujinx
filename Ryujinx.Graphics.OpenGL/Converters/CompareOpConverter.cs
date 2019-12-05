@@ -1,6 +1,5 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Graphics.GAL;
-using System;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -10,19 +9,33 @@ namespace Ryujinx.Graphics.OpenGL
         {
             switch (op)
             {
-                case CompareOp.Never:          return All.Never;
-                case CompareOp.Less:           return All.Less;
-                case CompareOp.Equal:          return All.Equal;
-                case CompareOp.LessOrEqual:    return All.Lequal;
-                case CompareOp.Greater:        return All.Greater;
-                case CompareOp.NotEqual:       return All.Notequal;
-                case CompareOp.GreaterOrEqual: return All.Gequal;
-                case CompareOp.Always:         return All.Always;
+                case CompareOp.Never:
+                case CompareOp.NeverGl:
+                    return All.Never;
+                case CompareOp.Less:
+                case CompareOp.LessGl:
+                    return All.Less;
+                case CompareOp.Equal:
+                case CompareOp.EqualGl:
+                    return All.Equal;
+                case CompareOp.LessOrEqual:
+                case CompareOp.LessOrEqualGl:
+                    return All.Lequal;
+                case CompareOp.Greater:
+                case CompareOp.GreaterGl:
+                    return All.Greater;
+                case CompareOp.NotEqual:
+                case CompareOp.NotEqualGl:
+                    return All.Notequal;
+                case CompareOp.GreaterOrEqual:
+                case CompareOp.GreaterOrEqualGl:
+                    return All.Gequal;
+                case CompareOp.Always:
+                case CompareOp.AlwaysGl:
+                    return All.Always;
             }
 
             return All.Never;
-
-            throw new ArgumentException($"Invalid compare operation \"{op}\".");
         }
     }
 }

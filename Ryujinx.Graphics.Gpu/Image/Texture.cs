@@ -277,7 +277,36 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         public void Flush()
         {
-            byte[] data = HostTexture.GetData(0);
+            Span<byte> data = HostTexture.GetData();
+
+            if (_info.IsLinear)
+            {
+                data = LayoutConverter.ConvertLinearToLinearStrided(
+                    _info.Width,
+                    _info.Height,
+                    _info.FormatInfo.BlockWidth,
+                    _info.FormatInfo.BlockHeight,
+                    _info.Stride,
+                    _info.FormatInfo.BytesPerPixel,
+                    data);
+            }
+            else
+            {
+                data = LayoutConverter.ConvertLinearToBlockLinear(
+                    _info.Width,
+                    _info.Height,
+                    _depth,
+                    _info.Levels,
+                    _layers,
+                    _info.FormatInfo.BlockWidth,
+                    _info.FormatInfo.BlockHeight,
+                    _info.FormatInfo.BytesPerPixel,
+                    _info.GobBlocksInY,
+                    _info.GobBlocksInZ,
+                    _info.GobBlocksInTileX,
+                    _sizeInfo,
+                    data);
+            }
 
             _context.PhysicalMemory.Write(Address, data);
         }

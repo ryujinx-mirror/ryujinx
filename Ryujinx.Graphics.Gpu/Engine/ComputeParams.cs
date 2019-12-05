@@ -1,3 +1,4 @@
+using Ryujinx.Graphics.Gpu.State;
 using System;
 using System.Runtime.InteropServices;
 
@@ -32,7 +33,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         public int ShaderOffset;
         public int Unknown9;
         public int Unknown10;
-        public int Unknown11;
+        public SamplerIndex SamplerIndex;
         public int GridSizeX;
         public int GridSizeYZ;
         public int Unknown14;

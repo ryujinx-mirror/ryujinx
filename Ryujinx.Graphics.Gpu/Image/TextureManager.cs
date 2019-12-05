@@ -81,14 +81,14 @@ namespace Ryujinx.Graphics.Gpu.Image
             _gpBindingsManager.SetTextureBufferIndex(index);
         }
 
-        public void SetComputeSamplerPool(ulong gpuVa, int maximumId)
+        public void SetComputeSamplerPool(ulong gpuVa, int maximumId, SamplerIndex samplerIndex)
         {
-            _cpBindingsManager.SetSamplerPool(gpuVa, maximumId);
+            _cpBindingsManager.SetSamplerPool(gpuVa, maximumId, samplerIndex);
         }
 
-        public void SetGraphicsSamplerPool(ulong gpuVa, int maximumId)
+        public void SetGraphicsSamplerPool(ulong gpuVa, int maximumId, SamplerIndex samplerIndex)
         {
-            _gpBindingsManager.SetSamplerPool(gpuVa, maximumId);
+            _gpBindingsManager.SetSamplerPool(gpuVa, maximumId, samplerIndex);
         }
 
         public void SetComputeTexturePool(ulong gpuVa, int maximumId)
@@ -591,6 +591,19 @@ namespace Ryujinx.Graphics.Gpu.Image
             foreach (Texture texture in _cache)
             {
                 if (texture.Info.IsLinear && texture.Modified)
+                {
+                    texture.Flush();
+
+                    texture.Modified = false;
+                }
+            }
+        }
+
+        public void Flush(ulong address, ulong size)
+        {
+            foreach (Texture texture in _cache)
+            {
+                if (texture.OverlapsWith(address, size) && texture.Modified)
                 {
                     texture.Flush();
 

@@ -162,6 +162,28 @@ namespace Ryujinx.Graphics.Gpu.State
             return modified;
         }
 
+        public bool QueryModified(
+            MethodOffset m1,
+            MethodOffset m2,
+            MethodOffset m3,
+            MethodOffset m4,
+            MethodOffset m5)
+        {
+            bool modified = _registers[(int)m1].Modified ||
+                            _registers[(int)m2].Modified ||
+                            _registers[(int)m3].Modified ||
+                            _registers[(int)m4].Modified ||
+                            _registers[(int)m5].Modified;
+
+            _registers[(int)m1].Modified = false;
+            _registers[(int)m2].Modified = false;
+            _registers[(int)m3].Modified = false;
+            _registers[(int)m4].Modified = false;
+            _registers[(int)m5].Modified = false;
+
+            return modified;
+        }
+
         public T Get<T>(MethodOffset offset, int index) where T : struct
         {
             Register register = _registers[(int)offset];

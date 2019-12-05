@@ -89,8 +89,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
             UpdateRenderTargetStateIfNeeded(state);
 
             if (state.QueryModified(MethodOffset.DepthTestEnable,
-                                             MethodOffset.DepthWriteEnable,
-                                             MethodOffset.DepthTestFunc))
+                                    MethodOffset.DepthWriteEnable,
+                                    MethodOffset.DepthTestFunc))
             {
                 UpdateDepthTestState(state);
             }
@@ -101,16 +101,16 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
 
             if (state.QueryModified(MethodOffset.DepthBiasState,
-                                             MethodOffset.DepthBiasFactor,
-                                             MethodOffset.DepthBiasUnits,
-                                             MethodOffset.DepthBiasClamp))
+                                    MethodOffset.DepthBiasFactor,
+                                    MethodOffset.DepthBiasUnits,
+                                    MethodOffset.DepthBiasClamp))
             {
                 UpdateDepthBiasState(state);
             }
 
             if (state.QueryModified(MethodOffset.StencilBackMasks,
-                                             MethodOffset.StencilTestState,
-                                             MethodOffset.StencilBackTestState))
+                                    MethodOffset.StencilTestState,
+                                    MethodOffset.StencilBackTestState))
             {
                 UpdateStencilTestState(state);
             }
@@ -143,9 +143,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
 
             if (state.QueryModified(MethodOffset.VertexBufferDrawState,
-                                             MethodOffset.VertexBufferInstanced,
-                                             MethodOffset.VertexBufferState,
-                                             MethodOffset.VertexBufferEndAddress))
+                                    MethodOffset.VertexBufferInstanced,
+                                    MethodOffset.VertexBufferState,
+                                    MethodOffset.VertexBufferEndAddress))
             {
                 UpdateVertexBufferState(state);
             }
@@ -160,7 +160,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 UpdateRtColorMask(state);
             }
 
-            if (state.QueryModified(MethodOffset.BlendEnable, MethodOffset.BlendState))
+            if (state.QueryModified(MethodOffset.BlendIndependent,
+                                    MethodOffset.BlendStateCommon,
+                                    MethodOffset.BlendEnableCommon,
+                                    MethodOffset.BlendEnable,
+                                    MethodOffset.BlendState))
             {
                 UpdateBlendState(state);
             }
@@ -288,6 +292,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private void UpdateViewportTransform(GpuState state)
         {
+            bool flipY = (state.Get<int>(MethodOffset.YControl) & 1) != 0;
+
+            float yFlip = flipY ? -1 : 1;
+
             Viewport[] viewports = new Viewport[Constants.TotalViewports];
 
             for (int index = 0; index < Constants.TotalViewports; index++)
@@ -299,7 +307,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 float y = transform.TranslateY - MathF.Abs(transform.ScaleY);
 
                 float width  = transform.ScaleX * 2;
-                float height = transform.ScaleY * 2;
+                float height = transform.ScaleY * 2 * yFlip;
 
                 RectangleF region = new RectangleF(x, y, width, height);
 
@@ -390,7 +398,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             var samplerPool = state.Get<PoolState>(MethodOffset.SamplerPoolState);
 
-            _textureManager.SetGraphicsSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId);
+            var samplerIndex = state.Get<SamplerIndex>(MethodOffset.SamplerIndex);
+
+            _textureManager.SetGraphicsSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId, samplerIndex);
         }
 
         private void UpdateTexturePoolState(GpuState state)
@@ -548,22 +558,42 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private void UpdateBlendState(GpuState state)
         {
+            bool blendIndependent = state.Get<Boolean32>(MethodOffset.BlendIndependent);
+
             BlendState[] blends = new BlendState[8];
 
             for (int index = 0; index < 8; index++)
             {
-                bool enable = state.Get<Boolean32>(MethodOffset.BlendEnable, index);
+                BlendDescriptor descriptor;
 
-                var blend = state.Get<BlendState>(MethodOffset.BlendState, index);
+                if (blendIndependent)
+                {
+                    bool enable = state.Get<Boolean32> (MethodOffset.BlendEnable, index);
+                    var  blend  = state.Get<BlendState>(MethodOffset.BlendState,  index);
 
-                BlendDescriptor descriptor = new BlendDescriptor(
-                    enable,
-                    blend.ColorOp,
-                    blend.ColorSrcFactor,
-                    blend.ColorDstFactor,
-                    blend.AlphaOp,
-                    blend.AlphaSrcFactor,
-                    blend.AlphaDstFactor);
+                    descriptor = new BlendDescriptor(
+                        enable,
+                        blend.ColorOp,
+                        blend.ColorSrcFactor,
+                        blend.ColorDstFactor,
+                        blend.AlphaOp,
+                        blend.AlphaSrcFactor,
+                        blend.AlphaDstFactor);
+                }
+                else
+                {
+                    bool enable = state.Get<Boolean32>       (MethodOffset.BlendEnable, 0);
+                    var  blend  = state.Get<BlendStateCommon>(MethodOffset.BlendStateCommon);
+
+                    descriptor = new BlendDescriptor(
+                        enable,
+                        blend.ColorOp,
+                        blend.ColorSrcFactor,
+                        blend.ColorDstFactor,
+                        blend.AlphaOp,
+                        blend.AlphaSrcFactor,
+                        blend.AlphaDstFactor);
+                }
 
                 _context.Renderer.Pipeline.BindBlendState(index, descriptor);
             }

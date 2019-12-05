@@ -18,7 +18,7 @@ namespace Ryujinx.Graphics.OpenGL
                 case MinFilter.LinearMipmapLinear:   return TextureMinFilter.LinearMipmapLinear;
             }
 
-            throw new ArgumentException($"Invalid filter \"{filter}\".");
+            return TextureMinFilter.Nearest;
         }
     }
 }

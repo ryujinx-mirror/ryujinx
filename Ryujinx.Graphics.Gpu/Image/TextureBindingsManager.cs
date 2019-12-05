@@ -1,4 +1,5 @@
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 using System;
 
@@ -11,6 +12,8 @@ namespace Ryujinx.Graphics.Gpu.Image
         private bool _isCompute;
 
         private SamplerPool _samplerPool;
+
+        private SamplerIndex _samplerIndex;
 
         private ulong _texturePoolAddress;
         private int   _texturePoolMaximumId;
@@ -67,7 +70,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             _textureBufferIndex = index;
         }
 
-        public void SetSamplerPool(ulong gpuVa, int maximumId)
+        public void SetSamplerPool(ulong gpuVa, int maximumId, SamplerIndex samplerIndex)
         {
             ulong address = _context.MemoryManager.Translate(gpuVa);
 
@@ -82,6 +85,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             _samplerPool = new SamplerPool(_context, address, maximumId);
+
+            _samplerIndex = samplerIndex;
         }
 
         public void SetTexturePool(ulong gpuVa, int maximumId)
@@ -131,7 +136,16 @@ namespace Ryujinx.Graphics.Gpu.Image
                 int packedId = ReadPackedId(stageIndex, binding.Handle);
 
                 int textureId = UnpackTextureId(packedId);
-                int samplerId = UnpackSamplerId(packedId);
+                int samplerId;
+
+                if (_samplerIndex == SamplerIndex.ViaHeaderIndex)
+                {
+                    samplerId = textureId;
+                }
+                else
+                {
+                    samplerId = UnpackSamplerId(packedId);
+                }
 
                 Texture texture = pool.Get(textureId);
 
