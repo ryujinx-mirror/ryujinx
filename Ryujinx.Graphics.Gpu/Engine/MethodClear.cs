@@ -7,7 +7,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
     {
         private void Clear(GpuState state, int argument)
         {
-            UpdateRenderTargetStateIfNeeded(state);
+            UpdateRenderTargetState(state, useControl: false);
 
             _textureManager.CommitGraphicsBindings();
 
@@ -49,6 +49,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     stencilValue,
                     stencilMask);
             }
+
+            UpdateRenderTargetState(state, useControl: true);
         }
     }
 }

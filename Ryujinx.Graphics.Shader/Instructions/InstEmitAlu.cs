@@ -200,6 +200,50 @@ namespace Ryujinx.Graphics.Shader.Instructions
             // TODO: CC, X, corner cases
         }
 
+        public static void Imad(EmitterContext context)
+        {
+            OpCodeAlu op = (OpCodeAlu)context.CurrOp;
+
+            bool signedA = context.CurrOp.RawOpCode.Extract(48);
+            bool signedB = context.CurrOp.RawOpCode.Extract(53);
+            bool high    = context.CurrOp.RawOpCode.Extract(54);
+
+            Operand srcA = GetSrcA(context);
+            Operand srcB = GetSrcB(context);
+            Operand srcC = GetSrcC(context);
+
+            Operand res;
+
+            if (high)
+            {
+                if (signedA && signedB)
+                {
+                    res = context.MultiplyHighS32(srcA, srcB);
+                }
+                else
+                {
+                    res = context.MultiplyHighU32(srcA, srcB);
+
+                    if (signedA)
+                    {
+                        res = context.IAdd(res, context.IMultiply(srcB, context.ShiftRightS32(srcA, Const(31))));
+                    }
+                    else if (signedB)
+                    {
+                        res = context.IAdd(res, context.IMultiply(srcA, context.ShiftRightS32(srcB, Const(31))));
+                    }
+                }
+            }
+            else
+            {
+                res = context.IMultiply(srcA, srcB);
+            }
+
+            res = context.IAdd(res, srcC);
+
+            context.Copy(GetDest(context), res);
+        }
+
         public static void Imnmx(EmitterContext context)
         {
             OpCodeAlu op = (OpCodeAlu)context.CurrOp;

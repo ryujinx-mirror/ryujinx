@@ -94,11 +94,17 @@ namespace Ryujinx.Graphics.Gpu.State
                 _backingMemory[(int)MethodOffset.ViewportExtents + index * 4 + 3] = 0x3F800000;
             }
 
+            // Viewport transform enable.
+            _backingMemory[(int)MethodOffset.ViewportTransformEnable] = 1;
+
             // Default front stencil mask.
             _backingMemory[0x4e7] = 0xff;
 
             // Default color mask.
-            _backingMemory[(int)MethodOffset.RtColorMask] = 0x1111;
+            for (int index = 0; index < Constants.TotalRenderTargets; index++)
+            {
+                _backingMemory[(int)MethodOffset.RtColorMask + index] = 0x1111;
+            }
         }
 
         public void RegisterCallback(MethodOffset offset, int count, MethodCallback callback)

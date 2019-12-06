@@ -22,6 +22,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         public const string LocalMemoryName  = "local_mem";
         public const string SharedMemoryName = "shared_mem";
 
+        public const string DummyIntName  = "dummyInt";
+        public const string DummyUintName = "dummyUint";
+
         public const string UndefinedName = "undef";
     }
 }

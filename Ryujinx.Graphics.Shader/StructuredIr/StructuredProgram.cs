@@ -171,6 +171,12 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             // decide which helper functions are needed on the final generated code.
             switch (operation.Inst)
             {
+                case Instruction.MultiplyHighS32:
+                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.MultiplyHighS32;
+                    break;
+                case Instruction.MultiplyHighU32:
+                    context.Info.HelperFunctionsMask |= HelperFunctionsMask.MultiplyHighU32;
+                    break;
                 case Instruction.Shuffle:
                     context.Info.HelperFunctionsMask |= HelperFunctionsMask.Shuffle;
                     break;

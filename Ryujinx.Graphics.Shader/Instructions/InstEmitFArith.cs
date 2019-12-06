@@ -59,6 +59,26 @@ namespace Ryujinx.Graphics.Shader.Instructions
             SetFPZnFlags(context, dest, op.SetCondCode);
         }
 
+        public static void Ffma32i(EmitterContext context)
+        {
+            IOpCodeFArith op = (IOpCodeFArith)context.CurrOp;
+
+            bool saturate = op.RawOpCode.Extract(55);
+            bool negateA  = op.RawOpCode.Extract(56);
+            bool negateC  = op.RawOpCode.Extract(57);
+
+            Operand srcA = context.FPNegate(GetSrcA(context), negateA);
+            Operand srcC = context.FPNegate(GetDest(context), negateC);
+
+            Operand srcB = GetSrcB(context);
+
+            Operand dest = GetDest(context);
+
+            context.Copy(dest, context.FPSaturate(context.FPFusedMultiplyAdd(srcA, srcB, srcC), saturate));
+
+            SetFPZnFlags(context, dest, op.SetCondCode);
+        }
+
         public static void Fmnmx(EmitterContext context)
         {
             IOpCodeFArith op = (IOpCodeFArith)context.CurrOp;

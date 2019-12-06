@@ -476,6 +476,16 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.LoadShared, Local(), a);
         }
 
+        public static Operand MultiplyHighS32(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.MultiplyHighS32, Local(), a, b);
+        }
+
+        public static Operand MultiplyHighU32(this EmitterContext context, Operand a, Operand b)
+        {
+            return context.Add(Instruction.MultiplyHighU32, Local(), a, b);
+        }
+
         public static Operand PackHalf2x16(this EmitterContext context, Operand a, Operand b)
         {
             return context.Add(Instruction.PackHalf2x16, Local(), a, b);

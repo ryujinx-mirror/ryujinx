@@ -69,7 +69,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return cpShader;
         }
 
-        public GraphicsShader GetGraphicsShader(ShaderAddresses addresses)
+        public GraphicsShader GetGraphicsShader(ShaderAddresses addresses, bool dividePosXY)
         {
             bool isCached = _gpPrograms.TryGetValue(addresses, out List<GraphicsShader> list);
 
@@ -86,19 +86,28 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             GraphicsShader gpShaders = new GraphicsShader();
 
+            TranslationFlags flags =
+                TranslationFlags.DebugMode |
+                TranslationFlags.Unspecialized;
+
+            if (dividePosXY)
+            {
+                flags |= TranslationFlags.DividePosXY;
+            }
+
             if (addresses.VertexA != 0)
             {
-                gpShaders.Shader[0] = TranslateGraphicsShader(addresses.Vertex, addresses.VertexA);
+                gpShaders.Shader[0] = TranslateGraphicsShader(flags, addresses.Vertex, addresses.VertexA);
             }
             else
             {
-                gpShaders.Shader[0] = TranslateGraphicsShader(addresses.Vertex);
+                gpShaders.Shader[0] = TranslateGraphicsShader(flags, addresses.Vertex);
             }
 
-            gpShaders.Shader[1] = TranslateGraphicsShader(addresses.TessControl);
-            gpShaders.Shader[2] = TranslateGraphicsShader(addresses.TessEvaluation);
-            gpShaders.Shader[3] = TranslateGraphicsShader(addresses.Geometry);
-            gpShaders.Shader[4] = TranslateGraphicsShader(addresses.Fragment);
+            gpShaders.Shader[1] = TranslateGraphicsShader(flags, addresses.TessControl);
+            gpShaders.Shader[2] = TranslateGraphicsShader(flags, addresses.TessEvaluation);
+            gpShaders.Shader[3] = TranslateGraphicsShader(flags, addresses.Geometry);
+            gpShaders.Shader[4] = TranslateGraphicsShader(flags, addresses.Fragment);
 
             BackpropQualifiers(gpShaders);
 
@@ -218,7 +227,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return new CachedShader(program, codeCached);
         }
 
-        private CachedShader TranslateGraphicsShader(ulong gpuVa, ulong gpuVaA = 0)
+        private CachedShader TranslateGraphicsShader(TranslationFlags flags, ulong gpuVa, ulong gpuVaA = 0)
         {
             if (gpuVa == 0)
             {
@@ -226,10 +235,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
 
             ShaderProgram program;
-
-            const TranslationFlags flags =
-                TranslationFlags.DebugMode |
-                TranslationFlags.Unspecialized;
 
             int[] codeCached = null;
 
@@ -345,7 +350,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
         private ShaderCapabilities GetShaderCapabilities()
         {
-            return new ShaderCapabilities(_context.Capabilities.StorageBufferOffsetAlignment);
+            return new ShaderCapabilities(
+                _context.Capabilities.MaximumViewportDimensions,
+                _context.Capabilities.StorageBufferOffsetAlignment);
         }
     }
 }

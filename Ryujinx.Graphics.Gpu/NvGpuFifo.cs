@@ -105,6 +105,8 @@ namespace Ryujinx.Graphics.Gpu
                 {
                     case NvGpuFifoMeth.WaitForIdle:
                     {
+                        _context.Methods.PerformDeferredDraws();
+
                         _context.Renderer.FlushPipelines();
 
                         break;

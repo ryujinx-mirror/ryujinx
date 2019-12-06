@@ -57,6 +57,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("0101110001011x", InstEmit.Fadd,    typeof(OpCodeFArithReg));
             Set("010010011xxxxx", InstEmit.Ffma,    typeof(OpCodeFArithCbuf));
             Set("0011001x1xxxxx", InstEmit.Ffma,    typeof(OpCodeFArithImm));
+            Set("000011xxxxxxxx", InstEmit.Ffma32i, typeof(OpCodeFArithImm32));
             Set("010100011xxxxx", InstEmit.Ffma,    typeof(OpCodeFArithRegCbuf));
             Set("010110011xxxxx", InstEmit.Ffma,    typeof(OpCodeFArithReg));
             Set("0100110000110x", InstEmit.Flo,     typeof(OpCodeAluCbuf));
@@ -102,12 +103,16 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("0011100x11100x", InstEmit.I2I,     typeof(OpCodeAluImm));
             Set("0101110011100x", InstEmit.I2I,     typeof(OpCodeAluReg));
             Set("0100110000010x", InstEmit.Iadd,    typeof(OpCodeAluCbuf));
-            Set("0011100000010x", InstEmit.Iadd,    typeof(OpCodeAluImm));
+            Set("0011100x00010x", InstEmit.Iadd,    typeof(OpCodeAluImm));
             Set("0001110x0xxxxx", InstEmit.Iadd,    typeof(OpCodeAluImm32));
             Set("0101110000010x", InstEmit.Iadd,    typeof(OpCodeAluReg));
             Set("010011001100xx", InstEmit.Iadd3,   typeof(OpCodeAluCbuf));
-            Set("001110001100xx", InstEmit.Iadd3,   typeof(OpCodeAluImm));
+            Set("0011100x1100xx", InstEmit.Iadd3,   typeof(OpCodeAluImm));
             Set("010111001100xx", InstEmit.Iadd3,   typeof(OpCodeAluReg));
+            Set("010010100xxxxx", InstEmit.Imad,    typeof(OpCodeAluCbuf));
+            Set("0011010x0xxxxx", InstEmit.Imad,    typeof(OpCodeAluImm));
+            Set("010110100xxxxx", InstEmit.Imad,    typeof(OpCodeAluReg));
+            Set("010100100xxxxx", InstEmit.Imad,    typeof(OpCodeAluRegCbuf));
             Set("0100110000100x", InstEmit.Imnmx,   typeof(OpCodeAluCbuf));
             Set("0011100x00100x", InstEmit.Imnmx,   typeof(OpCodeAluImm));
             Set("0101110000100x", InstEmit.Imnmx,   typeof(OpCodeAluReg));

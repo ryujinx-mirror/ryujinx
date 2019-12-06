@@ -49,15 +49,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public static ShaderProgram Translate(Span<byte> code, ShaderCapabilities capabilities, TranslationFlags flags)
         {
-            bool compute   = (flags & TranslationFlags.Compute)   != 0;
-            bool debugMode = (flags & TranslationFlags.DebugMode) != 0;
+            bool compute = (flags & TranslationFlags.Compute) != 0;
 
-            Operation[] ops = DecodeShader(
-                code,
-                compute,
-                debugMode,
-                out ShaderHeader header,
-                out int size);
+            Operation[] ops = DecodeShader(code, capabilities, flags, out ShaderHeader header, out int size);
 
             ShaderStage stage;
 
@@ -94,8 +88,8 @@ namespace Ryujinx.Graphics.Shader.Translation
         {
             bool debugMode = (flags & TranslationFlags.DebugMode) != 0;
 
-            Operation[] vpAOps = DecodeShader(vpACode, compute: false, debugMode, out _, out _);
-            Operation[] vpBOps = DecodeShader(vpBCode, compute: false, debugMode, out ShaderHeader header, out int sizeB);
+            Operation[] vpAOps = DecodeShader(vpACode, capabilities, flags, out _, out _);
+            Operation[] vpBOps = DecodeShader(vpBCode, capabilities, flags, out ShaderHeader header, out int sizeB);
 
             ShaderConfig config = new ShaderConfig(
                 header.Stage,
@@ -142,23 +136,23 @@ namespace Ryujinx.Graphics.Shader.Translation
         }
 
         private static Operation[] DecodeShader(
-            Span<byte>       code,
-            bool             compute,
-            bool             debugMode,
-            out ShaderHeader header,
-            out int          size)
+            Span<byte>         code,
+            ShaderCapabilities capabilities,
+            TranslationFlags   flags,
+            out ShaderHeader   header,
+            out int            size)
         {
             Block[] cfg;
 
             EmitterContext context;
 
-            if (compute)
+            if ((flags & TranslationFlags.Compute) != 0)
             {
                 header = null;
 
                 cfg = Decoder.Decode(code, 0);
 
-                context = new EmitterContext(ShaderStage.Compute, header);
+                context = new EmitterContext(ShaderStage.Compute, header, capabilities, flags);
             }
             else
             {
@@ -166,7 +160,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 cfg = Decoder.Decode(code, HeaderSize);
 
-                context = new EmitterContext(header.Stage, header);
+                context = new EmitterContext(header.Stage, header, capabilities, flags);
             }
 
             if (cfg == null)
@@ -197,7 +191,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 {
                     OpCode op = block.OpCodes[opIndex];
 
-                    if (debugMode)
+                    if ((flags & TranslationFlags.DebugMode) != 0)
                     {
                         string instName;
 
@@ -274,7 +268,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 }
             }
 
-            size = (int)maxEndAddress + (compute ? 0 : HeaderSize);
+            size = (int)maxEndAddress + (((flags & TranslationFlags.Compute) != 0) ? 0 : HeaderSize);
 
             return context.GetOperations();
         }

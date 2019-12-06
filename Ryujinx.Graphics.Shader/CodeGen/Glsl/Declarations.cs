@@ -142,6 +142,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 context.AppendLine();
             }
 
+            if ((info.HelperFunctionsMask & HelperFunctionsMask.MultiplyHighS32) != 0)
+            {
+                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/MultiplyHighS32.glsl");
+            }
+
+            if ((info.HelperFunctionsMask & HelperFunctionsMask.MultiplyHighU32) != 0)
+            {
+                AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/MultiplyHighU32.glsl");
+            }
+
             if ((info.HelperFunctionsMask & HelperFunctionsMask.Shuffle) != 0)
             {
                 AppendHelperFunction(context, "Ryujinx.Graphics.Shader/CodeGen/Glsl/HelperFunctions/Shuffle.glsl");
@@ -170,6 +180,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         public static void DeclareLocals(CodeGenContext context, StructuredProgramInfo info)
         {
+            context.AppendLine(GetVarTypeName(VariableType.S32) + " " + DefaultNames.DummyIntName + ";");
+            context.AppendLine(GetVarTypeName(VariableType.U32) + " " + DefaultNames.DummyUintName + ";");
+
             foreach (AstOperand decl in info.Locals)
             {
                 string name = context.OperandManager.DeclareLocal(decl);

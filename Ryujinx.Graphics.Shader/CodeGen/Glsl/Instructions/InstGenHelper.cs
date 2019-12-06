@@ -93,6 +93,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.Minimum,                  InstType.CallBinary,     "min");
             Add(Instruction.MinimumU32,               InstType.CallBinary,     "min");
             Add(Instruction.Multiply,                 InstType.OpBinaryCom,    "*",               1);
+            Add(Instruction.MultiplyHighS32,          InstType.CallBinary,     HelperFunctionNames.MultiplyHighS32);
+            Add(Instruction.MultiplyHighU32,          InstType.CallBinary,     HelperFunctionNames.MultiplyHighU32);
             Add(Instruction.Negate,                   InstType.OpUnary,        "-",               0);
             Add(Instruction.ReciprocalSquareRoot,     InstType.CallUnary,      "inversesqrt");
             Add(Instruction.Return,                   InstType.OpNullary,      "return");

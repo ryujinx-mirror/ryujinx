@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private int _firstIndex;
         private int _indexCount;
 
-        private bool _instancedHasState;
+        private bool _instancedDrawPending;
         private bool _instancedIndexed;
 
         private int _instancedFirstIndex;
@@ -32,9 +32,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (instanced)
             {
-                if (!_instancedHasState)
+                if (!_instancedDrawPending)
                 {
-                    _instancedHasState = true;
+                    _instancedDrawPending = true;
 
                     _instancedIndexed = _drawIndexed;
 
@@ -82,20 +82,22 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private void DrawBegin(GpuState state, int argument)
         {
-            PrimitiveType type = (PrimitiveType)(argument & 0xffff);
-
-            _context.Renderer.Pipeline.SetPrimitiveTopology(type.Convert());
-
-            PrimitiveType = type;
-
             if ((argument & (1 << 26)) != 0)
             {
                 _instanceIndex++;
             }
             else if ((argument & (1 << 27)) == 0)
             {
+                PerformDeferredDraws();
+
                 _instanceIndex = 0;
             }
+
+            PrimitiveType type = (PrimitiveType)(argument & 0xffff);
+
+            _context.Renderer.Pipeline.SetPrimitiveTopology(type.Convert());
+
+            PrimitiveType = type;
         }
 
         private void SetIndexBufferCount(GpuState state, int argument)
@@ -106,9 +108,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
         public void PerformDeferredDraws()
         {
             // Perform any pending instanced draw.
-            if (_instancedHasState)
+            if (_instancedDrawPending)
             {
-                _instancedHasState = false;
+                _instancedDrawPending = false;
 
                 if (_instancedIndexed)
                 {

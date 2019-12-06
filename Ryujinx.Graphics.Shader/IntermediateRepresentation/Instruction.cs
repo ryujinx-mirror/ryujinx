@@ -84,6 +84,8 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         Minimum,
         MinimumU32,
         Multiply,
+        MultiplyHighS32,
+        MultiplyHighU32,
         Negate,
         PackDouble2x32,
         PackHalf2x16,

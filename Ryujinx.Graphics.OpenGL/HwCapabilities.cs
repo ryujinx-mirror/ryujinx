@@ -7,10 +7,12 @@ namespace Ryujinx.Graphics.OpenGL
     {
         private static Lazy<bool> _supportsAstcCompression = new Lazy<bool>(() => HasExtension("GL_KHR_texture_compression_astc_ldr"));
 
+        private static Lazy<int> _maximumViewportDimensions    = new Lazy<int>(() => GetLimit(All.MaxViewportDims));
         private static Lazy<int> _storageBufferOffsetAlignment = new Lazy<int>(() => GetLimit(All.ShaderStorageBufferOffsetAlignment));
 
         public static bool SupportsAstcCompression => _supportsAstcCompression.Value;
 
+        public static int MaximumViewportDimensions    => _maximumViewportDimensions.Value;
         public static int StorageBufferOffsetAlignment => _storageBufferOffsetAlignment.Value;
 
         private static bool HasExtension(string name)

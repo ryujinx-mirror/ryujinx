@@ -11,18 +11,25 @@ namespace Ryujinx.Graphics.Shader.Translation
         public Block  CurrBlock { get; set; }
         public OpCode CurrOp    { get; set; }
 
-        private ShaderStage _stage;
-
-        private ShaderHeader _header;
+        private ShaderStage        _stage;
+        private ShaderHeader       _header;
+        private ShaderCapabilities _capabilities;
+        private TranslationFlags   _flags;
 
         private List<Operation> _operations;
 
         private Dictionary<ulong, Operand> _labels;
 
-        public EmitterContext(ShaderStage stage, ShaderHeader header)
+        public EmitterContext(
+            ShaderStage        stage,
+            ShaderHeader       header,
+            ShaderCapabilities capabilities,
+            TranslationFlags   flags)
         {
-            _stage  = stage;
-            _header = header;
+            _stage        = stage;
+            _header       = header;
+            _capabilities = capabilities;
+            _flags        = flags;
 
             _operations = new List<Operation>();
 
@@ -62,7 +69,18 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public void PrepareForReturn()
         {
-            if (_stage == ShaderStage.Fragment)
+            if (_stage == ShaderStage.Vertex)
+            {
+                if ((_flags & TranslationFlags.DividePosXY) != 0)
+                {
+                    Operand posX = Attribute(AttributeConsts.PositionX);
+                    Operand posY = Attribute(AttributeConsts.PositionY);
+
+                    this.Copy(posX, this.FPDivide(posX, ConstF(_capabilities.MaximumViewportDimensions / 2)));
+                    this.Copy(posY, this.FPDivide(posY, ConstF(_capabilities.MaximumViewportDimensions / 2)));
+                }
+            }
+            else if (_stage == ShaderStage.Fragment)
             {
                 if (_header.OmapDepth)
                 {

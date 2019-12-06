@@ -86,7 +86,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 UpdateShaderState(state);
             }
 
-            UpdateRenderTargetStateIfNeeded(state);
+            if (state.QueryModified(MethodOffset.RtColorState,
+                                    MethodOffset.RtDepthStencilState,
+                                    MethodOffset.RtControl,
+                                    MethodOffset.RtDepthStencilSize,
+                                    MethodOffset.RtDepthStencilEnable))
+            {
+                UpdateRenderTargetState(state, useControl: true);
+            }
 
             if (state.QueryModified(MethodOffset.DepthTestEnable,
                                     MethodOffset.DepthWriteEnable,
@@ -155,7 +162,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 UpdateFaceState(state);
             }
 
-            if (state.QueryModified(MethodOffset.RtColorMask))
+            if (state.QueryModified(MethodOffset.RtColorMaskShared, MethodOffset.RtColorMask))
             {
                 UpdateRtColorMask(state);
             }
@@ -210,19 +217,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
-        private void UpdateRenderTargetStateIfNeeded(GpuState state)
+        private void UpdateRenderTargetState(GpuState state, bool useControl)
         {
-            if (state.QueryModified(MethodOffset.RtColorState,
-                                             MethodOffset.RtDepthStencilState,
-                                             MethodOffset.RtDepthStencilSize,
-                                             MethodOffset.RtDepthStencilEnable))
-            {
-                UpdateRenderTargetState(state);
-            }
-        }
+            var rtControl = state.Get<RtControl>(MethodOffset.RtControl);
 
-        private void UpdateRenderTargetState(GpuState state)
-        {
+            int count = useControl ? rtControl.UnpackCount() : Constants.TotalRenderTargets;
+
             var msaaMode = state.Get<TextureMsaaMode>(MethodOffset.RtMsaaMode);
 
             int samplesInX = msaaMode.SamplesInX();
@@ -230,9 +230,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             for (int index = 0; index < Constants.TotalRenderTargets; index++)
             {
-                var colorState = state.Get<RtColorState>(MethodOffset.RtColorState, index);
+                int rtIndex = useControl ? rtControl.UnpackPermutationIndex(index) : index;
 
-                if (!IsRtEnabled(colorState))
+                var colorState = state.Get<RtColorState>(MethodOffset.RtColorState, rtIndex);
+
+                if (index >= count || !IsRtEnabled(colorState))
                 {
                     _textureManager.SetRenderTargetColor(index, null);
 
@@ -292,6 +294,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private void UpdateViewportTransform(GpuState state)
         {
+            bool transformEnable = GetViewportTransformEnable(state);
+
             bool flipY = (state.Get<int>(MethodOffset.YControl) & 1) != 0;
 
             float yFlip = flipY ? -1 : 1;
@@ -303,13 +307,35 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 var transform = state.Get<ViewportTransform>(MethodOffset.ViewportTransform, index);
                 var extents   = state.Get<ViewportExtents>  (MethodOffset.ViewportExtents,   index);
 
-                float x = transform.TranslateX - MathF.Abs(transform.ScaleX);
-                float y = transform.TranslateY - MathF.Abs(transform.ScaleY);
+                RectangleF region;
 
-                float width  = transform.ScaleX * 2;
-                float height = transform.ScaleY * 2 * yFlip;
+                if (transformEnable)
+                {
+                    float x = transform.TranslateX - MathF.Abs(transform.ScaleX);
+                    float y = transform.TranslateY - MathF.Abs(transform.ScaleY);
 
-                RectangleF region = new RectangleF(x, y, width, height);
+                    float width  = transform.ScaleX * 2;
+                    float height = transform.ScaleY * 2 * yFlip;
+
+                    region = new RectangleF(x, y, width, height);
+                }
+                else
+                {
+                    // It's not possible to fully disable viewport transform, at least with the most
+                    // common graphics APIs, but we can effectively disable it with a dummy transform.
+                    // The transform is defined as: xw = (width / 2) * xndc + x + (width / 2)
+                    // By setting x to -(width / 2), we effectively remove the translation.
+                    // By setting the width to 2, we remove the scale since 2 / 2 = 1.
+                    // Now, the only problem is the viewport clipping, that we also can't disable.
+                    // To prevent the values from being clipped, we multiply (-1, -1, 2, 2) by
+                    // the maximum supported viewport dimensions.
+                    // This must be compensated on the shader, by dividing the vertex position
+                    // by the maximum viewport dimensions.
+                    float maxSize     = (float)_context.Capabilities.MaximumViewportDimensions;
+                    float halfMaxSize = (float)_context.Capabilities.MaximumViewportDimensions * 0.5f;
+
+                    region = new RectangleF(-halfMaxSize, -halfMaxSize, maxSize, maxSize * yFlip);
+                }
 
                 viewports[index] = new Viewport(
                     region,
@@ -537,11 +563,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private void UpdateRtColorMask(GpuState state)
         {
+            bool rtColorMaskShared = state.Get<Boolean32>(MethodOffset.RtColorMaskShared);
+
             uint[] componentMasks = new uint[Constants.TotalRenderTargets];
 
             for (int index = 0; index < Constants.TotalRenderTargets; index++)
             {
-                var colorMask = state.Get<RtColorMask>(MethodOffset.RtColorMask, index);
+                var colorMask = state.Get<RtColorMask>(MethodOffset.RtColorMask, rtColorMaskShared ? 0 : index);
 
                 uint componentMask = 0;
 
@@ -634,7 +662,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 addressesArray[index] = baseAddress + shader.Offset;
             }
 
-            GraphicsShader gs = _shaderCache.GetGraphicsShader(addresses);
+            bool viewportTransformEnable = GetViewportTransformEnable(state);
+
+            GraphicsShader gs = _shaderCache.GetGraphicsShader(addresses, !viewportTransformEnable);
 
             _vsUsesInstanceId = gs.Shader[0].Program.Info.UsesInstanceId;
 
@@ -693,6 +723,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
 
             _context.Renderer.Pipeline.BindProgram(gs.HostProgram);
+        }
+
+        private bool GetViewportTransformEnable(GpuState state)
+        {
+            // FIXME: We should read ViewportTransformEnable, but it seems that some games writes 0 there?
+            // return state.Get<Boolean32>(MethodOffset.ViewportTransformEnable) != 0;
+
+            return true;
         }
 
         private static Target GetTarget(SamplerType type)

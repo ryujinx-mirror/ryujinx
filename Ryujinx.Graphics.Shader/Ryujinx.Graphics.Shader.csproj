@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\MultiplyHighS32.glsl" />
+    <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\MultiplyHighU32.glsl" />
     <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\Shuffle.glsl" />
     <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\ShuffleDown.glsl" />
     <EmbeddedResource Include="CodeGen\Glsl\HelperFunctions\ShuffleUp.glsl" />
