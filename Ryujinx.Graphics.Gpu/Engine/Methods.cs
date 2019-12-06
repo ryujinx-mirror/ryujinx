@@ -123,7 +123,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
 
             // Pools.
-            if (state.QueryModified(MethodOffset.SamplerPoolState))
+            if (state.QueryModified(MethodOffset.SamplerPoolState, MethodOffset.SamplerIndex))
             {
                 UpdateSamplerPoolState(state);
             }
@@ -422,11 +422,16 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private void UpdateSamplerPoolState(GpuState state)
         {
+            var texturePool = state.Get<PoolState>(MethodOffset.TexturePoolState);
             var samplerPool = state.Get<PoolState>(MethodOffset.SamplerPoolState);
 
             var samplerIndex = state.Get<SamplerIndex>(MethodOffset.SamplerIndex);
 
-            _textureManager.SetGraphicsSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId, samplerIndex);
+            int maximumId = samplerIndex == SamplerIndex.ViaHeaderIndex
+                ? texturePool.MaximumId
+                : samplerPool.MaximumId;
+
+            _textureManager.SetGraphicsSamplerPool(samplerPool.Address.Pack(), maximumId, samplerIndex);
         }
 
         private void UpdateTexturePoolState(GpuState state)

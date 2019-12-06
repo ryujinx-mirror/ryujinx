@@ -180,9 +180,6 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
         public static void DeclareLocals(CodeGenContext context, StructuredProgramInfo info)
         {
-            context.AppendLine(GetVarTypeName(VariableType.S32) + " " + DefaultNames.DummyIntName + ";");
-            context.AppendLine(GetVarTypeName(VariableType.U32) + " " + DefaultNames.DummyUintName + ";");
-
             foreach (AstOperand decl in info.Locals)
             {
                 string name = context.OperandManager.DeclareLocal(decl);

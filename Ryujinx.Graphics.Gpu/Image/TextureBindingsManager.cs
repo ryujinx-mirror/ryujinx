@@ -76,7 +76,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (_samplerPool != null)
             {
-                if (_samplerPool.Address == address)
+                if (_samplerPool.Address == address && _samplerPool.MaximumId >= maximumId)
                 {
                     return;
                 }

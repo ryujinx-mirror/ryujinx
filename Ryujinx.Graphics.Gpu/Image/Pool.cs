@@ -11,12 +11,15 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         protected T[] Items;
 
+        public int MaximumId { get; }
+
         public ulong Address { get; }
         public ulong Size    { get; }
 
         public Pool(GpuContext context, ulong address, int maximumId)
         {
-            Context = context;
+            Context   = context;
+            MaximumId = maximumId;
 
             int count = maximumId + 1;
 

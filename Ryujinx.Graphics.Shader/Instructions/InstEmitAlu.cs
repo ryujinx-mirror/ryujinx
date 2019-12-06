@@ -241,6 +241,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             res = context.IAdd(res, srcC);
 
+            // TODO: CC, X, SAT, and more?
+
             context.Copy(GetDest(context), res);
         }
 
