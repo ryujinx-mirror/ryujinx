@@ -30,13 +30,15 @@ namespace Ryujinx.Graphics.OpenGL
 
         private TextureView _unit0Texture;
 
-        private ClipOrigin _clipOrigin;
+        private ClipOrigin    _clipOrigin;
+        private ClipDepthMode _clipDepthMode;
 
         private uint[] _componentMasks;
 
         internal Pipeline()
         {
-            _clipOrigin = ClipOrigin.LowerLeft;
+            _clipOrigin    = ClipOrigin.LowerLeft;
+            _clipDepthMode = ClipDepthMode.NegativeOneToOne;
         }
 
         public void BindBlendState(int index, BlendDescriptor blend)
@@ -646,6 +648,18 @@ namespace Ryujinx.Graphics.OpenGL
             // GL.PolygonOffsetClamp(factor, units, clamp);
         }
 
+        public void SetDepthMode(DepthMode mode)
+        {
+            ClipDepthMode depthMode = mode.Convert();
+
+            if (_clipDepthMode != depthMode)
+            {
+                _clipDepthMode = depthMode;
+
+                GL.ClipControl(_clipOrigin, depthMode);
+            }
+        }
+
         public void SetDepthTest(DepthTestDescriptor depthTest)
         {
             GL.DepthFunc((DepthFunction)depthTest.Func.Convert());
@@ -828,7 +842,7 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 _clipOrigin = origin;
 
-                GL.ClipControl(origin, ClipDepthMode.NegativeOneToOne);
+                GL.ClipControl(origin, _clipDepthMode);
             }
         }
 

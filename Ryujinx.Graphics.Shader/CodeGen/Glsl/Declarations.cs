@@ -26,6 +26,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                 context.AppendLine("#extension GL_ARB_compute_shader : enable");
             }
 
+            context.AppendLine("#pragma optionNV(fastmath off)");
+
             context.AppendLine();
 
             context.AppendLine($"const int {DefaultNames.UndefinedName} = 0;");

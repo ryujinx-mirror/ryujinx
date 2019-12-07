@@ -102,7 +102,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 UpdateDepthTestState(state);
             }
 
-            if (state.QueryModified(MethodOffset.ViewportTransform, MethodOffset.ViewportExtents))
+            if (state.QueryModified(MethodOffset.DepthMode, MethodOffset.ViewportTransform, MethodOffset.ViewportExtents))
             {
                 UpdateViewportTransform(state);
             }
@@ -294,6 +294,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private void UpdateViewportTransform(GpuState state)
         {
+            DepthMode depthMode = state.Get<DepthMode>(MethodOffset.DepthMode);
+
+            _context.Renderer.Pipeline.SetDepthMode(depthMode);
+
             bool transformEnable = GetViewportTransformEnable(state);
 
             bool flipY = (state.Get<int>(MethodOffset.YControl) & 1) != 0;

@@ -49,6 +49,8 @@ namespace Ryujinx.Graphics.GAL
 
         void SetDepthBias(PolygonModeMask enables, float factor, float units, float clamp);
 
+        void SetDepthMode(DepthMode mode);
+
         void SetDepthTest(DepthTestDescriptor depthTest);
 
         void SetFaceCulling(bool enable, Face face);

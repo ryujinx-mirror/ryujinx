@@ -21,6 +21,7 @@ namespace Ryujinx.Graphics.Gpu.State
         ViewportTransform               = 0x280,
         ViewportExtents                 = 0x300,
         VertexBufferDrawState           = 0x35d,
+        DepthMode                       = 0x35f,
         ClearColors                     = 0x360,
         ClearDepthValue                 = 0x364,
         ClearStencilValue               = 0x368,
