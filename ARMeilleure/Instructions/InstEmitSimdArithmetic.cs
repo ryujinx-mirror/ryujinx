@@ -384,8 +384,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                OperandType type = sizeF != 0 ? OperandType.FP64
-                                              : OperandType.FP32;
+                OperandType type = sizeF != 0 ? OperandType.FP64 : OperandType.FP32;
 
                 Operand ne0 = context.VectorExtract(type, GetVec(op.Rn), 0);
                 Operand ne1 = context.VectorExtract(type, GetVec(op.Rn), 1);
@@ -455,6 +454,7 @@ namespace ARMeilleure.Instructions
             {
                 OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
 
+                Operand d = GetVec(op.Rd);
                 Operand a = GetVec(op.Ra);
                 Operand n = GetVec(op.Rn);
                 Operand m = GetVec(op.Rm);
@@ -462,18 +462,16 @@ namespace ARMeilleure.Instructions
                 if (op.Size == 0)
                 {
                     Operand res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
+                            res = context.AddIntrinsic(Intrinsic.X86Addss, a, res);
 
-                    res = context.AddIntrinsic(Intrinsic.X86Addss, a, res);
-
-                    context.Copy(GetVec(op.Rd), context.VectorZeroUpper96(res));
+                    context.Copy(d, context.VectorZeroUpper96(res));
                 }
                 else /* if (op.Size == 1) */
                 {
                     Operand res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
+                            res = context.AddIntrinsic(Intrinsic.X86Addsd, a, res);
 
-                    res = context.AddIntrinsic(Intrinsic.X86Addsd, a, res);
-
-                    context.Copy(GetVec(op.Rd), context.VectorZeroUpper64(res));
+                    context.Copy(d, context.VectorZeroUpper64(res));
                 }
             }
             else
@@ -517,18 +515,32 @@ namespace ARMeilleure.Instructions
 
         public static void Fmaxnm_S(ArmEmitterContext context)
         {
-            EmitScalarBinaryOpF(context, (op1, op2) =>
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
-                return EmitSoftFloatCall(context, SoftFloat32.FPMaxNum, SoftFloat64.FPMaxNum, op1, op2);
-            });
+                EmitSse41MaxMinNumOpF(context, isMaxNum: true, scalar: true);
+            }
+            else
+            {
+                EmitScalarBinaryOpF(context, (op1, op2) =>
+                {
+                    return EmitSoftFloatCall(context, SoftFloat32.FPMaxNum, SoftFloat64.FPMaxNum, op1, op2);
+                });
+            }
         }
 
         public static void Fmaxnm_V(ArmEmitterContext context)
         {
-            EmitVectorBinaryOpF(context, (op1, op2) =>
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
-                return EmitSoftFloatCall(context, SoftFloat32.FPMaxNum, SoftFloat64.FPMaxNum, op1, op2);
-            });
+                EmitSse41MaxMinNumOpF(context, isMaxNum: true, scalar: false);
+            }
+            else
+            {
+                EmitVectorBinaryOpF(context, (op1, op2) =>
+                {
+                    return EmitSoftFloatCall(context, SoftFloat32.FPMaxNum, SoftFloat64.FPMaxNum, op1, op2);
+                });
+            }
         }
 
         public static void Fmaxp_V(ArmEmitterContext context)
@@ -578,18 +590,32 @@ namespace ARMeilleure.Instructions
 
         public static void Fminnm_S(ArmEmitterContext context)
         {
-            EmitScalarBinaryOpF(context, (op1, op2) =>
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
-                return EmitSoftFloatCall(context, SoftFloat32.FPMinNum, SoftFloat64.FPMinNum, op1, op2);
-            });
+                EmitSse41MaxMinNumOpF(context, isMaxNum: false, scalar: true);
+            }
+            else
+            {
+                EmitScalarBinaryOpF(context, (op1, op2) =>
+                {
+                    return EmitSoftFloatCall(context, SoftFloat32.FPMinNum, SoftFloat64.FPMinNum, op1, op2);
+                });
+            }
         }
 
         public static void Fminnm_V(ArmEmitterContext context)
         {
-            EmitVectorBinaryOpF(context, (op1, op2) =>
+            if (Optimizations.FastFP && Optimizations.UseSse41)
             {
-                return EmitSoftFloatCall(context, SoftFloat32.FPMinNum, SoftFloat64.FPMinNum, op1, op2);
-            });
+                EmitSse41MaxMinNumOpF(context, isMaxNum: false, scalar: false);
+            }
+            else
+            {
+                EmitVectorBinaryOpF(context, (op1, op2) =>
+                {
+                    return EmitSoftFloatCall(context, SoftFloat32.FPMinNum, SoftFloat64.FPMinNum, op1, op2);
+                });
+            }
         }
 
         public static void Fminp_V(ArmEmitterContext context)
@@ -813,6 +839,7 @@ namespace ARMeilleure.Instructions
             {
                 OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
 
+                Operand d = GetVec(op.Rd);
                 Operand a = GetVec(op.Ra);
                 Operand n = GetVec(op.Rn);
                 Operand m = GetVec(op.Rm);
@@ -820,18 +847,16 @@ namespace ARMeilleure.Instructions
                 if (op.Size == 0)
                 {
                     Operand res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
+                            res = context.AddIntrinsic(Intrinsic.X86Subss, a, res);
 
-                    res = context.AddIntrinsic(Intrinsic.X86Subss, a, res);
-
-                    context.Copy(GetVec(op.Rd), context.VectorZeroUpper96(res));
+                    context.Copy(d, context.VectorZeroUpper96(res));
                 }
                 else /* if (op.Size == 1) */
                 {
                     Operand res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
+                            res = context.AddIntrinsic(Intrinsic.X86Subsd, a, res);
 
-                    res = context.AddIntrinsic(Intrinsic.X86Subsd, a, res);
-
-                    context.Copy(GetVec(op.Rd), context.VectorZeroUpper64(res));
+                    context.Copy(d, context.VectorZeroUpper64(res));
                 }
             }
             else
@@ -1035,36 +1060,88 @@ namespace ARMeilleure.Instructions
 
         public static void Fnmadd_S(ArmEmitterContext context) // Fused.
         {
-            OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
+            if (Optimizations.FastFP && Optimizations.UseSse2)
+            {
+                OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
 
-            int sizeF = op.Size & 1;
+                Operand d = GetVec(op.Rd);
+                Operand a = GetVec(op.Ra);
+                Operand n = GetVec(op.Rn);
+                Operand m = GetVec(op.Rm);
 
-            OperandType type = sizeF != 0 ? OperandType.FP64 : OperandType.FP32;
+                if (op.Size == 0)
+                {
+                    Operand mask = X86GetScalar(context, -0f);
 
-            Operand ne = context.VectorExtract(type, GetVec(op.Rn), 0);
-            Operand me = context.VectorExtract(type, GetVec(op.Rm), 0);
-            Operand ae = context.VectorExtract(type, GetVec(op.Ra), 0);
+                    Operand aNeg = context.AddIntrinsic(Intrinsic.X86Xorps, mask, a);
 
-            Operand res = context.Subtract(context.Multiply(context.Negate(ne), me), ae);
+                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
+                            res = context.AddIntrinsic(Intrinsic.X86Subss, aNeg, res);
 
-            context.Copy(GetVec(op.Rd), context.VectorInsert(context.VectorZero(), res, 0));
+                    context.Copy(d, context.VectorZeroUpper96(res));
+                }
+                else /* if (op.Size == 1) */
+                {
+                    Operand mask = X86GetScalar(context, -0d);
+
+                    Operand aNeg = context.AddIntrinsic(Intrinsic.X86Xorpd, mask, a);
+
+                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
+                            res = context.AddIntrinsic(Intrinsic.X86Subsd, aNeg, res);
+
+                    context.Copy(d, context.VectorZeroUpper64(res));
+                }
+            }
+            else
+            {
+                EmitScalarTernaryRaOpF(context, (op1, op2, op3) =>
+                {
+                    return EmitSoftFloatCall(context, SoftFloat32.FPNegMulAdd, SoftFloat64.FPNegMulAdd, op1, op2, op3);
+                });
+            }
         }
 
         public static void Fnmsub_S(ArmEmitterContext context) // Fused.
         {
-            OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
+            if (Optimizations.FastFP && Optimizations.UseSse2)
+            {
+                OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
 
-            int sizeF = op.Size & 1;
+                Operand d = GetVec(op.Rd);
+                Operand a = GetVec(op.Ra);
+                Operand n = GetVec(op.Rn);
+                Operand m = GetVec(op.Rm);
 
-            OperandType type = sizeF != 0 ? OperandType.FP64 : OperandType.FP32;
+                if (op.Size == 0)
+                {
+                    Operand mask = X86GetScalar(context, -0f);
 
-            Operand ne = context.VectorExtract(type, GetVec(op.Rn), 0);
-            Operand me = context.VectorExtract(type, GetVec(op.Rm), 0);
-            Operand ae = context.VectorExtract(type, GetVec(op.Ra), 0);
+                    Operand aNeg = context.AddIntrinsic(Intrinsic.X86Xorps, mask, a);
 
-            Operand res = context.Subtract(context.Multiply(ne, me), ae);
+                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulss, n, m);
+                            res = context.AddIntrinsic(Intrinsic.X86Addss, aNeg, res);
 
-            context.Copy(GetVec(op.Rd), context.VectorInsert(context.VectorZero(), res, 0));
+                    context.Copy(d, context.VectorZeroUpper96(res));
+                }
+                else /* if (op.Size == 1) */
+                {
+                    Operand mask = X86GetScalar(context, -0d);
+
+                    Operand aNeg = context.AddIntrinsic(Intrinsic.X86Xorpd, mask, a);
+
+                    Operand res = context.AddIntrinsic(Intrinsic.X86Mulsd, n, m);
+                            res = context.AddIntrinsic(Intrinsic.X86Addsd, aNeg, res);
+
+                    context.Copy(d, context.VectorZeroUpper64(res));
+                }
+            }
+            else
+            {
+                EmitScalarTernaryRaOpF(context, (op1, op2, op3) =>
+                {
+                    return EmitSoftFloatCall(context, SoftFloat32.FPNegMulSub, SoftFloat64.FPNegMulSub, op1, op2, op3);
+                });
+            }
         }
 
         public static void Fnmul_S(ArmEmitterContext context)
@@ -2067,9 +2144,7 @@ namespace ARMeilleure.Instructions
                     m = context.AddIntrinsic(Intrinsic.X86Psrldq, m, Const(8));
                 }
 
-                Intrinsic movInst = op.Size == 0
-                    ? Intrinsic.X86Pmovsxbw
-                    : Intrinsic.X86Pmovsxwd;
+                Intrinsic movInst = op.Size == 0 ? Intrinsic.X86Pmovsxbw : Intrinsic.X86Pmovsxwd;
 
                 n = context.AddIntrinsic(movInst, n);
                 m = context.AddIntrinsic(movInst, m);
@@ -2694,9 +2769,7 @@ namespace ARMeilleure.Instructions
                     m = context.AddIntrinsic(Intrinsic.X86Psrldq, m, Const(8));
                 }
 
-                Intrinsic movInst = op.Size == 0
-                    ? Intrinsic.X86Pmovzxbw
-                    : Intrinsic.X86Pmovzxwd;
+                Intrinsic movInst = op.Size == 0 ? Intrinsic.X86Pmovzxbw : Intrinsic.X86Pmovzxwd;
 
                 n = context.AddIntrinsic(movInst, n);
                 m = context.AddIntrinsic(movInst, m);
@@ -3009,6 +3082,98 @@ namespace ARMeilleure.Instructions
             }
 
             context.Copy(GetVec(op.Rd), res);
+        }
+
+        private static Operand EmitSse2VectorIsQNaNOpF(ArmEmitterContext context, Operand opF)
+        {
+            IOpCodeSimd op = (IOpCodeSimd)context.CurrOp;
+
+            if ((op.Size & 1) == 0)
+            {
+                const int QBit = 22;
+
+                Operand qMask = X86GetAllElements(context, 1 << QBit);
+
+                Operand mask1 = context.AddIntrinsic(Intrinsic.X86Cmpps, opF, opF, Const((int)CmpCondition.UnorderedQ));
+
+                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Pand,  opF,   qMask);
+                        mask2 = context.AddIntrinsic(Intrinsic.X86Cmpps, mask2, qMask, Const((int)CmpCondition.Equal));
+
+                return context.AddIntrinsic(Intrinsic.X86Andps, mask1, mask2);
+            }
+            else /* if ((op.Size & 1) == 1) */
+            {
+                const int QBit = 51;
+
+                Operand qMask = X86GetAllElements(context, 1L << QBit);
+
+                Operand mask1 = context.AddIntrinsic(Intrinsic.X86Cmppd, opF, opF, Const((int)CmpCondition.UnorderedQ));
+
+                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Pand,  opF,   qMask);
+                        mask2 = context.AddIntrinsic(Intrinsic.X86Cmppd, mask2, qMask, Const((int)CmpCondition.Equal));
+
+                return context.AddIntrinsic(Intrinsic.X86Andpd, mask1, mask2);
+            }
+        }
+
+        private static void EmitSse41MaxMinNumOpF(ArmEmitterContext context, bool isMaxNum, bool scalar)
+        {
+            OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
+
+            Operand d = GetVec(op.Rd);
+            Operand n = GetVec(op.Rn);
+            Operand m = GetVec(op.Rm);
+
+            Operand nQNaNMask = EmitSse2VectorIsQNaNOpF(context, n);
+            Operand mQNaNMask = EmitSse2VectorIsQNaNOpF(context, m);
+
+            Operand nNum = context.Copy(n);
+            Operand mNum = context.Copy(m);
+
+            int sizeF = op.Size & 1;
+
+            if (sizeF == 0)
+            {
+                Operand negInfMask = X86GetAllElements(context, isMaxNum ? float.NegativeInfinity : float.PositiveInfinity);
+
+                Operand nMask = context.AddIntrinsic(Intrinsic.X86Andnps, mQNaNMask, nQNaNMask);
+                Operand mMask = context.AddIntrinsic(Intrinsic.X86Andnps, nQNaNMask, mQNaNMask);
+
+                nNum = context.AddIntrinsic(Intrinsic.X86Blendvps, nNum, negInfMask, nMask);
+                mNum = context.AddIntrinsic(Intrinsic.X86Blendvps, mNum, negInfMask, mMask);
+
+                Operand res = context.AddIntrinsic(isMaxNum ? Intrinsic.X86Maxps : Intrinsic.X86Minps, nNum, mNum);
+
+                if (scalar)
+                {
+                    res = context.VectorZeroUpper96(res);
+                }
+                else if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(d, res);
+            }
+            else /* if (sizeF == 1) */
+            {
+                Operand negInfMask = X86GetAllElements(context, isMaxNum ? double.NegativeInfinity : double.PositiveInfinity);
+
+                Operand nMask = context.AddIntrinsic(Intrinsic.X86Andnpd, mQNaNMask, nQNaNMask);
+                Operand mMask = context.AddIntrinsic(Intrinsic.X86Andnpd, nQNaNMask, mQNaNMask);
+
+                nNum = context.AddIntrinsic(Intrinsic.X86Blendvpd, nNum, negInfMask, nMask);
+                mNum = context.AddIntrinsic(Intrinsic.X86Blendvpd, mNum, negInfMask, mMask);
+
+                Operand res = context.AddIntrinsic(isMaxNum ? Intrinsic.X86Maxpd : Intrinsic.X86Minpd, nNum, mNum);
+
+                if (scalar)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(d, res);
+            }
         }
 
         private enum AddSub

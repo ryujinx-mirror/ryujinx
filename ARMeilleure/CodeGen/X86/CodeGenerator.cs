@@ -336,7 +336,15 @@ namespace ARMeilleure.CodeGen.X86
 
                         Debug.Assert(!dest.Type.IsInteger());
 
-                        if (info.Inst == X86Instruction.Pblendvb && HardwareCapabilities.SupportsVexEncoding)
+                        if (info.Inst == X86Instruction.Blendvpd && HardwareCapabilities.SupportsVexEncoding)
+                        {
+                            context.Assembler.WriteInstruction(X86Instruction.Vblendvpd, dest, src1, src2, src3);
+                        }
+                        else if (info.Inst == X86Instruction.Blendvps && HardwareCapabilities.SupportsVexEncoding)
+                        {
+                            context.Assembler.WriteInstruction(X86Instruction.Vblendvps, dest, src1, src2, src3);
+                        }
+                        else if (info.Inst == X86Instruction.Pblendvb && HardwareCapabilities.SupportsVexEncoding)
                         {
                             context.Assembler.WriteInstruction(X86Instruction.Vpblendvb, dest, src1, src2, src3);
                         }
@@ -1646,7 +1654,7 @@ namespace ARMeilleure.CodeGen.X86
 
             for (int offset = PageSize; offset < size; offset += PageSize)
             {
-                Operand memOp = new MemoryOperand(OperandType.I32, rsp, null, Multiplier.x1, -offset);;
+                Operand memOp = new MemoryOperand(OperandType.I32, rsp, null, Multiplier.x1, -offset);
 
                 context.Assembler.Mov(temp, memOp, OperandType.I32);
             }

@@ -8,15 +8,7 @@ namespace ARMeilleure.Decoders
 
         public OpCodeSimdFmov(InstDescriptor inst, ulong address, int opCode) : base(inst, address, opCode)
         {
-            int imm5 = (opCode >>  5) & 0x1f;
             int type = (opCode >> 22) & 0x3;
-
-            if (imm5 != 0b00000 || type > 1)
-            {
-                Instruction = InstDescriptor.Undefined;
-
-                return;
-            }
 
             Size = type;
 
@@ -25,7 +17,14 @@ namespace ARMeilleure.Decoders
             Rd  = (opCode >>  0) & 0x1f;
             imm = (opCode >> 13) & 0xff;
 
-            Immediate = DecoderHelper.DecodeImm8Float(imm, type);
+            if (type == 0)
+            {
+                Immediate = (long)DecoderHelper.Imm8ToFP32Table[(int)imm];
+            }
+            else /* if (type == 1) */
+            {
+                Immediate = (long)DecoderHelper.Imm8ToFP64Table[(int)imm];
+            }
         }
     }
 }

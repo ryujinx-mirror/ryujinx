@@ -23,19 +23,19 @@ namespace ARMeilleure.Decoders
 
             if (modeHigh == 0b111)
             {
-                Size = modeLow != 0 ? op : 3;
-
                 switch (op | (modeLow << 1))
                 {
                     case 0:
                         // 64-bits Immediate.
                         // Transform abcd efgh into abcd efgh abcd efgh ...
+                        Size = 3;
                         imm = (long)((ulong)imm * 0x0101010101010101);
                         break;
 
                     case 1:
                         // 64-bits Immediate.
                         // Transform abcd efgh into aaaa aaaa bbbb bbbb ...
+                        Size = 3;
                         imm = (imm & 0xf0) >> 4 | (imm & 0x0f) << 4;
                         imm = (imm & 0xcc) >> 2 | (imm & 0x33) << 2;
                         imm = (imm & 0xaa) >> 1 | (imm & 0x55) << 1;
@@ -49,9 +49,16 @@ namespace ARMeilleure.Decoders
                         break;
 
                     case 2:
+                        // 2 x 32-bits floating point Immediate.
+                        Size = 0;
+                        imm = (long)DecoderHelper.Imm8ToFP32Table[(int)imm];
+                        imm |= imm << 32;
+                        break;
+
                     case 3:
-                        // Floating point Immediate.
-                        imm = DecoderHelper.DecodeImm8Float(imm, Size);
+                        // 64-bits floating point Immediate.
+                        Size = 1;
+                        imm = (long)DecoderHelper.Imm8ToFP64Table[(int)imm];
                         break;
                 }
             }
@@ -72,7 +79,7 @@ namespace ARMeilleure.Decoders
             }
             else
             {
-                // 8 bits without shift.
+                // 8-bits without shift.
                 Size = 0;
             }
 

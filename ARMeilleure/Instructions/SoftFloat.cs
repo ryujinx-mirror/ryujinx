@@ -1089,8 +1089,6 @@ namespace ARMeilleure.Instructions
 
         public static float FPMulSub(float valueA, float value1, float value2)
         {
-            ExecutionContext context = NativeInterface.GetContext();
-
             value1 = value1.FPNeg();
 
             return FPMulAdd(valueA, value1, value2);
@@ -1136,6 +1134,21 @@ namespace ARMeilleure.Instructions
             }
 
             return result;
+        }
+
+        public static float FPNegMulAdd(float valueA, float value1, float value2)
+        {
+            valueA = valueA.FPNeg();
+            value1 = value1.FPNeg();
+
+            return FPMulAdd(valueA, value1, value2);
+        }
+
+        public static float FPNegMulSub(float valueA, float value1, float value2)
+        {
+            valueA = valueA.FPNeg();
+
+            return FPMulAdd(valueA, value1, value2);
         }
 
         public static float FPRecipEstimate(float value)
@@ -2194,6 +2207,21 @@ namespace ARMeilleure.Instructions
             }
 
             return result;
+        }
+
+        public static double FPNegMulAdd(double valueA, double value1, double value2)
+        {
+            valueA = valueA.FPNeg();
+            value1 = value1.FPNeg();
+
+            return FPMulAdd(valueA, value1, value2);
+        }
+
+        public static double FPNegMulSub(double valueA, double value1, double value2)
+        {
+            valueA = valueA.FPNeg();
+
+            return FPMulAdd(valueA, value1, value2);
         }
 
         public static double FPRecipEstimate(double value)

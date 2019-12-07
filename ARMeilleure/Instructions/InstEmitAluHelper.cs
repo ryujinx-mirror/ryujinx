@@ -268,7 +268,7 @@ namespace ARMeilleure.Instructions
         {
             if (setCarry)
             {
-                SetFlag(context, PState.CFlag, Const(0));;
+                SetFlag(context, PState.CFlag, Const(0));
             }
 
             return Const(0);

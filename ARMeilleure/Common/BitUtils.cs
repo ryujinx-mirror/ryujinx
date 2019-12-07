@@ -1,12 +1,12 @@
-using System.Runtime.CompilerServices;
-
 namespace ARMeilleure.Common
 {
     static class BitUtils
     {
         private const int DeBrujinSequence = 0x77cb531;
 
-        private static int[] DeBrujinLbsLut;
+        private static readonly int[] DeBrujinLbsLut;
+
+        private static readonly sbyte[] HbsNibbleLut;
 
         static BitUtils()
         {
@@ -18,19 +18,27 @@ namespace ARMeilleure.Common
 
                 DeBrujinLbsLut[lutIndex] = index;
             }
+
+            HbsNibbleLut = new sbyte[] { -1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3 };
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int LowestBitSet(int value)
+        public static int CountBits(int value)
         {
-            if (value == 0)
+            int count = 0;
+
+            while (value != 0)
             {
-                return -1;
+                value &= ~(value & -value);
+
+                count++;
             }
 
-            int lsb = value & -value;
+            return count;
+        }
 
-            return DeBrujinLbsLut[(uint)(DeBrujinSequence * lsb) >> 27];
+        public static long FillWithOnes(int bits)
+        {
+            return bits == 64 ? -1L : (1L << bits) - 1;
         }
 
         public static int HighestBitSet(int value)
@@ -51,9 +59,22 @@ namespace ARMeilleure.Common
             return -1;
         }
 
-        private static readonly sbyte[] HbsNibbleLut = { -1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3 };
+        public static int HighestBitSetNibble(int value)
+        {
+            return HbsNibbleLut[value];
+        }
 
-        public static int HighestBitSetNibble(int value) => HbsNibbleLut[value & 0b1111];
+        public static int LowestBitSet(int value)
+        {
+            if (value == 0)
+            {
+                return -1;
+            }
+
+            int lsb = value & -value;
+
+            return DeBrujinLbsLut[(uint)(DeBrujinSequence * lsb) >> 27];
+        }
 
         public static long Replicate(long bits, int size)
         {
@@ -65,25 +86,6 @@ namespace ARMeilleure.Common
             }
 
             return output;
-        }
-
-        public static int CountBits(int value)
-        {
-            int count = 0;
-
-            while (value != 0)
-            {
-                value &= ~(value & -value);
-
-                count++;
-            }
-
-            return count;
-        }
-
-        public static long FillWithOnes(int bits)
-        {
-            return bits == 64 ? -1L : (1L << bits) - 1;
         }
 
         public static int RotateRight(int bits, int shift, int size)

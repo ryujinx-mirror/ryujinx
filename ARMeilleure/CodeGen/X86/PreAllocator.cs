@@ -298,8 +298,11 @@ namespace ARMeilleure.CodeGen.X86
                 {
                     IntrinsicOperation intrinOp = (IntrinsicOperation)operation;
 
-                    // PBLENDVB last operand is always implied to be XMM0 when VEX is not supported.
-                    if (intrinOp.Intrinsic == Intrinsic.X86Pblendvb && !HardwareCapabilities.SupportsVexEncoding)
+                    // BLENDVPD, BLENDVPS, PBLENDVB last operand is always implied to be XMM0 when VEX is not supported.
+                    if ((intrinOp.Intrinsic == Intrinsic.X86Blendvpd ||
+                         intrinOp.Intrinsic == Intrinsic.X86Blendvps ||
+                         intrinOp.Intrinsic == Intrinsic.X86Pblendvb) &&
+                         !HardwareCapabilities.SupportsVexEncoding)
                     {
                         Operand xmm0 = Xmm(X86Register.Xmm0, OperandType.V128);
 

@@ -1,10 +1,77 @@
 using ARMeilleure.Common;
-using System;
 
 namespace ARMeilleure.Decoders
 {
     static class DecoderHelper
     {
+        static DecoderHelper()
+        {
+            Imm8ToFP32Table = BuildImm8ToFP32Table();
+            Imm8ToFP64Table = BuildImm8ToFP64Table();
+        }
+
+        public static readonly uint[]  Imm8ToFP32Table;
+        public static readonly ulong[] Imm8ToFP64Table;
+
+        private static uint[] BuildImm8ToFP32Table()
+        {
+            uint[] tbl = new uint[256];
+
+            for (int idx = 0; idx < 256; idx++)
+            {
+                tbl[idx] = ExpandImm8ToFP32((uint)idx);
+            }
+
+            return tbl;
+        }
+
+        private static ulong[] BuildImm8ToFP64Table()
+        {
+            ulong[] tbl = new ulong[256];
+
+            for (int idx = 0; idx < 256; idx++)
+            {
+                tbl[idx] = ExpandImm8ToFP64((ulong)idx);
+            }
+
+            return tbl;
+        }
+
+        // abcdefgh -> aBbbbbbc defgh000 00000000 00000000 (B = ~b)
+        private static uint ExpandImm8ToFP32(uint imm)
+        {
+            uint MoveBit(uint bits, int from, int to)
+            {
+                return ((bits >> from) & 1U) << to;
+            }
+
+            return MoveBit(imm, 7, 31) | MoveBit(~imm, 6, 30) |
+                   MoveBit(imm, 6, 29) | MoveBit( imm, 6, 28) |
+                   MoveBit(imm, 6, 27) | MoveBit( imm, 6, 26) |
+                   MoveBit(imm, 6, 25) | MoveBit( imm, 5, 24) |
+                   MoveBit(imm, 4, 23) | MoveBit( imm, 3, 22) |
+                   MoveBit(imm, 2, 21) | MoveBit( imm, 1, 20) |
+                   MoveBit(imm, 0, 19);
+        }
+
+        // abcdefgh -> aBbbbbbb bbcdefgh 00000000 00000000 00000000 00000000 00000000 00000000 (B = ~b)
+        private static ulong ExpandImm8ToFP64(ulong imm)
+        {
+            ulong MoveBit(ulong bits, int from, int to)
+            {
+                return ((bits >> from) & 1UL) << to;
+            }
+
+            return MoveBit(imm, 7, 63) | MoveBit(~imm, 6, 62) |
+                   MoveBit(imm, 6, 61) | MoveBit( imm, 6, 60) |
+                   MoveBit(imm, 6, 59) | MoveBit( imm, 6, 58) |
+                   MoveBit(imm, 6, 57) | MoveBit( imm, 6, 56) |
+                   MoveBit(imm, 6, 55) | MoveBit( imm, 6, 54) |
+                   MoveBit(imm, 5, 53) | MoveBit( imm, 4, 52) |
+                   MoveBit(imm, 3, 51) | MoveBit( imm, 2, 50) |
+                   MoveBit(imm, 1, 49) | MoveBit( imm, 0, 48);
+        }
+
         public struct BitMask
         {
             public long WMask;
@@ -60,34 +127,6 @@ namespace ARMeilleure.Decoders
                 Pos   = immS,
                 Shift = immR
             };
-        }
-
-        public static long DecodeImm8Float(long imm, int size)
-        {
-            int e = 0, f = 0;
-
-            switch (size)
-            {
-                case 0: e =  8; f = 23; break;
-                case 1: e = 11; f = 52; break;
-
-                default: throw new ArgumentOutOfRangeException(nameof(size));
-            }
-
-            long value = (imm & 0x3f) << f - 4;
-
-            long eBit = (imm >> 6) & 1;
-            long sBit = (imm >> 7) & 1;
-
-            if (eBit != 0)
-            {
-                value |= (1L << e - 3) - 1 << f + 2;
-            }
-
-            value |= (eBit ^ 1) << f + e - 1;
-            value |=  sBit      << f + e;
-
-            return value;
         }
 
         public static long DecodeImm24_2(int opCode)

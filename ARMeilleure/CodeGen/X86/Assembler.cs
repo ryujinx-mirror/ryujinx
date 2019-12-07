@@ -75,6 +75,10 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.And,        new InstructionInfo(0x00000021, 0x04000083, 0x04000081, BadOp,      0x00000023, InstructionFlags.None));
             Add(X86Instruction.Andnpd,     new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f55, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Andnps,     new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f55, InstructionFlags.Vex));
+            Add(X86Instruction.Andpd,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f54, InstructionFlags.Vex | InstructionFlags.Prefix66));
+            Add(X86Instruction.Andps,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f54, InstructionFlags.Vex));
+            Add(X86Instruction.Blendvpd,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3815, InstructionFlags.Prefix66));
+            Add(X86Instruction.Blendvps,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3814, InstructionFlags.Prefix66));
             Add(X86Instruction.Bsr,        new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000fbd, InstructionFlags.None));
             Add(X86Instruction.Bswap,      new InstructionInfo(0x00000fc8, BadOp,      BadOp,      BadOp,      BadOp,      InstructionFlags.RegOnly));
             Add(X86Instruction.Call,       new InstructionInfo(0x020000ff, BadOp,      BadOp,      BadOp,      BadOp,      InstructionFlags.None));
@@ -245,6 +249,8 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.Unpckhps,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f15, InstructionFlags.Vex));
             Add(X86Instruction.Unpcklpd,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f14, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Unpcklps,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f14, InstructionFlags.Vex));
+            Add(X86Instruction.Vblendvpd,  new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3a4b, InstructionFlags.Vex | InstructionFlags.Prefix66));
+            Add(X86Instruction.Vblendvps,  new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3a4a, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Vpblendvb,  new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x000f3a4c, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Xor,        new InstructionInfo(0x00000031, 0x06000083, 0x06000081, BadOp,      0x00000033, InstructionFlags.None));
             Add(X86Instruction.Xorpd,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f57, InstructionFlags.Vex | InstructionFlags.Prefix66));
