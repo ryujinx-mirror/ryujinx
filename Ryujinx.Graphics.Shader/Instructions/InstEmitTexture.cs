@@ -417,7 +417,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
         public static void Tld4(EmitterContext context)
         {
-            OpCodeTld4 op = (OpCodeTld4)context.CurrOp;
+            IOpCodeTld4 op = (IOpCodeTld4)context.CurrOp;
 
             if (op.Rd.IsRZ)
             {
@@ -454,6 +454,13 @@ namespace Ryujinx.Graphics.Shader.Instructions
             SamplerType type = ConvertSamplerType(op.Dimensions);
 
             TextureFlags flags = TextureFlags.Gather;
+
+            if (op.Bindless)
+            {
+                sourcesList.Add(Rb());
+
+                flags |= TextureFlags.Bindless;
+            }
 
             int coordsCount = type.GetDimensions();
 

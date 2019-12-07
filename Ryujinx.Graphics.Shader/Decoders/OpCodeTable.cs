@@ -184,6 +184,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             Set("11011100xx111x", InstEmit.Tld,     typeof(OpCodeTld));
             Set("11011101xx111x", InstEmit.TldB,    typeof(OpCodeTld));
             Set("110010xxxx111x", InstEmit.Tld4,    typeof(OpCodeTld4));
+            Set("1101111011111x", InstEmit.Tld4,    typeof(OpCodeTld4B));
             Set("110111100x1110", InstEmit.Txd,     typeof(OpCodeTxd));
             Set("1101111101001x", InstEmit.Txq,     typeof(OpCodeTex));
             Set("1101111101010x", InstEmit.TxqB,    typeof(OpCodeTex));

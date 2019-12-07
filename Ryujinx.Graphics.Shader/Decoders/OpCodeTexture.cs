@@ -2,7 +2,7 @@ using Ryujinx.Graphics.Shader.Instructions;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    class OpCodeTexture : OpCode
+    class OpCodeTexture : OpCode, IOpCodeTexture
     {
         public Register Rd { get; }
         public Register Ra { get; }

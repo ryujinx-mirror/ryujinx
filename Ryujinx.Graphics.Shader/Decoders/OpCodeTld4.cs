@@ -2,11 +2,13 @@ using Ryujinx.Graphics.Shader.Instructions;
 
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    class OpCodeTld4 : OpCodeTexture
+    class OpCodeTld4 : OpCodeTexture, IOpCodeTld4
     {
         public TextureGatherOffset Offset { get; }
 
         public int GatherCompIndex { get; }
+
+        public bool Bindless => false;
 
         public OpCodeTld4(InstEmitter emitter, ulong address, long opCode) : base(emitter, address, opCode)
         {
