@@ -257,7 +257,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                     data,
                     _info.FormatInfo.BlockWidth,
                     _info.FormatInfo.BlockHeight,
-                    1,
                     _info.Width,
                     _info.Height,
                     _depth,

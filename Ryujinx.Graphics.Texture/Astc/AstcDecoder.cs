@@ -51,7 +51,6 @@ namespace Ryujinx.Graphics.Texture.Astc
             Span<byte>     data,
             int            blockWidth,
             int            blockHeight,
-            int            blockDepth,
             int            width,
             int            height,
             int            depth,
@@ -64,17 +63,6 @@ namespace Ryujinx.Graphics.Texture.Astc
             {
                 BinaryReader binReader = new BinaryReader(inputStream);
 
-                if (blockWidth > 12 || blockHeight > 12)
-                {
-                    throw new AstcDecoderException("Invalid block size.");
-                }
-
-                if (blockDepth != 1 || depth != 1)
-                {
-                    // TODO: Support 3D textures.
-                    throw new NotImplementedException("3D compressed textures are not unsupported.");
-                }
-
                 using (MemoryStream outputStream = new MemoryStream())
                 {
                     int blockIndex = 0;
@@ -83,6 +71,9 @@ namespace Ryujinx.Graphics.Texture.Astc
 
                     for (int l = 0; l < levels; l++)
                     {
+                        int sliceSize = width * height * 4;
+
+                        for (int k = 0; k < depth;  k++)
                         for (int j = 0; j < height; j += blockHeight)
                         for (int i = 0; i < width;  i += blockWidth)
                         {
@@ -100,7 +91,7 @@ namespace Ryujinx.Graphics.Texture.Astc
                             int decompressedWidth  = Math.Min(blockWidth,  width  - i);
                             int decompressedHeight = Math.Min(blockHeight, height - j);
 
-                            int baseOffset = mipOffset + (j * width + i) * 4;
+                            int baseOffset = mipOffset + k * sliceSize + (j * width + i) * 4;
 
                             for (int jj = 0; jj < decompressedHeight; jj++)
                             {
@@ -116,10 +107,11 @@ namespace Ryujinx.Graphics.Texture.Astc
                             blockIndex++;
                         }
 
-                        mipOffset += width * height * 4;
+                        mipOffset += sliceSize * depth;
 
                         width  = Math.Max(1, width  >> 1);
                         height = Math.Max(1, height >> 1);
+                        depth  = Math.Max(1, depth  >> 1);
                     }
 
                     decoded = outputStream.ToArray();
