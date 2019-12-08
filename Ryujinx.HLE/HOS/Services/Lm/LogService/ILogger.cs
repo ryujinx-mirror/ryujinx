@@ -8,6 +8,26 @@ namespace Ryujinx.HLE.HOS.Services.Lm.LogService
     {
         public ILogger() { }
 
+        private static int ReadEncodedInt(BinaryReader reader)
+        {
+            int result   = 0;
+            int position = 0;
+
+            byte encoded;
+
+            do
+            {
+                encoded = reader.ReadByte();
+
+                result += (encoded & 0x7F) << (7 * position);
+
+                position++;
+
+            } while ((encoded & 0x80) != 0);
+
+            return result;
+        }
+
         [Command(0)]
         // Log(buffer<unknown, 0x21>)
         public ResultCode Log(ServiceCtx context)
@@ -34,8 +54,8 @@ namespace Ryujinx.HLE.HOS.Services.Lm.LogService
 
                 while (ms.Position < ms.Length)
                 {
-                    byte type = reader.ReadByte();
-                    byte size = reader.ReadByte();
+                    int type = ReadEncodedInt(reader);
+                    int size = ReadEncodedInt(reader);
 
                     LmLogField field = (LmLogField)type;
 
