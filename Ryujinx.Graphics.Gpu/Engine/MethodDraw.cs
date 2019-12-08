@@ -26,29 +26,35 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private void DrawEnd(GpuState state, int argument)
         {
+            if (_instancedDrawPending)
+            {
+                _drawIndexed = false;
+
+                return;
+            }
+
             UpdateState(state);
 
             bool instanced = _vsUsesInstanceId || _isAnyVbInstanced;
 
             if (instanced)
             {
-                if (!_instancedDrawPending)
-                {
-                    _instancedDrawPending = true;
+                _instancedDrawPending = true;
 
-                    _instancedIndexed = _drawIndexed;
+                _instancedIndexed = _drawIndexed;
 
-                    _instancedFirstIndex    = _firstIndex;
-                    _instancedFirstVertex   = state.Get<int>(MethodOffset.FirstVertex);
-                    _instancedFirstInstance = state.Get<int>(MethodOffset.FirstInstance);
+                _instancedFirstIndex    = _firstIndex;
+                _instancedFirstVertex   = state.Get<int>(MethodOffset.FirstVertex);
+                _instancedFirstInstance = state.Get<int>(MethodOffset.FirstInstance);
 
-                    _instancedIndexCount = _indexCount;
+                _instancedIndexCount = _indexCount;
 
-                    var drawState = state.Get<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState);
+                var drawState = state.Get<VertexBufferDrawState>(MethodOffset.VertexBufferDrawState);
 
-                    _instancedDrawStateFirst = drawState.First;
-                    _instancedDrawStateCount = drawState.Count;
-                }
+                _instancedDrawStateFirst = drawState.First;
+                _instancedDrawStateCount = drawState.Count;
+
+                _drawIndexed = false;
 
                 return;
             }
