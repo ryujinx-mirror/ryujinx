@@ -212,7 +212,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             int[] codeCached = MemoryMarshal.Cast<byte, int>(code.Slice(0, program.Size)).ToArray();
 
-            program.Replace(DefineNames.SharedMemorySize, sharedMemorySize.ToString(CultureInfo.InvariantCulture));
+            program.Replace(DefineNames.SharedMemorySize, (sharedMemorySize / 4).ToString(CultureInfo.InvariantCulture));
 
             program.Replace(DefineNames.LocalSizeX, localSizeX.ToString(CultureInfo.InvariantCulture));
             program.Replace(DefineNames.LocalSizeY, localSizeY.ToString(CultureInfo.InvariantCulture));
