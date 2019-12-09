@@ -75,7 +75,16 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             if (context.Config.Stage == ShaderStage.Compute)
             {
-                string size = NumberFormatter.FormatInt(context.Config.Capabilities.MaximumComputeSharedMemorySize / 4);
+                string size;
+
+                if ((context.Config.Flags & TranslationFlags.Unspecialized) != 0)
+                {
+                    size = DefineNames.SharedMemorySize;
+                }
+                else
+                {
+                    size = NumberFormatter.FormatInt(context.Config.Capabilities.MaximumComputeSharedMemorySize / 4);
+                }
 
                 context.AppendLine($"shared uint {DefaultNames.SharedMemoryName}[{size}];");
                 context.AppendLine();

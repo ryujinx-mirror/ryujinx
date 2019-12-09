@@ -32,7 +32,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             _gpPrograms = new Dictionary<ShaderAddresses, List<GraphicsShader>>();
         }
 
-        public ComputeShader GetComputeShader(ulong gpuVa, int localSizeX, int localSizeY, int localSizeZ)
+        public ComputeShader GetComputeShader(ulong gpuVa, int sharedMemorySize, int localSizeX, int localSizeY, int localSizeZ)
         {
             bool isCached = _cpPrograms.TryGetValue(gpuVa, out List<ComputeShader> list);
 
@@ -47,7 +47,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 }
             }
 
-            CachedShader shader = TranslateComputeShader(gpuVa, localSizeX, localSizeY, localSizeZ);
+            CachedShader shader = TranslateComputeShader(gpuVa, sharedMemorySize, localSizeX, localSizeY, localSizeZ);
 
             IShader hostShader = _context.Renderer.CompileShader(shader.Program);
 
@@ -192,7 +192,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return false;
         }
 
-        private CachedShader TranslateComputeShader(ulong gpuVa, int localSizeX, int localSizeY, int localSizeZ)
+        private CachedShader TranslateComputeShader(ulong gpuVa, int sharedMemorySize, int localSizeX, int localSizeY, int localSizeZ)
         {
             if (gpuVa == 0)
             {
@@ -211,6 +211,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             program = Translator.Translate(code, GetShaderCapabilities(), flags);
 
             int[] codeCached = MemoryMarshal.Cast<byte, int>(code.Slice(0, program.Size)).ToArray();
+
+            program.Replace(DefineNames.SharedMemorySize, sharedMemorySize.ToString(CultureInfo.InvariantCulture));
 
             program.Replace(DefineNames.LocalSizeX, localSizeX.ToString(CultureInfo.InvariantCulture));
             program.Replace(DefineNames.LocalSizeY, localSizeY.ToString(CultureInfo.InvariantCulture));

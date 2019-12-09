@@ -22,6 +22,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             ComputeShader cs = _shaderCache.GetComputeShader(
                 shaderGpuVa,
+                dispatchParams.SharedMemorySize & 0xffff,
                 dispatchParams.UnpackBlockSizeX(),
                 dispatchParams.UnpackBlockSizeY(),
                 dispatchParams.UnpackBlockSizeZ());

@@ -39,7 +39,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         public int Unknown14;
         public int Unknown15;
         public int Unknown16;
-        public int Unknown17;
+        public int SharedMemorySize;
         public int BlockSizeX;
         public int BlockSizeYZ;
         public int UniformBuffersConfig;
