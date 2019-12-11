@@ -126,6 +126,15 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private static LinkedListNode<INode> RewriteTextureSample(LinkedListNode<INode> node)
         {
+            // Technically, non-constant texture offsets are not allowed (according to the spec),
+            // however some GPUs does support that.
+            // For GPUs where it is not supported, we can replace the instruction with the following:
+            // For texture*Offset, we replace it by texture*, and add the offset to the P coords.
+            // The offset can be calculated as offset / textureSize(lod), where lod = textureQueryLod(coords).
+            // For texelFetchOffset, we replace it by texelFetch and add the offset to the P coords directly.
+            // For textureGatherOffset, we take advantage of the fact that the operation is already broken down
+            // to read the 4 pixels separately, and just replace it with 4 textureGather with a different offset
+            // for each pixel.
             TextureOperation texOp = (TextureOperation)node.Value;
 
             bool hasOffset  = (texOp.Flags & TextureFlags.Offset)  != 0;
@@ -139,6 +148,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             bool isBindless     = (texOp.Flags & TextureFlags.Bindless)    != 0;
             bool isGather       = (texOp.Flags & TextureFlags.Gather)      != 0;
             bool hasDerivatives = (texOp.Flags & TextureFlags.Derivatives) != 0;
+            bool intCoords      = (texOp.Flags & TextureFlags.IntCoords)   != 0;
             bool hasLodBias     = (texOp.Flags & TextureFlags.LodBias)     != 0;
             bool hasLodLevel    = (texOp.Flags & TextureFlags.LodLevel)    != 0;
 
@@ -228,74 +238,90 @@ namespace Ryujinx.Graphics.Shader.Translation
                sources[dstIndex++] = texOp.GetSource(srcIndex++);
             }
 
-            Operand Int(Operand value)
-            {
-                Operand res = Local();
-
-                node.List.AddBefore(node, new Operation(Instruction.ConvertFPToS32, res, value));
-
-                return res;
-            }
-
-            Operand Float(Operand value)
-            {
-                Operand res = Local();
-
-                node.List.AddBefore(node, new Operation(Instruction.ConvertS32ToFP, res, value));
-
-                return res;
-            }
-
-            Operand lod = Local();
-
-            node.List.AddBefore(node, new TextureOperation(
-                Instruction.Lod,
-                texOp.Type,
-                texOp.Flags,
-                texOp.Handle,
-                1,
-                lod,
-                lodSources));
-
             int coordsIndex = isBindless || isIndexed ? 1 : 0;
 
-            for (int index = 0; index < coordsCount; index++)
+            if (intCoords)
             {
-                Operand coordSize = Local();
-
-                Operand[] texSizeSources;
-
-                if (isBindless || isIndexed)
+                for (int index = 0; index < coordsCount; index++)
                 {
-                    texSizeSources = new Operand[] { sources[0], Int(lod) };
+                    Operand source = sources[coordsIndex + index];
+
+                    Operand coordPlusOffset = Local();
+
+                    node.List.AddBefore(node, new Operation(Instruction.Add, coordPlusOffset, source, offsets[index]));
+
+                    sources[coordsIndex + index] = coordPlusOffset;
                 }
-                else
-                {
-                    texSizeSources = new Operand[] { Int(lod) };
-                }
+            }
+            else
+            {
+                Operand lod = Local();
 
                 node.List.AddBefore(node, new TextureOperation(
-                    Instruction.TextureSize,
+                    Instruction.Lod,
                     texOp.Type,
                     texOp.Flags,
                     texOp.Handle,
-                    index,
-                    coordSize,
-                    texSizeSources));
+                    1,
+                    lod,
+                    lodSources));
 
-                Operand offset = Local();
+                Operand Int(Operand value)
+                {
+                    Operand res = Local();
 
-                Operand intOffset = offsets[index + (hasOffsets ? texOp.Index * coordsCount : 0)];
+                    node.List.AddBefore(node, new Operation(Instruction.ConvertFPToS32, res, value));
 
-                node.List.AddBefore(node, new Operation(Instruction.FP | Instruction.Divide, offset, Float(intOffset), Float(coordSize)));
+                    return res;
+                }
 
-                Operand source = sources[coordsIndex + index];
+                Operand Float(Operand value)
+                {
+                    Operand res = Local();
 
-                Operand coordPlusOffset = Local();
+                    node.List.AddBefore(node, new Operation(Instruction.ConvertS32ToFP, res, value));
 
-                node.List.AddBefore(node, new Operation(Instruction.FP | Instruction.Add, coordPlusOffset, source, offset));
+                    return res;
+                }
 
-                sources[coordsIndex + index] = coordPlusOffset;
+                for (int index = 0; index < coordsCount; index++)
+                {
+                    Operand coordSize = Local();
+
+                    Operand[] texSizeSources;
+
+                    if (isBindless || isIndexed)
+                    {
+                        texSizeSources = new Operand[] { sources[0], Int(lod) };
+                    }
+                    else
+                    {
+                        texSizeSources = new Operand[] { Int(lod) };
+                    }
+
+                    node.List.AddBefore(node, new TextureOperation(
+                        Instruction.TextureSize,
+                        texOp.Type,
+                        texOp.Flags,
+                        texOp.Handle,
+                        index,
+                        coordSize,
+                        texSizeSources));
+
+                    Operand offset = Local();
+
+                    Operand intOffset = offsets[index + (hasOffsets ? texOp.Index * coordsCount : 0)];
+
+                    node.List.AddBefore(node, new Operation(Instruction.FP | Instruction.Divide, offset, Float(intOffset), Float(coordSize)));
+
+                    Operand source = sources[coordsIndex + index];
+
+                    Operand coordPlusOffset = Local();
+
+                    node.List.AddBefore(node, new Operation(Instruction.FP | Instruction.Add, coordPlusOffset, source, offset));
+
+                    sources[coordsIndex + index] = coordPlusOffset;
+                }
             }
 
             int componentIndex;

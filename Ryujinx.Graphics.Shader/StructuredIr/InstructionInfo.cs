@@ -140,8 +140,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         {
             // TODO: Return correct type depending on source index,
             // that can improve the decompiler output.
-            if (
-                inst == Instruction.ImageLoad  ||
+            if (inst == Instruction.ImageLoad  ||
                 inst == Instruction.ImageStore ||
                 inst == Instruction.Lod        ||
                 inst == Instruction.TextureSample)
