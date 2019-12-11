@@ -133,6 +133,9 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                     case Instruction.LoadStorage:
                         return InstGenMemory.LoadStorage(context, operation);
 
+                    case Instruction.Lod:
+                        return InstGenMemory.Lod(context, operation);
+
                     case Instruction.PackHalf2x16:
                         return InstGenPacking.PackHalf2x16(context, operation);
 

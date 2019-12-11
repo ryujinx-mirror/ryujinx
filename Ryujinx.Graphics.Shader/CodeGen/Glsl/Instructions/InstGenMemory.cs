@@ -148,6 +148,48 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             return GetStorageBufferAccessor(indexExpr, offsetExpr, context.Config.Stage);
         }
 
+        public static string Lod(CodeGenContext context, AstOperation operation)
+        {
+            AstTextureOperation texOp = (AstTextureOperation)operation;
+
+            int coordsCount = texOp.Type.GetDimensions();
+
+            bool isBindless = (texOp.Flags & TextureFlags.Bindless) != 0;
+
+            bool isIndexed = (texOp.Type & SamplerType.Indexed) != 0;
+
+            string indexExpr = null;
+
+            if (isIndexed)
+            {
+                indexExpr = GetSoureExpr(context, texOp.GetSource(0), VariableType.S32);
+            }
+
+            string samplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp, indexExpr);
+
+            int coordsIndex = isBindless || isIndexed ? 1 : 0;
+
+            string coordsExpr;
+
+            if (coordsCount > 1)
+            {
+                string[] elems = new string[coordsCount];
+
+                for (int index = 0; index < coordsCount; index++)
+                {
+                    elems[index] = GetSoureExpr(context, texOp.GetSource(coordsIndex + index), VariableType.F32);
+                }
+
+                coordsExpr = "vec" + coordsCount + "(" + string.Join(", ", elems) + ")";
+            }
+            else
+            {
+                coordsExpr = GetSoureExpr(context, texOp.GetSource(coordsIndex), VariableType.F32);
+            }
+
+            return $"textureQueryLod({samplerName}, {coordsExpr}){GetMask(texOp.Index)}";
+        }
+
         public static string StoreLocal(CodeGenContext context, AstOperation operation)
         {
             return StoreLocalOrShared(context, operation, DefaultNames.LocalMemoryName);
@@ -359,15 +401,15 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
                 }
             }
 
+            if (hasExtraCompareArg)
+            {
+                Append(Src(VariableType.F32));
+            }
+
             if (hasDerivatives)
             {
                 Append(AssembleDerivativesVector(coordsCount)); // dPdx
                 Append(AssembleDerivativesVector(coordsCount)); // dPdy
-            }
-
-            if (hasExtraCompareArg)
-            {
-                Append(Src(VariableType.F32));
             }
 
             if (isMultisample)
@@ -446,11 +488,13 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
 
             string samplerName = OperandManager.GetSamplerName(context.Config.Stage, texOp, indexExpr);
 
-            IAstNode src0 = operation.GetSource(isBindless || isIndexed ? 1 : 0);
+            int lodSrcIndex = isBindless || isIndexed ? 1 : 0;
 
-            string src0Expr = GetSoureExpr(context, src0, GetSrcVarType(operation.Inst, 0));
+            IAstNode lod = operation.GetSource(lodSrcIndex);
 
-            return $"textureSize({samplerName}, {src0Expr}){GetMask(texOp.Index)}";
+            string lodExpr = GetSoureExpr(context, lod, GetSrcVarType(operation.Inst, lodSrcIndex));
+
+            return $"textureSize({samplerName}, {lodExpr}){GetMask(texOp.Index)}";
         }
 
         private static string GetStorageBufferAccessor(string slotExpr, string offsetExpr, ShaderStage stage)

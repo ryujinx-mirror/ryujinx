@@ -73,6 +73,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.LoadLocal,                InstType.Special);
             Add(Instruction.LoadShared,               InstType.Special);
             Add(Instruction.LoadStorage,              InstType.Special);
+            Add(Instruction.Lod,                      InstType.Special);
             Add(Instruction.LogarithmB2,              InstType.CallUnary,      "log2");
             Add(Instruction.LogicalAnd,               InstType.OpBinaryCom,    "&&",              9);
             Add(Instruction.LogicalExclusiveOr,       InstType.OpBinaryCom,    "^^",              10);

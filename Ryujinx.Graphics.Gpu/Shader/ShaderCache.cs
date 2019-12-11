@@ -355,7 +355,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return new ShaderCapabilities(
                 _context.Capabilities.MaximumViewportDimensions,
                 _context.Capabilities.MaximumComputeSharedMemorySize,
-                _context.Capabilities.StorageBufferOffsetAlignment);
+                _context.Capabilities.StorageBufferOffsetAlignment,
+                _context.Capabilities.SupportsNonConstantTextureOffset);
         }
     }
 }

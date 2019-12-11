@@ -71,6 +71,7 @@ namespace Ryujinx.Graphics.Shader.IntermediateRepresentation
         LoadLocal,
         LoadShared,
         LoadStorage,
+        Lod,
         LogarithmB2,
         LogicalAnd,
         LogicalExclusiveOr,

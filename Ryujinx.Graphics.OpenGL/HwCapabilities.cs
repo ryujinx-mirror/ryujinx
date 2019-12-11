@@ -11,11 +11,14 @@ namespace Ryujinx.Graphics.OpenGL
         private static Lazy<int> _maximumComputeSharedMemorySize = new Lazy<int>(() => GetLimit(All.MaxComputeSharedMemorySize));
         private static Lazy<int> _storageBufferOffsetAlignment   = new Lazy<int>(() => GetLimit(All.ShaderStorageBufferOffsetAlignment));
 
-        public static bool SupportsAstcCompression => _supportsAstcCompression.Value;
+        private static Lazy<bool> _isNvidiaDriver = new Lazy<bool>(() => IsNvidiaDriver());
 
-        public static int MaximumViewportDimensions      => _maximumViewportDimensions.Value;
-        public static int MaximumComputeSharedMemorySize => _maximumComputeSharedMemorySize.Value;
-        public static int StorageBufferOffsetAlignment   => _storageBufferOffsetAlignment.Value;
+        public static bool SupportsAstcCompression          => _supportsAstcCompression.Value;
+        public static bool SupportsNonConstantTextureOffset => _isNvidiaDriver.Value;
+
+        public static int  MaximumViewportDimensions      => _maximumViewportDimensions.Value;
+        public static int  MaximumComputeSharedMemorySize => _maximumComputeSharedMemorySize.Value;
+        public static int  StorageBufferOffsetAlignment   => _storageBufferOffsetAlignment.Value;
 
         private static bool HasExtension(string name)
         {
@@ -35,6 +38,11 @@ namespace Ryujinx.Graphics.OpenGL
         private static int GetLimit(All name)
         {
             return GL.GetInteger((GetPName)name);
+        }
+
+        private static bool IsNvidiaDriver()
+        {
+            return GL.GetString(StringName.Vendor).Equals("NVIDIA Corporation");
         }
     }
 }

@@ -85,6 +85,7 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             Add(Instruction.LoadLocal,                VariableType.U32,    VariableType.S32);
             Add(Instruction.LoadShared,               VariableType.U32,    VariableType.S32);
             Add(Instruction.LoadStorage,              VariableType.U32,    VariableType.S32,    VariableType.S32);
+            Add(Instruction.Lod,                      VariableType.F32);
             Add(Instruction.LogarithmB2,              VariableType.Scalar, VariableType.Scalar);
             Add(Instruction.LogicalAnd,               VariableType.Bool,   VariableType.Bool,   VariableType.Bool);
             Add(Instruction.LogicalExclusiveOr,       VariableType.Bool,   VariableType.Bool,   VariableType.Bool);
@@ -139,9 +140,11 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
         {
             // TODO: Return correct type depending on source index,
             // that can improve the decompiler output.
-            if (inst == Instruction.TextureSample ||
-                inst == Instruction.ImageLoad     ||
-                inst == Instruction.ImageStore)
+            if (
+                inst == Instruction.ImageLoad  ||
+                inst == Instruction.ImageStore ||
+                inst == Instruction.Lod        ||
+                inst == Instruction.TextureSample)
             {
                 return VariableType.F32;
             }
