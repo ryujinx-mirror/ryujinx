@@ -1,5 +1,5 @@
 ﻿using Ryujinx.Common;
-using System;
+using System.Runtime.CompilerServices;
 
 using static Ryujinx.Graphics.Texture.BlockLinearConstants;
 
@@ -19,11 +19,6 @@ namespace Ryujinx.Graphics.Texture
             }
         }
 
-        private int _texWidth;
-        private int _texHeight;
-        private int _texDepth;
-        private int _texGobBlocksInY;
-        private int _texGobBlocksInZ;
         private int _texBpp;
 
         private int _bhMask;
@@ -46,12 +41,7 @@ namespace Ryujinx.Graphics.Texture
             int gobBlocksInZ,
             int bpp)
         {
-            _texWidth        = width;
-            _texHeight       = height;
-            _texDepth        = depth;
-            _texGobBlocksInY = gobBlocksInY;
-            _texGobBlocksInZ = gobBlocksInZ;
-            _texBpp          = bpp;
+            _texBpp = bpp;
 
             _bppShift = BitUtils.CountTrailingZeros32(bpp);
 
@@ -80,27 +70,32 @@ namespace Ryujinx.Graphics.Texture
             return new RobAndSliceSizes(robSize, sliceSize);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetOffset(int x, int y, int z)
         {
-            x <<= _bppShift;
+            return GetOffsetWithLineOffset(x << _bppShift, y, z);
+        }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetOffsetWithLineOffset(int x, int y, int z)
+        {
             int yh = y / GobHeight;
 
-            int position = (z >> _bdShift) * _sliceSize + (yh >> _bhShift) * _robSize;
+            int offset = (z >> _bdShift) * _sliceSize + (yh >> _bhShift) * _robSize;
 
-            position += (x / GobStride) << _xShift;
+            offset += (x / GobStride) << _xShift;
 
-            position += (yh & _bhMask) * GobSize;
+            offset += (yh & _bhMask) * GobSize;
 
-            position += ((z & _bdMask) * GobSize) << _bhShift;
+            offset += ((z & _bdMask) * GobSize) << _bhShift;
 
-            position += ((x & 0x3f) >> 5) << 8;
-            position += ((y & 0x07) >> 1) << 6;
-            position += ((x & 0x1f) >> 4) << 5;
-            position += ((y & 0x01) >> 0) << 4;
-            position += ((x & 0x0f) >> 0) << 0;
+            offset += ((x & 0x3f) >> 5) << 8;
+            offset += ((y & 0x07) >> 1) << 6;
+            offset += ((x & 0x1f) >> 4) << 5;
+            offset += ((y & 0x01) >> 0) << 4;
+            offset += ((x & 0x0f) >> 0) << 0;
 
-            return position;
+            return offset;
         }
     }
 }

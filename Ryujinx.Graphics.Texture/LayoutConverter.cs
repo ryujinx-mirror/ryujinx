@@ -62,6 +62,10 @@ namespace Ryujinx.Graphics.Texture
                     mipGobBlocksInZ >>= 1;
                 }
 
+                int strideTrunc = BitUtils.AlignDown(w * bytesPerPixel, 16);
+
+                int xStart = strideTrunc / bytesPerPixel;
+
                 int stride   = BitUtils.AlignUp(w * bytesPerPixel, HostStrideAlignment);
                 int wAligned = BitUtils.AlignUp(w, wAlignment);
 
@@ -80,7 +84,16 @@ namespace Ryujinx.Graphics.Texture
                     for (int z = 0; z < d; z++)
                     for (int y = 0; y < h; y++)
                     {
-                        for (int x = 0; x < w; x++)
+                        for (int x = 0; x < strideTrunc; x += 16)
+                        {
+                            int offset = inBaseOffset + layoutConverter.GetOffsetWithLineOffset(x, y, z);
+
+                            Span<byte> dest = output.Slice(outOffs + x, 16);
+
+                            data.Slice(offset, 16).CopyTo(dest);
+                        }
+
+                        for (int x = xStart; x < w; x++)
                         {
                             int offset = inBaseOffset + layoutConverter.GetOffset(x, y, z);
 
