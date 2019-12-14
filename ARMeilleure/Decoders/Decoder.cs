@@ -10,6 +10,11 @@ namespace ARMeilleure.Decoders
 {
     static class Decoder
     {
+        // We define a limit on the number of instructions that a function may have,
+        // this prevents functions being potentially too large, which would
+        // take too long to compile and use too much memory.
+        private const int MaxInstsPerFunction = 5000;
+
         private delegate object MakeOp(InstDescriptor inst, ulong address, int opCode);
 
         private static ConcurrentDictionary<Type, MakeOp> _opActivators;
@@ -36,10 +41,17 @@ namespace ARMeilleure.Decoders
 
             Dictionary<ulong, Block> visited = new Dictionary<ulong, Block>();
 
+            int opsCount = 0;
+
             Block GetBlock(ulong blkAddress)
             {
                 if (!visited.TryGetValue(blkAddress, out Block block))
                 {
+                    if (opsCount > MaxInstsPerFunction)
+                    {
+                        return null;
+                    }
+
                     block = new Block(blkAddress);
 
                     workQueue.Enqueue(block);
@@ -91,6 +103,8 @@ namespace ARMeilleure.Decoders
                 }
 
                 FillBlock(memory, mode, currBlock, limitAddress);
+
+                opsCount += currBlock.OpCodes.Count;
 
                 if (currBlock.OpCodes.Count != 0)
                 {
