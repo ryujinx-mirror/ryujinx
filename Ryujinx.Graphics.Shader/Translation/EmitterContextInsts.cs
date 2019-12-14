@@ -61,6 +61,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.Ballot, Local(), a);
         }
 
+        public static Operand Barrier(this EmitterContext context)
+        {
+            return context.Add(Instruction.Barrier);
+        }
+
         public static Operand BitCount(this EmitterContext context, Operand a)
         {
             return context.Add(Instruction.BitCount, Local(), a);
@@ -336,6 +341,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             return context.Add(Instruction.SwizzleAdd, Local(), a, b, Const(mask));
         }
 
+        public static Operand GroupMemoryBarrier(this EmitterContext context)
+        {
+            return context.Add(Instruction.GroupMemoryBarrier);
+        }
+
         public static Operand IAbsNeg(this EmitterContext context, Operand a, bool abs, bool neg)
         {
             return context.INegate(context.IAbsolute(a, abs), neg);
@@ -474,6 +484,11 @@ namespace Ryujinx.Graphics.Shader.Translation
         public static Operand LoadShared(this EmitterContext context, Operand a)
         {
             return context.Add(Instruction.LoadShared, Local(), a);
+        }
+
+        public static Operand MemoryBarrier(this EmitterContext context)
+        {
+            return context.Add(Instruction.MemoryBarrier);
         }
 
         public static Operand MultiplyHighS32(this EmitterContext context, Operand a, Operand b)

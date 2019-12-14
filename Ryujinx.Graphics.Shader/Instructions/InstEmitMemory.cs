@@ -77,6 +77,17 @@ namespace Ryujinx.Graphics.Shader.Instructions
             context.Copy(GetDest(context), res);
         }
 
+        public static void Bar(EmitterContext context)
+        {
+            OpCodeBarrier op = (OpCodeBarrier)context.CurrOp;
+
+            // TODO: Support other modes.
+            if (op.Mode == BarrierMode.Sync)
+            {
+                context.Barrier();
+            }
+        }
+
         public static void Ipa(EmitterContext context)
         {
             OpCodeIpa op = (OpCodeIpa)context.CurrOp;
@@ -160,6 +171,20 @@ namespace Ryujinx.Graphics.Shader.Instructions
         public static void Lds(EmitterContext context)
         {
             EmitLoad(context, MemoryRegion.Shared);
+        }
+
+        public static void Membar(EmitterContext context)
+        {
+            OpCodeMemoryBarrier op = (OpCodeMemoryBarrier)context.CurrOp;
+
+            if (op.Level == BarrierLevel.Cta)
+            {
+                context.GroupMemoryBarrier();
+            }
+            else
+            {
+                context.MemoryBarrier();
+            }
         }
 
         public static void Out(EmitterContext context)

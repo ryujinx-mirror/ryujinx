@@ -26,6 +26,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.Absolute,                 InstType.CallUnary,      "abs");
             Add(Instruction.Add,                      InstType.OpBinaryCom,    "+",               2);
             Add(Instruction.Ballot,                   InstType.CallUnary,      "ballotARB");
+            Add(Instruction.Barrier,                  InstType.CallNullary,    "barrier");
             Add(Instruction.BitCount,                 InstType.CallUnary,      "bitCount");
             Add(Instruction.BitfieldExtractS32,       InstType.CallTernary,    "bitfieldExtract");
             Add(Instruction.BitfieldExtractU32,       InstType.CallTernary,    "bitfieldExtract");
@@ -65,6 +66,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.FindFirstSetU32,          InstType.CallUnary,      "findMSB");
             Add(Instruction.Floor,                    InstType.CallUnary,      "floor");
             Add(Instruction.FusedMultiplyAdd,         InstType.CallTernary,    "fma");
+            Add(Instruction.GroupMemoryBarrier,       InstType.CallNullary,    "groupMemoryBarrier");
             Add(Instruction.ImageLoad,                InstType.Special);
             Add(Instruction.ImageStore,               InstType.Special);
             Add(Instruction.IsNan,                    InstType.CallUnary,      "isnan");
@@ -91,6 +93,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl.Instructions
             Add(Instruction.ShuffleXor,               InstType.CallTernary,    HelperFunctionNames.ShuffleXor);
             Add(Instruction.Maximum,                  InstType.CallBinary,     "max");
             Add(Instruction.MaximumU32,               InstType.CallBinary,     "max");
+            Add(Instruction.MemoryBarrier,            InstType.CallNullary,    "memoryBarrier");
             Add(Instruction.Minimum,                  InstType.CallBinary,     "min");
             Add(Instruction.MinimumU32,               InstType.CallBinary,     "min");
             Add(Instruction.Multiply,                 InstType.OpBinaryCom,    "*",               1);
