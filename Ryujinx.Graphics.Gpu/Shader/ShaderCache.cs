@@ -1,10 +1,10 @@
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Shader
@@ -12,6 +12,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
     class ShaderCache
     {
         private const int MaxProgramSize = 0x100000;
+
+        private const TranslationFlags DefaultFlags = TranslationFlags.DebugMode;
 
         private GpuContext _context;
 
@@ -69,7 +71,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return cpShader;
         }
 
-        public GraphicsShader GetGraphicsShader(ShaderAddresses addresses, bool dividePosXY)
+        public GraphicsShader GetGraphicsShader(GpuState state, ShaderAddresses addresses)
         {
             bool isCached = _gpPrograms.TryGetValue(addresses, out List<GraphicsShader> list);
 
@@ -86,28 +88,19 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             GraphicsShader gpShaders = new GraphicsShader();
 
-            TranslationFlags flags =
-                TranslationFlags.DebugMode |
-                TranslationFlags.Unspecialized;
-
-            if (dividePosXY)
-            {
-                flags |= TranslationFlags.DividePosXY;
-            }
-
             if (addresses.VertexA != 0)
             {
-                gpShaders.Shader[0] = TranslateGraphicsShader(flags, addresses.Vertex, addresses.VertexA);
+                gpShaders.Shader[0] = TranslateGraphicsShader(state, ShaderStage.Vertex, addresses.Vertex, addresses.VertexA);
             }
             else
             {
-                gpShaders.Shader[0] = TranslateGraphicsShader(flags, addresses.Vertex);
+                gpShaders.Shader[0] = TranslateGraphicsShader(state, ShaderStage.Vertex, addresses.Vertex);
             }
 
-            gpShaders.Shader[1] = TranslateGraphicsShader(flags, addresses.TessControl);
-            gpShaders.Shader[2] = TranslateGraphicsShader(flags, addresses.TessEvaluation);
-            gpShaders.Shader[3] = TranslateGraphicsShader(flags, addresses.Geometry);
-            gpShaders.Shader[4] = TranslateGraphicsShader(flags, addresses.Fragment);
+            gpShaders.Shader[1] = TranslateGraphicsShader(state, ShaderStage.TessellationControl,    addresses.TessControl);
+            gpShaders.Shader[2] = TranslateGraphicsShader(state, ShaderStage.TessellationEvaluation, addresses.TessEvaluation);
+            gpShaders.Shader[3] = TranslateGraphicsShader(state, ShaderStage.Geometry,               addresses.Geometry);
+            gpShaders.Shader[4] = TranslateGraphicsShader(state, ShaderStage.Fragment,               addresses.Fragment);
 
             BackpropQualifiers(gpShaders);
 
@@ -199,24 +192,30 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return null;
             }
 
-            ShaderProgram program;
+            QueryInfoCallback queryInfo = (QueryInfoName info, int index) =>
+            {
+                switch (info)
+                {
+                    case QueryInfoName.ComputeLocalSizeX:
+                        return localSizeX;
+                    case QueryInfoName.ComputeLocalSizeY:
+                        return localSizeY;
+                    case QueryInfoName.ComputeLocalSizeZ:
+                        return localSizeZ;
+                    case QueryInfoName.ComputeSharedMemorySize:
+                        return sharedMemorySize;
+                }
 
-            const TranslationFlags flags =
-                TranslationFlags.Compute   |
-                TranslationFlags.DebugMode |
-                TranslationFlags.Unspecialized;
+                return QueryInfoCommon(info);
+            };
+
+            ShaderProgram program;
 
             Span<byte> code = _context.MemoryAccessor.Read(gpuVa, MaxProgramSize);
 
-            program = Translator.Translate(code, GetShaderCapabilities(), flags);
+            program = Translator.Translate(code, queryInfo, DefaultFlags | TranslationFlags.Compute);
 
             int[] codeCached = MemoryMarshal.Cast<byte, int>(code.Slice(0, program.Size)).ToArray();
-
-            program.Replace(DefineNames.SharedMemorySize, (sharedMemorySize / 4).ToString(CultureInfo.InvariantCulture));
-
-            program.Replace(DefineNames.LocalSizeX, localSizeX.ToString(CultureInfo.InvariantCulture));
-            program.Replace(DefineNames.LocalSizeY, localSizeY.ToString(CultureInfo.InvariantCulture));
-            program.Replace(DefineNames.LocalSizeZ, localSizeZ.ToString(CultureInfo.InvariantCulture));
 
             _dumper.Dump(code, compute: true, out string fullPath, out string codePath);
 
@@ -229,12 +228,29 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return new CachedShader(program, codeCached);
         }
 
-        private CachedShader TranslateGraphicsShader(TranslationFlags flags, ulong gpuVa, ulong gpuVaA = 0)
+        private CachedShader TranslateGraphicsShader(GpuState state, ShaderStage stage, ulong gpuVa, ulong gpuVaA = 0)
         {
             if (gpuVa == 0)
             {
                 return new CachedShader(null, null);
             }
+
+            QueryInfoCallback queryInfo = (QueryInfoName info, int index) =>
+            {
+                switch (info)
+                {
+                    case QueryInfoName.IsTextureBuffer:
+                        return Convert.ToInt32(QueryIsTextureBuffer(state, (int)stage - 1, index));
+                    case QueryInfoName.IsTextureRectangle:
+                        return Convert.ToInt32(QueryIsTextureRectangle(state, (int)stage - 1, index));
+                    case QueryInfoName.PrimitiveTopology:
+                        return (int)GetPrimitiveTopology();
+                    case QueryInfoName.ViewportTransformEnable:
+                        return Convert.ToInt32(_context.Methods.GetViewportTransformEnable(state));
+                }
+
+                return QueryInfoCommon(info);
+            };
 
             ShaderProgram program;
 
@@ -245,9 +261,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 Span<byte> codeA = _context.MemoryAccessor.Read(gpuVaA, MaxProgramSize);
                 Span<byte> codeB = _context.MemoryAccessor.Read(gpuVa,  MaxProgramSize);
 
-                program = Translator.Translate(codeA, codeB, GetShaderCapabilities(), flags);
+                program = Translator.Translate(codeA, codeB, queryInfo, DefaultFlags);
 
-                // TODO: We should also check "codeA" into account.
+                // TODO: We should also take "codeA" into account.
                 codeCached = MemoryMarshal.Cast<byte, int>(codeB.Slice(0, program.Size)).ToArray();
 
                 _dumper.Dump(codeA, compute: false, out string fullPathA, out string codePathA);
@@ -265,7 +281,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 Span<byte> code = _context.MemoryAccessor.Read(gpuVa, MaxProgramSize);
 
-                program = Translator.Translate(code, GetShaderCapabilities(), flags);
+                program = Translator.Translate(code, queryInfo, DefaultFlags);
 
                 codeCached = MemoryMarshal.Cast<byte, int>(code.Slice(0, program.Size)).ToArray();
 
@@ -276,40 +292,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     program.Prepend("// " + codePath);
                     program.Prepend("// " + fullPath);
                 }
-            }
-
-            if (program.Stage == ShaderStage.Geometry)
-            {
-                PrimitiveType primitiveType = _context.Methods.PrimitiveType;
-
-                string inPrimitive = "points";
-
-                switch (primitiveType)
-                {
-                    case PrimitiveType.Points:
-                        inPrimitive = "points";
-                        break;
-                    case PrimitiveType.Lines:
-                    case PrimitiveType.LineLoop:
-                    case PrimitiveType.LineStrip:
-                        inPrimitive = "lines";
-                        break;
-                    case PrimitiveType.LinesAdjacency:
-                    case PrimitiveType.LineStripAdjacency:
-                        inPrimitive = "lines_adjacency";
-                        break;
-                    case PrimitiveType.Triangles:
-                    case PrimitiveType.TriangleStrip:
-                    case PrimitiveType.TriangleFan:
-                        inPrimitive = "triangles";
-                        break;
-                    case PrimitiveType.TrianglesAdjacency:
-                    case PrimitiveType.TriangleStripAdjacency:
-                        inPrimitive = "triangles_adjacency";
-                        break;
-                }
-
-                program.Replace(DefineNames.InputTopologyName, inPrimitive);
             }
 
             ulong address = _context.MemoryManager.Translate(gpuVa);
@@ -350,13 +332,66 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
         }
 
-        private ShaderCapabilities GetShaderCapabilities()
+        private InputTopology GetPrimitiveTopology()
         {
-            return new ShaderCapabilities(
-                _context.Capabilities.MaximumViewportDimensions,
-                _context.Capabilities.MaximumComputeSharedMemorySize,
-                _context.Capabilities.StorageBufferOffsetAlignment,
-                _context.Capabilities.SupportsNonConstantTextureOffset);
+            switch (_context.Methods.PrimitiveType)
+            {
+                case PrimitiveType.Points:
+                    return InputTopology.Points;
+                case PrimitiveType.Lines:
+                case PrimitiveType.LineLoop:
+                case PrimitiveType.LineStrip:
+                    return InputTopology.Lines;
+                case PrimitiveType.LinesAdjacency:
+                case PrimitiveType.LineStripAdjacency:
+                    return InputTopology.LinesAdjacency;
+                case PrimitiveType.Triangles:
+                case PrimitiveType.TriangleStrip:
+                case PrimitiveType.TriangleFan:
+                    return InputTopology.Triangles;
+                case PrimitiveType.TrianglesAdjacency:
+                case PrimitiveType.TriangleStripAdjacency:
+                    return InputTopology.TrianglesAdjacency;
+            }
+
+            return InputTopology.Points;
+        }
+
+        private bool QueryIsTextureBuffer(GpuState state, int stageIndex, int index)
+        {
+            return GetTextureDescriptor(state, stageIndex, index).UnpackTextureTarget() == TextureTarget.TextureBuffer;
+        }
+
+        private bool QueryIsTextureRectangle(GpuState state, int stageIndex, int index)
+        {
+            var descriptor = GetTextureDescriptor(state, stageIndex, index);
+
+            TextureTarget target = descriptor.UnpackTextureTarget();
+
+            bool is2DTexture = target == TextureTarget.Texture2D ||
+                               target == TextureTarget.Texture2DRect;
+
+            return !descriptor.UnpackTextureCoordNormalized() && is2DTexture;
+        }
+
+        private Image.TextureDescriptor GetTextureDescriptor(GpuState state, int stageIndex, int index)
+        {
+            return _context.Methods.TextureManager.GetGraphicsTextureDescriptor(state, stageIndex, index);
+        }
+
+        private int QueryInfoCommon(QueryInfoName info)
+        {
+            switch (info)
+            {
+                case QueryInfoName.MaximumViewportDimensions:
+                    return _context.Capabilities.MaximumViewportDimensions;
+                case QueryInfoName.StorageBufferOffsetAlignment:
+                    return _context.Capabilities.StorageBufferOffsetAlignment;
+                case QueryInfoName.SupportsNonConstantTextureOffset:
+                    return Convert.ToInt32(_context.Capabilities.SupportsNonConstantTextureOffset);
+            }
+
+            return 0;
         }
     }
 }

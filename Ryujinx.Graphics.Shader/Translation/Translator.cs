@@ -16,14 +16,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public static Span<byte> ExtractCode(Span<byte> code, bool compute, out int headerSize)
         {
-            if (compute)
-            {
-                headerSize = 0;
-            }
-            else
-            {
-                headerSize = HeaderSize;
-            }
+            headerSize = compute ? 0 : HeaderSize;
 
             Block[] cfg = Decoder.Decode(code, (ulong)headerSize);
 
@@ -47,56 +40,21 @@ namespace Ryujinx.Graphics.Shader.Translation
             return code.Slice(0, headerSize + (int)endAddress);
         }
 
-        public static ShaderProgram Translate(Span<byte> code, ShaderCapabilities capabilities, TranslationFlags flags)
+        public static ShaderProgram Translate(Span<byte> code, QueryInfoCallback queryInfoCallback, TranslationFlags flags)
         {
             bool compute = (flags & TranslationFlags.Compute) != 0;
 
-            Operation[] ops = DecodeShader(code, capabilities, flags, out ShaderHeader header, out int size);
-
-            ShaderStage stage;
-
-            if (compute)
-            {
-                stage = ShaderStage.Compute;
-            }
-            else
-            {
-                stage = header.Stage;
-            }
-
-            int maxOutputVertexCount = 0;
-
-            OutputTopology outputTopology = OutputTopology.LineStrip;
-
-            if (!compute)
-            {
-                maxOutputVertexCount = header.MaxOutputVertexCount;
-                outputTopology       = header.OutputTopology;
-            }
-
-            ShaderConfig config = new ShaderConfig(
-                stage,
-                capabilities,
-                flags,
-                maxOutputVertexCount,
-                outputTopology);
+            Operation[] ops = DecodeShader(code, queryInfoCallback, flags, out ShaderConfig config, out int size);
 
             return Translate(ops, config, size);
         }
 
-        public static ShaderProgram Translate(Span<byte> vpACode, Span<byte> vpBCode, ShaderCapabilities capabilities, TranslationFlags flags)
+        public static ShaderProgram Translate(Span<byte> vpACode, Span<byte> vpBCode, QueryInfoCallback queryInfoCallback, TranslationFlags flags)
         {
             bool debugMode = (flags & TranslationFlags.DebugMode) != 0;
 
-            Operation[] vpAOps = DecodeShader(vpACode, capabilities, flags, out _, out _);
-            Operation[] vpBOps = DecodeShader(vpBCode, capabilities, flags, out ShaderHeader header, out int sizeB);
-
-            ShaderConfig config = new ShaderConfig(
-                header.Stage,
-                capabilities,
-                flags,
-                header.MaxOutputVertexCount,
-                header.OutputTopology);
+            Operation[] vpAOps = DecodeShader(vpACode, queryInfoCallback, flags, out _, out _);
+            Operation[] vpBOps = DecodeShader(vpBCode, queryInfoCallback, flags, out ShaderConfig config, out int sizeB);
 
             return Translate(Combine(vpAOps, vpBOps), config, sizeB);
         }
@@ -136,31 +94,25 @@ namespace Ryujinx.Graphics.Shader.Translation
         }
 
         private static Operation[] DecodeShader(
-            Span<byte>         code,
-            ShaderCapabilities capabilities,
-            TranslationFlags   flags,
-            out ShaderHeader   header,
-            out int            size)
+            Span<byte>        code,
+            QueryInfoCallback queryInfoCallback,
+            TranslationFlags  flags,
+            out ShaderConfig  config,
+            out int           size)
         {
             Block[] cfg;
 
-            EmitterContext context;
-
             if ((flags & TranslationFlags.Compute) != 0)
             {
-                header = null;
+                config = new ShaderConfig(flags, queryInfoCallback);
 
                 cfg = Decoder.Decode(code, 0);
-
-                context = new EmitterContext(ShaderStage.Compute, header, capabilities, flags);
             }
             else
             {
-                header = new ShaderHeader(code);
+                config = new ShaderConfig(new ShaderHeader(code), flags, queryInfoCallback);
 
                 cfg = Decoder.Decode(code, HeaderSize);
-
-                context = new EmitterContext(header.Stage, header, capabilities, flags);
             }
 
             if (cfg == null)
@@ -171,6 +123,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                 return new Operation[0];
             }
+
+            EmitterContext context = new EmitterContext(config);
 
             ulong maxEndAddress = 0;
 

@@ -671,9 +671,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 addressesArray[index] = baseAddress + shader.Offset;
             }
 
-            bool viewportTransformEnable = GetViewportTransformEnable(state);
-
-            GraphicsShader gs = _shaderCache.GetGraphicsShader(addresses, !viewportTransformEnable);
+            GraphicsShader gs = _shaderCache.GetGraphicsShader(state, addresses);
 
             _vsUsesInstanceId = gs.Shader[0].Program.Info.UsesInstanceId;
 
@@ -734,7 +732,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.Renderer.Pipeline.BindProgram(gs.HostProgram);
         }
 
-        private bool GetViewportTransformEnable(GpuState state)
+        public bool GetViewportTransformEnable(GpuState state)
         {
             // FIXME: We should read ViewportTransformEnable, but it seems that some games writes 0 there?
             // return state.Get<Boolean32>(MethodOffset.ViewportTransformEnable) != 0;

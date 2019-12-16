@@ -27,9 +27,9 @@ namespace Ryujinx.Graphics.Shader.Translation
                         node = RewriteGlobalAccess(node, config);
                     }
 
-                    if (!config.Capabilities.SupportsNonConstantTextureOffset && operation.Inst == Instruction.TextureSample)
+                    if (operation.Inst == Instruction.TextureSample)
                     {
-                        node = RewriteTextureSample(node);
+                        node = RewriteTextureSample(node, config);
                     }
                 }
             }
@@ -79,7 +79,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                 sbSlot        = PrependOperation(Instruction.ConditionalSelect, inRange, Const(slot), sbSlot);
             }
 
-            Operand alignMask = Const(-config.Capabilities.StorageBufferOffsetAlignment);
+            Operand alignMask = Const(-config.QueryInfo(QueryInfoName.StorageBufferOffsetAlignment));
 
             Operand baseAddrTrunc = PrependOperation(Instruction.BitwiseAnd,    sbBaseAddrLow, Const(-64));
             Operand byteOffset    = PrependOperation(Instruction.Subtract,      addrLow, baseAddrTrunc);
@@ -124,23 +124,18 @@ namespace Ryujinx.Graphics.Shader.Translation
             return node;
         }
 
-        private static LinkedListNode<INode> RewriteTextureSample(LinkedListNode<INode> node)
+        private static LinkedListNode<INode> RewriteTextureSample(LinkedListNode<INode> node, ShaderConfig config)
         {
-            // Technically, non-constant texture offsets are not allowed (according to the spec),
-            // however some GPUs does support that.
-            // For GPUs where it is not supported, we can replace the instruction with the following:
-            // For texture*Offset, we replace it by texture*, and add the offset to the P coords.
-            // The offset can be calculated as offset / textureSize(lod), where lod = textureQueryLod(coords).
-            // For texelFetchOffset, we replace it by texelFetch and add the offset to the P coords directly.
-            // For textureGatherOffset, we take advantage of the fact that the operation is already broken down
-            // to read the 4 pixels separately, and just replace it with 4 textureGather with a different offset
-            // for each pixel.
             TextureOperation texOp = (TextureOperation)node.Value;
 
             bool hasOffset  = (texOp.Flags & TextureFlags.Offset)  != 0;
             bool hasOffsets = (texOp.Flags & TextureFlags.Offsets) != 0;
 
-            if (!(hasOffset || hasOffsets))
+            bool hasInvalidOffset = (hasOffset || hasOffsets) && !config.QueryInfoBool(QueryInfoName.SupportsNonConstantTextureOffset);
+
+            bool isRect = config.QueryInfoBool(QueryInfoName.IsTextureRectangle, texOp.Handle);
+
+            if (!(hasInvalidOffset || isRect))
             {
                 return node;
             }
@@ -159,13 +154,23 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             int coordsCount = texOp.Type.GetDimensions();
 
-            int offsetsCount = coordsCount * (hasOffsets ? 4 : 1);
+            int offsetsCount;
+
+            if (hasOffsets)
+            {
+                offsetsCount = coordsCount * 4;
+            }
+            else if (hasOffset)
+            {
+                offsetsCount = coordsCount;
+            }
+            else
+            {
+                offsetsCount = 0;
+            }
 
             Operand[] offsets = new Operand[offsetsCount];
             Operand[] sources = new Operand[texOp.SourcesCount - offsetsCount];
-
-            int srcIndex = 0;
-            int dstIndex = 0;
 
             int copyCount = 0;
 
@@ -207,6 +212,9 @@ namespace Ryujinx.Graphics.Shader.Translation
                 copyCount++;
             }
 
+            int srcIndex = 0;
+            int dstIndex = 0;
+
             for (int index = 0; index < copyCount; index++)
             {
                 sources[dstIndex++] = texOp.GetSource(srcIndex++);
@@ -223,7 +231,9 @@ namespace Ryujinx.Graphics.Shader.Translation
                 offsets[index] = offset;
             }
 
-            if (areAllOffsetsConstant)
+            hasInvalidOffset &= !areAllOffsetsConstant;
+
+            if (!(hasInvalidOffset || isRect))
             {
                 return node;
             }
@@ -240,50 +250,32 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             int coordsIndex = isBindless || isIndexed ? 1 : 0;
 
-            if (intCoords)
+            int componentIndex = texOp.Index;
+
+            Operand Int(Operand value)
             {
-                for (int index = 0; index < coordsCount; index++)
-                {
-                    Operand source = sources[coordsIndex + index];
+                Operand res = Local();
 
-                    Operand coordPlusOffset = Local();
+                node.List.AddBefore(node, new Operation(Instruction.ConvertFPToS32, res, value));
 
-                    node.List.AddBefore(node, new Operation(Instruction.Add, coordPlusOffset, source, offsets[index]));
-
-                    sources[coordsIndex + index] = coordPlusOffset;
-                }
+                return res;
             }
-            else
+
+            Operand Float(Operand value)
             {
-                Operand lod = Local();
+                Operand res = Local();
 
-                node.List.AddBefore(node, new TextureOperation(
-                    Instruction.Lod,
-                    texOp.Type,
-                    texOp.Flags,
-                    texOp.Handle,
-                    1,
-                    lod,
-                    lodSources));
+                node.List.AddBefore(node, new Operation(Instruction.ConvertS32ToFP, res, value));
 
-                Operand Int(Operand value)
-                {
-                    Operand res = Local();
+                return res;
+            }
 
-                    node.List.AddBefore(node, new Operation(Instruction.ConvertFPToS32, res, value));
-
-                    return res;
-                }
-
-                Operand Float(Operand value)
-                {
-                    Operand res = Local();
-
-                    node.List.AddBefore(node, new Operation(Instruction.ConvertS32ToFP, res, value));
-
-                    return res;
-                }
-
+            // Emulate texture rectangle by normalizing the coordinates on the shader.
+            // When sampler*Rect is used, the coords are expected to the in the [0, W or H] range,
+            // and otherwise, it is expected to be in the [0, 1] range.
+            // We normalize by dividing the coords by the texture size.
+            if (isRect && !intCoords)
+            {
                 for (int index = 0; index < coordsCount; index++)
                 {
                     Operand coordSize = Local();
@@ -292,11 +284,11 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     if (isBindless || isIndexed)
                     {
-                        texSizeSources = new Operand[] { sources[0], Int(lod) };
+                        texSizeSources = new Operand[] { sources[0], Const(0) };
                     }
                     else
                     {
-                        texSizeSources = new Operand[] { Int(lod) };
+                        texSizeSources = new Operand[] { Const(0) };
                     }
 
                     node.List.AddBefore(node, new TextureOperation(
@@ -308,35 +300,101 @@ namespace Ryujinx.Graphics.Shader.Translation
                         coordSize,
                         texSizeSources));
 
-                    Operand offset = Local();
-
-                    Operand intOffset = offsets[index + (hasOffsets ? texOp.Index * coordsCount : 0)];
-
-                    node.List.AddBefore(node, new Operation(Instruction.FP | Instruction.Divide, offset, Float(intOffset), Float(coordSize)));
-
                     Operand source = sources[coordsIndex + index];
 
-                    Operand coordPlusOffset = Local();
+                    Operand coordNormalized = Local();
 
-                    node.List.AddBefore(node, new Operation(Instruction.FP | Instruction.Add, coordPlusOffset, source, offset));
+                    node.List.AddBefore(node, new Operation(Instruction.FP | Instruction.Divide, coordNormalized, source, Float(coordSize)));
 
-                    sources[coordsIndex + index] = coordPlusOffset;
+                    sources[coordsIndex + index] = coordNormalized;
                 }
             }
 
-            int componentIndex;
-
-            if (isGather && !isShadow)
+            // Technically, non-constant texture offsets are not allowed (according to the spec),
+            // however some GPUs does support that.
+            // For GPUs where it is not supported, we can replace the instruction with the following:
+            // For texture*Offset, we replace it by texture*, and add the offset to the P coords.
+            // The offset can be calculated as offset / textureSize(lod), where lod = textureQueryLod(coords).
+            // For texelFetchOffset, we replace it by texelFetch and add the offset to the P coords directly.
+            // For textureGatherOffset, we take advantage of the fact that the operation is already broken down
+            // to read the 4 pixels separately, and just replace it with 4 textureGather with a different offset
+            // for each pixel.
+            if (hasInvalidOffset)
             {
-                Operand gatherComponent = sources[dstIndex - 1];
+                if (intCoords)
+                {
+                    for (int index = 0; index < coordsCount; index++)
+                    {
+                        Operand source = sources[coordsIndex + index];
 
-                Debug.Assert(gatherComponent.Type == OperandType.Constant);
+                        Operand coordPlusOffset = Local();
 
-                componentIndex = gatherComponent.Value;
-            }
-            else
-            {
-                componentIndex = texOp.Index;
+                        node.List.AddBefore(node, new Operation(Instruction.Add, coordPlusOffset, source, offsets[index]));
+
+                        sources[coordsIndex + index] = coordPlusOffset;
+                    }
+                }
+                else
+                {
+                    Operand lod = Local();
+
+                    node.List.AddBefore(node, new TextureOperation(
+                        Instruction.Lod,
+                        texOp.Type,
+                        texOp.Flags,
+                        texOp.Handle,
+                        1,
+                        lod,
+                        lodSources));
+
+                    for (int index = 0; index < coordsCount; index++)
+                    {
+                        Operand coordSize = Local();
+
+                        Operand[] texSizeSources;
+
+                        if (isBindless || isIndexed)
+                        {
+                            texSizeSources = new Operand[] { sources[0], Int(lod) };
+                        }
+                        else
+                        {
+                            texSizeSources = new Operand[] { Int(lod) };
+                        }
+
+                        node.List.AddBefore(node, new TextureOperation(
+                            Instruction.TextureSize,
+                            texOp.Type,
+                            texOp.Flags,
+                            texOp.Handle,
+                            index,
+                            coordSize,
+                            texSizeSources));
+
+                        Operand offset = Local();
+
+                        Operand intOffset = offsets[index + (hasOffsets ? texOp.Index * coordsCount : 0)];
+
+                        node.List.AddBefore(node, new Operation(Instruction.FP | Instruction.Divide, offset, Float(intOffset), Float(coordSize)));
+
+                        Operand source = sources[coordsIndex + index];
+
+                        Operand coordPlusOffset = Local();
+
+                        node.List.AddBefore(node, new Operation(Instruction.FP | Instruction.Add, coordPlusOffset, source, offset));
+
+                        sources[coordsIndex + index] = coordPlusOffset;
+                    }
+                }
+
+                if (isGather && !isShadow)
+                {
+                    Operand gatherComponent = sources[dstIndex - 1];
+
+                    Debug.Assert(gatherComponent.Type == OperandType.Constant);
+
+                    componentIndex = gatherComponent.Value;
+                }
             }
 
             TextureOperation newTexOp = new TextureOperation(

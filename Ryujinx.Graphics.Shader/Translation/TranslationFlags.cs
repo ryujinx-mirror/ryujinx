@@ -4,9 +4,7 @@ namespace Ryujinx.Graphics.Shader.Translation
     {
         None = 0,
 
-        Compute       = 1 << 0,
-        DebugMode     = 1 << 1,
-        Unspecialized = 1 << 2,
-        DividePosXY   = 1 << 3
+        Compute   = 1 << 0,
+        DebugMode = 1 << 1
     }
 }

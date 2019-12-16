@@ -52,7 +52,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                 Operand baseAddrTrunc = Local();
 
-                Operand alignMask = Const(-config.Capabilities.StorageBufferOffsetAlignment);
+                Operand alignMask = Const(-config.QueryInfo(QueryInfoName.StorageBufferOffsetAlignment));
 
                 Operation andOp = new Operation(Instruction.BitwiseAnd, baseAddrTrunc, baseAddrLow, alignMask);
 

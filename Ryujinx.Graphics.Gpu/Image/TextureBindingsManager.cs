@@ -199,6 +199,21 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        public TextureDescriptor GetTextureDescriptor(GpuState state, int stageIndex, int handle)
+        {
+            int packedId = ReadPackedId(stageIndex, handle);
+
+            int textureId = UnpackTextureId(packedId);
+
+            var poolState = state.Get<PoolState>(MethodOffset.TexturePoolState);
+
+            ulong poolAddress = _context.MemoryManager.Translate(poolState.Address.Pack());
+
+            TexturePool texturePool = _texturePoolCache.FindOrCreate(poolAddress, poolState.MaximumId);
+
+            return texturePool.GetDescriptor(textureId);
+        }
+
         private int ReadPackedId(int stage, int wordOffset)
         {
             ulong address;

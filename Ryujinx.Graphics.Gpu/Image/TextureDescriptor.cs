@@ -101,6 +101,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             return (int)((Word5 >> 16) & 0x3fff) + 1;
         }
 
+        public bool UnpackTextureCoordNormalized()
+        {
+            return (Word5 & (1 << 31)) != 0;
+        }
+
         public int UnpackBaseLevel()
         {
             return (int)(Word7 & 0xf);

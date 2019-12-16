@@ -76,28 +76,6 @@ namespace Ryujinx.Graphics.Shader
         public bool              OmapSampleMask { get; }
         public bool              OmapDepth      { get; }
 
-        public int DepthRegister
-        {
-            get
-            {
-                int count = 0;
-
-                for (int index = 0; index < OmapTargets.Length; index++)
-                {
-                    for (int component = 0; component < 4; component++)
-                    {
-                        if (OmapTargets[index].ComponentEnabled(component))
-                        {
-                            count++;
-                        }
-                    }
-                }
-
-                // Depth register is always two registers after the last color output.
-                return count + 1;
-            }
-        }
-
         public ShaderHeader(Span<byte> code)
         {
             Span<int> header = MemoryMarshal.Cast<byte, int>(code);

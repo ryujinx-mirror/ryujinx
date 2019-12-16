@@ -129,6 +129,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             UpdateRenderTargets();
         }
 
+        public TextureDescriptor GetGraphicsTextureDescriptor(GpuState state, int stageIndex, int handle)
+        {
+            return _gpBindingsManager.GetTextureDescriptor(state, stageIndex, handle);
+        }
+
         private void UpdateRenderTargets()
         {
             bool anyChanged = false;

@@ -36,11 +36,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (texture == null)
             {
-                ulong address = Address + (ulong)(uint)id * DescriptorSize;
-
-                Span<byte> data = Context.PhysicalMemory.Read(address, DescriptorSize);
-
-                TextureDescriptor descriptor = MemoryMarshal.Cast<byte, TextureDescriptor>(data)[0];
+                TextureDescriptor descriptor = GetDescriptor(id);
 
                 TextureInfo info = GetInfo(descriptor);
 
@@ -64,6 +60,15 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             return texture;
+        }
+
+        public TextureDescriptor GetDescriptor(int id)
+        {
+            ulong address = Address + (ulong)(uint)id * DescriptorSize;
+
+            Span<byte> data = Context.PhysicalMemory.Read(address, DescriptorSize);
+
+            return MemoryMarshal.Cast<byte, TextureDescriptor>(data)[0];
         }
 
         protected override void InvalidateRangeImpl(ulong address, ulong size)

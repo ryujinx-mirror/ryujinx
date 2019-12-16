@@ -35,23 +35,11 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             if (context.Config.Stage == ShaderStage.Geometry)
             {
-                string inPrimitive = "points";
-
-                if ((context.Config.Flags & TranslationFlags.Unspecialized) != 0)
-                {
-                    inPrimitive = DefineNames.InputTopologyName;
-                }
+                string inPrimitive = ((InputTopology)context.Config.QueryInfo(QueryInfoName.PrimitiveTopology)).ToGlslString();
 
                 context.AppendLine($"layout ({inPrimitive}) in;");
 
-                string outPrimitive = "triangle_strip";
-
-                switch (context.Config.OutputTopology)
-                {
-                    case OutputTopology.LineStrip:     outPrimitive = "line_strip";     break;
-                    case OutputTopology.PointList:     outPrimitive = "points";         break;
-                    case OutputTopology.TriangleStrip: outPrimitive = "triangle_strip"; break;
-                }
+                string outPrimitive = context.Config.OutputTopology.ToGlslString();
 
                 int maxOutputVertices = context.Config.MaxOutputVertices;
 
@@ -75,16 +63,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             if (context.Config.Stage == ShaderStage.Compute)
             {
-                string size;
-
-                if ((context.Config.Flags & TranslationFlags.Unspecialized) != 0)
-                {
-                    size = DefineNames.SharedMemorySize;
-                }
-                else
-                {
-                    size = NumberFormatter.FormatInt(context.Config.Capabilities.MaximumComputeSharedMemorySize / 4);
-                }
+                string size = NumberFormatter.FormatInt(BitUtils.DivRoundUp(context.Config.QueryInfo(QueryInfoName.ComputeSharedMemorySize), 4));
 
                 context.AppendLine($"shared uint {DefaultNames.SharedMemoryName}[{size}];");
                 context.AppendLine();
@@ -136,19 +115,12 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
             }
             else
             {
-                string localSizeX = "1";
-                string localSizeY = "1";
-                string localSizeZ = "1";
-
-                if ((context.Config.Flags & TranslationFlags.Unspecialized) != 0)
-                {
-                    localSizeX = DefineNames.LocalSizeX;
-                    localSizeY = DefineNames.LocalSizeY;
-                    localSizeZ = DefineNames.LocalSizeZ;
-                }
+                string localSizeX = NumberFormatter.FormatInt(context.Config.QueryInfo(QueryInfoName.ComputeLocalSizeX));
+                string localSizeY = NumberFormatter.FormatInt(context.Config.QueryInfo(QueryInfoName.ComputeLocalSizeY));
+                string localSizeZ = NumberFormatter.FormatInt(context.Config.QueryInfo(QueryInfoName.ComputeLocalSizeZ));
 
                 context.AppendLine(
-                    $"layout (" +
+                    "layout (" +
                     $"local_size_x = {localSizeX}, " +
                     $"local_size_y = {localSizeY}, " +
                     $"local_size_z = {localSizeZ}) in;");
