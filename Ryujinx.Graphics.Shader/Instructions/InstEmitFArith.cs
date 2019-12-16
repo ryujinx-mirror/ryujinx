@@ -163,14 +163,20 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (boolFloat)
             {
-                context.Copy(dest, context.ConditionalSelect(res, ConstF(1), Const(0)));
+                res = context.ConditionalSelect(res, ConstF(1), Const(0));
+
+                context.Copy(dest, res);
+
+                SetFPZnFlags(context, res, op.SetCondCode);
             }
             else
             {
                 context.Copy(dest, res);
+
+                SetZnFlags(context, res, op.SetCondCode, op.Extended);
             }
 
-            // TODO: CC, X
+            // TODO: X
         }
 
         public static void Fsetp(EmitterContext context)
@@ -451,15 +457,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
 
             return res;
-        }
-
-        private static void SetFPZnFlags(EmitterContext context, Operand dest, bool setCC)
-        {
-            if (setCC)
-            {
-                context.Copy(GetZF(context), context.FPCompareEqual(dest, ConstF(0)));
-                context.Copy(GetNF(context), context.FPCompareLess (dest, ConstF(0)));
-            }
         }
 
         private static Operand[] GetHfmaSrcA(EmitterContext context)

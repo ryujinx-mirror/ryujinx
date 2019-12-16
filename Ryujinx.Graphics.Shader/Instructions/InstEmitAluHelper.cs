@@ -84,5 +84,14 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             context.Copy(GetNF(context), context.ICompareLess(dest, Const(0)));
         }
+
+        public static void SetFPZnFlags(EmitterContext context, Operand dest, bool setCC)
+        {
+            if (setCC)
+            {
+                context.Copy(GetZF(context), context.FPCompareEqual(dest, ConstF(0)));
+                context.Copy(GetNF(context), context.FPCompareLess (dest, ConstF(0)));
+            }
+        }
     }
 }
