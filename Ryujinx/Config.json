@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "graphics_shaders_dump_path": "",
     "logging_enable_debug": false,
     "logging_enable_stub": true,
@@ -7,9 +8,7 @@
     "logging_enable_error": true,
     "logging_enable_guest": true,
     "logging_enable_fs_access_log": false,
-    "logging_filtered_classes": [
-        
-    ],
+    "logging_filtered_classes": [],
     "enable_file_log": true,
     "system_language": "AmericanEnglish",
     "docked_mode": false,
@@ -32,9 +31,7 @@
         "file_size_column": true,
         "path_column": true
     },
-    "game_dirs": [
-        
-    ],
+    "game_dirs": [],
     "enable_custom_theme": false,
     "custom_theme_path": "",
     "enable_keyboard": false,

@@ -1,12 +1,12 @@
 ﻿using Gtk;
-using Ryujinx.HLE.HOS.SystemState;
-using Ryujinx.HLE.Input;
-using Ryujinx.Ui.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Ryujinx.Configuration;
+using Ryujinx.Configuration.System;
+using Ryujinx.Configuration.Hid;
 
 using GUI = Gtk.Builder.ObjectAttribute;
 
@@ -14,10 +14,6 @@ namespace Ryujinx.Ui
 {
     public class SwitchSettings : Window
     {
-        internal static Configuration SwitchConfig { get; set; }
-
-        private readonly HLE.Switch _device;
-
         private static ListStore _gameDirsBoxStore;
 
         private static bool _listeningForKeypress;
@@ -83,15 +79,11 @@ namespace Ryujinx.Ui
 #pragma warning restore CS0649
 #pragma warning restore IDE0044
 
-        public static void ConfigureSettings(Configuration instance) { SwitchConfig = instance; }
+        public SwitchSettings() : this(new Builder("Ryujinx.Ui.SwitchSettings.glade")) { }
 
-        public SwitchSettings(HLE.Switch device) : this(new Builder("Ryujinx.Ui.SwitchSettings.glade"), device) { }
-
-        private SwitchSettings(Builder builder, HLE.Switch device) : base(builder.GetObject("_settingsWin").Handle)
+        private SwitchSettings(Builder builder) : base(builder.GetObject("_settingsWin").Handle)
         {
             builder.Autoconnect(this);
-
-            _device = device;
 
             _settingsWin.Icon        = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png");
             _controller1Image.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.JoyCon.png", 500, 500);
@@ -124,60 +116,123 @@ namespace Ryujinx.Ui
             _controller1Type.Changed += (sender, args) => Controller_Changed(sender, args, _controller1Type.ActiveId, _controller1Image);
 
             //Setup Currents
-            if (SwitchConfig.EnableFileLog)             _fileLogToggle.Click();
-            if (SwitchConfig.LoggingEnableError)        _errorLogToggle.Click();
-            if (SwitchConfig.LoggingEnableWarn)         _warningLogToggle.Click();
-            if (SwitchConfig.LoggingEnableInfo)         _infoLogToggle.Click();
-            if (SwitchConfig.LoggingEnableStub)         _stubLogToggle.Click();
-            if (SwitchConfig.LoggingEnableDebug)        _debugLogToggle.Click();
-            if (SwitchConfig.LoggingEnableGuest)        _guestLogToggle.Click();
-            if (SwitchConfig.LoggingEnableFsAccessLog)  _fsAccessLogToggle.Click();
-            if (SwitchConfig.DockedMode)                _dockedModeToggle.Click();
-            if (SwitchConfig.EnableDiscordIntegration)  _discordToggle.Click();
-            if (SwitchConfig.EnableVsync)               _vSyncToggle.Click();
-            if (SwitchConfig.EnableMulticoreScheduling) _multiSchedToggle.Click();
-            if (SwitchConfig.EnableFsIntegrityChecks)   _fsicToggle.Click();
-            if (SwitchConfig.IgnoreMissingServices)     _ignoreToggle.Click();
-            if (SwitchConfig.EnableKeyboard)            _directKeyboardAccess.Click();
-            if (SwitchConfig.EnableCustomTheme)         _custThemeToggle.Click();
+            if (ConfigurationState.Instance.Logger.EnableFileLog)
+            {
+                _fileLogToggle.Click();
+            }
 
-            _systemLanguageSelect.SetActiveId(SwitchConfig.SystemLanguage.ToString());
-            _controller1Type     .SetActiveId(SwitchConfig.ControllerType.ToString());
+            if (ConfigurationState.Instance.Logger.EnableError)
+            {
+                _errorLogToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.Logger.EnableWarn)
+            {
+                _warningLogToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.Logger.EnableInfo)
+            {
+                _infoLogToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.Logger.EnableStub)
+            {
+                _stubLogToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.Logger.EnableDebug)
+            {
+                _debugLogToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.Logger.EnableGuest)
+            {
+                _guestLogToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.Logger.EnableFsAccessLog)
+            {
+                _fsAccessLogToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.System.EnableDockedMode)
+            {
+                _dockedModeToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.EnableDiscordIntegration)
+            {
+                _discordToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.Graphics.EnableVsync)
+            {
+                _vSyncToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.System.EnableMulticoreScheduling)
+            {
+                _multiSchedToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.System.EnableFsIntegrityChecks)
+            {
+                _fsicToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.System.IgnoreMissingServices)
+            {
+                _ignoreToggle.Click();
+            }
+
+            if (ConfigurationState.Instance.Hid.EnableKeyboard)
+            {
+                _directKeyboardAccess.Click();
+            }
+
+            if (ConfigurationState.Instance.Ui.EnableCustomTheme)
+            {
+                _custThemeToggle.Click();
+            }
+
+            _systemLanguageSelect.SetActiveId(ConfigurationState.Instance.System.Language.Value.ToString());
+            _controller1Type     .SetActiveId(ConfigurationState.Instance.Hid.ControllerType.Value.ToString());
             Controller_Changed(null, null, _controller1Type.ActiveId, _controller1Image);
 
-            _lStickUp1.Label     = SwitchConfig.KeyboardControls.LeftJoycon.StickUp.ToString();
-            _lStickDown1.Label   = SwitchConfig.KeyboardControls.LeftJoycon.StickDown.ToString();
-            _lStickLeft1.Label   = SwitchConfig.KeyboardControls.LeftJoycon.StickLeft.ToString();
-            _lStickRight1.Label  = SwitchConfig.KeyboardControls.LeftJoycon.StickRight.ToString();
-            _lStickButton1.Label = SwitchConfig.KeyboardControls.LeftJoycon.StickButton.ToString();
-            _dpadUp1.Label       = SwitchConfig.KeyboardControls.LeftJoycon.DPadUp.ToString();
-            _dpadDown1.Label     = SwitchConfig.KeyboardControls.LeftJoycon.DPadDown.ToString();
-            _dpadLeft1.Label     = SwitchConfig.KeyboardControls.LeftJoycon.DPadLeft.ToString();
-            _dpadRight1.Label    = SwitchConfig.KeyboardControls.LeftJoycon.DPadRight.ToString();
-            _minus1.Label        = SwitchConfig.KeyboardControls.LeftJoycon.ButtonMinus.ToString();
-            _l1.Label            = SwitchConfig.KeyboardControls.LeftJoycon.ButtonL.ToString();
-            _zL1.Label           = SwitchConfig.KeyboardControls.LeftJoycon.ButtonZl.ToString();
-            _rStickUp1.Label     = SwitchConfig.KeyboardControls.RightJoycon.StickUp.ToString();
-            _rStickDown1.Label   = SwitchConfig.KeyboardControls.RightJoycon.StickDown.ToString();
-            _rStickLeft1.Label   = SwitchConfig.KeyboardControls.RightJoycon.StickLeft.ToString();
-            _rStickRight1.Label  = SwitchConfig.KeyboardControls.RightJoycon.StickRight.ToString();
-            _rStickButton1.Label = SwitchConfig.KeyboardControls.RightJoycon.StickButton.ToString();
-            _a1.Label            = SwitchConfig.KeyboardControls.RightJoycon.ButtonA.ToString();
-            _b1.Label            = SwitchConfig.KeyboardControls.RightJoycon.ButtonB.ToString();
-            _x1.Label            = SwitchConfig.KeyboardControls.RightJoycon.ButtonX.ToString();
-            _y1.Label            = SwitchConfig.KeyboardControls.RightJoycon.ButtonY.ToString();
-            _plus1.Label         = SwitchConfig.KeyboardControls.RightJoycon.ButtonPlus.ToString();
-            _r1.Label            = SwitchConfig.KeyboardControls.RightJoycon.ButtonR.ToString();
-            _zR1.Label           = SwitchConfig.KeyboardControls.RightJoycon.ButtonZr.ToString();
+            _lStickUp1.Label     = ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon.StickUp.ToString();
+            _lStickDown1.Label   = ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon.StickDown.ToString();
+            _lStickLeft1.Label   = ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon.StickLeft.ToString();
+            _lStickRight1.Label  = ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon.StickRight.ToString();
+            _lStickButton1.Label = ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon.StickButton.ToString();
+            _dpadUp1.Label       = ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon.DPadUp.ToString();
+            _dpadDown1.Label     = ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon.DPadDown.ToString();
+            _dpadLeft1.Label     = ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon.DPadLeft.ToString();
+            _dpadRight1.Label    = ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon.DPadRight.ToString();
+            _minus1.Label        = ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon.ButtonMinus.ToString();
+            _l1.Label            = ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon.ButtonL.ToString();
+            _zL1.Label           = ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon.ButtonZl.ToString();
+            _rStickUp1.Label     = ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon.StickUp.ToString();
+            _rStickDown1.Label   = ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon.StickDown.ToString();
+            _rStickLeft1.Label   = ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon.StickLeft.ToString();
+            _rStickRight1.Label  = ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon.StickRight.ToString();
+            _rStickButton1.Label = ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon.StickButton.ToString();
+            _a1.Label            = ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon.ButtonA.ToString();
+            _b1.Label            = ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon.ButtonB.ToString();
+            _x1.Label            = ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon.ButtonX.ToString();
+            _y1.Label            = ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon.ButtonY.ToString();
+            _plus1.Label         = ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon.ButtonPlus.ToString();
+            _r1.Label            = ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon.ButtonR.ToString();
+            _zR1.Label           = ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon.ButtonZr.ToString();
 
-            _custThemePath.Buffer.Text           = SwitchConfig.CustomThemePath;
-            _graphicsShadersDumpPath.Buffer.Text = SwitchConfig.GraphicsShadersDumpPath;
-            _fsLogSpinAdjustment.Value           = SwitchConfig.FsGlobalAccessLogMode;
+            _custThemePath.Buffer.Text           = ConfigurationState.Instance.Ui.CustomThemePath;
+            _graphicsShadersDumpPath.Buffer.Text = ConfigurationState.Instance.Graphics.ShadersDumpPath;
+            _fsLogSpinAdjustment.Value           = ConfigurationState.Instance.System.FsGlobalAccessLogMode;
 
             _gameDirsBox.AppendColumn("", new CellRendererText(), "text", 0);
             _gameDirsBoxStore  = new ListStore(typeof(string));
             _gameDirsBox.Model = _gameDirsBoxStore;
-            foreach (string gameDir in SwitchConfig.GameDirs)
+            foreach (string gameDir in ConfigurationState.Instance.Ui.GameDirs.Value)
             {
                 _gameDirsBoxStore.AppendValues(gameDir);
             }
@@ -208,7 +263,7 @@ namespace Ryujinx.Ui
                     string key    = keyPressed.Event.Key.ToString();
                     string capKey = key.First().ToString().ToUpper() + key.Substring(1);
 
-                    if (Enum.IsDefined(typeof(OpenTK.Input.Key), capKey))
+                    if (Enum.IsDefined(typeof(Configuration.Hid.Key), capKey))
                     {
                         button.Label = capKey;
                     }
@@ -325,65 +380,63 @@ namespace Ryujinx.Ui
                 _gameDirsBoxStore.IterNext(ref treeIter);
             }
 
-            SwitchConfig.LoggingEnableError        = _errorLogToggle.Active;
-            SwitchConfig.LoggingEnableWarn         = _warningLogToggle.Active;
-            SwitchConfig.LoggingEnableInfo         = _infoLogToggle.Active;
-            SwitchConfig.LoggingEnableStub         = _stubLogToggle.Active;
-            SwitchConfig.LoggingEnableDebug        = _debugLogToggle.Active;
-            SwitchConfig.LoggingEnableGuest        = _guestLogToggle.Active;
-            SwitchConfig.LoggingEnableFsAccessLog  = _fsAccessLogToggle.Active;
-            SwitchConfig.EnableFileLog             = _fileLogToggle.Active;
-            SwitchConfig.DockedMode                = _dockedModeToggle.Active;
-            SwitchConfig.EnableDiscordIntegration  = _discordToggle.Active;
-            SwitchConfig.EnableVsync               = _vSyncToggle.Active;
-            SwitchConfig.EnableMulticoreScheduling = _multiSchedToggle.Active;
-            SwitchConfig.EnableFsIntegrityChecks   = _fsicToggle.Active;
-            SwitchConfig.IgnoreMissingServices     = _ignoreToggle.Active;
-            SwitchConfig.EnableKeyboard            = _directKeyboardAccess.Active;
-            SwitchConfig.EnableCustomTheme         = _custThemeToggle.Active;
+            ConfigurationState.Instance.Logger.EnableError.Value               = _errorLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableWarn.Value                = _warningLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableInfo.Value                = _infoLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableStub.Value                = _stubLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableDebug.Value               = _debugLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableGuest.Value               = _guestLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableFsAccessLog.Value         = _fsAccessLogToggle.Active;
+            ConfigurationState.Instance.Logger.EnableFileLog.Value             = _fileLogToggle.Active;
+            ConfigurationState.Instance.System.EnableDockedMode.Value          = _dockedModeToggle.Active;
+            ConfigurationState.Instance.EnableDiscordIntegration.Value         = _discordToggle.Active;
+            ConfigurationState.Instance.Graphics.EnableVsync.Value             = _vSyncToggle.Active;
+            ConfigurationState.Instance.System.EnableMulticoreScheduling.Value = _multiSchedToggle.Active;
+            ConfigurationState.Instance.System.EnableFsIntegrityChecks.Value   = _fsicToggle.Active;
+            ConfigurationState.Instance.System.IgnoreMissingServices.Value     = _ignoreToggle.Active;
+            ConfigurationState.Instance.Hid.EnableKeyboard.Value               = _directKeyboardAccess.Active;
+            ConfigurationState.Instance.Ui.EnableCustomTheme.Value             = _custThemeToggle.Active;
 
-            SwitchConfig.KeyboardControls.LeftJoycon = new NpadKeyboardLeft()
+            ConfigurationState.Instance.Hid.KeyboardControls.Value.LeftJoycon = new NpadKeyboardLeft()
             {
-                StickUp     = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _lStickUp1.Label),
-                StickDown   = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _lStickDown1.Label),
-                StickLeft   = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _lStickLeft1.Label),
-                StickRight  = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _lStickRight1.Label),
-                StickButton = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _lStickButton1.Label),
-                DPadUp      = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _dpadUp1.Label),
-                DPadDown    = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _dpadDown1.Label),
-                DPadLeft    = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _dpadLeft1.Label),
-                DPadRight   = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _dpadRight1.Label),
-                ButtonMinus = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _minus1.Label),
-                ButtonL     = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _l1.Label),
-                ButtonZl    = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _zL1.Label),
+                StickUp     = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _lStickUp1.Label),
+                StickDown   = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _lStickDown1.Label),
+                StickLeft   = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _lStickLeft1.Label),
+                StickRight  = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _lStickRight1.Label),
+                StickButton = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _lStickButton1.Label),
+                DPadUp      = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _dpadUp1.Label),
+                DPadDown    = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _dpadDown1.Label),
+                DPadLeft    = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _dpadLeft1.Label),
+                DPadRight   = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _dpadRight1.Label),
+                ButtonMinus = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _minus1.Label),
+                ButtonL     = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _l1.Label),
+                ButtonZl    = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _zL1.Label),
             };
 
-            SwitchConfig.KeyboardControls.RightJoycon = new NpadKeyboardRight()
+            ConfigurationState.Instance.Hid.KeyboardControls.Value.RightJoycon = new NpadKeyboardRight()
             {
-                StickUp     = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _rStickUp1.Label),
-                StickDown   = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _rStickDown1.Label),
-                StickLeft   = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _rStickLeft1.Label),
-                StickRight  = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _rStickRight1.Label),
-                StickButton = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _rStickButton1.Label),
-                ButtonA     = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _a1.Label),
-                ButtonB     = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _b1.Label),
-                ButtonX     = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _x1.Label),
-                ButtonY     = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _y1.Label),
-                ButtonPlus  = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _plus1.Label),
-                ButtonR     = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _r1.Label),
-                ButtonZr    = (OpenTK.Input.Key)Enum.Parse(typeof(OpenTK.Input.Key), _zR1.Label),
+                StickUp     = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _rStickUp1.Label),
+                StickDown   = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _rStickDown1.Label),
+                StickLeft   = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _rStickLeft1.Label),
+                StickRight  = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _rStickRight1.Label),
+                StickButton = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _rStickButton1.Label),
+                ButtonA     = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _a1.Label),
+                ButtonB     = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _b1.Label),
+                ButtonX     = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _x1.Label),
+                ButtonY     = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _y1.Label),
+                ButtonPlus  = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _plus1.Label),
+                ButtonR     = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _r1.Label),
+                ButtonZr    = (Configuration.Hid.Key)Enum.Parse(typeof(Configuration.Hid.Key), _zR1.Label),
             };
 
-            SwitchConfig.SystemLanguage          = (SystemLanguage)Enum.Parse(typeof(SystemLanguage), _systemLanguageSelect.ActiveId);
-            SwitchConfig.ControllerType          = (ControllerStatus)Enum.Parse(typeof(ControllerStatus), _controller1Type.ActiveId);
-            SwitchConfig.CustomThemePath         = _custThemePath.Buffer.Text;
-            SwitchConfig.GraphicsShadersDumpPath = _graphicsShadersDumpPath.Buffer.Text;
-            SwitchConfig.GameDirs                = gameDirs;
-            SwitchConfig.FsGlobalAccessLogMode   = (int)_fsLogSpinAdjustment.Value;
+            ConfigurationState.Instance.System.Language.Value              = (Language)Enum.Parse(typeof(Language), _systemLanguageSelect.ActiveId);
+            ConfigurationState.Instance.Hid.ControllerType.Value           = (ControllerType)Enum.Parse(typeof(ControllerType), _controller1Type.ActiveId);
+            ConfigurationState.Instance.Ui.CustomThemePath.Value           = _custThemePath.Buffer.Text;
+            ConfigurationState.Instance.Graphics.ShadersDumpPath.Value     = _graphicsShadersDumpPath.Buffer.Text;
+            ConfigurationState.Instance.Ui.GameDirs.Value                  = gameDirs;
+            ConfigurationState.Instance.System.FsGlobalAccessLogMode.Value = (int)_fsLogSpinAdjustment.Value;
 
-            Configuration.SaveConfig(SwitchConfig, System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json"));
-            Configuration.Configure(_device, SwitchConfig);
-
+            MainWindow.SaveConfig();
             MainWindow.ApplyTheme();
 #pragma warning disable CS4014
             MainWindow.UpdateGameTable();

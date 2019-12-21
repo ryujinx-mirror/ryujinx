@@ -1,30 +1,22 @@
 using JsonPrettyPrinterPlus;
-using LibHac.FsSystem;
-using OpenTK.Input;
-using Ryujinx.Common;
 using Ryujinx.Common.Logging;
-using Ryujinx.HLE;
-using Ryujinx.HLE.HOS.SystemState;
-using Ryujinx.HLE.HOS.Services;
-using Ryujinx.HLE.Input;
-using Ryujinx.Ui;
-using Ryujinx.Ui.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using Utf8Json;
 using Utf8Json.Resolvers;
+using Ryujinx.Configuration.System;
+using Ryujinx.Configuration.Hid;
+using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.UI.Input;
+using Ryujinx.Configuration.Ui;
 
-namespace Ryujinx
+namespace Ryujinx.Configuration
 {
-    public class Configuration
+    public class ConfigurationFileFormat
     {
-        /// <summary>
-        /// The default configuration instance
-        /// </summary>
-        public static Configuration Instance { get; private set; }
+        public int Version { get; set; }
 
         /// <summary>
         /// Dumps shaders in this local directory
@@ -79,7 +71,7 @@ namespace Ryujinx
         /// <summary>
         /// Change System Language
         /// </summary>
-        public SystemLanguage SystemLanguage { get; set; }
+        public Language SystemLanguage { get; set; }
 
         /// <summary>
         /// Enables or disables Docked Mode
@@ -119,7 +111,7 @@ namespace Ryujinx
         /// <summary>
         ///  The primary controller's type
         /// </summary>
-        public ControllerStatus ControllerType { get; set; }
+        public ControllerType ControllerType { get; set; }
 
         /// <summary>
         /// Used to toggle columns in the GUI
@@ -154,13 +146,13 @@ namespace Ryujinx
         /// <summary>
         /// Controller control bindings
         /// </summary>
-        public Ui.Input.NpadController JoystickControls { get; private set; }
+        public NpadController JoystickControls { get; set; }
 
         /// <summary>
         /// Loads a configuration file from disk
         /// </summary>
         /// <param name="path">The path to the JSON configuration file</param>
-        public static void Load(string path)
+        public static ConfigurationFileFormat Load(string path)
         {
             var resolver = CompositeResolver.Create(
                 new[] { new ConfigurationEnumFormatter<Key>() },
@@ -169,24 +161,7 @@ namespace Ryujinx
 
             using (Stream stream = File.OpenRead(path))
             {
-                Instance = JsonSerializer.Deserialize<Configuration>(stream, resolver);
-            }
-        }
-
-        /// <summary>
-        /// Loads a configuration file asynchronously from disk
-        /// </summary>
-        /// <param name="path">The path to the JSON configuration file</param>
-        public static async Task LoadAsync(string path)
-        {
-            IJsonFormatterResolver resolver = CompositeResolver.Create(
-                new[] { new ConfigurationEnumFormatter<Key>()  },
-                new[] { StandardResolver.AllowPrivateSnakeCase }
-            );
-
-            using (Stream stream = File.OpenRead(path))
-            {
-                Instance = await JsonSerializer.DeserializeAsync<Configuration>(stream, resolver);
+                return JsonSerializer.Deserialize<ConfigurationFileFormat>(stream, resolver);
             }
         }
 
@@ -194,106 +169,15 @@ namespace Ryujinx
         /// Save a configuration file to disk
         /// </summary>
         /// <param name="path">The path to the JSON configuration file</param>
-        public static void SaveConfig(Configuration config, string path)
+        public void SaveConfig(string path)
         {
             IJsonFormatterResolver resolver = CompositeResolver.Create(
                 new[] { new ConfigurationEnumFormatter<Key>()  },
                 new[] { StandardResolver.AllowPrivateSnakeCase }
             );
 
-            byte[] data = JsonSerializer.Serialize(config, resolver);
+            byte[] data = JsonSerializer.Serialize(this, resolver);
             File.WriteAllText(path, Encoding.UTF8.GetString(data, 0, data.Length).PrettyPrintJson());
-        }
-
-        /// <summary>
-        /// Configures a <see cref="Switch"/> instance
-        /// </summary>
-        /// <param name="device">The instance to configure</param>
-        public static void InitialConfigure(Switch device)
-        {
-            if (Instance == null)
-            {
-                throw new InvalidOperationException("Configuration has not been loaded yet.");
-            }
-
-            SwitchSettings.ConfigureSettings(Instance);
-
-            Logger.AddTarget(new AsyncLogTargetWrapper(
-                new ConsoleLogTarget(),
-                1000,
-                AsyncLogTargetOverflowAction.Block
-            ));
-
-            if (Instance.EnableFileLog)
-            {
-                Logger.AddTarget(new AsyncLogTargetWrapper(
-                    new FileLogTarget(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Ryujinx.log")),
-                    1000,
-                    AsyncLogTargetOverflowAction.Block
-                ));
-            }
-
-            Configure(device, Instance);
-        }
-
-        public static void Configure(Switch device, Configuration SwitchConfig)
-        {
-            GraphicsConfig.ShadersDumpPath = SwitchConfig.GraphicsShadersDumpPath;
-
-            Logger.SetEnable(LogLevel.Debug,     SwitchConfig.LoggingEnableDebug      );
-            Logger.SetEnable(LogLevel.Stub,      SwitchConfig.LoggingEnableStub       );
-            Logger.SetEnable(LogLevel.Info,      SwitchConfig.LoggingEnableInfo       );
-            Logger.SetEnable(LogLevel.Warning,   SwitchConfig.LoggingEnableWarn       );
-            Logger.SetEnable(LogLevel.Error,     SwitchConfig.LoggingEnableError      );
-            Logger.SetEnable(LogLevel.Guest,     SwitchConfig.LoggingEnableGuest      );
-            Logger.SetEnable(LogLevel.AccessLog, SwitchConfig.LoggingEnableFsAccessLog);
-
-            if (SwitchConfig.LoggingFilteredClasses.Length > 0)
-            {
-                foreach (var logClass in EnumExtensions.GetValues<LogClass>())
-                {
-                    Logger.SetEnable(logClass, false);
-                }
-
-                foreach (var logClass in SwitchConfig.LoggingFilteredClasses)
-                {
-                    Logger.SetEnable(logClass, true);
-                }
-            }
-
-            MainWindow.DiscordIntegrationEnabled = SwitchConfig.EnableDiscordIntegration;
-
-            device.EnableDeviceVsync = SwitchConfig.EnableVsync;
-
-            device.System.State.DockedMode = SwitchConfig.DockedMode;
-
-            device.System.State.SetLanguage(SwitchConfig.SystemLanguage);
-
-            if (SwitchConfig.EnableMulticoreScheduling)
-            {
-                device.System.EnableMultiCoreScheduling();
-            }
-
-            device.System.FsIntegrityCheckLevel = SwitchConfig.EnableFsIntegrityChecks
-                ? IntegrityCheckLevel.ErrorOnInvalid
-                : IntegrityCheckLevel.None;
-
-            device.System.GlobalAccessLogMode = SwitchConfig.FsGlobalAccessLogMode;
-
-            ServiceConfiguration.IgnoreMissingServices = SwitchConfig.IgnoreMissingServices;
-        }
-
-        public static void ConfigureHid(Switch device, Configuration SwitchConfig)
-        {
-            if (SwitchConfig.JoystickControls.Enabled)
-            {
-                if (!Joystick.GetState(SwitchConfig.JoystickControls.Index).IsConnected)
-                {
-                    SwitchConfig.JoystickControls.SetEnabled(false);
-                }
-            }
-            device.Hid.InitializePrimaryController(SwitchConfig.ControllerType);
-            device.Hid.InitializeKeyboard();
         }
 
         private class ConfigurationEnumFormatter<T> : IJsonFormatter<T>

@@ -9,6 +9,10 @@ namespace Ryujinx.Common.Logging
 
         private readonly ILogFormatter _formatter;
 
+        private readonly string _name;
+
+        string ILogTarget.Name { get => _name; }
+
         static ConsoleLogTarget()
         {
             _logColors = new ConcurrentDictionary<LogLevel, ConsoleColor> {
@@ -19,9 +23,10 @@ namespace Ryujinx.Common.Logging
             };
         }
 
-        public ConsoleLogTarget()
+        public ConsoleLogTarget(string name)
         {
             _formatter = new DefaultLogFormatter();
+            _name      = name;
         }
 
         public void Log(object sender, LogEventArgs args)

@@ -1,8 +1,12 @@
+using LibHac.FsSystem;
 using Ryujinx.Audio;
+using Ryujinx.Configuration;
 using Ryujinx.Graphics;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
+using Ryujinx.HLE.HOS.Services;
+using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Input;
 using System;
 using System.Threading;
@@ -58,6 +62,29 @@ namespace Ryujinx.HLE
             Hid = new Hid(this, System.HidBaseAddress);
 
             VsyncEvent = new AutoResetEvent(true);
+        }
+
+        public void Initialize()
+        {
+            System.State.SetLanguage((SystemLanguage)ConfigurationState.Instance.System.Language.Value);
+
+            EnableDeviceVsync = ConfigurationState.Instance.Graphics.EnableVsync;
+
+            // TODO: Make this reloadable and implement Docking/Undocking logic.
+            System.State.DockedMode = ConfigurationState.Instance.System.EnableDockedMode;
+
+            if (ConfigurationState.Instance.System.EnableMulticoreScheduling)
+            {
+                System.EnableMultiCoreScheduling();
+            }
+
+            System.FsIntegrityCheckLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks
+                ? IntegrityCheckLevel.ErrorOnInvalid
+                : IntegrityCheckLevel.None;
+
+            System.GlobalAccessLogMode = ConfigurationState.Instance.System.FsGlobalAccessLogMode;
+
+            ServiceConfiguration.IgnoreMissingServices = ConfigurationState.Instance.System.IgnoreMissingServices;
         }
 
         public void LoadCart(string exeFsDir, string romFsFile = null)

@@ -1,160 +1,57 @@
 ﻿using OpenTK;
 using OpenTK.Input;
+using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.HLE.Input;
 using System;
 
+using InnerNpadController = Ryujinx.Common.Configuration.Hid.NpadController;
+
 namespace Ryujinx.Ui.Input
 {
-    public enum ControllerInputId
-    {
-        Button0,
-        Button1,
-        Button2,
-        Button3,
-        Button4,
-        Button5,
-        Button6,
-        Button7,
-        Button8,
-        Button9,
-        Button10,
-        Button11,
-        Button12,
-        Button13,
-        Button14,
-        Button15,
-        Button16,
-        Button17,
-        Button18,
-        Button19,
-        Button20,
-        Axis0,
-        Axis1,
-        Axis2,
-        Axis3,
-        Axis4,
-        Axis5,
-        Hat0Up,
-        Hat0Down,
-        Hat0Left,
-        Hat0Right,
-        Hat1Up,
-        Hat1Down,
-        Hat1Left,
-        Hat1Right,
-        Hat2Up,
-        Hat2Down,
-        Hat2Left,
-        Hat2Right,
-    }
-
-    public struct NpadControllerLeft
-    {
-        public ControllerInputId Stick;
-        public ControllerInputId StickButton;
-        public ControllerInputId ButtonMinus;
-        public ControllerInputId ButtonL;
-        public ControllerInputId ButtonZl;
-        public ControllerInputId DPadUp;
-        public ControllerInputId DPadDown;
-        public ControllerInputId DPadLeft;
-        public ControllerInputId DPadRight;
-    }
-
-    public struct NpadControllerRight
-    {
-        public ControllerInputId Stick;
-        public ControllerInputId StickButton;
-        public ControllerInputId ButtonA;
-        public ControllerInputId ButtonB;
-        public ControllerInputId ButtonX;
-        public ControllerInputId ButtonY;
-        public ControllerInputId ButtonPlus;
-        public ControllerInputId ButtonR;
-        public ControllerInputId ButtonZr;
-    }
-
     public class NpadController
     {
-        /// <summary>
-        /// Enables or disables controller support
-        /// </summary>
-        public bool Enabled { get; private set; }
+        private InnerNpadController _inner;
 
-        /// <summary>
-        /// Controller Device Index
-        /// </summary>
-        public int Index { get; private set; }
-
-        /// <summary>
-        /// Controller Analog Stick Deadzone
-        /// </summary>
-        public float Deadzone { get; private set; }
-
-        /// <summary>
-        /// Controller Trigger Threshold
-        /// </summary>
-        public float TriggerThreshold { get; private set; }
-
-        /// <summary>
-        /// Left JoyCon Controller Bindings
-        /// </summary>
-        public NpadControllerLeft LeftJoycon { get; private set; }
-
-        /// <summary>
-        /// Right JoyCon Controller Bindings
-        /// </summary>
-        public NpadControllerRight RightJoycon { get; private set; }
-
-        public NpadController(
-            bool                enabled,
-            int                 index,
-            float               deadzone,
-            float               triggerThreshold,
-            NpadControllerLeft  leftJoycon,
-            NpadControllerRight rightJoycon)
+        // NOTE: This should be initialized AFTER GTK for compat reasons with OpenTK SDL2 backend and GTK on Linux.
+        // BODY: Usage of Joystick.GetState must be defer to after GTK full initialization. Otherwise, GTK will segfault because SDL2 was already init *sighs*
+        public NpadController(InnerNpadController inner)
         {
-            Enabled          = enabled;
-            Index            = index;
-            Deadzone         = deadzone;
-            TriggerThreshold = triggerThreshold;
-            LeftJoycon       = leftJoycon;
-            RightJoycon      = rightJoycon;
+            _inner = inner;
         }
 
-        public void SetEnabled(bool enabled)
+        private bool IsEnabled()
         {
-            Enabled = enabled;
+            return _inner.Enabled && Joystick.GetState(_inner.Index).IsConnected;
         }
 
         public ControllerButtons GetButtons()
         {
-            if (!Enabled)
+            if (!IsEnabled())
             {
                 return 0;
             }
 
-            JoystickState joystickState = Joystick.GetState(Index);
+            JoystickState joystickState = Joystick.GetState(_inner.Index);
 
             ControllerButtons buttons = 0;
 
-            if (IsActivated(joystickState, LeftJoycon.DPadUp))       buttons |= ControllerButtons.DpadUp;
-            if (IsActivated(joystickState, LeftJoycon.DPadDown))     buttons |= ControllerButtons.DpadDown;
-            if (IsActivated(joystickState, LeftJoycon.DPadLeft))     buttons |= ControllerButtons.DpadLeft;
-            if (IsActivated(joystickState, LeftJoycon.DPadRight))    buttons |= ControllerButtons.DPadRight;
-            if (IsActivated(joystickState, LeftJoycon.StickButton))  buttons |= ControllerButtons.StickLeft;
-            if (IsActivated(joystickState, LeftJoycon.ButtonMinus))  buttons |= ControllerButtons.Minus;
-            if (IsActivated(joystickState, LeftJoycon.ButtonL))      buttons |= ControllerButtons.L;
-            if (IsActivated(joystickState, LeftJoycon.ButtonZl))     buttons |= ControllerButtons.Zl;
+            if (IsActivated(joystickState, _inner.LeftJoycon.DPadUp))       buttons |= ControllerButtons.DpadUp;
+            if (IsActivated(joystickState, _inner.LeftJoycon.DPadDown))     buttons |= ControllerButtons.DpadDown;
+            if (IsActivated(joystickState, _inner.LeftJoycon.DPadLeft))     buttons |= ControllerButtons.DpadLeft;
+            if (IsActivated(joystickState, _inner.LeftJoycon.DPadRight))    buttons |= ControllerButtons.DPadRight;
+            if (IsActivated(joystickState, _inner.LeftJoycon.StickButton))  buttons |= ControllerButtons.StickLeft;
+            if (IsActivated(joystickState, _inner.LeftJoycon.ButtonMinus))  buttons |= ControllerButtons.Minus;
+            if (IsActivated(joystickState, _inner.LeftJoycon.ButtonL))      buttons |= ControllerButtons.L;
+            if (IsActivated(joystickState, _inner.LeftJoycon.ButtonZl))     buttons |= ControllerButtons.Zl;
 
-            if (IsActivated(joystickState, RightJoycon.ButtonA))     buttons |= ControllerButtons.A;
-            if (IsActivated(joystickState, RightJoycon.ButtonB))     buttons |= ControllerButtons.B;
-            if (IsActivated(joystickState, RightJoycon.ButtonX))     buttons |= ControllerButtons.X;
-            if (IsActivated(joystickState, RightJoycon.ButtonY))     buttons |= ControllerButtons.Y;
-            if (IsActivated(joystickState, RightJoycon.StickButton)) buttons |= ControllerButtons.StickRight;
-            if (IsActivated(joystickState, RightJoycon.ButtonPlus))  buttons |= ControllerButtons.Plus;
-            if (IsActivated(joystickState, RightJoycon.ButtonR))     buttons |= ControllerButtons.R;
-            if (IsActivated(joystickState, RightJoycon.ButtonZr))    buttons |= ControllerButtons.Zr;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonA))     buttons |= ControllerButtons.A;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonB))     buttons |= ControllerButtons.B;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonX))     buttons |= ControllerButtons.X;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonY))     buttons |= ControllerButtons.Y;
+            if (IsActivated(joystickState, _inner.RightJoycon.StickButton)) buttons |= ControllerButtons.StickRight;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonPlus))  buttons |= ControllerButtons.Plus;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonR))     buttons |= ControllerButtons.R;
+            if (IsActivated(joystickState, _inner.RightJoycon.ButtonZr))    buttons |= ControllerButtons.Zr;
 
             return buttons;
         }
@@ -169,7 +66,7 @@ namespace Ryujinx.Ui.Input
             {
                 int axis = controllerInputId - ControllerInputId.Axis0;
 
-                return joystickState.GetAxis(axis) > TriggerThreshold;
+                return joystickState.GetAxis(axis) > _inner.TriggerThreshold;
             }
             else if (controllerInputId <= ControllerInputId.Hat2Right)
             {
@@ -190,22 +87,22 @@ namespace Ryujinx.Ui.Input
 
         public (short, short) GetLeftStick()
         {
-            if (!Enabled)
+            if (!IsEnabled())
             {
                 return (0, 0);
             }
 
-            return GetStick(LeftJoycon.Stick);
+            return GetStick(_inner.LeftJoycon.Stick);
         }
 
         public (short, short) GetRightStick()
         {
-            if (!Enabled)
+            if (!IsEnabled())
             {
                 return (0, 0);
             }
 
-            return GetStick(RightJoycon.Stick);
+            return GetStick(_inner.RightJoycon.Stick);
         }
 
         private (short, short) GetStick(ControllerInputId stickInputId)
@@ -215,7 +112,7 @@ namespace Ryujinx.Ui.Input
                 return (0, 0);
             }
 
-            JoystickState jsState = Joystick.GetState(Index);
+            JoystickState jsState = Joystick.GetState(_inner.Index);
 
             int xAxis = stickInputId - ControllerInputId.Axis0;
 
@@ -227,8 +124,8 @@ namespace Ryujinx.Ui.Input
 
         private (short, short) ApplyDeadzone(Vector2 axis)
         {
-            return (ClampAxis(MathF.Abs(axis.X) > Deadzone ? axis.X : 0f),
-                    ClampAxis(MathF.Abs(axis.Y) > Deadzone ? axis.Y : 0f));
+            return (ClampAxis(MathF.Abs(axis.X) > _inner.Deadzone ? axis.X : 0f),
+                    ClampAxis(MathF.Abs(axis.Y) > _inner.Deadzone ? axis.Y : 0f));
         }
 
         private static short ClampAxis(float value)

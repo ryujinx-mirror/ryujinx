@@ -37,6 +37,12 @@ namespace Ryujinx.Common.Logging
             m_LogTargets = new List<ILogTarget>();
 
             m_Time = Stopwatch.StartNew();
+
+            // Logger should log to console by default
+            AddTarget(new AsyncLogTargetWrapper(
+                new ConsoleLogTarget("console"),
+                1000,
+                AsyncLogTargetOverflowAction.Block));
         }
 
         public static void RestartTime()
@@ -44,11 +50,38 @@ namespace Ryujinx.Common.Logging
             m_Time.Restart();
         }
 
+        private static ILogTarget GetTarget(string targetName)
+        {
+            foreach (var target in m_LogTargets)
+            {
+                if (target.Name.Equals(targetName))
+                {
+                    return target;
+                }
+            }
+
+            return null;
+        }
+
         public static void AddTarget(ILogTarget target)
         {
             m_LogTargets.Add(target);
 
             Updated += target.Log;
+        }
+
+        public static void RemoveTarget(string target)
+        {
+            ILogTarget logTarget = GetTarget(target);
+
+            if (logTarget != null)
+            {
+                Updated -= logTarget.Log;
+
+                m_LogTargets.Remove(logTarget);
+
+                logTarget.Dispose();
+            }
         }
 
         public static void Shutdown()

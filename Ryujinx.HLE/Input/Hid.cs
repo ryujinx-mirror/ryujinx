@@ -1,5 +1,7 @@
 ﻿using Ryujinx.Common;
+using Ryujinx.Configuration.Hid;
 using Ryujinx.HLE.HOS;
+using System;
 
 namespace Ryujinx.HLE.Input
 {
@@ -47,29 +49,37 @@ namespace Ryujinx.HLE.Input
             _keyboardOffset     = HidPosition + HidKeyboardOffset;
         }
 
-        public void InitializePrimaryController(ControllerStatus controllerType)
+        private static ControllerStatus ConvertControllerTypeToState(ControllerType controllerType)
         {
-            ControllerId controllerId = controllerType == ControllerStatus.Handheld ?
+            switch (controllerType)
+            {
+                case ControllerType.Handheld:      return ControllerStatus.Handheld;
+                case ControllerType.NpadLeft:      return ControllerStatus.NpadLeft;
+                case ControllerType.NpadRight:     return ControllerStatus.NpadRight;
+                case ControllerType.NpadPair:      return ControllerStatus.NpadPair;
+                case ControllerType.ProController: return ControllerStatus.ProController;
+                default:                           throw new NotImplementedException();
+            }
+        }
+
+        public void InitializePrimaryController(ControllerType controllerType)
+        {
+            ControllerId controllerId = controllerType == ControllerType.Handheld ?
                 ControllerId.ControllerHandheld : ControllerId.ControllerPlayer1;
 
-            if (controllerType == ControllerStatus.ProController)
+            if (controllerType == ControllerType.ProController)
             {
                 PrimaryController = new ProController(_device, NpadColor.Black, NpadColor.Black);
             }
             else
             {
-                PrimaryController = new NpadController(controllerType,
+                PrimaryController = new NpadController(ConvertControllerTypeToState(controllerType),
                      _device,
                      (NpadColor.BodyNeonRed,     NpadColor.BodyNeonRed),
                      (NpadColor.ButtonsNeonBlue, NpadColor.ButtonsNeonBlue));
             }
 
             PrimaryController.Connect(controllerId);
-        }
-
-        public void InitializeKeyboard()
-        {
-            _device.Memory.FillWithZeros(HidPosition + HidKeyboardOffset, HidKeyboardSize);
         }
 
         public ControllerButtons UpdateStickButtons(
