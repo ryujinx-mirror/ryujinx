@@ -1,11 +1,12 @@
-﻿using Ryujinx.Common;
-using Ryujinx.Common.Logging;
+﻿using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Utilities;
+using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
 {
@@ -379,13 +380,26 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
                 }
             }
 
-            try
+            if (fdsCount != 0)
             {
-                System.Net.Sockets.Socket.Select(readEvents, writeEvents, errorEvents, timeout);
+                try
+                {
+                    System.Net.Sockets.Socket.Select(readEvents, writeEvents, errorEvents, timeout);
+                }
+                catch (SocketException exception)
+                {
+                    return WriteWinSock2Error(context, (WsaError)exception.ErrorCode);
+                }
             }
-            catch (SocketException exception)
+            else if (timeout == -1)
             {
-                return WriteWinSock2Error(context, (WsaError)exception.ErrorCode);
+                // FIXME: If we get a timeout of -1 and there is no fds to wait on, this should kill the KProces. (need to check that with re)
+                throw new InvalidOperationException();
+            }
+            else
+            {
+                // FIXME: We should make the KThread sleep but we can't do much about it yet.
+                Thread.Sleep(timeout);
             }
 
             for (int i = 0; i < fdsCount; i++)
