@@ -38,16 +38,6 @@ namespace Ryujinx.Ui
         private static bool _gameLoaded;
         private static bool _ending;
 
-        private static TreeViewColumn _favColumn;
-        private static TreeViewColumn _appColumn;
-        private static TreeViewColumn _devColumn;
-        private static TreeViewColumn _versionColumn;
-        private static TreeViewColumn _timePlayedColumn;
-        private static TreeViewColumn _lastPlayedColumn;
-        private static TreeViewColumn _fileExtColumn;
-        private static TreeViewColumn _fileSizeColumn;
-        private static TreeViewColumn _pathColumn;
-
         private static TreeView _treeView;
 
 #pragma warning disable CS0649
@@ -66,6 +56,7 @@ namespace Ryujinx.Ui
         [GUI] CheckMenuItem _fileSizeToggle;
         [GUI] CheckMenuItem _pathToggle;
         [GUI] TreeView      _gameTable;
+        [GUI] TreeSelection _gameTableSelection;
         [GUI] Label         _progressLabel;
         [GUI] LevelBar      _progressBar;
 #pragma warning restore CS0649
@@ -80,6 +71,8 @@ namespace Ryujinx.Ui
             DeleteEvent += Window_Close;
 
             ApplicationLibrary.ApplicationAdded += Application_Added;
+
+            _gameTable.ButtonReleaseEvent += Row_Clicked;
 
             _renderer = new OglRenderer();
 
@@ -173,26 +166,16 @@ namespace Ryujinx.Ui
 
             foreach (TreeViewColumn column in _gameTable.Columns)
             {
-                if (column.Title == "Fav")              _favColumn        = column;
-                else if (column.Title == "Application") _appColumn        = column;
-                else if (column.Title == "Developer")   _devColumn        = column;
-                else if (column.Title == "Version")     _versionColumn    = column;
-                else if (column.Title == "Time Played") _timePlayedColumn = column;
-                else if (column.Title == "Last Played") _lastPlayedColumn = column;
-                else if (column.Title == "File Ext")    _fileExtColumn    = column;
-                else if (column.Title == "File Size")   _fileSizeColumn   = column;
-                else if (column.Title == "Path")        _pathColumn       = column;
+                if      (column.Title == "Fav"         && ConfigurationState.Instance.Ui.GuiColumns.FavColumn)        column.SortColumnId = 0;
+                else if (column.Title == "Application" && ConfigurationState.Instance.Ui.GuiColumns.AppColumn)        column.SortColumnId = 2;
+                else if (column.Title == "Developer"   && ConfigurationState.Instance.Ui.GuiColumns.DevColumn)        column.SortColumnId = 3;
+                else if (column.Title == "Version"     && ConfigurationState.Instance.Ui.GuiColumns.VersionColumn)    column.SortColumnId = 4;
+                else if (column.Title == "Time Played" && ConfigurationState.Instance.Ui.GuiColumns.TimePlayedColumn) column.SortColumnId = 5;
+                else if (column.Title == "Last Played" && ConfigurationState.Instance.Ui.GuiColumns.LastPlayedColumn) column.SortColumnId = 6;
+                else if (column.Title == "File Ext"    && ConfigurationState.Instance.Ui.GuiColumns.FileExtColumn)    column.SortColumnId = 7;
+                else if (column.Title == "File Size"   && ConfigurationState.Instance.Ui.GuiColumns.FileSizeColumn)   column.SortColumnId = 8;
+                else if (column.Title == "Path"        && ConfigurationState.Instance.Ui.GuiColumns.PathColumn)       column.SortColumnId = 9;
             }
-
-            if (ConfigurationState.Instance.Ui.GuiColumns.FavColumn)        _favColumn.SortColumnId        = 0;
-            if (ConfigurationState.Instance.Ui.GuiColumns.AppColumn)        _appColumn.SortColumnId        = 2;
-            if (ConfigurationState.Instance.Ui.GuiColumns.DevColumn)        _devColumn.SortColumnId        = 3;
-            if (ConfigurationState.Instance.Ui.GuiColumns.VersionColumn)    _versionColumn.SortColumnId    = 4;
-            if (ConfigurationState.Instance.Ui.GuiColumns.TimePlayedColumn) _timePlayedColumn.SortColumnId = 5;
-            if (ConfigurationState.Instance.Ui.GuiColumns.LastPlayedColumn) _lastPlayedColumn.SortColumnId = 6;
-            if (ConfigurationState.Instance.Ui.GuiColumns.FileExtColumn)    _fileExtColumn.SortColumnId    = 7;
-            if (ConfigurationState.Instance.Ui.GuiColumns.FileSizeColumn)   _fileSizeColumn.SortColumnId   = 8;
-            if (ConfigurationState.Instance.Ui.GuiColumns.PathColumn)       _pathColumn.SortColumnId       = 9;
         }
 
         private HLE.Switch InitializeSwitchInstance()
@@ -421,24 +404,24 @@ namespace Ryujinx.Ui
         }
 
         //Events
-        private void Application_Added(object sender, ApplicationAddedEventArgs e)
+        private void Application_Added(object sender, ApplicationAddedEventArgs args)
         {
             Application.Invoke(delegate
             {
                 _tableStore.AppendValues(
-                    e.AppData.Favorite,
-                    new Gdk.Pixbuf(e.AppData.Icon, 75, 75),
-                    $"{e.AppData.TitleName}\n{e.AppData.TitleId.ToUpper()}",
-                    e.AppData.Developer,
-                    e.AppData.Version,
-                    e.AppData.TimePlayed,
-                    e.AppData.LastPlayed,
-                    e.AppData.FileExtension,
-                    e.AppData.FileSize,
-                    e.AppData.Path);
+                    args.AppData.Favorite,
+                    new Gdk.Pixbuf(args.AppData.Icon, 75, 75),
+                    $"{args.AppData.TitleName}\n{args.AppData.TitleId.ToUpper()}",
+                    args.AppData.Developer,
+                    args.AppData.Version,
+                    args.AppData.TimePlayed,
+                    args.AppData.LastPlayed,
+                    args.AppData.FileExtension,
+                    args.AppData.FileSize,
+                    args.AppData.Path);
 
-                _progressLabel.Text = $"{e.NumAppsLoaded}/{e.NumAppsFound} Games Loaded";
-                _progressBar.Value  = (float)e.NumAppsLoaded / e.NumAppsFound;
+                _progressLabel.Text = $"{args.NumAppsLoaded}/{args.NumAppsFound} Games Loaded";
+                _progressBar.Value  = (float)args.NumAppsLoaded / args.NumAppsFound;
             });
         }
 
@@ -477,10 +460,23 @@ namespace Ryujinx.Ui
 
         private void Row_Activated(object sender, RowActivatedArgs args)
         {
-            _tableStore.GetIter(out TreeIter treeIter, new TreePath(args.Path.ToString()));
+            _gameTableSelection.GetSelected(out TreeIter treeIter);
             string path = (string)_tableStore.GetValue(treeIter, 9);
 
             LoadApplication(path);
+        }
+
+        private void Row_Clicked(object sender, ButtonReleaseEventArgs args)
+        {
+            if (args.Event.Button != 3) return;
+
+            _gameTableSelection.GetSelected(out TreeIter treeIter);
+
+            if (treeIter.UserData == IntPtr.Zero) return;
+
+            GameTableContextMenu contextMenu = new GameTableContextMenu(_tableStore, treeIter);
+            contextMenu.ShowAll();
+            contextMenu.PopupAtPointer(null);
         }
 
         private void Load_Application_File(object sender, EventArgs args)

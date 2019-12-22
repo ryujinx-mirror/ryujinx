@@ -330,7 +330,7 @@
                     <property name="hover_selection">True</property>
                     <signal name="row-activated" handler="Row_Activated" swapped="no"/>
                     <child internal-child="selection">
-                      <object class="GtkTreeSelection"/>
+                      <object class="GtkTreeSelection" id="_gameTableSelection"/>
                     </child>
                   </object>
                 </child>
