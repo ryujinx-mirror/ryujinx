@@ -1,0 +1,27 @@
+name: "Build job"
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '*'
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        dotnet: ['3.1.100']
+        environment: ['Debug', 'Release', 'Profile Debug', 'Profile Release']
+    name: ${{ matrix.environment }} build (Dotnet ${{ matrix.dotnet }}, OS ${{ matrix.os }})
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ matrix.dotnet }}
+      - name: Build
+        run: dotnet build -c "${{ matrix.environment }}"
+      - name: Test
+        run: dotnet test -c "${{ matrix.environment }}"
