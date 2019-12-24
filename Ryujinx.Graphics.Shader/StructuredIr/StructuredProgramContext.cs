@@ -78,13 +78,19 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             foreach (BasicBlock predecessor in block.Predecessors.OrderByDescending(x => x.Index))
             {
+                // If not a loop, break.
                 if (predecessor.Index < block.Index)
                 {
                     break;
                 }
 
+                // Check if we can create a do-while loop here (only possible if the loop end
+                // falls inside the current scope), if not add a goto instead.
                 if (predecessor.Index < _currEndIndex && !done)
                 {
+                    // Create do-while loop block. We must avoid inserting a goto at the end
+                    // of the loop later, when the tail block is processed. So we add the predecessor
+                    // to a list of loop tails to prevent it from being processed later.
                     Operation branchOp = (Operation)predecessor.GetLastOp();
 
                     NewBlock(AstBlockType.DoWhile, branchOp, predecessor.Index + 1);
@@ -95,6 +101,9 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
                 }
                 else
                 {
+                    // Failed to create loop. Since this block is the loop head, we reset the
+                    // goto condition variable here. The variable is always reset on the jump
+                    // target, and this block is the jump target for some loop.
                     AddGotoTempReset(block, GetGotoTempAsg(block.Index));
 
                     break;
@@ -129,6 +138,8 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
             {
                 AstAssignment gotoTempAsg = GetGotoTempAsg(block.Branch.Index);
 
+                // We use DoWhile type here, as the condition should be true for
+                // unconditional branches, or it should jump if the condition is true otherwise.
                 IAstNode cond = GetBranchCond(AstBlockType.DoWhile, branchOp);
 
                 AddNode(Assign(gotoTempAsg.Destination, cond));
@@ -161,6 +172,12 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
         private void AddGotoTempReset(BasicBlock block, AstAssignment gotoTempAsg)
         {
+            // If it was already added, we don't need to add it again.
+            if (gotoTempAsg.Parent != null)
+            {
+                return;
+            }
+
             AddNode(gotoTempAsg);
 
             // For block 0, we don't need to add the extra "reset" at the beginning,
@@ -200,6 +217,9 @@ namespace Ryujinx.Graphics.Shader.StructuredIr
 
             if (branchOp.Inst == Instruction.Branch)
             {
+                // If the branch is not conditional, the condition is a constant.
+                // For if it's false (always jump over, if block never executed).
+                // For loops it's always true (always loop).
                 cond = Const(type == AstBlockType.If ? IrConsts.False : IrConsts.True);
             }
             else
