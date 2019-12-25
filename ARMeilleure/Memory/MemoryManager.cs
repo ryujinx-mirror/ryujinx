@@ -268,33 +268,34 @@ namespace ARMeilleure.Memory
 
             while (address < endAddress)
             {
-                if (IsValidPosition((long)address))
+                // If the address is invalid, we stop and consider all the remaining memory
+                // as not modified (since the address is invalid, we can't check, and technically
+                // the memory doesn't exist).
+                if (!IsValidPosition((long)address))
                 {
-                    byte* ptr = ((byte**)_pageTable)[address >> PageBits];
+                    break;
+                }
 
-                    ulong ptrUlong = (ulong)ptr;
+                byte* ptr = ((byte**)_pageTable)[address >> PageBits];
 
-                    if ((ptrUlong & idMask) == 0)
-                    {
-                        // Modified.
-                        currSize += PageSize;
+                ulong ptrUlong = (ulong)ptr;
 
-                        SetPtEntryFlag((long)address, (long)idMask);
-                    }
-                    else
-                    {
-                        if (currSize != 0)
-                        {
-                            ranges.Add((currAddr, currSize));
-                        }
+                if ((ptrUlong & idMask) == 0)
+                {
+                    // Modified.
+                    currSize += PageSize;
 
-                        currAddr = address + PageSize;
-                        currSize = 0;
-                    }
+                    SetPtEntryFlag((long)address, (long)idMask);
                 }
                 else
                 {
-                    currSize += PageSize;
+                    if (currSize != 0)
+                    {
+                        ranges.Add((currAddr, currSize));
+                    }
+
+                    currAddr = address + PageSize;
+                    currSize = 0;
                 }
 
                 address += PageSize;
