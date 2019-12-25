@@ -8,8 +8,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
         public ushort Flags;
         public ushort Kind;
         public int    NvMapHandle;
-        public int    Padding;
-        public uint   Offset;
+        public uint   MapOffset;
+        public uint   GpuOffset;
         public uint   Pages;
     }
 }

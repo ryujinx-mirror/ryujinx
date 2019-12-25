@@ -293,13 +293,15 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                     return NvInternalResult.InvalidInput;
                 }
 
-                long result = vmm.Map(map.Address, (long)arguments[index].Offset << 16,
-                                                   (long)arguments[index].Pages << 16);
+                long result = vmm.Map(
+                    ((long)arguments[index].MapOffset << 16) + map.Address,
+                    (long)arguments[index].GpuOffset << 16,
+                    (long)arguments[index].Pages << 16);
 
                 if (result < 0)
                 {
                     Logger.PrintWarning(LogClass.ServiceNv,
-                        $"Page 0x{arguments[index].Offset:x16} size 0x{arguments[index].Pages:x16} not allocated!");
+                        $"Page 0x{arguments[index].GpuOffset:x16} size 0x{arguments[index].Pages:x16} not allocated!");
 
                     return NvInternalResult.InvalidInput;
                 }
