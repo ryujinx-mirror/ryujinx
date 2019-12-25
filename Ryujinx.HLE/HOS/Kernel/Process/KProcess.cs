@@ -1115,6 +1115,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             Translator = new Translator(CpuMemory);
 
+            // TODO: This should eventually be removed.
+            // The GPU shouldn't depend on the CPU memory manager at all.
+            _system.Device.Gpu.SetVmm(CpuMemory);
+
             MemoryManager = new KMemoryManager(_system, CpuMemory);
         }
 

@@ -212,14 +212,6 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return;
             }
 
-            ulong pageSize = (uint)_context.PhysicalMemory.GetPageSize();
-
-            ulong pageMask = pageSize - 1;
-
-            ulong rangeAddress = Address & ~pageMask;
-
-            ulong rangeSize = (EndAddress - Address + pageMask) & ~pageMask;
-
             Span<byte> data = _context.PhysicalMemory.Read(Address, Size);
 
             if (_info.IsLinear)

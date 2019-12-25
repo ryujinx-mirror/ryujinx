@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Gpu
     {
         public IRenderer Renderer { get; }
 
-        internal IPhysicalMemory PhysicalMemory { get; private set; }
+        internal PhysicalMemory PhysicalMemory { get; private set; }
 
         public MemoryManager MemoryManager { get; }
 
@@ -25,7 +25,7 @@ namespace Ryujinx.Graphics.Gpu
 
         internal int SequenceNumber { get; private set; }
 
-        private Lazy<Capabilities> _caps;
+        private readonly Lazy<Capabilities> _caps;
 
         internal Capabilities Capabilities => _caps.Value;
 
@@ -53,9 +53,9 @@ namespace Ryujinx.Graphics.Gpu
             SequenceNumber++;
         }
 
-        public void SetVmm(IPhysicalMemory mm)
+        public void SetVmm(ARMeilleure.Memory.MemoryManager cpuMemory)
         {
-            PhysicalMemory = mm;
+            PhysicalMemory = new PhysicalMemory(cpuMemory);
         }
     }
 }

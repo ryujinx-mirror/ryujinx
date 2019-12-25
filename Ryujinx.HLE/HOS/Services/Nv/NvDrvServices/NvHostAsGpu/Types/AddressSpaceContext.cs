@@ -40,43 +40,9 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
 
         public MemoryManager Gmm { get; }
 
-        private class MemoryProxy : IPhysicalMemory
-        {
-            private ARMeilleure.Memory.MemoryManager _cpuMemory;
-
-            public MemoryProxy(ARMeilleure.Memory.MemoryManager cpuMemory)
-            {
-                _cpuMemory = cpuMemory;
-            }
-
-            public Span<byte> Read(ulong address, ulong size)
-            {
-                return _cpuMemory.ReadBytes((long)address, (long)size);
-            }
-
-            public void Write(ulong address, Span<byte> data)
-            {
-                _cpuMemory.WriteBytes((long)address, data.ToArray());
-            }
-
-            public (ulong, ulong)[] GetModifiedRanges(ulong address, ulong size, ResourceName name)
-            {
-                return _cpuMemory.GetModifiedRanges(address, size, (int)name);
-            }
-
-            public int GetPageSize()
-            {
-                return 4096;
-            }
-        }
-
         public AddressSpaceContext(ServiceCtx context)
         {
             Gmm = context.Device.Gpu.MemoryManager;
-
-            var memoryProxy = new MemoryProxy(context.Process.CpuMemory);
-
-            context.Device.Gpu.SetVmm(memoryProxy);
 
             _maps         = new SortedList<long, Range>();
             _reservations = new SortedList<long, Range>();
