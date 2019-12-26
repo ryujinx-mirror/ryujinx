@@ -272,6 +272,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                             disposableObj.Dispose();
                         }
 
+                        entry.Obj.DecrementReferenceCount();
                         entry.Obj  = null;
                         entry.Next = _nextFreeEntry;
 

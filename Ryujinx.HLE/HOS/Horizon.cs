@@ -754,21 +754,42 @@ namespace Ryujinx.HLE.HOS
         {
             if (disposing)
             {
-                // Force all threads to exit.
-                lock (Processes)
+                KProcess terminationProcess = new KProcess(this);
+
+                KThread terminationThread = new KThread(this);
+
+                terminationThread.Initialize(0, 0, 0, 3, 0, terminationProcess, ThreadType.Kernel, () =>
                 {
-                    foreach (KProcess process in Processes.Values)
+                    // Force all threads to exit.
+                    lock (Processes)
                     {
-                        process.StopAllThreads();
+                        foreach (KProcess process in Processes.Values)
+                        {
+                            process.Terminate();
+
+                            // Exit ourself now!
+                            Scheduler.ExitThread(terminationThread);
+                            Scheduler.GetCurrentThread().Exit();
+                            Scheduler.RemoveThread(terminationThread);
+                        }
                     }
+                });
+
+                terminationThread.Start();
+
+                // Signal the vsync event to avoid issues of KThread waiting on it.
+                if (Device.EnableDeviceVsync)
+                {
+                    Device.VsyncEvent.Set();
                 }
+
+                // This is needed as the IPC Dummy KThread is also counted in the ThreadCounter.
+                ThreadCounter.Signal();
 
                 // It's only safe to release resources once all threads
                 // have exited.
                 ThreadCounter.Signal();
-                //ThreadCounter.Wait(); // FIXME: Uncomment this
-                // BODY: Right now, guest processes don't exit properly because the logic waits for them to exit.
-                // BODY: However, this doesn't happen when you close the main window so we need to find a way to make them exit gracefully
+                ThreadCounter.Wait();
 
                 Scheduler.Dispose();
 

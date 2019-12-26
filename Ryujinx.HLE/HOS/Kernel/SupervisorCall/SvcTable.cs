@@ -74,7 +74,8 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 { 0x72, nameof(SvcHandler.ConnectToPort64)                 },
                 { 0x73, nameof(SvcHandler.SetProcessMemoryPermission64)    },
                 { 0x77, nameof(SvcHandler.MapProcessCodeMemory64)          },
-                { 0x78, nameof(SvcHandler.UnmapProcessCodeMemory64)        }
+                { 0x78, nameof(SvcHandler.UnmapProcessCodeMemory64)        },
+                { 0x7B, nameof(SvcHandler.TerminateProcess64)              }
             };
 
             _svcTable64 = new Action<SvcHandler, ExecutionContext>[0x80];

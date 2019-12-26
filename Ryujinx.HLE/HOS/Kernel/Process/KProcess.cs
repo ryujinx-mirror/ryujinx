@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         public ulong PersonalMmHeapPagesCount { get; private set; }
 
-        private ProcessState _state;
+        public ProcessState State { get; private set; }
 
         private object _processLock;
         private object _threadingLock;
@@ -383,7 +383,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             Name = creationInfo.Name;
 
-            _state = ProcessState.Created;
+            State = ProcessState.Created;
 
             _creationTimestamp = PerformanceCounter.ElapsedMilliseconds;
 
@@ -579,7 +579,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             lock (_processLock)
             {
-                if (_state > ProcessState.CreatedAttached)
+                if (State > ProcessState.CreatedAttached)
                 {
                     return KernelResult.InvalidState;
                 }
@@ -733,8 +733,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                 mainThread.SetEntryArguments(0, mainThreadHandle);
 
-                ProcessState oldState = _state;
-                ProcessState newState = _state != ProcessState.Created
+                ProcessState oldState = State;
+                ProcessState newState = State != ProcessState.Created
                     ? ProcessState.Attached
                     : ProcessState.Started;
 
@@ -768,9 +768,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
         private void SetState(ProcessState newState)
         {
-            if (_state != newState)
+            if (State != newState)
             {
-                _state    = newState;
+                State     = newState;
                 _signaled = true;
 
                 Signal();
@@ -818,6 +818,20 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             {
                 Terminate();
             }
+        }
+
+        public void DecrementToZeroWhileTerminatingCurrent()
+        {
+            System.ThreadCounter.Signal();
+
+            while (Interlocked.Decrement(ref _threadCount) != 0)
+            {
+                Destroy();
+                TerminateCurrentProcess();
+            }
+
+            // Nintendo panic here because if it reaches this point, the current thread should be already dead.
+            // As we handle the death of the thread in the post SVC handler and inside the CPU emulator, we don't panic here.
         }
 
         public ulong GetMemoryCapacity()
@@ -909,12 +923,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             lock (_processLock)
             {
-                if (_state >= ProcessState.Started)
+                if (State >= ProcessState.Started)
                 {
-                    if (_state == ProcessState.Started  ||
-                        _state == ProcessState.Crashed  ||
-                        _state == ProcessState.Attached ||
-                        _state == ProcessState.DebugSuspended)
+                    if (State == ProcessState.Started  ||
+                        State == ProcessState.Crashed  ||
+                        State == ProcessState.Attached ||
+                        State == ProcessState.DebugSuspended)
                     {
                         SetState(ProcessState.Exiting);
 
@@ -933,23 +947,98 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             if (shallTerminate)
             {
-                // UnpauseAndTerminateAllThreadsExcept(System.Scheduler.GetCurrentThread());
+                UnpauseAndTerminateAllThreadsExcept(System.Scheduler.GetCurrentThread());
 
                 HandleTable.Destroy();
 
-                SignalExitForDebugEvent();
+                SignalExitToDebugTerminated();
                 SignalExit();
             }
 
             return result;
         }
 
-        private void UnpauseAndTerminateAllThreadsExcept(KThread thread)
+        public void TerminateCurrentProcess()
         {
-            // TODO.
+            bool shallTerminate = false;
+
+            System.CriticalSection.Enter();
+
+            lock (_processLock)
+            {
+                if (State >= ProcessState.Started)
+                {
+                    if (State == ProcessState.Started ||
+                        State == ProcessState.Attached ||
+                        State == ProcessState.DebugSuspended)
+                    {
+                        SetState(ProcessState.Exiting);
+
+                        shallTerminate = true;
+                    }
+                }
+            }
+
+            System.CriticalSection.Leave();
+
+            if (shallTerminate)
+            {
+                UnpauseAndTerminateAllThreadsExcept(System.Scheduler.GetCurrentThread());
+
+                HandleTable.Destroy();
+
+                // NOTE: this is supposed to be called in receiving of the mailbox.
+                SignalExitToDebugExited();
+                SignalExit();
+            }
         }
 
-        private void SignalExitForDebugEvent()
+        private void UnpauseAndTerminateAllThreadsExcept(KThread currentThread)
+        {
+            lock (_threadingLock)
+            {
+                System.CriticalSection.Enter();
+
+                foreach (KThread thread in _threads)
+                {
+                    if ((thread.SchedFlags & ThreadSchedState.LowMask) != ThreadSchedState.TerminationPending)
+                    {
+                        thread.PrepareForTermination();
+                    }
+                }
+
+                System.CriticalSection.Leave();
+            }
+
+            KThread blockedThread = null;
+
+            lock (_threadingLock)
+            {
+                foreach (KThread thread in _threads)
+                {
+                    if (thread != currentThread && (thread.SchedFlags & ThreadSchedState.LowMask) != ThreadSchedState.TerminationPending)
+                    {
+                        thread.IncrementReferenceCount();
+
+                        blockedThread = thread;
+                        break;
+                    }
+                }
+            }
+
+            if (blockedThread != null)
+            {
+                blockedThread.Terminate();
+                blockedThread.DecrementReferenceCount();
+            }
+        }
+
+        private void SignalExitToDebugTerminated()
+        {
+            // TODO: Debug events.
+        }
+
+        private void SignalExitToDebugExited()
         {
             // TODO: Debug events.
         }
@@ -976,7 +1065,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             lock (_processLock)
             {
-                if (_state != ProcessState.Exited && _signaled)
+                if (State != ProcessState.Exited && _signaled)
                 {
                     _signaled = false;
 
@@ -999,7 +1088,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             {
                 foreach (KThread thread in _threads)
                 {
-                    thread.Context.Running = false;
+                    System.Scheduler.ExitThread(thread);
 
                     System.Scheduler.CoreManager.Set(thread.HostThread);
                 }

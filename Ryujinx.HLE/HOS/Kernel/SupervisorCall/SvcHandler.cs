@@ -1,5 +1,6 @@
 using ARMeilleure.State;
 using Ryujinx.HLE.HOS.Kernel.Process;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using System;
 
 namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
@@ -29,6 +30,15 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             ExecutionContext context = (ExecutionContext)sender;
 
             svcFunc(this, context);
+
+            PostSvcHandler();
+        }
+
+        private void PostSvcHandler()
+        {
+            KThread currentThread = _system.Scheduler.GetCurrentThread();
+
+            currentThread.HandlePostSyscall();
         }
     }
 }

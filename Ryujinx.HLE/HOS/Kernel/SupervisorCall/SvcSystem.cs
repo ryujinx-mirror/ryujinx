@@ -17,9 +17,41 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             ExitProcess();
         }
 
+        public KernelResult TerminateProcess64(int handle)
+        {
+            return TerminateProcess(handle);
+        }
+
+        private KernelResult TerminateProcess(int handle)
+        {
+            KProcess process = _process.HandleTable.GetObject<KProcess>(handle);
+
+            KernelResult result;
+
+            if (process != null)
+            {
+                if (process == _system.Scheduler.GetCurrentProcess())
+                {
+                    result = KernelResult.Success;
+                    process.DecrementToZeroWhileTerminatingCurrent();
+                }
+                else
+                {
+                    result = process.Terminate();
+                    process.DecrementReferenceCount();
+                }
+            }
+            else
+            {
+                result = KernelResult.InvalidHandle;
+            }
+
+            return result;
+        }
+
         private void ExitProcess()
         {
-            _system.Scheduler.GetCurrentProcess().Terminate();
+            _system.Scheduler.GetCurrentProcess().TerminateCurrentProcess();
         }
 
         public KernelResult SignalEvent64(int handle)
@@ -183,6 +215,15 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             if ((reason & (1UL << 31)) == 0)
             {
                 currentThread.PrintGuestStackTrace();
+
+                // As the process is exiting, this is probably caused by emulation termination.
+                if (currentThread.Owner.State == ProcessState.Exiting)
+                {
+                    return;
+                }
+
+                // TODO: Debug events.
+                currentThread.Owner.TerminateCurrentProcess();
 
                 throw new GuestBrokeExecutionException();
             }

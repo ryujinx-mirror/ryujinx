@@ -70,7 +70,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public ThreadSchedState SchedFlags { get; private set; }
 
-        public bool ShallBeTerminated { get; private set; }
+        private int _shallBeTerminated;
+
+        public bool ShallBeTerminated { get => _shallBeTerminated != 0; set => _shallBeTerminated = value ? 1 : 0; }
 
         public bool SyncCancelled { get; set; }
         public bool WaitingSync   { get; set; }
@@ -104,7 +106,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             int        priority,
             int        defaultCpuCore,
             KProcess   owner,
-            ThreadType type = ThreadType.User)
+            ThreadType type = ThreadType.User,
+            ThreadStart customHostThreadStart = null)
         {
             if ((uint)type > 3)
             {
@@ -156,7 +159,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 is64Bits = true;
             }
 
-            HostThread = new Thread(() => ThreadStart(entrypoint));
+            HostThread = new Thread(customHostThreadStart == null ? () => ThreadStart(entrypoint) : customHostThreadStart);
 
             Context = new ARMeilleure.State.ExecutionContext();
 
@@ -181,6 +184,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             owner.SubscribeThreadEventHandlers(Context);
 
             ThreadUid = System.GetThreadUid();
+
+            HostThread.Name = $"Host Thread (thread id {ThreadUid})";
 
             _hasBeenInitialized = true;
 
@@ -298,6 +303,100 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             System.CriticalSection.Leave();
 
             DecrementReferenceCount();
+        }
+
+        public ThreadSchedState PrepareForTermination()
+        {
+            System.CriticalSection.Enter();
+
+            ThreadSchedState result;
+
+            if (Interlocked.CompareExchange(ref _shallBeTerminated, 1, 0) == 0)
+            {
+                if ((SchedFlags & ThreadSchedState.LowMask) == ThreadSchedState.None)
+                {
+                    SchedFlags = ThreadSchedState.TerminationPending;
+                }
+                else
+                {
+                    if (_forcePauseFlags != ThreadSchedState.None)
+                    {
+                        _forcePauseFlags &= ~ThreadSchedState.ThreadPauseFlag;
+
+                        ThreadSchedState oldSchedFlags = SchedFlags;
+
+                        SchedFlags &= ThreadSchedState.LowMask;
+
+                        AdjustScheduling(oldSchedFlags);
+                    }
+
+                    if (BasePriority >= 0x10)
+                    {
+                        SetPriority(0xF);
+                    }
+
+                    if ((SchedFlags & ThreadSchedState.LowMask) == ThreadSchedState.Running)
+                    {
+                        // TODO: GIC distributor stuffs (sgir changes ect)
+                    }
+
+                    SignaledObj   = null;
+                    ObjSyncResult = KernelResult.ThreadTerminating;
+
+                    ReleaseAndResume();
+                }
+            }
+
+            result = SchedFlags;
+
+            System.CriticalSection.Leave();
+
+            return result & ThreadSchedState.LowMask;
+        }
+
+        public void Terminate()
+        {
+            ThreadSchedState state = PrepareForTermination();
+
+            if (state != ThreadSchedState.TerminationPending)
+            {
+                System.Synchronization.WaitFor(new KSynchronizationObject[] { this }, -1, out _);
+            }
+        }
+
+        public void HandlePostSyscall()
+        {
+            ThreadSchedState state;
+
+            do
+            {
+                if (ShallBeTerminated || SchedFlags == ThreadSchedState.TerminationPending)
+                {
+                    System.Scheduler.ExitThread(this);
+                    Exit();
+
+                    // As the death of the thread is handled by the CPU emulator, we differ from the official kernel and return here.
+                    break;
+                }
+
+                System.CriticalSection.Enter();
+
+                if (ShallBeTerminated || SchedFlags == ThreadSchedState.TerminationPending)
+                {
+                    state = ThreadSchedState.TerminationPending;
+                }
+                else
+                {
+                    if (_forcePauseFlags != ThreadSchedState.None)
+                    {
+                        CombineForcePauseFlags();
+                    }
+
+                    state = ThreadSchedState.Running;
+                }
+
+                System.CriticalSection.Leave();
+            } while (state == ThreadSchedState.TerminationPending);
         }
 
         private void ExitImpl()
