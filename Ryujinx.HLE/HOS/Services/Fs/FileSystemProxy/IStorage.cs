@@ -1,9 +1,10 @@
 using LibHac;
 using Ryujinx.HLE.HOS.Ipc;
+using System;
 
 namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 {
-    class IStorage : IpcService
+    class IStorage : IpcService, IDisposable
     {
         private LibHac.Fs.IStorage _baseStorage;
 
@@ -50,6 +51,19 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
             context.ResponseData.Write(size);
 
             return (ResultCode)result.Value;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _baseStorage?.Dispose();
+            }
         }
     }
 }
