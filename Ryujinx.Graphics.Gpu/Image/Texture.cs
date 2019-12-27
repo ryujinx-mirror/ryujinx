@@ -7,6 +7,7 @@ using Ryujinx.Graphics.Texture.Astc;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Ryujinx.Common.Logging;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -246,7 +247,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (!_context.Capabilities.SupportsAstcCompression && _info.FormatInfo.Format.IsAstc())
             {
                 if (!AstcDecoder.TryDecodeToRgba8(
-                    data,
+                    data.ToArray(),
                     _info.FormatInfo.BlockWidth,
                     _info.FormatInfo.BlockHeight,
                     _info.Width,
