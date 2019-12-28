@@ -13,11 +13,11 @@ namespace Ryujinx.Graphics.Shader
         public int CbufSlot   { get; }
         public int CbufOffset { get; }
 
-        public TextureDescriptor(string name, SamplerType type, int hIndex)
+        public TextureDescriptor(string name, SamplerType type, int handleIndex)
         {
             Name        = name;
             Type        = type;
-            HandleIndex = hIndex;
+            HandleIndex = handleIndex;
 
             IsBindless = false;
 

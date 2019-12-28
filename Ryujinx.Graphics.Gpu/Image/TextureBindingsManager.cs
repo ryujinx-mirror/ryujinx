@@ -2,6 +2,7 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -133,7 +134,29 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 TextureBindingInfo binding = _textureBindings[stageIndex][index];
 
-                int packedId = ReadPackedId(stageIndex, binding.Handle);
+                int packedId;
+
+                if (binding.IsBindless)
+                {
+                    ulong address;
+
+                    var bufferManager = _context.Methods.BufferManager;
+
+                    if (_isCompute)
+                    {
+                        address = bufferManager.GetComputeUniformBufferAddress(binding.CbufSlot);
+                    }
+                    else
+                    {
+                        address = bufferManager.GetGraphicsUniformBufferAddress(stageIndex, binding.CbufSlot);
+                    }
+
+                    packedId = MemoryMarshal.Cast<byte, int>(_context.PhysicalMemory.Read(address + (ulong)binding.CbufOffset * 4, 4))[0];
+                }
+                else
+                {
+                    packedId = ReadPackedId(stageIndex, binding.Handle);
+                }
 
                 int textureId = UnpackTextureId(packedId);
                 int samplerId;

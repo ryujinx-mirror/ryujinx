@@ -694,7 +694,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                     Target target = GetTarget(descriptor.Type);
 
-                    textureBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
+                    if (descriptor.IsBindless)
+                    {
+                        textureBindings[index] = new TextureBindingInfo(target, descriptor.CbufSlot, descriptor.CbufOffset);
+                    }
+                    else
+                    {
+                        textureBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
+                    }
                 }
 
                 _textureManager.SetGraphicsTextures(stage, textureBindings);

@@ -272,6 +272,8 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
                     AstOperand operand = texOp.GetSource(0) as AstOperand;
 
                     desc = new TextureDescriptor(samplerName, texOp.Type, operand.CbufSlot, operand.CbufOffset);
+
+                    context.TextureDescriptors.Add(desc);
                 }
                 else if ((texOp.Type & SamplerType.Indexed) != 0)
                 {
