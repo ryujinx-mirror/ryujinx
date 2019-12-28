@@ -1,6 +1,6 @@
 using OpenTK.Graphics.OpenGL;
 
-namespace Ryujinx.Graphics.OpenGL.Formats
+namespace Ryujinx.Graphics.OpenGL
 {
     struct FormatInfo
     {

@@ -1,7 +1,7 @@
+using OpenTK.Graphics.OpenGL;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.Texture;
-using Ryujinx.Graphics.OpenGL.Formats;
-using OpenTK.Graphics.OpenGL;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -135,13 +135,15 @@ namespace Ryujinx.Graphics.OpenGL
                         _info.Height,
                         _info.Depth);
                     break;
+
+                default:
+                    Logger.PrintError(LogClass.Gpu, $"Invalid or unsupported texture target: {target}.");
+                    break;
             }
         }
 
         public ITexture CreateDefaultView()
         {
-            int layers = _info.GetLayers();
-
             return CreateView(_info, 0, 0);
         }
 

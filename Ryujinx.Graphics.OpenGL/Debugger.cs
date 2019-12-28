@@ -1,4 +1,5 @@
 using OpenTK.Graphics.OpenGL;
+using Ryujinx.Common.Logging;
 using System;
 using System.Runtime.InteropServices;
 
@@ -12,16 +13,14 @@ namespace Ryujinx.Graphics.OpenGL
         {
             GL.Enable(EnableCap.DebugOutputSynchronous);
 
-            int[] array = null;
+            GL.DebugMessageControl(DebugSourceControl.DontCare, DebugTypeControl.DontCare, DebugSeverityControl.DontCare, 0, (int[])null, true);
 
-            GL.DebugMessageControl(DebugSourceControl.DontCare, DebugTypeControl.DontCare, DebugSeverityControl.DontCare, 0, array, true);
-
-            _debugCallback = PrintDbg;
+            _debugCallback = GLDebugHandler;
 
             GL.DebugMessageCallback(_debugCallback, IntPtr.Zero);
         }
 
-        private static void PrintDbg(
+        private static void GLDebugHandler(
             DebugSource source,
             DebugType type,
             int id,
@@ -30,14 +29,20 @@ namespace Ryujinx.Graphics.OpenGL
             IntPtr message,
             IntPtr userParam)
         {
-            string msg = Marshal.PtrToStringAnsi(message);
+            string fullMessage = $"{type} {severity} {source} {Marshal.PtrToStringAnsi(message)}";
 
-            if (type == DebugType.DebugTypeError && !msg.Contains("link"))
+            switch (type)
             {
-                throw new Exception(msg);
+                case DebugType.DebugTypeError:
+                    Logger.PrintError(LogClass.Gpu, fullMessage);
+                    break;
+                case DebugType.DebugTypePerformance:
+                    Logger.PrintWarning(LogClass.Gpu, fullMessage);
+                    break;
+                default:
+                    Logger.PrintDebug(LogClass.Gpu, fullMessage);
+                    break;
             }
-
-            System.Console.WriteLine("GL message: " + source + " " + type + " " + severity + " " + msg);
         }
     }
 }

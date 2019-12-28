@@ -1,4 +1,5 @@
 using Ryujinx.Common;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.Texture;
 using Ryujinx.Graphics.Gpu.Memory;
@@ -7,7 +8,6 @@ using Ryujinx.Graphics.Texture.Astc;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Ryujinx.Common.Logging;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
@@ -256,7 +256,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                     _info.Levels,
                     out Span<byte> decoded))
                 {
-                    // TODO: Error.
+                    string texInfo = $"{_info.Target} {_info.FormatInfo.Format} {_info.Width}x{_info.Height}x{_info.DepthOrLayers} levels {_info.Levels}";
+
+                    Logger.PrintError(LogClass.Gpu, $"Invalid ASTC texture at 0x{_info.Address:X} ({texInfo}).");
                 }
 
                 data = decoded;

@@ -1,10 +1,10 @@
 using OpenTK.Graphics.OpenGL;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.Blend;
 using Ryujinx.Graphics.GAL.Color;
 using Ryujinx.Graphics.GAL.DepthStencil;
 using Ryujinx.Graphics.GAL.InputAssembler;
-using Ryujinx.Graphics.OpenGL.Formats;
 using Ryujinx.Graphics.Shader;
 using System;
 
@@ -114,6 +114,10 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 ((Sampler)sampler).Bind(unit);
             }
+            else if (unit == -1)
+            {
+                Logger.PrintError(LogClass.Gpu, $"Invalid binding point: {stage} {index}.");
+            }
         }
 
         public void BindTexture(int index, ShaderStage stage, ITexture texture)
@@ -130,6 +134,10 @@ namespace Ryujinx.Graphics.OpenGL
                 {
                     ((TextureView)texture).Bind(unit);
                 }
+            }
+            else if (unit == -1)
+            {
+                Logger.PrintError(LogClass.Gpu, $"Invalid binding point: {stage} {index}.");
             }
         }
 
@@ -151,6 +159,8 @@ namespace Ryujinx.Graphics.OpenGL
 
             if (bindingPoint == -1)
             {
+                Logger.PrintError(LogClass.Gpu, $"Invalid binding point: {stage} {index}.");
+
                 return;
             }
 
@@ -289,6 +299,8 @@ namespace Ryujinx.Graphics.OpenGL
         {
             if (!_program.IsLinked)
             {
+                Logger.PrintError(LogClass.Gpu, "Dispatch error, shader not linked.");
+
                 return;
             }
 
@@ -301,6 +313,8 @@ namespace Ryujinx.Graphics.OpenGL
         {
             if (!_program.IsLinked)
             {
+                Logger.PrintError(LogClass.Gpu, "Draw error, shader not linked.");
+
                 return;
             }
 
@@ -407,12 +421,12 @@ namespace Ryujinx.Graphics.OpenGL
         {
             if (!_program.IsLinked)
             {
+                Logger.PrintError(LogClass.Gpu, "Draw error, shader not linked.");
+
                 return;
             }
 
             PrepareForDraw();
-
-            int firstIndexOffset = firstIndex;
 
             int indexElemSize = 1;
 
@@ -450,7 +464,6 @@ namespace Ryujinx.Graphics.OpenGL
                     indexCount,
                     instanceCount,
                     indexBaseOffset,
-                    indexElemSize,
                     firstVertex,
                     firstInstance);
             }
@@ -536,7 +549,6 @@ namespace Ryujinx.Graphics.OpenGL
             int    indexCount,
             int    instanceCount,
             IntPtr indexBaseOffset,
-            int    indexElemSize,
             int    firstVertex,
             int    firstInstance)
         {

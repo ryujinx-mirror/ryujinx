@@ -1,6 +1,7 @@
+using OpenTK.Graphics.OpenGL;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Shader;
-using OpenTK.Graphics.OpenGL;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -190,13 +191,11 @@ namespace Ryujinx.Graphics.OpenGL
 
         private void CheckProgramLink()
         {
-            int status = 0;
-
-            GL.GetProgram(Handle, GetProgramParameterName.LinkStatus, out status);
+            GL.GetProgram(Handle, GetProgramParameterName.LinkStatus, out int status);
 
             if (status == 0)
             {
-                // throw new System.Exception(GL.GetProgramInfoLog(Handle));
+                Logger.PrintError(LogClass.Gpu, $"Shader linking failed: {GL.GetProgramInfoLog(Handle)}");
             }
             else
             {
