@@ -8,28 +8,37 @@ using System;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
+    /// <summary>
+    /// Texture manager.
+    /// </summary>
     class TextureManager
     {
         private const int OverlapsBufferInitialCapacity = 10;
         private const int OverlapsBufferMaxCapacity     = 10000;
 
-        private GpuContext _context;
+        private readonly GpuContext _context;
 
-        private TextureBindingsManager _cpBindingsManager;
-        private TextureBindingsManager _gpBindingsManager;
+        private readonly TextureBindingsManager _cpBindingsManager;
+        private readonly TextureBindingsManager _gpBindingsManager;
 
-        private Texture[] _rtColors;
-        private Texture   _rtDepthStencil;
+        private readonly Texture[] _rtColors;
 
-        private ITexture[] _rtHostColors;
-        private ITexture   _rtHostDs;
+        private Texture _rtDepthStencil;
 
-        private RangeList<Texture> _textures;
+        private readonly ITexture[] _rtHostColors;
+
+        private ITexture _rtHostDs;
+
+        private readonly RangeList<Texture> _textures;
 
         private Texture[] _textureOverlaps;
 
-        private AutoDeleteCache _cache;
+        private readonly AutoDeleteCache _cache;
 
+        /// <summary>
+        /// Constructs a new instance of the texture manager.
+        /// </summary>
+        /// <param name="context">The GPU context that the texture manager belongs to</param>
         public TextureManager(GpuContext context)
         {
             _context = context;
@@ -50,66 +59,126 @@ namespace Ryujinx.Graphics.Gpu.Image
             _cache = new AutoDeleteCache();
         }
 
+        /// <summary>
+        /// Sets texture bindings on the compute pipeline.
+        /// </summary>
+        /// <param name="bindings">The texture bindings</param>
         public void SetComputeTextures(TextureBindingInfo[] bindings)
         {
             _cpBindingsManager.SetTextures(0, bindings);
         }
 
+        /// <summary>
+        /// Sets texture bindings on the graphics pipeline.
+        /// </summary>
+        /// <param name="stage">The index of the shader stage to bind the textures</param>
+        /// <param name="bindings">The texture bindings</param>
         public void SetGraphicsTextures(int stage, TextureBindingInfo[] bindings)
         {
             _gpBindingsManager.SetTextures(stage, bindings);
         }
 
+        /// <summary>
+        /// Sets image bindings on the compute pipeline.
+        /// </summary>
+        /// <param name="bindings">The image bindings</param>
         public void SetComputeImages(TextureBindingInfo[] bindings)
         {
             _cpBindingsManager.SetImages(0, bindings);
         }
 
+        /// <summary>
+        /// Sets image bindings on the graphics pipeline.
+        /// </summary>
+        /// <param name="stage">The index of the shader stage to bind the images</param>
+        /// <param name="bindings">The image bindings</param>
         public void SetGraphicsImages(int stage, TextureBindingInfo[] bindings)
         {
             _gpBindingsManager.SetImages(stage, bindings);
         }
 
+        /// <summary>
+        /// Sets the texture constant buffer index on the compute pipeline.
+        /// </summary>
+        /// <param name="index">The texture constant buffer index</param>
         public void SetComputeTextureBufferIndex(int index)
         {
             _cpBindingsManager.SetTextureBufferIndex(index);
         }
 
+        /// <summary>
+        /// Sets the texture constant buffer index on the graphics pipeline.
+        /// </summary>
+        /// <param name="index">The texture constant buffer index</param>
         public void SetGraphicsTextureBufferIndex(int index)
         {
             _gpBindingsManager.SetTextureBufferIndex(index);
         }
 
+        /// <summary>
+        /// Sets the current sampler pool on the compute pipeline.
+        /// </summary>
+        /// <param name="gpuVa">The start GPU virtual address of the sampler pool</param>
+        /// <param name="maximumId">The maximum ID of the sampler pool</param>
+        /// <param name="samplerIndex">The indexing type of the sampler</param>
         public void SetComputeSamplerPool(ulong gpuVa, int maximumId, SamplerIndex samplerIndex)
         {
             _cpBindingsManager.SetSamplerPool(gpuVa, maximumId, samplerIndex);
         }
 
+        /// <summary>
+        /// Sets the current sampler pool on the graphics pipeline.
+        /// </summary>
+        /// <param name="gpuVa">The start GPU virtual address of the sampler pool</param>
+        /// <param name="maximumId">The maximum ID of the sampler pool</param>
+        /// <param name="samplerIndex">The indexing type of the sampler</param>
         public void SetGraphicsSamplerPool(ulong gpuVa, int maximumId, SamplerIndex samplerIndex)
         {
             _gpBindingsManager.SetSamplerPool(gpuVa, maximumId, samplerIndex);
         }
 
+        /// <summary>
+        /// Sets the current texture pool on the compute pipeline.
+        /// </summary>
+        /// <param name="gpuVa">The start GPU virtual address of the texture pool</param>
+        /// <param name="maximumId">The maximum ID of the texture pool</param>
         public void SetComputeTexturePool(ulong gpuVa, int maximumId)
         {
             _cpBindingsManager.SetTexturePool(gpuVa, maximumId);
         }
 
+        /// <summary>
+        /// Sets the current texture pool on the graphics pipeline.
+        /// </summary>
+        /// <param name="gpuVa">The start GPU virtual address of the texture pool</param>
+        /// <param name="maximumId">The maximum ID of the texture pool</param>
         public void SetGraphicsTexturePool(ulong gpuVa, int maximumId)
         {
             _gpBindingsManager.SetTexturePool(gpuVa, maximumId);
         }
 
+        /// <summary>
+        /// Sets the render target color buffer.
+        /// </summary>
+        /// <param name="index">The index of the color buffer to set (up to 8)</param>
+        /// <param name="color">The color buffer texture</param>
         public void SetRenderTargetColor(int index, Texture color)
         {
             _rtColors[index] = color;
         }
 
+        /// <summary>
+        /// Sets the render target depth-stencil buffer.
+        /// </summary>
+        /// <param name="depthStencil">The depth-stencil buffer texture</param>
         public void SetRenderTargetDepthStencil(Texture depthStencil)
         {
             _rtDepthStencil = depthStencil;
         }
 
+        /// <summary>
+        /// Commits bindings on the compute pipeline.
+        /// </summary>
         public void CommitComputeBindings()
         {
             // Every time we switch between graphics and compute work,
@@ -121,6 +190,9 @@ namespace Ryujinx.Graphics.Gpu.Image
             _gpBindingsManager.Rebind();
         }
 
+        /// <summary>
+        /// Commits bindings on the graphics pipeline.
+        /// </summary>
         public void CommitGraphicsBindings()
         {
             _gpBindingsManager.CommitBindings();
@@ -128,11 +200,21 @@ namespace Ryujinx.Graphics.Gpu.Image
             UpdateRenderTargets();
         }
 
+        /// <summary>
+        /// Gets a texture descriptor used on the graphics pipeline.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="stageIndex">Index of the shader stage where the texture is bound</param>
+        /// <param name="handle">Shader "fake" handle of the texture</param>
+        /// <returns>The texture descriptor</returns>
         public TextureDescriptor GetGraphicsTextureDescriptor(GpuState state, int stageIndex, int handle)
         {
             return _gpBindingsManager.GetTextureDescriptor(state, stageIndex, handle);
         }
 
+        /// <summary>
+        /// Update host framebuffer attachments based on currently bound render target buffers.
+        /// </summary>
         private void UpdateRenderTargets()
         {
             bool anyChanged = false;
@@ -162,6 +244,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Tries to find a existing texture, or create a new one if not found.
+        /// </summary>
+        /// <param name="copyTexture">Copy texture to find or create</param>
+        /// <returns>The texture</returns>
         public Texture FindOrCreateTexture(CopyTexture copyTexture)
         {
             ulong address = _context.MemoryManager.Translate(copyTexture.Address.Pack());
@@ -210,6 +297,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             return texture;
         }
 
+        /// <summary>
+        /// Tries to find a existing texture, or create a new one if not found.
+        /// </summary>
+        /// <param name="colorState">Color buffer texture to find or create</param>
+        /// <param name="samplesInX">Number of samples in the X direction, for MSAA</param>
+        /// <param name="samplesInY">Number of samples in the Y direction, for MSAA</param>
+        /// <returns>The texture</returns>
         public Texture FindOrCreateTexture(RtColorState colorState, int samplesInX, int samplesInY)
         {
             ulong address = _context.MemoryManager.Translate(colorState.Address.Pack());
@@ -286,6 +380,14 @@ namespace Ryujinx.Graphics.Gpu.Image
             return texture;
         }
 
+        /// <summary>
+        /// Tries to find a existing texture, or create a new one if not found.
+        /// </summary>
+        /// <param name="dsState">Depth-stencil buffer texture to find or create</param>
+        /// <param name="size">Size of the depth-stencil texture</param>
+        /// <param name="samplesInX">Number of samples in the X direction, for MSAA</param>
+        /// <param name="samplesInY">Number of samples in the Y direction, for MSAA</param>
+        /// <returns>The texture</returns>
         public Texture FindOrCreateTexture(RtDepthStencilState dsState, Size3D size, int samplesInX, int samplesInY)
         {
             ulong address = _context.MemoryManager.Translate(dsState.Address.Pack());
@@ -327,6 +429,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             return texture;
         }
 
+        /// <summary>
+        /// Tries to find a existing texture, or create a new one if not found.
+        /// </summary>
+        /// <param name="info">Texture information of the texture to be found or created</param>
+        /// <param name="flags">The texture search flags, defines texture comparison rules</param>
+        /// <returns>The texture</returns>
         public Texture FindOrCreateTexture(TextureInfo info, TextureSearchFlags flags = TextureSearchFlags.None)
         {
             bool isSamplerTexture = (flags & TextureSearchFlags.Sampler) != 0;
@@ -480,6 +588,9 @@ namespace Ryujinx.Graphics.Gpu.Image
             return texture;
         }
 
+        /// <summary>
+        /// Resizes the temporary buffer used for range list intersection results, if it has grown too much.
+        /// </summary>
         private void ShrinkOverlapsBufferIfNeeded()
         {
             if (_textureOverlaps.Length > OverlapsBufferMaxCapacity)
@@ -488,6 +599,14 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Adjusts the size of the texture information for a given mipmap level,
+        /// based on the size of a parent texture.
+        /// </summary>
+        /// <param name="parent">The parent texture</param>
+        /// <param name="info">The texture information to be adjusted</param>
+        /// <param name="firstLevel">The first level of the texture view</param>
+        /// <returns>The adjusted texture information with the new size</returns>
         private static TextureInfo AdjustSizes(Texture parent, TextureInfo info, int firstLevel)
         {
             // When the texture is used as view of another texture, we must
@@ -551,6 +670,14 @@ namespace Ryujinx.Graphics.Gpu.Image
                 info.SwizzleA);
         }
 
+
+        /// <summary>
+        /// Gets a texture creation information from texture information.
+        /// This can be used to create new host textures.
+        /// </summary>
+        /// <param name="info">Texture information</param>
+        /// <param name="caps">GPU capabilities</param>
+        /// <returns>The texture creation information</returns>
         public static TextureCreateInfo GetCreateInfo(TextureInfo info, Capabilities caps)
         {
             FormatInfo formatInfo = info.FormatInfo;
@@ -590,6 +717,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                 info.SwizzleA);
         }
 
+        /// <summary>
+        /// Flushes all the textures in the cache that have been modified since the last call.
+        /// </summary>
         public void Flush()
         {
             foreach (Texture texture in _cache)
@@ -603,6 +733,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Flushes textures in the cache inside a given range that have been modified since the last call.
+        /// </summary>
+        /// <param name="address">The range start address</param>
+        /// <param name="size">The range size</param>
         public void Flush(ulong address, ulong size)
         {
             foreach (Texture texture in _cache)
@@ -616,6 +751,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Removes a texture from the cache.
+        /// This only removes the texture from the internal list, not from the auto-deletion cache.
+        /// It may still have live references after the removal.
+        /// </summary>
+        /// <param name="texture">The texture to be removed</param>
         public void RemoveTextureFromCache(Texture texture)
         {
             _textures.Remove(texture);

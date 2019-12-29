@@ -2,6 +2,9 @@ using Ryujinx.Graphics.GAL;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
+    /// <summary>
+    /// Texture swizzle color component.
+    /// </summary>
     enum TextureComponent
     {
         Zero  = 0,
@@ -15,6 +18,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
     static class TextureComponentConverter
     {
+        /// <summary>
+        /// Converts the texture swizzle color component enum to the respective Graphics Abstraction Layer enum.
+        /// </summary>
+        /// <param name="component">Texture swizzle color component</param>
+        /// <returns>Converted enum</returns>
         public static SwizzleComponent Convert(this TextureComponent component)
         {
             switch (component)

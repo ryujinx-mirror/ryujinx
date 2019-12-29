@@ -10,14 +10,23 @@ using System.Diagnostics;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
+    /// <summary>
+    /// Represents a cached GPU texture.
+    /// </summary>
     class Texture : IRange<Texture>
     {
         private GpuContext _context;
 
         private SizeInfo _sizeInfo;
 
+        /// <summary>
+        /// Texture format.
+        /// </summary>
         public Format Format => Info.FormatInfo.Format;
 
+        /// <summary>
+        /// Texture information.
+        /// </summary>
         public TextureInfo Info { get; private set; }
 
         private int _depth;
@@ -34,21 +43,48 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private List<Texture> _views;
 
+        /// <summary>
+        /// Host texture.
+        /// </summary>
         public ITexture HostTexture { get; private set; }
 
+        /// <summary>
+        /// Intrusive linked list node used on the auto deletion texture cache.
+        /// </summary>
         public LinkedListNode<Texture> CacheNode { get; set; }
 
+        /// <summary>
+        /// Texture data modified by the GPU.
+        /// </summary>
         public bool Modified { get; set; }
 
-        public ulong Address    => Info.Address;
+        /// <summary>
+        /// Start address of the texture in guest memory.
+        /// </summary>
+        public ulong Address => Info.Address;
+
+        /// <summary>
+        /// End address of the texture in guest memory.
+        /// </summary>
         public ulong EndAddress => Info.Address + Size;
 
+        /// <summary>
+        /// Texture size in bytes.
+        /// </summary>
         public ulong Size => (ulong)_sizeInfo.TotalSize;
 
         private int _referenceCount;
 
         private int _sequenceNumber;
 
+        /// <summary>
+        /// Constructs a new instance of the cached GPU texture.
+        /// </summary>
+        /// <param name="context">GPU context that the texture belongs to</param>
+        /// <param name="info">Texture information</param>
+        /// <param name="sizeInfo">Size information of the texture</param>
+        /// <param name="firstLayer">The first layer of the texture, or 0 if the texture has no parent</param>
+        /// <param name="firstLevel">The first mipmap level of the texture, or 0 if the texture has no parent</param>
         private Texture(
             GpuContext  context,
             TextureInfo info,
@@ -64,6 +100,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             _hasData = true;
         }
 
+        /// <summary>
+        /// Constructs a new instance of the cached GPU texture.
+        /// </summary>
+        /// <param name="context">GPU context that the texture belongs to</param>
+        /// <param name="info">Texture information</param>
+        /// <param name="sizeInfo">Size information of the texture</param>
         public Texture(GpuContext context, TextureInfo info, SizeInfo sizeInfo)
         {
             InitializeTexture(context, info, sizeInfo);
@@ -73,6 +115,14 @@ namespace Ryujinx.Graphics.Gpu.Image
             HostTexture = _context.Renderer.CreateTexture(createInfo);
         }
 
+        /// <summary>
+        /// Common texture initialization method.
+        /// This sets the context, info and sizeInfo fields.
+        /// Other fields are initialized with their default values.
+        /// </summary>
+        /// <param name="context">GPU context that the texture belongs to</param>
+        /// <param name="info">Texture information</param>
+        /// <param name="sizeInfo">Size information of the texture</param>
         private void InitializeTexture(GpuContext context, TextureInfo info, SizeInfo sizeInfo)
         {
             _context  = context;
@@ -85,6 +135,17 @@ namespace Ryujinx.Graphics.Gpu.Image
             _views = new List<Texture>();
         }
 
+        /// <summary>
+        /// Create a texture view from this texture.
+        /// A texture view is defined as a child texture, from a sub-range of their parent texture.
+        /// For example, the initial layer and mipmap level of the view can be defined, so the texture
+        /// will start at the given layer/level of the parent texture.
+        /// </summary>
+        /// <param name="info">Child texture information</param>
+        /// <param name="sizeInfo">Child texture size information</param>
+        /// <param name="firstLayer">Start layer of the child texture on the parent texture</param>
+        /// <param name="firstLevel">Start mipmap level of the child texture on the parent texture</param>
+        /// <returns>The child texture</returns>
         public Texture CreateView(TextureInfo info, SizeInfo sizeInfo, int firstLayer, int firstLevel)
         {
             Texture texture = new Texture(
@@ -103,6 +164,10 @@ namespace Ryujinx.Graphics.Gpu.Image
             return texture;
         }
 
+        /// <summary>
+        /// Adds a child texture to this texture.
+        /// </summary>
+        /// <param name="texture">The child texture</param>
         private void AddView(Texture texture)
         {
             _views.Add(texture);
@@ -110,6 +175,10 @@ namespace Ryujinx.Graphics.Gpu.Image
             texture._viewStorage = this;
         }
 
+        /// <summary>
+        /// Removes a child texture from this texture.
+        /// </summary>
+        /// <param name="texture">The child texture</param>
         private void RemoveView(Texture texture)
         {
             _views.Remove(texture);
@@ -119,6 +188,14 @@ namespace Ryujinx.Graphics.Gpu.Image
             DeleteIfNotUsed();
         }
 
+        /// <summary>
+        /// Changes the texture size.
+        /// This operation may also change the size of all mipmap levels, including from the parent
+        /// and other possible child textures, to ensure that all sizes are consistent.
+        /// </summary>
+        /// <param name="width">The new texture width</param>
+        /// <param name="height">The new texture height</param>
+        /// <param name="depthOrLayers">The new texture depth (for 3D textures) or layers (for layered textures)</param>
         public void ChangeSize(int width, int height, int depthOrLayers)
         {
             width  <<= _firstLevel;
@@ -155,6 +232,14 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Recreates the texture storage (or view, in the case of child textures) of this texture.
+        /// This allows recreating the texture with a new size.
+        /// A copy is automatically performed from the old to the new texture.
+        /// </summary>
+        /// <param name="width">The new texture width</param>
+        /// <param name="height">The new texture height</param>
+        /// <param name="depthOrLayers">The new texture depth (for 3D textures) or layers (for layered textures)</param>
         private void RecreateStorageOrView(int width, int height, int depthOrLayers)
         {
             SetInfo(new TextureInfo(
@@ -194,6 +279,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Synchronizes guest and host memory.
+        /// This will overwrite the texture data with the texture data on the guest memory, if a CPU
+        /// modification is detected.
+        /// Be aware that this can cause texture data written by the GPU to be lost, this is just a
+        /// one way copy (from CPU owned to GPU owned memory).
+        /// </summary>
         public void SynchronizeMemory()
         {
             if (_sequenceNumber == _context.SequenceNumber && _hasData)
@@ -266,6 +358,14 @@ namespace Ryujinx.Graphics.Gpu.Image
             _hasData = true;
         }
 
+        /// <summary>
+        /// Flushes the texture data.
+        /// This causes the texture data to be written back to guest memory.
+        /// If the texture was written by the GPU, this includes all modification made by the GPU
+        /// up to this point.
+        /// Be aware that this is a expensive operation, avoid calling it unless strictly needed.
+        /// This may cause data corruption if the memory is already being used for something else on the CPU side.
+        /// </summary>
         public void Flush()
         {
             Span<byte> data = HostTexture.GetData();
@@ -302,6 +402,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             _context.PhysicalMemory.Write(Address, data);
         }
 
+        /// <summary>
+        /// Performs a comparison of this texture information, with the specified texture information.
+        /// This performs a strict comparison, used to check if two textures are equal.
+        /// </summary>
+        /// <param name="info">Texture information to compare with</param>
+        /// <param name="flags">Comparison flags</param>
+        /// <returns>True if the textures are strictly equal or similar, false otherwise</returns>
         public bool IsPerfectMatch(TextureInfo info, TextureSearchFlags flags)
         {
             if (!FormatMatches(info, (flags & TextureSearchFlags.Strict) != 0))
@@ -344,6 +451,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             return Info.Address == info.Address && Info.Levels == info.Levels;
         }
 
+        /// <summary>
+        /// Checks if the texture format matches with the specified texture information.
+        /// </summary>
+        /// <param name="info">Texture information to compare with</param>
+        /// <param name="strict">True to perform a strict comparison (formats must be exactly equal)</param>
+        /// <returns>True if the format matches, with the given comparison rules</returns>
         private bool FormatMatches(TextureInfo info, bool strict)
         {
             // D32F and R32F texture have the same representation internally,
@@ -356,6 +469,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             return Info.FormatInfo.Format == info.FormatInfo.Format;
         }
 
+        /// <summary>
+        /// Checks if the texture layout specified matches with this texture layout.
+        /// The layout information is composed of the Stride for linear textures, or GOB block size
+        /// for block linear textures.
+        /// </summary>
+        /// <param name="info">Texture information to compare with</param>
+        /// <returns>True if the layout matches, false otherwise</returns>
         private bool LayoutMatches(TextureInfo info)
         {
             if (Info.IsLinear != info.IsLinear)
@@ -376,11 +496,23 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Checks if the texture sizes of the supplied texture information matches this texture.
+        /// </summary>
+        /// <param name="info">Texture information to compare with</param>
+        /// <returns>True if the size matches, false otherwise</returns>
         public bool SizeMatches(TextureInfo info)
         {
             return SizeMatches(info, alignSizes: false);
         }
 
+        /// <summary>
+        /// Checks if the texture sizes of the supplied texture information matches the given level of
+        /// this texture.
+        /// </summary>
+        /// <param name="info">Texture information to compare with</param>
+        /// <param name="level">Mipmap level of this texture to compare with</param>
+        /// <returns>True if the size matches with the level, false otherwise</returns>
         public bool SizeMatches(TextureInfo info, int level)
         {
             return Math.Max(1, Info.Width      >> level) == info.Width  &&
@@ -388,6 +520,12 @@ namespace Ryujinx.Graphics.Gpu.Image
                    Math.Max(1, Info.GetDepth() >> level) == info.GetDepth();
         }
 
+        /// <summary>
+        /// Checks if the texture sizes of the supplied texture information matches this texture.
+        /// </summary>
+        /// <param name="info">Texture information to compare with</param>
+        /// <param name="alignSizes">True to align the sizes according to the texture layout for comparison</param>
+        /// <returns>True if the sizes matches, false otherwise</returns>
         private bool SizeMatches(TextureInfo info, bool alignSizes)
         {
             if (Info.GetLayers() != info.GetLayers())
@@ -412,6 +550,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Checks if the texture shader sampling parameters matches.
+        /// </summary>
+        /// <param name="info">Texture information to compare with</param>
+        /// <returns>True if the texture shader sampling parameters matches, false otherwise</returns>
         private bool SamplerParamsMatches(TextureInfo info)
         {
             return Info.DepthStencilMode == info.DepthStencilMode &&
@@ -421,6 +564,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                    Info.SwizzleA         == info.SwizzleA;
         }
 
+        /// <summary>
+        /// Check if the texture target and samples count (for multisampled textures) matches.
+        /// </summary>
+        /// <param name="info">Texture information to compare with</param>
+        /// <returns>True if the texture target and samples count matches, false otherwise</returns>
         private bool TargetAndSamplesCompatible(TextureInfo info)
         {
             return Info.Target     == info.Target     &&
@@ -428,6 +576,14 @@ namespace Ryujinx.Graphics.Gpu.Image
                    Info.SamplesInY == info.SamplesInY;
         }
 
+        /// <summary>
+        /// Check if it's possible to create a view, with the given parameters, from this texture.
+        /// </summary>
+        /// <param name="info">Texture view information</param>
+        /// <param name="size">Texture view size</param>
+        /// <param name="firstLayer">Texture view initial layer on this texture</param>
+        /// <param name="firstLevel">Texture view first mipmap level on this texture</param>
+        /// <returns>True if a view with the given parameters can be created from this texture, false otherwise</returns>
         public bool IsViewCompatible(
             TextureInfo info,
             ulong       size,
@@ -437,6 +593,15 @@ namespace Ryujinx.Graphics.Gpu.Image
             return IsViewCompatible(info, size, isCopy: false, out firstLayer, out firstLevel);
         }
 
+        /// <summary>
+        /// Check if it's possible to create a view, with the given parameters, from this texture.
+        /// </summary>
+        /// <param name="info">Texture view information</param>
+        /// <param name="size">Texture view size</param>
+        /// <param name="isCopy">True to check for copy compability, instead of view compatibility</param>
+        /// <param name="firstLayer">Texture view initial layer on this texture</param>
+        /// <param name="firstLevel">Texture view first mipmap level on this texture</param>
+        /// <returns>True if a view with the given parameters can be created from this texture, false otherwise</returns>
         public bool IsViewCompatible(
             TextureInfo info,
             ulong       size,
@@ -484,6 +649,14 @@ namespace Ryujinx.Graphics.Gpu.Image
                    Info.SamplesInY == info.SamplesInY;
         }
 
+        /// <summary>
+        /// Check it's possible to create a view with the specified layout.
+        /// The layout information is composed of the Stride for linear textures, or GOB block size
+        /// for block linear textures.
+        /// </summary>
+        /// <param name="info">Texture information of the texture view</param>
+        /// <param name="level">Start level of the texture view, in relation with this texture</param>
+        /// <returns>True if the layout is compatible, false otherwise</returns>
         private bool ViewLayoutCompatible(TextureInfo info, int level)
         {
             if (Info.IsLinear != info.IsLinear)
@@ -520,11 +693,26 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Checks if the view format is compatible with this texture format.
+        /// In general, the formats are considered compatible if the bytes per pixel value is equal,
+        /// but there are more complex rules for some formats, like compressed or depth-stencil formats.
+        /// This follows the host API copy compatibility rules.
+        /// </summary>
+        /// <param name="info">Texture information of the texture view</param>
+        /// <returns>True if the formats are compatible, false otherwise</returns>
         private bool ViewFormatCompatible(TextureInfo info)
         {
             return TextureCompatibility.FormatCompatible(Info.FormatInfo, info.FormatInfo);
         }
 
+        /// <summary>
+        /// Checks if the size of a given texture view is compatible with this texture.
+        /// </summary>
+        /// <param name="info">Texture information of the texture view</param>
+        /// <param name="level">Mipmap level of the texture view in relation to this texture</param>
+        /// <param name="isCopy">True to check for copy compatibility rather than view compatibility</param>
+        /// <returns>True if the sizes are compatible, false otherwise</returns>
         private bool ViewSizeMatches(TextureInfo info, int level, bool isCopy)
         {
             Size size = GetAlignedSize(Info, level);
@@ -542,6 +730,14 @@ namespace Ryujinx.Graphics.Gpu.Image
                    size.Height == otherSize.Height;
         }
 
+        /// <summary>
+        /// Check if the target of the specified texture view information is compatible with this
+        /// texture.
+        /// This follows the host API target compatibility rules.
+        /// </summary>
+        /// <param name="info">Texture information of the texture view</param>
+        /// <param name="isCopy">True to check for copy rather than view compatibility</param>
+        /// <returns>True if the targets are compatible, false otherwise</returns>
         private bool ViewTargetCompatible(TextureInfo info, bool isCopy)
         {
             switch (Info.Target)
@@ -576,6 +772,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             return false;
         }
 
+        /// <summary>
+        /// Gets the aligned sizes of the specified texture information.
+        /// The alignment depends on the texture layout and format bytes per pixel.
+        /// </summary>
+        /// <param name="info">Texture information to calculate the aligned size from</param>
+        /// <param name="level">Mipmap level for texture views</param>
+        /// <returns>The aligned texture size</returns>
         private static Size GetAlignedSize(TextureInfo info, int level = 0)
         {
             int width  = Math.Max(1, info.Width  >> level);
@@ -614,6 +817,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Gets a texture of the specified target type from this texture.
+        /// This can be used to get an array texture from a non-array texture and vice-versa.
+        /// If this texture and the requested targets are equal, then this texture Host texture is returned directly.
+        /// </summary>
+        /// <param name="target">The desired target type</param>
+        /// <returns>A view of this texture with the requested target, or null if the target is invalid for this texture</returns>
         public ITexture GetTargetTexture(Target target)
         {
             if (target == Info.Target)
@@ -655,6 +865,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             return null;
         }
 
+        /// <summary>
+        /// Check if this texture and the specified target have the same number of dimensions.
+        /// For the purposes of this comparison, 2D and 2D Multisample textures are not considered to have
+        /// the same number of dimensions. Same for Cubemap and 3D textures.
+        /// </summary>
+        /// <param name="target">The target to compare with</param>
+        /// <returns>True if both targets have the same number of dimensions, false otherwise</returns>
         private bool IsSameDimensionsTarget(Target target)
         {
             switch (Info.Target)
@@ -686,6 +903,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             return false;
         }
 
+        /// <summary>
+        /// Replaces view texture information.
+        /// This should only be used for child textures with a parent.
+        /// </summary>
+        /// <param name="parent">The parent texture</param>
+        /// <param name="info">The new view texture information</param>
+        /// <param name="hostTexture">The new host texture</param>
         public void ReplaceView(Texture parent, TextureInfo info, ITexture hostTexture)
         {
             ReplaceStorage(hostTexture);
@@ -695,6 +919,10 @@ namespace Ryujinx.Graphics.Gpu.Image
             SetInfo(info);
         }
 
+        /// <summary>
+        /// Sets the internal texture information structure.
+        /// </summary>
+        /// <param name="info">The new texture information</param>
         private void SetInfo(TextureInfo info)
         {
             Info = info;
@@ -703,6 +931,10 @@ namespace Ryujinx.Graphics.Gpu.Image
             _layers = info.GetLayers();
         }
 
+        /// <summary>
+        /// Replaces the host texture, while disposing of the old one if needed.
+        /// </summary>
+        /// <param name="hostTexture">The new host texture</param>
         private void ReplaceStorage(ITexture hostTexture)
         {
             DisposeTextures();
@@ -710,16 +942,29 @@ namespace Ryujinx.Graphics.Gpu.Image
             HostTexture = hostTexture;
         }
 
+        /// <summary>
+        /// Checks if the texture overlaps with a memory range.
+        /// </summary>
+        /// <param name="address">Start address of the range</param>
+        /// <param name="size">Size of the range</param>
+        /// <returns>True if the texture overlaps with the range, false otherwise</returns>
         public bool OverlapsWith(ulong address, ulong size)
         {
             return Address < address + size && address < EndAddress;
         }
 
+        /// <summary>
+        /// Increments the texture reference count.
+        /// </summary>
         public void IncrementReferenceCount()
         {
             _referenceCount++;
         }
 
+        /// <summary>
+        /// Decrements the texture reference count.
+        /// When the reference count hits zero, the texture may be deleted and can't be used anymore.
+        /// </summary>
         public void DecrementReferenceCount()
         {
             int newRefCount = --_referenceCount;
@@ -739,6 +984,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             DeleteIfNotUsed();
         }
 
+        /// <summary>
+        /// Delete the texture if it is not used anymore.
+        /// The texture is considered unused when the reference count is zero,
+        /// and it has no child views.
+        /// </summary>
         private void DeleteIfNotUsed()
         {
             // We can delete the texture as long it is not being used
@@ -751,6 +1001,9 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Performs texture disposal, deleting the texture.
+        /// </summary>
         private void DisposeTextures()
         {
             HostTexture.Dispose();

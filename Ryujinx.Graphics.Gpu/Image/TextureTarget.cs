@@ -2,6 +2,9 @@ using Ryujinx.Graphics.GAL;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
+    /// <summary>
+    /// Texture target.
+    /// </summary>
     enum TextureTarget
     {
         Texture1D,
@@ -17,6 +20,12 @@ namespace Ryujinx.Graphics.Gpu.Image
 
     static class TextureTargetConverter
     {
+        /// <summary>
+        /// Converts the texture target enum to a host compatible, Graphics Abstraction Layer enum.
+        /// </summary>
+        /// <param name="target">The target enum to convert</param>
+        /// <param name="isMultisample">True if the texture is a multisampled texture</param>
+        /// <returns>The host compatible texture target</returns>
         public static Target Convert(this TextureTarget target, bool isMultisample)
         {
             if (isMultisample)

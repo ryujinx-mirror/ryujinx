@@ -3,10 +3,21 @@ using System;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
+    /// <summary>
+    /// Cached sampler entry for sampler pools.
+    /// </summary>
     class Sampler : IDisposable
     {
+        /// <summary>
+        /// Host sampler object.
+        /// </summary>
         public ISampler HostSampler { get; }
 
+        /// <summary>
+        /// Creates a new instance of the cached sampler.
+        /// </summary>
+        /// <param name="context">The GPU context the sampler belongs to</param>
+        /// <param name="descriptor">The Maxwell sampler descriptor</param>
         public Sampler(GpuContext context, SamplerDescriptor descriptor)
         {
             MinFilter minFilter = descriptor.UnpackMinFilter();
@@ -42,6 +53,9 @@ namespace Ryujinx.Graphics.Gpu.Image
                 maxAnisotropy));
         }
 
+        /// <summary>
+        /// Disposes the host sampler object.
+        /// </summary>
         public void Dispose()
         {
             HostSampler.Dispose();

@@ -2,6 +2,10 @@ using Ryujinx.Graphics.GAL;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
+    /// <summary>
+    /// Maxwell sampler descriptor structure.
+    /// This structure defines the sampler descriptor as it is packed on the GPU sampler pool region.
+    /// </summary>
     struct SamplerDescriptor
     {
         private static readonly float[] _f5ToF32ConversionLut = new float[]
@@ -56,41 +60,81 @@ namespace Ryujinx.Graphics.Gpu.Image
         public uint BorderColorB;
         public uint BorderColorA;
 
+        /// <summary>
+        /// Unpacks the texture wrap mode along the X axis.
+        /// </summary>
+        /// <returns>The texture wrap mode enum</returns>
         public AddressMode UnpackAddressU()
         {
             return (AddressMode)(Word0 & 7);
         }
 
+        // <summary>
+        /// Unpacks the texture wrap mode along the Y axis.
+        /// </summary>
+        /// <returns>The texture wrap mode enum</returns>
         public AddressMode UnpackAddressV()
         {
             return (AddressMode)((Word0 >> 3) & 7);
         }
 
+        // <summary>
+        /// Unpacks the texture wrap mode along the Z axis.
+        /// </summary>
+        /// <returns>The texture wrap mode enum</returns>
         public AddressMode UnpackAddressP()
         {
             return (AddressMode)((Word0 >> 6) & 7);
         }
 
+        /// <summary>
+        /// Unpacks the compare mode used for depth comparison on the shader, for
+        /// depth buffer texture.
+        /// This is only relevant for shaders with shadow samplers.
+        /// </summary>
+        /// <returns>The depth comparison mode enum</returns>
         public CompareMode UnpackCompareMode()
         {
             return (CompareMode)((Word0 >> 9) & 1);
         }
 
+        /// <summary>
+        /// Unpacks the compare operation used for depth comparison on the shader, for
+        /// depth buffer texture.
+        /// This is only relevant for shaders with shadow samplers.
+        /// </summary>
+        /// <returns>The depth comparison operation enum</returns>
         public CompareOp UnpackCompareOp()
         {
             return (CompareOp)(((Word0 >> 10) & 7) + 1);
         }
 
+        /// <summary>
+        /// Unpacks and converts the maximum anisotropy value used for texture anisotropic filtering.
+        /// </summary>
+        /// <returns>The maximum anisotropy</returns>
         public float UnpackMaxAnisotropy()
         {
             return _maxAnisotropyLut[(Word0 >> 20) & 7];
         }
 
+        /// <summary>
+        /// Unpacks the texture magnification filter.
+        /// This defines the filtering used when the texture covers an area on the screen
+        /// that is larger than the texture size.
+        /// </summary>
+        /// <returns>The magnification filter</returns>
         public MagFilter UnpackMagFilter()
         {
             return (MagFilter)(Word1 & 3);
         }
 
+        /// <summary>
+        /// Unpacks the texture minification filter.
+        /// This defines the filtering used when the texture covers an area on the screen
+        /// that is smaller than the texture size.
+        /// </summary>
+        /// <returns>The minification filter</returns>
         public MinFilter UnpackMinFilter()
         {
             SamplerMinFilter minFilter = (SamplerMinFilter)((Word1 >> 4) & 3);
@@ -99,6 +143,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             return ConvertFilter(minFilter, mipFilter);
         }
 
+        /// <summary>
+        /// Converts two minification and filter enum, to a single minification enum,
+        /// including mipmap filtering information, as expected from the host API.
+        /// </summary>
+        /// <param name="minFilter">The minification filter</param>
+        /// <param name="mipFilter">The mipmap level filter</param>
+        /// <returns>The combined, host API compatible filter enum</returns>
         private static MinFilter ConvertFilter(SamplerMinFilter minFilter, SamplerMipFilter mipFilter)
         {
             switch (mipFilter)
@@ -131,11 +182,22 @@ namespace Ryujinx.Graphics.Gpu.Image
             return MinFilter.Nearest;
         }
 
+        /// <summary>
+        /// Unpacks the reduction filter, used with texture minification linear filtering.
+        /// This describes how the final value will be computed from neighbouring pixels.
+        /// </summary>
+        /// <returns>The reduction filter</returns>
         public ReductionFilter UnpackReductionFilter()
         {
             return (ReductionFilter)((Word1 >> 10) & 3);
         }
 
+        /// <summary>
+        /// Unpacks the level-of-detail bias value.
+        /// This is a bias added to the level-of-detail value as computed by the GPU, used to select
+        /// which mipmap level to use from a given texture.
+        /// </summary>
+        /// <returns>The level-of-detail bias value</returns>
         public float UnpackMipLodBias()
         {
             int fixedValue = (int)(Word1 >> 12) & 0x1fff;
@@ -145,16 +207,28 @@ namespace Ryujinx.Graphics.Gpu.Image
             return fixedValue * Frac8ToF32;
         }
 
+        /// <summary>
+        /// Unpacks the level-of-detail snap value.
+        /// </summary>
+        /// <returns>The level-of-detail snap value</returns>
         public float UnpackLodSnap()
         {
             return _f5ToF32ConversionLut[(Word1 >> 26) & 0x1f];
         }
 
+        /// <summary>
+        /// Unpacks the minimum level-of-detail value.
+        /// </summary>
+        /// <returns>The minimum level-of-detail value</returns>
         public float UnpackMinLod()
         {
             return (Word2 & 0xfff) * Frac8ToF32;
         }
 
+        /// <summary>
+        /// Unpacks the maximum level-of-detail value.
+        /// </summary>
+        /// <returns>The maximum level-of-detail value</returns>
         public float UnpackMaxLod()
         {
             return ((Word2 >> 12) & 0xfff) * Frac8ToF32;

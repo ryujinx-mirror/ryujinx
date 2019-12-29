@@ -2,6 +2,9 @@ using System;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
+    /// <summary>
+    /// Texture search flags, defines texture information comparison rules.
+    /// </summary>
     [Flags]
     enum TextureSearchFlags
     {

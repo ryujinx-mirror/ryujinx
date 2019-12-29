@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
+    /// <summary>
+    /// Contains format tables, for texture and vertex attribute formats.
+    /// </summary>
     static class FormatTable
     {
         private static Dictionary<uint, FormatInfo> _textureFormats = new Dictionary<uint, FormatInfo>()
@@ -186,6 +189,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             { 0x36000000, Format.R10G10B10A2Sscaled  }
         };
 
+        /// <summary>
+        /// Try getting the texture format from a encoded format integer from the Maxwell texture descriptor.
+        /// </summary>
+        /// <param name="encoded">The encoded format integer from the texture descriptor</param>
+        /// <param name="isSrgb">Indicates if the format is a sRGB format</param>
+        /// <param name="format">The output texture format</param>
+        /// <returns>True if the format is valid, false otherwise</returns>
         public static bool TryGetTextureFormat(uint encoded, bool isSrgb, out FormatInfo format)
         {
             encoded |= (isSrgb ? 1u << 19 : 0u);
@@ -193,6 +203,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             return _textureFormats.TryGetValue(encoded, out format);
         }
 
+        /// <summary>
+        /// Try getting the vertex attribute format from a encoded format integer from Maxwell attribute registers.
+        /// </summary>
+        /// <param name="encoded">The encoded format integer from the attribute registers</param>
+        /// <param name="format">The output vertex attribute format</param>
+        /// <returns>True if the format is valid, false otherwise</returns>
         public static bool TryGetAttribFormat(uint encoded, out Format format)
         {
             return _attribFormats.TryGetValue(encoded, out format);

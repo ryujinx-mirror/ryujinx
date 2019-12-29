@@ -3,6 +3,10 @@ using System;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
+    /// <summary>
+    /// Represents a pool of GPU resources, such as samplers or textures.
+    /// </summary>
+    /// <typeparam name="T">GPU resource type</typeparam>
     abstract class Pool<T> : IDisposable
     {
         protected const int DescriptorSize = 0x20;
@@ -11,10 +15,21 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         protected T[] Items;
 
+        /// <summary>
+        /// The maximum ID value of resources on the pool (inclusive).
+        /// The maximum amount of resources on the pool is equal to this value plus one.
+        /// </summary>
         public int MaximumId { get; }
 
+        /// <summary>
+        /// The address of the pool in guest memory.
+        /// </summary>
         public ulong Address { get; }
-        public ulong Size    { get; }
+
+        /// <summary>
+        /// The size of the pool in bytes.
+        /// </summary>
+        public ulong Size { get; }
 
         public Pool(GpuContext context, ulong address, int maximumId)
         {
@@ -31,8 +46,18 @@ namespace Ryujinx.Graphics.Gpu.Image
             Size    = size;
         }
 
+        /// <summary>
+        /// Gets the GPU resource with the given ID.
+        /// </summary>
+        /// <param name="id">ID of the resource. This is effectively a zero-based index</param>
+        /// <returns>The GPU resource with the given ID</returns>
         public abstract T Get(int id);
 
+        /// <summary>
+        /// Synchronizes host memory with guest memory.
+        /// This causes a invalidation of pool entries,
+        /// if a modification of entries by the CPU is detected.
+        /// </summary>
         public void SynchronizeMemory()
         {
             (ulong, ulong)[] modifiedRanges = Context.PhysicalMemory.GetModifiedRanges(Address, Size, ResourceName.TexturePool);
@@ -57,6 +82,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Invalidates a range of memory of the GPU resource pool.
+        /// Entries that falls inside the speicified range will be invalidated,
+        /// causing all the data to be reloaded from guest memory.
+        /// </summary>
+        /// <param name="address">The start address of the range to invalidate</param>
+        /// <param name="size">The size of the range to invalidate</param>
         public void InvalidateRange(ulong address, ulong size)
         {
             ulong endAddress = address + size;
@@ -80,6 +112,8 @@ namespace Ryujinx.Graphics.Gpu.Image
                 endAddress = texturePoolEndAddress;
             }
 
+            size = endAddress - address;
+
             InvalidateRangeImpl(address, size);
         }
 
@@ -87,6 +121,10 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         protected abstract void Delete(T item);
 
+        /// <summary>
+        /// Performs the disposal of all resources stored on the pool.
+        /// It's an error to try using the pool after disposal.
+        /// </summary>
         public void Dispose()
         {
             if (Items != null)

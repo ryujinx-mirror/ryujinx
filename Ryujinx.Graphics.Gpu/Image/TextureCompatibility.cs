@@ -2,6 +2,9 @@ using Ryujinx.Graphics.GAL;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {
+    /// <summary>
+    /// Texture format compatibility checks.
+    /// </summary>
     static class TextureCompatibility
     {
         private enum FormatClass
@@ -19,6 +22,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             Bc7
         }
 
+        /// <summary>
+        /// Checks if two formats are compatible, according to the host API copy format compatibility rules.
+        /// </summary>
+        /// <param name="lhs">First comparand</param>
+        /// <param name="rhs">Second comparand</param>
+        /// <returns>True if the formats are compatible, false otherwise</returns>
         public static bool FormatCompatible(FormatInfo lhs, FormatInfo rhs)
         {
             if (IsDsFormat(lhs.Format) || IsDsFormat(rhs.Format))
@@ -44,6 +53,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
         }
 
+        /// <summary>
+        /// Gets the texture format class, for compressed textures, or Unclassified otherwise.
+        /// </summary>
+        /// <param name="format">The format</param>
+        /// <returns>Format class</returns>
         private static FormatClass GetFormatClass(Format format)
         {
             switch (format)
@@ -77,6 +91,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             return FormatClass.Unclassified;
         }
 
+        /// <summary>
+        /// Checks if the format is a depth-stencil texture format.
+        /// </summary>
+        /// <param name="format">Format to check</param>
+        /// <returns>True if the format is a depth-stencil format (including depth only), false otherwise</returns>
         private static bool IsDsFormat(Format format)
         {
             switch (format)
