@@ -2,7 +2,7 @@ using Ryujinx.Graphics.Shader.Decoders;
 using System;
 using System.Runtime.InteropServices;
 
-namespace Ryujinx.Graphics.Shader
+namespace Ryujinx.Graphics.Shader.Translation
 {
     struct OutputMapTarget
     {

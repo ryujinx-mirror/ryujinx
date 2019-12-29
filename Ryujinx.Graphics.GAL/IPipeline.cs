@@ -1,33 +1,10 @@
-using Ryujinx.Graphics.GAL.Blend;
-using Ryujinx.Graphics.GAL.Color;
-using Ryujinx.Graphics.GAL.DepthStencil;
-using Ryujinx.Graphics.GAL.InputAssembler;
 using Ryujinx.Graphics.Shader;
 
 namespace Ryujinx.Graphics.GAL
 {
     public interface IPipeline
     {
-        void BindBlendState(int index, BlendDescriptor blend);
-
-        void BindIndexBuffer(BufferRange buffer, IndexType type);
-
-        void BindImage(int index, ShaderStage stage, ITexture texture);
-
-        void BindProgram(IProgram program);
-
-        void BindSampler(int index, ShaderStage stage, ISampler sampler);
-        void BindTexture(int index, ShaderStage stage, ITexture texture);
-
-        void BindStorageBuffer(int index, ShaderStage stage, BufferRange buffer);
-        void BindUniformBuffer(int index, ShaderStage stage, BufferRange buffer);
-
-        void BindVertexAttribs(VertexAttribDescriptor[] vertexAttribs);
-        void BindVertexBuffers(VertexBufferDescriptor[] vertexBuffers);
-
         void ClearRenderTargetColor(int index, uint componentMask, ColorF color);
-        void ClearRenderTargetColor(int index, uint componentMask, ColorSI color);
-        void ClearRenderTargetColor(int index, uint componentMask, ColorUI color);
 
         void ClearRenderTargetDepthStencil(
             float depthValue,
@@ -35,7 +12,7 @@ namespace Ryujinx.Graphics.GAL
             int   stencilValue,
             int   stencilMask);
 
-        void Dispatch(int groupsX, int groupsY, int groupsZ);
+        void DispatchCompute(int groupsX, int groupsY, int groupsZ);
 
         void Draw(int vertexCount, int instanceCount, int firstVertex, int firstInstance);
         void DrawIndexed(
@@ -44,6 +21,8 @@ namespace Ryujinx.Graphics.GAL
             int firstIndex,
             int firstVertex,
             int firstInstance);
+
+        void SetBlendState(int index, BlendDescriptor blend);
 
         void SetBlendColor(ColorF color);
 
@@ -57,15 +36,32 @@ namespace Ryujinx.Graphics.GAL
 
         void SetFrontFace(FrontFace frontFace);
 
+        void SetIndexBuffer(BufferRange buffer, IndexType type);
+
+        void SetImage(int index, ShaderStage stage, ITexture texture);
+
         void SetPrimitiveRestart(bool enable, int index);
 
         void SetPrimitiveTopology(PrimitiveTopology topology);
+
+        void SetProgram(IProgram program);
 
         void SetRenderTargetColorMasks(uint[] componentMask);
 
         void SetRenderTargets(ITexture[] colors, ITexture depthStencil);
 
+        void SetSampler(int index, ShaderStage stage, ISampler sampler);
+
         void SetStencilTest(StencilTestDescriptor stencilTest);
+
+        void SetStorageBuffer(int index, ShaderStage stage, BufferRange buffer);
+
+        void SetTexture(int index, ShaderStage stage, ITexture texture);
+
+        void SetUniformBuffer(int index, ShaderStage stage, BufferRange buffer);
+
+        void SetVertexAttribs(VertexAttribDescriptor[] vertexAttribs);
+        void SetVertexBuffers(VertexBufferDescriptor[] vertexBuffers);
 
         void SetViewports(int first, Viewport[] viewports);
 

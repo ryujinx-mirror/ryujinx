@@ -1,6 +1,5 @@
-using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Sampler;
 using OpenTK.Graphics.OpenGL;
+using Ryujinx.Graphics.GAL;
 
 namespace Ryujinx.Graphics.OpenGL
 {

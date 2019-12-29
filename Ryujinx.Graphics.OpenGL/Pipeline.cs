@@ -1,10 +1,6 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Blend;
-using Ryujinx.Graphics.GAL.Color;
-using Ryujinx.Graphics.GAL.DepthStencil;
-using Ryujinx.Graphics.GAL.InputAssembler;
 using Ryujinx.Graphics.Shader;
 using System;
 
@@ -41,166 +37,6 @@ namespace Ryujinx.Graphics.OpenGL
             _clipDepthMode = ClipDepthMode.NegativeOneToOne;
         }
 
-        public void BindBlendState(int index, BlendDescriptor blend)
-        {
-            if (!blend.Enable)
-            {
-                GL.Disable(IndexedEnableCap.Blend, index);
-
-                return;
-            }
-
-            GL.BlendEquationSeparate(
-                index,
-                blend.ColorOp.Convert(),
-                blend.AlphaOp.Convert());
-
-            GL.BlendFuncSeparate(
-                index,
-                (BlendingFactorSrc) blend.ColorSrcFactor.Convert(),
-                (BlendingFactorDest)blend.ColorDstFactor.Convert(),
-                (BlendingFactorSrc) blend.AlphaSrcFactor.Convert(),
-                (BlendingFactorDest)blend.AlphaDstFactor.Convert());
-
-            GL.Enable(IndexedEnableCap.Blend, index);
-        }
-
-        public void BindImage(int index, ShaderStage stage, ITexture texture)
-        {
-            int unit = _program.GetImageUnit(stage, index);
-
-            if (unit != -1 && texture != null)
-            {
-                TextureView view = (TextureView)texture;
-
-                FormatInfo formatInfo = FormatTable.GetFormatInfo(view.Format);
-
-                SizedInternalFormat format = (SizedInternalFormat)formatInfo.PixelInternalFormat;
-
-                GL.BindImageTexture(
-                    unit,
-                    view.Handle,
-                    0,
-                    true,
-                    0,
-                    TextureAccess.ReadWrite,
-                    format);
-            }
-        }
-
-        public void BindIndexBuffer(BufferRange buffer, IndexType type)
-        {
-            _elementsType = type.Convert();
-
-            _indexBaseOffset = (IntPtr)buffer.Offset;
-
-            EnsureVertexArray();
-
-            _vertexArray.SetIndexBuffer((Buffer)buffer.Buffer);
-        }
-
-        public void BindProgram(IProgram program)
-        {
-            _program = (Program)program;
-
-            _program.Bind();
-        }
-
-        public void BindSampler(int index, ShaderStage stage, ISampler sampler)
-        {
-            int unit = _program.GetTextureUnit(stage, index);
-
-            if (unit != -1 && sampler != null)
-            {
-                ((Sampler)sampler).Bind(unit);
-            }
-            else if (unit == -1)
-            {
-                Logger.PrintError(LogClass.Gpu, $"Invalid binding point: {stage} {index}.");
-            }
-        }
-
-        public void BindTexture(int index, ShaderStage stage, ITexture texture)
-        {
-            int unit = _program.GetTextureUnit(stage, index);
-
-            if (unit != -1 && texture != null)
-            {
-                if (unit == 0)
-                {
-                    _unit0Texture = ((TextureView)texture);
-                }
-                else
-                {
-                    ((TextureView)texture).Bind(unit);
-                }
-            }
-            else if (unit == -1)
-            {
-                Logger.PrintError(LogClass.Gpu, $"Invalid binding point: {stage} {index}.");
-            }
-        }
-
-        public void BindStorageBuffer(int index, ShaderStage stage, BufferRange buffer)
-        {
-            BindBuffer(index, stage, buffer, isStorage: true);
-        }
-
-        public void BindUniformBuffer(int index, ShaderStage stage, BufferRange buffer)
-        {
-            BindBuffer(index, stage, buffer, isStorage: false);
-        }
-
-        private void BindBuffer(int index, ShaderStage stage, BufferRange buffer, bool isStorage)
-        {
-            int bindingPoint = isStorage
-                ? _program.GetStorageBufferBindingPoint(stage, index)
-                : _program.GetUniformBufferBindingPoint(stage, index);
-
-            if (bindingPoint == -1)
-            {
-                Logger.PrintError(LogClass.Gpu, $"Invalid binding point: {stage} {index}.");
-
-                return;
-            }
-
-            BufferRangeTarget target = isStorage
-                ? BufferRangeTarget.ShaderStorageBuffer
-                : BufferRangeTarget.UniformBuffer;
-
-            if (buffer.Buffer == null)
-            {
-                GL.BindBufferRange(target, bindingPoint, 0, IntPtr.Zero, 0);
-
-                return;
-            }
-
-            int bufferHandle = ((Buffer)buffer.Buffer).Handle;
-
-            IntPtr bufferOffset = (IntPtr)buffer.Offset;
-
-            GL.BindBufferRange(
-                target,
-                bindingPoint,
-                bufferHandle,
-                bufferOffset,
-                buffer.Size);
-        }
-
-        public void BindVertexAttribs(VertexAttribDescriptor[] vertexAttribs)
-        {
-            EnsureVertexArray();
-
-            _vertexArray.SetVertexAttributes(vertexAttribs);
-        }
-
-        public void BindVertexBuffers(VertexBufferDescriptor[] vertexBuffers)
-        {
-            EnsureVertexArray();
-
-            _vertexArray.SetVertexBuffers(vertexBuffers);
-        }
-
         public void ClearRenderTargetColor(int index, uint componentMask, ColorF color)
         {
             GL.ColorMask(
@@ -217,43 +53,7 @@ namespace Ryujinx.Graphics.OpenGL
             RestoreComponentMask(index);
         }
 
-        public void ClearRenderTargetColor(int index, uint componentMask, ColorSI color)
-        {
-            GL.ColorMask(
-                index,
-                (componentMask & 1u) != 0,
-                (componentMask & 2u) != 0,
-                (componentMask & 4u) != 0,
-                (componentMask & 8u) != 0);
-
-            int[] colors = new int[] { color.Red, color.Green, color.Blue, color.Alpha };
-
-            GL.ClearBuffer(ClearBuffer.Color, index, colors);
-
-            RestoreComponentMask(index);
-        }
-
-        public void ClearRenderTargetColor(int index, uint componentMask, ColorUI color)
-        {
-            GL.ColorMask(
-                index,
-                (componentMask & 1u) != 0,
-                (componentMask & 2u) != 0,
-                (componentMask & 4u) != 0,
-                (componentMask & 8u) != 0);
-
-            uint[] colors = new uint[] { color.Red, color.Green, color.Blue, color.Alpha };
-
-            GL.ClearBuffer(ClearBuffer.Color, index, colors);
-
-            RestoreComponentMask(index);
-        }
-
-        public void ClearRenderTargetDepthStencil(
-            float depthValue,
-            bool  depthMask,
-            int   stencilValue,
-            int   stencilMask)
+        public void ClearRenderTargetDepthStencil(float depthValue, bool depthMask, int stencilValue, int stencilMask)
         {
             bool stencilMaskChanged =
                 stencilMask != 0 &&
@@ -295,7 +95,7 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void Dispatch(int groupsX, int groupsY, int groupsZ)
+        public void DispatchCompute(int groupsX, int groupsY, int groupsZ)
         {
             if (!_program.IsLinked)
             {
@@ -607,19 +407,33 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void DrawIndirect(BufferRange buffer, ulong offset, int drawCount, int stride)
-        {
-
-        }
-
-        public void DrawIndexedIndirect(BufferRange buffer, ulong offset, int drawCount, int stride)
-        {
-
-        }
-
         public void SetBlendColor(ColorF color)
         {
             GL.BlendColor(color.Red, color.Green, color.Blue, color.Alpha);
+        }
+
+        public void SetBlendState(int index, BlendDescriptor blend)
+        {
+            if (!blend.Enable)
+            {
+                GL.Disable(IndexedEnableCap.Blend, index);
+
+                return;
+            }
+
+            GL.BlendEquationSeparate(
+                index,
+                blend.ColorOp.Convert(),
+                blend.AlphaOp.Convert());
+
+            GL.BlendFuncSeparate(
+                index,
+                (BlendingFactorSrc)blend.ColorSrcFactor.Convert(),
+                (BlendingFactorDest)blend.ColorDstFactor.Convert(),
+                (BlendingFactorSrc)blend.AlphaSrcFactor.Convert(),
+                (BlendingFactorDest)blend.AlphaDstFactor.Convert());
+
+            GL.Enable(IndexedEnableCap.Blend, index);
         }
 
         public void SetDepthBias(PolygonModeMask enables, float factor, float units, float clamp)
@@ -701,6 +515,33 @@ namespace Ryujinx.Graphics.OpenGL
             GL.FrontFace(frontFace.Convert());
         }
 
+        public void SetImage(int index, ShaderStage stage, ITexture texture)
+        {
+            int unit = _program.GetImageUnit(stage, index);
+
+            if (unit != -1 && texture != null)
+            {
+                TextureView view = (TextureView)texture;
+
+                FormatInfo formatInfo = FormatTable.GetFormatInfo(view.Format);
+
+                SizedInternalFormat format = (SizedInternalFormat)formatInfo.PixelInternalFormat;
+
+                GL.BindImageTexture(unit, view.Handle, 0, true, 0, TextureAccess.ReadWrite, format);
+            }
+        }
+
+        public void SetIndexBuffer(BufferRange buffer, IndexType type)
+        {
+            _elementsType = type.Convert();
+
+            _indexBaseOffset = (IntPtr)buffer.Offset;
+
+            EnsureVertexArray();
+
+            _vertexArray.SetIndexBuffer((Buffer)buffer.Buffer);
+        }
+
         public void SetPrimitiveRestart(bool enable, int index)
         {
             if (!enable)
@@ -718,6 +559,13 @@ namespace Ryujinx.Graphics.OpenGL
         public void SetPrimitiveTopology(PrimitiveTopology topology)
         {
             _primitiveType = topology.Convert();
+        }
+
+        public void SetProgram(IProgram program)
+        {
+            _program = (Program)program;
+
+            _program.Bind();
         }
 
         public void SetRenderTargetColorMasks(uint[] componentMasks)
@@ -750,6 +598,20 @@ namespace Ryujinx.Graphics.OpenGL
             _hasDepthBuffer = depthStencil != null && depthStencilView.Format != Format.S8Uint;
 
             UpdateDepthTest();
+        }
+
+        public void SetSampler(int index, ShaderStage stage, ISampler sampler)
+        {
+            int unit = _program.GetTextureUnit(stage, index);
+
+            if (unit != -1 && sampler != null)
+            {
+                ((Sampler)sampler).Bind(unit);
+            }
+            else if (unit == -1)
+            {
+                Logger.PrintError(LogClass.Gpu, $"Invalid binding point: {stage} {index}.");
+            }
         }
 
         public void SetStencilTest(StencilTestDescriptor stencilTest)
@@ -792,6 +654,51 @@ namespace Ryujinx.Graphics.OpenGL
             GL.Enable(EnableCap.StencilTest);
 
             _stencilFrontMask = stencilTest.FrontMask;
+        }
+
+        public void SetStorageBuffer(int index, ShaderStage stage, BufferRange buffer)
+        {
+            SetBuffer(index, stage, buffer, isStorage: true);
+        }
+
+        public void SetTexture(int index, ShaderStage stage, ITexture texture)
+        {
+            int unit = _program.GetTextureUnit(stage, index);
+
+            if (unit != -1 && texture != null)
+            {
+                if (unit == 0)
+                {
+                    _unit0Texture = ((TextureView)texture);
+                }
+                else
+                {
+                    ((TextureView)texture).Bind(unit);
+                }
+            }
+            else if (unit == -1)
+            {
+                Logger.PrintError(LogClass.Gpu, $"Invalid binding point: {stage} {index}.");
+            }
+        }
+
+        public void SetUniformBuffer(int index, ShaderStage stage, BufferRange buffer)
+        {
+            SetBuffer(index, stage, buffer, isStorage: false);
+        }
+
+        public void SetVertexAttribs(VertexAttribDescriptor[] vertexAttribs)
+        {
+            EnsureVertexArray();
+
+            _vertexArray.SetVertexAttributes(vertexAttribs);
+        }
+
+        public void SetVertexBuffers(VertexBufferDescriptor[] vertexBuffers)
+        {
+            EnsureVertexArray();
+
+            _vertexArray.SetVertexBuffers(vertexBuffers);
         }
 
         public void SetViewports(int first, Viewport[] viewports)
@@ -846,6 +753,37 @@ namespace Ryujinx.Graphics.OpenGL
         public void TextureBarrierTiled()
         {
             GL.MemoryBarrier(MemoryBarrierFlags.TextureFetchBarrierBit);
+        }
+
+        private void SetBuffer(int index, ShaderStage stage, BufferRange buffer, bool isStorage)
+        {
+            int bindingPoint = isStorage
+                ? _program.GetStorageBufferBindingPoint(stage, index)
+                : _program.GetUniformBufferBindingPoint(stage, index);
+
+            if (bindingPoint == -1)
+            {
+                Logger.PrintError(LogClass.Gpu, $"Invalid binding point: {stage} {index}.");
+
+                return;
+            }
+
+            BufferRangeTarget target = isStorage
+                ? BufferRangeTarget.ShaderStorageBuffer
+                : BufferRangeTarget.UniformBuffer;
+
+            if (buffer.Buffer == null)
+            {
+                GL.BindBufferRange(target, bindingPoint, 0, IntPtr.Zero, 0);
+
+                return;
+            }
+
+            int bufferHandle = ((Buffer)buffer.Buffer).Handle;
+
+            IntPtr bufferOffset = (IntPtr)buffer.Offset;
+
+            GL.BindBufferRange(target, bindingPoint, bufferHandle, bufferOffset, buffer.Size);
         }
 
         private void SetOrigin(ClipOrigin origin)

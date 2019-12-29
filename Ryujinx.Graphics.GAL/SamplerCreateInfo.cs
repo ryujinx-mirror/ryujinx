@@ -1,6 +1,4 @@
-using Ryujinx.Graphics.GAL.Color;
-
-namespace Ryujinx.Graphics.GAL.Sampler
+namespace Ryujinx.Graphics.GAL
 {
     public struct SamplerCreateInfo
     {

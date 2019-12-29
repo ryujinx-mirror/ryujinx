@@ -1,5 +1,4 @@
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Sampler;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {

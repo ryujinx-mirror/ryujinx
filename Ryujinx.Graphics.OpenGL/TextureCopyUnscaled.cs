@@ -1,6 +1,6 @@
-using Ryujinx.Common;
-using Ryujinx.Graphics.GAL.Texture;
 using OpenTK.Graphics.OpenGL;
+using Ryujinx.Common;
+using Ryujinx.Graphics.GAL;
 using System;
 
 namespace Ryujinx.Graphics.OpenGL

@@ -1,4 +1,4 @@
-using Ryujinx.Graphics.GAL.Blend;
+using Ryujinx.Graphics.GAL;
 
 namespace Ryujinx.Graphics.Gpu.State
 {

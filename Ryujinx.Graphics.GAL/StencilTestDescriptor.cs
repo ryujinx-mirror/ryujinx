@@ -1,4 +1,4 @@
-namespace Ryujinx.Graphics.GAL.DepthStencil
+namespace Ryujinx.Graphics.GAL
 {
     public struct StencilTestDescriptor
     {

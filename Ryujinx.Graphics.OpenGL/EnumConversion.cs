@@ -1,9 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Blend;
-using Ryujinx.Graphics.GAL.Sampler;
-using Ryujinx.Graphics.GAL.Texture;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -334,31 +331,31 @@ namespace Ryujinx.Graphics.OpenGL
             return PrimitiveType.Points;
         }
 
-        public static StencilOp Convert(this GAL.DepthStencil.StencilOp op)
+        public static OpenTK.Graphics.OpenGL.StencilOp Convert(this GAL.StencilOp op)
         {
             switch (op)
             {
-                case GAL.DepthStencil.StencilOp.Keep:
-                    return StencilOp.Keep;
-                case GAL.DepthStencil.StencilOp.Zero:
-                    return StencilOp.Zero;
-                case GAL.DepthStencil.StencilOp.Replace:
-                    return StencilOp.Replace;
-                case GAL.DepthStencil.StencilOp.IncrementAndClamp:
-                    return StencilOp.Incr;
-                case GAL.DepthStencil.StencilOp.DecrementAndClamp:
-                    return StencilOp.Decr;
-                case GAL.DepthStencil.StencilOp.Invert:
-                    return StencilOp.Invert;
-                case GAL.DepthStencil.StencilOp.IncrementAndWrap:
-                    return StencilOp.IncrWrap;
-                case GAL.DepthStencil.StencilOp.DecrementAndWrap:
-                    return StencilOp.DecrWrap;
+                case GAL.StencilOp.Keep:
+                    return OpenTK.Graphics.OpenGL.StencilOp.Keep;
+                case GAL.StencilOp.Zero:
+                    return OpenTK.Graphics.OpenGL.StencilOp.Zero;
+                case GAL.StencilOp.Replace:
+                    return OpenTK.Graphics.OpenGL.StencilOp.Replace;
+                case GAL.StencilOp.IncrementAndClamp:
+                    return OpenTK.Graphics.OpenGL.StencilOp.Incr;
+                case GAL.StencilOp.DecrementAndClamp:
+                    return OpenTK.Graphics.OpenGL.StencilOp.Decr;
+                case GAL.StencilOp.Invert:
+                    return OpenTK.Graphics.OpenGL.StencilOp.Invert;
+                case GAL.StencilOp.IncrementAndWrap:
+                    return OpenTK.Graphics.OpenGL.StencilOp.IncrWrap;
+                case GAL.StencilOp.DecrementAndWrap:
+                    return OpenTK.Graphics.OpenGL.StencilOp.DecrWrap;
             }
 
-            Logger.PrintError(LogClass.Gpu, $"Invalid {nameof(GAL.DepthStencil.StencilOp)} enum value: {op}.");
+            Logger.PrintError(LogClass.Gpu, $"Invalid {nameof(GAL.StencilOp)} enum value: {op}.");
 
-            return StencilOp.Keep;
+            return OpenTK.Graphics.OpenGL.StencilOp.Keep;
         }
 
         public static All Convert(this SwizzleComponent swizzleComponent)

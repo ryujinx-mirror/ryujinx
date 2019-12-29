@@ -1,4 +1,4 @@
-namespace Ryujinx.Graphics.GAL.Color
+namespace Ryujinx.Graphics.GAL
 {
     public struct ColorF
     {

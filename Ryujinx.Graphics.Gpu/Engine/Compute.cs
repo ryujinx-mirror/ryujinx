@@ -1,4 +1,4 @@
-using Ryujinx.Graphics.GAL.Texture;
+using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.Shader;
 using Ryujinx.Graphics.Gpu.State;
@@ -30,17 +30,17 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 dispatchParams.UnpackBlockSizeY(),
                 dispatchParams.UnpackBlockSizeZ());
 
-            _context.Renderer.Pipeline.BindProgram(cs.HostProgram);
+            _context.Renderer.Pipeline.SetProgram(cs.HostProgram);
 
             var samplerPool = state.Get<PoolState>(MethodOffset.SamplerPoolState);
 
-            _textureManager.SetComputeSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId, dispatchParams.SamplerIndex);
+            TextureManager.SetComputeSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId, dispatchParams.SamplerIndex);
 
             var texturePool = state.Get<PoolState>(MethodOffset.TexturePoolState);
 
-            _textureManager.SetComputeTexturePool(texturePool.Address.Pack(), texturePool.MaximumId);
+            TextureManager.SetComputeTexturePool(texturePool.Address.Pack(), texturePool.MaximumId);
 
-            _textureManager.SetComputeTextureBufferIndex(state.Get<int>(MethodOffset.TextureBufferIndex));
+            TextureManager.SetComputeTextureBufferIndex(state.Get<int>(MethodOffset.TextureBufferIndex));
 
             ShaderProgramInfo info = cs.Shader.Program.Info;
 
@@ -57,7 +57,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 ulong gpuVa = dispatchParams.UniformBuffers[index].PackAddress();
                 ulong size  = dispatchParams.UniformBuffers[index].UnpackSize();
 
-                _bufferManager.SetComputeUniformBuffer(index, gpuVa, size);
+                BufferManager.SetComputeUniformBuffer(index, gpuVa, size);
             }
 
             for (int index = 0; index < info.SBuffers.Count; index++)
@@ -66,7 +66,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 sbEnableMask |= 1u << sb.Slot;
 
-                ulong sbDescAddress = _bufferManager.GetComputeUniformBufferAddress(0);
+                ulong sbDescAddress = BufferManager.GetComputeUniformBufferAddress(0);
 
                 int sbDescOffset = 0x310 + sb.Slot * 0x10;
 
@@ -76,7 +76,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 SbDescriptor sbDescriptor = MemoryMarshal.Cast<byte, SbDescriptor>(sbDescriptorData)[0];
 
-                _bufferManager.SetComputeStorageBuffer(sb.Slot, sbDescriptor.PackAddress(), (uint)sbDescriptor.Size);
+                BufferManager.SetComputeStorageBuffer(sb.Slot, sbDescriptor.PackAddress(), (uint)sbDescriptor.Size);
             }
 
             ubEnableMask = 0;
@@ -86,8 +86,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 ubEnableMask |= 1u << info.CBuffers[index].Slot;
             }
 
-            _bufferManager.SetComputeStorageBufferEnableMask(sbEnableMask);
-            _bufferManager.SetComputeUniformBufferEnableMask(ubEnableMask);
+            BufferManager.SetComputeStorageBufferEnableMask(sbEnableMask);
+            BufferManager.SetComputeUniformBufferEnableMask(ubEnableMask);
 
             var textureBindings = new TextureBindingInfo[info.Textures.Count];
 
@@ -107,7 +107,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 }
             }
 
-            _textureManager.SetComputeTextures(textureBindings);
+            TextureManager.SetComputeTextures(textureBindings);
 
             var imageBindings = new TextureBindingInfo[info.Images.Count];
 
@@ -120,12 +120,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 imageBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
             }
 
-            _textureManager.SetComputeImages(imageBindings);
+            TextureManager.SetComputeImages(imageBindings);
 
-            _bufferManager.CommitComputeBindings();
-            _textureManager.CommitComputeBindings();
+            BufferManager.CommitComputeBindings();
+            TextureManager.CommitComputeBindings();
 
-            _context.Renderer.Pipeline.Dispatch(
+            _context.Renderer.Pipeline.DispatchCompute(
                 dispatchParams.UnpackGridSizeX(),
                 dispatchParams.UnpackGridSizeY(),
                 dispatchParams.UnpackGridSizeZ());

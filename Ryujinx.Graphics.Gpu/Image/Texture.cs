@@ -1,7 +1,6 @@
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Texture;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Texture;
 using Ryujinx.Graphics.Texture.Astc;
@@ -15,18 +14,16 @@ namespace Ryujinx.Graphics.Gpu.Image
     {
         private GpuContext _context;
 
-        private TextureInfo _info;
-
         private SizeInfo _sizeInfo;
 
-        public Format Format => _info.FormatInfo.Format;
+        public Format Format => Info.FormatInfo.Format;
 
-        public TextureInfo Info => _info;
+        public TextureInfo Info { get; private set; }
 
         private int _depth;
         private int _layers;
-        private int _firstLayer;
-        private int _firstLevel;
+        private readonly int _firstLayer;
+        private readonly int _firstLevel;
 
         private bool _hasData;
 
@@ -43,8 +40,8 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         public bool Modified { get; set; }
 
-        public ulong Address    => _info.Address;
-        public ulong EndAddress => _info.Address + Size;
+        public ulong Address    => Info.Address;
+        public ulong EndAddress => Info.Address + Size;
 
         public ulong Size => (ulong)_sizeInfo.TotalSize;
 
@@ -127,13 +124,13 @@ namespace Ryujinx.Graphics.Gpu.Image
             width  <<= _firstLevel;
             height <<= _firstLevel;
 
-            if (_info.Target == Target.Texture3D)
+            if (Info.Target == Target.Texture3D)
             {
                 depthOrLayers <<= _firstLevel;
             }
             else
             {
-                depthOrLayers = _viewStorage._info.DepthOrLayers;
+                depthOrLayers = _viewStorage.Info.DepthOrLayers;
             }
 
             _viewStorage.RecreateStorageOrView(width, height, depthOrLayers);
@@ -145,13 +142,13 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 int viewDepthOrLayers;
 
-                if (view._info.Target == Target.Texture3D)
+                if (view.Info.Target == Target.Texture3D)
                 {
                     viewDepthOrLayers = Math.Max(1, depthOrLayers >> view._firstLevel);
                 }
                 else
                 {
-                    viewDepthOrLayers = view._info.DepthOrLayers;
+                    viewDepthOrLayers = view.Info.DepthOrLayers;
                 }
 
                 view.RecreateStorageOrView(viewWidth, viewHeight, viewDepthOrLayers);
@@ -161,27 +158,27 @@ namespace Ryujinx.Graphics.Gpu.Image
         private void RecreateStorageOrView(int width, int height, int depthOrLayers)
         {
             SetInfo(new TextureInfo(
-                _info.Address,
+                Info.Address,
                 width,
                 height,
                 depthOrLayers,
-                _info.Levels,
-                _info.SamplesInX,
-                _info.SamplesInY,
-                _info.Stride,
-                _info.IsLinear,
-                _info.GobBlocksInY,
-                _info.GobBlocksInZ,
-                _info.GobBlocksInTileX,
-                _info.Target,
-                _info.FormatInfo,
-                _info.DepthStencilMode,
-                _info.SwizzleR,
-                _info.SwizzleG,
-                _info.SwizzleB,
-                _info.SwizzleA));
+                Info.Levels,
+                Info.SamplesInX,
+                Info.SamplesInY,
+                Info.Stride,
+                Info.IsLinear,
+                Info.GobBlocksInY,
+                Info.GobBlocksInZ,
+                Info.GobBlocksInTileX,
+                Info.Target,
+                Info.FormatInfo,
+                Info.DepthStencilMode,
+                Info.SwizzleR,
+                Info.SwizzleG,
+                Info.SwizzleB,
+                Info.SwizzleA));
 
-            TextureCreateInfo createInfo = TextureManager.GetCreateInfo(_info, _context.Capabilities);
+            TextureCreateInfo createInfo = TextureManager.GetCreateInfo(Info, _context.Capabilities);
 
             if (_viewStorage != this)
             {
@@ -215,50 +212,50 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             Span<byte> data = _context.PhysicalMemory.Read(Address, Size);
 
-            if (_info.IsLinear)
+            if (Info.IsLinear)
             {
                 data = LayoutConverter.ConvertLinearStridedToLinear(
-                    _info.Width,
-                    _info.Height,
-                    _info.FormatInfo.BlockWidth,
-                    _info.FormatInfo.BlockHeight,
-                    _info.Stride,
-                    _info.FormatInfo.BytesPerPixel,
+                    Info.Width,
+                    Info.Height,
+                    Info.FormatInfo.BlockWidth,
+                    Info.FormatInfo.BlockHeight,
+                    Info.Stride,
+                    Info.FormatInfo.BytesPerPixel,
                     data);
             }
             else
             {
                 data = LayoutConverter.ConvertBlockLinearToLinear(
-                    _info.Width,
-                    _info.Height,
+                    Info.Width,
+                    Info.Height,
                     _depth,
-                    _info.Levels,
+                    Info.Levels,
                     _layers,
-                    _info.FormatInfo.BlockWidth,
-                    _info.FormatInfo.BlockHeight,
-                    _info.FormatInfo.BytesPerPixel,
-                    _info.GobBlocksInY,
-                    _info.GobBlocksInZ,
-                    _info.GobBlocksInTileX,
+                    Info.FormatInfo.BlockWidth,
+                    Info.FormatInfo.BlockHeight,
+                    Info.FormatInfo.BytesPerPixel,
+                    Info.GobBlocksInY,
+                    Info.GobBlocksInZ,
+                    Info.GobBlocksInTileX,
                     _sizeInfo,
                     data);
             }
 
-            if (!_context.Capabilities.SupportsAstcCompression && _info.FormatInfo.Format.IsAstc())
+            if (!_context.Capabilities.SupportsAstcCompression && Info.FormatInfo.Format.IsAstc())
             {
                 if (!AstcDecoder.TryDecodeToRgba8(
                     data.ToArray(),
-                    _info.FormatInfo.BlockWidth,
-                    _info.FormatInfo.BlockHeight,
-                    _info.Width,
-                    _info.Height,
+                    Info.FormatInfo.BlockWidth,
+                    Info.FormatInfo.BlockHeight,
+                    Info.Width,
+                    Info.Height,
                     _depth,
-                    _info.Levels,
+                    Info.Levels,
                     out Span<byte> decoded))
                 {
-                    string texInfo = $"{_info.Target} {_info.FormatInfo.Format} {_info.Width}x{_info.Height}x{_info.DepthOrLayers} levels {_info.Levels}";
+                    string texInfo = $"{Info.Target} {Info.FormatInfo.Format} {Info.Width}x{Info.Height}x{Info.DepthOrLayers} levels {Info.Levels}";
 
-                    Logger.PrintError(LogClass.Gpu, $"Invalid ASTC texture at 0x{_info.Address:X} ({texInfo}).");
+                    Logger.PrintError(LogClass.Gpu, $"Invalid ASTC texture at 0x{Info.Address:X} ({texInfo}).");
                 }
 
                 data = decoded;
@@ -273,31 +270,31 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             Span<byte> data = HostTexture.GetData();
 
-            if (_info.IsLinear)
+            if (Info.IsLinear)
             {
                 data = LayoutConverter.ConvertLinearToLinearStrided(
-                    _info.Width,
-                    _info.Height,
-                    _info.FormatInfo.BlockWidth,
-                    _info.FormatInfo.BlockHeight,
-                    _info.Stride,
-                    _info.FormatInfo.BytesPerPixel,
+                    Info.Width,
+                    Info.Height,
+                    Info.FormatInfo.BlockWidth,
+                    Info.FormatInfo.BlockHeight,
+                    Info.Stride,
+                    Info.FormatInfo.BytesPerPixel,
                     data);
             }
             else
             {
                 data = LayoutConverter.ConvertLinearToBlockLinear(
-                    _info.Width,
-                    _info.Height,
+                    Info.Width,
+                    Info.Height,
                     _depth,
-                    _info.Levels,
+                    Info.Levels,
                     _layers,
-                    _info.FormatInfo.BlockWidth,
-                    _info.FormatInfo.BlockHeight,
-                    _info.FormatInfo.BytesPerPixel,
-                    _info.GobBlocksInY,
-                    _info.GobBlocksInZ,
-                    _info.GobBlocksInTileX,
+                    Info.FormatInfo.BlockWidth,
+                    Info.FormatInfo.BlockHeight,
+                    Info.FormatInfo.BytesPerPixel,
+                    Info.GobBlocksInY,
+                    Info.GobBlocksInZ,
+                    Info.GobBlocksInTileX,
                     _sizeInfo,
                     data);
             }
@@ -332,8 +329,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if ((flags & TextureSearchFlags.IgnoreMs) != 0)
             {
-                bool msTargetCompatible = _info.Target == Target.Texture2DMultisample &&
-                                           info.Target == Target.Texture2D;
+                bool msTargetCompatible = Info.Target == Target.Texture2DMultisample && info.Target == Target.Texture2D;
 
                 if (!msTargetCompatible && !TargetAndSamplesCompatible(info))
                 {
@@ -345,25 +341,24 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return false;
             }
 
-            return _info.Address == info.Address && _info.Levels == info.Levels;
+            return Info.Address == info.Address && Info.Levels == info.Levels;
         }
 
         private bool FormatMatches(TextureInfo info, bool strict)
         {
             // D32F and R32F texture have the same representation internally,
             // however the R32F format is used to sample from depth textures.
-            if (_info.FormatInfo.Format == Format.D32Float &&
-                 info.FormatInfo.Format == Format.R32Float && !strict)
+            if (Info.FormatInfo.Format == Format.D32Float && info.FormatInfo.Format == Format.R32Float && !strict)
             {
                 return true;
             }
 
-            return _info.FormatInfo.Format == info.FormatInfo.Format;
+            return Info.FormatInfo.Format == info.FormatInfo.Format;
         }
 
         private bool LayoutMatches(TextureInfo info)
         {
-            if (_info.IsLinear != info.IsLinear)
+            if (Info.IsLinear != info.IsLinear)
             {
                 return false;
             }
@@ -372,12 +367,12 @@ namespace Ryujinx.Graphics.Gpu.Image
             // For block linear textures, the stride is ignored.
             if (info.IsLinear)
             {
-                return _info.Stride == info.Stride;
+                return Info.Stride == info.Stride;
             }
             else
             {
-                return _info.GobBlocksInY == info.GobBlocksInY &&
-                       _info.GobBlocksInZ == info.GobBlocksInZ;
+                return Info.GobBlocksInY == info.GobBlocksInY &&
+                       Info.GobBlocksInZ == info.GobBlocksInZ;
             }
         }
 
@@ -388,21 +383,21 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         public bool SizeMatches(TextureInfo info, int level)
         {
-            return Math.Max(1, _info.Width      >> level) == info.Width  &&
-                   Math.Max(1, _info.Height     >> level) == info.Height &&
-                   Math.Max(1, _info.GetDepth() >> level) == info.GetDepth();
+            return Math.Max(1, Info.Width      >> level) == info.Width  &&
+                   Math.Max(1, Info.Height     >> level) == info.Height &&
+                   Math.Max(1, Info.GetDepth() >> level) == info.GetDepth();
         }
 
         private bool SizeMatches(TextureInfo info, bool alignSizes)
         {
-            if (_info.GetLayers() != info.GetLayers())
+            if (Info.GetLayers() != info.GetLayers())
             {
                 return false;
             }
 
             if (alignSizes)
             {
-                Size size0 = GetAlignedSize(_info);
+                Size size0 = GetAlignedSize(Info);
                 Size size1 = GetAlignedSize(info);
 
                 return size0.Width  == size1.Width  &&
@@ -411,26 +406,26 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
             else
             {
-                return _info.Width      == info.Width  &&
-                       _info.Height     == info.Height &&
-                       _info.GetDepth() == info.GetDepth();
+                return Info.Width      == info.Width  &&
+                       Info.Height     == info.Height &&
+                       Info.GetDepth() == info.GetDepth();
             }
         }
 
         private bool SamplerParamsMatches(TextureInfo info)
         {
-            return _info.DepthStencilMode == info.DepthStencilMode &&
-                   _info.SwizzleR         == info.SwizzleR         &&
-                   _info.SwizzleG         == info.SwizzleG         &&
-                   _info.SwizzleB         == info.SwizzleB         &&
-                   _info.SwizzleA         == info.SwizzleA;
+            return Info.DepthStencilMode == info.DepthStencilMode &&
+                   Info.SwizzleR         == info.SwizzleR         &&
+                   Info.SwizzleG         == info.SwizzleG         &&
+                   Info.SwizzleB         == info.SwizzleB         &&
+                   Info.SwizzleA         == info.SwizzleA;
         }
 
         private bool TargetAndSamplesCompatible(TextureInfo info)
         {
-            return _info.Target     == info.Target     &&
-                   _info.SamplesInX == info.SamplesInX &&
-                   _info.SamplesInY == info.SamplesInY;
+            return Info.Target     == info.Target     &&
+                   Info.SamplesInX == info.SamplesInX &&
+                   Info.SamplesInY == info.SamplesInY;
         }
 
         public bool IsViewCompatible(
@@ -485,13 +480,13 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return false;
             }
 
-            return _info.SamplesInX == info.SamplesInX &&
-                   _info.SamplesInY == info.SamplesInY;
+            return Info.SamplesInX == info.SamplesInX &&
+                   Info.SamplesInY == info.SamplesInY;
         }
 
         private bool ViewLayoutCompatible(TextureInfo info, int level)
         {
-            if (_info.IsLinear != info.IsLinear)
+            if (Info.IsLinear != info.IsLinear)
             {
                 return false;
             }
@@ -500,9 +495,9 @@ namespace Ryujinx.Graphics.Gpu.Image
             // For block linear textures, the stride is ignored.
             if (info.IsLinear)
             {
-                int width = Math.Max(1, _info.Width >> level);
+                int width = Math.Max(1, Info.Width >> level);
 
-                int stride = width * _info.FormatInfo.BytesPerPixel;
+                int stride = width * Info.FormatInfo.BytesPerPixel;
 
                 stride = BitUtils.AlignUp(stride, 32);
 
@@ -510,15 +505,15 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
             else
             {
-                int height = Math.Max(1, _info.Height     >> level);
-                int depth  = Math.Max(1, _info.GetDepth() >> level);
+                int height = Math.Max(1, Info.Height     >> level);
+                int depth  = Math.Max(1, Info.GetDepth() >> level);
 
                 (int gobBlocksInY, int gobBlocksInZ) = SizeCalculator.GetMipGobBlockSizes(
                     height,
                     depth,
-                    _info.FormatInfo.BlockHeight,
-                    _info.GobBlocksInY,
-                    _info.GobBlocksInZ);
+                    Info.FormatInfo.BlockHeight,
+                    Info.GobBlocksInY,
+                    Info.GobBlocksInZ);
 
                 return gobBlocksInY == info.GobBlocksInY &&
                        gobBlocksInZ == info.GobBlocksInZ;
@@ -527,12 +522,12 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private bool ViewFormatCompatible(TextureInfo info)
         {
-            return TextureCompatibility.FormatCompatible(_info.FormatInfo, info.FormatInfo);
+            return TextureCompatibility.FormatCompatible(Info.FormatInfo, info.FormatInfo);
         }
 
         private bool ViewSizeMatches(TextureInfo info, int level, bool isCopy)
         {
-            Size size = GetAlignedSize(_info, level);
+            Size size = GetAlignedSize(Info, level);
 
             Size otherSize = GetAlignedSize(info);
 
@@ -549,7 +544,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private bool ViewTargetCompatible(TextureInfo info, bool isCopy)
         {
-            switch (_info.Target)
+            switch (Info.Target)
             {
                 case Target.Texture1D:
                 case Target.Texture1DArray:
@@ -621,7 +616,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         public ITexture GetTargetTexture(Target target)
         {
-            if (target == _info.Target)
+            if (target == Info.Target)
             {
                 return HostTexture;
             }
@@ -629,21 +624,21 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (_arrayViewTexture == null && IsSameDimensionsTarget(target))
             {
                 TextureCreateInfo createInfo = new TextureCreateInfo(
-                    _info.Width,
-                    _info.Height,
+                    Info.Width,
+                    Info.Height,
                     target == Target.CubemapArray ? 6 : 1,
-                    _info.Levels,
-                    _info.Samples,
-                    _info.FormatInfo.BlockWidth,
-                    _info.FormatInfo.BlockHeight,
-                    _info.FormatInfo.BytesPerPixel,
-                    _info.FormatInfo.Format,
-                    _info.DepthStencilMode,
+                    Info.Levels,
+                    Info.Samples,
+                    Info.FormatInfo.BlockWidth,
+                    Info.FormatInfo.BlockHeight,
+                    Info.FormatInfo.BytesPerPixel,
+                    Info.FormatInfo.Format,
+                    Info.DepthStencilMode,
                     target,
-                    _info.SwizzleR,
-                    _info.SwizzleG,
-                    _info.SwizzleB,
-                    _info.SwizzleA);
+                    Info.SwizzleR,
+                    Info.SwizzleG,
+                    Info.SwizzleB,
+                    Info.SwizzleA);
 
                 ITexture viewTexture = HostTexture.CreateView(createInfo, 0, 0);
 
@@ -662,7 +657,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private bool IsSameDimensionsTarget(Target target)
         {
-            switch (_info.Target)
+            switch (Info.Target)
             {
                 case Target.Texture1D:
                 case Target.Texture1DArray:
@@ -702,7 +697,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         private void SetInfo(TextureInfo info)
         {
-            _info = info;
+            Info = info;
 
             _depth  = info.GetDepth();
             _layers = info.GetLayers();

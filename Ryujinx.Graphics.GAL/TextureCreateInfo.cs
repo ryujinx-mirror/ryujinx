@@ -1,7 +1,7 @@
 using Ryujinx.Common;
 using System;
 
-namespace Ryujinx.Graphics.GAL.Texture
+namespace Ryujinx.Graphics.GAL
 {
     public struct TextureCreateInfo
     {

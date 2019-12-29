@@ -1,3 +1,4 @@
+using Ryujinx.Graphics.Shader.Translation;
 using System.Collections.Generic;
 using System.Text;
 

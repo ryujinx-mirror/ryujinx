@@ -3,6 +3,8 @@ using Ryujinx.Graphics.Gpu.State;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
+    using Texture = Image.Texture;
+
     partial class Methods
     {
         private void CopyTexture(GpuState state, int argument)
@@ -10,7 +12,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             var dstCopyTexture = state.Get<CopyTexture>(MethodOffset.CopyDstTexture);
             var srcCopyTexture = state.Get<CopyTexture>(MethodOffset.CopySrcTexture);
 
-            Image.Texture srcTexture = _textureManager.FindOrCreateTexture(srcCopyTexture);
+            Texture srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture);
 
             if (srcTexture == null)
             {
@@ -25,7 +27,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 dstCopyTexture.Format = RtFormat.D32Float;
             }
 
-            Image.Texture dstTexture = _textureManager.FindOrCreateTexture(dstCopyTexture);
+            Texture dstTexture = TextureManager.FindOrCreateTexture(dstCopyTexture);
 
             if (dstTexture == null)
             {
@@ -76,7 +78,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             {
                 srcCopyTexture.Height++;
 
-                srcTexture = _textureManager.FindOrCreateTexture(srcCopyTexture);
+                srcTexture = TextureManager.FindOrCreateTexture(srcCopyTexture);
 
                 srcRegion = new Extents2D(
                     srcRegion.X1 - srcTexture.Info.Width,

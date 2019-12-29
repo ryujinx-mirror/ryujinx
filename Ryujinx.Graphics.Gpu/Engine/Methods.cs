@@ -1,8 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Blend;
-using Ryujinx.Graphics.GAL.DepthStencil;
-using Ryujinx.Graphics.GAL.InputAssembler;
-using Ryujinx.Graphics.GAL.Texture;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Gpu.Shader;
@@ -13,19 +10,18 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
+    using Texture = Image.Texture;
+
     partial class Methods
     {
-        private GpuContext _context;
+        private readonly GpuContext _context;
 
-        private ShaderCache _shaderCache;
+        private readonly ShaderCache _shaderCache;
 
-        private ShaderProgramInfo[] _currentProgramInfo;
+        private readonly ShaderProgramInfo[] _currentProgramInfo;
 
-        private BufferManager  _bufferManager;
-        private TextureManager _textureManager;
-
-        public BufferManager  BufferManager  => _bufferManager;
-        public TextureManager TextureManager => _textureManager;
+        public BufferManager  BufferManager  { get; }
+        public TextureManager TextureManager { get; }
 
         private bool _isAnyVbInstanced;
         private bool _vsUsesInstanceId;
@@ -38,8 +34,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             _currentProgramInfo = new ShaderProgramInfo[Constants.TotalShaderStages];
 
-            _bufferManager  = new BufferManager(context);
-            _textureManager = new TextureManager(context);
+            BufferManager  = new BufferManager(context);
+            TextureManager = new TextureManager(context);
         }
 
         public void RegisterCallbacks(GpuState state)
@@ -183,8 +179,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             UpdateStorageBuffers();
 
-            _bufferManager.CommitBindings();
-            _textureManager.CommitGraphicsBindings();
+            BufferManager.CommitBindings();
+            TextureManager.CommitGraphicsBindings();
         }
 
         private void UpdateStorageBuffers()
@@ -202,7 +198,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 {
                     BufferDescriptor sb = info.SBuffers[index];
 
-                    ulong sbDescAddress = _bufferManager.GetGraphicsUniformBufferAddress(stage, 0);
+                    ulong sbDescAddress = BufferManager.GetGraphicsUniformBufferAddress(stage, 0);
 
                     int sbDescOffset = 0x110 + stage * 0x100 + sb.Slot * 0x10;
 
@@ -212,7 +208,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                     SbDescriptor sbDescriptor = MemoryMarshal.Cast<byte, SbDescriptor>(sbDescriptorData)[0];
 
-                    _bufferManager.SetGraphicsStorageBuffer(stage, sb.Slot, sbDescriptor.PackAddress(), (uint)sbDescriptor.Size);
+                    BufferManager.SetGraphicsStorageBuffer(stage, sb.Slot, sbDescriptor.PackAddress(), (uint)sbDescriptor.Size);
                 }
             }
         }
@@ -236,17 +232,14 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 if (index >= count || !IsRtEnabled(colorState))
                 {
-                    _textureManager.SetRenderTargetColor(index, null);
+                    TextureManager.SetRenderTargetColor(index, null);
 
                     continue;
                 }
 
-                Image.Texture color = _textureManager.FindOrCreateTexture(
-                    colorState,
-                    samplesInX,
-                    samplesInY);
+                Texture color = TextureManager.FindOrCreateTexture(colorState, samplesInX, samplesInY);
 
-                _textureManager.SetRenderTargetColor(index, color);
+                TextureManager.SetRenderTargetColor(index, color);
 
                 if (color != null)
                 {
@@ -256,21 +249,17 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             bool dsEnable = state.Get<Boolean32>(MethodOffset.RtDepthStencilEnable);
 
-            Image.Texture depthStencil = null;
+            Texture depthStencil = null;
 
             if (dsEnable)
             {
                 var dsState = state.Get<RtDepthStencilState>(MethodOffset.RtDepthStencilState);
                 var dsSize  = state.Get<Size3D>             (MethodOffset.RtDepthStencilSize);
 
-                depthStencil = _textureManager.FindOrCreateTexture(
-                    dsState,
-                    dsSize,
-                    samplesInX,
-                    samplesInY);
+                depthStencil = TextureManager.FindOrCreateTexture(dsState, dsSize, samplesInX, samplesInY);
             }
 
-            _textureManager.SetRenderTargetDepthStencil(depthStencil);
+            TextureManager.SetRenderTargetDepthStencil(depthStencil);
 
             if (depthStencil != null)
             {
@@ -335,8 +324,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     // the maximum supported viewport dimensions.
                     // This must be compensated on the shader, by dividing the vertex position
                     // by the maximum viewport dimensions.
-                    float maxSize     = (float)_context.Capabilities.MaximumViewportDimensions;
-                    float halfMaxSize = (float)_context.Capabilities.MaximumViewportDimensions * 0.5f;
+                    float maxSize     = _context.Capabilities.MaximumViewportDimensions;
+                    float halfMaxSize = _context.Capabilities.MaximumViewportDimensions * 0.5f;
 
                     region = new RectangleF(-halfMaxSize, -halfMaxSize, maxSize, maxSize * yFlip);
                 }
@@ -362,7 +351,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             float units  = state.Get<float>(MethodOffset.DepthBiasUnits);
             float clamp  = state.Get<float>(MethodOffset.DepthBiasClamp);
 
-            PolygonModeMask enables = 0;
+            PolygonModeMask enables;
 
             enables  = (depthBias.PointEnable ? PolygonModeMask.Point : 0);
             enables |= (depthBias.LineEnable  ? PolygonModeMask.Line  : 0);
@@ -435,16 +424,16 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 ? texturePool.MaximumId
                 : samplerPool.MaximumId;
 
-            _textureManager.SetGraphicsSamplerPool(samplerPool.Address.Pack(), maximumId, samplerIndex);
+            TextureManager.SetGraphicsSamplerPool(samplerPool.Address.Pack(), maximumId, samplerIndex);
         }
 
         private void UpdateTexturePoolState(GpuState state)
         {
             var texturePool = state.Get<PoolState>(MethodOffset.TexturePoolState);
 
-            _textureManager.SetGraphicsTexturePool(texturePool.Address.Pack(), texturePool.MaximumId);
+            TextureManager.SetGraphicsTexturePool(texturePool.Address.Pack(), texturePool.MaximumId);
 
-            _textureManager.SetGraphicsTextureBufferIndex(state.Get<int>(MethodOffset.TextureBufferIndex));
+            TextureManager.SetGraphicsTextureBufferIndex(state.Get<int>(MethodOffset.TextureBufferIndex));
         }
 
         private void UpdateVertexAttribState(GpuState state)
@@ -457,7 +446,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 if (!FormatTable.TryGetAttribFormat(vertexAttrib.UnpackFormat(), out Format format))
                 {
-                    // TODO: warning.
+                    Logger.PrintError(LogClass.Gpu, $"Invalid attribute format 0x{vertexAttrib.UnpackFormat():X}.");
 
                     format = Format.R32G32B32A32Float;
                 }
@@ -468,7 +457,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     format);
             }
 
-            _context.Renderer.Pipeline.BindVertexAttribs(vertexAttribs);
+            _context.Renderer.Pipeline.SetVertexAttribs(vertexAttribs);
         }
 
         private void UpdatePrimitiveRestartState(GpuState state)
@@ -504,7 +493,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 case IndexType.UInt:   size *= 4; break;
             }
 
-            _bufferManager.SetIndexBuffer(gpuVa, size, indexBuffer.Type);
+            BufferManager.SetIndexBuffer(gpuVa, size, indexBuffer.Type);
 
             // The index buffer affects the vertex buffer size calculation, we
             // need to ensure that they are updated.
@@ -521,7 +510,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 if (!vertexBuffer.UnpackEnable())
                 {
-                    _bufferManager.SetVertexBuffer(index, 0, 0, 0, 0);
+                    BufferManager.SetVertexBuffer(index, 0, 0, 0, 0);
 
                     continue;
                 }
@@ -557,7 +546,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     size = (ulong)((firstInstance + drawState.First + drawState.Count) * stride);
                 }
 
-                _bufferManager.SetVertexBuffer(index, address, size, stride, divisor);
+                BufferManager.SetVertexBuffer(index, address, size, stride, divisor);
             }
         }
 
@@ -580,7 +569,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             {
                 var colorMask = state.Get<RtColorMask>(MethodOffset.RtColorMask, rtColorMaskShared ? 0 : index);
 
-                uint componentMask = 0;
+                uint componentMask;
 
                 componentMask  = (colorMask.UnpackRed()   ? 1u : 0u);
                 componentMask |= (colorMask.UnpackGreen() ? 2u : 0u);
@@ -596,8 +585,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private void UpdateBlendState(GpuState state)
         {
             bool blendIndependent = state.Get<Boolean32>(MethodOffset.BlendIndependent);
-
-            BlendState[] blends = new BlendState[8];
 
             for (int index = 0; index < 8; index++)
             {
@@ -632,7 +619,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                         blend.AlphaDstFactor);
                 }
 
-                _context.Renderer.Pipeline.BindBlendState(index, descriptor);
+                _context.Renderer.Pipeline.SetBlendState(index, descriptor);
             }
         }
 
@@ -704,7 +691,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     }
                 }
 
-                _textureManager.SetGraphicsTextures(stage, textureBindings);
+                TextureManager.SetGraphicsTextures(stage, textureBindings);
 
                 var imageBindings = new TextureBindingInfo[info.Images.Count];
 
@@ -717,7 +704,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     imageBindings[index] = new TextureBindingInfo(target, descriptor.HandleIndex);
                 }
 
-                _textureManager.SetGraphicsImages(stage, imageBindings);
+                TextureManager.SetGraphicsImages(stage, imageBindings);
 
                 uint sbEnableMask = 0;
                 uint ubEnableMask = 0;
@@ -732,11 +719,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     ubEnableMask |= 1u << info.CBuffers[index].Slot;
                 }
 
-                _bufferManager.SetGraphicsStorageBufferEnableMask(stage, sbEnableMask);
-                _bufferManager.SetGraphicsUniformBufferEnableMask(stage, ubEnableMask);
+                BufferManager.SetGraphicsStorageBufferEnableMask(stage, sbEnableMask);
+                BufferManager.SetGraphicsUniformBufferEnableMask(stage, ubEnableMask);
             }
 
-            _context.Renderer.Pipeline.BindProgram(gs.HostProgram);
+            _context.Renderer.Pipeline.SetProgram(gs.HostProgram);
         }
 
         public bool GetViewportTransformEnable(GpuState state)
@@ -796,7 +783,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private void InvalidateTextures(GpuState state, int argument)
         {
-            _textureManager.Flush();
+            TextureManager.Flush();
         }
 
         private void TextureBarrierTiled(GpuState state, int argument)

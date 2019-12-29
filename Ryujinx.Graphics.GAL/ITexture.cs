@@ -1,4 +1,3 @@
-using Ryujinx.Graphics.GAL.Texture;
 using System;
 
 namespace Ryujinx.Graphics.GAL

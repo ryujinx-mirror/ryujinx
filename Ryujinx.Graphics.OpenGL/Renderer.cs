@@ -1,7 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Sampler;
-using Ryujinx.Graphics.GAL.Texture;
 using Ryujinx.Graphics.Shader;
 
 namespace Ryujinx.Graphics.OpenGL
@@ -10,9 +8,9 @@ namespace Ryujinx.Graphics.OpenGL
     {
         public IPipeline Pipeline { get; }
 
-        private Counters _counters;
+        private readonly Counters _counters;
 
-        private Window _window;
+        private readonly Window _window;
 
         public IWindow Window => _window;
 

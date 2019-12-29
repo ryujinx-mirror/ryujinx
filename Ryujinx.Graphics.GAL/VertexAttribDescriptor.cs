@@ -1,4 +1,4 @@
-namespace Ryujinx.Graphics.GAL.InputAssembler
+namespace Ryujinx.Graphics.GAL
 {
     public struct VertexAttribDescriptor
     {

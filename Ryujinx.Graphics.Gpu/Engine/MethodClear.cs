@@ -1,4 +1,4 @@
-using Ryujinx.Graphics.GAL.Color;
+using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.State;
 
 namespace Ryujinx.Graphics.Gpu.Engine
@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             UpdateRenderTargetState(state, useControl: false);
 
-            _textureManager.CommitGraphicsBindings();
+            TextureManager.CommitGraphicsBindings();
 
             bool clearDepth   = (argument & 1) != 0;
             bool clearStencil = (argument & 2) != 0;

@@ -1,4 +1,4 @@
-using Ryujinx.Graphics.GAL.Texture;
+using Ryujinx.Graphics.GAL;
 
 namespace Ryujinx.Graphics.Gpu.Image
 {

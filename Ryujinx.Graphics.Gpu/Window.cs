@@ -1,14 +1,15 @@
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Texture;
 using Ryujinx.Graphics.Gpu.Image;
 using System;
 using System.Collections.Concurrent;
 
 namespace Ryujinx.Graphics.Gpu
 {
+    using Texture = Image.Texture;
+
     public class Window
     {
-        private GpuContext _context;
+        private readonly GpuContext _context;
 
         private struct PresentationTexture
         {
@@ -30,7 +31,7 @@ namespace Ryujinx.Graphics.Gpu
             }
         }
 
-        private ConcurrentQueue<PresentationTexture> _frameQueue;
+        private readonly ConcurrentQueue<PresentationTexture> _frameQueue;
 
         public Window(GpuContext context)
         {
@@ -79,7 +80,7 @@ namespace Ryujinx.Graphics.Gpu
 
             if (_frameQueue.TryDequeue(out PresentationTexture pt))
             {
-                Image.Texture texture = _context.Methods.TextureManager.FindOrCreateTexture(pt.Info);
+                Texture texture = _context.Methods.TextureManager.FindOrCreateTexture(pt.Info);
 
                 texture.SynchronizeMemory();
 

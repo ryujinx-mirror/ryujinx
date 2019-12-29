@@ -1,7 +1,6 @@
-using Ryujinx.Graphics.Shader.Translation;
 using System;
 
-namespace Ryujinx.Graphics.Shader
+namespace Ryujinx.Graphics.Shader.Translation
 {
     struct ShaderConfig
     {

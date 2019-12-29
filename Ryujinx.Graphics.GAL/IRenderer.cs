@@ -1,5 +1,3 @@
-using Ryujinx.Graphics.GAL.Sampler;
-using Ryujinx.Graphics.GAL.Texture;
 using Ryujinx.Graphics.Shader;
 
 namespace Ryujinx.Graphics.GAL

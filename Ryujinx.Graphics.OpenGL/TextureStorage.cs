@@ -1,7 +1,6 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Texture;
 
 namespace Ryujinx.Graphics.OpenGL
 {
@@ -9,9 +8,9 @@ namespace Ryujinx.Graphics.OpenGL
     {
         public int Handle { get; private set; }
 
-        private Renderer _renderer;
+        private readonly Renderer _renderer;
 
-        private TextureCreateInfo _info;
+        private readonly TextureCreateInfo _info;
 
         public Target Target => _info.Target;
 

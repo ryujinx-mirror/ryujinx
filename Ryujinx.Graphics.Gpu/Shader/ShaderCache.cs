@@ -9,6 +9,8 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
+    using TextureDescriptor = Image.TextureDescriptor;
+
     class ShaderCache
     {
         private const int MaxProgramSize = 0x100000;
@@ -374,7 +376,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return !descriptor.UnpackTextureCoordNormalized() && is2DTexture;
         }
 
-        private Image.TextureDescriptor GetTextureDescriptor(GpuState state, int stageIndex, int index)
+        private TextureDescriptor GetTextureDescriptor(GpuState state, int stageIndex, int index)
         {
             return _context.Methods.TextureManager.GetGraphicsTextureDescriptor(state, stageIndex, index);
         }

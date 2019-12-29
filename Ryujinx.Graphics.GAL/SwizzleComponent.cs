@@ -1,4 +1,4 @@
-namespace Ryujinx.Graphics.GAL.Texture
+namespace Ryujinx.Graphics.GAL
 {
     public enum SwizzleComponent
     {

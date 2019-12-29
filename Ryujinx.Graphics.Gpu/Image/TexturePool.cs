@@ -1,5 +1,5 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Texture;
 using Ryujinx.Graphics.Gpu.Memory;
 using System;
 using System.Collections.Generic;
@@ -128,7 +128,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             if (!FormatTable.TryGetTextureFormat(format, srgb, out FormatInfo formatInfo))
             {
-                // TODO: Warning.
+                Logger.PrintError(LogClass.Gpu, $"Invalid texture format 0x{format:X} (sRGB: {srgb}).");
 
                 formatInfo = FormatInfo.Default;
             }

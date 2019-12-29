@@ -1,6 +1,5 @@
 using Ryujinx.Common;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.InputAssembler;
 using Ryujinx.Graphics.Gpu.State;
 using Ryujinx.Graphics.Shader;
 using System;
@@ -305,7 +304,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 BufferRange buffer = GetBufferRange(bounds.Address, bounds.Size);
 
-                _context.Renderer.Pipeline.BindStorageBuffer(index, ShaderStage.Compute, buffer);
+                _context.Renderer.Pipeline.SetStorageBuffer(index, ShaderStage.Compute, buffer);
             }
 
             enableMask = _cpUniformBuffers.EnableMask;
@@ -326,7 +325,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 BufferRange buffer = GetBufferRange(bounds.Address, bounds.Size);
 
-                _context.Renderer.Pipeline.BindUniformBuffer(index, ShaderStage.Compute, buffer);
+                _context.Renderer.Pipeline.SetUniformBuffer(index, ShaderStage.Compute, buffer);
             }
 
             // Force rebind after doing compute work.
@@ -343,7 +342,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 {
                     BufferRange buffer = GetBufferRange(_indexBuffer.Address, _indexBuffer.Size);
 
-                    _context.Renderer.Pipeline.BindIndexBuffer(buffer, _indexBuffer.Type);
+                    _context.Renderer.Pipeline.SetIndexBuffer(buffer, _indexBuffer.Type);
                 }
             }
             else if (_indexBuffer.Address != 0)
@@ -373,7 +372,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                     vertexBuffers[index] = new VertexBufferDescriptor(buffer, vb.Stride, vb.Divisor);
                 }
 
-                _context.Renderer.Pipeline.BindVertexBuffers(vertexBuffers);
+                _context.Renderer.Pipeline.SetVertexBuffers(vertexBuffers);
             }
             else
             {
@@ -468,11 +467,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             if (isStorage)
             {
-                _context.Renderer.Pipeline.BindStorageBuffer(index, stage, buffer);
+                _context.Renderer.Pipeline.SetStorageBuffer(index, stage, buffer);
             }
             else
             {
-                _context.Renderer.Pipeline.BindUniformBuffer(index, stage, buffer);
+                _context.Renderer.Pipeline.SetUniformBuffer(index, stage, buffer);
             }
         }
 

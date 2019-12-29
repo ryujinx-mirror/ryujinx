@@ -1,4 +1,4 @@
-namespace Ryujinx.Graphics.GAL.Sampler
+namespace Ryujinx.Graphics.GAL
 {
     public enum MinFilter
     {

@@ -1,6 +1,5 @@
 using OpenTK.Graphics.OpenGL;
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Texture;
 using System;
 
 namespace Ryujinx.Graphics.OpenGL
@@ -9,13 +8,13 @@ namespace Ryujinx.Graphics.OpenGL
     {
         public int Handle { get; private set; }
 
-        private Renderer _renderer;
+        private readonly Renderer _renderer;
 
-        private TextureStorage _parent;
+        private readonly TextureStorage _parent;
 
         private TextureView _emulatedViewParent;
 
-        private TextureCreateInfo _info;
+        private readonly TextureCreateInfo _info;
 
         private int _firstLayer;
         private int _firstLevel;

@@ -1,6 +1,4 @@
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.Color;
-using Ryujinx.Graphics.GAL.Sampler;
 using System;
 
 namespace Ryujinx.Graphics.Gpu.Image

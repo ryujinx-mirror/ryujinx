@@ -178,7 +178,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     _textureState[stageIndex][index].Texture = hostTexture;
 
-                    _context.Renderer.Pipeline.BindTexture(index, stage, hostTexture);
+                    _context.Renderer.Pipeline.SetTexture(index, stage, hostTexture);
                 }
 
                 Sampler sampler = _samplerPool.Get(samplerId);
@@ -189,7 +189,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     _textureState[stageIndex][index].Sampler = hostSampler;
 
-                    _context.Renderer.Pipeline.BindSampler(index, stage, hostSampler);
+                    _context.Renderer.Pipeline.SetSampler(index, stage, hostSampler);
                 }
             }
         }
@@ -217,7 +217,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     _imageState[stageIndex][index].Texture = hostTexture;
 
-                    _context.Renderer.Pipeline.BindImage(index, stage, hostTexture);
+                    _context.Renderer.Pipeline.SetImage(index, stage, hostTexture);
                 }
             }
         }

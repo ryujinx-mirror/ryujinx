@@ -1,5 +1,4 @@
 using Ryujinx.Graphics.GAL;
-using Ryujinx.Graphics.GAL.DepthStencil;
 
 namespace Ryujinx.Graphics.Gpu.State
 {

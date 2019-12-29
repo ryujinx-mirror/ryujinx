@@ -1,4 +1,4 @@
-namespace Ryujinx.Graphics.GAL.Blend
+namespace Ryujinx.Graphics.GAL
 {
     public enum BlendFactor
     {
