@@ -608,10 +608,6 @@ namespace Ryujinx.Graphics.OpenGL
             {
                 ((Sampler)sampler).Bind(unit);
             }
-            else if (unit == -1)
-            {
-                Logger.PrintError(LogClass.Gpu, $"Invalid binding point: {stage} {index}.");
-            }
         }
 
         public void SetStencilTest(StencilTestDescriptor stencilTest)
@@ -675,10 +671,6 @@ namespace Ryujinx.Graphics.OpenGL
                 {
                     ((TextureView)texture).Bind(unit);
                 }
-            }
-            else if (unit == -1)
-            {
-                Logger.PrintError(LogClass.Gpu, $"Invalid binding point: {stage} {index}.");
             }
         }
 
@@ -763,8 +755,6 @@ namespace Ryujinx.Graphics.OpenGL
 
             if (bindingPoint == -1)
             {
-                Logger.PrintError(LogClass.Gpu, $"Invalid binding point: {stage} {index}.");
-
                 return;
             }
 
