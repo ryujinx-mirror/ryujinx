@@ -766,13 +766,13 @@ namespace Ryujinx.HLE.HOS
                         foreach (KProcess process in Processes.Values)
                         {
                             process.Terminate();
-
-                            // Exit ourself now!
-                            Scheduler.ExitThread(terminationThread);
-                            Scheduler.GetCurrentThread().Exit();
-                            Scheduler.RemoveThread(terminationThread);
                         }
                     }
+
+                    // Exit ourself now!
+                    Scheduler.ExitThread(terminationThread);
+                    Scheduler.GetCurrentThread().Exit();
+                    Scheduler.RemoveThread(terminationThread);
                 });
 
                 terminationThread.Start();
