@@ -105,6 +105,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 case Format.D24UnormS8Uint:
                 case Format.D32Float:
                 case Format.D32FloatS8Uint:
+                case Format.S8Uint:
                     return true;
             }
 
