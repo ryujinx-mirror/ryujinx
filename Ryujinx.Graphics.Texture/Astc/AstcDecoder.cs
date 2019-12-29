@@ -32,9 +32,14 @@ namespace Ryujinx.Graphics.Texture.Astc
             int depth,
             int levels)
         {
-            if ((uint)blockWidth > 12 || (uint)blockHeight > 12)
+            if ((uint)blockWidth > 12)
             {
-                throw new AstcDecoderException("Invalid block size.");
+                throw new ArgumentOutOfRangeException(nameof(blockWidth));
+            }
+
+            if ((uint)blockHeight > 12)
+            {
+                throw new ArgumentOutOfRangeException(nameof(blockHeight));
             }
 
             InputBuffer = inputBuffer;
@@ -44,6 +49,8 @@ namespace Ryujinx.Graphics.Texture.Astc
             BlockSizeY = blockHeight;
 
             Levels = new AstcLevel[levels];
+
+            Success = true;
 
             TotalBlockCount = 0;
 
