@@ -120,7 +120,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="gpuVa">The start GPU virtual address of the sampler pool</param>
         /// <param name="maximumId">The maximum ID of the sampler pool</param>
-        /// <param name="samplerIndex">The indexing type of the sampler</param>
+        /// <param name="samplerIndex">The indexing type of the sampler pool</param>
         public void SetComputeSamplerPool(ulong gpuVa, int maximumId, SamplerIndex samplerIndex)
         {
             _cpBindingsManager.SetSamplerPool(gpuVa, maximumId, samplerIndex);
@@ -131,7 +131,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         /// <param name="gpuVa">The start GPU virtual address of the sampler pool</param>
         /// <param name="maximumId">The maximum ID of the sampler pool</param>
-        /// <param name="samplerIndex">The indexing type of the sampler</param>
+        /// <param name="samplerIndex">The indexing type of the sampler pool</param>
         public void SetGraphicsSamplerPool(ulong gpuVa, int maximumId, SamplerIndex samplerIndex)
         {
             _gpBindingsManager.SetSamplerPool(gpuVa, maximumId, samplerIndex);
@@ -734,7 +734,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Flushes textures in the cache inside a given range that have been modified since the last call.
+        /// Flushes the textures in the cache inside a given range that have been modified since the last call.
         /// </summary>
         /// <param name="address">The range start address</param>
         /// <param name="size">The range size</param>

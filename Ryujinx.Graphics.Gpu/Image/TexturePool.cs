@@ -245,7 +245,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// Checks if the swizzle component is equal to the red or green channels.
         /// </summary>
         /// <param name="component">The swizzle component to check</param>
-        /// <returns>True if the swizzle component is equal to the red or blue, false otherwise</returns>
+        /// <returns>True if the swizzle component is equal to the red or green, false otherwise</returns>
         private static bool IsRG(SwizzleComponent component)
         {
             return component == SwizzleComponent.Red ||

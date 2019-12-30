@@ -112,7 +112,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="width">The width of the texture</param>
         /// <param name="height">The height or the texture</param>
         /// <param name="depthOrLayers">The depth or layers count of the texture</param>
-        /// <param name="levels">The amount if mipmap levels of the texture</param>
+        /// <param name="levels">The amount of mipmap levels of the texture</param>
         /// <param name="samplesInX">The number of samples in the X direction for multisample textures, should be 1 otherwise</param>
         /// <param name="samplesInY">The number of samples in the Y direction for multisample textures, should be 1 otherwise</param>
         /// <param name="stride">The stride for linear textures</param>

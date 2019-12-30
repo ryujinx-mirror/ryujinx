@@ -650,7 +650,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Check it's possible to create a view with the specified layout.
+        /// Check if it's possible to create a view with the specified layout.
         /// The layout information is composed of the Stride for linear textures, or GOB block size
         /// for block linear textures.
         /// </summary>
@@ -695,7 +695,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Checks if the view format is compatible with this texture format.
-        /// In general, the formats are considered compatible if the bytes per pixel value is equal,
+        /// In general, the formats are considered compatible if the bytes per pixel values are equal,
         /// but there are more complex rules for some formats, like compressed or depth-stencil formats.
         /// This follows the host API copy compatibility rules.
         /// </summary>

@@ -188,7 +188,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Unpacks the texture coordinates normalized flag.
         /// When this is true, texture coordinates are expected to be in the [0, 1] range on the shader.
-        /// WHen this is false, texture coordinates are expected to be in the [0, W], [0, H] and [0, D] range.
+        /// When this is false, texture coordinates are expected to be in the [0, W], [0, H] and [0, D] range.
         /// It must be set to false (by the guest driver) for rectangle textures.
         /// </summary>
         /// <returns>The texture coordinates normalized flag</returns>
