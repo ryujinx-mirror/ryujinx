@@ -99,7 +99,7 @@ namespace Ryujinx.Graphics.OpenGL
         {
             if (!_program.IsLinked)
             {
-                Logger.PrintError(LogClass.Gpu, "Dispatch error, shader not linked.");
+                Logger.PrintDebug(LogClass.Gpu, "Dispatch error, shader not linked.");
 
                 return;
             }
@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.OpenGL
         {
             if (!_program.IsLinked)
             {
-                Logger.PrintError(LogClass.Gpu, "Draw error, shader not linked.");
+                Logger.PrintDebug(LogClass.Gpu, "Draw error, shader not linked.");
 
                 return;
             }
@@ -221,7 +221,7 @@ namespace Ryujinx.Graphics.OpenGL
         {
             if (!_program.IsLinked)
             {
-                Logger.PrintError(LogClass.Gpu, "Draw error, shader not linked.");
+                Logger.PrintDebug(LogClass.Gpu, "Draw error, shader not linked.");
 
                 return;
             }

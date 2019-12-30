@@ -136,7 +136,7 @@ namespace Ryujinx.Graphics.OpenGL
                     break;
 
                 default:
-                    Logger.PrintError(LogClass.Gpu, $"Invalid or unsupported texture target: {target}.");
+                    Logger.PrintDebug(LogClass.Gpu, $"Invalid or unsupported texture target: {target}.");
                     break;
             }
         }

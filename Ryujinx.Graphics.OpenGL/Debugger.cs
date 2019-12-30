@@ -34,7 +34,7 @@ namespace Ryujinx.Graphics.OpenGL
             switch (type)
             {
                 case DebugType.DebugTypeError:
-                    Logger.PrintError(LogClass.Gpu, fullMessage);
+                    Logger.PrintDebug(LogClass.Gpu, fullMessage);
                     break;
                 case DebugType.DebugTypePerformance:
                     Logger.PrintWarning(LogClass.Gpu, fullMessage);

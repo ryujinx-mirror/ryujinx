@@ -195,7 +195,8 @@ namespace Ryujinx.Graphics.OpenGL
 
             if (status == 0)
             {
-                Logger.PrintError(LogClass.Gpu, $"Shader linking failed: {GL.GetProgramInfoLog(Handle)}");
+                // Use GL.GetProgramInfoLog(Handle), it may be too long to print on the log.
+                Logger.PrintDebug(LogClass.Gpu, "Shader linking failed.");
             }
             else
             {

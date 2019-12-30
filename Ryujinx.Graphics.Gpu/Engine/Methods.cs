@@ -446,7 +446,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 if (!FormatTable.TryGetAttribFormat(vertexAttrib.UnpackFormat(), out Format format))
                 {
-                    Logger.PrintError(LogClass.Gpu, $"Invalid attribute format 0x{vertexAttrib.UnpackFormat():X}.");
+                    Logger.PrintDebug(LogClass.Gpu, $"Invalid attribute format 0x{vertexAttrib.UnpackFormat():X}.");
 
                     format = Format.R32G32B32A32Float;
                 }
