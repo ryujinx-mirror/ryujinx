@@ -41,8 +41,11 @@ namespace ARMeilleure.CodeGen.X86
             Add(Intrinsic.X86Cvtps2pd,   new IntrinsicInfo(X86Instruction.Cvtps2pd,   IntrinsicType.Unary));
             Add(Intrinsic.X86Cvtsd2si,   new IntrinsicInfo(X86Instruction.Cvtsd2si,   IntrinsicType.UnaryToGpr));
             Add(Intrinsic.X86Cvtsd2ss,   new IntrinsicInfo(X86Instruction.Cvtsd2ss,   IntrinsicType.Binary));
+            Add(Intrinsic.X86Cvtsi2sd,   new IntrinsicInfo(X86Instruction.Cvtsi2sd,   IntrinsicType.BinaryGpr));
             Add(Intrinsic.X86Cvtsi2si,   new IntrinsicInfo(X86Instruction.Movd,       IntrinsicType.UnaryToGpr));
+            Add(Intrinsic.X86Cvtsi2ss,   new IntrinsicInfo(X86Instruction.Cvtsi2ss,   IntrinsicType.BinaryGpr));
             Add(Intrinsic.X86Cvtss2sd,   new IntrinsicInfo(X86Instruction.Cvtss2sd,   IntrinsicType.Binary));
+            Add(Intrinsic.X86Cvtss2si,   new IntrinsicInfo(X86Instruction.Cvtss2si,   IntrinsicType.UnaryToGpr));
             Add(Intrinsic.X86Divpd,      new IntrinsicInfo(X86Instruction.Divpd,      IntrinsicType.Binary));
             Add(Intrinsic.X86Divps,      new IntrinsicInfo(X86Instruction.Divps,      IntrinsicType.Binary));
             Add(Intrinsic.X86Divsd,      new IntrinsicInfo(X86Instruction.Divsd,      IntrinsicType.Binary));

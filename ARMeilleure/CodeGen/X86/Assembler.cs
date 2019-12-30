@@ -103,6 +103,7 @@ namespace ARMeilleure.CodeGen.X86
             Add(X86Instruction.Cvtsi2sd,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f2a, InstructionFlags.Vex | InstructionFlags.PrefixF2));
             Add(X86Instruction.Cvtsi2ss,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f2a, InstructionFlags.Vex | InstructionFlags.PrefixF3));
             Add(X86Instruction.Cvtss2sd,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f5a, InstructionFlags.Vex | InstructionFlags.PrefixF3));
+            Add(X86Instruction.Cvtss2si,   new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f2d, InstructionFlags.Vex | InstructionFlags.PrefixF3));
             Add(X86Instruction.Div,        new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x060000f7, InstructionFlags.None));
             Add(X86Instruction.Divpd,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f5e, InstructionFlags.Vex | InstructionFlags.Prefix66));
             Add(X86Instruction.Divps,      new InstructionInfo(BadOp,      BadOp,      BadOp,      BadOp,      0x00000f5e, InstructionFlags.Vex));
@@ -789,6 +790,16 @@ namespace ARMeilleure.CodeGen.X86
             {
                 WriteInstruction(dest, src1, src2, inst);
             }
+        }
+
+        public void WriteInstruction(
+            X86Instruction inst,
+            Operand dest,
+            Operand src1,
+            Operand src2,
+            OperandType type)
+        {
+            WriteInstruction(dest, src1, src2, inst, type);
         }
 
         public void WriteInstruction(X86Instruction inst, Operand dest, Operand source, byte imm)

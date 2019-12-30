@@ -4,6 +4,7 @@ using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
 using System;
+using System.Diagnostics;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
@@ -16,13 +17,6 @@ namespace ARMeilleure.Instructions
     static partial class InstEmit
     {
 #region "Masks"
-        private static readonly long[] _masks_RshrnShrn = new long[]
-        {
-            14L << 56 | 12L << 48 | 10L << 40 | 08L << 32 | 06L << 24 | 04L << 16 | 02L << 8 | 00L << 0,
-            13L << 56 | 12L << 48 | 09L << 40 | 08L << 32 | 05L << 24 | 04L << 16 | 01L << 8 | 00L << 0,
-            11L << 56 | 10L << 48 | 09L << 40 | 08L << 32 | 03L << 24 | 02L << 16 | 01L << 8 | 00L << 0
-        };
-
         private static readonly long[] _masks_SliSri = new long[] // Replication masks.
         {
             0x0101010101010101L, 0x0001000100010001L, 0x0000000100000001L, 0x0000000000000001L
@@ -42,7 +36,7 @@ namespace ARMeilleure.Instructions
                 Operand d = GetVec(op.Rd);
                 Operand n = GetVec(op.Rn);
 
-                Operand dLow = context.AddIntrinsic(Intrinsic.X86Movlhps, d, context.VectorZero());
+                Operand dLow = context.VectorZeroUpper64(d);
 
                 Operand mask = null;
 
@@ -61,7 +55,7 @@ namespace ARMeilleure.Instructions
 
                 res = context.AddIntrinsic(srlInst, res, Const(shift));
 
-                Operand mask2 = X86GetAllElements(context, _masks_RshrnShrn[op.Size]);
+                Operand mask2 = X86GetAllElements(context, EvenMasks[op.Size]);
 
                 res = context.AddIntrinsic(Intrinsic.X86Pshufb, res, mask2);
 
@@ -157,13 +151,13 @@ namespace ARMeilleure.Instructions
                 Operand d = GetVec(op.Rd);
                 Operand n = GetVec(op.Rn);
 
-                Operand dLow = context.AddIntrinsic(Intrinsic.X86Movlhps, d, context.VectorZero());
+                Operand dLow = context.VectorZeroUpper64(d);
 
                 Intrinsic srlInst = X86PsrlInstruction[op.Size + 1];
 
                 Operand nShifted = context.AddIntrinsic(srlInst, n, Const(shift));
 
-                Operand mask = X86GetAllElements(context, _masks_RshrnShrn[op.Size]);
+                Operand mask = X86GetAllElements(context, EvenMasks[op.Size]);
 
                 Operand res = context.AddIntrinsic(Intrinsic.X86Pshufb, nShifted, mask);
 
@@ -702,9 +696,9 @@ namespace ARMeilleure.Instructions
             for (int index = 0; index < elems; index++)
             {
                 Operand ne = EmitVectorExtractZx(context, op.Rn, index, op.Size);
-                Operand me = EmitVectorExtractZx(context, op.Rm, index, op.Size);
+                Operand me = EmitVectorExtractSx(context, op.Rm, index << op.Size, 0);
 
-                Operand e = context.Call(new _U64_U64_U64_Bool_S32(SoftFallback.UnsignedShlReg), ne, me, Const(0), Const(op.Size));
+                Operand e = EmitUnsignedShlRegOp(context, ne, context.ConvertI64ToI32(me), op.Size);
 
                 res = EmitVectorInsert(context, res, e, index, op.Size);
             }
@@ -879,9 +873,7 @@ namespace ARMeilleure.Instructions
                         e = context.Add(e, Const(roundConst));
                     }
 
-                    e = signed
-                        ? context.ShiftRightSI(e, Const(shift))
-                        : context.ShiftRightUI(e, Const(shift));
+                    e = signed ? context.ShiftRightSI(e, Const(shift)) : context.ShiftRightUI(e, Const(shift));
                 }
                 else /* if (op.Size == 3) */
                 {
@@ -901,6 +893,28 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVec(op.Rd), res);
         }
 
+        private static Operand EmitUnsignedShlRegOp(ArmEmitterContext context, Operand op, Operand shiftLsB, int size)
+        {
+            Debug.Assert(op.Type       == OperandType.I64);
+            Debug.Assert(shiftLsB.Type == OperandType.I32);
+            Debug.Assert((uint)size < 4u);
+
+            Operand negShiftLsB = context.Negate(shiftLsB);
+
+            Operand isPositive = context.ICompareGreaterOrEqual(shiftLsB, Const(0));
+
+            Operand shl = context.ShiftLeft   (op, shiftLsB);
+            Operand shr = context.ShiftRightUI(op, negShiftLsB);
+
+            Operand res = context.ConditionalSelect(isPositive, shl, shr);
+
+            Operand isOutOfRange = context.BitwiseOr(
+                context.ICompareGreaterOrEqual(shiftLsB,    Const(8 << size)),
+                context.ICompareGreaterOrEqual(negShiftLsB, Const(8 << size)));
+
+            return context.ConditionalSelect(isOutOfRange, Const(0UL), res);
+        }
+
         private static void EmitVectorShrImmNarrowOpZx(ArmEmitterContext context, bool round)
         {
             OpCodeSimdShImm op = (OpCodeSimdShImm)context.CurrOp;
@@ -913,7 +927,9 @@ namespace ARMeilleure.Instructions
 
             int part = op.RegisterSize == RegisterSize.Simd128 ? elems : 0;
 
-            Operand res = part == 0 ? context.VectorZero() : context.Copy(GetVec(op.Rd));
+            Operand d = GetVec(op.Rd);
+
+            Operand res = part == 0 ? context.VectorZero() : context.Copy(d);
 
             for (int index = 0; index < elems; index++)
             {
@@ -929,7 +945,7 @@ namespace ARMeilleure.Instructions
                 res = EmitVectorInsert(context, res, e, part + index, op.Size);
             }
 
-            context.Copy(GetVec(op.Rd), res);
+            context.Copy(d, res);
         }
 
         [Flags]
@@ -972,7 +988,9 @@ namespace ARMeilleure.Instructions
 
             int part = !scalar && (op.RegisterSize == RegisterSize.Simd128) ? elems : 0;
 
-            Operand res = part == 0 ? context.VectorZero() : context.Copy(GetVec(op.Rd));
+            Operand d = GetVec(op.Rd);
+
+            Operand res = part == 0 ? context.VectorZero() : context.Copy(d);
 
             for (int index = 0; index < elems; index++)
             {
@@ -985,9 +1003,7 @@ namespace ARMeilleure.Instructions
                         e = context.Add(e, Const(roundConst));
                     }
 
-                    e = signedSrc
-                        ? context.ShiftRightSI(e, Const(shift))
-                        : context.ShiftRightUI(e, Const(shift));
+                    e = signedSrc ? context.ShiftRightSI(e, Const(shift)) : context.ShiftRightUI(e, Const(shift));
                 }
                 else /* if (op.Size == 2 && round) */
                 {
@@ -999,7 +1015,7 @@ namespace ARMeilleure.Instructions
                 res = EmitVectorInsert(context, res, e, part + index, op.Size);
             }
 
-            context.Copy(GetVec(op.Rd), res);
+            context.Copy(d, res);
         }
 
         // dst64 = (Int(src64, signed) + roundConst) >> shift;

@@ -163,12 +163,26 @@ namespace ARMeilleure.Instructions
 
         public static void Fcvtms_Gp(ArmEmitterContext context)
         {
-            EmitFcvt_s_Gp(context, (op1) => EmitUnaryMathCall(context, MathF.Floor, Math.Floor, op1));
+            if (Optimizations.UseSse41)
+            {
+                EmitSse41Fcvts_Gp(context, FPRoundingMode.TowardsMinusInfinity, isFixed: false);
+            }
+            else
+            {
+                EmitFcvt_s_Gp(context, (op1) => EmitUnaryMathCall(context, MathF.Floor, Math.Floor, op1));
+            }
         }
 
         public static void Fcvtmu_Gp(ArmEmitterContext context)
         {
-            EmitFcvt_u_Gp(context, (op1) => EmitUnaryMathCall(context, MathF.Floor, Math.Floor, op1));
+            if (Optimizations.UseSse41)
+            {
+                EmitSse41Fcvtu_Gp(context, FPRoundingMode.TowardsMinusInfinity, isFixed: false);
+            }
+            else
+            {
+                EmitFcvt_u_Gp(context, (op1) => EmitUnaryMathCall(context, MathF.Floor, Math.Floor, op1));
+            }
         }
 
         public static void Fcvtn_V(ArmEmitterContext context)
@@ -180,11 +194,10 @@ namespace ARMeilleure.Instructions
             if (Optimizations.UseSse2 && sizeF == 1)
             {
                 Operand d = GetVec(op.Rd);
-                Operand n = GetVec(op.Rn);
 
-                Operand res = context.AddIntrinsic(Intrinsic.X86Movlhps, d, context.VectorZero());
+                Operand res = context.VectorZeroUpper64(d);
 
-                Operand nInt = context.AddIntrinsic(Intrinsic.X86Cvtpd2ps, n);
+                Operand nInt = context.AddIntrinsic(Intrinsic.X86Cvtpd2ps, GetVec(op.Rn));
 
                 nInt = context.AddIntrinsic(Intrinsic.X86Movlhps, nInt, nInt);
 
@@ -194,7 +207,7 @@ namespace ARMeilleure.Instructions
 
                 res = context.AddIntrinsic(movInst, res, nInt);
 
-                context.Copy(GetVec(op.Rd), res);
+                context.Copy(d, res);
             }
             else
             {
@@ -204,7 +217,9 @@ namespace ARMeilleure.Instructions
 
                 int part = op.RegisterSize == RegisterSize.Simd128 ? elems : 0;
 
-                Operand res = part == 0 ? context.VectorZero() : context.Copy(GetVec(op.Rd));
+                Operand d = GetVec(op.Rd);
+
+                Operand res = part == 0 ? context.VectorZero() : context.Copy(d);
 
                 for (int index = 0; index < elems; index++)
                 {
@@ -228,7 +243,7 @@ namespace ARMeilleure.Instructions
                     }
                 }
 
-                context.Copy(GetVec(op.Rd), res);
+                context.Copy(d, res);
             }
         }
 
@@ -282,22 +297,50 @@ namespace ARMeilleure.Instructions
 
         public static void Fcvtps_Gp(ArmEmitterContext context)
         {
-            EmitFcvt_s_Gp(context, (op1) => EmitUnaryMathCall(context, MathF.Ceiling, Math.Ceiling, op1));
+            if (Optimizations.UseSse41)
+            {
+                EmitSse41Fcvts_Gp(context, FPRoundingMode.TowardsPlusInfinity, isFixed: false);
+            }
+            else
+            {
+                EmitFcvt_s_Gp(context, (op1) => EmitUnaryMathCall(context, MathF.Ceiling, Math.Ceiling, op1));
+            }
         }
 
         public static void Fcvtpu_Gp(ArmEmitterContext context)
         {
-            EmitFcvt_u_Gp(context, (op1) => EmitUnaryMathCall(context, MathF.Ceiling, Math.Ceiling, op1));
+            if (Optimizations.UseSse41)
+            {
+                EmitSse41Fcvtu_Gp(context, FPRoundingMode.TowardsPlusInfinity, isFixed: false);
+            }
+            else
+            {
+                EmitFcvt_u_Gp(context, (op1) => EmitUnaryMathCall(context, MathF.Ceiling, Math.Ceiling, op1));
+            }
         }
 
         public static void Fcvtzs_Gp(ArmEmitterContext context)
         {
-            EmitFcvt_s_Gp(context, (op1) => op1);
+            if (Optimizations.UseSse41)
+            {
+                EmitSse41Fcvts_Gp(context, FPRoundingMode.TowardsZero, isFixed: false);
+            }
+            else
+            {
+                EmitFcvt_s_Gp(context, (op1) => op1);
+            }
         }
 
         public static void Fcvtzs_Gp_Fixed(ArmEmitterContext context)
         {
-            EmitFcvtzs_Gp_Fixed(context);
+            if (Optimizations.UseSse41)
+            {
+                EmitSse41Fcvts_Gp(context, FPRoundingMode.TowardsZero, isFixed: true);
+            }
+            else
+            {
+                EmitFcvtzs_Gp_Fixed(context);
+            }
         }
 
         public static void Fcvtzs_S(ArmEmitterContext context)
@@ -338,12 +381,26 @@ namespace ARMeilleure.Instructions
 
         public static void Fcvtzu_Gp(ArmEmitterContext context)
         {
-            EmitFcvt_u_Gp(context, (op1) => op1);
+            if (Optimizations.UseSse41)
+            {
+                EmitSse41Fcvtu_Gp(context, FPRoundingMode.TowardsZero, isFixed: false);
+            }
+            else
+            {
+                EmitFcvt_u_Gp(context, (op1) => op1);
+            }
         }
 
         public static void Fcvtzu_Gp_Fixed(ArmEmitterContext context)
         {
-            EmitFcvtzu_Gp_Fixed(context);
+            if (Optimizations.UseSse41)
+            {
+                EmitSse41Fcvtu_Gp(context, FPRoundingMode.TowardsZero, isFixed: true);
+            }
+            else
+            {
+                EmitFcvtzu_Gp_Fixed(context);
+            }
         }
 
         public static void Fcvtzu_S(ArmEmitterContext context)
@@ -418,16 +475,16 @@ namespace ARMeilleure.Instructions
 
         public static void Scvtf_S(ArmEmitterContext context)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
-
-            int sizeF = op.Size & 1;
-
-            if (Optimizations.UseSse2 && sizeF == 0)
+            if (Optimizations.UseSse2)
             {
                 EmitSse2Scvtf(context, scalar: true);
             }
             else
             {
+                OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+
+                int sizeF = op.Size & 1;
+
                 Operand res = EmitVectorLongExtract(context, op.Rn, 0, sizeF + 2);
 
                 res = EmitFPConvert(context, res, op.Size, signed: true);
@@ -438,11 +495,7 @@ namespace ARMeilleure.Instructions
 
         public static void Scvtf_V(ArmEmitterContext context)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
-
-            int sizeF = op.Size & 1;
-
-            if (Optimizations.UseSse2 && sizeF == 0)
+            if (Optimizations.UseSse2)
             {
                 EmitSse2Scvtf(context, scalar: false);
             }
@@ -454,12 +507,7 @@ namespace ARMeilleure.Instructions
 
         public static void Scvtf_V_Fixed(ArmEmitterContext context)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
-
-            // sizeF == ((OpCodeSimdShImm64)op).Size - 2
-            int sizeF = op.Size & 1;
-
-            if (Optimizations.UseSse2 && sizeF == 0)
+            if (Optimizations.UseSse2)
             {
                 EmitSse2Scvtf(context, scalar: false);
             }
@@ -495,16 +543,16 @@ namespace ARMeilleure.Instructions
 
         public static void Ucvtf_S(ArmEmitterContext context)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
-
-            int sizeF = op.Size & 1;
-
-            if (Optimizations.UseSse2 && sizeF == 0)
+            if (Optimizations.UseSse2)
             {
                 EmitSse2Ucvtf(context, scalar: true);
             }
             else
             {
+                OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+
+                int sizeF = op.Size & 1;
+
                 Operand ne = EmitVectorLongExtract(context, op.Rn, 0, sizeF + 2);
 
                 Operand res = EmitFPConvert(context, ne, sizeF, signed: false);
@@ -515,11 +563,7 @@ namespace ARMeilleure.Instructions
 
         public static void Ucvtf_V(ArmEmitterContext context)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
-
-            int sizeF = op.Size & 1;
-
-            if (Optimizations.UseSse2 && sizeF == 0)
+            if (Optimizations.UseSse2)
             {
                 EmitSse2Ucvtf(context, scalar: false);
             }
@@ -531,12 +575,7 @@ namespace ARMeilleure.Instructions
 
         public static void Ucvtf_V_Fixed(ArmEmitterContext context)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
-
-            // sizeF == ((OpCodeSimdShImm)op).Size - 2
-            int sizeF = op.Size & 1;
-
-            if (Optimizations.UseSse2 && sizeF == 0)
+            if (Optimizations.UseSse2)
             {
                 EmitSse2Ucvtf(context, scalar: false);
             }
@@ -830,42 +869,68 @@ namespace ARMeilleure.Instructions
             }
         }
 
-        private static void EmitSse41Fcvts(ArmEmitterContext context, FPRoundingMode roundMode, bool scalar)
+        private static Operand EmitSse2CvtDoubleToInt64OpF(ArmEmitterContext context, Operand opF, bool scalar)
+        {
+            Debug.Assert(opF.Type == OperandType.V128);
+
+            Operand longL = context.AddIntrinsicLong  (Intrinsic.X86Cvtsd2si, opF); // opFL
+            Operand res   = context.VectorCreateScalar(longL);
+
+            if (!scalar)
+            {
+                Operand opFH  = context.AddIntrinsic      (Intrinsic.X86Movhlps,  res, opF); // res doesn't matter.
+                Operand longH = context.AddIntrinsicLong  (Intrinsic.X86Cvtsd2si, opFH);
+                Operand resH  = context.VectorCreateScalar(longH);
+                        res   = context.AddIntrinsic      (Intrinsic.X86Movlhps,  res, resH);
+            }
+
+            return res;
+        }
+
+        private static Operand EmitSse2CvtInt64ToDoubleOp(ArmEmitterContext context, Operand op, bool scalar)
+        {
+            Debug.Assert(op.Type == OperandType.V128);
+
+            Operand longL = context.AddIntrinsicLong(Intrinsic.X86Cvtsi2si, op); // opL
+            Operand res   = context.AddIntrinsic    (Intrinsic.X86Cvtsi2sd, context.VectorZero(), longL);
+
+            if (!scalar)
+            {
+                Operand opH   = context.AddIntrinsic    (Intrinsic.X86Movhlps,  res, op);    // res doesn't matter.
+                Operand longH = context.AddIntrinsicLong(Intrinsic.X86Cvtsi2si, opH);
+                Operand resH  = context.AddIntrinsic    (Intrinsic.X86Cvtsi2sd, res, longH); // res doesn't matter.
+                        res   = context.AddIntrinsic    (Intrinsic.X86Movlhps,  res, resH);
+            }
+
+            return res;
+        }
+
+        private static void EmitSse2Scvtf(ArmEmitterContext context, bool scalar)
         {
             OpCodeSimd op = (OpCodeSimd)context.CurrOp;
 
             Operand n = GetVec(op.Rn);
 
-            // sizeF == ((OpCodeSimdShImm64)op).Size - 2
+            // sizeF == ((OpCodeSimdShImm)op).Size - 2
             int sizeF = op.Size & 1;
 
             if (sizeF == 0)
             {
-                Operand nMask = context.AddIntrinsic(Intrinsic.X86Cmpps, n, n, Const((int)CmpCondition.OrderedQ));
-
-                Operand nScaled = context.AddIntrinsic(Intrinsic.X86Pand, nMask, n);
+                Operand res = context.AddIntrinsic(Intrinsic.X86Cvtdq2ps, n);
 
                 if (op is OpCodeSimdShImm fixedOp)
                 {
                     int fBits = GetImmShr(fixedOp);
 
-                    // BitConverter.Int32BitsToSingle(fpScaled) == MathF.Pow(2f, fBits)
-                    int fpScaled = 0x3F800000 + fBits * 0x800000;
+                    // BitConverter.Int32BitsToSingle(fpScaled) == 1f / MathF.Pow(2f, fBits)
+                    int fpScaled = 0x3F800000 - fBits * 0x800000;
 
-                    Operand scale = X86GetAllElements(context, fpScaled);
+                    Operand fpScaledMask = scalar
+                        ? X86GetScalar     (context, fpScaled)
+                        : X86GetAllElements(context, fpScaled);
 
-                    nScaled = context.AddIntrinsic(Intrinsic.X86Mulps, nScaled, scale);
+                    res = context.AddIntrinsic(Intrinsic.X86Mulps, res, fpScaledMask);
                 }
-
-                Operand nRnd = context.AddIntrinsic(Intrinsic.X86Roundps, nScaled, Const(X86GetRoundControl(roundMode)));
-
-                Operand nInt = context.AddIntrinsic(Intrinsic.X86Cvtps2dq, nRnd);
-
-                Operand mask = X86GetAllElements(context, 0x4F000000); // 2.14748365E9f (2147483648)
-
-                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Cmpps, nRnd, mask, Const((int)CmpCondition.NotLessThan));
-
-                Operand res = context.AddIntrinsic(Intrinsic.X86Pxor, nInt, mask2);
 
                 if (scalar)
                 {
@@ -880,9 +945,175 @@ namespace ARMeilleure.Instructions
             }
             else /* if (sizeF == 1) */
             {
-                Operand nMask = context.AddIntrinsic(Intrinsic.X86Cmppd, n, n, Const((int)CmpCondition.OrderedQ));
+                Operand res = EmitSse2CvtInt64ToDoubleOp(context, n, scalar);
 
-                Operand nScaled = context.AddIntrinsic(Intrinsic.X86Pand, nMask, n);
+                if (op is OpCodeSimdShImm fixedOp)
+                {
+                    int fBits = GetImmShr(fixedOp);
+
+                    // BitConverter.Int64BitsToDouble(fpScaled) == 1d / Math.Pow(2d, fBits)
+                    long fpScaled = 0x3FF0000000000000L - fBits * 0x10000000000000L;
+
+                    Operand fpScaledMask = scalar
+                        ? X86GetScalar     (context, fpScaled)
+                        : X86GetAllElements(context, fpScaled);
+
+                    res = context.AddIntrinsic(Intrinsic.X86Mulpd, res, fpScaledMask);
+                }
+
+                if (scalar)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(GetVec(op.Rd), res);
+            }
+        }
+
+        private static void EmitSse2Ucvtf(ArmEmitterContext context, bool scalar)
+        {
+            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+
+            Operand n = GetVec(op.Rn);
+
+            // sizeF == ((OpCodeSimdShImm)op).Size - 2
+            int sizeF = op.Size & 1;
+
+            if (sizeF == 0)
+            {
+                Operand mask = scalar // 65536.000f (1 << 16)
+                    ? X86GetScalar     (context, 0x47800000)
+                    : X86GetAllElements(context, 0x47800000);
+
+                Operand res = context.AddIntrinsic(Intrinsic.X86Psrld, n, Const(16));
+                        res = context.AddIntrinsic(Intrinsic.X86Cvtdq2ps, res);
+                        res = context.AddIntrinsic(Intrinsic.X86Mulps, res, mask);
+
+                Operand res2 = context.AddIntrinsic(Intrinsic.X86Pslld, n, Const(16));
+                        res2 = context.AddIntrinsic(Intrinsic.X86Psrld, res2, Const(16));
+                        res2 = context.AddIntrinsic(Intrinsic.X86Cvtdq2ps, res2);
+
+                res = context.AddIntrinsic(Intrinsic.X86Addps, res, res2);
+
+                if (op is OpCodeSimdShImm fixedOp)
+                {
+                    int fBits = GetImmShr(fixedOp);
+
+                    // BitConverter.Int32BitsToSingle(fpScaled) == 1f / MathF.Pow(2f, fBits)
+                    int fpScaled = 0x3F800000 - fBits * 0x800000;
+
+                    Operand fpScaledMask = scalar
+                        ? X86GetScalar     (context, fpScaled)
+                        : X86GetAllElements(context, fpScaled);
+
+                    res = context.AddIntrinsic(Intrinsic.X86Mulps, res, fpScaledMask);
+                }
+
+                if (scalar)
+                {
+                    res = context.VectorZeroUpper96(res);
+                }
+                else if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(GetVec(op.Rd), res);
+            }
+            else /* if (sizeF == 1) */
+            {
+                Operand mask = scalar // 4294967296.0000000d (1L << 32)
+                    ? X86GetScalar     (context, 0x41F0000000000000L)
+                    : X86GetAllElements(context, 0x41F0000000000000L);
+
+                Operand res = context.AddIntrinsic      (Intrinsic.X86Psrlq, n, Const(32));
+                        res = EmitSse2CvtInt64ToDoubleOp(context, res, scalar);
+                        res = context.AddIntrinsic      (Intrinsic.X86Mulpd, res, mask);
+
+                Operand res2 = context.AddIntrinsic      (Intrinsic.X86Psllq, n, Const(32));
+                        res2 = context.AddIntrinsic      (Intrinsic.X86Psrlq, res2, Const(32));
+                        res2 = EmitSse2CvtInt64ToDoubleOp(context, res2, scalar);
+
+                res = context.AddIntrinsic(Intrinsic.X86Addpd, res, res2);
+
+                if (op is OpCodeSimdShImm fixedOp)
+                {
+                    int fBits = GetImmShr(fixedOp);
+
+                    // BitConverter.Int64BitsToDouble(fpScaled) == 1d / Math.Pow(2d, fBits)
+                    long fpScaled = 0x3FF0000000000000L - fBits * 0x10000000000000L;
+
+                    Operand fpScaledMask = scalar
+                        ? X86GetScalar     (context, fpScaled)
+                        : X86GetAllElements(context, fpScaled);
+
+                    res = context.AddIntrinsic(Intrinsic.X86Mulpd, res, fpScaledMask);
+                }
+
+                if (scalar)
+                {
+                    res = context.VectorZeroUpper64(res);
+                }
+
+                context.Copy(GetVec(op.Rd), res);
+            }
+        }
+
+        private static void EmitSse41Fcvts(ArmEmitterContext context, FPRoundingMode roundMode, bool scalar)
+        {
+            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+
+            Operand n = GetVec(op.Rn);
+
+            // sizeF == ((OpCodeSimdShImm)op).Size - 2
+            int sizeF = op.Size & 1;
+
+            if (sizeF == 0)
+            {
+                Operand nRes = context.AddIntrinsic(Intrinsic.X86Cmpps, n, n, Const((int)CmpCondition.OrderedQ));
+                        nRes = context.AddIntrinsic(Intrinsic.X86Pand, nRes, n);
+
+                if (op is OpCodeSimdShImm fixedOp)
+                {
+                    int fBits = GetImmShr(fixedOp);
+
+                    // BitConverter.Int32BitsToSingle(fpScaled) == MathF.Pow(2f, fBits)
+                    int fpScaled = 0x3F800000 + fBits * 0x800000;
+
+                    Operand fpScaledMask = scalar
+                        ? X86GetScalar     (context, fpScaled)
+                        : X86GetAllElements(context, fpScaled);
+
+                    nRes = context.AddIntrinsic(Intrinsic.X86Mulps, nRes, fpScaledMask);
+                }
+
+                nRes = context.AddIntrinsic(Intrinsic.X86Roundps, nRes, Const(X86GetRoundControl(roundMode)));
+
+                Operand nInt = context.AddIntrinsic(Intrinsic.X86Cvtps2dq, nRes);
+
+                Operand fpMaxValMask = scalar // 2.14748365E9f (2147483648)
+                    ? X86GetScalar     (context, 0x4F000000)
+                    : X86GetAllElements(context, 0x4F000000);
+
+                nRes = context.AddIntrinsic(Intrinsic.X86Cmpps, nRes, fpMaxValMask, Const((int)CmpCondition.NotLessThan));
+
+                Operand dRes = context.AddIntrinsic(Intrinsic.X86Pxor, nInt, nRes);
+
+                if (scalar)
+                {
+                    dRes = context.VectorZeroUpper96(dRes);
+                }
+                else if (op.RegisterSize == RegisterSize.Simd64)
+                {
+                    dRes = context.VectorZeroUpper64(dRes);
+                }
+
+                context.Copy(GetVec(op.Rd), dRes);
+            }
+            else /* if (sizeF == 1) */
+            {
+                Operand nRes = context.AddIntrinsic(Intrinsic.X86Cmppd, n, n, Const((int)CmpCondition.OrderedQ));
+                        nRes = context.AddIntrinsic(Intrinsic.X86Pand, nRes, n);
 
                 if (op is OpCodeSimdShImm fixedOp)
                 {
@@ -891,41 +1122,31 @@ namespace ARMeilleure.Instructions
                     // BitConverter.Int64BitsToDouble(fpScaled) == Math.Pow(2d, fBits)
                     long fpScaled = 0x3FF0000000000000L + fBits * 0x10000000000000L;
 
-                    Operand scale = X86GetAllElements(context, fpScaled);
+                    Operand fpScaledMask = scalar
+                        ? X86GetScalar     (context, fpScaled)
+                        : X86GetAllElements(context, fpScaled);
 
-                    nScaled = context.AddIntrinsic(Intrinsic.X86Mulpd, nScaled, scale);
+                    nRes = context.AddIntrinsic(Intrinsic.X86Mulpd, nRes, fpScaledMask);
                 }
 
-                Operand nRnd = context.AddIntrinsic(Intrinsic.X86Roundpd, nScaled, Const(X86GetRoundControl(roundMode)));
+                nRes = context.AddIntrinsic(Intrinsic.X86Roundpd, nRes, Const(X86GetRoundControl(roundMode)));
 
-                Operand high;
+                Operand nLong = EmitSse2CvtDoubleToInt64OpF(context, nRes, scalar);
 
-                if (!scalar)
-                {
-                    high = context.AddIntrinsic(Intrinsic.X86Unpckhpd, nRnd, nRnd);
-                    high = context.AddIntrinsicLong(Intrinsic.X86Cvtsd2si, high);
-                }
-                else
-                {
-                    high = Const(0L);
-                }
+                Operand fpMaxValMask = scalar // 9.2233720368547760E18d (9223372036854775808)
+                    ? X86GetScalar     (context, 0x43E0000000000000L)
+                    : X86GetAllElements(context, 0x43E0000000000000L);
 
-                Operand low = context.AddIntrinsicLong(Intrinsic.X86Cvtsd2si, nRnd);
+                nRes = context.AddIntrinsic(Intrinsic.X86Cmppd, nRes, fpMaxValMask, Const((int)CmpCondition.NotLessThan));
 
-                Operand nInt = EmitVectorLongCreate(context, low, high);
-
-                Operand mask = X86GetAllElements(context, 0x43E0000000000000L); // 9.2233720368547760E18d (9223372036854775808)
-
-                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Cmppd, nRnd, mask, Const((int)CmpCondition.NotLessThan));
-
-                Operand res = context.AddIntrinsic(Intrinsic.X86Pxor, nInt, mask2);
+                Operand dRes = context.AddIntrinsic(Intrinsic.X86Pxor, nLong, nRes);
 
                 if (scalar)
                 {
-                    res = context.VectorZeroUpper64(res);
+                    dRes = context.VectorZeroUpper64(dRes);
                 }
 
-                context.Copy(GetVec(op.Rd), res);
+                context.Copy(GetVec(op.Rd), dRes);
             }
         }
 
@@ -940,9 +1161,8 @@ namespace ARMeilleure.Instructions
 
             if (sizeF == 0)
             {
-                Operand nMask = context.AddIntrinsic(Intrinsic.X86Cmpps, n, n, Const((int)CmpCondition.OrderedQ));
-
-                Operand nScaled = context.AddIntrinsic(Intrinsic.X86Pand, nMask, n);
+                Operand nRes = context.AddIntrinsic(Intrinsic.X86Cmpps, n, n, Const((int)CmpCondition.OrderedQ));
+                        nRes = context.AddIntrinsic(Intrinsic.X86Pand, nRes, n);
 
                 if (op is OpCodeSimdShImm fixedOp)
                 {
@@ -951,50 +1171,53 @@ namespace ARMeilleure.Instructions
                     // BitConverter.Int32BitsToSingle(fpScaled) == MathF.Pow(2f, fBits)
                     int fpScaled = 0x3F800000 + fBits * 0x800000;
 
-                    Operand scale = X86GetAllElements(context, fpScaled);
+                    Operand fpScaledMask = scalar
+                        ? X86GetScalar     (context, fpScaled)
+                        : X86GetAllElements(context, fpScaled);
 
-                    nScaled = context.AddIntrinsic(Intrinsic.X86Mulps, nScaled, scale);
+                    nRes = context.AddIntrinsic(Intrinsic.X86Mulps, nRes, fpScaledMask);
                 }
 
-                Operand nRnd = context.AddIntrinsic(Intrinsic.X86Roundps, nScaled, Const(X86GetRoundControl(roundMode)));
+                nRes = context.AddIntrinsic(Intrinsic.X86Roundps, nRes, Const(X86GetRoundControl(roundMode)));
 
-                Operand nRndMask = context.AddIntrinsic(Intrinsic.X86Cmpps, nRnd, context.VectorZero(), Const((int)CmpCondition.NotLessThanOrEqual));
+                Operand zero = context.VectorZero();
 
-                Operand nRndMasked = context.AddIntrinsic(Intrinsic.X86Pand, nRnd, nRndMask);
+                Operand nCmp = context.AddIntrinsic(Intrinsic.X86Cmpps, nRes, zero, Const((int)CmpCondition.NotLessThanOrEqual));
+                        nRes = context.AddIntrinsic(Intrinsic.X86Pand,  nRes, nCmp);
 
-                Operand nInt = context.AddIntrinsic(Intrinsic.X86Cvtps2dq, nRndMasked);
+                Operand fpMaxValMask = scalar // 2.14748365E9f (2147483648)
+                    ? X86GetScalar     (context, 0x4F000000)
+                    : X86GetAllElements(context, 0x4F000000);
 
-                Operand mask = X86GetAllElements(context, 0x4F000000); // 2.14748365E9f (2147483648)
+                Operand nInt = context.AddIntrinsic(Intrinsic.X86Cvtps2dq, nRes);
 
-                Operand res = context.AddIntrinsic(Intrinsic.X86Subps, nRndMasked, mask);
+                nRes = context.AddIntrinsic(Intrinsic.X86Subps, nRes, fpMaxValMask);
 
-                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Cmpps, res, context.VectorZero(), Const((int)CmpCondition.NotLessThanOrEqual));
+                nCmp = context.AddIntrinsic(Intrinsic.X86Cmpps, nRes, zero, Const((int)CmpCondition.NotLessThanOrEqual));
+                nRes = context.AddIntrinsic(Intrinsic.X86Pand,  nRes, nCmp);
 
-                Operand resMasked = context.AddIntrinsic(Intrinsic.X86Pand, res, mask2);
+                Operand nInt2 = context.AddIntrinsic(Intrinsic.X86Cvtps2dq, nRes);
 
-                res = context.AddIntrinsic(Intrinsic.X86Cvtps2dq, resMasked);
+                nRes = context.AddIntrinsic(Intrinsic.X86Cmpps, nRes, fpMaxValMask, Const((int)CmpCondition.NotLessThan));
 
-                Operand mask3 = context.AddIntrinsic(Intrinsic.X86Cmpps, resMasked, mask, Const((int)CmpCondition.NotLessThan));
-
-                res = context.AddIntrinsic(Intrinsic.X86Pxor, res, mask3);
-                res = context.AddIntrinsic(Intrinsic.X86Paddd, res, nInt);
+                Operand dRes = context.AddIntrinsic(Intrinsic.X86Pxor,  nInt2, nRes);
+                        dRes = context.AddIntrinsic(Intrinsic.X86Paddd, dRes,  nInt);
 
                 if (scalar)
                 {
-                    res = context.VectorZeroUpper96(res);
+                    dRes = context.VectorZeroUpper96(dRes);
                 }
                 else if (op.RegisterSize == RegisterSize.Simd64)
                 {
-                    res = context.VectorZeroUpper64(res);
+                    dRes = context.VectorZeroUpper64(dRes);
                 }
 
-                context.Copy(GetVec(op.Rd), res);
+                context.Copy(GetVec(op.Rd), dRes);
             }
             else /* if (sizeF == 1) */
             {
-                Operand nMask = context.AddIntrinsic(Intrinsic.X86Cmppd, n, n, Const((int)CmpCondition.OrderedQ));
-
-                Operand nScaled = context.AddIntrinsic(Intrinsic.X86Pand, nMask, n);
+                Operand nRes = context.AddIntrinsic(Intrinsic.X86Cmppd, n, n, Const((int)CmpCondition.OrderedQ));
+                        nRes = context.AddIntrinsic(Intrinsic.X86Pand, nRes, n);
 
                 if (op is OpCodeSimdShImm fixedOp)
                 {
@@ -1003,140 +1226,251 @@ namespace ARMeilleure.Instructions
                     // BitConverter.Int64BitsToDouble(fpScaled) == Math.Pow(2d, fBits)
                     long fpScaled = 0x3FF0000000000000L + fBits * 0x10000000000000L;
 
-                    Operand scale = X86GetAllElements(context, fpScaled);
+                    Operand fpScaledMask = scalar
+                        ? X86GetScalar     (context, fpScaled)
+                        : X86GetAllElements(context, fpScaled);
 
-                    nScaled = context.AddIntrinsic(Intrinsic.X86Mulpd, nScaled, scale);
+                    nRes = context.AddIntrinsic(Intrinsic.X86Mulpd, nRes, fpScaledMask);
                 }
 
-                Operand nRnd = context.AddIntrinsic(Intrinsic.X86Roundpd, nScaled, Const(X86GetRoundControl(roundMode)));
+                nRes = context.AddIntrinsic(Intrinsic.X86Roundpd, nRes, Const(X86GetRoundControl(roundMode)));
 
-                Operand nRndMask = context.AddIntrinsic(Intrinsic.X86Cmppd, nRnd, context.VectorZero(), Const((int)CmpCondition.NotLessThanOrEqual));
+                Operand zero = context.VectorZero();
 
-                Operand nRndMasked = context.AddIntrinsic(Intrinsic.X86Pand, nRnd, nRndMask);
+                Operand nCmp = context.AddIntrinsic(Intrinsic.X86Cmppd, nRes, zero, Const((int)CmpCondition.NotLessThanOrEqual));
+                        nRes = context.AddIntrinsic(Intrinsic.X86Pand,  nRes, nCmp);
 
-                Operand high;
+                Operand fpMaxValMask = scalar // 9.2233720368547760E18d (9223372036854775808)
+                    ? X86GetScalar     (context, 0x43E0000000000000L)
+                    : X86GetAllElements(context, 0x43E0000000000000L);
 
-                if (!scalar)
-                {
-                    high = context.AddIntrinsic(Intrinsic.X86Unpckhpd, nRndMasked, nRndMasked);
-                    high = context.AddIntrinsicLong(Intrinsic.X86Cvtsd2si, high);
-                }
-                else
-                {
-                    high = Const(0L);
-                }
+                Operand nLong = EmitSse2CvtDoubleToInt64OpF(context, nRes, scalar);
 
-                Operand low = context.AddIntrinsicLong(Intrinsic.X86Cvtsd2si, nRndMasked);
+                nRes = context.AddIntrinsic(Intrinsic.X86Subpd, nRes, fpMaxValMask);
 
-                Operand nInt = EmitVectorLongCreate(context, low, high);
+                nCmp = context.AddIntrinsic(Intrinsic.X86Cmppd, nRes, zero, Const((int)CmpCondition.NotLessThanOrEqual));
+                nRes = context.AddIntrinsic(Intrinsic.X86Pand,  nRes, nCmp);
 
-                Operand mask = X86GetAllElements(context, 0x43E0000000000000L); // 9.2233720368547760E18d (9223372036854775808)
+                Operand nLong2 = EmitSse2CvtDoubleToInt64OpF(context, nRes, scalar);
 
-                Operand res = context.AddIntrinsic(Intrinsic.X86Subpd, nRndMasked, mask);
+                nRes = context.AddIntrinsic(Intrinsic.X86Cmppd, nRes, fpMaxValMask, Const((int)CmpCondition.NotLessThan));
 
-                Operand mask2 = context.AddIntrinsic(Intrinsic.X86Cmppd, res, context.VectorZero(), Const((int)CmpCondition.NotLessThanOrEqual));
-
-                Operand resMasked = context.AddIntrinsic(Intrinsic.X86Pand, res, mask2);
-
-                if (!scalar)
-                {
-                    high = context.AddIntrinsic(Intrinsic.X86Unpckhpd, resMasked, resMasked);
-                    high = context.AddIntrinsicLong(Intrinsic.X86Cvtsd2si, high);
-                }
-
-                low = context.AddIntrinsicLong(Intrinsic.X86Cvtsd2si, resMasked);
-
-                res = EmitVectorLongCreate(context, low, high);
-
-                Operand mask3 = context.AddIntrinsic(Intrinsic.X86Cmppd, resMasked, mask, Const((int)CmpCondition.NotLessThan));
-
-                res = context.AddIntrinsic(Intrinsic.X86Pxor, res, mask3);
-                res = context.AddIntrinsic(Intrinsic.X86Paddq, res, nInt);
+                Operand dRes = context.AddIntrinsic(Intrinsic.X86Pxor,  nLong2, nRes);
+                        dRes = context.AddIntrinsic(Intrinsic.X86Paddq, dRes,   nLong);
 
                 if (scalar)
                 {
-                    res = context.VectorZeroUpper64(res);
+                    dRes = context.VectorZeroUpper64(dRes);
                 }
 
-                context.Copy(GetVec(op.Rd), res);
+                context.Copy(GetVec(op.Rd), dRes);
             }
         }
 
-        private static void EmitSse2Scvtf(ArmEmitterContext context, bool scalar)
+        private static void EmitSse41Fcvts_Gp(ArmEmitterContext context, FPRoundingMode roundMode, bool isFixed)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+            OpCodeSimdCvt op = (OpCodeSimdCvt)context.CurrOp;
 
             Operand n = GetVec(op.Rn);
 
-            Operand res = context.AddIntrinsic(Intrinsic.X86Cvtdq2ps, n);
-
-            if (op is OpCodeSimdShImm fixedOp)
+            if (op.Size == 0)
             {
-                int fBits = GetImmShr(fixedOp);
+                Operand nRes = context.AddIntrinsic(Intrinsic.X86Cmpss, n, n, Const((int)CmpCondition.OrderedQ));
+                        nRes = context.AddIntrinsic(Intrinsic.X86Pand, nRes, n);
 
-                // BitConverter.Int32BitsToSingle(fpScaled) == 1f / MathF.Pow(2f, fBits)
-                int fpScaled = 0x3F800000 - fBits * 0x800000;
+                if (isFixed)
+                {
+                    // BitConverter.Int32BitsToSingle(fpScaled) == MathF.Pow(2f, op.FBits)
+                    int fpScaled = 0x3F800000 + op.FBits * 0x800000;
 
-                Operand scale = X86GetAllElements(context, fpScaled);
+                    Operand fpScaledMask = X86GetScalar(context, fpScaled);
 
-                res = context.AddIntrinsic(Intrinsic.X86Mulps, res, scale);
+                    nRes = context.AddIntrinsic(Intrinsic.X86Mulss, nRes, fpScaledMask);
+                }
+
+                nRes = context.AddIntrinsic(Intrinsic.X86Roundss, nRes, Const(X86GetRoundControl(roundMode)));
+
+                Operand nIntOrLong = op.RegisterSize == RegisterSize.Int32
+                    ? context.AddIntrinsicInt (Intrinsic.X86Cvtss2si, nRes)
+                    : context.AddIntrinsicLong(Intrinsic.X86Cvtss2si, nRes);
+
+                int fpMaxVal = op.RegisterSize == RegisterSize.Int32
+                    ? 0x4F000000  // 2.14748365E9f (2147483648)
+                    : 0x5F000000; // 9.223372E18f  (9223372036854775808)
+
+                Operand fpMaxValMask = X86GetScalar(context, fpMaxVal);
+
+                nRes = context.AddIntrinsic(Intrinsic.X86Cmpss, nRes, fpMaxValMask, Const((int)CmpCondition.NotLessThan));
+
+                Operand nInt = context.AddIntrinsicInt(Intrinsic.X86Cvtsi2si, nRes);
+
+                if (op.RegisterSize == RegisterSize.Int64)
+                {
+                    nInt = context.SignExtend32(OperandType.I64, nInt);
+                }
+
+                Operand dRes = context.BitwiseExclusiveOr(nIntOrLong, nInt);
+
+                SetIntOrZR(context, op.Rd, dRes);
             }
-
-            if (scalar)
+            else /* if (op.Size == 1) */
             {
-                res = context.VectorZeroUpper96(res);
-            }
-            else if (op.RegisterSize == RegisterSize.Simd64)
-            {
-                res = context.VectorZeroUpper64(res);
-            }
+                Operand nRes = context.AddIntrinsic(Intrinsic.X86Cmpsd, n, n, Const((int)CmpCondition.OrderedQ));
+                        nRes = context.AddIntrinsic(Intrinsic.X86Pand, nRes, n);
 
-            context.Copy(GetVec(op.Rd), res);
+                if (isFixed)
+                {
+                    // BitConverter.Int64BitsToDouble(fpScaled) == Math.Pow(2d, op.FBits)
+                    long fpScaled = 0x3FF0000000000000L + op.FBits * 0x10000000000000L;
+
+                    Operand fpScaledMask = X86GetScalar(context, fpScaled);
+
+                    nRes = context.AddIntrinsic(Intrinsic.X86Mulsd, nRes, fpScaledMask);
+                }
+
+                nRes = context.AddIntrinsic(Intrinsic.X86Roundsd, nRes, Const(X86GetRoundControl(roundMode)));
+
+                Operand nIntOrLong = op.RegisterSize == RegisterSize.Int32
+                    ? context.AddIntrinsicInt (Intrinsic.X86Cvtsd2si, nRes)
+                    : context.AddIntrinsicLong(Intrinsic.X86Cvtsd2si, nRes);
+
+                long fpMaxVal = op.RegisterSize == RegisterSize.Int32
+                    ? 0x41E0000000000000L  // 2147483648.0000000d    (2147483648)
+                    : 0x43E0000000000000L; // 9.2233720368547760E18d (9223372036854775808)
+
+                Operand fpMaxValMask = X86GetScalar(context, fpMaxVal);
+
+                nRes = context.AddIntrinsic(Intrinsic.X86Cmpsd, nRes, fpMaxValMask, Const((int)CmpCondition.NotLessThan));
+
+                Operand nLong = context.AddIntrinsicLong(Intrinsic.X86Cvtsi2si, nRes);
+
+                if (op.RegisterSize == RegisterSize.Int32)
+                {
+                    nLong = context.ConvertI64ToI32(nLong);
+                }
+
+                Operand dRes = context.BitwiseExclusiveOr(nIntOrLong, nLong);
+
+                SetIntOrZR(context, op.Rd, dRes);
+            }
         }
 
-        private static void EmitSse2Ucvtf(ArmEmitterContext context, bool scalar)
+        private static void EmitSse41Fcvtu_Gp(ArmEmitterContext context, FPRoundingMode roundMode, bool isFixed)
         {
-            OpCodeSimd op = (OpCodeSimd)context.CurrOp;
+            OpCodeSimdCvt op = (OpCodeSimdCvt)context.CurrOp;
 
             Operand n = GetVec(op.Rn);
 
-            Operand res = context.AddIntrinsic(Intrinsic.X86Psrld, n, Const(16));
-
-            res = context.AddIntrinsic(Intrinsic.X86Cvtdq2ps, res);
-
-            Operand mask = X86GetAllElements(context, 0x47800000); // 65536.0f (1 << 16)
-
-            res = context.AddIntrinsic(Intrinsic.X86Mulps, res, mask);
-
-            Operand res2 = context.AddIntrinsic(Intrinsic.X86Pslld, n, Const(16));
-
-            res2 = context.AddIntrinsic(Intrinsic.X86Psrld, res2, Const(16));
-            res2 = context.AddIntrinsic(Intrinsic.X86Cvtdq2ps, res2);
-
-            res = context.AddIntrinsic(Intrinsic.X86Addps, res, res2);
-
-            if (op is OpCodeSimdShImm fixedOp)
+            if (op.Size == 0)
             {
-                int fBits = GetImmShr(fixedOp);
+                Operand nRes = context.AddIntrinsic(Intrinsic.X86Cmpss, n, n, Const((int)CmpCondition.OrderedQ));
+                        nRes = context.AddIntrinsic(Intrinsic.X86Pand, nRes, n);
 
-                // BitConverter.Int32BitsToSingle(fpScaled) == 1f / MathF.Pow(2f, fBits)
-                int fpScaled = 0x3F800000 - fBits * 0x800000;
+                if (isFixed)
+                {
+                    // BitConverter.Int32BitsToSingle(fpScaled) == MathF.Pow(2f, op.FBits)
+                    int fpScaled = 0x3F800000 + op.FBits * 0x800000;
 
-                Operand scale = X86GetAllElements(context, fpScaled);
+                    Operand fpScaledMask = X86GetScalar(context, fpScaled);
 
-                res = context.AddIntrinsic(Intrinsic.X86Mulps, res, scale);
+                    nRes = context.AddIntrinsic(Intrinsic.X86Mulss, nRes, fpScaledMask);
+                }
+
+                nRes = context.AddIntrinsic(Intrinsic.X86Roundss, nRes, Const(X86GetRoundControl(roundMode)));
+
+                Operand zero = context.VectorZero();
+
+                Operand nCmp = context.AddIntrinsic(Intrinsic.X86Cmpss, nRes, zero, Const((int)CmpCondition.NotLessThanOrEqual));
+                        nRes = context.AddIntrinsic(Intrinsic.X86Pand,  nRes, nCmp);
+
+                int fpMaxVal = op.RegisterSize == RegisterSize.Int32
+                    ? 0x4F000000  // 2.14748365E9f (2147483648)
+                    : 0x5F000000; // 9.223372E18f  (9223372036854775808)
+
+                Operand fpMaxValMask = X86GetScalar(context, fpMaxVal);
+
+                Operand nIntOrLong = op.RegisterSize == RegisterSize.Int32
+                    ? context.AddIntrinsicInt (Intrinsic.X86Cvtss2si, nRes)
+                    : context.AddIntrinsicLong(Intrinsic.X86Cvtss2si, nRes);
+
+                nRes = context.AddIntrinsic(Intrinsic.X86Subss, nRes, fpMaxValMask);
+
+                nCmp = context.AddIntrinsic(Intrinsic.X86Cmpss, nRes, zero, Const((int)CmpCondition.NotLessThanOrEqual));
+                nRes = context.AddIntrinsic(Intrinsic.X86Pand,  nRes, nCmp);
+
+                Operand nIntOrLong2 = op.RegisterSize == RegisterSize.Int32
+                    ? context.AddIntrinsicInt (Intrinsic.X86Cvtss2si, nRes)
+                    : context.AddIntrinsicLong(Intrinsic.X86Cvtss2si, nRes);
+
+                nRes = context.AddIntrinsic(Intrinsic.X86Cmpss, nRes, fpMaxValMask, Const((int)CmpCondition.NotLessThan));
+
+                Operand nInt = context.AddIntrinsicInt(Intrinsic.X86Cvtsi2si, nRes);
+
+                if (op.RegisterSize == RegisterSize.Int64)
+                {
+                    nInt = context.SignExtend32(OperandType.I64, nInt);
+                }
+
+                Operand dRes = context.BitwiseExclusiveOr(nIntOrLong2, nInt);
+                        dRes = context.Add(dRes, nIntOrLong);
+
+                SetIntOrZR(context, op.Rd, dRes);
             }
-
-            if (scalar)
+            else /* if (op.Size == 1) */
             {
-                res = context.VectorZeroUpper96(res);
-            }
-            else if (op.RegisterSize == RegisterSize.Simd64)
-            {
-                res = context.VectorZeroUpper64(res);
-            }
+                Operand nRes = context.AddIntrinsic(Intrinsic.X86Cmpsd, n, n, Const((int)CmpCondition.OrderedQ));
+                        nRes = context.AddIntrinsic(Intrinsic.X86Pand, nRes, n);
 
-            context.Copy(GetVec(op.Rd), res);
+                if (isFixed)
+                {
+                    // BitConverter.Int64BitsToDouble(fpScaled) == Math.Pow(2d, op.FBits)
+                    long fpScaled = 0x3FF0000000000000L + op.FBits * 0x10000000000000L;
+
+                    Operand fpScaledMask = X86GetScalar(context, fpScaled);
+
+                    nRes = context.AddIntrinsic(Intrinsic.X86Mulsd, nRes, fpScaledMask);
+                }
+
+                nRes = context.AddIntrinsic(Intrinsic.X86Roundsd, nRes, Const(X86GetRoundControl(roundMode)));
+
+                Operand zero = context.VectorZero();
+
+                Operand nCmp = context.AddIntrinsic(Intrinsic.X86Cmpsd, nRes, zero, Const((int)CmpCondition.NotLessThanOrEqual));
+                        nRes = context.AddIntrinsic(Intrinsic.X86Pand,  nRes, nCmp);
+
+                long fpMaxVal = op.RegisterSize == RegisterSize.Int32
+                    ? 0x41E0000000000000L  // 2147483648.0000000d    (2147483648)
+                    : 0x43E0000000000000L; // 9.2233720368547760E18d (9223372036854775808)
+
+                Operand fpMaxValMask = X86GetScalar(context, fpMaxVal);
+
+                Operand nIntOrLong = op.RegisterSize == RegisterSize.Int32
+                    ? context.AddIntrinsicInt (Intrinsic.X86Cvtsd2si, nRes)
+                    : context.AddIntrinsicLong(Intrinsic.X86Cvtsd2si, nRes);
+
+                nRes = context.AddIntrinsic(Intrinsic.X86Subsd, nRes, fpMaxValMask);
+
+                nCmp = context.AddIntrinsic(Intrinsic.X86Cmpsd, nRes, zero, Const((int)CmpCondition.NotLessThanOrEqual));
+                nRes = context.AddIntrinsic(Intrinsic.X86Pand,  nRes, nCmp);
+
+                Operand nIntOrLong2 = op.RegisterSize == RegisterSize.Int32
+                    ? context.AddIntrinsicInt (Intrinsic.X86Cvtsd2si, nRes)
+                    : context.AddIntrinsicLong(Intrinsic.X86Cvtsd2si, nRes);
+
+                nRes = context.AddIntrinsic(Intrinsic.X86Cmpsd, nRes, fpMaxValMask, Const((int)CmpCondition.NotLessThan));
+
+                Operand nLong = context.AddIntrinsicLong(Intrinsic.X86Cvtsi2si, nRes);
+
+                if (op.RegisterSize == RegisterSize.Int32)
+                {
+                    nLong = context.ConvertI64ToI32(nLong);
+                }
+
+                Operand dRes = context.BitwiseExclusiveOr(nIntOrLong2, nLong);
+                        dRes = context.Add(dRes, nIntOrLong);
+
+                SetIntOrZR(context, op.Rd, dRes);
+            }
         }
 
         private static Operand EmitVectorLongExtract(ArmEmitterContext context, int reg, int index, int size)
@@ -1144,15 +1478,6 @@ namespace ARMeilleure.Instructions
             OperandType type = size == 3 ? OperandType.I64 : OperandType.I32;
 
             return context.VectorExtract(type, GetVec(reg), index);
-        }
-
-        private static Operand EmitVectorLongCreate(ArmEmitterContext context, Operand low, Operand high)
-        {
-            Operand vector = context.VectorCreateScalar(low);
-
-            vector = context.VectorInsert(vector, high, 1);
-
-            return vector;
         }
     }
 }

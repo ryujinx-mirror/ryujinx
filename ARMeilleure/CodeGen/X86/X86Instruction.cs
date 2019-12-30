@@ -38,6 +38,7 @@ namespace ARMeilleure.CodeGen.X86
         Cvtsi2sd,
         Cvtsi2ss,
         Cvtss2sd,
+        Cvtss2si,
         Div,
         Divpd,
         Divps,

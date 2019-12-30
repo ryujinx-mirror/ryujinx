@@ -13,20 +13,6 @@ namespace ARMeilleure.Instructions
     static partial class InstEmit
     {
 #region "Masks"
-        private static readonly long[] _masksE0_TrnUzpXtn = new long[]
-        {
-            14L << 56 | 12L << 48 | 10L << 40 | 08L << 32 | 06L << 24 | 04L << 16 | 02L << 8 | 00L << 0,
-            13L << 56 | 12L << 48 | 09L << 40 | 08L << 32 | 05L << 24 | 04L << 16 | 01L << 8 | 00L << 0,
-            11L << 56 | 10L << 48 | 09L << 40 | 08L << 32 | 03L << 24 | 02L << 16 | 01L << 8 | 00L << 0
-        };
-
-        private static readonly long[] _masksE1_TrnUzp = new long[]
-        {
-            15L << 56 | 13L << 48 | 11L << 40 | 09L << 32 | 07L << 24 | 05L << 16 | 03L << 8 | 01L << 0,
-            15L << 56 | 14L << 48 | 11L << 40 | 10L << 32 | 07L << 24 | 06L << 16 | 03L << 8 | 02L << 0,
-            15L << 56 | 14L << 48 | 13L << 40 | 12L << 32 | 07L << 24 | 06L << 16 | 05L << 8 | 04L << 0
-        };
-
         private static readonly long[] _masksE0_Uzp = new long[]
         {
             13L << 56 | 09L << 48 | 05L << 40 | 01L << 32 | 12L << 24 | 08L << 16 | 04L << 8 | 00L << 0,
@@ -447,7 +433,7 @@ namespace ARMeilleure.Instructions
 
                 Operand res = context.VectorZeroUpper64(d);
 
-                Operand mask = X86GetAllElements(context, _masksE0_TrnUzpXtn[op.Size]);
+                Operand mask = X86GetAllElements(context, EvenMasks[op.Size]);
 
                 Operand res2 = context.AddIntrinsic(Intrinsic.X86Pshufb, GetVec(op.Rn), mask);
 
@@ -646,8 +632,8 @@ namespace ARMeilleure.Instructions
 
                 if (op.Size < 3)
                 {
-                    long maskE0 = _masksE0_TrnUzpXtn[op.Size];
-                    long maskE1 = _masksE1_TrnUzp   [op.Size];
+                    long maskE0 = EvenMasks[op.Size];
+                    long maskE1 = OddMasks [op.Size];
 
                     mask = X86GetScalar(context, maskE0);
 
@@ -714,8 +700,8 @@ namespace ARMeilleure.Instructions
 
                     if (op.Size < 3)
                     {
-                        long maskE0 = _masksE0_TrnUzpXtn[op.Size];
-                        long maskE1 = _masksE1_TrnUzp   [op.Size];
+                        long maskE0 = EvenMasks[op.Size];
+                        long maskE1 = OddMasks [op.Size];
 
                         mask = X86GetScalar(context, maskE0);
 

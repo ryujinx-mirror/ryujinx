@@ -1,6 +1,7 @@
 using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Translation;
+using System.Diagnostics;
 
 using static ARMeilleure.Instructions.InstEmitHelper;
 using static ARMeilleure.Instructions.InstEmitSimdHelper;
@@ -107,7 +108,7 @@ namespace ARMeilleure.Instructions
                     res = context.VectorZeroUpper64(res);
                 }
 
-                context.Copy(GetVec(op.Rd), res);
+                context.Copy(d, res);
             }
             else
             {
@@ -158,7 +159,7 @@ namespace ARMeilleure.Instructions
                     res = context.VectorZeroUpper64(res);
                 }
 
-                context.Copy(GetVec(op.Rd), res);
+                context.Copy(d, res);
             }
             else
             {
@@ -292,16 +293,26 @@ namespace ARMeilleure.Instructions
             {
                 Operand ne = EmitVectorExtractZx(context, op.Rn, index, 0);
 
-                ne = context.ConvertI64ToI32(ne);
-
-                Operand de = context.Call(new _U32_U32(SoftFallback.ReverseBits8), ne);
-
-                de = context.ZeroExtend32(OperandType.I64, de);
+                Operand de = EmitReverseBits8Op(context, ne);
 
                 res = EmitVectorInsert(context, res, de, index, 0);
             }
 
             context.Copy(GetVec(op.Rd), res);
+        }
+
+        private static Operand EmitReverseBits8Op(ArmEmitterContext context, Operand op)
+        {
+            Debug.Assert(op.Type == OperandType.I64);
+
+            Operand val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(op, Const(0xaaul)), Const(1)),
+                                            context.ShiftLeft   (context.BitwiseAnd(op, Const(0x55ul)), Const(1)));
+
+            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xccul)), Const(2)),
+                                    context.ShiftLeft   (context.BitwiseAnd(val, Const(0x33ul)), Const(2)));
+
+            return context.BitwiseOr(context.ShiftRightUI(val, Const(4)),
+                                     context.ShiftLeft   (context.BitwiseAnd(val, Const(0x0ful)), Const(4)));
         }
 
         public static void Rev16_V(ArmEmitterContext context)

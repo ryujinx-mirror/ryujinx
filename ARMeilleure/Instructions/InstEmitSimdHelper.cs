@@ -16,6 +16,24 @@ namespace ARMeilleure.Instructions
 
     static class InstEmitSimdHelper
     {
+#region "Masks"
+        public static readonly long[] EvenMasks = new long[]
+        {
+            14L << 56 | 12L << 48 | 10L << 40 | 08L << 32 | 06L << 24 | 04L << 16 | 02L << 8 | 00L << 0, // B
+            13L << 56 | 12L << 48 | 09L << 40 | 08L << 32 | 05L << 24 | 04L << 16 | 01L << 8 | 00L << 0, // H
+            11L << 56 | 10L << 48 | 09L << 40 | 08L << 32 | 03L << 24 | 02L << 16 | 01L << 8 | 00L << 0  // S
+        };
+
+        public static readonly long[] OddMasks = new long[]
+        {
+            15L << 56 | 13L << 48 | 11L << 40 | 09L << 32 | 07L << 24 | 05L << 16 | 03L << 8 | 01L << 0, // B
+            15L << 56 | 14L << 48 | 11L << 40 | 10L << 32 | 07L << 24 | 06L << 16 | 03L << 8 | 02L << 0, // H
+            15L << 56 | 14L << 48 | 13L << 40 | 12L << 32 | 07L << 24 | 06L << 16 | 05L << 8 | 04L << 0  // S
+        };
+
+        private static readonly long _zeroMask = 128L << 56 | 128L << 48 | 128L << 40 | 128L << 32 | 128L << 24 | 128L << 16 | 128L << 8 | 128L << 0;
+#endregion
+
 #region "X86 SSE Intrinsics"
         public static readonly Intrinsic[] X86PaddInstruction = new Intrinsic[]
         {
@@ -189,11 +207,19 @@ namespace ARMeilleure.Instructions
             return vector;
         }
 
+        public static Operand X86GetElements(ArmEmitterContext context, long e1, long e0)
+        {
+            Operand vector0 = context.VectorCreateScalar(Const(e0));
+            Operand vector1 = context.VectorCreateScalar(Const(e1));
+
+            return context.AddIntrinsic(Intrinsic.X86Punpcklqdq, vector0, vector1);
+        }
+
         public static int X86GetRoundControl(FPRoundingMode roundMode)
         {
             switch (roundMode)
             {
-                case FPRoundingMode.ToNearest:            return 8 | 0;
+                case FPRoundingMode.ToNearest:            return 8 | 0; // even
                 case FPRoundingMode.TowardsPlusInfinity:  return 8 | 2;
                 case FPRoundingMode.TowardsMinusInfinity: return 8 | 1;
                 case FPRoundingMode.TowardsZero:          return 8 | 3;
@@ -991,6 +1017,46 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVec(op.Rd), res);
         }
 
+        public static void EmitSsse3VectorPairwiseOp(ArmEmitterContext context, Intrinsic[] inst)
+        {
+            OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
+
+            Operand n = GetVec(op.Rn);
+            Operand m = GetVec(op.Rm);
+
+            if (op.RegisterSize == RegisterSize.Simd64)
+            {
+                Operand zeroEvenMask = X86GetElements(context, _zeroMask, EvenMasks[op.Size]);
+                Operand zeroOddMask  = X86GetElements(context, _zeroMask, OddMasks [op.Size]);
+
+                Operand mN = context.AddIntrinsic(Intrinsic.X86Punpcklqdq, n, m); // m:n
+
+                Operand left  = context.AddIntrinsic(Intrinsic.X86Pshufb, mN, zeroEvenMask); // 0:even from m:n
+                Operand right = context.AddIntrinsic(Intrinsic.X86Pshufb, mN, zeroOddMask);  // 0:odd  from m:n
+
+                context.Copy(GetVec(op.Rd), context.AddIntrinsic(inst[op.Size], left, right));
+            }
+            else if (op.Size < 3)
+            {
+                Operand oddEvenMask = X86GetElements(context, OddMasks[op.Size], EvenMasks[op.Size]);
+
+                Operand oddEvenN = context.AddIntrinsic(Intrinsic.X86Pshufb, n, oddEvenMask); // odd:even from n
+                Operand oddEvenM = context.AddIntrinsic(Intrinsic.X86Pshufb, m, oddEvenMask); // odd:even from m
+
+                Operand left  = context.AddIntrinsic(Intrinsic.X86Punpcklqdq, oddEvenN, oddEvenM);
+                Operand right = context.AddIntrinsic(Intrinsic.X86Punpckhqdq, oddEvenN, oddEvenM);
+
+                context.Copy(GetVec(op.Rd), context.AddIntrinsic(inst[op.Size], left, right));
+            }
+            else
+            {
+                Operand left  = context.AddIntrinsic(Intrinsic.X86Punpcklqdq, n, m);
+                Operand right = context.AddIntrinsic(Intrinsic.X86Punpckhqdq, n, m);
+
+                context.Copy(GetVec(op.Rd), context.AddIntrinsic(inst[3], left, right));
+            }
+        }
+
         public static void EmitVectorAcrossVectorOpSx(ArmEmitterContext context, Func2I emit)
         {
             EmitVectorAcrossVectorOp(context, emit, signed: true, isLong: false);
@@ -1066,7 +1132,7 @@ namespace ARMeilleure.Instructions
             context.Copy(GetVec(op.Rd), res);
         }
 
-        public static void EmitVectorPairwiseOpF(ArmEmitterContext context, Intrinsic inst32, Intrinsic inst64)
+        public static void EmitSse2VectorPairwiseOpF(ArmEmitterContext context, Intrinsic inst32, Intrinsic inst64)
         {
             OpCodeSimdReg op = (OpCodeSimdReg)context.CurrOp;
 
@@ -1231,8 +1297,7 @@ namespace ARMeilleure.Instructions
 
                     if (op.Size <= 2)
                     {
-                        Operand temp = add ? context.Add     (ne, me)
-                                           : context.Subtract(ne, me);
+                        Operand temp = add ? context.Add(ne, me) : context.Subtract(ne, me);
 
                         de = EmitSatQ(context, temp, op.Size, signedSrc: true, signedDst: signed);
                     }
@@ -1316,7 +1381,9 @@ namespace ARMeilleure.Instructions
 
             int part = !scalar && (op.RegisterSize == RegisterSize.Simd128) ? elems : 0;
 
-            Operand res = part == 0 ? context.VectorZero() : context.Copy(GetVec(op.Rd));
+            Operand d = GetVec(op.Rd);
+
+            Operand res = part == 0 ? context.VectorZero() : context.Copy(d);
 
             for (int index = 0; index < elems; index++)
             {
@@ -1327,7 +1394,7 @@ namespace ARMeilleure.Instructions
                 res = EmitVectorInsert(context, res, temp, part + index, op.Size);
             }
 
-            context.Copy(GetVec(op.Rd), res);
+            context.Copy(d, res);
         }
 
         // TSrc (16bit, 32bit, 64bit; signed, unsigned) > TDst (8bit, 16bit, 32bit; signed, unsigned).

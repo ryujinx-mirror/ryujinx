@@ -269,11 +269,11 @@ namespace ARMeilleure.CodeGen.X86
                         {
                             if (dest.Type == OperandType.I32)
                             {
-                                context.Assembler.Movd(dest, source); // int _mm_cvtsi128_si32
+                                context.Assembler.Movd(dest, source); // int _mm_cvtsi128_si32(__m128i a)
                             }
                             else /* if (dest.Type == OperandType.I64) */
                             {
-                                context.Assembler.Movq(dest, source); // __int64 _mm_cvtsi128_si64
+                                context.Assembler.Movq(dest, source); // __int64 _mm_cvtsi128_si64(__m128i a)
                             }
                         }
                         else
@@ -301,6 +301,26 @@ namespace ARMeilleure.CodeGen.X86
                         Debug.Assert(!src2.Type.IsInteger() || src2.Kind == OperandKind.Constant);
 
                         context.Assembler.WriteInstruction(info.Inst, dest, src1, src2);
+
+                        break;
+                    }
+
+                    case IntrinsicType.BinaryGpr:
+                    {
+                        Operand dest = operation.Destination;
+                        Operand src1 = operation.GetSource(0);
+                        Operand src2 = operation.GetSource(1);
+
+                        EnsureSameType(dest, src1);
+
+                        if (!HardwareCapabilities.SupportsVexEncoding)
+                        {
+                            EnsureSameReg(dest, src1);
+                        }
+
+                        Debug.Assert(!dest.Type.IsInteger() && src2.Type.IsInteger());
+
+                        context.Assembler.WriteInstruction(info.Inst, dest, src1, src2, src2.Type);
 
                         break;
                     }
@@ -1070,11 +1090,11 @@ namespace ARMeilleure.CodeGen.X86
 
             if (source.Type == OperandType.I32)
             {
-                context.Assembler.Movd(dest, source);
+                context.Assembler.Movd(dest, source); // (__m128i _mm_cvtsi32_si128(int a))
             }
             else /* if (source.Type == OperandType.I64) */
             {
-                context.Assembler.Movq(dest, source);
+                context.Assembler.Movq(dest, source); // (__m128i _mm_cvtsi64_si128(__int64 a))
             }
         }
 

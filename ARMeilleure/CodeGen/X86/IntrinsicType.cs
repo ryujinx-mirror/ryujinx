@@ -7,6 +7,7 @@ namespace ARMeilleure.CodeGen.X86
         Unary,
         UnaryToGpr,
         Binary,
+        BinaryGpr,
         BinaryImm,
         Ternary,
         TernaryImm

@@ -2,6 +2,7 @@ using ARMeilleure.Decoders;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.State;
 using ARMeilleure.Translation;
+using System.Diagnostics;
 
 using static ARMeilleure.Instructions.InstEmitAluHelper;
 using static ARMeilleure.Instructions.InstEmitHelper;
@@ -265,14 +266,50 @@ namespace ARMeilleure.Instructions
 
             if (op.RegisterSize == RegisterSize.Int32)
             {
-                d = context.Call(new _U32_U32(SoftFallback.ReverseBits32), n);
+                d = EmitReverseBits32Op(context, n);
             }
             else
             {
-                d = context.Call(new _U64_U64(SoftFallback.ReverseBits64), n);
+                d = EmitReverseBits64Op(context, n);
             }
 
             SetAluDOrZR(context, d);
+        }
+
+        private static Operand EmitReverseBits32Op(ArmEmitterContext context, Operand op)
+        {
+            Debug.Assert(op.Type == OperandType.I32);
+
+            Operand val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(op, Const(0xaaaaaaaau)), Const(1)),
+                                            context.ShiftLeft   (context.BitwiseAnd(op, Const(0x55555555u)), Const(1)));
+
+            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xccccccccu)), Const(2)),
+                                    context.ShiftLeft   (context.BitwiseAnd(val, Const(0x33333333u)), Const(2)));
+            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xf0f0f0f0u)), Const(4)),
+                                    context.ShiftLeft   (context.BitwiseAnd(val, Const(0x0f0f0f0fu)), Const(4)));
+            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xff00ff00u)), Const(8)),
+                                    context.ShiftLeft   (context.BitwiseAnd(val, Const(0x00ff00ffu)), Const(8)));
+
+            return context.BitwiseOr(context.ShiftRightUI(val, Const(16)), context.ShiftLeft(val, Const(16)));
+        }
+
+        private static Operand EmitReverseBits64Op(ArmEmitterContext context, Operand op)
+        {
+            Debug.Assert(op.Type == OperandType.I64);
+
+            Operand val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(op, Const(0xaaaaaaaaaaaaaaaaul)), Const(1)),
+                                            context.ShiftLeft   (context.BitwiseAnd(op, Const(0x5555555555555555ul)), Const(1)));
+
+            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xccccccccccccccccul)), Const(2)),
+                                    context.ShiftLeft   (context.BitwiseAnd(val, Const(0x3333333333333333ul)), Const(2)));
+            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xf0f0f0f0f0f0f0f0ul)), Const(4)),
+                                    context.ShiftLeft   (context.BitwiseAnd(val, Const(0x0f0f0f0f0f0f0f0ful)), Const(4)));
+            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xff00ff00ff00ff00ul)), Const(8)),
+                                    context.ShiftLeft   (context.BitwiseAnd(val, Const(0x00ff00ff00ff00fful)), Const(8)));
+            val = context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xffff0000ffff0000ul)), Const(16)),
+                                    context.ShiftLeft   (context.BitwiseAnd(val, Const(0x0000ffff0000fffful)), Const(16)));
+
+            return context.BitwiseOr(context.ShiftRightUI(val, Const(32)), context.ShiftLeft(val, Const(32)));
         }
 
         public static void Rev16(ArmEmitterContext context)
@@ -284,14 +321,31 @@ namespace ARMeilleure.Instructions
 
             if (op.RegisterSize == RegisterSize.Int32)
             {
-                d = context.Call(new _U32_U32(SoftFallback.ReverseBytes16_32), n);
+                d = EmitReverseBytes16_32Op(context, n);
             }
             else
             {
-                d = context.Call(new _U64_U64(SoftFallback.ReverseBytes16_64), n);
+                d = EmitReverseBytes16_64Op(context, n);
             }
 
             SetAluDOrZR(context, d);
+        }
+
+        private static Operand EmitReverseBytes16_32Op(ArmEmitterContext context, Operand op)
+        {
+            Debug.Assert(op.Type == OperandType.I32);
+
+            Operand val = EmitReverseBytes16_64Op(context, context.ZeroExtend32(OperandType.I64, op));
+
+            return context.ConvertI64ToI32(val);
+        }
+
+        private static Operand EmitReverseBytes16_64Op(ArmEmitterContext context, Operand op)
+        {
+            Debug.Assert(op.Type == OperandType.I64);
+
+            return context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(op, Const(0xff00ff00ff00ff00ul)), Const(8)),
+                                     context.ShiftLeft   (context.BitwiseAnd(op, Const(0x00ff00ff00ff00fful)), Const(8)));
         }
 
         public static void Rev32(ArmEmitterContext context)
@@ -299,17 +353,28 @@ namespace ARMeilleure.Instructions
             OpCodeAlu op = (OpCodeAlu)context.CurrOp;
 
             Operand n = GetIntOrZR(context, op.Rn);
+            Operand d;
 
             if (op.RegisterSize == RegisterSize.Int32)
             {
-                SetAluDOrZR(context, context.ByteSwap(n));
+                d = context.ByteSwap(n);
             }
             else
             {
-                Operand d = context.Call(new _U64_U64(SoftFallback.ReverseBytes32_64), n);
-
-                SetAluDOrZR(context, d);
+                d = EmitReverseBytes32_64Op(context, n);
             }
+
+            SetAluDOrZR(context, d);
+        }
+
+        private static Operand EmitReverseBytes32_64Op(ArmEmitterContext context, Operand op)
+        {
+            Debug.Assert(op.Type == OperandType.I64);
+
+            Operand val = EmitReverseBytes16_64Op(context, op);
+
+            return context.BitwiseOr(context.ShiftRightUI(context.BitwiseAnd(val, Const(0xffff0000ffff0000ul)), Const(16)),
+                                     context.ShiftLeft   (context.BitwiseAnd(val, Const(0x0000ffff0000fffful)), Const(16)));
         }
 
         public static void Rev64(ArmEmitterContext context)
