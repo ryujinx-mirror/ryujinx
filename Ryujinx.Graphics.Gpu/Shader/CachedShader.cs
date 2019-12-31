@@ -16,7 +16,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Host shader object.
         /// </summary>
-        public IShader Shader { get; set; }
+        public IShader HostShader { get; set; }
 
         /// <summary>
         /// Maxwell binary shader code.

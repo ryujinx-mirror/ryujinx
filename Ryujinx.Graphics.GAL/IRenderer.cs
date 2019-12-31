@@ -1,8 +1,9 @@
 using Ryujinx.Graphics.Shader;
+using System;
 
 namespace Ryujinx.Graphics.GAL
 {
-    public interface IRenderer
+    public interface IRenderer : IDisposable
     {
         IPipeline Pipeline { get; }
 

@@ -4,7 +4,7 @@ using System;
 
 namespace Ryujinx.Graphics.OpenGL
 {
-    class Window : IWindow
+    class Window : IWindow, IDisposable
     {
         private const int NativeWidth  = 1280;
         private const int NativeHeight = 720;
@@ -117,6 +117,16 @@ namespace Ryujinx.Graphics.OpenGL
             }
 
             return handle;
+        }
+
+        public void Dispose()
+        {
+            if (_copyFramebufferHandle != 0)
+            {
+                GL.DeleteFramebuffer(_copyFramebufferHandle);
+
+                _copyFramebufferHandle = 0;
+            }
         }
     }
 }

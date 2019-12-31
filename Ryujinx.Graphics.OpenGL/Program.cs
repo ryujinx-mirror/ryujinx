@@ -66,6 +66,13 @@ namespace Ryujinx.Graphics.OpenGL
 
             GL.LinkProgram(Handle);
 
+            for (int index = 0; index < shaders.Length; index++)
+            {
+                int shaderHandle = ((Shader)shaders[index]).Handle;
+
+                GL.DetachShader(Handle, shaderHandle);
+            }
+
             CheckProgramLink();
 
             Bind();

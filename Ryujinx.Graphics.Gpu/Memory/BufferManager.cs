@@ -683,5 +683,17 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 buffer.SynchronizeMemory(address, size);
             }
         }
+
+        /// <summary>
+        /// Disposes all buffers in the cache.
+        /// It's an error to use the buffer manager after disposal.
+        /// </summary>
+        public void Dispose()
+        {
+            foreach (Buffer buffer in _buffers)
+            {
+                buffer.Dispose();
+            }
+        }
     }
 }

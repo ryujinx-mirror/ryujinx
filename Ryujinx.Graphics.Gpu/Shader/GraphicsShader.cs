@@ -15,14 +15,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Compiled shader for each shader stage.
         /// </summary>
-        public CachedShader[] Shader { get; }
+        public CachedShader[] Shaders { get; }
 
         /// <summary>
         /// Creates a new instance of cached graphics shader.
         /// </summary>
         public GraphicsShader()
         {
-            Shader = new CachedShader[5];
+            Shaders = new CachedShader[5];
         }
     }
 }

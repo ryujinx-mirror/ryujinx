@@ -18,10 +18,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
     partial class Methods
     {
         private readonly GpuContext _context;
-
-        private readonly ShaderCache _shaderCache;
-
         private readonly ShaderProgramInfo[] _currentProgramInfo;
+
+        /// <summary>
+        /// In-memory shader cache.
+        /// </summary>
+        public ShaderCache ShaderCache { get; }
 
         /// <summary>
         /// GPU buffer manager.
@@ -44,7 +46,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         {
             _context = context;
 
-            _shaderCache = new ShaderCache(_context);
+            ShaderCache = new ShaderCache(_context);
 
             _currentProgramInfo = new ShaderProgramInfo[Constants.TotalShaderStages];
 
@@ -757,13 +759,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 addressesArray[index] = baseAddress + shader.Offset;
             }
 
-            GraphicsShader gs = _shaderCache.GetGraphicsShader(state, addresses);
+            GraphicsShader gs = ShaderCache.GetGraphicsShader(state, addresses);
 
-            _vsUsesInstanceId = gs.Shader[0].Program.Info.UsesInstanceId;
+            _vsUsesInstanceId = gs.Shaders[0].Program.Info.UsesInstanceId;
 
             for (int stage = 0; stage < Constants.TotalShaderStages; stage++)
             {
-                ShaderProgramInfo info = gs.Shader[stage].Program?.Info;
+                ShaderProgramInfo info = gs.Shaders[stage].Program?.Info;
 
                 _currentProgramInfo[stage] = info;
 

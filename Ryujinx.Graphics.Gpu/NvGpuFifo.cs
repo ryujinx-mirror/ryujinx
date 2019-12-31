@@ -21,6 +21,9 @@ namespace Ryujinx.Graphics.Gpu
         /// </summary>
         private struct CachedMacro
         {
+            /// <summary>
+            /// Word offset of the code on the code memory.
+            /// </summary>
             public int Position { get; }
 
             private bool _executionPending;

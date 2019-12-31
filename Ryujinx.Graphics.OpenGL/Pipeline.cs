@@ -6,7 +6,7 @@ using System;
 
 namespace Ryujinx.Graphics.OpenGL
 {
-    class Pipeline : IPipeline
+    class Pipeline : IPipeline, IDisposable
     {
         private Program _program;
 
@@ -862,6 +862,12 @@ namespace Ryujinx.Graphics.OpenGL
                     (_componentMasks[index] & 4u) != 0,
                     (_componentMasks[index] & 8u) != 0);
             }
+        }
+
+        public void Dispose()
+        {
+            _framebuffer?.Dispose();
+            _vertexArray?.Dispose();
         }
     }
 }

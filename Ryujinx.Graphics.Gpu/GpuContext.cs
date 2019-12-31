@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Gpu
     /// <summary>
     /// GPU emulation context.
     /// </summary>
-    public class GpuContext
+    public sealed class GpuContext : IDisposable
     {
         /// <summary>
         /// Host renderer.
@@ -103,6 +103,19 @@ namespace Ryujinx.Graphics.Gpu
         public void SetVmm(ARMeilleure.Memory.MemoryManager cpuMemory)
         {
             PhysicalMemory = new PhysicalMemory(cpuMemory);
+        }
+
+        /// <summary>
+        /// Disposes all GPU resources currently cached.
+        /// It's an error to push any GPU commands after disposal.
+        /// Additionally, the GPU commands FIFO must be empty for disposal,
+        /// and processing of all commands must have finished.
+        /// </summary>
+        public void Dispose()
+        {
+            Methods.ShaderCache.Dispose();
+            Methods.BufferManager.Dispose();
+            Methods.TextureManager.Dispose();
         }
     }
 }

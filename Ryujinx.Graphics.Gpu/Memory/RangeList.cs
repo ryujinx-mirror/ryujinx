@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gpu.Memory
@@ -7,11 +8,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
     /// List of GPU resources with data on guest memory.
     /// </summary>
     /// <typeparam name="T">Type of the GPU resource</typeparam>
-    class RangeList<T> where T : IRange<T>
+    class RangeList<T> : IEnumerable<T> where T : IRange<T>
     {
         private const int ArrayGrowthSize = 32;
 
-        private List<T> _items;
+        private readonly List<T> _items;
 
         /// <summary>
         /// Creates a new GPU resources list.
@@ -319,6 +320,16 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
 
             return ~left;
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return _items.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _items.GetEnumerator();
         }
     }
 }

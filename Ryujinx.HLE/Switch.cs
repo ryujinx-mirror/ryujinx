@@ -134,6 +134,11 @@ namespace Ryujinx.HLE
             Memory.Dispose();
         }
 
+        public void DisposeGpu()
+        {
+            Gpu.Dispose();
+        }
+
         public void Dispose()
         {
             Dispose(true);

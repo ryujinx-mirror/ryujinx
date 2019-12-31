@@ -28,7 +28,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
             // Note: A size of 0 is also invalid, the size must be at least 1.
             int sharedMemorySize = Math.Clamp(dispatchParams.SharedMemorySize & 0xffff, 1, _context.Capabilities.MaximumComputeSharedMemorySize);
 
-            ComputeShader cs = _shaderCache.GetComputeShader(
+            ComputeShader cs = ShaderCache.GetComputeShader(
                 shaderGpuVa,
                 sharedMemorySize,
                 dispatchParams.UnpackBlockSizeX(),

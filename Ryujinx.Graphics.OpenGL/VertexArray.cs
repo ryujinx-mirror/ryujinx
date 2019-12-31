@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.OpenGL
 {
     class VertexArray : IDisposable
     {
-        public int Handle { get; }
+        public int Handle { get; private set; }
 
         private bool _needsAttribsUpdate;
 
@@ -128,7 +128,12 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void Dispose()
         {
-            GL.DeleteVertexArray(Handle);
+            if (Handle != 0)
+            {
+                GL.DeleteVertexArray(Handle);
+
+                Handle = 0;
+            }
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// Represents a cached GPU texture.
     /// </summary>
-    class Texture : IRange<Texture>
+    class Texture : IRange<Texture>, IDisposable
     {
         private GpuContext _context;
 
@@ -1010,6 +1010,14 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             _arrayViewTexture?.Dispose();
             _arrayViewTexture = null;
+        }
+
+        /// <summary>
+        /// Performs texture disposal, deleting the texture.
+        /// </summary>
+        public void Dispose()
+        {
+            DisposeTextures();
         }
     }
 }

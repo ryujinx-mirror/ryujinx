@@ -106,6 +106,9 @@ namespace Ryujinx.Ui
                     ticks = Math.Min(ticks - ticksPerFrame, ticksPerFrame);
                 }
             }
+
+            _device.DisposeGpu();
+            _renderer.Dispose();
         }
 
         public void MainLoop()

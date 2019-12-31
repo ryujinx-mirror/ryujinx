@@ -4,9 +4,11 @@ using Ryujinx.Graphics.Shader;
 
 namespace Ryujinx.Graphics.OpenGL
 {
-    public class Renderer : IRenderer
+    public sealed class Renderer : IRenderer
     {
-        public IPipeline Pipeline { get; }
+        private Pipeline _pipeline;
+
+        public IPipeline Pipeline => _pipeline;
 
         private readonly Counters _counters;
 
@@ -18,7 +20,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         public Renderer()
         {
-            Pipeline = new Pipeline();
+            _pipeline = new Pipeline();
 
             _counters = new Counters();
 
@@ -80,6 +82,13 @@ namespace Ryujinx.Graphics.OpenGL
         public void ResetCounter(CounterType type)
         {
             _counters.ResetCounter(type);
+        }
+
+        public void Dispose()
+        {
+            TextureCopy.Dispose();
+            _pipeline.Dispose();
+            _window.Dispose();
         }
     }
 }

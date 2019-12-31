@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// Texture manager.
     /// </summary>
-    class TextureManager
+    class TextureManager : IDisposable
     {
         private const int OverlapsBufferInitialCapacity = 10;
         private const int OverlapsBufferMaxCapacity     = 10000;
@@ -760,6 +760,18 @@ namespace Ryujinx.Graphics.Gpu.Image
         public void RemoveTextureFromCache(Texture texture)
         {
             _textures.Remove(texture);
+        }
+
+        /// <summary>
+        /// Disposes all textures in the cache.
+        /// It's an error to use the texture manager after disposal.
+        /// </summary>
+        public void Dispose()
+        {
+            foreach (Texture texture in _textures)
+            {
+                texture.Dispose();
+            }
         }
     }
 }

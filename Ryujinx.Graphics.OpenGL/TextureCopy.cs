@@ -1,9 +1,10 @@
 using Ryujinx.Graphics.GAL;
 using OpenTK.Graphics.OpenGL;
+using System;
 
 namespace Ryujinx.Graphics.OpenGL
 {
-    class TextureCopy
+    class TextureCopy : IDisposable
     {
         private int _srcFramebuffer;
         private int _dstFramebuffer;
@@ -51,11 +52,6 @@ namespace Ryujinx.Graphics.OpenGL
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, oldDrawFramebufferHandle);
 
             GL.Enable(EnableCap.FramebufferSrgb);
-        }
-
-        private static void Detach(FramebufferTarget target, Format format)
-        {
-            Attach(target, format, 0);
         }
 
         private static void Attach(FramebufferTarget target, Format format, int handle)
@@ -123,6 +119,23 @@ namespace Ryujinx.Graphics.OpenGL
             }
 
             return _dstFramebuffer;
+        }
+
+        public void Dispose()
+        {
+            if (_srcFramebuffer != 0)
+            {
+                GL.DeleteFramebuffer(_srcFramebuffer);
+
+                _srcFramebuffer = 0;
+            }
+
+            if (_dstFramebuffer != 0)
+            {
+                GL.DeleteFramebuffer(_dstFramebuffer);
+
+                _dstFramebuffer = 0;
+            }
         }
     }
 }
