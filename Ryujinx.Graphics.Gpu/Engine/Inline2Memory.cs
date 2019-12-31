@@ -19,6 +19,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private int[] _buffer;
 
+        /// <summary>
+        /// Launches Inline-to-Memory engine DMA copy.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         public void LaunchDma(GpuState state, int argument)
         {
             _params = state.Get<Inline2MemoryParams>(MethodOffset.I2mParams);
@@ -42,6 +47,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _finished = false;
         }
 
+        /// <summary>
+        /// Pushes a word of data to the Inline-to-Memory engine.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         public void LoadInlineData(GpuState state, int argument)
         {
             if (!_finished)
@@ -55,6 +65,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
+        /// <summary>
+        /// Performs actual copy of the inline data after the transfer is finished.
+        /// </summary>
         private void FinishTransfer()
         {
             Span<byte> data = MemoryMarshal.Cast<int, byte>(_buffer).Slice(0, _size);

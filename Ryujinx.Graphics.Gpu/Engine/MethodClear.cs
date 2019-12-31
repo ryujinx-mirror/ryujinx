@@ -5,6 +5,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
+        /// <summary>
+        /// Clears the current color and depth-stencil buffers.
+        /// Which buffers should be cleared is also specified on the argument.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         private void Clear(GpuState state, int argument)
         {
             UpdateRenderTargetState(state, useControl: false);

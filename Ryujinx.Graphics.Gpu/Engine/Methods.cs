@@ -12,6 +12,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     using Texture = Image.Texture;
 
+    /// <summary>
+    /// GPU method implementations.
+    /// </summary>
     partial class Methods
     {
         private readonly GpuContext _context;
@@ -20,12 +23,23 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private readonly ShaderProgramInfo[] _currentProgramInfo;
 
-        public BufferManager  BufferManager  { get; }
+        /// <summary>
+        /// GPU buffer manager.
+        /// </summary>
+        public BufferManager BufferManager { get; }
+
+        /// <summary>
+        /// GPU texture manager.
+        /// </summary>
         public TextureManager TextureManager { get; }
 
         private bool _isAnyVbInstanced;
         private bool _vsUsesInstanceId;
 
+        /// <summary>
+        /// Creates a new instance of the GPU methods class.
+        /// </summary>
+        /// <param name="context">GPU context</param>
         public Methods(GpuContext context)
         {
             _context = context;
@@ -38,6 +52,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             TextureManager = new TextureManager(context);
         }
 
+        /// <summary>
+        /// Register callback for GPU method calls that triggers an action on the GPU.
+        /// </summary>
+        /// <param name="state">GPU state where the triggers will be registered</param>
         public void RegisterCallbacks(GpuState state)
         {
             state.RegisterCallback(MethodOffset.LaunchDma,      LaunchDma);
@@ -72,6 +90,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             state.RegisterCallback(MethodOffset.UniformBufferBindFragment,       UniformBufferBindFragment);
         }
 
+        /// <summary>
+        /// Updates host state based on the current guest GPU state.
+        /// </summary>
+        /// <param name="state">Guest GPU state</param>
         private void UpdateState(GpuState state)
         {
             // Shaders must be the first one to be updated if modified, because
@@ -175,6 +197,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             CommitBindings();
         }
 
+        /// <summary>
+        /// Ensures that the bindings are visible to the host GPU.
+        /// This actually performs the binding using the host graphics API.
+        /// </summary>
         private void CommitBindings()
         {
             UpdateStorageBuffers();
@@ -183,6 +209,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
             TextureManager.CommitGraphicsBindings();
         }
 
+        /// <summary>
+        /// Updates storage buffer bindings.
+        /// </summary>
         private void UpdateStorageBuffers()
         {
             for (int stage = 0; stage < _currentProgramInfo.Length; stage++)
@@ -213,6 +242,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
+        /// <summary>
+        /// Updates render targets (color and depth-stencil buffers) based on current render target state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="useControl">Use draw buffers information from render target control register</param>
         private void UpdateRenderTargetState(GpuState state, bool useControl)
         {
             var rtControl = state.Get<RtControl>(MethodOffset.RtControl);
@@ -267,12 +301,21 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
+        /// <summary>
+        /// Checks if a render target color buffer is used.
+        /// </summary>
+        /// <param name="colorState">Color buffer information</param>
+        /// <returns>True if the specified buffer is enabled/used, false otherwise</returns>
         private static bool IsRtEnabled(RtColorState colorState)
         {
             // Colors are disabled by writing 0 to the format.
             return colorState.Format != 0 && colorState.WidthOrStride != 0;
         }
 
+        /// <summary>
+        /// Updates host depth test state based on current GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateDepthTestState(GpuState state)
         {
             _context.Renderer.Pipeline.SetDepthTest(new DepthTestDescriptor(
@@ -281,6 +324,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 state.Get<CompareOp>(MethodOffset.DepthTestFunc)));
         }
 
+        /// <summary>
+        /// Updates host viewport transform and clipping state based on current GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateViewportTransform(GpuState state)
         {
             DepthMode depthMode = state.Get<DepthMode>(MethodOffset.DepthMode);
@@ -343,6 +390,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.Renderer.Pipeline.SetViewports(0, viewports);
         }
 
+        /// <summary>
+        /// Updates host depth bias (also called polygon offset) state based on current GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateDepthBiasState(GpuState state)
         {
             var depthBias = state.Get<DepthBiasState>(MethodOffset.DepthBiasState);
@@ -360,6 +411,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.Renderer.Pipeline.SetDepthBias(enables, factor, units, clamp);
         }
 
+        /// <summary>
+        /// Updates host stencil test state based on current GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateStencilTestState(GpuState state)
         {
             var backMasks = state.Get<StencilBackMasks>    (MethodOffset.StencilBackMasks);
@@ -413,6 +468,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 backMask));
         }
 
+        /// <summary>
+        /// Updates current sampler pool address and size based on guest GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateSamplerPoolState(GpuState state)
         {
             var texturePool = state.Get<PoolState>(MethodOffset.TexturePoolState);
@@ -427,6 +486,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             TextureManager.SetGraphicsSamplerPool(samplerPool.Address.Pack(), maximumId, samplerIndex);
         }
 
+        /// <summary>
+        /// Updates current texture pool address and size based on guest GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateTexturePoolState(GpuState state)
         {
             var texturePool = state.Get<PoolState>(MethodOffset.TexturePoolState);
@@ -436,6 +499,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             TextureManager.SetGraphicsTextureBufferIndex(state.Get<int>(MethodOffset.TextureBufferIndex));
         }
 
+        /// <summary>
+        /// Updates host vertex attributes based on guest GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateVertexAttribState(GpuState state)
         {
             VertexAttribDescriptor[] vertexAttribs = new VertexAttribDescriptor[16];
@@ -460,6 +527,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.Renderer.Pipeline.SetVertexAttribs(vertexAttribs);
         }
 
+        /// <summary>
+        /// Updates host primitive restart based on guest GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdatePrimitiveRestartState(GpuState state)
         {
             PrimitiveRestartState primitiveRestart = state.Get<PrimitiveRestartState>(MethodOffset.PrimitiveRestartState);
@@ -469,6 +540,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 primitiveRestart.Index);
         }
 
+        /// <summary>
+        /// Updates host index buffer binding based on guest GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateIndexBufferState(GpuState state)
         {
             var indexBuffer = state.Get<IndexBufferState>(MethodOffset.IndexBufferState);
@@ -500,6 +575,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             UpdateVertexBufferState(state);
         }
 
+        /// <summary>
+        /// Updates host vertex buffer bindings based on guest GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateVertexBufferState(GpuState state)
         {
             _isAnyVbInstanced = false;
@@ -550,6 +629,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
+        /// <summary>
+        /// Updates host face culling and orientation based on guest GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateFaceState(GpuState state)
         {
             var face = state.Get<FaceState>(MethodOffset.FaceState);
@@ -559,6 +642,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.Renderer.Pipeline.SetFrontFace(face.FrontFace);
         }
 
+        /// <summary>
+        /// Updates host render target color masks, based on guest GPU state.
+        /// This defines with color channels are written to each color buffer.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateRtColorMask(GpuState state)
         {
             bool rtColorMaskShared = state.Get<Boolean32>(MethodOffset.RtColorMaskShared);
@@ -582,6 +670,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.Renderer.Pipeline.SetRenderTargetColorMasks(componentMasks);
         }
 
+        /// <summary>
+        /// Updates host render target color buffer blending state, based on guest state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateBlendState(GpuState state)
         {
             bool blendIndependent = state.Get<Boolean32>(MethodOffset.BlendIndependent);
@@ -623,6 +715,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
+        /// <summary>
+        /// Storage buffer address and size information.
+        /// </summary>
         private struct SbDescriptor
         {
             public uint AddressLow;
@@ -636,6 +731,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
+        /// <summary>
+        /// Updates host shaders based on the guest GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void UpdateShaderState(GpuState state)
         {
             ShaderAddresses addresses = new ShaderAddresses();
@@ -726,6 +825,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.Renderer.Pipeline.SetProgram(gs.HostProgram);
         }
 
+        /// <summary>
+        /// Gets viewport transform enable.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <returns>Viewport transform enable</returns>
         public bool GetViewportTransformEnable(GpuState state)
         {
             // FIXME: We should read ViewportTransformEnable, but it seems that some games writes 0 there?
@@ -734,6 +838,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
             return true;
         }
 
+        /// <summary>
+        /// Gets texture target from a sampler type.
+        /// </summary>
+        /// <param name="type">Sampler type</param>
+        /// <returns>Texture target value</returns>
         private static Target GetTarget(SamplerType type)
         {
             type &= ~(SamplerType.Indexed | SamplerType.Shadow);
@@ -776,16 +885,38 @@ namespace Ryujinx.Graphics.Gpu.Engine
             return Target.Texture2D;
         }
 
+        /// <summary>
+        /// Issues a texture barrier.
+        /// This waits until previous texture writes from the GPU to finish, before
+        /// performing new operations with said textures.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         private void TextureBarrier(GpuState state, int argument)
         {
             _context.Renderer.Pipeline.TextureBarrier();
         }
 
+        /// <summary>
+        /// Invalidates all modified textures on the cache.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         private void InvalidateTextures(GpuState state, int argument)
         {
             TextureManager.Flush();
         }
 
+        /// <summary>
+        /// Issues a texture barrier.
+        /// This waits until previous texture writes from the GPU to finish, before
+        /// performing new operations with said textures.
+        /// This performs a per-tile wait, it is only valid if both the previous write
+        /// and current access has the same access patterns.
+        /// This may be faster than the regular barrier on tile-based rasterizers.
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="argument"></param>
         private void TextureBarrierTiled(GpuState state, int argument)
         {
             _context.Renderer.Pipeline.TextureBarrierTiled();

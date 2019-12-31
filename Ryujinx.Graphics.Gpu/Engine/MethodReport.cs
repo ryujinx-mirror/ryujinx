@@ -10,6 +10,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
     {
         private ulong _runningCounter;
 
+        /// <summary>
+        /// Writes a GPU counter to guest memory.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         private void Report(GpuState state, int argument)
         {
             ReportMode mode = (ReportMode)(argument & 3);
@@ -23,6 +28,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
+        /// <summary>
+        /// Writes a GPU semaphore value to guest memory.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
         private void ReportSemaphore(GpuState state)
         {
             var rs = state.Get<ReportState>(MethodOffset.ReportState);
@@ -32,12 +41,21 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.AdvanceSequence();
         }
 
+        /// <summary>
+        /// Packed GPU counter data (including GPU timestamp) in memory.
+        /// </summary>
         private struct CounterData
         {
             public ulong Counter;
             public ulong Timestamp;
         }
 
+        /// <summary>
+        /// Writes a GPU counter to guest memory.
+        /// This also writes the current timestamp value.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="type">Counter to be written to memory</param>
         private void ReportCounter(GpuState state, ReportCounterType type)
         {
             CounterData counterData = new CounterData();
@@ -83,6 +101,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
             _context.MemoryAccessor.Write(rs.Address.Pack(), data);
         }
 
+        /// <summary>
+        /// Converts a nanoseconds timestamp value to Maxwell time ticks.
+        /// The frequency is approximately 1.63Hz.
+        /// </summary>
+        /// <param name="nanoseconds">Timestamp in nanoseconds</param>
+        /// <returns>Maxwell ticks</returns>
         private static ulong ConvertNanosecondsToTicks(ulong nanoseconds)
         {
             // We need to divide first to avoid overflows.

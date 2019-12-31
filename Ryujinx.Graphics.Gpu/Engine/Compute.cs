@@ -10,6 +10,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
+        /// <summary>
+        /// Dispatches compute work.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         public void Dispatch(GpuState state, int argument)
         {
             uint dispatchParamsAddress = (uint)state.Get<int>(MethodOffset.DispatchParamsAddress);

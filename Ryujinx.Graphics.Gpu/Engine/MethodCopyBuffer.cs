@@ -6,6 +6,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
+        /// <summary>
+        /// Performs a buffer to buffer, or buffer to texture copy.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         private void CopyBuffer(GpuState state, int argument)
         {
             var cbp = state.Get<CopyBufferParams>(MethodOffset.CopyBufferParams);

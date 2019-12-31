@@ -4,22 +4,36 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Engine
 {
+    /// <summary>
+    /// Compute uniform buffer parameters.
+    /// </summary>
     struct UniformBufferParams
     {
         public int AddressLow;
         public int AddressHighAndSize;
 
+        /// <summary>
+        /// Packs the split address to a 64-bits integer.
+        /// </summary>
+        /// <returns>Uniform buffer GPU virtual address</returns>
         public ulong PackAddress()
         {
             return (uint)AddressLow | ((ulong)(AddressHighAndSize & 0xff) << 32);
         }
 
+        /// <summary>
+        /// Unpacks the uniform buffer size in bytes.
+        /// </summary>
+        /// <returns>Uniform buffer size in bytes</returns>
         public ulong UnpackSize()
         {
             return (ulong)((AddressHighAndSize >> 15) & 0x1ffff);
         }
     }
 
+    /// <summary>
+    /// Compute dispatch parameters.
+    /// </summary>
     struct ComputeParams
     {
         public int Unknown0;
@@ -61,6 +75,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
         private UniformBufferParams _uniformBuffer6;
         private UniformBufferParams _uniformBuffer7;
 
+        /// <summary>
+        /// Uniform buffer parameters.
+        /// </summary>
         public Span<UniformBufferParams> UniformBuffers
         {
             get
@@ -89,36 +106,65 @@ namespace Ryujinx.Graphics.Gpu.Engine
         public int Unknown62;
         public int Unknown63;
 
+        /// <summary>
+        /// Unpacks the work group X size.
+        /// </summary>
+        /// <returns>Work group X size</returns>
         public int UnpackGridSizeX()
         {
             return GridSizeX & 0x7fffffff;
         }
 
+        /// <summary>
+        /// Unpacks the work group Y size.
+        /// </summary>
+        /// <returns>Work group Y size</returns>
         public int UnpackGridSizeY()
         {
             return GridSizeYZ & 0xffff;
         }
 
+        /// <summary>
+        /// Unpacks the work group Z size.
+        /// </summary>
+        /// <returns>Work group Z size</returns>
         public int UnpackGridSizeZ()
         {
             return (GridSizeYZ >> 16) & 0xffff;
         }
 
+        /// <summary>
+        /// Unpacks the local group X size.
+        /// </summary>
+        /// <returns>Local group X size</returns>
         public int UnpackBlockSizeX()
         {
             return (BlockSizeX >> 16) & 0xffff;
         }
 
+        /// <summary>
+        /// Unpacks the local group Y size.
+        /// </summary>
+        /// <returns>Local group Y size</returns>
         public int UnpackBlockSizeY()
         {
             return BlockSizeYZ & 0xffff;
         }
 
+        /// <summary>
+        /// Unpacks the local group Z size.
+        /// </summary>
+        /// <returns>Local group Z size</returns>
         public int UnpackBlockSizeZ()
         {
             return (BlockSizeYZ >> 16) & 0xffff;
         }
 
+        /// <summary>
+        /// Unpacks the uniform buffers enable mask.
+        /// Each bit set on the mask indicates that the respective buffer index is enabled.
+        /// </summary>
+        /// <returns>Uniform buffers enable mask</returns>
         public uint UnpackUniformBuffersEnableMask()
         {
             return (uint)UniformBuffersConfig & 0xff;

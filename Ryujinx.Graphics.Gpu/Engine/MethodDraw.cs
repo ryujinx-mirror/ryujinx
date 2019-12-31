@@ -22,8 +22,17 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         private int _instanceIndex;
 
+        /// <summary>
+        /// Primitive type of the current draw.
+        /// </summary>
         public PrimitiveType PrimitiveType { get; private set; }
 
+        /// <summary>
+        /// Finishes draw call.
+        /// This draws geometry on the bound buffers based on the current GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         private void DrawEnd(GpuState state, int argument)
         {
             if (_instancedDrawPending)
@@ -86,6 +95,12 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
         }
 
+        /// <summary>
+        /// Starts draw.
+        /// This sets primitive type and instanced draw parameters.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         private void DrawBegin(GpuState state, int argument)
         {
             if ((argument & (1 << 26)) != 0)
@@ -106,11 +121,24 @@ namespace Ryujinx.Graphics.Gpu.Engine
             PrimitiveType = type;
         }
 
+        /// <summary>
+        /// Sets the index buffer count.
+        /// This also sets internal state that indicates that the next draw is a indexed draw.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         private void SetIndexBufferCount(GpuState state, int argument)
         {
             _drawIndexed = true;
         }
 
+        /// <summary>
+        /// Perform any deferred draws.
+        /// This is used for instanced draws.
+        /// Since each instance is a separate draw, we defer the draw and accumulate the instance count.
+        /// Once we detect the last instanced draw, then we perform the host instanced draw,
+        /// with the accumulated instance count.
+        /// </summary>
         public void PerformDeferredDraws()
         {
             // Perform any pending instanced draw.

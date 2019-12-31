@@ -4,6 +4,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
+        /// <summary>
+        /// Updates the uniform buffer data with inline data.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">New uniform buffer data word</param>
         private void UniformBufferUpdate(GpuState state, int argument)
         {
             var uniformBuffer = state.Get<UniformBufferState>(MethodOffset.UniformBufferState);

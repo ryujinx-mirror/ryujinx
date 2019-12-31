@@ -7,6 +7,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
     partial class Methods
     {
+        /// <summary>
+        /// Performs a texture to texture copy.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         private void CopyTexture(GpuState state, int argument)
         {
             var dstCopyTexture = state.Get<CopyTexture>(MethodOffset.CopyDstTexture);

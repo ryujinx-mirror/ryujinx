@@ -5,6 +5,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
+        /// <summary>
+        /// Resets the value of a internal GPU counter back to zero.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="argument">Method call argument</param>
         private void ResetCounter(GpuState state, int argument)
         {
             ResetCounterType type = (ResetCounterType)argument;
