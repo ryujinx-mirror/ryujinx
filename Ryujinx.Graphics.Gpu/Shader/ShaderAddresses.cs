@@ -2,6 +2,9 @@ using System;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
+    /// <summary>
+    /// Shader code addresses in memory for each shader stage.
+    /// </summary>
     struct ShaderAddresses : IEquatable<ShaderAddresses>
     {
         public ulong VertexA;
@@ -11,11 +14,21 @@ namespace Ryujinx.Graphics.Gpu.Shader
         public ulong Geometry;
         public ulong Fragment;
 
+        /// <summary>
+        /// Check if the addresses are equal.
+        /// </summary>
+        /// <param name="other">Shader addresses structure to compare with</param>
+        /// <returns>True if they are equal, false otherwise</returns>
         public override bool Equals(object other)
         {
             return other is ShaderAddresses addresses && Equals(addresses);
         }
 
+        /// <summary>
+        /// Check if the addresses are equal.
+        /// </summary>
+        /// <param name="other">Shader addresses structure to compare with</param>
+        /// <returns>True if they are equal, false otherwise</returns>
         public bool Equals(ShaderAddresses other)
         {
             return VertexA        == other.VertexA &&
@@ -26,6 +39,10 @@ namespace Ryujinx.Graphics.Gpu.Shader
                    Fragment       == other.Fragment;
         }
 
+        /// <summary>
+        /// Computes hash code from the addresses.
+        /// </summary>
+        /// <returns>Hash code</returns>
         public override int GetHashCode()
         {
             return HashCode.Combine(VertexA, Vertex, TessControl, TessEvaluation, Geometry, Fragment);

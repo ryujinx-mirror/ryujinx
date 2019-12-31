@@ -4,23 +4,29 @@ using System.IO;
 
 namespace Ryujinx.Graphics.Gpu.Shader
 {
+    /// <summary>
+    /// Shader dumper, writes binary shader code to disk.
+    /// </summary>
     class ShaderDumper
     {
-        private GpuContext _context;
-
         private string _runtimeDir;
         private string _dumpPath;
         private int    _dumpIndex;
 
         public int CurrentDumpIndex => _dumpIndex;
 
-        public ShaderDumper(GpuContext context)
+        public ShaderDumper()
         {
-            _context = context;
-
             _dumpIndex = 1;
         }
 
+        /// <summary>
+        /// Dumps shader code to disk.
+        /// </summary>
+        /// <param name="code">Code to be dumped</param>
+        /// <param name="compute">True for compute shader code, false for graphics shader code</param>
+        /// <param name="fullPath">Output path for the shader code with header included</param>
+        /// <param name="codePath">Output path for the shader code without header</param>
         public void Dump(Span<byte> code, bool compute, out string fullPath, out string codePath)
         {
             _dumpPath = GraphicsConfig.ShadersDumpPath;
@@ -68,16 +74,28 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
         }
 
+        /// <summary>
+        /// Returns the output directory for shader code with header.
+        /// </summary>
+        /// <returns>Directory path</returns>
         private string FullDir()
         {
             return CreateAndReturn(Path.Combine(DumpDir(), "Full"));
         }
 
+        /// <summary>
+        /// Returns the output directory for shader code without header.
+        /// </summary>
+        /// <returns>Directory path</returns>
         private string CodeDir()
         {
             return CreateAndReturn(Path.Combine(DumpDir(), "Code"));
         }
 
+        /// <summary>
+        /// Returns the full output directory for the current shader dump.
+        /// </summary>
+        /// <returns>Directory path</returns>
         private string DumpDir()
         {
             if (string.IsNullOrEmpty(_runtimeDir))
@@ -98,6 +116,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return _runtimeDir;
         }
 
+        /// <summary>
+        /// Creates a new specified directory if needed.
+        /// </summary>
+        /// <param name="dir">The directory to create</param>
+        /// <returns>The same directory passed to the method</returns>
         private static string CreateAndReturn(string dir)
         {
             Directory.CreateDirectory(dir);

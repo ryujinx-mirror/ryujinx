@@ -44,7 +44,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="pa">CPU virtual address to map into</param>
         /// <param name="va">GPU virtual address to be mapped</param>
         /// <param name="size">Size in bytes of the mapping</param>
-        /// <returns>The GPU virtual address of the mapping</returns>
+        /// <returns>GPU virtual address of the mapping</returns>
         public ulong Map(ulong pa, ulong va, ulong size)
         {
             lock (_pageTable)
@@ -117,7 +117,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Reserves memory at a fixed GPU memory location.
         /// This prevents the reserved region from being used for memory allocation for map.
         /// </summary>
-        /// <param name="va">CPU virtual address to reserve</param>
+        /// <param name="va">GPU virtual address to reserve</param>
         /// <param name="size">Reservation size in bytes</param>
         /// <returns>GPU virtual address of the reservation, or an all ones mask in case of failure</returns>
         public ulong ReserveFixed(ulong va, ulong size)

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Ryujinx.Graphics.Gpu.Memory
 {
     /// <summary>
-    /// Lists of GPU resources with data on guest memory.
+    /// List of GPU resources with data on guest memory.
     /// </summary>
     /// <typeparam name="T">Type of the GPU resource</typeparam>
     class RangeList<T> where T : IRange<T>

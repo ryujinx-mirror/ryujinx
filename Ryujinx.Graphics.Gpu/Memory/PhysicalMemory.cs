@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
     /// <summary>
     /// Represents physical memory, accessible from the GPU.
-    /// This is actually working CPU virtual addresses, of memory mapped on the game process.
+    /// This is actually working CPU virtual addresses, of memory mapped on the application process.
     /// </summary>
     class PhysicalMemory
     {

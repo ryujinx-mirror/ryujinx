@@ -11,6 +11,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
 {
     using TextureDescriptor = Image.TextureDescriptor;
 
+    /// <summary>
+    /// Memory cache of shader code.
+    /// </summary>
     class ShaderCache
     {
         private const int MaxProgramSize = 0x100000;
@@ -25,17 +28,31 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
         private Dictionary<ShaderAddresses, List<GraphicsShader>> _gpPrograms;
 
+        /// <summary>
+        /// Creates a new instance of the shader cache.
+        /// </summary>
+        /// <param name="context">GPU context that the shader cache belongs to</param>
         public ShaderCache(GpuContext context)
         {
             _context = context;
 
-            _dumper = new ShaderDumper(context);
+            _dumper = new ShaderDumper();
 
             _cpPrograms = new Dictionary<ulong, List<ComputeShader>>();
 
             _gpPrograms = new Dictionary<ShaderAddresses, List<GraphicsShader>>();
         }
 
+        /// <summary>
+        /// Gets a compute shader from the cache.
+        /// This automatically translates, compiles and adds the code to the cache if not present.
+        /// </summary>
+        /// <param name="gpuVa">GPU virtual address of the binary shader code</param>
+        /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
+        /// <param name="localSizeX">Local group size X of the computer shader</param>
+        /// <param name="localSizeY">Local group size Y of the computer shader</param>
+        /// <param name="localSizeZ">Local group size Z of the computer shader</param>
+        /// <returns>Compiled compute shader code</returns>
         public ComputeShader GetComputeShader(ulong gpuVa, int sharedMemorySize, int localSizeX, int localSizeY, int localSizeZ)
         {
             bool isCached = _cpPrograms.TryGetValue(gpuVa, out List<ComputeShader> list);
@@ -73,6 +90,14 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return cpShader;
         }
 
+        /// <summary>
+        /// Gets a graphics shader program from the shader cache.
+        /// This includes all the specified shader stages.
+        /// This automatically translates, compiles and adds the code to the cache if not present.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="addresses">Addresses of the shaders for each stage</param>
+        /// <returns>Compiled graphics shader code</returns>
         public GraphicsShader GetGraphicsShader(GpuState state, ShaderAddresses addresses)
         {
             bool isCached = _gpPrograms.TryGetValue(addresses, out List<GraphicsShader> list);
@@ -138,11 +163,23 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return gpShaders;
         }
 
+        /// <summary>
+        /// Checks if compute shader code in memory is different from the cached shader.
+        /// </summary>
+        /// <param name="cpShader">Cached compute shader</param>
+        /// <param name="gpuVa">GPU virtual address of the shader code in memory</param>
+        /// <returns>True if the code is different, false otherwise</returns>
         private bool IsShaderDifferent(ComputeShader cpShader, ulong gpuVa)
         {
             return IsShaderDifferent(cpShader.Shader, gpuVa);
         }
 
+        /// <summary>
+        /// Checks if graphics shader code from all stages in memory is different from the cached shaders.
+        /// </summary>
+        /// <param name="gpShaders">Cached graphics shaders</param>
+        /// <param name="addresses">GPU virtual addresses of all enabled shader stages</param>
+        /// <returns>True if the code is different, false otherwise</returns>
         private bool IsShaderDifferent(GraphicsShader gpShaders, ShaderAddresses addresses)
         {
             for (int stage = 0; stage < gpShaders.Shader.Length; stage++)
@@ -174,6 +211,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return false;
         }
 
+        /// <summary>
+        /// Checks if the code of the specified cached shader is different from the code in memory.
+        /// </summary>
+        /// <param name="shader">Cached shader to compare with</param>
+        /// <param name="gpuVa">GPU virtual address of the binary shader code</param>
+        /// <returns>True if the code is different, false otherwise</returns>
         private bool IsShaderDifferent(CachedShader shader, ulong gpuVa)
         {
             for (int index = 0; index < shader.Code.Length; index++)
@@ -187,6 +230,15 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return false;
         }
 
+        /// <summary>
+        /// Translates the binary Maxwell shader code to something that the host API accepts.
+        /// </summary>
+        /// <param name="gpuVa">GPU virtual address of the binary shader code</param>
+        /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
+        /// <param name="localSizeX">Local group size X of the computer shader</param>
+        /// <param name="localSizeY">Local group size Y of the computer shader</param>
+        /// <param name="localSizeZ">Local group size Z of the computer shader</param>
+        /// <returns>Compiled compute shader code</returns>
         private CachedShader TranslateComputeShader(ulong gpuVa, int sharedMemorySize, int localSizeX, int localSizeY, int localSizeZ)
         {
             if (gpuVa == 0)
@@ -230,6 +282,15 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return new CachedShader(program, codeCached);
         }
 
+        /// <summary>
+        /// Translates the binary Maxwell shader code to something that the host API accepts.
+        /// This will combine the "Vertex A" and "Vertex B" shader stages, if specified, into one shader.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="stage">Shader stage</param>
+        /// <param name="gpuVa">GPU virtual address of the shader code</param>
+        /// <param name="gpuVaA">Optional GPU virtual address of the "Vertex A" shader code</param>
+        /// <returns></returns>
         private CachedShader TranslateGraphicsShader(GpuState state, ShaderStage stage, ulong gpuVa, ulong gpuVaA = 0)
         {
             if (gpuVa == 0)
@@ -301,6 +362,12 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return new CachedShader(program, codeCached);
         }
 
+        /// <summary>
+        /// Performs backwards propagation of interpolation qualifiers or later shader stages input,
+        /// to ealier shader stages output.
+        /// This is required by older versions of OpenGL (pre-4.3).
+        /// </summary>
+        /// <param name="program">Graphics shader cached code</param>
         private void BackpropQualifiers(GraphicsShader program)
         {
             ShaderProgram fragmentShader = program.Shader[4].Program;
@@ -334,6 +401,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
         }
 
+        /// <summary>
+        /// Gets the primitive topology for the current draw.
+        /// This is required by geometry shaders.
+        /// </summary>
+        /// <returns>Primitive topology</returns>
         private InputTopology GetPrimitiveTopology()
         {
             switch (_context.Methods.PrimitiveType)
@@ -359,11 +431,29 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return InputTopology.Points;
         }
 
+        /// <summary>
+        /// Check if the target of a given texture is texture buffer.
+        /// This is required as 1D textures and buffer textures shares the same sampler type on binary shader code,
+        /// but not on GLSL.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="stageIndex">Index of the shader stage</param>
+        /// <param name="index">Index of the texture (this is the shader "fake" handle)</param>
+        /// <returns>True if the texture is a buffer texture, false otherwise</returns>
         private bool QueryIsTextureBuffer(GpuState state, int stageIndex, int index)
         {
             return GetTextureDescriptor(state, stageIndex, index).UnpackTextureTarget() == TextureTarget.TextureBuffer;
         }
 
+        /// <summary>
+        /// Check if the target of a given texture is texture rectangle.
+        /// This is required as 2D textures and rectangle textures shares the same sampler type on binary shader code,
+        /// but not on GLSL.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="stageIndex">Index of the shader stage</param>
+        /// <param name="index">Index of the texture (this is the shader "fake" handle)</param>
+        /// <returns>True if the texture is a rectangle texture, false otherwise</returns>
         private bool QueryIsTextureRectangle(GpuState state, int stageIndex, int index)
         {
             var descriptor = GetTextureDescriptor(state, stageIndex, index);
@@ -376,11 +466,23 @@ namespace Ryujinx.Graphics.Gpu.Shader
             return !descriptor.UnpackTextureCoordNormalized() && is2DTexture;
         }
 
+        /// <summary>
+        /// Gets the texture descriptor for a given texture on the pool.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="stageIndex">Index of the shader stage</param>
+        /// <param name="index">Index of the texture (this is the shader "fake" handle)</param>
+        /// <returns>Texture descriptor</returns>
         private TextureDescriptor GetTextureDescriptor(GpuState state, int stageIndex, int index)
         {
             return _context.Methods.TextureManager.GetGraphicsTextureDescriptor(state, stageIndex, index);
         }
 
+        /// <summary>
+        /// Returns information required by both compute and graphics shader compilation.
+        /// </summary>
+        /// <param name="info">Information queried</param>
+        /// <returns>Requested information</returns>
         private int QueryInfoCommon(QueryInfoName info)
         {
             switch (info)
