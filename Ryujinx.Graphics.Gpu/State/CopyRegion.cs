@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Texture copy region.
+    /// </summary>
     struct CopyRegion
     {
         public int  DstX;

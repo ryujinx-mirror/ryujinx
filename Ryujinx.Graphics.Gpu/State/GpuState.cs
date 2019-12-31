@@ -3,6 +3,9 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// GPU state.
+    /// </summary>
     class GpuState
     {
         private const int RegistersCount = 0xe00;
@@ -11,6 +14,9 @@ namespace Ryujinx.Graphics.Gpu.State
 
         private int[] _backingMemory;
 
+        /// <summary>
+        /// GPU register information.
+        /// </summary>
         private struct Register
         {
             public MethodCallback Callback;
@@ -25,6 +31,9 @@ namespace Ryujinx.Graphics.Gpu.State
 
         private Register[] _registers;
 
+        /// <summary>
+        /// Creates a new instance of the GPU state.
+        /// </summary>
         public GpuState()
         {
             _backingMemory = new int[RegistersCount];
@@ -56,6 +65,10 @@ namespace Ryujinx.Graphics.Gpu.State
             InitializeDefaultState();
         }
 
+        /// <summary>
+        /// Calls a GPU method, using this state.
+        /// </summary>
+        /// <param name="meth">The GPU method to be called</param>
         public void CallMethod(MethodParams meth)
         {
             Register register = _registers[meth.Method];
@@ -67,24 +80,31 @@ namespace Ryujinx.Graphics.Gpu.State
 
             _backingMemory[meth.Method] = meth.Argument;
 
-            MethodCallback callback = register.Callback;
-
-            if (callback != null)
-            {
-                callback(this, meth.Argument);
-            }
+            register.Callback?.Invoke(this, meth.Argument);
         }
 
+        /// <summary>
+        /// Reads data from a GPU register at the given offset.
+        /// </summary>
+        /// <param name="offset">Offset to be read</param>
+        /// <returns>Data at the register</returns>
         public int Read(int offset)
         {
             return _backingMemory[offset];
         }
 
+        /// <summary>
+        /// Writes a offset value at the uniform buffer offset register.
+        /// </summary>
+        /// <param name="offset">The offset to be written</param>
         public void SetUniformBufferOffset(int offset)
         {
             _backingMemory[(int)MethodOffset.UniformBufferState + 3] = offset;
         }
 
+        /// <summary>
+        /// Initializes registers with the default state.
+        /// </summary>
         private void InitializeDefaultState()
         {
             // Depth ranges.
@@ -107,6 +127,12 @@ namespace Ryujinx.Graphics.Gpu.State
             }
         }
 
+        /// <summary>
+        /// Registers a callback that is called every time a GPU method, or methods are called.
+        /// </summary>
+        /// <param name="offset">Offset of the method</param>
+        /// <param name="count">Word count of the methods region</param>
+        /// <param name="callback">Calllback to be called</param>
         public void RegisterCallback(MethodOffset offset, int count, MethodCallback callback)
         {
             for (int index = 0; index < count; index++)
@@ -115,11 +141,21 @@ namespace Ryujinx.Graphics.Gpu.State
             }
         }
 
+        /// <summary>
+        /// Registers a callback that is called every time a GPU method is called.
+        /// </summary>
+        /// <param name="offset">Offset of the method</param>
+        /// <param name="callback">Calllback to be called</param>
         public void RegisterCallback(MethodOffset offset, MethodCallback callback)
         {
             _registers[(int)offset].Callback = callback;
         }
 
+        /// <summary>
+        /// Checks if a given register has been modified since the last call to this method.
+        /// </summary>
+        /// <param name="offset">Register offset</param>
+        /// <returns>True if modified, false otherwise</returns>
         public bool QueryModified(MethodOffset offset)
         {
             bool modified = _registers[(int)offset].Modified;
@@ -129,6 +165,12 @@ namespace Ryujinx.Graphics.Gpu.State
             return modified;
         }
 
+        /// <summary>
+        /// Checks if two registers have been modified since the last call to this method.
+        /// </summary>
+        /// <param name="m1">First register offset</param>
+        /// <param name="m2">Second register offset</param>
+        /// <returns>True if any register was modified, false otherwise</returns>
         public bool QueryModified(MethodOffset m1, MethodOffset m2)
         {
             bool modified = _registers[(int)m1].Modified ||
@@ -140,6 +182,13 @@ namespace Ryujinx.Graphics.Gpu.State
             return modified;
         }
 
+        /// <summary>
+        /// Checks if two registers have been modified since the last call to this method.
+        /// </summary>
+        /// <param name="m1">First register offset</param>
+        /// <param name="m2">Second register offset</param>
+        /// <param name="m3">Third  register offset</param>
+        /// <returns>True if any register was modified, false otherwise</returns>
         public bool QueryModified(MethodOffset m1, MethodOffset m2, MethodOffset m3)
         {
             bool modified = _registers[(int)m1].Modified ||
@@ -153,6 +202,14 @@ namespace Ryujinx.Graphics.Gpu.State
             return modified;
         }
 
+        /// <summary>
+        /// Checks if two registers have been modified since the last call to this method.
+        /// </summary>
+        /// <param name="m1">First register offset</param>
+        /// <param name="m2">Second register offset</param>
+        /// <param name="m3">Third  register offset</param>
+        /// <param name="m4">Fourth register offset</param>
+        /// <returns>True if any register was modified, false otherwise</returns>
         public bool QueryModified(MethodOffset m1, MethodOffset m2, MethodOffset m3, MethodOffset m4)
         {
             bool modified = _registers[(int)m1].Modified ||
@@ -168,6 +225,15 @@ namespace Ryujinx.Graphics.Gpu.State
             return modified;
         }
 
+        /// <summary>
+        /// Checks if two registers have been modified since the last call to this method.
+        /// </summary>
+        /// <param name="m1">First register offset</param>
+        /// <param name="m2">Second register offset</param>
+        /// <param name="m3">Third  register offset</param>
+        /// <param name="m4">Fourth register offset</param>
+        /// <param name="m5">Fifth register offset</param>
+        /// <returns>True if any register was modified, false otherwise</returns>
         public bool QueryModified(
             MethodOffset m1,
             MethodOffset m2,
@@ -190,6 +256,13 @@ namespace Ryujinx.Graphics.Gpu.State
             return modified;
         }
 
+        /// <summary>
+        /// Gets indexed data from a given register offset.
+        /// </summary>
+        /// <typeparam name="T">Type of the data</typeparam>
+        /// <param name="offset">Register offset</param>
+        /// <param name="index">Index for indexed data</param>
+        /// <returns>The data at the specified location</returns>
         public T Get<T>(MethodOffset offset, int index) where T : struct
         {
             Register register = _registers[(int)offset];
@@ -202,6 +275,12 @@ namespace Ryujinx.Graphics.Gpu.State
             return Get<T>(offset + index * register.Stride);
         }
 
+        /// <summary>
+        /// Gets data from a given register offset.
+        /// </summary>
+        /// <typeparam name="T">Type of the data</typeparam>
+        /// <param name="offset">Register offset</param>
+        /// <returns>The data at the specified location</returns>
         public T Get<T>(MethodOffset offset) where T : struct
         {
             return MemoryMarshal.Cast<int, T>(_backingMemory.AsSpan().Slice((int)offset))[0];

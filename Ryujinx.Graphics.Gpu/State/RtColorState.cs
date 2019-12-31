@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Render target color buffer state.
+    /// </summary>
     struct RtColorState
     {
         public GpuVa        Address;

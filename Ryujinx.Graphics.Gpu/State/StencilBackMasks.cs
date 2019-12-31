@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Stencil test masks for back tests.
+    /// </summary>
     struct StencilBackMasks
     {
         public int FuncRef;

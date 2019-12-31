@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Depth bias (also called polygon offset) parameters.
+    /// </summary>
     struct DepthBiasState
     {
         public Boolean32 PointEnable;

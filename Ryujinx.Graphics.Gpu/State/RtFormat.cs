@@ -3,6 +3,9 @@ using Ryujinx.Graphics.Gpu.Image;
 
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Render target buffer texture format.
+    /// </summary>
     enum RtFormat
     {
         D32Float          = 0xa,
@@ -69,73 +72,77 @@ namespace Ryujinx.Graphics.Gpu.State
 
     static class RtFormatConverter
     {
+        /// <summary>
+        /// Converts the render target buffer texture format to a host compatible format.
+        /// </summary>
+        /// <param name="format">Render target format</param>
+        /// <returns>Host compatible format enum value</returns>
         public static FormatInfo Convert(this RtFormat format)
         {
-            switch (format)
+            return format switch
             {
-                case RtFormat.D32Float:             return new FormatInfo(Format.D32Float,          1, 1, 4);
-                case RtFormat.D16Unorm:             return new FormatInfo(Format.D16Unorm,          1, 1, 2);
-                case RtFormat.D24UnormS8Uint:       return new FormatInfo(Format.D24UnormS8Uint,    1, 1, 4);
-                case RtFormat.D24Unorm:             return new FormatInfo(Format.D24UnormS8Uint,    1, 1, 4);
-                case RtFormat.S8UintD24Unorm:       return new FormatInfo(Format.D24UnormS8Uint,    1, 1, 4);
-                case RtFormat.S8Uint:               return new FormatInfo(Format.S8Uint,            1, 1, 1);
-                case RtFormat.D32FloatS8Uint:       return new FormatInfo(Format.D32FloatS8Uint,    1, 1, 8);
-                case RtFormat.R32G32B32A32Float:    return new FormatInfo(Format.R32G32B32A32Float, 1, 1, 16);
-                case RtFormat.R32G32B32A32Sint:     return new FormatInfo(Format.R32G32B32A32Sint,  1, 1, 16);
-                case RtFormat.R32G32B32A32Uint:     return new FormatInfo(Format.R32G32B32A32Uint,  1, 1, 16);
-                case RtFormat.R32G32B32X32Float:    return new FormatInfo(Format.R32G32B32A32Float, 1, 1, 16);
-                case RtFormat.R32G32B32X32Sint:     return new FormatInfo(Format.R32G32B32A32Sint,  1, 1, 16);
-                case RtFormat.R32G32B32X32Uint:     return new FormatInfo(Format.R32G32B32A32Uint,  1, 1, 16);
-                case RtFormat.R16G16B16X16Unorm:    return new FormatInfo(Format.R16G16B16A16Unorm, 1, 1, 8);
-                case RtFormat.R16G16B16X16Snorm:    return new FormatInfo(Format.R16G16B16A16Snorm, 1, 1, 8);
-                case RtFormat.R16G16B16X16Sint:     return new FormatInfo(Format.R16G16B16A16Sint,  1, 1, 8);
-                case RtFormat.R16G16B16X16Uint:     return new FormatInfo(Format.R16G16B16A16Uint,  1, 1, 8);
-                case RtFormat.R16G16B16A16Float:    return new FormatInfo(Format.R16G16B16A16Float, 1, 1, 8);
-                case RtFormat.R32G32Float:          return new FormatInfo(Format.R32G32Float,       1, 1, 8);
-                case RtFormat.R32G32Sint:           return new FormatInfo(Format.R32G32Sint,        1, 1, 8);
-                case RtFormat.R32G32Uint:           return new FormatInfo(Format.R32G32Uint,        1, 1, 8);
-                case RtFormat.R16G16B16X16Float:    return new FormatInfo(Format.R16G16B16A16Float, 1, 1, 8);
-                case RtFormat.B8G8R8A8Unorm:        return new FormatInfo(Format.B8G8R8A8Unorm,     1, 1, 4);
-                case RtFormat.B8G8R8A8Srgb:         return new FormatInfo(Format.B8G8R8A8Srgb,      1, 1, 4);
-                case RtFormat.R10G10B10A2Unorm:     return new FormatInfo(Format.R10G10B10A2Unorm,  1, 1, 4);
-                case RtFormat.R10G10B10A2Uint:      return new FormatInfo(Format.R10G10B10A2Uint,   1, 1, 4);
-                case RtFormat.R8G8B8A8Unorm:        return new FormatInfo(Format.R8G8B8A8Unorm,     1, 1, 4);
-                case RtFormat.R8G8B8A8Srgb:         return new FormatInfo(Format.R8G8B8A8Srgb,      1, 1, 4);
-                case RtFormat.R8G8B8X8Snorm:        return new FormatInfo(Format.R8G8B8A8Snorm,     1, 1, 4);
-                case RtFormat.R8G8B8X8Sint:         return new FormatInfo(Format.R8G8B8A8Sint,      1, 1, 4);
-                case RtFormat.R8G8B8X8Uint:         return new FormatInfo(Format.R8G8B8A8Uint,      1, 1, 4);
-                case RtFormat.R16G16Unorm:          return new FormatInfo(Format.R16G16Unorm,       1, 1, 4);
-                case RtFormat.R16G16Snorm:          return new FormatInfo(Format.R16G16Snorm,       1, 1, 4);
-                case RtFormat.R16G16Sint:           return new FormatInfo(Format.R16G16Sint,        1, 1, 4);
-                case RtFormat.R16G16Uint:           return new FormatInfo(Format.R16G16Uint,        1, 1, 4);
-                case RtFormat.R16G16Float:          return new FormatInfo(Format.R16G16Float,       1, 1, 4);
-                case RtFormat.R11G11B10Float:       return new FormatInfo(Format.R11G11B10Float,    1, 1, 4);
-                case RtFormat.R32Sint:              return new FormatInfo(Format.R32Sint,           1, 1, 4);
-                case RtFormat.R32Uint:              return new FormatInfo(Format.R32Uint,           1, 1, 4);
-                case RtFormat.R32Float:             return new FormatInfo(Format.R32Float,          1, 1, 4);
-                case RtFormat.B8G8R8X8Unorm:        return new FormatInfo(Format.B8G8R8A8Unorm,     1, 1, 4);
-                case RtFormat.B8G8R8X8Srgb:         return new FormatInfo(Format.B8G8R8A8Srgb,      1, 1, 4);
-                case RtFormat.B5G6R5Unorm:          return new FormatInfo(Format.B5G6R5Unorm,       1, 1, 2);
-                case RtFormat.B5G5R5A1Unorm:        return new FormatInfo(Format.B5G5R5A1Unorm,     1, 1, 2);
-                case RtFormat.R8G8Unorm:            return new FormatInfo(Format.R8G8Unorm,         1, 1, 2);
-                case RtFormat.R8G8Snorm:            return new FormatInfo(Format.R8G8Snorm,         1, 1, 2);
-                case RtFormat.R8G8Sint:             return new FormatInfo(Format.R8G8Sint,          1, 1, 2);
-                case RtFormat.R8G8Uint:             return new FormatInfo(Format.R8G8Uint,          1, 1, 2);
-                case RtFormat.R16Unorm:             return new FormatInfo(Format.R16Unorm,          1, 1, 2);
-                case RtFormat.R16Snorm:             return new FormatInfo(Format.R16Snorm,          1, 1, 2);
-                case RtFormat.R16Sint:              return new FormatInfo(Format.R16Sint,           1, 1, 2);
-                case RtFormat.R16Uint:              return new FormatInfo(Format.R16Uint,           1, 1, 2);
-                case RtFormat.R16Float:             return new FormatInfo(Format.R16Float,          1, 1, 2);
-                case RtFormat.R8Unorm:              return new FormatInfo(Format.R8Unorm,           1, 1, 1);
-                case RtFormat.R8Snorm:              return new FormatInfo(Format.R8Snorm,           1, 1, 1);
-                case RtFormat.R8Sint:               return new FormatInfo(Format.R8Sint,            1, 1, 1);
-                case RtFormat.R8Uint:               return new FormatInfo(Format.R8Uint,            1, 1, 1);
-                case RtFormat.B5G5R5X1Unorm:        return new FormatInfo(Format.B5G5R5X1Unorm,     1, 1, 2);
-                case RtFormat.R8G8B8X8Unorm:        return new FormatInfo(Format.R8G8B8A8Unorm,     1, 1, 4);
-                case RtFormat.R8G8B8X8Srgb:         return new FormatInfo(Format.R8G8B8A8Srgb,      1, 1, 4);
-            }
-
-            return FormatInfo.Default;
+                RtFormat.D32Float => new FormatInfo(Format.D32Float, 1, 1, 4),
+                RtFormat.D16Unorm => new FormatInfo(Format.D16Unorm, 1, 1, 2),
+                RtFormat.D24UnormS8Uint => new FormatInfo(Format.D24UnormS8Uint, 1, 1, 4),
+                RtFormat.D24Unorm => new FormatInfo(Format.D24UnormS8Uint, 1, 1, 4),
+                RtFormat.S8UintD24Unorm => new FormatInfo(Format.D24UnormS8Uint, 1, 1, 4),
+                RtFormat.S8Uint => new FormatInfo(Format.S8Uint, 1, 1, 1),
+                RtFormat.D32FloatS8Uint => new FormatInfo(Format.D32FloatS8Uint, 1, 1, 8),
+                RtFormat.R32G32B32A32Float => new FormatInfo(Format.R32G32B32A32Float, 1, 1, 16),
+                RtFormat.R32G32B32A32Sint => new FormatInfo(Format.R32G32B32A32Sint, 1, 1, 16),
+                RtFormat.R32G32B32A32Uint => new FormatInfo(Format.R32G32B32A32Uint, 1, 1, 16),
+                RtFormat.R32G32B32X32Float => new FormatInfo(Format.R32G32B32A32Float, 1, 1, 16),
+                RtFormat.R32G32B32X32Sint => new FormatInfo(Format.R32G32B32A32Sint, 1, 1, 16),
+                RtFormat.R32G32B32X32Uint => new FormatInfo(Format.R32G32B32A32Uint, 1, 1, 16),
+                RtFormat.R16G16B16X16Unorm => new FormatInfo(Format.R16G16B16A16Unorm, 1, 1, 8),
+                RtFormat.R16G16B16X16Snorm => new FormatInfo(Format.R16G16B16A16Snorm, 1, 1, 8),
+                RtFormat.R16G16B16X16Sint => new FormatInfo(Format.R16G16B16A16Sint, 1, 1, 8),
+                RtFormat.R16G16B16X16Uint => new FormatInfo(Format.R16G16B16A16Uint, 1, 1, 8),
+                RtFormat.R16G16B16A16Float => new FormatInfo(Format.R16G16B16A16Float, 1, 1, 8),
+                RtFormat.R32G32Float => new FormatInfo(Format.R32G32Float, 1, 1, 8),
+                RtFormat.R32G32Sint => new FormatInfo(Format.R32G32Sint, 1, 1, 8),
+                RtFormat.R32G32Uint => new FormatInfo(Format.R32G32Uint, 1, 1, 8),
+                RtFormat.R16G16B16X16Float => new FormatInfo(Format.R16G16B16A16Float, 1, 1, 8),
+                RtFormat.B8G8R8A8Unorm => new FormatInfo(Format.B8G8R8A8Unorm, 1, 1, 4),
+                RtFormat.B8G8R8A8Srgb => new FormatInfo(Format.B8G8R8A8Srgb, 1, 1, 4),
+                RtFormat.R10G10B10A2Unorm => new FormatInfo(Format.R10G10B10A2Unorm, 1, 1, 4),
+                RtFormat.R10G10B10A2Uint => new FormatInfo(Format.R10G10B10A2Uint, 1, 1, 4),
+                RtFormat.R8G8B8A8Unorm => new FormatInfo(Format.R8G8B8A8Unorm, 1, 1, 4),
+                RtFormat.R8G8B8A8Srgb => new FormatInfo(Format.R8G8B8A8Srgb, 1, 1, 4),
+                RtFormat.R8G8B8X8Snorm => new FormatInfo(Format.R8G8B8A8Snorm, 1, 1, 4),
+                RtFormat.R8G8B8X8Sint => new FormatInfo(Format.R8G8B8A8Sint, 1, 1, 4),
+                RtFormat.R8G8B8X8Uint => new FormatInfo(Format.R8G8B8A8Uint, 1, 1, 4),
+                RtFormat.R16G16Unorm => new FormatInfo(Format.R16G16Unorm, 1, 1, 4),
+                RtFormat.R16G16Snorm => new FormatInfo(Format.R16G16Snorm, 1, 1, 4),
+                RtFormat.R16G16Sint => new FormatInfo(Format.R16G16Sint, 1, 1, 4),
+                RtFormat.R16G16Uint => new FormatInfo(Format.R16G16Uint, 1, 1, 4),
+                RtFormat.R16G16Float => new FormatInfo(Format.R16G16Float, 1, 1, 4),
+                RtFormat.R11G11B10Float => new FormatInfo(Format.R11G11B10Float, 1, 1, 4),
+                RtFormat.R32Sint => new FormatInfo(Format.R32Sint, 1, 1, 4),
+                RtFormat.R32Uint => new FormatInfo(Format.R32Uint, 1, 1, 4),
+                RtFormat.R32Float => new FormatInfo(Format.R32Float, 1, 1, 4),
+                RtFormat.B8G8R8X8Unorm => new FormatInfo(Format.B8G8R8A8Unorm, 1, 1, 4),
+                RtFormat.B8G8R8X8Srgb => new FormatInfo(Format.B8G8R8A8Srgb, 1, 1, 4),
+                RtFormat.B5G6R5Unorm => new FormatInfo(Format.B5G6R5Unorm, 1, 1, 2),
+                RtFormat.B5G5R5A1Unorm => new FormatInfo(Format.B5G5R5A1Unorm, 1, 1, 2),
+                RtFormat.R8G8Unorm => new FormatInfo(Format.R8G8Unorm, 1, 1, 2),
+                RtFormat.R8G8Snorm => new FormatInfo(Format.R8G8Snorm, 1, 1, 2),
+                RtFormat.R8G8Sint => new FormatInfo(Format.R8G8Sint, 1, 1, 2),
+                RtFormat.R8G8Uint => new FormatInfo(Format.R8G8Uint, 1, 1, 2),
+                RtFormat.R16Unorm => new FormatInfo(Format.R16Unorm, 1, 1, 2),
+                RtFormat.R16Snorm => new FormatInfo(Format.R16Snorm, 1, 1, 2),
+                RtFormat.R16Sint => new FormatInfo(Format.R16Sint, 1, 1, 2),
+                RtFormat.R16Uint => new FormatInfo(Format.R16Uint, 1, 1, 2),
+                RtFormat.R16Float => new FormatInfo(Format.R16Float, 1, 1, 2),
+                RtFormat.R8Unorm => new FormatInfo(Format.R8Unorm, 1, 1, 1),
+                RtFormat.R8Snorm => new FormatInfo(Format.R8Snorm, 1, 1, 1),
+                RtFormat.R8Sint => new FormatInfo(Format.R8Sint, 1, 1, 1),
+                RtFormat.R8Uint => new FormatInfo(Format.R8Uint, 1, 1, 1),
+                RtFormat.B5G5R5X1Unorm => new FormatInfo(Format.B5G5R5X1Unorm, 1, 1, 2),
+                RtFormat.R8G8B8X8Unorm => new FormatInfo(Format.R8G8B8A8Unorm, 1, 1, 4),
+                RtFormat.R8G8B8X8Srgb => new FormatInfo(Format.R8G8B8A8Srgb, 1, 1, 4),
+                _ => FormatInfo.Default
+            };
         }
     }
 }

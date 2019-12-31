@@ -4,15 +4,37 @@ using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// GPU State item sizes table.
+    /// </summary>
     static class GpuStateTable
     {
+        /// <summary>
+        /// GPU state table item, with size for structures, and count for indexed state data.
+        /// </summary>
         public struct TableItem
         {
+            /// <summary>
+            /// Offset of the data.
+            /// </summary>
             public MethodOffset Offset { get; }
 
-            public int Size  { get; }
+            /// <summary>
+            /// Size in words.
+            /// </summary>
+            public int Size { get; }
+
+            /// <summary>
+            /// Count for indexed data, or 1 if not indexed.
+            /// </summary>
             public int Count { get; }
 
+            /// <summary>
+            /// Constructs the table item structure.
+            /// </summary>
+            /// <param name="offset">Data offset</param>
+            /// <param name="type">Data type</param>
+            /// <param name="count">Data count, for indexed data</param>
             public TableItem(MethodOffset offset, Type type, int count)
             {
                 int sizeInBytes = Marshal.SizeOf(type);
@@ -25,6 +47,9 @@ namespace Ryujinx.Graphics.Gpu.State
             }
         }
 
+        /// <summary>
+        /// Table of GPU state structure sizes and counts.
+        /// </summary>
         public static TableItem[] Table = new TableItem[]
         {
             new TableItem(MethodOffset.RtColorState,           typeof(RtColorState),          8),

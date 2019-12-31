@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Graphics shader stage state.
+    /// </summary>
     struct ShaderState
     {
         public uint       Control;
@@ -19,6 +22,11 @@ namespace Ryujinx.Graphics.Gpu.State
         public uint       Unknown0x38;
         public uint       Unknown0x3c;
 
+        /// <summary>
+        /// Unpacks shader enable information.
+        /// Must be ignored for vertex shaders, those are always enabled.
+        /// </summary>
+        /// <returns>True if the stage is enabled, false otherwise</returns>
         public bool UnpackEnable()
         {
             return (Control & 1) != 0;

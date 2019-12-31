@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Memory layout parameters, for block linear textures.
+    /// </summary>
     struct MemoryLayout
     {
         public uint Packed;

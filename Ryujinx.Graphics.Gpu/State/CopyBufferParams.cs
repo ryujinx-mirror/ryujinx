@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Buffer to buffer copy parameters.
+    /// </summary>
     struct CopyBufferParams
     {
         public GpuVa SrcAddress;

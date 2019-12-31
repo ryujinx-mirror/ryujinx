@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Counter type for GPU counter reset.
+    /// </summary>
     enum ResetCounterType
     {
         SamplesPassed                      = 1,

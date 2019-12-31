@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Viewport extents for viewport clipping, also includes depth range.
+    /// </summary>
     struct ViewportExtents
     {
         public ushort X;

@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Inline-to-memory copy parameters.
+    /// </summary>
     struct Inline2MemoryParams
     {
         public int          LineLengthIn;

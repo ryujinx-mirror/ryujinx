@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Buffer to texture copy parameters.
+    /// </summary>
     struct CopyBufferTexture
     {
         public MemoryLayout MemoryLayout;

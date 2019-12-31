@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Counter type for GPU counter reporting.
+    /// </summary>
     enum ReportCounterType
     {
         Zero                               = 0,

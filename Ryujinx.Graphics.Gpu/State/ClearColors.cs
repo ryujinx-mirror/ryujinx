@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Color buffer clear color.
+    /// </summary>
     struct ClearColors
     {
         public float Red;

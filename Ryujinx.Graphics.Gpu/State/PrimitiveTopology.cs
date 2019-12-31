@@ -2,6 +2,9 @@ using Ryujinx.Graphics.GAL;
 
 namespace Ryujinx.Graphics.Gpu.State
 {
+    /// <summary>
+    /// Draw primitive type.
+    /// </summary>
     enum PrimitiveType
     {
         Points,
@@ -23,28 +26,32 @@ namespace Ryujinx.Graphics.Gpu.State
 
     static class PrimitiveTypeConverter
     {
-        public static PrimitiveTopology Convert(this PrimitiveType topology)
+        /// <summary>
+        /// Converts the primitive type into something that can be used with the host API.
+        /// </summary>
+        /// <param name="type">The primitive type to convert</param>
+        /// <returns>A host compatible enum value</returns>
+        public static PrimitiveTopology Convert(this PrimitiveType type)
         {
-            switch (topology)
+            return type switch
             {
-                case PrimitiveType.Points:                 return PrimitiveTopology.Points;
-                case PrimitiveType.Lines:                  return PrimitiveTopology.Lines;
-                case PrimitiveType.LineLoop:               return PrimitiveTopology.LineLoop;
-                case PrimitiveType.LineStrip:              return PrimitiveTopology.LineStrip;
-                case PrimitiveType.Triangles:              return PrimitiveTopology.Triangles;
-                case PrimitiveType.TriangleStrip:          return PrimitiveTopology.TriangleStrip;
-                case PrimitiveType.TriangleFan:            return PrimitiveTopology.TriangleFan;
-                case PrimitiveType.Quads:                  return PrimitiveTopology.Quads;
-                case PrimitiveType.QuadStrip:              return PrimitiveTopology.QuadStrip;
-                case PrimitiveType.Polygon:                return PrimitiveTopology.Polygon;
-                case PrimitiveType.LinesAdjacency:         return PrimitiveTopology.LinesAdjacency;
-                case PrimitiveType.LineStripAdjacency:     return PrimitiveTopology.LineStripAdjacency;
-                case PrimitiveType.TrianglesAdjacency:     return PrimitiveTopology.TrianglesAdjacency;
-                case PrimitiveType.TriangleStripAdjacency: return PrimitiveTopology.TriangleStripAdjacency;
-                case PrimitiveType.Patches:                return PrimitiveTopology.Patches;
-            }
-
-            return PrimitiveTopology.Triangles;
+                PrimitiveType.Points => PrimitiveTopology.Points,
+                PrimitiveType.Lines => PrimitiveTopology.Lines,
+                PrimitiveType.LineLoop => PrimitiveTopology.LineLoop,
+                PrimitiveType.LineStrip => PrimitiveTopology.LineStrip,
+                PrimitiveType.Triangles => PrimitiveTopology.Triangles,
+                PrimitiveType.TriangleStrip => PrimitiveTopology.TriangleStrip,
+                PrimitiveType.TriangleFan => PrimitiveTopology.TriangleFan,
+                PrimitiveType.Quads => PrimitiveTopology.Quads,
+                PrimitiveType.QuadStrip => PrimitiveTopology.QuadStrip,
+                PrimitiveType.Polygon => PrimitiveTopology.Polygon,
+                PrimitiveType.LinesAdjacency => PrimitiveTopology.LinesAdjacency,
+                PrimitiveType.LineStripAdjacency => PrimitiveTopology.LineStripAdjacency,
+                PrimitiveType.TrianglesAdjacency => PrimitiveTopology.TrianglesAdjacency,
+                PrimitiveType.TriangleStripAdjacency => PrimitiveTopology.TriangleStripAdjacency,
+                PrimitiveType.Patches => PrimitiveTopology.Patches,
+                _ => PrimitiveTopology.Triangles
+            };
         }
     }
 }
