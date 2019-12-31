@@ -130,23 +130,11 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public int GetStorageDebugId()
-        {
-            return _parent.GetHashCode();
-        }
-
         public void CopyTo(ITexture destination, int firstLayer, int firstLevel)
         {
             TextureView destinationView = (TextureView)destination;
 
             TextureCopyUnscaled.Copy(this, destinationView, firstLayer, firstLevel);
-
-            int width  = Math.Min(Width,  destinationView.Width);
-            int height = Math.Min(Height, destinationView.Height);
-
-            int depth = Math.Min(_info.GetDepthOrLayers(), destinationView._info.GetDepthOrLayers());
-
-            int levels = Math.Min(_info.Levels, destinationView._info.Levels);
 
             if (destinationView._emulatedViewParent != null)
             {
@@ -415,32 +403,8 @@ namespace Ryujinx.Graphics.OpenGL
             GL.BindTexture(target, Handle);
         }
 
-        public void Acquire()
-        {
-            _acquired = true;
-        }
-
-        public void Release()
-        {
-            _acquired = false;
-
-            if (_pendingDelete)
-            {
-                _pendingDelete = false;
-
-                Dispose();
-            }
-        }
-
         public void Dispose()
         {
-            if (_acquired)
-            {
-                _pendingDelete = true;
-
-                return;
-            }
-
             if (Handle != 0)
             {
                 GL.DeleteTexture(Handle);

@@ -308,8 +308,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
                         return Convert.ToInt32(QueryIsTextureRectangle(state, (int)stage - 1, index));
                     case QueryInfoName.PrimitiveTopology:
                         return (int)GetPrimitiveTopology();
-                    case QueryInfoName.ViewportTransformEnable:
-                        return Convert.ToInt32(_context.Methods.GetViewportTransformEnable(state));
                 }
 
                 return QueryInfoCommon(info);

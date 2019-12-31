@@ -336,8 +336,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             _context.Renderer.Pipeline.SetDepthMode(depthMode);
 
-            bool transformEnable = GetViewportTransformEnable(state);
-
             bool flipY = (state.Get<int>(MethodOffset.YControl) & 1) != 0;
 
             float yFlip = flipY ? -1 : 1;
@@ -349,35 +347,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 var transform = state.Get<ViewportTransform>(MethodOffset.ViewportTransform, index);
                 var extents   = state.Get<ViewportExtents>  (MethodOffset.ViewportExtents,   index);
 
-                RectangleF region;
+                float x = transform.TranslateX - MathF.Abs(transform.ScaleX);
+                float y = transform.TranslateY - MathF.Abs(transform.ScaleY);
 
-                if (transformEnable)
-                {
-                    float x = transform.TranslateX - MathF.Abs(transform.ScaleX);
-                    float y = transform.TranslateY - MathF.Abs(transform.ScaleY);
+                float width  = transform.ScaleX * 2;
+                float height = transform.ScaleY * 2 * yFlip;
 
-                    float width  = transform.ScaleX * 2;
-                    float height = transform.ScaleY * 2 * yFlip;
-
-                    region = new RectangleF(x, y, width, height);
-                }
-                else
-                {
-                    // It's not possible to fully disable viewport transform, at least with the most
-                    // common graphics APIs, but we can effectively disable it with a dummy transform.
-                    // The transform is defined as: xw = (width / 2) * xndc + x + (width / 2)
-                    // By setting x to -(width / 2), we effectively remove the translation.
-                    // By setting the width to 2, we remove the scale since 2 / 2 = 1.
-                    // Now, the only problem is the viewport clipping, that we also can't disable.
-                    // To prevent the values from being clipped, we multiply (-1, -1, 2, 2) by
-                    // the maximum supported viewport dimensions.
-                    // This must be compensated on the shader, by dividing the vertex position
-                    // by the maximum viewport dimensions.
-                    float maxSize     = _context.Capabilities.MaximumViewportDimensions;
-                    float halfMaxSize = _context.Capabilities.MaximumViewportDimensions * 0.5f;
-
-                    region = new RectangleF(-halfMaxSize, -halfMaxSize, maxSize, maxSize * yFlip);
-                }
+                RectangleF region = new RectangleF(x, y, width, height);
 
                 viewports[index] = new Viewport(
                     region,
@@ -825,19 +801,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
             }
 
             _context.Renderer.Pipeline.SetProgram(gs.HostProgram);
-        }
-
-        /// <summary>
-        /// Gets viewport transform enable.
-        /// </summary>
-        /// <param name="state">Current GPU state</param>
-        /// <returns>Viewport transform enable</returns>
-        public bool GetViewportTransformEnable(GpuState state)
-        {
-            // FIXME: We should read ViewportTransformEnable, but it seems that some games writes 0 there?
-            // return state.Get<Boolean32>(MethodOffset.ViewportTransformEnable) != 0;
-
-            return true;
         }
 
         /// <summary>

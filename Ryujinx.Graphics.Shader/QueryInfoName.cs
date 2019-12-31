@@ -11,7 +11,6 @@ namespace Ryujinx.Graphics.Shader
         MaximumViewportDimensions,
         PrimitiveTopology,
         StorageBufferOffsetAlignment,
-        SupportsNonConstantTextureOffset,
-        ViewportTransformEnable
+        SupportsNonConstantTextureOffset
     }
 }

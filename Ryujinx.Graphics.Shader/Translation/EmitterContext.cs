@@ -59,18 +59,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public void PrepareForReturn()
         {
-            if (_config.Stage == ShaderStage.Vertex)
-            {
-                if (!_config.QueryInfoBool(QueryInfoName.ViewportTransformEnable))
-                {
-                    Operand posX = Attribute(AttributeConsts.PositionX);
-                    Operand posY = Attribute(AttributeConsts.PositionY);
-
-                    this.Copy(posX, this.FPDivide(posX, ConstF(_config.QueryInfo(QueryInfoName.MaximumViewportDimensions) / 2)));
-                    this.Copy(posY, this.FPDivide(posY, ConstF(_config.QueryInfo(QueryInfoName.MaximumViewportDimensions) / 2)));
-                }
-            }
-            else if (_config.Stage == ShaderStage.Fragment)
+            if (_config.Stage == ShaderStage.Fragment)
             {
                 if (_config.OmapDepth)
                 {
