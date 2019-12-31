@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu
 {
+    /// <summary>
+    /// GPU engine class ID.
+    /// </summary>
     enum ClassId
     {
         Engine2D            = 0x902d,

@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu
 {
+    /// <summary>
+    /// GPU commands FIFO processor commands.
+    /// </summary>
     enum NvGpuFifoMeth
     {
         BindChannel           = 0,

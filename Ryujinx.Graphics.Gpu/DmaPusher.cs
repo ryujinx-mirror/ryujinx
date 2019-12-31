@@ -3,6 +3,9 @@ using System.Threading;
 
 namespace Ryujinx.Graphics.Gpu
 {
+    /// <summary>
+    /// GPU DMA pusher, used to push commands to the GPU.
+    /// </summary>
     public class DmaPusher
     {
         private ConcurrentQueue<ulong> _ibBuffer;
@@ -10,6 +13,9 @@ namespace Ryujinx.Graphics.Gpu
         private ulong _dmaPut;
         private ulong _dmaGet;
 
+        /// <summary>
+        /// Internal GPFIFO state.
+        /// </summary>
         private struct DmaState
         {
             public int  Method;
@@ -34,6 +40,10 @@ namespace Ryujinx.Graphics.Gpu
 
         private AutoResetEvent _event;
 
+        /// <summary>
+        /// Creates a new instance of the GPU DMA pusher.
+        /// </summary>
+        /// <param name="context">GPU context that the pusher belongs to</param>
         internal DmaPusher(GpuContext context)
         {
             _context = context;
@@ -45,6 +55,10 @@ namespace Ryujinx.Graphics.Gpu
             _event = new AutoResetEvent(false);
         }
 
+        /// <summary>
+        /// Pushes a GPFIFO entry.
+        /// </summary>
+        /// <param name="entry">GPFIFO entry</param>
         public void Push(ulong entry)
         {
             _ibBuffer.Enqueue(entry);
@@ -52,16 +66,27 @@ namespace Ryujinx.Graphics.Gpu
             _event.Set();
         }
 
+        /// <summary>
+        /// Waits until commands are pushed to the FIFO.
+        /// </summary>
+        /// <returns>True if commands were received, false if wait timed out</returns>
         public bool WaitForCommands()
         {
             return _event.WaitOne(8);
         }
 
+        /// <summary>
+        /// Processes commands pushed to the FIFO.
+        /// </summary>
         public void DispatchCalls()
         {
             while (Step());
         }
 
+        /// <summary>
+        /// Processes a single command on the FIFO.
+        /// </summary>
+        /// <returns></returns>
         private bool Step()
         {
             if (_dmaGet != _dmaPut)
@@ -162,6 +187,10 @@ namespace Ryujinx.Graphics.Gpu
             return true;
         }
 
+        /// <summary>
+        /// Sets current non-immediate method call state.
+        /// </summary>
+        /// <param name="word">Compressed method word</param>
         private void SetNonImmediateState(int word)
         {
             _state.Method      = (word >> 0)  & 0x1fff;
@@ -169,6 +198,10 @@ namespace Ryujinx.Graphics.Gpu
             _state.MethodCount = (word >> 16) & 0x1fff;
         }
 
+        /// <summary>
+        /// Forwards the method call to GPU engines.
+        /// </summary>
+        /// <param name="argument">Call argument</param>
         private void CallMethod(int argument)
         {
             _context.Fifo.CallMethod(new MethodParams(

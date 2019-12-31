@@ -5,6 +5,9 @@ using System.Collections.Generic;
 
 namespace Ryujinx.Graphics.Gpu
 {
+    /// <summary>
+    /// Macro code interpreter.
+    /// </summary>
     class MacroInterpreter
     {
         private enum AssignmentOperation
@@ -42,10 +45,6 @@ namespace Ryujinx.Graphics.Gpu
             BitwiseNotAnd      = 12
         }
 
-        private GpuContext _context;
-
-        private NvGpuFifo _pFifo;
-
         public Queue<int> Fifo { get; private set; }
 
         private int[] _gprs;
@@ -61,16 +60,23 @@ namespace Ryujinx.Graphics.Gpu
 
         private int _pc;
 
-        public MacroInterpreter(GpuContext context, NvGpuFifo pFifo)
+        /// <summary>
+        /// Creates a new instance of the macro code interpreter.
+        /// </summary>
+        public MacroInterpreter()
         {
-            _context = context;
-            _pFifo   = pFifo;
-
             Fifo = new Queue<int>();
 
             _gprs = new int[8];
         }
 
+        /// <summary>
+        /// Executes a macro program until it exits.
+        /// </summary>
+        /// <param name="mme">Code of the program to execute</param>
+        /// <param name="position">Start position to execute</param>
+        /// <param name="param">Optional argument passed to the program, 0 if not used</param>
+        /// <param name="state">Current GPU state</param>
         public void Execute(int[] mme, int position, int param, GpuState state)
         {
             Reset();
@@ -88,6 +94,10 @@ namespace Ryujinx.Graphics.Gpu
             Step(mme, state);
         }
 
+        /// <summary>
+        /// Resets the internal interpreter state.
+        /// Call each time you run a new program.
+        /// </summary>
         private void Reset()
         {
             for (int index = 0; index < _gprs.Length; index++)
@@ -101,6 +111,12 @@ namespace Ryujinx.Graphics.Gpu
             _carry = false;
         }
 
+        /// <summary>
+        /// Executes a single instruction of the program.
+        /// </summary>
+        /// <param name="mme">Program code to execute</param>
+        /// <param name="state">Current GPU state</param>
+        /// <returns>True to continue execution, false if the program exited</returns>
         private bool Step(int[] mme, GpuState state)
         {
             int baseAddr = _pc - 1;
@@ -226,12 +242,21 @@ namespace Ryujinx.Graphics.Gpu
             return !exit;
         }
 
+        /// <summary>
+        /// Fetches a single operation code from the program code.
+        /// </summary>
+        /// <param name="mme">Program code</param>
         private void FetchOpCode(int[] mme)
         {
             _opCode = _pipeOp;
             _pipeOp = mme[_pc++];
         }
 
+        /// <summary>
+        /// Gets the result of the current Arithmetic and Logic unit operation.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <returns>Operation result</returns>
         private int GetAluResult(GpuState state)
         {
             AluOperation op = (AluOperation)(_opCode & 7);
@@ -303,6 +328,13 @@ namespace Ryujinx.Graphics.Gpu
             throw new ArgumentException(nameof(_opCode));
         }
 
+        /// <summary>
+        /// Gets the result of a Arithmetic and Logic operation using registers.
+        /// </summary>
+        /// <param name="aluOp">Arithmetic and Logic unit operation with registers</param>
+        /// <param name="a">First operand value</param>
+        /// <param name="b">Second operand value</param>
+        /// <returns>Operation result</returns>
         private int GetAluResult(AluRegOperation aluOp, int a, int b)
         {
             switch (aluOp)
@@ -353,43 +385,70 @@ namespace Ryujinx.Graphics.Gpu
             throw new ArgumentOutOfRangeException(nameof(aluOp));
         }
 
+        /// <summary>
+        /// Extracts a 32-bits signed integer constant from the current operation code.
+        /// </summary>
+        /// <returns></returns>
         private int GetImm()
         {
             // Note: The immediate is signed, the sign-extension is intended here.
             return _opCode >> 14;
         }
 
+        /// <summary>
+        /// Sets the current method address, for method calls.
+        /// </summary>
+        /// <param name="value">Packed address and increment value</param>
         private void SetMethAddr(int value)
         {
             _methAddr = (value >>  0) & 0xfff;
             _methIncr = (value >> 12) & 0x3f;
         }
 
+        /// <summary>
+        /// Sets the destination register value.
+        /// </summary>
+        /// <param name="value">Value to set (usually the operation result)</param>
         private void SetDstGpr(int value)
         {
             _gprs[(_opCode >> 8) & 7] = value;
         }
 
+        /// <summary>
+        /// Gets first operand value from the respective register.
+        /// </summary>
+        /// <returns>Operand value</returns>
         private int GetGprA()
         {
             return GetGprValue((_opCode >> 11) & 7);
         }
 
+        /// <summary>
+        /// Gets second operand value from the respective register.
+        /// </summary>
+        /// <returns>Operand value</returns>
         private int GetGprB()
         {
             return GetGprValue((_opCode >> 14) & 7);
         }
 
+        /// <summary>
+        /// Gets the value from a register, or 0 if the R0 register is specified.
+        /// </summary>
+        /// <param name="index">Index of the register</param>
+        /// <returns>Register value</returns>
         private int GetGprValue(int index)
         {
             return index != 0 ? _gprs[index] : 0;
         }
 
+        /// <summary>
+        /// Fetches a call argument from the call argument FIFO.
+        /// </summary>
+        /// <returns>The call argument, or 0 if the FIFO is empty</returns>
         private int FetchParam()
         {
-            int value;
-
-            if (!Fifo.TryDequeue(out value))
+            if (!Fifo.TryDequeue(out int value))
             {
                 Logger.PrintWarning(LogClass.Gpu, "Macro attempted to fetch an inexistent argument.");
 
@@ -399,11 +458,22 @@ namespace Ryujinx.Graphics.Gpu
             return value;
         }
 
+        /// <summary>
+        /// Reads data from a GPU register.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="reg">Register offset to read</param>
+        /// <returns>GPU register value</returns>
         private int Read(GpuState state, int reg)
         {
             return state.Read(reg);
         }
 
+        /// <summary>
+        /// Performs a GPU method call.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        /// <param name="value">Call argument</param>
         private void Send(GpuState state, int value)
         {
             MethodParams meth = new MethodParams(_methAddr, value);

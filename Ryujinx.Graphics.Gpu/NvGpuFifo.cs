@@ -2,6 +2,9 @@ using Ryujinx.Graphics.Gpu.State;
 
 namespace Ryujinx.Graphics.Gpu
 {
+    /// <summary>
+    /// GPU commands FIFO.
+    /// </summary>
     class NvGpuFifo
     {
         private const int MacrosCount    = 0x80;
@@ -13,25 +16,36 @@ namespace Ryujinx.Graphics.Gpu
 
         private GpuContext _context;
 
+        /// <summary>
+        /// Cached GPU macro program.
+        /// </summary>
         private struct CachedMacro
         {
-            public int Position { get; private set; }
+            public int Position { get; }
 
             private bool _executionPending;
             private int  _argument;
 
             private MacroInterpreter _interpreter;
 
-            public CachedMacro(GpuContext context, NvGpuFifo fifo, int position)
+            /// <summary>
+            /// Creates a new instance of the GPU cached macro program.
+            /// </summary>
+            /// <param name="position">Macro code start position</param>
+            public CachedMacro(int position)
             {
                 Position = position;
 
                 _executionPending = false;
                 _argument         = 0;
 
-                _interpreter = new MacroInterpreter(context, fifo);
+                _interpreter = new MacroInterpreter();
             }
 
+            /// <summary>
+            /// Sets the first argument for the macro call.
+            /// </summary>
+            /// <param name="argument">First argument</param>
             public void StartExecution(int argument)
             {
                 _argument = argument;
@@ -39,6 +53,11 @@ namespace Ryujinx.Graphics.Gpu
                 _executionPending = true;
             }
 
+            /// <summary>
+            /// Starts executing the macro program code.
+            /// </summary>
+            /// <param name="mme">Program code</param>
+            /// <param name="state">Current GPU state</param>
             public void Execute(int[] mme, GpuState state)
             {
                 if (_executionPending)
@@ -49,6 +68,10 @@ namespace Ryujinx.Graphics.Gpu
                 }
             }
 
+            /// <summary>
+            /// Pushes a argument to the macro call argument FIFO.
+            /// </summary>
+            /// <param name="argument">Argument to be pushed</param>
             public void PushArgument(int argument)
             {
                 _interpreter?.Fifo.Enqueue(argument);
@@ -62,11 +85,24 @@ namespace Ryujinx.Graphics.Gpu
 
         private int[] _mme;
 
+        /// <summary>
+        /// GPU sub-channel information.
+        /// </summary>
         private class SubChannel
         {
+            /// <summary>
+            /// Sub-channel GPU state.
+            /// </summary>
             public GpuState State { get; }
+
+            /// <summary>
+            /// Engine bound to the sub-channel.
+            /// </summary>
             public ClassId  Class { get; set; }
 
+            /// <summary>
+            /// Creates a new instance of the GPU sub-channel.
+            /// </summary>
             public SubChannel()
             {
                 State = new GpuState();
@@ -75,6 +111,10 @@ namespace Ryujinx.Graphics.Gpu
 
         private SubChannel[] _subChannels;
 
+        /// <summary>
+        /// Creates a new instance of the GPU commands FIFO.
+        /// </summary>
+        /// <param name="context">GPU emulation context</param>
         public NvGpuFifo(GpuContext context)
         {
             _context = context;
@@ -93,6 +133,10 @@ namespace Ryujinx.Graphics.Gpu
             }
         }
 
+        /// <summary>
+        /// Calls a GPU method.
+        /// </summary>
+        /// <param name="meth">GPU method call parameters</param>
         public void CallMethod(MethodParams meth)
         {
             if ((NvGpuFifoMeth)meth.Method == NvGpuFifoMeth.BindChannel)
@@ -137,7 +181,7 @@ namespace Ryujinx.Graphics.Gpu
                     {
                         int position = meth.Argument;
 
-                        _macros[_currMacroBindIndex++] = new CachedMacro(_context, this, position);
+                        _macros[_currMacroBindIndex++] = new CachedMacro(position);
 
                         break;
                     }
