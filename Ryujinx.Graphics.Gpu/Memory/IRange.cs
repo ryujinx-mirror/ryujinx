@@ -3,8 +3,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
     /// <summary>
     /// Range of memory.
     /// </summary>
-    /// <typeparam name="T">GPU resource type</typeparam>
-    interface IRange<T>
+    interface IRange
     {
         ulong Address { get; }
         ulong Size    { get; }

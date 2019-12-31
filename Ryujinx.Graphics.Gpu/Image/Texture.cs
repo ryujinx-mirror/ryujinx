@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// Represents a cached GPU texture.
     /// </summary>
-    class Texture : IRange<Texture>, IDisposable
+    class Texture : IRange, IDisposable
     {
         private GpuContext _context;
 

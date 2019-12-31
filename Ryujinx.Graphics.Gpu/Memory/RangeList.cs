@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
     /// List of GPU resources with data on guest memory.
     /// </summary>
     /// <typeparam name="T">Type of the GPU resource</typeparam>
-    class RangeList<T> : IEnumerable<T> where T : IRange<T>
+    class RangeList<T> : IEnumerable<T> where T : IRange
     {
         private const int ArrayGrowthSize = 32;
 

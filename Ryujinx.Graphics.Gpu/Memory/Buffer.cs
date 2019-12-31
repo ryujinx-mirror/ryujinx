@@ -6,16 +6,14 @@ namespace Ryujinx.Graphics.Gpu.Memory
     /// <summary>
     /// Buffer, used to store vertex and index data, uniform and storage buffers, and others.
     /// </summary>
-    class Buffer : IRange<Buffer>, IDisposable
+    class Buffer : IRange, IDisposable
     {
-        private GpuContext _context;
-
-        private IBuffer _buffer;
+        private readonly GpuContext _context;
 
         /// <summary>
         /// Host buffer object.
         /// </summary>
-        public IBuffer HostBuffer => _buffer;
+        public IBuffer HostBuffer { get; }
 
         /// <summary>
         /// Start address of the buffer in guest memory.
@@ -46,7 +44,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             Address  = address;
             Size     = size;
 
-            _buffer = context.Renderer.CreateBuffer((int)size);
+            HostBuffer = context.Renderer.CreateBuffer((int)size);
 
             _sequenceNumbers = new int[size / MemoryManager.PageSize];
 
@@ -64,7 +62,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             int offset = (int)(address - Address);
 
-            return new BufferRange(_buffer, offset, (int)size);
+            return new BufferRange(HostBuffer, offset, (int)size);
         }
 
         /// <summary>
@@ -121,7 +119,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 int offset = (int)(mAddress - Address);
 
-                _buffer.SetData(offset, _context.PhysicalMemory.Read(mAddress, mSize));
+                HostBuffer.SetData(offset, _context.PhysicalMemory.Read(mAddress, mSize));
             }
         }
 
@@ -132,7 +130,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <param name="dstOffset">The offset of the destination buffer to copy into</param>
         public void CopyTo(Buffer destination, int dstOffset)
         {
-            _buffer.CopyTo(destination._buffer, 0, dstOffset, (int)Size);
+            HostBuffer.CopyTo(destination.HostBuffer, 0, dstOffset, (int)Size);
         }
 
         /// <summary>
@@ -145,7 +143,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             int offset = (int)(address - Address);
 
-            byte[] data = _buffer.GetData(offset, (int)size);
+            byte[] data = HostBuffer.GetData(offset, (int)size);
 
             _context.PhysicalMemory.Write(address, data);
         }
@@ -155,7 +153,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         public void Invalidate()
         {
-            _buffer.SetData(0, _context.PhysicalMemory.Read(Address, Size));
+            HostBuffer.SetData(0, _context.PhysicalMemory.Read(Address, Size));
         }
 
         /// <summary>
@@ -163,7 +161,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         public void Dispose()
         {
-            _buffer.Dispose();
+            HostBuffer.Dispose();
         }
     }
 }
