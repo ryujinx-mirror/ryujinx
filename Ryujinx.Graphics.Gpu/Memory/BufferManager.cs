@@ -6,6 +6,9 @@ using System;
 
 namespace Ryujinx.Graphics.Gpu.Memory
 {
+    /// <summary>
+    /// Buffer manager.
+    /// </summary>
     class BufferManager
     {
         private const int OverlapsBufferInitialCapacity = 10;
@@ -56,6 +59,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         private bool _rebind;
 
+        /// <summary>
+        /// Creates a new instance of the buffer manager.
+        /// </summary>
+        /// <param name="context">The GPU context that the buffer manager belongs to</param>
         public BufferManager(GpuContext context)
         {
             _context = context;
@@ -79,6 +86,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
+        /// <summary>
+        /// Sets the memory range with the index buffer data, to be used for subsequent draw calls.
+        /// </summary>
+        /// <param name="gpuVa">Start GPU virtual address of the index buffer</param>
+        /// <param name="size">Size, in bytes, of the index buffer</param>
+        /// <param name="type">Type of each index buffer element</param>
         public void SetIndexBuffer(ulong gpuVa, ulong size, IndexType type)
         {
             ulong address = TranslateAndCreateBuffer(gpuVa, size);
@@ -90,6 +103,14 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _indexBufferDirty = true;
         }
 
+        /// <summary>
+        /// Sets the memory range with vertex buffer data, to be used for subsequent draw calls.
+        /// </summary>
+        /// <param name="index">Index of the vertex buffer (up to 16)</param>
+        /// <param name="gpuVa">GPU virtual address of the buffer</param>
+        /// <param name="size">Size in bytes of the buffer</param>
+        /// <param name="stride">Stride of the buffer, defined as the number of bytes of each vertex</param>
+        /// <param name="divisor">Vertex divisor of the buffer, for instanced draws</param>
         public void SetVertexBuffer(int index, ulong gpuVa, ulong size, int stride, int divisor)
         {
             ulong address = TranslateAndCreateBuffer(gpuVa, size);
@@ -111,6 +132,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
+        /// <summary>
+        /// Sets a storage buffer on the compute pipeline.
+        /// Storage buffers can be read and written to on shaders.
+        /// </summary>
+        /// <param name="index">Index of the storage buffer</param>
+        /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
+        /// <param name="size">Size in bytes of the storage buffer</param>
         public void SetComputeStorageBuffer(int index, ulong gpuVa, ulong size)
         {
             size += gpuVa & ((ulong)_context.Capabilities.StorageBufferOffsetAlignment - 1);
@@ -122,6 +150,14 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _cpStorageBuffers.Bind(index, address, size);
         }
 
+        /// <summary>
+        /// Sets a storage buffer on the graphics pipeline.
+        /// Storage buffers can be read and written to on shaders.
+        /// </summary>
+        /// <param name="stage">Index of the shader stage</param>
+        /// <param name="index">Index of the storage buffer</param>
+        /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
+        /// <param name="size">Size in bytes of the storage buffer</param>
         public void SetGraphicsStorageBuffer(int stage, int index, ulong gpuVa, ulong size)
         {
             size += gpuVa & ((ulong)_context.Capabilities.StorageBufferOffsetAlignment - 1);
@@ -139,6 +175,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _gpStorageBuffers[stage].Bind(index, address, size);
         }
 
+        /// <summary>
+        /// Sets a uniform buffer on the compute pipeline.
+        /// Uniform buffers are read-only from shaders, and have a small capacity.
+        /// </summary>
+        /// <param name="index">Index of the uniform buffer</param>
+        /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
+        /// <param name="size">Size in bytes of the storage buffer</param>
         public void SetComputeUniformBuffer(int index, ulong gpuVa, ulong size)
         {
             ulong address = TranslateAndCreateBuffer(gpuVa, size);
@@ -146,6 +189,14 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _cpUniformBuffers.Bind(index, address, size);
         }
 
+        /// <summary>
+        /// Sets a uniform buffer on the graphics pipeline.
+        /// Uniform buffers are read-only from shaders, and have a small capacity.
+        /// </summary>
+        /// <param name="stage">Index of the shader stage</param>
+        /// <param name="index">Index of the uniform buffer</param>
+        /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
+        /// <param name="size">Size in bytes of the storage buffer</param>
         public void SetGraphicsUniformBuffer(int stage, int index, ulong gpuVa, ulong size)
         {
             ulong address = TranslateAndCreateBuffer(gpuVa, size);
@@ -155,11 +206,22 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _gpUniformBuffersDirty = true;
         }
 
+        /// <summary>
+        /// Sets the enabled storage buffers mask on the compute pipeline.
+        /// Each bit set on the mask indicates that the respective buffer index is enabled.
+        /// </summary>
+        /// <param name="mask">Buffer enable mask</param>
         public void SetComputeStorageBufferEnableMask(uint mask)
         {
             _cpStorageBuffers.EnableMask = mask;
         }
 
+        /// <summary>
+        /// Sets the enabled storage buffers mask on the graphics pipeline.
+        /// Each bit set on the mask indicates that the respective buffer index is enabled.
+        /// </summary>
+        /// <param name="stage">Index of the shader stage</param>
+        /// <param name="mask">Buffer enable mask</param>
         public void SetGraphicsStorageBufferEnableMask(int stage, uint mask)
         {
             _gpStorageBuffers[stage].EnableMask = mask;
@@ -167,11 +229,22 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _gpStorageBuffersDirty = true;
         }
 
+        /// <summary>
+        /// Sets the enabled uniform buffers mask on the compute pipeline.
+        /// Each bit set on the mask indicates that the respective buffer index is enabled.
+        /// </summary>
+        /// <param name="mask">Buffer enable mask</param>
         public void SetComputeUniformBufferEnableMask(uint mask)
         {
             _cpUniformBuffers.EnableMask = mask;
         }
 
+        /// <summary>
+        /// Sets the enabled uniform buffers mask on the graphics pipeline.
+        /// Each bit set on the mask indicates that the respective buffer index is enabled.
+        /// </summary>
+        /// <param name="stage">Index of the shader stage</param>
+        /// <param name="mask">Buffer enable mask</param>
         public void SetGraphicsUniformBufferEnableMask(int stage, uint mask)
         {
             _gpUniformBuffers[stage].EnableMask = mask;
@@ -179,6 +252,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _gpUniformBuffersDirty = true;
         }
 
+        /// <summary>
+        /// Performs address translation of the GPU virtual address, and creates a
+        /// new buffer, if needed, for the specified range.
+        /// </summary>
+        /// <param name="gpuVa">Start GPU virtual address of the buffer</param>
+        /// <param name="size">Size in bytes of the buffer</param>
+        /// <returns>CPU virtual address of the buffer, after address translation</returns>
         private ulong TranslateAndCreateBuffer(ulong gpuVa, ulong size)
         {
             if (gpuVa == 0)
@@ -210,6 +290,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return address;
         }
 
+        /// <summary>
+        /// Creates a new buffer for the specified range, if needed.
+        /// If a buffer where this range can be fully contained already exists,
+        /// then the creation of a new buffer is not necessary.
+        /// </summary>
+        /// <param name="address">Address of the buffer in guest memory</param>
+        /// <param name="size">Size in bytes of the buffer</param>
         private void CreateBuffer(ulong address, ulong size)
         {
             int overlapsCount = _buffers.FindOverlapsNonOverlapping(address, size, ref _bufferOverlaps);
@@ -266,6 +353,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
             ShrinkOverlapsBufferIfNeeded();
         }
 
+        /// <summary>
+        /// Resizes the temporary buffer used for range list intersection results, if it has grown too much.
+        /// </summary>
         private void ShrinkOverlapsBufferIfNeeded()
         {
             if (_bufferOverlaps.Length > OverlapsBufferMaxCapacity)
@@ -274,16 +364,31 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
+        /// <summary>
+        /// Gets the address of the compute uniform buffer currently bound at the given index.
+        /// </summary>
+        /// <param name="index">Index of the uniform buffer binding</param>
+        /// <returns>The uniform buffer address, or a undefined value if the buffer is not currently bound</returns>
         public ulong GetComputeUniformBufferAddress(int index)
         {
             return _cpUniformBuffers.Buffers[index].Address;
         }
 
+        /// <summary>
+        /// Gets the address of the graphics uniform buffer currently bound at the given index.
+        /// </summary>
+        /// <param name="stage">Index of the shader stage</param>
+        /// <param name="index">Index of the uniform buffer binding</param>
+        /// <returns>The uniform buffer address, or a undefined value if the buffer is not currently bound</returns>
         public ulong GetGraphicsUniformBufferAddress(int stage, int index)
         {
             return _gpUniformBuffers[stage].Buffers[index].Address;
         }
 
+        /// <summary>
+        /// Ensures that the compute engine bindings are visible to the host GPU.
+        /// This actually performs the binding using the host graphics API.
+        /// </summary>
         public void CommitComputeBindings()
         {
             uint enableMask = _cpStorageBuffers.EnableMask;
@@ -332,6 +437,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _rebind = true;
         }
 
+        /// <summary>
+        /// Ensures that the graphics engine bindings are visible to the host GPU.
+        /// This actually performs the binding using the host graphics API.
+        /// </summary>
         public void CommitBindings()
         {
             if (_indexBufferDirty || _rebind)
@@ -414,16 +523,31 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _rebind = false;
         }
 
+        /// <summary>
+        /// Bind respective buffer bindings on the host API.
+        /// </summary>
+        /// <param name="bindings">Bindings to bind</param>
+        /// <param name="isStorage">True to bind as storage buffer, false to bind as uniform buffers</param>
         private void BindBuffers(BuffersPerStage[] bindings, bool isStorage)
         {
             BindOrUpdateBuffers(bindings, bind: true, isStorage);
         }
 
+        /// <summary>
+        /// Updates data for the already bound buffer bindings.
+        /// </summary>
+        /// <param name="bindings">Bindings to update</param>
         private void UpdateBuffers(BuffersPerStage[] bindings)
         {
             BindOrUpdateBuffers(bindings, bind: false);
         }
 
+        /// <summary>
+        /// This binds buffer into the host API, or updates data for already bound buffers.
+        /// </summary>
+        /// <param name="bindings">Bindings to bind or update</param>
+        /// <param name="bind">True to bind, false to update</param>
+        /// <param name="isStorage">True to bind as storage buffer, false to bind as uniform buffers</param>
         private void BindOrUpdateBuffers(BuffersPerStage[] bindings, bool bind, bool isStorage = false)
         {
             for (ShaderStage stage = ShaderStage.Vertex; stage <= ShaderStage.Fragment; stage++)
@@ -461,6 +585,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
+        /// <summary>
+        /// Binds a buffer on the host API.
+        /// </summary>
+        /// <param name="index">Index to bind the buffer into</param>
+        /// <param name="stage">Shader stage to bind the buffer into</param>
+        /// <param name="bounds">Buffer address and size</param>
+        /// <param name="isStorage">True to bind as storage buffer, false to bind as uniform buffer</param>
         private void BindBuffer(int index, ShaderStage stage, BufferBounds bounds, bool isStorage)
         {
             BufferRange buffer = GetBufferRange(bounds.Address, bounds.Size);
@@ -475,6 +606,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
+        /// <summary>
+        /// Copy a buffer data from a given address to another.
+        /// This does a GPU side copy.
+        /// </summary>
+        /// <param name="srcVa">GPU virtual address of the copy source</param>
+        /// <param name="dstVa">GPU virtual address of the copy destination</param>
+        /// <param name="size">Size in bytes of the copy</param>
         public void CopyBuffer(GpuVa srcVa, GpuVa dstVa, ulong size)
         {
             ulong srcAddress = TranslateAndCreateBuffer(srcVa.Pack(), size);
@@ -495,11 +633,24 @@ namespace Ryujinx.Graphics.Gpu.Memory
             dstBuffer.Flush(dstAddress, size);
         }
 
+        /// <summary>
+        /// Gets a buffer sub-range for a given memory range.
+        /// </summary>
+        /// <param name="address">Start address of the memory range</param>
+        /// <param name="size">Size in bytes of the memory range</param>
+        /// <returns>The buffer sub-range for the given range</returns>
         private BufferRange GetBufferRange(ulong address, ulong size)
         {
             return GetBuffer(address, size).GetRange(address, size);
         }
 
+        /// <summary>
+        /// Gets a buffer for a given memory range.
+        /// A buffer overlapping with the specified range is assumed to already exist on the cache.
+        /// </summary>
+        /// <param name="address">Start address of the memory range</param>
+        /// <param name="size">Size in bytes of the memory range</param>
+        /// <returns>The buffer where the range is fully contained</returns>
         private Buffer GetBuffer(ulong address, ulong size)
         {
             Buffer buffer;
@@ -518,6 +669,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return buffer;
         }
 
+        /// <summary>
+        /// Performs guest to host memory synchronization of a given memory range.
+        /// </summary>
+        /// <param name="address">Start address of the memory range</param>
+        /// <param name="size">Size in bytes of the memory range</param>
         private void SynchronizeBufferRange(ulong address, ulong size)
         {
             if (size != 0)

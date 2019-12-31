@@ -3,21 +3,43 @@ using System;
 
 namespace Ryujinx.Graphics.Gpu.Memory
 {
+    /// <summary>
+    /// Buffer, used to store vertex and index data, uniform and storage buffers, and others.
+    /// </summary>
     class Buffer : IRange<Buffer>, IDisposable
     {
         private GpuContext _context;
 
         private IBuffer _buffer;
 
+        /// <summary>
+        /// Host buffer object.
+        /// </summary>
         public IBuffer HostBuffer => _buffer;
 
+        /// <summary>
+        /// Start address of the buffer in guest memory.
+        /// </summary>
         public ulong Address { get; }
-        public ulong Size    { get; }
 
+        /// <summary>
+        /// Size of the buffer in bytes.
+        /// </summary>
+        public ulong Size { get; }
+
+        /// <summary>
+        /// End address of the buffer in guest memory.
+        /// </summary>
         public ulong EndAddress => Address + Size;
 
         private int[] _sequenceNumbers;
 
+        /// <summary>
+        /// Creates a new instance of the buffer.
+        /// </summary>
+        /// <param name="context">GPU context that the buffer belongs to</param>
+        /// <param name="address">Start address of the buffer</param>
+        /// <param name="size">Size of the buffer in bytes</param>
         public Buffer(GpuContext context, ulong address, ulong size)
         {
             _context = context;
@@ -31,6 +53,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
             Invalidate();
         }
 
+        /// <summary>
+        /// Gets a sub-range from the buffer.
+        /// This can be used to bind and use sub-ranges of the buffer on the host API.
+        /// </summary>
+        /// <param name="address">Start address of the sub-range, must be greater or equal to the buffer address</param>
+        /// <param name="size">Size in bytes of the sub-range, must be less than or equal to the buffer size</param>
+        /// <returns>The buffer sub-range</returns>
         public BufferRange GetRange(ulong address, ulong size)
         {
             int offset = (int)(address - Address);
@@ -38,11 +67,24 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return new BufferRange(_buffer, offset, (int)size);
         }
 
+        /// <summary>
+        /// Checks if a given range overlaps with the buffer.
+        /// </summary>
+        /// <param name="address">Start address of the range</param>
+        /// <param name="size">Size in bytes of the range</param>
+        /// <returns>True if the range overlaps, false otherwise</returns>
         public bool OverlapsWith(ulong address, ulong size)
         {
             return Address < address + size && address < EndAddress;
         }
 
+        /// <summary>
+        /// Performs guest to host memory synchronization of the buffer data.
+        /// This causes the buffer data to be overwritten if a write was detected from the CPU,
+        /// since the last call to this method.
+        /// </summary>
+        /// <param name="address">Start address of the range to synchronize</param>
+        /// <param name="size">Size in bytes of the range to synchronize</param>
         public void SynchronizeMemory(ulong address, ulong size)
         {
             int currentSequenceNumber = _context.SequenceNumber;
@@ -83,11 +125,22 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
+        /// <summary>
+        /// Performs copy of all the buffer data from one buffer to another.
+        /// </summary>
+        /// <param name="destination">The destination buffer to copy the data into</param>
+        /// <param name="dstOffset">The offset of the destination buffer to copy into</param>
         public void CopyTo(Buffer destination, int dstOffset)
         {
             _buffer.CopyTo(destination._buffer, 0, dstOffset, (int)Size);
         }
 
+        /// <summary>
+        /// Flushes a range of the buffer.
+        /// This writes the range data back into guest memory.
+        /// </summary>
+        /// <param name="address">Start address of the range</param>
+        /// <param name="size">Size in bytes of the range</param>
         public void Flush(ulong address, ulong size)
         {
             int offset = (int)(address - Address);
@@ -97,11 +150,17 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _context.PhysicalMemory.Write(address, data);
         }
 
+        /// <summary>
+        /// Invalidates all the buffer data, causing it to be read from guest memory.
+        /// </summary>
         public void Invalidate()
         {
             _buffer.SetData(0, _context.PhysicalMemory.Read(Address, Size));
         }
 
+        /// <summary>
+        /// Disposes the host buffer.
+        /// </summary>
         public void Dispose()
         {
             _buffer.Dispose();

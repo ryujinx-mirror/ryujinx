@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.Memory
 {
+    /// <summary>
+    /// GPU Vertex Buffer information.
+    /// </summary>
     struct VertexBuffer
     {
         public ulong Address;

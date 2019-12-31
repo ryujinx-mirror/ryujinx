@@ -1,5 +1,8 @@
 namespace Ryujinx.Graphics.Gpu.Memory
 {
+    /// <summary>
+    /// GPU memory manager.
+    /// </summary>
     public class MemoryManager
     {
         private const ulong AddressSpaceSize = 1UL << 40;
@@ -26,11 +29,22 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         private ulong[][] _pageTable;
 
+        /// <summary>
+        /// Creates a new instance of the GPU memory manager.
+        /// </summary>
         public MemoryManager()
         {
             _pageTable = new ulong[PtLvl0Size][];
         }
 
+        /// <summary>
+        /// Maps a given range of pages to the specified CPU virtual address.
+        /// All addresses and sizes must be page aligned.
+        /// </summary>
+        /// <param name="pa">CPU virtual address to map into</param>
+        /// <param name="va">GPU virtual address to be mapped</param>
+        /// <param name="size">Size in bytes of the mapping</param>
+        /// <returns>The GPU virtual address of the mapping</returns>
         public ulong Map(ulong pa, ulong va, ulong size)
         {
             lock (_pageTable)
@@ -44,6 +58,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return va;
         }
 
+        /// <summary>
+        /// Maps a given range of pages to a allocated GPU virtual address.
+        /// The memory is automatically allocated by the memory manager.
+        /// </summary>
+        /// <param name="pa">CPU virtual address to map into</param>
+        /// <param name="size">Mapping size in bytes</param>
+        /// <returns>GPU virtual address where the range was mapped, or an all ones mask in case of failure</returns>
         public ulong Map(ulong pa, ulong size)
         {
             lock (_pageTable)
@@ -62,6 +83,14 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
+        /// <summary>
+        /// Maps a given range of pages to a allocated GPU virtual address.
+        /// The memory is automatically allocated by the memory manager.
+        /// This also ensures that the mapping is always done in the first 4GB of GPU address space.
+        /// </summary>
+        /// <param name="pa">CPU virtual address to map into</param>
+        /// <param name="size">Mapping size in bytes</param>
+        /// <returns>GPU virtual address where the range was mapped, or an all ones mask in case of failure</returns>
         public ulong MapLow(ulong pa, ulong size)
         {
             lock (_pageTable)
@@ -84,6 +113,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
+        /// <summary>
+        /// Reserves memory at a fixed GPU memory location.
+        /// This prevents the reserved region from being used for memory allocation for map.
+        /// </summary>
+        /// <param name="va">CPU virtual address to reserve</param>
+        /// <param name="size">Reservation size in bytes</param>
+        /// <returns>GPU virtual address of the reservation, or an all ones mask in case of failure</returns>
         public ulong ReserveFixed(ulong va, ulong size)
         {
             lock (_pageTable)
@@ -105,6 +141,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return va;
         }
 
+        /// <summary>
+        /// Reserves memory at any GPU memory location.
+        /// </summary>
+        /// <param name="size">Reservation size in bytes</param>
+        /// <param name="alignment">Reservation address alignment in bytes</param>
+        /// <returns>GPU virtual address of the reservation, or an all ones mask in case of failure</returns>
         public ulong Reserve(ulong size, ulong alignment)
         {
             lock (_pageTable)
@@ -123,6 +165,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
+        /// <summary>
+        /// Frees memory that was previously allocated by a map or reserved.
+        /// </summary>
+        /// <param name="va">GPU virtual address to free</param>
+        /// <param name="size">Size in bytes of the region being freed</param>
         public void Free(ulong va, ulong size)
         {
             lock (_pageTable)
@@ -134,6 +181,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
             }
         }
 
+        /// <summary>
+        /// Gets the address of a unused (free) region of the specified size.
+        /// </summary>
+        /// <param name="size">Size of the region in bytes</param>
+        /// <param name="alignment">Required alignment of the region address in bytes</param>
+        /// <param name="start">Start address of the search on the address space</param>
+        /// <returns>GPU virtual address of the allocation, or an all ones mask in case of failure</returns>
         private ulong GetFreePosition(ulong size, ulong alignment = 1, ulong start = 1UL << 32)
         {
             // Note: Address 0 is not considered valid by the driver,
@@ -176,6 +230,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return PteUnmapped;
         }
 
+        /// <summary>
+        /// Gets the number of mapped or reserved pages on a given region.
+        /// </summary>
+        /// <param name="gpuVa">Start GPU virtual address of the region</param>
+        /// <returns>Mapped size in bytes of the specified region</returns>
         internal ulong GetSubSize(ulong gpuVa)
         {
             ulong size = 0;
@@ -188,6 +247,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return size;
         }
 
+        /// <summary>
+        /// Translated a GPU virtual address to a CPU virtual address.
+        /// </summary>
+        /// <param name="gpuVa">GPU virtual address to be translated</param>
+        /// <returns>CPU virtual address</returns>
         internal ulong Translate(ulong gpuVa)
         {
             ulong baseAddress = GetPte(gpuVa);
@@ -200,11 +264,17 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return baseAddress + (gpuVa & PageMask);
         }
 
-        public bool IsRegionFree(ulong va, ulong size)
+        /// <summary>
+        /// Checks if a given memory region is currently unmapped.
+        /// </summary>
+        /// <param name="gpuVa">Start GPU virtual address of the region</param>
+        /// <param name="size">Size in bytes of the region</param>
+        /// <returns>True if the region is unmapped (free), false otherwise</returns>
+        public bool IsRegionFree(ulong gpuVa, ulong size)
         {
             for (ulong offset = 0; offset < size; offset += PageSize)
             {
-                if (IsPageInUse(va + offset))
+                if (IsPageInUse(gpuVa + offset))
                 {
                     return false;
                 }
@@ -213,15 +283,20 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return true;
         }
 
-        private bool IsPageInUse(ulong va)
+        /// <summary>
+        /// Checks if a given memory page is mapped or reserved.
+        /// </summary>
+        /// <param name="gpuVa">GPU virtual address of the page</param>
+        /// <returns>True if the page is mapped or reserved, false otherwise</returns>
+        private bool IsPageInUse(ulong gpuVa)
         {
-            if (va >> PtLvl0Bits + PtLvl1Bits + PtPageBits != 0)
+            if (gpuVa >> PtLvl0Bits + PtLvl1Bits + PtPageBits != 0)
             {
                 return false;
             }
 
-            ulong l0 = (va >> PtLvl0Bit) & PtLvl0Mask;
-            ulong l1 = (va >> PtLvl1Bit) & PtLvl1Mask;
+            ulong l0 = (gpuVa >> PtLvl0Bit) & PtLvl0Mask;
+            ulong l1 = (gpuVa >> PtLvl1Bit) & PtLvl1Mask;
 
             if (_pageTable[l0] == null)
             {
@@ -231,10 +306,15 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return _pageTable[l0][l1] != PteUnmapped;
         }
 
-        private ulong GetPte(ulong address)
+        /// <summary>
+        /// Gets the Page Table entry for a given GPU virtual address.
+        /// </summary>
+        /// <param name="gpuVa">GPU virtual address</param>
+        /// <returns>Page table entry (CPU virtual address)</returns>
+        private ulong GetPte(ulong gpuVa)
         {
-            ulong l0 = (address >> PtLvl0Bit) & PtLvl0Mask;
-            ulong l1 = (address >> PtLvl1Bit) & PtLvl1Mask;
+            ulong l0 = (gpuVa >> PtLvl0Bit) & PtLvl0Mask;
+            ulong l1 = (gpuVa >> PtLvl1Bit) & PtLvl1Mask;
 
             if (_pageTable[l0] == null)
             {
@@ -244,10 +324,15 @@ namespace Ryujinx.Graphics.Gpu.Memory
             return _pageTable[l0][l1];
         }
 
-        private void SetPte(ulong address, ulong tgtAddr)
+        /// <summary>
+        /// Sets a Page Table entry at a given GPU virtual address.
+        /// </summary>
+        /// <param name="gpuVa">GPU virtual address</param>
+        /// <param name="pte">Page table entry (CPU virtual address)</param>
+        private void SetPte(ulong gpuVa, ulong pte)
         {
-            ulong l0 = (address >> PtLvl0Bit) & PtLvl0Mask;
-            ulong l1 = (address >> PtLvl1Bit) & PtLvl1Mask;
+            ulong l0 = (gpuVa >> PtLvl0Bit) & PtLvl0Mask;
+            ulong l1 = (gpuVa >> PtLvl1Bit) & PtLvl1Mask;
 
             if (_pageTable[l0] == null)
             {
@@ -259,7 +344,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 }
             }
 
-            _pageTable[l0][l1] = tgtAddr;
+            _pageTable[l0][l1] = pte;
         }
     }
 }
