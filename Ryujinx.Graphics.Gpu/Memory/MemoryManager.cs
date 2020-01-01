@@ -252,7 +252,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="gpuVa">GPU virtual address to be translated</param>
         /// <returns>CPU virtual address</returns>
-        internal ulong Translate(ulong gpuVa)
+        public ulong Translate(ulong gpuVa)
         {
             ulong baseAddress = GetPte(gpuVa);
 

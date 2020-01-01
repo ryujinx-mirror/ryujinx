@@ -28,7 +28,7 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// GPU memory accessor.
         /// </summary>
-        internal MemoryAccessor MemoryAccessor { get; }
+        public MemoryAccessor MemoryAccessor { get; }
 
         /// <summary>
         /// GPU engine methods processing.

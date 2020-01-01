@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
     /// <summary>
     /// GPU mapped memory accessor.
     /// </summary>
-    class MemoryAccessor
+    public class MemoryAccessor
     {
         private GpuContext _context;
 
@@ -17,6 +17,17 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public MemoryAccessor(GpuContext context)
         {
             _context = context;
+        }
+
+        /// <summary>
+        /// Reads a byte array from GPU mapped memory.
+        /// </summary>
+        /// <param name="gpuVa">GPU virtual address where the data is located</param>
+        /// <param name="size">Size of the data in bytes</param>
+        /// <returns>Byte array with the data</returns>
+        public byte[] ReadBytes(ulong gpuVa, ulong size)
+        {
+            return Read(gpuVa, size).ToArray();
         }
 
         /// <summary>
@@ -60,6 +71,30 @@ namespace Ryujinx.Graphics.Gpu.Memory
             ulong processVa = _context.MemoryManager.Translate(gpuVa);
 
             return BitConverter.ToInt32(_context.PhysicalMemory.Read(processVa, 4));
+        }
+
+        /// <summary>
+        /// Reads a 64-bits unsigned integer from GPU mapped memory.
+        /// </summary>
+        /// <param name="gpuVa">GPU virtual address where the value is located</param>
+        /// <returns>The value at the specified memory location</returns>
+        public ulong ReadUInt64(ulong gpuVa)
+        {
+            ulong processVa = _context.MemoryManager.Translate(gpuVa);
+
+            return BitConverter.ToUInt64(_context.PhysicalMemory.Read(processVa, 8));
+        }
+
+        /// <summary>
+        /// Reads a 8-bits unsigned integer from GPU mapped memory.
+        /// </summary>
+        /// <param name="gpuVa">GPU virtual address where the value is located</param>
+        /// <param name="value">The value to be written</param>
+        public void WriteByte(ulong gpuVa, byte value)
+        {
+            ulong processVa = _context.MemoryManager.Translate(gpuVa);
+
+            _context.PhysicalMemory.Write(processVa, MemoryMarshal.CreateSpan(ref value, 1));
         }
 
         /// <summary>
