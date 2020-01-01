@@ -6,7 +6,7 @@ namespace Ryujinx.Graphics.Gpu.Image
     /// <summary>
     /// Represents a pool of GPU resources, such as samplers or textures.
     /// </summary>
-    /// <typeparam name="T">GPU resource type</typeparam>
+    /// <typeparam name="T">Type of the GPU resource</typeparam>
     abstract class Pool<T> : IDisposable
     {
         protected const int DescriptorSize = 0x20;
@@ -57,7 +57,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Synchronizes host memory with guest memory.
-        /// This causes a invalidation of pool entries,
+        /// This causes invalidation of pool entries,
         /// if a modification of entries by the CPU is detected.
         /// </summary>
         public void SynchronizeMemory()

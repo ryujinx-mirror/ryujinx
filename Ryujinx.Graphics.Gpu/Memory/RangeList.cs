@@ -39,7 +39,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Removes a item from the list.
+        /// Removes an item from the list.
         /// </summary>
         /// <param name="item">The item to be removed</param>
         /// <returns>True if the item was removed, or false if it was not found</returns>
@@ -97,7 +97,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// It only ensures that the item returned overlaps the specified memory range.
         /// </remarks>
         /// <param name="address">Start address of the range</param>
-        /// <param name="size">Size in bytes or the rangee</param>
+        /// <param name="size">Size in bytes of the range</param>
         /// <returns>The overlapping item, or the default value for the type if none found</returns>
         public T FindFirstOverlap(ulong address, ulong size)
         {
@@ -126,7 +126,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Gets all items on the list overlapping the specified memory range.
         /// </summary>
         /// <param name="address">Start address of the range</param>
-        /// <param name="size">Size in bytes or the rangee</param>
+        /// <param name="size">Size in bytes of the range</param>
         /// <param name="output">Output array where matches will be written. It is automatically resized to fit the results</param>
         /// <returns>The number of overlapping items found</returns>
         public int FindOverlaps(ulong address, ulong size, ref T[] output)
@@ -184,7 +184,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// This method is faster than the regular method to find all overlaps.
         /// </remarks>
         /// <param name="address">Start address of the range</param>
-        /// <param name="size">Size in bytes or the rangee</param>
+        /// <param name="size">Size in bytes of the range</param>
         /// <param name="output">Output array where matches will be written. It is automatically resized to fit the results</param>
         /// <returns>The number of overlapping items found</returns>
         public int FindOverlapsNonOverlapping(ulong address, ulong size, ref T[] output)
@@ -297,7 +297,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Performs binary search for items overlapping a given memory range.
         /// </summary>
         /// <param name="address">Start address of the range</param>
-        /// <param name="size">Size of the range in bytes</param>
+        /// <param name="size">Size in bytes of the range</param>
         /// <returns>List index of the item, or complement index of nearest item with lower value on the list</returns>
         private int BinarySearch(ulong address, ulong size)
         {

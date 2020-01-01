@@ -15,7 +15,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Shader texture handle.
-        /// This is a index into the texture constant buffer.
+        /// This is an index into the texture constant buffer.
         /// </summary>
         public int Handle { get; }
 

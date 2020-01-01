@@ -65,7 +65,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// The memory is automatically allocated by the memory manager.
         /// </summary>
         /// <param name="pa">CPU virtual address to map into</param>
-        /// <param name="size">Mapping size in bytes</param>
+        /// <param name="size">Size in bytes of the mapping</param>
         /// <returns>GPU virtual address where the range was mapped, or an all ones mask in case of failure</returns>
         public ulong Map(ulong pa, ulong size)
         {
@@ -91,7 +91,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// This also ensures that the mapping is always done in the first 4GB of GPU address space.
         /// </summary>
         /// <param name="pa">CPU virtual address to map into</param>
-        /// <param name="size">Mapping size in bytes</param>
+        /// <param name="size">Size in bytes of the mapping</param>
         /// <returns>GPU virtual address where the range was mapped, or an all ones mask in case of failure</returns>
         public ulong MapLow(ulong pa, ulong size)
         {
@@ -120,7 +120,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// This prevents the reserved region from being used for memory allocation for map.
         /// </summary>
         /// <param name="va">GPU virtual address to reserve</param>
-        /// <param name="size">Reservation size in bytes</param>
+        /// <param name="size">Size in bytes of the reservation</param>
         /// <returns>GPU virtual address of the reservation, or an all ones mask in case of failure</returns>
         public ulong ReserveFixed(ulong va, ulong size)
         {
@@ -146,7 +146,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <summary>
         /// Reserves memory at any GPU memory location.
         /// </summary>
-        /// <param name="size">Reservation size in bytes</param>
+        /// <param name="size">Size in bytes of the reservation</param>
         /// <param name="alignment">Reservation address alignment in bytes</param>
         /// <returns>GPU virtual address of the reservation, or an all ones mask in case of failure</returns>
         public ulong Reserve(ulong size, ulong alignment)
@@ -184,7 +184,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Gets the address of a unused (free) region of the specified size.
+        /// Gets the address of an unused (free) region of the specified size.
         /// </summary>
         /// <param name="size">Size of the region in bytes</param>
         /// <param name="alignment">Required alignment of the region address in bytes</param>
@@ -250,7 +250,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Translated a GPU virtual address to a CPU virtual address.
+        /// Translates a GPU virtual address to a CPU virtual address.
         /// </summary>
         /// <param name="gpuVa">GPU virtual address to be translated</param>
         /// <returns>CPU virtual address</returns>

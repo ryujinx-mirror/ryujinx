@@ -18,7 +18,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <summary>
         /// Constructs a new instance of the texture pool.
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="context">GPU context that the texture pool belongs to</param>
         public TexturePoolCache(GpuContext context)
         {
             _context = context;

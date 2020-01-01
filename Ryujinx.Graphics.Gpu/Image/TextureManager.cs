@@ -245,7 +245,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Tries to find a existing texture, or create a new one if not found.
+        /// Tries to find an existing texture, or create a new one if not found.
         /// </summary>
         /// <param name="copyTexture">Copy texture to find or create</param>
         /// <returns>The texture</returns>
@@ -298,7 +298,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Tries to find a existing texture, or create a new one if not found.
+        /// Tries to find an existing texture, or create a new one if not found.
         /// </summary>
         /// <param name="colorState">Color buffer texture to find or create</param>
         /// <param name="samplesInX">Number of samples in the X direction, for MSAA</param>
@@ -381,7 +381,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Tries to find a existing texture, or create a new one if not found.
+        /// Tries to find an existing texture, or create a new one if not found.
         /// </summary>
         /// <param name="dsState">Depth-stencil buffer texture to find or create</param>
         /// <param name="size">Size of the depth-stencil texture</param>
@@ -430,7 +430,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Tries to find a existing texture, or create a new one if not found.
+        /// Tries to find an existing texture, or create a new one if not found.
         /// </summary>
         /// <param name="info">Texture information of the texture to be found or created</param>
         /// <param name="flags">The texture search flags, defines texture comparison rules</param>

@@ -190,7 +190,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         };
 
         /// <summary>
-        /// Try getting the texture format from a encoded format integer from the Maxwell texture descriptor.
+        /// Try getting the texture format from an encoded format integer from the Maxwell texture descriptor.
         /// </summary>
         /// <param name="encoded">The encoded format integer from the texture descriptor</param>
         /// <param name="isSrgb">Indicates if the format is a sRGB format</param>
@@ -204,7 +204,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
-        /// Try getting the vertex attribute format from a encoded format integer from Maxwell attribute registers.
+        /// Try getting the vertex attribute format from an encoded format integer from Maxwell attribute registers.
         /// </summary>
         /// <param name="encoded">The encoded format integer from the attribute registers</param>
         /// <param name="format">The output vertex attribute format</param>

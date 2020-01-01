@@ -72,7 +72,7 @@ namespace Ryujinx.Graphics.Gpu
             }
 
             /// <summary>
-            /// Pushes a argument to the macro call argument FIFO.
+            /// Pushes an argument to the macro call argument FIFO.
             /// </summary>
             /// <param name="argument">Argument to be pushed</param>
             public void PushArgument(int argument)

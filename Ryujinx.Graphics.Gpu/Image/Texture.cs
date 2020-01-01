@@ -365,7 +365,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// This causes the texture data to be written back to guest memory.
         /// If the texture was written by the GPU, this includes all modification made by the GPU
         /// up to this point.
-        /// Be aware that this is a expensive operation, avoid calling it unless strictly needed.
+        /// Be aware that this is an expensive operation, avoid calling it unless strictly needed.
         /// This may cause data corruption if the memory is already being used for something else on the CPU side.
         /// </summary>
         public void Flush()

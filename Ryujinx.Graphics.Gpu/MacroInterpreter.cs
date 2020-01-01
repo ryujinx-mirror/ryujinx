@@ -329,7 +329,7 @@ namespace Ryujinx.Graphics.Gpu
         }
 
         /// <summary>
-        /// Gets the result of a Arithmetic and Logic operation using registers.
+        /// Gets the result of an Arithmetic and Logic operation using registers.
         /// </summary>
         /// <param name="aluOp">Arithmetic and Logic unit operation with registers</param>
         /// <param name="a">First operand value</param>

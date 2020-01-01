@@ -94,7 +94,7 @@ namespace Ryujinx.Graphics.Gpu.State
         }
 
         /// <summary>
-        /// Writes a offset value at the uniform buffer offset register.
+        /// Writes an offset value at the uniform buffer offset register.
         /// </summary>
         /// <param name="offset">The offset to be written</param>
         public void SetUniformBufferOffset(int offset)

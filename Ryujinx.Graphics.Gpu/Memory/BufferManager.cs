@@ -368,7 +368,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Gets the address of the compute uniform buffer currently bound at the given index.
         /// </summary>
         /// <param name="index">Index of the uniform buffer binding</param>
-        /// <returns>The uniform buffer address, or a undefined value if the buffer is not currently bound</returns>
+        /// <returns>The uniform buffer address, or an undefined value if the buffer is not currently bound</returns>
         public ulong GetComputeUniformBufferAddress(int index)
         {
             return _cpUniformBuffers.Buffers[index].Address;
@@ -379,7 +379,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="stage">Index of the shader stage</param>
         /// <param name="index">Index of the uniform buffer binding</param>
-        /// <returns>The uniform buffer address, or a undefined value if the buffer is not currently bound</returns>
+        /// <returns>The uniform buffer address, or an undefined value if the buffer is not currently bound</returns>
         public ulong GetGraphicsUniformBufferAddress(int stage, int index)
         {
             return _gpUniformBuffers[stage].Buffers[index].Address;

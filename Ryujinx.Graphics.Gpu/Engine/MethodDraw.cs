@@ -123,7 +123,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         /// <summary>
         /// Sets the index buffer count.
-        /// This also sets internal state that indicates that the next draw is a indexed draw.
+        /// This also sets internal state that indicates that the next draw is an indexed draw.
         /// </summary>
         /// <param name="state">Current GPU state</param>
         /// <param name="argument">Method call argument</param>
