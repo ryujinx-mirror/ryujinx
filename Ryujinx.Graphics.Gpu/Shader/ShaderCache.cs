@@ -1,3 +1,4 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu.Image;
 using Ryujinx.Graphics.Gpu.State;
@@ -45,8 +46,10 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
         /// <summary>
         /// Gets a compute shader from the cache.
-        /// This automatically translates, compiles and adds the code to the cache if not present.
         /// </summary>
+        /// <remarks>
+        /// This automatically translates, compiles and adds the code to the cache if not present.
+        /// </remarks>
         /// <param name="gpuVa">GPU virtual address of the binary shader code</param>
         /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
         /// <param name="localSizeX">Local group size X of the computer shader</param>
@@ -93,8 +96,10 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Gets a graphics shader program from the shader cache.
         /// This includes all the specified shader stages.
-        /// This automatically translates, compiles and adds the code to the cache if not present.
         /// </summary>
+        /// <remarks>
+        /// This automatically translates, compiles and adds the code to the cache if not present.
+        /// </remarks>
         /// <param name="state">Current GPU state</param>
         /// <param name="addresses">Addresses of the shaders for each stage</param>
         /// <returns>Compiled graphics shader code</returns>
@@ -246,28 +251,25 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return null;
             }
 
-            QueryInfoCallback queryInfo = (QueryInfoName info, int index) =>
+            int QueryInfo(QueryInfoName info, int index)
             {
-                switch (info)
+                return info switch
                 {
-                    case QueryInfoName.ComputeLocalSizeX:
-                        return localSizeX;
-                    case QueryInfoName.ComputeLocalSizeY:
-                        return localSizeY;
-                    case QueryInfoName.ComputeLocalSizeZ:
-                        return localSizeZ;
-                    case QueryInfoName.ComputeSharedMemorySize:
-                        return sharedMemorySize;
-                }
+                    QueryInfoName.ComputeLocalSizeX => localSizeX,
+                    QueryInfoName.ComputeLocalSizeY => localSizeY,
+                    QueryInfoName.ComputeLocalSizeZ => localSizeZ,
+                    QueryInfoName.ComputeSharedMemorySize => sharedMemorySize,
+                    _ => QueryInfoCommon(info)
+                };
+            }
 
-                return QueryInfoCommon(info);
-            };
+            TranslatorCallbacks callbacks = new TranslatorCallbacks(QueryInfo, PrintLog);
 
             ShaderProgram program;
 
             Span<byte> code = _context.MemoryAccessor.Read(gpuVa, MaxProgramSize);
 
-            program = Translator.Translate(code, queryInfo, DefaultFlags | TranslationFlags.Compute);
+            program = Translator.Translate(code, callbacks, DefaultFlags | TranslationFlags.Compute);
 
             int[] codeCached = MemoryMarshal.Cast<byte, int>(code.Slice(0, program.Size)).ToArray();
 
@@ -284,13 +286,15 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
         /// <summary>
         /// Translates the binary Maxwell shader code to something that the host API accepts.
-        /// This will combine the "Vertex A" and "Vertex B" shader stages, if specified, into one shader.
         /// </summary>
+        /// <remarks>
+        /// This will combine the "Vertex A" and "Vertex B" shader stages, if specified, into one shader.
+        /// </remarks>
         /// <param name="state">Current GPU state</param>
         /// <param name="stage">Shader stage</param>
         /// <param name="gpuVa">GPU virtual address of the shader code</param>
         /// <param name="gpuVaA">Optional GPU virtual address of the "Vertex A" shader code</param>
-        /// <returns></returns>
+        /// <returns>Compiled graphics shader code</returns>
         private CachedShader TranslateGraphicsShader(GpuState state, ShaderStage stage, ulong gpuVa, ulong gpuVaA = 0)
         {
             if (gpuVa == 0)
@@ -298,20 +302,18 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return new CachedShader(null, null);
             }
 
-            QueryInfoCallback queryInfo = (QueryInfoName info, int index) =>
+            int QueryInfo(QueryInfoName info, int index)
             {
-                switch (info)
+                return info switch
                 {
-                    case QueryInfoName.IsTextureBuffer:
-                        return Convert.ToInt32(QueryIsTextureBuffer(state, (int)stage - 1, index));
-                    case QueryInfoName.IsTextureRectangle:
-                        return Convert.ToInt32(QueryIsTextureRectangle(state, (int)stage - 1, index));
-                    case QueryInfoName.PrimitiveTopology:
-                        return (int)GetPrimitiveTopology();
-                }
+                    QueryInfoName.IsTextureBuffer => Convert.ToInt32(QueryIsTextureBuffer(state, (int)stage - 1, index)),
+                    QueryInfoName.IsTextureRectangle => Convert.ToInt32(QueryIsTextureRectangle(state, (int)stage - 1, index)),
+                    QueryInfoName.PrimitiveTopology => (int)GetPrimitiveTopology(),
+                    _ => QueryInfoCommon(info)
+                };
+            }
 
-                return QueryInfoCommon(info);
-            };
+            TranslatorCallbacks callbacks = new TranslatorCallbacks(QueryInfo, PrintLog);
 
             ShaderProgram program;
 
@@ -322,7 +324,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 Span<byte> codeA = _context.MemoryAccessor.Read(gpuVaA, MaxProgramSize);
                 Span<byte> codeB = _context.MemoryAccessor.Read(gpuVa,  MaxProgramSize);
 
-                program = Translator.Translate(codeA, codeB, queryInfo, DefaultFlags);
+                program = Translator.Translate(codeA, codeB, callbacks, DefaultFlags);
 
                 // TODO: We should also take "codeA" into account.
                 codeCached = MemoryMarshal.Cast<byte, int>(codeB.Slice(0, program.Size)).ToArray();
@@ -342,7 +344,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 Span<byte> code = _context.MemoryAccessor.Read(gpuVa, MaxProgramSize);
 
-                program = Translator.Translate(code, queryInfo, DefaultFlags);
+                program = Translator.Translate(code, callbacks, DefaultFlags);
 
                 codeCached = MemoryMarshal.Cast<byte, int>(code.Slice(0, program.Size)).ToArray();
 
@@ -483,17 +485,21 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <returns>Requested information</returns>
         private int QueryInfoCommon(QueryInfoName info)
         {
-            switch (info)
+            return info switch
             {
-                case QueryInfoName.MaximumViewportDimensions:
-                    return _context.Capabilities.MaximumViewportDimensions;
-                case QueryInfoName.StorageBufferOffsetAlignment:
-                    return _context.Capabilities.StorageBufferOffsetAlignment;
-                case QueryInfoName.SupportsNonConstantTextureOffset:
-                    return Convert.ToInt32(_context.Capabilities.SupportsNonConstantTextureOffset);
-            }
+                QueryInfoName.StorageBufferOffsetAlignment => _context.Capabilities.StorageBufferOffsetAlignment,
+                QueryInfoName.SupportsNonConstantTextureOffset => Convert.ToInt32(_context.Capabilities.SupportsNonConstantTextureOffset),
+                _ => 0
+            };
+        }
 
-            return 0;
+        /// <summary>
+        /// Prints a warning from the shader code translator.
+        /// </summary>
+        /// <param name="message">Warning message</param>
+        private static void PrintLog(string message)
+        {
+            Logger.PrintWarning(LogClass.Gpu, $"Shader translator: {message}");
         }
 
         /// <summary>

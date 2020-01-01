@@ -22,7 +22,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// </summary>
         public GraphicsShader()
         {
-            Shaders = new CachedShader[5];
+            Shaders = new CachedShader[Constants.ShaderStages];
         }
     }
 }

@@ -190,9 +190,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Changes the texture size.
+        /// </summary>
+        /// <remarks>
         /// This operation may also change the size of all mipmap levels, including from the parent
         /// and other possible child textures, to ensure that all sizes are consistent.
-        /// </summary>
+        /// </remarks>
         /// <param name="width">The new texture width</param>
         /// <param name="height">The new texture height</param>
         /// <param name="depthOrLayers">The new texture depth (for 3D textures) or layers (for layered textures)</param>

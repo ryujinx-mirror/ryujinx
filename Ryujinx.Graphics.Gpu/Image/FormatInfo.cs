@@ -18,13 +18,19 @@ namespace Ryujinx.Graphics.Gpu.Image
         public Format Format { get; }
 
         /// <summary>
-        /// The block width for compressed formats. Must be 1 for non-compressed formats.
+        /// The block width for compressed formats.
         /// </summary>
+        /// <remarks>
+        /// Must be 1 for non-compressed formats.
+        /// </remarks>
         public int BlockWidth { get; }
 
         /// <summary>
-        /// The block height for compressed formats. Must be 1 for non-compressed formats.
+        /// The block height for compressed formats.
         /// </summary>
+        /// <remarks>
+        /// Must be 1 for non-compressed formats.
+        /// </remarks>
         public int BlockHeight { get; }
 
         /// <summary>

@@ -187,7 +187,7 @@ namespace Ryujinx.Graphics.Gpu.State
         /// </summary>
         /// <param name="m1">First register offset</param>
         /// <param name="m2">Second register offset</param>
-        /// <param name="m3">Third  register offset</param>
+        /// <param name="m3">Third register offset</param>
         /// <returns>True if any register was modified, false otherwise</returns>
         public bool QueryModified(MethodOffset m1, MethodOffset m2, MethodOffset m3)
         {
@@ -207,7 +207,7 @@ namespace Ryujinx.Graphics.Gpu.State
         /// </summary>
         /// <param name="m1">First register offset</param>
         /// <param name="m2">Second register offset</param>
-        /// <param name="m3">Third  register offset</param>
+        /// <param name="m3">Third register offset</param>
         /// <param name="m4">Fourth register offset</param>
         /// <returns>True if any register was modified, false otherwise</returns>
         public bool QueryModified(MethodOffset m1, MethodOffset m2, MethodOffset m3, MethodOffset m4)
@@ -230,7 +230,7 @@ namespace Ryujinx.Graphics.Gpu.State
         /// </summary>
         /// <param name="m1">First register offset</param>
         /// <param name="m2">Second register offset</param>
-        /// <param name="m3">Third  register offset</param>
+        /// <param name="m3">Third register offset</param>
         /// <param name="m4">Fourth register offset</param>
         /// <param name="m5">Fifth register offset</param>
         /// <returns>True if any register was modified, false otherwise</returns>

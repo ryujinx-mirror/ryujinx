@@ -40,21 +40,17 @@ namespace Ryujinx.Graphics.Shader.Translation
             return code.Slice(0, headerSize + (int)endAddress);
         }
 
-        public static ShaderProgram Translate(Span<byte> code, QueryInfoCallback queryInfoCallback, TranslationFlags flags)
+        public static ShaderProgram Translate(Span<byte> code, TranslatorCallbacks callbacks, TranslationFlags flags)
         {
-            bool compute = (flags & TranslationFlags.Compute) != 0;
-
-            Operation[] ops = DecodeShader(code, queryInfoCallback, flags, out ShaderConfig config, out int size);
+            Operation[] ops = DecodeShader(code, callbacks, flags, out ShaderConfig config, out int size);
 
             return Translate(ops, config, size);
         }
 
-        public static ShaderProgram Translate(Span<byte> vpACode, Span<byte> vpBCode, QueryInfoCallback queryInfoCallback, TranslationFlags flags)
+        public static ShaderProgram Translate(Span<byte> vpACode, Span<byte> vpBCode, TranslatorCallbacks callbacks, TranslationFlags flags)
         {
-            bool debugMode = (flags & TranslationFlags.DebugMode) != 0;
-
-            Operation[] vpAOps = DecodeShader(vpACode, queryInfoCallback, flags, out _, out _);
-            Operation[] vpBOps = DecodeShader(vpBCode, queryInfoCallback, flags, out ShaderConfig config, out int sizeB);
+            Operation[] vpAOps = DecodeShader(vpACode, callbacks, flags, out _, out _);
+            Operation[] vpBOps = DecodeShader(vpBCode, callbacks, flags, out ShaderConfig config, out int sizeB);
 
             return Translate(Combine(vpAOps, vpBOps), config, sizeB);
         }
@@ -94,34 +90,34 @@ namespace Ryujinx.Graphics.Shader.Translation
         }
 
         private static Operation[] DecodeShader(
-            Span<byte>        code,
-            QueryInfoCallback queryInfoCallback,
-            TranslationFlags  flags,
-            out ShaderConfig  config,
-            out int           size)
+            Span<byte>          code,
+            TranslatorCallbacks callbacks,
+            TranslationFlags    flags,
+            out ShaderConfig    config,
+            out int             size)
         {
             Block[] cfg;
 
             if ((flags & TranslationFlags.Compute) != 0)
             {
-                config = new ShaderConfig(flags, queryInfoCallback);
+                config = new ShaderConfig(flags, callbacks);
 
                 cfg = Decoder.Decode(code, 0);
             }
             else
             {
-                config = new ShaderConfig(new ShaderHeader(code), flags, queryInfoCallback);
+                config = new ShaderConfig(new ShaderHeader(code), flags, callbacks);
 
                 cfg = Decoder.Decode(code, HeaderSize);
             }
 
             if (cfg == null)
             {
-                // TODO: Error.
+                config.PrintLog("Invalid branch detected, failed to build CFG.");
 
                 size = 0;
 
-                return new Operation[0];
+                return Array.Empty<Operation>();
             }
 
             EmitterContext context = new EmitterContext(config);
@@ -156,6 +152,8 @@ namespace Ryujinx.Graphics.Shader.Translation
                         else
                         {
                             instName = "???";
+
+                            config.PrintLog($"Invalid instruction at 0x{op.Address:X6} (0x{op.RawOpCode:X16}).");
                         }
 
                         string dbgComment = $"0x{op.Address:X6}: 0x{op.RawOpCode:X16} {instName}";
@@ -210,10 +208,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
                     context.CurrOp = op;
 
-                    if (op.Emitter != null)
-                    {
-                        op.Emitter(context);
-                    }
+                    op.Emitter?.Invoke(context);
 
                     if (predSkipLbl != null)
                     {

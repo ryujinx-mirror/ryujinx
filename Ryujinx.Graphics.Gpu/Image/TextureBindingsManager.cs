@@ -52,7 +52,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             _texturePoolCache = texturePoolCache;
             _isCompute        = isCompute;
 
-            int stages = isCompute ? 1 : Constants.TotalShaderStages;
+            int stages = isCompute ? 1 : Constants.ShaderStages;
 
             _textureBindings = new TextureBindingInfo[stages][];
             _imageBindings   = new TextureBindingInfo[stages][];
@@ -135,7 +135,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Ensures that the bindings are visible to the host GPU.
-        /// This actually performs the binding using the host graphics API.
+        /// Note: this actually performs the binding using the host graphics API.
         /// </summary>
         public void CommitBindings()
         {
@@ -164,7 +164,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Ensures that the texture bindings are visible to the host GPU.
-        /// This actually performs the binding using the host graphics API.
+        /// Note: this actually performs the binding using the host graphics API.
         /// </summary>
         /// <param name="pool">The current texture pool</param>
         /// <param name="stage">The shader stage using the textures to be bound</param>
@@ -242,7 +242,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Ensures that the image bindings are visible to the host GPU.
-        /// This actually performs the binding using the host graphics API.
+        /// Note: this actually performs the binding using the host graphics API.
         /// </summary>
         /// <param name="pool">The current texture pool</param>
         /// <param name="stage">The shader stage using the textures to be bound</param>

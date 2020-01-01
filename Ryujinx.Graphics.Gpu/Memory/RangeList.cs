@@ -77,9 +77,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         /// <summary>
         /// Gets the first item on the list overlapping in memory with the specified item.
+        /// </summary>
+        /// <remarks>
         /// Despite the name, this has no ordering guarantees of the returned item.
         /// It only ensures that the item returned overlaps the specified item.
-        /// </summary>
+        /// </remarks>
         /// <param name="item">Item to check for overlaps</param>
         /// <returns>The overlapping item, or the default value for the type if none found</returns>
         public T FindFirstOverlap(T item)
@@ -89,9 +91,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         /// <summary>
         /// Gets the first item on the list overlapping the specified memory range.
+        /// </summary>
+        /// <remarks>
         /// Despite the name, this has no ordering guarantees of the returned item.
         /// It only ensures that the item returned overlaps the specified memory range.
-        /// </summary>
+        /// </remarks>
         /// <param name="address">Start address of the range</param>
         /// <param name="size">Size in bytes or the rangee</param>
         /// <returns>The overlapping item, or the default value for the type if none found</returns>
@@ -157,10 +161,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         /// <summary>
         /// Gets all items overlapping with the specified item in memory.
+        /// </summary>
+        /// <remarks>
         /// This method only returns correct results if none of the items on the list overlaps with
         /// each other. If that is not the case, this method should not be used.
         /// This method is faster than the regular method to find all overlaps.
-        /// </summary>
+        /// </remarks>
         /// <param name="item">Item to check for overlaps</param>
         /// <param name="output">Output array where matches will be written. It is automatically resized to fit the results</param>
         /// <returns>The number of overlapping items found</returns>
@@ -171,10 +177,12 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         /// <summary>
         /// Gets all items on the list overlapping the specified memory range.
+        /// </summary>
+        /// <remarks>
         /// This method only returns correct results if none of the items on the list overlaps with
         /// each other. If that is not the case, this method should not be used.
         /// This method is faster than the regular method to find all overlaps.
-        /// </summary>
+        /// </remarks>
         /// <param name="address">Start address of the range</param>
         /// <param name="size">Size in bytes or the rangee</param>
         /// <param name="output">Output array where matches will be written. It is automatically resized to fit the results</param>

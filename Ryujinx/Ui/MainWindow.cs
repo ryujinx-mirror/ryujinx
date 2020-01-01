@@ -405,13 +405,13 @@ namespace Ryujinx.Ui
         /// <returns>An <see cref="IAalOutput"/> supported by this machine</returns>
         private static IAalOutput InitializeAudioEngine()
         {
-            /*if (SoundIoAudioOut.IsSupported)
-            {
-                return new SoundIoAudioOut();
-            }
-            else*/ if (OpenALAudioOut.IsSupported)
+            if (OpenALAudioOut.IsSupported)
             {
                 return new OpenALAudioOut();
+            }
+            else if (SoundIoAudioOut.IsSupported)
+            {
+                return new SoundIoAudioOut();
             }
             else
             {

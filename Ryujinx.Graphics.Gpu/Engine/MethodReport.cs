@@ -8,6 +8,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
+        private const int NsToTicksFractionNumerator = 384;
+        private const int NsToTicksFractionDenominator = 625;
+
         private ulong _runningCounter;
 
         /// <summary>
@@ -103,8 +106,10 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         /// <summary>
         /// Converts a nanoseconds timestamp value to Maxwell time ticks.
-        /// The frequency is approximately 1.63Hz.
         /// </summary>
+        /// <remarks>
+        /// The frequency is 614400000 Hz.
+        /// </remarks>
         /// <param name="nanoseconds">Timestamp in nanoseconds</param>
         /// <returns>Maxwell ticks</returns>
         private static ulong ConvertNanosecondsToTicks(ulong nanoseconds)
@@ -112,13 +117,13 @@ namespace Ryujinx.Graphics.Gpu.Engine
             // We need to divide first to avoid overflows.
             // We fix up the result later by calculating the difference and adding
             // that to the result.
-            ulong divided = nanoseconds / 625;
+            ulong divided = nanoseconds / NsToTicksFractionDenominator;
 
-            ulong rounded = divided * 625;
+            ulong rounded = divided * NsToTicksFractionDenominator;
 
-            ulong errorBias = ((nanoseconds - rounded) * 384) / 625;
+            ulong errorBias = (nanoseconds - rounded) * NsToTicksFractionNumerator / NsToTicksFractionDenominator;
 
-            return divided * 384 + errorBias;
+            return divided * NsToTicksFractionNumerator + errorBias;
         }
     }
 }

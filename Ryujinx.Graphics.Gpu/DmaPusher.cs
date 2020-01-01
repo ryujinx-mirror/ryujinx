@@ -86,7 +86,7 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// Processes a single command on the FIFO.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>True if the FIFO still has commands to be processed, false otherwise</returns>
         private bool Step()
         {
             if (_dmaGet != _dmaPut)

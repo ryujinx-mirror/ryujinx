@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Gpu
         public const int TotalCpUniformBuffers = 8;
 
         /// <summary>
-        /// Maximum number of compute storage buffers (this is a API limitation).
+        /// Maximum number of compute storage buffers (this is an API limitation).
         /// </summary>
         public const int TotalCpStorageBuffers = 16;
 
@@ -21,7 +21,7 @@ namespace Ryujinx.Graphics.Gpu
         public const int TotalGpUniformBuffers = 18;
 
         /// <summary>
-        /// Maximum number of graphics storage buffers (this is a API limitation).
+        /// Maximum number of graphics storage buffers (this is an API limitation).
         /// </summary>
         public const int TotalGpStorageBuffers = 16;
 
@@ -33,7 +33,7 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// Number of shader stages.
         /// </summary>
-        public const int TotalShaderStages = 5;
+        public const int ShaderStages = 5;
 
         /// <summary>
         /// Maximum number of vertex buffers.

@@ -24,9 +24,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Adds a new texture to the cache, even if the texture added is already on the cache.
+        /// </summary>
+        /// <remarks>
         /// Using this method is only recommended if you know that the texture is not yet on the cache,
         /// otherwise it would store the same texture more than once.
-        /// </summary>
+        /// </remarks>
         /// <param name="texture">The texture to be added to the cache</param>
         public void Add(Texture texture)
         {
@@ -48,9 +50,12 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Adds a new texture to the cache, or just moves it to the top of the list if the
-        /// texture is already on the cache. Moving the texture to the top of the list prevents
-        /// it from being deleted, as the textures on the bottom of the list are deleted when new ones are added.
+        /// texture is already on the cache.
         /// </summary>
+        /// <remarks>
+        /// Moving the texture to the top of the list prevents it from being deleted,
+        /// as the textures on the bottom of the list are deleted when new ones are added.
+        /// </remarks>
         /// <param name="texture">The texture to be added, or moved to the top</param>
         public void Lift(Texture texture)
         {

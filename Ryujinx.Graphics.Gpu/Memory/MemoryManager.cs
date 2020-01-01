@@ -39,8 +39,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         /// <summary>
         /// Maps a given range of pages to the specified CPU virtual address.
-        /// All addresses and sizes must be page aligned.
         /// </summary>
+        /// <remarks>
+        /// All addresses and sizes must be page aligned.
+        /// </remarks>
         /// <param name="pa">CPU virtual address to map into</param>
         /// <param name="va">GPU virtual address to be mapped</param>
         /// <param name="size">Size in bytes of the mapping</param>
@@ -59,7 +61,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Maps a given range of pages to a allocated GPU virtual address.
+        /// Maps a given range of pages to an allocated GPU virtual address.
         /// The memory is automatically allocated by the memory manager.
         /// </summary>
         /// <param name="pa">CPU virtual address to map into</param>
@@ -84,7 +86,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Maps a given range of pages to a allocated GPU virtual address.
+        /// Maps a given range of pages to an allocated GPU virtual address.
         /// The memory is automatically allocated by the memory manager.
         /// This also ensures that the mapping is always done in the first 4GB of GPU address space.
         /// </summary>

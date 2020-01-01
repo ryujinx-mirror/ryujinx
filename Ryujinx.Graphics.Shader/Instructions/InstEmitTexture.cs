@@ -18,7 +18,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (type == SamplerType.None)
             {
-                // TODO: Error, encoding is invalid.
+                context.Config.PrintLog("Invalid image store sampler type.");
 
                 return;
             }
@@ -86,7 +86,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else
             {
-                // TODO.
+                context.Config.PrintLog("Unsized image store not supported.");
             }
 
             Operand[] sources = sourcesList.ToArray();
@@ -180,7 +180,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 if (type == SamplerType.None)
                 {
-                    // TODO: Error, encoding is invalid.
+                    context.Config.PrintLog("Invalid texture sampler type.");
 
                     return;
                 }
@@ -210,40 +210,40 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 {
                     switch (texsOp.Target)
                     {
-                        case Decoders.TextureTarget.Texture1DLodZero:
+                        case TextureTarget.Texture1DLodZero:
                             sourcesList.Add(Ra());
                             break;
 
-                        case Decoders.TextureTarget.Texture2D:
+                        case TextureTarget.Texture2D:
                             sourcesList.Add(Ra());
                             sourcesList.Add(Rb());
                             break;
 
-                        case Decoders.TextureTarget.Texture2DLodZero:
-                            sourcesList.Add(Ra());
-                            sourcesList.Add(Rb());
-                            sourcesList.Add(ConstF(0));
-                            break;
-
-                        case Decoders.TextureTarget.Texture2DLodLevel:
-                        case Decoders.TextureTarget.Texture2DDepthCompare:
-                        case Decoders.TextureTarget.Texture3D:
-                        case Decoders.TextureTarget.TextureCube:
-                            sourcesList.Add(Ra());
-                            sourcesList.Add(Ra());
-                            sourcesList.Add(Rb());
-                            break;
-
-                        case Decoders.TextureTarget.Texture2DLodZeroDepthCompare:
-                        case Decoders.TextureTarget.Texture3DLodZero:
-                            sourcesList.Add(Ra());
+                        case TextureTarget.Texture2DLodZero:
                             sourcesList.Add(Ra());
                             sourcesList.Add(Rb());
                             sourcesList.Add(ConstF(0));
                             break;
 
-                        case Decoders.TextureTarget.Texture2DLodLevelDepthCompare:
-                        case Decoders.TextureTarget.TextureCubeLodLevel:
+                        case TextureTarget.Texture2DLodLevel:
+                        case TextureTarget.Texture2DDepthCompare:
+                        case TextureTarget.Texture3D:
+                        case TextureTarget.TextureCube:
+                            sourcesList.Add(Ra());
+                            sourcesList.Add(Ra());
+                            sourcesList.Add(Rb());
+                            break;
+
+                        case TextureTarget.Texture2DLodZeroDepthCompare:
+                        case TextureTarget.Texture3DLodZero:
+                            sourcesList.Add(Ra());
+                            sourcesList.Add(Ra());
+                            sourcesList.Add(Rb());
+                            sourcesList.Add(ConstF(0));
+                            break;
+
+                        case TextureTarget.Texture2DLodLevelDepthCompare:
+                        case TextureTarget.TextureCubeLodLevel:
                             sourcesList.Add(Ra());
                             sourcesList.Add(Ra());
                             sourcesList.Add(Rb());
@@ -258,7 +258,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 if (type == SamplerType.None)
                 {
-                    // TODO: Error, encoding is invalid.
+                    context.Config.PrintLog("Invalid texel fetch sampler type.");
 
                     return;
                 }
@@ -742,8 +742,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             OpCodeTexture op = (OpCodeTexture)context.CurrOp;
 
-            bool isBindless = (flags & TextureFlags.Bindless)  != 0;
-            bool intCoords  = (flags & TextureFlags.IntCoords) != 0;
+            bool isBindless = (flags & TextureFlags.Bindless) != 0;
 
             if (op.Rd.IsRZ)
             {
@@ -920,36 +919,36 @@ namespace Ryujinx.Graphics.Shader.Instructions
             throw new ArgumentException($"Invalid texture dimensions \"{dimensions}\".");
         }
 
-        private static SamplerType ConvertSamplerType(Decoders.TextureTarget type)
+        private static SamplerType ConvertSamplerType(TextureTarget type)
         {
             switch (type)
             {
-                case Decoders.TextureTarget.Texture1DLodZero:
+                case TextureTarget.Texture1DLodZero:
                     return SamplerType.Texture1D;
 
-                case Decoders.TextureTarget.Texture2D:
-                case Decoders.TextureTarget.Texture2DLodZero:
-                case Decoders.TextureTarget.Texture2DLodLevel:
+                case TextureTarget.Texture2D:
+                case TextureTarget.Texture2DLodZero:
+                case TextureTarget.Texture2DLodLevel:
                     return SamplerType.Texture2D;
 
-                case Decoders.TextureTarget.Texture2DDepthCompare:
-                case Decoders.TextureTarget.Texture2DLodLevelDepthCompare:
-                case Decoders.TextureTarget.Texture2DLodZeroDepthCompare:
+                case TextureTarget.Texture2DDepthCompare:
+                case TextureTarget.Texture2DLodLevelDepthCompare:
+                case TextureTarget.Texture2DLodZeroDepthCompare:
                     return SamplerType.Texture2D | SamplerType.Shadow;
 
-                case Decoders.TextureTarget.Texture2DArray:
-                case Decoders.TextureTarget.Texture2DArrayLodZero:
+                case TextureTarget.Texture2DArray:
+                case TextureTarget.Texture2DArrayLodZero:
                     return SamplerType.Texture2D | SamplerType.Array;
 
-                case Decoders.TextureTarget.Texture2DArrayLodZeroDepthCompare:
+                case TextureTarget.Texture2DArrayLodZeroDepthCompare:
                     return SamplerType.Texture2D | SamplerType.Array | SamplerType.Shadow;
 
-                case Decoders.TextureTarget.Texture3D:
-                case Decoders.TextureTarget.Texture3DLodZero:
+                case TextureTarget.Texture3D:
+                case TextureTarget.Texture3DLodZero:
                     return SamplerType.Texture3D;
 
-                case Decoders.TextureTarget.TextureCube:
-                case Decoders.TextureTarget.TextureCubeLodLevel:
+                case TextureTarget.TextureCube:
+                case TextureTarget.TextureCubeLodLevel:
                     return SamplerType.TextureCube;
             }
 
@@ -987,22 +986,22 @@ namespace Ryujinx.Graphics.Shader.Instructions
         {
             switch (type)
             {
-                case Decoders.TextureTarget.Texture1DLodZero:
-                case Decoders.TextureTarget.Texture2DLodZero:
-                case Decoders.TextureTarget.Texture2DLodLevel:
-                case Decoders.TextureTarget.Texture2DLodLevelDepthCompare:
-                case Decoders.TextureTarget.Texture2DLodZeroDepthCompare:
-                case Decoders.TextureTarget.Texture2DArrayLodZero:
-                case Decoders.TextureTarget.Texture2DArrayLodZeroDepthCompare:
-                case Decoders.TextureTarget.Texture3DLodZero:
-                case Decoders.TextureTarget.TextureCubeLodLevel:
+                case TextureTarget.Texture1DLodZero:
+                case TextureTarget.Texture2DLodZero:
+                case TextureTarget.Texture2DLodLevel:
+                case TextureTarget.Texture2DLodLevelDepthCompare:
+                case TextureTarget.Texture2DLodZeroDepthCompare:
+                case TextureTarget.Texture2DArrayLodZero:
+                case TextureTarget.Texture2DArrayLodZeroDepthCompare:
+                case TextureTarget.Texture3DLodZero:
+                case TextureTarget.TextureCubeLodLevel:
                     return TextureFlags.LodLevel;
 
-                case Decoders.TextureTarget.Texture2D:
-                case Decoders.TextureTarget.Texture2DDepthCompare:
-                case Decoders.TextureTarget.Texture2DArray:
-                case Decoders.TextureTarget.Texture3D:
-                case Decoders.TextureTarget.TextureCube:
+                case TextureTarget.Texture2D:
+                case TextureTarget.Texture2DDepthCompare:
+                case TextureTarget.Texture2DArray:
+                case TextureTarget.Texture3D:
+                case TextureTarget.TextureCube:
                     return TextureFlags.None;
             }
 

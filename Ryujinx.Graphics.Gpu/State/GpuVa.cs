@@ -11,7 +11,7 @@ namespace Ryujinx.Graphics.Gpu.State
         /// <summary>
         /// Packs the split address into a 64-bits address value.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The 64-bits address value</returns>
         public ulong Pack()
         {
             return Low | ((ulong)High << 32);

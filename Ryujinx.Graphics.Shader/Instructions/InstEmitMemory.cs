@@ -86,6 +86,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 context.Barrier();
             }
+            else
+            {
+                context.Config.PrintLog($"Invalid barrier mode: {op.Mode}.");
+            }
         }
 
         public static void Ipa(EmitterContext context)
@@ -100,8 +104,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
 
             Operand srcA = Attribute(op.AttributeOffset, iq);
-
-            Operand srcB = GetSrcB(context);
 
             Operand res = context.FPSaturate(srcA, op.Saturate);
 
@@ -128,7 +130,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (op.Size > IntegerSize.B64)
             {
-                // TODO: Warning.
+                context.Config.PrintLog($"Invalid LDC size: {op.Size}.");
             }
 
             bool isSmallInt = op.Size < IntegerSize.B32;
@@ -156,7 +158,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
                 if (isSmallInt)
                 {
-                    value = ExtractSmallInt(context, op.Size, wordOffset, value);
+                    value = ExtractSmallInt(context, op.Size, bitOffset, value);
                 }
 
                 context.Copy(Register(rd), value);
@@ -261,7 +263,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                     else
                     {
-                        // Not supported or invalid.
+                        context.Config.PrintLog($"Invalid reduction type: {type}.");
                     }
                     break;
                 case AtomicOp.BitwiseAnd:
@@ -271,7 +273,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                     else
                     {
-                        // Not supported or invalid.
+                        context.Config.PrintLog($"Invalid reduction type: {type}.");
                     }
                     break;
                 case AtomicOp.BitwiseExclusiveOr:
@@ -281,7 +283,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                     else
                     {
-                        // Not supported or invalid.
+                        context.Config.PrintLog($"Invalid reduction type: {type}.");
                     }
                     break;
                 case AtomicOp.BitwiseOr:
@@ -291,7 +293,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                     else
                     {
-                        // Not supported or invalid.
+                        context.Config.PrintLog($"Invalid reduction type: {type}.");
                     }
                     break;
                 case AtomicOp.Maximum:
@@ -305,7 +307,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                     else
                     {
-                        // Not supported or invalid.
+                        context.Config.PrintLog($"Invalid reduction type: {type}.");
                     }
                     break;
                 case AtomicOp.Minimum:
@@ -319,7 +321,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                     else
                     {
-                        // Not supported or invalid.
+                        context.Config.PrintLog($"Invalid reduction type: {type}.");
                     }
                     break;
             }
@@ -333,7 +335,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (op.Size > IntegerSize.B128)
             {
-                // TODO: Warning.
+                context.Config.PrintLog($"Invalid load size: {op.Size}.");
             }
 
             bool isSmallInt = op.Size < IntegerSize.B32;
@@ -419,7 +421,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (op.Size > IntegerSize.B128)
             {
-                // TODO: Warning.
+                context.Config.PrintLog($"Invalid store size: {op.Size}.");
             }
 
             bool isSmallInt = op.Size < IntegerSize.B32;

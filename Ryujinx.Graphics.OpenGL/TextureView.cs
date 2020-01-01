@@ -104,6 +104,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             GL.TexParameter(target, TextureParameterName.TextureMaxLevel, maxLevel);
 
+            // TODO: This requires ARB_stencil_texturing, we should uncomment and test this.
             // GL.TexParameter(target, TextureParameterName.DepthStencilTextureMode, (int)_info.DepthStencilMode.Convert());
         }
 
@@ -118,7 +119,11 @@ namespace Ryujinx.Graphics.OpenGL
             }
             else
             {
-                // TODO: Improve
+                // TODO: Most graphics APIs doesn't support creating a texture view from a compressed format
+                // with a non-compressed format (or vice-versa), however NVN seems to support it.
+                // So we emulate that here with a texture copy (see the first CopyTo overload).
+                // However right now it only does a single copy right after the view is created,
+                // so it doesn't work for all cases.
                 TextureView emulatedView = (TextureView)_renderer.CreateTexture(info);
 
                 emulatedView._emulatedViewParent = this;

@@ -16,30 +16,30 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public TranslationFlags Flags { get; }
 
-        private QueryInfoCallback _queryInfoCallback;
+        private TranslatorCallbacks _callbacks;
 
-        public ShaderConfig(TranslationFlags flags, QueryInfoCallback queryInfoCallback)
+        public ShaderConfig(TranslationFlags flags, TranslatorCallbacks callbacks)
         {
-            Stage              = ShaderStage.Compute;
-            OutputTopology     = OutputTopology.PointList;
-            MaxOutputVertices  = 0;
-            OmapTargets        = null;
-            OmapSampleMask     = false;
-            OmapDepth          = false;
-            Flags              = flags;
-            _queryInfoCallback = queryInfoCallback;
+            Stage             = ShaderStage.Compute;
+            OutputTopology    = OutputTopology.PointList;
+            MaxOutputVertices = 0;
+            OmapTargets       = null;
+            OmapSampleMask    = false;
+            OmapDepth         = false;
+            Flags             = flags;
+            _callbacks        = callbacks;
         }
 
-        public ShaderConfig(ShaderHeader header, TranslationFlags flags, QueryInfoCallback queryInfoCallback)
+        public ShaderConfig(ShaderHeader header, TranslationFlags flags, TranslatorCallbacks callbacks)
         {
-            Stage              = header.Stage;
-            OutputTopology     = header.OutputTopology;
-            MaxOutputVertices  = header.MaxOutputVertexCount;
-            OmapTargets        = header.OmapTargets;
-            OmapSampleMask     = header.OmapSampleMask;
-            OmapDepth          = header.OmapDepth;
-            Flags              = flags;
-            _queryInfoCallback = queryInfoCallback;
+            Stage             = header.Stage;
+            OutputTopology    = header.OutputTopology;
+            MaxOutputVertices = header.MaxOutputVertexCount;
+            OmapTargets       = header.OmapTargets;
+            OmapSampleMask    = header.OmapSampleMask;
+            OmapDepth         = header.OmapDepth;
+            Flags             = flags;
+            _callbacks        = callbacks;
         }
 
         public int GetDepthRegister()
@@ -68,9 +68,9 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public int QueryInfo(QueryInfoName info, int index = 0)
         {
-            if (_queryInfoCallback != null)
+            if (_callbacks.QueryInfo != null)
             {
-                return _queryInfoCallback(info, index);
+                return _callbacks.QueryInfo(info, index);
             }
             else
             {
@@ -86,8 +86,6 @@ namespace Ryujinx.Graphics.Shader.Translation
                         return Convert.ToInt32(false);
                     case QueryInfoName.IsTextureRectangle:
                         return Convert.ToInt32(false);
-                    case QueryInfoName.MaximumViewportDimensions:
-                        return 0x8000;
                     case QueryInfoName.PrimitiveTopology:
                         return (int)InputTopology.Points;
                     case QueryInfoName.StorageBufferOffsetAlignment:
@@ -98,6 +96,11 @@ namespace Ryujinx.Graphics.Shader.Translation
             }
 
             return 0;
+        }
+
+        public void PrintLog(string message)
+        {
+            _callbacks.PrintLog?.Invoke(message);
         }
     }
 }

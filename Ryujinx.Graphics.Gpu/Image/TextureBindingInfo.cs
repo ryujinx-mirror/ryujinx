@@ -21,8 +21,10 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Indicates if the texture is a bindless texture.
-        /// For those textures, Handle is ignored.
         /// </summary>
+        /// <remarks>
+        /// For those textures, Handle is ignored.
+        /// </remarks>
         public bool IsBindless { get; }
 
         /// <summary>

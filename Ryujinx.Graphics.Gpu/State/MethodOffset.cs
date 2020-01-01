@@ -3,6 +3,9 @@ namespace Ryujinx.Graphics.Gpu.State
     /// <summary>
     /// GPU method offset.
     /// </summary>
+    /// <remarks>
+    /// This is indexed in 32 bits word.
+    /// </remarks>
     enum MethodOffset
     {
         I2mParams                       = 0x60,

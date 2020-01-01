@@ -13,6 +13,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         private ShaderConfig _config;
 
+        public ShaderConfig Config => _config;
+
         private List<Operation> _operations;
 
         private Dictionary<ulong, Operand> _labels;

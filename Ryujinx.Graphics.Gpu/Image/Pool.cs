@@ -17,8 +17,10 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// The maximum ID value of resources on the pool (inclusive).
-        /// The maximum amount of resources on the pool is equal to this value plus one.
         /// </summary>
+        /// <remarks>
+        /// The maximum amount of resources on the pool is equal to this value plus one.
+        /// </remarks>
         public int MaximumId { get; }
 
         /// <summary>

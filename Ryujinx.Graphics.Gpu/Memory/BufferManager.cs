@@ -76,10 +76,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
             _cpStorageBuffers = new BuffersPerStage(Constants.TotalCpStorageBuffers);
             _cpUniformBuffers = new BuffersPerStage(Constants.TotalCpUniformBuffers);
 
-            _gpStorageBuffers = new BuffersPerStage[Constants.TotalShaderStages];
-            _gpUniformBuffers = new BuffersPerStage[Constants.TotalShaderStages];
+            _gpStorageBuffers = new BuffersPerStage[Constants.ShaderStages];
+            _gpUniformBuffers = new BuffersPerStage[Constants.ShaderStages];
 
-            for (int index = 0; index < Constants.TotalShaderStages; index++)
+            for (int index = 0; index < Constants.ShaderStages; index++)
             {
                 _gpStorageBuffers[index] = new BuffersPerStage(Constants.TotalGpStorageBuffers);
                 _gpUniformBuffers[index] = new BuffersPerStage(Constants.TotalGpUniformBuffers);
@@ -387,7 +387,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         /// <summary>
         /// Ensures that the compute engine bindings are visible to the host GPU.
-        /// This actually performs the binding using the host graphics API.
+        /// Note: this actually performs the binding using the host graphics API.
         /// </summary>
         public void CommitComputeBindings()
         {
@@ -439,7 +439,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         /// <summary>
         /// Ensures that the graphics engine bindings are visible to the host GPU.
-        /// This actually performs the binding using the host graphics API.
+        /// Note: this actually performs the binding using the host graphics API.
         /// </summary>
         public void CommitBindings()
         {
@@ -543,11 +543,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// This binds buffer into the host API, or updates data for already bound buffers.
+        /// This binds buffers into the host API, or updates data for already bound buffers.
         /// </summary>
         /// <param name="bindings">Bindings to bind or update</param>
         /// <param name="bind">True to bind, false to update</param>
-        /// <param name="isStorage">True to bind as storage buffer, false to bind as uniform buffers</param>
+        /// <param name="isStorage">True to bind as storage buffer, false to bind as uniform buffer</param>
         private void BindOrUpdateBuffers(BuffersPerStage[] bindings, bool bind, bool isStorage = false)
         {
             for (ShaderStage stage = ShaderStage.Vertex; stage <= ShaderStage.Fragment; stage++)
@@ -608,8 +608,10 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         /// <summary>
         /// Copy a buffer data from a given address to another.
-        /// This does a GPU side copy.
         /// </summary>
+        /// <remarks>
+        /// This does a GPU side copy.
+        /// </remarks>
         /// <param name="srcVa">GPU virtual address of the copy source</param>
         /// <param name="dstVa">GPU virtual address of the copy destination</param>
         /// <param name="size">Size in bytes of the copy</param>

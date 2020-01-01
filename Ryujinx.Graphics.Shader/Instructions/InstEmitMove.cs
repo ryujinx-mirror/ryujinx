@@ -11,8 +11,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
     {
         public static void Mov(EmitterContext context)
         {
-            OpCodeAlu op = (OpCodeAlu)context.CurrOp;
-
             context.Copy(GetDest(context), GetSrcB(context));
         }
 
@@ -33,7 +31,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (isCC)
             {
-                // TODO.
+                // TODO: Support Register to condition code flags copy.
+                context.Config.PrintLog("R2P.CC not implemented.");
             }
             else
             {

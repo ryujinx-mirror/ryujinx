@@ -753,9 +753,11 @@ namespace Ryujinx.Graphics.Gpu.Image
 
         /// <summary>
         /// Removes a texture from the cache.
+        /// </summary>
+        /// <remarks>
         /// This only removes the texture from the internal list, not from the auto-deletion cache.
         /// It may still have live references after the removal.
-        /// </summary>
+        /// </remarks>
         /// <param name="texture">The texture to be removed</param>
         public void RemoveTextureFromCache(Texture texture)
         {

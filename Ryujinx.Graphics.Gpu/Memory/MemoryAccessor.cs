@@ -50,7 +50,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// Reads a structure from GPU mapped memory.
         /// </summary>
         /// <typeparam name="T">Type of the structure</typeparam>
-        /// <param name="gpuVa">GPU virtual address where the strcture is located</param>
+        /// <param name="gpuVa">GPU virtual address where the structure is located</param>
         /// <returns>The structure at the specified memory location</returns>
         public T Read<T>(ulong gpuVa) where T : struct
         {

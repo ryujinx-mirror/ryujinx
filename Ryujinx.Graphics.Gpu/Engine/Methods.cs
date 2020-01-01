@@ -48,7 +48,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             ShaderCache = new ShaderCache(_context);
 
-            _currentProgramInfo = new ShaderProgramInfo[Constants.TotalShaderStages];
+            _currentProgramInfo = new ShaderProgramInfo[Constants.ShaderStages];
 
             BufferManager  = new BufferManager(context);
             TextureManager = new TextureManager(context);
@@ -201,7 +201,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         /// <summary>
         /// Ensures that the bindings are visible to the host GPU.
-        /// This actually performs the binding using the host graphics API.
+        /// Note: this actually performs the binding using the host graphics API.
         /// </summary>
         private void CommitBindings()
         {
@@ -622,7 +622,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
         /// <summary>
         /// Updates host render target color masks, based on guest GPU state.
-        /// This defines with color channels are written to each color buffer.
+        /// This defines which color channels are written to each color buffer.
         /// </summary>
         /// <param name="state">Current GPU state</param>
         private void UpdateRtColorMask(GpuState state)
@@ -739,7 +739,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             _vsUsesInstanceId = gs.Shaders[0].Program.Info.UsesInstanceId;
 
-            for (int stage = 0; stage < Constants.TotalShaderStages; stage++)
+            for (int stage = 0; stage < Constants.ShaderStages; stage++)
             {
                 ShaderProgramInfo info = gs.Shaders[stage].Program?.Info;
 
@@ -845,7 +845,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                     return Target.CubemapArray;
             }
 
-            // TODO: Warning.
+            Logger.PrintWarning(LogClass.Gpu, $"Invalid sampler type \"{type}\".");
 
             return Target.Texture2D;
         }
@@ -855,8 +855,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// This waits until previous texture writes from the GPU to finish, before
         /// performing new operations with said textures.
         /// </summary>
-        /// <param name="state">Current GPU state</param>
-        /// <param name="argument">Method call argument</param>
+        /// <param name="state">Current GPU state (unused)</param>
+        /// <param name="argument">Method call argument (unused)</param>
         private void TextureBarrier(GpuState state, int argument)
         {
             _context.Renderer.Pipeline.TextureBarrier();
@@ -865,8 +865,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <summary>
         /// Invalidates all modified textures on the cache.
         /// </summary>
-        /// <param name="state">Current GPU state</param>
-        /// <param name="argument">Method call argument</param>
+        /// <param name="state">Current GPU state (unused)</param>
+        /// <param name="argument">Method call argument (unused)</param>
         private void InvalidateTextures(GpuState state, int argument)
         {
             TextureManager.Flush();
@@ -880,8 +880,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// and current access has the same access patterns.
         /// This may be faster than the regular barrier on tile-based rasterizers.
         /// </summary>
-        /// <param name="state"></param>
-        /// <param name="argument"></param>
+        /// <param name="state">Current GPU state (unused)</param>
+        /// <param name="argument">Method call argument (unused)</param>
         private void TextureBarrierTiled(GpuState state, int argument)
         {
             _context.Renderer.Pipeline.TextureBarrierTiled();

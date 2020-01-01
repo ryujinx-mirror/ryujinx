@@ -53,9 +53,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         /// <summary>
         /// Gets a sub-range from the buffer.
-        /// This can be used to bind and use sub-ranges of the buffer on the host API.
         /// </summary>
-        /// <param name="address">Start address of the sub-range, must be greater or equal to the buffer address</param>
+        /// <remarks>
+        /// This can be used to bind and use sub-ranges of the buffer on the host API.
+        /// </remarks>
+        /// <param name="address">Start address of the sub-range, must be greater than or equal to the buffer address</param>
         /// <param name="size">Size in bytes of the sub-range, must be less than or equal to the buffer size</param>
         /// <returns>The buffer sub-range</returns>
         public BufferRange GetRange(ulong address, ulong size)
@@ -78,9 +80,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
         /// <summary>
         /// Performs guest to host memory synchronization of the buffer data.
+        /// </summary>
+        /// <remarks>
         /// This causes the buffer data to be overwritten if a write was detected from the CPU,
         /// since the last call to this method.
-        /// </summary>
+        /// </remarks>
         /// <param name="address">Start address of the range to synchronize</param>
         /// <param name="size">Size in bytes of the range to synchronize</param>
         public void SynchronizeMemory(ulong address, ulong size)

@@ -91,10 +91,5 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
 
             return indentation;
         }
-
-        public string GetTabString()
-        {
-            return Tab;
-        }
     }
 }

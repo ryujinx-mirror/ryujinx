@@ -8,7 +8,6 @@ namespace Ryujinx.Graphics.Shader
         ComputeSharedMemorySize,
         IsTextureBuffer,
         IsTextureRectangle,
-        MaximumViewportDimensions,
         PrimitiveTopology,
         StorageBufferOffsetAlignment,
         SupportsNonConstantTextureOffset

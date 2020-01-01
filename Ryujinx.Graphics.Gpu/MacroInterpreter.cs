@@ -388,7 +388,7 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// Extracts a 32-bits signed integer constant from the current operation code.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The 32-bits immediate value encoded at the current operation code</returns>
         private int GetImm()
         {
             // Note: The immediate is signed, the sign-extension is intended here.
