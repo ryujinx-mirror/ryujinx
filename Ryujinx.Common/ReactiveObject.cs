@@ -6,7 +6,8 @@ namespace Ryujinx.Common
     public class ReactiveObject<T>
     {
         private ReaderWriterLock _readerWriterLock = new ReaderWriterLock();
-        private T                _value;
+        private bool _isInitialized = false;
+        private T _value;
 
         public event EventHandler<ReactiveEventArgs<T>> Event;
 
@@ -25,12 +26,15 @@ namespace Ryujinx.Common
                 _readerWriterLock.AcquireWriterLock(Timeout.Infinite);
 
                 T oldValue = _value;
-                
-                _value = value;
+
+                bool oldIsInitialized = _isInitialized;
+
+                _isInitialized = true;
+                _value         = value;
 
                 _readerWriterLock.ReleaseWriterLock();
 
-                if (oldValue == null || !oldValue.Equals(_value))
+                if (!oldIsInitialized || !oldValue.Equals(_value))
                 {
                     Event?.Invoke(this, new ReactiveEventArgs<T>(oldValue, value));
                 }
