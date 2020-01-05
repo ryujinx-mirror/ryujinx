@@ -1,22 +1,21 @@
 using Gtk;
+using JsonPrettyPrinterPlus;
 using Ryujinx.Audio;
 using Ryujinx.Common.Logging;
+using Ryujinx.Configuration;
 using Ryujinx.Graphics.Gal;
 using Ryujinx.Graphics.Gal.OpenGL;
+using Ryujinx.HLE.FileSystem;
 using Ryujinx.Profiler;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using Ryujinx.Configuration;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Utf8Json;
-using JsonPrettyPrinterPlus;
 using Utf8Json.Resolvers;
-using Ryujinx.HLE.FileSystem;
-
 
 using GUI = Gtk.Builder.ObjectAttribute;
 
@@ -74,12 +73,28 @@ namespace Ryujinx.Ui
 
             _gameTable.ButtonReleaseEvent += Row_Clicked;
 
+            bool continueWithStartup = Migration.PromptIfMigrationNeededForStartup(this, out bool migrationNeeded);
+            if (!continueWithStartup)          
+            {
+                End();
+            }
+
             _renderer = new OglRenderer();
 
             _audioOut = InitializeAudioEngine();
 
             // TODO: Initialization and dispose of HLE.Switch when starting/stoping emulation.
             _device = InitializeSwitchInstance();
+
+            if (migrationNeeded)
+            {
+                bool migrationSuccessful = Migration.DoMigrationForStartup(this, _device);
+
+                if (!migrationSuccessful)
+                {
+                    End();
+                }
+            }
 
             _treeView = _gameTable;
 
@@ -198,7 +213,9 @@ namespace Ryujinx.Ui
 
             _tableStore.Clear();
 
-            await Task.Run(() => ApplicationLibrary.LoadApplications(ConfigurationState.Instance.Ui.GameDirs, _device.System.KeySet, _device.System.State.DesiredTitleLanguage));
+            await Task.Run(() => ApplicationLibrary.LoadApplications(ConfigurationState.Instance.Ui.GameDirs,
+                _device.System.KeySet, _device.System.State.DesiredTitleLanguage, _device.System.FsClient,
+                _device.FileSystem));
 
             _updatingGameTable = false;
         }
@@ -377,8 +394,8 @@ namespace Ryujinx.Ui
             }
 
             Profile.FinishProfiling();
-            _device.Dispose();
-            _audioOut.Dispose();
+            _device?.Dispose();
+            _audioOut?.Dispose();
             Logger.Shutdown();
             Environment.Exit(0);
         }
@@ -474,7 +491,7 @@ namespace Ryujinx.Ui
 
             if (treeIter.UserData == IntPtr.Zero) return;
 
-            GameTableContextMenu contextMenu = new GameTableContextMenu(_tableStore, treeIter);
+            GameTableContextMenu contextMenu = new GameTableContextMenu(_tableStore, treeIter, _device.System.FsClient);
             contextMenu.ShowAll();
             contextMenu.PopupAtPointer(null);
         }

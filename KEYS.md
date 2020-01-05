@@ -6,7 +6,7 @@ Keys are required for decrypting most of the file formats used by the Nintendo S
 * `prod.keys` - Contains common keys used by all Nintendo Switch devices.
 * `title.keys` - Contains game-specific keys.
 
-Ryujinx will first look for keys in `RyuFS/system`, and if it doesn't find any there it will look in `$HOME/.switch`.
+Ryujinx will first look for keys in `Ryujinx/system`, and if it doesn't find any there it will look in `$HOME/.switch`.
 To dump your `prod.keys` and `title.keys` please follow these following steps.
 1.	First off learn how to boot into RCM mode and inject payloads if you haven't already. This can be done [here](https://nh-server.github.io/switch-guide/).
 2.	Make sure you have an SD card with the latest release of [Atmosphere](https://github.com/Atmosphere-NX/Atmosphere/releases) inserted into your Nintendo Switch.
@@ -18,7 +18,7 @@ To dump your `prod.keys` and `title.keys` please follow these following steps.
 8.	After its completion press any button to return to the main menu of Lockpick_RCM.
 9.	Navigate to and select `Power off` if you have an SD card reader. Or you could Navigate and select `Reboot (RCM)` if you want to mount your SD card using `TegraRCMGUI > Tools > Memloader V3 > MMC - SD Card`.
 10.	You can find your keys in `sd:/switch/prod.keys` and `sd:/switch/title.keys` respectively.
-11. Copy these files and paste them in `RyuFS/system`.
+11. Copy these files and paste them in `Ryujinx/system`.
 And you're done!
 
 ## Title keys

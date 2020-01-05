@@ -21,7 +21,7 @@ namespace Ryujinx.HLE
 
         internal NvGpu Gpu { get; private set; }
 
-        internal VirtualFileSystem FileSystem { get; private set; }
+        public VirtualFileSystem FileSystem { get; private set; }
 
         public Horizon System { get; private set; }
 

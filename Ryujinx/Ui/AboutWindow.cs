@@ -40,21 +40,8 @@ namespace Ryujinx.Ui
             _discordLogo.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.DiscordLogo.png", 30 , 30 );
             _twitterLogo.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.TwitterLogo.png", 30 , 30 );
 
-            try
-            {
-                IJsonFormatterResolver resolver = CompositeResolver.Create(new[] { StandardResolver.AllowPrivateSnakeCase });
-
-                using (Stream stream = File.OpenRead(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RyuFS", "Installer", "Config", "Config.json")))
-                {
-                    AboutInformation = JsonSerializer.Deserialize<AboutInfo>(stream, resolver);
-                }
-
-                _versionText.Text = $"Version {AboutInformation.InstallVersion} - {AboutInformation.InstallBranch} ({AboutInformation.InstallCommit})";
-            }
-            catch
-            {
-                _versionText.Text = "Unknown Version";
-            }
+            // todo: Get version string
+            _versionText.Text = "Unknown Version";
         }
 
         private static void OpenUrl(string url)

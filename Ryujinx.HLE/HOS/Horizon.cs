@@ -1,8 +1,10 @@
 using LibHac;
+using LibHac.Common;
 using LibHac.Fs;
 using LibHac.FsService;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
+using LibHac.Ns;
 using LibHac.Spl;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem.Content;
@@ -103,7 +105,7 @@ namespace Ryujinx.HLE.HOS
 
         private bool _hasStarted;
 
-        public Nacp ControlData { get; set; }
+        public BlitStruct<ApplicationControlProperty> ControlData { get; set; }
 
         public string TitleName { get; private set; }
 
@@ -116,11 +118,13 @@ namespace Ryujinx.HLE.HOS
         internal long HidBaseAddress { get; private set; }
 
         internal FileSystemServer FsServer { get; private set; }
+        public FileSystemClient FsClient { get; private set; }
+
         internal EmulatedGameCard GameCard { get; private set; }
 
         public Horizon(Switch device)
         {
-            ControlData = new Nacp();
+            ControlData = new BlitStruct<ApplicationControlProperty>(1);
 
             Device = device;
 
@@ -245,6 +249,7 @@ namespace Ryujinx.HLE.HOS
             };
 
             FsServer = new FileSystemServer(fsServerConfig);
+            FsClient = FsServer.CreateFileSystemClient();
         }
 
         public void LoadCart(string exeFsDir, string romFsFile = null)
@@ -350,6 +355,10 @@ namespace Ryujinx.HLE.HOS
             {
                 ReadControlData(controlNca);
             }
+            else
+            {
+                ControlData.ByteSpan.Clear();
+            }
 
             return (mainNca, patchNca, controlNca);
         }
@@ -362,9 +371,23 @@ namespace Ryujinx.HLE.HOS
 
             if (result.IsSuccess())
             {
-                ControlData = new Nacp(controlFile.AsStream());
+                result = controlFile.Read(out long bytesRead, 0, ControlData.ByteSpan, ReadOption.None);
 
-                TitleName = ControlData.Descriptions[(int)State.DesiredTitleLanguage].Title;
+                if (result.IsSuccess() && bytesRead == ControlData.ByteSpan.Length)
+                {
+                    TitleName = ControlData.Value
+                        .Titles[(int) State.DesiredTitleLanguage].Name.ToString();
+
+                    if (string.IsNullOrWhiteSpace(TitleName))
+                    {
+                        TitleName = ControlData.Value.Titles.ToArray()
+                            .FirstOrDefault(x => x.Name[0] != 0).Name.ToString();
+                    }
+                }
+            }
+            else
+            {
+                ControlData.ByteSpan.Clear();
             }
         }
 
@@ -489,33 +512,16 @@ namespace Ryujinx.HLE.HOS
             }
 
             LoadExeFs(codeFs, out Npdm metaData);
-
-            Nacp ReadControlData()
-            {
-                IFileSystem controlRomfs = controlNca.OpenFileSystem(NcaSectionType.Data, FsIntegrityCheckLevel);
-
-                controlRomfs.OpenFile(out IFile controlFile, "/control.nacp", OpenMode.Read).ThrowIfFailure();
-
-                Nacp controlData = new Nacp(controlFile.AsStream());
-
-                TitleName = controlData.Descriptions[(int)State.DesiredTitleLanguage].Title;
-                TitleId   = metaData.Aci0.TitleId.ToString("x16");
-
-                if (string.IsNullOrWhiteSpace(TitleName))
-                {
-                    TitleName = controlData.Descriptions.ToList().Find(x => !string.IsNullOrWhiteSpace(x.Title)).Title;
-                }
-
-                return controlData;
-            }
+            
+            TitleId = metaData.Aci0.TitleId.ToString("x16");
 
             if (controlNca != null)
             {
-                ReadControlData();
+                ReadControlData(controlNca);
             }
             else
             {
-                TitleId = metaData.Aci0.TitleId.ToString("x16");
+                ControlData.ByteSpan.Clear();
             }
         }
 
@@ -613,28 +619,28 @@ namespace Ryujinx.HLE.HOS
                             if (nacpSize != 0)
                             {
                                 input.Seek(obj.FileSize + (long)nacpOffset, SeekOrigin.Begin);
-                                using (MemoryStream stream = new MemoryStream(reader.ReadBytes((int)nacpSize)))
-                                {
-                                    ControlData = new Nacp(stream);
-                                }
 
-                                metaData.TitleName = ControlData.Descriptions[(int)State.DesiredTitleLanguage].Title;
+                                reader.Read(ControlData.ByteSpan);
+
+                                ref ApplicationControlProperty nacp = ref ControlData.Value;
+
+                                metaData.TitleName = nacp.Titles[(int)State.DesiredTitleLanguage].Name.ToString();
 
                                 if (string.IsNullOrWhiteSpace(metaData.TitleName))
                                 {
-                                    metaData.TitleName = ControlData.Descriptions.ToList().Find(x => !string.IsNullOrWhiteSpace(x.Title)).Title;
+                                    metaData.TitleName = nacp.Titles.ToArray().FirstOrDefault(x => x.Name[0] != 0).Name.ToString();
                                 }
 
-                                metaData.Aci0.TitleId = ControlData.PresenceGroupId;
+                                metaData.Aci0.TitleId = nacp.PresenceGroupId;
 
                                 if (metaData.Aci0.TitleId == 0)
                                 {
-                                    metaData.Aci0.TitleId = ControlData.SaveDataOwnerId;
+                                    metaData.Aci0.TitleId = nacp.SaveDataOwnerId.Value;
                                 }
 
                                 if (metaData.Aci0.TitleId == 0)
                                 {
-                                    metaData.Aci0.TitleId = ControlData.AddOnContentBaseId - 0x1000;
+                                    metaData.Aci0.TitleId = nacp.AddOnContentBaseId - 0x1000;
                                 }
 
                                 if (metaData.Aci0.TitleId.ToString("x16") == "fffffffffffff000")

@@ -1,7 +1,12 @@
 ﻿using Gtk;
+using LibHac;
+using LibHac.Fs;
+using LibHac.Fs.Shim;
+using LibHac.Ncm;
 using Ryujinx.HLE.FileSystem;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 
@@ -13,6 +18,7 @@ namespace Ryujinx.Ui
     {
         private static ListStore _gameTableStore;
         private static TreeIter  _rowIter;
+        private FileSystemClient _fsClient;
 
 #pragma warning disable CS0649
 #pragma warning disable IDE0044
@@ -20,9 +26,10 @@ namespace Ryujinx.Ui
 #pragma warning restore CS0649
 #pragma warning restore IDE0044
 
-        public GameTableContextMenu(ListStore gameTableStore, TreeIter rowIter) : this(new Builder("Ryujinx.Ui.GameTableContextMenu.glade"), gameTableStore, rowIter) { }
+        public GameTableContextMenu(ListStore gameTableStore, TreeIter rowIter, FileSystemClient fsClient)
+            : this(new Builder("Ryujinx.Ui.GameTableContextMenu.glade"), gameTableStore, rowIter, fsClient) { }
 
-        private GameTableContextMenu(Builder builder, ListStore gameTableStore, TreeIter rowIter) : base(builder.GetObject("_contextMenu").Handle)
+        private GameTableContextMenu(Builder builder, ListStore gameTableStore, TreeIter rowIter, FileSystemClient fsClient) : base(builder.GetObject("_contextMenu").Handle)
         {
             builder.Autoconnect(this);
 
@@ -30,6 +37,7 @@ namespace Ryujinx.Ui
 
             _gameTableStore = gameTableStore;
             _rowIter        = rowIter;
+            _fsClient       = fsClient;
         }
 
         //Events
@@ -37,32 +45,13 @@ namespace Ryujinx.Ui
         {
             string titleName = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[0];
             string titleId   = _gameTableStore.GetValue(_rowIter, 2).ToString().Split("\n")[1].ToLower();
-            string saveDir   = System.IO.Path.Combine(new VirtualFileSystem().GetNandPath(), "user", "save", "0000000000000000", "00000000000000000000000000000001", titleId, "0");
 
-            if (!Directory.Exists(saveDir))
+            if (!TryFindSaveData(titleName, titleId, out ulong saveDataId))
             {
-                MessageDialog messageDialog = new MessageDialog(null, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo, null)
-                {
-                    Title          = "Ryujinx",
-                    Icon           = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png"),
-                    Text           = $"Could not find save directory for {titleName} [{titleId}]",
-                    SecondaryText  = "Would you like to create the directory?",
-                    WindowPosition = WindowPosition.Center
-                };
-
-                if (messageDialog.Run() == (int)ResponseType.Yes)
-                {
-                    Directory.CreateDirectory(saveDir);
-                }
-                else
-                {
-                    messageDialog.Dispose();
-
-                    return;
-                }
-
-                messageDialog.Dispose();
+                return;
             }
+
+            string saveDir = GetSaveDataDirectory(saveDataId);
 
             Process.Start(new ProcessStartInfo()
             {
@@ -70,6 +59,94 @@ namespace Ryujinx.Ui
                 UseShellExecute = true,
                 Verb            = "open"
             });
+        }
+
+        private bool TryFindSaveData(string titleName, string titleIdText, out ulong saveDataId)
+        {
+            saveDataId = default;
+
+            if (!ulong.TryParse(titleIdText, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleId))
+            {
+                GtkDialog.CreateErrorDialog("UI error: The selected game did not have a valid title ID");
+
+                return false;
+            }
+
+            SaveDataFilter filter = new SaveDataFilter();
+            filter.SetUserId(new UserId(1, 0));
+            filter.SetTitleId(new TitleId(titleId));
+
+            Result result = _fsClient.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo, SaveDataSpaceId.User, ref filter);
+
+            if (result == ResultFs.TargetNotFound)
+            {
+                // Savedata was not found. Ask the user if they want to create it
+                using MessageDialog messageDialog = new MessageDialog(null, DialogFlags.Modal, MessageType.Question, ButtonsType.YesNo, null)
+                {
+                    Title          = "Ryujinx",
+                    Icon           = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png"),
+                    Text           = $"There is no savedata for {titleName} [{titleId:x16}]",
+                    SecondaryText  = "Would you like to create savedata for this game?",
+                    WindowPosition = WindowPosition.Center
+                };
+
+                if (messageDialog.Run() != (int)ResponseType.Yes)
+                {
+                    return false;
+                }
+
+                result = _fsClient.CreateSaveData(new TitleId(titleId), new UserId(1, 0), new TitleId(titleId), 0, 0, 0);
+
+                if (result.IsFailure())
+                {
+                    GtkDialog.CreateErrorDialog($"There was an error creating the specified savedata: {result.ToStringWithName()}");
+
+                    return false;
+                }
+
+                // Try to find the savedata again after creating it
+                result = _fsClient.FindSaveDataWithFilter(out saveDataInfo, SaveDataSpaceId.User, ref filter);
+            }
+
+            if (result.IsSuccess())
+            {
+                saveDataId = saveDataInfo.SaveDataId;
+
+                return true;
+            }
+
+            GtkDialog.CreateErrorDialog($"There was an error finding the specified savedata: {result.ToStringWithName()}");
+
+            return false;
+        }
+
+        private string GetSaveDataDirectory(ulong saveDataId)
+        {
+            string saveRootPath = System.IO.Path.Combine(new VirtualFileSystem().GetNandPath(), $"user/save/{saveDataId:x16}");
+
+            if (!Directory.Exists(saveRootPath))
+            {
+                // Inconsistent state. Create the directory
+                Directory.CreateDirectory(saveRootPath);
+            }
+
+            string committedPath = System.IO.Path.Combine(saveRootPath, "0");
+            string workingPath = System.IO.Path.Combine(saveRootPath, "1");
+
+            // If the committed directory exists, that path will be loaded the next time the savedata is mounted
+            if (Directory.Exists(committedPath))
+            {
+                return committedPath;
+            }
+
+            // If the working directory exists and the committed directory doesn't,
+            // the working directory will be loaded the next time the savedata is mounted
+            if (!Directory.Exists(workingPath))
+            {
+                Directory.CreateDirectory(workingPath);
+            }
+
+            return workingPath;
         }
     }
 }

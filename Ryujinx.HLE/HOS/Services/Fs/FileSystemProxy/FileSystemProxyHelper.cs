@@ -3,54 +3,12 @@ using LibHac.Fs;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
 using LibHac.Spl;
-using Ryujinx.Common;
-using Ryujinx.HLE.FileSystem;
-using Ryujinx.HLE.Utilities;
 using System.IO;
 
 namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
 {
     static class FileSystemProxyHelper
     {
-        public static ResultCode LoadSaveDataFileSystem(ServiceCtx context, bool readOnly, out IFileSystem loadedFileSystem)
-        {
-            loadedFileSystem = null;
-
-            SaveSpaceId  saveSpaceId  = (SaveSpaceId)context.RequestData.ReadInt64();
-            ulong        titleId      = context.RequestData.ReadUInt64();
-            UInt128      userId       = context.RequestData.ReadStruct<UInt128>();
-            long         saveId       = context.RequestData.ReadInt64();
-            SaveDataType saveDataType = (SaveDataType)context.RequestData.ReadByte();
-            SaveInfo     saveInfo     = new SaveInfo(titleId, saveId, saveDataType, saveSpaceId, userId);
-            string       savePath     = context.Device.FileSystem.GetSavePath(context, saveInfo);
-
-            try
-            {
-                LocalFileSystem       fileSystem     = new LocalFileSystem(savePath);
-
-                Result result = DirectorySaveDataFileSystem.CreateNew(out DirectorySaveDataFileSystem dirFileSystem, fileSystem);
-                if (result.IsFailure())
-                {
-                    return (ResultCode)result.Value;
-                }
-
-                LibHac.Fs.IFileSystem saveFileSystem = dirFileSystem;
-
-                if (readOnly)
-                {
-                    saveFileSystem = new ReadOnlyFileSystem(saveFileSystem);
-                }
-
-                loadedFileSystem = new IFileSystem(saveFileSystem);
-            }
-            catch (HorizonResultException ex)
-            {
-                return (ResultCode)ex.ResultValue.Value;
-            }
-
-            return ResultCode.Success;
-        }
-
         public static ResultCode OpenNsp(ServiceCtx context, string pfsPath, out IFileSystem openedFileSystem)
         {
             openedFileSystem = null;
@@ -153,6 +111,16 @@ namespace Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy
                     keySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(keySet)));
                 }
             }
+        }
+
+        public static Result ReadFsPath(out FsPath path, ServiceCtx context, int index = 0)
+        {
+            long position = context.Request.SendBuff[index].Position;
+            long size     = context.Request.SendBuff[index].Size;
+
+            byte[] pathBytes = context.Memory.ReadBytes(position, size);
+
+            return FsPath.FromSpan(out path, pathBytes);
         }
     }
 }
