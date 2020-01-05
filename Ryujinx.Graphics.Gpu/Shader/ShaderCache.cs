@@ -73,11 +73,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             CachedShader shader = TranslateComputeShader(gpuVa, sharedMemorySize, localSizeX, localSizeY, localSizeZ);
 
-            IShader hostShader = _context.Renderer.CompileShader(shader.Program);
+            shader.HostShader = _context.Renderer.CompileShader(shader.Program);
 
-            IProgram hostProgram = _context.Renderer.CreateProgram(new IShader[] { hostShader });
-
-            ulong address = _context.MemoryManager.Translate(gpuVa);
+            IProgram hostProgram = _context.Renderer.CreateProgram(new IShader[] { shader.HostShader });
 
             ComputeShader cpShader = new ComputeShader(hostProgram, shader);
 
@@ -140,7 +138,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             for (int stage = 0; stage < gpShaders.Shaders.Length; stage++)
             {
-                ShaderProgram program = gpShaders.Shaders[stage].Program;
+                ShaderProgram program = gpShaders.Shaders[stage]?.Program;
 
                 if (program == null)
                 {
@@ -191,11 +189,6 @@ namespace Ryujinx.Graphics.Gpu.Shader
             {
                 CachedShader shader = gpShaders.Shaders[stage];
 
-                if (shader.Code == null)
-                {
-                    continue;
-                }
-
                 ulong gpuVa = 0;
 
                 switch (stage)
@@ -224,6 +217,11 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <returns>True if the code is different, false otherwise</returns>
         private bool IsShaderDifferent(CachedShader shader, ulong gpuVa)
         {
+            if (shader == null)
+            {
+                return false;
+            }
+
             for (int index = 0; index < shader.Code.Length; index++)
             {
                 if (_context.MemoryAccessor.ReadInt32(gpuVa + (ulong)index * 4) != shader.Code[index])
@@ -299,7 +297,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         {
             if (gpuVa == 0)
             {
-                return new CachedShader(null, null);
+                return null;
             }
 
             int QueryInfo(QueryInfoName info, int index)
@@ -370,13 +368,13 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="program">Graphics shader cached code</param>
         private void BackpropQualifiers(GraphicsShader program)
         {
-            ShaderProgram fragmentShader = program.Shaders[4].Program;
+            ShaderProgram fragmentShader = program.Shaders[4]?.Program;
 
             bool isFirst = true;
 
             for (int stage = 3; stage >= 0; stage--)
             {
-                if (program.Shaders[stage].Program == null)
+                if (program.Shaders[stage] == null)
                 {
                     continue;
                 }
@@ -387,7 +385,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 {
                     string iq = fragmentShader?.Info.InterpolationQualifiers[attr].ToGlslQualifier() ?? string.Empty;
 
-                    if (isFirst && iq != string.Empty)
+                    if (isFirst && !string.IsNullOrEmpty(iq))
                     {
                         program.Shaders[stage].Program.Replace($"{DefineNames.OutQualifierPrefixName}{attr}", iq);
                     }
@@ -513,7 +511,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 foreach (ComputeShader shader in list)
                 {
                     shader.HostProgram.Dispose();
-                    shader.Shader.HostShader.Dispose();
+                    shader.Shader?.HostShader.Dispose();
                 }
             }
 
@@ -525,7 +523,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
                     foreach (CachedShader cachedShader in shader.Shaders)
                     {
-                        cachedShader.HostShader?.Dispose();
+                        cachedShader?.HostShader.Dispose();
                     }
                 }
             }

@@ -10,7 +10,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <summary>
         /// Host shader program object.
         /// </summary>
-        public IProgram HostProgram { get; set; }
+        public IProgram HostProgram { get; }
 
         /// <summary>
         /// Cached shader.

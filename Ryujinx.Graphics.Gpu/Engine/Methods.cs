@@ -737,11 +737,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             GraphicsShader gs = ShaderCache.GetGraphicsShader(state, addresses);
 
-            _vsUsesInstanceId = gs.Shaders[0].Program.Info.UsesInstanceId;
+            _vsUsesInstanceId = gs.Shaders[0]?.Program.Info.UsesInstanceId ?? false;
 
             for (int stage = 0; stage < Constants.ShaderStages; stage++)
             {
-                ShaderProgramInfo info = gs.Shaders[stage].Program?.Info;
+                ShaderProgramInfo info = gs.Shaders[stage]?.Program.Info;
 
                 _currentProgramInfo[stage] = info;
 
