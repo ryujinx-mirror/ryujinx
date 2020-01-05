@@ -64,6 +64,9 @@ namespace Ryujinx.Ui
 
                 dialogSuccess.Run();
 
+                // Reload key set after migration to be sure to catch the keys in the system directory.
+                device.System.LoadKeySet();
+
                 return true;
             }
             catch (HorizonResultException ex)
@@ -171,7 +174,7 @@ namespace Ryujinx.Ui
             }
         }
 
-        private static bool IsMigrationNeeded()
+        public static bool IsMigrationNeeded()
         {
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
