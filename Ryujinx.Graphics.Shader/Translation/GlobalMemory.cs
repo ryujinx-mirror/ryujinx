@@ -9,7 +9,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         public const int StorageDescSize = 4; // In words.
         public const int StorageMaxCount = 16;
 
-        public const int StorageDescsSize  = StorageDescSize * StorageMaxCount;
+        public const int StorageDescsSize = StorageDescSize * StorageMaxCount;
 
         public static bool UsesGlobalMemory(Instruction inst)
         {

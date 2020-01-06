@@ -198,7 +198,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (!(emit || cut))
             {
-                // TODO: Warning.
+                context.Config.PrintLog("Invalid OUT encoding.");
             }
 
             if (emit)

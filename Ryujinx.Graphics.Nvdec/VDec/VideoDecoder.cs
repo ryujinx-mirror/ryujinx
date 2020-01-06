@@ -35,14 +35,14 @@ namespace Ryujinx.Graphics.VDec
 
             switch (method)
             {
-                case VideoDecoderMeth.SetVideoCodec: SetVideoCodec(arguments); break;
-                case VideoDecoderMeth.Execute: Execute(gpu); break;
-                case VideoDecoderMeth.SetDecoderCtxAddr: SetDecoderCtxAddr(arguments); break;
-                case VideoDecoderMeth.SetFrameDataAddr: SetFrameDataAddr(arguments); break;
-                case VideoDecoderMeth.SetVpxCurrLumaAddr: SetVpxCurrLumaAddr(arguments); break;
-                case VideoDecoderMeth.SetVpxRef0LumaAddr: SetVpxRef0LumaAddr(arguments); break;
-                case VideoDecoderMeth.SetVpxRef1LumaAddr: SetVpxRef1LumaAddr(arguments); break;
-                case VideoDecoderMeth.SetVpxRef2LumaAddr: SetVpxRef2LumaAddr(arguments); break;
+                case VideoDecoderMeth.SetVideoCodec:        SetVideoCodec(arguments);        break;
+                case VideoDecoderMeth.Execute:              Execute(gpu);                    break;
+                case VideoDecoderMeth.SetDecoderCtxAddr:    SetDecoderCtxAddr(arguments);    break;
+                case VideoDecoderMeth.SetFrameDataAddr:     SetFrameDataAddr(arguments);     break;
+                case VideoDecoderMeth.SetVpxCurrLumaAddr:   SetVpxCurrLumaAddr(arguments);   break;
+                case VideoDecoderMeth.SetVpxRef0LumaAddr:   SetVpxRef0LumaAddr(arguments);   break;
+                case VideoDecoderMeth.SetVpxRef1LumaAddr:   SetVpxRef1LumaAddr(arguments);   break;
+                case VideoDecoderMeth.SetVpxRef2LumaAddr:   SetVpxRef2LumaAddr(arguments);   break;
                 case VideoDecoderMeth.SetVpxCurrChromaAddr: SetVpxCurrChromaAddr(arguments); break;
                 case VideoDecoderMeth.SetVpxRef0ChromaAddr: SetVpxRef0ChromaAddr(arguments); break;
                 case VideoDecoderMeth.SetVpxRef1ChromaAddr: SetVpxRef1ChromaAddr(arguments); break;

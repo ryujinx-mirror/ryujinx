@@ -13,7 +13,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
 
         public OpCodeBranchIndir BrIndir { get; set; }
 
-        public List<OpCode>    OpCodes     { get; }
+        public List<OpCode>     OpCodes     { get; }
         public List<OpCodePush> PushOpCodes { get; }
 
         public Block(ulong address)

@@ -12,11 +12,13 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostChannel
 {
     class NvHostChannelDeviceFile : NvDeviceFile
     {
-        private uint           _timeout;
-        private uint           _submitTimeout;
-        private uint           _timeslice;
-        private GpuContext     _gpu;
-        private ARMeilleure.Memory.MemoryManager  _memory;
+        private uint _timeout;
+        private uint _submitTimeout;
+        private uint _timeslice;
+
+        private GpuContext _gpu;
+
+        private ARMeilleure.Memory.MemoryManager _memory;
 
         public NvHostChannelDeviceFile(ServiceCtx context) : base(context)
         {

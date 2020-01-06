@@ -35,22 +35,22 @@ namespace Ryujinx.Graphics.Gpu.State
         {
             return type switch
             {
-                PrimitiveType.Points => PrimitiveTopology.Points,
-                PrimitiveType.Lines => PrimitiveTopology.Lines,
-                PrimitiveType.LineLoop => PrimitiveTopology.LineLoop,
-                PrimitiveType.LineStrip => PrimitiveTopology.LineStrip,
-                PrimitiveType.Triangles => PrimitiveTopology.Triangles,
-                PrimitiveType.TriangleStrip => PrimitiveTopology.TriangleStrip,
-                PrimitiveType.TriangleFan => PrimitiveTopology.TriangleFan,
-                PrimitiveType.Quads => PrimitiveTopology.Quads,
-                PrimitiveType.QuadStrip => PrimitiveTopology.QuadStrip,
-                PrimitiveType.Polygon => PrimitiveTopology.Polygon,
-                PrimitiveType.LinesAdjacency => PrimitiveTopology.LinesAdjacency,
-                PrimitiveType.LineStripAdjacency => PrimitiveTopology.LineStripAdjacency,
-                PrimitiveType.TrianglesAdjacency => PrimitiveTopology.TrianglesAdjacency,
+                PrimitiveType.Points                 => PrimitiveTopology.Points,
+                PrimitiveType.Lines                  => PrimitiveTopology.Lines,
+                PrimitiveType.LineLoop               => PrimitiveTopology.LineLoop,
+                PrimitiveType.LineStrip              => PrimitiveTopology.LineStrip,
+                PrimitiveType.Triangles              => PrimitiveTopology.Triangles,
+                PrimitiveType.TriangleStrip          => PrimitiveTopology.TriangleStrip,
+                PrimitiveType.TriangleFan            => PrimitiveTopology.TriangleFan,
+                PrimitiveType.Quads                  => PrimitiveTopology.Quads,
+                PrimitiveType.QuadStrip              => PrimitiveTopology.QuadStrip,
+                PrimitiveType.Polygon                => PrimitiveTopology.Polygon,
+                PrimitiveType.LinesAdjacency         => PrimitiveTopology.LinesAdjacency,
+                PrimitiveType.LineStripAdjacency     => PrimitiveTopology.LineStripAdjacency,
+                PrimitiveType.TrianglesAdjacency     => PrimitiveTopology.TrianglesAdjacency,
                 PrimitiveType.TriangleStripAdjacency => PrimitiveTopology.TriangleStripAdjacency,
-                PrimitiveType.Patches => PrimitiveTopology.Patches,
-                _ => PrimitiveTopology.Triangles
+                PrimitiveType.Patches                => PrimitiveTopology.Patches,
+                _                                    => PrimitiveTopology.Triangles
             };
         }
     }

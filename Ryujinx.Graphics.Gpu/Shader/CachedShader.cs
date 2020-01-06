@@ -30,8 +30,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="code">Maxwell binary shader code</param>
         public CachedShader(ShaderProgram program, int[] code)
         {
-            Program  = program;
-            Code     = code;
+            Program = program;
+            Code    = code;
         }
     }
 }

@@ -23,9 +23,9 @@ namespace Ryujinx.Graphics.Vic
 
             switch (method)
             {
-                case VideoImageComposerMeth.Execute: Execute(gpu); break;
-                case VideoImageComposerMeth.SetConfigStructOffset: SetConfigStructOffset(arguments); break;
-                case VideoImageComposerMeth.SetOutputSurfaceLumaOffset: SetOutputSurfaceLumaOffset(arguments); break;
+                case VideoImageComposerMeth.Execute:                       Execute(gpu);                             break;
+                case VideoImageComposerMeth.SetConfigStructOffset:         SetConfigStructOffset(arguments);         break;
+                case VideoImageComposerMeth.SetOutputSurfaceLumaOffset:    SetOutputSurfaceLumaOffset(arguments);    break;
                 case VideoImageComposerMeth.SetOutputSurfaceChromaUOffset: SetOutputSurfaceChromaUOffset(arguments); break;
                 case VideoImageComposerMeth.SetOutputSurfaceChromaVOffset: SetOutputSurfaceChromaVOffset(arguments); break;
             }

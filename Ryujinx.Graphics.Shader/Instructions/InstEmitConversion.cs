@@ -60,7 +60,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (intType == IntegerType.U64)
             {
-                // TODO: Warning. This instruction supports 64-bits integers, but it is not implemented.
+                context.Config.PrintLog("Unimplemented 64-bits F2I.");
 
                 return;
             }
@@ -172,7 +172,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             if (srcType == IntegerType.U64 || dstType == IntegerType.U64)
             {
-                // TODO: Warning. This instruction doesn't support 64-bits integers.
+                context.Config.PrintLog("Invalid I2I encoding.");
 
                 return;
             }

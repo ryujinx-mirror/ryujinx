@@ -38,6 +38,7 @@ namespace Ryujinx.Common
                 using (var mem = new MemoryStream())
                 {
                     stream.CopyTo(mem);
+
                     return mem.ToArray();
                 }
             }
@@ -53,6 +54,7 @@ namespace Ryujinx.Common
                 using (var mem = new MemoryStream())
                 {
                     await stream.CopyToAsync(mem);
+
                     return mem.ToArray();
                 }
             }

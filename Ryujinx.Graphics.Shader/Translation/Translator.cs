@@ -22,8 +22,6 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             if (cfg == null)
             {
-                // TODO: Error.
-
                 return code;
             }
 

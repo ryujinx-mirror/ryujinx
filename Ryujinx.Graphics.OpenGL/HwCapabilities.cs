@@ -15,8 +15,8 @@ namespace Ryujinx.Graphics.OpenGL
         public static bool SupportsAstcCompression          => _supportsAstcCompression.Value;
         public static bool SupportsNonConstantTextureOffset => _isNvidiaDriver.Value;
 
-        public static int  MaximumComputeSharedMemorySize => _maximumComputeSharedMemorySize.Value;
-        public static int  StorageBufferOffsetAlignment   => _storageBufferOffsetAlignment.Value;
+        public static int MaximumComputeSharedMemorySize => _maximumComputeSharedMemorySize.Value;
+        public static int StorageBufferOffsetAlignment   => _storageBufferOffsetAlignment.Value;
 
         private static bool HasExtension(string name)
         {

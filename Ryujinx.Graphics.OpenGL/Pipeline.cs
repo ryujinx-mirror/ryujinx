@@ -471,6 +471,7 @@ namespace Ryujinx.Graphics.OpenGL
             }
 
             GL.PolygonOffset(factor, units);
+            // TODO: Enable when GL_EXT_polygon_offset_clamp is supported.
             // GL.PolygonOffsetClamp(factor, units, clamp);
         }
 

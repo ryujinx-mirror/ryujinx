@@ -53,10 +53,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
             }
             else if (floatType == FPType.FP64)
             {
-                // TODO.
+                // TODO: Double floating-point type support.
             }
 
-            // TODO: Warn about invalid floating point type.
+            context.Config.PrintLog($"Invalid floating point type: {floatType}.");
 
             return ConstF(0);
         }
