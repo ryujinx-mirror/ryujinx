@@ -43,10 +43,6 @@ The latest automatic build for Windows, macOS, and Linux can be found on the [Of
 
    Everything on the Switch is encrypted, so if you want to run anything other than homebrew, you have to dump encryption keys from your console. To get more information please take a look at our [Keys Documentation](KEYS.md).
 
- - **FFmpeg Dependencies**
-
-   Ryujinx has a basic implementation of `NVDEC`, a video decoder used by the Switch's GPU. Many games include videos that use it, so you need to download [Zeranoe's FFmpeg Builds](http://ffmpeg.zeranoe.com/builds/) for **Shared** linking and your computer's operating system. When it's done, extract the contents of the `bin` folder directly into your Ryujinx folder.
-
  - **System Titles**
 
    Some of our System Module implementations, like `time`, require [System Data Archives](https://switchbrew.org/wiki/Title_list#System_Data_Archives). You can install them by mounting your nand partition using [HacDiskMount](https://switchtools.sshnuke.net/) and copying the content to `Ryujinx/nand/system`.
