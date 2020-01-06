@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 {
     partial class Methods
     {
-        private const int NsToTicksFractionNumerator = 384;
+        private const int NsToTicksFractionNumerator   = 384;
         private const int NsToTicksFractionDenominator = 625;
 
         private ulong _runningCounter;

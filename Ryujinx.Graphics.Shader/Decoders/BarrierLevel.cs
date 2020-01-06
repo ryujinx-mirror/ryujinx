@@ -1,6 +1,6 @@
 namespace Ryujinx.Graphics.Shader.Decoders
 {
-    enum  BarrierLevel
+    enum BarrierLevel
     {
         Cta = 0,
         Gl  = 1,

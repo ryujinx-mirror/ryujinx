@@ -61,42 +61,42 @@ namespace Ryujinx.Graphics.GAL
             SwizzleA         = swizzleA;
         }
 
-        public int GetMipSize(int level)
+        public readonly int GetMipSize(int level)
         {
             return GetMipStride(level) * GetLevelHeight(level) * GetLevelDepth(level);
         }
 
-        public int GetMipSize2D(int level)
+        public readonly int GetMipSize2D(int level)
         {
             return GetMipStride(level) * GetLevelHeight(level);
         }
 
-        public int GetMipStride(int level)
+        public readonly int GetMipStride(int level)
         {
             return BitUtils.AlignUp(GetLevelWidth(level) * BytesPerPixel, 4);
         }
 
-        private int GetLevelWidth(int level)
+        private readonly int GetLevelWidth(int level)
         {
             return BitUtils.DivRoundUp(GetLevelSize(Width, level), BlockWidth);
         }
 
-        private int GetLevelHeight(int level)
+        private readonly int GetLevelHeight(int level)
         {
             return BitUtils.DivRoundUp(GetLevelSize(Height, level), BlockHeight);
         }
 
-        private int GetLevelDepth(int level)
+        private readonly int GetLevelDepth(int level)
         {
             return Target == Target.Texture3D ? GetLevelSize(Depth, level) : GetLayers();
         }
 
-        public int GetDepthOrLayers()
+        public readonly int GetDepthOrLayers()
         {
             return Target == Target.Texture3D ? Depth : GetLayers();
         }
 
-        public int GetLayers()
+        public readonly int GetLayers()
         {
             if (Target == Target.Texture2DArray ||
                 Target == Target.Texture2DMultisampleArray ||

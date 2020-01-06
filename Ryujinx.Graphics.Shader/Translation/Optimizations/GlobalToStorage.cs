@@ -48,7 +48,7 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             {
                 Operand addrLow = operation.GetSource(0);
 
-                Operand baseAddrLow  = Cbuf(0, GetStorageCbOffset(config.Stage, storageIndex));
+                Operand baseAddrLow = Cbuf(0, GetStorageCbOffset(config.Stage, storageIndex));
 
                 Operand baseAddrTrunc = Local();
 

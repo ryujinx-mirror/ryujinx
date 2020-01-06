@@ -19,9 +19,6 @@ namespace Ryujinx.Graphics.OpenGL
         private int _firstLayer;
         private int _firstLevel;
 
-        private bool _acquired;
-        private bool _pendingDelete;
-
         public int Width         => _info.Width;
         public int Height        => _info.Height;
         public int DepthOrLayers => _info.GetDepthOrLayers();

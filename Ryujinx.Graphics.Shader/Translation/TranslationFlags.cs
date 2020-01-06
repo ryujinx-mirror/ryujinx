@@ -1,5 +1,8 @@
+using System;
+
 namespace Ryujinx.Graphics.Shader.Translation
 {
+    [Flags]
     public enum TranslationFlags
     {
         None = 0,

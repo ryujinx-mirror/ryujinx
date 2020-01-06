@@ -33,7 +33,9 @@ namespace Ryujinx.Common
             using (var stream = GetStream(assembly, filename))
             {
                 if (stream == null)
+                {
                     return null;
+                }
 
                 using (var mem = new MemoryStream())
                 {
@@ -49,7 +51,9 @@ namespace Ryujinx.Common
             using (var stream = GetStream(assembly, filename))
             {
                 if (stream == null)
+                {
                     return null;
+                }
 
                 using (var mem = new MemoryStream())
                 {
@@ -79,7 +83,9 @@ namespace Ryujinx.Common
             using (var stream = GetStream(assembly, filename))
             {
                 if (stream == null)
+                {
                     return null;
+                }
 
                 using (var reader = new StreamReader(stream))
                 {
@@ -93,7 +99,9 @@ namespace Ryujinx.Common
             using (var stream = GetStream(assembly, filename))
             {
                 if (stream == null)
+                {
                     return null;
+                }
 
                 using (var reader = new StreamReader(stream))
                 {
@@ -104,7 +112,7 @@ namespace Ryujinx.Common
 
         public static Stream GetStream(string filename)
         {
-            var (assembly, path) = ResolveManifestPath(filename);
+            var (assembly, _) = ResolveManifestPath(filename);
 
             return GetStream(assembly, filename);
         }
@@ -115,9 +123,6 @@ namespace Ryujinx.Common
             var manifestUri = namespace_ + "." + filename.Replace('/', '.');
 
             var stream = assembly.GetManifestResourceStream(manifestUri);
-
-            if (stream == null)
-                return null;
 
             return stream;
         }
@@ -131,11 +136,13 @@ namespace Ryujinx.Common
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
                     if (assembly.GetName().Name == segments[0])
+                    {
                         return (assembly, segments[1]);
+                    }
                 }
             }
 
-            return (EmbeddedResources.ResourceAssembly, filename);
+            return (ResourceAssembly, filename);
         }
     }
 }

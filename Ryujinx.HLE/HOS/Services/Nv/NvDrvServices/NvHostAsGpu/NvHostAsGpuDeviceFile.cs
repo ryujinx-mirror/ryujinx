@@ -295,8 +295,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
 
                 long result = (long)gmm.Map(
                     ((ulong)arguments[index].MapOffset << 16) + (ulong)map.Address,
-                    (ulong)arguments[index].GpuOffset << 16,
-                    (ulong)arguments[index].Pages << 16);
+                     (ulong)arguments[index].GpuOffset << 16,
+                     (ulong)arguments[index].Pages     << 16);
 
                 if (result < 0)
                 {

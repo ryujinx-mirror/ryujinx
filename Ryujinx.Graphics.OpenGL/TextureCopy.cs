@@ -96,7 +96,7 @@ namespace Ryujinx.Graphics.OpenGL
 
         private static bool IsDepthOnly(Format format)
         {
-            return format == Format.D16Unorm ||
+            return format == Format.D16Unorm   ||
                    format == Format.D24X8Unorm ||
                    format == Format.D32Float;
         }

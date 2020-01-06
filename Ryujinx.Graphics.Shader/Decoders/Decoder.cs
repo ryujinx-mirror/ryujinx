@@ -285,8 +285,8 @@ namespace Ryujinx.Graphics.Shader.Decoders
         private static bool IsBranch(OpCode opCode)
         {
             return (opCode is OpCodeBranch opBranch && !opBranch.PushTarget) ||
-                    opCode is OpCodeBranchIndir ||
-                    opCode is OpCodeBranchPop ||
+                    opCode is OpCodeBranchIndir                              ||
+                    opCode is OpCodeBranchPop                                ||
                     opCode is OpCodeExit;
         }
 
