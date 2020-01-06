@@ -71,26 +71,26 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 // previous result when extended is specified, to ensure
                 // we have ZF set only if all words are zero, and not just
                 // the last one.
-                Operand oldZF = GetZF(context);
+                Operand oldZF = GetZF();
 
                 Operand res = context.BitwiseAnd(context.ICompareEqual(dest, Const(0)), oldZF);
 
-                context.Copy(GetZF(context), res);
+                context.Copy(GetZF(), res);
             }
             else
             {
-                context.Copy(GetZF(context), context.ICompareEqual(dest, Const(0)));
+                context.Copy(GetZF(), context.ICompareEqual(dest, Const(0)));
             }
 
-            context.Copy(GetNF(context), context.ICompareLess(dest, Const(0)));
+            context.Copy(GetNF(), context.ICompareLess(dest, Const(0)));
         }
 
         public static void SetFPZnFlags(EmitterContext context, Operand dest, bool setCC)
         {
             if (setCC)
             {
-                context.Copy(GetZF(context), context.FPCompareEqual(dest, ConstF(0)));
-                context.Copy(GetNF(context), context.FPCompareLess (dest, ConstF(0)));
+                context.Copy(GetZF(), context.FPCompareEqual(dest, ConstF(0)));
+                context.Copy(GetNF(), context.FPCompareLess (dest, ConstF(0)));
             }
         }
     }

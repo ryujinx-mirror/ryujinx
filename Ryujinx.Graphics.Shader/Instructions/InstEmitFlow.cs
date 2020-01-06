@@ -169,10 +169,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 case Condition.Equal:
                 case Condition.EqualUnordered:
-                    return GetZF(context);
+                    return GetZF();
                 case Condition.NotEqual:
                 case Condition.NotEqualUnordered:
-                    return context.BitwiseNot(GetZF(context));
+                    return context.BitwiseNot(GetZF());
             }
 
             return Const(IrConsts.True);

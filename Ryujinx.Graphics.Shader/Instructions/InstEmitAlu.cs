@@ -125,8 +125,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
             {
                 // Add carry, or subtract borrow.
                 res = context.IAdd(res, isSubtraction
-                    ? context.BitwiseNot(GetCF(context))
-                    : context.BitwiseAnd(GetCF(context), Const(1)));
+                    ? context.BitwiseNot(GetCF())
+                    : context.BitwiseAnd(GetCF(), Const(1)));
             }
 
             SetIaddFlags(context, res, srcA, srcB, op.SetCondCode, op.Extended, isSubtraction);
@@ -693,7 +693,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             if (extended)
             {
                 // Add with carry.
-                res = context.IAdd(res, context.BitwiseAnd(GetCF(context), Const(1)));
+                res = context.IAdd(res, context.BitwiseAnd(GetCF(), Const(1)));
             }
             else
             {
@@ -806,7 +806,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
             if (!extended || isSubtraction)
             {
                 // C = d < a
-                context.Copy(GetCF(context), context.ICompareLessUnsigned(res, srcA));
+                context.Copy(GetCF(), context.ICompareLessUnsigned(res, srcA));
             }
             else
             {
@@ -814,9 +814,9 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 Operand tempC0 = context.ICompareEqual       (res, srcA);
                 Operand tempC1 = context.ICompareLessUnsigned(res, srcA);
 
-                tempC0 = context.BitwiseAnd(tempC0, GetCF(context));
+                tempC0 = context.BitwiseAnd(tempC0, GetCF());
 
-                context.Copy(GetCF(context), context.BitwiseOr(tempC0, tempC1));
+                context.Copy(GetCF(), context.BitwiseOr(tempC0, tempC1));
             }
 
             // V = (d ^ a) & ~(a ^ b) < 0
@@ -827,7 +827,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             Operand tempV = context.BitwiseAnd(tempV0, tempV1);
 
-            context.Copy(GetVF(context), context.ICompareLess(tempV, Const(0)));
+            context.Copy(GetVF(), context.ICompareLess(tempV, Const(0)));
 
             SetZnFlags(context, res, setCC: true, extended: extended);
         }

@@ -9,22 +9,22 @@ namespace Ryujinx.Graphics.Shader.Instructions
 {
     static class InstEmitHelper
     {
-        public static Operand GetZF(EmitterContext context)
+        public static Operand GetZF()
         {
             return Register(0, RegisterType.Flag);
         }
 
-        public static Operand GetNF(EmitterContext context)
+        public static Operand GetNF()
         {
             return Register(1, RegisterType.Flag);
         }
 
-        public static Operand GetCF(EmitterContext context)
+        public static Operand GetCF()
         {
             return Register(2, RegisterType.Flag);
         }
 
-        public static Operand GetVF(EmitterContext context)
+        public static Operand GetVF()
         {
             return Register(3, RegisterType.Flag);
         }
