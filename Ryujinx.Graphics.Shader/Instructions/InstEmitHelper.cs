@@ -104,7 +104,11 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             bool absoluteA = false, negateA = false;
 
-            if (isAdd || op is IOpCodeCbuf || op is IOpCodeImm)
+            if (op is OpCodeAluImm32 && isAdd)
+            {
+                negateA = op.RawOpCode.Extract(56);
+            }
+            else if (isAdd || op is IOpCodeCbuf || op is IOpCodeImm)
             {
                 negateA   = op.RawOpCode.Extract(43);
                 absoluteA = op.RawOpCode.Extract(44);
@@ -112,10 +116,6 @@ namespace Ryujinx.Graphics.Shader.Instructions
             else if (op is IOpCodeReg)
             {
                 absoluteA = op.RawOpCode.Extract(44);
-            }
-            else if (op is OpCodeAluImm32 && isAdd)
-            {
-                negateA = op.RawOpCode.Extract(56);
             }
 
             FPHalfSwizzle swizzle = (FPHalfSwizzle)op.RawOpCode.Extract(47, 2);
