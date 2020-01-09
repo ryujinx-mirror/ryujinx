@@ -264,7 +264,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                 case ColorFormat.X8B8G8R8:
                     return Format.R8G8B8A8Unorm;
                 case ColorFormat.R5G6B5:
-                    return Format.R5G6B5Unorm;
+                    return Format.B5G6R5Unorm;
                 case ColorFormat.A8R8G8B8:
                     return Format.B8G8R8A8Unorm;
                 case ColorFormat.A4B4G4R4:
@@ -298,7 +298,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
             Format format = ConvertColorFormat(_bufferQueue[slot].Data.Buffer.Surfaces[0].ColorFormat);
 
             int bytesPerPixel =
-                format == Format.R5G6B5Unorm ||
+                format == Format.B5G6R5Unorm ||
                 format == Format.R4G4B4A4Unorm ? 2 : 4;
 
             int gobBlocksInY = 1 << _bufferQueue[slot].Data.Buffer.Surfaces[0].BlockHeightLog2;
