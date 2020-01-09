@@ -1707,7 +1707,8 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
                 Time = new CalendarTime()
                 {
                     Year   = (short)calendarTime.Year,
-                    Month  = calendarTime.Month,
+                    // NOTE: Nintendo's month range is 1-12, internal range is 0-11.
+                    Month = (sbyte)(calendarTime.Month + 1),
                     Day    = calendarTime.Day,
                     Hour   = calendarTime.Hour,
                     Minute = calendarTime.Minute,
@@ -1724,7 +1725,8 @@ namespace Ryujinx.HLE.HOS.Services.Time.TimeZone
             CalendarTimeInternal calendarTimeInternal = new CalendarTimeInternal()
             {
                 Year   = calendarTime.Year,
-                Month  = calendarTime.Month,
+                // NOTE: Nintendo's month range is 1-12, internal range is 0-11.
+                Month  = (sbyte)(calendarTime.Month - 1),
                 Day    = calendarTime.Day,
                 Hour   = calendarTime.Hour,
                 Minute = calendarTime.Minute,
