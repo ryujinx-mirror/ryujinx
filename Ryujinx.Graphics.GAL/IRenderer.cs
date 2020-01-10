@@ -24,7 +24,7 @@ namespace Ryujinx.Graphics.GAL
 
         ulong GetCounter(CounterType type);
 
-        void InitializeCounters();
+        void Initialize();
 
         void ResetCounter(CounterType type);
     }

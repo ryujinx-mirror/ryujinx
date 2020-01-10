@@ -70,7 +70,7 @@ namespace Ryujinx.Ui
         {
             MakeCurrent();
 
-            _renderer.InitializeCounters();
+            _renderer.Initialize();
 
             Stopwatch chrono = new Stopwatch();
 

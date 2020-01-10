@@ -74,7 +74,7 @@ namespace Ryujinx.Graphics.OpenGL
             return _counters.GetCounter(type);
         }
 
-        public void InitializeCounters()
+        public void Initialize()
         {
             PrintGpuInformation();
 
