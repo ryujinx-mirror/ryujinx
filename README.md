@@ -45,7 +45,7 @@ The latest automatic build for Windows, macOS, and Linux can be found on the [Of
 
  - **System Titles**
 
-   Some of our System Module implementations, like `time`, require [System Data Archives](https://switchbrew.org/wiki/Title_list#System_Data_Archives). You can install them by mounting your nand partition using [HacDiskMount](https://switchtools.sshnuke.net/) and copying the content to `Ryujinx/nand/system`.
+   Some of our System Module implementations, like `time`, require [System Data Archives](https://switchbrew.org/wiki/Title_list#System_Data_Archives). You can install them by mounting your nand partition using [HacDiskMount](https://switchtools.sshnuke.net/) and copying the content to `Ryujinx/bis/system`.
 
  - **Executables**
 
