@@ -76,12 +76,12 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void InitializeCounters()
         {
-            GetGpuInformation();
+            PrintGpuInformation();
 
             _counters.Initialize();
         }
 
-        private void GetGpuInformation()
+        private void PrintGpuInformation()
         {
             string gpuVendor   = GL.GetString(StringName.Vendor);
             string gpuRenderer = GL.GetString(StringName.Renderer);
