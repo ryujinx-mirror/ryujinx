@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Shader;
 
@@ -75,7 +76,18 @@ namespace Ryujinx.Graphics.OpenGL
 
         public void InitializeCounters()
         {
+            GetGpuInformation();
+
             _counters.Initialize();
+        }
+
+        private void GetGpuInformation()
+        {
+            string gpuVendor   = GL.GetString(StringName.Vendor);
+            string gpuRenderer = GL.GetString(StringName.Renderer);
+            string gpuVersion  = GL.GetString(StringName.Version);
+
+            Logger.PrintInfo(LogClass.Gpu, $"{gpuVendor} {gpuRenderer} ({gpuVersion})");
         }
 
         public void ResetCounter(CounterType type)
