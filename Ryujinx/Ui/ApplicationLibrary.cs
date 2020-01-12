@@ -34,9 +34,8 @@ namespace Ryujinx.Ui
         private static readonly byte[] _nroIcon = GetResourceBytes("Ryujinx.Ui.assets.NROIcon.png");
         private static readonly byte[] _nsoIcon = GetResourceBytes("Ryujinx.Ui.assets.NSOIcon.png");
 
-        private static Keyset              _keySet;
-        private static TitleLanguage       _desiredTitleLanguage;
-        private static ApplicationMetadata _appMetadata;
+        private static Keyset        _keySet;
+        private static TitleLanguage _desiredTitleLanguage;
 
         public static void LoadApplications(List<string> appDirs, Keyset keySet, TitleLanguage desiredTitleLanguage, FileSystemClient fsClient = null, VirtualFileSystem vfs = null)
         {
@@ -339,7 +338,7 @@ namespace Ryujinx.Ui
                     }
                 }
 
-                (bool favorite, string timePlayed, string lastPlayed) = GetMetadata(titleId);
+                ApplicationMetadata appMetadata = LoadAndSaveMetaData(titleId);
 
                 if (ulong.TryParse(titleId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ulong titleIdNum))
                 {
@@ -357,14 +356,14 @@ namespace Ryujinx.Ui
 
                 ApplicationData data = new ApplicationData()
                 {
-                    Favorite      = favorite,
+                    Favorite      = appMetadata.Favorite,
                     Icon          = applicationIcon,
                     TitleName     = titleName,
                     TitleId       = titleId,
                     Developer     = developer,
                     Version       = version,
-                    TimePlayed    = timePlayed,
-                    LastPlayed    = lastPlayed,
+                    TimePlayed    = ConvertSecondsToReadableString(appMetadata.TimePlayed),
+                    LastPlayed    = appMetadata.LastPlayed,
                     FileExtension = Path.GetExtension(applicationPath).ToUpper().Remove(0 ,1),
                     FileSize      = (fileSize < 1) ? (fileSize * 1024).ToString("0.##") + "MB" : fileSize.ToString("0.##") + "GB",
                     Path          = applicationPath,
@@ -431,34 +430,44 @@ namespace Ryujinx.Ui
             return controlNca?.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None);
         }
 
-        private static (bool favorite, string timePlayed, string lastPlayed) GetMetadata(string titleId)
+        internal static ApplicationMetadata LoadAndSaveMetaData(string titleId, Action<ApplicationMetadata> modifyFunction = null)
         {
             string metadataFolder = Path.Combine(new VirtualFileSystem().GetBasePath(), "games", titleId, "gui");
-            string metadataFile   = Path.Combine(metadataFolder, "metadata.json");
+            string metadataFile = Path.Combine(metadataFolder, "metadata.json");
 
-            IJsonFormatterResolver resolver = CompositeResolver.Create(StandardResolver.AllowPrivateSnakeCase);
+            IJsonFormatterResolver resolver = CompositeResolver.Create(new[] { StandardResolver.AllowPrivateSnakeCase });
+
+            ApplicationMetadata appMetadata;
 
             if (!File.Exists(metadataFile))
             {
                 Directory.CreateDirectory(metadataFolder);
 
-                _appMetadata = new ApplicationMetadata
+                appMetadata = new ApplicationMetadata
                 {
                     Favorite   = false,
                     TimePlayed = 0,
                     LastPlayed = "Never"
                 };
 
-                byte[] saveData = JsonSerializer.Serialize(_appMetadata, resolver);
-                File.WriteAllText(metadataFile, Encoding.UTF8.GetString(saveData, 0, saveData.Length).PrettyPrintJson());
+                byte[] data = JsonSerializer.Serialize(appMetadata, resolver);
+                File.WriteAllText(metadataFile, Encoding.UTF8.GetString(data, 0, data.Length).PrettyPrintJson());
             }
 
             using (Stream stream = File.OpenRead(metadataFile))
             {
-                _appMetadata = JsonSerializer.Deserialize<ApplicationMetadata>(stream, resolver);
+                appMetadata = JsonSerializer.Deserialize<ApplicationMetadata>(stream, resolver);
             }
 
-            return (_appMetadata.Favorite, ConvertSecondsToReadableString(_appMetadata.TimePlayed), _appMetadata.LastPlayed);
+            if (modifyFunction != null)
+            {
+                modifyFunction(appMetadata);
+
+                byte[] saveData = JsonSerializer.Serialize(appMetadata, resolver);
+                File.WriteAllText(metadataFile, Encoding.UTF8.GetString(saveData, 0, saveData.Length).PrettyPrintJson());
+            }
+
+            return appMetadata;
         }
 
         private static string ConvertSecondsToReadableString(double seconds)

@@ -307,37 +307,10 @@ namespace Ryujinx.Ui
 
                 DiscordIntegrationModule.SwitchToPlayingState(_device.System.TitleId, _device.System.TitleName);
 
-                string metadataFolder = System.IO.Path.Combine(new VirtualFileSystem().GetBasePath(), "games", _device.System.TitleId, "gui");
-                string metadataFile   = System.IO.Path.Combine(metadataFolder, "metadata.json");
-
-                IJsonFormatterResolver resolver = CompositeResolver.Create(new[] { StandardResolver.AllowPrivateSnakeCase });
-
-                ApplicationMetadata appMetadata;
-
-                if (!File.Exists(metadataFile))
+                ApplicationLibrary.LoadAndSaveMetaData(_device.System.TitleId, appMetadata =>
                 {
-                    Directory.CreateDirectory(metadataFolder);
-
-                    appMetadata = new ApplicationMetadata
-                    {
-                        Favorite   = false,
-                        TimePlayed = 0,
-                        LastPlayed = "Never"
-                    };
-
-                    byte[] data = JsonSerializer.Serialize(appMetadata, resolver);
-                    File.WriteAllText(metadataFile, Encoding.UTF8.GetString(data, 0, data.Length).PrettyPrintJson());
-                }
-
-                using (Stream stream = File.OpenRead(metadataFile))
-                {
-                    appMetadata = JsonSerializer.Deserialize<ApplicationMetadata>(stream, resolver);
-                }
-
-                appMetadata.LastPlayed = DateTime.UtcNow.ToString();
-
-                byte[] saveData = JsonSerializer.Serialize(appMetadata, resolver);
-                File.WriteAllText(metadataFile, Encoding.UTF8.GetString(saveData, 0, saveData.Length).PrettyPrintJson());
+                    appMetadata.LastPlayed = DateTime.UtcNow.ToString();
+                });
             }
         }
 
@@ -364,40 +337,13 @@ namespace Ryujinx.Ui
 
             if (_gameLoaded)
             {
-                string metadataFolder = System.IO.Path.Combine(new VirtualFileSystem().GetBasePath(), "games", _device.System.TitleId, "gui");
-                string metadataFile   = System.IO.Path.Combine(metadataFolder, "metadata.json");
-
-                IJsonFormatterResolver resolver = CompositeResolver.Create(new[] { StandardResolver.AllowPrivateSnakeCase });
-
-                ApplicationMetadata appMetadata;
-
-                if (!File.Exists(metadataFile))
+                ApplicationLibrary.LoadAndSaveMetaData(_device.System.TitleId, appMetadata =>
                 {
-                    Directory.CreateDirectory(metadataFolder);
+                    DateTime lastPlayedDateTime = DateTime.Parse(appMetadata.LastPlayed);
+                    double sessionTimePlayed = DateTime.UtcNow.Subtract(lastPlayedDateTime).TotalSeconds;
 
-                    appMetadata = new ApplicationMetadata
-                    {
-                        Favorite   = false,
-                        TimePlayed = 0,
-                        LastPlayed = "Never"
-                    };
-
-                    byte[] data = JsonSerializer.Serialize(appMetadata, resolver);
-                    File.WriteAllText(metadataFile, Encoding.UTF8.GetString(data, 0, data.Length).PrettyPrintJson());
-                }
-
-                using (Stream stream = File.OpenRead(metadataFile))
-                {
-                    appMetadata = JsonSerializer.Deserialize<ApplicationMetadata>(stream, resolver);
-                }
-
-                DateTime lastPlayedDateTime = DateTime.Parse(appMetadata.LastPlayed);
-                double   sessionTimePlayed  = DateTime.UtcNow.Subtract(lastPlayedDateTime).TotalSeconds;
-
-                appMetadata.TimePlayed += Math.Round(sessionTimePlayed, MidpointRounding.AwayFromZero);
-
-                byte[] saveData = JsonSerializer.Serialize(appMetadata, resolver);
-                File.WriteAllText(metadataFile, Encoding.UTF8.GetString(saveData, 0, saveData.Length).PrettyPrintJson());
+                    appMetadata.TimePlayed += Math.Round(sessionTimePlayed, MidpointRounding.AwayFromZero);
+                });
             }
 
             Profile.FinishProfiling();
@@ -453,33 +399,16 @@ namespace Ryujinx.Ui
         {
             _tableStore.GetIter(out TreeIter treeIter, new TreePath(args.Path));
 
-            string titleId      = _tableStore.GetValue(treeIter, 2).ToString().Split("\n")[1].ToLower();
-            string metadataPath = System.IO.Path.Combine(new VirtualFileSystem().GetBasePath(), "games", titleId, "gui", "metadata.json");
+            string titleId = _tableStore.GetValue(treeIter, 2).ToString().Split("\n")[1].ToLower();
 
-            IJsonFormatterResolver resolver = CompositeResolver.Create(new[] { StandardResolver.AllowPrivateSnakeCase });
+            bool newToggleValue = !(bool)_tableStore.GetValue(treeIter, 0);
 
-            ApplicationMetadata appMetadata;
+            _tableStore.SetValue(treeIter, 0, newToggleValue);
 
-            using (Stream stream = File.OpenRead(metadataPath))
+            ApplicationLibrary.LoadAndSaveMetaData(titleId, appMetadata =>
             {
-                appMetadata = JsonSerializer.Deserialize<ApplicationMetadata>(stream, resolver);
-            }
-
-            if ((bool)_tableStore.GetValue(treeIter, 0))
-            {
-                _tableStore.SetValue(treeIter, 0, false);
-
-                appMetadata.Favorite = false;
-            }
-            else
-            {
-                _tableStore.SetValue(treeIter, 0, true);
-
-                appMetadata.Favorite = true;
-            }
-
-            byte[] saveData = JsonSerializer.Serialize(appMetadata, resolver);
-            File.WriteAllText(metadataPath, Encoding.UTF8.GetString(saveData, 0, saveData.Length).PrettyPrintJson());
+                appMetadata.Favorite = newToggleValue;
+            });
         }
 
         private void Row_Activated(object sender, RowActivatedArgs args)
