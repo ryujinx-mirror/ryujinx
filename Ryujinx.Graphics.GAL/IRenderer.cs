@@ -18,8 +18,6 @@ namespace Ryujinx.Graphics.GAL
         ISampler CreateSampler(SamplerCreateInfo info);
         ITexture CreateTexture(TextureCreateInfo info);
 
-        void FlushPipelines();
-
         Capabilities GetCapabilities();
 
         ulong GetCounter(CounterType type);

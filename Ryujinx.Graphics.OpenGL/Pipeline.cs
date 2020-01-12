@@ -37,6 +37,11 @@ namespace Ryujinx.Graphics.OpenGL
             _clipDepthMode = ClipDepthMode.NegativeOneToOne;
         }
 
+        public void Barrier()
+        {
+            GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
+        }
+
         public void ClearRenderTargetColor(int index, uint componentMask, ColorF color)
         {
             GL.ColorMask(

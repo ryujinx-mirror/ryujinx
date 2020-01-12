@@ -154,7 +154,7 @@ namespace Ryujinx.Graphics.Gpu
                     {
                         _context.Methods.PerformDeferredDraws();
 
-                        _context.Renderer.FlushPipelines();
+                        _context.Renderer.Pipeline.Barrier();
 
                         break;
                     }

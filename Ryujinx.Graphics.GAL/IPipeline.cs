@@ -4,6 +4,8 @@ namespace Ryujinx.Graphics.GAL
 {
     public interface IPipeline
     {
+        void Barrier();
+
         void ClearRenderTargetColor(int index, uint componentMask, ColorF color);
 
         void ClearRenderTargetDepthStencil(

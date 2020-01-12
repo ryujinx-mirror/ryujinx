@@ -55,11 +55,6 @@ namespace Ryujinx.Graphics.OpenGL
             return new TextureStorage(this, info).CreateDefaultView();
         }
 
-        public void FlushPipelines()
-        {
-            GL.Finish();
-        }
-
         public Capabilities GetCapabilities()
         {
             return new Capabilities(
