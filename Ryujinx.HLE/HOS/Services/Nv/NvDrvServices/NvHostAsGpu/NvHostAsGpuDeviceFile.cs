@@ -1,10 +1,12 @@
-﻿using Ryujinx.Common.Logging;
+﻿using Ryujinx.Common;
+using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types;
 using Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvMap;
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
 {
@@ -165,7 +167,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
 
         private NvInternalResult MapBufferEx(ref MapBufferExArguments arguments)
         {
-            const string mapErrorMsg = "Failed to map fixed buffer with offset 0x{0:x16} and size 0x{1:x16}!";
+            const string mapErrorMsg = "Failed to map fixed buffer with offset 0x{0:x16}, size 0x{1:x16} and alignment 0x{2:x16}!";
 
             AddressSpaceContext addressSpaceContext = GetAddressSpaceContext(Context);
 
@@ -176,6 +178,13 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                 Logger.PrintWarning(LogClass.ServiceNv, $"Invalid NvMap handle 0x{arguments.NvMapHandle:x8}!");
 
                 return NvInternalResult.InvalidInput;
+            }
+
+            ulong pageSize = (ulong)arguments.PageSize;
+
+            if (pageSize == 0)
+            {
+                pageSize = (ulong)map.Align;
             }
 
             long physicalAddress;
@@ -192,7 +201,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
 
                         if ((long)addressSpaceContext.Gmm.Map((ulong)physicalAddress, (ulong)virtualAddress, (ulong)arguments.MappingSize) < 0)
                         {
-                            string message = string.Format(mapErrorMsg, virtualAddress, arguments.MappingSize);
+                            string message = string.Format(mapErrorMsg, virtualAddress, arguments.MappingSize, pageSize);
 
                             Logger.PrintWarning(LogClass.ServiceNv, message);
 
@@ -229,13 +238,13 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
 
                 if (!virtualAddressAllocated)
                 {
-                    if (addressSpaceContext.ValidateFixedBuffer(arguments.Offset, size))
+                    if (addressSpaceContext.ValidateFixedBuffer(arguments.Offset, size, pageSize))
                     {
                         arguments.Offset = (long)addressSpaceContext.Gmm.Map((ulong)physicalAddress, (ulong)arguments.Offset, (ulong)size);
                     }
                     else
                     {
-                        string message = string.Format(mapErrorMsg, arguments.Offset, size);
+                        string message = string.Format(mapErrorMsg, arguments.Offset, size, pageSize);
 
                         Logger.PrintWarning(LogClass.ServiceNv, message);
 
@@ -244,7 +253,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu
                 }
                 else
                 {
-                    arguments.Offset = (long)addressSpaceContext.Gmm.Map((ulong)physicalAddress, (ulong)size);
+                    arguments.Offset = (long)addressSpaceContext.Gmm.MapAllocate((ulong)physicalAddress, (ulong)size, pageSize);
                 }
 
                 if (arguments.Offset < 0)

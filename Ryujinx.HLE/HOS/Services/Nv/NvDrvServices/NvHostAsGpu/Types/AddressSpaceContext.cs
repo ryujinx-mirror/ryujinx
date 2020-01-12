@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
             _reservations = new SortedList<long, Range>();
         }
 
-        public bool ValidateFixedBuffer(long position, long size)
+        public bool ValidateFixedBuffer(long position, long size, ulong alignment)
         {
             long mapEnd = position + size;
 
@@ -58,8 +58,8 @@ namespace Ryujinx.HLE.HOS.Services.Nv.NvDrvServices.NvHostAsGpu.Types
                 return false;
             }
 
-            // Check if address is page aligned.
-            if ((position & (long)MemoryManager.PageMask) != 0)
+            // Check if address is aligned.
+            if ((position & (long)(alignment - 1)) != 0)
             {
                 return false;
             }

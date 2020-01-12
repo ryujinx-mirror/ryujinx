@@ -66,12 +66,13 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="pa">CPU virtual address to map into</param>
         /// <param name="size">Size in bytes of the mapping</param>
+        /// <param name="alignment">Required alignment of the GPU virtual address in bytes</param>
         /// <returns>GPU virtual address where the range was mapped, or an all ones mask in case of failure</returns>
-        public ulong Map(ulong pa, ulong size)
+        public ulong MapAllocate(ulong pa, ulong size, ulong alignment)
         {
             lock (_pageTable)
             {
-                ulong va = GetFreePosition(size);
+                ulong va = GetFreePosition(size, alignment);
 
                 if (va != PteUnmapped)
                 {
