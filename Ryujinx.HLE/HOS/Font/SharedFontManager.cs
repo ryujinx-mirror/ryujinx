@@ -44,7 +44,15 @@ namespace Ryujinx.HLE.HOS.Font
             _fontsPath = Path.Combine(device.FileSystem.GetSystemPath(), "fonts");
         }
 
-        public void EnsureInitialized(ContentManager contentManager)
+        public void Initialize(ContentManager contentManager, bool ignoreMissingFonts)
+        {
+            _fontData?.Clear();
+            _fontData = null;
+
+            EnsureInitialized(contentManager, ignoreMissingFonts);
+        }
+
+        public void EnsureInitialized(ContentManager contentManager, bool ignoreMissingFonts)
         {
             if (_fontData == null)
             {
@@ -112,10 +120,12 @@ namespace Ryujinx.HLE.HOS.Font
 
                         return info;
                     }
-                    else
+                    else if (!ignoreMissingFonts)
                     {
                         throw new InvalidSystemResourceException($"Font \"{name}.ttf\" not found. Please provide it in \"{_fontsPath}\".");
                     }
+
+                    return new FontInfo();
                 }
 
                 _fontData = new Dictionary<SharedFontType, FontInfo>
@@ -128,7 +138,7 @@ namespace Ryujinx.HLE.HOS.Font
                     { SharedFontType.NintendoEx,          CreateFont("FontNintendoExtended")          }
                 };
 
-                if (fontOffset > Horizon.FontSize)
+                if (fontOffset > Horizon.FontSize && !ignoreMissingFonts)
                 {
                     throw new InvalidSystemResourceException(
                         $"The sum of all fonts size exceed the shared memory size. " +
@@ -151,14 +161,14 @@ namespace Ryujinx.HLE.HOS.Font
 
         public int GetFontSize(SharedFontType fontType)
         {
-            EnsureInitialized(_device.System.ContentManager);
+            EnsureInitialized(_device.System.ContentManager, false);
 
             return _fontData[fontType].Size;
         }
 
         public int GetSharedMemoryAddressOffset(SharedFontType fontType)
         {
-            EnsureInitialized(_device.System.ContentManager);
+            EnsureInitialized(_device.System.ContentManager, false);
 
             return _fontData[fontType].Offset + 8;
         }

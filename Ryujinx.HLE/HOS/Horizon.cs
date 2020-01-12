@@ -715,6 +715,21 @@ namespace Ryujinx.HLE.HOS
             }
         }
 
+        public SystemVersion VerifyFirmwarePackage(string firmwarePackage)
+        {
+            return ContentManager.VerifyFirmwarePackage(firmwarePackage);
+        }
+
+        public SystemVersion GetCurrentFirmwareVersion()
+        {
+            return ContentManager.GetCurrentFirmwareVersion();
+        }
+
+        public void InstallFirmware(string firmwarePackage)
+        {
+            ContentManager.InstallFirmware(firmwarePackage);
+        }
+
         public void SignalVsync()
         {
             VsyncEvent.ReadableEvent.Signal();

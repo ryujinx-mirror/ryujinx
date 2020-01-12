@@ -61,7 +61,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pl
         // GetSharedMemoryNativeHandle() -> handle<copy>
         public ResultCode GetSharedMemoryNativeHandle(ServiceCtx context)
         {
-            context.Device.System.Font.EnsureInitialized(context.Device.System.ContentManager);
+            context.Device.System.Font.EnsureInitialized(context.Device.System.ContentManager, false);
 
             if (context.Process.HandleTable.GenerateHandle(context.Device.System.FontSharedMem, out int handle) != KernelResult.Success)
             {
