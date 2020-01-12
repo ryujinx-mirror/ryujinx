@@ -13,8 +13,6 @@ namespace Ryujinx.Ui
 {
     public class AboutWindow : Window
     {
-        private static AboutInfo AboutInformation { get; set; }
-
 #pragma warning disable CS0649
 #pragma warning disable IDE0044
         [GUI] Window _aboutWin;
