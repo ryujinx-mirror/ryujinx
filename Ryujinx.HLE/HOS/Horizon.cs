@@ -1,9 +1,11 @@
 using LibHac;
+using LibHac.Account;
 using LibHac.Common;
 using LibHac.Fs;
 using LibHac.FsService;
 using LibHac.FsSystem;
 using LibHac.FsSystem.NcaUtils;
+using LibHac.Ncm;
 using LibHac.Ns;
 using LibHac.Spl;
 using Ryujinx.Common.Logging;
@@ -31,6 +33,8 @@ using System.Threading;
 
 using TimeServiceManager = Ryujinx.HLE.HOS.Services.Time.TimeManager;
 using NxStaticObject     = Ryujinx.HLE.Loaders.Executables.NxStaticObject;
+
+using static LibHac.Fs.ApplicationSaveDataManagement;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -109,7 +113,8 @@ namespace Ryujinx.HLE.HOS
 
         public string TitleName { get; private set; }
 
-        public string TitleId { get; private set; }
+        public ulong  TitleId { get; private set; }
+        public string TitleIdText => TitleId.ToString("x16");
 
         public IntegrityCheckLevel FsIntegrityCheckLevel { get; set; }
 
@@ -513,7 +518,7 @@ namespace Ryujinx.HLE.HOS
 
             LoadExeFs(codeFs, out Npdm metaData);
             
-            TitleId = metaData.Aci0.TitleId.ToString("x16");
+            TitleId = metaData.Aci0.TitleId;
 
             if (controlNca != null)
             {
@@ -522,6 +527,11 @@ namespace Ryujinx.HLE.HOS
             else
             {
                 ControlData.ByteSpan.Clear();
+            }
+
+            if (TitleId != 0)
+            {
+                EnsureSaveData(new TitleId(TitleId));
             }
         }
 
@@ -561,7 +571,7 @@ namespace Ryujinx.HLE.HOS
                 }
             }
 
-            TitleId = metaData.Aci0.TitleId.ToString("x16");
+            TitleId = metaData.Aci0.TitleId;
 
             LoadNso("rtld");
             LoadNso("main");
@@ -664,7 +674,7 @@ namespace Ryujinx.HLE.HOS
             ContentManager.LoadEntries();
 
             TitleName = metaData.TitleName;
-            TitleId   = metaData.Aci0.TitleId.ToString("x16");
+            TitleId   = metaData.Aci0.TitleId;
 
             ProgramLoader.LoadStaticObjects(this, metaData, new IExecutable[] { staticObject });
         }
@@ -677,6 +687,39 @@ namespace Ryujinx.HLE.HOS
             {
                 return new Npdm(npdmStream);
             }
+        }
+
+        private Result EnsureSaveData(TitleId titleId)
+        {
+            Logger.PrintInfo(LogClass.Application, "Ensuring required savedata exists.");
+
+            UInt128 lastOpenedUser = State.Account.LastOpenedUser.UserId;
+            Uid user = new Uid((ulong)lastOpenedUser.Low, (ulong)lastOpenedUser.High);
+
+            ref ApplicationControlProperty control = ref ControlData.Value;
+
+            if (LibHac.Util.IsEmpty(ControlData.ByteSpan))
+            {
+                // If the current application doesn't have a loaded control property, create a dummy one
+                // and set the savedata sizes so a user savedata will be created.
+                control = ref new BlitStruct<ApplicationControlProperty>(1).Value;
+
+                // The set sizes don't actually matter as long as they're non-zero because we use directory savedata.
+                control.UserAccountSaveDataSize = 0x4000;
+                control.UserAccountSaveDataJournalSize = 0x4000;
+
+                Logger.PrintWarning(LogClass.Application,
+                    "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
+            }
+
+            Result rc = EnsureApplicationSaveData(FsClient, out _, titleId, ref ControlData.Value, ref user);
+
+            if (rc.IsFailure())
+            {
+                Logger.PrintError(LogClass.Application, $"Error calling EnsureApplicationSaveData. Result code {rc.ToStringWithName()}");
+            }
+
+            return rc;
         }
 
         public void LoadKeySet()

@@ -307,10 +307,10 @@ namespace Ryujinx.Ui
             string titleNameSection = string.IsNullOrWhiteSpace(_device.System.TitleName) ? string.Empty
                 : " | " + _device.System.TitleName;
 
-            string titleIDSection = string.IsNullOrWhiteSpace(_device.System.TitleId) ? string.Empty
-                : " | " + _device.System.TitleId.ToUpper();
+            string titleIdSection = string.IsNullOrWhiteSpace(_device.System.TitleIdText) ? string.Empty
+                : " | " + _device.System.TitleIdText.ToUpper();
 
-            _newTitle = $"Ryujinx{titleNameSection}{titleIDSection} | Host FPS: {hostFps:0.0} | Game FPS: {gameFps:0.0} | " +
+            _newTitle = $"Ryujinx{titleNameSection}{titleIdSection} | Host FPS: {hostFps:0.0} | Game FPS: {gameFps:0.0} | " +
                 $"Game Vsync: {(_device.EnableDeviceVsync ? "On" : "Off")}";
 
             _titleEvent = true;

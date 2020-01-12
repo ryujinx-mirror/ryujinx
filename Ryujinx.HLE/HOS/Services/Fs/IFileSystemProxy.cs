@@ -133,6 +133,20 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             SaveDataCreateInfo createInfo     = context.RequestData.ReadStruct<SaveDataCreateInfo>();
             SaveMetaCreateInfo metaCreateInfo = context.RequestData.ReadStruct<SaveMetaCreateInfo>();
 
+            // TODO: There's currently no program registry for FS to reference.
+            // Workaround that by setting the application ID and owner ID if they're not already set
+            if (attribute.TitleId == TitleId.Zero)
+            {
+                attribute.TitleId = new TitleId(context.Process.TitleId);
+            }
+
+            if (createInfo.OwnerId == TitleId.Zero)
+            {
+                createInfo.OwnerId = new TitleId(context.Process.TitleId);
+            }
+
+            Logger.PrintInfo(LogClass.ServiceFs, $"Creating save with title ID {attribute.TitleId.Value:x16}");
+
             Result result = _baseFileSystemProxy.CreateSaveDataFileSystem(ref attribute, ref createInfo, ref metaCreateInfo);
 
             return (ResultCode)result.Value;
@@ -196,6 +210,18 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             SaveMetaCreateInfo metaCreateInfo = context.RequestData.ReadStruct<SaveMetaCreateInfo>();
             HashSalt           hashSalt       = context.RequestData.ReadStruct<HashSalt>();
 
+            // TODO: There's currently no program registry for FS to reference.
+            // Workaround that by setting the application ID and owner ID if they're not already set
+            if (attribute.TitleId == TitleId.Zero)
+            {
+                attribute.TitleId = new TitleId(context.Process.TitleId);
+            }
+
+            if (createInfo.OwnerId == TitleId.Zero)
+            {
+                createInfo.OwnerId = new TitleId(context.Process.TitleId);
+            }
+
             Result result = _baseFileSystemProxy.CreateSaveDataFileSystemWithHashSalt(ref attribute, ref createInfo, ref metaCreateInfo, ref hashSalt);
 
             return (ResultCode)result.Value;
@@ -208,6 +234,8 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             SaveDataSpaceId   spaceId   = (SaveDataSpaceId)context.RequestData.ReadInt64();
             SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
 
+            // TODO: There's currently no program registry for FS to reference.
+            // Workaround that by setting the application ID if it's not already set
             if (attribute.TitleId == TitleId.Zero)
             {
                 attribute.TitleId = new TitleId(context.Process.TitleId);
@@ -247,6 +275,8 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
             SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
 
+            // TODO: There's currently no program registry for FS to reference.
+            // Workaround that by setting the application ID if it's not already set
             if (attribute.TitleId == TitleId.Zero)
             {
                 attribute.TitleId = new TitleId(context.Process.TitleId);
