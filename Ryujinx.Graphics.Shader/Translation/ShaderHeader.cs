@@ -76,9 +76,9 @@ namespace Ryujinx.Graphics.Shader.Translation
         public bool              OmapSampleMask { get; }
         public bool              OmapDepth      { get; }
 
-        public ShaderHeader(Span<byte> code)
+        public ShaderHeader(ReadOnlySpan<byte> code)
         {
-            Span<int> header = MemoryMarshal.Cast<byte, int>(code);
+            ReadOnlySpan<int> header = MemoryMarshal.Cast<byte, int>(code);
 
             int commonWord0 = header[0];
             int commonWord1 = header[1];

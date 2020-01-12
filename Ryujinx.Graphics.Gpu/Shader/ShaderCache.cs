@@ -265,7 +265,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             ShaderProgram program;
 
-            Span<byte> code = _context.MemoryAccessor.Read(gpuVa, MaxProgramSize);
+            ReadOnlySpan<byte> code = _context.MemoryAccessor.GetSpan(gpuVa, MaxProgramSize);
 
             program = Translator.Translate(code, callbacks, DefaultFlags | TranslationFlags.Compute);
 
@@ -319,8 +319,8 @@ namespace Ryujinx.Graphics.Gpu.Shader
 
             if (gpuVaA != 0)
             {
-                Span<byte> codeA = _context.MemoryAccessor.Read(gpuVaA, MaxProgramSize);
-                Span<byte> codeB = _context.MemoryAccessor.Read(gpuVa,  MaxProgramSize);
+                ReadOnlySpan<byte> codeA = _context.MemoryAccessor.GetSpan(gpuVaA, MaxProgramSize);
+                ReadOnlySpan<byte> codeB = _context.MemoryAccessor.GetSpan(gpuVa,  MaxProgramSize);
 
                 program = Translator.Translate(codeA, codeB, callbacks, DefaultFlags);
 
@@ -340,7 +340,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
             }
             else
             {
-                Span<byte> code = _context.MemoryAccessor.Read(gpuVa, MaxProgramSize);
+                ReadOnlySpan<byte> code = _context.MemoryAccessor.GetSpan(gpuVa, MaxProgramSize);
 
                 program = Translator.Translate(code, callbacks, DefaultFlags);
 

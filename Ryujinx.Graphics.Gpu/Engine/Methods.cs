@@ -235,7 +235,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                     sbDescAddress += (ulong)sbDescOffset;
 
-                    Span<byte> sbDescriptorData = _context.PhysicalMemory.Read(sbDescAddress, 0x10);
+                    ReadOnlySpan<byte> sbDescriptorData = _context.PhysicalMemory.GetSpan(sbDescAddress, 0x10);
 
                     SbDescriptor sbDescriptor = MemoryMarshal.Cast<byte, SbDescriptor>(sbDescriptorData)[0];
 

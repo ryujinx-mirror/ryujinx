@@ -123,7 +123,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
                 int offset = (int)(mAddress - Address);
 
-                HostBuffer.SetData(offset, _context.PhysicalMemory.Read(mAddress, mSize));
+                HostBuffer.SetData(offset, _context.PhysicalMemory.GetSpan(mAddress, mSize));
             }
         }
 
@@ -157,7 +157,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         public void Invalidate()
         {
-            HostBuffer.SetData(0, _context.PhysicalMemory.Read(Address, Size));
+            HostBuffer.SetData(0, _context.PhysicalMemory.GetSpan(Address, Size));
         }
 
         /// <summary>

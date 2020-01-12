@@ -22,14 +22,14 @@ namespace Ryujinx.Graphics.Gpu.Memory
         }
 
         /// <summary>
-        /// Reads data from the application process.
+        /// Gets a span of data from the application process.
         /// </summary>
-        /// <param name="address">Address to be read</param>
-        /// <param name="size">Size in bytes to be read</param>
-        /// <returns>The data at the specified memory location</returns>
-        public Span<byte> Read(ulong address, ulong size)
+        /// <param name="address">Start address of the range</param>
+        /// <param name="size">Size in bytes to be range</param>
+        /// <returns>A read only span of the data at the specified memory location</returns>
+        public ReadOnlySpan<byte> GetSpan(ulong address, ulong size)
         {
-            return _cpuMemory.ReadBytes((long)address, (long)size);
+            return _cpuMemory.GetSpan(address, size);
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// </summary>
         /// <param name="address">Address to write into</param>
         /// <param name="data">Data to be written</param>
-        public void Write(ulong address, Span<byte> data)
+        public void Write(ulong address, ReadOnlySpan<byte> data)
         {
             _cpuMemory.WriteBytes((long)address, data.ToArray());
         }

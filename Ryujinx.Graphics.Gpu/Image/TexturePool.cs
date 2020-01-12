@@ -85,7 +85,7 @@ namespace Ryujinx.Graphics.Gpu.Image
         {
             ulong address = Address + (ulong)(uint)id * DescriptorSize;
 
-            Span<byte> data = Context.PhysicalMemory.Read(address, DescriptorSize);
+            ReadOnlySpan<byte> data = Context.PhysicalMemory.GetSpan(address, DescriptorSize);
 
             return MemoryMarshal.Cast<byte, TextureDescriptor>(data)[0];
         }
@@ -107,7 +107,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (texture != null)
                 {
-                    Span<byte> data = Context.PhysicalMemory.Read(address, DescriptorSize);
+                    ReadOnlySpan<byte> data = Context.PhysicalMemory.GetSpan(address, DescriptorSize);
 
                     TextureDescriptor descriptor = MemoryMarshal.Cast<byte, TextureDescriptor>(data)[0];
 

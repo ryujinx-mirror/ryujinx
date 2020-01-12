@@ -197,7 +197,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                         address = bufferManager.GetGraphicsUniformBufferAddress(stageIndex, binding.CbufSlot);
                     }
 
-                    packedId = MemoryMarshal.Cast<byte, int>(_context.PhysicalMemory.Read(address + (ulong)binding.CbufOffset * 4, 4))[0];
+                    packedId = MemoryMarshal.Cast<byte, int>(_context.PhysicalMemory.GetSpan(address + (ulong)binding.CbufOffset * 4, 4))[0];
                 }
                 else
                 {
@@ -321,7 +321,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             address += (uint)wordOffset * 4;
 
-            return BitConverter.ToInt32(_context.PhysicalMemory.Read(address, 4));
+            return BitConverter.ToInt32(_context.PhysicalMemory.GetSpan(address, 4));
         }
 
         /// <summary>

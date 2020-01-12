@@ -40,7 +40,7 @@ namespace Ryujinx.Graphics.OpenGL
             return data;
         }
 
-        public void SetData(Span<byte> data)
+        public void SetData(ReadOnlySpan<byte> data)
         {
             unsafe
             {
@@ -53,7 +53,7 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void SetData(int offset, Span<byte> data)
+        public void SetData(int offset, ReadOnlySpan<byte> data)
         {
             GL.BindBuffer(BufferTarget.CopyWriteBuffer, Handle);
 

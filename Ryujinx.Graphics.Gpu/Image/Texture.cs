@@ -304,7 +304,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 return;
             }
 
-            Span<byte> data = _context.PhysicalMemory.Read(Address, Size);
+            ReadOnlySpan<byte> data = _context.PhysicalMemory.GetSpan(Address, Size);
 
             if (Info.IsLinear)
             {

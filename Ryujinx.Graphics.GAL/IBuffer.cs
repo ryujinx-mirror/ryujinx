@@ -8,8 +8,8 @@ namespace Ryujinx.Graphics.GAL
 
         byte[] GetData(int offset, int size);
 
-        void SetData(Span<byte> data);
+        void SetData(ReadOnlySpan<byte> data);
 
-        void SetData(int offset, Span<byte> data);
+        void SetData(int offset, ReadOnlySpan<byte> data);
     }
 }

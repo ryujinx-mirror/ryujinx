@@ -43,7 +43,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             {
                 ulong address = Address + (ulong)(uint)id * DescriptorSize;
 
-                Span<byte> data = Context.PhysicalMemory.Read(address, DescriptorSize);
+                ReadOnlySpan<byte> data = Context.PhysicalMemory.GetSpan(address, DescriptorSize);
 
                 SamplerDescriptor descriptor = MemoryMarshal.Cast<byte, SamplerDescriptor>(data)[0];
 

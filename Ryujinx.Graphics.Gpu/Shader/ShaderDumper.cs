@@ -27,7 +27,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// <param name="compute">True for compute shader code, false for graphics shader code</param>
         /// <param name="fullPath">Output path for the shader code with header included</param>
         /// <param name="codePath">Output path for the shader code without header</param>
-        public void Dump(Span<byte> code, bool compute, out string fullPath, out string codePath)
+        public void Dump(ReadOnlySpan<byte> code, bool compute, out string fullPath, out string codePath)
         {
             _dumpPath = GraphicsConfig.ShadersDumpPath;
 

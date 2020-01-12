@@ -27,23 +27,23 @@ namespace Ryujinx.Graphics.Gpu.Memory
         /// <returns>Byte array with the data</returns>
         public byte[] ReadBytes(ulong gpuVa, ulong size)
         {
-            return Read(gpuVa, size).ToArray();
+            return GetSpan(gpuVa, size).ToArray();
         }
 
         /// <summary>
-        /// Reads data from GPU mapped memory.
+        /// Gets a read-only span of data from GPU mapped memory.
         /// This reads as much data as possible, up to the specified maximum size.
         /// </summary>
         /// <param name="gpuVa">GPU virtual address where the data is located</param>
         /// <param name="maxSize">Maximum size of the data</param>
-        /// <returns>The data at the specified memory location</returns>
-        public Span<byte> Read(ulong gpuVa, ulong maxSize)
+        /// <returns>The span of the data at the specified memory location</returns>
+        public ReadOnlySpan<byte> GetSpan(ulong gpuVa, ulong maxSize)
         {
             ulong processVa = _context.MemoryManager.Translate(gpuVa);
 
             ulong size = Math.Min(_context.MemoryManager.GetSubSize(gpuVa), maxSize);
 
-            return _context.PhysicalMemory.Read(processVa, size);
+            return _context.PhysicalMemory.GetSpan(processVa, size);
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
 
             ulong size = (uint)Marshal.SizeOf<T>();
 
-            return MemoryMarshal.Cast<byte, T>(_context.PhysicalMemory.Read(processVa, size))[0];
+            return MemoryMarshal.Cast<byte, T>(_context.PhysicalMemory.GetSpan(processVa, size))[0];
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             ulong processVa = _context.MemoryManager.Translate(gpuVa);
 
-            return BitConverter.ToInt32(_context.PhysicalMemory.Read(processVa, 4));
+            return BitConverter.ToInt32(_context.PhysicalMemory.GetSpan(processVa, 4));
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             ulong processVa = _context.MemoryManager.Translate(gpuVa);
 
-            return BitConverter.ToUInt64(_context.PhysicalMemory.Read(processVa, 8));
+            return BitConverter.ToUInt64(_context.PhysicalMemory.GetSpan(processVa, 8));
         }
 
         /// <summary>

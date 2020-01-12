@@ -21,7 +21,7 @@ namespace Ryujinx.Graphics.Shader.Decoders
             _opActivators = new ConcurrentDictionary<Type, OpActivator>();
         }
 
-        public static Block[] Decode(Span<byte> code, ulong headerSize)
+        public static Block[] Decode(ReadOnlySpan<byte> code, ulong headerSize)
         {
             List<Block> blocks = new List<Block>();
 
@@ -214,10 +214,10 @@ namespace Ryujinx.Graphics.Shader.Decoders
         }
 
         private static void FillBlock(
-            Span<byte> code,
-            Block      block,
-            ulong      limitAddress,
-            ulong      startAddress)
+            ReadOnlySpan<byte> code,
+            Block              block,
+            ulong              limitAddress,
+            ulong              startAddress)
         {
             ulong address = block.Address;
 

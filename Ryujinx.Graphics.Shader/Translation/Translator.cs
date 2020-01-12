@@ -14,7 +14,7 @@ namespace Ryujinx.Graphics.Shader.Translation
     {
         private const int HeaderSize = 0x50;
 
-        public static Span<byte> ExtractCode(Span<byte> code, bool compute, out int headerSize)
+        public static ReadOnlySpan<byte> ExtractCode(ReadOnlySpan<byte> code, bool compute, out int headerSize)
         {
             headerSize = compute ? 0 : HeaderSize;
 
@@ -38,14 +38,14 @@ namespace Ryujinx.Graphics.Shader.Translation
             return code.Slice(0, headerSize + (int)endAddress);
         }
 
-        public static ShaderProgram Translate(Span<byte> code, TranslatorCallbacks callbacks, TranslationFlags flags)
+        public static ShaderProgram Translate(ReadOnlySpan<byte> code, TranslatorCallbacks callbacks, TranslationFlags flags)
         {
             Operation[] ops = DecodeShader(code, callbacks, flags, out ShaderConfig config, out int size);
 
             return Translate(ops, config, size);
         }
 
-        public static ShaderProgram Translate(Span<byte> vpACode, Span<byte> vpBCode, TranslatorCallbacks callbacks, TranslationFlags flags)
+        public static ShaderProgram Translate(ReadOnlySpan<byte> vpACode, ReadOnlySpan<byte> vpBCode, TranslatorCallbacks callbacks, TranslationFlags flags)
         {
             Operation[] vpAOps = DecodeShader(vpACode, callbacks, flags, out _, out _);
             Operation[] vpBOps = DecodeShader(vpBCode, callbacks, flags, out ShaderConfig config, out int sizeB);
@@ -88,7 +88,7 @@ namespace Ryujinx.Graphics.Shader.Translation
         }
 
         private static Operation[] DecodeShader(
-            Span<byte>          code,
+            ReadOnlySpan<byte>  code,
             TranslatorCallbacks callbacks,
             TranslationFlags    flags,
             out ShaderConfig    config,

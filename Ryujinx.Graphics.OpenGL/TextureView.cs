@@ -217,7 +217,7 @@ namespace Ryujinx.Graphics.OpenGL
             }
         }
 
-        public void SetData(Span<byte> data)
+        public void SetData(ReadOnlySpan<byte> data)
         {
             unsafe
             {

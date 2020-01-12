@@ -1,6 +1,7 @@
 using ARMeilleure.State;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -550,6 +551,50 @@ namespace ARMeilleure.Memory
             }
 
             return data;
+        }
+
+        public ReadOnlySpan<byte> GetSpan(ulong address, ulong size)
+        {
+            if (IsContiguous(address, size))
+            {
+                return new ReadOnlySpan<byte>((void*)Translate((long)address), (int)size);
+            }
+            else
+            {
+                return ReadBytes((long)address, (long)size);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool IsContiguous(ulong address, ulong size)
+        {
+            if (!IsValidPosition((long)address))
+            {
+                return false;
+            }
+
+            ulong endVa = (address + size + PageMask) & ~(ulong)PageMask;
+
+            address &= ~(ulong)PageMask;
+
+            int pages = (int)((endVa - address) / PageSize);
+
+            for (int page = 0; page < pages - 1; page++)
+            {
+                if (!IsValidPosition((long)address + PageSize))
+                {
+                    return false;
+                }
+
+                if (GetPtEntry((long)address) + PageSize != GetPtEntry((long)address + PageSize))
+                {
+                    return false;
+                }
+
+                address += PageSize;
+            }
+
+            return true;
         }
 
         public void WriteSByte(long position, sbyte value)
