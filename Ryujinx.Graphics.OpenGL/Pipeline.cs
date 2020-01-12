@@ -170,26 +170,35 @@ namespace Ryujinx.Graphics.OpenGL
             int firstVertex,
             int firstInstance)
         {
-            // TODO: Instanced rendering.
             int quadsCount = (vertexCount - 2) / 2;
 
-            int[] firsts = new int[quadsCount];
-            int[] counts = new int[quadsCount];
-
-            firsts[0] = firstVertex;
-            counts[0] = 4;
-
-            for (int quadIndex = 1; quadIndex < quadsCount; quadIndex++)
+            if (firstInstance != 0 || instanceCount != 1)
             {
-                firsts[quadIndex] = firstVertex + quadIndex * 2;
-                counts[quadIndex] = 4;
+                for (int quadIndex = 0; quadIndex < quadsCount; quadIndex++)
+                {
+                    GL.DrawArraysInstancedBaseInstance(PrimitiveType.TriangleFan, firstVertex + quadIndex * 2, 4, instanceCount, firstInstance);
+                }
             }
+            else
+            {
+                int[] firsts = new int[quadsCount];
+                int[] counts = new int[quadsCount];
 
-            GL.MultiDrawArrays(
-                PrimitiveType.TriangleFan,
-                firsts,
-                counts,
-                quadsCount);
+                firsts[0] = firstVertex;
+                counts[0] = 4;
+
+                for (int quadIndex = 1; quadIndex < quadsCount; quadIndex++)
+                {
+                    firsts[quadIndex] = firstVertex + quadIndex * 2;
+                    counts[quadIndex] = 4;
+                }
+
+                GL.MultiDrawArrays(
+                    PrimitiveType.TriangleFan,
+                    firsts,
+                    counts,
+                    quadsCount);
+            }
         }
 
         private void DrawImpl(
@@ -282,31 +291,75 @@ namespace Ryujinx.Graphics.OpenGL
             int    firstVertex,
             int    firstInstance)
         {
-            // TODO: Instanced rendering.
             int quadsCount = indexCount / 4;
 
-            IntPtr[] indices = new IntPtr[quadsCount];
-
-            int[] counts = new int[quadsCount];
-
-            int[] baseVertices = new int[quadsCount];
-
-            for (int quadIndex = 0; quadIndex < quadsCount; quadIndex++)
+            if (firstInstance != 0 || instanceCount != 1)
             {
-                indices[quadIndex] = indexBaseOffset + quadIndex * 4 * indexElemSize;
-
-                counts[quadIndex] = 4;
-
-                baseVertices[quadIndex] = firstVertex;
+                if (firstVertex != 0 && firstInstance != 0)
+                {
+                    for (int quadIndex = 0; quadIndex < quadsCount; quadIndex++)
+                    {
+                        GL.DrawElementsInstancedBaseVertexBaseInstance(
+                            PrimitiveType.TriangleFan,
+                            4,
+                            _elementsType,
+                            indexBaseOffset + quadIndex * 4 * indexElemSize,
+                            instanceCount,
+                            firstVertex,
+                            firstInstance);
+                    }
+                }
+                else if (firstInstance != 0)
+                {
+                    for (int quadIndex = 0; quadIndex < quadsCount; quadIndex++)
+                    {
+                        GL.DrawElementsInstancedBaseInstance(
+                            PrimitiveType.TriangleFan,
+                            4,
+                            _elementsType,
+                            indexBaseOffset + quadIndex * 4 * indexElemSize,
+                            instanceCount,
+                            firstInstance);
+                    }
+                }
+                else
+                {
+                    for (int quadIndex = 0; quadIndex < quadsCount; quadIndex++)
+                    {
+                        GL.DrawElementsInstanced(
+                            PrimitiveType.TriangleFan,
+                            4,
+                            _elementsType,
+                            indexBaseOffset + quadIndex * 4 * indexElemSize,
+                            instanceCount);
+                    }
+                }
             }
+            else
+            {
+                IntPtr[] indices = new IntPtr[quadsCount];
 
-            GL.MultiDrawElementsBaseVertex(
-                PrimitiveType.TriangleFan,
-                counts,
-                _elementsType,
-                indices,
-                quadsCount,
-                baseVertices);
+                int[] counts = new int[quadsCount];
+
+                int[] baseVertices = new int[quadsCount];
+
+                for (int quadIndex = 0; quadIndex < quadsCount; quadIndex++)
+                {
+                    indices[quadIndex] = indexBaseOffset + quadIndex * 4 * indexElemSize;
+
+                    counts[quadIndex] = 4;
+
+                    baseVertices[quadIndex] = firstVertex;
+                }
+
+                GL.MultiDrawElementsBaseVertex(
+                    PrimitiveType.TriangleFan,
+                    counts,
+                    _elementsType,
+                    indices,
+                    quadsCount,
+                    baseVertices);
+            }
         }
 
         private void DrawQuadStripIndexedImpl(
