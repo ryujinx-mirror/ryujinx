@@ -21,7 +21,10 @@ namespace Ryujinx.Profiler.UI
             {
                 _profilerRunning = true;
                 _prevTime        = 0;
-                _profileThread   = new Thread(ProfileLoop);
+                _profileThread   = new Thread(ProfileLoop)
+                {
+                    Name = "Profiler.ProfileThread"
+                };
                 _profileThread.Start();
             }
         }
@@ -60,7 +63,10 @@ namespace Ryujinx.Profiler.UI
             using (_window = new ProfileWindow())
             {
                 // Create thread for render loop
-                _renderThread = new Thread(RenderLoop);
+                _renderThread = new Thread(RenderLoop)
+                {
+                    Name = "Profiler.RenderThread"
+                };
                 _renderThread.Start();
 
                 while (_profilerRunning)

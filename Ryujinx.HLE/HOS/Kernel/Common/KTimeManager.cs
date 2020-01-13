@@ -33,7 +33,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
 
             _keepRunning = true;
 
-            Thread work = new Thread(WaitAndCheckScheduledObjects);
+            Thread work = new Thread(WaitAndCheckScheduledObjects)
+            {
+                Name = "HLE.TimeManager"
+            };
 
             work.Start();
         }

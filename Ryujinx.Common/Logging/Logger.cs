@@ -155,7 +155,7 @@ namespace Ryujinx.Common.Logging
         {
             if (m_EnabledLevels[(int)logLevel] && m_EnabledClasses[(int)logClass])
             {
-                Updated?.Invoke(null, new LogEventArgs(logLevel, m_Time.Elapsed, Thread.CurrentThread.ManagedThreadId, message));
+                Updated?.Invoke(null, new LogEventArgs(logLevel, m_Time.Elapsed, Thread.CurrentThread.Name, message));
             }
         }
 
@@ -163,7 +163,7 @@ namespace Ryujinx.Common.Logging
         {
             if (m_EnabledLevels[(int)logLevel] && m_EnabledClasses[(int)logClass])
             {
-                Updated?.Invoke(null, new LogEventArgs(logLevel, m_Time.Elapsed, Thread.CurrentThread.ManagedThreadId, message, data));
+                Updated?.Invoke(null, new LogEventArgs(logLevel, m_Time.Elapsed, Thread.CurrentThread.Name, message, data));
             }
         }
 

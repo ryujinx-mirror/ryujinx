@@ -18,8 +18,13 @@ namespace Ryujinx.Common.Logging
 
                 sb.AppendFormat(@"{0:hh\:mm\:ss\.fff}", args.Time);
                 sb.Append(" | ");
-                sb.AppendFormat("{0:d4}", args.ThreadId);
-                sb.Append(' ');
+
+                if (args.ThreadName != null)
+                {
+                    sb.Append(args.ThreadName);
+                    sb.Append(' ');
+                }
+
                 sb.Append(args.Message);
 
                 if (args.Data != null)

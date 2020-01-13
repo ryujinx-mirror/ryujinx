@@ -159,7 +159,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 is64Bits = true;
             }
 
-            HostThread = new Thread(customHostThreadStart == null ? () => ThreadStart(entrypoint) : customHostThreadStart);
+            HostThread = new Thread(customHostThreadStart ?? (() => ThreadStart(entrypoint)));
 
             Context = new ARMeilleure.State.ExecutionContext();
 
@@ -185,7 +185,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
             ThreadUid = System.GetThreadUid();
 
-            HostThread.Name = $"Host Thread (thread id {ThreadUid})";
+            HostThread.Name = $"HLE.HostThread.{ThreadUid}";
 
             _hasBeenInitialized = true;
 

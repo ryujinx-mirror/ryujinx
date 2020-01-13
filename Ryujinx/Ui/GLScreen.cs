@@ -120,7 +120,10 @@ namespace Ryujinx.Ui
             Context.MakeCurrent(null);
 
             // OpenTK doesn't like sleeps in its thread, to avoid this a renderer thread is created
-            _renderThread = new Thread(RenderLoop);
+            _renderThread = new Thread(RenderLoop)
+            {
+                Name = "GUI.RenderThread"
+            };
 
             _renderThread.Start();
 

@@ -58,9 +58,12 @@ namespace ARMeilleure.Translation
         {
             if (Interlocked.Increment(ref _threadCount) == 1)
             {
-                Thread backgroundTranslatorThread = new Thread(TranslateQueuedSubs);
+                Thread backgroundTranslatorThread = new Thread(TranslateQueuedSubs)
+                {
+                    Name     = "CPU.BackgroundTranslatorThread",
+                    Priority = ThreadPriority.Lowest
+                };
 
-                backgroundTranslatorThread.Priority = ThreadPriority.Lowest;
                 backgroundTranslatorThread.Start();
             }
 

@@ -17,7 +17,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public void StartAutoPreemptionThread()
         {
-            Thread preemptionThread = new Thread(PreemptCurrentThread);
+            Thread preemptionThread = new Thread(PreemptCurrentThread)
+            {
+                Name = "HLE.PreemptionThread"
+            };
 
             _keepPreempting = true;
 

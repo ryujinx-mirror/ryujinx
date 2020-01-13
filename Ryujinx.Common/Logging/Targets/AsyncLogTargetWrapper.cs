@@ -57,6 +57,7 @@ namespace Ryujinx.Common.Logging
                 }
             });
 
+            _messageThread.Name         = "Logger.MessageThread";
             _messageThread.IsBackground = true;
             _messageThread.Start();
         }

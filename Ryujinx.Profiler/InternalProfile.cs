@@ -55,7 +55,10 @@ namespace Ryujinx.Profiler
             _cleanupRunning      = true;
 
             // Create cleanup thread.
-            _cleanupThread = new Thread(CleanupLoop);
+            _cleanupThread = new Thread(CleanupLoop)
+            {
+                Name = "Profiler.CleanupThread"
+            };
             _cleanupThread.Start();
         }
 

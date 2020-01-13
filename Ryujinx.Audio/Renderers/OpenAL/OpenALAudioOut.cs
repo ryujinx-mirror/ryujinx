@@ -70,7 +70,10 @@ namespace Ryujinx.Audio
             _context           = new AudioContext();
             _tracks            = new ConcurrentDictionary<int, OpenALAudioTrack>();
             _keepPolling       = true;
-            _audioPollerThread = new Thread(AudioPollerWork);
+            _audioPollerThread = new Thread(AudioPollerWork)
+            {
+                Name = "Audio.PollerThread"
+            };
 
             _audioPollerThread.Start();
         }
