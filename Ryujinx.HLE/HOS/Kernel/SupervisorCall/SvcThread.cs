@@ -9,12 +9,12 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
     partial class SvcHandler
     {
         public KernelResult CreateThread64(
-            ulong   entrypoint,
-            ulong   argsPtr,
-            ulong   stackTop,
-            int     priority,
-            int     cpuCore,
-            out int handle)
+            [R(1)] ulong   entrypoint,
+            [R(2)] ulong   argsPtr,
+            [R(3)] ulong   stackTop,
+            [R(4)] int     priority,
+            [R(5)] int     cpuCore,
+            [R(1)] out int handle)
         {
             return CreateThread(entrypoint, argsPtr, stackTop, priority, cpuCore, out handle);
         }
@@ -78,7 +78,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return result;
         }
 
-        public KernelResult StartThread64(int handle)
+        public KernelResult StartThread64([R(0)] int handle)
         {
             return StartThread(handle);
         }
@@ -122,7 +122,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             currentThread.Exit();
         }
 
-        public void SleepThread64(long timeout)
+        public void SleepThread64([R(0)] long timeout)
         {
             SleepThread(timeout);
         }
@@ -146,7 +146,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
         }
 
-        public KernelResult GetThreadPriority64(int handle, out int priority)
+        public KernelResult GetThreadPriority64([R(1)] int handle, [R(1)] out int priority)
         {
             return GetThreadPriority(handle, out priority);
         }
@@ -169,7 +169,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
         }
 
-        public KernelResult SetThreadPriority64(int handle, int priority)
+        public KernelResult SetThreadPriority64([R(0)] int handle, [R(1)] int priority)
         {
             return SetThreadPriority(handle, priority);
         }
@@ -190,7 +190,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return KernelResult.Success;
         }
 
-        public KernelResult GetThreadCoreMask64(int handle, out int preferredCore, out long affinityMask)
+        public KernelResult GetThreadCoreMask64([R(2)] int handle, [R(1)] out int preferredCore, [R(2)] out long affinityMask)
         {
             return GetThreadCoreMask(handle, out preferredCore, out affinityMask);
         }
@@ -215,7 +215,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
         }
 
-        public KernelResult SetThreadCoreMask64(int handle, int preferredCore, long affinityMask)
+        public KernelResult SetThreadCoreMask64([R(0)] int handle, [R(1)] int preferredCore, [R(2)] long affinityMask)
         {
             return SetThreadCoreMask(handle, preferredCore, affinityMask);
         }
@@ -271,7 +271,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _system.Scheduler.GetCurrentThread().CurrentCore;
         }
 
-        public KernelResult GetThreadId64(int handle, out long threadUid)
+        public KernelResult GetThreadId64([R(1)] int handle, [R(1)] out long threadUid)
         {
             return GetThreadId(handle, out threadUid);
         }
@@ -294,7 +294,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
         }
 
-        public KernelResult SetThreadActivity64(int handle, bool pause)
+        public KernelResult SetThreadActivity64([R(0)] int handle, [R(1)] bool pause)
         {
             return SetThreadActivity(handle, pause);
         }
@@ -321,7 +321,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return thread.SetActivity(pause);
         }
 
-        public KernelResult GetThreadContext364(ulong address, int handle)
+        public KernelResult GetThreadContext364([R(0)] ulong address, [R(1)] int handle)
         {
             return GetThreadContext3(address, handle);
         }

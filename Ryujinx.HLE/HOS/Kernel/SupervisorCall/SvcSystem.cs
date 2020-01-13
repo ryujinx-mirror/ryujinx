@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             ExitProcess();
         }
 
-        public KernelResult TerminateProcess64(int handle)
+        public KernelResult TerminateProcess64([R(0)] int handle)
         {
             return TerminateProcess(handle);
         }
@@ -54,7 +54,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             _system.Scheduler.GetCurrentProcess().TerminateCurrentProcess();
         }
 
-        public KernelResult SignalEvent64(int handle)
+        public KernelResult SignalEvent64([R(0)] int handle)
         {
             return SignalEvent(handle);
         }
@@ -79,7 +79,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return result;
         }
 
-        public KernelResult ClearEvent64(int handle)
+        public KernelResult ClearEvent64([R(0)] int handle)
         {
             return ClearEvent(handle);
         }
@@ -104,7 +104,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return result;
         }
 
-        public KernelResult CloseHandle64(int handle)
+        public KernelResult CloseHandle64([R(0)] int handle)
         {
             return CloseHandle(handle);
         }
@@ -134,7 +134,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return KernelResult.Success;
         }
 
-        public KernelResult ResetSignal64(int handle)
+        public KernelResult ResetSignal64([R(0)] int handle)
         {
             return ResetSignal(handle);
         }
@@ -173,7 +173,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _system.Scheduler.GetCurrentThread().Context.CntpctEl0;
         }
 
-        public KernelResult GetProcessId64(int handle, out long pid)
+        public KernelResult GetProcessId64([R(1)] int handle, [R(1)] out long pid)
         {
             return GetProcessId(handle, out pid);
         }
@@ -203,7 +203,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 : KernelResult.InvalidHandle;
         }
 
-        public void Break64(ulong reason, ulong x1, ulong info)
+        public void Break64([R(0)] ulong reason, [R(1)] ulong x1, [R(2)] ulong info)
         {
             Break(reason);
         }
@@ -235,7 +235,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             }
         }
 
-        public void OutputDebugString64(ulong strPtr, ulong size)
+        public void OutputDebugString64([R(0)] ulong strPtr, [R(1)] ulong size)
         {
             OutputDebugString(strPtr, size);
         }
@@ -247,7 +247,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             Logger.PrintWarning(LogClass.KernelSvc, str);
         }
 
-        public KernelResult GetInfo64(uint id, int handle, long subId, out long value)
+        public KernelResult GetInfo64([R(1)] uint id, [R(2)] int handle, [R(3)] long subId, [R(1)] out long value)
         {
             return GetInfo(id, handle, subId, out value);
         }
@@ -478,7 +478,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return KernelResult.Success;
         }
 
-        public KernelResult CreateEvent64(out int wEventHandle, out int rEventHandle)
+        public KernelResult CreateEvent64([R(1)] out int wEventHandle, [R(2)] out int rEventHandle)
         {
             return CreateEvent(out wEventHandle, out rEventHandle);
         }
@@ -506,7 +506,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return result;
         }
 
-        public KernelResult GetProcessList64(ulong address, int maxCount, out int count)
+        public KernelResult GetProcessList64([R(1)] ulong address, [R(2)] int maxCount, [R(1)] out int count)
         {
             return GetProcessList(address, maxCount, out count);
         }
@@ -560,7 +560,7 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return KernelResult.Success;
         }
 
-        public KernelResult GetSystemInfo64(uint id, int handle, long subId, out long value)
+        public KernelResult GetSystemInfo64([R(1)] uint id, [R(2)] int handle, [R(3)] long subId, [R(1)] out long value)
         {
             return GetSystemInfo(id, handle, subId, out value);
         }
