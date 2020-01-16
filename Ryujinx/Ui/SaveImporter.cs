@@ -3,7 +3,6 @@ using LibHac.Common;
 using LibHac.Fs;
 using LibHac.Fs.Shim;
 using LibHac.FsSystem;
-using LibHac.FsSystem.Save;
 using LibHac.Ncm;
 using Ryujinx.HLE.Utilities;
 using System;
@@ -131,7 +130,7 @@ namespace Ryujinx.Ui
                     {
                         SaveDataAttribute attribute = new SaveDataAttribute
                         {
-                            Type = SaveDataType.SaveData,
+                            Type = SaveDataType.Account,
                             UserId = userId,
                             TitleId = new TitleId(titleId)
                         };

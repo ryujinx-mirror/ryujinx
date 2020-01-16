@@ -37,9 +37,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         public ResultCode OpenFileSystemWithId(ServiceCtx context)
         {
             FileSystemType fileSystemType = (FileSystemType)context.RequestData.ReadInt32();
-            long           titleId        = context.RequestData.ReadInt64();
-            string         switchPath     = ReadUtf8String(context);
-            string         fullPath       = context.Device.FileSystem.SwitchPathToSystemPath(switchPath);
+            long titleId = context.RequestData.ReadInt64();
+            string switchPath = ReadUtf8String(context);
+            string fullPath = context.Device.FileSystem.SwitchPathToSystemPath(switchPath);
 
             if (!File.Exists(fullPath))
             {
@@ -59,7 +59,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             }
 
             FileStream fileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
-            string     extension  = Path.GetExtension(fullPath);
+            string extension = Path.GetExtension(fullPath);
 
             if (extension == ".nca")
             {
@@ -129,8 +129,8 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         [Command(22)]
         public ResultCode CreateSaveDataFileSystem(ServiceCtx context)
         {
-            SaveDataAttribute  attribute      = context.RequestData.ReadStruct<SaveDataAttribute>();
-            SaveDataCreateInfo createInfo     = context.RequestData.ReadStruct<SaveDataCreateInfo>();
+            SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
+            SaveDataCreationInfo creationInfo = context.RequestData.ReadStruct<SaveDataCreationInfo>();
             SaveMetaCreateInfo metaCreateInfo = context.RequestData.ReadStruct<SaveMetaCreateInfo>();
 
             // TODO: There's currently no program registry for FS to reference.
@@ -140,14 +140,14 @@ namespace Ryujinx.HLE.HOS.Services.Fs
                 attribute.TitleId = new TitleId(context.Process.TitleId);
             }
 
-            if (createInfo.OwnerId == TitleId.Zero)
+            if (creationInfo.OwnerId == TitleId.Zero)
             {
-                createInfo.OwnerId = new TitleId(context.Process.TitleId);
+                creationInfo.OwnerId = new TitleId(context.Process.TitleId);
             }
 
             Logger.PrintInfo(LogClass.ServiceFs, $"Creating save with title ID {attribute.TitleId.Value:x16}");
 
-            Result result = _baseFileSystemProxy.CreateSaveDataFileSystem(ref attribute, ref createInfo, ref metaCreateInfo);
+            Result result = _baseFileSystemProxy.CreateSaveDataFileSystem(ref attribute, ref creationInfo, ref metaCreateInfo);
 
             return (ResultCode)result.Value;
         }
@@ -155,10 +155,10 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         [Command(23)]
         public ResultCode CreateSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
         {
-            SaveDataAttribute  attribute  = context.RequestData.ReadStruct<SaveDataAttribute>();
-            SaveDataCreateInfo createInfo = context.RequestData.ReadStruct<SaveDataCreateInfo>();
+            SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
+            SaveDataCreationInfo creationInfo = context.RequestData.ReadStruct<SaveDataCreationInfo>();
 
-            Result result = _baseFileSystemProxy.CreateSaveDataFileSystemBySystemSaveDataId(ref attribute, ref createInfo);
+            Result result = _baseFileSystemProxy.CreateSaveDataFileSystemBySystemSaveDataId(ref attribute, ref creationInfo);
 
             return (ResultCode)result.Value;
         }
@@ -166,8 +166,8 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         [Command(25)]
         public ResultCode DeleteSaveDataFileSystemBySaveDataSpaceId(ServiceCtx context)
         {
-            SaveDataSpaceId spaceId    = (SaveDataSpaceId)context.RequestData.ReadInt64();
-            ulong           saveDataId = context.RequestData.ReadUInt64();
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            ulong saveDataId = context.RequestData.ReadUInt64();
 
             Result result = _baseFileSystemProxy.DeleteSaveDataFileSystemBySaveDataSpaceId(spaceId, saveDataId);
 
@@ -177,7 +177,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         [Command(28)]
         public ResultCode DeleteSaveDataFileSystemBySaveDataAttribute(ServiceCtx context)
         {
-            SaveDataSpaceId   spaceId   = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
             SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
 
             Result result = _baseFileSystemProxy.DeleteSaveDataFileSystemBySaveDataAttribute(spaceId, ref attribute);
@@ -189,7 +189,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // OpenGameCardStorage(u32, u32) -> object<nn::fssrv::sf::IStorage>
         public ResultCode OpenGameCardStorage(ServiceCtx context)
         {
-            GameCardHandle       handle      = new GameCardHandle(context.RequestData.ReadInt32());
+            GameCardHandle handle = new GameCardHandle(context.RequestData.ReadInt32());
             GameCardPartitionRaw partitionId = (GameCardPartitionRaw)context.RequestData.ReadInt32();
 
             Result result = _baseFileSystemProxy.OpenGameCardStorage(out LibHac.Fs.IStorage storage, handle, partitionId);
@@ -205,10 +205,10 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         [Command(35)]
         public ResultCode CreateSaveDataFileSystemWithHashSalt(ServiceCtx context)
         {
-            SaveDataAttribute  attribute      = context.RequestData.ReadStruct<SaveDataAttribute>();
-            SaveDataCreateInfo createInfo     = context.RequestData.ReadStruct<SaveDataCreateInfo>();
+            SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
+            SaveDataCreationInfo creationInfo = context.RequestData.ReadStruct<SaveDataCreationInfo>();
             SaveMetaCreateInfo metaCreateInfo = context.RequestData.ReadStruct<SaveMetaCreateInfo>();
-            HashSalt           hashSalt       = context.RequestData.ReadStruct<HashSalt>();
+            HashSalt hashSalt = context.RequestData.ReadStruct<HashSalt>();
 
             // TODO: There's currently no program registry for FS to reference.
             // Workaround that by setting the application ID and owner ID if they're not already set
@@ -217,12 +217,12 @@ namespace Ryujinx.HLE.HOS.Services.Fs
                 attribute.TitleId = new TitleId(context.Process.TitleId);
             }
 
-            if (createInfo.OwnerId == TitleId.Zero)
+            if (creationInfo.OwnerId == TitleId.Zero)
             {
-                createInfo.OwnerId = new TitleId(context.Process.TitleId);
+                creationInfo.OwnerId = new TitleId(context.Process.TitleId);
             }
 
-            Result result = _baseFileSystemProxy.CreateSaveDataFileSystemWithHashSalt(ref attribute, ref createInfo, ref metaCreateInfo, ref hashSalt);
+            Result result = _baseFileSystemProxy.CreateSaveDataFileSystemWithHashSalt(ref attribute, ref creationInfo, ref metaCreateInfo, ref hashSalt);
 
             return (ResultCode)result.Value;
         }
@@ -231,7 +231,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // OpenSaveDataFileSystem(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> saveDataFs
         public ResultCode OpenSaveDataFileSystem(ServiceCtx context)
         {
-            SaveDataSpaceId   spaceId   = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
             SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
 
             // TODO: There's currently no program registry for FS to reference.
@@ -242,7 +242,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             }
 
             Result result = _baseFileSystemProxy.OpenSaveDataFileSystem(out LibHac.Fs.IFileSystem fileSystem, spaceId, ref attribute);
-            
+
             if (result.IsSuccess())
             {
                 MakeObject(context, new FileSystemProxy.IFileSystem(fileSystem));
@@ -255,7 +255,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         // OpenSaveDataFileSystemBySystemSaveDataId(u8 save_data_space_id, nn::fssrv::sf::SaveStruct saveStruct) -> object<nn::fssrv::sf::IFileSystem> systemSaveDataFs
         public ResultCode OpenSaveDataFileSystemBySystemSaveDataId(ServiceCtx context)
         {
-            SaveDataSpaceId   spaceId   = (SaveDataSpaceId)context.RequestData.ReadInt64();
+            SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
             SaveDataAttribute attribute = context.RequestData.ReadStruct<SaveDataAttribute>();
 
             Result result = _baseFileSystemProxy.OpenSaveDataFileSystemBySystemSaveDataId(out LibHac.Fs.IFileSystem fileSystem, spaceId, ref attribute);
@@ -324,10 +324,10 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         public ResultCode FindSaveDataWithFilter(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
-            SaveDataFilter  filter  = context.RequestData.ReadStruct<SaveDataFilter>();
+            SaveDataFilter filter = context.RequestData.ReadStruct<SaveDataFilter>();
 
             long bufferPosition = context.Request.ReceiveBuff[0].Position;
-            long bufferLen      = context.Request.ReceiveBuff[0].Size;
+            long bufferLen = context.Request.ReceiveBuff[0].Size;
 
             byte[] infoBuffer = new byte[bufferLen];
 
@@ -343,7 +343,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         public ResultCode OpenSaveDataInfoReaderWithFilter(ServiceCtx context)
         {
             SaveDataSpaceId spaceId = (SaveDataSpaceId)context.RequestData.ReadInt64();
-            SaveDataFilter  filter  = context.RequestData.ReadStruct<SaveDataFilter>();
+            SaveDataFilter filter = context.RequestData.ReadStruct<SaveDataFilter>();
 
             Result result = _baseFileSystemProxy.OpenSaveDataInfoReaderWithFilter(out LibHac.FsService.ISaveDataInfoReader infoReader, spaceId, ref filter);
 
@@ -369,8 +369,8 @@ namespace Ryujinx.HLE.HOS.Services.Fs
         public ResultCode OpenDataStorageByDataId(ServiceCtx context)
         {
             StorageId storageId = (StorageId)context.RequestData.ReadByte();
-            byte[]    padding   = context.RequestData.ReadBytes(7);
-            long      titleId   = context.RequestData.ReadInt64();
+            byte[] padding = context.RequestData.ReadBytes(7);
+            long titleId = context.RequestData.ReadInt64();
 
             NcaContentType contentType = NcaContentType.Data;
 
@@ -398,8 +398,8 @@ namespace Ryujinx.HLE.HOS.Services.Fs
                     {
                         try
                         {
-                            LibHac.Fs.IStorage ncaStorage   = new LocalStorage(ncaPath, FileAccess.Read, FileMode.Open);
-                            Nca                nca          = new Nca(context.Device.System.KeySet, ncaStorage);
+                            LibHac.Fs.IStorage ncaStorage = new LocalStorage(ncaPath, FileAccess.Read, FileMode.Open);
+                            Nca nca = new Nca(context.Device.System.KeySet, ncaStorage);
                             LibHac.Fs.IStorage romfsStorage = nca.OpenStorage(NcaSectionType.Data, context.Device.System.FsIntegrityCheckLevel);
 
                             MakeObject(context, new FileSystemProxy.IStorage(romfsStorage));
@@ -412,12 +412,12 @@ namespace Ryujinx.HLE.HOS.Services.Fs
                         return ResultCode.Success;
                     }
                     else
-                    { 
+                    {
                         throw new FileNotFoundException($"No Nca found in Path `{ncaPath}`.");
                     }
                 }
                 else
-                { 
+                {
                     throw new DirectoryNotFoundException($"Path for title id {titleId:x16} on Storage {storageId} was not found in Path {installPath}.");
                 }
             }
