@@ -55,10 +55,10 @@ namespace Ryujinx.Graphics.Gpu.Image
         public uint Word1;
         public uint Word2;
         public uint Word3;
-        public uint BorderColorR;
-        public uint BorderColorG;
-        public uint BorderColorB;
-        public uint BorderColorA;
+        public float BorderColorR;
+        public float BorderColorG;
+        public float BorderColorB;
+        public float BorderColorA;
 
         /// <summary>
         /// Unpacks the texture wrap mode along the X axis.

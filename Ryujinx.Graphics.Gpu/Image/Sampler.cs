@@ -30,7 +30,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             CompareMode compareMode = descriptor.UnpackCompareMode();
             CompareOp   compareOp   = descriptor.UnpackCompareOp();
 
-            ColorF color = new ColorF(0, 0, 0, 0);
+            ColorF color = new ColorF(
+                descriptor.BorderColorR,
+                descriptor.BorderColorG,
+                descriptor.BorderColorB,
+                descriptor.BorderColorA);
 
             float minLod     = descriptor.UnpackMinLod();
             float maxLod     = descriptor.UnpackMaxLod();
