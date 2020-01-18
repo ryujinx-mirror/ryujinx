@@ -346,7 +346,6 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
                 int   outOffset      = 0;
                 int   pendingSamples = MixBufferSamplesCount;
-                float volume         = voice.Volume;
 
                 while (pendingSamples > 0)
                 {

@@ -108,7 +108,7 @@ namespace Ryujinx.HLE.HOS.Services.Audio.AudioRendererManager
 
                 if (wb.Looping == 0)
                 {
-                    SetBufferIndex((_bufferIndex + 1) & 3);
+                    SetBufferIndex(_bufferIndex + 1);
                 }
 
                 _outStatus.PlayedWaveBuffersCount++;

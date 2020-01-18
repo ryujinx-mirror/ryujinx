@@ -8,7 +8,7 @@
         public int VoiceSize;
         public int VoiceResourceSize;
         public int EffectSize;
-        public int MixeSize;
+        public int MixSize;
         public int SinkSize;
         public int PerformanceManagerSize;
         public int Unknown24;
