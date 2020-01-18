@@ -82,7 +82,7 @@ namespace Ryujinx.Graphics.Shader.Translation
                     {
                         if (target.ComponentEnabled(component))
                         {
-                            Operand dest = Attribute(AttributeConsts.FragmentOutputColorBase + regIndex * 4);
+                            Operand dest = Attribute(AttributeConsts.FragmentOutputColorBase + attachment * 16 + component * 4);
 
                             Operand src = Register(regIndex, RegisterType.Gpr);
 
