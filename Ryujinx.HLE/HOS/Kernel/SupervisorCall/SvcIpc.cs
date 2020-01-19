@@ -35,6 +35,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return ConnectToNamedPort(namePtr, out handle);
         }
 
+        public KernelResult ConnectToNamedPort32([R(1)] uint namePtr, [R(1)] out int handle)
+        {
+            return ConnectToNamedPort(namePtr, out handle);
+        }
+
         private KernelResult ConnectToNamedPort(ulong namePtr, out int handle)
         {
             handle = 0;
@@ -86,7 +91,17 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return SendSyncRequest((ulong)_system.Scheduler.GetCurrentThread().Context.Tpidr, 0x100, handle);
         }
 
+        public KernelResult SendSyncRequest32([R(0)] int handle)
+        {
+            return SendSyncRequest((ulong)_system.Scheduler.GetCurrentThread().Context.Tpidr, 0x100, handle);
+        }
+
         public KernelResult SendSyncRequestWithUserBuffer64([R(0)] ulong messagePtr, [R(1)] ulong size, [R(2)] int handle)
+        {
+            return SendSyncRequest(messagePtr, size, handle);
+        }
+
+        public KernelResult SendSyncRequestWithUserBuffer32([R(0)] uint messagePtr, [R(1)] uint size, [R(2)] int handle)
         {
             return SendSyncRequest(messagePtr, size, handle);
         }
@@ -176,6 +191,15 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return CreateSession(isLight, namePtr, out serverSessionHandle, out clientSessionHandle);
         }
 
+        public KernelResult CreateSession32(
+            [R(2)] bool isLight,
+            [R(3)] uint namePtr,
+            [R(1)] out int serverSessionHandle,
+            [R(2)] out int clientSessionHandle)
+        {
+            return CreateSession(isLight, namePtr, out serverSessionHandle, out clientSessionHandle);
+        }
+
         private KernelResult CreateSession(
             bool    isLight,
             ulong   namePtr,
@@ -247,6 +271,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return AcceptSession(portHandle, out sessionHandle);
         }
 
+        public KernelResult AcceptSession32([R(1)] int portHandle, [R(1)] out int sessionHandle)
+        {
+            return AcceptSession(portHandle, out sessionHandle);
+        }
+
         private KernelResult AcceptSession(int portHandle, out int sessionHandle)
         {
             sessionHandle = 0;
@@ -304,6 +333,29 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             [R(3)] int     replyTargetHandle,
             [R(4)] long    timeout,
             [R(1)] out int handleIndex)
+        {
+            return ReplyAndReceive(handlesPtr, handlesCount, replyTargetHandle, timeout, out handleIndex);
+        }
+
+        public KernelResult ReplyAndReceive32(
+            [R(0)] uint    timeoutLow,
+            [R(1)] ulong   handlesPtr,
+            [R(2)] int     handlesCount,
+            [R(3)] int     replyTargetHandle,
+            [R(4)] uint    timeoutHigh,
+            [R(1)] out int handleIndex)
+        {
+            long timeout = (long)(timeoutLow | ((ulong)timeoutHigh << 32));
+
+            return ReplyAndReceive(handlesPtr, handlesCount, replyTargetHandle, timeout, out handleIndex);
+        }
+
+        public KernelResult ReplyAndReceive(
+            ulong   handlesPtr,
+            int     handlesCount,
+            int     replyTargetHandle,
+            long    timeout,
+            out int handleIndex)
         {
             handleIndex = 0;
 
@@ -394,6 +446,16 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return CreatePort(maxSessions, isLight, namePtr, out serverPortHandle, out clientPortHandle);
         }
 
+        public KernelResult CreatePort32(
+            [R(0)] uint    namePtr,
+            [R(2)] int     maxSessions,
+            [R(3)] bool    isLight,
+            [R(1)] out int serverPortHandle,
+            [R(2)] out int clientPortHandle)
+        {
+            return CreatePort(maxSessions, isLight, namePtr, out serverPortHandle, out clientPortHandle);
+        }
+
         private KernelResult CreatePort(
             int     maxSessions,
             bool    isLight,
@@ -430,6 +492,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         }
 
         public KernelResult ManageNamedPort64([R(1)] ulong namePtr, [R(2)] int maxSessions, [R(1)] out int handle)
+        {
+            return ManageNamedPort(namePtr, maxSessions, out handle);
+        }
+
+        public KernelResult ManageNamedPort32([R(1)] uint namePtr, [R(2)] int maxSessions, [R(1)] out int handle)
         {
             return ManageNamedPort(namePtr, maxSessions, out handle);
         }
@@ -475,6 +542,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         }
 
         public KernelResult ConnectToPort64([R(1)] int clientPortHandle, [R(1)] out int clientSessionHandle)
+        {
+            return ConnectToPort(clientPortHandle, out clientSessionHandle);
+        }
+
+        public KernelResult ConnectToPort32([R(1)] int clientPortHandle, [R(1)] out int clientSessionHandle)
         {
             return ConnectToPort(clientPortHandle, out clientSessionHandle);
         }

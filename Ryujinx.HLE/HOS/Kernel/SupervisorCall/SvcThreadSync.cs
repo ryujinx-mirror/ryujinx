@@ -12,6 +12,18 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return WaitSynchronization(handlesPtr, handlesCount, timeout, out handleIndex);
         }
 
+        public KernelResult WaitSynchronization32(
+            [R(0)] uint    timeoutLow,
+            [R(1)] uint    handlesPtr,
+            [R(2)] int     handlesCount,
+            [R(3)] uint    timeoutHigh,
+            [R(1)] out int handleIndex)
+        {
+            long timeout = (long)(timeoutLow | ((ulong)timeoutHigh << 32));
+
+            return WaitSynchronization(handlesPtr, handlesCount, timeout, out handleIndex);
+        }
+
         private KernelResult WaitSynchronization(ulong handlesPtr, int handlesCount, long timeout, out int handleIndex)
         {
             handleIndex = 0;
@@ -45,6 +57,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return CancelSynchronization(handle);
         }
 
+        public KernelResult CancelSynchronization32([R(0)] int handle)
+        {
+            return CancelSynchronization(handle);
+        }
+
         private KernelResult CancelSynchronization(int handle)
         {
             KThread thread = _process.HandleTable.GetKThread(handle);
@@ -60,6 +77,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         }
 
         public KernelResult ArbitrateLock64([R(0)] int ownerHandle, [R(1)] ulong mutexAddress, [R(2)] int requesterHandle)
+        {
+            return ArbitrateLock(ownerHandle, mutexAddress, requesterHandle);
+        }
+
+        public KernelResult ArbitrateLock32([R(0)] int ownerHandle, [R(1)] uint mutexAddress, [R(2)] int requesterHandle)
         {
             return ArbitrateLock(ownerHandle, mutexAddress, requesterHandle);
         }
@@ -82,6 +104,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         }
 
         public KernelResult ArbitrateUnlock64([R(0)] ulong mutexAddress)
+        {
+            return ArbitrateUnlock(mutexAddress);
+        }
+
+        public KernelResult ArbitrateUnlock32([R(0)] uint mutexAddress)
         {
             return ArbitrateUnlock(mutexAddress);
         }
@@ -109,6 +136,18 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             [R(2)] int   handle,
             [R(3)] long  timeout)
         {
+            return WaitProcessWideKeyAtomic(mutexAddress, condVarAddress, handle, timeout);
+        }
+
+        public KernelResult WaitProcessWideKeyAtomic32(
+            [R(0)] uint mutexAddress,
+            [R(1)] uint condVarAddress,
+            [R(2)] int  handle,
+            [R(3)] uint timeoutLow,
+            [R(4)] uint timeoutHigh)
+        {
+            long timeout = (long)(timeoutLow | ((ulong)timeoutHigh << 32));
+
             return WaitProcessWideKeyAtomic(mutexAddress, condVarAddress, handle, timeout);
         }
 
@@ -142,6 +181,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return SignalProcessWideKey(address, count);
         }
 
+        public KernelResult SignalProcessWideKey32([R(0)] uint address, [R(1)] int count)
+        {
+            return SignalProcessWideKey(address, count);
+        }
+
         private KernelResult SignalProcessWideKey(ulong address, int count)
         {
             KProcess currentProcess = _system.Scheduler.GetCurrentProcess();
@@ -153,6 +197,13 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
 
         public KernelResult WaitForAddress64([R(0)] ulong address, [R(1)] ArbitrationType type, [R(2)] int value, [R(3)] long timeout)
         {
+            return WaitForAddress(address, type, value, timeout);
+        }
+
+        public KernelResult WaitForAddress32([R(0)] uint address, [R(1)] ArbitrationType type, [R(2)] int value, [R(3)] uint timeoutLow, [R(4)] uint timeoutHigh)
+        {
+            long timeout = (long)(timeoutLow | ((ulong)timeoutHigh << 32));
+
             return WaitForAddress(address, type, value, timeout);
         }
 
@@ -195,6 +246,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         }
 
         public KernelResult SignalToAddress64([R(0)] ulong address, [R(1)] SignalType type, [R(2)] int value, [R(3)] int count)
+        {
+            return SignalToAddress(address, type, value, count);
+        }
+
+        public KernelResult SignalToAddress32([R(0)] uint address, [R(1)] SignalType type, [R(2)] int value, [R(3)] int count)
         {
             return SignalToAddress(address, type, value, count);
         }

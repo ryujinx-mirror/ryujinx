@@ -17,7 +17,17 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             ExitProcess();
         }
 
+        public void ExitProcess32()
+        {
+            ExitProcess();
+        }
+
         public KernelResult TerminateProcess64([R(0)] int handle)
+        {
+            return TerminateProcess(handle);
+        }
+
+        public KernelResult TerminateProcess32([R(0)] int handle)
         {
             return TerminateProcess(handle);
         }
@@ -59,6 +69,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return SignalEvent(handle);
         }
 
+        public KernelResult SignalEvent32([R(0)] int handle)
+        {
+            return SignalEvent(handle);
+        }
+
         private KernelResult SignalEvent(int handle)
         {
             KWritableEvent writableEvent = _process.HandleTable.GetObject<KWritableEvent>(handle);
@@ -84,6 +99,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return ClearEvent(handle);
         }
 
+        public KernelResult ClearEvent32([R(0)] int handle)
+        {
+            return ClearEvent(handle);
+        }
+
         private KernelResult ClearEvent(int handle)
         {
             KernelResult result;
@@ -105,6 +125,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         }
 
         public KernelResult CloseHandle64([R(0)] int handle)
+        {
+            return CloseHandle(handle);
+        }
+
+        public KernelResult CloseHandle32([R(0)] int handle)
         {
             return CloseHandle(handle);
         }
@@ -135,6 +160,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         }
 
         public KernelResult ResetSignal64([R(0)] int handle)
+        {
+            return ResetSignal(handle);
+        }
+
+        public KernelResult ResetSignal32([R(0)] int handle)
         {
             return ResetSignal(handle);
         }
@@ -173,9 +203,27 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return _system.Scheduler.GetCurrentThread().Context.CntpctEl0;
         }
 
+        public void GetSystemTick32([R(0)] out uint resultLow, [R(1)] out uint resultHigh)
+        {
+            ulong result = _system.Scheduler.GetCurrentThread().Context.CntpctEl0;
+
+            resultLow  = (uint)(result & uint.MaxValue);
+            resultHigh = (uint)(result >> 32);
+        }
+
         public KernelResult GetProcessId64([R(1)] int handle, [R(1)] out long pid)
         {
             return GetProcessId(handle, out pid);
+        }
+
+        public KernelResult GetProcessId32([R(1)] int handle, [R(1)] out int pidLow, [R(2)] out int pidHigh)
+        {
+            KernelResult result = GetProcessId(handle, out long pid);
+
+            pidLow  = (int)(pid & uint.MaxValue);
+            pidHigh = (int)(pid >> 32);
+
+            return result;
         }
 
         private KernelResult GetProcessId(int handle, out long pid)
@@ -204,6 +252,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         }
 
         public void Break64([R(0)] ulong reason, [R(1)] ulong x1, [R(2)] ulong info)
+        {
+            Break(reason);
+        }
+
+        public void Break32([R(0)] uint reason, [R(1)] uint r1, [R(2)] uint info)
         {
             Break(reason);
         }
@@ -240,6 +293,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             OutputDebugString(strPtr, size);
         }
 
+        public void OutputDebugString32([R(0)] uint strPtr, [R(1)] uint size)
+        {
+            OutputDebugString(strPtr, size);
+        }
+
         private void OutputDebugString(ulong strPtr, ulong size)
         {
             string str = MemoryHelper.ReadAsciiString(_process.CpuMemory, (long)strPtr, (long)size);
@@ -250,6 +308,23 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         public KernelResult GetInfo64([R(1)] uint id, [R(2)] int handle, [R(3)] long subId, [R(1)] out long value)
         {
             return GetInfo(id, handle, subId, out value);
+        }
+
+        public KernelResult GetInfo32(
+            [R(0)] uint     subIdLow,
+            [R(1)] uint     id,
+            [R(2)] int      handle,
+            [R(3)] uint     subIdHigh,
+            [R(1)] out uint valueLow,
+            [R(2)] out uint valueHigh)
+        {
+            long subId = (long)(subIdLow | ((ulong)subIdHigh << 32));
+
+            KernelResult result = GetInfo(id, handle, subId, out long value);
+            valueHigh = (uint)(value >> 32);
+            valueLow  = (uint)(value & uint.MaxValue);
+
+            return result;
         }
 
         private KernelResult GetInfo(uint id, int handle, long subId, out long value)
@@ -483,6 +558,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return CreateEvent(out wEventHandle, out rEventHandle);
         }
 
+        public KernelResult CreateEvent32([R(1)] out int wEventHandle, [R(2)] out int rEventHandle)
+        {
+            return CreateEvent(out wEventHandle, out rEventHandle);
+        }
+
         private KernelResult CreateEvent(out int wEventHandle, out int rEventHandle)
         {
             KEvent Event = new KEvent(_system);
@@ -507,6 +587,11 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
         }
 
         public KernelResult GetProcessList64([R(1)] ulong address, [R(2)] int maxCount, [R(1)] out int count)
+        {
+            return GetProcessList(address, maxCount, out count);
+        }
+
+        public KernelResult GetProcessList32([R(1)] ulong address, [R(2)] int maxCount, [R(1)] out int count)
         {
             return GetProcessList(address, maxCount, out count);
         }
@@ -565,6 +650,18 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
             return GetSystemInfo(id, handle, subId, out value);
         }
 
+        public KernelResult GetSystemInfo32([R(1)] uint subIdLow, [R(2)] uint id, [R(3)] int handle, [R(3)] uint subIdHigh, [R(1)] out int valueLow, [R(2)] out int valueHigh)
+        {
+            long subId = (long)(subIdLow | ((ulong)subIdHigh << 32));
+
+            KernelResult result = GetSystemInfo(id, handle, subId, out long value);
+
+            valueHigh = (int)(value >> 32);
+            valueLow  = (int)(value & uint.MaxValue);
+
+            return result;
+        }
+
         private KernelResult GetSystemInfo(uint id, int handle, long subId, out long value)
         {
             value = 0;
@@ -618,6 +715,17 @@ namespace Ryujinx.HLE.HOS.Kernel.SupervisorCall
                 }
             }
 
+            return KernelResult.Success;
+        }
+
+        public KernelResult FlushProcessDataCache32(
+            [R(0)] uint processHandle,
+            [R(2)] uint addressLow,
+            [R(3)] uint addressHigh,
+            [R(1)] uint sizeLow,
+            [R(4)] uint sizeHigh)
+        {
+            // FIXME: This needs to be implemented as ARMv7 doesn't have any way to do cache maintenance operations on EL0. As we don't support (and don't actually need) to flush the cache, this is stubbed.
             return KernelResult.Success;
         }
     }
