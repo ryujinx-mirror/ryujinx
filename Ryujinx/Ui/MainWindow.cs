@@ -3,8 +3,10 @@ using JsonPrettyPrinterPlus;
 using Ryujinx.Audio;
 using Ryujinx.Common.Logging;
 using Ryujinx.Configuration;
+using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE.FileSystem;
+using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.Profiler;
 using System;
 using System.Diagnostics;
@@ -22,11 +24,10 @@ namespace Ryujinx.Ui
 {
     public class MainWindow : Window
     {
-        private static HLE.Switch _device;
+        private static VirtualFileSystem _virtualFileSystem;
+        private static ContentManager    _contentManager;
 
-        private static Renderer _renderer;
-
-        private static IAalOutput _audioOut;
+        private static HLE.Switch _emulationContext;
 
         private static GlScreen _screen;
 
@@ -75,28 +76,28 @@ namespace Ryujinx.Ui
 
             _gameTable.ButtonReleaseEvent += Row_Clicked;
 
+            // First we check that a migration isn't needed. (because VirtualFileSystem will create the new directory otherwise)
             bool continueWithStartup = Migration.PromptIfMigrationNeededForStartup(this, out bool migrationNeeded);
             if (!continueWithStartup)
             {
-                End();
+                End(null);
             }
 
-            _renderer = new Renderer();
-
-            _audioOut = InitializeAudioEngine();
-
-            // TODO: Initialization and dispose of HLE.Switch when starting/stoping emulation.
-            _device = InitializeSwitchInstance();
+            _virtualFileSystem = new VirtualFileSystem();
+            _contentManager    = new ContentManager(_virtualFileSystem);
 
             if (migrationNeeded)
             {
-                bool migrationSuccessful = Migration.DoMigrationForStartup(this, _device);
+                bool migrationSuccessful = Migration.DoMigrationForStartup(this, _virtualFileSystem);
 
                 if (!migrationSuccessful)
                 {
-                    End();
+                    End(null);
                 }
             }
+
+            // Make sure that everything is loaded.
+            _virtualFileSystem.Reload();
 
             _treeView = _gameTable;
 
@@ -199,7 +200,9 @@ namespace Ryujinx.Ui
 
         private HLE.Switch InitializeSwitchInstance()
         {
-            HLE.Switch instance = new HLE.Switch(_renderer, _audioOut);
+            _virtualFileSystem.Reload();
+
+            HLE.Switch instance = new HLE.Switch(_virtualFileSystem, _contentManager, InitializeRenderer(), InitializeAudioEngine());
 
             instance.Initialize();
 
@@ -218,8 +221,7 @@ namespace Ryujinx.Ui
             _tableStore.Clear();
 
             await Task.Run(() => ApplicationLibrary.LoadApplications(ConfigurationState.Instance.Ui.GameDirs,
-                _device.System.KeySet, _device.System.State.DesiredTitleLanguage, _device.System.FsClient,
-                _device.FileSystem));
+                _virtualFileSystem, ConfigurationState.Instance.System.Language));
 
             _updatingGameTable = false;
         }
@@ -234,8 +236,10 @@ namespace Ryujinx.Ui
             {
                 Logger.RestartTime();
 
+                HLE.Switch device = InitializeSwitchInstance();
+
                 // TODO: Move this somewhere else + reloadable?
-                Ryujinx.Graphics.Gpu.GraphicsConfig.ShadersDumpPath = ConfigurationState.Instance.Graphics.ShadersDumpPath;
+                Graphics.Gpu.GraphicsConfig.ShadersDumpPath = ConfigurationState.Instance.Graphics.ShadersDumpPath;
 
                 if (Directory.Exists(path))
                 {
@@ -249,12 +253,12 @@ namespace Ryujinx.Ui
                     if (romFsFiles.Length > 0)
                     {
                         Logger.PrintInfo(LogClass.Application, "Loading as cart with RomFS.");
-                        _device.LoadCart(path, romFsFiles[0]);
+                        device.LoadCart(path, romFsFiles[0]);
                     }
                     else
                     {
                         Logger.PrintInfo(LogClass.Application, "Loading as cart WITHOUT RomFS.");
-                        _device.LoadCart(path);
+                        device.LoadCart(path);
                     }
                 }
                 else if (File.Exists(path))
@@ -263,22 +267,22 @@ namespace Ryujinx.Ui
                     {
                         case ".xci":
                             Logger.PrintInfo(LogClass.Application, "Loading as XCI.");
-                            _device.LoadXci(path);
+                            device.LoadXci(path);
                             break;
                         case ".nca":
                             Logger.PrintInfo(LogClass.Application, "Loading as NCA.");
-                            _device.LoadNca(path);
+                            device.LoadNca(path);
                             break;
                         case ".nsp":
                         case ".pfs0":
                             Logger.PrintInfo(LogClass.Application, "Loading as NSP.");
-                            _device.LoadNsp(path);
+                            device.LoadNsp(path);
                             break;
                         default:
                             Logger.PrintInfo(LogClass.Application, "Loading as homebrew.");
                             try
                             {
-                                _device.LoadProgram(path);
+                                device.LoadProgram(path);
                             }
                             catch (ArgumentOutOfRangeException)
                             {
@@ -290,13 +294,15 @@ namespace Ryujinx.Ui
                 else
                 {
                     Logger.PrintWarning(LogClass.Application, "Please specify a valid XCI/NCA/NSP/PFS0/NRO file.");
-                    End();
+                    End(device);
                 }
 
+                _emulationContext = device;
+
 #if MACOS_BUILD
-                CreateGameWindow();
+                CreateGameWindow(device);
 #else
-                new Thread(CreateGameWindow).Start();
+                new Thread(() => CreateGameWindow(device)).Start();
 #endif
 
                 _gameLoaded              = true;
@@ -305,28 +311,55 @@ namespace Ryujinx.Ui
                 _firmwareInstallFile.Sensitive      = false;
                 _firmwareInstallDirectory.Sensitive = false;
 
-                DiscordIntegrationModule.SwitchToPlayingState(_device.System.TitleIdText, _device.System.TitleName);
+                DiscordIntegrationModule.SwitchToPlayingState(device.System.TitleIdText, device.System.TitleName);
 
-                ApplicationLibrary.LoadAndSaveMetaData(_device.System.TitleIdText, appMetadata =>
+                ApplicationLibrary.LoadAndSaveMetaData(device.System.TitleIdText, appMetadata =>
                 {
                     appMetadata.LastPlayed = DateTime.UtcNow.ToString();
                 });
             }
         }
 
-        private static void CreateGameWindow()
+        private void CreateGameWindow(HLE.Switch device)
         {
-            _device.Hid.InitializePrimaryController(ConfigurationState.Instance.Hid.ControllerType);
+            device.Hid.InitializePrimaryController(ConfigurationState.Instance.Hid.ControllerType);
 
-            using (_screen = new GlScreen(_device, _renderer))
+            using (_screen = new GlScreen(device))
             {
                 _screen.MainLoop();
+            }
 
-                End();
+            device.Dispose();
+
+            _emulationContext = null;
+            _screen           = null;
+            _gameLoaded       = false;
+
+            DiscordIntegrationModule.SwitchToMainMenu();
+
+            Application.Invoke(delegate
+            {
+                _stopEmulation.Sensitive            = false;
+                _firmwareInstallFile.Sensitive      = true;
+                _firmwareInstallDirectory.Sensitive = true;
+            });
+        }
+
+        private static void UpdateGameMetadata(string titleId)
+        {
+            if (_gameLoaded)
+            {
+                ApplicationLibrary.LoadAndSaveMetaData(titleId, appMetadata =>
+                {
+                    DateTime lastPlayedDateTime = DateTime.Parse(appMetadata.LastPlayed);
+                    double   sessionTimePlayed  = DateTime.UtcNow.Subtract(lastPlayedDateTime).TotalSeconds;
+
+                    appMetadata.TimePlayed += Math.Round(sessionTimePlayed, MidpointRounding.AwayFromZero);
+                });
             }
         }
 
-        private static void End()
+        private void End(HLE.Switch device)
         {
             if (_ending)
             {
@@ -335,22 +368,23 @@ namespace Ryujinx.Ui
 
             _ending = true;
 
-            if (_gameLoaded)
+            if (device != null)
             {
-                ApplicationLibrary.LoadAndSaveMetaData(_device.System.TitleIdText, appMetadata =>
-                {
-                    DateTime lastPlayedDateTime = DateTime.Parse(appMetadata.LastPlayed);
-                    double sessionTimePlayed = DateTime.UtcNow.Subtract(lastPlayedDateTime).TotalSeconds;
-
-                    appMetadata.TimePlayed += Math.Round(sessionTimePlayed, MidpointRounding.AwayFromZero);
-                });
+                UpdateGameMetadata(device.System.TitleIdText);
             }
 
+            Dispose();
+
             Profile.FinishProfiling();
-            _device?.Dispose();
-            _audioOut?.Dispose();
+            device?.Dispose();
+            DiscordIntegrationModule.Exit();
             Logger.Shutdown();
-            Environment.Exit(0);
+            Application.Quit();
+        }
+
+        private static IRenderer InitializeRenderer()
+        {
+            return new Renderer();
         }
 
         /// <summary>
@@ -427,7 +461,7 @@ namespace Ryujinx.Ui
 
             if (treeIter.UserData == IntPtr.Zero) return;
 
-            GameTableContextMenu contextMenu = new GameTableContextMenu(_tableStore, treeIter, _device.System.FsClient);
+            GameTableContextMenu contextMenu = new GameTableContextMenu(_tableStore, treeIter, _virtualFileSystem.FsClient);
             contextMenu.ShowAll();
             contextMenu.PopupAtPointer(null);
         }
@@ -477,20 +511,18 @@ namespace Ryujinx.Ui
         private void Exit_Pressed(object sender, EventArgs args)
         {
             _screen?.Exit();
-            End();
+            End(_emulationContext);
         }
 
         private void Window_Close(object sender, DeleteEventArgs args)
         {
             _screen?.Exit();
-            End();
+            End(_emulationContext);
         }
 
         private void StopEmulation_Pressed(object sender, EventArgs args)
         {
-            // TODO: Write logic to kill running game
-
-            _gameLoaded = false;
+            _screen?.Exit();
         }
 
         private void Installer_File_Pressed(object o, EventArgs args)
@@ -525,7 +557,7 @@ namespace Ryujinx.Ui
 
         private void RefreshFirmwareLabel()
         {
-            var currentFirmware = _device.System.GetCurrentFirmwareVersion();
+            var currentFirmware = _contentManager.GetCurrentFirmwareVersion();
 
             GLib.Idle.Add(new GLib.IdleHandler(() =>
             {
@@ -547,7 +579,7 @@ namespace Ryujinx.Ui
 
                     fileChooser.Dispose();
 
-                    var firmwareVersion = _device.System.VerifyFirmwarePackage(filename);
+                    var firmwareVersion = _contentManager.VerifyFirmwarePackage(filename);
 
                     if (firmwareVersion == null)
                     {
@@ -566,7 +598,7 @@ namespace Ryujinx.Ui
                         return;
                     }
 
-                    var currentVersion = _device.System.GetCurrentFirmwareVersion();
+                    var currentVersion = _contentManager.GetCurrentFirmwareVersion();
 
                     string dialogMessage = $"System version {firmwareVersion.VersionString} will be installed.";
 
@@ -606,7 +638,7 @@ namespace Ryujinx.Ui
 
                             try
                             {
-                                _device.System.InstallFirmware(filename);
+                                _contentManager.InstallFirmware(filename);
 
                                 GLib.Idle.Add(new GLib.IdleHandler(() =>
                                 {

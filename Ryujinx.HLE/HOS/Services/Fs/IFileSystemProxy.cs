@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Fs
 
         public IFileSystemProxy(ServiceCtx context)
         {
-            _baseFileSystemProxy = context.Device.System.FsServer.CreateFileSystemProxyService();
+            _baseFileSystemProxy = context.Device.FileSystem.FsServer.CreateFileSystemProxyService();
         }
 
         [Command(1)]

@@ -1,3 +1,7 @@
+using LibHac;
+using LibHac.Fs;
+using LibHac.FsService;
+using LibHac.FsSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
 using System;
@@ -15,6 +19,16 @@ namespace Ryujinx.HLE.FileSystem
         public static string SafeNandPath   = Path.Combine(NandPath, "safe");
         public static string SystemNandPath = Path.Combine(NandPath, "system");
         public static string UserNandPath   = Path.Combine(NandPath, "user");
+
+        public Keyset           KeySet   { get; private set; }
+        public FileSystemServer FsServer { get; private set; }
+        public FileSystemClient FsClient { get; private set; }
+        public EmulatedGameCard GameCard { get; private set; }
+
+        public VirtualFileSystem()
+        {
+            Reload();
+        }
 
         public Stream RomFs { get; private set; }
 
@@ -183,6 +197,69 @@ namespace Ryujinx.HLE.FileSystem
             return Path.Combine(appDataPath, BasePath);
         }
 
+        public void Reload()
+        {
+            ReloadKeySet();
+
+            LocalFileSystem serverBaseFs = new LocalFileSystem(GetBasePath());
+
+            DefaultFsServerObjects fsServerObjects = DefaultFsServerObjects.GetDefaultEmulatedCreators(serverBaseFs, KeySet);
+
+            GameCard = fsServerObjects.GameCard;
+
+            FileSystemServerConfig fsServerConfig = new FileSystemServerConfig
+            {
+                FsCreators     = fsServerObjects.FsCreators,
+                DeviceOperator = fsServerObjects.DeviceOperator,
+                ExternalKeySet = KeySet.ExternalKeySet
+            };
+
+            FsServer = new FileSystemServer(fsServerConfig);
+            FsClient = FsServer.CreateFileSystemClient();
+        }
+
+
+        private void ReloadKeySet()
+        {
+            string keyFile        = null;
+            string titleKeyFile   = null;
+            string consoleKeyFile = null;
+
+            string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+            LoadSetAtPath(Path.Combine(home, ".switch"));
+            LoadSetAtPath(GetSystemPath());
+
+            void LoadSetAtPath(string basePath)
+            {
+                string localKeyFile        = Path.Combine(basePath, "prod.keys");
+                string localTitleKeyFile   = Path.Combine(basePath, "title.keys");
+                string localConsoleKeyFile = Path.Combine(basePath, "console.keys");
+
+                if (File.Exists(localKeyFile))
+                {
+                    keyFile = localKeyFile;
+                }
+
+                if (File.Exists(localTitleKeyFile))
+                {
+                    titleKeyFile = localTitleKeyFile;
+                }
+
+                if (File.Exists(localConsoleKeyFile))
+                {
+                    consoleKeyFile = localConsoleKeyFile;
+                }
+            }
+
+            KeySet = ExternalKeyReader.ReadKeyFile(keyFile, titleKeyFile, consoleKeyFile);
+        }
+
+        public void Unload()
+        {
+            RomFs?.Dispose();
+        }
+
         public void Dispose()
         {
             Dispose(true);
@@ -192,7 +269,7 @@ namespace Ryujinx.HLE.FileSystem
         {
             if (disposing)
             {
-                RomFs?.Dispose();
+                Unload();
             }
         }
     }

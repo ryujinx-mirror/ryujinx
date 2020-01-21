@@ -88,5 +88,23 @@ namespace Ryujinx.Configuration
 
             DiscordClient?.SetPresence(DiscordPresence);
         }
+
+        public static void SwitchToMainMenu()
+        {
+            DiscordPresence.Details               = "Main Menu";
+            DiscordPresence.State                 = "Idling";
+            DiscordPresence.Assets.LargeImageKey  = "ryujinx";
+            DiscordPresence.Assets.LargeImageText = LargeDescription;
+            DiscordPresence.Assets.SmallImageKey  = null;
+            DiscordPresence.Assets.SmallImageText = null;
+            DiscordPresence.Timestamps            = new Timestamps(DateTime.UtcNow);
+
+            DiscordClient?.SetPresence(DiscordPresence);
+        }
+
+        public static void Exit()
+        {
+            DiscordClient?.Dispose();
+        }
     }
 }

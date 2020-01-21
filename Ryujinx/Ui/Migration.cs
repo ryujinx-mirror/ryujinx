@@ -1,21 +1,20 @@
 ﻿using Gtk;
 using LibHac;
+using Ryujinx.HLE.FileSystem;
 using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
-using Switch = Ryujinx.HLE.Switch;
-
 namespace Ryujinx.Ui
 {
     internal class Migration
     {
-        private Switch Device { get; }
+        private VirtualFileSystem _virtualFileSystem;
 
-        public Migration(Switch device)
+        public Migration(VirtualFileSystem virtualFileSystem)
         {
-            Device = device;
+            _virtualFileSystem = virtualFileSystem;
         }
 
         public static bool PromptIfMigrationNeededForStartup(Window parentWindow, out bool isMigrationNeeded)
@@ -48,11 +47,11 @@ namespace Ryujinx.Ui
             return dialogResponse == (int)ResponseType.Yes;
         }
 
-        public static bool DoMigrationForStartup(Window parentWindow, Switch device)
+        public static bool DoMigrationForStartup(MainWindow parentWindow, VirtualFileSystem virtualFileSystem)
         {
             try
             {
-                Migration migration = new Migration(device);
+                Migration migration = new Migration(virtualFileSystem);
                 int saveCount = migration.Migrate();
 
                 using MessageDialog dialogSuccess = new MessageDialog(parentWindow, DialogFlags.Modal, MessageType.Info, ButtonsType.Ok, null)
@@ -63,9 +62,6 @@ namespace Ryujinx.Ui
                 };
 
                 dialogSuccess.Run();
-
-                // Reload key set after migration to be sure to catch the keys in the system directory.
-                device.System.LoadKeySet();
 
                 return true;
             }
@@ -80,6 +76,9 @@ namespace Ryujinx.Ui
         // Returns the number of saves migrated
         public int Migrate()
         {
+            // Make sure FsClient is initialized
+            _virtualFileSystem.Reload();
+
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
             string oldBasePath = Path.Combine(appDataPath, "RyuFs");
@@ -89,7 +88,7 @@ namespace Ryujinx.Ui
 
             CopyRyuFs(oldBasePath, newBasePath);
 
-            SaveImporter importer = new SaveImporter(oldSaveDir, Device.System.FsClient);
+            SaveImporter importer = new SaveImporter(oldSaveDir, _virtualFileSystem.FsClient);
 
             return importer.Import();
         }

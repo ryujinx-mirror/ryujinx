@@ -44,15 +44,15 @@ namespace Ryujinx.HLE.HOS.Font
             _fontsPath = Path.Combine(device.FileSystem.GetSystemPath(), "fonts");
         }
 
-        public void Initialize(ContentManager contentManager, bool ignoreMissingFonts)
+        public void Initialize(ContentManager contentManager)
         {
             _fontData?.Clear();
             _fontData = null;
 
-            EnsureInitialized(contentManager, ignoreMissingFonts);
+            EnsureInitialized(contentManager);
         }
 
-        public void EnsureInitialized(ContentManager contentManager, bool ignoreMissingFonts)
+        public void EnsureInitialized(ContentManager contentManager)
         {
             if (_fontData == null)
             {
@@ -120,12 +120,10 @@ namespace Ryujinx.HLE.HOS.Font
 
                         return info;
                     }
-                    else if (!ignoreMissingFonts)
+                    else
                     {
                         throw new InvalidSystemResourceException($"Font \"{name}.ttf\" not found. Please provide it in \"{_fontsPath}\".");
                     }
-
-                    return new FontInfo();
                 }
 
                 _fontData = new Dictionary<SharedFontType, FontInfo>
@@ -138,7 +136,7 @@ namespace Ryujinx.HLE.HOS.Font
                     { SharedFontType.NintendoEx,          CreateFont("FontNintendoExtended")          }
                 };
 
-                if (fontOffset > Horizon.FontSize && !ignoreMissingFonts)
+                if (fontOffset > Horizon.FontSize)
                 {
                     throw new InvalidSystemResourceException(
                         $"The sum of all fonts size exceed the shared memory size. " +
@@ -161,14 +159,14 @@ namespace Ryujinx.HLE.HOS.Font
 
         public int GetFontSize(SharedFontType fontType)
         {
-            EnsureInitialized(_device.System.ContentManager, false);
+            EnsureInitialized(_device.System.ContentManager);
 
             return _fontData[fontType].Size;
         }
 
         public int GetSharedMemoryAddressOffset(SharedFontType fontType)
         {
-            EnsureInitialized(_device.System.ContentManager, false);
+            EnsureInitialized(_device.System.ContentManager);
 
             return _fontData[fontType].Offset + 8;
         }

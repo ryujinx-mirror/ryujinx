@@ -45,14 +45,20 @@ namespace Ryujinx.Ui
         private ProfileWindowManager _profileWindow;
 #endif
 
-        public GlScreen(Switch device, Renderer renderer)
+        public GlScreen(Switch device)
             : base(1280, 720,
             new GraphicsMode(), "Ryujinx", 0,
             DisplayDevice.Default, 3, 3,
             GraphicsContextFlags.ForwardCompatible)
         {
-            _device   = device;
-            _renderer = renderer;
+            _device = device;
+
+            if (!(device.Gpu.Renderer is Renderer))
+            {
+                throw new NotSupportedException($"GPU renderer must be an OpenGL renderer when using GlScreen!");
+            }
+
+            _renderer = (Renderer)device.Gpu.Renderer;
 
             _primaryController = new Input.NpadController(ConfigurationState.Instance.Hid.JoystickControls);
 
@@ -108,7 +114,6 @@ namespace Ryujinx.Ui
             }
 
             _device.DisposeGpu();
-            _renderer.Dispose();
         }
 
         public void MainLoop()

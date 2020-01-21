@@ -1,6 +1,6 @@
 ﻿namespace Ryujinx.HLE.FileSystem
 {
-    internal enum StorageId
+    public enum StorageId
     {
         None,
         Host,

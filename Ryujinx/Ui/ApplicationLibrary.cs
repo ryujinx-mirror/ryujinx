@@ -7,6 +7,7 @@ using LibHac.FsSystem.NcaUtils;
 using LibHac.Ncm;
 using LibHac.Spl;
 using Ryujinx.Common.Logging;
+using Ryujinx.Configuration.System;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.Loaders.Npdm;
 using System;
@@ -20,7 +21,6 @@ using Utf8Json;
 using Utf8Json.Resolvers;
 
 using RightsId = LibHac.Fs.RightsId;
-using TitleLanguage = Ryujinx.HLE.HOS.SystemState.TitleLanguage;
 
 namespace Ryujinx.Ui
 {
@@ -34,15 +34,15 @@ namespace Ryujinx.Ui
         private static readonly byte[] _nroIcon = GetResourceBytes("Ryujinx.Ui.assets.NROIcon.png");
         private static readonly byte[] _nsoIcon = GetResourceBytes("Ryujinx.Ui.assets.NSOIcon.png");
 
-        private static Keyset        _keySet;
-        private static TitleLanguage _desiredTitleLanguage;
+        private static Keyset   _keySet;
+        private static Language _desiredTitleLanguage;
 
-        public static void LoadApplications(List<string> appDirs, Keyset keySet, TitleLanguage desiredTitleLanguage, FileSystemClient fsClient = null, VirtualFileSystem vfs = null)
+        public static void LoadApplications(List<string> appDirs, VirtualFileSystem virtualFileSystem, Language desiredTitleLanguage)
         {
             int numApplicationsFound  = 0;
             int numApplicationsLoaded = 0;
 
-            _keySet               = keySet;
+            _keySet               = virtualFileSystem.KeySet;
             _desiredTitleLanguage = desiredTitleLanguage;
 
             // Builds the applications list with paths to found applications
@@ -346,11 +346,11 @@ namespace Ryujinx.Ui
                     filter.SetUserId(new UserId(1, 0));
                     filter.SetTitleId(new TitleId(titleIdNum));
 
-                    Result result = fsClient.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo, SaveDataSpaceId.User, ref filter);
+                    Result result = virtualFileSystem.FsClient.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo, SaveDataSpaceId.User, ref filter);
 
                     if (result.IsSuccess())
                     {
-                        saveDataPath = Path.Combine(vfs.GetNandPath(), $"user/save/{saveDataInfo.SaveDataId:x16}");
+                        saveDataPath = Path.Combine(virtualFileSystem.GetNandPath(), $"user/save/{saveDataInfo.SaveDataId:x16}");
                     }
                 }
 

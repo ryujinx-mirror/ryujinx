@@ -4,6 +4,7 @@ using Ryujinx.Configuration;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.FileSystem;
+using Ryujinx.HLE.FileSystem.Content;
 using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services;
 using Ryujinx.HLE.HOS.SystemState;
@@ -15,11 +16,11 @@ namespace Ryujinx.HLE
 {
     public class Switch : IDisposable
     {
-        internal IAalOutput AudioOut { get; private set; }
+        public IAalOutput AudioOut { get; private set; }
 
         internal DeviceMemory Memory { get; private set; }
 
-        internal GpuContext Gpu { get; private set; }
+        public GpuContext Gpu { get; private set; }
 
         public VirtualFileSystem FileSystem { get; private set; }
 
@@ -35,7 +36,7 @@ namespace Ryujinx.HLE
 
         public event EventHandler Finish;
 
-        public Switch(IRenderer renderer, IAalOutput audioOut)
+        public Switch(VirtualFileSystem fileSystem, ContentManager contentManager, IRenderer renderer, IAalOutput audioOut)
         {
             if (renderer == null)
             {
@@ -53,9 +54,9 @@ namespace Ryujinx.HLE
 
             Gpu = new GpuContext(renderer);
 
-            FileSystem = new VirtualFileSystem();
+            FileSystem = fileSystem;
 
-            System = new Horizon(this);
+            System = new Horizon(this, contentManager);
 
             Statistics = new PerformanceStatistics();
 
@@ -78,13 +79,18 @@ namespace Ryujinx.HLE
                 System.EnableMultiCoreScheduling();
             }
 
-            System.FsIntegrityCheckLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks
-                ? IntegrityCheckLevel.ErrorOnInvalid
-                : IntegrityCheckLevel.None;
+            System.FsIntegrityCheckLevel = GetIntigrityCheckLevel();
 
             System.GlobalAccessLogMode = ConfigurationState.Instance.System.FsGlobalAccessLogMode;
 
             ServiceConfiguration.IgnoreMissingServices = ConfigurationState.Instance.System.IgnoreMissingServices;
+        }
+
+        public static IntegrityCheckLevel GetIntigrityCheckLevel()
+        {
+            return ConfigurationState.Instance.System.EnableFsIntegrityChecks
+                ? IntegrityCheckLevel.ErrorOnInvalid
+                : IntegrityCheckLevel.None;
         }
 
         public void LoadCart(string exeFsDir, string romFsFile = null)
@@ -129,7 +135,7 @@ namespace Ryujinx.HLE
 
         internal void Unload()
         {
-            FileSystem.Dispose();
+            FileSystem.Unload();
 
             Memory.Dispose();
         }
@@ -150,6 +156,7 @@ namespace Ryujinx.HLE
             {
                 System.Dispose();
                 VsyncEvent.Dispose();
+                AudioOut.Dispose();
             }
         }
     }

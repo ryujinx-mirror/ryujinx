@@ -43,7 +43,6 @@ namespace Ryujinx
                 ConfigurationState.Instance.ToFileFormat().SaveConfig(configurationPath);
             }
 
-
             Profile.Initialize();
 
             Application.Init();

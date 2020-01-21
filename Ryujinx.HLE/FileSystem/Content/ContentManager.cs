@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace Ryujinx.HLE.FileSystem.Content
 {
-    internal class ContentManager
+    public class ContentManager
     {
         private const ulong SystemVersionTitleId = 0x0100000000000809;
         private const ulong SystemUpdateTitleId  = 0x0100000000000816;
@@ -26,11 +26,11 @@ namespace Ryujinx.HLE.FileSystem.Content
 
         private SortedDictionary<(ulong titleId, NcaContentType type), string> _contentDictionary;
 
-        private Switch _device;
+        private VirtualFileSystem _virtualFileSystem;
 
         private readonly object _lock = new object();
 
-        public ContentManager(Switch device)
+        public ContentManager(VirtualFileSystem virtualFileSystem)
         {
             _contentDictionary = new SortedDictionary<(ulong, NcaContentType), string>();
             _locationEntries   = new Dictionary<StorageId, LinkedList<LocationEntry>>();
@@ -55,10 +55,10 @@ namespace Ryujinx.HLE.FileSystem.Content
                 { "FontNintendoExtended",          "nintendo_ext_003.bfttf" }
             };
 
-            _device = device;
+            _virtualFileSystem = virtualFileSystem;
         }
 
-        public void LoadEntries(bool ignoreMissingFonts = false)
+        public void LoadEntries(Switch device = null)
         {
             lock (_lock)
             {
@@ -74,7 +74,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                     try
                     {
                         contentPathString   = LocationHelper.GetContentRoot(storageId);
-                        contentDirectory    = LocationHelper.GetRealPath(_device.FileSystem, contentPathString);
+                        contentDirectory    = LocationHelper.GetRealPath(_virtualFileSystem, contentPathString);
                         registeredDirectory = Path.Combine(contentDirectory, "registered");
                     }
                     catch (NotSupportedException)
@@ -99,7 +99,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                             using (FileStream ncaFile = File.OpenRead(Directory.GetFiles(directoryPath)[0]))
                             {
-                                Nca nca = new Nca(_device.System.KeySet, ncaFile.AsStorage());
+                                Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
 
                                 string switchPath = contentPathString + ":/" + ncaFile.Name.Replace(contentDirectory, string.Empty).TrimStart(Path.DirectorySeparatorChar);
 
@@ -126,7 +126,7 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                             using (FileStream ncaFile = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                             {
-                                Nca nca = new Nca(_device.System.KeySet, ncaFile.AsStorage());
+                                Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
 
                                 string switchPath = contentPathString + ":/" + filePath.Replace(contentDirectory, string.Empty).TrimStart(Path.DirectorySeparatorChar);
 
@@ -156,9 +156,11 @@ namespace Ryujinx.HLE.FileSystem.Content
                     }
                 }
 
-                TimeManager.Instance.InitializeTimeZone(_device);
-
-                _device.System.Font.Initialize(this, ignoreMissingFonts);
+                if (device != null)
+                {
+                    TimeManager.Instance.InitializeTimeZone(device);
+                    device.System.Font.Initialize(this);
+                }
             }
         }
 
@@ -271,7 +273,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                 return false;
             }
             
-            string installedPath = _device.FileSystem.SwitchPathToSystemPath(locationEntry.ContentPath);
+            string installedPath = _virtualFileSystem.SwitchPathToSystemPath(locationEntry.ContentPath);
 
             if (!string.IsNullOrWhiteSpace(installedPath))
             {
@@ -279,7 +281,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                 {
                     using (FileStream file = new FileStream(installedPath, FileMode.Open, FileAccess.Read))
                     {
-                        Nca nca = new Nca(_device.System.KeySet, file.AsStorage());
+                        Nca nca = new Nca(_virtualFileSystem.KeySet, file.AsStorage());
                         bool contentCheck = nca.Header.ContentType == contentType;
 
                         return contentCheck;
@@ -351,7 +353,7 @@ namespace Ryujinx.HLE.FileSystem.Content
         public void InstallFirmware(string firmwareSource)
         {
             string contentPathString   = LocationHelper.GetContentRoot(StorageId.NandSystem);
-            string contentDirectory    = LocationHelper.GetRealPath(_device.FileSystem, contentPathString);
+            string contentDirectory    = LocationHelper.GetRealPath(_virtualFileSystem, contentPathString);
             string registeredDirectory = Path.Combine(contentDirectory, "registered");
             string temporaryDirectory  = Path.Combine(contentDirectory, "temp");
 
@@ -386,7 +388,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                         }
                         break;
                     case ".xci":
-                        Xci xci = new Xci(_device.System.KeySet, file.AsStorage());
+                        Xci xci = new Xci(_virtualFileSystem.KeySet, file.AsStorage());
                         InstallFromCart(xci, temporaryDirectory);
                         break;
                     default:
@@ -418,7 +420,7 @@ namespace Ryujinx.HLE.FileSystem.Content
         {
             foreach (var entry in filesystem.EnumerateEntries("/", "*.nca"))
             {
-                Nca nca = new Nca(_device.System.KeySet, OpenPossibleFragmentedFile(filesystem, entry.FullPath, OpenMode.Read).AsStorage());
+                Nca nca = new Nca(_virtualFileSystem.KeySet, OpenPossibleFragmentedFile(filesystem, entry.FullPath, OpenMode.Read).AsStorage());
 
                 SaveNca(nca, entry.Name.Remove(entry.Name.IndexOf('.')), temporaryDirectory);
             }
@@ -537,7 +539,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                             return VerifyAndGetVersionZip(archive);
                         }
                     case ".xci":
-                        Xci xci = new Xci(_device.System.KeySet, file.AsStorage());
+                        Xci xci = new Xci(_virtualFileSystem.KeySet, file.AsStorage());
 
                         if (xci.HasPartition(XciPartitionType.Update))
                         {
@@ -561,6 +563,8 @@ namespace Ryujinx.HLE.FileSystem.Content
 
             SystemVersion VerifyAndGetVersionZip(ZipArchive archive)
             {
+                IntegrityCheckLevel integrityCheckLevel = Switch.GetIntigrityCheckLevel();
+
                 SystemVersion systemVersion = null;
 
                 foreach (var entry in archive.Entries)
@@ -571,7 +575,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                         {
                             IStorage storage = ncaStream.AsStorage();
 
-                            Nca nca = new Nca(_device.System.KeySet, storage);
+                            Nca nca = new Nca(_virtualFileSystem.KeySet, storage);
 
                             if (updateNcas.ContainsKey(nca.Header.TitleId))
                             {
@@ -598,9 +602,9 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                     using (Stream ncaStream = GetZipStream(fileEntry))
                     {
-                        Nca metaNca = new Nca(_device.System.KeySet, ncaStream.AsStorage());
+                        Nca metaNca = new Nca(_virtualFileSystem.KeySet, ncaStream.AsStorage());
 
-                        IFileSystem fs = metaNca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
+                        IFileSystem fs = metaNca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
 
                         string cnmtPath = fs.EnumerateEntries("/", "*.cnmt").Single().FullPath;
 
@@ -628,9 +632,9 @@ namespace Ryujinx.HLE.FileSystem.Content
 
                         using (Stream ncaStream = GetZipStream(archive.GetEntry(versionEntry)))
                         {
-                            Nca nca = new Nca(_device.System.KeySet, ncaStream.AsStorage());
+                            Nca nca = new Nca(_virtualFileSystem.KeySet, ncaStream.AsStorage());
 
-                            var romfs = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
+                            var romfs = nca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
 
                             if (romfs.OpenFile(out IFile systemVersionFile, "/file", OpenMode.Read).IsSuccess())
                             {
@@ -663,9 +667,9 @@ namespace Ryujinx.HLE.FileSystem.Content
                             {
                                 using (Stream contentNcaStream = GetZipStream(contentZipEntry))
                                 {
-                                    Nca metaNca = new Nca(_device.System.KeySet, metaNcaStream.AsStorage());
+                                    Nca metaNca = new Nca(_virtualFileSystem.KeySet, metaNcaStream.AsStorage());
 
-                                    IFileSystem fs = metaNca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
+                                    IFileSystem fs = metaNca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
 
                                     string cnmtPath = fs.EnumerateEntries("/", "*.cnmt").Single().FullPath;
 
@@ -722,6 +726,8 @@ namespace Ryujinx.HLE.FileSystem.Content
 
             SystemVersion VerifyAndGetVersion(IFileSystem filesystem)
             {
+                IntegrityCheckLevel integrityCheckLevel = Switch.GetIntigrityCheckLevel();
+
                 SystemVersion systemVersion = null;
 
                 CnmtContentMetaEntry[] metaEntries = null;
@@ -730,11 +736,11 @@ namespace Ryujinx.HLE.FileSystem.Content
                 {
                     IStorage ncaStorage = OpenPossibleFragmentedFile(filesystem, entry.FullPath, OpenMode.Read).AsStorage();
 
-                    Nca nca = new Nca(_device.System.KeySet, ncaStorage);
+                    Nca nca = new Nca(_virtualFileSystem.KeySet, ncaStorage);
 
                     if (nca.Header.TitleId == SystemUpdateTitleId && nca.Header.ContentType == NcaContentType.Meta)
                     {
-                        IFileSystem fs = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
+                        IFileSystem fs = nca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
 
                         string cnmtPath = fs.EnumerateEntries("/", "*.cnmt").Single().FullPath;
 
@@ -752,7 +758,7 @@ namespace Ryujinx.HLE.FileSystem.Content
                     }
                     else if (nca.Header.TitleId == SystemVersionTitleId && nca.Header.ContentType == NcaContentType.Data)
                     {
-                        var romfs = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
+                        var romfs = nca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
 
                         if (romfs.OpenFile(out IFile systemVersionFile, "/file", OpenMode.Read).IsSuccess())
                         {
@@ -797,9 +803,9 @@ namespace Ryujinx.HLE.FileSystem.Content
                         IStorage metaStorage = OpenPossibleFragmentedFile(filesystem, metaNcaEntry.path, OpenMode.Read).AsStorage();
                         IStorage contentStorage = OpenPossibleFragmentedFile(filesystem, contentPath, OpenMode.Read).AsStorage();
 
-                        Nca metaNca = new Nca(_device.System.KeySet, metaStorage);
+                        Nca metaNca = new Nca(_virtualFileSystem.KeySet, metaStorage);
 
-                        IFileSystem fs = metaNca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
+                        IFileSystem fs = metaNca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
 
                         string cnmtPath = fs.EnumerateEntries("/", "*.cnmt").Single().FullPath;
 
@@ -851,7 +857,9 @@ namespace Ryujinx.HLE.FileSystem.Content
 
         public SystemVersion GetCurrentFirmwareVersion()
         {
-            LoadEntries(true);
+            IntegrityCheckLevel integrityCheckLevel = Switch.GetIntigrityCheckLevel();
+
+            LoadEntries();
 
             lock (_lock)
             {
@@ -861,15 +869,15 @@ namespace Ryujinx.HLE.FileSystem.Content
                 {
                     if (entry.ContentType == NcaContentType.Data)
                     {
-                        var path = _device.FileSystem.SwitchPathToSystemPath(entry.ContentPath);
+                        var path = _virtualFileSystem.SwitchPathToSystemPath(entry.ContentPath);
 
                         using (FileStream fileStream = File.OpenRead(path))
                         {
-                            Nca nca = new Nca(_device.System.KeySet, fileStream.AsStorage());
+                            Nca nca = new Nca(_virtualFileSystem.KeySet, fileStream.AsStorage());
 
                             if (nca.Header.TitleId == SystemVersionTitleId && nca.Header.ContentType == NcaContentType.Data)
                             {
-                                var romfs = nca.OpenFileSystem(NcaSectionType.Data, _device.System.FsIntegrityCheckLevel);
+                                var romfs = nca.OpenFileSystem(NcaSectionType.Data, integrityCheckLevel);
 
                                 if (romfs.OpenFile(out IFile systemVersionFile, "/file", OpenMode.Read).IsSuccess())
                                 {

@@ -60,7 +60,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
                     "No control file was found for this game. Using a dummy one instead. This may cause inaccuracies in some games.");
             }
 
-            Result result = EnsureApplicationSaveData(context.Device.System.FsClient, out long requiredSize, titleId,
+            Result result = EnsureApplicationSaveData(context.Device.FileSystem.FsClient, out long requiredSize, titleId,
                 ref context.Device.System.ControlData.Value, ref userId);
 
             context.ResponseData.Write(requiredSize);
