@@ -58,6 +58,8 @@ namespace Ryujinx.Graphics.Gpu
 
         private int _pipeOp;
 
+        private bool _ignoreExitFlag;
+
         private int _pc;
 
         /// <summary>
@@ -232,12 +234,19 @@ namespace Ryujinx.Graphics.Gpu
                     {
                         FetchOpCode(mme);
                     }
+                    else
+                    {
+                        // The delay slot instruction exit flag should be ignored.
+                        _ignoreExitFlag = true;
+                    }
 
                     return true;
                 }
             }
 
-            bool exit = (_opCode & 0x80) != 0;
+            bool exit = (_opCode & 0x80) != 0 && !_ignoreExitFlag;
+
+            _ignoreExitFlag = false;
 
             return !exit;
         }

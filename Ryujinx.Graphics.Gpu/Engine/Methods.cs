@@ -83,6 +83,8 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             state.RegisterCallback(MethodOffset.Report, Report);
 
+            state.RegisterCallback(MethodOffset.FirmwareCall4, FirmwareCall4);
+
             state.RegisterCallback(MethodOffset.UniformBufferUpdateData, 16, UniformBufferUpdate);
 
             state.RegisterCallback(MethodOffset.UniformBufferBindVertex,         UniformBufferBindVertex);

@@ -94,6 +94,16 @@ namespace Ryujinx.Graphics.Gpu.State
         }
 
         /// <summary>
+        /// Writes data to the GPU register at the given offset.
+        /// </summary>
+        /// <param name="offset">Offset to be written</param>
+        /// <param name="value">Value to be written</param>
+        public void Write(int offset, int value)
+        {
+            _backingMemory[offset] = value;
+        }
+
+        /// <summary>
         /// Writes an offset value at the uniform buffer offset register.
         /// </summary>
         /// <param name="offset">The offset to be written</param>
