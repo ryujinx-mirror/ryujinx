@@ -21,6 +21,7 @@
   <!-- Due to .net core 3.0 embedded resource loading -->
   <PropertyGroup>
     <EmbeddedResourceUseDependentUponConvention>false</EmbeddedResourceUseDependentUponConvention>
+    <ApplicationIcon>Ryujinx.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64'">
