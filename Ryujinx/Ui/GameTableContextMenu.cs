@@ -18,7 +18,7 @@ namespace Ryujinx.Ui
     {
         private static ListStore _gameTableStore;
         private static TreeIter  _rowIter;
-        private FileSystemClient _fsClient;
+        private VirtualFileSystem _virtualFileSystem;
 
 #pragma warning disable CS0649
 #pragma warning disable IDE0044
@@ -26,18 +26,18 @@ namespace Ryujinx.Ui
 #pragma warning restore CS0649
 #pragma warning restore IDE0044
 
-        public GameTableContextMenu(ListStore gameTableStore, TreeIter rowIter, FileSystemClient fsClient)
-            : this(new Builder("Ryujinx.Ui.GameTableContextMenu.glade"), gameTableStore, rowIter, fsClient) { }
+        public GameTableContextMenu(ListStore gameTableStore, TreeIter rowIter, VirtualFileSystem virtualFileSystem)
+            : this(new Builder("Ryujinx.Ui.GameTableContextMenu.glade"), gameTableStore, rowIter, virtualFileSystem) { }
 
-        private GameTableContextMenu(Builder builder, ListStore gameTableStore, TreeIter rowIter, FileSystemClient fsClient) : base(builder.GetObject("_contextMenu").Handle)
+        private GameTableContextMenu(Builder builder, ListStore gameTableStore, TreeIter rowIter, VirtualFileSystem virtualFileSystem) : base(builder.GetObject("_contextMenu").Handle)
         {
             builder.Autoconnect(this);
 
             _openSaveDir.Activated += OpenSaveDir_Clicked;
 
-            _gameTableStore = gameTableStore;
-            _rowIter        = rowIter;
-            _fsClient       = fsClient;
+            _gameTableStore    = gameTableStore;
+            _rowIter           = rowIter;
+            _virtualFileSystem = virtualFileSystem;
         }
 
         //Events
@@ -76,7 +76,7 @@ namespace Ryujinx.Ui
             filter.SetUserId(new UserId(1, 0));
             filter.SetTitleId(new TitleId(titleId));
 
-            Result result = _fsClient.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo, SaveDataSpaceId.User, ref filter);
+            Result result = _virtualFileSystem.FsClient.FindSaveDataWithFilter(out SaveDataInfo saveDataInfo, SaveDataSpaceId.User, ref filter);
 
             if (result == ResultFs.TargetNotFound)
             {
@@ -95,7 +95,7 @@ namespace Ryujinx.Ui
                     return false;
                 }
 
-                result = _fsClient.CreateSaveData(new TitleId(titleId), new UserId(1, 0), new TitleId(titleId), 0, 0, 0);
+                result = _virtualFileSystem.FsClient.CreateSaveData(new TitleId(titleId), new UserId(1, 0), new TitleId(titleId), 0, 0, 0);
 
                 if (result.IsFailure())
                 {
@@ -105,7 +105,7 @@ namespace Ryujinx.Ui
                 }
 
                 // Try to find the savedata again after creating it
-                result = _fsClient.FindSaveDataWithFilter(out saveDataInfo, SaveDataSpaceId.User, ref filter);
+                result = _virtualFileSystem.FsClient.FindSaveDataWithFilter(out saveDataInfo, SaveDataSpaceId.User, ref filter);
             }
 
             if (result.IsSuccess())
@@ -122,7 +122,7 @@ namespace Ryujinx.Ui
 
         private string GetSaveDataDirectory(ulong saveDataId)
         {
-            string saveRootPath = System.IO.Path.Combine(new VirtualFileSystem().GetNandPath(), $"user/save/{saveDataId:x16}");
+            string saveRootPath = System.IO.Path.Combine(_virtualFileSystem.GetNandPath(), $"user/save/{saveDataId:x16}");
 
             if (!Directory.Exists(saveRootPath))
             {

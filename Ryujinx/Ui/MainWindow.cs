@@ -83,7 +83,7 @@ namespace Ryujinx.Ui
                 End(null);
             }
 
-            _virtualFileSystem = new VirtualFileSystem();
+            _virtualFileSystem = VirtualFileSystem.CreateInstance();
             _contentManager    = new ContentManager(_virtualFileSystem);
 
             if (migrationNeeded)
@@ -461,7 +461,7 @@ namespace Ryujinx.Ui
 
             if (treeIter.UserData == IntPtr.Zero) return;
 
-            GameTableContextMenu contextMenu = new GameTableContextMenu(_tableStore, treeIter, _virtualFileSystem.FsClient);
+            GameTableContextMenu contextMenu = new GameTableContextMenu(_tableStore, treeIter, _virtualFileSystem);
             contextMenu.ShowAll();
             contextMenu.PopupAtPointer(null);
         }
@@ -502,7 +502,7 @@ namespace Ryujinx.Ui
         {
             Process.Start(new ProcessStartInfo()
             {
-                FileName        = new VirtualFileSystem().GetBasePath(),
+                FileName        = _virtualFileSystem.GetBasePath(),
                 UseShellExecute = true,
                 Verb            = "open"
             });
@@ -738,7 +738,7 @@ namespace Ryujinx.Ui
 
         private void Update_Pressed(object sender, EventArgs args)
         {
-            string ryuUpdater = System.IO.Path.Combine(new VirtualFileSystem().GetBasePath(), "RyuUpdater.exe");
+            string ryuUpdater = System.IO.Path.Combine(_virtualFileSystem.GetBasePath(), "RyuUpdater.exe");
 
             try
             {

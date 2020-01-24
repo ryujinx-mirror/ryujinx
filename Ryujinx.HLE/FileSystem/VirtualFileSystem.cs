@@ -20,12 +20,14 @@ namespace Ryujinx.HLE.FileSystem
         public static string SystemNandPath = Path.Combine(NandPath, "system");
         public static string UserNandPath   = Path.Combine(NandPath, "user");
 
+        private static bool _isInitialized = false;
+
         public Keyset           KeySet   { get; private set; }
         public FileSystemServer FsServer { get; private set; }
         public FileSystemClient FsClient { get; private set; }
         public EmulatedGameCard GameCard { get; private set; }
 
-        public VirtualFileSystem()
+        private VirtualFileSystem()
         {
             Reload();
         }
@@ -271,6 +273,18 @@ namespace Ryujinx.HLE.FileSystem
             {
                 Unload();
             }
+        }
+
+        public static VirtualFileSystem CreateInstance()
+        {
+            if (_isInitialized)
+            {
+                throw new InvalidOperationException($"VirtualFileSystem can only be instanciated once!");
+            }
+
+            _isInitialized = true;
+
+            return new VirtualFileSystem();
         }
     }
 }

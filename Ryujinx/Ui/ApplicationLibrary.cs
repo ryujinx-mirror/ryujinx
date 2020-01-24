@@ -34,15 +34,15 @@ namespace Ryujinx.Ui
         private static readonly byte[] _nroIcon = GetResourceBytes("Ryujinx.Ui.assets.NROIcon.png");
         private static readonly byte[] _nsoIcon = GetResourceBytes("Ryujinx.Ui.assets.NSOIcon.png");
 
-        private static Keyset   _keySet;
-        private static Language _desiredTitleLanguage;
+        private static VirtualFileSystem _virtualFileSystem;
+        private static Language          _desiredTitleLanguage;
 
         public static void LoadApplications(List<string> appDirs, VirtualFileSystem virtualFileSystem, Language desiredTitleLanguage)
         {
             int numApplicationsFound  = 0;
             int numApplicationsLoaded = 0;
 
-            _keySet               = virtualFileSystem.KeySet;
+            _virtualFileSystem    = virtualFileSystem;
             _desiredTitleLanguage = desiredTitleLanguage;
 
             // Builds the applications list with paths to found applications
@@ -77,7 +77,7 @@ namespace Ryujinx.Ui
                             {
                                 nsp.OpenFile(out IFile ncaFile, fileEntry.FullPath, OpenMode.Read).ThrowIfFailure();
 
-                                Nca nca       = new Nca(_keySet, ncaFile.AsStorage());
+                                Nca nca       = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
                                 int dataIndex = Nca.GetSectionIndexFromType(NcaSectionType.Data, NcaContentType.Program);
 
                                 if (nca.Header.ContentType == NcaContentType.Program && !nca.Header.GetFsHeader(dataIndex).IsPatchSection())
@@ -103,7 +103,7 @@ namespace Ryujinx.Ui
                     {
                         try
                         {
-                            Nca nca       = new Nca(_keySet, new FileStream(app, FileMode.Open, FileAccess.Read).AsStorage());
+                            Nca nca       = new Nca(_virtualFileSystem.KeySet, new FileStream(app, FileMode.Open, FileAccess.Read).AsStorage());
                             int dataIndex = Nca.GetSectionIndexFromType(NcaSectionType.Data, NcaContentType.Program);
 
                             if (nca.Header.ContentType != NcaContentType.Program || nca.Header.GetFsHeader(dataIndex).IsPatchSection())
@@ -145,7 +145,7 @@ namespace Ryujinx.Ui
                              
                             if (Path.GetExtension(applicationPath) == ".xci")
                             {
-                                Xci xci = new Xci(_keySet, file.AsStorage());
+                                Xci xci = new Xci(_virtualFileSystem.KeySet, file.AsStorage());
 
                                 pfs = xci.OpenPartition(XciPartitionType.Secure);
                             }
@@ -409,7 +409,7 @@ namespace Ryujinx.Ui
                 {
                     Ticket ticket = new Ticket(ticketFile.AsStream());
 
-                    _keySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(_keySet)));
+                    _virtualFileSystem.KeySet.ExternalKeySet.Add(new RightsId(ticket.RightsId), new AccessKey(ticket.GetTitleKey(_virtualFileSystem.KeySet)));
                 }
             }
 
@@ -418,7 +418,7 @@ namespace Ryujinx.Ui
             {
                 pfs.OpenFile(out IFile ncaFile, fileEntry.FullPath, OpenMode.Read).ThrowIfFailure();
 
-                Nca nca = new Nca(_keySet, ncaFile.AsStorage());
+                Nca nca = new Nca(_virtualFileSystem.KeySet, ncaFile.AsStorage());
 
                 if (nca.Header.ContentType == NcaContentType.Control)
                 {
@@ -432,7 +432,7 @@ namespace Ryujinx.Ui
 
         internal static ApplicationMetadata LoadAndSaveMetaData(string titleId, Action<ApplicationMetadata> modifyFunction = null)
         {
-            string metadataFolder = Path.Combine(new VirtualFileSystem().GetBasePath(), "games", titleId, "gui");
+            string metadataFolder = Path.Combine(_virtualFileSystem.GetBasePath(), "games", titleId, "gui");
             string metadataFile = Path.Combine(metadataFolder, "metadata.json");
 
             IJsonFormatterResolver resolver = CompositeResolver.Create(new[] { StandardResolver.AllowPrivateSnakeCase });
