@@ -166,9 +166,9 @@ namespace Ryujinx.HLE.HOS.Applets
                 }
                 else
                 {
-                    // In interactive mode, we write the length of the text
-                    // as a long, rather than a result code.
-                    writer.Write((long)output.Length);
+                    // In interactive mode, we write the length of the text as a long, rather than
+                    // a result code. This field is inclusive of the 64-bit size.
+                    writer.Write((long)output.Length + 8);
                 }
 
                 writer.Write(output);
