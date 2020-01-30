@@ -53,8 +53,8 @@ namespace Ryujinx.HLE.HOS.Ipc
                 else if (request.Type == IpcMessageType.Control ||
                          request.Type == IpcMessageType.ControlWithContext)
                 {
-                    long magic = reqReader.ReadInt64();
-                    long cmdId = reqReader.ReadInt64();
+                    uint magic = (uint)reqReader.ReadUInt64();
+                    uint cmdId = (uint)reqReader.ReadUInt64();
 
                     switch (cmdId)
                     {
