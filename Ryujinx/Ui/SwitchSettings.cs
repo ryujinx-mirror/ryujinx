@@ -438,9 +438,7 @@ namespace Ryujinx.Ui
 
             MainWindow.SaveConfig();
             MainWindow.ApplyTheme();
-#pragma warning disable CS4014
             MainWindow.UpdateGameTable();
-#pragma warning restore CS4014
             Dispose();
         }
 

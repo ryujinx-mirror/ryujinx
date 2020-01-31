@@ -72,7 +72,8 @@ namespace Ryujinx.Ui
 
             DeleteEvent += Window_Close;
 
-            ApplicationLibrary.ApplicationAdded += Application_Added;
+            ApplicationLibrary.ApplicationAdded        += Application_Added;
+            ApplicationLibrary.ApplicationCountUpdated += ApplicationCount_Updated;
 
             _gameTable.ButtonReleaseEvent += Row_Clicked;
 
@@ -135,9 +136,7 @@ namespace Ryujinx.Ui
             _tableStore.SetSortColumnId(0, SortType.Descending);
 
             UpdateColumns();
-#pragma warning disable CS4014
             UpdateGameTable();
-#pragma warning restore CS4014
 
             Task.Run(RefreshFirmwareLabel);
         }
@@ -209,7 +208,7 @@ namespace Ryujinx.Ui
             return instance;
         }
 
-        internal static async Task UpdateGameTable()
+        internal static void UpdateGameTable()
         {
             if (_updatingGameTable)
             {
@@ -220,10 +219,16 @@ namespace Ryujinx.Ui
 
             _tableStore.Clear();
 
-            await Task.Run(() => ApplicationLibrary.LoadApplications(ConfigurationState.Instance.Ui.GameDirs,
-                _virtualFileSystem, ConfigurationState.Instance.System.Language));
+            Thread applicationLibraryThread = new Thread(() =>
+            {
+                ApplicationLibrary.LoadApplications(ConfigurationState.Instance.Ui.GameDirs,
+                    _virtualFileSystem, ConfigurationState.Instance.System.Language);
 
-            _updatingGameTable = false;
+                _updatingGameTable = false;
+            });
+            applicationLibraryThread.Name = "GUI.ApplicationLibraryThread";
+            applicationLibraryThread.IsBackground = true;
+            applicationLibraryThread.Start();
         }
 
         internal void LoadApplication(string path)
@@ -423,9 +428,22 @@ namespace Ryujinx.Ui
                     args.AppData.FileExtension,
                     args.AppData.FileSize,
                     args.AppData.Path);
+            });
+        }
 
+        private void ApplicationCount_Updated(object sender, ApplicationCountUpdatedEventArgs args)
+        {
+            Application.Invoke(delegate
+            {
                 _progressLabel.Text = $"{args.NumAppsLoaded}/{args.NumAppsFound} Games Loaded";
-                _progressBar.Value  = (float)args.NumAppsLoaded / args.NumAppsFound;
+                float barValue      = 0;
+
+                if (args.NumAppsFound != 0)
+                {
+                    barValue = (float)args.NumAppsLoaded / args.NumAppsFound;
+                }
+
+                _progressBar.Value = barValue;
             });
         }
 
@@ -838,9 +856,7 @@ namespace Ryujinx.Ui
 
         private void RefreshList_Pressed(object sender, ButtonReleaseEventArgs args)
         {
-#pragma warning disable CS4014
             UpdateGameTable();
-#pragma warning restore CS4014
         }
 
         private static int TimePlayedSort(ITreeModel model, TreeIter a, TreeIter b)
