@@ -100,9 +100,7 @@ namespace Ryujinx.Graphics.OpenGL
             }
 
             GL.TexParameter(target, TextureParameterName.TextureMaxLevel, maxLevel);
-
-            // TODO: This requires ARB_stencil_texturing, we should uncomment and test this.
-            // GL.TexParameter(target, TextureParameterName.DepthStencilTextureMode, (int)_info.DepthStencilMode.Convert());
+            GL.TexParameter(target, TextureParameterName.DepthStencilTextureMode, (int)_info.DepthStencilMode.Convert());
         }
 
         public ITexture CreateView(TextureCreateInfo info, int firstLayer, int firstLevel)

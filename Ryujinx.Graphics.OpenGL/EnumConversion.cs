@@ -193,9 +193,9 @@ namespace Ryujinx.Graphics.OpenGL
             switch (mode)
             {
                 case DepthStencilMode.Depth:
-                    return All.Depth;
+                    return All.DepthComponent;
                 case DepthStencilMode.Stencil:
-                    return All.Stencil;
+                    return All.StencilIndex;
             }
 
             Logger.PrintDebug(LogClass.Gpu, $"Invalid {nameof(DepthStencilMode)} enum value: {mode}.");
