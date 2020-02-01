@@ -100,7 +100,8 @@ namespace Ryujinx.Graphics.Shader.Instructions
 
             switch (op.Mode)
             {
-                case InterpolationMode.Pass: iq = InterpolationQualifier.NoPerspective; break;
+                case InterpolationMode.Constant: iq = InterpolationQualifier.Flat;          break;
+                case InterpolationMode.Pass:     iq = InterpolationQualifier.NoPerspective; break;
             }
 
             Operand srcA = Attribute(op.AttributeOffset, iq);
