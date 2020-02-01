@@ -53,6 +53,7 @@ namespace Ryujinx.Graphics.Gpu.State
         YControl                        = 0x4eb,
         FirstVertex                     = 0x50d,
         FirstInstance                   = 0x50e,
+        PointSize                       = 0x546,
         ResetCounter                    = 0x54c,
         RtDepthStencilEnable            = 0x54e,
         ConditionState                  = 0x554,

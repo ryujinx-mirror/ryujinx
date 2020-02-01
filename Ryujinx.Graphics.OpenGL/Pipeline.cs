@@ -601,6 +601,11 @@ namespace Ryujinx.Graphics.OpenGL
             _vertexArray.SetIndexBuffer((Buffer)buffer.Buffer);
         }
 
+        public void SetPointSize(float size)
+        {
+            GL.PointSize(size);
+        }
+
         public void SetPrimitiveRestart(bool enable, int index)
         {
             if (!enable)
