@@ -1,15 +1,14 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Arp;
-using Ryujinx.HLE.Utilities;
 
 namespace Ryujinx.HLE.HOS.Services.Account.Acc
 {
     class IManagerForApplication : IpcService
     {
-        private UInt128                   _userId;
+        private UserId                    _userId;
         private ApplicationLaunchProperty _applicationLaunchProperty;
 
-        public IManagerForApplication(UInt128 userId, ApplicationLaunchProperty applicationLaunchProperty)
+        public IManagerForApplication(UserId userId, ApplicationLaunchProperty applicationLaunchProperty)
         {
             _userId                    = userId;
             _applicationLaunchProperty = applicationLaunchProperty;

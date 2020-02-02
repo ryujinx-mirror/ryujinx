@@ -1,5 +1,4 @@
-﻿using Ryujinx.HLE.Utilities;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,14 +15,14 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             _profiles = new ConcurrentDictionary<string, UserProfile>();
         }
 
-        public void AddUser(UInt128 userId, string name)
+        public void AddUser(UserId userId, string name)
         {
             UserProfile profile = new UserProfile(userId, name);
 
             _profiles.AddOrUpdate(userId.ToString(), profile, (key, old) => profile);
         }
 
-        public void OpenUser(UInt128 userId)
+        public void OpenUser(UserId userId)
         {
             if (_profiles.TryGetValue(userId.ToString(), out UserProfile profile))
             {
@@ -31,7 +30,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             }
         }
 
-        public void CloseUser(UInt128 userId)
+        public void CloseUser(UserId userId)
         {
             if (_profiles.TryGetValue(userId.ToString(), out UserProfile profile))
             {
@@ -44,7 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             return _profiles.Count;
         }
 
-        internal bool TryGetUser(UInt128 userId, out UserProfile profile)
+        internal bool TryGetUser(UserId userId, out UserProfile profile)
         {
             return _profiles.TryGetValue(userId.ToString(), out profile);
         }

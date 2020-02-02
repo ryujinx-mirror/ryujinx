@@ -1,7 +1,7 @@
 using ARMeilleure.Memory;
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Arp;
-using Ryujinx.HLE.Utilities;
 using System.Collections.Generic;
 
 namespace Ryujinx.HLE.HOS.Services.Account.Acc
@@ -28,7 +28,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         // GetUserExistence(nn::account::Uid) -> bool
         public ResultCode GetUserExistence(ServiceCtx context)
         {
-            UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
+            UserId userId = context.RequestData.ReadStruct<UserId>();
 
             if (userId.IsNull)
             {
@@ -75,8 +75,8 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
                     break;
                 }
 
-                context.Memory.WriteInt64(outputPosition + (long)offset,     userProfile.UserId.Low);
-                context.Memory.WriteInt64(outputPosition + (long)offset + 8, userProfile.UserId.High);
+                context.Memory.WriteInt64(outputPosition + (long)offset,     userProfile.UserId.High);
+                context.Memory.WriteInt64(outputPosition + (long)offset + 8, userProfile.UserId.Low);
 
                 offset += 0x10;
             }
@@ -97,7 +97,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         // GetProfile(nn::account::Uid) -> object<nn::account::profile::IProfile>
         public ResultCode GetProfile(ServiceCtx context)
         {
-            UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
+            UserId userId = context.RequestData.ReadStruct<UserId>();
 
             if (!context.Device.System.State.Account.TryGetUser(userId, out UserProfile userProfile))
             {
@@ -131,7 +131,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
             if (context.Device.System.State.Account.GetUserCount() != 1)
             {
                 // Invalid UserId.
-                new UInt128(0, 0).Write(context.ResponseData);
+                new UserId(0, 0).Write(context.ResponseData);
 
                 return 0;
             }
@@ -191,7 +191,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         // GetBaasAccountManagerForApplication(nn::account::Uid) -> object<nn::account::baas::IManagerForApplication>
         public ResultCode GetBaasAccountManagerForApplication(ServiceCtx context)
         {
-            UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
+            UserId userId = context.RequestData.ReadStruct<UserId>();
 
             if (userId.IsNull)
             {
@@ -220,7 +220,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
                 return ResultCode.InvalidArgument;
             }
 
-            UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
+            UserId userId = context.RequestData.ReadStruct<UserId>();
 
             if (userId.IsNull)
             {
@@ -258,7 +258,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
                 return ResultCode.InvalidArgument;
             }
 
-            UInt128 userId = new UInt128(context.RequestData.ReadBytes(0x10));
+            UserId userId = context.RequestData.ReadStruct<UserId>();
 
             if (userId.IsNull)
             {

@@ -1,6 +1,7 @@
 ﻿using ARMeilleure.Memory;
+using Ryujinx.Common;
+using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService.Types;
-using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService
 {
     static class QueryPlayStatisticsManager
     {
-        private static Dictionary<UInt128, ApplicationPlayStatistics> applicationPlayStatistics = new Dictionary<UInt128, ApplicationPlayStatistics>();
+        private static Dictionary<UserId, ApplicationPlayStatistics> applicationPlayStatistics = new Dictionary<UserId, ApplicationPlayStatistics>();
 
         internal static ResultCode GetPlayStatistics(ServiceCtx context, bool byUserId = false)
         {
@@ -20,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService
             long outputPosition = context.Request.ReceiveBuff[0].Position;
             long outputSize     = context.Request.ReceiveBuff[0].Size;
 
-            UInt128 userId = byUserId ? new UInt128(context.RequestData.ReadBytes(0x10)) : new UInt128();
+            UserId userId = byUserId ? context.RequestData.ReadStruct<UserId>() : new UserId();
 
             if (byUserId)
             {

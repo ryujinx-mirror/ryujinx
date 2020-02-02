@@ -1,5 +1,4 @@
 using Ryujinx.HLE.HOS.Services.Account.Acc;
-using Ryujinx.HLE.Utilities;
 using System;
 
 namespace Ryujinx.HLE.HOS.SystemState
@@ -54,7 +53,7 @@ namespace Ryujinx.HLE.HOS.SystemState
 
             Account = new AccountUtils();
 
-            UInt128 defaultUid = new UInt128("00000000000000000000000000000001");
+            UserId defaultUid = new UserId("00000000000000010000000000000000");
 
             Account.AddUser(defaultUid, "Player");
             Account.OpenUser(defaultUid);

@@ -1,4 +1,5 @@
-﻿using Ryujinx.HLE.Utilities;
+﻿using Ryujinx.HLE.HOS.Services.Account.Acc;
+using Ryujinx.HLE.Utilities;
 
 namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.NotificationService
 {
@@ -57,7 +58,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.NotificationService
         }
 
         // TODO: Use this when we will have enough things to go online.
-        public void SignalFriendListUpdate(UInt128 targetId)
+        public void SignalFriendListUpdate(UserId targetId)
         {
             for (int i = 0; i < _registry.Length; i++)
             {
@@ -69,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.NotificationService
         }
 
         // TODO: Use this when we will have enough things to go online.
-        public void SignalNewFriendRequest(UInt128 targetId)
+        public void SignalNewFriendRequest(UserId targetId)
         {
             for (int i = 0; i < _registry.Length; i++)
             {

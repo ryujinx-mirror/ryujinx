@@ -7,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
     {
         private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        public UInt128 UserId { get; private set; }
+        public UserId UserId { get; private set; }
 
         public string Name { get; private set; }
 
@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         public AccountState AccountState    { get; set; }
         public AccountState OnlinePlayState { get; set; }
 
-        public UserProfile(UInt128 userId, string name)
+        public UserProfile(UserId userId, string name)
         {
             UserId = userId;
             Name   = name;

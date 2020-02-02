@@ -2,8 +2,8 @@ using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.NotificationService;
-using Ryujinx.HLE.Utilities;
 using System;
 using System.Collections.Generic;
 
@@ -11,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
 {
     class INotificationService : IpcService, IDisposable
     {
-        private readonly UInt128                      _userId;
+        private readonly UserId                       _userId;
         private readonly FriendServicePermissionLevel _permissionLevel;
 
         private readonly object _lock = new object();
@@ -24,7 +24,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
         private bool _hasNewFriendRequest;
         private bool _hasFriendListUpdate;
 
-        public INotificationService(ServiceCtx context, UInt128 userId, FriendServicePermissionLevel permissionLevel)
+        public INotificationService(ServiceCtx context, UserId userId, FriendServicePermissionLevel permissionLevel)
         {
             _userId            = userId;
             _permissionLevel   = permissionLevel;
@@ -98,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             return ResultCode.NotificationQueueEmpty;
         }
 
-        public void SignalFriendListUpdate(UInt128 targetId)
+        public void SignalFriendListUpdate(UserId targetId)
         {
             lock (_lock)
             {
@@ -140,7 +140,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             }
         }
 
-        public void SignalNewFriendRequest(UInt128 targetId)
+        public void SignalNewFriendRequest(UserId targetId)
         {
             lock (_lock)
             {

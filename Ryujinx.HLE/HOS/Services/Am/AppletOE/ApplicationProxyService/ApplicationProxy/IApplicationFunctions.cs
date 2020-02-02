@@ -1,6 +1,7 @@
 using LibHac;
 using LibHac.Account;
 using LibHac.Common;
+using LibHac.Fs;
 using LibHac.Ncm;
 using LibHac.Ns;
 using Ryujinx.Common;
@@ -13,6 +14,7 @@ using Ryujinx.HLE.HOS.Services.Sdb.Pdm.QueryService;
 using System;
 
 using static LibHac.Fs.ApplicationSaveDataManagement;
+using AccountUid = Ryujinx.HLE.HOS.Services.Account.Acc.UserId;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy
 {
@@ -30,7 +32,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         public ResultCode PopLaunchParameter(ServiceCtx context)
         {
             // Only the first 0x18 bytes of the Data seems to be actually used.
-            MakeObject(context, new AppletAE.IStorage(StorageHelper.MakeLaunchParams()));
+            MakeObject(context, new AppletAE.IStorage(StorageHelper.MakeLaunchParams(context.Device.System.State.Account.LastOpenedUser)));
 
             return ResultCode.Success;
         }
@@ -39,7 +41,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
         // EnsureSaveData(nn::account::Uid) -> u64
         public ResultCode EnsureSaveData(ServiceCtx context)
         {
-            Uid     userId  = context.RequestData.ReadStruct<Uid>();
+            Uid     userId  = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
             TitleId titleId = new TitleId(context.Process.TitleId);
 
             BlitStruct<ApplicationControlProperty> controlHolder = context.Device.System.ControlData;
@@ -104,6 +106,23 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.Applicati
             // FIXME: Need to check correct version on a switch.
             context.ResponseData.Write(1L);
             context.ResponseData.Write(0L);
+
+            return ResultCode.Success;
+        }
+
+        // GetSaveDataSize(u8, nn::account::Uid) -> (u64, u64)
+        [Command(26)] // 3.0.0+
+        public ResultCode GetSaveDataSize(ServiceCtx context)
+        {
+            SaveDataType saveDataType = (SaveDataType)context.RequestData.ReadByte();
+            context.RequestData.BaseStream.Seek(7, System.IO.SeekOrigin.Current);
+
+            Uid userId = context.RequestData.ReadStruct<AccountUid>().ToLibHacUid();
+
+            // TODO: We return a size of 2GB as we use a directory based save system. This should be enough for most of the games.
+            context.ResponseData.Write(2000000000u);
+
+            Logger.PrintStub(LogClass.ServiceAm, new { saveDataType, userId });
 
             return ResultCode.Success;
         }

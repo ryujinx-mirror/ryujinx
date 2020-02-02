@@ -1,4 +1,4 @@
-﻿using Ryujinx.HLE.Utilities;
+﻿using Ryujinx.HLE.HOS.Services.Account.Acc;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.FriendService
@@ -6,7 +6,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.FriendService
     [StructLayout(LayoutKind.Sequential, Pack = 0x8, Size = 0x200, CharSet = CharSet.Ansi)]
     struct Friend
     {
-        public UInt128 UserId;
+        public UserId  UserId;
         public long    NetworkUserId;
 
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 0x21)]

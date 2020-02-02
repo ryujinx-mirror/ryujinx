@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Ryujinx.HLE.HOS.Services.Account.Acc;
+using System.IO;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.Storage
 {
@@ -6,7 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.Storage
     {
         private const uint LaunchParamsMagic = 0xc79497ca;
 
-        public static byte[] MakeLaunchParams()
+        public static byte[] MakeLaunchParams(UserProfile userProfile)
         {
             // Size needs to be at least 0x88 bytes otherwise application errors.
             using (MemoryStream ms = new MemoryStream())
@@ -17,8 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.Storage
 
                 writer.Write(LaunchParamsMagic);
                 writer.Write(1);  // IsAccountSelected? Only lower 8 bits actually used.
-                writer.Write(1L); // User Id Low (note: User Id needs to be != 0)
-                writer.Write(0L); // User Id High
+                userProfile.UserId.Write(writer);
 
                 return ms.ToArray();
             }

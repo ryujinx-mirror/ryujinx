@@ -2,7 +2,6 @@ using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Friend.ServiceCreator.FriendService;
-using Ryujinx.HLE.Utilities;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -18,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
         }
 
         [Command(10100)]
-        // nn::friends::GetFriendListIds(int offset, nn::account::Uid userUUID, nn::friends::detail::ipc::SizedFriendFilter friendFilter, ulong pidPlaceHolder, pid) 
+        // nn::friends::GetFriendListIds(int offset, nn::account::Uid userId, nn::friends::detail::ipc::SizedFriendFilter friendFilter, ulong pidPlaceHolder, pid)
         // -> int outCount, array<nn::account::NetworkServiceAccountId, 0xa>
         public ResultCode GetFriendListIds(ServiceCtx context)
         {
@@ -27,13 +26,13 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             // Padding
             context.RequestData.ReadInt32();
 
-            UInt128      uuid   = context.RequestData.ReadStruct<UInt128>();
+            UserId       userId = context.RequestData.ReadStruct<UserId>();
             FriendFilter filter = context.RequestData.ReadStruct<FriendFilter>();
 
             // Pid placeholder
             context.RequestData.ReadInt64();
 
-            if (uuid.IsNull)
+            if (userId.IsNull)
             {
                 return ResultCode.InvalidArgument;
             }
@@ -43,7 +42,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
 
             Logger.PrintStub(LogClass.ServiceFriend, new
             {
-                UserId = uuid.ToString(),
+                UserId = userId.ToString(),
                 offset,
                 filter.PresenceStatus,
                 filter.IsFavoriteOnly,
@@ -57,7 +56,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
         }
 
         [Command(10101)]
-        // nn::friends::GetFriendList(int offset, nn::account::Uid userUUID, nn::friends::detail::ipc::SizedFriendFilter friendFilter, ulong pidPlaceHolder, pid) 
+        // nn::friends::GetFriendList(int offset, nn::account::Uid userId, nn::friends::detail::ipc::SizedFriendFilter friendFilter, ulong pidPlaceHolder, pid)
         // -> int outCount, array<nn::friends::detail::FriendImpl, 0x6>
         public ResultCode GetFriendList(ServiceCtx context)
         {
@@ -66,13 +65,13 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             // Padding
             context.RequestData.ReadInt32();
 
-            UInt128      uuid   = context.RequestData.ReadStruct<UInt128>();
+            UserId       userId   = context.RequestData.ReadStruct<UserId>();
             FriendFilter filter = context.RequestData.ReadStruct<FriendFilter>();
 
             // Pid placeholder
             context.RequestData.ReadInt64();
 
-            if (uuid.IsNull)
+            if (userId.IsNull)
             {
                 return ResultCode.InvalidArgument;
             }
@@ -81,7 +80,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
             context.ResponseData.Write(0);
 
             Logger.PrintStub(LogClass.ServiceFriend, new {
-                UserId = uuid.ToString(),
+                UserId = userId.ToString(),
                 offset,
                 filter.PresenceStatus,
                 filter.IsFavoriteOnly,
@@ -95,43 +94,43 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
         }
 
         [Command(10600)]
-        // nn::friends::DeclareOpenOnlinePlaySession(nn::account::Uid)
+        // nn::friends::DeclareOpenOnlinePlaySession(nn::account::Uid userId)
         public ResultCode DeclareOpenOnlinePlaySession(ServiceCtx context)
         {
-            UInt128 uuid = context.RequestData.ReadStruct<UInt128>();
+            UserId userId = context.RequestData.ReadStruct<UserId>();
 
-            if (uuid.IsNull)
+            if (userId.IsNull)
             {
                 return ResultCode.InvalidArgument;
             }
 
-            if (context.Device.System.State.Account.TryGetUser(uuid, out UserProfile profile))
+            if (context.Device.System.State.Account.TryGetUser(userId, out UserProfile profile))
             {
                 profile.OnlinePlayState = AccountState.Open;
             }
 
-            Logger.PrintStub(LogClass.ServiceFriend, new { UserId = uuid.ToString(), profile.OnlinePlayState });
+            Logger.PrintStub(LogClass.ServiceFriend, new { UserId = userId.ToString(), profile.OnlinePlayState });
 
             return ResultCode.Success;
         }
 
         [Command(10601)]
-        // nn::friends::DeclareCloseOnlinePlaySession(nn::account::Uid)
+        // nn::friends::DeclareCloseOnlinePlaySession(nn::account::Uid userId)
         public ResultCode DeclareCloseOnlinePlaySession(ServiceCtx context)
         {
-            UInt128 uuid = context.RequestData.ReadStruct<UInt128>();
+            UserId userId = context.RequestData.ReadStruct<UserId>();
 
-            if (uuid.IsNull)
+            if (userId.IsNull)
             {
                 return ResultCode.InvalidArgument;
             }
 
-            if (context.Device.System.State.Account.TryGetUser(uuid, out UserProfile profile))
+            if (context.Device.System.State.Account.TryGetUser(userId, out UserProfile profile))
             {
                 profile.OnlinePlayState = AccountState.Closed;
             }
 
-            Logger.PrintStub(LogClass.ServiceFriend, new { UserId = uuid.ToString(), profile.OnlinePlayState });
+            Logger.PrintStub(LogClass.ServiceFriend, new { UserId = userId.ToString(), profile.OnlinePlayState });
 
             return ResultCode.Success;
         }
@@ -140,7 +139,7 @@ namespace Ryujinx.HLE.HOS.Services.Friend.ServiceCreator
         // nn::friends::UpdateUserPresence(nn::account::Uid, u64, pid, buffer<nn::friends::detail::UserPresenceImpl, 0x19>)
         public ResultCode UpdateUserPresence(ServiceCtx context)
         {
-            UInt128 uuid = context.RequestData.ReadStruct<UInt128>();
+            UserId uuid = context.RequestData.ReadStruct<UserId>();
 
             // Pid placeholder
             context.RequestData.ReadInt64();
