@@ -17,29 +17,31 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <param name="argument">Method call argument</param>
         public void Dispatch(GpuState state, int argument)
         {
-            uint dispatchParamsAddress = (uint)state.Get<int>(MethodOffset.DispatchParamsAddress);
+            uint qmdAddress = (uint)state.Get<int>(MethodOffset.DispatchParamsAddress);
 
-            var dispatchParams = _context.MemoryAccessor.Read<ComputeParams>((ulong)dispatchParamsAddress << 8);
+            var qmd = _context.MemoryAccessor.Read<ComputeQmd>((ulong)qmdAddress << 8);
 
             GpuVa shaderBaseAddress = state.Get<GpuVa>(MethodOffset.ShaderBaseAddress);
 
-            ulong shaderGpuVa = shaderBaseAddress.Pack() + (uint)dispatchParams.ShaderOffset;
+            ulong shaderGpuVa = shaderBaseAddress.Pack() + (uint)qmd.ProgramOffset;
 
-            // Note: A size of 0 is also invalid, the size must be at least 1.
-            int sharedMemorySize = Math.Clamp(dispatchParams.SharedMemorySize & 0xffff, 1, _context.Capabilities.MaximumComputeSharedMemorySize);
+            int localMemorySize = qmd.ShaderLocalMemoryLowSize + qmd.ShaderLocalMemoryHighSize;
+
+            int sharedMemorySize = Math.Min(qmd.SharedMemorySize, _context.Capabilities.MaximumComputeSharedMemorySize);
 
             ComputeShader cs = ShaderCache.GetComputeShader(
                 shaderGpuVa,
-                sharedMemorySize,
-                dispatchParams.UnpackBlockSizeX(),
-                dispatchParams.UnpackBlockSizeY(),
-                dispatchParams.UnpackBlockSizeZ());
+                qmd.CtaThreadDimension0,
+                qmd.CtaThreadDimension1,
+                qmd.CtaThreadDimension2,
+                localMemorySize,
+                sharedMemorySize);
 
             _context.Renderer.Pipeline.SetProgram(cs.HostProgram);
 
             var samplerPool = state.Get<PoolState>(MethodOffset.SamplerPoolState);
 
-            TextureManager.SetComputeSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId, dispatchParams.SamplerIndex);
+            TextureManager.SetComputeSamplerPool(samplerPool.Address.Pack(), samplerPool.MaximumId, qmd.SamplerIndex);
 
             var texturePool = state.Get<PoolState>(MethodOffset.TexturePoolState);
 
@@ -50,17 +52,19 @@ namespace Ryujinx.Graphics.Gpu.Engine
             ShaderProgramInfo info = cs.Shader.Program.Info;
 
             uint sbEnableMask = 0;
-            uint ubEnableMask = dispatchParams.UnpackUniformBuffersEnableMask();
+            uint ubEnableMask = 0;
 
-            for (int index = 0; index < dispatchParams.UniformBuffers.Length; index++)
+            for (int index = 0; index < Constants.TotalCpUniformBuffers; index++)
             {
-                if ((ubEnableMask & (1 << index)) == 0)
+                if (!qmd.ConstantBufferValid(index))
                 {
                     continue;
                 }
 
-                ulong gpuVa = dispatchParams.UniformBuffers[index].PackAddress();
-                ulong size  = dispatchParams.UniformBuffers[index].UnpackSize();
+                ubEnableMask |= 1u << index;
+
+                ulong gpuVa = (uint)qmd.ConstantBufferAddrLower(index) | (ulong)qmd.ConstantBufferAddrUpper(index) << 32;
+                ulong size = (ulong)qmd.ConstantBufferSize(index);
 
                 BufferManager.SetComputeUniformBuffer(index, gpuVa, size);
             }
@@ -131,9 +135,9 @@ namespace Ryujinx.Graphics.Gpu.Engine
             TextureManager.CommitComputeBindings();
 
             _context.Renderer.Pipeline.DispatchCompute(
-                dispatchParams.UnpackGridSizeX(),
-                dispatchParams.UnpackGridSizeY(),
-                dispatchParams.UnpackGridSizeZ());
+                qmd.CtaRasterWidth,
+                qmd.CtaRasterHeight,
+                qmd.CtaRasterDepth);
 
             UpdateShaderState(state);
         }

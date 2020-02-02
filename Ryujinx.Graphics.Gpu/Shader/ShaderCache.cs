@@ -51,12 +51,19 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// This automatically translates, compiles and adds the code to the cache if not present.
         /// </remarks>
         /// <param name="gpuVa">GPU virtual address of the binary shader code</param>
-        /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
         /// <param name="localSizeX">Local group size X of the computer shader</param>
         /// <param name="localSizeY">Local group size Y of the computer shader</param>
         /// <param name="localSizeZ">Local group size Z of the computer shader</param>
+        /// <param name="localMemorySize">Local memory size of the compute shader</param>
+        /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
         /// <returns>Compiled compute shader code</returns>
-        public ComputeShader GetComputeShader(ulong gpuVa, int sharedMemorySize, int localSizeX, int localSizeY, int localSizeZ)
+        public ComputeShader GetComputeShader(
+            ulong gpuVa,
+            int localSizeX,
+            int localSizeY,
+            int localSizeZ,
+            int localMemorySize,
+            int sharedMemorySize)
         {
             bool isCached = _cpPrograms.TryGetValue(gpuVa, out List<ComputeShader> list);
 
@@ -71,7 +78,13 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 }
             }
 
-            CachedShader shader = TranslateComputeShader(gpuVa, sharedMemorySize, localSizeX, localSizeY, localSizeZ);
+            CachedShader shader = TranslateComputeShader(
+                gpuVa,
+                localSizeX,
+                localSizeY,
+                localSizeZ,
+                localMemorySize,
+                sharedMemorySize);
 
             shader.HostShader = _context.Renderer.CompileShader(shader.Program);
 
@@ -237,12 +250,19 @@ namespace Ryujinx.Graphics.Gpu.Shader
         /// Translates the binary Maxwell shader code to something that the host API accepts.
         /// </summary>
         /// <param name="gpuVa">GPU virtual address of the binary shader code</param>
-        /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
         /// <param name="localSizeX">Local group size X of the computer shader</param>
         /// <param name="localSizeY">Local group size Y of the computer shader</param>
         /// <param name="localSizeZ">Local group size Z of the computer shader</param>
+        /// <param name="localMemorySize">Local memory size of the compute shader</param>
+        /// <param name="sharedMemorySize">Shared memory size of the compute shader</param>
         /// <returns>Compiled compute shader code</returns>
-        private CachedShader TranslateComputeShader(ulong gpuVa, int sharedMemorySize, int localSizeX, int localSizeY, int localSizeZ)
+        private CachedShader TranslateComputeShader(
+            ulong gpuVa,
+            int localSizeX,
+            int localSizeY,
+            int localSizeZ,
+            int localMemorySize,
+            int sharedMemorySize)
         {
             if (gpuVa == 0)
             {
@@ -256,6 +276,7 @@ namespace Ryujinx.Graphics.Gpu.Shader
                     QueryInfoName.ComputeLocalSizeX => localSizeX,
                     QueryInfoName.ComputeLocalSizeY => localSizeY,
                     QueryInfoName.ComputeLocalSizeZ => localSizeZ,
+                    QueryInfoName.ComputeLocalMemorySize => localMemorySize,
                     QueryInfoName.ComputeSharedMemorySize => sharedMemorySize,
                     _ => QueryInfoCommon(info)
                 };

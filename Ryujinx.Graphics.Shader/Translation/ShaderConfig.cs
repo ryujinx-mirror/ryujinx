@@ -10,6 +10,8 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public int MaxOutputVertices { get; }
 
+        public int LocalMemorySize { get; }
+
         public OutputMapTarget[] OmapTargets    { get; }
         public bool              OmapSampleMask { get; }
         public bool              OmapDepth      { get; }
@@ -23,6 +25,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             Stage             = ShaderStage.Compute;
             OutputTopology    = OutputTopology.PointList;
             MaxOutputVertices = 0;
+            LocalMemorySize   = 0;
             OmapTargets       = null;
             OmapSampleMask    = false;
             OmapDepth         = false;
@@ -35,6 +38,7 @@ namespace Ryujinx.Graphics.Shader.Translation
             Stage             = header.Stage;
             OutputTopology    = header.OutputTopology;
             MaxOutputVertices = header.MaxOutputVertexCount;
+            LocalMemorySize   = header.ShaderLocalMemoryLowSize + header.ShaderLocalMemoryHighSize;
             OmapTargets       = header.OmapTargets;
             OmapSampleMask    = header.OmapSampleMask;
             OmapDepth         = header.OmapDepth;
@@ -80,6 +84,8 @@ namespace Ryujinx.Graphics.Shader.Translation
                     case QueryInfoName.ComputeLocalSizeY:
                     case QueryInfoName.ComputeLocalSizeZ:
                         return 1;
+                    case QueryInfoName.ComputeLocalMemorySize:
+                        return 0x1000;
                     case QueryInfoName.ComputeSharedMemorySize:
                         return 0xc000;
                     case QueryInfoName.IsTextureBuffer:

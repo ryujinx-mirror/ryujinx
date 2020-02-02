@@ -5,6 +5,7 @@ namespace Ryujinx.Graphics.Shader
         ComputeLocalSizeX,
         ComputeLocalSizeY,
         ComputeLocalSizeZ,
+        ComputeLocalMemorySize,
         ComputeSharedMemorySize,
         IsTextureBuffer,
         IsTextureRectangle,

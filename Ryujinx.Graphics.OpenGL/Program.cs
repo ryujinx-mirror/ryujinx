@@ -77,14 +77,7 @@ namespace Ryujinx.Graphics.OpenGL
 
             Bind();
 
-            int extraBlockindex = GL.GetUniformBlockIndex(Handle, "Extra");
-
-            if (extraBlockindex >= 0)
-            {
-                GL.UniformBlockBinding(Handle, extraBlockindex, 0);
-            }
-
-            int ubBindingPoint = 1;
+            int ubBindingPoint = 0;
             int sbBindingPoint = 0;
             int textureUnit    = 0;
             int imageUnit      = 0;
