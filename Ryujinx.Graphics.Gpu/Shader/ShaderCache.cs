@@ -235,15 +235,9 @@ namespace Ryujinx.Graphics.Gpu.Shader
                 return false;
             }
 
-            for (int index = 0; index < shader.Code.Length; index++)
-            {
-                if (_context.MemoryAccessor.ReadInt32(gpuVa + (ulong)index * 4) != shader.Code[index])
-                {
-                    return true;
-                }
-            }
+            ReadOnlySpan<byte> memoryCode = _context.MemoryAccessor.GetSpan(gpuVa, (ulong)shader.Code.Length * 4);
 
-            return false;
+            return !MemoryMarshal.Cast<byte, int>(memoryCode).SequenceEqual(shader.Code);
         }
 
         /// <summary>

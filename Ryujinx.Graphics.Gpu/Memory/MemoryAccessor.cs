@@ -41,7 +41,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
         {
             ulong processVa = _context.MemoryManager.Translate(gpuVa);
 
-            ulong size = Math.Min(_context.MemoryManager.GetSubSize(gpuVa), maxSize);
+            ulong size = _context.MemoryManager.GetSubSize(gpuVa, maxSize);
 
             return _context.PhysicalMemory.GetSpan(processVa, size);
         }
