@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Ryujinx.Profiler.UI
+namespace Ryujinx.Debugger.Profiler
 {
     public static class ProfileSorters
     {

@@ -1,4 +1,4 @@
-﻿using Ryujinx.Profiler;
+﻿using Ryujinx.Debugger.Profiler;
 using System.Diagnostics;
 using System.Timers;
 

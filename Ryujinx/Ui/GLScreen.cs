@@ -5,8 +5,6 @@ using Ryujinx.Configuration;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE;
 using Ryujinx.HLE.Input;
-using Ryujinx.Profiler.UI;
-using Ryujinx.Ui;
 using System;
 using System.Threading;
 
@@ -41,10 +39,6 @@ namespace Ryujinx.Ui
 
         private string _newTitle;
 
-#if USE_PROFILING
-        private ProfileWindowManager _profileWindow;
-#endif
-
         public GlScreen(Switch device)
             : base(1280, 720,
             new GraphicsMode(), "Ryujinx", 0,
@@ -65,11 +59,6 @@ namespace Ryujinx.Ui
             Location = new Point(
                 (DisplayDevice.Default.Width  / 2) - (Width  / 2),
                 (DisplayDevice.Default.Height / 2) - (Height / 2));
-
-#if USE_PROFILING
-            // Start profile window, it will handle itself from there
-            _profileWindow = new ProfileWindowManager();
-#endif
         }
 
         private void RenderLoop()
@@ -170,11 +159,6 @@ namespace Ryujinx.Ui
             if (_keyboard.HasValue)
             {
                 KeyboardState keyboard = _keyboard.Value;
-
-#if USE_PROFILING
-                // Profiler input, lets the profiler get access to the main windows keyboard state
-                _profileWindow.UpdateKeyInput(keyboard);
-#endif
 
                 // Normal Input
                 currentHotkeyButtons = KeyboardControls.GetHotkeyButtons(ConfigurationState.Instance.Hid.KeyboardControls, keyboard);
@@ -330,10 +314,6 @@ namespace Ryujinx.Ui
 
         protected override void OnUnload(EventArgs e)
         {
-#if USE_PROFILING
-            _profileWindow.Close();
-#endif
-
             _renderThread.Join();
 
             base.OnUnload(e);

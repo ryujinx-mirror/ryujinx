@@ -4,19 +4,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace Ryujinx.Profiler
+namespace Ryujinx.Debugger.Profiler
 {
     public static class Profile
     {
         public static float UpdateRate    => _settings.UpdateRate;
         public static long  HistoryLength => _settings.History;
 
-        public static ProfilerKeyboardHandler Controls      => _settings.Controls;
-
         private static InternalProfile  _profileInstance;
         private static ProfilerSettings _settings;
 
-        [Conditional("USE_PROFILING")]
+        [Conditional("USE_DEBUGGING")]
         public static void Initialize()
         {
             var config = ProfilerConfiguration.Load(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ProfilerConfig.jsonc"));
@@ -29,14 +27,13 @@ namespace Ryujinx.Profiler
                 UpdateRate      = (config.UpdateRate <= 0) ? -1 : 1.0f / config.UpdateRate,
                 History         = (long)(config.History * PerformanceCounter.TicksPerSecond),
                 MaxLevel        = config.MaxLevel,
-                Controls        = config.Controls,
                 MaxFlags        = config.MaxFlags,
             };
         }
 
         public static bool ProfilingEnabled()
         {
-#if USE_PROFILING
+#if USE_DEBUGGING
             if (!_settings.Enabled)
                 return false;
 
@@ -49,7 +46,7 @@ namespace Ryujinx.Profiler
 #endif
         }
 
-        [Conditional("USE_PROFILING")]
+        [Conditional("USE_DEBUGGING")]
         public static void FinishProfiling()
         {
             if (!ProfilingEnabled())
@@ -61,7 +58,7 @@ namespace Ryujinx.Profiler
             _profileInstance.Dispose();
         }
 
-        [Conditional("USE_PROFILING")]
+        [Conditional("USE_DEBUGGING")]
         public static void FlagTime(TimingFlagType flagType)
         {
             if (!ProfilingEnabled())
@@ -69,7 +66,7 @@ namespace Ryujinx.Profiler
             _profileInstance.FlagTime(flagType);
         }
 
-        [Conditional("USE_PROFILING")]
+        [Conditional("USE_DEBUGGING")]
         public static void RegisterFlagReceiver(Action<TimingFlag> receiver)
         {
             if (!ProfilingEnabled())
@@ -77,7 +74,7 @@ namespace Ryujinx.Profiler
             _profileInstance.RegisterFlagReceiver(receiver);
         }
 
-        [Conditional("USE_PROFILING")]
+        [Conditional("USE_DEBUGGING")]
         public static void Begin(ProfileConfig config)
         {
             if (!ProfilingEnabled())
@@ -87,7 +84,7 @@ namespace Ryujinx.Profiler
             _profileInstance.BeginProfile(config);
         }
 
-        [Conditional("USE_PROFILING")]
+        [Conditional("USE_DEBUGGING")]
         public static void End(ProfileConfig config)
         {
             if (!ProfilingEnabled())
@@ -99,7 +96,7 @@ namespace Ryujinx.Profiler
 
         public static string GetSession()
         {
-#if USE_PROFILING
+#if USE_DEBUGGING
             if (!ProfilingEnabled())
                 return null;
             return _profileInstance.GetSession();
@@ -110,7 +107,7 @@ namespace Ryujinx.Profiler
 
         public static List<KeyValuePair<ProfileConfig, TimingInfo>> GetProfilingData()
         {
-#if USE_PROFILING
+#if USE_DEBUGGING
             if (!ProfilingEnabled())
                 return new List<KeyValuePair<ProfileConfig, TimingInfo>>();
             return _profileInstance.GetProfilingData();
@@ -121,7 +118,7 @@ namespace Ryujinx.Profiler
 
         public static TimingFlag[] GetTimingFlags()
         {
-#if USE_PROFILING
+#if USE_DEBUGGING
             if (!ProfilingEnabled())
                 return new TimingFlag[0];
             return _profileInstance.GetTimingFlags();
@@ -132,7 +129,7 @@ namespace Ryujinx.Profiler
 
         public static (long[], long[]) GetTimingAveragesAndLast()
         {
-#if USE_PROFILING
+#if USE_DEBUGGING
             if (!ProfilingEnabled())
                 return (new long[0], new long[0]);
             return _profileInstance.GetTimingAveragesAndLast();

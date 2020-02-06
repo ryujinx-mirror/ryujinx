@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Ryujinx.Profiler
+namespace Ryujinx.Debugger.Profiler
 {
     public struct ProfileConfig : IEquatable<ProfileConfig>
     {

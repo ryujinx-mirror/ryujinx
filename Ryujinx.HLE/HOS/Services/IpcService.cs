@@ -6,7 +6,7 @@ using Ryujinx.HLE.HOS.Kernel.Ipc;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Ryujinx.Profiler;
+using Ryujinx.Debugger.Profiler;
 using System.Reflection;
 using System.Linq;
 

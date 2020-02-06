@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Profiler
+﻿namespace Ryujinx.Debugger.Profiler
 {
     public enum TimingFlagType
     {

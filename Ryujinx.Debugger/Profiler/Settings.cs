@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Profiler
+﻿namespace Ryujinx.Debugger.Profiler
 {
     public class ProfilerSettings
     {
@@ -13,8 +13,5 @@
         // 19531225 = 5 seconds in ticks on most pc's.
         // It should get set on boot to the time specified in config
         public long History { get; set; } = 19531225;
-
-        // Controls
-        public ProfilerKeyboardHandler Controls;
     }
 }

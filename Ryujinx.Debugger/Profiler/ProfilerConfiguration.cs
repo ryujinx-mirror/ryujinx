@@ -1,10 +1,10 @@
-﻿using OpenTK.Input;
+﻿using Gdk;
 using System;
 using System.IO;
 using Utf8Json;
 using Utf8Json.Resolvers;
 
-namespace Ryujinx.Profiler
+namespace Ryujinx.Debugger.Profiler
 {
     public class ProfilerConfiguration
     {
@@ -14,8 +14,6 @@ namespace Ryujinx.Profiler
         public int    MaxLevel   { get; private set; }
         public int    MaxFlags   { get; private set; }
         public float  History    { get; private set; }
-
-        public ProfilerKeyboardHandler Controls { get; private set; }
 
         /// <summary>
         /// Loads a configuration file from disk

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Ryujinx.Profiler
+namespace Ryujinx.Debugger.Profiler
 {
     public struct Timestamp
     {

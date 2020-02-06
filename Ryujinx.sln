@@ -10,9 +10,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Tests.Unicorn", "Ryujinx.Tests.Unicorn\Ryujinx.Tests.Unicorn.csproj", "{D8F72938-78EF-4E8C-BAFE-531C9C3C8F15}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.HLE", "Ryujinx.HLE\Ryujinx.HLE.csproj", "{CB92CFF9-1D62-4D4F-9E88-8130EF61E351}"
-	ProjectSection(ProjectDependencies) = postProject
-		{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34} = {4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Audio", "Ryujinx.Audio\Ryujinx.Audio.csproj", "{5C1D818E-682A-46A5-9D54-30006E26C270}"
 EndProject
@@ -21,8 +18,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Luea", "Ryujinx.LLE\Luea.csproj", "{8E7D36DD-9626-47E2-8EF5-8F2F66751C9C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Common", "Ryujinx.Common\Ryujinx.Common.csproj", "{5FD4E4F6-8928-4B3C-BE07-28A675C17226}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Profiler", "Ryujinx.Profiler\Ryujinx.Profiler.csproj", "{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ARMeilleure", "ARMeilleure\ARMeilleure.csproj", "{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}"
 EndProject
@@ -37,6 +32,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Graphics.Shader", "Ryujinx.Graphics.Shader\Ryujinx.Graphics.Shader.csproj", "{03B955CD-AD84-4B93-AAA7-BF17923BBAA5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ryujinx.Graphics.Nvdec", "Ryujinx.Graphics.Nvdec\Ryujinx.Graphics.Nvdec.csproj", "{85A0FA56-DC01-4A42-8808-70DAC76BD66D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.Debugger", "Ryujinx.Debugger\Ryujinx.Debugger.csproj", "{2E02B7F3-245E-43B1-AE5B-44167A0FDA20}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -110,14 +106,6 @@ Global
 		{5FD4E4F6-8928-4B3C-BE07-28A675C17226}.Profile Release|Any CPU.Build.0 = Profile Release|Any CPU
 		{5FD4E4F6-8928-4B3C-BE07-28A675C17226}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5FD4E4F6-8928-4B3C-BE07-28A675C17226}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}.Profile Debug|Any CPU.ActiveCfg = Profile Debug|Any CPU
-		{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}.Profile Debug|Any CPU.Build.0 = Profile Debug|Any CPU
-		{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}.Profile Release|Any CPU.ActiveCfg = Profile Release|Any CPU
-		{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}.Profile Release|Any CPU.Build.0 = Profile Release|Any CPU
-		{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4E69B67F-8CA7-42CF-A9E1-CCB0915DFB34}.Release|Any CPU.Build.0 = Release|Any CPU
 		{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ABF09A5E-2D8B-4B6F-A51D-5CE414DDB15A}.Profile Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -174,6 +162,14 @@ Global
 		{85A0FA56-DC01-4A42-8808-70DAC76BD66D}.Profile Release|Any CPU.Build.0 = Release|Any CPU
 		{85A0FA56-DC01-4A42-8808-70DAC76BD66D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{85A0FA56-DC01-4A42-8808-70DAC76BD66D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E02B7F3-245E-43B1-AE5B-44167A0FDA20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E02B7F3-245E-43B1-AE5B-44167A0FDA20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E02B7F3-245E-43B1-AE5B-44167A0FDA20}.Profile Debug|Any CPU.ActiveCfg = Profile Debug|Any CPU
+		{2E02B7F3-245E-43B1-AE5B-44167A0FDA20}.Profile Debug|Any CPU.Build.0 = Profile Debug|Any CPU
+		{2E02B7F3-245E-43B1-AE5B-44167A0FDA20}.Profile Release|Any CPU.ActiveCfg = Profile Release|Any CPU
+		{2E02B7F3-245E-43B1-AE5B-44167A0FDA20}.Profile Release|Any CPU.Build.0 = Profile Release|Any CPU
+		{2E02B7F3-245E-43B1-AE5B-44167A0FDA20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E02B7F3-245E-43B1-AE5B-44167A0FDA20}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

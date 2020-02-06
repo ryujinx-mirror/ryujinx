@@ -12,12 +12,12 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile Release|AnyCPU'">
-    <DefineConstants>TRACE;USE_PROFILING</DefineConstants>
+    <DefineConstants>TRACE;USE_DEBUGGING</DefineConstants>
     <Optimize>true</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile Debug|AnyCPU'">
-    <DefineConstants>TRACE;USE_PROFILING</DefineConstants>
+    <DefineConstants>TRACE;USE_DEBUGGING</DefineConstants>
     <Optimize>false</Optimize>
   </PropertyGroup>
 
