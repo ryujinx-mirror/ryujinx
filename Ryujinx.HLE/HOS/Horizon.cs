@@ -107,6 +107,7 @@ namespace Ryujinx.HLE.HOS
         public Keyset KeySet => Device.FileSystem.KeySet;
 
         private bool _hasStarted;
+        private bool _isDisposed;
 
         public BlitStruct<ApplicationControlProperty> ControlData { get; set; }
 
@@ -740,8 +741,10 @@ namespace Ryujinx.HLE.HOS
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
+            if (!_isDisposed && disposing)
             {
+                _isDisposed = true;
+
                 KProcess terminationProcess = new KProcess(this);
 
                 KThread terminationThread = new KThread(this);

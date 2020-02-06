@@ -1131,5 +1131,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             throw new UndefinedInstructionException(e.Address, e.OpCode);
         }
+
+        protected override void Destroy()
+        {
+            CpuMemory.Dispose();
+        }
     }
 }

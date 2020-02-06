@@ -101,6 +101,7 @@ namespace Ryujinx.Audio
             }
 
             _tracks.Clear();
+            _context.Dispose();
         }
 
         /// <summary>
