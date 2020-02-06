@@ -94,7 +94,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 srcTexture.HostTexture.CopyTo(dstTexture.HostTexture, srcRegion, dstRegion, linearFilter);
             }
 
-            dstTexture.Modified = true;
+            dstTexture.SignalModified();
         }
     }
 }

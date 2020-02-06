@@ -286,7 +286,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
                 if (color != null)
                 {
-                    color.Modified = true;
+                    color.SignalModified();
                 }
             }
 
@@ -306,7 +306,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (depthStencil != null)
             {
-                depthStencil.Modified = true;
+                depthStencil.SignalModified();
             }
         }
 

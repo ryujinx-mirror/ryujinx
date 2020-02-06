@@ -54,9 +54,14 @@ namespace Ryujinx.Graphics.Gpu.Image
         public LinkedListNode<Texture> CacheNode { get; set; }
 
         /// <summary>
-        /// Texture data modified by the GPU.
+        /// Event to fire when texture data is modified by the GPU.
         /// </summary>
-        public bool Modified { get; set; }
+        public event Action<Texture> Modified;
+
+        /// <summary>
+        /// Event to fire when texture data is disposed.
+        /// </summary>
+        public event Action<Texture> Disposed;
 
         /// <summary>
         /// Start address of the texture in guest memory.
@@ -934,6 +939,14 @@ namespace Ryujinx.Graphics.Gpu.Image
         }
 
         /// <summary>
+        /// Signals that the texture has been modified.
+        /// </summary>
+        public void SignalModified()
+        {
+            Modified?.Invoke(this);
+        }
+
+        /// <summary>
         /// Replaces the host texture, while disposing of the old one if needed.
         /// </summary>
         /// <param name="hostTexture">The new host texture</param>
@@ -1012,6 +1025,8 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             _arrayViewTexture?.Dispose();
             _arrayViewTexture = null;
+
+            Disposed?.Invoke(this);
         }
 
         /// <summary>
