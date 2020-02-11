@@ -156,7 +156,7 @@ namespace Ryujinx.Ui
                             else
                             {
                                 // Store the ControlFS in variable called controlFs
-                                IFileSystem controlFs = GetControlFs(pfs);
+                                GetControlFsAndTitleId(pfs, out IFileSystem controlFs, out titleId);
 
                                 // Creates NACP class from the NACP file
                                 controlFs.OpenFile(out IFile controlNacpFile, "/control.nacp", OpenMode.Read).ThrowIfFailure();
@@ -166,7 +166,7 @@ namespace Ryujinx.Ui
                                 // Get the title name, title ID, developer name and version number from the NACP
                                 version = controlData.DisplayVersion;
 
-                                GetNameIdDeveloper(controlData, out titleName, out titleId, out developer);
+                                GetNameIdDeveloper(controlData, out titleName, out _, out developer);
 
                                 // Read the icon from the ControlFS and store it as a byte array
                                 try
@@ -409,7 +409,7 @@ namespace Ryujinx.Ui
             return resourceByteArray;
         }
 
-        private static IFileSystem GetControlFs(PartitionFileSystem pfs)
+        private static void GetControlFsAndTitleId(PartitionFileSystem pfs, out IFileSystem controlFs, out string titleId)
         {
             Nca controlNca = null;
 
@@ -440,7 +440,8 @@ namespace Ryujinx.Ui
             }
 
             // Return the ControlFS
-            return controlNca?.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None);
+            controlFs = controlNca?.OpenFileSystem(NcaSectionType.Data, IntegrityCheckLevel.None);
+            titleId = controlNca?.Header.TitleId.ToString("x16");
         }
 
         internal static ApplicationMetadata LoadAndSaveMetaData(string titleId, Action<ApplicationMetadata> modifyFunction = null)
