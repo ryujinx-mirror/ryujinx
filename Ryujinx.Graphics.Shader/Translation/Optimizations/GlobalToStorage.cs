@@ -31,7 +31,26 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
 
                         if (storageIndex >= 0)
                         {
+                            // Storage buffers are implemented using global memory access.
+                            // If we know from where the base address of the access is loaded,
+                            // we can guess which storage buffer it is accessing.
+                            // We can then replace the global memory access with a storage
+                            // buffer access.
                             node = ReplaceGlobalWithStorage(node, config, storageIndex);
+                        }
+                        else if (config.Stage == ShaderStage.Compute && operation.Inst == Instruction.LoadGlobal)
+                        {
+                            // Here we effectively try to replace a LDG instruction with LDC.
+                            // The hardware only supports a limited amount of constant buffers
+                            // so NVN "emulates" more constant buffers using global memory access.
+                            // Here we try to replace the global access back to a constant buffer
+                            // load.
+                            storageIndex = SearchForStorageBase(asgOperation, UbeBaseOffset, UbeBaseOffset + UbeDescsSize);
+
+                            if (storageIndex >= 0)
+                            {
+                                node = ReplaceLdgWithLdc(node, config, storageIndex);
+                            }
                         }
                     }
                 }
@@ -41,8 +60,6 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
         private static LinkedListNode<INode> ReplaceGlobalWithStorage(LinkedListNode<INode> node, ShaderConfig config, int storageIndex)
         {
             Operation operation = (Operation)node.Value;
-
-            Operation storageOp;
 
             Operand GetStorageOffset()
             {
@@ -80,6 +97,8 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
                 sources[index] = operation.GetSource(index);
             }
 
+            Operation storageOp;
+
             if (operation.Inst.IsAtomic())
             {
                 Instruction inst = (operation.Inst & ~Instruction.MrMask) | Instruction.MrStorage;
@@ -103,6 +122,62 @@ namespace Ryujinx.Graphics.Shader.Translation.Optimizations
             LinkedListNode<INode> oldNode = node;
 
             node = node.List.AddBefore(node, storageOp);
+
+            node.List.Remove(oldNode);
+
+            return node;
+        }
+
+        private static LinkedListNode<INode> ReplaceLdgWithLdc(LinkedListNode<INode> node, ShaderConfig config, int storageIndex)
+        {
+            Operation operation = (Operation)node.Value;
+
+            Operand GetCbufOffset()
+            {
+                Operand addrLow = operation.GetSource(0);
+
+                Operand baseAddrLow = Cbuf(0, UbeBaseOffset + storageIndex * StorageDescSize);
+
+                Operand baseAddrTrunc = Local();
+
+                Operand alignMask = Const(-config.QueryInfo(QueryInfoName.StorageBufferOffsetAlignment));
+
+                Operation andOp = new Operation(Instruction.BitwiseAnd, baseAddrTrunc, baseAddrLow, alignMask);
+
+                node.List.AddBefore(node, andOp);
+
+                Operand byteOffset = Local();
+                Operand wordOffset = Local();
+
+                Operation subOp = new Operation(Instruction.Subtract,      byteOffset, addrLow, baseAddrTrunc);
+                Operation shrOp = new Operation(Instruction.ShiftRightU32, wordOffset, byteOffset, Const(2));
+
+                node.List.AddBefore(node, subOp);
+                node.List.AddBefore(node, shrOp);
+
+                return wordOffset;
+            }
+
+            Operand[] sources = new Operand[operation.SourcesCount];
+
+            sources[0] = Const(UbeFirstCbuf + storageIndex);
+            sources[1] = GetCbufOffset();
+
+            for (int index = 2; index < operation.SourcesCount; index++)
+            {
+                sources[index] = operation.GetSource(index);
+            }
+
+            Operation ldcOp = new Operation(Instruction.LoadConstant, operation.Dest, sources);
+
+            for (int index = 0; index < operation.SourcesCount; index++)
+            {
+                operation.SetSource(index, null);
+            }
+
+            LinkedListNode<INode> oldNode = node;
+
+            node = node.List.AddBefore(node, ldcOp);
 
             node.List.Remove(oldNode);
 

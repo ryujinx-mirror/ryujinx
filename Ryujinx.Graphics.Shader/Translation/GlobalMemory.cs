@@ -11,6 +11,11 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public const int StorageDescsSize = StorageDescSize * StorageMaxCount;
 
+        public const int UbeBaseOffset = 0x98; // In words.
+        public const int UbeMaxCount   = 9;
+        public const int UbeDescsSize  = StorageDescSize * UbeMaxCount;
+        public const int UbeFirstCbuf  = 8;
+
         public static bool UsesGlobalMemory(Instruction inst)
         {
             return (inst.IsAtomic() && IsGlobalMr(inst)) ||
@@ -30,17 +35,16 @@ namespace Ryujinx.Graphics.Shader.Translation
 
         public static int GetStorageBaseCbOffset(ShaderStage stage)
         {
-            switch (stage)
+            return stage switch
             {
-                case ShaderStage.Compute:                return StorageDescsBaseOffset + 2 * StorageDescsSize;
-                case ShaderStage.Vertex:                 return StorageDescsBaseOffset;
-                case ShaderStage.TessellationControl:    return StorageDescsBaseOffset + 1 * StorageDescsSize;
-                case ShaderStage.TessellationEvaluation: return StorageDescsBaseOffset + 2 * StorageDescsSize;
-                case ShaderStage.Geometry:               return StorageDescsBaseOffset + 3 * StorageDescsSize;
-                case ShaderStage.Fragment:               return StorageDescsBaseOffset + 4 * StorageDescsSize;
-            }
-
-            return 0;
+                ShaderStage.Compute                => StorageDescsBaseOffset + 2 * StorageDescsSize,
+                ShaderStage.Vertex                 => StorageDescsBaseOffset,
+                ShaderStage.TessellationControl    => StorageDescsBaseOffset + 1 * StorageDescsSize,
+                ShaderStage.TessellationEvaluation => StorageDescsBaseOffset + 2 * StorageDescsSize,
+                ShaderStage.Geometry               => StorageDescsBaseOffset + 3 * StorageDescsSize,
+                ShaderStage.Fragment               => StorageDescsBaseOffset + 4 * StorageDescsSize,
+                _ => 0
+            };
         }
     }
 }

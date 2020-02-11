@@ -8,11 +8,18 @@ namespace Ryujinx.Graphics.Gpu
         /// <summary>
         /// Maximum number of compute uniform buffers.
         /// </summary>
-        public const int TotalCpUniformBuffers = 8;
+        /// <remarks>
+        /// This does not reflect the hardware count, the API will emulate some constant buffers using
+        /// global memory to make up for the low amount of compute constant buffers supported by hardware (only 8).
+        /// </remarks>
+        public const int TotalCpUniformBuffers = 17; // 8 hardware constant buffers + 9 emulated (14 available to the user).
 
         /// <summary>
-        /// Maximum number of compute storage buffers (this is an API limitation).
+        /// Maximum number of compute storage buffers.
         /// </summary>
+        /// <remarks>
+        /// The maximum number of storage buffers is API limited, the hardware supports a unlimited amount.
+        /// </remarks>
         public const int TotalCpStorageBuffers = 16;
 
         /// <summary>
@@ -21,8 +28,11 @@ namespace Ryujinx.Graphics.Gpu
         public const int TotalGpUniformBuffers = 18;
 
         /// <summary>
-        /// Maximum number of graphics storage buffers (this is an API limitation).
+        /// Maximum number of graphics storage buffers.
         /// </summary>
+        /// <remarks>
+        /// The maximum number of storage buffers is API limited, the hardware supports a unlimited amount.
+        /// </remarks>
         public const int TotalGpStorageBuffers = 16;
 
         /// <summary>

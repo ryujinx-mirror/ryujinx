@@ -81,7 +81,7 @@ namespace Ryujinx.Graphics.Shader.Translation
 
             Operand alignMask = Const(-config.QueryInfo(QueryInfoName.StorageBufferOffsetAlignment));
 
-            Operand baseAddrTrunc = PrependOperation(Instruction.BitwiseAnd,    sbBaseAddrLow, Const(-64));
+            Operand baseAddrTrunc = PrependOperation(Instruction.BitwiseAnd,    sbBaseAddrLow, alignMask);
             Operand byteOffset    = PrependOperation(Instruction.Subtract,      addrLow, baseAddrTrunc);
             Operand wordOffset    = PrependOperation(Instruction.ShiftRightU32, byteOffset, Const(2));
 
