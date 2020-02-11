@@ -7,10 +7,11 @@ namespace Ryujinx.HLE.HOS.Services.Am
 
         Success = 0,
 
-        NotAvailable        = (2   << ErrorCodeShift) | ModuleId,
-        NoMessages          = (3   << ErrorCodeShift) | ModuleId,
-        ObjectInvalid       = (500 << ErrorCodeShift) | ModuleId,
-        OutOfBounds         = (503 << ErrorCodeShift) | ModuleId,
-        CpuBoostModeInvalid = (506 << ErrorCodeShift) | ModuleId
+        NotAvailable      = (2   << ErrorCodeShift) | ModuleId,
+        NoMessages        = (3   << ErrorCodeShift) | ModuleId,
+        ObjectInvalid     = (500 << ErrorCodeShift) | ModuleId,
+        OutOfBounds       = (503 << ErrorCodeShift) | ModuleId,
+        InvalidParameters = (506 << ErrorCodeShift) | ModuleId,
+        NullObject        = (518 << ErrorCodeShift) | ModuleId
     }
 }

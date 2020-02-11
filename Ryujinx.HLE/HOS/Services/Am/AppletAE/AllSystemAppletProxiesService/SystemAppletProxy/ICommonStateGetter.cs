@@ -128,7 +128,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             if (cpuBoostMode > 1)
             {
-                return ResultCode.CpuBoostModeInvalid;
+                return ResultCode.InvalidParameters;
             }
 
             _cpuBoostMode = (CpuBoostMode)cpuBoostMode;
