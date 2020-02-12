@@ -3,6 +3,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Configuration;
 using Ryujinx.Debugger.Profiler;
 using Ryujinx.Ui;
+using OpenTK;
 using System;
 using System.IO;
 
@@ -12,6 +13,12 @@ namespace Ryujinx
     {
         static void Main(string[] args)
         {
+            Toolkit.Init(new ToolkitOptions
+            {
+                Backend = PlatformBackend.PreferNative,
+                EnableHighResolution = true
+            });
+
             Console.Title = "Ryujinx Console";
 
             string systemPath = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine);

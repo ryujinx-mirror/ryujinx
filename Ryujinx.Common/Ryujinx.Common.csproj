@@ -28,7 +28,8 @@
 
   <ItemGroup>
     <PackageReference Include="JsonPrettyPrinter" Version="1.0.1.1" />
-    <PackageReference Include="Utf8Json" Version="1.3.7" />
+    <PackageReference Include="Utf8Json" Version="1.3.7" /><PackageReference Include="OpenTK.NetStandard" Version="1.0.5.12" />
+    <PackageReference Include="SharpFontCore" Version="0.1.1" />
   </ItemGroup>
 
 </Project>

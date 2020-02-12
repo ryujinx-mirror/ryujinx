@@ -17,7 +17,7 @@
         <property name="can_focus">False</property>
         <property name="orientation">vertical</property>
         <child>
-          <object class="GtkMenuBar" id="MenuBar">
+          <object class="GtkMenuBar" id="_menuBar">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
@@ -97,13 +97,11 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkCheckMenuItem" id="_fullScreen">
+                      <object class="GtkMenuItem" id="_fullScreen">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Fullscreens the window</property>
-                        <property name="label" translatable="yes">Fullscreen</property>
+                        <property name="label" translatable="yes">Enter Fullscreen</property>
                         <property name="use_underline">True</property>
-                        <signal name="toggled" handler="FullScreen_Toggled" swapped="no"/>
                       </object>
                     </child>
                     <child>
@@ -364,21 +362,35 @@
             <property name="can_focus">False</property>
             <property name="orientation">vertical</property>
             <child>
-              <object class="GtkScrolledWindow" id="_gameTableWindow">
+              <object class="GtkBox" id="_viewBox">
+                <property name="width_request">1280</property>
+                <property name="height_request">720</property>
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="shadow_type">in</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkTreeView" id="_gameTable">
+                  <object class="GtkScrolledWindow" id="_gameTableWindow">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="reorderable">True</property>
-                    <property name="hover_selection">True</property>
-                    <signal name="row-activated" handler="Row_Activated" swapped="no"/>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection" id="_gameTableSelection"/>
+                    <property name="shadow_type">in</property>
+                    <child>
+                      <object class="GtkTreeView" id="_gameTable">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="reorderable">True</property>
+                        <property name="hover_selection">True</property>
+                        <signal name="row-activated" handler="Row_Activated" swapped="no"/>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection" id="_gameTableSelection"/>
+                        </child>
+                      </object>
                     </child>
                   </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
                 </child>
               </object>
               <packing>
@@ -388,59 +400,70 @@
               </packing>
             </child>
             <child>
-              <object class="GtkBox" id="FooterBox">
+              <object class="GtkBox" id="_footerBox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkEventBox">
+                  <object class="GtkBox" id="_listStatusBox">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="margin_left">5</property>
-                    <signal name="button-release-event" handler="RefreshList_Pressed" swapped="no"/>
                     <child>
-                      <object class="GtkImage">
-                        <property name="name">RefreshList</property>
+                      <object class="GtkEventBox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="stock">gtk-refresh</property>
+                        <property name="margin_left">5</property>
+                        <signal name="button-release-event" handler="RefreshList_Pressed" swapped="no"/>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="name">RefreshList</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="stock">gtk-refresh</property>
+                          </object>
+                        </child>
                       </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">0</property>
+                      </packing>
                     </child>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="_progressLabel">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="margin_left">10</property>
-                    <property name="margin_right">5</property>
-                    <property name="margin_top">2</property>
-                    <property name="margin_bottom">2</property>
-                    <property name="label" translatable="yes">0/0 Games Loaded</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkLevelBar" id="_progressBar">
-                    <property name="width_request">200</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="halign">start</property>
-                    <property name="margin_left">10</property>
-                    <property name="margin_right">5</property>
+                    <child>
+                      <object class="GtkLabel" id="_progressLabel">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="margin_left">10</property>
+                        <property name="margin_right">5</property>
+                        <property name="margin_top">2</property>
+                        <property name="margin_bottom">2</property>
+                        <property name="label" translatable="yes">0/0 Games Loaded</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLevelBar" id="_progressBar">
+                        <property name="width_request">200</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="margin_left">10</property>
+                        <property name="margin_right">5</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">True</property>
                     <property name="fill">True</property>
-                    <property name="position">2</property>
+                    <property name="position">1</property>
                   </packing>
                 </child>
                 <child>

@@ -72,9 +72,10 @@
 
   <ItemGroup>
     <PackageReference Include="DiscordRichPresence" Version="1.0.147" />
+    <PackageReference Include="GLWidget" Version="1.0.0" />
     <PackageReference Include="GtkSharp" Version="3.22.25.56" />
     <PackageReference Include="GtkSharp.Dependencies" Version="1.1.0" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'osx-x64'" />
-    <PackageReference Include="OpenTK.NetStandard" Version="1.0.4" />
+    <PackageReference Include="OpenTK.NetStandard" Version="1.0.5.12" />
   </ItemGroup>
 
   <ItemGroup>
