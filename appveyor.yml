@@ -14,11 +14,11 @@ build_script:
 - ps: >-
     dotnet --version
 
-    dotnet publish -c $env:config -r win-x64
+    dotnet publish -c $env:config -r win-x64 /p:Version=$env:APPVEYOR_BUILD_VERSION
 
-    dotnet publish -c $env:config -r linux-x64
+    dotnet publish -c $env:config -r linux-x64 /p:Version=$env:APPVEYOR_BUILD_VERSION
 
-    dotnet publish -c $env:config -r osx-x64
+    dotnet publish -c $env:config -r osx-x64 /p:Version=$env:APPVEYOR_BUILD_VERSION
 
     7z a ryujinx$env:config_name$env:APPVEYOR_BUILD_VERSION-win_x64.zip $env:APPVEYOR_BUILD_FOLDER\Ryujinx\bin\$env:config\netcoreapp3.0\win-x64\publish\
 

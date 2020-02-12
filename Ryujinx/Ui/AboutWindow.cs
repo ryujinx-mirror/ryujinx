@@ -38,8 +38,7 @@ namespace Ryujinx.Ui
             _discordLogo.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.DiscordLogo.png", 30 , 30 );
             _twitterLogo.Pixbuf = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.TwitterLogo.png", 30 , 30 );
 
-            // todo: Get version string
-            _versionText.Text = "Unknown Version";
+            _versionText.Text = Program.Version;
         }
 
         private static void OpenUrl(string url)
