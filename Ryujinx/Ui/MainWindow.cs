@@ -31,7 +31,7 @@ namespace Ryujinx.Ui
 
         private static GLRenderer _gLWidget;
 
-        private static AutoResetEvent _screenExitStatus = new AutoResetEvent(false);
+        private static AutoResetEvent _deviceExitStatus = new AutoResetEvent(false);
 
         private static ListStore _tableStore;
 
@@ -356,7 +356,7 @@ namespace Ryujinx.Ui
 
                 _emulationContext = device;
 
-                _screenExitStatus.Reset();
+                _deviceExitStatus.Reset();
 
 #if MACOS_BUILD
                 CreateGameWindow(device);
@@ -391,8 +391,6 @@ namespace Ryujinx.Ui
         {
             device.Hid.InitializePrimaryController(ConfigurationState.Instance.Hid.ControllerType);
 
-            _gLWidget?.Exit();
-            _gLWidget?.Dispose();
             _gLWidget = new GLRenderer(_emulationContext);
 
             Application.Invoke(delegate
@@ -402,13 +400,17 @@ namespace Ryujinx.Ui
                 _viewBox.Child = _gLWidget;
 
                 _gLWidget.ShowAll();
-                _listStatusBox.Hide();
+                ClearFooterForGameRender();
             });
 
             _gLWidget.WaitEvent.WaitOne();
 
             _gLWidget.Start();
 
+            device.Dispose();
+            _deviceExitStatus.Set();
+
+            // NOTE: Everything that is here will not be executed when you close the UI.
             Application.Invoke(delegate
             {
                 _viewBox.Remove(_gLWidget);
@@ -419,36 +421,41 @@ namespace Ryujinx.Ui
                     _gLWidget.Window.Dispose();
                 }
 
+                _gLWidget.Dispose();
+
                 _viewBox.Add(_gameTableWindow);
 
                 _gameTableWindow.Expand = true;
 
                 this.Window.Title = "Ryujinx";
 
-                _listStatusBox.ShowAll();
+                _emulationContext = null;
+                _gameLoaded       = false;
+                _gLWidget         = null;
+
+                DiscordIntegrationModule.SwitchToMainMenu();
+
+                RecreateFooterForMenu();
 
                 UpdateColumns();
                 UpdateGameTable();
 
                 Task.Run(RefreshFirmwareLabel);
-            });
 
-            device.Dispose();
-
-            _emulationContext = null;
-            _gameLoaded       = false;
-            _gLWidget         = null;
-
-            DiscordIntegrationModule.SwitchToMainMenu();
-
-            Application.Invoke(delegate
-            {
                 _stopEmulation.Sensitive            = false;
                 _firmwareInstallFile.Sensitive      = true;
                 _firmwareInstallDirectory.Sensitive = true;
             });
+        }
 
-            _screenExitStatus.Set();
+        private void RecreateFooterForMenu()
+        {
+            _footerBox.Add(_listStatusBox);
+        }
+
+        private void ClearFooterForGameRender()
+        {
+            _footerBox.Remove(_listStatusBox);
         }
 
         public void ToggleExtraWidgets(bool show)
@@ -469,7 +476,7 @@ namespace Ryujinx.Ui
 
             bool fullScreenToggled = this.Window.State.HasFlag(Gdk.WindowState.Fullscreen);
 
-            _fullScreen.Label = !fullScreenToggled ? "Exit Fullscreen" : "Enter Fullscreen";
+            _fullScreen.Label = fullScreenToggled ? "Exit Fullscreen" : "Enter Fullscreen";
         }
 
         private static void UpdateGameMetadata(string titleId)
@@ -506,8 +513,11 @@ namespace Ryujinx.Ui
 
                 if (_gLWidget != null)
                 {
+                    // We tell the widget that we are exiting
                     _gLWidget.Exit();
-                    _screenExitStatus.WaitOne();
+
+                    // Wait for the other thread to dispose the HLE context before exiting.
+                    _deviceExitStatus.WaitOne();
                 }
             }
 
@@ -874,15 +884,11 @@ namespace Ryujinx.Ui
             {
                 Fullscreen();
 
-                _fullScreen.Label = "Exit Fullscreen";
-
                 ToggleExtraWidgets(false);
             }
             else
             {
                 Unfullscreen();
-
-                _fullScreen.Label = "Enter Fullscreen";
 
                 ToggleExtraWidgets(true);
             }

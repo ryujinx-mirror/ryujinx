@@ -53,7 +53,7 @@ namespace Ryujinx.Ui
         private Input.NpadController _primaryController;
 
         public GLRenderer(Switch device) 
-            : base (new GraphicsMode(new ColorFormat(24)), 
+            : base (new GraphicsMode(new ColorFormat()),
             3, 3, 
             GraphicsContextFlags.ForwardCompatible)
         {
@@ -63,6 +63,7 @@ namespace Ryujinx.Ui
 
             this.Initialized += GLRenderer_Initialized;
             this.Destroyed += GLRenderer_Destroyed;
+            this.ShuttingDown += GLRenderer_ShuttingDown;
 
             Initialize();
 
@@ -81,6 +82,11 @@ namespace Ryujinx.Ui
             this.Shown += Renderer_Shown;
         }
 
+        private void GLRenderer_ShuttingDown(object sender, EventArgs args)
+        {
+            Exit();
+        }
+
         private void Parent_FocusOutEvent(object o, Gtk.FocusOutEventArgs args)
         {
             IsFocused = false;
@@ -93,9 +99,7 @@ namespace Ryujinx.Ui
 
         private void GLRenderer_Destroyed(object sender, EventArgs e)
         {
-            Exit();
-
-            this.Dispose();
+            Dispose();
         }
 
         protected void Renderer_Shown(object sender, EventArgs e)
@@ -106,41 +110,38 @@ namespace Ryujinx.Ui
         public void HandleScreenState(KeyboardState keyboard)
         {
             bool toggleFullscreen = keyboard.IsKeyDown(OpenTK.Input.Key.F11) 
-                               || ((keyboard.IsKeyDown(OpenTK.Input.Key.AltLeft) 
-                               ||   keyboard.IsKeyDown(OpenTK.Input.Key.AltRight)) 
-                               &&   keyboard.IsKeyDown(OpenTK.Input.Key.Enter));
+                                || ((keyboard.IsKeyDown(OpenTK.Input.Key.AltLeft) 
+                                ||   keyboard.IsKeyDown(OpenTK.Input.Key.AltRight)) 
+                                &&   keyboard.IsKeyDown(OpenTK.Input.Key.Enter))
+                                || keyboard.IsKeyDown(OpenTK.Input.Key.Escape);
 
-            if (toggleFullscreen == _toggleFullscreen)
+            bool fullScreenToggled = ParentWindow.State.HasFlag(Gdk.WindowState.Fullscreen);
+
+            if (toggleFullscreen != _toggleFullscreen)
             {
-                return;
+                if (toggleFullscreen)
+                {
+                    if (fullScreenToggled)
+                    {
+                        ParentWindow.Unfullscreen();
+                        (Toplevel as MainWindow)?.ToggleExtraWidgets(true);
+                    }
+                    else
+                    {
+                        if (keyboard.IsKeyDown(OpenTK.Input.Key.Escape))
+                        {
+                            Exit();
+                        }
+                        else
+                        {
+                            ParentWindow.Fullscreen();
+                            (Toplevel as MainWindow)?.ToggleExtraWidgets(false);
+                        }
+                    }
+                }
             }
 
             _toggleFullscreen = toggleFullscreen;
-
-            Gtk.Application.Invoke(delegate
-            {
-                if (this.ParentWindow.State.HasFlag(Gdk.WindowState.Fullscreen))
-                {
-                    if (keyboard.IsKeyDown(OpenTK.Input.Key.Escape) || _toggleFullscreen)
-                    {
-                        this.ParentWindow.Unfullscreen();
-                        (this.Toplevel as MainWindow)?.ToggleExtraWidgets(true);
-                    }
-                }
-                else
-                {
-                    if (keyboard.IsKeyDown(OpenTK.Input.Key.Escape))
-                    {
-                        Exit();
-                    }
-
-                    if (_toggleFullscreen)
-                    {
-                        this.ParentWindow.Fullscreen();
-                        (this.Toplevel as MainWindow)?.ToggleExtraWidgets(false);
-                    }
-                }
-            });
         }
 
         private void GLRenderer_Initialized(object sender, EventArgs e)
