@@ -43,7 +43,8 @@ namespace Ryujinx
             DiscordIntegrationModule.Initialize();
 
             string localConfigurationPath  = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json");
-            string globalConfigurationPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ryujinx", "Config.json");
+            string globalBasePath          = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ryujinx");
+            string globalConfigurationPath = Path.Combine(globalBasePath, "Config.json");
 
             // Now load the configuration as the other subsystems are now registered
             if (File.Exists(localConfigurationPath))
@@ -67,6 +68,9 @@ namespace Ryujinx
                 // No configuration, we load the default values and save it on disk
                 ConfigurationPath = globalConfigurationPath;
 
+                // Make sure to create the Ryujinx directory if needed.
+                Directory.CreateDirectory(globalBasePath);
+
                 ConfigurationState.Instance.LoadDefault();
                 ConfigurationState.Instance.ToFileFormat().SaveConfig(globalConfigurationPath);
             }
@@ -75,9 +79,9 @@ namespace Ryujinx
 
             Application.Init();
 
-            string appDataPath     = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ryujinx", "system", "prod.keys");
-            string userProfilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".switch", "prod.keys");
-            if (!File.Exists(appDataPath) && !File.Exists(userProfilePath) && !Migration.IsMigrationNeeded())
+            string globalProdKeysPath = Path.Combine(globalBasePath, "system", "prod.keys");
+            string userProfilePath    = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".switch", "prod.keys");
+            if (!File.Exists(globalProdKeysPath) && !File.Exists(userProfilePath) && !Migration.IsMigrationNeeded())
             {
                 GtkDialog.CreateWarningDialog("Key file was not found", "Please refer to `KEYS.md` for more info");
             }
